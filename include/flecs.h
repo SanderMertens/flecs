@@ -84,6 +84,7 @@ typedef struct ecs_world_info_t {
     double merge_time_total;    /**< Total time spent in merges */
     double world_time_total;    /**< Time elapsed in simulation */
     double world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
+    double sleep_err;           /**< Measured sleep error */
     
     int32_t frame_count_total;  /**< Total number of frames */
     int32_t merge_count_total;  /**< Total number of merges */
@@ -2307,7 +2308,7 @@ ecs_entity_t ecs_import_from_library(
  */
 #define ECS_MODULE(world, id)\
     ECS_ENTITY_VAR(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id *handles = (id*)ecs_get_mut(world, ecs_entity(id), id, NULL);\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
@@ -2333,7 +2334,7 @@ ecs_entity_t ecs_import_from_library(
     ECS_ENTITY_VAR(id) = ecs_import(\
         world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
     ecs_os_free(id##__name);\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id##ImportHandles(ecs_module(id));\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
