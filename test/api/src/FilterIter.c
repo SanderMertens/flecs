@@ -25,7 +25,6 @@ void FilterIter_iter_one_table() {
         table_count ++;
         entity_count += it.count;
         
-        test_assert(ecs_iter_type(&it) == ecs_type(Position));
         Position *row = ecs_table_column(&it, 0);
         test_assert(row != NULL);
 

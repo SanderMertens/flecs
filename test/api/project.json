@@ -444,7 +444,8 @@
                 "sort_after_remove",
                 "sort_after_delete",
                 "sort_after_set",
-                "sort_after_system"
+                "sort_after_system",
+                "sort_by_component_same_value"
             ]
         }, {
             "id": "Queries",
@@ -821,6 +822,8 @@
                 "control_fps_busy_app",
                 "control_fps_random_system",
                 "control_fps_random_app",
+                "measure_fps_vs_actual",
+                "measure_delta_time_vs_actual",
                 "world_stats",
                 "quit",
                 "get_delta_time",

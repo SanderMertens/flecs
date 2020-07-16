@@ -84,6 +84,7 @@ typedef struct ecs_world_info_t {
     double merge_time_total;    /**< Total time spent in merges */
     double world_time_total;    /**< Time elapsed in simulation */
     double world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
+    double sleep_err;           /**< Measured sleep error */
     
     int32_t frame_count_total;  /**< Total number of frames */
     int32_t merge_count_total;  /**< Total number of merges */
@@ -308,7 +309,7 @@ typedef struct EcsTrigger {
  */
 #define ECS_COMPONENT(world, id) \
     ECS_ENTITY_VAR(id) = ecs_new_component(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
 
@@ -318,7 +319,7 @@ typedef struct EcsTrigger {
  */
 #define ECS_TAG(world, id) \
     ECS_ENTITY(world, id, 0);\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
     (void)ecs_type(id);\
 
 /** Declare a type.
@@ -2307,7 +2308,7 @@ ecs_entity_t ecs_import_from_library(
  */
 #define ECS_MODULE(world, id)\
     ECS_ENTITY_VAR(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id *handles = (id*)ecs_get_mut(world, ecs_entity(id), id, NULL);\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
@@ -2333,7 +2334,7 @@ ecs_entity_t ecs_import_from_library(
     ECS_ENTITY_VAR(id) = ecs_import(\
         world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
     ecs_os_free(id##__name);\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id##ImportHandles(ecs_module(id));\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
@@ -2355,18 +2356,18 @@ ecs_entity_t ecs_import_from_library(
     ECS_SET_ENTITY(type)
 
 /** Utility macro for declaring handles by modules */
-#define ECS_IMPORT_COMPONENT(handles, type)\
-    ECS_ENTITY_VAR(type) = (handles).ecs_entity(type); (void)ecs_entity(type);\
-    ECS_TYPE_VAR(type) = (handles).ecs_type(type); (void)ecs_type(type);\
-    (void)ecs_entity(type);\
-    (void)ecs_type(type)
+#define ECS_IMPORT_COMPONENT(handles, id)\
+    ECS_ENTITY_VAR(id) = (handles).ecs_entity(id); (void)ecs_entity(id);\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id)
 
 /** Utility macro for declaring handles by modules */
-#define ECS_IMPORT_ENTITY(handles, entity)\
-    ecs_entity_t entity = (handles).entity;\
-    ECS_TYPE_VAR(entity) = (handles).ecs_type(entity); (void)ecs_type(entity);\
-    (void)entity;\
-    (void)ecs_type(entity)
+#define ECS_IMPORT_ENTITY(handles, id)\
+    ecs_entity_t id = (handles).id;\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
+    (void)id;\
+    (void)ecs_type(id)
 
 
 ////////////////////////////////////////////////////////////////////////////////

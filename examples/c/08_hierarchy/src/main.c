@@ -92,13 +92,13 @@ int main(int argc, char *argv[]) {
         ECS_ENTITY(world, Child1, WorldPosition, Position, CHILDOF | Root);
             ecs_set(world, Child1, Position, {100, 100});
             
-            ECS_ENTITY(world, GChild1, WorldPosition, Position, CHILDOF | Child1);
+            ECS_ENTITY(world, GChild1, WorldPosition, Position, CHILDOF | Root.Child1);
                 ecs_set(world, GChild1, Position, {1000, 1000});
 
         ECS_ENTITY(world, Child2, WorldPosition, Position, CHILDOF | Root);
             ecs_set(world, Child2, Position, {200, 200});
 
-            ECS_ENTITY(world, GChild2, WorldPosition, Position, CHILDOF | Child2);
+            ECS_ENTITY(world, GChild2, WorldPosition, Position, CHILDOF | Root.Child2);
                 ecs_set(world, GChild2, Position, {2000, 2000});
 
     /* Set target FPS for main loop to 1 frame per second */

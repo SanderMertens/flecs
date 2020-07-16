@@ -1,6 +1,6 @@
 #include "pipeline.h"
 
-ecs_type_t ecs_type(EcsPipelineQuery);
+ECS_TYPE_DECL(EcsPipelineQuery);
 
 typedef struct EcsPipelineQuery {
     ecs_query_t *query;
@@ -158,6 +158,8 @@ bool build_pipeline(
     ecs_entity_t pipeline,
     EcsPipelineQuery *pq)
 {
+    (void)pipeline;
+    
     ecs_query_iter(pq->query);
 
     if (pq->match_count == pq->query->match_count) {
@@ -450,6 +452,87 @@ void EcsOnAddPipeline(
 }
 
 static
+float insert_sleep(
+    ecs_world_t *world,
+    ecs_time_t *stop)
+{
+    ecs_time_t start = *stop;
+    float delta_time = ecs_time_measure(stop);
+
+    if (!world->stats.target_fps) {
+        return delta_time;
+    }
+
+    float target_delta_time = (1.0 / world->stats.target_fps);
+    float world_sleep_err = 
+        world->stats.sleep_err / world->stats.frame_count_total;
+
+    /* Calculate the time we need to sleep by taking the measured delta from the
+     * previous frame, and subtracting it from target_delta_time. */
+    float sleep = target_delta_time - delta_time;
+
+    /* Pick a sleep interval that is 20 times lower than the time one frame
+     * should take. This means that this function at most iterates 20 times in
+     * a busy loop */
+    float sleep_time = target_delta_time / 20;
+
+    /* Measure at least two frames before interpreting sleep error */
+    if (world->stats.frame_count_total > 1) {
+        /* If the ratio between the sleep error and the sleep time is too high,
+         * just do a busy loop */
+        if (world_sleep_err / sleep_time > 0.1) {
+            sleep_time = 0;
+        } 
+    }
+
+    /* If the time we need to sleep is large enough to warrant a sleep, sleep */
+    if (sleep > (sleep_time - world_sleep_err)) {
+        if (sleep_time > sleep) {
+            /* Make sure we don't sleep longer than we should */
+            sleep_time = sleep;
+        }
+
+        float sleep_err = 0;
+        int32_t iterations = 0;
+
+        do {
+            /* Only call sleep when sleep_time is not 0. On some platforms, even
+             * a sleep with a timeout of 0 can cause stutter. */
+            if (sleep_time) {
+                ecs_sleepf(sleep_time);
+            }
+
+            ecs_time_t now = start;
+            float prev_delta_time = delta_time;
+            delta_time = ecs_time_measure(&now);
+
+            /* Measure the error of the sleep by taking the difference between 
+             * the time we expected to sleep, and the measured time. This 
+             * assumes that a sleep is less accurate than a high resolution 
+             * timer which should be true in most cases. */
+            sleep_err = delta_time - prev_delta_time - sleep_time;
+            iterations ++;
+        } while ((target_delta_time - delta_time) > (sleep_time - world_sleep_err));
+
+        /* Add sleep error measurement to sleep error, with a bias towards the
+         * latest measured values. */
+        world->stats.sleep_err =
+            (world_sleep_err * 0.9 + sleep_err * 0.1) * 
+                world->stats.frame_count_total;
+    }
+
+    /*  Make last minute corrections if due to a larger clock error delta_time
+     * is still more than 5% away from the target. The 5% buffer is to account
+     * for the fact that measuring the time also takes time. */
+    while (delta_time < target_delta_time * 0.95) {
+        ecs_time_t now = start;
+        delta_time = ecs_time_measure(&now);
+    }
+
+    return delta_time;
+}
+
+static
 float start_measure_frame(
     ecs_world_t *world,
     float user_delta_time)
@@ -460,7 +543,9 @@ float start_measure_frame(
         ecs_time_t t = world->frame_start_time;
         do {
             if (world->frame_start_time.sec) {
-                delta_time = ecs_time_measure(&t);
+                delta_time = insert_sleep(world, &t);
+
+                ecs_time_measure(&t);
             } else {
                 ecs_time_measure(&t);
                 if (world->stats.target_fps) {
@@ -484,86 +569,14 @@ float start_measure_frame(
 
 static
 void stop_measure_frame(
-    ecs_world_t *world,
-    float delta_time)
+    ecs_world_t* world)
 {
-    /* These values automatically calibrate the timer based on the accuracy of
-     * the OS sleep. Above the sleep_threshold Flecs will just do a single
-     * sleep with the required timeout to meet the FPS target. Below that a busy
-     * loop will be used with a timeout that is the required sleep time times
-     * the sleep_granularity. */
-    static float sleep_threshold = 0.1;
-    static float sleep_granularity = 0.1;
-
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
         double frame_time = ecs_time_measure(&t);
         world->stats.frame_time_total += frame_time;
-
-        /* Sleep if processing faster than target FPS */
-        float target_fps = world->stats.target_fps;
-        if (target_fps) {
-            float sleep = (1.0 / target_fps) - delta_time + world->fps_sleep;
-
-            /* Sleep value is above threshold. Sleep for the requested amount of
-             * time in a single sleep. */
-            if (sleep > sleep_threshold) {
-                ecs_sleepf(sleep);
-
-            /* If sleep value is smaller than threshold but above zero, use a
-             * busy loop with a smaller sleep value. */
-            } else if (sleep > 0 ) {
-                double sleep_time;
-
-                /* Use the sleep time times the sleep granularity value */
-                if (sleep_granularity) {
-                    sleep_time = sleep * sleep_granularity;
-                } else {
-                    sleep_time = 0;
-                }
-                
-                ecs_time_t t_sleep = t;
-                double time_passed = ecs_time_measure(&t_sleep);
-                while((time_passed - frame_time) < sleep) {
-                    ecs_sleepf(sleep_time);
-                    t_sleep = t;
-                    time_passed = ecs_time_measure(&t_sleep);
-                }
-
-            /* If the sleep time was negative, it means that we slept too much
-             * in the previous frame, which is an indication of our sleep not
-             * being able to sleep for short durations. Automatically adjust
-             * based on the accuracy of the OS sleep. */
-            } else {
-                /* As long as the sleep threshold is lower than 1, keep
-                 * increasing the sleep threshold. This will cause more sleeping
-                 * to take place in the busy loop, which is more accurate. */
-                if (sleep_threshold < 1) {
-                    sleep_threshold *= 1.1;
-
-                /* If the sleep threshold is above 1, adjust the sleep 
-                 * granularity so that the sleep durations become smaller. This
-                 * may not help much as apparently the OS sleep is not very 
-                 * accurate, but it's worth trying out. */
-                } else if (sleep_granularity < 100) {
-                    sleep_granularity /= 1.1;
-
-                /* If the sleep accuracy is really poor, sleep 0 seconds which
-                 * regresses to a busy loop that can cause load of a CPU core to
-                 * spike to 100%, even if the actual load is not that high. This 
-                 * should probably be discoverable at the API level, as an 
-                 * application may at this point switch to an alternative method 
-                 * of FPS control like vsync. */
-                } else {
-                    sleep_granularity = 0;
-                }
-            }
-
-            world->fps_sleep = sleep;
-        }        
     }
 }
-
 
 /* -- Public API -- */
 
@@ -595,8 +608,7 @@ float ecs_frame_begin(
 }
 
 void ecs_frame_end(
-    ecs_world_t *world,
-    float delta_time)
+    ecs_world_t *world)
 {
     world->stats.frame_count_total ++;
 
@@ -608,18 +620,18 @@ void ecs_frame_end(
         ecs_os_mutex_unlock(world->thr_sync);
     }
 
-    stop_measure_frame(world, delta_time);   
+    stop_measure_frame(world);
 }
 
 bool ecs_progress(
     ecs_world_t *world,
     float user_delta_time)
 {
-    float delta_time = ecs_frame_begin(world, user_delta_time);
+    ecs_frame_begin(world, user_delta_time);
 
     ecs_workers_progress(world);
 
-    ecs_frame_end(world, delta_time);
+    ecs_frame_end(world);
 
     return !world->should_quit;
 }
@@ -734,7 +746,7 @@ void FlecsPipelineImport(
     ecs_bootstrap_tag(world, EcsOnStore);
     ecs_bootstrap_tag(world, EcsPostFrame);
 
-    ecs_type(EcsPipelineQuery) = ecs_bootstrap_type(world, ecs_entity(EcsPipelineQuery));
+    ECS_TYPE_IMPL(EcsPipelineQuery);
 
     /* Set ctor and dtor for PipelineQuery */
     ecs_set(world, ecs_entity(EcsPipelineQuery), EcsComponentLifecycle, {

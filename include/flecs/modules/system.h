@@ -16,7 +16,6 @@ extern "C" {
 FLECS_EXPORT
 extern ecs_type_t
     ecs_type(EcsTrigger),
-    ecs_type(EcsModule),
     ecs_type(EcsSystem),
     ecs_type(EcsTickSource),
     ecs_type(EcsSignatureExpr),

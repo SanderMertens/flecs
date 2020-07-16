@@ -20,6 +20,40 @@ struct ecs_vector_t {
 #define ECS_VECTOR_U(size, alignment) size, ECS_MAX(sizeof(ecs_vector_t), alignment)
 #define ECS_VECTOR_T(T) ECS_VECTOR_U(sizeof(T), ECS_ALIGNOF(T))
 
+/* Macro's for creating vector on stack */
+#ifndef NDEBUG
+#define ECS_VECTOR_VALUE(T, elem_count)\
+{\
+    .elem_size = sizeof(T),\
+    .count = elem_count,\
+    .size = elem_count\
+}
+#else
+#define ECS_VECTOR_VALUE(T, elem_count)\
+{\
+    .count = elem_count,\
+    .size = elem_count\
+}
+#endif
+
+#define ECS_VECTOR_DECL(name, T, elem_count)\
+struct {\
+    union {\
+        ecs_vector_t vector;\
+    } header;\
+    T array[elem_count];\
+} __##name##_value = {\
+    .header.vector = ECS_VECTOR_VALUE(T, elem_count),\
+};\
+const ecs_vector_t *name = (ecs_vector_t*)&__##name##_value
+
+#define ECS_VECTOR_IMPL(name, T, elems, elem_count)\
+memcpy(__##name##_value.array, elems, sizeof(T) * elem_count)
+
+#define ECS_VECTOR_STACK(name, T, elems, elem_count)\
+ECS_VECTOR_DECL(name, T, elem_count);\
+ECS_VECTOR_IMPL(name, T, elems, elem_count)
+
 typedef struct ecs_vector_t ecs_vector_t;
 
 typedef int (*ecs_comparator_t)(

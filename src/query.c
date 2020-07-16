@@ -493,6 +493,7 @@ void add_table(
         trait_index_offsets = ecs_os_calloc(sizeof(int32_t) * column_count);
     }
 
+
     /* From here we recurse */
 add_trait:
 
@@ -702,7 +703,7 @@ bool ecs_query_match(
         ecs_sig_from_kind_t from_kind = elem->from_kind;
         ecs_sig_oper_kind_t oper_kind = elem->oper_kind;
 
-        failure_info->column = i + 1;     
+        failure_info->column = i + 1;
 
         if (oper_kind == EcsOperAnd) {
             if (!match_column(
@@ -878,14 +879,13 @@ int32_t qsort_table(
     int32_t hi,
     ecs_compare_action_t compare)
 {
+    int32_t p = (hi + lo) / 2;
+    void *pivot = ELEM(ptr, elem_size, p);
+    ecs_entity_t pivot_e = entities[p];
+    int32_t i = lo - 1, j = hi + 1;
+    void *el;    
 repeat:
     {
-        int32_t p = (hi + lo) / 2;
-        void *pivot = ELEM(ptr, elem_size, p);
-        ecs_entity_t pivot_e = entities[p];
-        int32_t i = lo - 1, j = hi + 1;
-        void *el;
-        
         do {
             i ++;
             el = ELEM(ptr, elem_size, i);
@@ -901,6 +901,7 @@ repeat:
         }
 
         ecs_table_swap(world, &world->stage, table, data, i, j);
+
         goto repeat;
     }
 }

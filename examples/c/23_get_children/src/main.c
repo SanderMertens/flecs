@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     // Create a simple hierarchy with 2 levels
     ECS_ENTITY(world, Parent, 0);
         ECS_ENTITY(world, Child1, CHILDOF | Parent);
-            ECS_ENTITY(world, GrandChild, CHILDOF | Child1);
+            ECS_ENTITY(world, GrandChild, CHILDOF | Parent.Child1);
         ECS_ENTITY(world, Child2, CHILDOF | Parent);
         ECS_ENTITY(world, Child3, CHILDOF | Parent);
 

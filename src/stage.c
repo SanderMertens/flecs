@@ -235,6 +235,8 @@ void clean_tables(
     if (count) {
         ecs_table_reset(world, &stage->root);
     }
+
+    ecs_sparse_clear(stage->tables);
 }
 
 /* If a table was created while staged, it was not yet matched with OnSet
@@ -326,79 +328,72 @@ void merge_tables(
         ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
         ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
 
-        /* If the table does not contain any data and/or hasn't been modified
-         * during this stage we can skip it. A stage has to recreate the parts
-         * of the table graph up to the tables that contain the staged data, and
-         * these tables do not need to be merged explicitly. Either they are
-         * already created in the main stage, or they will be created as the
-         * tables with actual data are merged. */
-        if (ecs_table_data_count(data)) {
+        /* Find or create the table in the main stage. Even though the
+         * table may not have been created in the main stage when the stage
+         * looked for it, other stages could have been merged before this
+         * stage that already created the table.
+         *
+         * If this is the first time that the table is created in the main
+         * stage, this will also trigger table notifications for queries. */
 
-            /* Find or create the table in the main stage. Even though the
-             * table may not have been created in the main stage when the stage
-             * looked for it, other stages could have been merged before this
-             * stage that already created the table.
-             *
-             * If this is the first time that the table is created in the main
-             * stage, this will also trigger table notifications for queries. */
+        ecs_table_t *main_table = ecs_table_from_type(
+            world, &world->stage, table->type);
+        ecs_assert(main_table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(main_table != table, ECS_INTERNAL_ERROR, NULL);
 
-            ecs_table_t *main_table = ecs_table_from_type(
-                world, &world->stage, table->type);
-            ecs_assert(main_table != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(main_table != table, ECS_INTERNAL_ERROR, NULL);
-
-            /* Make sure the main stage table does not yet contain data for this
-             * stage. That should never happen, as this stage is the only one
-             * that could have populated the *stage-specific* table data, and we
-             * wouldn't be here if the stage had found the table in the main
-             * stage. */
+        /* Make sure the main stage table does not yet contain data for this
+         * stage. That should never happen, as this stage is the only one
+         * that could have populated the *stage-specific* table data, and we
+         * wouldn't be here if the stage had found the table in the main
+         * stage. */
 #ifndef NDEBUG
-            ecs_data_t *staged_data = ecs_table_get_staged_data(
-                world, stage, main_table);
+        ecs_data_t *staged_data = ecs_table_get_staged_data(
+            world, stage, main_table);
 
-            ecs_assert(!staged_data || !staged_data->columns, 
-                ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(!staged_data || !staged_data->columns, 
+            ECS_INTERNAL_ERROR, NULL);
 #endif
 
-            ecs_data_t *main_staged_data = ecs_table_get_or_create_data(
-                world, stage, main_table);
-            
-            ecs_assert(main_staged_data != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_data_t *main_staged_data = ecs_table_get_or_create_data(
+            world, stage, main_table);
+        
+        ecs_assert(main_staged_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            /* Move the staged data from the staged table to the stage-specific
-             * location in the main stage. This will ensure that the data will
-             * be merged in the next step. Reset the data pointer to NULL in the
-             * staged table so it won't be cleaned up */
+        /* Move the staged data from the staged table to the stage-specific
+         * location in the main stage. This will ensure that the data will
+         * be merged in the next step. Reset the data pointer to NULL in the
+         * staged table so it won't be cleaned up */
+        if (data) {
             *main_staged_data = *data;
-
-            /* If the main_table has been matched with OnSet systems, these
-             * systems have not yet been invoked for the entities in this table
-             * as systems aren't matched while in progress. Invoke them now. */
-            if (main_table->on_set_all || main_table->un_set_all || 
-                main_table->monitors || main_table->on_set_override) 
-            {
-                /* TODO: if an entity is moved by an OnSet handler to a new
-                 * table that is also created in the stage, it is possible that
-                 * an OnSet handler is executed twice. To prevent this from
-                 * happening, only invoke OnSet handlers on tables that were
-                 * created while iterating. This introduces an edge case where
-                 * an OnSet system that is applicable exclusively to the new
-                 * staged table is not invoked, but to address this case we need
-                 * to keep a shadow entity index while merging, as the only way
-                 * to determine the exclusive set of OnSet systems is by taking
-                 * the previous staged table and the new staged table. */
-                if (start == 0) {
-                    merge_on_set(world, stage, main_table, main_staged_data);
-                }
-            }
-
-            /* Add main stage table to dirty_tables. This will cause both the
-             * staged table as well as the main stage table to be added to
-             * the array. This is ok, as the staged table is now empty, so 
-             * entities won't be added twice. */
-            ecs_table_t **el = ecs_vector_add(&stage->dirty_tables, ecs_table_t*);
-            *el = main_table;
         }
+
+        /* If the main_table has been matched with OnSet systems, these
+         * systems have not yet been invoked for the entities in this table
+         * as systems aren't matched while in progress. Invoke them now. */
+        if (main_table->on_set_all || main_table->un_set_all || 
+            main_table->monitors || main_table->on_set_override) 
+        {
+            /* TODO: if an entity is moved by an OnSet handler to a new
+             * table that is also created in the stage, it is possible that
+             * an OnSet handler is executed twice. To prevent this from
+             * happening, only invoke OnSet handlers on tables that were
+             * created while iterating. This introduces an edge case where
+             * an OnSet system that is applicable exclusively to the new
+             * staged table is not invoked, but to address this case we need
+             * to keep a shadow entity index while merging, as the only way
+             * to determine the exclusive set of OnSet systems is by taking
+             * the previous staged table and the new staged table. */
+            if (start == 0) {
+                merge_on_set(world, stage, main_table, main_staged_data);
+            }
+        }
+
+        /* Add main stage table to dirty_tables. This will cause both the
+         * staged table as well as the main stage table to be added to
+         * the array. This is ok, as the staged table is now empty, so 
+         * entities won't be added twice. */
+        ecs_table_t **el = ecs_vector_add(&stage->dirty_tables, ecs_table_t*);
+        *el = main_table;
     }
 
     /* It is possible that new tables were introduced to the stage while OnSet
@@ -437,7 +432,6 @@ void ecs_stage_merge(
 
     /* Clear temporary tables used by stage */
     clean_tables(world, stage);
-    ecs_sparse_clear(stage->tables);
     ecs_eis_clear(stage);
 }
 

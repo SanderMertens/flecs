@@ -10,6 +10,13 @@
 //// Core bootstrap functions
 ////////////////////////////////////////////////////////////////////////////////
 
+#define ECS_TYPE_DECL(component)\
+static const ecs_entity_t __##component = ecs_entity(component);\
+ECS_VECTOR_DECL(FLECS__T##component, ecs_entity_t, 1)
+
+#define ECS_TYPE_IMPL(component)\
+ECS_VECTOR_IMPL(FLECS__T##component, ecs_entity_t, &__##component, 1)
+
 /* Bootstrap world */
 void ecs_bootstrap(
     ecs_world_t *world);
@@ -19,7 +26,7 @@ ecs_type_t ecs_bootstrap_type(
     ecs_entity_t entity);
 
 #define ecs_bootstrap_component(world, name)\
-    ecs_new_component(world, ecs_entity(name), #name, sizeof(name), ECS_ALIGNOF(name));
+    ecs_new_component(world, ecs_entity(name), #name, sizeof(name), ECS_ALIGNOF(name))
 
 #define ecs_bootstrap_tag(world, name)\
     ecs_set(world, name, EcsName, {.value = &#name[strlen("Ecs")], .symbol = #name});\

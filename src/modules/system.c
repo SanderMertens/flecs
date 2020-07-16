@@ -1,16 +1,15 @@
 #include "../flecs_private.h"
 
 /* Global type variables */
-ecs_type_t ecs_type(EcsComponentLifecycle);
-ecs_type_t ecs_type(EcsTrigger);
-ecs_type_t ecs_type(EcsModule);
-ecs_type_t ecs_type(EcsSystem);
-ecs_type_t ecs_type(EcsTickSource);
-ecs_type_t ecs_type(EcsSignatureExpr);
-ecs_type_t ecs_type(EcsSignature);
-ecs_type_t ecs_type(EcsQuery);
-ecs_type_t ecs_type(EcsIterAction);
-ecs_type_t ecs_type(EcsContext);
+ECS_TYPE_DECL(EcsComponentLifecycle);
+ECS_TYPE_DECL(EcsTrigger);
+ECS_TYPE_DECL(EcsSystem);
+ECS_TYPE_DECL(EcsTickSource);
+ECS_TYPE_DECL(EcsSignatureExpr);
+ECS_TYPE_DECL(EcsSignature);
+ECS_TYPE_DECL(EcsQuery);
+ECS_TYPE_DECL(EcsIterAction);
+ECS_TYPE_DECL(EcsContext);
 
 static
 ecs_on_demand_in_t* get_in_component(
@@ -544,6 +543,9 @@ void ecs_run_monitor(
     int32_t count,
     ecs_entity_t *entities)
 {
+    ecs_world_t *original_world = world;
+    ecs_get_stage(&world);
+
     ecs_query_t *query = monitor->query;
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -559,6 +561,7 @@ void ecs_run_monitor(
     ecs_query_set_iter( world, stage, query, &it, 
         monitor->matched_table_index, row, count);
 
+    it.world = original_world;
     it.triggered_by = components;
     it.param = system_data->ctx;
 
@@ -872,15 +875,15 @@ void FlecsSystemImport(
     ecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
 
-    ecs_type(EcsComponentLifecycle) = ecs_bootstrap_type(world, ecs_entity(EcsComponentLifecycle));
-    ecs_type(EcsTrigger) = ecs_bootstrap_type(world, ecs_entity(EcsTrigger));
-    ecs_type(EcsSystem) = ecs_bootstrap_type(world, ecs_entity(EcsSystem));
-    ecs_type(EcsTickSource) = ecs_bootstrap_type(world, ecs_entity(EcsTickSource));
-    ecs_type(EcsSignatureExpr) = ecs_bootstrap_type(world, ecs_entity(EcsSignatureExpr));
-    ecs_type(EcsSignature) = ecs_bootstrap_type(world, ecs_entity(EcsSignature));
-    ecs_type(EcsQuery) = ecs_bootstrap_type(world, ecs_entity(EcsQuery));
-    ecs_type(EcsIterAction) = ecs_bootstrap_type(world, ecs_entity(EcsIterAction));
-    ecs_type(EcsContext) = ecs_bootstrap_type(world, ecs_entity(EcsContext));   
+    ECS_TYPE_IMPL(EcsComponentLifecycle);
+    ECS_TYPE_IMPL(EcsTrigger);
+    ECS_TYPE_IMPL(EcsSystem);
+    ECS_TYPE_IMPL(EcsTickSource);
+    ECS_TYPE_IMPL(EcsSignatureExpr);
+    ECS_TYPE_IMPL(EcsSignature);
+    ECS_TYPE_IMPL(EcsQuery);
+    ECS_TYPE_IMPL(EcsIterAction);
+    ECS_TYPE_IMPL(EcsContext);
 
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, ecs_entity(EcsSystem));
