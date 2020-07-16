@@ -606,8 +606,7 @@ float ecs_frame_begin(
 }
 
 void ecs_frame_end(
-    ecs_world_t *world,
-    float delta_time)
+    ecs_world_t *world)
 {
     world->stats.frame_count_total ++;
 
@@ -626,11 +625,11 @@ bool ecs_progress(
     ecs_world_t *world,
     float user_delta_time)
 {
-    float delta_time = ecs_frame_begin(world, user_delta_time);
+    ecs_frame_begin(world, user_delta_time);
 
     ecs_workers_progress(world);
 
-    ecs_frame_end(world, delta_time);
+    ecs_frame_end(world);
 
     return !world->should_quit;
 }
