@@ -270,6 +270,8 @@ void* _ecs_map_get(
     size_t elem_size,
     ecs_map_key_t key)
 {
+    (void)elem_size;
+
     if (!map) {
         return NULL;
     }

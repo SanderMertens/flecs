@@ -158,6 +158,8 @@ bool build_pipeline(
     ecs_entity_t pipeline,
     EcsPipelineQuery *pq)
 {
+    (void)pipeline;
+    
     ecs_query_iter(pq->query);
 
     if (pq->match_count == pq->query->match_count) {
