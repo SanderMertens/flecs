@@ -762,6 +762,48 @@ void World_control_fps_busy_app() {
     ecs_fini(world);
 }
 
+void World_measure_fps_vs_actual() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_target_fps(world, 60);
+
+    /* Run 10 times, test if one second has passed */
+    ecs_time_t t;
+    ecs_os_get_time(&t);
+    int32_t i;
+    for (i = 0; i < 60; i ++) {
+        ecs_progress(world, 0);
+    }
+
+    float elapsed = ecs_time_measure(&t);
+    test_assert(elapsed >= 0.9);
+
+    ecs_fini(world);
+}
+
+void World_measure_delta_time_vs_actual() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_target_fps(world, 60);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    /* Run 10 times, test if one second has passed */
+    ecs_time_t t;
+    float delta_time = 0;
+    ecs_os_get_time(&t);
+    int32_t i;
+    for (i = 0; i < 60; i ++) {
+        ecs_progress(world, 0);
+        delta_time += stats->delta_time;
+    }
+
+    float elapsed = ecs_time_measure(&t);
+    test_assert(delta_time - elapsed < 0.1);
+    test_assert(elapsed >= 0.9);    
+
+    ecs_fini(world);
+}
+
 static
 void RandomSystem(ecs_iter_t *it) {
     /* wait at most 16msec */

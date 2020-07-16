@@ -739,6 +739,8 @@ void World_control_fps_busy_system(void);
 void World_control_fps_busy_app(void);
 void World_control_fps_random_system(void);
 void World_control_fps_random_app(void);
+void World_measure_fps_vs_actual(void);
+void World_measure_delta_time_vs_actual(void);
 void World_world_stats(void);
 void World_quit(void);
 void World_get_delta_time(void);
@@ -3807,7 +3809,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 30,
+        .testcase_count = 32,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -3892,6 +3894,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "control_fps_random_app",
                 .function = World_control_fps_random_app
+            },
+            {
+                .id = "measure_fps_vs_actual",
+                .function = World_measure_fps_vs_actual
+            },
+            {
+                .id = "measure_delta_time_vs_actual",
+                .function = World_measure_delta_time_vs_actual
             },
             {
                 .id = "world_stats",

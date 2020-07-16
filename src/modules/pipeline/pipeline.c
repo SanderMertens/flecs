@@ -1,6 +1,6 @@
 #include "pipeline.h"
 
-ecs_type_t ecs_type(EcsPipelineQuery);
+ECS_TYPE_DECL(EcsPipelineQuery);
 
 typedef struct EcsPipelineQuery {
     ecs_query_t *query;
@@ -456,6 +456,11 @@ float insert_sleep(
 {
     ecs_time_t start = *stop;
     float delta_time = ecs_time_measure(stop);
+
+    if (!world->stats.target_fps) {
+        return delta_time;
+    }
+
     float target_delta_time = (1.0 / world->stats.target_fps);
     float world_sleep_err = 
         world->stats.sleep_err / world->stats.frame_count_total;
@@ -477,7 +482,6 @@ float insert_sleep(
             sleep_time = 0;
         } 
     }
-
 
     /* If the time we need to sleep is large enough to warrant a sleep, sleep */
     if (sleep > (sleep_time - world_sleep_err)) {
@@ -538,6 +542,8 @@ float start_measure_frame(
         do {
             if (world->frame_start_time.sec) {
                 delta_time = insert_sleep(world, &t);
+
+                ecs_time_measure(&t);
             } else {
                 ecs_time_measure(&t);
                 if (world->stats.target_fps) {
@@ -739,7 +745,7 @@ void FlecsPipelineImport(
     ecs_bootstrap_tag(world, EcsOnStore);
     ecs_bootstrap_tag(world, EcsPostFrame);
 
-    ecs_type(EcsPipelineQuery) = ecs_bootstrap_type(world, ecs_entity(EcsPipelineQuery));
+    ECS_TYPE_IMPL(EcsPipelineQuery);
 
     /* Set ctor and dtor for PipelineQuery */
     ecs_set(world, ecs_entity(EcsPipelineQuery), EcsComponentLifecycle, {
