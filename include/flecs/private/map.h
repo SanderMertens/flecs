@@ -127,6 +127,7 @@ FLECS_EXPORT
 ecs_map_t* ecs_map_copy(
     const ecs_map_t *map);
 
+#ifndef FLECS_LEGACY
 #define ecs_map_each(map, T, key, var, ...)\
     {\
         ecs_map_iter_t it = ecs_map_iter(map);\
@@ -138,7 +139,7 @@ ecs_map_t* ecs_map_copy(
             __VA_ARGS__\
         }\
     }
-
+#endif
 #ifdef __cplusplus
 }
 #endif

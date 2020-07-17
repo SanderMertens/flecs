@@ -37,9 +37,6 @@ void _ecs_trace(
     const char *fmt,
     ...);
 
-#define ecs_trace(lvl, ...)\
-    _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
-
 FLECS_EXPORT
 void _ecs_warn(
     const char *file,
@@ -47,24 +44,29 @@ void _ecs_warn(
     const char *fmt,
     ...);
 
-#define ecs_warn(...)\
-    _ecs_warn(__FILE__, __LINE__, __VA_ARGS__)
-
 FLECS_EXPORT
 void _ecs_err(
     const char *file,
     int32_t line,
     const char *fmt,
     ...);
-
-#define ecs_err(...)\
-    _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
-
 FLECS_EXPORT
 void ecs_log_push(void);
 
 FLECS_EXPORT
 void ecs_log_pop(void);
+
+#ifndef FLECS_LEGACY
+
+#define ecs_trace(lvl, ...)\
+    _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
+
+#define ecs_warn(...)\
+    _ecs_warn(__FILE__, __LINE__, __VA_ARGS__)
+
+#define ecs_err(...)\
+    _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
+
 
 /* If in debug mode and no tracing verbosity is defined, compile all tracing */
 #if !defined(NDEBUG) && !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
@@ -92,7 +94,7 @@ void ecs_log_pop(void);
 #define ecs_trace_2(...)
 #define ecs_trace_3(...)
 #endif
-
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Exceptions
@@ -140,9 +142,13 @@ void _ecs_parser_error(
     const char *fmt,
     ...);
 
+#ifndef FLECS_LEGACY
+
 #define ecs_parser_error(name, expr, column, ...)\
     _ecs_parser_error(name, expr, column, __VA_ARGS__);\
     abort()
+
+#endif
 
 #ifdef __cplusplus
 }

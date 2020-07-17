@@ -305,6 +305,7 @@ ecs_vector_t* _ecs_vector_copy(
 #define ecs_vector_copy_t(src, size, alignment) \
     _ecs_vector_copy(src, ECS_VECTOR_U(size, alignment))
 
+#ifndef FLECS_LEGACY
 #define ecs_vector_each(vector, T, var, ...)\
     {\
         int var##_i, var##_count = ecs_vector_count(vector);\
@@ -314,7 +315,7 @@ ecs_vector_t* _ecs_vector_copy(
             __VA_ARGS__\
         }\
     }
-
+#endif
 #ifdef __cplusplus
 }
 #endif

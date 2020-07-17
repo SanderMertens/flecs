@@ -97,11 +97,13 @@ typedef struct EcsContext {
  * For more details on system signatures and phases see the Flecs manual.
  */
 
+#ifndef FLECS_LEGACY
 #define ECS_SYSTEM(world, name, kind, ...) \
     ecs_iter_action_t ecs_iter_action(name) = name;\
     ecs_entity_t name = ecs_new_system(world, 0, #name, kind, #__VA_ARGS__, ecs_iter_action(name));\
     (void)ecs_iter_action(name);\
     (void)name;
+#endif
 
 #define ECS_TRIGGER(world, name, kind, component) \
     ecs_entity_t __F##name = ecs_new_trigger(world, 0, #name, kind, #component, name);\

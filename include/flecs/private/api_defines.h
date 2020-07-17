@@ -61,6 +61,14 @@ typedef char bool;
 #define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
+#if defined(COMPILER_GCC) || defined(__clang__)
+#define ECS_UNUSED __attribute__((unused))
+#else
+#define ECS_UNUSED
+#endif
+
+#define ECS_ALIGN(size, alignment) (((((size) - 1) / (alignment)) + 1) * (alignment))
+
 /* Simple utility for determining the max of two values */
 #define ECS_MAX(a, b) ((a > b) ? a : b)
 
@@ -121,7 +129,7 @@ typedef char bool;
 /** Translate C type to module struct. */
 #define ecs_iter_action(T) FLECS__F##T
 
-
+#ifndef FLECS_LEGACY
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities for working with trait identifiers
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,7 +240,7 @@ typedef char bool;
             __VA_ARGS__\
         }\
     }
-
+#endif
 #ifdef __cplusplus
 }
 #endif

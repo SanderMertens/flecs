@@ -458,9 +458,11 @@ void ecs_set_component_actions_w_entity(
     ecs_entity_t component,
     EcsComponentLifecycle *actions);
 
+#ifndef FLECS_LEGACY
 #define ecs_set_component_actions(world, component, ...)\
     ecs_set_component_actions_w_entity(world, ecs_entity(component), &(EcsComponentLifecycle)__VA_ARGS__)
 
+#endif
 /** Set a world context.
  * This operation allows an application to register custom data with a world
  * that can be accessed anywhere where the application has the world object.
@@ -1037,6 +1039,8 @@ void ecs_bulk_add_remove_type(
 #define ecs_has_trait(world, entity, component, trait)\
     ecs_has_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)))
 
+
+#ifndef FLECS_LEGACY
 /** Set trait for component. 
  * This operation adds a trait for an entity and component. Traits can be added
  * multiple times to the same entity, as long as it is for different components.
@@ -1055,6 +1059,7 @@ void ecs_bulk_add_remove_type(
 #define ecs_set_trait(world, entity, component, trait, ...)\
     ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)), sizeof(trait), &(trait)__VA_ARGS__)
 
+
 /** Set tag trait for component. 
  * This operation is similar to ecs_set_trait, but is used for trait tags. When
  * a trait tag is set on an entity, the trait type is not used (tags have no
@@ -1070,7 +1075,7 @@ void ecs_bulk_add_remove_type(
 #define ecs_set_trait_tag(world, entity, trait, component, ...)\
     ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_entity(component), trait), sizeof(component), &(component)__VA_ARGS__)
 
-
+#endif
 /** Get trait for component. 
  * This operation obtains the value of a trait for a componetn that has been 
  * added by ecs_set_trait.
