@@ -8,7 +8,6 @@
         "amalgamate": true
     },
     "lang.c": {
-        "defines": ["FOOBAR"],
         "${os linux}": {
             "lib": ["rt"]
         }
