@@ -69,7 +69,7 @@ void merge_table(
             int32_t src_count = ecs_table_count(src_table);
 
             if (to_remove && to_remove->count && src_data) {
-                ecs_run_deinit_actions(world, src_table, src_data, 
+                ecs_run_deinit_actions(world, &world->stage, src_table, src_data, 
                     0, src_count, *to_remove, true);
             }
 

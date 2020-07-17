@@ -15,10 +15,10 @@
 // #define FLECS_NO_ADDONS
 
 #include "flecs/private/api_defines.h"
-#include "flecs/private/vector.h"  /* Vector datatype */
-#include "flecs/private/sparse.h"  /* Sparse set */
-#include "flecs/private/map.h"     /* Hashmap */
-#include "flecs/private/strbuf.h"  /* Efficient string builder */
+#include "flecs/private/vector.h"        /* Vector datatype */
+#include "flecs/private/sparse.h"        /* Sparse set */
+#include "flecs/private/map.h"           /* Hashmap */
+#include "flecs/private/strbuf.h"        /* Efficient string builder */
 
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
 

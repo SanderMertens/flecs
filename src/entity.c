@@ -233,6 +233,7 @@ bool ecs_get_info(
 static
 void run_component_trigger_for_entities(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_vector_t *trigger_vec,
     ecs_entity_t component,
     ecs_table_t *table,
@@ -241,6 +242,7 @@ void run_component_trigger_for_entities(
     int32_t count,
     ecs_entity_t *entities)
 {    
+    (void)world;
     int32_t i, trigger_count = ecs_vector_count(trigger_vec);
     if (trigger_count) {
         EcsTrigger *triggers = ecs_vector_first(trigger_vec, EcsTrigger);
@@ -252,7 +254,7 @@ void run_component_trigger_for_entities(
         int32_t columns[1] = { index };
 
         ecs_iter_t it = {
-            .world = world,
+            .world = stage->world,
             .columns = columns,
             .table_count = 1,
             .inactive_table_count = 1,
@@ -275,6 +277,7 @@ void run_component_trigger_for_entities(
 
 void ecs_run_component_trigger(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_vector_t *trigger_vec,
     ecs_entity_t component,
     ecs_table_t *table,
@@ -294,7 +297,7 @@ void ecs_run_component_trigger(
     entities = ECS_OFFSET(entities, sizeof(ecs_entity_t) * row);
 
     run_component_trigger_for_entities(
-        world, trigger_vec, component, table, data, row, count, entities);
+        world, stage, trigger_vec, component, table, data, row, count, entities);
 }
 
 static
@@ -734,7 +737,7 @@ void ecs_run_init_actions(
                 ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_entity_t *ids = ecs_vector_first(data->entities, ecs_entity_t);
                 void *ctx = c_info->lifecycle.ctx;
-                ctor(world, component, ids, ptr, size, count, ctx);
+                ctor(stage->world, component, ids, ptr, size, count, ctx);
             }
 
             if (has_base && !comp_mask_is_set(set_mask, component)) {
@@ -753,7 +756,7 @@ void ecs_run_init_actions(
 
         if (triggers) {
             ecs_run_component_trigger(
-                world, triggers, component, table, data, row, count);
+                world, stage, triggers, component, table, data, row, count);
         }
     }
 
@@ -767,6 +770,7 @@ void ecs_run_init_actions(
 
 void ecs_run_deinit_actions(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
@@ -816,7 +820,7 @@ void ecs_run_deinit_actions(
 
         if (triggers && run_triggers) {
             ecs_run_component_trigger(
-                world, triggers, component, table, data, row, count);
+                world, stage, triggers, component, table, data, row, count);
         }
 
         if (cur < column_count) {
@@ -829,7 +833,7 @@ void ecs_run_deinit_actions(
             if (dtor) {
                 void *ctx = c_info->lifecycle.ctx;
                 ecs_entity_t *ids = ecs_vector_first(data->entities, ecs_entity_t);
-                dtor(world, component, ids, ptr, size, count, ctx);
+                dtor(stage->world, component, ids, ptr, size, count, ctx);
             }
         }
     } 
@@ -967,7 +971,7 @@ int32_t move_entity(
                 dst_row, 1, dst_table->un_set_all);
 
             ecs_run_deinit_actions(
-                world, src_table, src_data, src_row, 1, *removed, true);
+                world, stage, src_table, src_data, src_row, 1, *removed, true);
         }            
     }
 
@@ -1010,7 +1014,7 @@ void delete_entity(
             src_row, 1, NULL);
 
         ecs_run_deinit_actions(
-            world, src_table, src_data, src_row, 1, *removed, true);
+            world, stage, src_table, src_data, src_row, 1, *removed, true);
     }
 
     ecs_table_delete(world, stage, src_table, src_data, src_row);
@@ -1964,7 +1968,6 @@ ecs_entity_t ecs_set_ptr_w_entity(
     size_t size,
     const void *ptr)
 {    
-    ecs_world_t *original_world = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
 
     ecs_entities_t added = {
@@ -2005,7 +2008,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
     ecs_table_mark_dirty(info.table, component);
 
-    ecs_run_set_systems(original_world, stage, &added, 
+    ecs_run_set_systems(world, stage, &added, 
         info.table, info.data, info.row, 1, false);
 
     ecs_defer_end(world, stage);

@@ -159,7 +159,7 @@ bool build_pipeline(
     EcsPipelineQuery *pq)
 {
     (void)pipeline;
-    
+
     ecs_query_iter(pq->query);
 
     if (pq->match_count == pq->query->match_count) {
@@ -323,15 +323,14 @@ void ecs_pipeline_progress(
     float delta_time)
 {
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
-    ecs_world_t *real_world = world;
-    ecs_get_stage(&real_world);
+    ecs_stage_t *stage = ecs_get_stage(&world);
 
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
-    ecs_worker_begin(real_world);
+    ecs_worker_begin(world);
     
     ecs_iter_t it = ecs_query_iter(pq->query);
     while (ecs_query_next(&it)) {
@@ -341,11 +340,11 @@ void ecs_pipeline_progress(
         for(i = 0; i < it.count; i ++) {
             ecs_entity_t e = it.entities[i];
             
-            ecs_run_intern(world, real_world, e, &sys[i], delta_time, 0, 0, 
+            ecs_run_intern(world, stage, e, &sys[i], delta_time, 0, 0, 
                 NULL, NULL, false);
 
             ran_since_merge ++;
-            real_world->stats.systems_ran_frame ++;
+            world->stats.systems_ran_frame ++;
 
             if (op != op_last && ran_since_merge == op->count) {
                 ran_since_merge = 0;
@@ -356,7 +355,7 @@ void ecs_pipeline_progress(
                  * current position (system). If there are a lot of systems
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
-                if (ecs_worker_sync(real_world)) {
+                if (ecs_worker_sync(world)) {
                     i = iter_reset(pq, &it, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
                     sys = ecs_column(&it, EcsSystem, 1);
@@ -365,7 +364,7 @@ void ecs_pipeline_progress(
         }
     }
 
-    ecs_worker_end(real_world);
+    ecs_worker_end(world);
 }
 
 static

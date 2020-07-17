@@ -150,7 +150,7 @@ void invoke_status_action(
 }
 
 static
-void mark_dirty(
+void mark_columns_dirty(
     ecs_iter_t *it,
     EcsSystem *system_data)
 {
@@ -379,7 +379,7 @@ void ecs_set_system_status_action(
 
 ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
-    ecs_world_t *real_world,
+    ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
     float delta_time,
@@ -398,7 +398,7 @@ ecs_entity_t ecs_run_intern(
 
     if (tick_source) {
         const EcsTickSource *tick = ecs_get(
-            real_world, tick_source, EcsTickSource);
+            world, tick_source, EcsTickSource);
 
         if (tick) {
             time_elapsed = tick->time_elapsed;
@@ -418,7 +418,7 @@ ecs_entity_t ecs_run_intern(
     }
 
     ecs_time_t time_start;
-    bool measure_time = real_world->measure_system_time;
+    bool measure_time = world->measure_system_time;
     if (measure_time) {
         ecs_os_get_time(&time_start);
     }
@@ -428,11 +428,11 @@ ecs_entity_t ecs_run_intern(
 
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
-    it.world = world;
+    it.world = stage->world;
     it.system = system;
     it.delta_time = delta_time;
     it.delta_system_time = time_elapsed;
-    it.world_time = real_world->stats.world_time_total;
+    it.world_time = world->stats.world_time_total;
     it.frame_offset = offset;
     
     /* Set param if provided, otherwise use system context */
@@ -446,22 +446,22 @@ ecs_entity_t ecs_run_intern(
 
     /* If no filter is provided, just iterate tables & invoke action */
     if (!filter) {
-        if (ran_by_app || world == real_world) {
+        if (ran_by_app || world == stage->world) {
             while (ecs_query_next(&it)) {
                 action(&it);
                 if (has_out_columns) {
-                    mark_dirty(&it, system_data);
+                    mark_columns_dirty(&it, system_data);
                 }
             }
         } else {
-            ecs_thread_t *thread = (ecs_thread_t*)world;
-            int32_t total = ecs_vector_count(real_world->workers);
+            ecs_thread_t *thread = (ecs_thread_t*)stage->world;
+            int32_t total = ecs_vector_count(world->workers);
             int32_t current = thread->index;
 
             while (ecs_query_next_worker(&it, current, total)) {
                 action(&it);
                 if (has_out_columns) {
-                    mark_dirty(&it, system_data);
+                    mark_columns_dirty(&it, system_data);
                 }                
             }
         }
@@ -470,14 +470,13 @@ ecs_entity_t ecs_run_intern(
     } else {
         while (ecs_query_next(&it)) {
             ecs_table_t *table = it.table;
-            if (!ecs_table_match_filter(real_world, table, filter))
-            {
+            if (!ecs_table_match_filter(world, table, filter)) {
                 continue;
             }
 
             action(&it);
             if (has_out_columns) {
-                mark_dirty(&it, system_data);
+                mark_columns_dirty(&it, system_data);
             }            
         }        
     }
@@ -502,25 +501,20 @@ ecs_entity_t ecs_run_w_filter(
     const ecs_filter_t *filter,
     void *param)
 {
-    ecs_world_t *real_world = world;
-    if (world->magic == ECS_THREAD_MAGIC) {
-        real_world = ((ecs_thread_t*)world)->world; /* dispel the magic */
-    }
-
-    ecs_get_stage(&real_world);
-    bool in_progress = ecs_staging_begin(real_world);
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    bool in_progress = ecs_staging_begin(world);
 
     EcsSystem *system_data = (EcsSystem*)ecs_get(
-        real_world, system, EcsSystem);
+        world, system, EcsSystem);
     assert(system_data != NULL);
 
     ecs_entity_t interrupted_by = ecs_run_intern(
-        world, real_world, system, system_data, delta_time, offset, limit, 
+        world, stage, system, system_data, delta_time, offset, limit, 
         filter, param, true);
 
     /* If world wasn't in progress when we entered this function, we need to
      * merge and reset the in_progress value */
-    ecs_staging_end(real_world, in_progress);
+    ecs_staging_end(world, in_progress);
 
     return interrupted_by;
 }
@@ -543,9 +537,6 @@ void ecs_run_monitor(
     int32_t count,
     ecs_entity_t *entities)
 {
-    ecs_world_t *original_world = world;
-    ecs_get_stage(&world);
-
     ecs_query_t *query = monitor->query;
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -561,7 +552,7 @@ void ecs_run_monitor(
     ecs_query_set_iter( world, stage, query, &it, 
         monitor->matched_table_index, row, count);
 
-    it.world = original_world;
+    it.world = stage->world;
     it.triggered_by = components;
     it.param = system_data->ctx;
 

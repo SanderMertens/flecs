@@ -335,6 +335,16 @@ typedef struct ecs_op_t {
  * iterating. Additionally, worker threads have their own stage that lets them
  * mutate the state of entities without requiring locks. */
 struct ecs_stage_t {
+    /* This points to the world pointer associated with the stage. Even though
+     * stages belong to the same world, when multithreaded, an application will
+     * receive a pointer not to the world, but to a thread. This allows for
+     * transparently passing the thread context without having to fallback on
+     * more expensive methods such as thread local storage. This world pointer
+     * is stored in the stage, so that it can be easily passed around when for
+     * example invoking callbacks, and prevents the API from passing around two
+     * world pointers (or constantly obtaining the real world when needed). */
+    ecs_world_t *world;
+
     /* If this is not main stage, 
      * changes to the entity index 
      * are buffered here */

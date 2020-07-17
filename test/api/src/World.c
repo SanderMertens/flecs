@@ -664,7 +664,14 @@ void World_control_fps() {
     test_assert(e != 0);
 
     double start, now = 0;
-    ecs_set_target_fps(world, 60);
+    ecs_set_target_fps(world, 20);
+
+    /* Run a few times to give the code an opportunity to calibrate */
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -680,8 +687,9 @@ void World_control_fps() {
         count ++;
     } while ((now - start) < 1.0);
 
-    test_assert(count >= 50);
-    test_assert(count < 65);
+    /* CI can be unpredictable, just make sure it's in the right ballpark */
+    test_assert(count >= 15);
+    test_assert(count < 25);
 
     ecs_fini(world);
 }
@@ -708,7 +716,7 @@ void World_control_fps_busy_system() {
     ECS_SYSTEM(world, BusySystem, EcsOnUpdate, 0);
 
     double start, now = 0;
-    ecs_set_target_fps(world, 60);
+    ecs_set_target_fps(world, 20);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -726,8 +734,8 @@ void World_control_fps_busy_system() {
 
     /* FPS control relies on sleep, which relies on the OS scheduler. Therefore
      * pick a wide enough range to avoid tests failing at random. */
-    test_assert(count >= 50);
-    test_assert(count < 65);
+    test_assert(count >= 15);
+    test_assert(count < 25);
 
     ecs_fini(world);
 }
@@ -736,7 +744,7 @@ void World_control_fps_busy_app() {
     ecs_world_t *world = ecs_init();
 
     double start, now = 0;
-    ecs_set_target_fps(world, 60);
+    ecs_set_target_fps(world, 20);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -756,8 +764,8 @@ void World_control_fps_busy_app() {
 
     /* FPS control relies on sleep, which relies on the OS scheduler. Therefore
      * pick a wide enough range to avoid tests failing at random. */
-    test_assert(count >= 50);
-    test_assert(count < 65);
+    test_assert(count >= 15);
+    test_assert(count < 25);
 
     ecs_fini(world);
 }
@@ -817,7 +825,7 @@ void World_control_fps_random_system() {
     ECS_SYSTEM(world, RandomSystem, EcsOnUpdate, 0);
 
     double start, now = 0;
-    ecs_set_target_fps(world, 60);
+    ecs_set_target_fps(world, 20);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -835,8 +843,8 @@ void World_control_fps_random_system() {
 
     /* FPS control relies on sleep, which relies on the OS scheduler. Therefore
      * pick a wide enough range to avoid tests failing at random. */
-    test_assert(count >= 50);
-    test_assert(count < 65);
+    test_assert(count >= 15);
+    test_assert(count < 25);
 
     ecs_fini(world);
 }
@@ -845,7 +853,7 @@ void World_control_fps_random_app() {
     ecs_world_t *world = ecs_init();
 
     double start, now = 0;
-    ecs_set_target_fps(world, 60);
+    ecs_set_target_fps(world, 20);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -866,8 +874,8 @@ void World_control_fps_random_app() {
 
     /* FPS control relies on sleep, which relies on the OS scheduler. Therefore
      * pick a wide enough range to avoid tests failing at random. */
-    test_assert(count >= 55);
-    test_assert(count < 65);
+    test_assert(count >= 15);
+    test_assert(count < 25);
 
     ecs_fini(world);
 }
