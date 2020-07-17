@@ -101,6 +101,9 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+## Building
+Add flecs.c and flecs.h to your project.
+
 ## Modules
 The following modules are available in [flecs-hub](https://github.com/flecs-hub) and are compatible with v2:
 
@@ -119,45 +122,3 @@ Module      | Description
 [flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe physics and movement
 [flecs.systems.civetweb](https://github.com/flecs-hub/flecs-systems-civetweb) | A civetweb-based implementation of flecs.components.http
 
-## Building
-You can build flecs with either CMake, Meson, [Bake](https://github.com/SanderMertens/bake) or embed the sources into your own project.
-
-### Embedding:
-Flecs can be easily embedded into projects, as it does not require complex build instructions. The following build instructions are enough to build a functioning Flecs library with gcc:
-
-```
-gcc src/*.c -Iinclude --shared -o libflecs.so
-```
-
-### CMake
-```
-git clone https://github.com/SanderMertens/flecs
-cd flecs
-mkdir build
-cd build
-cmake ..
-make
-```
-
-### Meson
-
-```
-git clone https://github.com/SanderMertens/flecs
-cd flecs
-meson build --default-library=both
-cd build
-ninja
-```
-
-### Bake
-Install bake first:
-```
-git clone https://github.com/SanderMertens/bake
-make -C bake/build-$(uname)
-bake/bake setup
-```
-
-To then install Flecs, do:
-```
-bake clone https://github.com/SanderMertens/flecs
-```
