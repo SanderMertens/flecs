@@ -242,6 +242,7 @@ void run_component_trigger_for_entities(
     int32_t count,
     ecs_entity_t *entities)
 {    
+    (void)world;
     int32_t i, trigger_count = ecs_vector_count(trigger_vec);
     if (trigger_count) {
         EcsTrigger *triggers = ecs_vector_first(trigger_vec, EcsTrigger);
