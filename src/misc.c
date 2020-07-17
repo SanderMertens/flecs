@@ -217,6 +217,7 @@ void ecs_increase_timer_resolution(bool enable)
 #else
 void ecs_increase_timer_resolution(bool enable)
 {
+    (void)enable;
     return;
 }
 #endif
