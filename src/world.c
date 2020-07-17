@@ -442,6 +442,8 @@ int ecs_fini(
      * will trigger an assert */
     world->magic = 0;
 
+    ecs_increase_timer_resolution(0);
+
     /* The end of the world */
     ecs_os_free(world);
 
@@ -565,6 +567,13 @@ void ecs_measure_system_time(
     world->measure_system_time = enable;
 }
 
+/* Increase timer resolution based on target fps */
+static void set_timer_resolution(float fps)
+{
+    if(fps >= 60.0f) ecs_increase_timer_resolution(1);
+    else ecs_increase_timer_resolution(0);
+}
+
 void ecs_set_target_fps(
     ecs_world_t *world,
     float fps)
@@ -576,6 +585,7 @@ void ecs_set_target_fps(
     if (!world->arg_fps) {
         ecs_measure_frame_time(world, true);
         world->stats.target_fps = fps;
+        set_timer_resolution(fps);
     }
 }
 

@@ -401,6 +401,10 @@ void ecs_os_time_sleep(
     int32_t sec, 
     int32_t nanosec);
 
+/* Increase or reset timer resolution (Windows only) */
+FLECS_EXPORT
+void ecs_increase_timer_resolution(
+    bool enable);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
