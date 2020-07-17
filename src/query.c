@@ -884,17 +884,22 @@ int32_t qsort_table(
     ecs_entity_t pivot_e = entities[p];
     int32_t i = lo - 1, j = hi + 1;
     void *el;    
+
 repeat:
     {
-        do {
-            i ++;
-            el = ELEM(ptr, elem_size, i);
-        } while ( compare(entities[i], el, pivot_e, pivot) < 0);
+        if (i < p) {
+            do {
+                i ++;
+                el = ELEM(ptr, elem_size, i);
+            } while ( compare(entities[i], el, pivot_e, pivot) < 0);
+        }
 
-        do {
-            j --;
-            el = ELEM(ptr, elem_size, j);
-        } while ( compare(entities[j], el, pivot_e, pivot) > 0);
+        if (j > p) {
+            do {
+                j --;
+                el = ELEM(ptr, elem_size, j);
+            } while ( compare(entities[j], el, pivot_e, pivot) > 0);
+        }
 
         if (i >= j) {
             return j;
