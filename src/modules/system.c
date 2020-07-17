@@ -150,7 +150,7 @@ void invoke_status_action(
 }
 
 static
-void mark_dirty(
+void mark_columns_dirty(
     ecs_iter_t *it,
     EcsSystem *system_data)
 {
@@ -450,7 +450,7 @@ ecs_entity_t ecs_run_intern(
             while (ecs_query_next(&it)) {
                 action(&it);
                 if (has_out_columns) {
-                    mark_dirty(&it, system_data);
+                    mark_columns_dirty(&it, system_data);
                 }
             }
         } else {
@@ -461,7 +461,7 @@ ecs_entity_t ecs_run_intern(
             while (ecs_query_next_worker(&it, current, total)) {
                 action(&it);
                 if (has_out_columns) {
-                    mark_dirty(&it, system_data);
+                    mark_columns_dirty(&it, system_data);
                 }                
             }
         }
@@ -476,7 +476,7 @@ ecs_entity_t ecs_run_intern(
 
             action(&it);
             if (has_out_columns) {
-                mark_dirty(&it, system_data);
+                mark_columns_dirty(&it, system_data);
             }            
         }        
     }

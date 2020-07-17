@@ -569,7 +569,8 @@ void ecs_table_reset(
     }
 }
 
-void mark_dirty(
+static
+void mark_table_dirty(
     ecs_table_t *table,
     int32_t index)
 {
@@ -582,7 +583,7 @@ void ecs_table_mark_dirty_w_index(
     ecs_table_t *table,
     int32_t index)
 {
-    mark_dirty(table, index);
+    mark_table_dirty(table, index);
 }
 
 void ecs_table_mark_dirty(
@@ -649,7 +650,7 @@ int32_t ecs_table_append(
     realloc |= prev_r != data->record_ptrs;
 
     /* If the table is monitored indicate that there has been a change */
-    mark_dirty(table, 0);
+    mark_table_dirty(table, 0);
 
     int32_t index = ecs_vector_count(data->entities) - 1;
 
@@ -740,7 +741,7 @@ void ecs_table_delete(
     }
 
     /* If the table is monitored indicate that there has been a change */
-    mark_dirty(table, 0);    
+    mark_table_dirty(table, 0);    
 
     if (!world->in_progress && !count) {
         ecs_table_activate(world, table, NULL, false);
@@ -799,7 +800,7 @@ int32_t ecs_table_grow(
     }
 
     /* If the table is monitored indicate that there has been a change */
-    mark_dirty(table, 0);    
+    mark_table_dirty(table, 0);    
 
     int32_t row_count = ecs_vector_count(data->entities);
     if (!world->in_progress && row_count == count) {
@@ -963,7 +964,7 @@ void ecs_table_swap(
     }
 
     /* If the table is monitored indicate that there has been a change */
-    mark_dirty(table, 0);    
+    mark_table_dirty(table, 0);    
 }
 
 static
@@ -1051,7 +1052,7 @@ void merge_table_data(
             old_columns[i_old].data = NULL;
 
             /* Mark component column as dirty */
-            mark_dirty(new_table, i_new + 1);
+            mark_table_dirty(new_table, i_new + 1);
             
             i_new ++;
             i_old ++;
@@ -1096,7 +1097,7 @@ void merge_table_data(
     old_data->record_ptrs = NULL;    
 
     /* Mark entity column as dirty */
-    mark_dirty(new_table, 0);      
+    mark_table_dirty(new_table, 0);      
 }
 
 void ecs_table_merge(
