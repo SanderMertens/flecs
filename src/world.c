@@ -231,6 +231,9 @@ ecs_world_t *ecs_mini(void) {
     ecs_stage_init(world, &world->stage);
     ecs_stage_init(world, &world->temp_stage);
 
+    world->stage.world = world;
+    world->temp_stage.world = world;
+
     ecs_bootstrap(world);
 
     ecs_log_pop();

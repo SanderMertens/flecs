@@ -57,6 +57,7 @@ void start_workers(
         thread->stage = ecs_vector_add(&world->worker_stages, ecs_stage_t);
         ecs_stage_init(world, thread->stage);
         thread->stage->id = 2 + i; /* 0 and 1 are reserved for main and temp */
+        thread->stage->world = (ecs_world_t*)thread;
 
         thread->thread = ecs_os_thread_new(worker, thread);
         ecs_assert(thread->thread != 0, ECS_THREAD_ERROR, NULL);

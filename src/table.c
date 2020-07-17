@@ -115,7 +115,7 @@ void run_on_remove_handlers(
 
         /* Run deinit actions (dtors) for components. Don't run triggers */
         ecs_run_deinit_actions(
-            world, table, data, 0, count, components, false);
+            world, &world->stage, table, data, 0, count, components, false);
     }
 }
 

@@ -192,6 +192,7 @@ void ecs_run_init_actions(
 
 void ecs_run_deinit_actions(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
@@ -201,6 +202,7 @@ void ecs_run_deinit_actions(
 
 void ecs_run_component_trigger(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_vector_t *trigger_vec,
     ecs_entity_t component,
     ecs_table_t *table,
@@ -376,7 +378,7 @@ void ecs_system_activate(
 /* Internal function to run a system */
 ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
-    ecs_world_t *real_world,
+    ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
     float delta_time,

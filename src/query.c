@@ -1694,8 +1694,7 @@ bool ecs_query_next(
         table_count = ecs_vector_count(query->tables);
     }
 
-    ecs_world_t *real_world = world;
-    ecs_get_stage(&real_world);
+    ecs_get_stage(&world);
 
     int32_t offset = iter->offset;
     int32_t limit = iter->limit;
@@ -1718,7 +1717,7 @@ bool ecs_query_next(
         int32_t first = 0, count = 0;
 
         if (world_table) {
-            table_data = ecs_table_get_data(real_world, world_table);
+            table_data = ecs_table_get_data(world, world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
             it->table_columns = table_data->columns;
             

@@ -43,8 +43,6 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* The API uses the native bool type in C++, or a custom one in C */
-#include <stdbool.h>
-
 #ifndef __cplusplus
 #undef bool
 #undef true
