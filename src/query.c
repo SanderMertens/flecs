@@ -868,7 +868,7 @@ void resolve_cascade_container(
 #define ELEM(ptr, size, index) ECS_OFFSET(ptr, size * index)
 
 static
-int32_t qsort_table(
+int32_t qsort_partition(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -887,19 +887,15 @@ int32_t qsort_table(
 
 repeat:
     {
-        if (i < p) {
-            do {
-                i ++;
-                el = ELEM(ptr, elem_size, i);
-            } while ( compare(entities[i], el, pivot_e, pivot) < 0);
-        }
+        do {
+            i ++;
+            el = ELEM(ptr, elem_size, i);
+        } while ( compare(entities[i], el, pivot_e, pivot) < 0);
 
-        if (j > p) {
-            do {
-                j --;
-                el = ELEM(ptr, elem_size, j);
-            } while ( compare(entities[j], el, pivot_e, pivot) > 0);
-        }
+        do {
+            j --;
+            el = ELEM(ptr, elem_size, j);
+        } while ( compare(entities[j], el, pivot_e, pivot) > 0);
 
         if (i >= j) {
             return j;
@@ -907,8 +903,40 @@ repeat:
 
         ecs_table_swap(world, &world->stage, table, data, i, j);
 
+        if (p == i) {
+            pivot = ELEM(ptr, elem_size, j);
+            pivot_e = entities[j];
+        } else if (p == j) {
+            pivot = ELEM(ptr, elem_size, i);
+            pivot_e = entities[i];
+        }
+
         goto repeat;
     }
+}
+
+static
+void qsort_array(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    ecs_entity_t *entities,
+    void *ptr,
+    int32_t size,
+    int32_t lo,
+    int32_t hi,
+    ecs_compare_action_t compare)
+{   
+    if ((hi - lo) < 1)  {
+        return;
+    }   
+
+    int32_t p = qsort_partition(
+        world, table, data, entities, ptr, size, lo, hi, compare);
+
+    qsort_array(world, table, data, entities, ptr, size, lo, p, compare);
+
+    qsort_array(world, table, data, entities, ptr, size, p + 1, hi, compare); 
 }
 
 static
@@ -939,14 +967,7 @@ void sort_table(
         ptr = ecs_vector_first_t(column->data, size, column->alignment);
     }
 
-    int32_t p = qsort_table(
-        world, table, data, entities, ptr, size, 0, count - 1, compare);
-
-    qsort_table(
-        world, table, data, entities, ptr, size, 0, p, compare);        
-
-    qsort_table(
-        world, table, data, entities, ptr, size, p + 1, count - 1, compare);
+    qsort_array(world, table, data, entities, ptr, size, 0, count - 1, compare);
 }
 
 /* Helper struct for building sorted table ranges */

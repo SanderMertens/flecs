@@ -402,6 +402,8 @@ void Sorting_sort_after_set(void);
 void Sorting_sort_after_system(void);
 void Sorting_sort_by_component_same_value_1(void);
 void Sorting_sort_by_component_same_value_2(void);
+void Sorting_sort_by_component_move_pivot(void);
+void Sorting_sort_1000_entities(void);
 
 // Testsuite 'Queries'
 void Queries_query_changed_after_new(void);
@@ -2540,7 +2542,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Sorting",
-        .testcase_count = 11,
+        .testcase_count = 13,
         .testcases = (bake_test_case[]){
             {
                 .id = "sort_by_component",
@@ -2585,6 +2587,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "sort_by_component_same_value_2",
                 .function = Sorting_sort_by_component_same_value_2
+            },
+            {
+                .id = "sort_by_component_move_pivot",
+                .function = Sorting_sort_by_component_move_pivot
+            },
+            {
+                .id = "sort_1000_entities",
+                .function = Sorting_sort_1000_entities
             }
         }
     },

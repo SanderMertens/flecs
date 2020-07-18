@@ -71,8 +71,8 @@ void Sorting_sort_by_component_same_value_1() {
     
 
     test_assert(it.entities[0] == e5);
-    test_assert(it.entities[1] == e3);
-    test_assert(it.entities[2] == e4);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.entities[2] == e3);
     test_assert(it.entities[3] == e2);
     test_assert(it.entities[4] == e1);
 
@@ -101,12 +101,12 @@ void Sorting_sort_by_component_same_value_2() {
     test_assert(ecs_query_next(&it));
 
     test_int(it.count, 6);
-    test_assert(it.entities[0] == e2);
-    test_assert(it.entities[1] == e4);
-    test_assert(it.entities[2] == e6);
-    test_assert(it.entities[3] == e5);
+    test_assert(it.entities[0] == e4);
+    test_assert(it.entities[1] == e6);
+    test_assert(it.entities[2] == e2);
+    test_assert(it.entities[3] == e1);
     test_assert(it.entities[4] == e3);
-    test_assert(it.entities[5] == e1);
+    test_assert(it.entities[5] == e5);
 
     test_assert(!ecs_query_next(&it));
 
@@ -654,6 +654,62 @@ void Sorting_sort_after_system() {
     test_assert(it.entities[0] == e3);
 
     test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_by_component_move_pivot() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {5, 0});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 0});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {2, 0});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {1, 0});
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+
+    ecs_iter_t it = ecs_query_iter(q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 4);
+
+    test_assert(it.entities[0] == e4);
+    test_assert(it.entities[1] == e3);
+    test_assert(it.entities[2] == e1);
+    test_assert(it.entities[3] == e2);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_1000_entities() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+
+    for (int i = 0; i < 1000; i ++) {
+        ecs_set(world, 0, Position, {rand()});
+
+        ecs_iter_t it = ecs_query_iter(q);
+        while (ecs_query_next(&it)) {
+            Position *p = ecs_column(&it, Position, 1);
+
+            test_assert(it.count == i + 1);
+
+            int32_t j, x = 0;
+            for (j = 0; j < it.count; j ++) {
+                test_assert(x < p[j].x);
+                x = p[j].x;
+            }
+        }
+    }
 
     ecs_fini(world);
 }
