@@ -706,8 +706,7 @@ void Sorting_sort_1000_entities() {
             test_assert(it.count == (i + 1) * 2);
 
             int32_t j, x = 0;
-            for (j = 0; j < it.count; j ++) {
-                
+            for (j = 0; j < it.count; j ++) {  
                 test_assert(x <= p[j].x);
                 x = p[j].x;
             }
