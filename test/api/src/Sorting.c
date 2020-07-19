@@ -695,17 +695,20 @@ void Sorting_sort_1000_entities() {
     ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
 
     for (int i = 0; i < 1000; i ++) {
-        ecs_set(world, 0, Position, {rand()});
+        int32_t v = rand();
+        ecs_set(world, 0, Position, {v});
+        ecs_set(world, 0, Position, {v});
 
         ecs_iter_t it = ecs_query_iter(q);
         while (ecs_query_next(&it)) {
             Position *p = ecs_column(&it, Position, 1);
 
-            test_assert(it.count == i + 1);
+            test_assert(it.count == (i + 1) * 2);
 
             int32_t j, x = 0;
             for (j = 0; j < it.count; j ++) {
-                test_assert(x < p[j].x);
+                
+                test_assert(x <= p[j].x);
                 x = p[j].x;
             }
         }
