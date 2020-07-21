@@ -286,10 +286,8 @@ bool ecs_strbuf_appendstr(
     ecs_strbuf_t *b,
     const char* str)
 {
-    va_list args;
     return ecs_strbuf_append_intern(
-        b, str, -1, false, args
-    );
+        b, str, -1, false);
 }
 
 bool ecs_strbuf_mergebuff(
