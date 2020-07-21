@@ -113,7 +113,7 @@ unsigned int fast_strncpy(
 
 /* Append a format string to a buffer */
 static
-bool ecs_strbuf_append_intern(
+bool ecs_strbuf_vappend_intern(
     ecs_strbuf_t *b,
     const char* str,
     int n,
@@ -224,6 +224,23 @@ bool ecs_strbuf_append_intern(
     return result;
 }
 
+static 
+bool ecs_strbuf_append_intern(
+    ecs_strbuf_t *b,
+    const char* str,
+    int n,
+    ...)
+{
+    va_list args;
+    va_start(args, n);
+    bool result = ecs_strbuf_vappend_intern(
+        b, str, n, false, args
+    );
+    va_end(args);
+
+    return result;
+}
+
 bool ecs_strbuf_vappend(
     ecs_strbuf_t *b,
     const char* fmt,
@@ -243,7 +260,7 @@ bool ecs_strbuf_append(
 {
     va_list args;
     va_start(args, fmt);
-    bool result = ecs_strbuf_append_intern(
+    bool result = ecs_strbuf_vappend_intern(
         b, fmt, -1, true, args
     );
     va_end(args);
@@ -256,9 +273,8 @@ bool ecs_strbuf_appendstrn(
     const char* str,
     int32_t len)
 {
-    va_list args;
     return ecs_strbuf_append_intern(
-        b, str, len, false, args
+        b, str, len
     );
 }
 
@@ -286,9 +302,8 @@ bool ecs_strbuf_appendstr(
     ecs_strbuf_t *b,
     const char* str)
 {
-    va_list args;
     return ecs_strbuf_append_intern(
-        b, str, -1, false, args
+        b, str, -1
     );
 }
 
@@ -414,7 +429,7 @@ bool ecs_strbuf_list_append(
 
     va_list args;
     va_start(args, fmt);
-    bool result = ecs_strbuf_append_intern(
+    bool result = ecs_strbuf_vappend_intern(
         buffer, fmt, -1, true, args
     );
     va_end(args);
