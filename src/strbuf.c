@@ -118,9 +118,11 @@ bool ecs_strbuf_append_intern(
     const char* str,
     int n,
     bool fmt_string,
-    va_list args)
+    ...)
 {
     bool result = true;
+    va_list args;
+    va_start(args, fmt_string);
     va_list arg_cpy;
 
     if (!str) {
@@ -256,10 +258,8 @@ bool ecs_strbuf_appendstrn(
     const char* str,
     int32_t len)
 {
-    va_list args;
     return ecs_strbuf_append_intern(
-        b, str, len, false, args
-    );
+        b, str, len, false);
 }
 
 bool ecs_strbuf_appendstr_zerocpy(
