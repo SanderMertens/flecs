@@ -719,12 +719,12 @@ public:
     ref()
         : m_world( nullptr )
         , m_entity( 0 )
-        , m_ref({0}) { }
+        , m_ref() { }
 
     ref(world_t *world, entity_t entity) 
         : m_world( world )
         , m_entity( entity )
-        , m_ref({0}) {
+        , m_ref() {
         _ecs_get_ref(
             m_world, &m_ref, m_entity, component_base<T>::s_entity);
     }
@@ -775,7 +775,7 @@ public:
         , m_id( ecs_lookup(m_world, name) ) 
         { 
             if (!m_id) {
-                EcsName id{ ecs_os_strdup(name) };
+                EcsName id;
                 id.alloc_value = ecs_os_strdup(name);
                 id.value = id.alloc_value;
                 id.symbol = NULL;            
@@ -1089,6 +1089,9 @@ public:
         entity_t cur_entity = s_entity;
         type_t cur_type = s_type;
 
+        (void)cur_entity;
+        (void)cur_type;
+
         s_entity = ecs_new_component(world.c_ptr(), 0, name, sizeof(T), alignof(T));
         s_type = ecs_type_from_entity(world.c_ptr(), s_entity);
         s_name = name;
@@ -1272,7 +1275,10 @@ public:
 
 private:
     /* Dummy function when last component has been added */
-    void populate_columns(ecs_iter_t *iter, int index) { }
+    void populate_columns(ecs_iter_t *iter, int index) { 
+        (void)iter;
+        (void)index;
+    }
 
     /* Populate columns array recursively */
     template <typename T, typename... Targs>
@@ -1299,6 +1305,8 @@ public:
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
     static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
         flecs::iter iter_wrapper(iter);
+        (void)index;
+        (void)columns;
 
         // Use any_column so we can transparently use shared components
         for (auto row : iter_wrapper) {
@@ -1500,6 +1508,9 @@ public:
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
     static void call_system(ecs_iter_t *iter, int index, Columns& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+
         const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
         action_invoker *self = (action_invoker*)ctx->ctx;
 
@@ -1971,6 +1982,7 @@ private:
     const filter& m_filter;
 };
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility for creating a child table iterator
 ////////////////////////////////////////////////////////////////////////////////
@@ -2004,6 +2016,7 @@ public:
     }
 
     reader(world& world, snapshot& snapshot) {
+        (void)world;
         ecs_iter_t it = ecs_snapshot_iter(snapshot.c_ptr(), nullptr);
         m_reader = ecs_reader_init_w_iter(&it, ecs_snapshot_next);
     }

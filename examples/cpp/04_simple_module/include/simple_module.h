@@ -15,7 +15,7 @@ struct Velocity {
 };
 
 struct SimpleModule {
-    SimpleModule(flecs::world& world, int flags);
+    SimpleModule(flecs::world& world);
     flecs::entity position;
     flecs::entity velocity;
     flecs::entity move;

@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
     flecs::world world(argc, argv);
 
     /* Import module containing Position, Velocity and Move */
-    flecs::import<SimpleModule>(world, 0);
+    flecs::import<SimpleModule>(world);
 
     /* Create entity with imported components */
     flecs::entity(world, "MyEntity")

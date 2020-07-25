@@ -6778,6 +6778,9 @@ public:
         entity_t cur_entity = s_entity;
         type_t cur_type = s_type;
 
+        (void)cur_entity;
+        (void)cur_type;
+
         s_entity = ecs_new_component(world.c_ptr(), 0, name, sizeof(T), alignof(T));
         s_type = ecs_type_from_entity(world.c_ptr(), s_entity);
         s_name = name;
