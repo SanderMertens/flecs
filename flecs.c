@@ -11542,7 +11542,7 @@ void resolve_cascade_container(
 #define ELEM(ptr, size, index) ECS_OFFSET(ptr, size * index)
 
 static
-int32_t qsort_table(
+int32_t qsort_partition(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -11558,6 +11558,7 @@ int32_t qsort_table(
     ecs_entity_t pivot_e = entities[p];
     int32_t i = lo - 1, j = hi + 1;
     void *el;    
+
 repeat:
     {
         do {
@@ -11576,8 +11577,40 @@ repeat:
 
         ecs_table_swap(world, &world->stage, table, data, i, j);
 
+        if (p == i) {
+            pivot = ELEM(ptr, elem_size, j);
+            pivot_e = entities[j];
+        } else if (p == j) {
+            pivot = ELEM(ptr, elem_size, i);
+            pivot_e = entities[i];
+        }
+
         goto repeat;
     }
+}
+
+static
+void qsort_array(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    ecs_entity_t *entities,
+    void *ptr,
+    int32_t size,
+    int32_t lo,
+    int32_t hi,
+    ecs_compare_action_t compare)
+{   
+    if ((hi - lo) < 1)  {
+        return;
+    }   
+
+    int32_t p = qsort_partition(
+        world, table, data, entities, ptr, size, lo, hi, compare);
+
+    qsort_array(world, table, data, entities, ptr, size, lo, p, compare);
+
+    qsort_array(world, table, data, entities, ptr, size, p + 1, hi, compare); 
 }
 
 static
@@ -11608,14 +11641,7 @@ void sort_table(
         ptr = ecs_vector_first_t(column->data, size, column->alignment);
     }
 
-    int32_t p = qsort_table(
-        world, table, data, entities, ptr, size, 0, count - 1, compare);
-
-    qsort_table(
-        world, table, data, entities, ptr, size, 0, p, compare);        
-
-    qsort_table(
-        world, table, data, entities, ptr, size, p + 1, count - 1, compare);
+    qsort_array(world, table, data, entities, ptr, size, 0, count - 1, compare);
 }
 
 /* Helper struct for building sorted table ranges */
@@ -15602,6 +15628,108 @@ ecs_writer_t ecs_writer_init(
     };
 }
 
+
+struct ecs_queue_t {
+    ecs_vector_t *data;
+    int32_t index;
+#ifndef NDEBUG
+    size_t elem_size;
+#endif
+};
+
+ecs_queue_t* _ecs_queue_new(
+    size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    ecs_queue_t *result = ecs_os_malloc(sizeof(ecs_queue_t));
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
+    result->data = _ecs_vector_new(elem_size, elem_count, offset);
+    result->index = 0;
+    return result;
+}
+
+ecs_queue_t* _ecs_queue_from_array(
+    size_t elem_size,
+    int16_t offset,
+    int32_t elem_count,
+    void *array)
+{
+    ecs_queue_t *result = ecs_os_malloc(sizeof(ecs_queue_t));
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
+    result->data = _ecs_vector_from_array(elem_size, offset, elem_count, array);
+    result->index = 0;
+    return result;    
+}
+
+void* _ecs_queue_push(
+    ecs_queue_t *buffer,
+    size_t elem_size,
+    int16_t offset)
+{
+    ecs_assert(elem_size == buffer->elem_size, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t size = ecs_vector_size(buffer->data);
+    int32_t count = ecs_vector_count(buffer->data);
+    void *result;
+
+    if (count == buffer->index) {
+        result = _ecs_vector_add(&buffer->data, elem_size, offset);
+    } else {
+        result = _ecs_vector_get(buffer->data, elem_size, offset, buffer->index);
+    }
+
+    buffer->index = (buffer->index + 1) % size;
+
+    return result;
+}
+
+void ecs_queue_free(
+    ecs_queue_t *buffer)
+{
+    ecs_vector_free(buffer->data);
+    ecs_os_free(buffer);
+}
+
+void* _ecs_queue_get(
+    ecs_queue_t *buffer,
+    size_t elem_size,
+    int16_t offset,
+    int32_t index)
+{
+    int32_t count = ecs_vector_count(buffer->data);
+    int32_t size = ecs_vector_size(buffer->data);
+    index = ((buffer->index - count + size) + (int32_t)index) % size;
+    return _ecs_vector_get(buffer->data, elem_size, offset, index);
+}
+
+void* _ecs_queue_last(
+    ecs_queue_t *buffer,
+    size_t elem_size,
+    int16_t offset)
+{
+    int32_t index = buffer->index;
+    if (!index) {
+        index = ecs_vector_size(buffer->data);
+    }
+
+    return _ecs_vector_get(buffer->data, elem_size, offset, index - 1);
+}
+
+int32_t ecs_queue_index(
+    ecs_queue_t *buffer)
+{
+    return buffer->index;
+}
+
+int32_t ecs_queue_count(
+    ecs_queue_t *buffer)
+{
+    return ecs_vector_count(buffer->data);
+}
+
 /* World snapshot */
 struct ecs_snapshot_t {
     ecs_world_t *world;
@@ -16669,94 +16797,6 @@ ecs_reader_t ecs_reader_init_w_iter(
     };
 
     return result;
-}
-
-
-struct ecs_ringbuf_t {
-    ecs_vector_t *data;
-    int32_t index;
-#ifndef NDEBUG
-    size_t elem_size;
-#endif
-};
-
-ecs_ringbuf_t* _ecs_ringbuf_new(
-    size_t elem_size,
-    int16_t offset,
-    int32_t elem_count)
-{
-    ecs_ringbuf_t *result = ecs_os_malloc(sizeof(ecs_ringbuf_t));
-    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
-
-    result->data = _ecs_vector_new(elem_size, elem_count, offset);
-    result->index = 0;
-    return result;
-}
-
-void* _ecs_ringbuf_push(
-    ecs_ringbuf_t *buffer,
-    size_t elem_size,
-    int16_t offset)
-{
-    ecs_assert(elem_size == buffer->elem_size, ECS_INVALID_PARAMETER, NULL);
-
-    int32_t size = ecs_vector_size(buffer->data);
-    int32_t count = ecs_vector_count(buffer->data);
-    void *result;
-
-    if (count == buffer->index) {
-        result = _ecs_vector_add(&buffer->data, elem_size, offset);
-    } else {
-        result = _ecs_vector_get(buffer->data, elem_size, offset, buffer->index);
-    }
-
-    buffer->index = (buffer->index + 1) % size;
-
-    return result;
-}
-
-void ecs_ringbuf_free(
-    ecs_ringbuf_t *buffer)
-{
-    ecs_vector_free(buffer->data);
-    ecs_os_free(buffer);
-}
-
-void* _ecs_ringbuf_get(
-    ecs_ringbuf_t *buffer,
-    size_t elem_size,
-    int16_t offset,
-    int32_t index)
-{
-    int32_t count = ecs_vector_count(buffer->data);
-    int32_t size = ecs_vector_size(buffer->data);
-    index = ((buffer->index - count + size) + (int32_t)index) % size;
-    return _ecs_vector_get(buffer->data, elem_size, offset, index);
-}
-
-void* _ecs_ringbuf_last(
-    ecs_ringbuf_t *buffer,
-    size_t elem_size,
-    int16_t offset)
-{
-    int32_t index = buffer->index;
-    if (!index) {
-        index = ecs_vector_size(buffer->data);
-    }
-
-    return _ecs_vector_get(buffer->data, elem_size, offset, index - 1);
-}
-
-int32_t ecs_ringbuf_index(
-    ecs_ringbuf_t *buffer)
-{
-    return buffer->index;
-}
-
-int32_t ecs_ringbuf_count(
-    ecs_ringbuf_t *buffer)
-{
-    return ecs_vector_count(buffer->data);
 }
 
 #ifdef __BAKE__

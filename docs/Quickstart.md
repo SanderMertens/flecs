@@ -769,3 +769,97 @@ ECS_SYSTEM(world, DetectCollisions, AfterFrame, Position);
 ecs_progress(world, 0);
 ```
 
+## Staging
+Staging is a feature that lets applications use the normal API while iterating through entities in a system. Adding & removing components changes their arrays, and because in Flecs systems iterate the underlying component arrays directly, this could introduce undefined behavior. Staging solves this problem by introducing a temporary storage where data is stored while an application is iterating.
+
+The following few examples provide an introduction to staging. To see how this works, let's take the implementation of a normal system and look at what happens exactly:
+
+```c
+void Move(ecs_iter_t *it) {
+    /* Obtain component arrays from the "main stage" */
+    Position *p = ecs_column(it, Position, 1);
+    Velocity *v = ecs_column(it, Velocity, 2);
+
+    for (int i = 0; i < it->count; i ++) {
+        /* Modify values of the component arrays in place. This changes the data
+         * of the components in the main stage directly, and nothing is stored
+         * in a temporary store. */
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
+}
+
+// System definition
+ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+```
+
+Now let's look at a system that adds "Velocity" to each entity with a Position:
+
+```c
+void AddVelocity(ecs_iter_t *it) {
+    /* To add the Velocity component, we need to get the handle first */
+    ecs_type_t ecs_type(Velocity) = ecs_column_type(it, 2);
+
+    for (int i = 0; i < it->count; i ++) {
+        /* This adds the "Velocity" component. Adding and removing components
+         * changes underlying arrays, but since changes are written to the stage
+         * the system can keep on iterating. */
+        ecs_add(it->world, it->entities[i], Velocity);
+
+        /* While we are staged, we can also query it with the regular API, like so: */
+        if (ecs_has(world, it->entities[i], Velocity)) {
+            printf("Yes, Velocity was added\n");
+        }
+    }
+}
+
+// System definition, only pass in Velocity handle
+ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, :Velocity);
+```
+
+In many cases, this means that a system can use the regular API and not worry about how the data from the temporary stage gets merged back into the main stage. However, there is one exception, which is when a system both writes to the component arrays directly as well as stages changes with the regular API:
+
+```c
+void AddVelocity(ecs_iter_t *it) {
+    Position *p = ecs_column(it, Position, 1);
+    ecs_type_t ecs_type(Velocity) = ecs_column_type(it, 2);
+
+    for (int i = 0; i < it->count; i ++) {
+        /* Add velocity to stage. This copies the entire value of the entity to
+         * the stage, including the current value of Position. */
+        ecs_add(it->world, it->entities[i], Velocity);
+
+        /* Write to the main stage after the entity has been staged. This change
+         * will be lost, because eventually the stage is merged back into the
+         * main stage, and the main stage data will be overwritten. */
+        p[i].x ++;
+        p[i].y ++;        
+    }
+}
+```
+
+This can result in confusing bugs. To make sure this does not happen, as a rule of thumb systems should not write to both the main stage and to the stage. Instead, systems can be split up in two systems. Flecs automatically merges data back to the stage when it is necessary, as long as systems indicate their intents in their signatures. Here are a few examples of correct ways to annotate a system:
+
+```c
+// Read/write Position from main stage, read Velocity from main stage
+ECS_SYSTEM(world, SystemA, EcsOnUpdate, Position, [in] Velocity);
+
+// Read Position from main stage, write Velocity to stage. For more information
+// on what the colon (:) means, see "Signatures" in the manual
+ECS_SYSTEM(world, SystemB, EcsOnUpdate, [in] Position, [out] :Velocity);
+
+// Read Position from the main stage, write Position to the stage
+ECS_SYSTEM(world, SystemB, EcsOnUpdate, [in] Position, [out] :Position);
+```
+
+When a system writes to the stage, and the subsequent system reads the same component from the main stage, Flecs will make sure the component is merged:
+
+```c
+// Write Velocity to the stage
+ECS_SYSTEM(world, SystemA, EcsOnUpdate, Position, [out] :Velocity);
+
+// Read Velocity from the main stage. Flecs will merge Velocity before running this system
+ECS_SYSTEM(world, SystemB, EcsOnUpdate, Position, [in] Velocity);
+```
+
+Staging is also the mechanism that allows multiple threads to concurrently make modifications to the store, as Flecs assigns a stage to each thread. 

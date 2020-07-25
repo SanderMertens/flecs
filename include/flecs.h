@@ -2469,7 +2469,7 @@ int ecs_enable_console(
 #ifndef FLECS_NO_ADDONS
 #include "flecs/addon/snapshot.h"
 #include "flecs/addon/reader_writer.h"
-#include "flecs/addon/ringbuf.h"
+#include "flecs/addon/queue.h"
 #endif
 
 #ifdef __cplusplus

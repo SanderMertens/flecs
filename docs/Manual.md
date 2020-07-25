@@ -840,6 +840,18 @@ while (ecs_query_next(&it)) {
 }
 ```
 
+### Change tracking
+An application is able to see whether the entities and components matched with a query have changed since the last iteration with the `ecs_query_changed` function. When this function is invoked for the first time for a query it will always return true. The function should be invoked before obtaining an iterator to the query, as obtaining an iterator resets the state required for change tracking. An example:
+
+```c
+if (ecs_query_changed(q)) {
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        // ...
+    }
+}
+```
+
 ## Signatures
 The query signature accepts a wide range of operators and options that allow an application to determine with fine granularity which entities to iterate over. The most common kind of signature is one that subscribes for entities with a set of components. An example of such a signature looks like a comma delimited list of component or tag identifiers:
 
@@ -1127,6 +1139,90 @@ Access modifiers are added to a signature using angular brackets:
 The default access modifier is `[inout]`, which by default allows a system to read and write a component, but also means Flecs cannot make optimizations in, for example, how systems can be executed in parallel. For this reason, while not mandatory, applications are encouraged to add access modifiers to systems where possible.
 
 ## Sorting
+Applications are able to access entities in order, by using sorted queries. Sorted queries allow an application to specify a component that entities should be sorted on. Sorting is enabled with the `ecs_query_order_by` function:
+
+```c
+ecs_query_t q = ecs_query_new(world, "Position");
+ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+```
+
+This will sort the query by the `Position` component. The function also accepts a compare function, which looks like this:
+
+```c
+int compare_position(ecs_entity_t e1, Posiiton *p1, ecs_entity_t e2, Position *p2) {
+    return p1->x - p2->x;
+}
+```
+
+Once sorting is enabled for a query, the data will remain sorted, even after the underlying data changes. The query keeps track of any changes that have happened to the data, and if changes could have invalidated the ordering, data will be resorted. Resorting does not happen when the data is modified, which means that sorting will not decrease performance of regular operations. Instead, the sort will be applied when the application obtains an iterator to the query:
+
+```c
+ecs_entity_t e = ecs_new(world, Position); // Does not reorder
+ecs_set(world, e, Position, {10, 20}); // Does not reorder
+ecs_iter_t it = ecs_query_iter(q); // Reordering happens here
+```
+
+The following operations mark data dirty can can trigger a reordering:
+- Creating a new entity with the ordered component
+- Deleting an entity with the ordered component
+- Adding the ordered component to an entity
+- Removing the ordered component from an entity
+- Setting the ordered component
+- Running a system that writes the ordered component (through an [out] column)
+
+Applications iterate a sorted query in the same way they would iterate a regular query:
+
+```c
+while (ecs_query_next(&it)) {
+    Position *p = ecs_column(&it, Position, 1);
+
+    for (int i = 0; i < it.count; i ++) {
+        printf("{%f, %f}\n", p[i].x, p[i].y); // Values printed will be in order
+    }
+}
+```
+
+### Sorting algorithm
+The algorithm used for the sort is a quicksort. Each table that is matched with the query will be sorted using a quicksort. As a result, sorting one query affects the order of entities in another query. However, just sorting tables is not enough, as the list of ordered entities may have to jump between tables. For example:
+
+Entitiy | Components (table) | Value used for sorting
+--------|--------------------|-----------------------
+E1      | Position           | 1
+E2      | Position           | 3
+E3      | Position           | 4
+E4      | Position, Velocity | 5
+E5      | Position, Velocity | 7
+E6      | Position, Mass     | 8
+E7      | Position           | 10
+E8      | Position           | 11
+
+To make sure a query iterates the entities in the right order, it will iterate entities in the ordered tables to determine the largest slice of ordered entities in each table, which the query will iterate in order. Slices are precomputed during the sorting step, which means that the performance of query iteration is similar to a regular iteration. For the above set of entities, these slices would look like this:
+
+Table              | Slice
+-------------------|-------
+Position           | 0..2
+Position, Velocity | 3..4
+Position, Mass     | 5
+Position           | 6..7
+
+This process is transparent for applications, except that the slicing will result in smaller contiguous arrays being iterated by the application.
+
+### Sorting by entity id
+Instead of sorting by a component value, applications can sort by entity id by not specifying a component to the `ecs_query_order_by` function:
+
+```c
+ecs_query_order_by(world, q, 0, compare_entity);
+```
+
+The compare function would look like this:
+
+```c
+int compare_position(ecs_entity_t e1, Posiiton *p1, ecs_entity_t e2, Position *p2) {
+    return e1 - e2;
+}
+```
+
+When no component is provided in the `ecs_query_order_by` function, no reordering will happen as a result of setting components or running a system with `[out]` columns.
 
 ## Filters
 
@@ -1157,7 +1253,8 @@ for (int i = 0; i < it->count, i ++) {
 }
 ```
 
-Systems are implemented using queries, which gives them a very simmilar API and performance characteristics. In addition to a regular query iteration, a system provides a `delta_time` which contains the time passed since the last frame:
+### Using delta_time
+A system provides a `delta_time` which contains the time passed since the last frame:
 
 ```c
 Position *p = ecs_column(it, Position, 1);
@@ -1169,6 +1266,27 @@ for (int i = 0; i < it->count, i ++) {
 }
 ```
 
+This is the value passed into `ecs_progress`:
+
+```c
+ecs_progress(world, delta_time);
+```
+
+If 0 was provided for `delta_time`, flecs will automatically measure the time passed between the last frame and the current. 
+
+A system may also use the `delta_system_time` member, which is the time elapsed since the last time the system was invoked. This can be useful when a system is not invoked each frame, for example when using a timer.
+
+### Systems and tables
+A system may be invoked multiple times per frame. The reason this happens is because entities are stored in different "tables", where each table stores entities of a specific set of components. For example, all entities with components `Position, Velocity` will be stored in table A, where all entities with components `Position, Mass` are stored in table B. Tables ensure that component data is stored in contiguous arrays, and that the same index can be used for a particular entity in all component arrays. Because systems iterate component arrays directly, and because a component can be stored in more than one array, systems need to be invoked once for each table.
+
+The total number of tables a system will iterate over is stored in the `table_count` member of the iterator. Additionally, the `table_offset` member contains the current table being iterated over, so that a system can keep track of where it is in the iteration:
+
+```c
+void Move(ecs_iter_t *it) { 
+    printf("Iterating table %d / %d\n", it->table_offset, it->table_count);
+    // ...
+}
+```
 
 ## Triggers
 

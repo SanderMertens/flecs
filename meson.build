@@ -22,7 +22,7 @@ flecs_src = files(
     'src/strbuf.c',
     'src/iter.c',
     'src/addon/writer.c',
-    'src/addon/ringbuf.c',
+    'src/addon/queue.c',
     'src/addon/reader.c',
     'src/addon/dbg.c',
     'src/addon/snapshot.c',

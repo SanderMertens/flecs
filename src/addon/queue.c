@@ -1,7 +1,7 @@
 
 #include "flecs.h"
 
-struct ecs_ringbuf_t {
+struct ecs_queue_t {
     ecs_vector_t *data;
     int32_t index;
 #ifndef NDEBUG
@@ -9,12 +9,12 @@ struct ecs_ringbuf_t {
 #endif
 };
 
-ecs_ringbuf_t* _ecs_ringbuf_new(
+ecs_queue_t* _ecs_queue_new(
     size_t elem_size,
     int16_t offset,
     int32_t elem_count)
 {
-    ecs_ringbuf_t *result = ecs_os_malloc(sizeof(ecs_ringbuf_t));
+    ecs_queue_t *result = ecs_os_malloc(sizeof(ecs_queue_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->data = _ecs_vector_new(elem_size, elem_count, offset);
@@ -22,8 +22,22 @@ ecs_ringbuf_t* _ecs_ringbuf_new(
     return result;
 }
 
-void* _ecs_ringbuf_push(
-    ecs_ringbuf_t *buffer,
+ecs_queue_t* _ecs_queue_from_array(
+    size_t elem_size,
+    int16_t offset,
+    int32_t elem_count,
+    void *array)
+{
+    ecs_queue_t *result = ecs_os_malloc(sizeof(ecs_queue_t));
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
+    result->data = _ecs_vector_from_array(elem_size, offset, elem_count, array);
+    result->index = 0;
+    return result;    
+}
+
+void* _ecs_queue_push(
+    ecs_queue_t *buffer,
     size_t elem_size,
     int16_t offset)
 {
@@ -44,15 +58,15 @@ void* _ecs_ringbuf_push(
     return result;
 }
 
-void ecs_ringbuf_free(
-    ecs_ringbuf_t *buffer)
+void ecs_queue_free(
+    ecs_queue_t *buffer)
 {
     ecs_vector_free(buffer->data);
     ecs_os_free(buffer);
 }
 
-void* _ecs_ringbuf_get(
-    ecs_ringbuf_t *buffer,
+void* _ecs_queue_get(
+    ecs_queue_t *buffer,
     size_t elem_size,
     int16_t offset,
     int32_t index)
@@ -63,8 +77,8 @@ void* _ecs_ringbuf_get(
     return _ecs_vector_get(buffer->data, elem_size, offset, index);
 }
 
-void* _ecs_ringbuf_last(
-    ecs_ringbuf_t *buffer,
+void* _ecs_queue_last(
+    ecs_queue_t *buffer,
     size_t elem_size,
     int16_t offset)
 {
@@ -76,14 +90,14 @@ void* _ecs_ringbuf_last(
     return _ecs_vector_get(buffer->data, elem_size, offset, index - 1);
 }
 
-int32_t ecs_ringbuf_index(
-    ecs_ringbuf_t *buffer)
+int32_t ecs_queue_index(
+    ecs_queue_t *buffer)
 {
     return buffer->index;
 }
 
-int32_t ecs_ringbuf_count(
-    ecs_ringbuf_t *buffer)
+int32_t ecs_queue_count(
+    ecs_queue_t *buffer)
 {
     return ecs_vector_count(buffer->data);
 }
