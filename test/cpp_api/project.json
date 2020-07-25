@@ -52,12 +52,15 @@
                 "action",
                 "action_const",
                 "action_shared",
+                "action_optional",
                 "each",
                 "each_const",
                 "each_shared",
+                "each_optional",
                 "signature",
                 "signature_const",
-                "signature_shared"
+                "signature_shared",
+                "signature_optional"
             ]
         }, {
             "id": "Query",
@@ -65,12 +68,15 @@
                 "action",
                 "action_const",
                 "action_shared",
+                "action_optional",
                 "each",
                 "each_const",
                 "each_shared",
+                "each_optional",
                 "signature",
                 "signature_const",
-                "signature_shared"
+                "signature_shared",
+                "signature_optional"
             ]
         }]
     }

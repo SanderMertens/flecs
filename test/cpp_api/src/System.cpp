@@ -103,6 +103,63 @@ void System_action_shared() {
     test_int(p->y, 24);   
 }
 
+void System_action_optional() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    flecs::component<Velocity>(world, "Velocity");
+    flecs::component<Mass>(world, "Mass");
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2})
+        .set<Mass>({1});
+
+    auto e2 = flecs::entity(world)
+        .set<Position>({30, 40})
+        .set<Velocity>({3, 4})
+        .set<Mass>({1});        
+
+    auto e3 = flecs::entity(world)
+        .set<Position>({50, 60});
+
+    auto e4 = flecs::entity(world)
+        .set<Position>({70, 80});
+
+    flecs::system<Position, Velocity*, Mass*>(world)
+        .action([](flecs::iter& it, flecs::column<Position> p, flecs::column<Velocity> v, flecs::column<Mass> m) {
+        if (v.is_set() && m.is_set()) {
+            for (auto i : it) {
+                p[i].x += v[i].x * m[i].value;
+                p[i].y += v[i].y * m[i].value;
+            }
+        } else {
+            for (auto i : it) {
+                p[i].x ++;
+                p[i].y ++;
+            }
+        }
+    });
+
+    world.progress();
+
+    const Position *p = e1.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    p = e2.get<Position>();
+    test_int(p->x, 33);
+    test_int(p->y, 44);
+
+    p = e3.get<Position>();
+    test_int(p->x, 51);
+    test_int(p->y, 61);
+
+    p = e4.get<Position>();
+    test_int(p->x, 71);
+    test_int(p->y, 81);
+}
+
 void System_each() {
     flecs::world world;
 
@@ -182,6 +239,60 @@ void System_each_shared() {
     test_int(p->x, 13);
     test_int(p->y, 24); 
 }
+
+void System_each_optional() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    flecs::component<Velocity>(world, "Velocity");
+    flecs::component<Mass>(world, "Mass");
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2})
+        .set<Mass>({1});
+
+    auto e2 = flecs::entity(world)
+        .set<Position>({30, 40})
+        .set<Velocity>({3, 4})
+        .set<Mass>({1});        
+
+    auto e3 = flecs::entity(world)
+        .set<Position>({50, 60});
+
+    auto e4 = flecs::entity(world)
+        .set<Position>({70, 80});
+
+    flecs::system<Position, Velocity*, Mass*>(world)
+        .each([](flecs::entity e, Position& p, Velocity* v, Mass *m) {
+        if (v && m) {
+            p.x += v->x * m->value;
+            p.y += v->y * m->value;
+        } else {
+            p.x ++;
+            p.y ++;
+        }
+    });
+
+    world.progress();
+
+    const Position *p = e1.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    p = e2.get<Position>();
+    test_int(p->x, 33);
+    test_int(p->y, 44);
+
+    p = e3.get<Position>();
+    test_int(p->x, 51);
+    test_int(p->y, 61);
+
+    p = e4.get<Position>();
+    test_int(p->x, 71);
+    test_int(p->y, 81);
+}
+
 
 void System_signature() {
     flecs::world world;
@@ -291,4 +402,65 @@ void System_signature_shared() {
     p = e2.get<Position>();
     test_int(p->x, 13);
     test_int(p->y, 24); 
+}
+
+void System_signature_optional() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    flecs::component<Velocity>(world, "Velocity");
+    flecs::component<Mass>(world, "Mass");
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2})
+        .set<Mass>({1});
+
+    auto e2 = flecs::entity(world)
+        .set<Position>({30, 40})
+        .set<Velocity>({3, 4})
+        .set<Mass>({1});        
+
+    auto e3 = flecs::entity(world)
+        .set<Position>({50, 60});
+
+    auto e4 = flecs::entity(world)
+        .set<Position>({70, 80});
+
+    flecs::system<>(world).signature("Position, ?Velocity, ?Mass")
+        .action([](flecs::iter& it) {
+            flecs::column<Position> p(it, 1);
+            flecs::column<Velocity> v(it, 2);
+            flecs::column<Mass> m(it, 3);
+
+            if (v.is_set() && m.is_set()) {
+                for (auto i : it) {
+                    p[i].x += v[i].x * m[i].value;
+                    p[i].y += v[i].y * m[i].value;
+                }
+            } else {
+                for (auto i : it) {
+                    p[i].x ++;
+                    p[i].y ++;
+                }            
+            }
+        });
+
+    world.progress();
+
+    const Position *p = e1.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    p = e2.get<Position>();
+    test_int(p->x, 33);
+    test_int(p->y, 44);
+
+    p = e3.get<Position>();
+    test_int(p->x, 51);
+    test_int(p->y, 61);
+
+    p = e4.get<Position>();
+    test_int(p->x, 71);
+    test_int(p->y, 81);
 }

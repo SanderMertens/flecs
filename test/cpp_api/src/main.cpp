@@ -42,23 +42,29 @@ void Type_2_component_signature(void);
 void System_action(void);
 void System_action_const(void);
 void System_action_shared(void);
+void System_action_optional(void);
 void System_each(void);
 void System_each_const(void);
 void System_each_shared(void);
+void System_each_optional(void);
 void System_signature(void);
 void System_signature_const(void);
 void System_signature_shared(void);
+void System_signature_optional(void);
 
 // Testsuite 'Query'
 void Query_action(void);
 void Query_action_const(void);
 void Query_action_shared(void);
+void Query_action_optional(void);
 void Query_each(void);
 void Query_each_const(void);
 void Query_each_shared(void);
+void Query_each_optional(void);
 void Query_signature(void);
 void Query_signature_const(void);
 void Query_signature_shared(void);
+void Query_signature_optional(void);
 
 static bake_test_suite suites[] = {
     {
@@ -185,7 +191,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        9,
+        12,
         (bake_test_case[]){
             {
                 "action",
@@ -200,6 +206,10 @@ static bake_test_suite suites[] = {
                 System_action_shared
             },
             {
+                "action_optional",
+                System_action_optional
+            },
+            {
                 "each",
                 System_each
             },
@@ -212,6 +222,10 @@ static bake_test_suite suites[] = {
                 System_each_shared
             },
             {
+                "each_optional",
+                System_each_optional
+            },
+            {
                 "signature",
                 System_signature
             },
@@ -222,6 +236,10 @@ static bake_test_suite suites[] = {
             {
                 "signature_shared",
                 System_signature_shared
+            },
+            {
+                "signature_optional",
+                System_signature_optional
             }
         }
     },
@@ -229,7 +247,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        9,
+        12,
         (bake_test_case[]){
             {
                 "action",
@@ -244,6 +262,10 @@ static bake_test_suite suites[] = {
                 Query_action_shared
             },
             {
+                "action_optional",
+                Query_action_optional
+            },
+            {
                 "each",
                 Query_each
             },
@@ -256,6 +278,10 @@ static bake_test_suite suites[] = {
                 Query_each_shared
             },
             {
+                "each_optional",
+                Query_each_optional
+            },
+            {
                 "signature",
                 Query_signature
             },
@@ -266,6 +292,10 @@ static bake_test_suite suites[] = {
             {
                 "signature_shared",
                 Query_signature_shared
+            },
+            {
+                "signature_optional",
+                Query_signature_optional
             }
         }
     }

@@ -13,29 +13,6 @@ struct Mana {
     float value;
 };
 
-void Regenerate(flecs::iter& it) {
-    flecs::column<Health> health(it, 1);
-    flecs::column<Stamina> stamina(it, 2);
-    flecs::column<Mana> mana(it, 3);
-
-    for (auto row : it) {
-        if (health.is_set()) {
-            health[row].value ++;
-            std::cout << it.entity(row).name() << " process health" << std::endl;
-        }
-
-        if (stamina.is_set()) {
-            stamina[row].value ++;
-            std::cout << it.entity(row).name() << " process stamina" << std::endl;
-        }
-
-        if (mana.is_set()) {
-            mana[row].value ++;
-            std::cout << it.entity(row).name() << " process mana" << std::endl;
-        }
-    }
-}
-
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
@@ -46,8 +23,28 @@ int main(int argc, char *argv[]) {
     flecs::component<Stamina>(world, "Stamina");
     flecs::component<Mana>(world, "Mana");
 
-    /* Create system with three optional columns */
-    flecs::system<>(world).signature("?Health, ?Stamina, ?Mana").action(Regenerate);
+    /* Create system with three optional columns. Pointer template arguments are
+     * converted to components with the optional operator. 
+     *
+     * This is an extreme example where all components are optional, which means
+     * that this system will evaluate all entities. */
+    flecs::system<Health*, Stamina*, Mana*>(world)
+        .each([](flecs::entity e, Health* h, Stamina *s, Mana *m) {
+            if (h) {
+                h->value ++;
+                std::cout << e.name() << " process health" << std::endl;
+            }
+
+            if (s) {
+                s->value ++;
+                std::cout << e.name() << " process stamina" << std::endl;
+            }
+
+            if (m) {
+                m->value ++;
+                std::cout << e.name() << " process mana" << std::endl;
+            }
+        });
 
     /* Create three entities that will all match with the Regenerate system */
     flecs::entity(world, "HealthEntity").set<Health>({0});

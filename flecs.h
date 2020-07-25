@@ -5735,6 +5735,9 @@ enum match_kind {
     MatchExact = EcsMatchExact
 };
 
+template <typename ...Components>
+bool pack_args_to_string(std::stringstream& str, bool is_each = false);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Builtin components and tags 
@@ -5836,8 +5839,31 @@ protected:
 //// Like flecs::column, but abstracts away from shared vs. owned columns
 ////////////////////////////////////////////////////////////////////////////////
 
+template <typename T, typename = void>
+class any_column { };
+
 template <typename T>
-class any_column final : public column<T> {
+class any_column<T, typename std::enable_if<std::is_pointer<T>::value == true>::type > final : public column<typename std::remove_pointer<T>::type> {
+public:
+    any_column(T array, std::size_t count, bool is_shared = false)
+        : column<typename std::remove_pointer<T>::type>(array, count, is_shared) { }
+
+    T operator[](size_t index) {
+        if (!this->m_is_shared) {
+            ecs_assert(index < this->m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+            if (this->m_array) {
+                return &this->m_array[index];
+            } else {
+                return nullptr;
+            }
+        } else {
+            return &this->m_array[0];
+        }
+    }   
+};
+
+template <typename T>
+class any_column<T, typename std::enable_if<std::is_pointer<T>::value == false>::type> final : public column<T> {
 public:
     any_column(T* array, std::size_t count, bool is_shared = false)
         : column<T>(array, count, is_shared) { }
@@ -6772,24 +6798,6 @@ private:
             m_type = tc->type;
             m_normalized = tc->normalized;
         }
-    }
-
-    template<typename ... Components>
-    bool pack_args_to_string(std::stringstream& str) {
-        std::array<const char*, sizeof...(Components)> ids = {
-            component_base<Components>::s_name...
-        }; 
-
-        int i = 0;
-        for (auto id : ids) {
-            if (i) {
-                str << ",";
-            }
-            str << id;
-            i ++;
-        }  
-
-        return i != 0;
     }    
 
     type_t m_type;
@@ -6847,6 +6855,11 @@ public:
 
         /* Register as well for both const and reference versions of type */
         component_base<const T>::init_existing(
+            component_base<T>::s_entity, 
+            component_base<T>::s_type, 
+            component_base<T>::s_name);
+
+        component_base<T*>::init_existing(
             component_base<T>::s_entity, 
             component_base<T>::s_type, 
             component_base<T>::s_name);
@@ -6987,7 +7000,7 @@ public:
     using Columns = std::array<Column, sizeof...(Components)>;
 
     column_args(ecs_iter_t* iter) {
-        populate_columns(iter, 0, (typename std::remove_reference<Components>::type*)nullptr...);
+        populate_columns(iter, 0, (typename std::remove_reference<typename std::remove_pointer<Components>::type>::type*)nullptr...);
     }
 
     Columns m_columns;
@@ -7002,8 +7015,9 @@ private:
     /* Populate columns array recursively */
     template <typename T, typename... Targs>
     void populate_columns(ecs_iter_t *iter, int index, T comp, Targs... comps) {
-        m_columns[index].ptr = ecs_column_w_size(iter, sizeof(*comp), index + 1);
-        m_columns[index].is_shared = !ecs_is_owned(iter, index + 1);
+        void *ptr = ecs_column_w_size(iter, sizeof(*comp), index + 1);
+        m_columns[index].ptr = ptr;
+        m_columns[index].is_shared = !ecs_is_owned(iter, index + 1) && ptr != nullptr;
         populate_columns(iter, index + 1, comps ...);
     }
 };
@@ -7030,7 +7044,7 @@ public:
         // Use any_column so we can transparently use shared components
         for (auto row : iter_wrapper) {
             func(iter_wrapper.entity(row), (any_column<typename std::remove_reference<Components>::type>(
-                 (typename std::remove_reference<Components>::type*)comps.ptr, iter->count, comps.is_shared))[row]...);
+                 (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, iter->count, comps.is_shared))[row]...);
         }
     }
 
@@ -7076,8 +7090,8 @@ public:
 
         flecs::iter iter_wrapper(iter);
         
-        func(iter_wrapper, (column<typename std::remove_reference<Components>::type>(
-            (typename std::remove_reference<Components>::type*)comps.ptr, iter->count, comps.is_shared))...);
+        func(iter_wrapper, (column<typename std::remove_reference< typename std::remove_pointer<Components>::type >::type>(
+            (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, iter->count, comps.is_shared))...);
     }
 
     /** Add components one by one to parameter pack */
@@ -7114,7 +7128,7 @@ public:
 
     explicit query(world& world) {
         std::stringstream str;
-        if (!pack_args_to_string(str)) {
+        if (!pack_args_to_string<Components...>(str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
@@ -7123,7 +7137,7 @@ public:
 
     explicit query(world& world, const char *expr) {
         std::stringstream str;
-        if (!pack_args_to_string(str)) {
+        if (!pack_args_to_string<Components...>(str, true)) {
             m_query = ecs_query_new(world.c_ptr(), expr);
         } else {
             str << "," << expr;
@@ -7162,25 +7176,6 @@ public:
     }
 
 private:
-    bool pack_args_to_string(std::stringstream& str) {
-        std::array<const char*, sizeof...(Components)> ids = {
-            component_base<Components>::s_name...
-        };
-
-        int i = 0;
-        for (auto id : ids) {
-            if (i) {
-                str << ",";
-            }
-
-            str << "ANY:";
-            str << id;
-            i ++;
-        }
-
-        return i != 0;
-    }
-
     query_t *m_query;
 };
 
@@ -7459,7 +7454,7 @@ private:
         bool is_set = false;
 
         std::stringstream str;
-        if (pack_args_to_string(str, is_each)) {
+        if (pack_args_to_string<Components ...>(str, is_each)) {
             is_set = true;
         }
 
@@ -7488,51 +7483,7 @@ private:
         } 
 
         return str.str();       
-    }
-
-    bool pack_args_to_string(std::stringstream& str, bool is_each) {
-        std::array<const char*, sizeof...(Components)> ids = {
-            component_base<Components>::s_name...
-        };
-
-        std::array<const char*, sizeof...(Components)> inout_modifiers = {
-            inout_modifier<Components>()...
-        };    
-
-        int i = 0;
-        for (auto id : ids) {
-            if (i) {
-                str << ",";
-            }
-            str << inout_modifiers[i];
-            if (is_each) {
-                str << "ANY:";
-            }
-            str << id;
-            i ++;
-        }  
-
-        return i != 0;
-    }
-
-    /** Utilities to convert type trait to flecs signature syntax */
-    template <typename T,
-        typename std::enable_if< std::is_const<T>::value == true, void>::type* = nullptr>
-    constexpr const char *inout_modifier() const {
-        return "[in] ";
-    }
-
-    template <typename T,
-        typename std::enable_if< std::is_reference<T>::value == true, void>::type* = nullptr>
-    constexpr const char *inout_modifier() const {
-        return "[out] ";
-    }
-
-    template <typename T,
-        typename std::enable_if<std::is_const<T>::value == false && std::is_reference<T>::value == false, void>::type* = nullptr>
-    constexpr const char *inout_modifier() const {
-        return "";
-    }
+    }       
 
     ecs_entity_t m_kind;
     const char *m_name;
@@ -8010,6 +7961,71 @@ inline void world::init_builtin_components() {
     component<Component>(*this, "EcsComponent");
     component<Type>(*this, "EcsType");
     component<Name>(*this, "EcsName");
+}
+
+/** Utilities to convert type trait to flecs signature syntax */
+template <typename T,
+    typename std::enable_if< std::is_const<T>::value == true, void>::type* = nullptr>
+constexpr const char *inout_modifier() {
+    return "[in] ";
+}
+
+template <typename T,
+    typename std::enable_if< std::is_reference<T>::value == true, void>::type* = nullptr>
+constexpr const char *inout_modifier() {
+    return "[out] ";
+}
+
+template <typename T,
+    typename std::enable_if<std::is_const<T>::value == false && std::is_reference<T>::value == false, void>::type* = nullptr>
+constexpr const char *inout_modifier() {
+    return "";
+}
+
+template <typename T,
+    typename std::enable_if< std::is_pointer<T>::value == true, void>::type* = nullptr>
+constexpr const char *optional_modifier() {
+    return "?";
+}
+
+template <typename T,
+    typename std::enable_if< std::is_pointer<T>::value == false, void>::type* = nullptr>
+constexpr const char *optional_modifier() {
+    return "";
+} 
+
+/** Convert template arguments to string */
+template <typename ...Components>
+bool pack_args_to_string(std::stringstream& str, bool is_each) {
+    std::array<const char*, sizeof...(Components)> ids = {
+        component_base<Components>::s_name...
+    };
+
+    std::array<const char*, sizeof...(Components)> inout_modifiers = {
+        inout_modifier<Components>()...
+    }; 
+
+    std::array<const char*, sizeof...(Components)> optional_modifiers = {
+        optional_modifier<Components>()...
+    };        
+
+    int i = 0;
+    for (auto id : ids) {
+        if (i) {
+            str << ",";
+        }
+        
+        str << inout_modifiers[i];
+        str << optional_modifiers[i];
+
+        if (is_each) {
+            str << "ANY:";
+        }
+        str << id;
+        i ++;
+    }  
+
+    return i != 0;
 }
 
 }
