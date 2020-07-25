@@ -4062,8 +4062,8 @@ char* ecs_get_path_w_sep(
     ecs_entity_t parent,
     ecs_entity_t child,
     ecs_entity_t component,
-    char *sep,
-    char *prefix);
+    const char *sep,
+    const char *prefix);
 
 /** Get a path identifier for an entity.
  * Same as ecs_get_path_w_sep, but with default values for the separator and
@@ -5833,9 +5833,9 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class auto_column final : public column<T> {
+class any_column final : public column<T> {
 public:
-    auto_column(T* array, std::size_t count, bool is_shared = false)
+    any_column(T* array, std::size_t count, bool is_shared = false)
         : column<T>(array, count, is_shared) { }
 
     T& operator[](size_t index) {
@@ -5986,7 +5986,7 @@ public:
     flecs::column<T> column(int32_t col) const {
         ecs_assert(!ecs_is_readonly(m_iter, col), ECS_COLUMN_ACCESS_VIOLATION, NULL);
         return get_column<T>(col);
-    }
+    }  
 
     /* Get owned */
     template <typename T>
@@ -6163,6 +6163,7 @@ public:
 
     /* Lookup by name */
     entity lookup(const char *name) const;
+    entity lookup(std::string& name) const;
 
     /* Bulk operations */
     void delete_entities(flecs::filter filter) const;
@@ -6357,7 +6358,7 @@ public:
     }
 
     template <typename T>
-    const base_type& replace(std::function<void(T&, bool)> func) const {
+    const base_type& patch(std::function<void(T&, bool)> func) const {
         static_cast<base_type*>(this)->invoke(
         [&func](world_t *world, entity_t id) {
             bool is_added;
@@ -6374,7 +6375,7 @@ public:
     }      
 
     template <typename T>
-    const base_type& replace(std::function<void(T&)> func) const {
+    const base_type& patch(std::function<void(T&)> func) const {
         static_cast<base_type*>(this)->invoke(
         [&func](world_t *world, entity_t id) {
             bool is_added;
@@ -6514,6 +6515,17 @@ public:
             return std::string();
         }
     }
+
+    std::string path() const {
+        char *path = ecs_get_fullpath(m_world, m_id);
+        if (path) {
+            std::string result = std::string(path);
+            ecs_os_free(path);
+            return result;
+        } else {
+            return std::string();
+        }
+    }    
 
     flecs::world world() const {
         return flecs::world(m_world);
@@ -6833,16 +6845,21 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-void import(world& world, int flags = 0) {
+void import(world& world) {
     if (!component_base<T>::s_name) {
+        ecs_entity_t scope = ecs_get_scope(world.c_ptr());
+
         // Allocate module, so the this ptr will remain stable
-        T *module_data = new T(world, flags);
+        T *module_data = new T(world);
 
-        flecs::entity s(world, EcsSingleton);
+        ecs_set_scope(world.c_ptr(), scope);
 
-        s.set<T>(*module_data);
+        flecs::entity m = world.lookup(component_base<T>::s_name);
+
+        m.set<T>(*module_data);
     }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// A filter is used to match subsets of tables
@@ -6972,9 +6989,9 @@ public:
     static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
         flecs::iter iter_wrapper(iter);
 
-        // Use auto_column so we can transparently use shared components
+        // Use any_column so we can transparently use shared components
         for (auto row : iter_wrapper) {
-            func(iter_wrapper.entity(row), (auto_column<typename std::remove_reference<Components>::type>(
+            func(iter_wrapper.entity(row), (any_column<typename std::remove_reference<Components>::type>(
                  (typename std::remove_reference<Components>::type*)comps.ptr, iter->count, comps.is_shared))[row]...);
         }
     }
@@ -7813,6 +7830,11 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_inst
 
 inline entity world::lookup(const char *name) const {
     auto id = ecs_lookup(m_world, name);
+    return entity(*this, id);
+}
+
+inline entity world::lookup(std::string& name) const {
+    auto id = ecs_lookup(m_world, name.c_str());
     return entity(*this, id);
 }
 

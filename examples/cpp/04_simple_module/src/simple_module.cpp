@@ -1,7 +1,7 @@
 #include <simple_module.h>
 #include <iostream>
 
-SimpleModule::SimpleModule(flecs::world& world, int flags) 
+SimpleModule::SimpleModule(flecs::world& world)
 {
     /* Register module with world */
     flecs::module<SimpleModule>(world, "SimpleModule");

@@ -6,8 +6,8 @@ bool path_append(
     ecs_entity_t parent, 
     ecs_entity_t child, 
     ecs_entity_t component,
-    char *sep,
-    char *prefix,
+    const char *sep,
+    const char *prefix,
     ecs_strbuf_t *buf)
 {
     ecs_type_t type = ecs_get_type(world, child);
@@ -39,8 +39,8 @@ char* ecs_get_path_w_sep(
     ecs_entity_t parent,
     ecs_entity_t child,
     ecs_entity_t component,
-    char *sep,
-    char *prefix)
+    const char *sep,
+    const char *prefix)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 

@@ -1843,8 +1843,8 @@ char* ecs_get_path_w_sep(
     ecs_entity_t parent,
     ecs_entity_t child,
     ecs_entity_t component,
-    char *sep,
-    char *prefix);
+    const char *sep,
+    const char *prefix);
 
 /** Get a path identifier for an entity.
  * Same as ecs_get_path_w_sep, but with default values for the separator and

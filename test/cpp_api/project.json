@@ -1,0 +1,47 @@
+{
+    "id": "cpp_api",
+    "type": "application",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "Test project for flecs",
+        "public": false,
+        "coverage": false,
+        "language": "c++",
+        "use": [
+            "flecs"
+        ]
+    },
+    "test": {
+        "testsuites": [{
+            "id": "Entity",
+            "testcases": [
+                "new",
+                "new_named",
+                "new_add",
+                "new_add_2",
+                "new_set",
+                "new_set_2",
+                "add",
+                "add_2",
+                "remove",
+                "remove_2",
+                "set",
+                "set_2",
+                "replace"
+            ]
+        }, {
+            "id": "System",
+            "testcases": [
+                "action",
+                "action_const",
+                "action_shared",
+                "each",
+                "each_const",
+                "each_shared",
+                "signature",
+                "signature_const",
+                "signature_shared"
+            ]
+        }]
+    }
+}

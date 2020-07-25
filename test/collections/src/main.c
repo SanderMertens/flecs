@@ -73,239 +73,242 @@ void Chunked_memory_null(void);
 
 static bake_test_suite suites[] = {
     {
-        .id = "Vector",
-        .testcase_count = 22,
-        .setup = Vector_setup,
-        .testcases = (bake_test_case[]){
+        "Vector",
+        Vector_setup,
+        NULL,
+        22,
+        (bake_test_case[]){
             {
-                .id = "free_empty",
-                .function = Vector_free_empty
+                "free_empty",
+                Vector_free_empty
             },
             {
-                .id = "count",
-                .function = Vector_count
+                "count",
+                Vector_count
             },
             {
-                .id = "count_empty",
-                .function = Vector_count_empty
+                "count_empty",
+                Vector_count_empty
             },
             {
-                .id = "get",
-                .function = Vector_get
+                "get",
+                Vector_get
             },
             {
-                .id = "get_first",
-                .function = Vector_get_first
+                "get_first",
+                Vector_get_first
             },
             {
-                .id = "get_last",
-                .function = Vector_get_last
+                "get_last",
+                Vector_get_last
             },
             {
-                .id = "get_empty",
-                .function = Vector_get_empty
+                "get_empty",
+                Vector_get_empty
             },
             {
-                .id = "get_out_of_bound",
-                .function = Vector_get_out_of_bound
+                "get_out_of_bound",
+                Vector_get_out_of_bound
             },
             {
-                .id = "add_empty",
-                .function = Vector_add_empty
+                "add_empty",
+                Vector_add_empty
             },
             {
-                .id = "add_resize",
-                .function = Vector_add_resize
+                "add_resize",
+                Vector_add_resize
             },
             {
-                .id = "remove",
-                .function = Vector_remove
+                "remove",
+                Vector_remove
             },
             {
-                .id = "remove_first",
-                .function = Vector_remove_first
+                "remove_first",
+                Vector_remove_first
             },
             {
-                .id = "remove_last",
-                .function = Vector_remove_last
+                "remove_last",
+                Vector_remove_last
             },
             {
-                .id = "remove_empty",
-                .function = Vector_remove_empty
+                "remove_empty",
+                Vector_remove_empty
             },
             {
-                .id = "remove_all",
-                .function = Vector_remove_all
+                "remove_all",
+                Vector_remove_all
             },
             {
-                .id = "remove_out_of_bound",
-                .function = Vector_remove_out_of_bound
+                "remove_out_of_bound",
+                Vector_remove_out_of_bound
             },
             {
-                .id = "sort_rnd",
-                .function = Vector_sort_rnd
+                "sort_rnd",
+                Vector_sort_rnd
             },
             {
-                .id = "sort_sorted",
-                .function = Vector_sort_sorted
+                "sort_sorted",
+                Vector_sort_sorted
             },
             {
-                .id = "sort_empty",
-                .function = Vector_sort_empty
+                "sort_empty",
+                Vector_sort_empty
             },
             {
-                .id = "size_of_null",
-                .function = Vector_size_of_null
+                "size_of_null",
+                Vector_size_of_null
             },
             {
-                .id = "set_size_smaller_than_count",
-                .function = Vector_set_size_smaller_than_count
+                "set_size_smaller_than_count",
+                Vector_set_size_smaller_than_count
             },
             {
-                .id = "pop_elements",
-                .function = Vector_pop_elements
+                "pop_elements",
+                Vector_pop_elements
             }
         }
     },
     {
-        .id = "Map",
-        .testcase_count = 17,
-        .setup = Map_setup,
-        .testcases = (bake_test_case[]){
+        "Map",
+        Map_setup,
+        NULL,
+        17,
+        (bake_test_case[]){
             {
-                .id = "count",
-                .function = Map_count
+                "count",
+                Map_count
             },
             {
-                .id = "count_empty",
-                .function = Map_count_empty
+                "count_empty",
+                Map_count_empty
             },
             {
-                .id = "set_overwrite",
-                .function = Map_set_overwrite
+                "set_overwrite",
+                Map_set_overwrite
             },
             {
-                .id = "set_rehash",
-                .function = Map_set_rehash
+                "set_rehash",
+                Map_set_rehash
             },
             {
-                .id = "set_zero_buckets",
-                .function = Map_set_zero_buckets
+                "set_zero_buckets",
+                Map_set_zero_buckets
             },
             {
-                .id = "get",
-                .function = Map_get
+                "get",
+                Map_get
             },
             {
-                .id = "get_all",
-                .function = Map_get_all
+                "get_all",
+                Map_get_all
             },
             {
-                .id = "get_empty",
-                .function = Map_get_empty
+                "get_empty",
+                Map_get_empty
             },
             {
-                .id = "get_unknown",
-                .function = Map_get_unknown
+                "get_unknown",
+                Map_get_unknown
             },
             {
-                .id = "iter",
-                .function = Map_iter
+                "iter",
+                Map_iter
             },
             {
-                .id = "iter_empty",
-                .function = Map_iter_empty
+                "iter_empty",
+                Map_iter_empty
             },
             {
-                .id = "iter_zero_buckets",
-                .function = Map_iter_zero_buckets
+                "iter_zero_buckets",
+                Map_iter_zero_buckets
             },
             {
-                .id = "remove",
-                .function = Map_remove
+                "remove",
+                Map_remove
             },
             {
-                .id = "remove_empty",
-                .function = Map_remove_empty
+                "remove_empty",
+                Map_remove_empty
             },
             {
-                .id = "remove_unknown",
-                .function = Map_remove_unknown
+                "remove_unknown",
+                Map_remove_unknown
             },
             {
-                .id = "grow",
-                .function = Map_grow
+                "grow",
+                Map_grow
             },
             {
-                .id = "set_size_0",
-                .function = Map_set_size_0
+                "set_size_0",
+                Map_set_size_0
             }
         }
     },
     {
-        .id = "Chunked",
-        .testcase_count = 15,
-        .setup = Chunked_setup,
-        .testcases = (bake_test_case[]){
+        "Chunked",
+        Chunked_setup,
+        NULL,
+        15,
+        (bake_test_case[]){
             {
-                .id = "add_1",
-                .function = Chunked_add_1
+                "add_1",
+                Chunked_add_1
             },
             {
-                .id = "add_1_to_empty",
-                .function = Chunked_add_1_to_empty
+                "add_1_to_empty",
+                Chunked_add_1_to_empty
             },
             {
-                .id = "add_1_chunk_size_1",
-                .function = Chunked_add_1_chunk_size_1
+                "add_1_chunk_size_1",
+                Chunked_add_1_chunk_size_1
             },
             {
-                .id = "add_n",
-                .function = Chunked_add_n
+                "add_n",
+                Chunked_add_n
             },
             {
-                .id = "add_n_chunk_size_1",
-                .function = Chunked_add_n_chunk_size_1
+                "add_n_chunk_size_1",
+                Chunked_add_n_chunk_size_1
             },
             {
-                .id = "remove",
-                .function = Chunked_remove
+                "remove",
+                Chunked_remove
             },
             {
-                .id = "remove_first",
-                .function = Chunked_remove_first
+                "remove_first",
+                Chunked_remove_first
             },
             {
-                .id = "remove_last",
-                .function = Chunked_remove_last
+                "remove_last",
+                Chunked_remove_last
             },
             {
-                .id = "remove_all",
-                .function = Chunked_remove_all
+                "remove_all",
+                Chunked_remove_all
             },
             {
-                .id = "remove_all_n_chunks",
-                .function = Chunked_remove_all_n_chunks
+                "remove_all_n_chunks",
+                Chunked_remove_all_n_chunks
             },
             {
-                .id = "clear_1",
-                .function = Chunked_clear_1
+                "clear_1",
+                Chunked_clear_1
             },
             {
-                .id = "clear_empty",
-                .function = Chunked_clear_empty
+                "clear_empty",
+                Chunked_clear_empty
             },
             {
-                .id = "clear_n",
-                .function = Chunked_clear_n
+                "clear_n",
+                Chunked_clear_n
             },
             {
-                .id = "clear_n_chunks",
-                .function = Chunked_clear_n_chunks
+                "clear_n_chunks",
+                Chunked_clear_n_chunks
             },
             {
-                .id = "memory_null",
-                .function = Chunked_memory_null
+                "memory_null",
+                Chunked_memory_null
             }
         }
     }

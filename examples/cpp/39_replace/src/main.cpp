@@ -1,15 +1,15 @@
 #include <replace.h>
 #include <iostream>
 
-// Implement a simple counter with the replace API. Other than a regular set, 
-// replace lets an application to read a value before setting it.
+// Implement a simple counter with the patch API. Other than a regular set, 
+// patch lets an application to read a value before setting it.
 
 struct Counter {
     int value;
 };
 
 void inc(flecs::entity e) {
-    e.replace<Counter>([](Counter& counter, bool exists) {
+    e.patch<Counter>([](Counter& counter, bool exists) {
         // If this is the first time that we're setting Counter, initialize.
         if (!exists) {
             counter.value = 0;
@@ -19,7 +19,7 @@ void inc(flecs::entity e) {
         counter.value ++;
     });
 
-    // Replace will call the OnSet systems for the specified component.
+    // Patch will call the OnSet systems for the specified component.
 }
 
 int main(int argc, char *argv[]) {
