@@ -133,7 +133,7 @@ void Entity_replace() {
     auto entity = flecs::entity(world);
     test_assert(entity.id() != 0);
 
-    entity.replace<Position>([](Position& p, bool exists) {
+    entity.patch<Position>([](Position& p, bool exists) {
         test_assert(!exists);
         p.x = 10;
         p.y = 20;
@@ -143,7 +143,7 @@ void Entity_replace() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    entity.replace<Position>([](Position& p, bool exists) {
+    entity.patch<Position>([](Position& p, bool exists) {
         test_assert(exists);
         p.x = 30;
     });
@@ -165,6 +165,45 @@ void Entity_add_2() {
 
     test_assert(entity.has<Position>());
     test_assert(entity.has<Velocity>());
+}
+
+void Entity_add_entity() {
+    flecs::world world;
+
+    auto tag = flecs::entity(world);
+    test_assert(tag.id() != 0);
+
+    auto entity = flecs::entity(world);
+    test_assert(entity.id() != 0);
+
+    entity.add(tag);
+    test_assert(entity.has(tag));
+}
+
+void Entity_add_childof() {
+    flecs::world world;
+
+    auto parent = flecs::entity(world);
+    test_assert(parent.id() != 0);
+
+    auto entity = flecs::entity(world);
+    test_assert(entity.id() != 0);
+
+    entity.add_childof(parent);
+    test_assert(entity.has(flecs::Childof | parent.id()));
+}
+
+void Entity_add_instanceof() {
+    flecs::world world;
+
+    auto base = flecs::entity(world);
+    test_assert(base.id() != 0);
+
+    auto entity = flecs::entity(world);
+    test_assert(entity.id() != 0);
+
+    entity.add_instanceof(base);
+    test_assert(entity.has(flecs::Instanceof | base.id()));
 }
 
 void Entity_remove_2() {
@@ -212,3 +251,50 @@ void Entity_set_2() {
     test_int(v->y, 2);    
 }
 
+void Entity_remove_entity() {
+    flecs::world world;
+
+    auto tag = flecs::entity(world);
+    test_assert(tag.id() != 0);
+
+    auto entity = flecs::entity(world);
+    test_assert(entity.id() != 0);
+
+    entity.add(tag);
+    test_assert(entity.has(tag));
+
+    entity.remove(tag);
+    test_assert(!entity.has(tag));
+}
+
+void Entity_remove_childof() {
+    flecs::world world;
+
+    auto parent = flecs::entity(world);
+    test_assert(parent.id() != 0);
+
+    auto entity = flecs::entity(world);
+    test_assert(entity.id() != 0);
+
+    entity.add_childof(parent);
+    test_assert(entity.has(flecs::Childof | parent.id()));
+
+    entity.remove_childof(parent);
+    test_assert(!entity.has(flecs::Childof | parent.id()));
+}
+
+void Entity_remove_instanceof() {
+    flecs::world world;
+
+    auto base = flecs::entity(world);
+    test_assert(base.id() != 0);
+
+    auto entity = flecs::entity(world);
+    test_assert(entity.id() != 0);
+
+    entity.add_instanceof(base);
+    test_assert(entity.has(flecs::Instanceof | base.id()));
+    
+    entity.remove_instanceof(base);
+    test_assert(!entity.has(flecs::Instanceof | base.id()));
+}

@@ -98,6 +98,10 @@ static const ecs_entity_t PostFrame = EcsPostFrame;
 static const ecs_entity_t World = EcsWorld;
 static const ecs_entity_t Singleton = EcsSingleton;
 
+/** Builtin roles */
+static const ecs_entity_t Childof = ECS_CHILDOF;
+static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Wrapper class around a table column
@@ -981,7 +985,7 @@ private:
 
 class type final : entity {
 public:
-    type(const flecs::world& world, const char *name, const char *expr = nullptr)
+    type(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr)
         : entity(world, ecs_new_type(world.c_ptr(), 0, name, expr))
     { 
         sync_from_flecs();
@@ -1011,14 +1015,6 @@ public:
         return *this;
     }
 
-    template<typename T>
-    type& add() {
-        m_type = ecs_type_add(m_world, m_type, component_base<T>::s_entity);
-        m_normalized = ecs_type_add(m_world, m_normalized, component_base<T>::s_entity);
-        sync_from_me();
-        return *this;
-    }
-
     type& add_instanceof(const entity& e) {
         m_type = ecs_type_add(m_world, m_type, e.id() | ECS_INSTANCEOF);
         m_normalized = ecs_type_add(m_world, m_normalized, e.id() | ECS_INSTANCEOF);
@@ -1032,6 +1028,22 @@ public:
         sync_from_me();
         return *this;
     }
+
+    template <typename ... Components>
+    type& add() {
+        std::stringstream str;
+        if (!pack_args_to_string<Components...>(str)) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        std::string expr = str.str();
+        ecs_type_t type = ecs_type_from_str(m_world, expr.c_str());
+        m_type = ecs_type_merge(m_world, m_type, type, nullptr);
+        m_normalized = ecs_type_merge(m_world, m_normalized, type, nullptr);
+        sync_from_me();
+
+        return *this;
+    }    
 
     std::string str() const {
         char *str = ecs_type_str(m_world, m_type);
@@ -1072,6 +1084,24 @@ private:
             m_normalized = tc->normalized;
         }
     }
+
+    template<typename ... Components>
+    bool pack_args_to_string(std::stringstream& str) {
+        std::array<const char*, sizeof...(Components)> ids = {
+            component_base<Components>::s_name...
+        }; 
+
+        int i = 0;
+        for (auto id : ids) {
+            if (i) {
+                str << ",";
+            }
+            str << id;
+            i ++;
+        }  
+
+        return i != 0;
+    }    
 
     type_t m_type;
     type_t m_normalized;
@@ -1335,6 +1365,53 @@ private:
     Func m_func;
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Utility class to invoke a system action
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Func, typename ... Components>
+class action_invoker {
+    using Columns = typename column_args<Components ...>::Columns;
+
+public:
+    explicit action_invoker(Func func) 
+        : m_func(func) { }
+
+    /* Invoke system */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+
+        flecs::iter iter_wrapper(iter);
+        
+        func(iter_wrapper, (column<typename std::remove_reference<Components>::type>(
+            (typename std::remove_reference<Components>::type*)comps.ptr, iter->count, comps.is_shared))...);
+    }
+
+    /** Add components one by one to parameter pack */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+        call_system(iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
+    /** Callback provided to flecs */
+    static void run(ecs_iter_t *iter) {
+        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
+        action_invoker *self = (action_invoker*)ctx->ctx;        
+        Func func = self->m_func; 
+        column_args<Components...> columns(iter);
+        call_system(iter, func, 0, columns.m_columns);
+    }   
+
+private:
+    Func m_func;
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Persistent queries
 ////////////////////////////////////////////////////////////////////////////////
@@ -1379,6 +1456,17 @@ public:
             ctx.call_system(&iter, func, 0, columns.m_columns);
         }
     }
+
+    template <typename Func>
+    void action(Func func) const {
+        ecs_iter_t iter = ecs_query_iter(m_query);
+
+        while (ecs_query_next(&iter)) {
+            column_args<Components...> columns(&iter);
+            action_invoker<Func, Components...> ctx(func);
+            ctx.call_system(&iter, func, 0, columns.m_columns);
+        }
+    }    
 
     query_t* c_ptr() const {
         return m_query;
@@ -1489,54 +1577,6 @@ public:
 private:
     const world& m_world;
     snapshot_t *m_snapshot;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utility class to invoke a system action
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename Func, typename ... Components>
-class action_invoker {
-    using Columns = typename column_args<Components ...>::Columns;
-
-public:
-    explicit action_invoker(Func func) 
-        : m_func(func) { }
-
-    /* Invoke system */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, int index, Columns& columns, Targs... comps) {
-        (void)index;
-        (void)columns;
-
-        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        action_invoker *self = (action_invoker*)ctx->ctx;
-
-        Func func = self->m_func;
-
-        flecs::iter iter_wrapper(iter);
-        
-        func(iter_wrapper, (column<typename std::remove_reference<Components>::type>(
-            (typename std::remove_reference<Components>::type*)comps.ptr, iter->count, comps.is_shared))...);
-    }
-
-    /** Add components one by one to parameter pack */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, int index, Columns& columns, Targs... comps) {
-        call_system(iter, index + 1, columns, comps..., columns[index]);
-    }
-
-    /** Callback provided to flecs */
-    static void run(ecs_iter_t *iter) {
-        column_args<Components...> columns(iter);
-        call_system(iter, 0, columns.m_columns);
-    }   
-
-private:
-    Func m_func;
 };
 
 

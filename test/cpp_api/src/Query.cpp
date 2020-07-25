@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void System_action() {
+void Query_action() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -10,26 +10,21 @@ void System_action() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<Position, Velocity>(world)
-        .action([](flecs::iter&it, flecs::column<Position> p, flecs::column<Velocity> v) {
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
-            }
-        });
+    flecs::query<Position, Velocity> q(world);
 
-    world.progress();
+    q.action([](flecs::iter& it, flecs::column<Position> p, flecs::column<Velocity> v) {
+        for (auto i : it) {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+        }
+    });
 
     const Position *p = entity.get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
-
-    const Velocity *v = entity.get<Velocity>();
-    test_int(v->x, 1);
-    test_int(v->y, 2);       
 }
 
-void System_action_const() {
+void Query_action_const() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -39,26 +34,21 @@ void System_action_const() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<Position, const Velocity>(world)
-        .action([](flecs::iter&it, flecs::column<Position> p, flecs::column<const Velocity> v) {
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
-            }
-        });
+    flecs::query<Position, const Velocity> q(world);
 
-    world.progress();
+    q.action([](flecs::iter& it, flecs::column<Position> p, flecs::column<const Velocity> v) {
+        for (auto i : it) {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+        }
+    });
 
     const Position *p = entity.get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
-
-    const Velocity *v = entity.get<Velocity>();
-    test_int(v->x, 1);
-    test_int(v->y, 2);
 }
 
-void System_action_shared() {
+void Query_action_shared() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -75,8 +65,9 @@ void System_action_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::system<Position>(world).signature("ANY:Velocity")
-        .action([](flecs::iter&it, flecs::column<Position> p) {
+    flecs::query<Position> q(world, "ANY:Velocity");
+
+    q.action([](flecs::iter&it, flecs::column<Position> p) {
             flecs::column<const Velocity> v(it, 2);
 
             if (v.is_shared()) {
@@ -92,18 +83,16 @@ void System_action_shared() {
             }
         });
 
-    world.progress();
-
     const Position *p = e1.get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 
     p = e2.get<Position>();
     test_int(p->x, 13);
-    test_int(p->y, 24);   
+    test_int(p->y, 24);  
 }
 
-void System_each() {
+void Query_each() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -113,20 +102,19 @@ void System_each() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<Position, Velocity>(world)
-        .each([](flecs::entity e, Position& p, Velocity& v) {
-            p.x += v.x;
-            p.y += v.y;
-        });
+    flecs::query<Position, Velocity> q(world);
 
-    world.progress();
+    q.each([](flecs::entity e, Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
 
     const Position *p = entity.get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
 
-void System_each_const() {
+void Query_each_const() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -136,20 +124,19 @@ void System_each_const() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<Position, const Velocity>(world)
-        .each([](flecs::entity e, Position& p, const Velocity& v) {
-            p.x += v.x;
-            p.y += v.y;
-        });
+    flecs::query<Position, const Velocity> q(world);
 
-    world.progress();
+    q.each([](flecs::entity e, Position& p, const Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
 
     const Position *p = entity.get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
 
-void System_each_shared() {
+void Query_each_shared() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -166,13 +153,12 @@ void System_each_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::system<Position, const Velocity>(world)
-        .each([](flecs::entity e, Position& p, const Velocity& v) {
-            p.x += v.x;
-            p.y += v.y;
-        });
+    flecs::query<Position, const Velocity> q(world);
 
-    world.progress();
+    q.each([](flecs::entity e, Position& p, const Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
 
     const Position *p = e1.get<Position>();
     test_int(p->x, 11);
@@ -183,7 +169,7 @@ void System_each_shared() {
     test_int(p->y, 24); 
 }
 
-void System_signature() {
+void Query_signature() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -193,29 +179,24 @@ void System_signature() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<>(world).signature("Position, Velocity")
-        .action([](flecs::iter&it) {
-            flecs::column<Position> p(it, 1);
-            flecs::column<Velocity> v(it, 2);
+    flecs::query<> q(world, "Position, Velocity");
 
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
-            }
-        });
+    q.action([](flecs::iter& it) {
+        flecs::column<Position> p(it, 1);
+        flecs::column<Velocity> v(it, 2);
 
-    world.progress();
+        for (auto i : it) {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+        }
+    });
 
     const Position *p = entity.get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
-
-    const Velocity *v = entity.get<Velocity>();
-    test_int(v->x, 1);
-    test_int(v->y, 2); 
 }
 
-void System_signature_const() {
+void Query_signature_const() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -225,29 +206,24 @@ void System_signature_const() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<>(world).signature("Position, [in] Velocity")
-        .action([](flecs::iter&it) {
-            flecs::column<Position> p(it, 1);
-            flecs::column<const Velocity> v(it, 2);
+    flecs::query<> q(world, "Position, [in] Velocity");
 
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
-            }
-        });
-
-    world.progress();
+    q.action([](flecs::iter& it) {
+        flecs::column<Position> p(it, 1);
+        flecs::column<const Velocity> v(it, 2);
+        
+        for (auto i : it) {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+        }
+    });
 
     const Position *p = entity.get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
-
-    const Velocity *v = entity.get<Velocity>();
-    test_int(v->x, 1);
-    test_int(v->y, 2); 
 }
 
-void System_signature_shared() {
+void Query_signature_shared() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -264,25 +240,24 @@ void System_signature_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::system<>(world).signature("Position, [in] ANY:Velocity")
-        .action([](flecs::iter&it) {
-            flecs::column<Position> p(it, 1);
-            flecs::column<const Velocity> v(it, 2);
+    flecs::query<> q(world, "Position, [in] ANY:Velocity");
+    
+    q.action([](flecs::iter&it) {
+        flecs::column<Position> p(it, 1);
+        flecs::column<const Velocity> v(it, 2);
 
-            if (v.is_shared()) {
-                for (auto i : it) {
-                    p[i].x += v->x;
-                    p[i].y += v->y;
-                }
-            } else {
-                for (auto i : it) {
-                    p[i].x += v[i].x;
-                    p[i].y += v[i].y;
-                }                
+        if (v.is_shared()) {
+            for (auto i : it) {
+                p[i].x += v->x;
+                p[i].y += v->y;
             }
-        });
-
-    world.progress();
+        } else {
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            }                
+        }
+    });
 
     const Position *p = e1.get<Position>();
     test_int(p->x, 11);

@@ -23,14 +23,44 @@
                 "new_set_2",
                 "add",
                 "add_2",
+                "add_entity",
+                "add_childof",
+                "add_instanceof",
                 "remove",
                 "remove_2",
+                "remove_entity",
+                "remove_childof",
+                "remove_instanceof",
                 "set",
                 "set_2",
                 "replace"
             ]
         }, {
+            "id": "Type",
+            "testcases": [
+                "add_2",
+                "add_instanceof",
+                "add_childof",
+                "1_component",
+                "2_component",
+                "1_component_signature",
+                "2_component_signature"
+            ]
+        }, {
             "id": "System",
+            "testcases": [
+                "action",
+                "action_const",
+                "action_shared",
+                "each",
+                "each_const",
+                "each_shared",
+                "signature",
+                "signature_const",
+                "signature_shared"
+            ]
+        }, {
+            "id": "Query",
             "testcases": [
                 "action",
                 "action_const",
