@@ -91,6 +91,15 @@
                 "non_pod_set",
                 "non_pod_override"
             ]
+        }, {
+            "id": "Refs",
+            "testcases": [
+                "get_ref",
+                "ref_after_add",
+                "ref_after_remove",
+                "ref_after_set",
+                "ref_before_set"
+            ]
         }]
     }
 }

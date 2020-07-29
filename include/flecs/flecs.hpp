@@ -755,12 +755,12 @@ public:
         : m_world( world )
         , m_entity( entity )
         , m_ref() {
-        _ecs_get_ref(
+        ecs_get_ref_w_entity(
             m_world, &m_ref, m_entity, component_base<T>::s_entity);
     }
 
-    T* operator->() {
-        T* result = static_cast<T*>(_ecs_get_ref(
+    const T* operator->() {
+        const T* result = static_cast<const T*>(ecs_get_ref_w_entity(
             m_world, &m_ref, m_entity, component_base<T>::s_entity));
 
         ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -768,9 +768,9 @@ public:
         return result;
     }
 
-    T* get() {
+    const T* get() {
         if (m_entity) {
-            _ecs_get_ref(
+            ecs_get_ref_w_entity(
                 m_world, &m_ref, m_entity, component_base<T>::s_entity);    
         }
 
