@@ -61,7 +61,7 @@ typedef char bool;
 #define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
-#if defined(COMPILER_GCC) || defined(__clang__)
+#if defined(__GNUC__)
 #define ECS_UNUSED __attribute__((unused))
 #else
 #define ECS_UNUSED
