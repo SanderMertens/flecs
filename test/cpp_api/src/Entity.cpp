@@ -143,9 +143,9 @@ void Entity_replace() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    entity.patch<Position>([](Position& p, bool exists) {
+    entity.patch<Position>([](Position& p_arg, bool exists) {
         test_assert(exists);
-        p.x = 30;
+        p_arg.x = 30;
     });
 
     test_int(p->x, 30); 

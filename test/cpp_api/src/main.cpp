@@ -66,6 +66,17 @@ void Query_signature_const(void);
 void Query_signature_shared(void);
 void Query_signature_optional(void);
 
+// Testsuite 'ComponentLifecycle'
+void ComponentLifecycle_ctor_on_add(void);
+void ComponentLifecycle_dtor_on_remove(void);
+void ComponentLifecycle_copy_on_set(void);
+void ComponentLifecycle_copy_on_override(void);
+void ComponentLifecycle_move_on_merge(void);
+void ComponentLifecycle_non_pod_add(void);
+void ComponentLifecycle_non_pod_remove(void);
+void ComponentLifecycle_non_pod_set(void);
+void ComponentLifecycle_non_pod_override(void);
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -298,10 +309,54 @@ static bake_test_suite suites[] = {
                 Query_signature_optional
             }
         }
+    },
+    {
+        "ComponentLifecycle",
+        NULL,
+        NULL,
+        9,
+        (bake_test_case[]){
+            {
+                "ctor_on_add",
+                ComponentLifecycle_ctor_on_add
+            },
+            {
+                "dtor_on_remove",
+                ComponentLifecycle_dtor_on_remove
+            },
+            {
+                "copy_on_set",
+                ComponentLifecycle_copy_on_set
+            },
+            {
+                "copy_on_override",
+                ComponentLifecycle_copy_on_override
+            },
+            {
+                "move_on_merge",
+                ComponentLifecycle_move_on_merge
+            },
+            {
+                "non_pod_add",
+                ComponentLifecycle_non_pod_add
+            },
+            {
+                "non_pod_remove",
+                ComponentLifecycle_non_pod_remove
+            },
+            {
+                "non_pod_set",
+                ComponentLifecycle_non_pod_set
+            },
+            {
+                "non_pod_override",
+                ComponentLifecycle_non_pod_override
+            }
+        }
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 4);
+    return bake_test_run("cpp_api", argc, argv, suites, 5);
 }

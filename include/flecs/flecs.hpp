@@ -679,7 +679,6 @@ public:
     base_type& remove_instanceof(const entity& base_entity) const;
 
     /* -- set -- */
-
     template <typename T>
     const base_type& set(const T&& value) const {
         static_cast<base_type*>(this)->invoke(
@@ -687,7 +686,8 @@ public:
             ecs_set_ptr_w_entity(world, id, component_base<T>::s_entity, sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
-    }   
+    }
+
 
     template <typename T>
     const base_type& set(const T& value) const {
@@ -1063,9 +1063,9 @@ public:
         }
 
         std::string expr = str.str();
-        ecs_type_t type = ecs_type_from_str(m_world, expr.c_str());
-        m_type = ecs_type_merge(m_world, m_type, type, nullptr);
-        m_normalized = ecs_type_merge(m_world, m_normalized, type, nullptr);
+        ecs_type_t t = ecs_type_from_str(m_world, expr.c_str());
+        m_type = ecs_type_merge(m_world, m_type, t, nullptr);
+        m_normalized = ecs_type_merge(m_world, m_normalized, t, nullptr);
         sync_from_me();
 
         return *this;
@@ -1159,6 +1159,84 @@ template <typename T> const char* component_base<T>::s_name( nullptr );
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
+void component_ctor(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entity_ptr,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *t_ptr = static_cast<T*>(ptr);
+    
+    for (int i = 0; i < count; i ++) {
+        new(&t_ptr[i]) T;
+    }
+} 
+
+template <typename T>
+void component_dtor(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entity_ptr,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *t_ptr = static_cast<T*>(ptr);
+    
+    for (int i = 0; i < count; i ++) {
+        t_ptr[i].~T();
+    }
+}
+
+template <typename T>
+void component_copy(
+    ecs_world_t *world,
+    ecs_entity_t component,    
+    const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity,
+    void *dst_ptr,
+    const void *src_ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *t_dst_ptr = static_cast<T*>(dst_ptr);
+    const T *t_src_ptr = static_cast<const T*>(src_ptr);
+    
+    for (int i = 0; i < count; i ++) {
+        t_dst_ptr[i] = t_src_ptr[i];
+    }
+}
+
+template <typename T>
+void component_move(
+    ecs_world_t *world,
+    ecs_entity_t component,    
+    const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity,
+    void *dst_ptr,
+    void *src_ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *t_dst_ptr = static_cast<T*>(dst_ptr);
+    T *t_src_ptr = static_cast<T*>(src_ptr);
+    
+    for (int i = 0; i < count; i ++) {
+        t_dst_ptr[i] = std::move(t_src_ptr[i]);
+    }
+}
+
+template <typename T>
 class component : public entity {
 public:
     component(const flecs::world& world, const char *name) { 
@@ -1182,6 +1260,17 @@ public:
 
         m_id = component_base<T>::s_entity;
         m_world = world.c_ptr();
+
+        EcsComponentLifecycle cl{};
+        cl.ctor = component_ctor<T>;
+        cl.dtor = component_dtor<T>;
+        cl.copy = component_copy<T>;
+        cl.move = component_move<T>;
+        
+        ecs_set_component_actions_w_entity(
+            world.c_ptr(), 
+            component_base<T>::s_entity, 
+            &cl);
     }
 };
 

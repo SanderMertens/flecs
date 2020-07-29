@@ -123,6 +123,13 @@ void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable);
 
+int32_t ecs_get_component_action_flags(
+    ecs_c_info_t *c_info);    
+
+void ecs_notify_tables_of_component_actions(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_c_info_t *c_info);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
@@ -179,36 +186,54 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_entity_t component,
     ecs_entity_t previous);
 
-void ecs_run_init_actions(
+void ecs_get_column_info(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entities_t *components,
+    ecs_column_info_t *cinfo,
+    bool get_all);
+
+void ecs_components_construct(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_entities_t components,
+    ecs_column_info_t *component_info,
+    int32_t component_count);
+
+void ecs_components_destruct(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    ecs_column_info_t *component_info,
+    int32_t component_count);
+
+void ecs_run_add_actions(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    ecs_entities_t *added,
     ecs_comp_mask_t set_mask,
-    bool run_on_set);
+    bool get_all,
+    bool run_on_set);   
 
-void ecs_run_deinit_actions(
+void ecs_run_remove_actions(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_entities_t components,
-    bool run_triggers);
-
-void ecs_run_component_trigger(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_vector_t *trigger_vec,
-    ecs_entity_t component,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count);
+    ecs_entities_t *removed,
+    bool get_all);
 
 void ecs_run_set_systems(
     ecs_world_t *world,
@@ -240,6 +265,15 @@ void ecs_table_register_query(
 void ecs_table_unset(
     ecs_world_t *world,
     ecs_table_t *table);
+
+/* Destruct columns */
+void ecs_table_destruct(
+    ecs_world_t *world, 
+    ecs_stage_t *stage, 
+    ecs_table_t *table, 
+    ecs_data_t *data, 
+    int32_t row, 
+    int32_t count);
 
 /* Free table */
 void ecs_table_free(

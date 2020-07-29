@@ -184,6 +184,12 @@ void init_edges(
                 ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
             }
         }
+
+        /* Set flags based on component actions */
+        ecs_c_info_t *ci = ecs_get_c_info(world, e & ECS_ENTITY_MASK);
+        if (ci) {
+            table->flags |= ecs_get_component_action_flags(ci);
+        }
     }
     
     /* Register as root table */

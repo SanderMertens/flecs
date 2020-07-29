@@ -57,7 +57,7 @@ void merge_table(
     ecs_table_t *src_table,
     ecs_entities_t *to_add,
     ecs_entities_t *to_remove)
-{
+{    
     if (!dst_table->type) {
         /* If this removes all components, clear table */
         ecs_table_clear(world, src_table);
@@ -69,16 +69,17 @@ void merge_table(
             int32_t src_count = ecs_table_count(src_table);
 
             if (to_remove && to_remove->count && src_data) {
-                ecs_run_deinit_actions(world, &world->stage, src_table, src_data, 
-                    0, src_count, *to_remove, true);
+                ecs_run_remove_actions(world, &world->stage, src_table, 
+                    src_data, 0, src_count, to_remove, false);
             }
 
             ecs_table_merge(world, dst_table, src_table);
             ecs_data_t *dst_data = ecs_table_get_data(world, dst_table);
 
             if (to_add && to_add->count && dst_data) {
-                ecs_run_init_actions(world, &world->stage, dst_table, dst_data, 
-                    dst_count, src_count, *to_add, (ecs_comp_mask_t){ 0 }, true);
+                ecs_comp_mask_t set_mask = {0};
+                ecs_run_add_actions(world, &world->stage, dst_table, dst_data, 
+                    dst_count, src_count, to_add, set_mask, false, true);
             }
         }
     }

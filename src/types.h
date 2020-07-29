@@ -99,11 +99,23 @@ typedef struct ecs_table_leaf_t {
 typedef enum ecs_table_flags_t {
     EcsTableHasBuiltins = 1,        /**< Does table have builtin components */
     EcsTableIsPrefab = 2,           /**< Does the table store prefabs */
-    EcsTableHasBase = 4,          /**< Does the table type has INSTANCEOF */
+    EcsTableHasBase = 4,            /**< Does the table type has INSTANCEOF */
     EcsTableHasParent = 8,          /**< Does the table type has CHILDOF */
     EcsTableHasComponentData = 16,  /**< Does the table have component data */
     EcsTableHasXor = 32,            /**< Does the table type has XOR */
-    EcsTableIsDisabled = 64         /**< Does the table type has EcsDisabled */
+    EcsTableIsDisabled = 64,        /**< Does the table type has EcsDisabled */
+    EcsTableHasCtors = 128,
+    EcsTableHasDtors = 256,
+    EcsTableHasOnAdd = 512,
+    EcsTableHasOnRemove = 1024,
+    EcsTableHasOnSet = 2048,
+    EcsTableHasUnSet = 4096,
+    EcsTableHasMonitors = 8192,
+
+    /* Composite constants */
+    EcsTableHasLifecycle = EcsTableHasCtors | EcsTableHasDtors,
+    EcsTableHasAddActions = EcsTableHasBase | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors,
+    EcsTableHasRemoveActions = EcsTableHasBase | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors
 } ecs_table_flags_t;
 
 /** Edge used for traversing the table graph. */
@@ -402,9 +414,15 @@ typedef struct ecs_thread_t {
 typedef struct ecs_c_info_t {
     ecs_vector_t *on_add;       /* Systems ran after adding this component */
     ecs_vector_t *on_remove;    /* Systems ran after removing this component */
-
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
 } ecs_c_info_t;
+
+/** Supporting type to store looked up component data in specific table */
+typedef struct ecs_column_info_t {
+    ecs_entity_t id;
+    ecs_c_info_t *ci;
+    int32_t column;
+} ecs_column_info_t;
 
 /* Component monitors */
 typedef struct ecs_component_monitor_t {

@@ -670,6 +670,8 @@ void trigger_set(
         *el = ct[i];
         el->self = entities[i];
 
+        ecs_notify_tables_of_component_actions(world, e, cdata);
+
         ecs_trace_1("trigger #[green]%s#[normal] created for component #[red]%s",
             ct[i].kind == EcsOnAdd
                 ? "OnAdd"

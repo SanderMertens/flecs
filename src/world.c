@@ -330,6 +330,63 @@ void on_demand_in_map_deinit(
     ecs_map_free(map);
 }
 
+static
+void ctor_init_zero(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entity_ptr,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    memset(ptr, 0, size * count);
+}
+
+int32_t ecs_get_component_action_flags(
+    ecs_c_info_t *c_info) 
+{
+    int32_t flags = 0;
+
+    if (c_info->lifecycle.ctor) {
+        flags |= EcsTableHasCtors;
+    }
+    if (c_info->lifecycle.dtor) {
+        flags |= EcsTableHasDtors;
+    }
+    if (c_info->on_add) {
+        flags |= EcsTableHasOnAdd;
+    }
+    if (c_info->on_remove) {
+        flags |= EcsTableHasOnRemove;
+    }    
+
+    return flags;  
+}
+
+void ecs_notify_tables_of_component_actions(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_c_info_t *c_info)
+{
+    int32_t flags = ecs_get_component_action_flags(c_info);
+
+    /* Iterate tables to set flags based on what actions have been registered */
+    ecs_sparse_t *tables = world->stage.tables;
+    int32_t i, count = ecs_sparse_count(tables);
+
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
+        if (ecs_type_owns_entity(world, table->type, component, true)) {
+            /* Reset lifecycle flags before setting */
+            table->flags &= ~EcsTableHasLifecycle;
+
+            /* Set lifecycle flags */
+            table->flags |= flags;
+        }
+    }
+}
+
 void ecs_set_component_actions_w_entity(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -337,6 +394,16 @@ void ecs_set_component_actions_w_entity(
 {
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
     c_info->lifecycle = *lifecycle;
+
+    /* If no constructor is set, invoking any of the other lifecycle actions is
+     * not safe as they will potentially access uninitialized memory. For ease
+     * of use, if no constructor is specified, set a default one that 
+     * initializes the component to 0. */
+    if (!lifecycle->ctor) {
+        c_info->lifecycle.ctor = ctor_init_zero;   
+    }
+
+    ecs_notify_tables_of_component_actions(world, component, c_info);
 }
 
 void ecs_atfini(

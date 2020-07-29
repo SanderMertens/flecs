@@ -100,22 +100,51 @@ void run_un_set_handlers(
 }
 
 static
-void run_on_remove_handlers(
+void run_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data)
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    bool dtor_only)
 {
-    int32_t count = ecs_vector_count(data->entities);
-
     if (count) {
         ecs_entities_t components = ecs_type_to_entities(table->type);
+        ecs_column_info_t *cinfo = NULL;
+        ecs_column_info_t cinfo_buff[ECS_MAX_ADD_REMOVE];
+        if (components.count < ECS_MAX_ADD_REMOVE) {
+            cinfo = cinfo_buff;
+            ecs_get_column_info(world, table, &components, cinfo, true);
+        } else {
+            cinfo = ecs_os_malloc(sizeof(ecs_column_info_t) * components.count);
+            ecs_get_column_info(world, table, &components, cinfo, true);
+        }
 
-        ecs_run_monitors(world, &world->stage, table, NULL, 
-                0, count, table->un_set_all);
+        if (!dtor_only) {
+            ecs_run_monitors(world, &world->stage, table, NULL, 
+                    row, count, table->un_set_all);
+        }
 
         /* Run deinit actions (dtors) for components. Don't run triggers */
-        ecs_run_deinit_actions(
-            world, &world->stage, table, data, 0, count, components, false);
+        ecs_components_destruct(world, &world->stage, table, data, row, count, 
+            cinfo, components.count);
+
+        if (cinfo != cinfo_buff) {
+            ecs_os_free(cinfo);
+        }
+    }
+}
+
+void ecs_table_destruct(
+    ecs_world_t *world, 
+    ecs_stage_t *stage, 
+    ecs_table_t *table, 
+    ecs_data_t *data, 
+    int32_t row, 
+    int32_t count)
+{
+    if (table->flags & EcsTableHasDtors) {
+        run_remove_actions(world, table, data, row, count, true);
     }
 }
 
@@ -359,6 +388,7 @@ void ecs_table_register_query(
 
     /* Register the query as a monitor */
     if (query->flags & EcsQueryMonitor) {
+        table->flags |= EcsTableHasMonitors;
         register_monitor(world, table, query, matched_table_index);
     }
 
@@ -498,7 +528,8 @@ void ecs_table_clear(
 {
     ecs_data_t *data = ecs_table_get_data(world, table);
     if (data) {
-        run_on_remove_handlers(world, table, data);
+        run_remove_actions(
+            world, table, data, 0, ecs_table_data_count(data), false);
 
         ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
         int32_t i, count = ecs_vector_count(data->entities);
@@ -532,7 +563,8 @@ void ecs_table_free(
     (void)world;
     ecs_data_t *data = ecs_table_get_data(world, table);
     if (data) {
-        run_on_remove_handlers(world, table, data);
+        run_remove_actions(
+            world, table, data, 0, ecs_table_data_count(data), false);
     }
 
     deinit_all_data(table);
@@ -688,7 +720,7 @@ void ecs_table_delete(
     uint32_t column_count = table->column_count;
     uint32_t i;
 
-    if (index != count) {   
+    if (index != count) {
         /* Move last entity id to index */     
         ecs_entity_t *entities = ecs_vector_first(entity_column, ecs_entity_t);
         ecs_entity_t entity_to_move = entities[count];
@@ -1221,7 +1253,8 @@ void ecs_table_replace_data(
 
     if (table_data) {
         prev_count = ecs_vector_count(table_data->entities);
-        run_on_remove_handlers(world, table, table_data);
+        run_remove_actions(
+            world, table, table_data, 0, ecs_table_data_count(table_data), false);
         deinit_data(table, table_data);
     }
 
@@ -1294,9 +1327,11 @@ void ecs_table_move(
                     ecs_c_info_t *cdata = ecs_get_c_info(
                         world, new_component);
 
+                    ecs_xtor_t ctor;
                     ecs_copy_t copy;
-                    if (cdata && (copy = cdata->lifecycle.copy)) {
+                    if (cdata && (ctor = cdata->lifecycle.ctor) && (copy = cdata->lifecycle.copy)) {
                         void *ctx = cdata->lifecycle.ctx;
+                        ctor(world, new_component, &dst_entity, dst, size, 1, ctx);
                         copy(world, new_component, &dst_entity, &src_entity, dst, src, 
                             size, 1, ctx);
                     } else {
