@@ -77,6 +77,13 @@ void ComponentLifecycle_non_pod_remove(void);
 void ComponentLifecycle_non_pod_set(void);
 void ComponentLifecycle_non_pod_override(void);
 
+// Testsuite 'Refs'
+void Refs_get_ref(void);
+void Refs_ref_after_add(void);
+void Refs_ref_after_remove(void);
+void Refs_ref_after_set(void);
+void Refs_ref_before_set(void);
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -353,10 +360,38 @@ static bake_test_suite suites[] = {
                 ComponentLifecycle_non_pod_override
             }
         }
+    },
+    {
+        "Refs",
+        NULL,
+        NULL,
+        5,
+        (bake_test_case[]){
+            {
+                "get_ref",
+                Refs_get_ref
+            },
+            {
+                "ref_after_add",
+                Refs_ref_after_add
+            },
+            {
+                "ref_after_remove",
+                Refs_ref_after_remove
+            },
+            {
+                "ref_after_set",
+                Refs_ref_after_set
+            },
+            {
+                "ref_before_set",
+                Refs_ref_before_set
+            }
+        }
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 5);
+    return bake_test_run("cpp_api", argc, argv, suites, 6);
 }
