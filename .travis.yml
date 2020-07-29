@@ -80,7 +80,9 @@ install:
   - if [[ -z "$NO_CPP" ]]; then bake examples/cpp; fi
 
 script:
-  - bake test
+  - bake run test/api --cfg test
+  - bake run test/collections --cfg test
+  - if [[ -z "$NO_CPP" ]]; then bake run test/cpp_api --cfg test; fi
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
