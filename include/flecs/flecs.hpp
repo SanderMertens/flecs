@@ -1237,9 +1237,9 @@ void component_move(
 }
 
 template <typename T>
-class component : public entity {
+class pod_component : public entity {
 public:
-    component(const flecs::world& world, const char *name) { 
+    pod_component(const flecs::world& world, const char *name) { 
         component_base<T>::init(world, name);
 
         /* Register as well for both const and reference versions of type */
@@ -1260,7 +1260,15 @@ public:
 
         m_id = component_base<T>::s_entity;
         m_world = world.c_ptr();
+    }
+};
 
+template <typename T>
+class component : public pod_component<T> {
+public:
+    component(const flecs::world& world, const char *name) 
+        : pod_component<T>(world, name) 
+    { 
         EcsComponentLifecycle cl{};
         cl.ctor = component_ctor<T>;
         cl.dtor = component_dtor<T>;
@@ -1280,9 +1288,9 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class module final : public component<T> {
+class module final : public pod_component<T> {
 public:
-    module(flecs::world& world, const char *name) : component<T>(world, name) { }
+    module(flecs::world& world, const char *name) : pod_component<T>(world, name) { }
 };
 
 
