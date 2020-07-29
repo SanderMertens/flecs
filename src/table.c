@@ -126,7 +126,7 @@ void run_remove_actions(
         }
 
         /* Run deinit actions (dtors) for components. Don't run triggers */
-        ecs_components_destruct(world, &world->stage, table, data, row, count, 
+        ecs_components_destruct(world, &world->stage, data, row, count, 
             cinfo, components.count);
 
         if (cinfo != cinfo_buff) {
@@ -137,7 +137,6 @@ void run_remove_actions(
 
 void ecs_table_destruct(
     ecs_world_t *world, 
-    ecs_stage_t *stage, 
     ecs_table_t *table, 
     ecs_data_t *data, 
     int32_t row, 

@@ -340,6 +340,10 @@ void ctor_init_zero(
     int32_t count,
     void *ctx)
 {
+    (void)world;
+    (void)component;
+    (void)entity_ptr;
+    (void)ctx;
     memset(ptr, 0, size * count);
 }
 

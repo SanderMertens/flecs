@@ -196,7 +196,6 @@ void ecs_get_column_info(
 void ecs_components_construct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -206,7 +205,6 @@ void ecs_components_construct(
 void ecs_components_destruct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -269,7 +267,6 @@ void ecs_table_unset(
 /* Destruct columns */
 void ecs_table_destruct(
     ecs_world_t *world, 
-    ecs_stage_t *stage, 
     ecs_table_t *table, 
     ecs_data_t *data, 
     int32_t row, 

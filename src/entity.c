@@ -692,13 +692,13 @@ bool override_component(
 void ecs_components_construct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
     ecs_column_info_t *component_info,
     int32_t component_count)
 {
+    (void) world;
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(component_count != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -727,13 +727,14 @@ void ecs_components_construct(
 void ecs_components_destruct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
     ecs_column_info_t *component_info,
     int32_t component_count)
 {
+    (void)world;
+
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(component_count != 0, ECS_INTERNAL_ERROR, NULL);
     if (!component_count) {
@@ -925,8 +926,7 @@ void ecs_run_add_actions(
 
     if (table->flags & EcsTableHasCtors) {
         ecs_components_construct(
-            world, stage, table, data, row, count, cinfo, 
-            added_count);
+            world, stage, data, row, count, cinfo, added_count);
     }
 
     if (table->flags & EcsTableHasBase) {
@@ -965,8 +965,7 @@ void ecs_run_remove_actions(
 
     if (table->flags & EcsTableHasDtors) {
         ecs_components_destruct(
-            world, stage, table, data, row, count, cinfo, 
-            removed_count);
+            world, stage, data, row, count, cinfo, removed_count);
     }    
 }
 

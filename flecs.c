@@ -1012,7 +1012,6 @@ void ecs_get_column_info(
 void ecs_components_construct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -1022,7 +1021,6 @@ void ecs_components_construct(
 void ecs_components_destruct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -1085,7 +1083,6 @@ void ecs_table_unset(
 /* Destruct columns */
 void ecs_table_destruct(
     ecs_world_t *world, 
-    ecs_stage_t *stage, 
     ecs_table_t *table, 
     ecs_data_t *data, 
     int32_t row, 
@@ -1848,7 +1845,7 @@ void run_remove_actions(
         }
 
         /* Run deinit actions (dtors) for components. Don't run triggers */
-        ecs_components_destruct(world, &world->stage, table, data, row, count, 
+        ecs_components_destruct(world, &world->stage, data, row, count, 
             cinfo, components.count);
 
         if (cinfo != cinfo_buff) {
@@ -1859,7 +1856,6 @@ void run_remove_actions(
 
 void ecs_table_destruct(
     ecs_world_t *world, 
-    ecs_stage_t *stage, 
     ecs_table_t *table, 
     ecs_data_t *data, 
     int32_t row, 
@@ -3826,13 +3822,13 @@ bool override_component(
 void ecs_components_construct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
     ecs_column_info_t *component_info,
     int32_t component_count)
 {
+    (void) world;
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(component_count != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -3861,13 +3857,14 @@ void ecs_components_construct(
 void ecs_components_destruct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
     ecs_column_info_t *component_info,
     int32_t component_count)
 {
+    (void)world;
+
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(component_count != 0, ECS_INTERNAL_ERROR, NULL);
     if (!component_count) {
@@ -4059,8 +4056,7 @@ void ecs_run_add_actions(
 
     if (table->flags & EcsTableHasCtors) {
         ecs_components_construct(
-            world, stage, table, data, row, count, cinfo, 
-            added_count);
+            world, stage, data, row, count, cinfo, added_count);
     }
 
     if (table->flags & EcsTableHasBase) {
@@ -4099,8 +4095,7 @@ void ecs_run_remove_actions(
 
     if (table->flags & EcsTableHasDtors) {
         ecs_components_destruct(
-            world, stage, table, data, row, count, cinfo, 
-            removed_count);
+            world, stage, data, row, count, cinfo, removed_count);
     }    
 }
 
@@ -5705,7 +5700,7 @@ void merge_commits(
             if (src_table) {
                 /* Delete entity from old table */
                 ecs_data_t *src_data = ecs_table_get_data(world, src_table);
-                ecs_table_destruct(world, stage, src_table, src_data, row, 1);
+                ecs_table_destruct(world, src_table, src_data, row, 1);
                 ecs_table_delete(world, stage, src_table, src_data, row);
             }
         }
@@ -7569,6 +7564,10 @@ void ctor_init_zero(
     int32_t count,
     void *ctx)
 {
+    (void)world;
+    (void)component;
+    (void)entity_ptr;
+    (void)ctx;
     memset(ptr, 0, size * count);
 }
 
@@ -15313,7 +15312,6 @@ void ecs_get_column_info(
 void ecs_components_construct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -15323,7 +15321,6 @@ void ecs_components_construct(
 void ecs_components_destruct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -15386,7 +15383,6 @@ void ecs_table_unset(
 /* Destruct columns */
 void ecs_table_destruct(
     ecs_world_t *world, 
-    ecs_stage_t *stage, 
     ecs_table_t *table, 
     ecs_data_t *data, 
     int32_t row, 
@@ -18314,7 +18310,6 @@ void ecs_get_column_info(
 void ecs_components_construct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -18324,7 +18319,6 @@ void ecs_components_construct(
 void ecs_components_destruct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -18387,7 +18381,6 @@ void ecs_table_unset(
 /* Destruct columns */
 void ecs_table_destruct(
     ecs_world_t *world, 
-    ecs_stage_t *stage, 
     ecs_table_t *table, 
     ecs_data_t *data, 
     int32_t row, 
@@ -20448,7 +20441,6 @@ void ecs_get_column_info(
 void ecs_components_construct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -20458,7 +20450,6 @@ void ecs_components_construct(
 void ecs_components_destruct(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -20521,7 +20512,6 @@ void ecs_table_unset(
 /* Destruct columns */
 void ecs_table_destruct(
     ecs_world_t *world, 
-    ecs_stage_t *stage, 
     ecs_table_t *table, 
     ecs_data_t *data, 
     int32_t row, 
