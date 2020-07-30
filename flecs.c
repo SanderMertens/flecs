@@ -16026,9 +16026,6 @@ ecs_writer_t ecs_writer_init(
 struct ecs_queue_t {
     ecs_vector_t *data;
     int32_t index;
-#ifndef NDEBUG
-    size_t elem_size;
-#endif
 };
 
 ecs_queue_t* _ecs_queue_new(
@@ -16063,8 +16060,6 @@ void* _ecs_queue_push(
     size_t elem_size,
     int16_t offset)
 {
-    ecs_assert(elem_size == buffer->elem_size, ECS_INVALID_PARAMETER, NULL);
-
     int32_t size = ecs_vector_size(buffer->data);
     int32_t count = ecs_vector_count(buffer->data);
     void *result;
@@ -21547,7 +21542,7 @@ void ecs_run_monitor(
 
 /* Generic constructor to initialize a component to 0 */
 static
-void ctor_init_zero(
+void sys_ctor_init_zero(
     ecs_world_t *world,
     ecs_entity_t component,
     const ecs_entity_t *entities,
@@ -21859,7 +21854,7 @@ void FlecsSystemImport(
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, ecs_entity(EcsSystem));
     ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    c_info->lifecycle.ctor = ctor_init_zero;
+    c_info->lifecycle.ctor = sys_ctor_init_zero;
     c_info->lifecycle.dtor = ecs_colsystem_dtor;
 
     /* Create systems necessary to create systems */

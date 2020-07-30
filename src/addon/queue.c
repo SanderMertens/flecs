@@ -4,9 +4,6 @@
 struct ecs_queue_t {
     ecs_vector_t *data;
     int32_t index;
-#ifndef NDEBUG
-    size_t elem_size;
-#endif
 };
 
 ecs_queue_t* _ecs_queue_new(
@@ -41,8 +38,6 @@ void* _ecs_queue_push(
     size_t elem_size,
     int16_t offset)
 {
-    ecs_assert(elem_size == buffer->elem_size, ECS_INVALID_PARAMETER, NULL);
-
     int32_t size = ecs_vector_size(buffer->data);
     int32_t count = ecs_vector_count(buffer->data);
     void *result;

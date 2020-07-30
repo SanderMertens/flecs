@@ -569,7 +569,7 @@ void ecs_run_monitor(
 
 /* Generic constructor to initialize a component to 0 */
 static
-void ctor_init_zero(
+void sys_ctor_init_zero(
     ecs_world_t *world,
     ecs_entity_t component,
     const ecs_entity_t *entities,
@@ -881,7 +881,7 @@ void FlecsSystemImport(
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, ecs_entity(EcsSystem));
     ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    c_info->lifecycle.ctor = ctor_init_zero;
+    c_info->lifecycle.ctor = sys_ctor_init_zero;
     c_info->lifecycle.dtor = ecs_colsystem_dtor;
 
     /* Create systems necessary to create systems */

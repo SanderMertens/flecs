@@ -1,4 +1,4 @@
-#define FLECS_STATIC
+#define flecs_STATIC
 
 #ifndef FLECS_H
 #define FLECS_H
