@@ -12,8 +12,8 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 - An efficient lock-free staging architecture allows for modifying entities across multiple threads
 - Expressive entity queries with support for and, or, not and optional operators
 - Systems that are time triggered, rate triggered, run every frame or run only when needed
-- Modules allow for creation of large scale applications by organizing systems & components in reusable plug & play units
-- A fully customizable core that makes it easy to integrate Flecs into other frameworks / game engines
+- Modules enable organizing systems & components in reusable plug & play units
+- A customizable core that makes it easy to integrate Flecs into other frameworks / game engines
 
 This is Flecs v2, which is a breaking change from v1. For the last v1 release, see:
 https://github.com/SanderMertens/flecs/releases/tag/v1.3
@@ -82,7 +82,7 @@ struct Speed {
 };
 
 int main(int argc, char *argv[]) {
-    flecs::world world();
+    flecs::world world;
 
     flecs::component<Position>(world, "Position");
     flecs::component<Speed>(world, "Speed");
