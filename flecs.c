@@ -3843,6 +3843,7 @@ void ecs_components_construct(
             continue;
         }
 
+        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_column_t *column = &columns[component_info[i].column];
         int32_t size = column->size;
         void *array = ecs_vector_first_t(column->data, size, column->alignment);
@@ -5266,6 +5267,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
     if (ptr) {
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         ecs_copy_t copy;
+
         if (cdata && (copy = cdata->lifecycle.copy)) {
             copy(world, component, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
@@ -7620,6 +7622,14 @@ void ecs_set_component_actions_w_entity(
     ecs_entity_t component,
     EcsComponentLifecycle *lifecycle)
 {
+    const EcsComponent *component_ptr = ecs_get(world, component, EcsComponent);
+    
+    /* Cannot register lifecycle actions for things that aren't a component */
+    ecs_assert(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    /* Cannot register lifecycle actions for components with size 0 */
+    ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
+
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
     c_info->lifecycle = *lifecycle;
 

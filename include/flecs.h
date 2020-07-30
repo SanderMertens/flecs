@@ -1764,7 +1764,7 @@ ecs_entity_t ecs_lookup_child(
  * scope. If the entity is not found there either, the function returns 0.
  *
  * @param world The world.
- * @param parent The entity from which to create the path.
+ * @param parent The entity from which to resolve the path.
  * @param path The path to resolve.
  * @param sep The path separator.
  * @param prefix The path prefix.
@@ -1784,7 +1784,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
  * signature expression.
  *
  * @param world The world.
- * @param parent The entity from which to create the path.
+ * @param parent The entity from which to resolve the path.
  * @param path The path to resolve.
  * @return The entity if found, else 0. 
  */

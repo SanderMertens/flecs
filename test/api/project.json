@@ -358,7 +358,11 @@
                 "ctor_dtor_on_bulk_add_remove",
                 "ctor_copy_on_snapshot",
                 "copy_on_snapshot",
-                "dtor_on_restore"
+                "dtor_on_restore",
+                "ctor_on_tag",
+                "dtor_on_tag",
+                "copy_on_tag",
+                "move_on_tag"
             ]
         }, {
             "id": "Pipeline",

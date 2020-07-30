@@ -713,6 +713,7 @@ void ecs_components_construct(
             continue;
         }
 
+        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_column_t *column = &columns[component_info[i].column];
         int32_t size = column->size;
         void *array = ecs_vector_first_t(column->data, size, column->alignment);
@@ -2136,6 +2137,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
     if (ptr) {
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         ecs_copy_t copy;
+
         if (cdata && (copy = cdata->lifecycle.copy)) {
             copy(world, component, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
