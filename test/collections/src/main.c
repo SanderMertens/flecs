@@ -33,6 +33,11 @@ void Vector_size_of_null(void);
 void Vector_set_size_smaller_than_count(void);
 void Vector_pop_elements(void);
 
+// Testsuite 'Queue'
+void Queue_setup(void);
+void Queue_free_empty(void);
+void Queue_push(void);
+
 // Testsuite 'Map'
 void Map_setup(void);
 void Map_count(void);
@@ -53,23 +58,23 @@ void Map_remove_unknown(void);
 void Map_grow(void);
 void Map_set_size_0(void);
 
-// Testsuite 'Chunked'
-void Chunked_setup(void);
-void Chunked_add_1(void);
-void Chunked_add_1_to_empty(void);
-void Chunked_add_1_chunk_size_1(void);
-void Chunked_add_n(void);
-void Chunked_add_n_chunk_size_1(void);
-void Chunked_remove(void);
-void Chunked_remove_first(void);
-void Chunked_remove_last(void);
-void Chunked_remove_all(void);
-void Chunked_remove_all_n_chunks(void);
-void Chunked_clear_1(void);
-void Chunked_clear_empty(void);
-void Chunked_clear_n(void);
-void Chunked_clear_n_chunks(void);
-void Chunked_memory_null(void);
+// Testsuite 'Sparse'
+void Sparse_setup(void);
+void Sparse_add_1(void);
+void Sparse_add_1_to_empty(void);
+void Sparse_add_1_chunk_size_1(void);
+void Sparse_add_n(void);
+void Sparse_add_n_chunk_size_1(void);
+void Sparse_remove(void);
+void Sparse_remove_first(void);
+void Sparse_remove_last(void);
+void Sparse_remove_all(void);
+void Sparse_remove_all_n_chunks(void);
+void Sparse_clear_1(void);
+void Sparse_clear_empty(void);
+void Sparse_clear_n(void);
+void Sparse_clear_n_chunks(void);
+void Sparse_memory_null(void);
 
 static bake_test_suite suites[] = {
     {
@@ -169,6 +174,22 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        "Queue",
+        Queue_setup,
+        NULL,
+        2,
+        (bake_test_case[]){
+            {
+                "free_empty",
+                Queue_free_empty
+            },
+            {
+                "push",
+                Queue_push
+            }
+        }
+    },
+    {
         "Map",
         Map_setup,
         NULL,
@@ -245,70 +266,70 @@ static bake_test_suite suites[] = {
         }
     },
     {
-        "Chunked",
-        Chunked_setup,
+        "Sparse",
+        Sparse_setup,
         NULL,
         15,
         (bake_test_case[]){
             {
                 "add_1",
-                Chunked_add_1
+                Sparse_add_1
             },
             {
                 "add_1_to_empty",
-                Chunked_add_1_to_empty
+                Sparse_add_1_to_empty
             },
             {
                 "add_1_chunk_size_1",
-                Chunked_add_1_chunk_size_1
+                Sparse_add_1_chunk_size_1
             },
             {
                 "add_n",
-                Chunked_add_n
+                Sparse_add_n
             },
             {
                 "add_n_chunk_size_1",
-                Chunked_add_n_chunk_size_1
+                Sparse_add_n_chunk_size_1
             },
             {
                 "remove",
-                Chunked_remove
+                Sparse_remove
             },
             {
                 "remove_first",
-                Chunked_remove_first
+                Sparse_remove_first
             },
             {
                 "remove_last",
-                Chunked_remove_last
+                Sparse_remove_last
             },
             {
                 "remove_all",
-                Chunked_remove_all
+                Sparse_remove_all
             },
             {
                 "remove_all_n_chunks",
-                Chunked_remove_all_n_chunks
+                Sparse_remove_all_n_chunks
             },
             {
                 "clear_1",
-                Chunked_clear_1
+                Sparse_clear_1
             },
             {
                 "clear_empty",
-                Chunked_clear_empty
+                Sparse_clear_empty
             },
             {
                 "clear_n",
-                Chunked_clear_n
+                Sparse_clear_n
             },
             {
                 "clear_n_chunks",
-                Chunked_clear_n_chunks
+                Sparse_clear_n_chunks
             },
             {
                 "memory_null",
-                Chunked_memory_null
+                Sparse_memory_null
             }
         }
     }
@@ -316,5 +337,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("collections", argc, argv, suites, 3);
+    return bake_test_run("collections", argc, argv, suites, 4);
 }

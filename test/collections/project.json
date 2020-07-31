@@ -39,6 +39,13 @@
                 "pop_elements"
             ]
         }, {
+            "id": "Queue",
+            "setup": true,
+            "testcases": [
+                "free_empty",
+                "push"
+            ]
+        }, {
             "id": "Map",
             "setup": true,
             "testcases": [
@@ -61,7 +68,7 @@
                 "set_size_0"
             ]
         }, {
-            "id": "Chunked",
+            "id": "Sparse",
             "setup": true,
             "testcases": [
                 "add_1",
