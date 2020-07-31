@@ -22,7 +22,7 @@ void Queue_push() {
     *v = 10;
 
     test_int(ecs_queue_count(queue), 1);
-    test_int(ecs_queue_index(queue), 0);
+    test_int(ecs_queue_index(queue), 1);
     test_int(*ecs_queue_get(queue, int, 0), 10);
 
     v = ecs_queue_push(queue, int);
@@ -30,7 +30,7 @@ void Queue_push() {
     *v = 20;
 
     test_int(ecs_queue_count(queue), 2);
-    test_int(ecs_queue_index(queue), 0);
+    test_int(ecs_queue_index(queue), 2);
     test_int(*ecs_queue_get(queue, int, 0), 10);
 
     v = ecs_queue_push(queue, int);
@@ -46,18 +46,7 @@ void Queue_push() {
 
     test_int(ecs_queue_count(queue), 3);
     test_int(ecs_queue_index(queue), 1);
+    test_int(*ecs_queue_get(queue, int, 0), 20);    
 
     ecs_queue_free(queue);
-}
-
-void Queue_get() {
-    // Implement testcase
-}
-
-void Queue_get_last() {
-    // Implement testcase
-}
-
-void Queue_get_index() {
-    // Implement testcase
 }
