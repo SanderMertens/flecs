@@ -153,7 +153,8 @@ bool ecs_strbuf_vappend_intern(
         memRequired = fast_strncpy(ecs_strbuf_ptr(b), str, max_copy, n);
     } else {
         va_copy(arg_cpy, args);
-        memRequired = vsnprintf(ecs_strbuf_ptr(b), max_copy + 1, str, args);
+        memRequired = vsnprintf(
+            ecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
     }
 
     if (memRequired <= memLeftInElement) {
@@ -177,7 +178,7 @@ bool ecs_strbuf_vappend_intern(
                     strncpy(
                         ecs_strbuf_ptr(b),
                         str + memLeftInElement,
-                        memRequired);
+                        (size_t)memRequired);
                 } else {
                     strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
                 }

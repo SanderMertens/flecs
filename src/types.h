@@ -216,7 +216,7 @@ struct ecs_query_t {
     ecs_rank_type_action_t group_table;
 
     /* The query kind determines how it is registered with tables */
-    int8_t flags;
+    ecs_flags32_t flags;
 
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */

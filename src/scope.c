@@ -201,9 +201,9 @@ bool is_sep(
     const char **ptr,
     const char *sep)
 {
-    size_t len = ecs_os_strlen(sep);
+    ecs_size_t len = ecs_os_strlen(sep);
 
-    if (!strncmp(*ptr, sep, len)) {
+    if (!ecs_os_strncmp(*ptr, sep, len)) {
         *ptr += len - 1;
         return true;
     } else {
@@ -249,8 +249,8 @@ ecs_entity_t get_parent_from_path(
     const char *path = *path_ptr;
 
     if (prefix) {
-        size_t len = ecs_os_strlen(prefix);
-        if (!strncmp(path, prefix, len)) {
+        ecs_size_t len = ecs_os_strlen(prefix);
+        if (!ecs_os_strncmp(path, prefix, len)) {
             path += len;
             parent = 0;
             start_from_root = true;

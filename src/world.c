@@ -313,7 +313,7 @@ void ctor_init_zero(
     (void)component;
     (void)entity_ptr;
     (void)ctx;
-    memset(ptr, 0, ecs_from_size_t(size) * count);
+    ecs_os_memset(ptr, 0, ecs_from_size_t(size) * count);
 }
 
 ecs_flags32_t ecs_get_component_action_flags(

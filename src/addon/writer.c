@@ -136,7 +136,7 @@ void ecs_table_writer_prepare_column(
 
             /* Initialize new elements to 0 */
             void *buffer = ecs_vector_first_t(column->data, size, 0);
-            memset(ECS_OFFSET(buffer, old_count * size), 0, 
+            ecs_os_memset(ECS_OFFSET(buffer, old_count * size), 0, 
                 (writer->row_count - old_count) * size);
         }
 

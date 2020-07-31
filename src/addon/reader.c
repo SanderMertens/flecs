@@ -250,7 +250,7 @@ ecs_size_t ecs_table_reader(
         ecs_size_t align = (((read - 1) / ECS_SIZEOF(int32_t)) + 1) * ECS_SIZEOF(int32_t);
         if (align != read) {
             /* Initialize padding bytes to 0 to keep valgrind happy */
-            memset(ECS_OFFSET(buffer, read), 0, align - read);
+            ecs_os_memset(ECS_OFFSET(buffer, read), 0, align - read);
 
             /* Set read to align so that data is always aligned to 4 bytes */
             read = align;
@@ -295,7 +295,7 @@ ecs_size_t ecs_table_reader(
             reader->name_written += ECS_SIZEOF(int32_t);
         } else {
             ecs_os_memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
-            memset(ECS_OFFSET(buffer, read), 0, ECS_SIZEOF(int32_t) - read);
+            ecs_os_memset(ECS_OFFSET(buffer, read), 0, ECS_SIZEOF(int32_t) - read);
             reader->name_written += read;
         }
 
