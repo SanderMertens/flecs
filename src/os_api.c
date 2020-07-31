@@ -168,7 +168,7 @@ void* ecs_os_api_memcpy(
 static
 char *module_file_base(const char *module, char sep) {
     char *base = ecs_os_strdup(module);
-    size_t i, len = ecs_os_strlen(base);
+    ecs_size_t i, len = ecs_os_strlen(base);
     for (i = 0; i < len; i ++) {
         if (base[i] == '.') {
             base[i] = sep;
