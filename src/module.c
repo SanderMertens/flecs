@@ -158,7 +158,7 @@ ecs_entity_t ecs_import_from_library(
         module = ecs_os_strdup(import_func);
         ecs_assert(module != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-        strcat(bptr, "Import");
+        ecs_os_strcat(bptr, "Import");
     }
 
     char *library_filename = ecs_os_module_to_dl(library_name);

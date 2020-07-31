@@ -25,7 +25,7 @@ bool path_append(
     char buff[22];
     const char *name = ecs_get_name(world, child);
     if (!name) {
-        sprintf(buff, "%u", (uint32_t)child);
+        ecs_os_sprintf(buff, "%u", (uint32_t)child);
         name = buff;
     }
 

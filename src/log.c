@@ -25,7 +25,7 @@ char *ecs_vasprintf(
         return NULL; 
     }
 
-    vsprintf(result, fmt, args);
+    ecs_os_vsprintf(result, fmt, args);
 
     return result;
 }
