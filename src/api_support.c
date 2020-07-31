@@ -6,7 +6,7 @@ int parse_type_action(
     ecs_world_t *world,
     const char *name,
     const char *sig,
-    int column,
+    int64_t column,
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t inout_kind,
@@ -255,8 +255,8 @@ ecs_entity_t ecs_new_component(
         result = e ? e : ++ world->stats.last_component_id;
 
         ecs_set(world, result, EcsComponent, {
-            .size = size,
-            .alignment = alignment
+            .size = ecs_from_size_t(size),
+            .alignment = ecs_from_size_t(alignment)
         });
 
         if (name) {
@@ -270,10 +270,10 @@ ecs_entity_t ecs_new_component(
     } else {
         const EcsComponent *ptr = ecs_get(world, result, EcsComponent);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, name);
-        if (ptr->size != size) {
+        if (ptr->size != ecs_from_size_t(size)) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, name);
         }
-        if (ptr->alignment != alignment) {
+        if (ptr->alignment != ecs_from_size_t(alignment)) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, name);
         }        
     }

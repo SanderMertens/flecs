@@ -482,7 +482,7 @@ ecs_entity_t ecs_run_intern(
     }
 
     if (measure_time) {
-        system_data->time_spent += ecs_time_measure(&time_start);
+        system_data->time_spent += (float)ecs_time_measure(&time_start);
     }
     
     system_data->invoke_count ++;
@@ -564,9 +564,6 @@ void ecs_run_monitor(
     system_data->action(&it);
 }
 
-
-
-
 /* Generic constructor to initialize a component to 0 */
 static
 void sys_ctor_init_zero(
@@ -582,7 +579,7 @@ void sys_ctor_init_zero(
     (void)component;
     (void)entities;
     (void)ctx;
-    memset(ptr, 0, size * count);
+    memset(ptr, 0, size * (size_t)count);
 }
 
 /* System destructor */

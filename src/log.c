@@ -5,7 +5,7 @@ char *ecs_vasprintf(
     const char *fmt,
     va_list args)
 {
-    size_t size = 0;
+    ecs_size_t size = 0;
     char *result  = NULL;
     va_list tmpa;
 
@@ -157,10 +157,10 @@ char* ecs_colorize(
 }
 
 static int trace_indent = 0;
-static int8_t trace_level = 0;
+static int trace_level = 0;
 
 void ecs_log_print(
-    int8_t level,
+    int level,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -260,7 +260,7 @@ void ecs_log_pop(void) {
 }
 
 void ecs_tracing_enable(
-    int8_t level)
+    int level)
 {
     trace_level = level;
 }
@@ -268,7 +268,7 @@ void ecs_tracing_enable(
 void _ecs_parser_error(
     const char *name,
     const char *expr, 
-    int column,
+    int64_t column,
     const char *fmt,
     ...)
 {

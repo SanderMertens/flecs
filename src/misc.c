@@ -1,5 +1,47 @@
 #include "flecs_private.h"
 
+int8_t ecs_to_i8(
+    int64_t v)
+{
+    ecs_assert(v < INT8_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (int8_t)v;
+}
+
+int16_t ecs_to_i16(
+    int64_t v)
+{
+    ecs_assert(v < INT16_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (int16_t)v;
+}
+
+int32_t ecs_to_i32(
+    int64_t v)
+{
+    ecs_assert(v < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (int32_t)v;
+}
+
+size_t ecs_to_size_t(
+    int64_t size)
+{
+    ecs_assert(size >= 0, ECS_INTERNAL_ERROR, NULL);
+    return (size_t)size;
+}
+
+ecs_size_t ecs_from_size_t(
+    size_t size)
+{
+   ecs_assert(size < INT64_MAX, ECS_INTERNAL_ERROR, NULL); 
+   return (ecs_size_t)size;
+}
+
+ecs_entity_t ecs_to_entity(
+    int64_t v)
+{
+    ecs_assert(v >= 0, ECS_INTERNAL_ERROR, NULL);
+    return (ecs_entity_t)v;
+}
+
 /** Convert time to double */
 double ecs_time_to_double(
     ecs_time_t t)
@@ -30,8 +72,8 @@ void ecs_sleepf(
     double t)
 {
     if (t > 0) {
-        int sec = t;
-        int nsec = ((t - sec) * 1000000000);
+        int sec = (int)t;
+        int nsec = (int)((t - sec) * 1000000000);
         ecs_os_sleep(sec, nsec);
     }
 }
@@ -47,7 +89,10 @@ double ecs_time_measure(
     return ecs_time_to_double(stop);
 }
 
-void* ecs_os_memdup(const void *src, size_t size) {
+void* ecs_os_memdup(
+    const void *src, 
+    ecs_size_t size) 
+{
     if (!src) {
         return NULL;
     }
@@ -157,6 +202,8 @@ void ecs_os_time_sleep(
 {
 #ifndef _WIN32
     struct timespec sleepTime;
+    ecs_assert(sec >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(nanosec >= 0, ECS_INTERNAL_ERROR, NULL);
 
     sleepTime.tv_sec = sec;
     sleepTime.tv_nsec = nanosec;

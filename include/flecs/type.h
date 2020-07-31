@@ -88,7 +88,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_entity_t xor_tag);
 
 FLECS_EXPORT
-int16_t ecs_type_index_of(
+int32_t ecs_type_index_of(
     ecs_type_t type,
     ecs_entity_t component);
 

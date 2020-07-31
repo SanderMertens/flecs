@@ -243,7 +243,7 @@ void ecs_workers_progress(
     }
 
     if (world->measure_frame_time) {
-        world->stats.system_time_total += ecs_time_measure(&start);
+        world->stats.system_time_total += (float)ecs_time_measure(&start);
     }    
 }
 

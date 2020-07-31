@@ -26,7 +26,7 @@ int compare_entity(
 {
     (void)ptr1;
     (void)ptr2;
-    return e1 - e2;
+    return (e1 > e2) - (e1 < e2);
 }
 
 static
@@ -61,8 +61,9 @@ int rank_phase(
     }
 
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result < INT_MAX, ECS_INTERNAL_ERROR, NULL);
 
-    return result;
+    return (int)result;
 }
 
 typedef enum ComponentWriteState {
@@ -104,10 +105,10 @@ static
 bool check_column_component(
     ecs_sig_column_t *column,
     bool is_active,
-    int32_t component,
+    ecs_entity_t component,
     ecs_map_t *write_state)    
 {
-    int8_t state = get_write_state(write_state, component);
+    int32_t state = get_write_state(write_state, component);
 
     if ((column->from_kind == EcsFromAny || column->from_kind == EcsFromOwned) && column->oper_kind != EcsOperNot) {
         switch(column->inout_kind) {
@@ -451,29 +452,29 @@ void EcsOnAddPipeline(
 }
 
 static
-float insert_sleep(
+double insert_sleep(
     ecs_world_t *world,
     ecs_time_t *stop)
 {
     ecs_time_t start = *stop;
-    float delta_time = ecs_time_measure(stop);
+    double delta_time = ecs_time_measure(stop);
 
-    if (!world->stats.target_fps) {
+    if (world->stats.target_fps == 0) {
         return delta_time;
     }
 
-    float target_delta_time = (1.0 / world->stats.target_fps);
-    float world_sleep_err = 
+    double target_delta_time = (1.0 / world->stats.target_fps);
+    double world_sleep_err = 
         world->stats.sleep_err / world->stats.frame_count_total;
 
     /* Calculate the time we need to sleep by taking the measured delta from the
      * previous frame, and subtracting it from target_delta_time. */
-    float sleep = target_delta_time - delta_time;
+    double sleep = target_delta_time - delta_time;
 
     /* Pick a sleep interval that is 20 times lower than the time one frame
      * should take. This means that this function at most iterates 20 times in
      * a busy loop */
-    float sleep_time = target_delta_time / 20;
+    double sleep_time = target_delta_time / 20;
 
     /* Measure at least two frames before interpreting sleep error */
     if (world->stats.frame_count_total > 1) {
@@ -491,18 +492,18 @@ float insert_sleep(
             sleep_time = sleep;
         }
 
-        float sleep_err = 0;
+        double sleep_err = 0;
         int32_t iterations = 0;
 
         do {
             /* Only call sleep when sleep_time is not 0. On some platforms, even
              * a sleep with a timeout of 0 can cause stutter. */
-            if (sleep_time) {
+            if (sleep_time != 0) {
                 ecs_sleepf(sleep_time);
             }
 
             ecs_time_t now = start;
-            float prev_delta_time = delta_time;
+            double prev_delta_time = delta_time;
             delta_time = ecs_time_measure(&now);
 
             /* Measure the error of the sleep by taking the difference between 
@@ -515,7 +516,7 @@ float insert_sleep(
 
         /* Add sleep error measurement to sleep error, with a bias towards the
          * latest measured values. */
-        world->stats.sleep_err =
+        world->stats.sleep_err = (float)
             (world_sleep_err * 0.9 + sleep_err * 0.1) * 
                 world->stats.frame_count_total;
     }
@@ -536,9 +537,9 @@ float start_measure_frame(
     ecs_world_t *world,
     float user_delta_time)
 {
-    float delta_time = 0;
+    double delta_time = 0;
 
-    if (world->measure_frame_time || !user_delta_time) {
+    if (world->measure_frame_time || (user_delta_time == 0)) {
         ecs_time_t t = world->frame_start_time;
         do {
             if (world->frame_start_time.sec) {
@@ -547,7 +548,7 @@ float start_measure_frame(
                 ecs_time_measure(&t);
             } else {
                 ecs_time_measure(&t);
-                if (world->stats.target_fps) {
+                if (world->stats.target_fps != 0) {
                     delta_time = 1.0 / world->stats.target_fps;
                 } else {
                     delta_time = 1.0 / 60.0; /* Best guess */
@@ -560,10 +561,10 @@ float start_measure_frame(
         world->frame_start_time = t;  
 
         /* Keep track of total time passed in world */
-        world->stats.world_time_total_raw += delta_time;
+        world->stats.world_time_total_raw += (float)delta_time;
     }
 
-    return delta_time;
+    return (float)delta_time;
 }
 
 static
@@ -572,8 +573,7 @@ void stop_measure_frame(
 {
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
-        double frame_time = ecs_time_measure(&t);
-        world->stats.frame_time_total += frame_time;
+        world->stats.frame_time_total += (float)ecs_time_measure(&t);
     }
 }
 
@@ -584,7 +584,7 @@ float ecs_frame_begin(
     float user_delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(user_delta_time || ecs_os_api.get_time, ECS_MISSING_OS_API, "get_time");
+    ecs_assert(user_delta_time != 0 || ecs_os_api.get_time, ECS_MISSING_OS_API, "get_time");
 
     if (world->locking_enabled) {
         ecs_lock(world);
@@ -592,8 +592,7 @@ float ecs_frame_begin(
 
     /* Start measuring total frame time */
     float delta_time = start_measure_frame(world, user_delta_time);
-
-    if (!user_delta_time) {
+    if (user_delta_time == 0) {
         user_delta_time = delta_time;
     }
 

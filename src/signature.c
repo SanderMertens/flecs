@@ -47,7 +47,7 @@ static
 char* parse_complex_elem(
     const char *name,
     const char *sig,
-    int column,
+    int64_t column,
     char *ptr,
     ecs_sig_from_kind_t *from_kind,
     ecs_sig_oper_kind_t *oper_kind,
@@ -84,19 +84,20 @@ char* parse_complex_elem(
 
     char *src = strchr(bptr, TOK_SOURCE);
     if (src) {
+        size_t token_len = ecs_to_size_t(src - bptr);
         if (bptr == src) {
             *from_kind = EcsFromEmpty;
-        } else if (!strncmp(bptr, TOK_PARENT, src - bptr)) {
+        } else if (!strncmp(bptr, TOK_PARENT, token_len)) {
             *from_kind = EcsFromParent;
-        } else if (!strncmp(bptr, TOK_SYSTEM, src - bptr)) {
+        } else if (!strncmp(bptr, TOK_SYSTEM, token_len)) {
             *from_kind = EcsFromSystem;
-        } else if (!strncmp(bptr, TOK_ANY, src - bptr)) {
+        } else if (!strncmp(bptr, TOK_ANY, token_len)) {
             *from_kind = EcsFromAny;
-        } else if (!strncmp(bptr, TOK_OWNED, src - bptr)) {
+        } else if (!strncmp(bptr, TOK_OWNED, token_len)) {
             *from_kind = EcsFromOwned;
-        } else if (!strncmp(bptr, TOK_SHARED, src - bptr)) {
+        } else if (!strncmp(bptr, TOK_SHARED, token_len)) {
             *from_kind = EcsFromShared;
-        } else if (!strncmp(bptr, TOK_CASCADE, src - bptr)) {
+        } else if (!strncmp(bptr, TOK_CASCADE, token_len)) {
             *from_kind = EcsCascade;   
         } else {
             *from_kind = EcsFromEntity;
@@ -119,19 +120,20 @@ char* parse_complex_elem(
 
     char *or = strchr(bptr, TOK_ROLE);
     if (or) {
-        if (!strncmp(bptr, TOK_ROLE_CHILDOF, or - bptr)) {
+        size_t token_len = ecs_to_size_t(or - bptr);
+        if (!strncmp(bptr, TOK_ROLE_CHILDOF, token_len)) {
             *flags = ECS_CHILDOF;
-        } else if (!strncmp(bptr, TOK_ROLE_INSTANCEOF, or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_INSTANCEOF, token_len)) {
             *flags = ECS_INSTANCEOF;
-        } else if (!strncmp(bptr, TOK_ROLE_TRAIT, or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_TRAIT, token_len)) {
             *flags = ECS_TRAIT;            
-        } else if (!strncmp(bptr, TOK_ROLE_AND, or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_AND, token_len)) {
             *flags = ECS_AND;
-        } else if (!strncmp(bptr, TOK_ROLE_OR, or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_OR, token_len)) {
             *flags = ECS_OR;
-        } else if (!strncmp(bptr, TOK_ROLE_XOR, or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_XOR, token_len)) {
             *flags = ECS_XOR;
-        } else if (!strncmp(bptr, TOK_ROLE_NOT, or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_NOT, token_len)) {
             *flags = ECS_NOT;
         } else {
             if (!name) {
@@ -165,14 +167,9 @@ int entity_compare(
     const void *ptr1,
     const void *ptr2)
 {
-    int64_t e1 = *(ecs_entity_t*)ptr1;
-    int64_t e2 = *(ecs_entity_t*)ptr2;
-
-    return (e1 - e2 < 0) 
-        ? -1 
-        : ((e1 - e2 > 0) 
-            ? 1 
-            : 0);
+    ecs_entity_t e1 = *(ecs_entity_t*)ptr1;
+    ecs_entity_t e2 = *(ecs_entity_t*)ptr2;
+    return (e1 > e2) - (e1 < e2);
 }
 
 static
@@ -194,7 +191,7 @@ static
 const char* parse_annotation(
     const char *name,
     const char *sig,
-    int column,
+    int64_t column,
     const char *ptr, 
     ecs_sig_inout_kind_t *inout_kind_out)
 {
@@ -266,7 +263,7 @@ int ecs_parse_expr(
     const char *name,
     void *ctx)
 {
-    size_t len = strlen(sig);
+    ecs_size_t len = ecs_os_strlen(sig);
     ecs_assert(len > 0, ECS_INVALID_SIGNATURE, NULL);
     
     const char *ptr;
@@ -400,7 +397,7 @@ int ecs_parse_expr(
             char *source_id = NULL;
             if (source) {
                 char *src = strchr(source, TOK_SOURCE);
-                source_id = ecs_os_malloc(src - source + 1);
+                source_id = ecs_os_malloc(ecs_to_i32(src - source + 1));
                 ecs_assert(source_id != NULL, ECS_OUT_OF_MEMORY, NULL);
 
                 strncpy(source_id, source, src - source);
@@ -464,7 +461,7 @@ int ecs_parse_signature_action(
     ecs_world_t *world,
     const char *system_id,
     const char *expr,
-    int column,
+    int64_t column,
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t inout_kind,

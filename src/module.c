@@ -56,7 +56,7 @@ char* ecs_module_path_from_c(
 
     for (ptr = c_name; (ch = *ptr); ptr++) {
         if (isupper(ch)) {
-            ch = tolower(ch);
+            ch = ecs_to_i8(tolower(ch));
             if (ptr != c_name) {
                 ecs_strbuf_appendstrn(&str, ".", 1);
             }
@@ -132,7 +132,7 @@ ecs_entity_t ecs_import_from_library(
     /* If no module name is specified, try default naming convention for loading
      * the main module from the library */
     if (!import_func) {
-        import_func = ecs_os_malloc(strlen(library_name) + sizeof("Import"));
+        import_func = ecs_os_malloc(ecs_os_strlen(library_name) + ECS_SIZEOF("Import"));
         ecs_assert(import_func != NULL, ECS_OUT_OF_MEMORY, NULL);
         
         const char *ptr;
@@ -143,11 +143,11 @@ ecs_entity_t ecs_import_from_library(
                 capitalize = true;
             } else {
                 if (capitalize) {
-                    *bptr = toupper(ch);
+                    *bptr = ecs_to_i8(toupper(ch));
                     bptr ++;
                     capitalize = false;
                 } else {
-                    *bptr = tolower(ch);
+                    *bptr = ecs_to_i8(tolower(ch));
                     bptr ++;
                 }
             }

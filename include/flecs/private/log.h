@@ -138,7 +138,7 @@ FLECS_EXPORT
 void _ecs_parser_error(
     const char *name,
     const char *expr, 
-    int column,
+    int64_t column,
     const char *fmt,
     ...);
 

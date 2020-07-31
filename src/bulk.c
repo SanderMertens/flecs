@@ -109,12 +109,12 @@ void ecs_bulk_add_remove_type(
     ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
 
     ecs_entities_t added = {
-        .array = ecs_os_alloca(sizeof(ecs_entity_t) * to_add_array.count),
+        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_add_array.count),
         .count = 0
     }; 
 
     ecs_entities_t removed = {
-        .array = ecs_os_alloca(sizeof(ecs_entity_t) * to_remove_array.count),
+        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_remove_array.count),
         .count = 0
     };
 
@@ -164,7 +164,7 @@ void ecs_bulk_add_type(
 
     ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
     ecs_entities_t added = {
-        .array = ecs_os_alloca(sizeof(ecs_entity_t) * to_add_array.count),
+        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_add_array.count),
         .count = 0
     };
 
@@ -254,7 +254,7 @@ void ecs_bulk_remove_type(
 
     ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
     ecs_entities_t removed = {
-        .array = ecs_os_alloca(sizeof(ecs_entity_t) * to_remove_array.count),
+        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_remove_array.count),
         .count = 0
     };
 

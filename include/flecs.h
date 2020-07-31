@@ -79,12 +79,12 @@ typedef struct ecs_world_info_t {
     float delta_time;           /**< Time passed to or computed by ecs_progress */
     float time_scale;           /**< Time scale applied to delta_time */
     float target_fps;           /**< Target fps */
-    double frame_time_total;    /**< Total time spent processing a frame */
-    double system_time_total;   /**< Total time spent in systems */
-    double merge_time_total;    /**< Total time spent in merges */
-    double world_time_total;    /**< Time elapsed in simulation */
-    double world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
-    double sleep_err;           /**< Measured sleep error */
+    float frame_time_total;    /**< Total time spent processing a frame */
+    float system_time_total;   /**< Total time spent in systems */
+    float merge_time_total;    /**< Total time spent in merges */
+    float world_time_total;    /**< Time elapsed in simulation */
+    float world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
+    float sleep_err;           /**< Measured sleep error */
     
     int32_t frame_count_total;  /**< Total number of frames */
     int32_t merge_count_total;  /**< Total number of merges */
@@ -145,8 +145,8 @@ typedef struct EcsName {
 
 /** Component information. */
 typedef struct EcsComponent {
-    size_t size;           /**< Component size */
-    size_t alignment;      /**< Component alignment */
+    ecs_size_t size;           /**< Component size */
+    ecs_size_t alignment;      /**< Component alignment */
 } EcsComponent;
 
 /** Component that stores an ecs_type_t. 
@@ -641,7 +641,7 @@ void ecs_end_wait(
  */
 FLECS_EXPORT
 void ecs_tracing_enable(
-    int8_t level);
+    int level);
 
 
 ////////////////////////////////////////////////////////////////////////////////

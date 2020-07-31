@@ -43,7 +43,7 @@ typedef struct ecs_table_reader_t {
     ecs_data_t *data;
 
     /* Current index in type */
-    size_t type_written;
+    ecs_size_t type_written;
     ecs_type_t type;
 
     /* Current column */
@@ -53,9 +53,9 @@ typedef struct ecs_table_reader_t {
 
     /* Keep track of how much of the component column has been written */
     void *column_data;
-    size_t column_size;
-    size_t column_alignment;
-    size_t column_written;
+    int16_t column_size;
+    int16_t column_alignment;
+    ecs_size_t column_written;
 
     /* Keep track of row when writing non-blittable data */
     int32_t row_index;
@@ -63,8 +63,8 @@ typedef struct ecs_table_reader_t {
 
     /* Keep track of how much of an entity name has been written */
     const char *name;
-    size_t name_len;
-    size_t name_written;
+    ecs_size_t name_len;
+    ecs_size_t name_written;
 
     bool has_next_table;
 } ecs_table_reader_t;
@@ -95,13 +95,13 @@ typedef struct ecs_table_writer_t {
     /* Keep state for parsing type */
     int32_t type_count;
     int32_t type_max_count;
-    size_t type_written;
+    ecs_size_t type_written;
     ecs_entity_t *type_array;
     
     int32_t column_index;
-    size_t column_size;
-    size_t column_alignment;
-    size_t column_written;
+    int16_t column_size;
+    int16_t column_alignment;
+    ecs_size_t column_written;
     void *column_data;
 
     int32_t row_count;
@@ -157,9 +157,9 @@ ecs_reader_t ecs_reader_init_w_iter(
  * @return The number of bytes read.
  */ 
 FLECS_EXPORT
-size_t ecs_reader_read(
+ecs_size_t ecs_reader_read(
     char *buffer,
-    size_t size,
+    ecs_size_t size,
     ecs_reader_t *reader);
 
 /** Initialize a writer.
@@ -201,7 +201,7 @@ ecs_writer_t ecs_writer_init(
 FLECS_EXPORT
 int ecs_writer_write(
     const char *buffer,
-    size_t size,
+    ecs_size_t size,
     ecs_writer_t *writer);
 
 #ifdef __cplusplus

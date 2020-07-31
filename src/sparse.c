@@ -18,8 +18,8 @@ struct ecs_sparse_t {
     ecs_vector_t *sparse;       /* Sparse array + element pointers */
     ecs_vector_t *unused_chunks;   /* Unused chunks */
     ecs_vector_t *unused_elements; /* Unused elements */
-    size_t elem_size;           /* Side of payload */
-    int32_t chunk_size;         /* Chunk size */
+    ecs_size_t elem_size;          /* Side of payload */
+    int32_t chunk_size;            /* Number of elements in chunk */
 };
 
 static
@@ -39,7 +39,7 @@ void add_chunk(
     }
 
     int32_t chunk_size = sparse->chunk_size;
-    size_t elem_size = sparse->elem_size;
+    ecs_size_t elem_size = sparse->elem_size;
 
     /* Allocate data vector for chunk */
     chunk->count = 0;
@@ -156,10 +156,10 @@ void* get_or_set_sparse(
 }
 
 ecs_sparse_t* _ecs_sparse_new(
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t element_count)
 {
-    ecs_sparse_t *result = ecs_os_calloc(sizeof(ecs_sparse_t));
+    ecs_sparse_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_sparse_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->chunk_size = CHUNK_ALLOC_SIZE / elem_size;
@@ -219,7 +219,7 @@ void ecs_sparse_clear(
 
 void* _ecs_sparse_recycle(
     ecs_sparse_t *sparse,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t *sparse_index_out)
 {
     (void)elem_size;
@@ -240,7 +240,7 @@ void* _ecs_sparse_recycle(
 
 void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
-    size_t elem_size)
+    ecs_size_t elem_size)
 {
     (void)elem_size;
     ecs_assert(!elem_size || elem_size == sparse->elem_size, 
@@ -274,7 +274,7 @@ void* _ecs_sparse_add(
 
 void* _ecs_sparse_remove(
     ecs_sparse_t *sparse,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t index)
 {   
     (void)elem_size;
@@ -293,7 +293,7 @@ void* _ecs_sparse_remove(
 
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t index)
 {
     (void)elem_size;
@@ -314,7 +314,7 @@ void* _ecs_sparse_get(
 
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t index)
 {
     (void)elem_size;
@@ -326,7 +326,7 @@ void* _ecs_sparse_get_sparse(
 
 void* _ecs_sparse_get_or_set_sparse(
     ecs_sparse_t *sparse,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t index,
     bool *is_new)
 {
@@ -382,7 +382,7 @@ ecs_sparse_t* ecs_sparse_copy(
         return NULL;
     }
     
-    ecs_sparse_t *dst = ecs_os_memdup(src, sizeof(ecs_sparse_t));
+    ecs_sparse_t *dst = ecs_os_memdup(src, ECS_SIZEOF(ecs_sparse_t));
     dst->chunks = ecs_vector_copy(src->chunks, chunk_t);
     dst->dense = ecs_vector_copy(src->dense, int32_t);
     dst->sparse = ecs_vector_copy(src->sparse, sparse_elem_t);
@@ -438,7 +438,7 @@ void ecs_sparse_restore(
 
     int32_t *dst_dense = ecs_vector_first(dst->dense, int32_t);
     int32_t *src_dense = ecs_vector_first(src->dense, int32_t);
-    memcpy(dst_dense, src_dense, elem_count * sizeof(int32_t));
+    memcpy(dst_dense, src_dense, elem_count * ECS_SIZEOF(int32_t));
 
     /* Copy sparse array */
     int32_t sparse_count = ecs_vector_count(src->sparse);
@@ -457,7 +457,7 @@ void ecs_sparse_restore(
 
     int32_t *dst_unused = ecs_vector_first(dst->unused_elements, int32_t);
     int32_t *src_unused = ecs_vector_first(src->unused_elements, int32_t);
-    memcpy(dst_unused, src_unused, unused_count * sizeof(int32_t));    
+    memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
 }
 
 void ecs_sparse_memory(

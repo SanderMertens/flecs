@@ -10,7 +10,7 @@ ecs_record_t* ecs_ei_get(
             entity_index->hi, ecs_record_t, entity);
     } else {
         return ecs_sparse_get_sparse(
-            entity_index->lo, ecs_record_t, entity);
+            entity_index->lo, ecs_record_t, (int32_t)entity);
     }
 }
 
@@ -40,7 +40,7 @@ ecs_record_t* ecs_ei_get_or_create(
         bool is_new = false;
 
         ecs_record_t *record = ecs_sparse_get_or_set_sparse(
-            entity_index->lo, ecs_record_t, entity, &is_new);
+            entity_index->lo, ecs_record_t, (int32_t)entity, &is_new);
 
         if (is_new) {
             record->table = NULL;
@@ -64,7 +64,7 @@ ecs_record_t* ecs_ei_set(
     } else {
         bool is_new;
         ecs_record_t *dst_record = ecs_sparse_get_or_set_sparse(
-            entity_index->lo, ecs_record_t, entity, &is_new);
+            entity_index->lo, ecs_record_t, (int32_t)entity, &is_new);
         *dst_record = *record;
 
         /* Only return record ptrs of the sparse set, as these pointers are
@@ -85,7 +85,7 @@ void ecs_ei_delete(
     if (entity > ECS_HI_ENTITY_ID) {
         ecs_map_remove(entity_index->hi, entity);
     } else {
-        ecs_sparse_remove(entity_index->lo, ecs_record_t, entity);
+        ecs_sparse_remove(entity_index->lo, ecs_record_t, (int32_t)entity);
     }
 }
 
@@ -116,7 +116,8 @@ ecs_entity_t ecs_ei_recycle(
 {
     int32_t result;
     if (ecs_sparse_recycle(entity_index->lo, ecs_record_t, &result)) {
-        return result; // implicit upcast
+        ecs_assert(result > 0, ECS_INTERNAL_ERROR, NULL);
+        return (ecs_entity_t)result; // implicit upcast
     } else {
         return 0;
     }
@@ -243,9 +244,9 @@ ecs_record_t *ecs_ei_next(
     if (sparse_indices) {
         int32_t index = iter->index;
         if (iter->index < iter->sparse_count) {
-            ecs_entity_t entity = sparse_indices[index];
+            ecs_entity_t entity = (ecs_entity_t)sparse_indices[index];
             ecs_record_t *result = ecs_sparse_get_sparse(
-                    iter->lo, ecs_record_t, entity);
+                    iter->lo, ecs_record_t, (int32_t)entity);
             *entity_out = entity;
             iter->index ++;
             return result;
