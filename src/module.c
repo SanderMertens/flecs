@@ -56,7 +56,7 @@ char* ecs_module_path_from_c(
 
     for (ptr = c_name; (ch = *ptr); ptr++) {
         if (isupper(ch)) {
-            ch = tolower(ch);
+            ch = ecs_to_i8(tolower(ch));
             if (ptr != c_name) {
                 ecs_strbuf_appendstrn(&str, ".", 1);
             }
@@ -98,7 +98,7 @@ ecs_entity_t ecs_import(
     /* Copy value of module component in handles_out parameter */
     if (handles_size && handles_out) {
         void *handles_ptr = ecs_get_mut_w_entity(world, e, e, NULL);
-        memcpy(handles_out, handles_ptr, handles_size);        
+        ecs_os_memcpy(handles_out, handles_ptr, ecs_from_size_t(handles_size));   
     }
 
     /* Restore to previous state */
@@ -132,7 +132,7 @@ ecs_entity_t ecs_import_from_library(
     /* If no module name is specified, try default naming convention for loading
      * the main module from the library */
     if (!import_func) {
-        import_func = ecs_os_malloc(strlen(library_name) + sizeof("Import"));
+        import_func = ecs_os_malloc(ecs_os_strlen(library_name) + ECS_SIZEOF("Import"));
         ecs_assert(import_func != NULL, ECS_OUT_OF_MEMORY, NULL);
         
         const char *ptr;
@@ -143,11 +143,11 @@ ecs_entity_t ecs_import_from_library(
                 capitalize = true;
             } else {
                 if (capitalize) {
-                    *bptr = toupper(ch);
+                    *bptr = ecs_to_i8(toupper(ch));
                     bptr ++;
                     capitalize = false;
                 } else {
-                    *bptr = tolower(ch);
+                    *bptr = ecs_to_i8(tolower(ch));
                     bptr ++;
                 }
             }
@@ -158,7 +158,7 @@ ecs_entity_t ecs_import_from_library(
         module = ecs_os_strdup(import_func);
         ecs_assert(module != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-        strcat(bptr, "Import");
+        ecs_os_strcat(bptr, "Import");
     }
 
     char *library_filename = ecs_os_module_to_dl(library_name);

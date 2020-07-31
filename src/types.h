@@ -2,7 +2,9 @@
 #define FLECS_TYPES_PRIVATE_H
 
 #ifndef __MACH__
+#ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
+#endif
 #endif
 
 #include <stdlib.h>
@@ -50,14 +52,14 @@
 
 /* Simple bitmask structure to store a set of components. This is used amongst
  * others to keep track of which components have been overridden from a base. */
-typedef uint64_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
+typedef ecs_entity_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
 
 /** Callback used by the system signature expression parser. */
 typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,                 
     const char *id,
     const char *expr,
-    int column,
+    int64_t column,
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t inout_kind,
@@ -76,8 +78,8 @@ typedef struct ecs_pipeline_op_t {
 /** A component array in a table. */
 struct ecs_column_t {
     ecs_vector_t *data;         /**< Column data */
-    uint16_t size;              /**< Column element size */
-    uint16_t alignment;         /**< Column element alignment */
+    int16_t size;              /**< Column element size */
+    int16_t alignment;         /**< Column element alignment */
 };
 
 /** Stage-specific component data */
@@ -96,27 +98,25 @@ typedef struct ecs_table_leaf_t {
 } ecs_table_leaf_t;
 
 /** Flags for quickly checking for special properties of a table. */
-typedef enum ecs_table_flags_t {
-    EcsTableHasBuiltins = 1,        /**< Does table have builtin components */
-    EcsTableIsPrefab = 2,           /**< Does the table store prefabs */
-    EcsTableHasBase = 4,            /**< Does the table type has INSTANCEOF */
-    EcsTableHasParent = 8,          /**< Does the table type has CHILDOF */
-    EcsTableHasComponentData = 16,  /**< Does the table have component data */
-    EcsTableHasXor = 32,            /**< Does the table type has XOR */
-    EcsTableIsDisabled = 64,        /**< Does the table type has EcsDisabled */
-    EcsTableHasCtors = 128,
-    EcsTableHasDtors = 256,
-    EcsTableHasOnAdd = 512,
-    EcsTableHasOnRemove = 1024,
-    EcsTableHasOnSet = 2048,
-    EcsTableHasUnSet = 4096,
-    EcsTableHasMonitors = 8192,
+#define EcsTableHasBuiltins         1u    /**< Does table have builtin components */
+#define EcsTableIsPrefab            2u    /**< Does the table store prefabs */
+#define EcsTableHasBase             4u    /**< Does the table type has INSTANCEOF */
+#define EcsTableHasParent           8u    /**< Does the table type has CHILDOF */
+#define EcsTableHasComponentData    16u   /**< Does the table have component data */
+#define EcsTableHasXor              32u   /**< Does the table type has XOR */
+#define EcsTableIsDisabled          64u   /**< Does the table type has EcsDisabled */
+#define EcsTableHasCtors            128u
+#define EcsTableHasDtors            256u
+#define EcsTableHasOnAdd            512u
+#define EcsTableHasOnRemove         1024u
+#define EcsTableHasOnSet            2048u
+#define EcsTableHasUnSet            4096u
+#define EcsTableHasMonitors         8192u
 
-    /* Composite constants */
-    EcsTableHasLifecycle = EcsTableHasCtors | EcsTableHasDtors,
-    EcsTableHasAddActions = EcsTableHasBase | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors,
-    EcsTableHasRemoveActions = EcsTableHasBase | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors
-} ecs_table_flags_t;
+/* Composite constants */
+#define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
+#define EcsTableHasAddActions       (EcsTableHasBase | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
+#define EcsTableHasRemoveActions    (EcsTableHasBase | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors)
 
 /** Edge used for traversing the table graph. */
 typedef struct ecs_edge_t {
@@ -157,7 +157,7 @@ struct ecs_table_t {
     int32_t *dirty_state;            /**< Keep track of changes in columns */
     int32_t alloc_count;             /**< Increases when columns are reallocd */
 
-    ecs_table_flags_t flags;         /**< Flags for testing table properties */
+    ecs_flags32_t flags;             /**< Flags for testing table properties */
     int32_t column_count;            /**< Number of data columns in table */
 };
 
@@ -218,7 +218,7 @@ struct ecs_query_t {
     ecs_rank_type_action_t group_table;
 
     /* The query kind determines how it is registered with tables */
-    int8_t flags;
+    ecs_flags32_t flags;
 
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
@@ -338,7 +338,7 @@ typedef struct ecs_op_t {
     ecs_entities_t components;
     ecs_entity_t component;
     void *value;
-    size_t size;
+    ecs_size_t size;
 } ecs_op_t;
 
 /** A stage is a data structure in which delta's are stored until it is safe to
@@ -407,7 +407,7 @@ typedef struct ecs_thread_t {
     ecs_world_t *world;                       /* Reference to world */
     ecs_stage_t *stage;                       /* Stage for thread */
     ecs_os_thread_t thread;                   /* Thread handle */
-    uint16_t index;                           /* Index of thread */
+    int32_t index;                           /* Index of thread */
 } ecs_thread_t;
 
 /** Component-specific data */

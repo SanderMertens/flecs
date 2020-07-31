@@ -148,7 +148,7 @@ int32_t ecs_get_threads(
 
 /** Get current thread index */
 FLECS_EXPORT
-uint16_t ecs_get_thread_index(
+int32_t ecs_get_thread_index(
     ecs_world_t *world);
 
 

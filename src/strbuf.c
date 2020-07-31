@@ -32,7 +32,7 @@ void ecs_strbuf_grow_str(
     b->current = (ecs_strbuf_element*)e;
     b->elementCount ++;
     e->super.buffer_embedded = false;
-    e->super.pos = size ? size : (int32_t)strlen(str);
+    e->super.pos = size ? size : (int32_t)ecs_os_strlen(str);
     e->super.next = NULL;
     e->super.buf = str;
     e->alloc_str = alloc_str;
@@ -92,12 +92,15 @@ void ecs_strbuf_init(
 /* Quick custom function to copy a maxium number of characters and
  * simultaneously determine length of source string. */
 static
-unsigned int fast_strncpy(
+int32_t fast_strncpy(
     char * dst,
     const char * src,
-    unsigned int n_cpy,
-    unsigned int n)
+    int n_cpy,
+    int n)
 {
+    ecs_assert(n_cpy >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(n >= 0, ECS_INTERNAL_ERROR, NULL);
+
     const char *ptr, *orig = src;
     char ch;
 
@@ -108,7 +111,9 @@ unsigned int fast_strncpy(
         }
     }
 
-    return ptr - orig;
+    ecs_assert(ptr - orig < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
+
+    return (int32_t)(ptr - orig);
 }
 
 /* Append a format string to a buffer */
@@ -148,7 +153,8 @@ bool ecs_strbuf_vappend_intern(
         memRequired = fast_strncpy(ecs_strbuf_ptr(b), str, max_copy, n);
     } else {
         va_copy(arg_cpy, args);
-        memRequired = vsnprintf(ecs_strbuf_ptr(b), max_copy + 1, str, args);
+        memRequired = vsnprintf(
+            ecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
     }
 
     if (memRequired <= memLeftInElement) {
@@ -172,7 +178,7 @@ bool ecs_strbuf_vappend_intern(
                     strncpy(
                         ecs_strbuf_ptr(b),
                         str + memLeftInElement,
-                        memRequired);
+                        (size_t)memRequired);
                 } else {
                     strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
                 }
@@ -194,7 +200,7 @@ bool ecs_strbuf_vappend_intern(
                 ecs_strbuf_grow(b);
 
                 /* Copy entire string to new buffer */
-                vsprintf(ecs_strbuf_ptr(b), str, arg_cpy);
+                ecs_os_vsprintf(ecs_strbuf_ptr(b), str, arg_cpy);
 
                 /* Ignore the part of the string that was copied into the
                  * previous buffer. The string copied into the new buffer could
@@ -208,7 +214,7 @@ bool ecs_strbuf_vappend_intern(
                 /* Resulting string does not fit in standard-size buffer.
                  * Allocate a new buffer that can hold the entire string. */
                 char *dst = ecs_os_malloc(memRequired + 1);
-                vsprintf(dst, str, arg_cpy);
+                ecs_os_vsprintf(dst, str, arg_cpy);
                 ecs_strbuf_grow_str(b, dst, dst, memRequired);
             }
         }
@@ -348,7 +354,7 @@ char* ecs_strbuf_get(ecs_strbuf_t *b) {
             char* ptr = result;
 
             do {
-                memcpy(ptr, e->buf, e->pos);
+                ecs_os_memcpy(ptr, e->buf, e->pos);
                 ptr += e->pos;
                 next = e->next;
                 if (e != &b->firstElement.super) {

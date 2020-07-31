@@ -11,19 +11,21 @@ int32_t comp_mask_index(
 static
 void comp_mask_set(
     ecs_comp_mask_t mask,
-    int32_t value)
+    ecs_entity_t value)
 {
-    int32_t index = comp_mask_index(value);
-    mask[index] |= (int64_t)1 << (value & 0x3F);
+    ecs_assert(value < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
+    int32_t index = comp_mask_index((int32_t)value);
+    mask[index] |= (ecs_entity_t)1 << (value & 0x3F);
 }
 
 static
-int64_t comp_mask_is_set(
+bool comp_mask_is_set(
     ecs_comp_mask_t mask,
-    int32_t value)
+    ecs_entity_t value)
 {
-    int32_t index = comp_mask_index(value);
-    return mask[index] & (int64_t)1 << (value & 0x3F);
+    ecs_assert(value < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
+    int32_t index = comp_mask_index((int32_t)value);
+    return (mask[index] & (ecs_entity_t)1 << (value & 0x3F)) != 0;
 }
 
 static
@@ -49,8 +51,8 @@ void* get_component_w_index(
     ecs_assert(index < info->table->column_count, ECS_INVALID_COMPONENT_ID, NULL);
 
     ecs_column_t *column = &columns[index];
-    size_t size = column->size; 
     ecs_vector_t *data_vec = column->data;
+    int16_t size = column->size; 
 
     ecs_assert(!size || data_vec != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -101,7 +103,11 @@ ecs_entity_t new_entity_handle(
     } else {
         int32_t thread_count = ecs_vector_count(world->workers);
         if (thread_count >= 1) { 
-            entity = ecs_os_ainc((int32_t*)&world->stats.last_id);
+            /* Can't atomically increase number above max int */
+            ecs_assert(
+                world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
+
+            entity = (ecs_entity_t)ecs_os_ainc((int32_t*)&world->stats.last_id);
         } else {
             entity = ++ world->stats.last_id;
         } 
@@ -331,7 +337,7 @@ void ecs_run_component_trigger(
     ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
     ecs_assert((row + count) <= ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
 
-    entities = ECS_OFFSET(entities, sizeof(ecs_entity_t) * row);
+    entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
 
     run_component_trigger_for_entities(
         world, stage, trigger_vec, component, table, data, row, count, entities);
@@ -385,7 +391,7 @@ void ecs_run_set_systems(
     ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
     ecs_assert((row + count) <= ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
 
-    entities = ECS_OFFSET(entities, sizeof(ecs_entity_t) * row);
+    entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
 
     run_set_systems_for_entities(world, stage, components, table, row, 
         count, entities, set_all);
@@ -496,13 +502,13 @@ void instantiate_children(
 
     /* Create component array for creating the table */
     ecs_entities_t components = {
-        .array = ecs_os_alloca(sizeof(ecs_entity_t) * type_count)
+        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * type_count)
     };
 
     void **c_info = NULL;
 
     if (child_data) {
-        c_info = ecs_os_alloca(sizeof(void*) * column_count);
+        c_info = ecs_os_alloca(ECS_SIZEOF(void*) * column_count);
     } else {
         return;
     }
@@ -625,7 +631,7 @@ bool override_from_base(
 
     void *base_ptr = get_component(&base_info, component);
     if (base_ptr) {
-        uint32_t data_size = column->size;
+        int16_t data_size = column->size;
         void *data_array = ecs_vector_first_t(column->data, column->size, column->alignment);
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
@@ -639,12 +645,12 @@ bool override_from_base(
             void *ctx = cdata->lifecycle.ctx;
             for (index = 0; index < count; index ++) {
                 copy(world, component, &base, &entities[row], 
-                    data_ptr, base_ptr, data_size, 1, ctx);
+                    data_ptr, base_ptr, ecs_to_size_t(data_size), 1, ctx);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
             }
         } else {
             for (index = 0; index < count; index ++) {
-                memcpy(data_ptr, base_ptr, data_size);
+                ecs_os_memcpy(data_ptr, base_ptr, data_size);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
             }                    
         }
@@ -715,13 +721,14 @@ void ecs_components_construct(
 
         ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_column_t *column = &columns[component_info[i].column];
-        int32_t size = column->size;
+        int16_t size = column->size;
         void *array = ecs_vector_first_t(column->data, size, column->alignment);
         ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_entity_t component = component_info[i].id;
         ctor(stage->world, component, &entities[row], 
-            ECS_OFFSET(array, size * row), size, count, c_info->lifecycle.ctx);
+            ECS_OFFSET(array, size * row), ecs_to_size_t(size), count, 
+            c_info->lifecycle.ctx);
     }
 }
 
@@ -754,13 +761,14 @@ void ecs_components_destruct(
         }
 
         ecs_column_t *column = &columns[component_info[i].column];
-        int32_t size = column->size;
+        int16_t size = column->size;
         void *array = ecs_vector_first_t(column->data, size, column->alignment);
         ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_entity_t component = component_info[i].id;
         dtor(stage->world, component, &entities[row], 
-            ECS_OFFSET(array, size * row), size, count, c_info->lifecycle.ctx);
+            ECS_OFFSET(array, size * row), ecs_to_size_t(size), count, 
+            c_info->lifecycle.ctx);
     }
 }
 
@@ -1318,7 +1326,7 @@ void new(
     ecs_entities_t *to_add)
 {
     ecs_entities_t added = {
-        .array = ecs_os_alloca(sizeof(ecs_entity_t) * to_add->count)
+        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_add->count)
     };
     ecs_entity_info_t info = {0};
     ecs_table_t *table = ecs_table_traverse_add(
@@ -1343,10 +1351,10 @@ int32_t new_w_data(
     
     ecs_type_t type = table->type;
     ecs_entity_t e = world->stats.last_id + 1;
-    world->stats.last_id += count;
+    world->stats.last_id += ecs_to_entity(count);
 
     if (!type) {
-        return e;
+        return 0;
     }
 
     ecs_entities_t component_array = { 0 };
@@ -1366,14 +1374,15 @@ int32_t new_w_data(
     if (stage == &world->stage) {
         ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
         for (i = 0; i < count; i ++) { 
-            record_ptrs[row + i] = ecs_eis_set(stage, e + i, &(ecs_record_t){
+            record_ptrs[row + i] = ecs_eis_set(stage, e + ecs_to_entity(i), 
+            &(ecs_record_t){
                 .table = table,
                 .row = row + i + 1
             });
         }
     } else {
         for (i = 0; i < count; i ++) {
-            ecs_eis_set(stage, e + i, &(ecs_record_t){
+            ecs_eis_set(stage, e + ecs_to_entity(i), &(ecs_record_t){
                 .table = table,
                 .row = row + i + 1
             });
@@ -1408,8 +1417,8 @@ int32_t new_w_data(
             /* Bulk copy column data into new table */
             int32_t table_index = ecs_type_index_of(type, c);
             ecs_column_t *column = &data->columns[table_index];
-            size_t size = column->size;
-            size_t alignment = column->alignment;
+            int16_t size = column->size;
+            int16_t alignment = column->alignment;
             void *ptr = ecs_vector_first_t(column->data, size, alignment);
             ptr = ECS_OFFSET(ptr, size * row);
 
@@ -1417,10 +1426,10 @@ int32_t new_w_data(
             ecs_copy_t copy = cdata->lifecycle.copy;
             if (copy) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-                copy(world, c, entities, entities, ptr, src_ptr, size, count, 
-                    cdata->lifecycle.ctx);
+                copy(world, c, entities, entities, ptr, src_ptr, 
+                    ecs_to_size_t(size), count, cdata->lifecycle.ctx);
             } else {
-                memcpy(ptr, src_ptr, size * count);
+                ecs_os_memcpy(ptr, src_ptr, size * count);
             }
         };
 
@@ -2124,7 +2133,9 @@ ecs_entity_t ecs_set_ptr_w_entity(
         }
     }
 
-    if (ecs_defer_begin(world, stage, EcsOpSet, entity, &added, ptr, size)) {
+    if (ecs_defer_begin(world, stage, EcsOpSet, entity, &added, ptr, 
+        ecs_from_size_t(size))) 
+    {
         return entity;
     }
 
@@ -2142,7 +2153,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
             copy(world, component, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
         } else {
-            memcpy(dst, ptr, size);
+            ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
         }
     } else {
         memset(dst, 0, size);
@@ -2319,7 +2330,7 @@ bool ecs_defer_begin(
     ecs_entity_t entity,
     ecs_entities_t *components,
     const void *value,
-    size_t size)
+    ecs_size_t size)
 {
     (void)world;
     
@@ -2338,9 +2349,9 @@ bool ecs_defer_begin(
                 .count = 1
             };
         } else {
-            size_t array_size = components->count * sizeof(ecs_entity_t);
+            ecs_size_t array_size = components->count * ECS_SIZEOF(ecs_entity_t);
             op->components.array = ecs_os_malloc(array_size);
-            memcpy(op->components.array, components->array, array_size);
+            ecs_os_memcpy(op->components.array, components->array, array_size);
             op->components.count = components->count;
         }
 
@@ -2385,7 +2396,8 @@ void ecs_defer_end(
                     break;
                 case EcsOpSet:
                     ecs_set_ptr_w_entity(world, op->entity, 
-                        op->components.array[0], op->size, op->value);
+                        op->components.array[0], ecs_to_size_t(op->size), 
+                        op->value);
                     break;
                 }
 

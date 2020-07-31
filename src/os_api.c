@@ -4,10 +4,10 @@ static bool ecs_os_api_initialized = false;
 
 ecs_os_api_t ecs_os_api;
 
-uint64_t ecs_os_api_malloc_count = 0;
-uint64_t ecs_os_api_realloc_count = 0;
-uint64_t ecs_os_api_calloc_count = 0;
-uint64_t ecs_os_api_free_count = 0;
+int64_t ecs_os_api_malloc_count = 0;
+int64_t ecs_os_api_realloc_count = 0;
+int64_t ecs_os_api_calloc_count = 0;
+int64_t ecs_os_api_free_count = 0;
 
 void ecs_os_set_api(
     ecs_os_api_t *os_api)
@@ -82,31 +82,35 @@ void ecs_os_err(const char *fmt, ...) {
     va_end(args);
 }
 
-void ecs_os_gettime(ecs_time_t *timeOut)
+void ecs_os_gettime(ecs_time_t *time)
 {
     uint64_t now = ecs_os_time_now();
     uint64_t sec = now / 1000000000;
-    timeOut->sec = sec;
-    timeOut->nanosec = now - sec * 1000000000;
+
+    assert(sec < UINT32_MAX);
+    assert((now - sec * 1000000000) < UINT32_MAX);
+
+    time->sec = (uint32_t)sec;
+    time->nanosec = (uint32_t)(now - sec * 1000000000);
 }
 
 static
-void* ecs_os_api_malloc(size_t size) {
+void* ecs_os_api_malloc(ecs_size_t size) {
     ecs_os_api_malloc_count ++;
-    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
-    return malloc(size);
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+    return malloc((size_t)size);
 }
 
 static
-void* ecs_os_api_calloc(size_t size) {
+void* ecs_os_api_calloc(ecs_size_t size) {
     ecs_os_api_calloc_count ++;
-    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
-    return calloc(1, size);
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+    return calloc(1, (size_t)size);
 }
 
 static
-void* ecs_os_api_realloc(void *ptr, size_t size) {
-    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
+void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
         ecs_os_api_realloc_count ++;
@@ -115,7 +119,7 @@ void* ecs_os_api_realloc(void *ptr, size_t size) {
         ecs_os_api_malloc_count ++; 
     }
     
-    return realloc(ptr, size);
+    return realloc(ptr, (size_t)size);
 }
 
 static
@@ -128,7 +132,7 @@ void ecs_os_api_free(void *ptr) {
 
 static
 char* ecs_os_api_strdup(const char *str) {
-    int len = strlen(str);
+    int len = ecs_os_strlen(str);
     char *result = ecs_os_api_malloc(len + 1);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
     strcpy(result, str);
@@ -139,7 +143,7 @@ char* ecs_os_api_strdup(const char *str) {
 static
 char *module_file_base(const char *module, char sep) {
     char *base = ecs_os_strdup(module);
-    size_t i, len = strlen(base);
+    ecs_size_t i, len = ecs_os_strlen(base);
     for (i = 0; i < len; i ++) {
         if (base[i] == '.') {
             base[i] = sep;
@@ -200,22 +204,28 @@ void ecs_os_set_api_defaults(void)
 
     ecs_os_time_setup();
     
+    /* Memory management */
     ecs_os_api.malloc = ecs_os_api_malloc;
     ecs_os_api.free = ecs_os_api_free;
     ecs_os_api.realloc = ecs_os_api_realloc;
     ecs_os_api.calloc = ecs_os_api_calloc;
+
+    /* Strings */
     ecs_os_api.strdup = ecs_os_api_strdup;
 
     ecs_os_api_impl(&ecs_os_api);
 
+    /* Time */
     ecs_os_api.sleep = ecs_os_time_sleep;
     ecs_os_api.get_time = ecs_os_gettime;
 
+    /* Logging */
     ecs_os_api.log = ecs_log;
     ecs_os_api.log_error = ecs_log_error;
     ecs_os_api.log_debug = ecs_log_debug;
     ecs_os_api.log_warning = ecs_log_warning;
 
+    /* Modules */
     if (!ecs_os_api.module_to_dl) {
         ecs_os_api.module_to_dl = ecs_os_api_module_to_dl;
     }

@@ -10,7 +10,7 @@ typedef struct ecs_queue_t ecs_queue_t;
 
 FLECS_EXPORT
 ecs_queue_t* _ecs_queue_new(
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count);
 
@@ -19,7 +19,7 @@ ecs_queue_t* _ecs_queue_new(
 
 FLECS_EXPORT
 ecs_queue_t* _ecs_queue_from_array(
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count,
     void *array);
@@ -30,7 +30,7 @@ ecs_queue_t* _ecs_queue_from_array(
 FLECS_EXPORT
 void* _ecs_queue_push(
     ecs_queue_t *queue,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset);
 
 #define ecs_queue_push(queue, T)\
@@ -39,7 +39,7 @@ void* _ecs_queue_push(
 FLECS_EXPORT
 void* _ecs_queue_get(
     ecs_queue_t *queue,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t index);
 
@@ -52,7 +52,7 @@ void* _ecs_queue_get(
 FLECS_EXPORT
 void* _ecs_queue_last(
     ecs_queue_t *queue,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset);
 
 #define ecs_queue_last(queue, T)\
