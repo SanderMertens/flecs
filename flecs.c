@@ -1351,7 +1351,7 @@ char *ecs_vasprintf(
         return NULL; 
     }
 
-    vsprintf(result, fmt, args);
+    ecs_os_vsprintf(result, fmt, args);
 
     return result;
 }
@@ -6681,7 +6681,7 @@ ecs_entity_t ecs_import_from_library(
         module = ecs_os_strdup(import_func);
         ecs_assert(module != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-        strcat(bptr, "Import");
+        ecs_os_strcat(bptr, "Import");
     }
 
     char *library_filename = ecs_os_module_to_dl(library_name);
@@ -8406,7 +8406,7 @@ bool path_append(
     char buff[22];
     const char *name = ecs_get_name(world, child);
     if (!name) {
-        sprintf(buff, "%u", (uint32_t)child);
+        ecs_os_sprintf(buff, "%u", (uint32_t)child);
         name = buff;
     }
 
@@ -9396,7 +9396,7 @@ bool ecs_strbuf_vappend_intern(
                 ecs_strbuf_grow(b);
 
                 /* Copy entire string to new buffer */
-                vsprintf(ecs_strbuf_ptr(b), str, arg_cpy);
+                ecs_os_vsprintf(ecs_strbuf_ptr(b), str, arg_cpy);
 
                 /* Ignore the part of the string that was copied into the
                  * previous buffer. The string copied into the new buffer could
@@ -9410,7 +9410,7 @@ bool ecs_strbuf_vappend_intern(
                 /* Resulting string does not fit in standard-size buffer.
                  * Allocate a new buffer that can hold the entire string. */
                 char *dst = ecs_os_malloc(memRequired + 1);
-                vsprintf(dst, str, arg_cpy);
+                ecs_os_vsprintf(dst, str, arg_cpy);
                 ecs_strbuf_grow_str(b, dst, dst, memRequired);
             }
         }

@@ -200,7 +200,7 @@ bool ecs_strbuf_vappend_intern(
                 ecs_strbuf_grow(b);
 
                 /* Copy entire string to new buffer */
-                vsprintf(ecs_strbuf_ptr(b), str, arg_cpy);
+                ecs_os_vsprintf(ecs_strbuf_ptr(b), str, arg_cpy);
 
                 /* Ignore the part of the string that was copied into the
                  * previous buffer. The string copied into the new buffer could
@@ -214,7 +214,7 @@ bool ecs_strbuf_vappend_intern(
                 /* Resulting string does not fit in standard-size buffer.
                  * Allocate a new buffer that can hold the entire string. */
                 char *dst = ecs_os_malloc(memRequired + 1);
-                vsprintf(dst, str, arg_cpy);
+                ecs_os_vsprintf(dst, str, arg_cpy);
                 ecs_strbuf_grow_str(b, dst, dst, memRequired);
             }
         }

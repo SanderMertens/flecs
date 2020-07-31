@@ -1469,9 +1469,12 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_strncmp(str1, str2, num) strncmp(str1, str2, (size_t)(num))
 #define ecs_os_strcpy(str1, str2) strcpy(str1, str2)
 #define ecs_os_strncpy(str1, str2, num) strncpy(str1, str2, (size_t)(num))
+#define ecs_os_strcat(str1, str2) strcat(str1, str2)
 #define ecs_os_memcmp(ptr1, ptr2, num) memcmp(ptr1, ptr2, (size_t)(num))
 #define ecs_os_memcpy(ptr1, ptr2, num) memcpy(ptr1, ptr2, (size_t)(num))
 #define ecs_os_memset(ptr, value, num) memset(ptr, value, (size_t)(num))
+#define ecs_os_sprintf(ptr, ...) sprintf(ptr, __VA_ARGS__)
+#define ecs_os_vsprintf(ptr, fmt, args) vsprintf(ptr, fmt, args)
 
 
 /* Threads */
