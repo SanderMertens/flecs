@@ -988,9 +988,9 @@ void ecs_table_swap(
             void *el_1 = ECS_OFFSET(ptr, size * row_1);
             void *el_2 = ECS_OFFSET(ptr, size * row_2);
 
-            memcpy(tmp, el_1, size);
-            memcpy(el_1, el_2, size);
-            memcpy(el_2, tmp, size);
+            ecs_os_memcpy(tmp, el_1, size);
+            ecs_os_memcpy(el_1, el_2, size);
+            ecs_os_memcpy(el_2, tmp, size);
         }
     }
 
@@ -1025,7 +1025,7 @@ void merge_vector(
         void *src_ptr = ecs_vector_first_t(src, size, alignment);
 
         dst_ptr = ECS_OFFSET(dst_ptr, size * dst_count);
-        memcpy(dst_ptr, src_ptr, size * src_count);
+        ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
 
         ecs_vector_free(src);
         *dst_out = dst;
@@ -1335,10 +1335,10 @@ void ecs_table_move(
                         copy(world, new_component, &dst_entity, &src_entity, 
                             dst, src, ecs_to_size_t(size), 1, ctx);
                     } else {
-                        memcpy(dst, src, size);
+                        ecs_os_memcpy(dst, src, size);
                     }
                 } else {
-                    memcpy(dst, src, size);
+                    ecs_os_memcpy(dst, src, size);
                 }
             }
         }

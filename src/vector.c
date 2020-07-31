@@ -45,7 +45,7 @@ ecs_vector_t* _ecs_vector_from_array(
         ecs_os_malloc(offset + elem_size * elem_count);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    memcpy(ECS_OFFSET(result, offset), array, elem_size * elem_count);
+    ecs_os_memcpy(ECS_OFFSET(result, offset), array, elem_size * elem_count);
 
     result->count = elem_count;
     result->size = elem_count;
@@ -139,7 +139,7 @@ int32_t _ecs_vector_move_index(
     void *dst_elem = _ecs_vector_add(dst, elem_size, offset);
     void *src_elem = _ecs_vector_get(src, elem_size, offset, index);
 
-    memcpy(dst_elem, src_elem, elem_size);
+    ecs_os_memcpy(dst_elem, src_elem, elem_size);
     return _ecs_vector_remove_index(src, elem_size, offset, index);
 }
 
@@ -167,7 +167,7 @@ int32_t _ecs_vector_remove(
 
     if (index != (count - 1)) {
         void *last_elem = ECS_OFFSET(buffer, elem_size * (count - 1));
-        memcpy(elem, last_elem, elem_size);
+        ecs_os_memcpy(elem, last_elem, elem_size);
     }
 
     count --;
@@ -202,7 +202,7 @@ bool _ecs_vector_pop(
     void *elem = ECS_OFFSET(vector, offset + (count - 1) * elem_size);
 
     if (value) {
-        memcpy(value, elem, elem_size);
+        ecs_os_memcpy(value, elem, elem_size);
     }
 
     ecs_vector_remove_last(vector);
@@ -226,7 +226,7 @@ int32_t _ecs_vector_remove_index(
 
     if (index != (count - 1)) {
         void *last_elem = ECS_OFFSET(buffer, elem_size * (count - 1));
-        memcpy(elem, last_elem, elem_size);
+        ecs_os_memcpy(elem, last_elem, elem_size);
     }
 
     count --;
@@ -466,6 +466,6 @@ ecs_vector_t* _ecs_vector_copy(
     }
 
     ecs_vector_t *dst = _ecs_vector_new(elem_size, offset, src->size);
-    memcpy(dst, src, offset + elem_size * src->count);
+    ecs_os_memcpy(dst, src, offset + elem_size * src->count);
     return dst;
 }

@@ -132,7 +132,7 @@ int32_t add_to_bucket(
     void *array = PAYLOAD_ARRAY(bucket, offset);
     ecs_map_key_t *elem = GET_ELEM(array, elem_size, bucket->count);
     *elem = key;
-    memcpy(PAYLOAD(elem), payload, elem_size);
+    ecs_os_memcpy(PAYLOAD(elem), payload, elem_size);
     return ++ bucket->count;
 }
 
@@ -157,7 +157,7 @@ void remove_from_bucket(
         ecs_map_key_t *last_elem = GET_ELEM(array, elem_size, bucket->count);
 
         ecs_assert(key == *elem, ECS_INTERNAL_ERROR, NULL);
-        memcpy(elem, last_elem, ELEM_SIZE(elem_size));
+        ecs_os_memcpy(elem, last_elem, ELEM_SIZE(elem_size));
     }
 }
 
@@ -309,7 +309,7 @@ bool _ecs_map_has(
 {
     const void *result = _ecs_map_get(map, elem_size, key);
     if (result) {
-        memcpy(payload, result, elem_size);
+        ecs_os_memcpy(payload, result, elem_size);
         return true;
     } else {
         return false;
@@ -367,7 +367,7 @@ void _ecs_map_set(
             int32_t map_count = ++map->count;
             
             *elem = key;
-            memcpy(PAYLOAD(elem), payload, elem_size);
+            ecs_os_memcpy(PAYLOAD(elem), payload, elem_size);
 
             int32_t target_bucket_count = get_bucket_count(map_count);
             int32_t map_bucket_count = map->bucket_count;
@@ -382,7 +382,7 @@ void _ecs_map_set(
         }
     } else {
         *found = key;
-        memcpy(PAYLOAD(found), payload, elem_size);
+        ecs_os_memcpy(PAYLOAD(found), payload, elem_size);
     }
 
     ecs_assert(map->bucket_count != 0, ECS_INTERNAL_ERROR, NULL);
@@ -411,7 +411,7 @@ void ecs_map_remove(
         if (*elem == key) {
             ecs_map_key_t *last_elem = GET_ELEM(array, elem_size, (bucket_count - 1));
             if (last_elem > elem) {
-                memcpy(elem, last_elem, ELEM_SIZE(elem_size));
+                ecs_os_memcpy(elem, last_elem, ELEM_SIZE(elem_size));
             }
 
             map->count --;

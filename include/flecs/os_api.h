@@ -75,6 +75,12 @@ int (*ecs_os_api_memcmp_t)(
     const void *ptr2, 
     ecs_size_t num);
 
+typedef
+void* (*ecs_os_api_memcpy_t)(
+    void *ptr1, 
+    const void *ptr2, 
+    ecs_size_t num);    
+
 /* Threads */
 typedef
 void* (*ecs_os_thread_callback_t)(
@@ -185,6 +191,7 @@ typedef struct ecs_os_api_t {
     ecs_os_api_strdup_t strdup;
     ecs_os_api_strlen_t strlen;
     ecs_os_api_memcmp_t memcmp;
+    ecs_os_api_memcpy_t memcpy;
 
     /* Threads */
     ecs_os_api_thread_new_t thread_new;
@@ -259,6 +266,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_strdup(str) ecs_os_api.strdup(str)
 #define ecs_os_strlen(str) ecs_os_api.strlen(str)
 #define ecs_os_memcmp(ptr1, ptr2, num) ecs_os_api.memcmp(ptr1, ptr2, num)
+#define ecs_os_memcpy(ptr1, ptr2, num) ecs_os_api.memcpy(ptr1, ptr2, num)
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new(callback, param)

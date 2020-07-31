@@ -78,7 +78,7 @@ void _bootstrap_component(
     
     c_info[index].size = size;
     c_info[index].alignment = alignment;
-    id_data[index].value = &id[strlen("Ecs")]; /* Skip prefix */
+    id_data[index].value = &id[ecs_os_strlen("Ecs")]; /* Skip prefix */
     id_data[index].symbol = id;
     id_data[index].alloc_value = NULL;
 }

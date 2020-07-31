@@ -511,7 +511,7 @@ void ecs_sig_init(
     const char *expr,
     ecs_sig_t *sig)
 {
-    if (expr && strlen(expr)) {
+    if (expr && ecs_os_strlen(expr)) {
         sig->expr = ecs_os_strdup(expr);
     } else {
         sig->expr = ecs_os_strdup("0");

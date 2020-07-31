@@ -405,7 +405,7 @@ void append_name(
 
     int32_t len = ecs_os_strlen(str);
     dst = ecs_vector_addn(chbuf, char, len);
-    memcpy(dst, str, len);
+    ecs_os_memcpy(dst, str, len);
     if (h != 1) {
         ecs_os_free((char*)str);
     }
@@ -437,19 +437,19 @@ char* ecs_type_str(
         if (flags & ECS_INSTANCEOF) {
             int len = sizeof("INSTANCEOF|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "INSTANCEOF|", len);
+            ecs_os_memcpy(dst, "INSTANCEOF|", len);
         }
 
         if (flags & ECS_CHILDOF) {
             int len = sizeof("CHILDOF|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "CHILDOF|", len);
+            ecs_os_memcpy(dst, "CHILDOF|", len);
         }
 
         if (flags & ECS_TRAIT) {
             int len = sizeof("TRAIT|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "TRAIT|", len);
+            ecs_os_memcpy(dst, "TRAIT|", len);
             trait = ecs_entity_t_hi(h);
             h = ecs_entity_t_lo(h);
         }
@@ -457,25 +457,25 @@ char* ecs_type_str(
         if (flags & ECS_XOR) {
             int len = sizeof("XOR|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "XOR|", len);
+            ecs_os_memcpy(dst, "XOR|", len);
         }
 
         if (flags & ECS_OR) {
             int len = sizeof("OR|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "OR|", len);
+            ecs_os_memcpy(dst, "OR|", len);
         }
 
         if (flags & ECS_AND) {
             int len = sizeof("AND|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "AND|", len);
+            ecs_os_memcpy(dst, "AND|", len);
         }
 
         if (flags & ECS_NOT) {
             int len = sizeof("NOT|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "NOT|", len);
+            ecs_os_memcpy(dst, "NOT|", len);
         }
 
         append_name(world, &chbuf, h);

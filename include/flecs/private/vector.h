@@ -49,7 +49,7 @@ struct {\
 const ecs_vector_t *name = (ecs_vector_t*)&__##name##_value
 
 #define ECS_VECTOR_IMPL(name, T, elems, elem_count)\
-memcpy(__##name##_value.array, elems, sizeof(T) * elem_count)
+ecs_os_memcpy(__##name##_value.array, elems, sizeof(T) * elem_count)
 
 #define ECS_VECTOR_STACK(name, T, elems, elem_count)\
 ECS_VECTOR_DECL(name, T, elem_count);\
