@@ -2,7 +2,9 @@
 #define FLECS_TYPES_PRIVATE_H
 
 #ifndef __MACH__
+#ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
+#endif
 #endif
 
 #include <stdlib.h>
