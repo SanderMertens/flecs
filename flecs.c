@@ -14634,6 +14634,7 @@ bool ecs_name_writer_write(
     ecs_size_t written = writer->len - writer->written;
     char *name_ptr = ECS_OFFSET(writer->name, writer->written);
 
+    ecs_assert(name_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(buffer != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (written >= ECS_SIZEOF(int32_t)) {
@@ -15578,6 +15579,9 @@ void ecs_dbg_table(
     ecs_table_t *table, 
     ecs_dbg_table_t *dbg_out)
 {
+    ecs_assert(dbg_out != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+
     *dbg_out = (ecs_dbg_table_t){.table = table};
 
     dbg_out->type = table->type;
