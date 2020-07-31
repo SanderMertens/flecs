@@ -65,50 +65,6 @@ typedef
 char* (*ecs_os_api_strdup_t)(
     const char *str);
 
-typedef
-ecs_size_t (*ecs_os_api_strlen_t)(
-    const char *str);
-
-typedef
-int (*ecs_os_api_strcmp_t)(
-    const char *str1, 
-    const char *str2);
-
-typedef
-int (*ecs_os_api_strncmp_t)(
-    const char *str1, 
-    const char *str2, 
-    ecs_size_t num);
-
-typedef
-char* (*ecs_os_api_strcpy_t)(
-    char *str1, 
-    const char *str2);
-
-typedef
-char* (*ecs_os_api_strncpy_t)(
-    char *str1, 
-    const char *str2, 
-    ecs_size_t num);    
-
-typedef
-int (*ecs_os_api_memcmp_t)(
-    const void *ptr1, 
-    const void *ptr2, 
-    ecs_size_t num);
-
-typedef
-void* (*ecs_os_api_memcpy_t)(
-    void *ptr1, 
-    const void *ptr2, 
-    ecs_size_t num);    
-
-typedef
-void* (*ecs_os_api_memset_t)(
-    void *ptr, 
-    int value, 
-    ecs_size_t num);   
-
 /* Threads */
 typedef
 void* (*ecs_os_thread_callback_t)(
@@ -216,14 +172,6 @@ typedef struct ecs_os_api_t {
 
     /* Strings */
     ecs_os_api_strdup_t strdup;
-    ecs_os_api_strlen_t strlen;
-    ecs_os_api_strcmp_t strcmp;
-    ecs_os_api_strncmp_t strncmp;
-    ecs_os_api_strcpy_t strcpy;
-    ecs_os_api_strncpy_t strncpy;
-    ecs_os_api_memcmp_t memcmp;
-    ecs_os_api_memcpy_t memcpy;
-    ecs_os_api_memset_t memset;
 
     /* Threads */
     ecs_os_api_thread_new_t thread_new;
@@ -296,14 +244,15 @@ void ecs_os_set_api_defaults(void);
 
 /* Strings */
 #define ecs_os_strdup(str) ecs_os_api.strdup(str)
-#define ecs_os_strlen(str) ecs_os_api.strlen(str)
-#define ecs_os_strcmp(str1, str2) ecs_os_api.strcmp(str1, str2)
-#define ecs_os_strncmp(str1, str2, num) ecs_os_api.strncmp(str1, str2, num)
-#define ecs_os_strcpy(str1, str2) ecs_os_api.strcpy(str1, str2, num)
-#define ecs_os_strncpy(str1, str2, num) ecs_os_api.strncpy(str1, str2, num)
-#define ecs_os_memcmp(ptr1, ptr2, num) ecs_os_api.memcmp(ptr1, ptr2, num)
-#define ecs_os_memcpy(ptr1, ptr2, num) ecs_os_api.memcpy(ptr1, ptr2, num)
-#define ecs_os_memset(ptr, value, num) ecs_os_api.memset(ptr, value, num)
+#define ecs_os_strlen(str) (ecs_size_t)strlen(str)
+#define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
+#define ecs_os_strncmp(str1, str2, num) strncmp(str1, str2, (size_t)(num))
+#define ecs_os_strcpy(str1, str2) strcpy(str1, str2)
+#define ecs_os_strncpy(str1, str2, num) strncpy(str1, str2, (size_t)(num))
+#define ecs_os_memcmp(ptr1, ptr2, num) memcmp(ptr1, ptr2, (size_t)(num))
+#define ecs_os_memcpy(ptr1, ptr2, num) memcpy(ptr1, ptr2, (size_t)(num))
+#define ecs_os_memset(ptr, value, num) memset(ptr, value, (size_t)(num))
+
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new(callback, param)
