@@ -18,6 +18,9 @@ void ecs_dbg_table(
     ecs_table_t *table, 
     ecs_dbg_table_t *dbg_out)
 {
+    ecs_assert(dbg_out != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+
     *dbg_out = (ecs_dbg_table_t){.table = table};
 
     dbg_out->type = table->type;
