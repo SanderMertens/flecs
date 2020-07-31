@@ -52,13 +52,20 @@ typedef char bool;
 #define true !false
 #endif
 
+typedef uint32_t ecs_flags32_t;
+typedef uint64_t ecs_flags64_t;
+
+/* Keep unsigned integers out of the codebase as they do more harm than good */
+typedef int32_t ecs_size_t;
+#define ECS_SIZEOF(T) (ecs_size_t)sizeof(T)
+
 /* Use alignof in C++, or a trick in C. */
 #ifdef __cplusplus
-#define ECS_ALIGNOF(T) alignof(T)
+#define ECS_ALIGNOF(T) (int64_t)alignof(T)
 #elif defined(_MSC_VER)
-#define ECS_ALIGNOF(T) __alignof(T)
+#define ECS_ALIGNOF(T) (int64_t)__alignof(T)
 #else
-#define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
+#define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
 #if defined(__GNUC__)

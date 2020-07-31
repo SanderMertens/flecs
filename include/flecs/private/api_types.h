@@ -102,7 +102,7 @@ struct ecs_iter_t {
     int32_t *columns;        /**< Mapping from query columns to table columns */
     int32_t table_count;         /**< Active table count for query */
     int32_t inactive_table_count; /**< Inactive table count for query */
-    uint16_t column_count;       /**< Number of columns for system */
+    int32_t column_count;        /**< Number of columns for system */
     ecs_table_t *table;          /**< The current table. */
     void *table_columns;         /**< Table component data */
     ecs_query_t *query;          /**< Current query being evaluated */

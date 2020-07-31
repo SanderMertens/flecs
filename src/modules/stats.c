@@ -191,7 +191,7 @@ void compute_world_memory(
     EcsMemoryStats *stats)
 {
     stats->world_memory.used_bytes = 
-    stats->world_memory.allocd_bytes = sizeof(ecs_world_t);
+    stats->world_memory.allocd_bytes = ECS_SIZEOF(ecs_world_t);
 
     /* Add memory spent on worker threads to world memory */
     ecs_vector_memory(world->workers, ecs_thread_t,
@@ -218,8 +218,8 @@ void compute_world_memory(
     
     /* Compute memory used in temporary stage */
     compute_stage_memory(&world->temp_stage, stats);
-    stats->stages_memory.used_bytes += sizeof(ecs_stage_t);
-    stats->stages_memory.allocd_bytes += sizeof(ecs_stage_t);    
+    stats->stages_memory.used_bytes += ECS_SIZEOF(ecs_stage_t);
+    stats->stages_memory.allocd_bytes += ECS_SIZEOF(ecs_stage_t);    
 
     /* Compute memory used in thread stages */
     int32_t i, count = ecs_vector_count(world->worker_stages);
@@ -355,12 +355,12 @@ void collect_system_table_metrics(
     int32_t i, count = ecs_vector_count(tables);
 
     /* The 'column' member in ecs_matched_table_t */
-    stat->allocd_bytes += (sizeof(int32_t) * column_count) * count;
-    stat->used_bytes += (sizeof(int32_t) * column_count) * count;
+    stat->allocd_bytes += (ECS_SIZEOF(int32_t) * column_count) * count;
+    stat->used_bytes += (ECS_SIZEOF(int32_t) * column_count) * count;
 
     /* The 'components' member of ecs_matched_table_t */
-    stat->allocd_bytes += (sizeof(ecs_entity_t) * column_count) * count;
-    stat->used_bytes += (sizeof(ecs_entity_t) * column_count) * count;
+    stat->allocd_bytes += (ECS_SIZEOF(ecs_entity_t) * column_count) * count;
+    stat->used_bytes += (ECS_SIZEOF(ecs_entity_t) * column_count) * count;
 
     /* Refs are different for each table, so we'll have to loop to get accurate 
      * numbers */
@@ -377,7 +377,7 @@ void StatsCollectColSystemMemoryStats(ecs_iter_t *it) {
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
-        stats[i].base_memory_bytes = sizeof(EcsSystem);
+        stats[i].base_memory_bytes = ECS_SIZEOF(EcsSystem);
         stats[i].columns_memory = (ecs_memory_stat_t){0};
         stats[i].active_tables_memory = (ecs_memory_stat_t){0};
         stats[i].inactive_tables_memory = (ecs_memory_stat_t){0};
@@ -395,7 +395,7 @@ void StatsCollectColSystemMemoryStats(ecs_iter_t *it) {
             &stats[i].inactive_tables_memory);            
 
         if (system->on_demand) {
-            stats[i].other_memory_bytes += sizeof(ecs_on_demand_out_t);
+            stats[i].other_memory_bytes += ECS_SIZEOF(ecs_on_demand_out_t);
         }
     }
 }
@@ -527,8 +527,8 @@ void StatsCollectTableStats(ecs_iter_t *it) {
         stats[i].rows_count = ecs_vector_count(columns[0].data);
         stats[i].systems_matched_count = ecs_vector_count(table->queries);
         stats[i].other_memory_bytes = 
-            sizeof(ecs_column_t) + ecs_vector_count(type) +
-            sizeof(ecs_entity_t) * ecs_vector_count(table->queries);
+            ECS_SIZEOF(ecs_column_t) + ecs_vector_count(type) +
+            ECS_SIZEOF(ecs_entity_t) * ecs_vector_count(table->queries);
 
         collect_table_data_memory(it->world, table, &stats[i]);
     }

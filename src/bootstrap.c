@@ -53,8 +53,8 @@ void _bootstrap_component(
     ecs_table_t *table,
     ecs_entity_t entity,
     const char *id,
-    size_t size,
-    size_t alignment)
+    ecs_size_t size,
+    ecs_size_t alignment)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 

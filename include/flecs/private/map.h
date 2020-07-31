@@ -21,8 +21,8 @@ typedef struct ecs_map_iter_t {
 
 FLECS_EXPORT
 ecs_map_t * _ecs_map_new(
-    size_t elem_size,
-    size_t alignment, 
+    ecs_size_t elem_size,
+    ecs_size_t alignment, 
     int32_t elem_count);
 
 #define ecs_map_new(T, elem_count)\
@@ -31,7 +31,7 @@ ecs_map_t * _ecs_map_new(
 FLECS_EXPORT
 void * _ecs_map_get(
     const ecs_map_t *map,
-    size_t elem_size,
+    ecs_size_t elem_size,
     ecs_map_key_t key);
 
 #define ecs_map_get(map, T, key)\
@@ -40,7 +40,7 @@ void * _ecs_map_get(
 FLECS_EXPORT
 bool _ecs_map_has(
     const ecs_map_t *map,
-    size_t elem_size,
+    ecs_size_t elem_size,
     ecs_map_key_t key,
     void *payload);
 
@@ -58,7 +58,7 @@ void * _ecs_map_get_ptr(
 FLECS_EXPORT
 void _ecs_map_set(
     ecs_map_t *map,
-    size_t elem_size,
+    ecs_size_t elem_size,
     ecs_map_key_t key,
     const void *payload);
 
@@ -93,7 +93,7 @@ ecs_map_iter_t ecs_map_iter(
 FLECS_EXPORT
 void* _ecs_map_next(
     ecs_map_iter_t* iter,
-    size_t elem_size,
+    ecs_size_t elem_size,
     ecs_map_key_t *key);
 
 #define ecs_map_next(iter, T, key) \

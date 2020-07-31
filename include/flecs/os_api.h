@@ -24,15 +24,15 @@ extern "C" {
 #endif
 
 typedef struct ecs_time_t {
-    int32_t sec;
-    int32_t nanosec;
+    uint32_t sec;
+    uint32_t nanosec;
 } ecs_time_t;
 
 /* Allocation counters (not thread safe) */
-extern uint64_t ecs_os_api_malloc_count;
-extern uint64_t ecs_os_api_realloc_count;
-extern uint64_t ecs_os_api_calloc_count;
-extern uint64_t ecs_os_api_free_count;
+extern int64_t ecs_os_api_malloc_count;
+extern int64_t ecs_os_api_realloc_count;
+extern int64_t ecs_os_api_calloc_count;
+extern int64_t ecs_os_api_free_count;
 
 /* Use handle types that _at least_ can store pointers */
 typedef uintptr_t ecs_os_thread_t;
@@ -46,7 +46,7 @@ typedef void (*ecs_os_proc_t)(void);
 /* Memory management */
 typedef 
 void* (*ecs_os_api_malloc_t)(
-    size_t size);
+    ecs_size_t size);
 
 typedef 
 void (*ecs_os_api_free_t)(
@@ -55,15 +55,25 @@ void (*ecs_os_api_free_t)(
 typedef
 void* (*ecs_os_api_realloc_t)(
     void *ptr, 
-    size_t size);
+    ecs_size_t size);
 
 typedef
 void* (*ecs_os_api_calloc_t)(
-    size_t size);
+    ecs_size_t size);
 
 typedef
 char* (*ecs_os_api_strdup_t)(
     const char *str);
+
+typedef
+ecs_size_t (*ecs_os_api_strlen_t)(
+    const char *str);
+
+typedef
+int (*ecs_os_api_memcmp_t)(
+    const void *ptr1, 
+    const void *ptr2, 
+    ecs_size_t num);
 
 /* Threads */
 typedef
@@ -170,7 +180,11 @@ typedef struct ecs_os_api_t {
     ecs_os_api_realloc_t realloc;
     ecs_os_api_calloc_t calloc;
     ecs_os_api_free_t free;
+
+    /* Strings */
     ecs_os_api_strdup_t strdup;
+    ecs_os_api_strlen_t strlen;
+    ecs_os_api_memcmp_t memcmp;
 
     /* Threads */
     ecs_os_api_thread_new_t thread_new;
@@ -235,13 +249,16 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_free(ptr) ecs_os_api.free(ptr);
 #define ecs_os_realloc(ptr, size) ecs_os_api.realloc(ptr, size)
 #define ecs_os_calloc(size) ecs_os_api.calloc(size)
-#define ecs_os_strdup(str) ecs_os_api.strdup(str)
-
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #define ecs_os_alloca(size) _alloca(size)
 #else
 #define ecs_os_alloca(size) alloca(size)
 #endif
+
+/* Strings */
+#define ecs_os_strdup(str) ecs_os_api.strdup(str)
+#define ecs_os_strlen(str) ecs_os_api.strlen(str)
+#define ecs_os_memcmp(ptr1, ptr2, num) ecs_os_api.memcmp(ptr1, ptr2, num)
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new(callback, param)
@@ -317,7 +334,8 @@ double ecs_time_to_double(
 FLECS_EXPORT
 void* ecs_os_memdup(
     const void *src, 
-    size_t size);
+    ecs_size_t size);
+    
 
 #ifdef __cplusplus
 }

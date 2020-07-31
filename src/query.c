@@ -490,7 +490,7 @@ void add_table(
      * iteration we can start the search from the correct offset type. */
     int32_t *trait_index_offsets = NULL;
     if (trait_count) {
-        trait_index_offsets = ecs_os_calloc(sizeof(int32_t) * column_count);
+        trait_index_offsets = ecs_os_calloc(ECS_SIZEOF(int32_t) * column_count);
     }
 
 
@@ -531,12 +531,12 @@ add_trait:
 
     if (column_count) {
         /* Array that contains the system column to table column mapping */
-        table_data->columns = ecs_os_malloc(sizeof(int32_t) * column_count);
+        table_data->columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * column_count);
         ecs_assert(table_data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Store the components of the matched table. In the case of OR expressions,
         * components may differ per matched table. */
-        table_data->components = ecs_os_malloc(sizeof(ecs_entity_t) * column_count);
+        table_data->components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * column_count);
         ecs_assert(table_data->components != NULL, ECS_OUT_OF_MEMORY, NULL);
     }
 
@@ -1011,7 +1011,7 @@ void build_sorted_table_range(
 
     /* Fetch data from all matched tables */
     ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
-    sort_helper_t *helper = ecs_os_malloc((end - start) * sizeof(sort_helper_t));
+    sort_helper_t *helper = ecs_os_malloc((end - start) * ECS_SIZEOF(sort_helper_t));
 
     int i, to_sort = 0;
     for (i = start; i < end; i ++) {
@@ -1024,8 +1024,8 @@ void build_sorted_table_range(
         int32_t index = ecs_type_index_of(table->table->type, component);
         if (index != -1) {
             ecs_column_t *column = &data->columns[index];
-            size_t size = column->size;
-            size_t align = column->alignment;
+            int16_t size = column->size;
+            int16_t align = column->alignment;
             helper[to_sort].ptr = ecs_vector_first_t(column->data, size, align);
             helper[to_sort].elem_size = size;
         }

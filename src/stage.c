@@ -73,8 +73,8 @@ void merge_columns(
         }
         
         ecs_column_t *column = &src_data->columns[c];
-        size_t size = column->size;
-        size_t alignment = column->alignment;
+        int16_t size = column->size;
+        int16_t alignment = column->alignment;
         ecs_assert(size == main_column->size, ECS_INTERNAL_ERROR, NULL);
 
         void *src = ecs_vector_first_t(column->data, size, alignment);
@@ -90,9 +90,10 @@ void merge_columns(
         ecs_move_t move;
         if (cdata && (move = cdata->lifecycle.move) && (ctor = cdata->lifecycle.ctor)) {
             void *ctx = cdata->lifecycle.ctx;
-            ctor(world, component, dst_entities, dst, size, src_entity_count, ctx);
+            ctor(world, component, dst_entities, dst, ecs_to_size_t(size), 
+                src_entity_count, ctx);
             move(world, component, dst_entities, src_entities, dst, src, 
-                size, src_entity_count, ctx);
+                ecs_to_size_t(size), src_entity_count, ctx);
         } else {
             memcpy(dst, src, size * src_entity_count);
         }
@@ -180,12 +181,12 @@ void merge_commits(
         /* Copy entity ids */
         ecs_entity_t *main_entities = ecs_vector_first(main_data->entities, ecs_entity_t);
         memcpy(&main_entities[main_entity_count], entities, 
-            entity_count * sizeof(ecs_entity_t));
+            entity_count * ECS_SIZEOF(ecs_entity_t));
 
         /* Copy record ptrs */
         ecs_record_t **main_record_ptrs = ecs_vector_first(main_data->record_ptrs, ecs_record_t*);
         memcpy(&main_record_ptrs[main_entity_count], record_ptrs, 
-            entity_count * sizeof(ecs_record_t*));
+            entity_count * ECS_SIZEOF(ecs_record_t*));
 
         /* Copy component data */
         merge_columns(

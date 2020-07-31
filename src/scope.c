@@ -53,6 +53,15 @@ char* ecs_get_path_w_sep(
     return ecs_strbuf_get(&buf);
 }
 
+static 
+ecs_entity_t name_to_id(
+    const char *name)
+{
+    long int result = atol(name);
+    ecs_assert(result >= 0, ECS_INTERNAL_ERROR, NULL);
+    return (ecs_entity_t)result;
+}
+
 static
 ecs_entity_t find_child_in_table(
     ecs_world_t *world,
@@ -78,7 +87,7 @@ ecs_entity_t find_child_in_table(
 
     int is_number = isdigit(name[0]);
     if (is_number) {
-        return atol(name);
+        return name_to_id(name);
     }
 
     ecs_column_t *column = &data->columns[name_index];
@@ -166,7 +175,7 @@ ecs_entity_t ecs_lookup(
     }
 
     if (isdigit(name[0])) {
-        return atoi(name);
+        return name_to_id(name);
     }
     
     return ecs_lookup_child(world, 0, name);
@@ -181,7 +190,7 @@ ecs_entity_t ecs_lookup_symbol(
     }
 
     if (isdigit(name[0])) {
-        return atoi(name);
+        return name_to_id(name);
     }
     
     return find_child_in_stage(world, &world->stage, 0, name);

@@ -92,12 +92,15 @@ void ecs_strbuf_init(
 /* Quick custom function to copy a maxium number of characters and
  * simultaneously determine length of source string. */
 static
-unsigned int fast_strncpy(
+int32_t fast_strncpy(
     char * dst,
     const char * src,
-    unsigned int n_cpy,
-    unsigned int n)
+    int n_cpy,
+    int n)
 {
+    ecs_assert(n_cpy >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(n >= 0, ECS_INTERNAL_ERROR, NULL);
+
     const char *ptr, *orig = src;
     char ch;
 
@@ -108,7 +111,9 @@ unsigned int fast_strncpy(
         }
     }
 
-    return ptr - orig;
+    ecs_assert(ptr - orig < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
+
+    return (int32_t)(ptr - orig);
 }
 
 /* Append a format string to a buffer */

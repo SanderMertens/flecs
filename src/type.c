@@ -200,7 +200,7 @@ ecs_entity_t ecs_type_contains(
 
 /* -- Public API -- */
 
-int16_t ecs_type_index_of(
+int32_t ecs_type_index_of(
     ecs_type_t type,
     ecs_entity_t entity)
 {
@@ -355,7 +355,7 @@ bool ecs_type_has_type(
     ecs_type_t type,
     ecs_type_t has)
 {
-    return ecs_type_contains(world, type, has, true, false);
+    return ecs_type_contains(world, type, has, true, false) != 0;
 }
 
 bool ecs_type_owns_type(
@@ -364,7 +364,7 @@ bool ecs_type_owns_type(
     ecs_type_t has,
     bool owned)
 {
-    return ecs_type_contains(world, type, has, true, !owned);
+    return ecs_type_contains(world, type, has, true, !owned) != 0;
 }
 
 ecs_type_t ecs_type_add(
@@ -403,7 +403,7 @@ void append_name(
 
     ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t len = strlen(str);
+    int32_t len = ecs_os_strlen(str);
     dst = ecs_vector_addn(chbuf, char, len);
     memcpy(dst, str, len);
     if (h != 1) {
