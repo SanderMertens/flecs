@@ -70,11 +70,11 @@ void ecs_table_clear_data(
     ecs_data_t *data);    
 
 /* Return number of entities in table in main stage. */
-uint64_t ecs_table_count(
+int32_t ecs_table_count(
     ecs_table_t *table);
 
 /* Return number of entities in stage-specific data */
-uint64_t ecs_table_data_count(
+int32_t ecs_table_data_count(
     ecs_data_t *data);
 
 /* Add a new entry to the table for the specified entity */

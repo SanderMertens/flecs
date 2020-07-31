@@ -1,5 +1,14 @@
 #include <api.h>
 
+static
+void install_test_abort() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.abort = test_abort;
+    ecs_os_set_api(&os_api);
+    ecs_tracing_enable(-2);
+}
+
 typedef struct xtor_ctx {
     ecs_world_t *world;
     ecs_entity_t component;
@@ -866,6 +875,70 @@ void ComponentLifecycle_dtor_on_restore() {
         test_int(p->x, i);
         test_int(p->y, i * 2);
     }   
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_ctor_on_tag() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    test_expect_abort();
+
+    ecs_set(world, Tag, EcsComponentLifecycle, {
+        .ctor = comp_ctor
+    });
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_dtor_on_tag() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    test_expect_abort();
+
+    ecs_set(world, Tag, EcsComponentLifecycle, {
+        .dtor = comp_dtor
+    });
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_on_tag() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    test_expect_abort();
+
+    ecs_set(world, Tag, EcsComponentLifecycle, {
+        .copy = comp_copy
+    });
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_move_on_tag() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    test_expect_abort();
+
+    ecs_set(world, Tag, EcsComponentLifecycle, {
+        .move = comp_move
+    });
 
     ecs_fini(world);
 }

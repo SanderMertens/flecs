@@ -29,7 +29,7 @@ ecs_type_t ecs_bootstrap_type(
     ecs_new_component(world, ecs_entity(name), #name, sizeof(name), ECS_ALIGNOF(name))
 
 #define ecs_bootstrap_tag(world, name)\
-    ecs_set(world, name, EcsName, {.value = &#name[strlen("Ecs")], .symbol = #name});\
+    ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = #name});\
     ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
 
 
@@ -95,7 +95,7 @@ void ecs_eval_component_monitors(
 
 void ecs_component_monitor_mark(
     ecs_component_monitor_t *mon,
-    int32_t component);
+    ecs_entity_t component);
 
 void ecs_component_monitor_register(
     ecs_component_monitor_t *mon,
@@ -109,7 +109,7 @@ bool ecs_defer_begin(
     ecs_entity_t entity,
     ecs_entities_t *components,
     const void *value,
-    size_t size);
+    ecs_size_t size);
 
 void ecs_defer_end(
     ecs_world_t *world,
@@ -123,7 +123,7 @@ void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable);
 
-int32_t ecs_get_component_action_flags(
+ecs_flags32_t ecs_get_component_action_flags(
     ecs_c_info_t *c_info);    
 
 void ecs_notify_tables_of_component_actions(
@@ -440,6 +440,30 @@ void ecs_increase_timer_resolution(
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
+
+/* Convert 64 bit signed integer to 16 bit */
+int8_t ecs_to_i8(
+    int64_t v);
+
+/* Convert 64 bit signed integer to 16 bit */
+int16_t ecs_to_i16(
+    int64_t v);
+
+/* Convert 64 bit signed integer to 32 bit */
+int32_t ecs_to_i32(
+    int64_t v);    
+
+/* Convert signed integer to size_t */
+size_t ecs_to_size_t(
+    int64_t size);
+
+/* Convert size_t to ecs_size_t */
+ecs_size_t ecs_from_size_t(
+    size_t size);    
+
+/* Convert int64_t to entity */
+ecs_entity_t ecs_to_entity(
+    int64_t v);
 
 /* Convert 64bit value to ecs_record_t type. ecs_record_t is stored as 64bit int in the
  * entity index */

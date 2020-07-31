@@ -25,7 +25,7 @@ bool path_append(
     char buff[22];
     const char *name = ecs_get_name(world, child);
     if (!name) {
-        sprintf(buff, "%u", (uint32_t)child);
+        ecs_os_sprintf(buff, "%u", (uint32_t)child);
         name = buff;
     }
 
@@ -53,6 +53,15 @@ char* ecs_get_path_w_sep(
     return ecs_strbuf_get(&buf);
 }
 
+static 
+ecs_entity_t name_to_id(
+    const char *name)
+{
+    long int result = atol(name);
+    ecs_assert(result >= 0, ECS_INTERNAL_ERROR, NULL);
+    return (ecs_entity_t)result;
+}
+
 static
 ecs_entity_t find_child_in_table(
     ecs_world_t *world,
@@ -78,7 +87,7 @@ ecs_entity_t find_child_in_table(
 
     int is_number = isdigit(name[0]);
     if (is_number) {
-        return atol(name);
+        return name_to_id(name);
     }
 
     ecs_column_t *column = &data->columns[name_index];
@@ -166,7 +175,7 @@ ecs_entity_t ecs_lookup(
     }
 
     if (isdigit(name[0])) {
-        return atoi(name);
+        return name_to_id(name);
     }
     
     return ecs_lookup_child(world, 0, name);
@@ -181,7 +190,7 @@ ecs_entity_t ecs_lookup_symbol(
     }
 
     if (isdigit(name[0])) {
-        return atoi(name);
+        return name_to_id(name);
     }
     
     return find_child_in_stage(world, &world->stage, 0, name);
@@ -192,9 +201,9 @@ bool is_sep(
     const char **ptr,
     const char *sep)
 {
-    size_t len = strlen(sep);
+    ecs_size_t len = ecs_os_strlen(sep);
 
-    if (!strncmp(*ptr, sep, len)) {
+    if (!ecs_os_strncmp(*ptr, sep, len)) {
         *ptr += len - 1;
         return true;
     } else {
@@ -240,8 +249,8 @@ ecs_entity_t get_parent_from_path(
     const char *path = *path_ptr;
 
     if (prefix) {
-        size_t len = strlen(prefix);
-        if (!strncmp(path, prefix, len)) {
+        ecs_size_t len = ecs_os_strlen(prefix);
+        if (!ecs_os_strncmp(path, prefix, len)) {
             path += len;
             parent = 0;
             start_from_root = true;

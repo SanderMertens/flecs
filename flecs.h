@@ -1,4 +1,4 @@
-#define FLECS_STATIC
+#define flecs_STATIC
 
 #ifndef FLECS_H
 #define FLECS_H
@@ -109,16 +109,23 @@ typedef char bool;
 #define true !false
 #endif
 
+typedef uint32_t ecs_flags32_t;
+typedef uint64_t ecs_flags64_t;
+
+/* Keep unsigned integers out of the codebase as they do more harm than good */
+typedef int32_t ecs_size_t;
+#define ECS_SIZEOF(T) (ecs_size_t)sizeof(T)
+
 /* Use alignof in C++, or a trick in C. */
 #ifdef __cplusplus
-#define ECS_ALIGNOF(T) alignof(T)
+#define ECS_ALIGNOF(T) (int64_t)alignof(T)
 #elif defined(_MSC_VER)
-#define ECS_ALIGNOF(T) __alignof(T)
+#define ECS_ALIGNOF(T) (int64_t)__alignof(T)
 #else
-#define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
+#define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
-#if defined(COMPILER_GCC) || defined(__clang__)
+#if defined(__GNUC__)
 #define ECS_UNUSED __attribute__((unused))
 #else
 #define ECS_UNUSED
@@ -317,18 +324,18 @@ struct ecs_vector_t {
     int32_t size;
     
 #ifndef NDEBUG
-    size_t elem_size;
+    int64_t elem_size;
 #endif
 };
 
-#define ECS_VECTOR_U(size, alignment) size, ECS_MAX(sizeof(ecs_vector_t), alignment)
-#define ECS_VECTOR_T(T) ECS_VECTOR_U(sizeof(T), ECS_ALIGNOF(T))
+#define ECS_VECTOR_U(size, alignment) size, ECS_MAX(ECS_SIZEOF(ecs_vector_t), alignment)
+#define ECS_VECTOR_T(T) ECS_VECTOR_U(ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 /* Macro's for creating vector on stack */
 #ifndef NDEBUG
 #define ECS_VECTOR_VALUE(T, elem_count)\
 {\
-    .elem_size = sizeof(T),\
+    .elem_size = (int32_t)(ECS_SIZEOF(T)),\
     .count = elem_count,\
     .size = elem_count\
 }
@@ -344,6 +351,7 @@ struct ecs_vector_t {
 struct {\
     union {\
         ecs_vector_t vector;\
+        uint64_t align;\
     } header;\
     T array[elem_count];\
 } __##name##_value = {\
@@ -352,7 +360,7 @@ struct {\
 const ecs_vector_t *name = (ecs_vector_t*)&__##name##_value
 
 #define ECS_VECTOR_IMPL(name, T, elems, elem_count)\
-memcpy(__##name##_value.array, elems, sizeof(T) * elem_count)
+ecs_os_memcpy(__##name##_value.array, elems, sizeof(T) * elem_count)
 
 #define ECS_VECTOR_STACK(name, T, elems, elem_count)\
 ECS_VECTOR_DECL(name, T, elem_count);\
@@ -366,7 +374,7 @@ typedef int (*ecs_comparator_t)(
 
 FLECS_EXPORT
 ecs_vector_t* _ecs_vector_new(
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count);
 
@@ -378,7 +386,7 @@ ecs_vector_t* _ecs_vector_new(
 
 FLECS_EXPORT
 ecs_vector_t* _ecs_vector_from_array(
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count,
     void *array);
@@ -397,7 +405,7 @@ void ecs_vector_clear(
 FLECS_EXPORT
 void* _ecs_vector_add(
     ecs_vector_t **array_inout,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset);
 
 #define ecs_vector_add(vector, T) \
@@ -409,7 +417,7 @@ void* _ecs_vector_add(
 FLECS_EXPORT
 void* _ecs_vector_addn(
     ecs_vector_t **array_inout,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count);
 
@@ -422,7 +430,7 @@ void* _ecs_vector_addn(
 FLECS_EXPORT
 void* _ecs_vector_get(
     const ecs_vector_t *vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t index);
 
@@ -435,7 +443,7 @@ void* _ecs_vector_get(
 FLECS_EXPORT
 void* _ecs_vector_last(
     const ecs_vector_t *vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset);
 
 #define ecs_vector_last(vector, T) \
@@ -444,7 +452,7 @@ void* _ecs_vector_last(
 FLECS_EXPORT
 int32_t _ecs_vector_remove(
     ecs_vector_t *vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     void *elem);
 
@@ -458,7 +466,7 @@ void ecs_vector_remove_last(
 FLECS_EXPORT
 bool _ecs_vector_pop(
     ecs_vector_t *vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     void *value);
 
@@ -469,7 +477,7 @@ FLECS_EXPORT
 int32_t _ecs_vector_move_index(
     ecs_vector_t **dst,
     ecs_vector_t *src,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t index);
 
@@ -479,7 +487,7 @@ int32_t _ecs_vector_move_index(
 FLECS_EXPORT
 int32_t _ecs_vector_remove_index(
     ecs_vector_t *vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t index);
 
@@ -492,7 +500,7 @@ int32_t _ecs_vector_remove_index(
 FLECS_EXPORT
 void _ecs_vector_reclaim(
     ecs_vector_t **vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset);
 
 #define ecs_vector_reclaim(vector, T)\
@@ -501,7 +509,7 @@ void _ecs_vector_reclaim(
 FLECS_EXPORT
 int32_t _ecs_vector_grow(
     ecs_vector_t **vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count);
 
@@ -511,7 +519,7 @@ int32_t _ecs_vector_grow(
 FLECS_EXPORT
 int32_t _ecs_vector_set_size(
     ecs_vector_t **vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count);
 
@@ -524,7 +532,7 @@ int32_t _ecs_vector_set_size(
 FLECS_EXPORT
 int32_t _ecs_vector_set_count(
     ecs_vector_t **vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count);
 
@@ -537,7 +545,7 @@ int32_t _ecs_vector_set_count(
 FLECS_EXPORT
 int32_t _ecs_vector_set_min_size(
     ecs_vector_t **array_inout,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count);
 
@@ -547,7 +555,7 @@ int32_t _ecs_vector_set_min_size(
 FLECS_EXPORT
 int32_t _ecs_vector_set_min_count(
     ecs_vector_t **vector_inout,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count);
 
@@ -565,7 +573,7 @@ int32_t ecs_vector_size(
 FLECS_EXPORT
 void* _ecs_vector_first(
     const ecs_vector_t *vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset);
 
 #define ecs_vector_first(vector, T) \
@@ -577,7 +585,7 @@ void* _ecs_vector_first(
 FLECS_EXPORT
 void _ecs_vector_sort(
     ecs_vector_t *vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     ecs_comparator_t compare_action);
 
@@ -587,7 +595,7 @@ void _ecs_vector_sort(
 FLECS_EXPORT
 void _ecs_vector_memory(
     const ecs_vector_t *vector,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t *allocd,
     int32_t *used);
@@ -600,7 +608,7 @@ void _ecs_vector_memory(
 
 ecs_vector_t* _ecs_vector_copy(
     const ecs_vector_t *src,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset);
 
 #define ecs_vector_copy(src, T) \
@@ -711,7 +719,7 @@ typedef struct ecs_sparse_t ecs_sparse_t;
 
 FLECS_EXPORT
 ecs_sparse_t* _ecs_sparse_new(
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t element_count);
 
 #define ecs_sparse_new(type, element_count)\
@@ -728,7 +736,7 @@ void ecs_sparse_clear(
 FLECS_EXPORT
 void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
-    size_t elem_size);
+    ecs_size_t elem_size);
 
 #define ecs_sparse_add(sparse, type)\
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
@@ -736,7 +744,7 @@ void* _ecs_sparse_add(
 FLECS_EXPORT
 void* _ecs_sparse_recycle(
     ecs_sparse_t *sparse,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t *sparse_index_out);
 
 #define ecs_sparse_recycle(sparse, T, sparse_index_out) \
@@ -745,7 +753,7 @@ void* _ecs_sparse_recycle(
 FLECS_EXPORT
 void* _ecs_sparse_remove(
     ecs_sparse_t *sparse,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t index);
 
 #define ecs_sparse_remove(sparse, type, index)\
@@ -754,7 +762,7 @@ void* _ecs_sparse_remove(
 FLECS_EXPORT
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t index);
 
 #define ecs_sparse_get(sparse, type, index)\
@@ -771,7 +779,7 @@ int32_t ecs_sparse_size(
 FLECS_EXPORT
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t index);
 
 #define ecs_sparse_get_sparse(sparse, type, index)\
@@ -780,7 +788,7 @@ void* _ecs_sparse_get_sparse(
 FLECS_EXPORT
 void* _ecs_sparse_get_or_set_sparse(
     ecs_sparse_t *sparse,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int32_t index,
     bool *is_new);
 
@@ -862,8 +870,8 @@ typedef struct ecs_map_iter_t {
 
 FLECS_EXPORT
 ecs_map_t * _ecs_map_new(
-    size_t elem_size,
-    size_t alignment, 
+    ecs_size_t elem_size,
+    ecs_size_t alignment, 
     int32_t elem_count);
 
 #define ecs_map_new(T, elem_count)\
@@ -872,7 +880,7 @@ ecs_map_t * _ecs_map_new(
 FLECS_EXPORT
 void * _ecs_map_get(
     const ecs_map_t *map,
-    size_t elem_size,
+    ecs_size_t elem_size,
     ecs_map_key_t key);
 
 #define ecs_map_get(map, T, key)\
@@ -881,7 +889,7 @@ void * _ecs_map_get(
 FLECS_EXPORT
 bool _ecs_map_has(
     const ecs_map_t *map,
-    size_t elem_size,
+    ecs_size_t elem_size,
     ecs_map_key_t key,
     void *payload);
 
@@ -899,7 +907,7 @@ void * _ecs_map_get_ptr(
 FLECS_EXPORT
 void _ecs_map_set(
     ecs_map_t *map,
-    size_t elem_size,
+    ecs_size_t elem_size,
     ecs_map_key_t key,
     const void *payload);
 
@@ -934,7 +942,7 @@ ecs_map_iter_t ecs_map_iter(
 FLECS_EXPORT
 void* _ecs_map_next(
     ecs_map_iter_t* iter,
-    size_t elem_size,
+    ecs_size_t elem_size,
     ecs_map_key_t *key);
 
 #define ecs_map_next(iter, T, key) \
@@ -1236,15 +1244,15 @@ extern "C" {
 #endif
 
 typedef struct ecs_time_t {
-    int32_t sec;
-    int32_t nanosec;
+    uint32_t sec;
+    uint32_t nanosec;
 } ecs_time_t;
 
 /* Allocation counters (not thread safe) */
-extern uint64_t ecs_os_api_malloc_count;
-extern uint64_t ecs_os_api_realloc_count;
-extern uint64_t ecs_os_api_calloc_count;
-extern uint64_t ecs_os_api_free_count;
+extern int64_t ecs_os_api_malloc_count;
+extern int64_t ecs_os_api_realloc_count;
+extern int64_t ecs_os_api_calloc_count;
+extern int64_t ecs_os_api_free_count;
 
 /* Use handle types that _at least_ can store pointers */
 typedef uintptr_t ecs_os_thread_t;
@@ -1258,7 +1266,7 @@ typedef void (*ecs_os_proc_t)(void);
 /* Memory management */
 typedef 
 void* (*ecs_os_api_malloc_t)(
-    size_t size);
+    ecs_size_t size);
 
 typedef 
 void (*ecs_os_api_free_t)(
@@ -1267,11 +1275,11 @@ void (*ecs_os_api_free_t)(
 typedef
 void* (*ecs_os_api_realloc_t)(
     void *ptr, 
-    size_t size);
+    ecs_size_t size);
 
 typedef
 void* (*ecs_os_api_calloc_t)(
-    size_t size);
+    ecs_size_t size);
 
 typedef
 char* (*ecs_os_api_strdup_t)(
@@ -1337,7 +1345,6 @@ void (*ecs_os_api_cond_wait_t)(
     ecs_os_cond_t cond,
     ecs_os_mutex_t mutex);
 
-
 typedef 
 void (*ecs_os_api_sleep_t)(
     int32_t sec,
@@ -1382,6 +1389,8 @@ typedef struct ecs_os_api_t {
     ecs_os_api_realloc_t realloc;
     ecs_os_api_calloc_t calloc;
     ecs_os_api_free_t free;
+
+    /* Strings */
     ecs_os_api_strdup_t strdup;
 
     /* Threads */
@@ -1447,13 +1456,26 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_free(ptr) ecs_os_api.free(ptr);
 #define ecs_os_realloc(ptr, size) ecs_os_api.realloc(ptr, size)
 #define ecs_os_calloc(size) ecs_os_api.calloc(size)
-#define ecs_os_strdup(str) ecs_os_api.strdup(str)
-
 #if defined(_MSC_VER) || defined(__MINGW32__)
-#define ecs_os_alloca(size) _alloca(size)
+#define ecs_os_alloca(size) _alloca((size_t)(size))
 #else
-#define ecs_os_alloca(size) alloca(size)
+#define ecs_os_alloca(size) alloca((size_t)(size))
 #endif
+
+/* Strings */
+#define ecs_os_strdup(str) ecs_os_api.strdup(str)
+#define ecs_os_strlen(str) (ecs_size_t)strlen(str)
+#define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
+#define ecs_os_strncmp(str1, str2, num) strncmp(str1, str2, (size_t)(num))
+#define ecs_os_strcpy(str1, str2) strcpy(str1, str2)
+#define ecs_os_strncpy(str1, str2, num) strncpy(str1, str2, (size_t)(num))
+#define ecs_os_strcat(str1, str2) strcat(str1, str2)
+#define ecs_os_memcmp(ptr1, ptr2, num) memcmp(ptr1, ptr2, (size_t)(num))
+#define ecs_os_memcpy(ptr1, ptr2, num) memcpy(ptr1, ptr2, (size_t)(num))
+#define ecs_os_memset(ptr, value, num) memset(ptr, value, (size_t)(num))
+#define ecs_os_sprintf(ptr, ...) sprintf(ptr, __VA_ARGS__)
+#define ecs_os_vsprintf(ptr, fmt, args) vsprintf(ptr, fmt, args)
+
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new(callback, param)
@@ -1529,7 +1551,8 @@ double ecs_time_to_double(
 FLECS_EXPORT
 void* ecs_os_memdup(
     const void *src, 
-    size_t size);
+    ecs_size_t size);
+    
 
 #ifdef __cplusplus
 }
@@ -1594,12 +1617,12 @@ typedef struct ecs_world_info_t {
     float delta_time;           /**< Time passed to or computed by ecs_progress */
     float time_scale;           /**< Time scale applied to delta_time */
     float target_fps;           /**< Target fps */
-    double frame_time_total;    /**< Total time spent processing a frame */
-    double system_time_total;   /**< Total time spent in systems */
-    double merge_time_total;    /**< Total time spent in merges */
-    double world_time_total;    /**< Time elapsed in simulation */
-    double world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
-    double sleep_err;           /**< Measured sleep error */
+    float frame_time_total;    /**< Total time spent processing a frame */
+    float system_time_total;   /**< Total time spent in systems */
+    float merge_time_total;    /**< Total time spent in merges */
+    float world_time_total;    /**< Time elapsed in simulation */
+    float world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
+    float sleep_err;           /**< Measured sleep error */
     
     int32_t frame_count_total;  /**< Total number of frames */
     int32_t merge_count_total;  /**< Total number of merges */
@@ -1744,7 +1767,7 @@ struct ecs_iter_t {
     int32_t *columns;        /**< Mapping from query columns to table columns */
     int32_t table_count;         /**< Active table count for query */
     int32_t inactive_table_count; /**< Inactive table count for query */
-    uint16_t column_count;       /**< Number of columns for system */
+    int32_t column_count;        /**< Number of columns for system */
     ecs_table_t *table;          /**< The current table. */
     void *table_columns;         /**< Table component data */
     ecs_query_t *query;          /**< Current query being evaluated */
@@ -2227,7 +2250,7 @@ FLECS_EXPORT
 void _ecs_parser_error(
     const char *name,
     const char *expr, 
-    int column,
+    int64_t column,
     const char *fmt,
     ...);
 
@@ -2334,7 +2357,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_entity_t xor_tag);
 
 FLECS_EXPORT
-int16_t ecs_type_index_of(
+int32_t ecs_type_index_of(
     ecs_type_t type,
     ecs_entity_t component);
 
@@ -2364,8 +2387,8 @@ typedef struct EcsName {
 
 /** Component information. */
 typedef struct EcsComponent {
-    size_t size;           /**< Component size */
-    size_t alignment;      /**< Component alignment */
+    ecs_size_t size;           /**< Component size */
+    ecs_size_t alignment;      /**< Component alignment */
 } EcsComponent;
 
 /** Component that stores an ecs_type_t. 
@@ -2860,7 +2883,7 @@ void ecs_end_wait(
  */
 FLECS_EXPORT
 void ecs_tracing_enable(
-    int8_t level);
+    int level);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3983,7 +4006,7 @@ ecs_entity_t ecs_lookup_child(
  * scope. If the entity is not found there either, the function returns 0.
  *
  * @param world The world.
- * @param parent The entity from which to create the path.
+ * @param parent The entity from which to resolve the path.
  * @param path The path to resolve.
  * @param sep The path separator.
  * @param prefix The path prefix.
@@ -4003,7 +4026,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
  * signature expression.
  *
  * @param world The world.
- * @param parent The entity from which to create the path.
+ * @param parent The entity from which to resolve the path.
  * @param path The path to resolve.
  * @return The entity if found, else 0. 
  */
@@ -5071,7 +5094,7 @@ int32_t ecs_get_threads(
 
 /** Get current thread index */
 FLECS_EXPORT
-uint16_t ecs_get_thread_index(
+int32_t ecs_get_thread_index(
     ecs_world_t *world);
 
 
@@ -5437,7 +5460,7 @@ typedef struct ecs_table_reader_t {
     ecs_data_t *data;
 
     /* Current index in type */
-    size_t type_written;
+    ecs_size_t type_written;
     ecs_type_t type;
 
     /* Current column */
@@ -5447,9 +5470,9 @@ typedef struct ecs_table_reader_t {
 
     /* Keep track of how much of the component column has been written */
     void *column_data;
-    size_t column_size;
-    size_t column_alignment;
-    size_t column_written;
+    int16_t column_size;
+    int16_t column_alignment;
+    ecs_size_t column_written;
 
     /* Keep track of row when writing non-blittable data */
     int32_t row_index;
@@ -5457,8 +5480,8 @@ typedef struct ecs_table_reader_t {
 
     /* Keep track of how much of an entity name has been written */
     const char *name;
-    size_t name_len;
-    size_t name_written;
+    ecs_size_t name_len;
+    ecs_size_t name_written;
 
     bool has_next_table;
 } ecs_table_reader_t;
@@ -5489,13 +5512,13 @@ typedef struct ecs_table_writer_t {
     /* Keep state for parsing type */
     int32_t type_count;
     int32_t type_max_count;
-    size_t type_written;
+    ecs_size_t type_written;
     ecs_entity_t *type_array;
     
     int32_t column_index;
-    size_t column_size;
-    size_t column_alignment;
-    size_t column_written;
+    int16_t column_size;
+    int16_t column_alignment;
+    ecs_size_t column_written;
     void *column_data;
 
     int32_t row_count;
@@ -5551,9 +5574,9 @@ ecs_reader_t ecs_reader_init_w_iter(
  * @return The number of bytes read.
  */ 
 FLECS_EXPORT
-size_t ecs_reader_read(
+ecs_size_t ecs_reader_read(
     char *buffer,
-    size_t size,
+    ecs_size_t size,
     ecs_reader_t *reader);
 
 /** Initialize a writer.
@@ -5595,7 +5618,7 @@ ecs_writer_t ecs_writer_init(
 FLECS_EXPORT
 int ecs_writer_write(
     const char *buffer,
-    size_t size,
+    ecs_size_t size,
     ecs_writer_t *writer);
 
 #ifdef __cplusplus
@@ -5615,7 +5638,7 @@ typedef struct ecs_queue_t ecs_queue_t;
 
 FLECS_EXPORT
 ecs_queue_t* _ecs_queue_new(
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count);
 
@@ -5624,7 +5647,7 @@ ecs_queue_t* _ecs_queue_new(
 
 FLECS_EXPORT
 ecs_queue_t* _ecs_queue_from_array(
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count,
     void *array);
@@ -5635,7 +5658,7 @@ ecs_queue_t* _ecs_queue_from_array(
 FLECS_EXPORT
 void* _ecs_queue_push(
     ecs_queue_t *queue,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset);
 
 #define ecs_queue_push(queue, T)\
@@ -5644,7 +5667,7 @@ void* _ecs_queue_push(
 FLECS_EXPORT
 void* _ecs_queue_get(
     ecs_queue_t *queue,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t index);
 
@@ -5657,7 +5680,7 @@ void* _ecs_queue_get(
 FLECS_EXPORT
 void* _ecs_queue_last(
     ecs_queue_t *queue,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset);
 
 #define ecs_queue_last(queue, T)\
@@ -5727,7 +5750,7 @@ template<typename ... Components>
 class query;
 
 template <typename T>
-class component_base;
+class component_info;
 
 enum match_kind {
     MatchAll = EcsMatchAll,
@@ -5998,7 +6021,7 @@ public:
     template <typename T>
     flecs::column<T> table_column() const {
         auto type = ecs_iter_type(m_iter);
-        auto col = ecs_type_index_of(type, component_base<T>::s_entity);
+        auto col = ecs_type_index_of(type, component_info<T>::s_entity);
         ecs_assert(col != -1, ECS_INVALID_PARAMETER, NULL);
         return flecs::column<T>(static_cast<T*>(ecs_table_column(m_iter, col)), m_iter->count, false);
     }
@@ -6028,7 +6051,7 @@ public:
     /* Get shared */
     template <typename T>
     const T& shared(int32_t col) const {
-        ecs_assert(ecs_column_entity(m_iter, col) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(ecs_column_entity(m_iter, col) == component_info<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
         ecs_assert(!ecs_is_owned(m_iter, col), ECS_COLUMN_IS_NOT_SHARED, NULL);
         return *static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), col));
     }
@@ -6052,7 +6075,7 @@ private:
     /* Get column, check if correct type is used */
     template <typename T>
     flecs::column<T> get_column(int32_t column_id) const {
-        ecs_assert(ecs_column_entity(m_iter, column_id) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(ecs_column_entity(m_iter, column_id) == component_info<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
         int32_t count;
         bool is_shared = !ecs_is_owned(m_iter, column_id);
 
@@ -6073,7 +6096,7 @@ private:
     /* Get single field, check if correct type is used */
     template <typename T>
     T& get_field(int32_t col, int32_t row) const {
-        ecs_assert(ecs_column_entity(m_iter, col) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(ecs_column_entity(m_iter, col) == component_info<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
         return *static_cast<T*>(ecs_element_w_size(m_iter, sizeof(T), col, row));
     }       
 
@@ -6228,7 +6251,7 @@ public:
     /* Count entities */
     template <typename T>
     int count() const {
-        return ecs_count_type(m_world, component_base<T>::s_type);
+        return ecs_count_type(m_world, component_info<T>::s_type);
     }
 
     int count(flecs::filter filter) const;
@@ -6277,7 +6300,7 @@ public:
 
     template <typename T>
     base_type& add() const {
-        return add(component_base<T>::s_entity);
+        return add(component_info<T>::s_entity);
     }
 
     base_type& add(const entity& entity) const;
@@ -6304,7 +6327,7 @@ public:
 
     template <typename T>
     base_type& remove() const {
-        return remove(component_base<T>::s_entity);
+        return remove(component_info<T>::s_entity);
     }
 
     base_type& remove(const entity& entity) const;
@@ -6372,7 +6395,7 @@ public:
     const base_type& set(const T&& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
-            ecs_set_ptr_w_entity(world, id, component_base<T>::s_entity, sizeof(T), &value);
+            ecs_set_ptr_w_entity(world, id, component_info<T>::s_entity, sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
     }
@@ -6382,7 +6405,7 @@ public:
     const base_type& set(const T& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
-            ecs_set_ptr_w_entity(world, id, component_base<T>::s_entity, sizeof(T), &value);
+            ecs_set_ptr_w_entity(world, id, component_info<T>::s_entity, sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
     }
@@ -6394,11 +6417,11 @@ public:
             bool is_added;
 
             T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-                world, id, component_base<T>::s_entity, &is_added));
+                world, id, component_info<T>::s_entity, &is_added));
 
             if (ptr) {
                 func(*ptr, !is_added);
-                ecs_modified_w_entity(world, id, component_base<T>::s_entity);
+                ecs_modified_w_entity(world, id, component_info<T>::s_entity);
             }
         });
         return *static_cast<base_type*>(this);
@@ -6411,17 +6434,11 @@ public:
             bool is_added;
 
             T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-                world, id, component_base<T>::s_entity, &is_added));
+                world, id, component_info<T>::s_entity, &is_added));
 
             if (ptr) {
-                if (is_added) {
-                    // Allow constructor to initialize value
-                    T value;
-                    *ptr = value;
-                }
-
                 func(*ptr);
-                ecs_modified_w_entity(world, id, component_base<T>::s_entity);
+                ecs_modified_w_entity(world, id, component_info<T>::s_entity);
             }
         });
         return *static_cast<base_type*>(this);
@@ -6444,23 +6461,23 @@ public:
         : m_world( world )
         , m_entity( entity )
         , m_ref() {
-        _ecs_get_ref(
-            m_world, &m_ref, m_entity, component_base<T>::s_entity);
+        ecs_get_ref_w_entity(
+            m_world, &m_ref, m_entity, component_info<T>::s_entity);
     }
 
-    T* operator->() {
-        T* result = static_cast<T*>(_ecs_get_ref(
-            m_world, &m_ref, m_entity, component_base<T>::s_entity));
+    const T* operator->() {
+        const T* result = static_cast<const T*>(ecs_get_ref_w_entity(
+            m_world, &m_ref, m_entity, component_info<T>::s_entity));
 
         ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
 
         return result;
     }
 
-    T* get() {
+    const T* get() {
         if (m_entity) {
-            _ecs_get_ref(
-                m_world, &m_ref, m_entity, component_base<T>::s_entity);    
+            ecs_get_ref_w_entity(
+                m_world, &m_ref, m_entity, component_info<T>::s_entity);    
         }
 
         return static_cast<T*>(m_ref.ptr);
@@ -6491,27 +6508,19 @@ public:
 
     entity(const world& world, const char *name) 
         : m_world( world.c_ptr() )
-        , m_id( ecs_lookup(m_world, name) ) 
+        , m_id( ecs_lookup_path_w_sep(m_world, 0, name, "::", "::") ) 
         { 
             if (!m_id) {
-                EcsName id;
-                id.alloc_value = ecs_os_strdup(name);
-                id.value = id.alloc_value;
-                id.symbol = NULL;            
-                m_id = ecs_set_ptr(m_world, 0, EcsName, &id);
+                m_id = ecs_new_from_path_w_sep(m_world, 0, name, "::", "::");
             }
         }
 
     entity(const world& world, std::string name) 
         : m_world( world.c_ptr() )
-        , m_id( ecs_lookup(m_world, name.c_str()) ) 
+        , m_id( ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::") ) 
         { 
             if (!m_id) {
-                EcsName id;
-                id.alloc_value = ecs_os_strdup(name.c_str());
-                id.value = id.alloc_value;
-                id.symbol = NULL;
-                m_id = ecs_set_ptr(m_world, 0, EcsName, &id);
+                m_id = ecs_new_from_path_w_sep(m_world, 0, name.c_str(), "::", "::");
             }
         }         
 
@@ -6547,7 +6556,7 @@ public:
     }
 
     std::string path() const {
-        char *path = ecs_get_fullpath(m_world, m_id);
+        char *path = ecs_get_path_w_sep(m_world, 0, m_id, 0, "::", "::");
         if (path) {
             std::string result = std::string(path);
             ecs_os_free(path);
@@ -6568,14 +6577,14 @@ public:
     template <typename T>
     const T* get() const {
         return static_cast<const T*>(
-            ecs_get_w_entity(m_world, m_id, component_base<T>::s_entity));
+            ecs_get_w_entity(m_world, m_id, component_info<T>::s_entity));
     }
 
     template <typename T>
     T* get_mut(bool *is_added = nullptr) const {
         return static_cast<T*>(
             ecs_get_mut_w_entity(
-                m_world, m_id, component_base<T>::s_entity), is_added);
+                m_world, m_id, component_info<T>::s_entity), is_added);
     }
 
     template <typename T>
@@ -6593,7 +6602,7 @@ public:
     }
 
     entity lookup(const char *name) const {
-        auto id = ecs_lookup_child(m_world, m_id, name);
+        auto id = ecs_lookup_path_w_sep(m_world, m_id, name, "::", "::");
         return entity(m_world, id);
     }
 
@@ -6613,7 +6622,7 @@ public:
 
     template <typename T>
     bool has() const {
-        return has(component_base<T>::s_entity);
+        return has(component_info<T>::s_entity);
     }
 
     bool owns(entity_t id) const {
@@ -6630,7 +6639,7 @@ public:
 
     template <typename T>
     bool owns() const {
-        return owns(component_base<T>::s_entity);
+        return owns(component_info<T>::s_entity);
     }
 
     float delta_time() {
@@ -6810,27 +6819,12 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class component_base final {
+class component_info final {
 public:
-    static void init(const world& world, const char *name) {
-        entity_t cur_entity = s_entity;
-        type_t cur_type = s_type;
-
-        (void)cur_entity;
-        (void)cur_type;
-
-        s_entity = ecs_new_component(world.c_ptr(), 0, name, sizeof(T), alignof(T));
-        s_type = ecs_type_from_entity(world.c_ptr(), s_entity);
-        s_name = name;
-
-        ecs_assert(!cur_entity || cur_entity == s_entity, ECS_INCONSISTENT_COMPONENT_NAME, name);
-        ecs_assert(!cur_type || cur_type == s_type, ECS_INCONSISTENT_COMPONENT_NAME, name);
-    }
-
-    static void init_existing(entity_t entity, type_t type, const char *name) {
+    static void init(const world& world, entity_t entity) {
         s_entity = entity;
-        s_type = type;
-        s_name = name;
+        s_type = ecs_type_from_entity(world.c_ptr(), entity);;
+        s_name = ecs_get_fullpath(world.c_ptr(), entity);
     }
 
     static entity_t s_entity;
@@ -6838,9 +6832,9 @@ public:
     static const char *s_name;
 };
 
-template <typename T> entity_t component_base<T>::s_entity( 0 );
-template <typename T> type_t component_base<T>::s_type( nullptr );
-template <typename T> const char* component_base<T>::s_name( nullptr );
+template <typename T> entity_t component_info<T>::s_entity( 0 );
+template <typename T> type_t component_info<T>::s_type( nullptr );
+template <typename T> const char* component_info<T>::s_name( nullptr );
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6926,30 +6920,23 @@ void component_move(
 }
 
 template <typename T>
-class component : public entity {
+class pod_component : public entity {
 public:
-    component(const flecs::world& world, const char *name) { 
-        component_base<T>::init(world, name);
+    pod_component(const flecs::world& world, const char *name) : entity(world, name) {
+        ecs_new_component(world.c_ptr(), this->m_id, nullptr, sizeof(T), alignof(T));
+        component_info<T>::init(world, this->m_id);
+        component_info<const T>::init(world, this->m_id);
+        component_info<T*>::init(world, this->m_id);
+        component_info<T&>::init(world, this->m_id); 
+    }
+};
 
-        /* Register as well for both const and reference versions of type */
-        component_base<const T>::init_existing(
-            component_base<T>::s_entity, 
-            component_base<T>::s_type, 
-            component_base<T>::s_name);
-
-        component_base<T*>::init_existing(
-            component_base<T>::s_entity, 
-            component_base<T>::s_type, 
-            component_base<T>::s_name);
-
-        component_base<T&>::init_existing(
-            component_base<T>::s_entity, 
-            component_base<T>::s_type, 
-            component_base<T>::s_name);    
-
-        m_id = component_base<T>::s_entity;
-        m_world = world.c_ptr();
-
+template <typename T>
+class component : public pod_component<T> {
+public:
+    component(const flecs::world& world, const char *name) 
+        : pod_component<T>(world, name) 
+    { 
         EcsComponentLifecycle cl{};
         cl.ctor = component_ctor<T>;
         cl.dtor = component_dtor<T>;
@@ -6958,7 +6945,7 @@ public:
         
         ecs_set_component_actions_w_entity(
             world.c_ptr(), 
-            component_base<T>::s_entity, 
+            component_info<T>::s_entity, 
             &cl);
     }
 };
@@ -6969,9 +6956,11 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class module final : public component<T> {
+class module final : public pod_component<T> {
 public:
-    module(flecs::world& world, const char *name) : component<T>(world, name) { }
+    module(flecs::world& world, const char *name) : pod_component<T>(world, name) { 
+        ecs_set_scope(this->m_world, this->m_id);
+    }
 };
 
 
@@ -6981,7 +6970,7 @@ public:
 
 template <typename T>
 void import(world& world) {
-    if (!component_base<T>::s_name) {
+    if (!component_info<T>::s_name) {
         ecs_entity_t scope = ecs_get_scope(world.c_ptr());
 
         // Allocate module, so the this ptr will remain stable
@@ -6989,7 +6978,7 @@ void import(world& world) {
 
         ecs_set_scope(world.c_ptr(), scope);
 
-        flecs::entity m = world.lookup(component_base<T>::s_name);
+        flecs::entity m = world.lookup(component_info<T>::s_name);
 
         m.set<T>(*module_data);
     }
@@ -7022,7 +7011,7 @@ public:
 
     template <typename T>
     filter& include() {
-        m_filter.include = ecs_type_add(m_world, m_filter.include, component_base<T>::s_entity);
+        m_filter.include = ecs_type_add(m_world, m_filter.include, component_info<T>::s_entity);
         return *this;
     }
 
@@ -7047,7 +7036,7 @@ public:
 
     template <typename T>
     filter& exclude() {
-        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, component_base<T>::s_entity);
+        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, component_info<T>::s_entity);
         return *this;
     }
  
@@ -7922,12 +7911,12 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_inst
 }
 
 inline entity world::lookup(const char *name) const {
-    auto id = ecs_lookup(m_world, name);
+    auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
     return entity(*this, id);
 }
 
 inline entity world::lookup(std::string& name) const {
-    auto id = ecs_lookup(m_world, name.c_str());
+    auto id = ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::");
     return entity(*this, id);
 }
 
@@ -7980,12 +7969,12 @@ inline void world::delete_entities(flecs::filter filter) const {
 
 template <typename T>
 inline void world::add() const {
-    ecs_bulk_add_remove_type(m_world, component_base<T>::s_type, nullptr, nullptr);
+    ecs_bulk_add_remove_type(m_world, component_info<T>::s_type, nullptr, nullptr);
 }
 
 template <typename T>
 inline void world::add(flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, component_base<T>::s_type, nullptr, filter.c_ptr());
+    ecs_bulk_add_remove_type(m_world, component_info<T>::s_type, nullptr, filter.c_ptr());
 }
 
 inline void world::add(type type) const {
@@ -8006,12 +7995,12 @@ inline void world::add(entity entity, flecs::filter filter) const {
 
 template <typename T>
 inline void world::remove() const {
-    ecs_bulk_add_remove_type(m_world, nullptr, component_base<T>::s_type, nullptr);
+    ecs_bulk_add_remove_type(m_world, nullptr, component_info<T>::s_type, nullptr);
 }
 
 template <typename T>
 inline void world::remove(flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, component_base<T>::s_type, filter.c_ptr());
+    ecs_bulk_add_remove_type(m_world, nullptr, component_info<T>::s_type, filter.c_ptr());
 }
 
 inline void world::remove(type type) const {
@@ -8047,9 +8036,9 @@ inline int world::count(flecs::filter filter) const {
 }
 
 inline void world::init_builtin_components() {
-    component<Component>(*this, "EcsComponent");
-    component<Type>(*this, "EcsType");
-    component<Name>(*this, "EcsName");
+    pod_component<Component>(*this, "EcsComponent");
+    pod_component<Type>(*this, "EcsType");
+    pod_component<Name>(*this, "EcsName");
 }
 
 /** Utilities to convert type trait to flecs signature syntax */
@@ -8087,7 +8076,7 @@ constexpr const char *optional_modifier() {
 template <typename ...Components>
 bool pack_args_to_string(std::stringstream& str, bool is_each) {
     std::array<const char*, sizeof...(Components)> ids = {
-        component_base<Components>::s_name...
+        component_info<Components>::s_name...
     };
 
     std::array<const char*, sizeof...(Components)> inout_modifiers = {

@@ -25,10 +25,10 @@ typedef struct ecs_memory_stat_t {
 
 /* Global statistics on memory allocations */
 typedef struct EcsAllocStats {
-    uint64_t malloc_count_total;      /* Total number of times malloc was invoked */
-    uint64_t realloc_count_total;     /* Total number of times realloc was invoked */
-    uint64_t calloc_count_total;      /* Total number of times calloc was invoked */
-    uint64_t free_count_total;        /* Total number of times free was invoked */
+    int64_t malloc_count_total;      /* Total number of times malloc was invoked */
+    int64_t realloc_count_total;     /* Total number of times realloc was invoked */
+    int64_t calloc_count_total;      /* Total number of times calloc was invoked */
+    int64_t free_count_total;        /* Total number of times free was invoked */
 } EcsAllocStats;
 
 /* Memory statistics on row (reactive) systems */
@@ -65,7 +65,7 @@ typedef struct EcsMemoryStats {
 typedef struct EcsComponentStats {
     ecs_entity_t entity;                    /* Entity handle of component */
     const char *name;                       /* Entity name */
-    uint16_t size_bytes;                    /* Size of the component */
+    int32_t size_bytes;                     /* Size of the component */
     ecs_memory_stat_t memory;               /* Memory in use for component */
     int32_t entities_count;                 /* Number of entities for component */
     int32_t tables_count;                   /* Number of tables for component */
@@ -80,7 +80,7 @@ typedef struct EcsSystemStats {
     float period_seconds;                   /* Period at which system runs */                       
     int32_t tables_matched_count;           /* Number of tables matched */
     int32_t entities_matched_count;         /* Number of entities matched */
-    uint64_t invoke_count_total;            /* Number of times system got invoked */
+    int64_t invoke_count_total;            /* Number of times system got invoked */
     float seconds_total;                    /* Total time spent in system */
     bool is_enabled;                        /* Is system enabled */
     bool is_active;                         /* Is system active */

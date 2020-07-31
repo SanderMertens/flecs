@@ -320,6 +320,10 @@ void ComponentLifecycle_ctor_dtor_on_bulk_add_remove(void);
 void ComponentLifecycle_ctor_copy_on_snapshot(void);
 void ComponentLifecycle_copy_on_snapshot(void);
 void ComponentLifecycle_dtor_on_restore(void);
+void ComponentLifecycle_ctor_on_tag(void);
+void ComponentLifecycle_dtor_on_tag(void);
+void ComponentLifecycle_copy_on_tag(void);
+void ComponentLifecycle_move_on_tag(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -2224,7 +2228,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        19,
+        23,
         (bake_test_case[]){
             {
                 "ctor_on_add",
@@ -2301,6 +2305,22 @@ static bake_test_suite suites[] = {
             {
                 "dtor_on_restore",
                 ComponentLifecycle_dtor_on_restore
+            },
+            {
+                "ctor_on_tag",
+                ComponentLifecycle_ctor_on_tag
+            },
+            {
+                "dtor_on_tag",
+                ComponentLifecycle_dtor_on_tag
+            },
+            {
+                "copy_on_tag",
+                ComponentLifecycle_copy_on_tag
+            },
+            {
+                "move_on_tag",
+                ComponentLifecycle_move_on_tag
             }
         }
     },

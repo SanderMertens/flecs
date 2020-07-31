@@ -16,13 +16,13 @@ ecs_data_t* duplicate_data(
     ecs_table_t *table,
     ecs_data_t *main_data)
 {
-    ecs_data_t *result = ecs_os_calloc(sizeof(ecs_data_t));
+    ecs_data_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_data_t));
 
     int32_t i, column_count = table->column_count;
     ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
 
     result->columns = ecs_os_memdup(
-        main_data->columns, sizeof(ecs_column_t) * column_count);
+        main_data->columns, ECS_SIZEOF(ecs_column_t) * column_count);
 
     /* Copy entities */
     result->entities = ecs_vector_copy(main_data->entities, ecs_entity_t);
@@ -42,8 +42,8 @@ ecs_data_t* duplicate_data(
         }
 
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
-        size_t size = column->size;
-        size_t alignment = column->alignment;
+        int16_t size = column->size;
+        int16_t alignment = column->alignment;
         ecs_copy_t copy;
 
         if ((copy = cdata->lifecycle.copy)) {
@@ -55,12 +55,13 @@ ecs_data_t* duplicate_data(
             
             ecs_xtor_t ctor = cdata->lifecycle.ctor;
             if (ctor) {
-                ctor(world, component, entities, dst_ptr, size, count, ctx);
+                ctor(world, component, entities, dst_ptr, ecs_to_size_t(size), 
+                    count, ctx);
             }
 
             void *src_ptr = ecs_vector_first_t(column->data, size, alignment);
             copy(world, component, entities, entities, dst_ptr, src_ptr, 
-                size, count, ctx);
+                ecs_to_size_t(size), count, ctx);
 
             column->data = dst_vec;
         } else {
@@ -78,7 +79,7 @@ ecs_snapshot_t* snapshot_create(
     ecs_iter_t *iter,
     ecs_iter_next_action_t next)
 {
-    ecs_snapshot_t *result = ecs_os_calloc(sizeof(ecs_snapshot_t));
+    ecs_snapshot_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_snapshot_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->world = world;

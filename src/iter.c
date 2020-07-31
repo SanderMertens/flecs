@@ -3,7 +3,7 @@
 static
 void* get_owned_column_ptr(
     const ecs_iter_t *it,
-    size_t size,
+    ecs_size_t size,
     int32_t table_column,
     int32_t row)
 {
@@ -20,7 +20,7 @@ void* get_owned_column_ptr(
 static
 const void* get_shared_column(
     const ecs_iter_t *it,
-    size_t size,
+    ecs_size_t size,
     int32_t table_column)
 {
     ecs_assert(it->references != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -72,7 +72,7 @@ bool get_table_column(
 static
 void* get_column(
     const ecs_iter_t *it,
-    size_t size,
+    ecs_size_t size,
     int32_t column,
     int32_t row)
 {
@@ -101,7 +101,7 @@ void* ecs_column_w_size(
     size_t size,
     int32_t column)
 {
-    return get_column(it, size, column, 0);
+    return get_column(it, ecs_from_size_t(size), column, 0);
 }
 
 void* ecs_element_w_size(
@@ -110,7 +110,7 @@ void* ecs_element_w_size(
     int32_t column,
     int32_t row)
 {
-    return get_column(it, size, column, row);
+    return get_column(it, ecs_from_size_t(size), column, row);
 }
 
 bool ecs_is_owned(
@@ -235,5 +235,5 @@ size_t ecs_table_column_size(
     ecs_column_t *columns = it->table_columns;
     ecs_column_t *column = &columns[column_index];
     
-    return column->size;
+    return ecs_to_size_t(column->size);
 }

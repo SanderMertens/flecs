@@ -482,7 +482,7 @@ ecs_entity_t ecs_run_intern(
     }
 
     if (measure_time) {
-        system_data->time_spent += ecs_time_measure(&time_start);
+        system_data->time_spent += (float)ecs_time_measure(&time_start);
     }
     
     system_data->invoke_count ++;
@@ -564,12 +564,9 @@ void ecs_run_monitor(
     system_data->action(&it);
 }
 
-
-
-
 /* Generic constructor to initialize a component to 0 */
 static
-void ctor_init_zero(
+void sys_ctor_init_zero(
     ecs_world_t *world,
     ecs_entity_t component,
     const ecs_entity_t *entities,
@@ -582,7 +579,7 @@ void ctor_init_zero(
     (void)component;
     (void)entities;
     (void)ctx;
-    memset(ptr, 0, size * count);
+    memset(ptr, 0, size * (size_t)count);
 }
 
 /* System destructor */
@@ -881,7 +878,7 @@ void FlecsSystemImport(
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, ecs_entity(EcsSystem));
     ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    c_info->lifecycle.ctor = ctor_init_zero;
+    c_info->lifecycle.ctor = sys_ctor_init_zero;
     c_info->lifecycle.dtor = ecs_colsystem_dtor;
 
     /* Create systems necessary to create systems */

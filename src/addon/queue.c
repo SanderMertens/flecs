@@ -4,31 +4,28 @@
 struct ecs_queue_t {
     ecs_vector_t *data;
     int32_t index;
-#ifndef NDEBUG
-    size_t elem_size;
-#endif
 };
 
 ecs_queue_t* _ecs_queue_new(
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count)
 {
-    ecs_queue_t *result = ecs_os_malloc(sizeof(ecs_queue_t));
+    ecs_queue_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_queue_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    result->data = _ecs_vector_new(elem_size, elem_count, offset);
+    result->data = _ecs_vector_new(elem_size, offset, elem_count);
     result->index = 0;
     return result;
 }
 
 ecs_queue_t* _ecs_queue_from_array(
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t elem_count,
     void *array)
 {
-    ecs_queue_t *result = ecs_os_malloc(sizeof(ecs_queue_t));
+    ecs_queue_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_queue_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->data = _ecs_vector_from_array(elem_size, offset, elem_count, array);
@@ -38,11 +35,9 @@ ecs_queue_t* _ecs_queue_from_array(
 
 void* _ecs_queue_push(
     ecs_queue_t *buffer,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset)
 {
-    ecs_assert(elem_size == buffer->elem_size, ECS_INVALID_PARAMETER, NULL);
-
     int32_t size = ecs_vector_size(buffer->data);
     int32_t count = ecs_vector_count(buffer->data);
     void *result;
@@ -67,7 +62,7 @@ void ecs_queue_free(
 
 void* _ecs_queue_get(
     ecs_queue_t *buffer,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset,
     int32_t index)
 {
@@ -79,7 +74,7 @@ void* _ecs_queue_get(
 
 void* _ecs_queue_last(
     ecs_queue_t *buffer,
-    size_t elem_size,
+    ecs_size_t elem_size,
     int16_t offset)
 {
     int32_t index = buffer->index;

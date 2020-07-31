@@ -36,6 +36,16 @@
                 "replace"
             ]
         }, {
+            "id": "Paths",
+            "testcases": [
+                "name",
+                "path_depth_1",
+                "path_depth_2",
+                "entity_lookup_name",
+                "entity_lookup_depth_1",
+                "entity_lookup_depth_2"
+            ]
+        }, {
             "id": "Type",
             "testcases": [
                 "add_2",
@@ -90,6 +100,21 @@
                 "non_pod_remove",
                 "non_pod_set",
                 "non_pod_override"
+            ]
+        }, {
+            "id": "Refs",
+            "testcases": [
+                "get_ref",
+                "ref_after_add",
+                "ref_after_remove",
+                "ref_after_set",
+                "ref_before_set"
+            ]
+        }, {
+            "id": "Module",
+            "testcases": [
+                "import",
+                "lookup_from_scope"
             ]
         }]
     }

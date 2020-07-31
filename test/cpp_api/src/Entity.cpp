@@ -298,3 +298,4 @@ void Entity_remove_instanceof() {
     entity.remove_instanceof(base);
     test_assert(!entity.has(flecs::Instanceof | base.id()));
 }
+

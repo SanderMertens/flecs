@@ -5,13 +5,13 @@ char *ecs_vasprintf(
     const char *fmt,
     va_list args)
 {
-    size_t size = 0;
+    ecs_size_t size = 0;
     char *result  = NULL;
     va_list tmpa;
 
     va_copy(tmpa, args);
 
-    size = vsnprintf(result, size, fmt, tmpa);
+    size = vsnprintf(result, ecs_to_size_t(size), fmt, tmpa);
 
     va_end(tmpa);
 
@@ -25,7 +25,7 @@ char *ecs_vasprintf(
         return NULL; 
     }
 
-    vsprintf(result, fmt, args);
+    ecs_os_vsprintf(result, fmt, args);
 
     return result;
 }
@@ -86,29 +86,29 @@ char* ecs_colorize(
             overrideColor = true;
 
             /* Custom colors */
-            if (!strncmp(&ptr[2], "]", strlen("]"))) {
+            if (!ecs_os_strncmp(&ptr[2], "]", ecs_os_strlen("]"))) {
                 autoColor = false;
-            } else if (!strncmp(&ptr[2], "green]", strlen("green]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "green]", ecs_os_strlen("green]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
-            } else if (!strncmp(&ptr[2], "red]", strlen("red]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_RED);
-            } else if (!strncmp(&ptr[2], "blue]", strlen("red]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BLUE);
-            } else if (!strncmp(&ptr[2], "magenta]", strlen("magenta]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_MAGENTA);
-            } else if (!strncmp(&ptr[2], "cyan]", strlen("cyan]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "cyan]", ecs_os_strlen("cyan]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
-            } else if (!strncmp(&ptr[2], "yellow]", strlen("yellow]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "yellow]", ecs_os_strlen("yellow]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_YELLOW);
-            } else if (!strncmp(&ptr[2], "grey]", strlen("grey]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "grey]", ecs_os_strlen("grey]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREY);
-            } else if (!strncmp(&ptr[2], "white]", strlen("white]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "white]", ecs_os_strlen("white]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else if (!strncmp(&ptr[2], "bold]", strlen("bold]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "bold]", ecs_os_strlen("bold]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BOLD);
-            } else if (!strncmp(&ptr[2], "normal]", strlen("normal]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "normal]", ecs_os_strlen("normal]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else if (!strncmp(&ptr[2], "reset]", strlen("reset]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "reset]", ecs_os_strlen("reset]"))) {
                 overrideColor = false;
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             } else {
@@ -157,10 +157,10 @@ char* ecs_colorize(
 }
 
 static int trace_indent = 0;
-static int8_t trace_level = 0;
+static int trace_level = 0;
 
 void ecs_log_print(
-    int8_t level,
+    int level,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -260,7 +260,7 @@ void ecs_log_pop(void) {
 }
 
 void ecs_tracing_enable(
-    int8_t level)
+    int level)
 {
     trace_level = level;
 }
@@ -268,7 +268,7 @@ void ecs_tracing_enable(
 void _ecs_parser_error(
     const char *name,
     const char *expr, 
-    int column,
+    int64_t column,
     const char *fmt,
     ...)
 {

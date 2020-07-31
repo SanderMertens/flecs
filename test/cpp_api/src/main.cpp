@@ -29,6 +29,14 @@ void Entity_set(void);
 void Entity_set_2(void);
 void Entity_replace(void);
 
+// Testsuite 'Paths'
+void Paths_name(void);
+void Paths_path_depth_1(void);
+void Paths_path_depth_2(void);
+void Paths_entity_lookup_name(void);
+void Paths_entity_lookup_depth_1(void);
+void Paths_entity_lookup_depth_2(void);
+
 // Testsuite 'Type'
 void Type_add_2(void);
 void Type_add_instanceof(void);
@@ -76,6 +84,17 @@ void ComponentLifecycle_non_pod_add(void);
 void ComponentLifecycle_non_pod_remove(void);
 void ComponentLifecycle_non_pod_set(void);
 void ComponentLifecycle_non_pod_override(void);
+
+// Testsuite 'Refs'
+void Refs_get_ref(void);
+void Refs_ref_after_add(void);
+void Refs_ref_after_remove(void);
+void Refs_ref_after_set(void);
+void Refs_ref_before_set(void);
+
+// Testsuite 'Module'
+void Module_import(void);
+void Module_lookup_from_scope(void);
 
 static bake_test_suite suites[] = {
     {
@@ -159,6 +178,38 @@ static bake_test_suite suites[] = {
             {
                 "replace",
                 Entity_replace
+            }
+        }
+    },
+    {
+        "Paths",
+        NULL,
+        NULL,
+        6,
+        (bake_test_case[]){
+            {
+                "name",
+                Paths_name
+            },
+            {
+                "path_depth_1",
+                Paths_path_depth_1
+            },
+            {
+                "path_depth_2",
+                Paths_path_depth_2
+            },
+            {
+                "entity_lookup_name",
+                Paths_entity_lookup_name
+            },
+            {
+                "entity_lookup_depth_1",
+                Paths_entity_lookup_depth_1
+            },
+            {
+                "entity_lookup_depth_2",
+                Paths_entity_lookup_depth_2
             }
         }
     },
@@ -353,10 +404,54 @@ static bake_test_suite suites[] = {
                 ComponentLifecycle_non_pod_override
             }
         }
+    },
+    {
+        "Refs",
+        NULL,
+        NULL,
+        5,
+        (bake_test_case[]){
+            {
+                "get_ref",
+                Refs_get_ref
+            },
+            {
+                "ref_after_add",
+                Refs_ref_after_add
+            },
+            {
+                "ref_after_remove",
+                Refs_ref_after_remove
+            },
+            {
+                "ref_after_set",
+                Refs_ref_after_set
+            },
+            {
+                "ref_before_set",
+                Refs_ref_before_set
+            }
+        }
+    },
+    {
+        "Module",
+        NULL,
+        NULL,
+        2,
+        (bake_test_case[]){
+            {
+                "import",
+                Module_import
+            },
+            {
+                "lookup_from_scope",
+                Module_lookup_from_scope
+            }
+        }
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 5);
+    return bake_test_run("cpp_api", argc, argv, suites, 8);
 }

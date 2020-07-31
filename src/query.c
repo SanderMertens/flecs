@@ -490,7 +490,7 @@ void add_table(
      * iteration we can start the search from the correct offset type. */
     int32_t *trait_index_offsets = NULL;
     if (trait_count) {
-        trait_index_offsets = ecs_os_calloc(sizeof(int32_t) * column_count);
+        trait_index_offsets = ecs_os_calloc(ECS_SIZEOF(int32_t) * column_count);
     }
 
 
@@ -531,12 +531,12 @@ add_trait:
 
     if (column_count) {
         /* Array that contains the system column to table column mapping */
-        table_data->columns = ecs_os_malloc(sizeof(int32_t) * column_count);
+        table_data->columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * column_count);
         ecs_assert(table_data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Store the components of the matched table. In the case of OR expressions,
         * components may differ per matched table. */
-        table_data->components = ecs_os_malloc(sizeof(ecs_entity_t) * column_count);
+        table_data->components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * column_count);
         ecs_assert(table_data->components != NULL, ECS_OUT_OF_MEMORY, NULL);
     }
 
@@ -1011,7 +1011,7 @@ void build_sorted_table_range(
 
     /* Fetch data from all matched tables */
     ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
-    sort_helper_t *helper = ecs_os_malloc((end - start) * sizeof(sort_helper_t));
+    sort_helper_t *helper = ecs_os_malloc((end - start) * ECS_SIZEOF(sort_helper_t));
 
     int i, to_sort = 0;
     for (i = start; i < end; i ++) {
@@ -1024,8 +1024,8 @@ void build_sorted_table_range(
         int32_t index = ecs_type_index_of(table->table->type, component);
         if (index != -1) {
             ecs_column_t *column = &data->columns[index];
-            size_t size = column->size;
-            size_t align = column->alignment;
+            int16_t size = column->size;
+            int16_t align = column->alignment;
             helper[to_sort].ptr = ecs_vector_first_t(column->data, size, align);
             helper[to_sort].elem_size = size;
         }
@@ -1140,11 +1140,11 @@ bool tables_dirty(
         int32_t *dirty_state = ecs_table_get_dirty_state(table);
         int32_t t, type_count = table->column_count;
         for (t = 0; t < type_count + 1; t ++) {
-            is_dirty |= dirty_state[t] != m_table->monitor[t];
+            is_dirty = is_dirty || (dirty_state[t] != m_table->monitor[t]);
         }
     }
 
-    is_dirty |= query->match_count != query->prev_match_count;
+    is_dirty = is_dirty || (query->match_count != query->prev_match_count);
 
     return is_dirty;
 }
@@ -1209,7 +1209,7 @@ void sort_tables(
 
         int32_t *dirty_state = ecs_table_get_dirty_state(table);
 
-        is_dirty |= dirty_state[0] != m_table->monitor[0];
+        is_dirty = is_dirty || (dirty_state[0] != m_table->monitor[0]);
 
         int32_t index = -1;
         if (sort_on_component) {
@@ -1218,7 +1218,7 @@ void sort_tables(
             index = ecs_type_index_of(table->type, sort_on_component);
             ecs_assert(index != -1, ECS_INVALID_PARAMETER, NULL);
             ecs_assert(index < ecs_vector_count(table->type), ECS_INTERNAL_ERROR, NULL); 
-            is_dirty |= dirty_state[index + 1] != m_table->monitor[index + 1];
+            is_dirty = is_dirty || (dirty_state[index + 1] != m_table->monitor[index + 1]);
         }      
         
         /* Check both if entities have moved (element 0) or if the component
@@ -1395,8 +1395,8 @@ void process_signature(
         }
     }
 
-    query->flags |= has_refs(&query->sig) * EcsQueryHasRefs;
-    query->flags |= has_traits(&query->sig) * EcsQueryHasTraits;
+    query->flags |= (ecs_flags32_t)(has_refs(&query->sig) * EcsQueryHasRefs);
+    query->flags |= (ecs_flags32_t)(has_traits(&query->sig) * EcsQueryHasTraits);
 
     register_monitors(world, query);
 }

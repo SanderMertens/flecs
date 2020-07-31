@@ -80,7 +80,7 @@ void eval_component_monitor(
 
 void ecs_component_monitor_mark(
     ecs_component_monitor_t *mon,
-    int32_t component)
+    ecs_entity_t component)
 {
     /* Only flag if there are actually monitors registered, so that we
      * don't waste cycles evaluating monitors if there's no interest */
@@ -213,6 +213,7 @@ ecs_world_t *ecs_mini(void) {
     world->stats.delta_time = 0;
     world->stats.time_scale = 1.0;
     world->stats.frame_time_total = 0;
+    world->stats.sleep_err = 0;
     world->stats.system_time_total = 0;
     world->stats.merge_time_total = 0;
     world->stats.world_time_total = 0;
@@ -279,41 +280,9 @@ ecs_world_t* ecs_init_w_args(
     int argc,
     char *argv[])
 {
-    /* First parse debug argument so logging is enabled while initializing world */ 
-    int i;
-    for (i = 1; i < argc; i ++) {
-        if (argv[i][0] == '-') {
-            bool parsed = false;
-
-            /* Ignore arguments that were not parsed */
-            (void)parsed;
-        } else {
-            /* Ignore arguments that don't start with '-' */
-        }
-    }
-
-    ecs_world_t *world = ecs_init();
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Parse remaining arguments */
-    for (i = 1; i < argc; i ++) {
-        if (argv[i][0] == '-') {
-            bool parsed = false;
-
-            ARG(0, "admin", 
-				ecs_enable_admin(world, atoi(argv[i + 1]));
-                i ++);
-
-            ARG(0, "console", ecs_enable_console(world));
-
-            /* Ignore arguments that were not parsed */
-            (void)parsed;
-        } else {
-            /* Ignore arguments that don't start with '-' */
-        }
-    }
-    
-    return world;
+    (void)argc;
+    (void)argv;
+    return ecs_init();
 }
 
 static
@@ -344,13 +313,13 @@ void ctor_init_zero(
     (void)component;
     (void)entity_ptr;
     (void)ctx;
-    memset(ptr, 0, size * count);
+    ecs_os_memset(ptr, 0, ecs_from_size_t(size) * count);
 }
 
-int32_t ecs_get_component_action_flags(
+ecs_flags32_t ecs_get_component_action_flags(
     ecs_c_info_t *c_info) 
 {
-    int32_t flags = 0;
+    ecs_flags32_t flags = 0;
 
     if (c_info->lifecycle.ctor) {
         flags |= EcsTableHasCtors;
@@ -373,7 +342,7 @@ void ecs_notify_tables_of_component_actions(
     ecs_entity_t component,
     ecs_c_info_t *c_info)
 {
-    int32_t flags = ecs_get_component_action_flags(c_info);
+    ecs_flags32_t flags = ecs_get_component_action_flags(c_info);
 
     /* Iterate tables to set flags based on what actions have been registered */
     ecs_sparse_t *tables = world->stage.tables;
@@ -396,6 +365,14 @@ void ecs_set_component_actions_w_entity(
     ecs_entity_t component,
     EcsComponentLifecycle *lifecycle)
 {
+    const EcsComponent *component_ptr = ecs_get(world, component, EcsComponent);
+    
+    /* Cannot register lifecycle actions for things that aren't a component */
+    ecs_assert(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    /* Cannot register lifecycle actions for components with size 0 */
+    ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
+
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
     c_info->lifecycle = *lifecycle;
 
@@ -582,7 +559,7 @@ void ecs_merge(
     ecs_eval_component_monitors(world);
 
     if (measure_frame_time) {
-        world->stats.merge_time_total += ecs_time_measure(&t_start);
+        world->stats.merge_time_total += (float)ecs_time_measure(&t_start);
     }
 
     world->stats.merge_count_total ++;
@@ -624,7 +601,8 @@ void ecs_measure_frame_time(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
-    if (!world->stats.target_fps || enable) {
+
+    if (world->stats.target_fps == 0.0 || enable) {
         world->measure_frame_time = enable;
     }
 }
@@ -702,7 +680,7 @@ bool ecs_enable_range_check(
     return old_value;
 }
 
-uint16_t ecs_get_thread_index(
+int32_t ecs_get_thread_index(
     ecs_world_t *world)
 {
     if (world->magic == ECS_THREAD_MAGIC) {
