@@ -21,19 +21,19 @@ void fill_map(
 static int32_t malloc_count;
 
 static
-void *test_malloc(size_t size) {
+void *test_malloc(ecs_size_t size) {
     malloc_count ++;
     return malloc(size);
 }
 
 static
-void *test_calloc(size_t size) {
+void *test_calloc(ecs_size_t size) {
     malloc_count ++;
     return calloc(1, size);
 }
 
 static
-void *test_realloc(void *old_ptr, size_t size) {
+void *test_realloc(void *old_ptr, ecs_size_t size) {
     malloc_count ++;
     return realloc(old_ptr, size);
 }
