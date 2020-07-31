@@ -2153,7 +2153,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
             copy(world, component, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
         } else {
-            ecs_os_memcpy(dst, ptr, size);
+            ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
         }
     } else {
         memset(dst, 0, size);

@@ -465,7 +465,7 @@ double insert_sleep(
 
     double target_delta_time = (1.0 / world->stats.target_fps);
     double world_sleep_err = 
-        world->stats.sleep_err / world->stats.frame_count_total;
+        world->stats.sleep_err / (double)world->stats.frame_count_total;
 
     /* Calculate the time we need to sleep by taking the measured delta from the
      * previous frame, and subtracting it from target_delta_time. */
@@ -518,7 +518,7 @@ double insert_sleep(
          * latest measured values. */
         world->stats.sleep_err = (float)
             (world_sleep_err * 0.9 + sleep_err * 0.1) * 
-                world->stats.frame_count_total;
+                (float)world->stats.frame_count_total;
     }
 
     /*  Make last minute corrections if due to a larger clock error delta_time

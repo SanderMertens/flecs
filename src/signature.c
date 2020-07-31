@@ -400,7 +400,7 @@ int ecs_parse_expr(
                 source_id = ecs_os_malloc(ecs_to_i32(src - source + 1));
                 ecs_assert(source_id != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-                strncpy(source_id, source, src - source);
+                ecs_os_strncpy(source_id, source, ecs_to_i32(src - source));
                 source_id[src - source] = '\0';
             }
 

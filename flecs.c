@@ -486,7 +486,7 @@ struct ecs_query_t {
     ecs_rank_type_action_t group_table;
 
     /* The query kind determines how it is registered with tables */
-    int8_t flags;
+    ecs_flags32_t flags;
 
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
@@ -1335,7 +1335,7 @@ char *ecs_vasprintf(
 
     va_copy(tmpa, args);
 
-    size = vsnprintf(result, size, fmt, tmpa);
+    size = vsnprintf(result, ecs_to_size_t(size), fmt, tmpa);
 
     va_end(tmpa);
 
@@ -1410,29 +1410,29 @@ char* ecs_colorize(
             overrideColor = true;
 
             /* Custom colors */
-            if (!strncmp(&ptr[2], "]", ecs_os_strlen("]"))) {
+            if (!ecs_os_strncmp(&ptr[2], "]", ecs_os_strlen("]"))) {
                 autoColor = false;
-            } else if (!strncmp(&ptr[2], "green]", ecs_os_strlen("green]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "green]", ecs_os_strlen("green]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
-            } else if (!strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_RED);
-            } else if (!strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BLUE);
-            } else if (!strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_MAGENTA);
-            } else if (!strncmp(&ptr[2], "cyan]", ecs_os_strlen("cyan]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "cyan]", ecs_os_strlen("cyan]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
-            } else if (!strncmp(&ptr[2], "yellow]", ecs_os_strlen("yellow]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "yellow]", ecs_os_strlen("yellow]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_YELLOW);
-            } else if (!strncmp(&ptr[2], "grey]", ecs_os_strlen("grey]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "grey]", ecs_os_strlen("grey]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREY);
-            } else if (!strncmp(&ptr[2], "white]", ecs_os_strlen("white]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "white]", ecs_os_strlen("white]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else if (!strncmp(&ptr[2], "bold]", ecs_os_strlen("bold]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "bold]", ecs_os_strlen("bold]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BOLD);
-            } else if (!strncmp(&ptr[2], "normal]", ecs_os_strlen("normal]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "normal]", ecs_os_strlen("normal]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else if (!strncmp(&ptr[2], "reset]", ecs_os_strlen("reset]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "reset]", ecs_os_strlen("reset]"))) {
                 overrideColor = false;
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             } else {
@@ -2178,7 +2178,7 @@ ecs_data_t* ecs_table_get_data_intern(
             /* Grow array, initialize table data to 0 */
             ecs_vector_set_count(&table->data, ecs_data_t, stage_count);
             data_array = ecs_vector_first(table->data, ecs_data_t);
-            memset(&data_array[count], 
+            ecs_os_memset(&data_array[count], 
                 0, ECS_SIZEOF(ecs_data_t) * (stage_count - count));
         } else {
             /* If the number of stages is reduced, deinit redudant stages */
@@ -2402,7 +2402,7 @@ int32_t ecs_table_append(
             if (size) {
                 ecs_vector_t *prev = columns[i].data;
                 ecs_vector_add_t(&columns[i].data, size, alignment);
-                realloc |= prev != columns[i].data;
+                realloc = realloc || (prev != columns[i].data);
             }
         }
     }
@@ -2412,14 +2412,14 @@ int32_t ecs_table_append(
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
     *e = entity;
-    realloc |= prev_e != data->entities;
+    realloc = realloc || (prev_e != data->entities);
 
     /* Add record ptr to array with record ptrs */
     ecs_vector_t *prev_r = data->record_ptrs;
     ecs_record_t **r = ecs_vector_add(&data->record_ptrs, ecs_record_t*);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     *r = record;
-    realloc |= prev_r != data->record_ptrs;
+    realloc = realloc || (prev_r != data->record_ptrs);
 
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);
@@ -5306,7 +5306,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
             copy(world, component, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
         } else {
-            ecs_os_memcpy(dst, ptr, size);
+            ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
         }
     } else {
         memset(dst, 0, size);
@@ -6619,7 +6619,7 @@ ecs_entity_t ecs_import(
     /* Copy value of module component in handles_out parameter */
     if (handles_size && handles_out) {
         void *handles_ptr = ecs_get_mut_w_entity(world, e, e, NULL);
-        ecs_os_memcpy(handles_out, handles_ptr, handles_size);        
+        ecs_os_memcpy(handles_out, handles_ptr, ecs_from_size_t(handles_size));   
     }
 
     /* Restore to previous state */
@@ -7575,7 +7575,7 @@ void ctor_init_zero(
     (void)component;
     (void)entity_ptr;
     (void)ctx;
-    memset(ptr, 0, ecs_from_size_t(size) * count);
+    ecs_os_memset(ptr, 0, ecs_from_size_t(size) * count);
 }
 
 ecs_flags32_t ecs_get_component_action_flags(
@@ -8580,9 +8580,9 @@ bool is_sep(
     const char **ptr,
     const char *sep)
 {
-    size_t len = ecs_os_strlen(sep);
+    ecs_size_t len = ecs_os_strlen(sep);
 
-    if (!strncmp(*ptr, sep, len)) {
+    if (!ecs_os_strncmp(*ptr, sep, len)) {
         *ptr += len - 1;
         return true;
     } else {
@@ -8628,8 +8628,8 @@ ecs_entity_t get_parent_from_path(
     const char *path = *path_ptr;
 
     if (prefix) {
-        size_t len = ecs_os_strlen(prefix);
-        if (!strncmp(path, prefix, len)) {
+        ecs_size_t len = ecs_os_strlen(prefix);
+        if (!ecs_os_strncmp(path, prefix, len)) {
             path += len;
             parent = 0;
             start_from_root = true;
@@ -9347,7 +9347,8 @@ bool ecs_strbuf_vappend_intern(
         memRequired = fast_strncpy(ecs_strbuf_ptr(b), str, max_copy, n);
     } else {
         va_copy(arg_cpy, args);
-        memRequired = vsnprintf(ecs_strbuf_ptr(b), max_copy + 1, str, args);
+        memRequired = vsnprintf(
+            ecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
     }
 
     if (memRequired <= memLeftInElement) {
@@ -9371,7 +9372,7 @@ bool ecs_strbuf_vappend_intern(
                     strncpy(
                         ecs_strbuf_ptr(b),
                         str + memLeftInElement,
-                        memRequired);
+                        (size_t)memRequired);
                 } else {
                     strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
                 }
@@ -10044,7 +10045,7 @@ int ecs_parse_expr(
                 source_id = ecs_os_malloc(ecs_to_i32(src - source + 1));
                 ecs_assert(source_id != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-                strncpy(source_id, source, src - source);
+                ecs_os_strncpy(source_id, source, ecs_to_i32(src - source));
                 source_id[src - source] = '\0';
             }
 
@@ -10945,6 +10946,41 @@ ecs_size_t ecs_os_api_strlen(const char *str) {
 }
 
 static
+int ecs_os_api_strcmp(
+    const char *str1, 
+    const char *str2)
+{
+    return strcmp(str1, str2);
+}
+
+static
+int ecs_os_api_strncmp(
+    const char *str1, 
+    const char *str2, 
+    ecs_size_t num)
+{
+    ecs_assert(num > 0, ECS_INVALID_PARAMETER, NULL);
+    return strncmp(str1, str2, (size_t)num);
+}
+
+static
+char* ecs_os_api_strcpy(
+    char *str1, 
+    const char *str2)
+{
+    return strcpy(str1, str2);
+}
+
+static
+char* ecs_os_api_strncpy(
+    char *str1, 
+    const char *str2, 
+    ecs_size_t num)
+{
+    return strncpy(str1, str2, (size_t)num);
+}
+
+static
 int ecs_os_api_memcmp(
     const void *ptr1, 
     const void *ptr2, 
@@ -10964,11 +11000,21 @@ void* ecs_os_api_memcpy(
     return memcpy(ptr1, ptr2, (size_t)num);
 }
 
+static
+void* ecs_os_api_memset(
+    void *ptr, 
+    int value, 
+    ecs_size_t num)
+{
+    ecs_assert(num >= 0, ECS_INVALID_PARAMETER, NULL);
+    return memset(ptr, value, (size_t)num);
+}
+
 /* Replace dots with underscores */
 static
 char *module_file_base(const char *module, char sep) {
     char *base = ecs_os_strdup(module);
-    size_t i, len = ecs_os_strlen(base);
+    ecs_size_t i, len = ecs_os_strlen(base);
     for (i = 0; i < len; i ++) {
         if (base[i] == '.') {
             base[i] = sep;
@@ -11038,8 +11084,13 @@ void ecs_os_set_api_defaults(void)
     /* Strings */
     ecs_os_api.strdup = ecs_os_api_strdup;
     ecs_os_api.strlen = ecs_os_api_strlen;
+    ecs_os_api.strcmp = ecs_os_api_strcmp;
+    ecs_os_api.strncmp = ecs_os_api_strncmp;
+    ecs_os_api.strcpy = ecs_os_api_strcpy;
+    ecs_os_api.strncpy = ecs_os_api_strncpy;
     ecs_os_api.memcmp = ecs_os_api_memcmp;
     ecs_os_api.memcpy = ecs_os_api_memcpy;
+    ecs_os_api.memset = ecs_os_api_memset;
 
     ecs_os_api_impl(&ecs_os_api);
 
@@ -12205,11 +12256,11 @@ bool tables_dirty(
         int32_t *dirty_state = ecs_table_get_dirty_state(table);
         int32_t t, type_count = table->column_count;
         for (t = 0; t < type_count + 1; t ++) {
-            is_dirty |= dirty_state[t] != m_table->monitor[t];
+            is_dirty = is_dirty || (dirty_state[t] != m_table->monitor[t]);
         }
     }
 
-    is_dirty |= query->match_count != query->prev_match_count;
+    is_dirty = is_dirty || (query->match_count != query->prev_match_count);
 
     return is_dirty;
 }
@@ -12274,7 +12325,7 @@ void sort_tables(
 
         int32_t *dirty_state = ecs_table_get_dirty_state(table);
 
-        is_dirty |= dirty_state[0] != m_table->monitor[0];
+        is_dirty = is_dirty || (dirty_state[0] != m_table->monitor[0]);
 
         int32_t index = -1;
         if (sort_on_component) {
@@ -12283,7 +12334,7 @@ void sort_tables(
             index = ecs_type_index_of(table->type, sort_on_component);
             ecs_assert(index != -1, ECS_INVALID_PARAMETER, NULL);
             ecs_assert(index < ecs_vector_count(table->type), ECS_INTERNAL_ERROR, NULL); 
-            is_dirty |= dirty_state[index + 1] != m_table->monitor[index + 1];
+            is_dirty = is_dirty || (dirty_state[index + 1] != m_table->monitor[index + 1]);
         }      
         
         /* Check both if entities have moved (element 0) or if the component
@@ -12460,8 +12511,8 @@ void process_signature(
         }
     }
 
-    query->flags |= has_refs(&query->sig) * EcsQueryHasRefs;
-    query->flags |= has_traits(&query->sig) * EcsQueryHasTraits;
+    query->flags |= (ecs_flags32_t)(has_refs(&query->sig) * EcsQueryHasRefs);
+    query->flags |= (ecs_flags32_t)(has_traits(&query->sig) * EcsQueryHasTraits);
 
     register_monitors(world, query);
 }
@@ -14855,7 +14906,7 @@ struct ecs_query_t {
     ecs_rank_type_action_t group_table;
 
     /* The query kind determines how it is registered with tables */
-    int8_t flags;
+    ecs_flags32_t flags;
 
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
@@ -15828,7 +15879,7 @@ void ecs_table_writer_prepare_column(
 
             /* Initialize new elements to 0 */
             void *buffer = ecs_vector_first_t(column->data, size, 0);
-            memset(ECS_OFFSET(buffer, old_count * size), 0, 
+            ecs_os_memset(ECS_OFFSET(buffer, old_count * size), 0, 
                 (writer->row_count - old_count) * size);
         }
 
@@ -17136,7 +17187,7 @@ ecs_size_t ecs_table_reader(
         ecs_size_t align = (((read - 1) / ECS_SIZEOF(int32_t)) + 1) * ECS_SIZEOF(int32_t);
         if (align != read) {
             /* Initialize padding bytes to 0 to keep valgrind happy */
-            memset(ECS_OFFSET(buffer, read), 0, align - read);
+            ecs_os_memset(ECS_OFFSET(buffer, read), 0, align - read);
 
             /* Set read to align so that data is always aligned to 4 bytes */
             read = align;
@@ -17181,7 +17232,7 @@ ecs_size_t ecs_table_reader(
             reader->name_written += ECS_SIZEOF(int32_t);
         } else {
             ecs_os_memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
-            memset(ECS_OFFSET(buffer, read), 0, ECS_SIZEOF(int32_t) - read);
+            ecs_os_memset(ECS_OFFSET(buffer, read), 0, ECS_SIZEOF(int32_t) - read);
             reader->name_written += read;
         }
 
@@ -17918,7 +17969,7 @@ struct ecs_query_t {
     ecs_rank_type_action_t group_table;
 
     /* The query kind determines how it is registered with tables */
-    int8_t flags;
+    ecs_flags32_t flags;
 
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
@@ -19553,7 +19604,7 @@ double insert_sleep(
 
     double target_delta_time = (1.0 / world->stats.target_fps);
     double world_sleep_err = 
-        world->stats.sleep_err / world->stats.frame_count_total;
+        world->stats.sleep_err / (double)world->stats.frame_count_total;
 
     /* Calculate the time we need to sleep by taking the measured delta from the
      * previous frame, and subtracting it from target_delta_time. */
@@ -19606,7 +19657,7 @@ double insert_sleep(
          * latest measured values. */
         world->stats.sleep_err = (float)
             (world_sleep_err * 0.9 + sleep_err * 0.1) * 
-                world->stats.frame_count_total;
+                (float)world->stats.frame_count_total;
     }
 
     /*  Make last minute corrections if due to a larger clock error delta_time
@@ -20070,7 +20121,7 @@ struct ecs_query_t {
     ecs_rank_type_action_t group_table;
 
     /* The query kind determines how it is registered with tables */
-    int8_t flags;
+    ecs_flags32_t flags;
 
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
@@ -23088,7 +23139,9 @@ const char* get_entity_name(
     const char *prefix = world->name_prefix;
     if (type_name && prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
-        if (!strncmp(type_name, prefix, len) && (isupper(type_name[len]) || type_name[len] == '_')) {
+        if (!ecs_os_strncmp(type_name, prefix, len) && 
+           (isupper(type_name[len]) || type_name[len] == '_')) 
+        {
             if (type_name[len] == '_') {
                 return type_name + len + 1;
             } else {

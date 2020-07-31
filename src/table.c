@@ -437,7 +437,7 @@ ecs_data_t* ecs_table_get_data_intern(
             /* Grow array, initialize table data to 0 */
             ecs_vector_set_count(&table->data, ecs_data_t, stage_count);
             data_array = ecs_vector_first(table->data, ecs_data_t);
-            memset(&data_array[count], 
+            ecs_os_memset(&data_array[count], 
                 0, ECS_SIZEOF(ecs_data_t) * (stage_count - count));
         } else {
             /* If the number of stages is reduced, deinit redudant stages */
@@ -661,7 +661,7 @@ int32_t ecs_table_append(
             if (size) {
                 ecs_vector_t *prev = columns[i].data;
                 ecs_vector_add_t(&columns[i].data, size, alignment);
-                realloc |= prev != columns[i].data;
+                realloc = realloc || (prev != columns[i].data);
             }
         }
     }
@@ -671,14 +671,14 @@ int32_t ecs_table_append(
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
     *e = entity;
-    realloc |= prev_e != data->entities;
+    realloc = realloc || (prev_e != data->entities);
 
     /* Add record ptr to array with record ptrs */
     ecs_vector_t *prev_r = data->record_ptrs;
     ecs_record_t **r = ecs_vector_add(&data->record_ptrs, ecs_record_t*);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     *r = record;
-    realloc |= prev_r != data->record_ptrs;
+    realloc = realloc || (prev_r != data->record_ptrs);
 
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);

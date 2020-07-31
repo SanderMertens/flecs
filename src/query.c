@@ -1140,11 +1140,11 @@ bool tables_dirty(
         int32_t *dirty_state = ecs_table_get_dirty_state(table);
         int32_t t, type_count = table->column_count;
         for (t = 0; t < type_count + 1; t ++) {
-            is_dirty |= dirty_state[t] != m_table->monitor[t];
+            is_dirty = is_dirty || (dirty_state[t] != m_table->monitor[t]);
         }
     }
 
-    is_dirty |= query->match_count != query->prev_match_count;
+    is_dirty = is_dirty || (query->match_count != query->prev_match_count);
 
     return is_dirty;
 }
@@ -1209,7 +1209,7 @@ void sort_tables(
 
         int32_t *dirty_state = ecs_table_get_dirty_state(table);
 
-        is_dirty |= dirty_state[0] != m_table->monitor[0];
+        is_dirty = is_dirty || (dirty_state[0] != m_table->monitor[0]);
 
         int32_t index = -1;
         if (sort_on_component) {
@@ -1218,7 +1218,7 @@ void sort_tables(
             index = ecs_type_index_of(table->type, sort_on_component);
             ecs_assert(index != -1, ECS_INVALID_PARAMETER, NULL);
             ecs_assert(index < ecs_vector_count(table->type), ECS_INTERNAL_ERROR, NULL); 
-            is_dirty |= dirty_state[index + 1] != m_table->monitor[index + 1];
+            is_dirty = is_dirty || (dirty_state[index + 1] != m_table->monitor[index + 1]);
         }      
         
         /* Check both if entities have moved (element 0) or if the component
@@ -1395,8 +1395,8 @@ void process_signature(
         }
     }
 
-    query->flags |= has_refs(&query->sig) * EcsQueryHasRefs;
-    query->flags |= has_traits(&query->sig) * EcsQueryHasTraits;
+    query->flags |= (ecs_flags32_t)(has_refs(&query->sig) * EcsQueryHasRefs);
+    query->flags |= (ecs_flags32_t)(has_traits(&query->sig) * EcsQueryHasTraits);
 
     register_monitors(world, query);
 }
