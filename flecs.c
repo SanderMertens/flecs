@@ -10940,76 +10940,6 @@ char* ecs_os_api_strdup(const char *str) {
     return result;
 }
 
-static
-ecs_size_t ecs_os_api_strlen(const char *str) {
-    return (ecs_size_t)strlen(str);
-}
-
-static
-int ecs_os_api_strcmp(
-    const char *str1, 
-    const char *str2)
-{
-    return strcmp(str1, str2);
-}
-
-static
-int ecs_os_api_strncmp(
-    const char *str1, 
-    const char *str2, 
-    ecs_size_t num)
-{
-    ecs_assert(num > 0, ECS_INVALID_PARAMETER, NULL);
-    return strncmp(str1, str2, (size_t)num);
-}
-
-static
-char* ecs_os_api_strcpy(
-    char *str1, 
-    const char *str2)
-{
-    return strcpy(str1, str2);
-}
-
-static
-char* ecs_os_api_strncpy(
-    char *str1, 
-    const char *str2, 
-    ecs_size_t num)
-{
-    return strncpy(str1, str2, (size_t)num);
-}
-
-static
-int ecs_os_api_memcmp(
-    const void *ptr1, 
-    const void *ptr2, 
-    ecs_size_t num)
-{
-    ecs_assert(num > 0, ECS_INVALID_PARAMETER, NULL);
-    return memcmp(ptr1, ptr2, (size_t)num);
-}
-
-static
-void* ecs_os_api_memcpy(
-    void *ptr1, 
-    const void *ptr2, 
-    ecs_size_t num)
-{
-    ecs_assert(num >= 0, ECS_INVALID_PARAMETER, NULL);
-    return memcpy(ptr1, ptr2, (size_t)num);
-}
-
-static
-void* ecs_os_api_memset(
-    void *ptr, 
-    int value, 
-    ecs_size_t num)
-{
-    ecs_assert(num >= 0, ECS_INVALID_PARAMETER, NULL);
-    return memset(ptr, value, (size_t)num);
-}
-
 /* Replace dots with underscores */
 static
 char *module_file_base(const char *module, char sep) {
@@ -11083,14 +11013,6 @@ void ecs_os_set_api_defaults(void)
 
     /* Strings */
     ecs_os_api.strdup = ecs_os_api_strdup;
-    ecs_os_api.strlen = ecs_os_api_strlen;
-    ecs_os_api.strcmp = ecs_os_api_strcmp;
-    ecs_os_api.strncmp = ecs_os_api_strncmp;
-    ecs_os_api.strcpy = ecs_os_api_strcpy;
-    ecs_os_api.strncpy = ecs_os_api_strncpy;
-    ecs_os_api.memcmp = ecs_os_api_memcmp;
-    ecs_os_api.memcpy = ecs_os_api_memcpy;
-    ecs_os_api.memset = ecs_os_api_memset;
 
     ecs_os_api_impl(&ecs_os_api);
 
