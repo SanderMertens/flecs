@@ -420,7 +420,7 @@ void ecs_sparse_restore(
     int32_t i, count = ecs_vector_count(src->chunks);
 
     for (i = 0; i < count; i ++) {
-        memcpy(dst_chunks[i].data, src_chunks[i].data,
+        ecs_os_memcpy(dst_chunks[i].data, src_chunks[i].data,
             dst->chunk_size * dst->elem_size);
     }
 
@@ -438,7 +438,7 @@ void ecs_sparse_restore(
 
     int32_t *dst_dense = ecs_vector_first(dst->dense, int32_t);
     int32_t *src_dense = ecs_vector_first(src->dense, int32_t);
-    memcpy(dst_dense, src_dense, elem_count * ECS_SIZEOF(int32_t));
+    ecs_os_memcpy(dst_dense, src_dense, elem_count * ECS_SIZEOF(int32_t));
 
     /* Copy sparse array */
     int32_t sparse_count = ecs_vector_count(src->sparse);
@@ -457,7 +457,7 @@ void ecs_sparse_restore(
 
     int32_t *dst_unused = ecs_vector_first(dst->unused_elements, int32_t);
     int32_t *src_unused = ecs_vector_first(src->unused_elements, int32_t);
-    memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
+    ecs_os_memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
 }
 
 void ecs_sparse_memory(

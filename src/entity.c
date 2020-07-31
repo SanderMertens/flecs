@@ -650,7 +650,7 @@ bool override_from_base(
             }
         } else {
             for (index = 0; index < count; index ++) {
-                memcpy(data_ptr, base_ptr, data_size);
+                ecs_os_memcpy(data_ptr, base_ptr, data_size);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
             }                    
         }
@@ -1429,7 +1429,7 @@ int32_t new_w_data(
                 copy(world, c, entities, entities, ptr, src_ptr, 
                     ecs_to_size_t(size), count, cdata->lifecycle.ctx);
             } else {
-                memcpy(ptr, src_ptr, size * count);
+                ecs_os_memcpy(ptr, src_ptr, size * count);
             }
         };
 
@@ -2153,7 +2153,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
             copy(world, component, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
         } else {
-            memcpy(dst, ptr, size);
+            ecs_os_memcpy(dst, ptr, size);
         }
     } else {
         memset(dst, 0, size);
@@ -2351,7 +2351,7 @@ bool ecs_defer_begin(
         } else {
             ecs_size_t array_size = components->count * ECS_SIZEOF(ecs_entity_t);
             op->components.array = ecs_os_malloc(array_size);
-            memcpy(op->components.array, components->array, array_size);
+            ecs_os_memcpy(op->components.array, components->array, array_size);
             op->components.count = components->count;
         }
 

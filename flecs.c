@@ -843,7 +843,7 @@ ecs_type_t ecs_bootstrap_type(
     ecs_new_component(world, ecs_entity(name), #name, sizeof(name), ECS_ALIGNOF(name))
 
 #define ecs_bootstrap_tag(world, name)\
-    ecs_set(world, name, EcsName, {.value = &#name[strlen("Ecs")], .symbol = #name});\
+    ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = #name});\
     ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
 
 
@@ -1410,29 +1410,29 @@ char* ecs_colorize(
             overrideColor = true;
 
             /* Custom colors */
-            if (!strncmp(&ptr[2], "]", strlen("]"))) {
+            if (!strncmp(&ptr[2], "]", ecs_os_strlen("]"))) {
                 autoColor = false;
-            } else if (!strncmp(&ptr[2], "green]", strlen("green]"))) {
+            } else if (!strncmp(&ptr[2], "green]", ecs_os_strlen("green]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
-            } else if (!strncmp(&ptr[2], "red]", strlen("red]"))) {
+            } else if (!strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_RED);
-            } else if (!strncmp(&ptr[2], "blue]", strlen("red]"))) {
+            } else if (!strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BLUE);
-            } else if (!strncmp(&ptr[2], "magenta]", strlen("magenta]"))) {
+            } else if (!strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_MAGENTA);
-            } else if (!strncmp(&ptr[2], "cyan]", strlen("cyan]"))) {
+            } else if (!strncmp(&ptr[2], "cyan]", ecs_os_strlen("cyan]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
-            } else if (!strncmp(&ptr[2], "yellow]", strlen("yellow]"))) {
+            } else if (!strncmp(&ptr[2], "yellow]", ecs_os_strlen("yellow]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_YELLOW);
-            } else if (!strncmp(&ptr[2], "grey]", strlen("grey]"))) {
+            } else if (!strncmp(&ptr[2], "grey]", ecs_os_strlen("grey]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREY);
-            } else if (!strncmp(&ptr[2], "white]", strlen("white]"))) {
+            } else if (!strncmp(&ptr[2], "white]", ecs_os_strlen("white]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else if (!strncmp(&ptr[2], "bold]", strlen("bold]"))) {
+            } else if (!strncmp(&ptr[2], "bold]", ecs_os_strlen("bold]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BOLD);
-            } else if (!strncmp(&ptr[2], "normal]", strlen("normal]"))) {
+            } else if (!strncmp(&ptr[2], "normal]", ecs_os_strlen("normal]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else if (!strncmp(&ptr[2], "reset]", strlen("reset]"))) {
+            } else if (!strncmp(&ptr[2], "reset]", ecs_os_strlen("reset]"))) {
                 overrideColor = false;
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             } else {
@@ -2729,9 +2729,9 @@ void ecs_table_swap(
             void *el_1 = ECS_OFFSET(ptr, size * row_1);
             void *el_2 = ECS_OFFSET(ptr, size * row_2);
 
-            memcpy(tmp, el_1, size);
-            memcpy(el_1, el_2, size);
-            memcpy(el_2, tmp, size);
+            ecs_os_memcpy(tmp, el_1, size);
+            ecs_os_memcpy(el_1, el_2, size);
+            ecs_os_memcpy(el_2, tmp, size);
         }
     }
 
@@ -2766,7 +2766,7 @@ void merge_vector(
         void *src_ptr = ecs_vector_first_t(src, size, alignment);
 
         dst_ptr = ECS_OFFSET(dst_ptr, size * dst_count);
-        memcpy(dst_ptr, src_ptr, size * src_count);
+        ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
 
         ecs_vector_free(src);
         *dst_out = dst;
@@ -3076,10 +3076,10 @@ void ecs_table_move(
                         copy(world, new_component, &dst_entity, &src_entity, 
                             dst, src, ecs_to_size_t(size), 1, ctx);
                     } else {
-                        memcpy(dst, src, size);
+                        ecs_os_memcpy(dst, src, size);
                     }
                 } else {
-                    memcpy(dst, src, size);
+                    ecs_os_memcpy(dst, src, size);
                 }
             }
         }
@@ -3803,7 +3803,7 @@ bool override_from_base(
             }
         } else {
             for (index = 0; index < count; index ++) {
-                memcpy(data_ptr, base_ptr, data_size);
+                ecs_os_memcpy(data_ptr, base_ptr, data_size);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
             }                    
         }
@@ -4582,7 +4582,7 @@ int32_t new_w_data(
                 copy(world, c, entities, entities, ptr, src_ptr, 
                     ecs_to_size_t(size), count, cdata->lifecycle.ctx);
             } else {
-                memcpy(ptr, src_ptr, size * count);
+                ecs_os_memcpy(ptr, src_ptr, size * count);
             }
         };
 
@@ -5306,7 +5306,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
             copy(world, component, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
         } else {
-            memcpy(dst, ptr, size);
+            ecs_os_memcpy(dst, ptr, size);
         }
     } else {
         memset(dst, 0, size);
@@ -5504,7 +5504,7 @@ bool ecs_defer_begin(
         } else {
             ecs_size_t array_size = components->count * ECS_SIZEOF(ecs_entity_t);
             op->components.array = ecs_os_malloc(array_size);
-            memcpy(op->components.array, components->array, array_size);
+            ecs_os_memcpy(op->components.array, components->array, array_size);
             op->components.count = components->count;
         }
 
@@ -5665,7 +5665,7 @@ void merge_columns(
             move(world, component, dst_entities, src_entities, dst, src, 
                 ecs_to_size_t(size), src_entity_count, ctx);
         } else {
-            memcpy(dst, src, size * src_entity_count);
+            ecs_os_memcpy(dst, src, size * src_entity_count);
         }
 
         ecs_vector_clear(column->data);
@@ -5750,12 +5750,12 @@ void merge_commits(
 
         /* Copy entity ids */
         ecs_entity_t *main_entities = ecs_vector_first(main_data->entities, ecs_entity_t);
-        memcpy(&main_entities[main_entity_count], entities, 
+        ecs_os_memcpy(&main_entities[main_entity_count], entities, 
             entity_count * ECS_SIZEOF(ecs_entity_t));
 
         /* Copy record ptrs */
         ecs_record_t **main_record_ptrs = ecs_vector_first(main_data->record_ptrs, ecs_record_t*);
-        memcpy(&main_record_ptrs[main_entity_count], record_ptrs, 
+        ecs_os_memcpy(&main_record_ptrs[main_entity_count], record_ptrs, 
             entity_count * ECS_SIZEOF(ecs_record_t*));
 
         /* Copy component data */
@@ -6096,7 +6096,7 @@ ecs_vector_t* _ecs_vector_from_array(
         ecs_os_malloc(offset + elem_size * elem_count);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    memcpy(ECS_OFFSET(result, offset), array, elem_size * elem_count);
+    ecs_os_memcpy(ECS_OFFSET(result, offset), array, elem_size * elem_count);
 
     result->count = elem_count;
     result->size = elem_count;
@@ -6190,7 +6190,7 @@ int32_t _ecs_vector_move_index(
     void *dst_elem = _ecs_vector_add(dst, elem_size, offset);
     void *src_elem = _ecs_vector_get(src, elem_size, offset, index);
 
-    memcpy(dst_elem, src_elem, elem_size);
+    ecs_os_memcpy(dst_elem, src_elem, elem_size);
     return _ecs_vector_remove_index(src, elem_size, offset, index);
 }
 
@@ -6218,7 +6218,7 @@ int32_t _ecs_vector_remove(
 
     if (index != (count - 1)) {
         void *last_elem = ECS_OFFSET(buffer, elem_size * (count - 1));
-        memcpy(elem, last_elem, elem_size);
+        ecs_os_memcpy(elem, last_elem, elem_size);
     }
 
     count --;
@@ -6253,7 +6253,7 @@ bool _ecs_vector_pop(
     void *elem = ECS_OFFSET(vector, offset + (count - 1) * elem_size);
 
     if (value) {
-        memcpy(value, elem, elem_size);
+        ecs_os_memcpy(value, elem, elem_size);
     }
 
     ecs_vector_remove_last(vector);
@@ -6277,7 +6277,7 @@ int32_t _ecs_vector_remove_index(
 
     if (index != (count - 1)) {
         void *last_elem = ECS_OFFSET(buffer, elem_size * (count - 1));
-        memcpy(elem, last_elem, elem_size);
+        ecs_os_memcpy(elem, last_elem, elem_size);
     }
 
     count --;
@@ -6517,7 +6517,7 @@ ecs_vector_t* _ecs_vector_copy(
     }
 
     ecs_vector_t *dst = _ecs_vector_new(elem_size, offset, src->size);
-    memcpy(dst, src, offset + elem_size * src->count);
+    ecs_os_memcpy(dst, src, offset + elem_size * src->count);
     return dst;
 }
 
@@ -6619,7 +6619,7 @@ ecs_entity_t ecs_import(
     /* Copy value of module component in handles_out parameter */
     if (handles_size && handles_out) {
         void *handles_ptr = ecs_get_mut_w_entity(world, e, e, NULL);
-        memcpy(handles_out, handles_ptr, handles_size);        
+        ecs_os_memcpy(handles_out, handles_ptr, handles_size);        
     }
 
     /* Restore to previous state */
@@ -7160,7 +7160,7 @@ void ecs_sparse_restore(
     int32_t i, count = ecs_vector_count(src->chunks);
 
     for (i = 0; i < count; i ++) {
-        memcpy(dst_chunks[i].data, src_chunks[i].data,
+        ecs_os_memcpy(dst_chunks[i].data, src_chunks[i].data,
             dst->chunk_size * dst->elem_size);
     }
 
@@ -7178,7 +7178,7 @@ void ecs_sparse_restore(
 
     int32_t *dst_dense = ecs_vector_first(dst->dense, int32_t);
     int32_t *src_dense = ecs_vector_first(src->dense, int32_t);
-    memcpy(dst_dense, src_dense, elem_count * ECS_SIZEOF(int32_t));
+    ecs_os_memcpy(dst_dense, src_dense, elem_count * ECS_SIZEOF(int32_t));
 
     /* Copy sparse array */
     int32_t sparse_count = ecs_vector_count(src->sparse);
@@ -7197,7 +7197,7 @@ void ecs_sparse_restore(
 
     int32_t *dst_unused = ecs_vector_first(dst->unused_elements, int32_t);
     int32_t *src_unused = ecs_vector_first(src->unused_elements, int32_t);
-    memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
+    ecs_os_memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
 }
 
 void ecs_sparse_memory(
@@ -8580,7 +8580,7 @@ bool is_sep(
     const char **ptr,
     const char *sep)
 {
-    size_t len = strlen(sep);
+    size_t len = ecs_os_strlen(sep);
 
     if (!strncmp(*ptr, sep, len)) {
         *ptr += len - 1;
@@ -8628,7 +8628,7 @@ ecs_entity_t get_parent_from_path(
     const char *path = *path_ptr;
 
     if (prefix) {
-        size_t len = strlen(prefix);
+        size_t len = ecs_os_strlen(prefix);
         if (!strncmp(path, prefix, len)) {
             path += len;
             parent = 0;
@@ -9226,7 +9226,7 @@ void ecs_strbuf_grow_str(
     b->current = (ecs_strbuf_element*)e;
     b->elementCount ++;
     e->super.buffer_embedded = false;
-    e->super.pos = size ? size : (int32_t)strlen(str);
+    e->super.pos = size ? size : (int32_t)ecs_os_strlen(str);
     e->super.next = NULL;
     e->super.buf = str;
     e->alloc_str = alloc_str;
@@ -9547,7 +9547,7 @@ char* ecs_strbuf_get(ecs_strbuf_t *b) {
             char* ptr = result;
 
             do {
-                memcpy(ptr, e->buf, e->pos);
+                ecs_os_memcpy(ptr, e->buf, e->pos);
                 ptr += e->pos;
                 next = e->next;
                 if (e != &b->firstElement.super) {
@@ -10155,7 +10155,7 @@ void ecs_sig_init(
     const char *expr,
     ecs_sig_t *sig)
 {
-    if (expr && strlen(expr)) {
+    if (expr && ecs_os_strlen(expr)) {
         sig->expr = ecs_os_strdup(expr);
     } else {
         sig->expr = ecs_os_strdup("0");
@@ -10664,7 +10664,7 @@ void append_name(
 
     int32_t len = ecs_os_strlen(str);
     dst = ecs_vector_addn(chbuf, char, len);
-    memcpy(dst, str, len);
+    ecs_os_memcpy(dst, str, len);
     if (h != 1) {
         ecs_os_free((char*)str);
     }
@@ -10696,19 +10696,19 @@ char* ecs_type_str(
         if (flags & ECS_INSTANCEOF) {
             int len = sizeof("INSTANCEOF|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "INSTANCEOF|", len);
+            ecs_os_memcpy(dst, "INSTANCEOF|", len);
         }
 
         if (flags & ECS_CHILDOF) {
             int len = sizeof("CHILDOF|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "CHILDOF|", len);
+            ecs_os_memcpy(dst, "CHILDOF|", len);
         }
 
         if (flags & ECS_TRAIT) {
             int len = sizeof("TRAIT|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "TRAIT|", len);
+            ecs_os_memcpy(dst, "TRAIT|", len);
             trait = ecs_entity_t_hi(h);
             h = ecs_entity_t_lo(h);
         }
@@ -10716,25 +10716,25 @@ char* ecs_type_str(
         if (flags & ECS_XOR) {
             int len = sizeof("XOR|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "XOR|", len);
+            ecs_os_memcpy(dst, "XOR|", len);
         }
 
         if (flags & ECS_OR) {
             int len = sizeof("OR|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "OR|", len);
+            ecs_os_memcpy(dst, "OR|", len);
         }
 
         if (flags & ECS_AND) {
             int len = sizeof("AND|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "AND|", len);
+            ecs_os_memcpy(dst, "AND|", len);
         }
 
         if (flags & ECS_NOT) {
             int len = sizeof("NOT|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
-            memcpy(dst, "NOT|", len);
+            ecs_os_memcpy(dst, "NOT|", len);
         }
 
         append_name(world, &chbuf, h);
@@ -10954,11 +10954,21 @@ int ecs_os_api_memcmp(
     return memcmp(ptr1, ptr2, (size_t)num);
 }
 
+static
+void* ecs_os_api_memcpy(
+    void *ptr1, 
+    const void *ptr2, 
+    ecs_size_t num)
+{
+    ecs_assert(num >= 0, ECS_INVALID_PARAMETER, NULL);
+    return memcpy(ptr1, ptr2, (size_t)num);
+}
+
 /* Replace dots with underscores */
 static
 char *module_file_base(const char *module, char sep) {
     char *base = ecs_os_strdup(module);
-    size_t i, len = strlen(base);
+    size_t i, len = ecs_os_strlen(base);
     for (i = 0; i < len; i ++) {
         if (base[i] == '.') {
             base[i] = sep;
@@ -11029,6 +11039,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.strdup = ecs_os_api_strdup;
     ecs_os_api.strlen = ecs_os_api_strlen;
     ecs_os_api.memcmp = ecs_os_api_memcmp;
+    ecs_os_api.memcpy = ecs_os_api_memcpy;
 
     ecs_os_api_impl(&ecs_os_api);
 
@@ -13026,7 +13037,7 @@ ecs_type_t entities_to_type(
         ecs_vector_t *result = NULL;
         ecs_vector_set_count(&result, ecs_entity_t, entities->count);
         ecs_entity_t *array = ecs_vector_first(result, ecs_entity_t);
-        memcpy(array, entities->array, ECS_SIZEOF(ecs_entity_t) * entities->count);
+        ecs_os_memcpy(array, entities->array, ECS_SIZEOF(ecs_entity_t) * entities->count);
         return result;
     } else {
         return NULL;
@@ -13735,7 +13746,7 @@ ecs_table_t *find_or_create(
     if (!ecs_entity_array_is_ordered(entities)) {
         ecs_size_t size = ECS_SIZEOF(ecs_entity_t) * type_count;
         ordered = ecs_os_alloca(size);
-        memcpy(ordered, entities->array, size);
+        ecs_os_memcpy(ordered, entities->array, size);
         qsort(ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare);
         type_count = ecs_entity_array_dedup(ordered, type_count);
     } else {
@@ -13949,7 +13960,7 @@ int32_t add_to_bucket(
     void *array = PAYLOAD_ARRAY(bucket, offset);
     ecs_map_key_t *elem = GET_ELEM(array, elem_size, bucket->count);
     *elem = key;
-    memcpy(PAYLOAD(elem), payload, elem_size);
+    ecs_os_memcpy(PAYLOAD(elem), payload, elem_size);
     return ++ bucket->count;
 }
 
@@ -13974,7 +13985,7 @@ void remove_from_bucket(
         ecs_map_key_t *last_elem = GET_ELEM(array, elem_size, bucket->count);
 
         ecs_assert(key == *elem, ECS_INTERNAL_ERROR, NULL);
-        memcpy(elem, last_elem, ELEM_SIZE(elem_size));
+        ecs_os_memcpy(elem, last_elem, ELEM_SIZE(elem_size));
     }
 }
 
@@ -14126,7 +14137,7 @@ bool _ecs_map_has(
 {
     const void *result = _ecs_map_get(map, elem_size, key);
     if (result) {
-        memcpy(payload, result, elem_size);
+        ecs_os_memcpy(payload, result, elem_size);
         return true;
     } else {
         return false;
@@ -14184,7 +14195,7 @@ void _ecs_map_set(
             int32_t map_count = ++map->count;
             
             *elem = key;
-            memcpy(PAYLOAD(elem), payload, elem_size);
+            ecs_os_memcpy(PAYLOAD(elem), payload, elem_size);
 
             int32_t target_bucket_count = get_bucket_count(map_count);
             int32_t map_bucket_count = map->bucket_count;
@@ -14199,7 +14210,7 @@ void _ecs_map_set(
         }
     } else {
         *found = key;
-        memcpy(PAYLOAD(found), payload, elem_size);
+        ecs_os_memcpy(PAYLOAD(found), payload, elem_size);
     }
 
     ecs_assert(map->bucket_count != 0, ECS_INTERNAL_ERROR, NULL);
@@ -14228,7 +14239,7 @@ void ecs_map_remove(
         if (*elem == key) {
             ecs_map_key_t *last_elem = GET_ELEM(array, elem_size, (bucket_count - 1));
             if (last_elem > elem) {
-                memcpy(elem, last_elem, ELEM_SIZE(elem_size));
+                ecs_os_memcpy(elem, last_elem, ELEM_SIZE(elem_size));
             }
 
             map->count --;
@@ -15201,7 +15212,7 @@ ecs_type_t ecs_bootstrap_type(
     ecs_new_component(world, ecs_entity(name), #name, sizeof(name), ECS_ALIGNOF(name))
 
 #define ecs_bootstrap_tag(world, name)\
-    ecs_set(world, name, EcsName, {.value = &#name[strlen("Ecs")], .symbol = #name});\
+    ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = #name});\
     ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
 
 
@@ -15711,7 +15722,7 @@ bool ecs_name_writer_write(
         writer->written += ECS_SIZEOF(int32_t);
         return writer->written != writer->len;
     } else {
-        memcpy(name_ptr, buffer, written);
+        ecs_os_memcpy(name_ptr, buffer, written);
         writer->written += written;
         return false;
     }
@@ -15980,7 +15991,7 @@ ecs_size_t ecs_table_writer(
             written = size;
         }
 
-        memcpy(ECS_OFFSET(writer->column_data, writer->column_written), buffer, written);
+        ecs_os_memcpy(ECS_OFFSET(writer->column_data, writer->column_written), buffer, written);
         writer->column_written += written;
         written = (((written - 1) / ECS_SIZEOF(int32_t)) + 1) * ECS_SIZEOF(int32_t);
 
@@ -17118,7 +17129,7 @@ ecs_size_t ecs_table_reader(
             read = size;
         }
 
-        memcpy(buffer, ECS_OFFSET(reader->column_data, reader->column_written), read);
+        ecs_os_memcpy(buffer, ECS_OFFSET(reader->column_data, reader->column_written), read);
         reader->column_written += read;
         ecs_assert(reader->column_written <= column_bytes, ECS_INTERNAL_ERROR, NULL);
 
@@ -17169,7 +17180,7 @@ ecs_size_t ecs_table_reader(
 
             reader->name_written += ECS_SIZEOF(int32_t);
         } else {
-            memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
+            ecs_os_memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
             memset(ECS_OFFSET(buffer, read), 0, ECS_SIZEOF(int32_t) - read);
             reader->name_written += read;
         }
@@ -17517,7 +17528,7 @@ void* ecs_os_memdup(
     
     void *dst = ecs_os_malloc(size);
     ecs_assert(dst != NULL, ECS_OUT_OF_MEMORY, NULL);
-    memcpy(dst, src, size);  
+    ecs_os_memcpy(dst, src, size);  
     return dst;  
 }
 
@@ -18264,7 +18275,7 @@ ecs_type_t ecs_bootstrap_type(
     ecs_new_component(world, ecs_entity(name), #name, sizeof(name), ECS_ALIGNOF(name))
 
 #define ecs_bootstrap_tag(world, name)\
-    ecs_set(world, name, EcsName, {.value = &#name[strlen("Ecs")], .symbol = #name});\
+    ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = #name});\
     ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
 
 
@@ -20416,7 +20427,7 @@ ecs_type_t ecs_bootstrap_type(
     ecs_new_component(world, ecs_entity(name), #name, sizeof(name), ECS_ALIGNOF(name))
 
 #define ecs_bootstrap_tag(world, name)\
-    ecs_set(world, name, EcsName, {.value = &#name[strlen("Ecs")], .symbol = #name});\
+    ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = #name});\
     ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
 
 
@@ -23076,7 +23087,7 @@ const char* get_entity_name(
 {
     const char *prefix = world->name_prefix;
     if (type_name && prefix) {
-        size_t len = strlen(prefix);
+        ecs_size_t len = ecs_os_strlen(prefix);
         if (!strncmp(type_name, prefix, len) && (isupper(type_name[len]) || type_name[len] == '_')) {
             if (type_name[len] == '_') {
                 return type_name + len + 1;
@@ -23456,7 +23467,7 @@ void _bootstrap_component(
     
     c_info[index].size = size;
     c_info[index].alignment = alignment;
-    id_data[index].value = &id[strlen("Ecs")]; /* Skip prefix */
+    id_data[index].value = &id[ecs_os_strlen("Ecs")]; /* Skip prefix */
     id_data[index].symbol = id;
     id_data[index].alloc_value = NULL;
 }

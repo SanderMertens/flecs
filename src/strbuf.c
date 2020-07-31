@@ -32,7 +32,7 @@ void ecs_strbuf_grow_str(
     b->current = (ecs_strbuf_element*)e;
     b->elementCount ++;
     e->super.buffer_embedded = false;
-    e->super.pos = size ? size : (int32_t)strlen(str);
+    e->super.pos = size ? size : (int32_t)ecs_os_strlen(str);
     e->super.next = NULL;
     e->super.buf = str;
     e->alloc_str = alloc_str;
@@ -353,7 +353,7 @@ char* ecs_strbuf_get(ecs_strbuf_t *b) {
             char* ptr = result;
 
             do {
-                memcpy(ptr, e->buf, e->pos);
+                ecs_os_memcpy(ptr, e->buf, e->pos);
                 ptr += e->pos;
                 next = e->next;
                 if (e != &b->firstElement.super) {

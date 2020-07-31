@@ -73,7 +73,7 @@ ecs_type_t entities_to_type(
         ecs_vector_t *result = NULL;
         ecs_vector_set_count(&result, ecs_entity_t, entities->count);
         ecs_entity_t *array = ecs_vector_first(result, ecs_entity_t);
-        memcpy(array, entities->array, ECS_SIZEOF(ecs_entity_t) * entities->count);
+        ecs_os_memcpy(array, entities->array, ECS_SIZEOF(ecs_entity_t) * entities->count);
         return result;
     } else {
         return NULL;
@@ -782,7 +782,7 @@ ecs_table_t *find_or_create(
     if (!ecs_entity_array_is_ordered(entities)) {
         ecs_size_t size = ECS_SIZEOF(ecs_entity_t) * type_count;
         ordered = ecs_os_alloca(size);
-        memcpy(ordered, entities->array, size);
+        ecs_os_memcpy(ordered, entities->array, size);
         qsort(ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare);
         type_count = ecs_entity_array_dedup(ordered, type_count);
     } else {

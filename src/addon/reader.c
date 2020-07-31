@@ -243,7 +243,7 @@ ecs_size_t ecs_table_reader(
             read = size;
         }
 
-        memcpy(buffer, ECS_OFFSET(reader->column_data, reader->column_written), read);
+        ecs_os_memcpy(buffer, ECS_OFFSET(reader->column_data, reader->column_written), read);
         reader->column_written += read;
         ecs_assert(reader->column_written <= column_bytes, ECS_INTERNAL_ERROR, NULL);
 
@@ -294,7 +294,7 @@ ecs_size_t ecs_table_reader(
 
             reader->name_written += ECS_SIZEOF(int32_t);
         } else {
-            memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
+            ecs_os_memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
             memset(ECS_OFFSET(buffer, read), 0, ECS_SIZEOF(int32_t) - read);
             reader->name_written += read;
         }

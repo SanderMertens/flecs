@@ -154,11 +154,21 @@ int ecs_os_api_memcmp(
     return memcmp(ptr1, ptr2, (size_t)num);
 }
 
+static
+void* ecs_os_api_memcpy(
+    void *ptr1, 
+    const void *ptr2, 
+    ecs_size_t num)
+{
+    ecs_assert(num >= 0, ECS_INVALID_PARAMETER, NULL);
+    return memcpy(ptr1, ptr2, (size_t)num);
+}
+
 /* Replace dots with underscores */
 static
 char *module_file_base(const char *module, char sep) {
     char *base = ecs_os_strdup(module);
-    size_t i, len = strlen(base);
+    size_t i, len = ecs_os_strlen(base);
     for (i = 0; i < len; i ++) {
         if (base[i] == '.') {
             base[i] = sep;
@@ -229,6 +239,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.strdup = ecs_os_api_strdup;
     ecs_os_api.strlen = ecs_os_api_strlen;
     ecs_os_api.memcmp = ecs_os_api_memcmp;
+    ecs_os_api.memcpy = ecs_os_api_memcpy;
 
     ecs_os_api_impl(&ecs_os_api);
 

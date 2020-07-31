@@ -86,29 +86,29 @@ char* ecs_colorize(
             overrideColor = true;
 
             /* Custom colors */
-            if (!strncmp(&ptr[2], "]", strlen("]"))) {
+            if (!strncmp(&ptr[2], "]", ecs_os_strlen("]"))) {
                 autoColor = false;
-            } else if (!strncmp(&ptr[2], "green]", strlen("green]"))) {
+            } else if (!strncmp(&ptr[2], "green]", ecs_os_strlen("green]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
-            } else if (!strncmp(&ptr[2], "red]", strlen("red]"))) {
+            } else if (!strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_RED);
-            } else if (!strncmp(&ptr[2], "blue]", strlen("red]"))) {
+            } else if (!strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BLUE);
-            } else if (!strncmp(&ptr[2], "magenta]", strlen("magenta]"))) {
+            } else if (!strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_MAGENTA);
-            } else if (!strncmp(&ptr[2], "cyan]", strlen("cyan]"))) {
+            } else if (!strncmp(&ptr[2], "cyan]", ecs_os_strlen("cyan]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
-            } else if (!strncmp(&ptr[2], "yellow]", strlen("yellow]"))) {
+            } else if (!strncmp(&ptr[2], "yellow]", ecs_os_strlen("yellow]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_YELLOW);
-            } else if (!strncmp(&ptr[2], "grey]", strlen("grey]"))) {
+            } else if (!strncmp(&ptr[2], "grey]", ecs_os_strlen("grey]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREY);
-            } else if (!strncmp(&ptr[2], "white]", strlen("white]"))) {
+            } else if (!strncmp(&ptr[2], "white]", ecs_os_strlen("white]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else if (!strncmp(&ptr[2], "bold]", strlen("bold]"))) {
+            } else if (!strncmp(&ptr[2], "bold]", ecs_os_strlen("bold]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BOLD);
-            } else if (!strncmp(&ptr[2], "normal]", strlen("normal]"))) {
+            } else if (!strncmp(&ptr[2], "normal]", ecs_os_strlen("normal]"))) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else if (!strncmp(&ptr[2], "reset]", strlen("reset]"))) {
+            } else if (!strncmp(&ptr[2], "reset]", ecs_os_strlen("reset]"))) {
                 overrideColor = false;
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             } else {

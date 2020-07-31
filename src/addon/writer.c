@@ -30,7 +30,7 @@ bool ecs_name_writer_write(
         writer->written += ECS_SIZEOF(int32_t);
         return writer->written != writer->len;
     } else {
-        memcpy(name_ptr, buffer, written);
+        ecs_os_memcpy(name_ptr, buffer, written);
         writer->written += written;
         return false;
     }
@@ -299,7 +299,7 @@ ecs_size_t ecs_table_writer(
             written = size;
         }
 
-        memcpy(ECS_OFFSET(writer->column_data, writer->column_written), buffer, written);
+        ecs_os_memcpy(ECS_OFFSET(writer->column_data, writer->column_written), buffer, written);
         writer->column_written += written;
         written = (((written - 1) / ECS_SIZEOF(int32_t)) + 1) * ECS_SIZEOF(int32_t);
 
