@@ -1325,14 +1325,10 @@ void new(
     ecs_entity_t entity,
     ecs_entities_t *to_add)
 {
-    ecs_entities_t added = {
-        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_add->count)
-    };
     ecs_entity_info_t info = {0};
     ecs_table_t *table = ecs_table_traverse_add(
-        world, stage, stage->scope_table, to_add, &added);
-
-    new_entity(world, stage, entity, &info, table, &added);
+        world, stage, stage->scope_table, to_add, NULL);
+    new_entity(world, stage, entity, &info, table, to_add);
 }
 
 static

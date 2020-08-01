@@ -2318,6 +2318,7 @@ void ecs_table_free(
     ecs_vector_free(table->monitors);
     ecs_vector_free(table->on_set_all);
     ecs_vector_free(table->on_set_override);
+    ecs_vector_free(table->un_set_all);
     
     if (table->on_set) {
         int32_t i;
@@ -2871,7 +2872,7 @@ void merge_table_data(
     old_data->record_ptrs = NULL;    
 
     /* Mark entity column as dirty */
-    mark_table_dirty(new_table, 0);      
+    mark_table_dirty(new_table, 0); 
 }
 
 void ecs_table_merge(
@@ -2945,6 +2946,7 @@ void ecs_table_merge_data(
             /* If table has entities, merge with new data */
             merge_table_data(world, table, table, new_count, old_count, 
                 data, old_data);
+            ecs_os_free(data->columns);
         }
     } else {
         old_data = ecs_table_get_or_create_data(world, &world->stage, table);
@@ -4480,14 +4482,10 @@ void new(
     ecs_entity_t entity,
     ecs_entities_t *to_add)
 {
-    ecs_entities_t added = {
-        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_add->count)
-    };
     ecs_entity_info_t info = {0};
     ecs_table_t *table = ecs_table_traverse_add(
-        world, stage, stage->scope_table, to_add, &added);
-
-    new_entity(world, stage, entity, &info, table, &added);
+        world, stage, stage->scope_table, to_add, NULL);
+    new_entity(world, stage, entity, &info, table, to_add);
 }
 
 static
@@ -6742,7 +6740,7 @@ ecs_entity_t ecs_import_from_library(
     return result;
 }
 
-#define CHUNK_ALLOC_SIZE (4096)
+#define CHUNK_ALLOC_SIZE (65536)
 
 typedef struct chunk_t {
     void *data;
@@ -7197,9 +7195,11 @@ void ecs_sparse_restore(
     int32_t unused_count = ecs_vector_count(src->unused_elements);
     ecs_vector_set_count(&dst->unused_elements, int32_t, unused_count);
 
-    int32_t *dst_unused = ecs_vector_first(dst->unused_elements, int32_t);
-    int32_t *src_unused = ecs_vector_first(src->unused_elements, int32_t);
-    ecs_os_memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
+    if (unused_count) {
+        int32_t *dst_unused = ecs_vector_first(dst->unused_elements, int32_t);
+        int32_t *src_unused = ecs_vector_first(src->unused_elements, int32_t);
+        ecs_os_memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
+    }
 }
 
 void ecs_sparse_memory(
@@ -13806,7 +13806,6 @@ ecs_table_t* ecs_table_from_type(
 #define LOAD_FACTOR (1.5)
 #define KEY_SIZE (ECS_SIZEOF(ecs_map_key_t))
 #define BUCKET_COUNT (8)
-#define CHUNK_SIZE (64)
 #define ELEM_SIZE(elem_size) (KEY_SIZE + elem_size)
 #define BUCKET_SIZE(elem_size, offset)\
     (offset + BUCKET_COUNT * (ELEM_SIZE(elem_size)))
@@ -15311,8 +15310,6 @@ void ecs_snapshot_restore(
         if (table->flags & EcsTableHasBuiltins) {
             continue;
         }
-
-        // printf("restore [%s]\n", ecs_type_str(world, table->type));
 
         ecs_table_leaf_t *leaf = NULL;
         if (l < count) {

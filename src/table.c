@@ -575,6 +575,7 @@ void ecs_table_free(
     ecs_vector_free(table->monitors);
     ecs_vector_free(table->on_set_all);
     ecs_vector_free(table->on_set_override);
+    ecs_vector_free(table->un_set_all);
     
     if (table->on_set) {
         int32_t i;
@@ -1128,7 +1129,7 @@ void merge_table_data(
     old_data->record_ptrs = NULL;    
 
     /* Mark entity column as dirty */
-    mark_table_dirty(new_table, 0);      
+    mark_table_dirty(new_table, 0); 
 }
 
 void ecs_table_merge(
@@ -1202,6 +1203,7 @@ void ecs_table_merge_data(
             /* If table has entities, merge with new data */
             merge_table_data(world, table, table, new_count, old_count, 
                 data, old_data);
+            ecs_os_free(data->columns);
         }
     } else {
         old_data = ecs_table_get_or_create_data(world, &world->stage, table);

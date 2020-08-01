@@ -1,6 +1,6 @@
 #include "flecs.h"
 
-#define CHUNK_ALLOC_SIZE (4096)
+#define CHUNK_ALLOC_SIZE (65536)
 
 typedef struct chunk_t {
     void *data;
@@ -455,9 +455,11 @@ void ecs_sparse_restore(
     int32_t unused_count = ecs_vector_count(src->unused_elements);
     ecs_vector_set_count(&dst->unused_elements, int32_t, unused_count);
 
-    int32_t *dst_unused = ecs_vector_first(dst->unused_elements, int32_t);
-    int32_t *src_unused = ecs_vector_first(src->unused_elements, int32_t);
-    ecs_os_memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
+    if (unused_count) {
+        int32_t *dst_unused = ecs_vector_first(dst->unused_elements, int32_t);
+        int32_t *src_unused = ecs_vector_first(src->unused_elements, int32_t);
+        ecs_os_memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
+    }
 }
 
 void ecs_sparse_memory(

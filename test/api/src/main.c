@@ -96,6 +96,7 @@ void Remove_type_from_empty(void);
 void Remove_not_added(void);
 
 // Testsuite 'Hierarchies'
+void Hierarchies_empty_scope(void);
 void Hierarchies_get_parent(void);
 void Hierarchies_get_parent_from_nested(void);
 void Hierarchies_get_parent_from_nested_2(void);
@@ -1408,8 +1409,12 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         NULL,
         NULL,
-        48,
+        49,
         (bake_test_case[]){
+            {
+                "empty_scope",
+                Hierarchies_empty_scope
+            },
             {
                 "get_parent",
                 Hierarchies_get_parent

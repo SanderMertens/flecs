@@ -109,6 +109,7 @@
         }, {
             "id": "Hierarchies",
             "testcases": [
+                "empty_scope",
                 "get_parent",
                 "get_parent_from_nested",
                 "get_parent_from_nested_2",

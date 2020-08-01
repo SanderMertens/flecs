@@ -121,6 +121,8 @@ typedef int32_t ecs_size_t;
 #define ECS_ALIGNOF(T) (int64_t)alignof(T)
 #elif defined(_MSC_VER)
 #define ECS_ALIGNOF(T) (int64_t)__alignof(T)
+#elif defined(__GNUC__)
+#define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
 #else
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif

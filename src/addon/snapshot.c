@@ -193,8 +193,6 @@ void ecs_snapshot_restore(
             continue;
         }
 
-        // printf("restore [%s]\n", ecs_type_str(world, table->type));
-
         ecs_table_leaf_t *leaf = NULL;
         if (l < count) {
             leaf = &leafs[l];

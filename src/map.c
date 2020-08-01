@@ -3,7 +3,6 @@
 #define LOAD_FACTOR (1.5)
 #define KEY_SIZE (ECS_SIZEOF(ecs_map_key_t))
 #define BUCKET_COUNT (8)
-#define CHUNK_SIZE (64)
 #define ELEM_SIZE(elem_size) (KEY_SIZE + elem_size)
 #define BUCKET_SIZE(elem_size, offset)\
     (offset + BUCKET_COUNT * (ELEM_SIZE(elem_size)))

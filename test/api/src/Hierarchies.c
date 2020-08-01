@@ -1,5 +1,13 @@
 #include <api.h>
 
+void Hierarchies_empty_scope() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_get_scope(world) == 0);
+
+    ecs_fini(world);
+}
+
 void Hierarchies_get_parent() {
     ecs_world_t *world = ecs_init();
 

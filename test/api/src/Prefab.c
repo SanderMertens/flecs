@@ -1254,6 +1254,8 @@ void Prefab_prefab_w_grandchild() {
     test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
+
+    ecs_fini(world);
 }
 
 void Prefab_prefab_w_base_w_child() {
@@ -1295,7 +1297,9 @@ void Prefab_prefab_w_base_w_child() {
     const Position *p_child = ecs_get(world, e_child, Position);
     test_assert(p_child != NULL);
     test_int(p_child->x, 2);
-    test_int(p_child->y, 3);    
+    test_int(p_child->y, 3);  
+
+    ecs_fini(world);  
 }
 
 void Prefab_prefab_w_child_w_base() {
@@ -1336,7 +1340,9 @@ void Prefab_prefab_w_child_w_base() {
     const Velocity *v_child = ecs_get(world, e_child, Velocity);
     test_assert(v_child != NULL);
     test_int(v_child->x, 3);
-    test_int(v_child->y, 4);     
+    test_int(v_child->y, 4);
+
+    ecs_fini(world);  
 }
 
 void Prefab_prefab_w_child_w_base_w_children() {
@@ -1393,6 +1399,8 @@ void Prefab_prefab_w_child_w_base_w_children() {
     test_assert(p_base_child != p_child);
     test_int(p_base_child->x, 4);
     test_int(p_base_child->y, 5);
+
+    ecs_fini(world);
 }
 
 void Prefab_prefab_w_child_new_w_count() {
