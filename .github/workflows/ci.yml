@@ -61,6 +61,8 @@ jobs:
 
   windows:
     timeout-minutes: 20
+    runs-on: windows-latest
+    
     steps:
     - uses: actions/checkout@v2
     - name: Install bake
