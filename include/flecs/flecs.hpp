@@ -794,21 +794,31 @@ public:
         : m_world( world )
         , m_id( ecs_new_w_type(m_world, 0) ) { }
 
-    entity(const world& world, const char *name) 
+    entity(const world& world, const char *name, bool is_component = false) 
         : m_world( world.c_ptr() )
         , m_id( ecs_lookup_path_w_sep(m_world, 0, name, "::", "::") ) 
         { 
             if (!m_id) {
-                m_id = ecs_new_from_path_w_sep(m_world, 0, name, "::", "::");
+                if (is_component) {
+                    m_id = ecs_new_component_id(m_world);
+                }
+
+                m_id = ecs_add_path_w_sep(
+                    m_world, m_id, 0, name, "::", "::");
             }
         }
 
-    entity(const world& world, std::string name) 
+    entity(const world& world, std::string name, bool is_component = false) 
         : m_world( world.c_ptr() )
         , m_id( ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::") ) 
         { 
             if (!m_id) {
-                m_id = ecs_new_from_path_w_sep(m_world, 0, name.c_str(), "::", "::");
+                if (is_component) {
+                    m_id = ecs_new_component_id(m_world);
+                }
+
+                m_id = ecs_add_path_w_sep(
+                    m_world, m_id, 0, name.c_str(), "::", "::");
             }
         }         
 
@@ -1210,7 +1220,9 @@ void component_move(
 template <typename T>
 class pod_component : public entity {
 public:
-    pod_component(const flecs::world& world, const char *name) : entity(world, name) {
+    pod_component(const flecs::world& world, const char *name) : 
+        entity(world, name, true) 
+    {
         ecs_new_component(world.c_ptr(), this->m_id, nullptr, sizeof(T), alignof(T));
         component_info<T>::init(world, this->m_id);
         component_info<const T>::init(world, this->m_id);

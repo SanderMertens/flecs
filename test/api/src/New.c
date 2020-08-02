@@ -256,3 +256,41 @@ void New_recycle_staged_delete() {
 
     ecs_fini(world);
 }
+
+void New_new_id() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    test_assert(!ecs_get_type(world, e));
+
+    ecs_fini(world);
+}
+
+void New_new_component_id() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_component_id(world);
+    test_assert(e != 0);
+    test_assert(e < ECS_HI_COMPONENT_ID);
+    test_assert(!ecs_get_type(world, e));
+
+    ecs_fini(world);
+}
+
+void New_new_hi_component_id() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    ecs_entity_t c;
+    do {
+        c = ecs_new_component_id(world);
+    } while (c < ECS_HI_COMPONENT_ID);
+
+    test_assert(c != e);
+    test_assert(c > e);
+
+    ecs_fini(world);
+}

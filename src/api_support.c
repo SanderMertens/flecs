@@ -254,7 +254,7 @@ ecs_entity_t ecs_new_component(
     ecs_entity_t result = e ? e : lookup(world, e_name, ecs_type(EcsComponent));
     if (!result || e) {
         ecs_stage_t *stage = ecs_get_stage(&world);
-        result = e ? e : ++ world->stats.last_component_id;
+        result = e ? e : ecs_new_component_id(world);
 
         ecs_set(world, result, EcsComponent, {
             .size = ecs_from_size_t(size),

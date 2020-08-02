@@ -2892,6 +2892,29 @@ void ecs_tracing_enable(
 //// Entity Creation
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Create new entity id.
+ * This operation returns an unused entity id.
+ *
+ * @param world The world.
+ * @return The new entity id.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_new_id(
+    ecs_world_t *world);
+
+/** Create new component id.
+ * This operation returns a new component id. Component ids are the same as
+ * entity ids, but can make use of the [1 .. ECS_HI_COMPONENT_ID] range.
+ * 
+ * This operation does not recycle ids.
+ *
+ * @param world The world.
+ * @return The new component id.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_new_component_id(
+    ecs_world_t *world);
+
 /** Create new entity.
  * This operation creates a new entity with a single entity in its type. The
  * entity may contain type roles. This operation recycles ids.
@@ -4159,6 +4182,53 @@ ecs_entity_t ecs_new_from_path_w_sep(
  */
 #define ecs_new_from_fullpath(world, path)\
     ecs_new_from_path_w_sep(world, 0, path, ".", NULL)
+
+/** Add specified path to entity.
+ * This operation is similar to ecs_new_from_path, but will instead add the path
+ * to an existing entity.
+ *
+ * If an entity already exists for the path, it will be returned instead.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path.
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @param sep The separator used in the path.
+ * @param prefix The prefix used in the path.
+ * @return The entity.
+ */ 
+FLECS_EXPORT
+ecs_entity_t ecs_add_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+/** Add specified path to entity.
+ * Same as ecs_add_from_path_w_sep, but with defaults for sep and prefix.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path. 
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_add_path(world, entity, parent, path)\
+    ecs_add_path_w_sep(world, entity, parent, path, ".", NULL)
+
+/** Add specified path to entity.
+ * Same as ecs_add_from_path, but entity will be created from the current scope,
+ * or root scope if no scope is set.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_add_fullpath(world, entity, path)\
+    ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6508,21 +6578,31 @@ public:
         : m_world( world )
         , m_id( ecs_new_w_type(m_world, 0) ) { }
 
-    entity(const world& world, const char *name) 
+    entity(const world& world, const char *name, bool is_component = false) 
         : m_world( world.c_ptr() )
         , m_id( ecs_lookup_path_w_sep(m_world, 0, name, "::", "::") ) 
         { 
             if (!m_id) {
-                m_id = ecs_new_from_path_w_sep(m_world, 0, name, "::", "::");
+                if (is_component) {
+                    m_id = ecs_new_component_id(m_world);
+                }
+
+                m_id = ecs_add_path_w_sep(
+                    m_world, m_id, 0, name, "::", "::");
             }
         }
 
-    entity(const world& world, std::string name) 
+    entity(const world& world, std::string name, bool is_component = false) 
         : m_world( world.c_ptr() )
         , m_id( ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::") ) 
         { 
             if (!m_id) {
-                m_id = ecs_new_from_path_w_sep(m_world, 0, name.c_str(), "::", "::");
+                if (is_component) {
+                    m_id = ecs_new_component_id(m_world);
+                }
+
+                m_id = ecs_add_path_w_sep(
+                    m_world, m_id, 0, name.c_str(), "::", "::");
             }
         }         
 
@@ -6924,7 +7004,9 @@ void component_move(
 template <typename T>
 class pod_component : public entity {
 public:
-    pod_component(const flecs::world& world, const char *name) : entity(world, name) {
+    pod_component(const flecs::world& world, const char *name) : 
+        entity(world, name, true) 
+    {
         ecs_new_component(world.c_ptr(), this->m_id, nullptr, sizeof(T), alignof(T));
         component_info<T>::init(world, this->m_id);
         component_info<const T>::init(world, this->m_id);
