@@ -74,7 +74,7 @@ jobs:
         dir
         cd ..
         dir
-        bake.exe setup --local
+        bake setup --local
         set PATH=%USERPROFILE%\bake;%PATH%
         cd ..
 
