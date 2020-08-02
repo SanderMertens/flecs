@@ -65,7 +65,7 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
-    - uses: ilammy/msvc-dev-cmd@v1
+    - uses: microsoft/setup-msbuild@v1.0.1
     - name: Install bake
       run: |
         git clone https://github.com/SanderMertens/bake
