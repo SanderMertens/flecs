@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   linux:
-    timeout-minutes: 20
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -50,17 +50,12 @@ jobs:
 
     - name: Build Flecs (release)
       run: bake --strict --cfg release
-
-    - name: Build examples
-      run: |
-        bake examples/c
-        bake examples/cpp
          
     - name: Run tests
       run: bake test 
 
   windows:
-    timeout-minutes: 20
+    timeout-minutes: 10
     runs-on: windows-latest
     
     steps:
@@ -71,18 +66,14 @@ jobs:
         git clone https://github.com/SanderMertens/bake
         cd bake\build-Windows
         nmake
-        dir
         cd ..
-        dir
         ./bake setup --local
-        set PATH=%USERPROFILE%\bake;%PATH%
-        cd ..
 
     - name: Build Flecs
-      run: bake --strict
+      run: bake/bake --strict
 
     - name: Run tests
       run: |
-        bake run test\cpp_api
-        bake run test\api
-        bake run test\collections
+        bake/bake run test\cpp_api
+        bake/bake run test\api
+        bake/bake run test\collections
