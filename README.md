@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 ```
 
 ## Building
-Add flecs.c and flecs.h to your project.
+The easiest way to add Flecs to a project is to add [flecs.c](https://github.com/flecs/master/flecs.c) and [flecs.h](https://github.com/flecs/master/flecs.h) to your source code. Alternatively you can also build Flecs as a library by using the cmake, meson, bazel or bake buildfiles.
 
 ## Modules
 The following modules are available in [flecs-hub](https://github.com/flecs-hub) and are compatible with v2:

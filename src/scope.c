@@ -447,8 +447,9 @@ const char* ecs_set_name_prefix(
     return old_prefix;
 }
 
-ecs_entity_t ecs_new_from_path_w_sep(
+ecs_entity_t ecs_add_path_w_sep(
     ecs_world_t *world,
+    ecs_entity_t entity,
     ecs_entity_t parent,
     const char *path,
     const char *sep,
@@ -465,6 +466,11 @@ ecs_entity_t ecs_new_from_path_w_sep(
         ecs_entity_t e = ecs_lookup_child(world, cur, buff);
         if (!e) {
             char *name = ecs_os_strdup(buff);
+
+            /* If this is the last entity in the path, use the provided id */
+            if (entity && !path_elem(ptr, buff, sep)) {
+                e = entity;
+            }
             
             e = ecs_set(world, e, EcsName, {
                 .value = name,
@@ -482,4 +488,14 @@ ecs_entity_t ecs_new_from_path_w_sep(
     }
 
     return cur;
+}
+
+ecs_entity_t ecs_new_from_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix)
+{
+    return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }

@@ -3171,6 +3171,7 @@ void comp_mask_set(
     ecs_entity_t value)
 {
     ecs_assert(value < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(value < ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
     int32_t index = comp_mask_index((int32_t)value);
     mask[index] |= (ecs_entity_t)1 << (value & 0x3F);
 }
@@ -3181,6 +3182,7 @@ bool comp_mask_is_set(
     ecs_entity_t value)
 {
     ecs_assert(value < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(value < ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
     int32_t index = comp_mask_index((int32_t)value);
     return (mask[index] & (ecs_entity_t)1 << (value & 0x3F)) != 0;
 }
@@ -3244,36 +3246,6 @@ void* get_component(
     });
     
     return NULL;
-}
-
-/* Get new entity handle */
-static
-ecs_entity_t new_entity_handle(
-    ecs_world_t *world)
-{
-    ecs_entity_t entity;
-
-    if (!world->in_progress) {
-        if (!(entity = ecs_eis_recycle(&world->stage))) {
-            entity = ++ world->stats.last_id;
-        }
-    } else {
-        int32_t thread_count = ecs_vector_count(world->workers);
-        if (thread_count >= 1) { 
-            /* Can't atomically increase number above max int */
-            ecs_assert(
-                world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
-
-            entity = (ecs_entity_t)ecs_os_ainc((int32_t*)&world->stats.last_id);
-        } else {
-            entity = ++ world->stats.last_id;
-        } 
-    }
-
-    ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, 
-        ECS_OUT_OF_RANGE, NULL);
-
-    return entity;
 }
 
 /* Utility to compute actual row from row in record */
@@ -4888,7 +4860,50 @@ ecs_entity_t ecs_find_in_type(
     return 0;
 }
 
+
 /* -- Public functions -- */
+
+ecs_entity_t ecs_new_id(
+    ecs_world_t *world)
+{
+    ecs_entity_t entity;
+
+    if (!world->in_progress) {
+        if (!(entity = ecs_eis_recycle(&world->stage))) {
+            entity = ++ world->stats.last_id;
+        }
+    } else {
+        int32_t thread_count = ecs_vector_count(world->workers);
+        if (thread_count >= 1) { 
+            /* Can't atomically increase number above max int */
+            ecs_assert(
+                world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
+
+            entity = (ecs_entity_t)ecs_os_ainc((int32_t*)&world->stats.last_id);
+        } else {
+            entity = ++ world->stats.last_id;
+        } 
+    }
+
+    ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, 
+        ECS_OUT_OF_RANGE, NULL);
+
+    return entity;
+}
+
+ecs_entity_t ecs_new_component_id(
+    ecs_world_t *world)
+{
+    /* Cannot issue new component ids while world is in progress */
+    ecs_assert(!world->in_progress, ECS_INVALID_PARAMETER, NULL);
+
+    if (world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
+        return world->stats.last_component_id ++;
+    } else {
+        /* If the low component ids are depleted, return a regular entity id */
+        return ecs_new_id(world);
+    }
+}
 
 ecs_entity_t ecs_new_w_type(
     ecs_world_t *world,
@@ -4896,7 +4911,7 @@ ecs_entity_t ecs_new_w_type(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);    
-    ecs_entity_t entity = new_entity_handle(world);
+    ecs_entity_t entity = ecs_new_id(world);
 
     if (type || stage->scope) {
         ecs_entities_t to_add = ecs_type_to_entities(type);
@@ -4914,7 +4929,7 @@ ecs_entity_t ecs_new_w_entity(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);    
-    ecs_entity_t entity = new_entity_handle(world);
+    ecs_entity_t entity = ecs_new_id(world);
 
     if (component || stage->scope) {
         ecs_entities_t to_add = {
@@ -5279,7 +5294,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
     };
 
     if (!entity) {
-        entity = new_entity_handle(world);
+        entity = ecs_new_id(world);
         ecs_entity_t scope = stage->scope;
         if (scope) {
             ecs_add_entity(world, entity, ECS_CHILDOF | scope);
@@ -8828,8 +8843,9 @@ const char* ecs_set_name_prefix(
     return old_prefix;
 }
 
-ecs_entity_t ecs_new_from_path_w_sep(
+ecs_entity_t ecs_add_path_w_sep(
     ecs_world_t *world,
+    ecs_entity_t entity,
     ecs_entity_t parent,
     const char *path,
     const char *sep,
@@ -8846,6 +8862,11 @@ ecs_entity_t ecs_new_from_path_w_sep(
         ecs_entity_t e = ecs_lookup_child(world, cur, buff);
         if (!e) {
             char *name = ecs_os_strdup(buff);
+
+            /* If this is the last entity in the path, use the provided id */
+            if (entity && !path_elem(ptr, buff, sep)) {
+                e = entity;
+            }
             
             e = ecs_set(world, e, EcsName, {
                 .value = name,
@@ -8863,6 +8884,16 @@ ecs_entity_t ecs_new_from_path_w_sep(
     }
 
     return cur;
+}
+
+ecs_entity_t ecs_new_from_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix)
+{
+    return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 
 static
@@ -20002,7 +20033,7 @@ ecs_entity_t ecs_new_component(
     ecs_entity_t result = e ? e : lookup(world, e_name, ecs_type(EcsComponent));
     if (!result || e) {
         ecs_stage_t *stage = ecs_get_stage(&world);
-        result = e ? e : ++ world->stats.last_component_id;
+        result = e ? e : ecs_new_component_id(world);
 
         ecs_set(world, result, EcsComponent, {
             .size = ecs_from_size_t(size),

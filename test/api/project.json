@@ -30,7 +30,10 @@
                 "recycle_id_w_entity",
                 "recycle_id_w_type",
                 "recycle_empty_staged_delete",
-                "recycle_staged_delete"
+                "recycle_staged_delete",
+                "new_id",
+                "new_component_id",
+                "new_hi_component_id"
             ]
         }, {
             "id": "New_w_Count",
@@ -157,6 +160,15 @@
                 "new_from_path_depth_0",
                 "new_from_path_depth_1",
                 "new_from_path_depth_2",
+                "new_from_path_existing_depth_0",
+                "new_from_path_existing_depth_1",
+                "new_from_path_existing_depth_2",
+                "add_path_depth_0",
+                "add_path_depth_1",
+                "add_path_depth_2", 
+                "add_path_existing_depth_0",
+                "add_path_existing_depth_1",
+                "add_path_existing_depth_2",                                
                 "new_w_child_in_root"
             ]
         }, {
