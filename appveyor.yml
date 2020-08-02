@@ -26,4 +26,3 @@ build_script:
 test_script:
 - cmd: bake run test/collections
 - cmd: bake run test/api
-
