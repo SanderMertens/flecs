@@ -27,10 +27,6 @@
 #ifndef FLECS_API_DEFINES_H
 #define FLECS_API_DEFINES_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Standard library dependencies */
 #include <time.h>
 #include <stdlib.h>
@@ -89,6 +85,10 @@ extern "C" {
 
 #endif
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef __BAKE_LEGACY__
 #define FLECS_LEGACY
