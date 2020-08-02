@@ -1,7 +1,8 @@
 ![flecs](https://user-images.githubusercontent.com/9919222/84740976-2ecc8580-af63-11ea-963e-c5da3be54101.png)
 
-[![Join the chat at https://gitter.im/flecsdev/community](https://badges.gitter.im/flecsdev/community.svg)](https://gitter.im/flecsdev/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/MRSAZqb) [![Build Status](https://travis-ci.org/SanderMertens/flecs.svg?branch=master)](https://travis-ci.org/SanderMertens/flecs)
+[![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/MRSAZqb) 
+![CI build](https://github.com/SanderMertens/flecs/workflows/CI/badge.svg)
+[![Build Status](https://travis-ci.org/SanderMertens/flecs.svg?branch=master)](https://travis-ci.org/SanderMertens/flecs)
 [![Build status](https://ci.appveyor.com/api/projects/status/t99p1per439ctg1a/branch/master?svg=true)](https://ci.appveyor.com/project/SanderMertens/flecs/branch/master)
 [![codecov](https://codecov.io/gh/SanderMertens/flecs/branch/master/graph/badge.svg)](https://codecov.io/gh/SanderMertens/flecs)
 
@@ -9,11 +10,10 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 
 - Blazing fast iteration speeds with direct access to raw C arrays across multiple components
 - Built-in support for entity hierarchies, prefabs, nested prefabs and prefab variants
-- An efficient lock-free staging architecture allows for modifying entities across multiple threads
+- An efficient lock-free architecture allows for modifying entities across multiple threads
 - Expressive entity queries with support for and, or, not and optional operators
 - Systems that are time triggered, rate triggered, run every frame or run only when needed
-- Modules enable organizing systems & components in reusable plug & play units
-- A customizable core that makes it easy to integrate Flecs into other frameworks / game engines
+- A customizable core that lets you include only the features you need
 
 This is Flecs v2, which is a breaking change from v1. For the last v1 release, see:
 https://github.com/SanderMertens/flecs/releases/tag/v1.3
