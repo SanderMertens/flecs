@@ -4,6 +4,7 @@ This document provides a quick overview of Flecs features.
 ## World
 The world is the container for all of your ECS data. An application can have multiple worlds. To create & delete a world, simply do:
 
+=== C
 ```c
 ecs_world_t *world = ecs_init();
 
@@ -11,6 +12,8 @@ ecs_world_t *world = ecs_init();
 
 ecs_fini(world);
 ```
+
+=== C++
 ```cpp
 flecs::world world();
 
@@ -20,18 +23,24 @@ flecs::world world();
 ## Entities
 An entity (`ecs_entity_t`) is a 64-bit integer that uniquely identifies a thing or object in your application. Entities are created like this:
 
+=== C
 ```c
 ecs_entity_t e = ecs_new(world, 0);
 ```
+
+=== C++
 ```cpp
 auto e = flecs::entity(world);
 ```
 
 You can also use plain numbers:
 
+=== C
 ```c
 ecs_entity_t e = 1000;
 ```
+
+=== C++
 ```cpp
 auto e = flecs::entity(world, 1000);
 ```
@@ -41,6 +50,7 @@ When not using an explicit id, the framework guarantees that the returned id is 
 ## Components
 A component is a plain datatype that can be attached to an entity. An entity can contain any number of components. Components must be registered with the world like this:
 
+=== C
 ```c
 // Components can be defined from regular types
 typedef struct Position {
@@ -54,6 +64,8 @@ int main() {
     ECS_COMPONENT(world, Position);
 }
 ```
+
+=== C++
 ```cpp
 // Components can be defined from regular types
 struct Position {
@@ -70,27 +82,36 @@ int main() {
 
 Once registered, a component can be added to an entity using `add`:
 
+=== C
 ```c
 ecs_add(world, e, Position);
 ```
+
+=== C++
 ```cpp
 e.add<Position>();
 ```
 
 You can also create an entity with a component already added:
 
+=== C
 ```c
 ecs_entity_t e = ecs_new(world, Position);
 ```
+
+=== C++
 ```cpp
 auto e = flecs::entity(world).add<Position>();
 ```
 
 An application can also use `set` to assign a value to the component. If the component was not added yet, `set` will add it implicitly:
 
+=== C
 ```c
 ecs_set(world, e, Position, {10, 20});
 ```
+
+=== C++
 ```cpp
 e.set<Position>({10, 20});
 ```
