@@ -90,7 +90,7 @@ Reader_writer | Serialize components to series of bytes          | FLECS_READER_
 Snapshot      | Take a snapshot that can be restored  afterwards | FLECS_SNAPSHOT      |
 
 #### Builtin modules
-Addons are located in the `src/modules` and `include/modules` folders. The following modules are available:
+Modules are located in the `src/modules` and `include/modules` folders. The following modules are available:
 
 Module        | Description                                      | Constant            |
 --------------|--------------------------------------------------|---------------------|
