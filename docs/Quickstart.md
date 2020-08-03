@@ -11,7 +11,7 @@ The world is the container for all of your ECS data. An application can have mul
     /* Application */
 
     ecs_fini(world);
-```
+    ```
 
 === "C++"
     ```cpp
