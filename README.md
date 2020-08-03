@@ -89,8 +89,8 @@ Queue         | A queue data structure                           | FLECS_QUEUE  
 Reader_writer | Serialize components to series of bytes          | FLECS_READER_WRITER | 
 Snapshot      | Take a snapshot that can be restored  afterwards | FLECS_SNAPSHOT      |
 
-### Modules
-Addons are located in the `src/modules` and `include/modules` folders. The following addons are available:
+### Builtin modules
+Addons are located in the `src/modules` and `include/modules` folders. The following modules are available:
 
 Module        | Description                                      | Constant            |
 --------------|--------------------------------------------------|---------------------|
