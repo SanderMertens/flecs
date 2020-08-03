@@ -5,6 +5,7 @@ This document provides a quick overview of Flecs features.
 The world is the container for all of your ECS data. An application can have multiple worlds. To create & delete a world, simply do:
 
 === "C"
+
     ```c
     ecs_world_t *world = ecs_init();
 
@@ -14,6 +15,7 @@ The world is the container for all of your ECS data. An application can have mul
     ```
 
 === "C++"
+
     ```cpp
     flecs::world world();
 
