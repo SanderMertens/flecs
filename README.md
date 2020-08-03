@@ -35,41 +35,6 @@ ECS (Entity Component System) is a way to organize code that is mostly used in g
 ## Example
 This is a simple flecs example in the C++11 API:
 
-```c
-typedef struct Position {
-    float x;
-    float y;
-} Position;
-
-typedef float Speed;
-
-void Move(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
-    Speed *s = ecs_column(it, Speed, 2);
-    
-    for (int i = 0; i < it->count; i ++) {
-        p[i].x += s[i] * it->delta_time;
-        p[i].y += s[i] * it->delta_time;
-    }
-}
-
-int main(int argc, char *argv[]) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Speed);
-    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Speed);
-
-    ecs_entity_t e = ecs_new(world, 0);    
-    ecs_set(world, e, Position, {0, 0});
-    ecs_set(world, e, Speed, {1});
-    
-    while (ecs_progress(world, 0));
-
-    return ecs_fini(world);
-}
-```
-
 ```c++
 struct Position {
     float x;
