@@ -1204,7 +1204,12 @@ public:
     T* get_mut(bool *is_added = nullptr) const {
         return static_cast<T*>(
             ecs_get_mut_w_entity(
-                m_world, m_id, component_info<T>::s_entity), is_added);
+                m_world, m_id, component_info<T>::s_entity, is_added));
+    }
+
+    template <typename T>
+    void modified() {
+        ecs_modified_w_entity(m_world, m_id, component_info<T>::s_entity);
     }
 
     template <typename T>

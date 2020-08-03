@@ -241,3 +241,53 @@ void ComponentLifecycle_non_pod_override() {
     test_assert(str != NULL);
     test_assert(str->value == "Hello World");
 }
+
+void ComponentLifecycle_get_mut_new() {
+    flecs::world world;
+
+    flecs::component<POD>(world, "POD");
+
+    auto e = flecs::entity(world);
+    test_assert(e.id() != 0);
+
+    POD* value = e.get_mut<POD>();
+    test_assert(value != NULL);
+
+    POD::ctor_invoked = 1;
+    POD::dtor_invoked = 0;
+    POD::copy_invoked = 0;
+    POD::move_invoked = 0;
+
+    e.modified<POD>();
+
+    POD::ctor_invoked = 1;
+    POD::dtor_invoked = 0;
+    POD::copy_invoked = 0;
+    POD::move_invoked = 0;    
+}
+
+void ComponentLifecycle_get_mut_existing() {
+    flecs::world world;
+
+    flecs::component<POD>(world, "POD");
+
+    auto e = flecs::entity(world);
+    test_assert(e.id() != 0);
+
+    POD* value = e.get_mut<POD>();
+    test_assert(value != NULL);
+
+    POD::ctor_invoked = 1;
+    POD::dtor_invoked = 0;
+    POD::copy_invoked = 0;
+    POD::move_invoked = 0;
+
+    value = e.get_mut<POD>();
+    test_assert(value != NULL);
+
+    /* Repeated calls to get_mut should not invoke constructor */
+    POD::ctor_invoked = 1;
+    POD::dtor_invoked = 0;
+    POD::copy_invoked = 0;
+    POD::move_invoked = 0;
+}

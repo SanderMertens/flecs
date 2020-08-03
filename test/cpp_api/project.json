@@ -99,7 +99,9 @@
                 "non_pod_add",
                 "non_pod_remove",
                 "non_pod_set",
-                "non_pod_override"
+                "non_pod_override",
+                "get_mut_new",
+                "get_mut_existing"
             ]
         }, {
             "id": "Refs",

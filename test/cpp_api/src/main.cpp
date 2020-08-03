@@ -84,6 +84,8 @@ void ComponentLifecycle_non_pod_add(void);
 void ComponentLifecycle_non_pod_remove(void);
 void ComponentLifecycle_non_pod_set(void);
 void ComponentLifecycle_non_pod_override(void);
+void ComponentLifecycle_get_mut_new(void);
+void ComponentLifecycle_get_mut_existing(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref(void);
@@ -371,6 +373,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "non_pod_override",
         ComponentLifecycle_non_pod_override
+    },
+    {
+        "get_mut_new",
+        ComponentLifecycle_get_mut_new
+    },
+    {
+        "get_mut_existing",
+        ComponentLifecycle_get_mut_existing
     }
 };
 
@@ -448,7 +458,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        9,
+        11,
         ComponentLifecycle_testcases
     },
     {
