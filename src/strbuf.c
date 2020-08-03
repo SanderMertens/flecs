@@ -175,12 +175,12 @@ bool ecs_strbuf_vappend_intern(
                 if (n) {
                     /* If a max number of characters to write is set, only a
                      * subset of the string should be copied to the buffer */
-                    strncpy(
+                    ecs_os_strncpy(
                         ecs_strbuf_ptr(b),
                         str + memLeftInElement,
                         (size_t)memRequired);
                 } else {
-                    strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
+                    ecs_os_strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
                 }
 
                 /* Update to number of characters copied to new buffer */

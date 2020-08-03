@@ -184,7 +184,7 @@ uint64_t ecs_os_time_now(void) {
     #if defined(_WIN32)
         LARGE_INTEGER qpc_t;
         QueryPerformanceCounter(&qpc_t);
-        now = qpc_t.QuadPart / _ecs_os_time_win_freq;
+        now = (uint64_t)(qpc_t.QuadPart / _ecs_os_time_win_freq);
     #elif defined(__APPLE__) && defined(__MACH__)
         now = mach_absolute_time();
     #else

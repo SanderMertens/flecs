@@ -175,7 +175,7 @@ void ecs_log_print(
 
     /* Massage filename so it doesn't take up too much space */
     char filebuff[256];
-    strcpy(filebuff, file);
+    ecs_os_strcpy(filebuff, file);
     file = filebuff;
     char *file_ptr = strrchr(file, '/');
     if (file_ptr) {
