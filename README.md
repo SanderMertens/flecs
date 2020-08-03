@@ -33,7 +33,7 @@ ECS (Entity Component System) is a way to organize code that is mostly used in g
 - [C++ examples](examples/cpp)
 
 ## Example
-This is a simple flecs example in the C99 and C++11 APIs:
+This is a simple flecs example in the C++11 API:
 
 ```c
 typedef struct Position {
