@@ -105,36 +105,69 @@ static const ecs_entity_t Singleton = EcsSingleton;
 static const ecs_entity_t Childof = ECS_CHILDOF;
 static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Wrapper class around a table column
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Wrapper class around a column.
+ * 
+ * @tparam T component type of the column.
+ */
 template <typename T>
 class column {
 public:
+    /** Create column from component array.
+     *
+     * @param array Pointer to the component array.
+     * @param count Number of elements in component array.
+     * @param is_shared Is the component shared or not.
+     */
     column(T* array, std::size_t count, bool is_shared = false)
         : m_array(array)
         , m_count(count) 
         , m_is_shared(is_shared) {}
 
+    /** Create column from iterator.
+     *
+     * @param iter Iterator object.
+     * @param column Index of the signature of the query being iterated over.
+     */
     column(iter &iter, int column);
 
+    /** Return element in component array.
+     * This operator may only be used if the column is not shared.
+     * 
+     * @param index Index of element.
+     * @return Reference to element.
+     */
     T& operator[](size_t index) {
         ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER, NULL);
         return m_array[index];
     }
 
+    /** Return first element of component array.
+     * This operator is typically used when the column is shared.
+     * 
+     * @return Reference to the first element.
+     */
     T* operator->() {
         ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return m_array;
     }
 
+    /** Return whether component is set.
+     * If the column is optional, this method may return false.
+     * 
+     * @return True if component is set, false if component is not set.
+     */
     bool is_set() const {
         return m_array != nullptr;
     }
 
+    /** Return whether component is shared.
+     * If the column is shared, this method returns true.
+     * 
+     * @return True if component is shared, false if component is owned.
+     */
     bool is_shared() const {
         return m_is_shared;
     }
@@ -147,9 +180,11 @@ protected:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Like flecs::column, but abstracts away from shared vs. owned columns
-////////////////////////////////////////////////////////////////////////////////
 
+/** Similar to flecs::column, but abstracts away from shared / owned columns.
+ * 
+ * @tparam T component type of the column.
+ */
 template <typename T, typename = void>
 class any_column { };
 
@@ -189,11 +224,12 @@ public:
     }   
 };
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Iterate over an integer range (used to iterate over entities in systems)
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Iterate over an integer range (used to iterate over entity range).
+ *
+ * @tparam Type of the iterator
+ */
 template <typename T>
 class range_iterator
 {
@@ -223,12 +259,17 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Type that enables iterating over table columns
-////////////////////////////////////////////////////////////////////////////////
 
+/** Class that enables iterating over table columns.
+ */
 class iter final {
     using row_iterator = range_iterator<int>;
-public:    
+public:
+    /** Construct iterator from C iterator object.
+     * This operation is typically not invoked directly by the user.
+     *
+     * @param it Pointer to C iterator.
+     */
     iter(const ecs_iter_t *it) : m_iter(it) { 
         m_begin = 0;
         m_end = it->count;
@@ -242,70 +283,111 @@ public:
         return row_iterator(m_end);
     }
 
-    /* Obtain handle to current system */
+    /** Obtain handle to current system. 
+     */
     flecs::entity system() const;
 
+    /** Obtain current world. 
+     */
     flecs::world world() const;
 
-    /* Number of entities to iterate over */
+    /** Number of entities to iterate over. 
+     */
     int32_t count() const {
         return m_iter->count;
     }
 
-    /* Return delta_time of current frame */
+    /** Return delta_time of current frame. 
+     */
     float delta_time() const {
         return m_iter->delta_time;
     }
 
-    /* Return time elapsed since last time system was invoked */
+    /** Return time elapsed since last time system was invoked.
+     */
     float delta_system_time() const {
         return m_iter->delta_system_time;
     }
 
-    /* Is column shared */
+    /** Returns whether column shared.
+     * 
+     * @param col The column id.
+     */
     bool is_shared(int32_t col) const {
         return !ecs_is_owned(m_iter, col);
     }
     
-    /* Access param field */
-    void *param() {
+    /** Access param field. 
+     * The param field contains the value assigned to flecs::Context, or the
+     * value passed to the `param` argument when invoking system::run.
+     */
+    void* param() {
         return m_iter->param;
     }
 
-    /* Is column readonly */
+    /** Returns whether column is readonly.
+     *
+     * @param col The column id.
+     */
     bool is_readonly(int32_t col) const {
         return ecs_is_readonly(m_iter, col);
     }
 
-    /* Obtain entity being iterated over for row */
-    flecs::entity entity(int32_t row) const;
-
-    /* Obtain column source (0 if self) */
+    /** Obtain column source (0 if self)
+     *
+     * @param col The column id.
+     */    
     flecs::entity column_source(int32_t col) const;
 
-    /* Obtain component/tag entity of column */
+    /** Obtain component/tag entity of column.
+     *
+     * @param col The column id.
+     */
     flecs::entity column_entity(int32_t col) const;
 
-    /* Obtain type of column */
-    type column_type(int32_t col) const;
+    /** Obtain type of column 
+     *
+     * @param col The column id.
+     */
+    flecs::type column_type(int32_t col) const;
 
-    /* Obtain type of table being iterated over */
+    /** Obtain entity being iterated over for row.
+     *
+     * @param row Row being iterated over.
+     */
+    flecs::entity entity(int32_t row) const;
+
+    /** Obtain type of table being iterated over.
+     */
     type table_type() const;
 
+    /** Obtain the total number of tables the iterator will iterate over.
+     */
     int32_t table_count() const {
         return m_iter->table_count;
     }
 
+    /** Obtain the total number of inactive tables the query is matched with.
+     */
     int32_t inactive_table_count() const {
         return m_iter->inactive_table_count;
     }
 
-    /* Obtain untyped pointer to table column */
-    void* table_column(int32_t col) const {
-        return ecs_table_column(m_iter, col);
+    /** Obtain untyped pointer to table column.
+     *
+     * @param table_column Id of table column (corresponds with location in table type).
+     * @return Pointer to table column.
+     */
+    void* table_column(int32_t table_column) const {
+        return ecs_table_column(m_iter, table_column);
     }
 
-    /* Obtain typed pointer to table column */
+    /** Obtain typed pointer to table column.
+     * If the table does not contain a column with the specified type, the
+     * function will assert.
+     *
+     * @tparam T Type of the table column.
+     */
     template <typename T>
     flecs::column<T> table_column() const {
         auto type = ecs_iter_type(m_iter);
@@ -314,14 +396,28 @@ public:
         return flecs::column<T>(static_cast<T*>(ecs_table_column(m_iter, col)), m_iter->count, false);
     }
 
-    /* Obtain column with a const type */
+    /** Obtain column with const type.
+     * If the specified column id does not match with the provided type, the
+     * function will assert.
+     *
+     * @tparam T Type of the column.
+     * @param col The column id.
+     * @return The component column.
+     */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
     flecs::column<T> column(unsigned int col) const {
         return get_column<T>(col);
     }
 
-    /* Obtain column with non-const type. Ensure that column is not readonly */
+    /** Obtain column with non-const type.
+     * If the specified column id does not match with the provided type or if
+     * the column is readonly, the function will assert.
+     *
+     * @tparam T Type of the column.
+     * @param col The column id.
+     * @return The component column.
+     */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value == false, void>::type* = nullptr>
     flecs::column<T> column(int32_t col) const {
@@ -329,14 +425,26 @@ public:
         return get_column<T>(col);
     }  
 
-    /* Get owned */
+    /** Obtain owned column.
+     * Same as iter::column, but ensures that column is owned.
+     *
+     * @tparam Type of the column.
+     * @param col The column id.
+     * @return The component column.
+     */
     template <typename T>
     flecs::column<T> owned(int32_t col) const {
         ecs_assert(!!ecs_is_owned(m_iter, col), ECS_COLUMN_IS_SHARED, NULL);
         return this->column<T>(col);
     }
 
-    /* Get shared */
+    /** Obtain shared column.
+     * Same as iter::column, but ensures that column is shared.
+     *
+     * @tparam Type of the column.
+     * @param col The column id.
+     * @return The component column.
+     */
     template <typename T>
     const T& shared(int32_t col) const {
         ecs_assert(ecs_column_entity(m_iter, col) == component_info<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
@@ -344,19 +452,35 @@ public:
         return *static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), col));
     }
 
-    /* Get single field of a const type */
+    /** Obtain single const element of owned or shared column.
+     * If the specified column id does not match with the provided type the
+     * function will assert.    
+     *
+     * @tparam Type of the element.
+     * @param col The column id.
+     * @param row The current row.
+     * @return The component element.
+     */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>    
-    T& field(int32_t col, int32_t row) const {
-        return get_field<T>(col, row);
+    T& element(int32_t col, int32_t row) const {
+        return get_element<T>(col, row);
     }
 
-    /* Get single field of a non-const type. Ensure that column is not readonly */
+    /** Obtain single const element of owned or shared column.
+     * If the specified column id does not match with the provided type or if
+     * the column is readonly, the function will assert.
+     *
+     * @tparam Type of the element.
+     * @param col The column id.
+     * @param row The current row.
+     * @return The component element.
+     */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value == false, void>::type* = nullptr>
-    T& field(int32_t col, int32_t row) const {
+    T& element(int32_t col, int32_t row) const {
         ecs_assert(!ecs_is_readonly(m_iter, col), ECS_COLUMN_ACCESS_VIOLATION, NULL);
-        return get_field<T>(col, row);
+        return get_element<T>(col, row);
     }
 
 private:
@@ -383,7 +507,7 @@ private:
 
     /* Get single field, check if correct type is used */
     template <typename T>
-    T& get_field(int32_t col, int32_t row) const {
+    T& get_element(int32_t col, int32_t row) const {
         ecs_assert(ecs_column_entity(m_iter, col) == component_info<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
         return *static_cast<T*>(ecs_element_w_size(m_iter, sizeof(T), col, row));
     }       
@@ -400,31 +524,43 @@ inline column<T>::column(iter &iter, int col) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// The ECS world
-////////////////////////////////////////////////////////////////////////////////
 
+/** The world.
+ * The world is the container of all ECS data and systems. If the world is
+ * deleted, all data in the world will be deleted as well.
+ */
 class world final {
 public:
+    /** Create world.
+     */
     world() 
         : m_world( ecs_init() )
         , m_owned( true ) { init_builtin_components(); }
 
+    /** Create world with command line arguments.
+     * Currently command line arguments are not interpreted, but they may be
+     * used in the future to configure Flecs parameters.
+     */
     world(int argc, char *argv[])
         : m_world( ecs_init_w_args(argc, argv) )
         , m_owned( true ) { init_builtin_components(); }
 
+    /** Create world from C world.
+     */
     explicit world(world_t *w) 
         : m_world( w ) 
         , m_owned( false ) { }
 
-    /* Not allowed to copy a world. May only take a reference */
+    /** Not allowed to copy a world. May only take a reference. 
+     */
     world(const world& obj) = delete;
 
     world(world&& obj) {
         m_world = obj.m_world;
     }
 
-    /* Not allowed to copy a world. May only take a reference */
+    /** Not allowed to copy a world. May only take a reference.
+     */
     world& operator=(const world& obj) = delete;
 
     world& operator=(world&& obj) {
@@ -438,123 +574,275 @@ public:
         }
     }
 
+    /** Obtain pointer to C world object.
+     */
     world_t* c_ptr() const {
         return m_world;
     }
 
+    /** Progress world, run all systems.
+     *
+     * @param delta_time Custom delta_time. If 0 is provided, Flecs will automatically measure delta_tiem.
+     */
     bool progress(float delta_time = 0.0) const {
         return ecs_progress(m_world, delta_time);
     }
 
-    /* Threading */
+    /** Set number of threads.
+     * This will distribute the load evenly across the configured number of 
+     * threads for each system.
+     *
+     * @param threads Number of threads.
+     */
     void set_threads(std::int32_t threads) const {
         ecs_set_threads(m_world, threads);
     }
 
+    /** Get number of threads.
+     *
+     * @return Number of configured threads.
+     */
     std::int32_t get_threads() const {
         return ecs_get_threads(m_world);
     }
 
+    /** Get index of current thread.
+     *
+     * @return Unique index for current thread.
+     */
     std::int32_t get_thread_index() const {
         return ecs_get_thread_index(m_world);
     }
 
-    /* Time management */
+    /** Set target FPS
+     * This will ensure that the main loop (world::progress) does not run faster
+     * than the specified frames per second.
+     *
+     * @param target_fps Target frames per second.
+     */
     void set_target_fps(float target_fps) const {
         ecs_set_target_fps(m_world, target_fps);
     }
 
+    /** Get target FPS
+     *
+     * @return Configured frames per second.
+     */
     float get_target_fps() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->target_fps;
     }
 
+    /** Get tick
+     *
+     * @return Monotonically increasing frame count.
+     */
     std::int32_t get_tick() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->frame_count_total;
 
     }
 
-    /* Get/set user-context */
+    /** Set world context.
+     * Set a context value that can be accessed by anyone that has a reference
+     * to the world.
+     *
+     * @param ctx The world context.
+     */
     void set_context(void* ctx) const {
         ecs_set_context(m_world, ctx);
     }
 
+    /** Get world context.
+     *
+     * @return The configured world context.
+     */
     void* get_context() const {
         return ecs_get_context(m_world);
     }
 
-    /* Preallocating memory */
+    /** Preallocate memory for number of entities.
+     * This function preallocates memory for the entity index.
+     *
+     * @param entity_count Number of entities to preallocate memory for.
+     */
     void dim(std::int32_t entity_count) const {
         ecs_dim(m_world, entity_count);
     }
 
+    /** Preallocate memory for type
+     * This function preallocates memory for the component arrays of the
+     * specified type.
+     *
+     * @param type Type to preallocate memory for.
+     * @param entity_count Number of entities to preallocate memory for.
+     */
     void dim_type(type_t type, std::int32_t entity_count) const {
         ecs_dim_type(m_world, type, entity_count);
     }
 
-    /* Entity ranges */
+    /** Set entity range.
+     * This function limits the range of issued entity ids between min and max.
+     *
+     * @param min Minimum entity id issued.
+     * @param max Maximum entity id issued.
+     */
     void set_entity_range(entity_t min, entity_t max) const {
         ecs_set_entity_range(m_world, min, max);
     }
 
+    /** Enforce that operations cannot modify entities outside of range.
+     * This function ensures that only entities within the specified range can
+     * be modified. Use this function if specific parts of the code only are
+     * allowed to modify a certain set of entities, as could be the case for
+     * networked applications.
+     *
+     * @param enabled True if range check should be enabled, false if not.
+     */
     void enable_range_check(bool enabled) const {
         ecs_enable_range_check(m_world, enabled);
     }
 
-    /* Lookup by name */
+    /** Lookup entity by name.
+     * 
+     * @param name Entity name.
+     */
     entity lookup(const char *name) const;
+
+    /** Lookup entity by name.
+     *
+     * @overload
+     */    
     entity lookup(std::string& name) const;
 
-    /* Bulk operations */
+    /** Delete all entities matching a filter.
+     *
+     * @param filter The filter to use for matching.
+     */
     void delete_entities(flecs::filter filter) const;
 
+    /** Add component to all entities.
+     *
+     * @tparam T The component to add.
+     */
     template <typename T>
     void add() const;
+
+    /** Add component to all entities matching a filter.
+     *
+     * @tparam T The component to add.
+     * @param filter The filter to use for matching.
+     */
     template <typename T>
     void add(flecs::filter filter) const;
 
+    /** Add type to all entities.
+     *
+     * @param type The type to add.
+     */
     void add(type type) const;
+
+    /** Add type to all entities matching a filter.
+     *
+     * @param type The type to add.
+     * @param filter The filter to use for matching.
+     */    
     void add(type type, flecs::filter filter) const;
 
+    /** Add entity to all entities.
+     *
+     * @param entity The entity to add.
+     */
     void add(entity entity) const;
+
+    /** Add entity to all entities matching a filter.
+     *
+     * @param entity The entity to add.
+     * @param filter The filter to use for matching.
+     */    
     void add(entity entity, flecs::filter filter) const;
 
+    /** Remove component from all entities.
+     *
+     * @tparam T The component to remove.
+     */
     template <typename T>
     void remove() const;
+
+    /** Remove component from all entities matching a filter.
+     *
+     * @tparam T The component to remove.
+     * @param filter The filter to use for matching.
+     */    
     template <typename T>
     void remove(flecs::filter filter) const;
 
+    /** Remove type from all entities.
+     *
+     * @param type The component to remove.
+     */ 
     void remove(type type) const;
+
+    /** Remove type from all entities matching a filter.
+     *
+     * @tparam T The component to remove.
+     * @param filter The filter to use for matching.
+     */     
     void remove(type type, flecs::filter filter) const;
 
+    /** Remove entity from all entities.
+     *
+     * @param entity The entity to remove.
+     */ 
     void remove(entity entity) const;
+
+    /** Remove entity from all entities matching a filter.
+     *
+     * @param entity The entity to remove.
+     * @param filter The filter to use for matching.
+     */     
     void remove(entity entity, flecs::filter filter) const;
 
-    /* Iterate world tables */
+    /** Create iterable filter for entities in world.
+     *
+     * @param filter The filter to create.
+     */ 
     world_filter filter(const flecs::filter& filter) const;
+
     filter_iterator begin() const;
     filter_iterator end() const;
 
-    /* Count entities */
+    /** Count entities matching a component.
+     *
+     * @tparam T The component to use for matching.
+     */
     template <typename T>
     int count() const {
         return ecs_count_type(m_world, component_info<T>::s_type);
     }
 
+    /** Count entities matching a filter.
+     *
+     * @param filter The filter to use for matching.
+     */
     int count(flecs::filter filter) const;
 
-    /* Enable locking */
+    /** Enable locking.
+     * 
+     * @param enabled True if locking should be enabled, false if not.
+     */
     bool enable_locking(bool enabled) {
         return ecs_enable_locking(m_world, enabled);
     }
 
-    /* Lock world */
+    /** Lock world.
+     */
     void lock() {
         ecs_lock(m_world);
     }
 
-    /* Unlock world */
+    /** Unlock world.
+     */
     void unlock() {
         ecs_unlock(m_world);
     }
