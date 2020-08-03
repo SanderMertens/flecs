@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 ## Building
 The easiest way to add Flecs to a project is to add [flecs.c](https://github.com/flecs/master/flecs.c) and [flecs.h](https://github.com/flecs/master/flecs.h) to your source code. Alternatively you can also build Flecs as a library by using the cmake, meson, bazel or bake buildfiles.
 
-## Customized builds
+### Customized builds
 Whether you're looking for a minimal ECS library or a full-fledged system runtime, customizable builds let you remove Flecs features you don't need. By default all features are included. To customize a build, follow these steps:
 
 - define `FLECS_CUSTOM_BUILD`. This removes all optional features from the build.
@@ -77,7 +77,7 @@ Whether you're looking for a minimal ECS library or a full-fledged system runtim
 
 Features are split up in addons and modules. Addons implement a specific Flecs feature, like snapshots. Modules are like addons but register their own components and systems, and therefore need to be imported.
 
-### Addons
+#### Addons
 Addons are located in the `src/addons` and `include/addons` folders. The following addons are available:
 
 Addon         | Description                                      | Constant            |
@@ -89,7 +89,7 @@ Queue         | A queue data structure                           | FLECS_QUEUE  
 Reader_writer | Serialize components to series of bytes          | FLECS_READER_WRITER | 
 Snapshot      | Take a snapshot that can be restored  afterwards | FLECS_SNAPSHOT      |
 
-### Builtin modules
+#### Builtin modules
 Addons are located in the `src/modules` and `include/modules` folders. The following modules are available:
 
 Module        | Description                                      | Constant            |
