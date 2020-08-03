@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 #define ECS_ANNOTATION_LENGTH_MAX (16)
 

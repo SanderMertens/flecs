@@ -1,5 +1,10 @@
-#include "../flecs_private.h"
+#include "../private_api.h"
+#include "flecs/addon/module.h"
+#include "flecs/addon/bulk.h"
 #include "flecs/modules/stats.h"
+#include "flecs/modules/timer.h"
+#include "flecs/modules/pipeline.h"
+#include "system/system.h"
 
 typedef struct EcsTablePtr {
     ecs_table_t *table;

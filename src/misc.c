@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 int8_t ecs_to_i8(
     int64_t v)
@@ -124,7 +124,7 @@ void* ecs_os_memdup(
         distribution.
 */
 
-#include "flecs_private.h"
+#include "private_api.h"
 
 static int ecs_os_time_initialized;
 

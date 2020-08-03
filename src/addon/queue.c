@@ -1,5 +1,5 @@
 
-#include "flecs.h"
+#include "flecs/addon/queue.h"
 
 struct ecs_queue_t {
     ecs_vector_t *data;

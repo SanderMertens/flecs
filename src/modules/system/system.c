@@ -1,4 +1,5 @@
-#include "../flecs_private.h"
+#include "../../private_api.h"
+#include "system.h"
 
 /* Global type variables */
 ECS_TYPE_DECL(EcsComponentLifecycle);
@@ -831,6 +832,86 @@ void bootstrap_set_system(
     ecs_sig_init(world, name, expr, &sig);
     ecs_query_t *query = ecs_query_new_w_sig(world, sys, &sig);
     ecs_init_system(world, sys, action, query, NULL);
+}
+
+ecs_entity_t ecs_new_system(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name,
+    ecs_entity_t tag,
+    const char *signature,
+    ecs_iter_action_t action)
+{
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+
+    const char *e_name = ecs_name_from_symbol(world, name);
+    
+    ecs_entity_t result = ecs_lookup_w_type(world, name, ecs_type(EcsSignatureExpr));
+    if (!result) {
+        result = e ? e : ecs_new(world, 0);
+        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
+        if (tag) {
+            ecs_add_entity(world, result, tag);
+        }
+
+        ecs_set(world, result, EcsSignatureExpr, {signature});
+        ecs_set(world, result, EcsIterAction, {action});
+    } else {
+        EcsSignatureExpr *ptr = ecs_get_mut(world, result, EcsSignatureExpr, NULL);
+        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (strcmp(ptr->expr, signature)) {
+            ecs_abort(ECS_ALREADY_DEFINED, name);
+        }
+    }
+
+    return result;
+}
+
+ecs_entity_t ecs_new_trigger(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name,
+    ecs_entity_t kind,
+    const char *component_name,
+    ecs_iter_action_t action)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+
+    ecs_entity_t component = ecs_lookup_fullpath(world, component_name);
+    ecs_assert(component != 0, ECS_INVALID_COMPONENT_ID, component_name);
+
+    const char *e_name = ecs_name_from_symbol(world, name);
+    
+    ecs_entity_t result = ecs_lookup_w_type(world, name, ecs_type(EcsTrigger));
+    if (!result) {
+        result = e ? e : ecs_new(world, 0);
+        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
+        ecs_set(world, result, EcsTrigger, {
+            .kind = kind,
+            .action = action,
+            .component = component,
+            .ctx = NULL
+        });
+    } else {
+        EcsTrigger *ptr = ecs_get_mut(world, result, EcsTrigger, NULL);
+        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (ptr->kind != kind) {
+            ecs_abort(ECS_ALREADY_DEFINED, name);
+        }
+
+        if (ptr->component != component) {
+            ecs_abort(ECS_ALREADY_DEFINED, name);
+        }
+
+        if (ptr->action != action) {
+            ptr->action = action;
+        }
+    }
+
+    return result;
 }
 
 void FlecsSystemImport(

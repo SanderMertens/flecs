@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 static
 ecs_data_t* init_data(

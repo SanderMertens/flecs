@@ -1,5 +1,5 @@
 
-#include "flecs_private.h"
+#include "private_api.h"
 
 static
 int32_t comp_mask_index(

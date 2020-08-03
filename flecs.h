@@ -3067,44 +3067,6 @@ void ecs_add_type(
 #define ecs_add(world, entity, component)\
     ecs_add_type(world, entity, ecs_type(component))
 
-/** Add an entity to entities matching a filter.
- * This operation is the same as ecs_add_entity, but is applied to all entities
- * that match the provided filter.
- *
- * @param world The world.
- * @param entity_add The entity to add.
- * @param filter The filter.
- */
-FLECS_EXPORT
-void ecs_bulk_add_entity(
-    ecs_world_t *world,
-    ecs_entity_t entity_add,
-    const ecs_filter_t *filter);
-
-/** Add a type to entities matching a filter.
- * This operation is the same as ecs_add_type but is applied to all entities
- * that match the provided filter.
- *
- * @param world The world.
- * @param type The type to add.
- * @param filter The filter.
- */
-FLECS_EXPORT
-void ecs_bulk_add_type(
-    ecs_world_t *world,
-    ecs_type_t type,
-    const ecs_filter_t *filter);
-
-/** Add a component / type / tag to entities matching a filter.
- * This operation is the same as ecs_add but is applied to all entities
- * that match the provided filter.
- *
- * @param world The world.
- * @param type The component, type or tag to add.
- * @param filter The filter.
- */
-#define ecs_bulk_add(world, type, filter)\
-    ecs_bulk_add_type(world, ecs_type(type), filter)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Removing components
@@ -3155,45 +3117,6 @@ void ecs_remove_type(
 #define ecs_remove(world, entity, type)\
     ecs_remove_type(world, entity, ecs_type(type))
 
-/** Removes an entity from entities matching a filter.
- * This operation is the same as ecs_remove_entity, but is applied to all 
- * entities that match the provided filter.
- *
- * @param world The world.
- * @param entity_remove The entity to remove.
- * @param filter The filter.
- */
-FLECS_EXPORT
-void ecs_bulk_remove_entity(
-    ecs_world_t *world,
-    ecs_entity_t entity_remove,
-    const ecs_filter_t *filter);
-
-/** Remove a type from entities matching a filter.
- * This operation is the same as ecs_remove_type but is applied to all entities
- * that match the provided filter.
- *
- * @param world The world.
- * @param type The type to remove.
- * @param filter The filter.
- */
-FLECS_EXPORT
-void ecs_bulk_remove_type(
-    ecs_world_t *world,
-    ecs_type_t type,
-    const ecs_filter_t *filter);
-
-/** Add a component / type / tag to entities matching a filter.
- * This operation is the same as ecs_remove but is applied to all entities
- * that match the provided filter.
- *
- * @param world The world.
- * @param type The component, type or tag to remove.
- * @param filter The filter.
- */
-#define ecs_bulk_remove(world, type, filter)\
-    ecs_bulk_remove_type(world, ecs_type(type), filter)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Adding + removing components
@@ -3239,32 +3162,6 @@ void ecs_add_remove_type(
  */
 #define ecs_add_remove(world, entity, to_add, to_remove)\
     ecs_add_remove_type(world, entity, ecs_type(to_add), ecs_type(to_remove))
-
-/** Add / remove type from entities matching a filter.
- * Combination of ecs_bulk_add_type and ecs_bulk_remove_type.
- *
- * @param world The world.
- * @param to_add The type to add.
- * @param to_remove The type to remove.
- * @param filter The filter.
- */
-FLECS_EXPORT
-void ecs_bulk_add_remove_type(
-    ecs_world_t *world,
-    ecs_type_t to_add,
-    ecs_type_t to_remove,
-    const ecs_filter_t *filter);
-
-/** Add / remove component, type or tag from entities matching a filter.
- * Combination of ecs_bulk_add and ecs_bulk_remove.
- *
- * @param world The world.
- * @param to_add The component, type or tag to add.
- * @param to_remove The component, type or tag to remove.
- * @param filter The filter.
- */
-#define ecs_bulk_add_remove(world, to_add, to_remove, filter)\
-    ecs_bulk_add_remove_type(world, ecs_type(to_add), ecs_type(to_remove), filter)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3373,18 +3270,6 @@ FLECS_EXPORT
 void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity);
-
-/** Delete entities matching a filter.
- * This operation is the same as ecs_delete, but applies to all entities that
- * match a filter.
- *
- * @param world The world.
- * @param filter The filter.
- */
-FLECS_EXPORT
-void ecs_bulk_delete(
-    ecs_world_t *world,
-    const ecs_filter_t *filter);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4082,207 +3967,10 @@ ecs_entity_t ecs_lookup_symbol(
     ecs_world_t *world,
     const char *name);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Path utilities
-////////////////////////////////////////////////////////////////////////////////
-
-/** Get a path identifier for an entity.
- * This operation creates a path that contains the names of the entities from
- * the specified parent to the provided entity, separated by the provided 
- * separator. If no parent is provided the path will be relative to the root. If
- * a prefix is provided, the path will be prefixed by the prefix.
- *
- * If the parent is equal to the provided child, the operation will return an
- * empty string. If a nonzero component is provided, the path will be created by 
- * looking for parents with that component.
- *
- * The returned path should be freed by the application.
- *
- * @param world The world.
- * @param parent The entity from which to create the path.
- * @param child The entity to which to create the path.
- * @param component The component of the parent.
- * @return The relative entity path.
- */
-FLECS_EXPORT
-char* ecs_get_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_entity_t child,
-    ecs_entity_t component,
-    const char *sep,
-    const char *prefix);
-
-/** Get a path identifier for an entity.
- * Same as ecs_get_path_w_sep, but with default values for the separator and
- * prefix. These defaults are used throughout Flecs whenever identifiers are
- * used in type or signature expressions.
- *
- * @param world The world.
- * @param parent The entity from which to create the path.
- * @param child The entity to which to create the path.
- * @return The relative entity path.
- */
-#define ecs_get_path(world, parent, child)\
-    ecs_get_path_w_sep(world, parent, child, 0, ".", NULL)
-
-/** Get a full path for an entity.
- * Same as ecs_get_path, but with default values for the separator and
- * prefix, and the path is created from the current scope, or root if no scope
- * is provided.
- *
- * @param world The world.
- * @param child The entity to which to create the path.
- * @return The entity path.
- */
-#define ecs_get_fullpath(world, child)\
-    ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
-
-/** Find or create entity from path.
- * This operation will find or create an entity from a path, and will create any
- * intermediate entities if required. If the entity already exists, no entities
- * will be created.
- *
- * If the path starts with the prefix, then the entity will be created from the
- * root scope.
- *
- * @param world The world.
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @param sep The separator used in the path.
- * @param prefix The prefix used in the path.
- * @return The entity.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_new_from_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *path,
-    const char *sep,
-    const char *prefix);
-
-/** Find or create entity from path.
- * Same as ecs_new_from_path_w_sep, but with defaults for sep and prefix.
- *
- * @param world The world.
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_new_from_path(world, parent, path)\
-    ecs_new_from_path_w_sep(world, parent, path, ".", NULL)
-
-/** Find or create entity from full path.
- * Same as ecs_new_from_path, but entity will be created from the current scope,
- * or root scope if no scope is set.
- *
- * @param world The world.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_new_from_fullpath(world, path)\
-    ecs_new_from_path_w_sep(world, 0, path, ".", NULL)
-
-/** Add specified path to entity.
- * This operation is similar to ecs_new_from_path, but will instead add the path
- * to an existing entity.
- *
- * If an entity already exists for the path, it will be returned instead.
- *
- * @param world The world.
- * @param entity The entity to which to add the path.
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @param sep The separator used in the path.
- * @param prefix The prefix used in the path.
- * @return The entity.
- */ 
-FLECS_EXPORT
-ecs_entity_t ecs_add_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t parent,
-    const char *path,
-    const char *sep,
-    const char *prefix);
-
-/** Add specified path to entity.
- * Same as ecs_add_from_path_w_sep, but with defaults for sep and prefix.
- *
- * @param world The world.
- * @param entity The entity to which to add the path. 
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_add_path(world, entity, parent, path)\
-    ecs_add_path_w_sep(world, entity, parent, path, ".", NULL)
-
-/** Add specified path to entity.
- * Same as ecs_add_from_path, but entity will be created from the current scope,
- * or root scope if no scope is set.
- *
- * @param world The world.
- * @param entity The entity to which to add the path.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_add_fullpath(world, entity, path)\
-    ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Scope API
 ////////////////////////////////////////////////////////////////////////////////
-
-/** Does entity have children.
- *
- * @param world The world
- * @param entity The entity
- * @return True if the entity has children, false if not.
- */
-FLECS_EXPORT
-int32_t ecs_get_child_count(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Return a scope iterator.
- * A scope iterator iterates over all the child entities of the specified 
- * parent.
- *
- * @param world The world.
- * @param parent The parent entity for which to iterate the children.
- * @return The iterator.
- */
-FLECS_EXPORT
-ecs_iter_t ecs_scope_iter(
-    ecs_world_t *world,
-    ecs_entity_t parent);
-
-/** Return a filtered scope iterator.
- * Same as ecs_scope_iter, but results will be filtered.
- *
- * @param world The world.
- * @param parent The parent entity for which to iterate the children.
- * @return The iterator.
- */
-FLECS_EXPORT
-ecs_iter_t ecs_scope_iter_w_filter(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_filter_t *filter);
-
-/** Progress the scope iterator.
- * This operation progresses the scope iterator to the next table. The iterator
- * must have been initialized with `ecs_scope_iter`. This operation must be
- * invoked at least once before interpreting the contents of the iterator.
- *
- * @param it The iterator
- * @return True if more data is available, false if not.
- */
-FLECS_EXPORT
-bool ecs_scope_next(
-    ecs_iter_t *it);
 
 /** Set the current scope.
  * This operation sets the scope of the current stage to the provided entity.
@@ -4323,8 +4011,7 @@ ecs_entity_t ecs_get_scope(
 FLECS_EXPORT
 const char* ecs_set_name_prefix(
     ecs_world_t *world,
-    const char *prefix);
-
+    const char *prefix);    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Iter API
@@ -4565,131 +4252,6 @@ int32_t ecs_table_component_index(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Module API
-////////////////////////////////////////////////////////////////////////////////
-
-/** Import a module.
- * This operation will load a modules and store the public module handles in the
- * handles_out out parameter. The module name will be used to verify if the
- * module was already loaded, in which case it won't be reimported. The name
- * will be translated from PascalCase to an entity path (pascal.case) before the
- * lookup occurs.
- *
- * Module contents will be stored as children of the module entity. This 
- * prevents modules from accidentally defining conflicting identifiers. This is
- * enforced by setting the scope before and after loading the module to the 
- * module entity id.
- *
- * A more convenient way to import a module is by using the ECS_IMPORT macro.
- *
- * @param world The world.
- * @param module The module to load.
- * @param module_name The name of the module to load.
- * @param flags An integer that will be passed into the module import action.
- * @param handles_out A struct with handles to the module components/systems.
- * @param handles_size Size of the handles_out parameter.
- * @return The module entity.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_import(
-    ecs_world_t *world,
-    ecs_module_action_t module,
-    const char *module_name,
-    void *handles_out,
-    size_t handles_size);
-
-/* Import a module from a library.
- * Similar to ecs_import, except that this operation will attempt to load the 
- * module from a dynamic library.
- *
- * A library may contain multiple modules, which is why both a library name and
- * a module name need to be provided. If only a library name is provided, the
- * library name will be reused for the module name.
- *
- * The library will be looked up using a canonical name, which is in the same
- * form as a module, like `flecs.components.transform`. To transform this
- * identifier to a platform specific library name, the operation relies on the
- * module_to_dl callback of the os_api which the application has to override if
- * the default does not yield the correct library name.
- *
- * @param world The world.
- * @param library_name The name of the library to load.
- * @param module_name The name of the module to load.
- * @param flags The flags to pass to the module.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_import_from_library(
-    ecs_world_t *world,
-    const char *library_name,
-    const char *module_name);
-
-/** Define module
- */
-#define ECS_MODULE(world, id)\
-    ECS_ENTITY_VAR(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
-    id *handles = (id*)ecs_get_mut(world, ecs_entity(id), id, NULL);\
-    (void)ecs_entity(id);\
-    (void)ecs_type(id);\
-    (void)handles;
-
-/** Wrapper around ecs_import.
- * This macro provides a convenient way to load a module with the world. It can
- * be used like this:
- *
- * ECS_IMPORT(world, FlecsSystemsPhysics, 0);
- * 
- * This macro will define entity and type handles for the component associated
- * with the module. An application can retrieve the module component like this:
- * 
- * FlecsSystemsPhysics m = ecs_get(world, EcsSingleton, FlecsSystemsPhysics);
- * 
- * The contents of a module component are module specific, although they
- * typically contain handles to the content of the module.
- */
-#define ECS_IMPORT(world, id) \
-    id ecs_module(id);\
-    char *id##__name = ecs_module_path_from_c(#id);\
-    ECS_ENTITY_VAR(id) = ecs_import(\
-        world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
-    ecs_os_free(id##__name);\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
-    id##ImportHandles(ecs_module(id));\
-    (void)ecs_entity(id);\
-    (void)ecs_type(id);\
-
-/** Utility macro for declaring a component inside a handles type */
-#define ECS_DECLARE_COMPONENT(type)\
-    ECS_ENTITY_VAR(type);\
-    ECS_TYPE_VAR(type)
-
-/** Utility macro for declaring a system inside a handles type */
-#define ECS_DECLARE_ENTITY(entity)\
-    ecs_entity_t entity;\
-    ECS_TYPE_VAR(entity)
-
-#define ECS_EXPORT_COMPONENT(type)\
-    ECS_SET_COMPONENT(type)
-
-#define ECS_EXPORT_ENTITY(type)\
-    ECS_SET_ENTITY(type)
-
-/** Utility macro for declaring handles by modules */
-#define ECS_IMPORT_COMPONENT(handles, id)\
-    ECS_ENTITY_VAR(id) = (handles).ecs_entity(id); (void)ecs_entity(id);\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
-    (void)ecs_entity(id);\
-    (void)ecs_type(id)
-
-/** Utility macro for declaring handles by modules */
-#define ECS_IMPORT_ENTITY(handles, id)\
-    ecs_entity_t id = (handles).id;\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
-    (void)id;\
-    (void)ecs_type(id)
-
-
-////////////////////////////////////////////////////////////////////////////////
 //// Staging API
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4738,39 +4300,6 @@ FLECS_EXPORT
 void ecs_set_automerge(
     ecs_world_t *world,
     bool auto_merge);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utilities
-////////////////////////////////////////////////////////////////////////////////
-
-/** Enables admin web server
- * This operation allows an profile and enable/disable registered systems. If
- * the flecs.systems.civetweb or flecs.systems.admin modules cannot be found,
- * the operation will fail.
- *
- * @param world The world.
- * @param port A port number for server.
- * 
- * @return The error code
- *          0 - success
- *          1 - failed to dynamically load `flecs.systems.civetweb` module
- *          2 - failed to dynamically load `flecs.systems.admin` module
- */
-FLECS_EXPORT
-int ecs_enable_admin(
-	ecs_world_t* world,
-	uint16_t port);
-
-/** Enable command line console for inspecting Flecs internals.
- * If the flecs.systems.console module cannot be found, the operation will fail.
- *
- * @param world The world.
- * @return 0 if success, nonzero if failed.  
- */
-FLECS_EXPORT
-int ecs_enable_console(
-	ecs_world_t* world);
 
 /* Optional modules */
 #ifndef FLECS_NO_MODULES
@@ -4998,6 +4527,51 @@ void ecs_set_system_status_action(
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// System debug API
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct ecs_dbg_system_t {
+    ecs_entity_t system;   
+    int32_t entities_matched_count;
+    int32_t active_table_count;
+    int32_t inactive_table_count;
+    bool enabled;
+    void *system_data;
+} ecs_dbg_system_t;
+
+FLECS_EXPORT
+int ecs_dbg_system(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_dbg_system_t *dbg_out);
+
+FLECS_EXPORT
+ecs_table_t* ecs_dbg_get_active_table(
+    ecs_world_t *world,
+    ecs_dbg_system_t *dbg,
+    int32_t index);
+
+FLECS_EXPORT
+ecs_table_t* ecs_dbg_get_inactive_table(
+    ecs_world_t *world,
+    ecs_dbg_system_t *dbg,
+    int32_t index);
+
+FLECS_EXPORT
+ecs_type_t ecs_dbg_get_column_type(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    int32_t column_index);
+
+FLECS_EXPORT
+bool ecs_dbg_match_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t system,
+    ecs_match_failure_t *failure_info_out);
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -5191,8 +4765,8 @@ void FlecsPipelineImport(
 
 #endif
 
-#ifndef FLECS_TIMERS_H
-#define FLECS_TIMERS_H
+#ifndef FLECS_TIMER_H
+#define FLECS_TIMER_H
 
 
 #ifdef __cplusplus
@@ -5399,89 +4973,632 @@ void FlecsTimerImport(
 /* Optional utilities */
 #ifndef FLECS_NO_ADDONS
 /**
- * @file snapshot.h
- * @brief Snapshot API.
+ * @file bulk.h
+ * @brief Bulk API.
  */
 
-#ifndef FLECS_SNAPSHOT_H
-#define FLECS_SNAPSHOT_H
+#ifndef FLECS_BULK_H
+#define FLECS_BULK_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** Create a snapshot.
- * This operation makes a copy of all component in the world that matches the 
- * specified filter.
- *
- * @param world The world to snapshot.
- * @param return The snapshot.
- */
-FLECS_EXPORT
-ecs_snapshot_t* ecs_snapshot_take(
-    ecs_world_t *world);
-
-/** Create a filtered snapshot.
- * This operation is the same as ecs_snapshot_take, but accepts an iterator so
- * an application can control what is stored by the snapshot. 
- *
- * @param iter An iterator to the data to be stored by the snapshot.
- * @param next A function pointer to the next operation for the iterator.
- * @param return The snapshot.
- */
-FLECS_EXPORT
-ecs_snapshot_t* ecs_snapshot_take_w_iter(
-    ecs_iter_t *iter,
-    ecs_iter_next_action_t action);
-
-/** Restore a snapshot.
- * This operation restores the world to the state it was in when the specified
- * snapshot was taken. A snapshot can only be used once for restoring, as its
- * data replaces the data that is currently in the world.
- * This operation also resets the last issued entity handle, so any calls to
- * ecs_new may return entity ids that have been issued before restoring the 
- * snapshot.
- *
- * The world in which the snapshot is restored must be the same as the world in
- * which the snapshot is taken.
- *
- * @param world The world to restore the snapshot to.
- * @param snapshot The snapshot to restore. 
- */
-FLECS_EXPORT
-void ecs_snapshot_restore(
-    ecs_world_t *world,
-    ecs_snapshot_t *snapshot);
-
-/** Obtain iterator to snapshot data.
- *
- * @param snapshot The snapshot to iterate over.
- * @return Iterator to snapshot data. */
-FLECS_EXPORT
-ecs_iter_t ecs_snapshot_iter(
-    ecs_snapshot_t *snapshot,
-    const ecs_filter_t *filter);
-
-/** Progress snapshot iterator.
- * 
- * @param iter The snapshot iterator.
- * @return True if more data is available, otherwise false.
- */
-FLECS_EXPORT
-bool ecs_snapshot_next(
-    ecs_iter_t *iter);
-
-
-/** Free snapshot resources.
- * This frees resources associated with a snapshot without restoring it.
+/** Add an entity to entities matching a filter.
+ * This operation is the same as ecs_add_entity, but is applied to all entities
+ * that match the provided filter.
  *
  * @param world The world.
- * @param snapshot The snapshot to free. 
+ * @param entity_add The entity to add.
+ * @param filter The filter.
  */
 FLECS_EXPORT
-void ecs_snapshot_free(
-    ecs_snapshot_t *snapshot);
-    
+void ecs_bulk_add_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity_add,
+    const ecs_filter_t *filter);
+
+/** Add a type to entities matching a filter.
+ * This operation is the same as ecs_add_type but is applied to all entities
+ * that match the provided filter.
+ *
+ * @param world The world.
+ * @param type The type to add.
+ * @param filter The filter.
+ */
+FLECS_EXPORT
+void ecs_bulk_add_type(
+    ecs_world_t *world,
+    ecs_type_t type,
+    const ecs_filter_t *filter);
+
+/** Add a component / type / tag to entities matching a filter.
+ * This operation is the same as ecs_add but is applied to all entities
+ * that match the provided filter.
+ *
+ * @param world The world.
+ * @param type The component, type or tag to add.
+ * @param filter The filter.
+ */
+#define ecs_bulk_add(world, type, filter)\
+    ecs_bulk_add_type(world, ecs_type(type), filter)
+
+/** Removes an entity from entities matching a filter.
+ * This operation is the same as ecs_remove_entity, but is applied to all 
+ * entities that match the provided filter.
+ *
+ * @param world The world.
+ * @param entity_remove The entity to remove.
+ * @param filter The filter.
+ */
+FLECS_EXPORT
+void ecs_bulk_remove_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity_remove,
+    const ecs_filter_t *filter);
+
+/** Remove a type from entities matching a filter.
+ * This operation is the same as ecs_remove_type but is applied to all entities
+ * that match the provided filter.
+ *
+ * @param world The world.
+ * @param type The type to remove.
+ * @param filter The filter.
+ */
+FLECS_EXPORT
+void ecs_bulk_remove_type(
+    ecs_world_t *world,
+    ecs_type_t type,
+    const ecs_filter_t *filter);
+
+/** Add a component / type / tag to entities matching a filter.
+ * This operation is the same as ecs_remove but is applied to all entities
+ * that match the provided filter.
+ *
+ * @param world The world.
+ * @param type The component, type or tag to remove.
+ * @param filter The filter.
+ */
+#define ecs_bulk_remove(world, type, filter)\
+    ecs_bulk_remove_type(world, ecs_type(type), filter)
+
+/** Add / remove type from entities matching a filter.
+ * Combination of ecs_bulk_add_type and ecs_bulk_remove_type.
+ *
+ * @param world The world.
+ * @param to_add The type to add.
+ * @param to_remove The type to remove.
+ * @param filter The filter.
+ */
+FLECS_EXPORT
+void ecs_bulk_add_remove_type(
+    ecs_world_t *world,
+    ecs_type_t to_add,
+    ecs_type_t to_remove,
+    const ecs_filter_t *filter);
+
+/** Add / remove component, type or tag from entities matching a filter.
+ * Combination of ecs_bulk_add and ecs_bulk_remove.
+ *
+ * @param world The world.
+ * @param to_add The component, type or tag to add.
+ * @param to_remove The component, type or tag to remove.
+ * @param filter The filter.
+ */
+#define ecs_bulk_add_remove(world, to_add, to_remove, filter)\
+    ecs_bulk_add_remove_type(world, ecs_type(to_add), ecs_type(to_remove), filter)
+
+/** Delete entities matching a filter.
+ * This operation is the same as ecs_delete, but applies to all entities that
+ * match a filter.
+ *
+ * @param world The world.
+ * @param filter The filter.
+ */
+FLECS_EXPORT
+void ecs_bulk_delete(
+    ecs_world_t *world,
+    const ecs_filter_t *filter);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+#ifndef FLECS_DBG_H
+#define FLECS_DBG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Unstable API */
+
+typedef struct ecs_dbg_entity_t {
+    ecs_entity_t entity;
+    ecs_table_t *table;
+    ecs_type_t type;
+    int32_t row;
+    bool is_watched;
+} ecs_dbg_entity_t;
+
+typedef struct ecs_dbg_table_t {
+    ecs_table_t *table;
+    ecs_type_t type;
+    ecs_type_t shared;
+    ecs_type_t container;
+    ecs_type_t parent_entities;
+    ecs_type_t base_entities;     
+    ecs_vector_t *systems_matched;
+    ecs_entity_t *entities;
+    int32_t entities_count;
+} ecs_dbg_table_t;
+
+FLECS_EXPORT
+void ecs_dbg_entity(
+    ecs_world_t *world, 
+    ecs_entity_t entity, 
+    ecs_dbg_entity_t *dbg_out);
+
+FLECS_EXPORT
+ecs_table_t *ecs_dbg_find_table(
+    ecs_world_t *world,
+    ecs_type_t type);
+
+FLECS_EXPORT
+ecs_table_t *ecs_dbg_get_table(
+    ecs_world_t *world,
+    int32_t index);
+
+FLECS_EXPORT
+bool ecs_dbg_filter_table(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_filter_t *filter);
+
+FLECS_EXPORT
+void ecs_dbg_table(
+    ecs_world_t *world, 
+    ecs_table_t *table, 
+    ecs_dbg_table_t *dbg_out);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+/**
+ * @file hierarchy.h
+ * @brief Hierarchy API.
+ */
+
+#ifndef FLECS_HIERARCHY_H
+#define FLECS_HIERARCHY_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//// Path utilities
+////////////////////////////////////////////////////////////////////////////////
+
+/** Get a path identifier for an entity.
+ * This operation creates a path that contains the names of the entities from
+ * the specified parent to the provided entity, separated by the provided 
+ * separator. If no parent is provided the path will be relative to the root. If
+ * a prefix is provided, the path will be prefixed by the prefix.
+ *
+ * If the parent is equal to the provided child, the operation will return an
+ * empty string. If a nonzero component is provided, the path will be created by 
+ * looking for parents with that component.
+ *
+ * The returned path should be freed by the application.
+ *
+ * @param world The world.
+ * @param parent The entity from which to create the path.
+ * @param child The entity to which to create the path.
+ * @param component The component of the parent.
+ * @return The relative entity path.
+ */
+FLECS_EXPORT
+char* ecs_get_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    ecs_entity_t component,
+    const char *sep,
+    const char *prefix);
+
+/** Get a path identifier for an entity.
+ * Same as ecs_get_path_w_sep, but with default values for the separator and
+ * prefix. These defaults are used throughout Flecs whenever identifiers are
+ * used in type or signature expressions.
+ *
+ * @param world The world.
+ * @param parent The entity from which to create the path.
+ * @param child The entity to which to create the path.
+ * @return The relative entity path.
+ */
+#define ecs_get_path(world, parent, child)\
+    ecs_get_path_w_sep(world, parent, child, 0, ".", NULL)
+
+/** Get a full path for an entity.
+ * Same as ecs_get_path, but with default values for the separator and
+ * prefix, and the path is created from the current scope, or root if no scope
+ * is provided.
+ *
+ * @param world The world.
+ * @param child The entity to which to create the path.
+ * @return The entity path.
+ */
+#define ecs_get_fullpath(world, child)\
+    ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
+
+/** Find or create entity from path.
+ * This operation will find or create an entity from a path, and will create any
+ * intermediate entities if required. If the entity already exists, no entities
+ * will be created.
+ *
+ * If the path starts with the prefix, then the entity will be created from the
+ * root scope.
+ *
+ * @param world The world.
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @param sep The separator used in the path.
+ * @param prefix The prefix used in the path.
+ * @return The entity.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_new_from_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+/** Find or create entity from path.
+ * Same as ecs_new_from_path_w_sep, but with defaults for sep and prefix.
+ *
+ * @param world The world.
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_new_from_path(world, parent, path)\
+    ecs_new_from_path_w_sep(world, parent, path, ".", NULL)
+
+/** Find or create entity from full path.
+ * Same as ecs_new_from_path, but entity will be created from the current scope,
+ * or root scope if no scope is set.
+ *
+ * @param world The world.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_new_from_fullpath(world, path)\
+    ecs_new_from_path_w_sep(world, 0, path, ".", NULL)
+
+/** Add specified path to entity.
+ * This operation is similar to ecs_new_from_path, but will instead add the path
+ * to an existing entity.
+ *
+ * If an entity already exists for the path, it will be returned instead.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path.
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @param sep The separator used in the path.
+ * @param prefix The prefix used in the path.
+ * @return The entity.
+ */ 
+FLECS_EXPORT
+ecs_entity_t ecs_add_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+/** Add specified path to entity.
+ * Same as ecs_add_from_path_w_sep, but with defaults for sep and prefix.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path. 
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_add_path(world, entity, parent, path)\
+    ecs_add_path_w_sep(world, entity, parent, path, ".", NULL)
+
+/** Add specified path to entity.
+ * Same as ecs_add_from_path, but entity will be created from the current scope,
+ * or root scope if no scope is set.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_add_fullpath(world, entity, path)\
+    ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Scope API
+////////////////////////////////////////////////////////////////////////////////
+
+/** Does entity have children.
+ *
+ * @param world The world
+ * @param entity The entity
+ * @return True if the entity has children, false if not.
+ */
+FLECS_EXPORT
+int32_t ecs_get_child_count(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Return a scope iterator.
+ * A scope iterator iterates over all the child entities of the specified 
+ * parent.
+ *
+ * @param world The world.
+ * @param parent The parent entity for which to iterate the children.
+ * @return The iterator.
+ */
+FLECS_EXPORT
+ecs_iter_t ecs_scope_iter(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
+/** Return a filtered scope iterator.
+ * Same as ecs_scope_iter, but results will be filtered.
+ *
+ * @param world The world.
+ * @param parent The parent entity for which to iterate the children.
+ * @return The iterator.
+ */
+FLECS_EXPORT
+ecs_iter_t ecs_scope_iter_w_filter(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_filter_t *filter);
+
+/** Progress the scope iterator.
+ * This operation progresses the scope iterator to the next table. The iterator
+ * must have been initialized with `ecs_scope_iter`. This operation must be
+ * invoked at least once before interpreting the contents of the iterator.
+ *
+ * @param it The iterator
+ * @return True if more data is available, false if not.
+ */
+FLECS_EXPORT
+bool ecs_scope_next(
+    ecs_iter_t *it);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+/**
+ * @file module.h
+ * @brief Module API.
+ */
+
+#ifndef FLECS_MODULE_H
+#define FLECS_MODULE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//// Module API
+////////////////////////////////////////////////////////////////////////////////
+
+/** Import a module.
+ * This operation will load a modules and store the public module handles in the
+ * handles_out out parameter. The module name will be used to verify if the
+ * module was already loaded, in which case it won't be reimported. The name
+ * will be translated from PascalCase to an entity path (pascal.case) before the
+ * lookup occurs.
+ *
+ * Module contents will be stored as children of the module entity. This 
+ * prevents modules from accidentally defining conflicting identifiers. This is
+ * enforced by setting the scope before and after loading the module to the 
+ * module entity id.
+ *
+ * A more convenient way to import a module is by using the ECS_IMPORT macro.
+ *
+ * @param world The world.
+ * @param module The module to load.
+ * @param module_name The name of the module to load.
+ * @param flags An integer that will be passed into the module import action.
+ * @param handles_out A struct with handles to the module components/systems.
+ * @param handles_size Size of the handles_out parameter.
+ * @return The module entity.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_import(
+    ecs_world_t *world,
+    ecs_module_action_t module,
+    const char *module_name,
+    void *handles_out,
+    size_t handles_size);
+
+/* Import a module from a library.
+ * Similar to ecs_import, except that this operation will attempt to load the 
+ * module from a dynamic library.
+ *
+ * A library may contain multiple modules, which is why both a library name and
+ * a module name need to be provided. If only a library name is provided, the
+ * library name will be reused for the module name.
+ *
+ * The library will be looked up using a canonical name, which is in the same
+ * form as a module, like `flecs.components.transform`. To transform this
+ * identifier to a platform specific library name, the operation relies on the
+ * module_to_dl callback of the os_api which the application has to override if
+ * the default does not yield the correct library name.
+ *
+ * @param world The world.
+ * @param library_name The name of the library to load.
+ * @param module_name The name of the module to load.
+ * @param flags The flags to pass to the module.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_import_from_library(
+    ecs_world_t *world,
+    const char *library_name,
+    const char *module_name);
+
+/** Define module
+ */
+#define ECS_MODULE(world, id)\
+    ECS_ENTITY_VAR(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
+    id *handles = (id*)ecs_get_mut(world, ecs_entity(id), id, NULL);\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id);\
+    (void)handles;
+
+/** Wrapper around ecs_import.
+ * This macro provides a convenient way to load a module with the world. It can
+ * be used like this:
+ *
+ * ECS_IMPORT(world, FlecsSystemsPhysics, 0);
+ * 
+ * This macro will define entity and type handles for the component associated
+ * with the module. An application can retrieve the module component like this:
+ * 
+ * FlecsSystemsPhysics m = ecs_get(world, EcsSingleton, FlecsSystemsPhysics);
+ * 
+ * The contents of a module component are module specific, although they
+ * typically contain handles to the content of the module.
+ */
+#define ECS_IMPORT(world, id) \
+    id ecs_module(id);\
+    char *id##__name = ecs_module_path_from_c(#id);\
+    ECS_ENTITY_VAR(id) = ecs_import(\
+        world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
+    ecs_os_free(id##__name);\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
+    id##ImportHandles(ecs_module(id));\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id);\
+
+/** Utility macro for declaring a component inside a handles type */
+#define ECS_DECLARE_COMPONENT(type)\
+    ECS_ENTITY_VAR(type);\
+    ECS_TYPE_VAR(type)
+
+/** Utility macro for declaring a system inside a handles type */
+#define ECS_DECLARE_ENTITY(entity)\
+    ecs_entity_t entity;\
+    ECS_TYPE_VAR(entity)
+
+#define ECS_EXPORT_COMPONENT(type)\
+    ECS_SET_COMPONENT(type)
+
+#define ECS_EXPORT_ENTITY(type)\
+    ECS_SET_ENTITY(type)
+
+/** Utility macro for declaring handles by modules */
+#define ECS_IMPORT_COMPONENT(handles, id)\
+    ECS_ENTITY_VAR(id) = (handles).ecs_entity(id); (void)ecs_entity(id);\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id)
+
+/** Utility macro for declaring handles by modules */
+#define ECS_IMPORT_ENTITY(handles, id)\
+    ecs_entity_t id = (handles).id;\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
+    (void)id;\
+    (void)ecs_type(id)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+#ifndef FLECS_QUEUE_H_
+#define FLECS_QUEUE_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct ecs_queue_t ecs_queue_t;
+
+FLECS_EXPORT
+ecs_queue_t* _ecs_queue_new(
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count);
+
+#define ecs_queue_new(T, elem_count)\
+    _ecs_queue_new(ECS_VECTOR_T(T), elem_count)
+
+FLECS_EXPORT
+ecs_queue_t* _ecs_queue_from_array(
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count,
+    void *array);
+
+#define ecs_queue_from_array(T, elem_count, array)\
+    _ecs_queue_from_array(ECS_VECTOR_T(T), elem_count, array)
+
+FLECS_EXPORT
+void* _ecs_queue_push(
+    ecs_queue_t *queue,
+    ecs_size_t elem_size,
+    int16_t offset);
+
+#define ecs_queue_push(queue, T)\
+    (T*)_ecs_queue_push(queue, ECS_VECTOR_T(T))
+
+FLECS_EXPORT
+void* _ecs_queue_get(
+    ecs_queue_t *queue,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t index);
+
+#define ecs_queue_get(queue, T, index)\
+    (T*)_ecs_queue_get(queue, ECS_VECTOR_T(T), index)
+
+#define ecs_queue_get_t(vector, size, alignment, index) \
+    _ecs_queue_get(vector, ECS_VECTOR_U(size, alignment), index)
+
+FLECS_EXPORT
+void* _ecs_queue_last(
+    ecs_queue_t *queue,
+    ecs_size_t elem_size,
+    int16_t offset);
+
+#define ecs_queue_last(queue, T)\
+    (T*)_ecs_queue_last(queue, ECS_VECTOR_T(T))
+
+FLECS_EXPORT
+int32_t ecs_queue_index(
+    ecs_queue_t *queue);
+
+FLECS_EXPORT
+int32_t ecs_queue_count(
+    ecs_queue_t *queue);
+
+FLECS_EXPORT
+void ecs_queue_free(
+    ecs_queue_t *queue);
+
 #ifdef __cplusplus
 }
 #endif
@@ -5698,78 +5815,90 @@ int ecs_writer_write(
 #endif     
 
 #endif
+/**
+ * @file snapshot.h
+ * @brief Snapshot API.
+ */
 
-#ifndef FLECS_QUEUE_H_
-#define FLECS_QUEUE_H_
+#ifndef FLECS_SNAPSHOT_H
+#define FLECS_SNAPSHOT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct ecs_queue_t ecs_queue_t;
-
+/** Create a snapshot.
+ * This operation makes a copy of all component in the world that matches the 
+ * specified filter.
+ *
+ * @param world The world to snapshot.
+ * @param return The snapshot.
+ */
 FLECS_EXPORT
-ecs_queue_t* _ecs_queue_new(
-    ecs_size_t elem_size,
-    int16_t offset,
-    int32_t elem_count);
+ecs_snapshot_t* ecs_snapshot_take(
+    ecs_world_t *world);
 
-#define ecs_queue_new(T, elem_count)\
-    _ecs_queue_new(ECS_VECTOR_T(T), elem_count)
-
+/** Create a filtered snapshot.
+ * This operation is the same as ecs_snapshot_take, but accepts an iterator so
+ * an application can control what is stored by the snapshot. 
+ *
+ * @param iter An iterator to the data to be stored by the snapshot.
+ * @param next A function pointer to the next operation for the iterator.
+ * @param return The snapshot.
+ */
 FLECS_EXPORT
-ecs_queue_t* _ecs_queue_from_array(
-    ecs_size_t elem_size,
-    int16_t offset,
-    int32_t elem_count,
-    void *array);
+ecs_snapshot_t* ecs_snapshot_take_w_iter(
+    ecs_iter_t *iter,
+    ecs_iter_next_action_t action);
 
-#define ecs_queue_from_array(T, elem_count, array)\
-    _ecs_queue_from_array(ECS_VECTOR_T(T), elem_count, array)
-
+/** Restore a snapshot.
+ * This operation restores the world to the state it was in when the specified
+ * snapshot was taken. A snapshot can only be used once for restoring, as its
+ * data replaces the data that is currently in the world.
+ * This operation also resets the last issued entity handle, so any calls to
+ * ecs_new may return entity ids that have been issued before restoring the 
+ * snapshot.
+ *
+ * The world in which the snapshot is restored must be the same as the world in
+ * which the snapshot is taken.
+ *
+ * @param world The world to restore the snapshot to.
+ * @param snapshot The snapshot to restore. 
+ */
 FLECS_EXPORT
-void* _ecs_queue_push(
-    ecs_queue_t *queue,
-    ecs_size_t elem_size,
-    int16_t offset);
+void ecs_snapshot_restore(
+    ecs_world_t *world,
+    ecs_snapshot_t *snapshot);
 
-#define ecs_queue_push(queue, T)\
-    (T*)_ecs_queue_push(queue, ECS_VECTOR_T(T))
-
+/** Obtain iterator to snapshot data.
+ *
+ * @param snapshot The snapshot to iterate over.
+ * @return Iterator to snapshot data. */
 FLECS_EXPORT
-void* _ecs_queue_get(
-    ecs_queue_t *queue,
-    ecs_size_t elem_size,
-    int16_t offset,
-    int32_t index);
+ecs_iter_t ecs_snapshot_iter(
+    ecs_snapshot_t *snapshot,
+    const ecs_filter_t *filter);
 
-#define ecs_queue_get(queue, T, index)\
-    (T*)_ecs_queue_get(queue, ECS_VECTOR_T(T), index)
-
-#define ecs_queue_get_t(vector, size, alignment, index) \
-    _ecs_queue_get(vector, ECS_VECTOR_U(size, alignment), index)
-
+/** Progress snapshot iterator.
+ * 
+ * @param iter The snapshot iterator.
+ * @return True if more data is available, otherwise false.
+ */
 FLECS_EXPORT
-void* _ecs_queue_last(
-    ecs_queue_t *queue,
-    ecs_size_t elem_size,
-    int16_t offset);
+bool ecs_snapshot_next(
+    ecs_iter_t *iter);
 
-#define ecs_queue_last(queue, T)\
-    (T*)_ecs_queue_last(queue, ECS_VECTOR_T(T))
 
+/** Free snapshot resources.
+ * This frees resources associated with a snapshot without restoring it.
+ *
+ * @param world The world.
+ * @param snapshot The snapshot to free. 
+ */
 FLECS_EXPORT
-int32_t ecs_queue_index(
-    ecs_queue_t *queue);
-
-FLECS_EXPORT
-int32_t ecs_queue_count(
-    ecs_queue_t *queue);
-
-FLECS_EXPORT
-void ecs_queue_free(
-    ecs_queue_t *queue);
-
+void ecs_snapshot_free(
+    ecs_snapshot_t *snapshot);
+    
 #ifdef __cplusplus
 }
 #endif

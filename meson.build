@@ -21,19 +21,20 @@ flecs_src = files(
     'src/entity_index.c',
     'src/strbuf.c',
     'src/iter.c',
-    'src/addon/writer.c',
+    'src/addon/bulk.c'
+    'src/addon/dbg.c',
+    'src/addon/hierarchy.c',
+    'src/addon/module.c',
+    'src/addon/os_api_impl.c',
     'src/addon/queue.c',
     'src/addon/reader.c',
-    'src/addon/dbg.c',
     'src/addon/snapshot.c',
-    'src/addon/os_api_impl.c',
+    'src/addon/writer.c',
     'src/table.c',
     'src/signature.c',
     'src/world.c',
     'src/stage.c',
     'src/bootstrap.c',
-    'src/scope.c',
-    'src/module.c',
     'src/map.c',
     'src/filter.c',
     'src/query.c',
@@ -41,10 +42,10 @@ flecs_src = files(
     'src/modules/stats.c',
     'src/modules/pipeline/pipeline.c',
     'src/modules/pipeline/worker.c',
-    'src/modules/system.c',
+    'src/modules/system/system.c',
+    'src/modules/system/system_dbg.c',
     'src/modules/timer.c',
     'src/table_graph.c',
-    'src/bulk.c'
 )
 
 install_headers('include/flecs.h')

@@ -705,6 +705,22 @@ ecs_entity_t ecs_get_pipeline(
     return world->pipeline;
 }
 
+ecs_entity_t ecs_new_pipeline(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name,
+    const char *expr)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+
+    ecs_entity_t result = ecs_new_type(world, e, name, expr);
+    ecs_assert(ecs_get(world, result, EcsType) != NULL, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_add_entity(world, result, EcsPipeline);
+
+    return result;
+}
 
 /* -- Module implementation -- */
 

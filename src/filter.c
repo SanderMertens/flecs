@@ -1,5 +1,5 @@
 
-#include "flecs_private.h"
+#include "private_api.h"
 
 ecs_iter_t ecs_filter_iter(
     ecs_world_t *world,

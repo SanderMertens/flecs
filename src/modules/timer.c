@@ -1,4 +1,8 @@
-#include "../flecs_private.h"
+#include "../private_api.h"
+#include "flecs/addon/module.h"
+#include "flecs/modules/timer.h"
+#include "flecs/modules/pipeline.h"
+#include "system/system.h"
 
 ecs_type_t ecs_type(EcsTimer);
 ecs_type_t ecs_type(EcsRateFilter);

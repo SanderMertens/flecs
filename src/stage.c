@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 /* If all components were removed, don't store the entity in a table. If the
  * entity was deleted, also remove the entity from the entity index so that its

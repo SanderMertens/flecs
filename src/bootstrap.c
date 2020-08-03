@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 /* Global type variables */
 ecs_type_t ecs_type(EcsComponent);

@@ -1,51 +1,5 @@
-#include "flecs_private.h"
-
-/* Mock types so we don't have to depend on them. 
- * TODO: Need a better workaround */
-typedef uint16_t EcsAdmin;
-typedef int32_t EcsConsole;
-
-int ecs_enable_admin(
-	ecs_world_t* world,
-	uint16_t port)
-{
-    if (!ecs_import_from_library(world, "flecs.systems.civetweb", NULL)) {
-        ecs_os_err("Failed to load flecs.systems.civetweb");
-        return 1;
-    }
-    
-    if (!ecs_import_from_library(world, "flecs.systems.admin", NULL)) {
-        ecs_os_err("Failed to load flecs.systems.admin");
-        return 1;
-    }
-
-    /* Enable monitoring */
-    ecs_measure_frame_time(world, true);
-    ecs_measure_system_time(world, true);
-
-    /* Create admin instance */
-    ecs_entity_t ecs_entity(EcsAdmin) = ecs_lookup(world, "EcsAdmin");
-    ecs_set(world, 0, EcsAdmin, {port});
-
-    ecs_os_log("admin is running on port %d", port);
-
-    return 0;
-}
-
-int ecs_enable_console(
-	ecs_world_t* world)
-{
-    if (!ecs_import_from_library( world, "flecs.systems.console", NULL)) {
-        ecs_os_err("Failed to load flecs.systems.console");
-        return 1;
-    }
-
-    /* Create console instance */
-    ecs_entity_t ecs_entity(EcsConsole) = ecs_lookup(world, "EcsConsole");
-    ecs_set(world, 0, EcsConsole, {0});
-
-    return 0;
-}
+#include "../private_api.h"
+#include "flecs/addon/hierarchy.h"
 
 char* ecs_module_path_from_c(
     const char *c_name)
@@ -215,6 +169,42 @@ ecs_entity_t ecs_import_from_library(
     }
 
     ecs_os_free(library_filename);
+
+    return result;
+}
+
+ecs_entity_t ecs_new_module(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name,
+    size_t size,
+    size_t alignment)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    assert(world->magic == ECS_WORLD_MAGIC);
+
+    if (!e) {
+        char *module_path = ecs_module_path_from_c(name);
+        e = ecs_new_from_fullpath(world, module_path);
+
+        EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
+        name_ptr->symbol = name;
+
+        ecs_os_free(module_path);
+    }
+
+    ecs_entity_t result = ecs_new_component(world, e, NULL, size, alignment);
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* Add module tag */
+    ecs_add_entity(world, result, EcsModule);
+
+    /* Add module to itself. This way we have all the module information stored
+     * in a single contained entity that we can use for namespacing */
+    ecs_set_ptr_w_entity(world, result, result, size, NULL);
+
+    /* Set the current scope to the module */
+    ecs_set_scope(world, result);
 
     return result;
 }

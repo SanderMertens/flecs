@@ -1,6 +1,6 @@
 
-#ifndef FLECS_TIMERS_H
-#define FLECS_TIMERS_H
+#ifndef FLECS_TIMER_H
+#define FLECS_TIMER_H
 
 #include "flecs.h"
 

@@ -28,7 +28,6 @@
 #include "flecs.h"
 #include "flecs/private/entity_index.h"
 #include "flecs/private/table.h"
-#include "flecs/private/strbuf.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
@@ -67,13 +66,6 @@ typedef int (*ecs_parse_action_t)(
     const char *component,
     const char *source,
     void *ctx);
-
-/** Instruction data for pipeline.
- * This type is the element type in the "ops" vector of a pipeline and contains
- * information about the set of systems that need to be ran before a merge. */
-typedef struct ecs_pipeline_op_t {
-    int32_t count;              /**< Number of systems to run before merge */
-} ecs_pipeline_op_t;
 
 /** A component array in a table. */
 struct ecs_column_t {
@@ -238,93 +230,13 @@ typedef struct ecs_on_demand_in_t {
     ecs_vector_t *systems;  /* Systems that have this column as [out] column */
 } ecs_on_demand_in_t;
 
-/** A column system is a system that is ran periodically (default = every frame)
- * on all entities that match the system signature expression. Column systems
- * are prematched with tables (archetypes) that match the system signature
- * expression. Each time a column system is invoked, it iterates over the 
- * matched list of tables (the 'tables' member). 
- *
- * For each table, the system stores a list of the components that were matched
- * with the system. This list may differ from the component list of the table,
- * when OR expressions or optional expressions are used.
- * 
- * A column system keeps track of tables that are empty. These tables are stored
- * in the 'empty_tables' array. This prevents the system from iterating over
- * tables in the main loop that have no data.
- * 
- * For each table, a column system stores an index that translates between the
- * a column in the system signature, and the matched table. This information is
- * stored, alongside with an index that identifies the table, in the 'tables'
- * member. This is an array of an array of integers, per table.
- * 
- * Additionally, the 'tables' member contains information on where a component
- * should be fetched from. By default, components are fetched from an entity,
- * but a system may specify that a component must be resolved from a container,
- * or must be fetched from a prefab. In this case, the index to lookup a table
- * column from system column contains a negative number, which identifies an
- * element in the 'refs' array.
- * 
- * The 'refs' array contains elements of type 'EcsRef', and stores references
- * to external entities. References can vary per table, but not per entity/row,
- * as prefabs / containers are part of the entity type, which in turn 
- * identifies the table in which the entity is stored.
- * 
- * The 'period' and 'time_passed' members are used for periodic systems. An
- * application may specify that a system should only run at a specific interval, 
- * like once per second. This interval is stored in the 'period' member. Each
- * time the system is evaluated but not ran, the delta_time is added to the 
- * time_passed member, until it exceeds 'period'. In that case, the system is
- * ran, and 'time_passed' is decreased by 'period'. 
- */
-typedef struct EcsSystem {
-    ecs_iter_action_t action;       /* Callback to be invoked for matching it */
-    void *ctx;                      /* Userdata for system */
-
-    ecs_entity_t entity;                  /* Entity id of system, used for ordering */
-    ecs_query_t *query;                   /* System query */
-    ecs_on_demand_out_t *on_demand;       /* Keep track of [out] column refs */
-    ecs_system_status_action_t status_action; /* Status action */
-    void *status_ctx;                     /* User data for status action */    
-    ecs_entity_t tick_source;             /* Tick source associated with system */
-    
-    int32_t invoke_count;                 /* Number of times system is invoked */
-    float time_spent;                     /* Time spent on running system */
-    float time_passed;                    /* Time passed since last invocation */
-    bool has_out_columns;                 /* True if system has out columns */
-} EcsSystem;
-
-#define ECS_TYPE_DB_MAX_CHILD_NODES (256)
-#define ECS_TYPE_DB_BUCKET_COUNT (256)
-
-/** The ecs_type_node_t type is a node in a hierarchical structure that allows
- * for quick lookups of types. A node represents a type, and its direct children
- * represent types with one additional entity. For example, given a node [A],
- * [A, B] would be a child node.
- * 
- * Child nodes are looked up directly using the entity id. For example, node [A]
- * will be stored at root.nodes[A]. Children entity ids are offset by their 
- * parent, such that [A, B] is stored at root.nodes[A].nodes[B - A].
- * 
- * If the offset exceeds ECS_TYPE_DB_MAX_CHILD_NODES, the type will be stored in
- * the types map. This map is keyed by the hash of the type relative to its
- * parent. For example, the hash for type [A, B, C] will be computed on [B, C]
- * if its parent is [A]. */
-typedef struct ecs_type_link_t {
-    ecs_type_t type;                /* type of current node */
-    struct ecs_type_link_t *next;   /* next link (for iterating linearly) */
-} ecs_type_link_t;
-
-typedef struct ecs_type_node_t {
-    ecs_vector_t *nodes;    /* child nodes - <ecs_entity_t, ecs_type_node_t> */
-    ecs_vector_t **types;   /* child types w/large entity offsets - <hash, vector<ecs_type_link_t>> */
-    ecs_type_link_t link;     
-} ecs_type_node_t;
-
+/** Entity index */
 struct ecs_ei_t {
     ecs_sparse_t *lo;       /* Low entity ids are stored in a sparse set */
     ecs_map_t *hi;          /* To save memory high ids are stored in a map */
 };
 
+/** Types for deferred operations */
 typedef enum ecs_op_kind_t {
     EcsOpNone,
     EcsOpAdd,

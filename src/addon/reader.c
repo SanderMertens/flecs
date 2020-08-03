@@ -1,4 +1,4 @@
-#include "../flecs_private.h"
+#include "../private_api.h"
 #include "flecs/addon/reader_writer.h"
 
 static

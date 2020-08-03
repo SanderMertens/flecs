@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 /* -- Global variables -- */
 
@@ -245,14 +245,18 @@ ecs_world_t *ecs_mini(void) {
 ecs_world_t *ecs_init(void) {
     ecs_world_t *world = ecs_mini();
 
-#ifndef FLECS_NO_MODULES
+#ifdef FLECS_MODULE_H
     ecs_trace_1("import builtin modules");
     ecs_log_push();
-
+#ifdef FLECS_SYSTEM_H
     ECS_IMPORT(world, FlecsSystem);
+#endif
+#ifdef FLECS_PIPELINE_H
     ECS_IMPORT(world, FlecsPipeline);
+#endif
+#ifdef FLECS_TIMER_H
     ECS_IMPORT(world, FlecsTimer);
-
+#endif
     ecs_log_pop();
 #endif
 

@@ -1,4 +1,8 @@
-#include "flecs_private.h"
+#include "private_api.h"
+
+#ifdef FLECS_SYSTEMS_H
+#include "modules/system/system.h"
+#endif
 
 static
 ecs_entity_t components_contains(
@@ -1442,6 +1446,8 @@ void ecs_query_activate_table(
         query->empty_tables = dst_array;
     }
 
+    /* Activate system if registered with query */
+#ifdef FLECS_SYSTEMS_H
     if (query->system) {
         int32_t dst_count = ecs_vector_count(dst_array);
         if (active) {
@@ -1452,6 +1458,9 @@ void ecs_query_activate_table(
             ecs_system_activate(world, query->system, false);
         }
     }
+#else
+    (void)src_count;
+#endif
 
     order_ranked_tables(world, query);
 }

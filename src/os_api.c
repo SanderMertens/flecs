@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 static bool ecs_os_api_initialized = false;
 

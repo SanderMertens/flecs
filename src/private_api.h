@@ -1,10 +1,7 @@
 #ifndef FLECS_PRIVATE_H
 #define FLECS_PRIVATE_H
 
-/* This file contains declarations to private flecs functions */
-
-#include "types.h"
-
+#include "private_types.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Core bootstrap functions
@@ -66,6 +63,7 @@ void ecs_run_monitors(
     int32_t dst_row, 
     int32_t count, 
     ecs_vector_t *v_src_monitors);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// World API
@@ -397,30 +395,6 @@ bool ecs_sig_check_constraints(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// System API (to be removed from core)
-////////////////////////////////////////////////////////////////////////////////
-
-/* Invoked when system becomes active / inactive */
-void ecs_system_activate(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    bool activate);
-
-/* Internal function to run a system */
-ecs_entity_t ecs_run_intern(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t system,
-    EcsSystem *system_data,
-    float delta_time,
-    int32_t offset,
-    int32_t limit,
-    const ecs_filter_t *filter,
-    void *param,
-    bool ran_by_app);
-
-
-////////////////////////////////////////////////////////////////////////////////
 //// Time API
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -486,7 +460,18 @@ int32_t ecs_row_to_record(
 
 /* Convert type to entity array */
 ecs_entities_t ecs_type_to_entities(
-    ecs_type_t type);    
+    ecs_type_t type); 
+
+/* Convert a symbol name to an entity name by removing the prefix */
+const char* ecs_name_from_symbol(
+    ecs_world_t *world,
+    const char *type_name); 
+
+/* Lookup an entity by name with a specific type */
+ecs_entity_t ecs_lookup_w_type(
+    ecs_world_t *world,
+    const char *name,
+    ecs_type_t type);      
 
 /* Utility that print a descriptive error string*/
 //void ecs_print_error_string(const char *error_description, const char* signature, const char* system_id, const char* component_id);

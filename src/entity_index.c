@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 /* Get entity */
 ecs_record_t* ecs_ei_get(

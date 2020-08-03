@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 static
 void* get_owned_column_ptr(

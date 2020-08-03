@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 /* When a new table is created, match it with the queries registered with the
  * world. If a query matches, it will call the esc_table_register_query 
