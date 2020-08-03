@@ -1399,7 +1399,7 @@ void ecs_log_print(
 
     /* Massage filename so it doesn't take up too much space */
     char filebuff[256];
-    strcpy(filebuff, file);
+    ecs_os_strcpy(filebuff, file);
     file = filebuff;
     char *file_ptr = strrchr(file, '/');
     if (file_ptr) {
@@ -10352,12 +10352,12 @@ bool ecs_strbuf_vappend_intern(
                 if (n) {
                     /* If a max number of characters to write is set, only a
                      * subset of the string should be copied to the buffer */
-                    strncpy(
+                    ecs_os_strncpy(
                         ecs_strbuf_ptr(b),
                         str + memLeftInElement,
                         (size_t)memRequired);
                 } else {
-                    strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
+                    ecs_os_strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
                 }
 
                 /* Update to number of characters copied to new buffer */
@@ -11641,11 +11641,7 @@ void append_name(
         /* Prevent issues during bootstrap */
         str = "EcsComponent";
     } else {
-#ifdef FLECS_HIERARCHY_H
         str = ecs_get_fullpath(world, h);
-#else
-        str = ecs_os_strdup(ecs_get_name(world, h));
-#endif
     }
 
     ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -11923,7 +11919,7 @@ char* ecs_os_api_strdup(const char *str) {
     int len = ecs_os_strlen(str);
     char *result = ecs_os_api_malloc(len + 1);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
-    strcpy(result, str);
+    ecs_os_strcpy(result, str);
     return result;
 }
 
@@ -15828,7 +15824,7 @@ uint64_t ecs_os_time_now(void) {
     #if defined(_WIN32)
         LARGE_INTEGER qpc_t;
         QueryPerformanceCounter(&qpc_t);
-        now = qpc_t.QuadPart / _ecs_os_time_win_freq;
+        now = (uint64_t)(qpc_t.QuadPart / _ecs_os_time_win_freq);
     #elif defined(__APPLE__) && defined(__MACH__)
         now = mach_absolute_time();
     #else
