@@ -230,30 +230,41 @@ static ULONG win32_current_resolution;
 
 void ecs_increase_timer_resolution(bool enable)
 {
-    HMODULE hntdll = GetModuleHandle("ntdll.dll");
-    if(!hntdll) return;
+    HMODULE hntdll = GetModuleHandle((LPCTSTR)"ntdll.dll");
+    if (!hntdll) {
+        return;
+    }
 
-    LONG (__stdcall *pNtSetTimerResolution)(ULONG desired, BOOLEAN set, ULONG * current);
+    LONG (__stdcall *pNtSetTimerResolution)(
+        ULONG desired, BOOLEAN set, ULONG * current);
 
-    pNtSetTimerResolution = (LONG(__stdcall*)(ULONG, BOOLEAN, ULONG*))GetProcAddress(hntdll, "NtSetTimerResolution");
-    if(!pNtSetTimerResolution) return;
+    pNtSetTimerResolution = (LONG(__stdcall*)(ULONG, BOOLEAN, ULONG*))
+        GetProcAddress(hntdll, "NtSetTimerResolution");
+
+    if(!pNtSetTimerResolution) {
+        return;
+    }
 
     ULONG current, resolution = 10000; /* 1 ms */
 
-    if(!enable && win32_current_resolution)
-    {
+    if (!enable && win32_current_resolution) {
         pNtSetTimerResolution(win32_current_resolution, 0, &current);
         win32_current_resolution = 0;
         return;
+    } else if (!enable) {
+        return;
     }
-    else if(!enable) return;
 
-    if(resolution == win32_current_resolution) return;
+    if (resolution == win32_current_resolution) {
+        return;
+    }
 
-    if(win32_current_resolution) pNtSetTimerResolution(win32_current_resolution, 0, &current);
+    if (win32_current_resolution) {
+        pNtSetTimerResolution(win32_current_resolution, 0, &current);
+    }
 
-    if(pNtSetTimerResolution(resolution, 1, &current))
-    {/* Try setting a lower resolution */
+    if (pNtSetTimerResolution(resolution, 1, &current)) {
+        /* Try setting a lower resolution */
         resolution *= 2;
         if(pNtSetTimerResolution(resolution, 1, &current)) return;
     }
