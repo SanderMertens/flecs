@@ -1,17 +1,14 @@
 #ifdef FLECS_PIPELINE
-#define FLECS_MODULE
 #define FLECS_SYSTEM
+
+#include "flecs/modules/system.h"
 
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H
 
-#include "flecs.h"
-#include "flecs/modules/system.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Pipeline API

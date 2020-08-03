@@ -398,11 +398,7 @@ void append_name(
         /* Prevent issues during bootstrap */
         str = "EcsComponent";
     } else {
-#ifdef FLECS_HIERARCHY_H
         str = ecs_get_fullpath(world, h);
-#else
-        str = ecs_os_strdup(ecs_get_name(world, h));
-#endif
     }
 
     ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);

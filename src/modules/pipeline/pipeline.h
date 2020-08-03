@@ -2,7 +2,6 @@
 #define FLECS_PIPELINE_PRIVATE_H
 
 #include "../../private_api.h"
-#include "flecs/addon/module.h"
 #include "../system/system.h"
 #include "flecs/modules/pipeline.h"
 

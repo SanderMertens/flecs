@@ -1,8 +1,5 @@
-#include "flecs.h"
 
-#ifdef FLECS_HIERARCHY
-
-#include "../private_api.h"
+#include "private_api.h"
 
 static
 bool path_append(
@@ -503,5 +500,3 @@ ecs_entity_t ecs_new_from_path_w_sep(
 {
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
-
-#endif

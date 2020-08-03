@@ -2,9 +2,9 @@
 #include "flecs.h"
 
 #ifdef FLECS_SYSTEM
+#ifdef FLECS_DBG
 
 #include "system.h"
-#include "flecs/addon/dbg.h"
 
 int ecs_dbg_system(
     ecs_world_t *world,
@@ -123,4 +123,5 @@ ecs_type_t ecs_dbg_get_column_type(
     return result;
 }
 
+#endif
 #endif

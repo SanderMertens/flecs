@@ -315,6 +315,7 @@ void ecs_run_component_trigger(
         world, stage, trigger_vec, component, table, data, row, count, entities);
 }
 
+#ifdef FLECS_SYSTEM 
 static
 void run_set_systems_for_entities(
     ecs_world_t *world,
@@ -325,7 +326,7 @@ void run_set_systems_for_entities(
     int32_t count,
     ecs_entity_t *entities,
     bool set_all)
-{
+{   
     /* Run OnSet systems */
     if (set_all) {
         ecs_vector_t *queries = table->on_set_all;
@@ -343,6 +344,7 @@ void run_set_systems_for_entities(
         }
     }
 }
+#endif
 
 void ecs_run_set_systems(
     ecs_world_t *world,
@@ -354,6 +356,7 @@ void ecs_run_set_systems(
     int32_t count,
     bool set_all)
 {
+#ifdef FLECS_SYSTEM    
     if (!count || !data) {
         return;
     }
@@ -367,24 +370,7 @@ void ecs_run_set_systems(
 
     run_set_systems_for_entities(world, stage, components, table, row, 
         count, entities, set_all);
-}
-
-static
-int32_t find_prefab(
-    ecs_type_t type,
-    int32_t n)
-{
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *buffer = ecs_vector_first(type, ecs_entity_t);
-
-    for (i = n + 1; i < count; i ++) {
-        ecs_entity_t e = buffer[i];
-        if (e & ECS_INSTANCEOF) {
-            return i;
-        }
-    }
-
-    return -1;
+#endif
 }
 
 void ecs_run_monitors(
@@ -396,6 +382,7 @@ void ecs_run_monitors(
     int32_t count, 
     ecs_vector_t *v_src_monitors)
 {
+#ifdef FLECS_SYSTEM    
     if (v_dst_monitors == v_src_monitors) {
         return;
     }
@@ -443,6 +430,25 @@ void ecs_run_monitors(
             ecs_run_monitor(world, stage, dst, NULL, dst_row, count, NULL);
         }
     }
+#endif
+}
+
+static
+int32_t find_prefab(
+    ecs_type_t type,
+    int32_t n)
+{
+    int32_t i, count = ecs_vector_count(type);
+    ecs_entity_t *buffer = ecs_vector_first(type, ecs_entity_t);
+
+    for (i = n + 1; i < count; i ++) {
+        ecs_entity_t e = buffer[i];
+        if (e & ECS_INSTANCEOF) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 static

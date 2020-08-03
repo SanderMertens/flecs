@@ -3,7 +3,6 @@
 #ifdef FLECS_SNAPSHOT
 
 #include "../private_api.h"
-#include "flecs/addon/snapshot.h"
 
 /* World snapshot */
 struct ecs_snapshot_t {

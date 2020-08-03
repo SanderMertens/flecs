@@ -3,7 +3,6 @@
 #ifdef FLECS_READER_WRITER
 
 #include "../private_api.h"
-#include "flecs/addon/reader_writer.h"
 
 static
 void ecs_name_writer_alloc(

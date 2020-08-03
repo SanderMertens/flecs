@@ -3,7 +3,6 @@
 #ifdef FLECS_DBG
 
 #include "../private_api.h"
-#include "flecs/addon/dbg.h"
 
 ecs_table_t *ecs_dbg_find_table(
     ecs_world_t *world,

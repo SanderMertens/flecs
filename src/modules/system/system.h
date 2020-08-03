@@ -2,8 +2,6 @@
 #define FLECS_SYSTEM_PRIVATE_H
 
 #include "../../private_api.h"
-#include "flecs/addon/module.h"
-#include "flecs/modules/system.h"
 
 typedef struct EcsSystem {
     ecs_iter_action_t action;       /* Callback to be invoked for matching it */

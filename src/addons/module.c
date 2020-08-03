@@ -3,7 +3,6 @@
 #ifdef FLECS_MODULE
 
 #include "../private_api.h"
-#include "flecs/addon/hierarchy.h"
 
 char* ecs_module_path_from_c(
     const char *c_name)

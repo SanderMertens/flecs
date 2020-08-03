@@ -1,4 +1,4 @@
-#ifdef FLECS_BULK
+#ifdef FLECS_DBG
 
 #ifndef FLECS_DBG_H
 #define FLECS_DBG_H
