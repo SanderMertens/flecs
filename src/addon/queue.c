@@ -1,3 +1,5 @@
+#include "flecs.h"
+
 #ifdef FLECS_QUEUE
 
 #include "flecs/addon/queue.h"

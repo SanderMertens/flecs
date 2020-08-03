@@ -1,3 +1,6 @@
+
+#include "flecs.h"
+
 #ifdef FLECS_SYSTEM
 
 #include "system.h"

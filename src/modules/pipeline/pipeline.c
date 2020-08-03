@@ -1,3 +1,5 @@
+#include "flecs.h"
+
 #ifdef FLECS_PIPELINE
 
 #include "pipeline.h"

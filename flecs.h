@@ -5469,9 +5469,9 @@ void FlecsStatsImport(
 
 /* Optional addons */
 #ifndef FLECS_NO_ADDONS
-#ifndef FLECS_BULK
+#ifdef FLECS_BULK
 #endif
-#ifndef FLECS_DBG
+#ifdef FLECS_DBG
 #ifdef FLECS_BULK
 
 #ifndef FLECS_DBG_H
@@ -5539,7 +5539,7 @@ void ecs_dbg_table(
 
 #endif
 #endif
-#ifndef FLECS_HIERARCHY
+#ifdef FLECS_HIERARCHY
 #ifdef FLECS_HIERARCHY
 
 /**
@@ -5765,9 +5765,9 @@ bool ecs_scope_next(
 
 #endif
 #endif
-#ifndef FLECS_MODULE
+#ifdef FLECS_MODULE
 #endif
-#ifndef FLECS_QUEUE
+#ifdef FLECS_QUEUE
 #ifdef FLECS_QUEUE
 
 #ifndef FLECS_QUEUE_H_
@@ -5849,7 +5849,7 @@ void ecs_queue_free(
 
 #endif
 #endif
-#ifndef FLECS_READER_WRITER
+#ifdef FLECS_READER_WRITER
 #ifdef FLECS_READER_WRITER
 
 /**
@@ -6066,7 +6066,7 @@ int ecs_writer_write(
 
 #endif
 #endif
-#ifndef FLECS_SNAPSHOT
+#ifdef FLECS_SNAPSHOT
 #ifdef FLECS_SNAPSHOT
 
 /**

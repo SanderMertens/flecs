@@ -1,3 +1,5 @@
+#include "flecs.h"
+
 #ifdef FLECS_STATS
 
 #include "../private_api.h"

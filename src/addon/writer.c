@@ -1,3 +1,5 @@
+#include "flecs.h"
+
 #ifdef FLECS_READER_WRITER
 
 #include "../private_api.h"
