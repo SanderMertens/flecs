@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 ## Building
 The easiest way to add Flecs to a project is to add [flecs.c](https://github.com/flecs/master/flecs.c) and [flecs.h](https://github.com/flecs/master/flecs.h) to your source code. Alternatively you can also build Flecs as a library by using the cmake, meson, bazel or bake buildfiles.
 
-### Customized builds
+### Custom builds
 Whether you're looking for a minimal ECS library or a full-fledged system runtime, customizable builds let you remove Flecs features you don't need. By default all features are included. To customize a build, follow these steps:
 
 - define `FLECS_CUSTOM_BUILD`. This removes all optional features from the build.
