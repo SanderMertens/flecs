@@ -18,44 +18,20 @@ Here are the highlights of v2:
 
 ### New features
 - A new pipeline architecture that enables fully customizable phases
-- Queries provide an interface to iterate over entities with the same benefits as systems (prematched) but without requiring a callback:
-
-```c
-ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
-ecs_iter_t it = ecs_query_iter(q);
-
-while (ecs_query_next(&it)) {
-    Position *p = ecs_column(&it, Position, 1);
-    Velocity *v = ecs_column(&it, Velocity, 2);
-
-    for (int i = 0; i < it.count; i ++) {
-        p[i].x += v[i].x;
-        p[i].y += v[i].y;
-    }
-}
-```
-
-- Component lifecycle callbacks allow an application to specify behavior when a component is constructed, destucted, copied or moved
-- Many new functions to support working with hierarchies, including a new API to iterate over a hierarchy depth-first:
-
-```c
-    ecs_iter_t it = ecs_scope_iter(world, parent);
-
-    while (ecs_scope_next(&it)) {
-        for (int i = 0; i < it.count; i ++) {
-            ecs_entity_t child = it.entities[i];
-            printf("%s\n", ecs_get_name(world, child));
-        }
-    }
-```
-
+- Queries provide an interface to iterate over entities with the same benefits as systems (prematched) but without requiring a callback
 - Sorting
+- Change tracking
+- Component lifecycle callbacks allow an application to specify behavior when a component is constructed, destucted, copied or moved
+- Component traits allow applications to implement generic behavior once for multiple components
+- Many new functions to support working with hierarchies, including a new API to iterate over a hierarchy depth-first
+- Modules are now namespaced, which ensures that component & system identifiers won't clash between modules
 - Monitors are a new kind of system that is executed once when the system condition becomes true
 - `OnSet` systems are now faster and more capable than in v1, and make it much easier to create declarative, component-based APIs
 - More ways to introspect internals, including a new, component-based API for creation and introspection of systems
 - Time-based and rate-based filters that can be shared across systems
 - Type constraints enable adding restrictions on what components can (not) be added to an entity
-- Switch (`XOR`) components allow for easy implementation of state machines
+- A modular core that makes it easy to remove features that are not needed
+- Many more smaller usability and performance improvements
 
 ### Bugfixes
 - A number of issues in multithreading have been addressed that could cause crashes
@@ -225,9 +201,9 @@ ECS_PREFAB(world, Parent);
 - The `CONTAINER` keyword has changed to `PARENT`
 - Cyclic `INSTANCEOF` relationships are no longer supported
 - Task OnRemove systems (systems that are not matched with any entities) are no longer supported.
+- Modules no longer take a `flags` argument, but now only accept a world.
 - Module components are no longer stored on the singleton entity but on their own entity, which also acts as the component handle:
 
 ```c
 MyModule *m_ptr = ecs_get(world, ecs_entity(MyModule), MyModule);
 ```
-
