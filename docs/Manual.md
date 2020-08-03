@@ -1225,6 +1225,48 @@ int compare_position(ecs_entity_t e1, Posiiton *p1, ecs_entity_t e2, Position *p
 When no component is provided in the `ecs_query_order_by` function, no reordering will happen as a result of setting components or running a system with `[out]` columns.
 
 ## Filters
+Filters allow an application to iterate through matching entities in a way that is similar to queries. Contrary to queries however, filters are not prematched, which means that a filter is evaluated as it is iterated over. Filters are therefore slower to evaluate than queries, but they have less overhead and are (much) cheaper to create. This makes filters less suitable for repeated-, but useful for ad-hoc searches where the application doesn't know beforehand which set of entities it will need.
+
+A filter can be used like this:
+
+```cpp
+ECS_COMPONENT(world, Position);
+
+/* Create filter */
+ecs_filter_t filter = {
+    .include = ecs_type(Position),
+    .include_kind = EcsMatchAll
+};
+
+/* Create iterator to filter */
+ecs_iter_t it = ecs_filter_iter(world, &filter);
+
+while (ecs_filter_next(&it)) {
+    /* Because a filter does not have a signature, we need to get the component
+     * array by finding it in the current table */
+    ecs_type_t table_type = ecs_iter_type(&it);
+
+    /* First Retrieve the column index for Position */
+    int32_t p_index = ecs_type_index_of(table_type, ecs_entity(Position));
+
+    /* Now use the column index to get the Position array from the table */
+    Position *p = ecs_table_column(&it, p_index);
+
+    /* Iterate as usual */
+    for (int i = 0; i < it.count; i ++) {
+        printf("{%f, %f}\n", p[i].x, p[i].y);
+    }
+}
+```
+
+A filter can provide an `include` and an `exclude` type, where the `include` type specifies the components the entities must have in order to match the filter, and the `exclude` type specifies the components the entity should not have. In addition to these two fields, the filter provides a `kind` field for both `include` and `exclude` types which can be one of these values:
+
+Option          | Description
+----------------|------------------------------------------------------------------------
+EcsMatchDefault | Default matching: ECsMatchAny for include, and EcsMatchAll for exclude
+EcsMatchAll     | The type must include/excldue all components
+EcsMatchAny     | The type must include/exclude one of the components
+EcsMatchExact   | The type must match exactly with the components of the entity
 
 ## Systems
 Systems allow the application to run logic that is matched with a set of entities every frame, periodically or as the result of some event. An example of a simple system definition is:
@@ -1289,6 +1331,25 @@ void Move(ecs_iter_t *it) {
 ```
 
 ## Triggers
+Triggers are callbacks that are executed when a component is added or removed from an entity. Triggers are similar to systems, but unlike systems they can only match a single component. This is an example of a trigger that is executed when the Position component is added:
+
+```c
+ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position);
+```
+
+The implementation of the trigger looks similar to a system:
+
+```c
+void AddPosition(ecs_iter_t *it) {
+    Position *p = ecs_column(it, Position, 1);
+
+    for (int i = 0; i < it->count; i ++) {
+        p[i].x = 10;
+        p[i].y = 20;
+        printf("Position added\n");
+    }
+}
+```
 
 ## Modules
 

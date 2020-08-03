@@ -1,4 +1,4 @@
-#include <add_remove_system.h>
+#include <simple_triggers.h>
 
 typedef struct Position {
     float x;
@@ -36,8 +36,8 @@ int main(int argc, char *argv[]) {
 
     /* Register two systems that are executed when Position is added or removed
      * to entities. */
-    ECS_SYSTEM(world, AddPosition, EcsOnAdd, Position);
-    ECS_SYSTEM(world, RemovePosition, EcsOnRemove, Position);
+    ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position);
+    ECS_TRIGGER(world, RemovePosition, EcsOnRemove, Position);
 
     /* Create new entity with Position. This triggers the OnAdd system. */
     ecs_entity_t e = ecs_new(world, Position);

@@ -1,8 +1,8 @@
-#ifndef ADD_REMOVE_SYSTEM_H
-#define ADD_REMOVE_SYSTEM_H
+#ifndef SIMPLE_TRIGGERS_H
+#define SIMPLE_TRIGGERS_H
 
 /* This generated file contains includes for project dependencies */
-#include "add_remove_system/bake_config.h"
+#include "simple_triggers/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {
