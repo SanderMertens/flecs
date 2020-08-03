@@ -1352,6 +1352,135 @@ void AddPosition(ecs_iter_t *it) {
 ```
 
 ## Modules
+Modules allow an application to split up systems and components into separate decoupled units. The purpose of modules is to make it easier to organize systems and components for large projects. Additionally, modules also make it easier to split off functionality into separate compilation units.
+
+A module consists out of a few parts:
+
+- A module type (struct) that stores handles to the contents in the modules
+- A macro to declare module contents as local variables in the scope where it is imported
+- An import function that loads the module contents for a world
+
+The module type and macro are typically located in the a separate module header file, and look like this for a module named "Vehicles":
+
+```c
+typedef struct Car {
+    float speed;
+} Car;
+
+typedef struct Bus {
+    float speed;
+} Bus;
+
+typedef struct MotorCycle {
+    float speed;
+} MotorCycle;
+
+typedef struct Vehicles {
+    /* Components are declared with ECS_DECLARE_COMPONENT */
+    ECS_DECLARE_COMPONENT(Car);
+    ECS_DECLARE_COMPONENT(Bus);
+    ECS_DECLARE_COMPONENT(MotorCycle);
+
+    /* Tags are declared with ECS_DECLARE_ENTITY */
+    ECS_DECLARE_ENTITY(Moving);
+
+    /* Systems are also declared with ECS_DECLARE_ENTITY */
+    ECS_DECLARE_ENTITY(Move);
+};
+
+/* Forward declaration to the import function */
+void VehiclesImport(ecs_world_t *world);
+
+/* The ImportHandles macro mimics the module struct */
+#define VehiclesImportHandles(handles)\
+    ECS_IMPORT_COMPONENT(handles, Car);\
+    ECS_IMPORT_COMPONENT(handles, Bus);\
+    ECS_IMPORT_COMPONENT(handles, MotorCycle);\
+    ECS_IMPORT_ENTITY(handles, Moving);\
+    ECS_IMPORT_ENTITY(handles, Move);
+```
+
+The import function for this module would look like this:
+
+```c
+void VehiclesImport(ecs_world_t *world) {
+    /* Define the module */
+    ECS_MODULE(world, Vehicles);
+
+    /* Declare components, tags and systems as usual */
+    ECS_COMPONENT(world, Car);
+    ECS_COMPONENT(world, Bus);
+    ECS_COMPONENT(world, MotorCycle);
+    ECS_TAG(world, Moving);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Car, Moving);
+
+    /* Export them so that they are assigned to the module struct */
+    ECS_EXPORT_COMPONENT(world, Car);
+    ECS_EXPORT_COMPONENT(world, Bus);
+    ECS_EXPORT_COMPONENT(world, Motorcycle);
+    ECS_EXPORT_ENTITY(world, Moving);
+    ECS_EXPORT_ENTITY(world, Move);
+}
+```
+
+After the module has been defined, it can be imported in an application like this:
+
+```c
+ecs_world_t *world = ecs_init();
+
+/* Import module, which invokes the module import function */
+ECS_IMPORT(world, Vehicles);
+
+/* The module contents can now be used */
+ecs_entity_t e = ecs_new(world, Car);
+```
+
+Module contents are namespaced, which means that the identifiers of the contenst of the module (components, tags, systems) are stored in the scope of the module. For the above example module, everything would be stored in the `vehicles` scope. To resolve the `Car` component by name, an application would have to do:
+
+```c
+ecs_entity_t car_entity = ecs_lookup_fullpath(world, "vehicles.Car");
+```
+
+Note that even though the module name is specified with uppercase, the name is stored with lowercase. This is because the naming convention for modules in C is PascalCase, whereas the stored identifiers use snake_case. If a module name contains several uppercase letters, this will be translated to a nested module. For example, the C module name `MySimpleModule` will be translated to `my.simple.module`.
+
+### Modules in C++
+A module in C++ is defined as a class where the module contents are defined in the constructor. The above Vehicles module would look like this in C++:
+
+```cpp
+/* In C++ it is more convenient to define tags as empty structs */
+struct Moving { };
+
+/* Module implementation */
+class vehicles {
+public:
+    vehicles(flecs::world& world) {
+        flecs::module<Vehicles>(world, "vehicles");
+
+        m_car = flecs::component<Car>(world, "Car");
+        m_bus = flecs::component<Bus>(world, "Bus");
+        m_motor_cycle = flecs::component<MotorCycle>(world, "MotorCycle");
+
+        m_moving = flecs::component<Moving>(world, "Moving");
+        m_move = flecs::system<Car, Moving>(world, "Move")
+            .each([](flecs::entity e, Car &car, Moving&) {
+                /* System implementation */
+            });
+    }
+
+    flecs::entity m_car;
+    flecs::entity m_bus;
+    flecs::entity m_motor_cycle;
+    flecs::entity m_moving;
+    flecs::entity m_move;
+}
+```
+
+An application can import the module in C++ like this:
+
+```cpp
+flecs::world world;
+flecs::import<vehicles>(world);
+```
 
 ## Hierarchies
 
