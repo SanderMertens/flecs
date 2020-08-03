@@ -18,11 +18,11 @@ This is Flecs v2, which is a breaking change from v1. For the last v1 release, s
 https://github.com/SanderMertens/flecs/releases/tag/v1.3
 
 ## What is an Entity Component System?
-ECS (Entity Component System) is a way to organize code that is mostly used in gaming and simulation projects. ECS code generally performs better than traditional OOP, and is typically easier to reuse. The main differences between ECS and OOP are composition is a first class citizen in ECS, and that data is represented as plain data types rather than encapsulated classes.  A framework is an Entity Component System if it:
+ECS (Entity Component System) is a design pattern often found in gaming and simulation which produces code that is fast and reusable. Dynamic omposition is a first-class citizen in ECS, and there is a strict separation between data and behavior. A framework is an Entity Component System if it:
 
-- Has _entities_ that are unique identifiers (integers)
-- Has _components_ that are plain data types which can be added to entities
-- Has _systems_ that are functions which are matched against entities with a set of components
+- Has _entities_ that are unique identifiers
+- Has _components_ that are plain data types
+- Has _systems_ which are behavior matched with entities based on their components
 
 ## Documentation
 - [Quickstart](docs/Quickstart.md)
