@@ -864,8 +864,8 @@ class entity_fluent {
     using base_type = const base;
 public:
 
-    /* -- adopt -- */
-
+    /** Add an entity to an entity by id.
+     */
     base_type& add(entity_t entity) const {
         static_cast<base_type*>(this)->invoke(
         [entity](world_t *world, entity_t id) {
@@ -874,13 +874,19 @@ public:
         return *static_cast<base_type*>(this);         
     }
 
+    /** Add a component to an entity.
+     */
     template <typename T>
     base_type& add() const {
         return add(component_info<T>::s_entity);
     }
 
+    /** Add an entity to an entity.
+     */
     base_type& add(const entity& entity) const;
 
+    /** Add a type to an entity by its C pointer.
+     */
     base_type& add(type_t type) const {
         static_cast<base_type*>(this)->invoke(
         [type](world_t *world, entity_t id) {
@@ -889,10 +895,12 @@ public:
         return *static_cast<base_type*>(this); 
     }
 
+    /** Add a type to an entity.
+     */
     base_type& add(type type) const;
 
-    /* -- remove -- */
-
+    /** Remove an entity from an entity by id.
+     */
     base_type& remove(entity_t entity) const {
         static_cast<base_type*>(this)->invoke(
         [entity](world_t *world, entity_t id) {
@@ -901,13 +909,19 @@ public:
         return *static_cast<base_type*>(this);         
     }    
 
+    /** Remove a component from an entity.
+     */
     template <typename T>
     base_type& remove() const {
         return remove(component_info<T>::s_entity);
     }
 
+    /** Remove an entity from an entity.
+     */
     base_type& remove(const entity& entity) const;
 
+    /** Remove a type from an entity by its C pointer.
+     */
     base_type& remove(type_t type) const {
         static_cast<base_type*>(this)->invoke(
         [type](world_t *world, entity_t id) {
@@ -916,10 +930,12 @@ public:
         return *static_cast<base_type*>(this);         
     }
 
+    /** Remove a type from an entity.
+     */
     base_type& remove(type type) const;
 
-    /* -- add_childof -- */
-
+    /** Add a parent entity to an entity by id.
+     */    
     base_type& add_childof(entity_t parent) const {
         static_cast<base_type*>(this)->invoke(
         [parent](world_t *world, entity_t id) {
@@ -928,10 +944,12 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
+    /** Add a parent entity to an entity.
+     */
     base_type& add_childof(const entity& parent) const;
 
-    /* -- remove_childof -- */
-
+    /** Remove a parent entity from an entity by id.
+     */
     base_type& remove_childof(entity_t parent) const {
         static_cast<base_type*>(this)->invoke(
         [parent](world_t *world, entity_t id) {
@@ -940,10 +958,12 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
+    /** Remove a parent entity from an entity.
+     */
     base_type& remove_childof(const entity& parent) const;
 
-    /* -- add_instanceof -- */
-
+    /** Add a base entity to an entity by id.
+     */    
     base_type& add_instanceof(entity_t base_entity) const {
         static_cast<base_type*>(this)->invoke(
         [base_entity](world_t *world, entity_t id) {
@@ -952,10 +972,12 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
+    /** Add a base entity to an entity.
+     */    
     base_type& add_instanceof(const entity& base_entity) const;  
 
-    /* -- remove_instanceof -- */
-
+    /** Remove a base entity from an entity by id.
+     */
     base_type& remove_instanceof(entity_t base_entity) const {
         static_cast<base_type*>(this)->invoke(
         [base_entity](world_t *world, entity_t id) {
@@ -964,9 +986,12 @@ public:
         return *static_cast<base_type*>(this);
     }
 
+    /** Remove a base entity from an entity.
+     */
     base_type& remove_instanceof(const entity& base_entity) const;
 
-    /* -- set -- */
+    /** Set a component for an entity.
+     */
     template <typename T>
     const base_type& set(const T&& value) const {
         static_cast<base_type*>(this)->invoke(
@@ -976,7 +1001,8 @@ public:
         return *static_cast<base_type*>(this);
     }
 
-
+    /** Set a component for an entity.
+     */
     template <typename T>
     const base_type& set(const T& value) const {
         static_cast<base_type*>(this)->invoke(
@@ -986,6 +1012,10 @@ public:
         return *static_cast<base_type*>(this);
     }
 
+    /** Patch a component value.
+     * This operation allows an application to partially overwrite a component 
+     * value.
+     */
     template <typename T>
     const base_type& patch(std::function<void(T&, bool)> func) const {
         static_cast<base_type*>(this)->invoke(
@@ -1003,6 +1033,10 @@ public:
         return *static_cast<base_type*>(this);
     }      
 
+    /** Patch a component value.
+     * This operation allows an application to partially overwrite a component 
+     * value.
+     */
     template <typename T>
     const base_type& patch(std::function<void(T&)> func) const {
         static_cast<base_type*>(this)->invoke(
