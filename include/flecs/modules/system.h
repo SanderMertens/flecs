@@ -1,3 +1,5 @@
+#ifdef FLECS_SYSTEM
+#define FLECS_MODULE
 
 #ifndef FLECS_SYSTEMS_H
 #define FLECS_SYSTEMS_H
@@ -284,6 +286,8 @@ void FlecsSystemImport(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

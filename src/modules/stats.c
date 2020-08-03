@@ -1,3 +1,5 @@
+#ifdef FLECS_STATS
+
 #include "../private_api.h"
 #include "flecs/addon/module.h"
 #include "flecs/addon/bulk.h"
@@ -728,3 +730,5 @@ void FlecsStatsImport(
     ECS_EXPORT_COMPONENT(EcsTablePtr);
     ECS_EXPORT_COMPONENT(EcsTypeStats);
 }
+
+#endif

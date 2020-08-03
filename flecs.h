@@ -15,6 +15,23 @@
 /* FLECS_NO_ADDONS should be defined when optional addons should not be included */
 // #define FLECS_NO_ADDONS
 
+#ifndef FLECS_NO_MODULES
+#define FLECS_SYSTEM
+#define FLECS_PIPELINE
+#define FLECS_TIMER
+#define FLECS_STATS
+#endif
+
+#ifndef FLECS_NO_ADDONS
+#define FLECS_BULK
+#define FLECS_DBG
+#define FLECS_HIERARCHY
+#define FLECS_MODULE
+#define FLECS_QUEUE
+#define FLECS_READER_WRITER
+#define FLECS_SNAPSHOT
+#endif
+
 /**
  * @file api_defines.h
  * @brief Supporting defines for the public API.
@@ -1219,7 +1236,6 @@ bool ecs_strbuf_list_appendstr(
 #endif
 
 #endif
-
 #ifndef FLECS_OS_API_H
 #define FLECS_OS_API_H
 
@@ -4303,6 +4319,9 @@ void ecs_set_automerge(
 
 /* Optional modules */
 #ifndef FLECS_NO_MODULES
+#ifdef FLECS_SYSTEM
+#ifdef FLECS_SYSTEM
+#define FLECS_MODULE
 
 #ifndef FLECS_SYSTEMS_H
 #define FLECS_SYSTEMS_H
@@ -4592,6 +4611,13 @@ void FlecsSystemImport(
 
 #endif
 
+#endif
+#endif
+#ifdef FLECS_PIIPELINE
+#ifdef FLECS_PIPELINE
+#define FLECS_MODULE
+#define FLECS_SYSTEM
+
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H
 
@@ -4764,6 +4790,13 @@ void FlecsPipelineImport(
 #endif
 
 #endif
+
+#endif
+#endif
+#ifdef FLECS_TIMER
+#ifdef FLECS_STATS
+#define FLECS_MODULE
+#define FLECS_PIPELINE
 
 #ifndef FLECS_TIMER_H
 #define FLECS_TIMER_H
@@ -4968,10 +5001,20 @@ void FlecsTimerImport(
 #endif
 
 #endif
-#endif
 
-/* Optional utilities */
-#ifndef FLECS_NO_ADDONS
+#endif
+#endif
+#ifdef FLECS_STATS
+#ifdef FLECS_STATS
+#define FLECS_MODULE
+#define FLECS_BULK
+#define FLECS_PIPELINE
+
+#ifndef FLECS_STATS_H
+#define FLECS_STATS_H
+
+#ifdef FLECS_BULK
+
 /**
  * @file bulk.h
  * @brief Bulk API.
@@ -5105,6 +5148,332 @@ void ecs_bulk_delete(
 #endif
 
 #endif
+
+#endif
+#ifdef FLECS_MODULE
+
+/**
+ * @file module.h
+ * @brief Module API.
+ */
+
+#ifndef FLECS_MODULE_H
+#define FLECS_MODULE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//// Module API
+////////////////////////////////////////////////////////////////////////////////
+
+/** Import a module.
+ * This operation will load a modules and store the public module handles in the
+ * handles_out out parameter. The module name will be used to verify if the
+ * module was already loaded, in which case it won't be reimported. The name
+ * will be translated from PascalCase to an entity path (pascal.case) before the
+ * lookup occurs.
+ *
+ * Module contents will be stored as children of the module entity. This 
+ * prevents modules from accidentally defining conflicting identifiers. This is
+ * enforced by setting the scope before and after loading the module to the 
+ * module entity id.
+ *
+ * A more convenient way to import a module is by using the ECS_IMPORT macro.
+ *
+ * @param world The world.
+ * @param module The module to load.
+ * @param module_name The name of the module to load.
+ * @param flags An integer that will be passed into the module import action.
+ * @param handles_out A struct with handles to the module components/systems.
+ * @param handles_size Size of the handles_out parameter.
+ * @return The module entity.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_import(
+    ecs_world_t *world,
+    ecs_module_action_t module,
+    const char *module_name,
+    void *handles_out,
+    size_t handles_size);
+
+/* Import a module from a library.
+ * Similar to ecs_import, except that this operation will attempt to load the 
+ * module from a dynamic library.
+ *
+ * A library may contain multiple modules, which is why both a library name and
+ * a module name need to be provided. If only a library name is provided, the
+ * library name will be reused for the module name.
+ *
+ * The library will be looked up using a canonical name, which is in the same
+ * form as a module, like `flecs.components.transform`. To transform this
+ * identifier to a platform specific library name, the operation relies on the
+ * module_to_dl callback of the os_api which the application has to override if
+ * the default does not yield the correct library name.
+ *
+ * @param world The world.
+ * @param library_name The name of the library to load.
+ * @param module_name The name of the module to load.
+ * @param flags The flags to pass to the module.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_import_from_library(
+    ecs_world_t *world,
+    const char *library_name,
+    const char *module_name);
+
+/** Define module
+ */
+#define ECS_MODULE(world, id)\
+    ECS_ENTITY_VAR(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
+    id *handles = (id*)ecs_get_mut(world, ecs_entity(id), id, NULL);\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id);\
+    (void)handles;
+
+/** Wrapper around ecs_import.
+ * This macro provides a convenient way to load a module with the world. It can
+ * be used like this:
+ *
+ * ECS_IMPORT(world, FlecsSystemsPhysics, 0);
+ * 
+ * This macro will define entity and type handles for the component associated
+ * with the module. An application can retrieve the module component like this:
+ * 
+ * FlecsSystemsPhysics m = ecs_get(world, EcsSingleton, FlecsSystemsPhysics);
+ * 
+ * The contents of a module component are module specific, although they
+ * typically contain handles to the content of the module.
+ */
+#define ECS_IMPORT(world, id) \
+    id ecs_module(id);\
+    char *id##__name = ecs_module_path_from_c(#id);\
+    ECS_ENTITY_VAR(id) = ecs_import(\
+        world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
+    ecs_os_free(id##__name);\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
+    id##ImportHandles(ecs_module(id));\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id);\
+
+/** Utility macro for declaring a component inside a handles type */
+#define ECS_DECLARE_COMPONENT(type)\
+    ECS_ENTITY_VAR(type);\
+    ECS_TYPE_VAR(type)
+
+/** Utility macro for declaring a system inside a handles type */
+#define ECS_DECLARE_ENTITY(entity)\
+    ecs_entity_t entity;\
+    ECS_TYPE_VAR(entity)
+
+#define ECS_EXPORT_COMPONENT(type)\
+    ECS_SET_COMPONENT(type)
+
+#define ECS_EXPORT_ENTITY(type)\
+    ECS_SET_ENTITY(type)
+
+/** Utility macro for declaring handles by modules */
+#define ECS_IMPORT_COMPONENT(handles, id)\
+    ECS_ENTITY_VAR(id) = (handles).ecs_entity(id); (void)ecs_entity(id);\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id)
+
+/** Utility macro for declaring handles by modules */
+#define ECS_IMPORT_ENTITY(handles, id)\
+    ecs_entity_t id = (handles).id;\
+    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
+    (void)id;\
+    (void)ecs_type(id)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* The naming convention of a metrics is:
+ * <name>_<unit>
+ *
+ * If the metric is a monotonically increasing count, the metric will have the
+ * suffix 'total'.
+ *
+ * If a member is of a composite type, it only has the metric name. A metric
+ * name will be plural if it is measured from multiple sources/objects.
+ */
+
+/* Type to keep track of memory that is in use vs. allocated */
+typedef struct ecs_memory_stat_t {
+    int32_t allocd_bytes;            /* Memory allocated */
+    int32_t used_bytes;              /* Memory in use */
+} ecs_memory_stat_t;
+
+/* Global statistics on memory allocations */
+typedef struct EcsAllocStats {
+    int64_t malloc_count_total;      /* Total number of times malloc was invoked */
+    int64_t realloc_count_total;     /* Total number of times realloc was invoked */
+    int64_t calloc_count_total;      /* Total number of times calloc was invoked */
+    int64_t free_count_total;        /* Total number of times free was invoked */
+} EcsAllocStats;
+
+/* Memory statistics on row (reactive) systems */
+typedef struct EcsRowSystemMemoryStats {
+    int32_t base_memory_bytes;              /* Size of the component datatype */
+    ecs_memory_stat_t columns_memory;       /* Memory in use for columns */
+    ecs_memory_stat_t components_memory;    /* Memory in use for components */
+} EcsRowSystemMemoryStats;
+
+/* Memory statistics on column (periodic) systems */
+typedef struct EcsSystemMemoryStats {
+    int32_t base_memory_bytes;              /* Size of the component datatype */
+    ecs_memory_stat_t columns_memory;       /* Memory in use for columns */
+    ecs_memory_stat_t active_tables_memory; /* Memory in use for active tables */
+    ecs_memory_stat_t inactive_tables_memory; /* Memory in use for inactive tables */
+    ecs_memory_stat_t jobs_memory;          /* Memory in use for jobs */
+    int32_t other_memory_bytes;             /* Remaining memory in use */
+} EcsSystemMemoryStats;
+
+/* Memory statistics for a world */
+typedef struct EcsMemoryStats {
+    int32_t __dummy;                        /* Allow for {0} initialization */
+    ecs_memory_stat_t total_memory;         /* Total amount of memory in use */
+    ecs_memory_stat_t entities_memory;      /* Memory in use for entities */
+    ecs_memory_stat_t components_memory;    /* Memory in use for components */
+    ecs_memory_stat_t systems_memory;       /* Memory in use for systems */
+    ecs_memory_stat_t types_memory;         /* Memory in use for types */
+    ecs_memory_stat_t tables_memory;        /* Memory in use for tables */
+    ecs_memory_stat_t stages_memory;        /* Memory in use for stages */
+    ecs_memory_stat_t world_memory;         /* Memory in use for world */
+} EcsMemoryStats;
+
+/* Component statistics */
+typedef struct EcsComponentStats {
+    ecs_entity_t entity;                    /* Entity handle of component */
+    const char *name;                       /* Entity name */
+    int32_t size_bytes;                     /* Size of the component */
+    ecs_memory_stat_t memory;               /* Memory in use for component */
+    int32_t entities_count;                 /* Number of entities for component */
+    int32_t tables_count;                   /* Number of tables for component */
+} EcsComponentStats; 
+
+/* System statistics */
+typedef struct EcsSystemStats {
+    ecs_entity_t entity;                    /* Entity handle of component */
+    const char *name;                       /* Entity name */
+    const char *signature;                  /* System signature */
+    ecs_entity_t phase;                     /* System kind */
+    float period_seconds;                   /* Period at which system runs */                       
+    int32_t tables_matched_count;           /* Number of tables matched */
+    int32_t entities_matched_count;         /* Number of entities matched */
+    int64_t invoke_count_total;            /* Number of times system got invoked */
+    float seconds_total;                    /* Total time spent in system */
+    bool is_enabled;                        /* Is system enabled */
+    bool is_active;                         /* Is system active */
+    bool is_hidden;                         /* Is system hidden */
+} EcsSystemStats;
+
+/* Type statistics (only for named types, created with ECS_TYPE) */
+typedef struct EcsTypeStats {
+    ecs_entity_t entity;                   /* Entity handle of type */
+    const char *name;                      /* Type name */
+    ecs_type_t type;                       /* Reference to type with nesting intact */
+    ecs_type_t normalized_type;            /* Reference to normalized type */
+    int32_t entities_count;                /* Number of plain entities in type */  
+    int32_t entities_childof_count;        /* Number of CHILDOF entities in type */
+    int32_t entities_instanceof_count;     /* Number of INSTANCEOF entities in type */
+    int32_t components_count;              /* Number of components in type */
+    int32_t col_systems_count;             /* Number of column (periodic) systems in type */
+    int32_t row_systems_count;             /* Number of row (reactive) systems in type */
+    int32_t enabled_systems_count;         /* Number of enabled systems in type */
+    int32_t active_systems_count;          /* Number of active systems in type */
+    int32_t instance_count;                /* Number of instances of this type */
+    bool is_hidden;                        /* Is type hidden */
+} EcsTypeStats; 
+
+/* Table statistics */
+typedef struct EcsTableStats {
+    ecs_type_t type;                       /* Reference to table type */
+    int32_t columns_count;                 /* Number of columns in table */
+    int32_t rows_count;                    /* Number of rows (entities) in table */                
+    int32_t systems_matched_count;         /* Number of systems matched */               
+    ecs_memory_stat_t entity_memory;       /* Memory in use for entity data */
+    ecs_memory_stat_t component_memory;    /* Memory in use for table data */
+    int32_t other_memory_bytes;            /* Memory in use for other */
+} EcsTableStats;
+
+/* World statistics */
+typedef struct EcsWorldStats {
+    double target_fps_hz;                  /* Target FPS */
+    int32_t tables_count;                  /* Number of tables in world */
+    int32_t components_count;              /* Number of components in world */
+    int32_t col_systems_count;             /* Number of column (periodic) systems in world */
+    int32_t row_systems_count;             /* Nunber of row (reactive) systems in world */
+    int32_t inactive_systems_count;        /* Number of inactive systems in world */
+    int32_t entities_count;                /* Number if entities in world */
+    int32_t threads_count;                 /* Number of threads in world */
+    int32_t frame_count_total;             /* Total number of frames processed */
+    double frame_seconds_total;            /* Total time spent processing frames */
+    double system_seconds_total;           /* Total time spent in systems */
+    double merge_seconds_total;            /* Total time spent merging */
+    double world_seconds_total;            /* Total time passed since simulation start */
+    double fps_hz;                         /* Frames per second (current) */
+} EcsWorldStats;
+
+/* Stats module component */
+typedef struct FlecsStats {
+    ECS_DECLARE_COMPONENT(EcsAllocStats);
+    ECS_DECLARE_COMPONENT(EcsWorldStats);
+    ECS_DECLARE_COMPONENT(EcsMemoryStats);
+    ECS_DECLARE_COMPONENT(EcsSystemStats);
+    ECS_DECLARE_COMPONENT(EcsSystemMemoryStats);
+    ECS_DECLARE_COMPONENT(EcsRowSystemMemoryStats);
+    ECS_DECLARE_COMPONENT(EcsComponentStats);
+    ECS_DECLARE_COMPONENT(EcsTableStats);
+    ECS_DECLARE_COMPONENT(EcsTablePtr);
+    ECS_DECLARE_COMPONENT(EcsTypeStats);
+} FlecsStats;
+
+FLECS_EXPORT
+void FlecsStatsImport(
+    ecs_world_t *world);
+
+#define FlecsStatsImportHandles(handles)\
+    ECS_IMPORT_COMPONENT(handles, EcsAllocStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsWorldStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsMemoryStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsSystemStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsSystemMemoryStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsRowSystemMemoryStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsComponentStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsTableStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsTablePtr);\
+    ECS_IMPORT_COMPONENT(handles, EcsTypeStats);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
+#endif
+#endif
+
+/* Optional addons */
+#ifndef FLECS_NO_ADDONS
+#ifndef FLECS_BULK
+#endif
+#ifndef FLECS_DBG
+#ifdef FLECS_BULK
+
 #ifndef FLECS_DBG_H
 #define FLECS_DBG_H
 
@@ -5167,6 +5536,12 @@ void ecs_dbg_table(
 #endif
 
 #endif
+
+#endif
+#endif
+#ifndef FLECS_HIERARCHY
+#ifdef FLECS_HIERARCHY
+
 /**
  * @file hierarchy.h
  * @brief Hierarchy API.
@@ -5387,147 +5762,14 @@ bool ecs_scope_next(
 #endif
 
 #endif
-/**
- * @file module.h
- * @brief Module API.
- */
-
-#ifndef FLECS_MODULE_H
-#define FLECS_MODULE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-//// Module API
-////////////////////////////////////////////////////////////////////////////////
-
-/** Import a module.
- * This operation will load a modules and store the public module handles in the
- * handles_out out parameter. The module name will be used to verify if the
- * module was already loaded, in which case it won't be reimported. The name
- * will be translated from PascalCase to an entity path (pascal.case) before the
- * lookup occurs.
- *
- * Module contents will be stored as children of the module entity. This 
- * prevents modules from accidentally defining conflicting identifiers. This is
- * enforced by setting the scope before and after loading the module to the 
- * module entity id.
- *
- * A more convenient way to import a module is by using the ECS_IMPORT macro.
- *
- * @param world The world.
- * @param module The module to load.
- * @param module_name The name of the module to load.
- * @param flags An integer that will be passed into the module import action.
- * @param handles_out A struct with handles to the module components/systems.
- * @param handles_size Size of the handles_out parameter.
- * @return The module entity.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_import(
-    ecs_world_t *world,
-    ecs_module_action_t module,
-    const char *module_name,
-    void *handles_out,
-    size_t handles_size);
-
-/* Import a module from a library.
- * Similar to ecs_import, except that this operation will attempt to load the 
- * module from a dynamic library.
- *
- * A library may contain multiple modules, which is why both a library name and
- * a module name need to be provided. If only a library name is provided, the
- * library name will be reused for the module name.
- *
- * The library will be looked up using a canonical name, which is in the same
- * form as a module, like `flecs.components.transform`. To transform this
- * identifier to a platform specific library name, the operation relies on the
- * module_to_dl callback of the os_api which the application has to override if
- * the default does not yield the correct library name.
- *
- * @param world The world.
- * @param library_name The name of the library to load.
- * @param module_name The name of the module to load.
- * @param flags The flags to pass to the module.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_import_from_library(
-    ecs_world_t *world,
-    const char *library_name,
-    const char *module_name);
-
-/** Define module
- */
-#define ECS_MODULE(world, id)\
-    ECS_ENTITY_VAR(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
-    id *handles = (id*)ecs_get_mut(world, ecs_entity(id), id, NULL);\
-    (void)ecs_entity(id);\
-    (void)ecs_type(id);\
-    (void)handles;
-
-/** Wrapper around ecs_import.
- * This macro provides a convenient way to load a module with the world. It can
- * be used like this:
- *
- * ECS_IMPORT(world, FlecsSystemsPhysics, 0);
- * 
- * This macro will define entity and type handles for the component associated
- * with the module. An application can retrieve the module component like this:
- * 
- * FlecsSystemsPhysics m = ecs_get(world, EcsSingleton, FlecsSystemsPhysics);
- * 
- * The contents of a module component are module specific, although they
- * typically contain handles to the content of the module.
- */
-#define ECS_IMPORT(world, id) \
-    id ecs_module(id);\
-    char *id##__name = ecs_module_path_from_c(#id);\
-    ECS_ENTITY_VAR(id) = ecs_import(\
-        world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
-    ecs_os_free(id##__name);\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
-    id##ImportHandles(ecs_module(id));\
-    (void)ecs_entity(id);\
-    (void)ecs_type(id);\
-
-/** Utility macro for declaring a component inside a handles type */
-#define ECS_DECLARE_COMPONENT(type)\
-    ECS_ENTITY_VAR(type);\
-    ECS_TYPE_VAR(type)
-
-/** Utility macro for declaring a system inside a handles type */
-#define ECS_DECLARE_ENTITY(entity)\
-    ecs_entity_t entity;\
-    ECS_TYPE_VAR(entity)
-
-#define ECS_EXPORT_COMPONENT(type)\
-    ECS_SET_COMPONENT(type)
-
-#define ECS_EXPORT_ENTITY(type)\
-    ECS_SET_ENTITY(type)
-
-/** Utility macro for declaring handles by modules */
-#define ECS_IMPORT_COMPONENT(handles, id)\
-    ECS_ENTITY_VAR(id) = (handles).ecs_entity(id); (void)ecs_entity(id);\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
-    (void)ecs_entity(id);\
-    (void)ecs_type(id)
-
-/** Utility macro for declaring handles by modules */
-#define ECS_IMPORT_ENTITY(handles, id)\
-    ecs_entity_t id = (handles).id;\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
-    (void)id;\
-    (void)ecs_type(id)
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
+#endif
+#ifndef FLECS_MODULE
+#endif
+#ifndef FLECS_QUEUE
+#ifdef FLECS_QUEUE
+
 #ifndef FLECS_QUEUE_H_
 #define FLECS_QUEUE_H_
 
@@ -5604,6 +5846,12 @@ void ecs_queue_free(
 #endif
 
 #endif
+
+#endif
+#endif
+#ifndef FLECS_READER_WRITER
+#ifdef FLECS_READER_WRITER
+
 /**
  * @file serializer.h
  * @brief Blob serializer API.
@@ -5815,6 +6063,12 @@ int ecs_writer_write(
 #endif     
 
 #endif
+
+#endif
+#endif
+#ifndef FLECS_SNAPSHOT
+#ifdef FLECS_SNAPSHOT
+
 /**
  * @file snapshot.h
  * @brief Snapshot API.
@@ -5903,6 +6157,9 @@ void ecs_snapshot_free(
 }
 #endif
 
+#endif
+
+#endif
 #endif
 #endif
 

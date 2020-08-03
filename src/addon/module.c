@@ -1,3 +1,5 @@
+#ifdef FLECS_MODULE
+
 #include "../private_api.h"
 #include "flecs/addon/hierarchy.h"
 
@@ -208,3 +210,5 @@ ecs_entity_t ecs_new_module(
 
     return result;
 }
+
+#endif

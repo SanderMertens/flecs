@@ -1,3 +1,5 @@
+#ifdef FLECS_SNAPSHOT
+
 /**
  * @file snapshot.h
  * @brief Snapshot API.
@@ -84,6 +86,8 @@ void ecs_snapshot_free(
     
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

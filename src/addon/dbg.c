@@ -1,3 +1,5 @@
+#ifdef FLECS_DBG
+
 #include "../private_api.h"
 #include "flecs/addon/dbg.h"
 
@@ -132,3 +134,5 @@ void ecs_dbg_entity(
         dbg_out->type = info.table ? info.table->type : NULL;
     }
 }
+
+#endif

@@ -1,8 +1,12 @@
+#ifdef FLECS_STATS
+#define FLECS_MODULE
+#define FLECS_PIPELINE
 
 #ifndef FLECS_TIMER_H
 #define FLECS_TIMER_H
 
 #include "flecs.h"
+#include "flecs/modules/pipeline.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -200,6 +204,8 @@ void FlecsTimerImport(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

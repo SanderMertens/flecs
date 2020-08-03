@@ -1,3 +1,5 @@
+#ifdef FLECS_READER_WRITER
+
 /**
  * @file serializer.h
  * @brief Blob serializer API.
@@ -207,5 +209,7 @@ int ecs_writer_write(
 #ifdef __cplusplus
 }
 #endif     
+
+#endif
 
 #endif

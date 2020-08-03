@@ -1,3 +1,5 @@
+#ifdef FLECS_SNAPSHOT
+
 #include "../private_api.h"
 #include "flecs/addon/snapshot.h"
 
@@ -338,3 +340,5 @@ void ecs_snapshot_free(
     ecs_vector_free(snapshot->tables);
     ecs_os_free(snapshot);
 }
+
+#endif

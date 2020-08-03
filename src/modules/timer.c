@@ -1,3 +1,5 @@
+#ifdef FLECS_TIMER
+
 #include "../private_api.h"
 #include "flecs/addon/module.h"
 #include "flecs/modules/timer.h"
@@ -240,3 +242,5 @@ void FlecsTimerImport(
     /* Rate filter handling */
     ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, [in] RateFilter, [out] flecs.system.TickSource);
 }
+
+#endif

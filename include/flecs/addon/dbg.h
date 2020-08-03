@@ -1,3 +1,5 @@
+#ifdef FLECS_BULK
+
 #ifndef FLECS_DBG_H
 #define FLECS_DBG_H
 
@@ -57,6 +59,8 @@ void ecs_dbg_table(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

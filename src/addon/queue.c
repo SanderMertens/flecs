@@ -1,3 +1,4 @@
+#ifdef FLECS_QUEUE
 
 #include "flecs/addon/queue.h"
 
@@ -96,3 +97,5 @@ int32_t ecs_queue_count(
 {
     return ecs_vector_count(buffer->data);
 }
+
+#endif

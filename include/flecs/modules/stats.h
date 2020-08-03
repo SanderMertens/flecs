@@ -1,7 +1,15 @@
+#ifdef FLECS_STATS
+#define FLECS_MODULE
+#define FLECS_BULK
+#define FLECS_PIPELINE
+
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
 #include "flecs.h"
+#include "flecs/addon/bulk.h"
+#include "flecs/addon/module.h"
+#include "flecs/modules/pipeline.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -166,6 +174,8 @@ void FlecsStatsImport(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

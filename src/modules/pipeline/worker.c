@@ -1,3 +1,5 @@
+#ifdef FLECS_PIPELINE
+
 #include "pipeline.h"
 
 /* Worker thread */
@@ -292,3 +294,5 @@ void ecs_set_threads(
         });
     }
 }
+
+#endif

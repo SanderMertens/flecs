@@ -1,3 +1,4 @@
+#ifdef FLECS_QUEUE
 
 #ifndef FLECS_QUEUE_H_
 #define FLECS_QUEUE_H_
@@ -72,6 +73,8 @@ void ecs_queue_free(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

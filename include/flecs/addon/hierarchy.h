@@ -1,3 +1,5 @@
+#ifdef FLECS_HIERARCHY
+
 /**
  * @file hierarchy.h
  * @brief Hierarchy API.
@@ -215,6 +217,8 @@ bool ecs_scope_next(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

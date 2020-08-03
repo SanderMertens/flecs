@@ -1,3 +1,5 @@
+#ifdef FLECS_SYSTEM
+
 #include "../../private_api.h"
 #include "system.h"
 
@@ -982,3 +984,5 @@ void FlecsSystemImport(
     ECS_SYSTEM(world, DisableSystem, EcsMonitor, System, Disabled || DisabledIntern, SYSTEM:Hidden);
     ECS_SYSTEM(world, EnableSystem, EcsMonitor, System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
 }
+
+#endif

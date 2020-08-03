@@ -1,3 +1,5 @@
+#ifdef FLECS_READER_WRITER
+
 #include "../private_api.h"
 #include "flecs/addon/reader_writer.h"
 
@@ -383,3 +385,5 @@ ecs_reader_t ecs_reader_init_w_iter(
 
     return result;
 }
+
+#endif

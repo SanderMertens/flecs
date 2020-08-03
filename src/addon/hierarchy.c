@@ -1,3 +1,5 @@
+#ifdef FLECS_HIERARCHY
+
 #include "../private_api.h"
 
 static
@@ -499,3 +501,5 @@ ecs_entity_t ecs_new_from_path_w_sep(
 {
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
+
+#endif

@@ -1,3 +1,5 @@
+#ifdef FLECS_MODULE
+
 /**
  * @file module.h
  * @brief Module API.
@@ -136,6 +138,8 @@ ecs_entity_t ecs_import_from_library(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

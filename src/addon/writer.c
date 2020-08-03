@@ -1,3 +1,5 @@
+#ifdef FLECS_READER_WRITER
+
 #include "../private_api.h"
 #include "flecs/addon/reader_writer.h"
 
@@ -411,3 +413,5 @@ ecs_writer_t ecs_writer_init(
         .state = EcsStreamHeader,
     };
 }
+
+#endif

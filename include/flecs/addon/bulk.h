@@ -1,3 +1,5 @@
+#ifdef FLECS_BULK
+
 /**
  * @file bulk.h
  * @brief Bulk API.
@@ -128,6 +130,8 @@ void ecs_bulk_delete(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

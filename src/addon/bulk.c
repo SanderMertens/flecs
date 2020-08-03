@@ -1,3 +1,5 @@
+#ifdef FLECS_BULK
+
 #include "../private_api.h"
 
 static
@@ -330,3 +332,5 @@ void ecs_bulk_remove_entity(
         removed.count = 0;        
     }    
 }
+
+#endif

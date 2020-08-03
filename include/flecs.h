@@ -14,12 +14,28 @@
 /* FLECS_NO_ADDONS should be defined when optional addons should not be included */
 // #define FLECS_NO_ADDONS
 
+#ifndef FLECS_NO_MODULES
+#define FLECS_SYSTEM
+#define FLECS_PIPELINE
+#define FLECS_TIMER
+#define FLECS_STATS
+#endif
+
+#ifndef FLECS_NO_ADDONS
+#define FLECS_BULK
+#define FLECS_DBG
+#define FLECS_HIERARCHY
+#define FLECS_MODULE
+#define FLECS_QUEUE
+#define FLECS_READER_WRITER
+#define FLECS_SNAPSHOT
+#endif
+
 #include "flecs/private/api_defines.h"
 #include "flecs/private/vector.h"        /* Vector datatype */
 #include "flecs/private/sparse.h"        /* Sparse set */
 #include "flecs/private/map.h"           /* Hashmap */
 #include "flecs/private/strbuf.h"        /* Efficient string builder */
-
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
 
 #ifdef __cplusplus
@@ -2059,20 +2075,43 @@ void ecs_set_automerge(
 
 /* Optional modules */
 #ifndef FLECS_NO_MODULES
+#ifdef FLECS_SYSTEM
 #include "flecs/modules/system.h"
+#endif
+#ifdef FLECS_PIIPELINE
 #include "flecs/modules/pipeline.h"
+#endif
+#ifdef FLECS_TIMER
 #include "flecs/modules/timer.h"
 #endif
+#ifdef FLECS_STATS
+#include "flecs/modules/stats.h"
+#endif
+#endif
 
-/* Optional utilities */
+/* Optional addons */
 #ifndef FLECS_NO_ADDONS
+#ifndef FLECS_BULK
 #include "flecs/addon/bulk.h"
+#endif
+#ifndef FLECS_DBG
 #include "flecs/addon/dbg.h"
+#endif
+#ifndef FLECS_HIERARCHY
 #include "flecs/addon/hierarchy.h"
+#endif
+#ifndef FLECS_MODULE
 #include "flecs/addon/module.h"
+#endif
+#ifndef FLECS_QUEUE
 #include "flecs/addon/queue.h"
+#endif
+#ifndef FLECS_READER_WRITER
 #include "flecs/addon/reader_writer.h"
+#endif
+#ifndef FLECS_SNAPSHOT
 #include "flecs/addon/snapshot.h"
+#endif
 #endif
 
 #ifdef __cplusplus

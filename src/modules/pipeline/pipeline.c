@@ -1,3 +1,5 @@
+#ifdef FLECS_PIPELINE
+
 #include "pipeline.h"
 
 ECS_TYPE_DECL(EcsPipelineQuery);
@@ -779,3 +781,5 @@ void FlecsPipelineImport(
     /* Cleanup thread administration when world is destroyed */
     ecs_atfini(world, FlecsPipelineFini, NULL);
 }
+
+#endif
