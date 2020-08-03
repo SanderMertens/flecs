@@ -2091,25 +2091,25 @@ void ecs_set_automerge(
 
 /* Optional addons */
 #ifndef FLECS_NO_ADDONS
-#ifndef FLECS_BULK
+#ifdef FLECS_BULK
 #include "flecs/addon/bulk.h"
 #endif
-#ifndef FLECS_DBG
+#ifdef FLECS_DBG
 #include "flecs/addon/dbg.h"
 #endif
-#ifndef FLECS_HIERARCHY
+#ifdef FLECS_HIERARCHY
 #include "flecs/addon/hierarchy.h"
 #endif
-#ifndef FLECS_MODULE
+#ifdef FLECS_MODULE
 #include "flecs/addon/module.h"
 #endif
-#ifndef FLECS_QUEUE
+#ifdef FLECS_QUEUE
 #include "flecs/addon/queue.h"
 #endif
-#ifndef FLECS_READER_WRITER
+#ifdef FLECS_READER_WRITER
 #include "flecs/addon/reader_writer.h"
 #endif
-#ifndef FLECS_SNAPSHOT
+#ifdef FLECS_SNAPSHOT
 #include "flecs/addon/snapshot.h"
 #endif
 #endif
