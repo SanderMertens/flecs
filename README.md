@@ -94,7 +94,7 @@ Modules are located in the `src/modules` and `include/modules` folders. The foll
 
 Module        | Description                                      | Constant            |
 --------------|--------------------------------------------------|---------------------|
-System        | Support for systems, monitors and triggers       | FLECS_SYSTEMS       | 
+System        | Support for systems, monitors and triggers       | FLECS_SYSTEM        | 
 Pipeline      | Run systems each frame and/or multithreaded      | FLECS_PIPELINE      |
 Timer         | Run systems at intervals, timeouts or fixed rate | FLECS_TIMER         | 
 Stats         | Collect statistics on entities and systems       | FLECS_STATS         |
