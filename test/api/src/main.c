@@ -81,6 +81,15 @@ void Add_add_w_xor(void);
 void Add_add_same_w_xor(void);
 void Add_add_after_remove_xor(void);
 
+// Testsuite 'Switch'
+void Switch_get_case_empty(void);
+void Switch_get_case_no_switch(void);
+void Switch_get_case_unset(void);
+void Switch_get_case_set(void);
+void Switch_get_case_change(void);
+void Switch_new_w_type(void);
+void Switch_add_w_type(void);
+
 // Testsuite 'Remove'
 void Remove_zero(void);
 void Remove_zero_from_nonzero(void);
@@ -1341,6 +1350,37 @@ bake_test_case Add_testcases[] = {
     {
         "add_after_remove_xor",
         Add_add_after_remove_xor
+    }
+};
+
+bake_test_case Switch_testcases[] = {
+    {
+        "get_case_empty",
+        Switch_get_case_empty
+    },
+    {
+        "get_case_no_switch",
+        Switch_get_case_no_switch
+    },
+    {
+        "get_case_unset",
+        Switch_get_case_unset
+    },
+    {
+        "get_case_set",
+        Switch_get_case_set
+    },
+    {
+        "get_case_change",
+        Switch_get_case_change
+    },
+    {
+        "new_w_type",
+        Switch_new_w_type
+    },
+    {
+        "add_w_type",
+        Switch_add_w_type
     }
 };
 
@@ -5062,6 +5102,13 @@ static bake_test_suite suites[] = {
         Add_testcases
     },
     {
+        "Switch",
+        NULL,
+        NULL,
+        7,
+        Switch_testcases
+    },
+    {
         "Remove",
         NULL,
         NULL,
@@ -5408,5 +5455,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 52);
+    return bake_test_run("api", argc, argv, suites, 53);
 }

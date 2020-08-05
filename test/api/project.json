@@ -91,6 +91,17 @@
                 "add_after_remove_xor"
             ]
         }, {
+            "id": "Switch",
+            "testcases": [
+                "get_case_empty",
+                "get_case_no_switch",
+                "get_case_unset",
+                "get_case_set",
+                "get_case_change",
+                "new_w_type",
+                "add_w_type"
+            ]
+        }, {
             "id": "Remove",
             "testcases": [
                 "zero",

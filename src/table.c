@@ -7,38 +7,60 @@ ecs_data_t* init_data(
     ecs_data_t *result)
 {
     ecs_type_t type = table->type; 
-    int32_t i, count = table->column_count;
+    int32_t i, count = table->column_count, sw_count = table->sw_column_count;
     
     result->entities = NULL;
     result->record_ptrs = NULL;
     result->marked_dirty = false;
 
     /* Root tables don't have columns */
-    if (!count) {
+    if (!count && !sw_count) {
         result->columns = NULL;
         return result;
     }
 
-    result->columns = ecs_os_calloc(ECS_SIZEOF(ecs_column_t) * count);
-    
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
 
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];
+    if (count) {
+        result->columns = ecs_os_calloc(ECS_SIZEOF(ecs_column_t) * count);    
 
-        /* Is the column a component? */
-        const EcsComponent *component = ecs_component_from_id(world, e);
-        if (component) {
-            /* Is the component associated wit a (non-empty) type? */
-            if (component->size) {
-                /* This is a regular component column */
-                result->columns[i].size = ecs_to_i16(component->size);
-                result->columns[i].alignment = ecs_to_i16(component->alignment);
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t e = entities[i];
+
+            /* Is the column a component? */
+            const EcsComponent *component = ecs_component_from_id(world, e);
+            if (component) {
+                /* Is the component associated wit a (non-empty) type? */
+                if (component->size) {
+                    /* This is a regular component column */
+                    result->columns[i].size = ecs_to_i16(component->size);
+                    result->columns[i].alignment = ecs_to_i16(component->alignment);
+                } else {
+                    /* This is a tag */
+                }
             } else {
-                /* This is a tag */
+                /* This is an entity that was added to the type */
             }
-        } else {
-            /* This is an entity that was added to the type */
+        }
+    }
+
+    if (sw_count) {
+        int32_t sw_offset = table->sw_column_offset;
+        result->sw_columns = ecs_os_calloc(ECS_SIZEOF(ecs_column_t) * sw_count);
+
+        for (i = 0; i < sw_count; i ++) {
+            ecs_entity_t e = entities[i + sw_offset];
+            ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
+            e = e & ECS_ENTITY_MASK;
+            const EcsType *type_ptr = ecs_get(world, e, EcsType);
+            ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_type_t sw_type = type_ptr->normalized;
+
+            ecs_entity_t *sw_array = ecs_vector_first(sw_type, ecs_entity_t);
+            int32_t sw_array_count = ecs_vector_count(sw_type);
+
+            result->sw_columns[i].data = ecs_switch_new(
+                sw_array[0], sw_array[sw_array_count - 1], 0);
         }
     }
 
@@ -640,19 +662,20 @@ int32_t ecs_table_append(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     int32_t column_count = table->column_count;
+    int32_t sw_column_count = table->sw_column_count;
     bool realloc = false;
 
-    if (column_count) {
+    if (column_count || sw_column_count) {
         ecs_column_t *columns = data->columns;
+        ecs_sw_column_t *sw_columns = data->sw_columns;
 
-        /* It is possible that the table data was created without content. Now that
-        * data is going to be written to the table, initialize it */ 
-        if (!columns) {
+        /* It is possible that the table data was created without content. Now 
+         * that data is going to be written to the table, initialize it */ 
+        if (!columns && !sw_columns) {
             init_data(world, table, data);
             columns = data->columns;
+            sw_columns = data->sw_columns;
         }
-
-        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Add elements to each column array */
         int32_t i;
@@ -665,6 +688,10 @@ int32_t ecs_table_append(
                 realloc = realloc || (prev != columns[i].data);
             }
         }
+
+        for (i = 0; i < sw_column_count; i ++) {
+            ecs_switch_add(sw_columns[i].data);
+        }        
     }
 
     /* Fist add entity to array with entity ids */

@@ -1099,6 +1099,10 @@ void ecs_switch_free(
     ecs_switch_t *sw);
 
 FLECS_EXPORT
+void ecs_switch_add(
+    ecs_switch_t *sw);
+
+FLECS_EXPORT
 void ecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
@@ -2180,6 +2184,7 @@ ecs_query_t* ecs_query_new_w_sig(
 #define ECS_TYPE_CONSTRAINT_VIOLATION (43)
 #define ECS_COMPONENT_NOT_REGISTERED (44)
 #define ECS_INCONSISTENT_COMPONENT_ID (45)
+#define ECS_INVALID_CASE (46)
 
 /** Declare type variable */
 #define ECS_TYPE_VAR(type)\
@@ -2561,6 +2566,12 @@ typedef struct EcsTrigger {
 /** None of the entities in a type may be added to the type.
  * This flag can only be used in combination with an entity that has EcsType. */
 #define ECS_NOT ((ecs_entity_t)0xF8 << 56)
+
+/** Cases are used to switch between mutually exclusive components */
+#define ECS_CASE ((ecs_entity_t)0xF7 << 56)
+
+/** Switches allow for fast switching between mutually exclusive components */
+#define ECS_SWITCH ((ecs_entity_t)0xF6 << 56)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3345,6 +3356,19 @@ void ecs_add_remove_type(
 #define ecs_get_trait(world, entity, component, trait)\
     ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait))))
 
+/** Get case for switch.
+ * This operation gets the current case for the specified switch. If the current
+ * switch is not set for the entity, the operation will return 0.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param sw The switch for which to obtain the case.
+ * @return The current case for the specified switch. 
+ */
+ecs_entity_t ecs_get_case(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t sw);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Deleting entities
@@ -6567,7 +6591,6 @@ public:
      * @param col The column id.
      */
     flecs::type column_type(int32_t col) const;
-<<<<<<< HEAD
 
     /** Obtain entity being iterated over for row.
      *
@@ -6575,15 +6598,6 @@ public:
      */
     flecs::entity entity(int32_t row) const;
 
-=======
-
-    /** Obtain entity being iterated over for row.
-     *
-     * @param row Row being iterated over.
-     */
-    flecs::entity entity(int32_t row) const;
-
->>>>>>> 47d407a... #211 increase type role addressing space
     /** Obtain type of table being iterated over.
      */
     type table_type() const;
@@ -6741,11 +6755,7 @@ private:
     /* Get single field, check if correct type is used */
     template <typename T>
     T& get_element(int32_t col, int32_t row) const {
-<<<<<<< HEAD
         ecs_assert(ecs_column_entity(m_iter, col) == component_info<T>::id(m_iter->world), ECS_COLUMN_TYPE_MISMATCH, NULL);
-=======
-        ecs_assert(ecs_column_entity(m_iter, col) == component_info<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
->>>>>>> 47d407a... #211 increase type role addressing space
         return *static_cast<T*>(ecs_element_w_size(m_iter, sizeof(T), col, row));
     }       
 
@@ -7055,7 +7065,8 @@ public:
      */
     template <typename T>
     int count() const {
-        return ecs_count_type(m_world, component_info<T>::s_type);
+        return ecs_count_type(
+            m_world, component_info<T>::type(m_world));
     }
 
     /** Count entities matching a filter.
@@ -7140,7 +7151,6 @@ public:
      */
     base_type& add(type type) const;
 
-<<<<<<< HEAD
     /** Add a trait
      */
     base_type& add_trait(entity_t entity, entity_t trait) const {
@@ -7170,8 +7180,6 @@ public:
     base_type& add_trait(flecs::entity trait) const;
     base_type& add_trait(flecs::entity entity, flecs::entity trait) const;
 
-=======
->>>>>>> 47d407a... #211 increase type role addressing space
     /** Remove an entity from an entity by id.
      */
     base_type& remove(entity_t entity) const {
@@ -7211,7 +7219,6 @@ public:
      */
     base_type& remove(type type) const;
 
-<<<<<<< HEAD
     /** Remove a trait
      */
     base_type& remove_trait(entity_t entity, entity_t trait) const {
@@ -7239,8 +7246,6 @@ public:
     base_type& remove_trait(flecs::entity trait) const;
     base_type& remove_trait(flecs::entity entity, flecs::entity trait) const;
 
-=======
->>>>>>> 47d407a... #211 increase type role addressing space
     /** Add a parent entity to an entity by id.
      */    
     base_type& add_childof(entity_t parent) const {
@@ -7324,7 +7329,6 @@ public:
         return *static_cast<base_type*>(this);
     }
 
-<<<<<<< HEAD
     /** Set a trait for an entity.
      */
     template <typename C, typename T>
@@ -7344,8 +7348,6 @@ public:
     template <typename T>
     const base_type& set_trait(flecs::entity trait, const T& value) const;
 
-=======
->>>>>>> 47d407a... #211 increase type role addressing space
     /** Patch a component value.
      * This operation allows an application to partially overwrite a component 
      * value.
@@ -7571,7 +7573,6 @@ public:
     T* get_mut(bool *is_added = nullptr) const {
         return static_cast<T*>(
             ecs_get_mut_w_entity(
-<<<<<<< HEAD
                 m_world, m_id, component_info<T>::id(m_world), is_added));
     }
 
@@ -7581,14 +7582,6 @@ public:
 
     void* get_mut(entity_t component_id, bool *is_added = nullptr) const {
         return ecs_get_mut_w_entity(m_world, m_id, component_id, is_added);
-=======
-                m_world, m_id, component_info<T>::s_entity, is_added));
-    }
-
-    template <typename T>
-    void modified() {
-        ecs_modified_w_entity(m_world, m_id, component_info<T>::s_entity);
->>>>>>> 47d407a... #211 increase type role addressing space
     }
 
     template <typename T>
@@ -7857,13 +7850,40 @@ private:
 //// Register component, provide global access to component handles / metadata
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Trick to obtain typename from type, as described 
- * by https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
+/* Trick to obtain typename from type, as described here
+ * https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
  */
 
 namespace internal
 {
-#ifdef __GNUC__
+    struct name_util {
+        static void trim_name(char *typeName) {
+            size_t len = strlen(typeName);
+            if (typeName[len - 1] == '*') {
+                typeName[len - 1] = '\0';
+                if (typeName[len - 2] == ' ') {
+                    typeName[len - 2] = '\0';
+                }   
+            }           
+        }
+    };
+
+#if defined(__clang__)
+  static const unsigned int FRONT_SIZE = sizeof("static const char* flecs::internal::name_helper<") - 1u;
+  static const unsigned int BACK_SIZE = sizeof(">::name() [T = ]") - 1u;
+ 
+  template <typename T>
+  struct name_helper
+  {
+    static const char* name(void) {
+      static const size_t size = (sizeof(__PRETTY_FUNCTION__) - FRONT_SIZE - BACK_SIZE) / 2 + 1u;
+      static char typeName[size] = {};
+      memcpy(typeName, __PRETTY_FUNCTION__ + FRONT_SIZE, size - 1u);
+      name_util::trim_name(typeName);
+      return typeName;
+    }
+  };    
+#elif defined(__GNUC__)
   static const unsigned int FRONT_SIZE = sizeof("static const char* flecs::internal::name_helper<T>::name() [with T = ") - 1u;
   static const unsigned int BACK_SIZE = sizeof("]") - 1u;
  
@@ -7874,10 +7894,11 @@ namespace internal
       static const size_t size = sizeof(__PRETTY_FUNCTION__) - FRONT_SIZE - BACK_SIZE;
       static char typeName[size] = {};
       memcpy(typeName, __PRETTY_FUNCTION__ + FRONT_SIZE, size - 1u);
+      name_util::trim_name(typeName);
       return typeName;
     }
   };
-#else
+#elif defined(_WIN32)
   static const unsigned int FRONT_SIZE = sizeof("flecs::internal::name_helper<") - 1u;
   static const unsigned int BACK_SIZE = sizeof(">::name") - 1u;
  
@@ -7888,9 +7909,12 @@ namespace internal
       static const size_t size = sizeof(__FUNCTION__) - FRONT_SIZE - BACK_SIZE;
       static char typeName[size] = {};
       memcpy(typeName, __FUNCTION__ + FRONT_SIZE, size - 1u);
+      name_util::trim_name(typeName);
       return typeName;
     }
   };
+#elif
+#error "implicit component registration not supported"
 #endif
 }
 
@@ -7942,7 +7966,16 @@ public:
         return s_name;
     }
 
-    static type_t type() {
+    static type_t type(world_t *world = nullptr) {
+        if (!s_id) {
+            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
+                internal::name_helper<T>::name());
+
+            id(world);
+        }
+
+        ecs_assert(s_type != nullptr, ECS_INTERNAL_ERROR, NULL);
+
         return s_type;
     }
 
@@ -8044,38 +8077,40 @@ void component_move(
 }
 
 template <typename T>
-class pod_component : public entity {
-public:
-    pod_component(const flecs::world& world, const char *name) : 
-        entity(world, name, true) 
-    {
-        world_t *world_ptr = world.c_ptr();
-        ecs_new_component(world_ptr, this->m_id, nullptr, sizeof(T), alignof(T));
-        component_info<T>::init(world_ptr, this->m_id);
-        component_info<const T>::init(world_ptr, this->m_id);
-        component_info<T*>::init(world_ptr, this->m_id);
-        component_info<T&>::init(world_ptr, this->m_id); 
+flecs::entity pod_component(flecs::world& world, const char *name = nullptr) {
+    if (!name) {
+        name = internal::name_helper<T>::name();
     }
-};
+
+    flecs::entity result = entity(world, name, true);
+
+    world_t *world_ptr = world.c_ptr();
+    ecs_new_component(world_ptr, result.id(), nullptr, sizeof(T), alignof(T));
+    component_info<T>::init(world_ptr, result.id());
+    component_info<const T>::init(world_ptr, result.id());
+    component_info<T*>::init(world_ptr, result.id());
+    component_info<T&>::init(world_ptr, result.id()); 
+    
+    return result;
+}
 
 template <typename T>
-class component : public pod_component<T> {
-public:
-    component(const flecs::world& world, const char *name) 
-        : pod_component<T>(world, name) 
-    { 
-        EcsComponentLifecycle cl{};
-        cl.ctor = component_ctor<T>;
-        cl.dtor = component_dtor<T>;
-        cl.copy = component_copy<T>;
-        cl.move = component_move<T>;
-        
-        ecs_set_component_actions_w_entity(
-            world.c_ptr(), 
-            component_info<T>::id(world.c_ptr()), 
-            &cl);
-    }
-};
+flecs::entity component(flecs::world& world, const char *name = nullptr) {
+    flecs::entity result = pod_component<T>(world, name);
+
+    EcsComponentLifecycle cl{};
+    cl.ctor = component_ctor<T>;
+    cl.dtor = component_dtor<T>;
+    cl.copy = component_copy<T>;
+    cl.move = component_move<T>;
+    
+    ecs_set_component_actions_w_entity(
+        world.c_ptr(), 
+        component_info<T>::id(world.c_ptr()), 
+        &cl);
+
+    return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8083,12 +8118,11 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class module final : public pod_component<T> {
-public:
-    module(flecs::world& world, const char *name) : pod_component<T>(world, name) { 
-        ecs_set_scope(this->m_world, this->m_id);
-    }
-};
+flecs::entity module(flecs::world& world, const char *name = nullptr) {
+    flecs::entity result = pod_component<T>(world, name);
+    ecs_set_scope(world.c_ptr(), result.id());
+    return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9133,12 +9167,14 @@ inline void world::delete_entities(flecs::filter filter) const {
 
 template <typename T>
 inline void world::add() const {
-    ecs_bulk_add_remove_type(m_world, component_info<T>::s_type, nullptr, nullptr);
+    ecs_bulk_add_remove_type(
+        m_world, component_info<T>::type(m_world), nullptr, nullptr);
 }
 
 template <typename T>
 inline void world::add(flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, component_info<T>::s_type, nullptr, filter.c_ptr());
+    ecs_bulk_add_remove_type(
+        m_world, component_info<T>::type(m_world), nullptr, filter.c_ptr());
 }
 
 inline void world::add(type type) const {
@@ -9159,12 +9195,14 @@ inline void world::add(entity entity, flecs::filter filter) const {
 
 template <typename T>
 inline void world::remove() const {
-    ecs_bulk_add_remove_type(m_world, nullptr, component_info<T>::s_type, nullptr);
+    ecs_bulk_add_remove_type(
+        m_world, nullptr, component_info<T>::type(m_world), nullptr);
 }
 
 template <typename T>
 inline void world::remove(flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, component_info<T>::s_type, filter.c_ptr());
+    ecs_bulk_add_remove_type(
+        m_world, nullptr, component_info<T>::type(m_world), filter.c_ptr());
 }
 
 inline void world::remove(type type) const {

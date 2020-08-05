@@ -238,6 +238,12 @@ typedef struct EcsTrigger {
  * This flag can only be used in combination with an entity that has EcsType. */
 #define ECS_NOT ((ecs_entity_t)0xF8 << 56)
 
+/** Cases are used to switch between mutually exclusive components */
+#define ECS_CASE ((ecs_entity_t)0xF7 << 56)
+
+/** Switches allow for fast switching between mutually exclusive components */
+#define ECS_SWITCH ((ecs_entity_t)0xF6 << 56)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Builtin tags
@@ -1021,6 +1027,19 @@ void ecs_add_remove_type(
 #define ecs_get_trait(world, entity, component, trait)\
     ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait))))
 
+/** Get case for switch.
+ * This operation gets the current case for the specified switch. If the current
+ * switch is not set for the entity, the operation will return 0.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param sw The switch for which to obtain the case.
+ * @return The current case for the specified switch. 
+ */
+ecs_entity_t ecs_get_case(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t sw);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Deleting entities

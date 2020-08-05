@@ -826,6 +826,33 @@ void ecs_components_override(
     }
 }
 
+void ecs_components_switch(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    ecs_entities_t *added)
+{
+    ecs_entity_t *array = added->array;
+    int32_t i, add_count = added->count;
+
+    for (i = 0; i < add_count; i ++) {
+        ecs_entity_t e = array[i];
+
+        if (ECS_HAS_ROLE(e, CASE)) {
+            e = e & ECS_ENTITY_MASK;
+
+            ecs_entity_t sw_case = ecs_entity_t_lo(e);
+            int32_t sw_index = ecs_entity_t_hi(e);
+
+            ecs_switch_t *sw = data->sw_columns[sw_index].data;
+            ecs_switch_set(sw, row, sw_case);
+        }
+    }
+}
+
 void ecs_components_on_add(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -922,6 +949,11 @@ void ecs_run_add_actions(
         ecs_components_override(
             world, stage, table, data, row, count, cinfo, 
             added_count, set_mask, run_on_set);
+    }
+
+    if (table->flags & EcsTableHasSwitch) {
+        ecs_components_switch(
+            world, stage, table, data, row, count, added);
     }
 
     if (table->flags & EcsTableHasOnAdd) {
@@ -1218,6 +1250,16 @@ void commit(
          * no action is required. When this is not the main stage, this can
          * happen when an entity is copied from the main stage table to the
          * same table in the stage, for example when ecs_set is invoked. */
+
+        /* However, if a component was added in the process of traversing a
+         * table, this suggests that a case switch could have occured. */
+        if (added && added->count && src_table && 
+            src_table->flags & EcsTableHasSwitch) 
+        {
+            ecs_components_switch(
+                world, stage, src_table, info->data, info->row, 1, added);
+        }
+
         return;
     }
 
@@ -2188,13 +2230,63 @@ ecs_entity_t ecs_set_ptr_w_entity(
     return entity;
 }
 
+ecs_entity_t ecs_get_case(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t sw_id)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_entity_info_t info;
+    if (!ecs_get_info(world, stage, entity, &info)) {
+        return 0;
+    }
+
+    sw_id = sw_id | ECS_SWITCH;
+
+    ecs_table_t *table = info.table;
+    ecs_data_t *data = info.data;
+    if (!data) {
+        return 0;
+    }
+
+    ecs_type_t type = table->type;
+    int32_t index = ecs_type_index_of(type, sw_id);
+    if (index == -1) {
+        return 0;
+    }
+
+    index -= table->sw_column_offset;
+    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_switch_t *sw = data->sw_columns[index].data;  
+    return ecs_switch_get_case(sw, info.row);  
+}
+
 bool ecs_has_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
 {
-    ecs_type_t type = ecs_get_type(world, entity);
-    return ecs_type_has_entity(world, type, component);
+    if (ECS_HAS_ROLE(component, CASE)) {
+        ecs_stage_t *stage = ecs_get_stage(&world);
+        ecs_entity_info_t info;
+        if (!ecs_get_info(world, stage, entity, &info)) {
+            return false;
+        }
+
+        ecs_table_t *table = info.table;
+        int32_t index = ecs_table_switch_from_case(world, table, component);
+        ecs_assert(index < table->sw_column_count, ECS_INTERNAL_ERROR, NULL);
+        
+        ecs_data_t *data = info.data;
+        ecs_switch_t *sw = data->sw_columns[index].data;
+        ecs_entity_t value = ecs_switch_get_case(sw, info.row);
+
+        return value == (component & ECS_ENTITY_MASK);
+    } else {
+        ecs_type_t type = ecs_get_type(world, entity);
+        return ecs_type_has_entity(world, type, component);
+    }
 }
 
 bool ecs_has_type(

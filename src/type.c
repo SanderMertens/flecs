@@ -478,6 +478,18 @@ char* ecs_type_str(
             ecs_os_memcpy(dst, "NOT|", len);
         }
 
+        if (ECS_HAS_ROLE(flags, SWITCH)) {
+            int len = sizeof("SWITCH|") - 1;
+            dst = ecs_vector_addn(&chbuf, char, len);
+            ecs_os_memcpy(dst, "SWITCH|", len);
+        }
+
+        if (ECS_HAS_ROLE(flags, CASE)) {
+            int len = sizeof("CASE|") - 1;
+            dst = ecs_vector_addn(&chbuf, char, len);
+            ecs_os_memcpy(dst, "CASE|", len);
+        }                
+
         append_name(world, &chbuf, h);
 
         if (trait) {

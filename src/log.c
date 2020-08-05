@@ -416,6 +416,8 @@ const char* ecs_strerror(
         return "component is not registered";
     case ECS_INCONSISTENT_COMPONENT_ID:
         return "component registered twice with a different id";        
+    case ECS_INVALID_CASE:
+        return "case not supported for type";
     }
 
     return "unknown error code";

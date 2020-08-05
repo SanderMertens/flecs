@@ -327,6 +327,11 @@ const EcsComponent* ecs_component_from_id(
     ecs_world_t *world,
     ecs_entity_t e);
 
+int32_t ecs_table_switch_from_case(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t add);    
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////

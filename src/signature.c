@@ -26,6 +26,8 @@
 #define TOK_ROLE_OR "OR"
 #define TOK_ROLE_XOR "XOR"
 #define TOK_ROLE_NOT "NOT"
+#define TOK_ROLE_SWITCH "SWITCH"
+#define TOK_ROLE_CASE "CASE"
 
 #define TOK_IN "in"
 #define TOK_OUT "out"
@@ -135,6 +137,10 @@ char* parse_complex_elem(
             *flags = ECS_XOR;
         } else if (!strncmp(bptr, TOK_ROLE_NOT, token_len)) {
             *flags = ECS_NOT;
+        } else if (!strncmp(bptr, TOK_ROLE_SWITCH, token_len)) {
+            *flags = ECS_SWITCH;
+        } else if (!strncmp(bptr, TOK_ROLE_CASE, token_len)) {
+            *flags = ECS_CASE;                        
         } else {
             if (!name) {
                 return NULL;

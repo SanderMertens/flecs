@@ -67,19 +67,25 @@ typedef int (*ecs_parse_action_t)(
     const char *source,
     void *ctx);
 
-/** A component array in a table. */
+/** A component column. */
 struct ecs_column_t {
-    ecs_vector_t *data;         /**< Column data */
+    ecs_vector_t *data;        /**< Column data */
     int16_t size;              /**< Column element size */
     int16_t alignment;         /**< Column element alignment */
 };
 
+/** A switch column. */
+typedef struct ecs_sw_column_t {
+    ecs_switch_t *data;   /**< Column data */
+} ecs_sw_column_t;
+
 /** Stage-specific component data */
 struct ecs_data_t {
-    ecs_vector_t *entities;     /**< Entity identifiers */
-    ecs_vector_t *record_ptrs;  /**< Pointers to records in main entity index */
-    ecs_column_t *columns;      /**< Component data */
-    bool marked_dirty;          /**< Was table marked dirty by stage? */  
+    ecs_vector_t *entities;      /**< Entity identifiers */
+    ecs_vector_t *record_ptrs;   /**< Ptrs to records in main entity index */
+    ecs_column_t *columns;       /**< Component columns */
+    ecs_sw_column_t *sw_columns; /**< Switch columns */
+    bool marked_dirty;           /**< Was table marked dirty by stage? */  
 };
 
 /** Small footprint data structure for storing data associated with a table. */
@@ -104,10 +110,11 @@ typedef struct ecs_table_leaf_t {
 #define EcsTableHasOnSet            2048u
 #define EcsTableHasUnSet            4096u
 #define EcsTableHasMonitors         8192u
+#define EcsTableHasSwitch           16384u
 
 /* Composite constants */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
-#define EcsTableHasAddActions       (EcsTableHasBase | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
+#define EcsTableHasAddActions       (EcsTableHasBase | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
 #define EcsTableHasRemoveActions    (EcsTableHasBase | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors)
 
 /** Edge used for traversing the table graph. */
@@ -151,6 +158,8 @@ struct ecs_table_t {
 
     ecs_flags32_t flags;             /**< Flags for testing table properties */
     int32_t column_count;            /**< Number of data columns in table */
+    int32_t sw_column_count;
+    int32_t sw_column_offset;
 };
 
 /** Type containing data for a table matched with a query. */
