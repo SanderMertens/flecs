@@ -61,6 +61,7 @@ ecs_data_t* init_data(
 
             result->sw_columns[i].data = ecs_switch_new(
                 sw_array[0], sw_array[sw_array_count - 1], 0);
+            result->sw_columns[i].type = sw_type;
         }
     }
 

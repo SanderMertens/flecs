@@ -435,25 +435,39 @@ int32_t ecs_table_switch_from_case(
     ecs_entity_t add)
 {
     ecs_type_t type = table->type;
+    ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = table->sw_column_count;
+    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
     add = add & ECS_ENTITY_MASK;
 
-    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_sw_column_t *sw_columns = NULL;
+    
+    if (data && (sw_columns = data->sw_columns)) {
+        /* Fast path, we can get the switch type from the column data */
+        for (i = 0; i < count; i ++) {
+            ecs_type_t type = sw_columns[i].type;
+            if (ecs_type_owns_entity(world, type, add, true)) {
+                return i;
+            }
+        }
+    } else {
+        /* Slow path, table is empty, so we'll have to get the switch types by
+         * actually inspecting the switch type entities. */
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t e = array[i + table->sw_column_offset];
+            ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
+            e = e & ECS_ENTITY_MASK;
 
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = array[i + table->sw_column_offset];
-        ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
-        e = e & ECS_ENTITY_MASK;
+            const EcsType *type_ptr = ecs_get(world, e, EcsType);
+            ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        const EcsType *type_ptr = ecs_get(world, e, EcsType);
-        ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (ecs_type_owns_entity(
-            world, type_ptr->normalized, add, true)) 
-        {
-            return i;
+            if (ecs_type_owns_entity(
+                world, type_ptr->normalized, add, true)) 
+            {
+                return i;
+            }
         }
     }
 
