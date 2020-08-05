@@ -240,7 +240,7 @@ bool is_override(
 
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities[i];
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             if (ecs_has_entity(world, e & ECS_ENTITY_MASK, comp)) {
                 return true;
             }
@@ -1070,8 +1070,8 @@ void merge_table_data(
         int16_t size = new_columns[i_new].size;
         int16_t alignment = new_columns[i_new].alignment;
 
-        if ((new_component & ECS_TYPE_ROLE_MASK) || 
-            (old_component & ECS_TYPE_ROLE_MASK)) 
+        if ((new_component & ECS_ROLE_MASK) || 
+            (old_component & ECS_ROLE_MASK)) 
         {
             break;
         }

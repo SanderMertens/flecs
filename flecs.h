@@ -184,9 +184,10 @@ typedef int32_t ecs_size_t;
 //// Type role macro's
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_TYPE_ROLE_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF | ECS_TRAIT | ECS_AND | ECS_OR | ECS_XOR | ECS_NOT))
-#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_TYPE_ROLE_MASK)
+#define ECS_ROLE_MASK ((ecs_entity_t)0xFF << 56)
+#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ROLE_MASK)
 #define ECS_TYPE_ROLE_START ECS_CHILDOF
+#define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1062,6 +1063,73 @@ private:
 }
 
 #endif
+#endif
+
+#endif
+#ifndef FLECS_SWITCH_LIST_H
+#define FLECS_SWITCH_LIST_H
+
+
+typedef struct ecs_switch_header_t {
+    int32_t element;
+    int32_t count;
+} ecs_switch_header_t;
+
+typedef struct ecs_switch_node_t {
+    int32_t next;
+    int32_t prev;
+    int32_t value;
+} ecs_switch_node_t;
+
+typedef struct ecs_switch_t {
+    int32_t min;
+    int32_t max;
+    ecs_switch_header_t *headers;
+    ecs_vector_t *nodes;
+} ecs_switch_t;
+
+FLECS_EXPORT
+ecs_switch_t* ecs_switch_new(
+    int32_t min, 
+    int32_t max,
+    int32_t elements);
+
+FLECS_EXPORT
+void ecs_switch_free(
+    ecs_switch_t *sw);
+
+FLECS_EXPORT
+void ecs_switch_set(
+    ecs_switch_t *sw,
+    int32_t element,
+    int32_t value);
+
+FLECS_EXPORT
+void ecs_switch_remove(
+    ecs_switch_t *sw,
+    int32_t element);
+
+FLECS_EXPORT
+int32_t ecs_switch_get_case(
+    const ecs_switch_t *sw,
+    int32_t element);
+
+FLECS_EXPORT
+int32_t ecs_switch_first(
+    const ecs_switch_t *sw,
+    int32_t value);
+
+FLECS_EXPORT
+int32_t ecs_switch_next(
+    const ecs_switch_t *sw,
+    int32_t elem);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif
@@ -2465,22 +2533,22 @@ typedef struct EcsTrigger {
 
 /** The INSTANCEOF role indicates that the components from the entity should be
  * shared with the entity that instantiates the type. */
-#define ECS_INSTANCEOF ((ecs_entity_t)1 << 63)
+#define ECS_INSTANCEOF ((ecs_entity_t)0xFE << 56)
 
 /** The CHILDOF role indicates that the entity should be treated as a parent of
  * the entity that instantiates the type. */
-#define ECS_CHILDOF ((ecs_entity_t)1 << 62)
+#define ECS_CHILDOF ((ecs_entity_t)0xFD << 56)
 
 /** The TRAIT role indicates that the entity is a trait identifier. */
-#define ECS_TRAIT ((ecs_entity_t)1 << 61)
+#define ECS_TRAIT ((ecs_entity_t)0xFC << 56)
 
 /** Enforce that all entities of a type are present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_AND ((ecs_entity_t)1 << 60)
+#define ECS_AND ((ecs_entity_t)0xFB << 56)
 
 /** Enforce that at least one entity of a type must be present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_OR ((ecs_entity_t)1 << 59)
+#define ECS_OR ((ecs_entity_t)0xFA << 56)
 
 /** Enforce that exactly one entity of a type must be present in the type.
  * This flag can only be used in combination with an entity that has EcsType. 
@@ -2488,11 +2556,11 @@ typedef struct EcsTrigger {
  * previous entity is removed from the entity. This makes XOR useful for
  * implementing state machines, as it allows for traversing states while 
  * ensuring that only one state is ever active at the same time. */
-#define ECS_XOR ((ecs_entity_t)1 << 58)
+#define ECS_XOR ((ecs_entity_t)0xF9 << 56)
 
 /** None of the entities in a type may be added to the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_NOT ((ecs_entity_t)1 << 57)
+#define ECS_NOT ((ecs_entity_t)0xF8 << 56)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6499,6 +6567,7 @@ public:
      * @param col The column id.
      */
     flecs::type column_type(int32_t col) const;
+<<<<<<< HEAD
 
     /** Obtain entity being iterated over for row.
      *
@@ -6506,6 +6575,15 @@ public:
      */
     flecs::entity entity(int32_t row) const;
 
+=======
+
+    /** Obtain entity being iterated over for row.
+     *
+     * @param row Row being iterated over.
+     */
+    flecs::entity entity(int32_t row) const;
+
+>>>>>>> 47d407a... #211 increase type role addressing space
     /** Obtain type of table being iterated over.
      */
     type table_type() const;
@@ -6663,7 +6741,11 @@ private:
     /* Get single field, check if correct type is used */
     template <typename T>
     T& get_element(int32_t col, int32_t row) const {
+<<<<<<< HEAD
         ecs_assert(ecs_column_entity(m_iter, col) == component_info<T>::id(m_iter->world), ECS_COLUMN_TYPE_MISMATCH, NULL);
+=======
+        ecs_assert(ecs_column_entity(m_iter, col) == component_info<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
+>>>>>>> 47d407a... #211 increase type role addressing space
         return *static_cast<T*>(ecs_element_w_size(m_iter, sizeof(T), col, row));
     }       
 
@@ -7058,6 +7140,7 @@ public:
      */
     base_type& add(type type) const;
 
+<<<<<<< HEAD
     /** Add a trait
      */
     base_type& add_trait(entity_t entity, entity_t trait) const {
@@ -7087,6 +7170,8 @@ public:
     base_type& add_trait(flecs::entity trait) const;
     base_type& add_trait(flecs::entity entity, flecs::entity trait) const;
 
+=======
+>>>>>>> 47d407a... #211 increase type role addressing space
     /** Remove an entity from an entity by id.
      */
     base_type& remove(entity_t entity) const {
@@ -7126,6 +7211,7 @@ public:
      */
     base_type& remove(type type) const;
 
+<<<<<<< HEAD
     /** Remove a trait
      */
     base_type& remove_trait(entity_t entity, entity_t trait) const {
@@ -7153,6 +7239,8 @@ public:
     base_type& remove_trait(flecs::entity trait) const;
     base_type& remove_trait(flecs::entity entity, flecs::entity trait) const;
 
+=======
+>>>>>>> 47d407a... #211 increase type role addressing space
     /** Add a parent entity to an entity by id.
      */    
     base_type& add_childof(entity_t parent) const {
@@ -7236,6 +7324,7 @@ public:
         return *static_cast<base_type*>(this);
     }
 
+<<<<<<< HEAD
     /** Set a trait for an entity.
      */
     template <typename C, typename T>
@@ -7255,6 +7344,8 @@ public:
     template <typename T>
     const base_type& set_trait(flecs::entity trait, const T& value) const;
 
+=======
+>>>>>>> 47d407a... #211 increase type role addressing space
     /** Patch a component value.
      * This operation allows an application to partially overwrite a component 
      * value.
@@ -7480,6 +7571,7 @@ public:
     T* get_mut(bool *is_added = nullptr) const {
         return static_cast<T*>(
             ecs_get_mut_w_entity(
+<<<<<<< HEAD
                 m_world, m_id, component_info<T>::id(m_world), is_added));
     }
 
@@ -7489,6 +7581,14 @@ public:
 
     void* get_mut(entity_t component_id, bool *is_added = nullptr) const {
         return ecs_get_mut_w_entity(m_world, m_id, component_id, is_added);
+=======
+                m_world, m_id, component_info<T>::s_entity, is_added));
+    }
+
+    template <typename T>
+    void modified() {
+        ecs_modified_w_entity(m_world, m_id, component_info<T>::s_entity);
+>>>>>>> 47d407a... #211 increase type role addressing space
     }
 
     template <typename T>

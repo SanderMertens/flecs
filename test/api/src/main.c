@@ -381,7 +381,6 @@ void SystemMisc_invalid_or_w_empty(void);
 void SystemMisc_invalid_component_id(void);
 void SystemMisc_invalid_entity_id(void);
 void SystemMisc_invalid_or_from_system(void);
-void SystemMisc_invalid_phase(void);
 void SystemMisc_invalid_null_string(void);
 void SystemMisc_invalid_empty_string(void);
 void SystemMisc_invalid_empty_string_w_space(void);
@@ -2461,10 +2460,6 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "invalid_or_from_system",
         SystemMisc_invalid_or_from_system
-    },
-    {
-        "invalid_phase",
-        SystemMisc_invalid_phase
     },
     {
         "invalid_null_string",
@@ -5182,7 +5177,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        50,
+        49,
         SystemMisc_testcases
     },
     {

@@ -22,7 +22,7 @@ const EcsComponent* ecs_component_from_id(
     ecs_entity_t trait = 0;
 
     /* If this is a trait, get the trait component from the identifier */
-    if (e & ECS_TRAIT) {
+    if (ECS_HAS_ROLE(e, TRAIT)) {
         trait = e;
         e = e & ECS_ENTITY_MASK;
         e = ecs_entity_t_hi(e);
@@ -164,15 +164,15 @@ void init_edges(
             table->flags |= EcsTableHasComponentData;
         }
 
-        if (e & ECS_XOR) {
+        if (ECS_HAS_ROLE(e, XOR)) {
             table->flags |= EcsTableHasXor;
         }
 
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             table->flags |= EcsTableHasBase;
         }
 
-        if (e & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(e, CHILDOF)) {
             table->flags |= EcsTableHasParent;
 
             ecs_entity_t parent = e & ECS_ENTITY_MASK;
@@ -395,7 +395,7 @@ ecs_table_t *find_or_create_table_include(
 
         for (i = type_count - 1; i >= 0; i --) {
             ecs_entity_t e = array[i];
-            if (e & ECS_XOR) {
+            if (ECS_HAS_ROLE(e, XOR)) {
                 ecs_entity_t e_type = e & ECS_ENTITY_MASK;
                 const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -718,7 +718,7 @@ int32_t count_occurrences(
     int i;
     for (i = 0; i < constraint_index; i ++) {
         ecs_entity_t e = entities->array[i];
-        if (e & ECS_TYPE_ROLE_MASK) {
+        if (e & ECS_ROLE_MASK) {
             break;
         }
 
@@ -738,8 +738,12 @@ void verify_constraints(
     int i, count = entities->count;
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities->array[i];
-        ecs_entity_t mask = e & ECS_TYPE_ROLE_MASK;
-        if (!mask || !(mask & (ECS_OR | ECS_XOR | ECS_NOT))) {
+        ecs_entity_t mask = e & ECS_ROLE_MASK;
+        if (!mask || 
+            ((mask != ECS_OR) &&
+             (mask != ECS_XOR) &&
+             (mask != ECS_NOT)))
+        {
             break;
         }
 

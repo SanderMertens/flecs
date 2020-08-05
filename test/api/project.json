@@ -424,7 +424,6 @@
                 "invalid_component_id",
                 "invalid_entity_id",
                 "invalid_or_from_system",
-                "invalid_phase",
                 "invalid_null_string",
                 "invalid_empty_string",
                 "invalid_empty_string_w_space",                

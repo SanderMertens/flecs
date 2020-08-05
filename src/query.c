@@ -15,7 +15,7 @@ ecs_entity_t components_contains(
     ecs_vector_each(table_type, ecs_entity_t, c_ptr, {
         ecs_entity_t entity = *c_ptr;
 
-        if (entity & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(entity, CHILDOF)) {
             entity &= ECS_ENTITY_MASK;
 
             ecs_record_t *record = ecs_eis_get(&world->stage, entity);
@@ -84,7 +84,7 @@ int32_t rank_by_depth(
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     for (i = count - 1; i >= 0; i --) {
-        if (array[i] & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(array[i], CHILDOF)) {
             ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_ENTITY_MASK);
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type, ecs_entity_t);
@@ -100,7 +100,7 @@ int32_t rank_by_depth(
             if (j != c_count) {
                 break;
             }
-        } else if (!(array[i] & ECS_TYPE_ROLE_MASK)) {
+        } else if (!(array[i] & ECS_ROLE_MASK)) {
             /* No more parents after this */
             break;
         }
@@ -281,7 +281,7 @@ int32_t get_component_index(
     ecs_entity_t component = *component_out;
 
     if (component) {
-        if (component & ECS_TRAIT) {
+        if (ECS_HAS_ROLE(component, TRAIT)) {
             ecs_assert(trait_index_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
 
             component &= ECS_ENTITY_MASK;
@@ -404,7 +404,7 @@ ecs_entity_t is_column_trait(
 
     /* For now traits are only supported on owned columns */
     if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
-        if (column->is.component & ECS_TRAIT) {
+        if (ECS_HAS_ROLE(column->is.component, TRAIT)) {
             return column->is.component;
         }
     }
@@ -425,7 +425,7 @@ int32_t type_trait_count(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
-        if (e & ECS_TRAIT) {
+        if (ECS_HAS_ROLE(e, TRAIT)) {
             e &= ECS_ENTITY_MASK;
             if (ecs_entity_t_hi(e) == trait) {
                 result ++;

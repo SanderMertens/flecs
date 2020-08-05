@@ -1885,7 +1885,7 @@ bool is_override(
 
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities[i];
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             if (ecs_has_entity(world, e & ECS_ENTITY_MASK, comp)) {
                 return true;
             }
@@ -2715,8 +2715,8 @@ void merge_table_data(
         int16_t size = new_columns[i_new].size;
         int16_t alignment = new_columns[i_new].alignment;
 
-        if ((new_component & ECS_TYPE_ROLE_MASK) || 
-            (old_component & ECS_TYPE_ROLE_MASK)) 
+        if ((new_component & ECS_ROLE_MASK) || 
+            (old_component & ECS_ROLE_MASK)) 
         {
             break;
         }
@@ -3196,6 +3196,7 @@ bool get_info(
     ecs_entity_info_t *info)
 {
     ecs_record_t *record = ecs_eis_get(&world->stage, entity);
+
     if (!record) {
         info->table = NULL;
         info->is_watched = false;
@@ -3502,7 +3503,7 @@ int32_t find_prefab(
 
     for (i = n + 1; i < count; i ++) {
         ecs_entity_t e = buffer[i];
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             return i;
         }
     }
@@ -3565,7 +3566,7 @@ void instantiate_children(
         /* Keep track of the element that creates the CHILDOF relationship with
         * the prefab parent. We need to replace this element to make sure the
         * created children point to the instance and not the prefab */ 
-        if (c & ECS_CHILDOF && (c & ECS_ENTITY_MASK) == base) {
+        if (ECS_HAS_ROLE(c, CHILDOF) && (c & ECS_ENTITY_MASK) == base) {
             base_index = pos;
         }        
 
@@ -3662,6 +3663,8 @@ bool override_from_base(
     int32_t count)
 {
     ecs_entity_info_t base_info;
+
+    printf("get_info(%lu)\n", base);
     if (!get_info(world, base, &base_info)) {
         return false;
     }
@@ -3723,7 +3726,7 @@ bool override_component(
             break;
         }
 
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             return override_from_base(world, e & ECS_ENTITY_MASK, component, 
                 data, column, row, count);
         }
@@ -3837,7 +3840,7 @@ void ecs_components_override(
         ecs_entity_t component = component_info[i].id;
 
         if (component >= ECS_HI_COMPONENT_ID) {
-            if (component & ECS_INSTANCEOF) {
+            if (ECS_HAS_ROLE(component, INSTANCEOF)) {
                 ecs_entity_t base = component & ECS_ENTITY_MASK;
                 instantiate(world, stage, base, data, row, count);
 
@@ -4224,7 +4227,7 @@ bool update_component_monitor_w_array(
         ecs_entity_t component = entities->array[i];
         if (component < ECS_HI_COMPONENT_ID) {
             ecs_component_monitor_mark(mon, component);
-        } else if (component & ECS_CHILDOF) {
+        } else if (ECS_HAS_ROLE(component, CHILDOF)) {
             childof_changed = true;
         }
     }
@@ -4343,6 +4346,7 @@ void* get_base_component(
         }
 
         ecs_entity_info_t prefab_info;
+        printf("prefab = %lu (%s)\n", prefab, ecs_get_name(world, prefab));
         if (get_info(world, prefab, &prefab_info)) {
             ptr = get_component(&prefab_info, component);
             if (!ptr) {
@@ -4640,7 +4644,7 @@ void *get_mutable(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert((component & ECS_ENTITY_MASK) == component || component & ECS_TRAIT, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((component & ECS_ENTITY_MASK) == component || ECS_HAS_ROLE(component, TRAIT), ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
     if (stage == &world->stage) {
@@ -4846,13 +4850,13 @@ ecs_entity_t ecs_new_w_entity(
         };
 
         ecs_entity_t old_scope = 0;
-        if (component & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(component, CHILDOF)) {
             old_scope = ecs_set_scope(world, 0);
         }
 
         new(world, stage, entity, &to_add);
 
-        if (component & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(component, CHILDOF)) {
             ecs_set_scope(world, old_scope);
         }
     } else {
@@ -8075,7 +8079,7 @@ void ecs_dbg_table(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
-        if (e & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(e, CHILDOF)) {
             ecs_dbg_entity_t parent_dbg;
             ecs_dbg_entity(world, e & ECS_ENTITY_MASK, &parent_dbg);
 
@@ -8093,7 +8097,7 @@ void ecs_dbg_table(
                 world, dbg_out->parent_entities, e & ECS_ENTITY_MASK);
         }
 
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             ecs_dbg_entity_t base_dbg;
             ecs_dbg_entity(world, e & ECS_ENTITY_MASK, &base_dbg);
 
@@ -9872,6 +9876,187 @@ const ecs_world_info_t* ecs_get_world_info(
     return &world->stats;
 }
 
+static
+ecs_switch_header_t *get_header(
+    const ecs_switch_t *sw,
+    int32_t value)
+{
+    if (value == -1) {
+        return NULL;
+    }
+
+    int32_t index = value - sw->min;
+    return &sw->headers[index];
+}
+
+static
+void remove_node(
+    ecs_switch_header_t *hdr,
+    ecs_switch_node_t *nodes,
+    ecs_switch_node_t *node,
+    int32_t element)
+{
+    /* The node is currently assigned to a value */
+    if (hdr->element == element) {
+        /* If this is the first node, update the header */
+        hdr->element = node->next;
+    } else {
+        /* If this is not the first node, update the previous node */
+        ecs_switch_node_t *prev_node = &nodes[node->prev];
+        prev_node->next = node->next;
+    }
+
+    if (node->next != -1) {
+        /* If this is not the last node, update the next node */
+        ecs_switch_node_t *next_node = &nodes[node->next];
+        next_node->prev = node->prev;
+    }
+
+    /* Decrease count of current header */
+    hdr->count --;
+}
+
+ecs_switch_t* ecs_switch_new(
+    int32_t min, 
+    int32_t max,
+    int32_t elements)
+{
+    ecs_switch_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_switch_t));
+    result->min = min;
+    result->max = max;
+
+    int32_t count = max - min;
+    result->headers = ecs_os_calloc(ECS_SIZEOF(ecs_switch_header_t) * count);
+    result->nodes = ecs_vector_new(ecs_switch_node_t, elements);
+
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        result->headers[i].element = -1;
+        result->headers[i].count = 0;
+    }
+
+    ecs_switch_node_t *nodes = ecs_vector_first(
+        result->nodes, ecs_switch_node_t);
+
+    for (i = 0; i < elements; i ++) {
+        nodes[i].prev = -1;
+        nodes[i].next = -1;
+        nodes[i].value = -1;
+    }
+
+    return result;
+}
+
+void ecs_switch_free(
+    ecs_switch_t *sw)
+{
+    ecs_os_free(sw->headers);
+    ecs_vector_free(sw->nodes);
+    ecs_os_free(sw);
+}
+
+void ecs_switch_set(
+    ecs_switch_t *sw,
+    int32_t element,
+    int32_t value)
+{
+    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_switch_node_t *nodes = ecs_vector_first(
+        sw->nodes, ecs_switch_node_t);
+
+    ecs_switch_node_t *node = &nodes[element];
+
+    /* If the node is already assigned to the value, nothing to be done */
+    if (node->value == value) {
+        return;
+    }
+
+    ecs_switch_header_t *cur_hdr = get_header(sw, node->value);
+    ecs_switch_header_t *dst_hdr = get_header(sw, value);
+
+    if (cur_hdr) {
+        remove_node(cur_hdr, nodes, node, element);
+    }
+
+    /* Now update the node itself by adding it as the first node of dst */
+    node->next = dst_hdr->element;
+    node->prev = -1;
+    node->value = value;
+
+    /* Also update the dst header */
+    dst_hdr->element = element;
+    dst_hdr->count ++;
+}
+
+void ecs_switch_remove(
+    ecs_switch_t *sw,
+    int32_t element)
+{
+    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_switch_node_t *nodes = ecs_vector_first(
+        sw->nodes, ecs_switch_node_t);
+
+    ecs_switch_node_t *node = &nodes[element];
+
+    /* If the node is not assigned to a value, nothing to be done */
+    if (node->value == -1) {
+        return;
+    }
+
+    ecs_switch_header_t *hdr = get_header(sw, node->value);
+    ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    remove_node(hdr, nodes, node, element);
+
+    node->value = -1;
+    node->prev = -1;
+    node->next = -1;
+}
+
+int32_t ecs_switch_get_case(
+    const ecs_switch_t *sw,
+    int32_t element)
+{
+    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_switch_node_t *nodes = ecs_vector_first(
+        sw->nodes, ecs_switch_node_t);
+
+    return nodes[element].value;
+}
+
+int32_t ecs_switch_first(
+    const ecs_switch_t *sw,
+    int32_t value)
+{
+    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(value <= sw->max, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(value >= sw->min, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_switch_header_t *hdr = get_header(sw, value);
+    ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    return hdr->element;
+}
+
+int32_t ecs_switch_next(
+    const ecs_switch_t *sw,
+    int32_t element)
+{
+    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_switch_node_t *nodes = ecs_vector_first(
+        sw->nodes, ecs_switch_node_t);
+
+    return nodes[element].next;
+}
+
 /* Get entity */
 ecs_record_t* ecs_ei_get(
     ecs_ei_t *entity_index,
@@ -11283,7 +11468,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = array[i];
 
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             ecs_entity_t prefab = e & ECS_ENTITY_MASK;
             ecs_type_t prefab_type = ecs_get_type(world, prefab);
 
@@ -11526,7 +11711,7 @@ bool ecs_type_has_entity(
         return true;
     }
 
-    if (entity & ECS_TRAIT) {
+    if (ECS_HAS_ROLE(entity, TRAIT)) {
         trait = entity & ECS_ENTITY_MASK;
     }
 
@@ -11536,13 +11721,13 @@ bool ecs_type_has_entity(
             return true;
         }
 
-        if (e & ECS_INSTANCEOF && entity != EcsPrefab && entity != EcsDisabled){
+        if (ECS_HAS_ROLE(e, INSTANCEOF) && entity != EcsPrefab && entity != EcsDisabled){
             ecs_entity_t base = e & ECS_ENTITY_MASK;
             if (ecs_has_entity(world, base, entity)) {
                 return true;
             }
         } else 
-        if (trait && e & ECS_TRAIT) {
+        if (trait && ECS_HAS_ROLE(e, TRAIT)) {
             e &= ECS_ENTITY_MASK;
             if (trait == ecs_entity_t_hi(e)) {
                 return true;
@@ -11565,7 +11750,7 @@ bool ecs_type_owns_entity(
         return false;
     }
 
-    if (entity & ECS_TRAIT) {
+    if (ECS_HAS_ROLE(entity, TRAIT)) {
         is_trait = true;
         entity = entity & ECS_ENTITY_MASK;
     }
@@ -11577,7 +11762,7 @@ bool ecs_type_owns_entity(
         if (is_trait) {
              for (i = 0; i < count; i ++) {
                  ecs_entity_t e = array[i];
-                 if (e & ECS_TRAIT) {
+                 if (ECS_HAS_ROLE(e, TRAIT)) {
                      e &= ECS_ENTITY_MASK;
                      if (ecs_entity_t_hi(e) == entity) {
                          return true;
@@ -11597,7 +11782,7 @@ bool ecs_type_owns_entity(
             if (e < ECS_INSTANCEOF) {
                 return false;
             } else
-            if (e & ECS_INSTANCEOF) {
+            if (ECS_HAS_ROLE(e, INSTANCEOF)) {
                 ecs_entity_t base = e & ECS_ENTITY_MASK;
                 if (ecs_has_entity(world, base, entity)) {
                     return true;
@@ -11687,25 +11872,25 @@ char* ecs_type_str(
     for (i = 0; i < count; i ++) {
         ecs_entity_t h;
         ecs_entity_t trait = 0;
-        ecs_entity_t flags = split_entity_id(handles[i], &h) & ECS_TYPE_ROLE_MASK;
+        ecs_entity_t flags = split_entity_id(handles[i], &h) & ECS_ROLE_MASK;
 
         if (i) {
             *(char*)ecs_vector_add(&chbuf, char) = ',';
         }
 
-        if (flags & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(flags, INSTANCEOF)) {
             int len = sizeof("INSTANCEOF|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             ecs_os_memcpy(dst, "INSTANCEOF|", len);
         }
 
-        if (flags & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(flags, CHILDOF)) {
             int len = sizeof("CHILDOF|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             ecs_os_memcpy(dst, "CHILDOF|", len);
         }
 
-        if (flags & ECS_TRAIT) {
+        if (ECS_HAS_ROLE(flags, TRAIT)) {
             int len = sizeof("TRAIT|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             ecs_os_memcpy(dst, "TRAIT|", len);
@@ -11713,25 +11898,25 @@ char* ecs_type_str(
             h = ecs_entity_t_lo(h);
         }
 
-        if (flags & ECS_XOR) {
+        if (ECS_HAS_ROLE(flags, XOR)) {
             int len = sizeof("XOR|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             ecs_os_memcpy(dst, "XOR|", len);
         }
 
-        if (flags & ECS_OR) {
+        if (ECS_HAS_ROLE(flags, OR)) {
             int len = sizeof("OR|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             ecs_os_memcpy(dst, "OR|", len);
         }
 
-        if (flags & ECS_AND) {
+        if (ECS_HAS_ROLE(flags, AND)) {
             int len = sizeof("AND|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             ecs_os_memcpy(dst, "AND|", len);
         }
 
-        if (flags & ECS_NOT) {
+        if (ECS_HAS_ROLE(flags, NOT)) {
             int len = sizeof("NOT|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             ecs_os_memcpy(dst, "NOT|", len);
@@ -11789,7 +11974,7 @@ int32_t ecs_type_trait_index_of(
 
     for (i = start_index; i < count; i ++) {
         ecs_entity_t e = array[i];
-        if (e & ECS_TRAIT) {
+        if (ECS_HAS_ROLE(e, TRAIT)) {
             e &= ECS_ENTITY_MASK;
             if (trait == ecs_entity_t_hi(e)) {
                 return i;
@@ -12092,7 +12277,7 @@ ecs_entity_t components_contains(
     ecs_vector_each(table_type, ecs_entity_t, c_ptr, {
         ecs_entity_t entity = *c_ptr;
 
-        if (entity & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(entity, CHILDOF)) {
             entity &= ECS_ENTITY_MASK;
 
             ecs_record_t *record = ecs_eis_get(&world->stage, entity);
@@ -12161,7 +12346,7 @@ int32_t rank_by_depth(
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     for (i = count - 1; i >= 0; i --) {
-        if (array[i] & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(array[i], CHILDOF)) {
             ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_ENTITY_MASK);
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type, ecs_entity_t);
@@ -12177,7 +12362,7 @@ int32_t rank_by_depth(
             if (j != c_count) {
                 break;
             }
-        } else if (!(array[i] & ECS_TYPE_ROLE_MASK)) {
+        } else if (!(array[i] & ECS_ROLE_MASK)) {
             /* No more parents after this */
             break;
         }
@@ -12358,7 +12543,7 @@ int32_t get_component_index(
     ecs_entity_t component = *component_out;
 
     if (component) {
-        if (component & ECS_TRAIT) {
+        if (ECS_HAS_ROLE(component, TRAIT)) {
             ecs_assert(trait_index_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
 
             component &= ECS_ENTITY_MASK;
@@ -12481,7 +12666,7 @@ ecs_entity_t is_column_trait(
 
     /* For now traits are only supported on owned columns */
     if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
-        if (column->is.component & ECS_TRAIT) {
+        if (ECS_HAS_ROLE(column->is.component, TRAIT)) {
             return column->is.component;
         }
     }
@@ -12502,7 +12687,7 @@ int32_t type_trait_count(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
-        if (e & ECS_TRAIT) {
+        if (ECS_HAS_ROLE(e, TRAIT)) {
             e &= ECS_ENTITY_MASK;
             if (ecs_entity_t_hi(e) == trait) {
                 result ++;
@@ -14007,7 +14192,7 @@ const EcsComponent* ecs_component_from_id(
     ecs_entity_t trait = 0;
 
     /* If this is a trait, get the trait component from the identifier */
-    if (e & ECS_TRAIT) {
+    if (ECS_HAS_ROLE(e, TRAIT)) {
         trait = e;
         e = e & ECS_ENTITY_MASK;
         e = ecs_entity_t_hi(e);
@@ -14149,15 +14334,15 @@ void init_edges(
             table->flags |= EcsTableHasComponentData;
         }
 
-        if (e & ECS_XOR) {
+        if (ECS_HAS_ROLE(e, XOR)) {
             table->flags |= EcsTableHasXor;
         }
 
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             table->flags |= EcsTableHasBase;
         }
 
-        if (e & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(e, CHILDOF)) {
             table->flags |= EcsTableHasParent;
 
             ecs_entity_t parent = e & ECS_ENTITY_MASK;
@@ -14380,7 +14565,7 @@ ecs_table_t *find_or_create_table_include(
 
         for (i = type_count - 1; i >= 0; i --) {
             ecs_entity_t e = array[i];
-            if (e & ECS_XOR) {
+            if (ECS_HAS_ROLE(e, XOR)) {
                 ecs_entity_t e_type = e & ECS_ENTITY_MASK;
                 const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -14703,7 +14888,7 @@ int32_t count_occurrences(
     int i;
     for (i = 0; i < constraint_index; i ++) {
         ecs_entity_t e = entities->array[i];
-        if (e & ECS_TYPE_ROLE_MASK) {
+        if (e & ECS_ROLE_MASK) {
             break;
         }
 
@@ -14723,8 +14908,12 @@ void verify_constraints(
     int i, count = entities->count;
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities->array[i];
-        ecs_entity_t mask = e & ECS_TYPE_ROLE_MASK;
-        if (!mask || !(mask & (ECS_OR | ECS_XOR | ECS_NOT))) {
+        ecs_entity_t mask = e & ECS_ROLE_MASK;
+        if (!mask || 
+            ((mask != ECS_OR) &&
+             (mask != ECS_XOR) &&
+             (mask != ECS_NOT)))
+        {
             break;
         }
 
@@ -17876,11 +18065,11 @@ void StatsCollectTypeStats(ecs_iter_t *it) {
             ecs_entity_t e = entities[j];
             bool has_flags = false;
             
-            if (e & ECS_CHILDOF) {
+            if (ECS_HAS_ROLE(e, CHILDOF)) {
                 stats[i].entities_childof_count ++;
                 has_flags = true;
             }
-            if (e & ECS_INSTANCEOF) {
+            if (ECS_HAS_ROLE(e, INSTANCEOF)) {
                 stats[i].entities_instanceof_count ++;
                 has_flags = true;
             }
@@ -19240,7 +19429,7 @@ EcsType type_from_vec(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
-        if (e & ECS_AND) {
+        if (ECS_HAS_ROLE(e, AND)) {
             ecs_entity_t entity = e & ECS_ENTITY_MASK;
             const EcsType *type_ptr = ecs_get(world, entity, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
