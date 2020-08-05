@@ -136,3 +136,24 @@ void Switch_add_w_type() {
     ecs_fini(world);
 }
 
+void Switch_bulk_new_w_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+    ECS_TYPE(world, Type, SWITCH | Movement, CASE | Running);
+
+    ecs_entity_t e = ecs_bulk_new(world, Type, 100);
+    test_assert(e != 0);
+
+    ecs_add(world, e, Type);
+
+    test_assert( ecs_has_entity(world, e, ECS_CASE | Running));
+    ecs_entity_t case_id = ecs_get_case(world, e, Movement);
+    test_int(case_id, Running);
+
+    ecs_fini(world);
+}

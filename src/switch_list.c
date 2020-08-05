@@ -5,7 +5,7 @@ ecs_switch_header_t *get_header(
     const ecs_switch_t *sw,
     int32_t value)
 {
-    if (value == -1) {
+    if (value == 0) {
         return NULL;
     }
 
@@ -92,6 +92,31 @@ void ecs_switch_add(
     node->prev = -1;
     node->next = -1;
     node->value = 0;
+}
+
+void ecs_switch_set_count(
+    ecs_switch_t *sw,
+    int32_t count)
+{
+    int32_t old_count = ecs_vector_count(sw->nodes);
+    ecs_vector_set_count(&sw->nodes, ecs_switch_node_t, count);
+
+    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
+    int32_t i;
+    for (i = old_count; i < count; i ++) {
+        ecs_switch_node_t *node = &nodes[i];
+        node->prev = -1;
+        node->next = -1;
+        node->value = 0;        
+    }
+}
+
+void ecs_switch_addn(
+    ecs_switch_t *sw,
+    int32_t count)
+{
+    int32_t old_count = ecs_vector_count(sw->nodes);
+    ecs_switch_set_count(sw, old_count + count);
 }
 
 void ecs_switch_set(

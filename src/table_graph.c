@@ -470,20 +470,20 @@ ecs_table_t *find_or_create_table_include(
     ecs_table_t *node,
     ecs_entity_t add)
 {
-    ecs_type_t type = node->type;
-    int32_t count = ecs_vector_count(type);
-
-    ecs_entities_t entities = {
-        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * (count + 1)),
-        .count = count + 1
-    };
-
     /* If table has one or more switches and this is a case, return self */
     if (ECS_HAS_ROLE(add, CASE)) {
         ecs_assert((node->flags & EcsTableHasSwitch) != 0, 
             ECS_INVALID_CASE, NULL);
         return node;
     } else {
+        ecs_type_t type = node->type;
+        int32_t count = ecs_vector_count(type);
+
+        ecs_entities_t entities = {
+            .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * (count + 1)),
+            .count = count + 1
+        };
+
         /* If table has a XOR column, check if the entity that is being added to
          * the table is part of the XOR type, and if it is, find the current 
          * entity in the table type matching the XOR type. This entity must be 

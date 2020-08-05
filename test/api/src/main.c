@@ -89,6 +89,7 @@ void Switch_get_case_set(void);
 void Switch_get_case_change(void);
 void Switch_new_w_type(void);
 void Switch_add_w_type(void);
+void Switch_bulk_new_w_type(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -1381,6 +1382,10 @@ bake_test_case Switch_testcases[] = {
     {
         "add_w_type",
         Switch_add_w_type
+    },
+    {
+        "bulk_new_w_type",
+        Switch_bulk_new_w_type
     }
 };
 
@@ -5105,7 +5110,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        7,
+        8,
         Switch_testcases
     },
     {

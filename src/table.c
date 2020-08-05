@@ -818,19 +818,19 @@ int32_t ecs_table_grow(
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t column_count = table->column_count;
+    int32_t sw_column_count = table->sw_column_count;
     ecs_column_t *columns = NULL;
+    ecs_sw_column_t *sw_columns = NULL;
 
-    if (column_count) {
+    if (column_count || sw_column_count) {
         columns = data->columns;
+        sw_columns = data->sw_columns;
 
-        /* It is possible that the table data was created without content. Now that
-        * data is going to be written to the table, initialize it */ 
-        if (!columns) {
+        if (!columns && !sw_columns) {
             init_data(world, table, data);
             columns = data->columns;
+            sw_columns = data->sw_columns;
         }
-
-        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     /* Fist grow record ptr array */
@@ -857,6 +857,12 @@ int32_t ecs_table_grow(
 
         ecs_vector_addn_t(&columns[i].data, size, alignment, count);
     }
+
+    /* Add elements to each switch column */
+    for (i = 0; i < sw_column_count; i ++) {
+        ecs_switch_t *sw = sw_columns[i].data;
+        ecs_switch_addn(sw, count);
+    }    
 
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);    

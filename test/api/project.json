@@ -99,7 +99,8 @@
                 "get_case_set",
                 "get_case_change",
                 "new_w_type",
-                "add_w_type"
+                "add_w_type",
+                "bulk_new_w_type"
             ]
         }, {
             "id": "Remove",

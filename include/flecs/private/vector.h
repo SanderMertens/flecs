@@ -44,7 +44,7 @@ struct {\
     } header;\
     T array[elem_count];\
 } __##name##_value = {\
-    .header.vector = ECS_VECTOR_VALUE(T, elem_count),\
+    .header.vector = ECS_VECTOR_VALUE(T, elem_count)\
 };\
 const ecs_vector_t *name = (ecs_vector_t*)&__##name##_value
 

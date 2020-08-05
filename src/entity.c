@@ -220,7 +220,7 @@ void ecs_get_column_info(
     ecs_entity_t *type_array = ecs_vector_first(table->type, ecs_entity_t);
 
     if (get_all) {
-        int32_t i, count = components->count;
+        int32_t i, count = ecs_vector_count(table->type);
         for (i = 0; i < count; i ++) {
             ecs_entity_t id = type_array[i];
             cinfo[i].id = id;

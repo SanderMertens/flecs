@@ -36,6 +36,16 @@ void ecs_switch_add(
     ecs_switch_t *sw);
 
 FLECS_EXPORT
+void ecs_switch_set_count(
+    ecs_switch_t *sw,
+    int32_t count);
+
+FLECS_EXPORT
+void ecs_switch_addn(
+    ecs_switch_t *sw,
+    int32_t count);    
+
+FLECS_EXPORT
 void ecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
