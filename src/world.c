@@ -369,13 +369,15 @@ void ecs_set_component_actions_w_entity(
     ecs_entity_t component,
     EcsComponentLifecycle *lifecycle)
 {
+#ifndef NDEBUG
     const EcsComponent *component_ptr = ecs_get(world, component, EcsComponent);
-    
+
     /* Cannot register lifecycle actions for things that aren't a component */
     ecs_assert(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     /* Cannot register lifecycle actions for components with size 0 */
     ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
+#endif
 
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
     c_info->lifecycle = *lifecycle;

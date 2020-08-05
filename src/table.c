@@ -60,7 +60,10 @@ ecs_data_t* init_data(
             int32_t sw_array_count = ecs_vector_count(sw_type);
 
             result->sw_columns[i].data = ecs_switch_new(
-                sw_array[0], sw_array[sw_array_count - 1], 0);
+                sw_array[0], 
+                sw_array[sw_array_count - 1], 
+                0);
+
             result->sw_columns[i].type = sw_type;
         }
     }

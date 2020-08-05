@@ -346,6 +346,7 @@ struct ecs_column_t {
 /** A switch column. */
 typedef struct ecs_sw_column_t {
     ecs_switch_t *data;   /**< Column data */
+    ecs_type_t type;      /**< Switch type */
 } ecs_sw_column_t;
 
 /** Stage-specific component data */
@@ -1182,6 +1183,13 @@ ecs_size_t ecs_from_size_t(
 ecs_entity_t ecs_to_entity(
     int64_t v);
 
+/* Convert int64_t from entity */
+int64_t ecs_from_entity(
+    ecs_entity_t v);   
+
+int32_t ecs_from_entity_to_i32(
+    ecs_entity_t v);        
+
 /* Convert 64bit value to ecs_record_t type. ecs_record_t is stored as 64bit int in the
  * entity index */
 ecs_record_t ecs_to_row(
@@ -1721,7 +1729,11 @@ ecs_data_t* init_data(
             int32_t sw_array_count = ecs_vector_count(sw_type);
 
             result->sw_columns[i].data = ecs_switch_new(
-                sw_array[0], sw_array[sw_array_count - 1], 0);
+                sw_array[0], 
+                sw_array[sw_array_count - 1], 
+                0);
+
+            result->sw_columns[i].type = sw_type;
         }
     }
 
@@ -2479,19 +2491,19 @@ int32_t ecs_table_grow(
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t column_count = table->column_count;
+    int32_t sw_column_count = table->sw_column_count;
     ecs_column_t *columns = NULL;
+    ecs_sw_column_t *sw_columns = NULL;
 
-    if (column_count) {
+    if (column_count || sw_column_count) {
         columns = data->columns;
+        sw_columns = data->sw_columns;
 
-        /* It is possible that the table data was created without content. Now that
-        * data is going to be written to the table, initialize it */ 
-        if (!columns) {
+        if (!columns && !sw_columns) {
             init_data(world, table, data);
             columns = data->columns;
+            sw_columns = data->sw_columns;
         }
-
-        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     /* Fist grow record ptr array */
@@ -2518,6 +2530,12 @@ int32_t ecs_table_grow(
 
         ecs_vector_addn_t(&columns[i].data, size, alignment, count);
     }
+
+    /* Add elements to each switch column */
+    for (i = 0; i < sw_column_count; i ++) {
+        ecs_switch_t *sw = sw_columns[i].data;
+        ecs_switch_addn(sw, count);
+    }    
 
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);    
@@ -3930,13 +3948,13 @@ void ecs_components_override(
 
 void ecs_components_switch(
     ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
     ecs_entities_t *added)
 {
+    (void)world;
+
     ecs_entity_t *array = added->array;
     int32_t i, add_count = added->count;
 
@@ -3947,10 +3965,13 @@ void ecs_components_switch(
             e = e & ECS_ENTITY_MASK;
 
             ecs_entity_t sw_case = ecs_entity_t_lo(e);
-            int32_t sw_index = ecs_entity_t_hi(e);
+            ecs_entity_t sw_index = ecs_entity_t_hi(e);
 
             ecs_switch_t *sw = data->sw_columns[sw_index].data;
-            ecs_switch_set(sw, row, sw_case);
+            int32_t r;
+            for (r = 0; r < count; r ++) {
+                ecs_switch_set(sw, row + r, sw_case);
+            }
         }
     }
 }
@@ -4055,7 +4076,7 @@ void ecs_run_add_actions(
 
     if (table->flags & EcsTableHasSwitch) {
         ecs_components_switch(
-            world, stage, table, data, row, count, added);
+            world, data, row, count, added);
     }
 
     if (table->flags & EcsTableHasOnAdd) {
@@ -4359,7 +4380,7 @@ void commit(
             src_table->flags & EcsTableHasSwitch) 
         {
             ecs_components_switch(
-                world, stage, src_table, info->data, info->row, 1, added);
+                world, info->data, info->row, 1, added);
         }
 
         return;
@@ -9566,13 +9587,15 @@ void ecs_set_component_actions_w_entity(
     ecs_entity_t component,
     EcsComponentLifecycle *lifecycle)
 {
+#ifndef NDEBUG
     const EcsComponent *component_ptr = ecs_get(world, component, EcsComponent);
-    
+
     /* Cannot register lifecycle actions for things that aren't a component */
     ecs_assert(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     /* Cannot register lifecycle actions for components with size 0 */
     ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
+#endif
 
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
     c_info->lifecycle = *lifecycle;
@@ -10012,13 +10035,13 @@ const ecs_world_info_t* ecs_get_world_info(
 static
 ecs_switch_header_t *get_header(
     const ecs_switch_t *sw,
-    int32_t value)
+    uint64_t value)
 {
     if (value == 0) {
         return NULL;
     }
 
-    int32_t index = value - sw->min;
+    uint64_t index = value - sw->min;
     return &sw->headers[index];
 }
 
@@ -10050,8 +10073,8 @@ void remove_node(
 }
 
 ecs_switch_t* ecs_switch_new(
-    int32_t min, 
-    int32_t max,
+    uint64_t min, 
+    uint64_t max,
     int32_t elements)
 {
     ecs_assert(min != max, ECS_INVALID_PARAMETER, NULL);
@@ -10064,11 +10087,11 @@ ecs_switch_t* ecs_switch_new(
     result->min = min;
     result->max = max;
 
-    int32_t count = max - min;
+    int32_t count = (int32_t)(max - min);
     result->headers = ecs_os_calloc(ECS_SIZEOF(ecs_switch_header_t) * count);
     result->nodes = ecs_vector_new(ecs_switch_node_t, elements);
 
-    int32_t i;
+    int64_t i;
     for (i = 0; i < count; i ++) {
         result->headers[i].element = -1;
         result->headers[i].count = 0;
@@ -10080,7 +10103,7 @@ ecs_switch_t* ecs_switch_new(
     for (i = 0; i < elements; i ++) {
         nodes[i].prev = -1;
         nodes[i].next = -1;
-        nodes[i].value = -1;
+        nodes[i].value = 0;
     }
 
     return result;
@@ -10103,10 +10126,35 @@ void ecs_switch_add(
     node->value = 0;
 }
 
+void ecs_switch_set_count(
+    ecs_switch_t *sw,
+    int32_t count)
+{
+    int32_t old_count = ecs_vector_count(sw->nodes);
+    ecs_vector_set_count(&sw->nodes, ecs_switch_node_t, count);
+
+    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
+    int32_t i;
+    for (i = old_count; i < count; i ++) {
+        ecs_switch_node_t *node = &nodes[i];
+        node->prev = -1;
+        node->next = -1;
+        node->value = 0;        
+    }
+}
+
+void ecs_switch_addn(
+    ecs_switch_t *sw,
+    int32_t count)
+{
+    int32_t old_count = ecs_vector_count(sw->nodes);
+    ecs_switch_set_count(sw, old_count + count);
+}
+
 void ecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
-    int32_t value)
+    uint64_t value)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
@@ -10151,7 +10199,7 @@ void ecs_switch_remove(
     ecs_switch_node_t *node = &nodes[element];
 
     /* If the node is not assigned to a value, nothing to be done */
-    if (node->value == -1) {
+    if (node->value == 0) {
         return;
     }
 
@@ -10165,7 +10213,7 @@ void ecs_switch_remove(
     node->next = -1;
 }
 
-int32_t ecs_switch_get_case(
+uint64_t ecs_switch_get_case(
     const ecs_switch_t *sw,
     int32_t element)
 {
@@ -10180,7 +10228,7 @@ int32_t ecs_switch_get_case(
 
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
-    int32_t value)
+    uint64_t value)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(value <= sw->max, ECS_INVALID_PARAMETER, NULL);
@@ -14404,7 +14452,6 @@ int32_t data_column_count(
 /* Count number of switch columns */
 static
 int32_t switch_column_count(
-    ecs_world_t *world,
     ecs_table_t *table)
 {
     int32_t count = 0;
@@ -14581,7 +14628,7 @@ void init_table(
 
     table->queries = NULL;
     table->column_count = data_column_count(world, table);
-    table->sw_column_count = switch_column_count(world, table);
+    table->sw_column_count = switch_column_count(table);
 }
 
 static
@@ -14771,25 +14818,39 @@ int32_t ecs_table_switch_from_case(
     ecs_entity_t add)
 {
     ecs_type_t type = table->type;
+    ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = table->sw_column_count;
+    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
     add = add & ECS_ENTITY_MASK;
 
-    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_sw_column_t *sw_columns = NULL;
 
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = array[i + table->sw_column_offset];
-        ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
-        e = e & ECS_ENTITY_MASK;
+    if (data && (sw_columns = data->sw_columns)) {
+        /* Fast path, we can get the switch type from the column data */
+        for (i = 0; i < count; i ++) {
+            ecs_type_t sw_type = sw_columns[i].type;
+            if (ecs_type_owns_entity(world, sw_type, add, true)) {
+                return i;
+            }
+        }
+    } else {
+        /* Slow path, table is empty, so we'll have to get the switch types by
+         * actually inspecting the switch type entities. */
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t e = array[i + table->sw_column_offset];
+            ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
+            e = e & ECS_ENTITY_MASK;
 
-        const EcsType *type_ptr = ecs_get(world, e, EcsType);
-        ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            const EcsType *type_ptr = ecs_get(world, e, EcsType);
+            ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (ecs_type_owns_entity(
-            world, type_ptr->normalized, add, true)) 
-        {
-            return i;
+            if (ecs_type_owns_entity(
+                world, type_ptr->normalized, add, true)) 
+            {
+                return i;
+            }
         }
     }
 
@@ -14806,20 +14867,20 @@ ecs_table_t *find_or_create_table_include(
     ecs_table_t *node,
     ecs_entity_t add)
 {
-    ecs_type_t type = node->type;
-    int32_t count = ecs_vector_count(type);
-
-    ecs_entities_t entities = {
-        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * (count + 1)),
-        .count = count + 1
-    };
-
     /* If table has one or more switches and this is a case, return self */
     if (ECS_HAS_ROLE(add, CASE)) {
         ecs_assert((node->flags & EcsTableHasSwitch) != 0, 
             ECS_INVALID_CASE, NULL);
         return node;
     } else {
+        ecs_type_t type = node->type;
+        int32_t count = ecs_vector_count(type);
+
+        ecs_entities_t entities = {
+            .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * (count + 1)),
+            .count = count + 1
+        };
+
         /* If table has a XOR column, check if the entity that is being added to
          * the table is part of the XOR type, and if it is, find the current 
          * entity in the table type matching the XOR type. This entity must be 
@@ -16138,6 +16199,20 @@ ecs_entity_t ecs_to_entity(
 {
     ecs_assert(v >= 0, ECS_INTERNAL_ERROR, NULL);
     return (ecs_entity_t)v;
+}
+
+int64_t ecs_from_entity(
+    ecs_entity_t v)
+{
+    ecs_assert(v < INT64_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (int64_t)v;
+}
+
+int32_t ecs_from_entity_to_i32(
+    ecs_entity_t v)
+{
+    ecs_assert(v < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (int32_t)v;
 }
 
 /** Convert time to double */

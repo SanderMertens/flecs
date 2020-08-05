@@ -3,13 +3,13 @@
 static
 ecs_switch_header_t *get_header(
     const ecs_switch_t *sw,
-    int32_t value)
+    uint64_t value)
 {
     if (value == 0) {
         return NULL;
     }
 
-    int32_t index = value - sw->min;
+    uint64_t index = value - sw->min;
     return &sw->headers[index];
 }
 
@@ -41,8 +41,8 @@ void remove_node(
 }
 
 ecs_switch_t* ecs_switch_new(
-    int32_t min, 
-    int32_t max,
+    uint64_t min, 
+    uint64_t max,
     int32_t elements)
 {
     ecs_assert(min != max, ECS_INVALID_PARAMETER, NULL);
@@ -55,11 +55,11 @@ ecs_switch_t* ecs_switch_new(
     result->min = min;
     result->max = max;
 
-    int32_t count = max - min;
+    int32_t count = (int32_t)(max - min);
     result->headers = ecs_os_calloc(ECS_SIZEOF(ecs_switch_header_t) * count);
     result->nodes = ecs_vector_new(ecs_switch_node_t, elements);
 
-    int32_t i;
+    int64_t i;
     for (i = 0; i < count; i ++) {
         result->headers[i].element = -1;
         result->headers[i].count = 0;
@@ -71,7 +71,7 @@ ecs_switch_t* ecs_switch_new(
     for (i = 0; i < elements; i ++) {
         nodes[i].prev = -1;
         nodes[i].next = -1;
-        nodes[i].value = -1;
+        nodes[i].value = 0;
     }
 
     return result;
@@ -122,7 +122,7 @@ void ecs_switch_addn(
 void ecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
-    int32_t value)
+    uint64_t value)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
@@ -167,7 +167,7 @@ void ecs_switch_remove(
     ecs_switch_node_t *node = &nodes[element];
 
     /* If the node is not assigned to a value, nothing to be done */
-    if (node->value == -1) {
+    if (node->value == 0) {
         return;
     }
 
@@ -181,7 +181,7 @@ void ecs_switch_remove(
     node->next = -1;
 }
 
-int32_t ecs_switch_get_case(
+uint64_t ecs_switch_get_case(
     const ecs_switch_t *sw,
     int32_t element)
 {
@@ -196,7 +196,7 @@ int32_t ecs_switch_get_case(
 
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
-    int32_t value)
+    uint64_t value)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(value <= sw->max, ECS_INVALID_PARAMETER, NULL);

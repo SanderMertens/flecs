@@ -68,7 +68,6 @@ int32_t data_column_count(
 /* Count number of switch columns */
 static
 int32_t switch_column_count(
-    ecs_world_t *world,
     ecs_table_t *table)
 {
     int32_t count = 0;
@@ -245,7 +244,7 @@ void init_table(
 
     table->queries = NULL;
     table->column_count = data_column_count(world, table);
-    table->sw_column_count = switch_column_count(world, table);
+    table->sw_column_count = switch_column_count(table);
 }
 
 static
@@ -443,12 +442,12 @@ int32_t ecs_table_switch_from_case(
     add = add & ECS_ENTITY_MASK;
 
     ecs_sw_column_t *sw_columns = NULL;
-    
+
     if (data && (sw_columns = data->sw_columns)) {
         /* Fast path, we can get the switch type from the column data */
         for (i = 0; i < count; i ++) {
-            ecs_type_t type = sw_columns[i].type;
-            if (ecs_type_owns_entity(world, type, add, true)) {
+            ecs_type_t sw_type = sw_columns[i].type;
+            if (ecs_type_owns_entity(world, sw_type, add, true)) {
                 return i;
             }
         }

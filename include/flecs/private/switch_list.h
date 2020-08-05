@@ -11,20 +11,20 @@ typedef struct ecs_switch_header_t {
 typedef struct ecs_switch_node_t {
     int32_t next;
     int32_t prev;
-    int32_t value;
+    uint64_t value;
 } ecs_switch_node_t;
 
 typedef struct ecs_switch_t {
-    int32_t min;
-    int32_t max;
+    uint64_t min;
+    uint64_t max;
     ecs_switch_header_t *headers;
     ecs_vector_t *nodes;
 } ecs_switch_t;
 
 FLECS_EXPORT
 ecs_switch_t* ecs_switch_new(
-    int32_t min, 
-    int32_t max,
+    uint64_t min, 
+    uint64_t max,
     int32_t elements);
 
 FLECS_EXPORT
@@ -49,7 +49,7 @@ FLECS_EXPORT
 void ecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
-    int32_t value);
+    uint64_t value);
 
 FLECS_EXPORT
 void ecs_switch_remove(
@@ -57,14 +57,14 @@ void ecs_switch_remove(
     int32_t element);
 
 FLECS_EXPORT
-int32_t ecs_switch_get_case(
+uint64_t ecs_switch_get_case(
     const ecs_switch_t *sw,
     int32_t element);
 
 FLECS_EXPORT
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
-    int32_t value);
+    uint64_t value);
 
 FLECS_EXPORT
 int32_t ecs_switch_next(

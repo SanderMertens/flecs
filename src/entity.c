@@ -828,13 +828,13 @@ void ecs_components_override(
 
 void ecs_components_switch(
     ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
     ecs_entities_t *added)
 {
+    (void)world;
+
     ecs_entity_t *array = added->array;
     int32_t i, add_count = added->count;
 
@@ -845,10 +845,13 @@ void ecs_components_switch(
             e = e & ECS_ENTITY_MASK;
 
             ecs_entity_t sw_case = ecs_entity_t_lo(e);
-            int32_t sw_index = ecs_entity_t_hi(e);
+            ecs_entity_t sw_index = ecs_entity_t_hi(e);
 
             ecs_switch_t *sw = data->sw_columns[sw_index].data;
-            ecs_switch_set(sw, row, sw_case);
+            int32_t r;
+            for (r = 0; r < count; r ++) {
+                ecs_switch_set(sw, row + r, sw_case);
+            }
         }
     }
 }
@@ -953,7 +956,7 @@ void ecs_run_add_actions(
 
     if (table->flags & EcsTableHasSwitch) {
         ecs_components_switch(
-            world, stage, table, data, row, count, added);
+            world, data, row, count, added);
     }
 
     if (table->flags & EcsTableHasOnAdd) {
@@ -1257,7 +1260,7 @@ void commit(
             src_table->flags & EcsTableHasSwitch) 
         {
             ecs_components_switch(
-                world, stage, src_table, info->data, info->row, 1, added);
+                world, info->data, info->row, 1, added);
         }
 
         return;

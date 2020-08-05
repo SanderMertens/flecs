@@ -42,6 +42,20 @@ ecs_entity_t ecs_to_entity(
     return (ecs_entity_t)v;
 }
 
+int64_t ecs_from_entity(
+    ecs_entity_t v)
+{
+    ecs_assert(v < INT64_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (int64_t)v;
+}
+
+int32_t ecs_from_entity_to_i32(
+    ecs_entity_t v)
+{
+    ecs_assert(v < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (int32_t)v;
+}
+
 /** Convert time to double */
 double ecs_time_to_double(
     ecs_time_t t)
