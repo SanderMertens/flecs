@@ -271,6 +271,7 @@ void get_comp_and_src(
 static
 int32_t get_component_index(
     ecs_world_t *world,
+    ecs_table_t *table,
     ecs_type_t table_type,
     ecs_entity_t *component_out,
     int32_t column_index,
@@ -281,6 +282,16 @@ int32_t get_component_index(
     ecs_entity_t component = *component_out;
 
     if (component) {
+        /* If requested component is a case, find the corresponding switch to
+         * lookup in the table */
+        if (ECS_HAS_ROLE(component, CASE)) {
+            int32_t index = ecs_table_switch_from_case(
+                world, table, component);
+            ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
+
+            index += table->sw_column_offset;
+
+        } else
         if (ECS_HAS_ROLE(component, TRAIT)) {
             ecs_assert(trait_index_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -567,8 +578,8 @@ add_trait:
         /* This column does not retrieve data from a static entity (either
          * EcsFromSystem or EcsFromParent) and is not just a handle */
         if (!entity && from != EcsFromEmpty) {
-            int32_t index = get_component_index(
-                world, table_type, &component, c, op, trait_index_offsets);
+            int32_t index = get_component_index(world, table, table_type, 
+                &component, c, op, trait_index_offsets);
             
             table_data->columns[c] = index;
         }

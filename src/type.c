@@ -256,12 +256,31 @@ ecs_type_t ecs_type_find(
     return ecs_type_find_intern(world, stage, array, count);
 }
 
+static
+bool has_trait(
+    ecs_entity_t trait,
+    ecs_entity_t e)
+{
+    return trait == ecs_entity_t_hi(e & ECS_ENTITY_MASK);
+}
+
+static
+bool has_case(
+    ecs_world_t *world,
+    ecs_entity_t sw_case,
+    ecs_entity_t e)
+{
+    const EcsType *type_ptr = ecs_get(world, e & ECS_ENTITY_MASK, EcsType);
+    ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_type_has_entity(world, type_ptr->normalized, sw_case);
+}
+
 bool ecs_type_has_entity(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity)
 {
-    ecs_entity_t trait = 0;
+    ecs_entity_t trait = 0, sw_case = 0;
 
     if (!entity) {
         return true;
@@ -269,6 +288,9 @@ bool ecs_type_has_entity(
 
     if (ECS_HAS_ROLE(entity, TRAIT)) {
         trait = entity & ECS_ENTITY_MASK;
+    } else
+    if (ECS_HAS_ROLE(entity, CASE)) {
+        sw_case = entity & ECS_ENTITY_MASK;
     }
 
     ecs_vector_each(type, ecs_entity_t, c_ptr, {
@@ -283,11 +305,11 @@ bool ecs_type_has_entity(
                 return true;
             }
         } else 
-        if (trait && ECS_HAS_ROLE(e, TRAIT)) {
-            e &= ECS_ENTITY_MASK;
-            if (trait == ecs_entity_t_hi(e)) {
-                return true;
-            }
+        if (trait && ECS_HAS_ROLE(e, TRAIT) && has_trait(trait, e)) {
+            return true;
+        } else
+        if (sw_case && ECS_HAS_ROLE(e, SWITCH) && has_case(world, sw_case, e)) {
+            return true;
         }
     });
 
@@ -300,29 +322,34 @@ bool ecs_type_owns_entity(
     ecs_entity_t entity,
     bool owned)
 {
-    bool is_trait = false;
+    ecs_entity_t trait = 0, sw_case = 0;
 
     if (!type) {
         return false;
     }
+    if (!entity) {
+        return true;
+    }
 
     if (ECS_HAS_ROLE(entity, TRAIT)) {
-        is_trait = true;
-        entity = entity & ECS_ENTITY_MASK;
+        trait = entity & ECS_ENTITY_MASK;
+    } else
+    if (ECS_HAS_ROLE(entity, CASE)) {
+        sw_case = entity & ECS_ENTITY_MASK;
     }
     
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     int i, count = ecs_vector_count(type);
 
     if (owned) {
-        if (is_trait) {
+        if (trait || sw_case) {
              for (i = 0; i < count; i ++) {
                  ecs_entity_t e = array[i];
-                 if (ECS_HAS_ROLE(e, TRAIT)) {
-                     e &= ECS_ENTITY_MASK;
-                     if (ecs_entity_t_hi(e) == entity) {
-                         return true;
-                     }
+                 if (trait && ECS_HAS_ROLE(e, TRAIT) && has_trait(trait, e)) {
+                     return true;
+                 } else
+                 if (sw_case && ECS_HAS_ROLE(e, SWITCH) && has_case(world, sw_case, e)) {
+                     return true;
                  }
              }
         } else {
