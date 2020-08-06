@@ -169,8 +169,8 @@ void ecs_switch_set(
     int32_t first = dst_hdr->element;
     if (first != -1) {
         ecs_assert(first >= 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_switch_node_t *node = &nodes[first];
-        node->prev = element;
+        ecs_switch_node_t *first_node = &nodes[first];
+        first_node->prev = element;
     }
 
     dst_hdr->element = element;

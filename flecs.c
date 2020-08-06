@@ -1690,9 +1690,17 @@ ecs_data_t* init_data(
 
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
 
-    if (count) {
+    if (count && !sw_count) {
         result->columns = ecs_os_calloc(ECS_SIZEOF(ecs_column_t) * count);    
+    } else if (count || sw_count) {
+        /* If a table has switch columns, store vector with the case values
+            * as a regular column, so it's easier to access for systems. To
+            * enable this, we need to allocate more space. */
+        int32_t type_count = ecs_vector_count(type);
+        result->columns = ecs_os_calloc(ECS_SIZEOF(ecs_column_t) * type_count);
+    }
 
+    if (count) {
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = entities[i];
 
@@ -1728,12 +1736,17 @@ ecs_data_t* init_data(
             ecs_entity_t *sw_array = ecs_vector_first(sw_type, ecs_entity_t);
             int32_t sw_array_count = ecs_vector_count(sw_type);
 
-            result->sw_columns[i].data = ecs_switch_new(
+            ecs_switch_t *sw = ecs_switch_new(
                 sw_array[0], 
                 sw_array[sw_array_count - 1], 
                 0);
-
+            result->sw_columns[i].data = sw;
             result->sw_columns[i].type = sw_type;
+
+            int32_t column_id = i + table->sw_column_offset;
+            result->columns[column_id].data = ecs_switch_values(sw);
+            result->columns[column_id].size = sizeof(ecs_entity_t);
+            result->columns[column_id].alignment = ECS_ALIGNOF(ecs_entity_t);
         }
     }
 
@@ -2363,7 +2376,9 @@ int32_t ecs_table_append(
         }
 
         for (i = 0; i < sw_column_count; i ++) {
-            ecs_switch_add(sw_columns[i].data);
+            ecs_switch_t *sw = sw_columns[i].data;
+            ecs_switch_add(sw);
+            columns[i + table->sw_column_offset].data = ecs_switch_values(sw);
         }        
     }
 
@@ -10096,7 +10111,6 @@ ecs_switch_header_t *get_header(
     }
 
     uint64_t index = value - sw->min;
-    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
     return &sw->headers[index];
 }
 
@@ -10256,8 +10270,8 @@ void ecs_switch_set(
     int32_t first = dst_hdr->element;
     if (first != -1) {
         ecs_assert(first >= 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_switch_node_t *node = &nodes[first];
-        node->prev = element;
+        ecs_switch_node_t *first_node = &nodes[first];
+        first_node->prev = element;
     }
 
     dst_hdr->element = element;
@@ -10312,6 +10326,12 @@ uint64_t ecs_switch_get(
 
     uint64_t *values = ecs_vector_first(sw->values, uint64_t);
     return values[element];
+}
+
+ecs_vector_t* ecs_switch_values(
+    const ecs_switch_t *sw)
+{
+    return sw->values;
 }
 
 int32_t ecs_switch_first(
@@ -12877,12 +12897,11 @@ int32_t get_component_index(
         /* If requested component is a case, find the corresponding switch to
          * lookup in the table */
         if (ECS_HAS_ROLE(component, CASE)) {
-            int32_t index = ecs_table_switch_from_case(
+            result = ecs_table_switch_from_case(
                 world, table, component);
-            ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
 
-            index += table->sw_column_offset;
-
+            result += table->sw_column_offset;
         } else
         if (ECS_HAS_ROLE(component, TRAIT)) {
             ecs_assert(trait_index_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -12921,11 +12940,15 @@ int32_t get_component_index(
 
             /* Check if component is a tag. If it is, set table_data to
             * zero, so that a system won't try to access the data */
-            const EcsComponent *data = ecs_get(
-                world, component, EcsComponent);
+            if (!ECS_HAS_ROLE(component, CASE) && 
+                !ECS_HAS_ROLE(component, SWITCH)) 
+            {
+                const EcsComponent *data = ecs_get(
+                    world, component, EcsComponent);
 
-            if (!data || !data->size) {
-                result = 0;
+                if (!data || !data->size) {
+                    result = 0;
+                }
             }
         }
         
