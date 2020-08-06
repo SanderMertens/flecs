@@ -285,12 +285,11 @@ int32_t get_component_index(
         /* If requested component is a case, find the corresponding switch to
          * lookup in the table */
         if (ECS_HAS_ROLE(component, CASE)) {
-            int32_t index = ecs_table_switch_from_case(
+            result = ecs_table_switch_from_case(
                 world, table, component);
-            ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
 
-            index += table->sw_column_offset;
-
+            result += table->sw_column_offset;
         } else
         if (ECS_HAS_ROLE(component, TRAIT)) {
             ecs_assert(trait_index_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -329,11 +328,15 @@ int32_t get_component_index(
 
             /* Check if component is a tag. If it is, set table_data to
             * zero, so that a system won't try to access the data */
-            const EcsComponent *data = ecs_get(
-                world, component, EcsComponent);
+            if (!ECS_HAS_ROLE(component, CASE) && 
+                !ECS_HAS_ROLE(component, SWITCH)) 
+            {
+                const EcsComponent *data = ecs_get(
+                    world, component, EcsComponent);
 
-            if (!data || !data->size) {
-                result = 0;
+                if (!data || !data->size) {
+                    result = 0;
+                }
             }
         }
         

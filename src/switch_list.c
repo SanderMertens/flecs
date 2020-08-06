@@ -10,7 +10,6 @@ ecs_switch_header_t *get_header(
     }
 
     uint64_t index = value - sw->min;
-    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
     return &sw->headers[index];
 }
 
@@ -226,6 +225,12 @@ uint64_t ecs_switch_get(
 
     uint64_t *values = ecs_vector_first(sw->values, uint64_t);
     return values[element];
+}
+
+ecs_vector_t* ecs_switch_values(
+    const ecs_switch_t *sw)
+{
+    return sw->values;
 }
 
 int32_t ecs_switch_first(
