@@ -1124,7 +1124,7 @@ void ecs_switch_remove(
     int32_t element);
 
 FLECS_EXPORT
-uint64_t ecs_switch_get_case(
+uint64_t ecs_switch_get(
     const ecs_switch_t *sw,
     int32_t element);
 

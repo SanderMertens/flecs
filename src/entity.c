@@ -1034,6 +1034,7 @@ int32_t new_entity(
 
     if (new_table->flags & EcsTableHasAddActions) {
         ecs_comp_mask_t set_mask = {0};
+        
         ecs_run_add_actions(
             world, stage, new_table, new_data, new_row, 1, added, set_mask, 
             true, true);
@@ -2262,7 +2263,7 @@ ecs_entity_t ecs_get_case(
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_switch_t *sw = data->sw_columns[index].data;  
-    return ecs_switch_get_case(sw, info.row);  
+    return ecs_switch_get(sw, info.row);  
 }
 
 bool ecs_has_entity(
@@ -2283,7 +2284,7 @@ bool ecs_has_entity(
         
         ecs_data_t *data = info.data;
         ecs_switch_t *sw = data->sw_columns[index].data;
-        ecs_entity_t value = ecs_switch_get_case(sw, info.row);
+        ecs_entity_t value = ecs_switch_get(sw, info.row);
 
         return value == (component & ECS_ENTITY_MASK);
     } else {

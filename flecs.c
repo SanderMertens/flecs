@@ -2447,6 +2447,13 @@ void ecs_table_delete(
             }
         }
 
+        /* Remove elements from switch columns */
+        ecs_sw_column_t *sw_columns = data->sw_columns;
+        int32_t sw_column_count = table->sw_column_count;
+        for (i = 0; i < sw_column_count; i ++) {
+            ecs_switch_remove(sw_columns[i].data, index);
+        }
+
         /* Update record of moved entity in entity index */
         if (!world->in_progress && record_to_move) {
             record_to_move->row = index + 1;
@@ -2981,6 +2988,49 @@ void ecs_table_replace_data(
     }
 }
 
+static
+void move_switch_columns(
+    ecs_table_t *new_table, 
+    ecs_data_t *new_data, 
+    int32_t new_index, 
+    ecs_table_t *old_table, 
+    ecs_data_t *old_data, 
+    int32_t old_index)
+{
+    int32_t i_old = 0, old_column_count = old_table->sw_column_count;
+    int32_t i_new = 0, new_column_count = new_table->sw_column_count;
+
+    if (!old_column_count || !new_column_count) {
+        return;
+    }
+
+    ecs_sw_column_t *old_columns = old_data->sw_columns;
+    ecs_sw_column_t *new_columns = new_data->sw_columns;
+
+    ecs_type_t new_type = new_table->type;
+    ecs_type_t old_type = old_table->type;
+
+    int32_t offset_new = new_table->sw_column_offset;
+    int32_t offset_old = old_table->sw_column_offset;
+
+    ecs_entity_t *new_components = ecs_vector_first(new_type, ecs_entity_t);
+    ecs_entity_t *old_components = ecs_vector_first(old_type, ecs_entity_t);
+
+    for (; (i_new < new_column_count) && (i_old < old_column_count);) {
+        ecs_entity_t new_component = new_components[i_new + offset_new];
+        ecs_entity_t old_component = old_components[i_old + offset_old];
+
+        if (new_component == old_component) {
+            uint64_t value = ecs_switch_get(old_columns[i_old].data, old_index);
+            ecs_switch_set(new_columns[i_new].data, new_index, value);
+        }
+
+        i_new += new_component <= old_component;
+        i_old += new_component >= old_component;
+    }
+
+}
+
 void ecs_table_move(
     ecs_world_t *world,
     ecs_entity_t dst_entity,
@@ -3054,6 +3104,9 @@ void ecs_table_move(
         i_new += new_component <= old_component;
         i_old += new_component >= old_component;
     }
+
+    move_switch_columns(
+        new_table, new_data, new_index, old_table, old_data, old_index);
 }
 
 bool ecs_table_match_filter(
@@ -4154,6 +4207,7 @@ int32_t new_entity(
 
     if (new_table->flags & EcsTableHasAddActions) {
         ecs_comp_mask_t set_mask = {0};
+        
         ecs_run_add_actions(
             world, stage, new_table, new_data, new_row, 1, added, set_mask, 
             true, true);
@@ -5382,7 +5436,7 @@ ecs_entity_t ecs_get_case(
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_switch_t *sw = data->sw_columns[index].data;  
-    return ecs_switch_get_case(sw, info.row);  
+    return ecs_switch_get(sw, info.row);  
 }
 
 bool ecs_has_entity(
@@ -5403,7 +5457,7 @@ bool ecs_has_entity(
         
         ecs_data_t *data = info.data;
         ecs_switch_t *sw = data->sw_columns[index].data;
-        ecs_entity_t value = ecs_switch_get_case(sw, info.row);
+        ecs_entity_t value = ecs_switch_get(sw, info.row);
 
         return value == (component & ECS_ENTITY_MASK);
     } else {
@@ -10042,6 +10096,7 @@ ecs_switch_header_t *get_header(
     }
 
     uint64_t index = value - sw->min;
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
     return &sw->headers[index];
 }
 
@@ -10054,22 +10109,27 @@ void remove_node(
 {
     /* The node is currently assigned to a value */
     if (hdr->element == element) {
+        ecs_assert(node->prev == -1, ECS_INVALID_PARAMETER, NULL);
         /* If this is the first node, update the header */
         hdr->element = node->next;
     } else {
         /* If this is not the first node, update the previous node */
+        ecs_assert(node->prev != -1, ECS_INVALID_PARAMETER, NULL);
         ecs_switch_node_t *prev_node = &nodes[node->prev];
         prev_node->next = node->next;
     }
 
-    if (node->next != -1) {
+    int32_t next = node->next;
+    if (next != -1) {
+        ecs_assert(next >= 0, ECS_INVALID_PARAMETER, NULL);
         /* If this is not the last node, update the next node */
-        ecs_switch_node_t *next_node = &nodes[node->next];
+        ecs_switch_node_t *next_node = &nodes[next];
         next_node->prev = node->prev;
     }
 
     /* Decrease count of current header */
     hdr->count --;
+    ecs_assert(hdr->count >= 0, ECS_INTERNAL_ERROR, NULL);
 }
 
 ecs_switch_t* ecs_switch_new(
@@ -10087,7 +10147,7 @@ ecs_switch_t* ecs_switch_new(
     result->min = min;
     result->max = max;
 
-    int32_t count = (int32_t)(max - min);
+    int32_t count = (int32_t)(max - min) + 1;
     result->headers = ecs_os_calloc(ECS_SIZEOF(ecs_switch_header_t) * count);
     result->nodes = ecs_vector_new(ecs_switch_node_t, elements);
     result->values = ecs_vector_new(uint64_t, elements);
@@ -10166,6 +10226,8 @@ void ecs_switch_set(
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->values), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t *values = ecs_vector_first(sw->values, uint64_t);
     uint64_t cur_value = values[element];
@@ -10191,6 +10253,13 @@ void ecs_switch_set(
     values[element] = value;
 
     /* Also update the dst header */
+    int32_t first = dst_hdr->element;
+    if (first != -1) {
+        ecs_assert(first >= 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_switch_node_t *node = &nodes[first];
+        node->prev = element;
+    }
+
     dst_hdr->element = element;
     dst_hdr->count ++;
 }
@@ -10201,32 +10270,46 @@ void ecs_switch_remove(
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t *values = ecs_vector_first(sw->values, uint64_t);
     uint64_t value = values[element];
-
-    /* If the node is not assigned to a value, nothing to be done */
-    if (value == 0) {
-        return;
-    }
-
     ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
     ecs_switch_node_t *node = &nodes[element];
-    ecs_switch_header_t *hdr = get_header(sw, value);
-    ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
-    remove_node(hdr, nodes, node, element);
 
-    values[element] = 0;
-    node->prev = -1;
-    node->next = -1;
+    /* If node is currently assigned to a case, remove it from the list */
+    if (value != 0) {
+        ecs_switch_header_t *hdr = get_header(sw, value);
+        ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
+        remove_node(hdr, nodes, node, element);
+
+        /* If header is pointing to last element, change it to current element,
+         * as the last element will be moved to the current element. */
+        if (hdr->element == ecs_vector_count(sw->nodes)) {
+            hdr->element = element;
+        }
+    }
+
+    /* Remove element from arrays */
+    ecs_vector_remove_index(sw->nodes, ecs_switch_node_t, element);
+    ecs_vector_remove_index(sw->values, uint64_t, element);
+
+    /* Update linked list references (node now points to previous last elem) */
+    int32_t prev = node->prev;
+    if (prev != -1) {
+        ecs_assert(prev >= 0, ECS_INVALID_PARAMETER, NULL);
+        nodes[prev].next = element;
+    }
 }
 
-uint64_t ecs_switch_get_case(
+uint64_t ecs_switch_get(
     const ecs_switch_t *sw,
     int32_t element)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
+
     uint64_t *values = ecs_vector_first(sw->values, uint64_t);
     return values[element];
 }
@@ -10251,6 +10334,7 @@ int32_t ecs_switch_next(
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_switch_node_t *nodes = ecs_vector_first(
         sw->nodes, ecs_switch_node_t);

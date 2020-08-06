@@ -778,6 +778,13 @@ void ecs_table_delete(
             }
         }
 
+        /* Remove elements from switch columns */
+        ecs_sw_column_t *sw_columns = data->sw_columns;
+        int32_t sw_column_count = table->sw_column_count;
+        for (i = 0; i < sw_column_count; i ++) {
+            ecs_switch_remove(sw_columns[i].data, index);
+        }
+
         /* Update record of moved entity in entity index */
         if (!world->in_progress && record_to_move) {
             record_to_move->row = index + 1;
@@ -1312,6 +1319,49 @@ void ecs_table_replace_data(
     }
 }
 
+static
+void move_switch_columns(
+    ecs_table_t *new_table, 
+    ecs_data_t *new_data, 
+    int32_t new_index, 
+    ecs_table_t *old_table, 
+    ecs_data_t *old_data, 
+    int32_t old_index)
+{
+    int32_t i_old = 0, old_column_count = old_table->sw_column_count;
+    int32_t i_new = 0, new_column_count = new_table->sw_column_count;
+
+    if (!old_column_count || !new_column_count) {
+        return;
+    }
+
+    ecs_sw_column_t *old_columns = old_data->sw_columns;
+    ecs_sw_column_t *new_columns = new_data->sw_columns;
+
+    ecs_type_t new_type = new_table->type;
+    ecs_type_t old_type = old_table->type;
+
+    int32_t offset_new = new_table->sw_column_offset;
+    int32_t offset_old = old_table->sw_column_offset;
+
+    ecs_entity_t *new_components = ecs_vector_first(new_type, ecs_entity_t);
+    ecs_entity_t *old_components = ecs_vector_first(old_type, ecs_entity_t);
+
+    for (; (i_new < new_column_count) && (i_old < old_column_count);) {
+        ecs_entity_t new_component = new_components[i_new + offset_new];
+        ecs_entity_t old_component = old_components[i_old + offset_old];
+
+        if (new_component == old_component) {
+            uint64_t value = ecs_switch_get(old_columns[i_old].data, old_index);
+            ecs_switch_set(new_columns[i_new].data, new_index, value);
+        }
+
+        i_new += new_component <= old_component;
+        i_old += new_component >= old_component;
+    }
+
+}
+
 void ecs_table_move(
     ecs_world_t *world,
     ecs_entity_t dst_entity,
@@ -1385,6 +1435,9 @@ void ecs_table_move(
         i_new += new_component <= old_component;
         i_old += new_component >= old_component;
     }
+
+    move_switch_columns(
+        new_table, new_data, new_index, old_table, old_data, old_index);
 }
 
 bool ecs_table_match_filter(

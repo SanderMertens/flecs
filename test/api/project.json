@@ -100,7 +100,10 @@
                 "get_case_change",
                 "new_w_type",
                 "add_w_type",
-                "bulk_new_w_type"
+                "bulk_new_w_type",
+                "3_entities_same_case",
+                "2_entities_1_change_case",
+                "3_entities_change_case"
             ]
         }, {
             "id": "Remove",
