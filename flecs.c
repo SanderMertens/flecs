@@ -10090,6 +10090,7 @@ ecs_switch_t* ecs_switch_new(
     int32_t count = (int32_t)(max - min);
     result->headers = ecs_os_calloc(ECS_SIZEOF(ecs_switch_header_t) * count);
     result->nodes = ecs_vector_new(ecs_switch_node_t, elements);
+    result->values = ecs_vector_new(uint64_t, elements);
 
     int64_t i;
     for (i = 0; i < count; i ++) {
@@ -10099,11 +10100,13 @@ ecs_switch_t* ecs_switch_new(
 
     ecs_switch_node_t *nodes = ecs_vector_first(
         result->nodes, ecs_switch_node_t);
+    uint64_t *values = ecs_vector_first(
+        result->values, uint64_t);        
 
     for (i = 0; i < elements; i ++) {
         nodes[i].prev = -1;
         nodes[i].next = -1;
-        nodes[i].value = 0;
+        values[i] = 0;
     }
 
     return result;
@@ -10114,6 +10117,7 @@ void ecs_switch_free(
 {
     ecs_os_free(sw->headers);
     ecs_vector_free(sw->nodes);
+    ecs_vector_free(sw->values);
     ecs_os_free(sw);
 }
 
@@ -10121,9 +10125,10 @@ void ecs_switch_add(
     ecs_switch_t *sw)
 {
     ecs_switch_node_t *node = ecs_vector_add(&sw->nodes, ecs_switch_node_t);
+    uint64_t *value = ecs_vector_add(&sw->values, uint64_t);
     node->prev = -1;
     node->next = -1;
-    node->value = 0;
+    *value = 0;
 }
 
 void ecs_switch_set_count(
@@ -10132,14 +10137,17 @@ void ecs_switch_set_count(
 {
     int32_t old_count = ecs_vector_count(sw->nodes);
     ecs_vector_set_count(&sw->nodes, ecs_switch_node_t, count);
+    ecs_vector_set_count(&sw->values, uint64_t, count);
 
     ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+
     int32_t i;
     for (i = old_count; i < count; i ++) {
         ecs_switch_node_t *node = &nodes[i];
         node->prev = -1;
         node->next = -1;
-        node->value = 0;        
+        values[i] = 0;
     }
 }
 
@@ -10159,17 +10167,18 @@ void ecs_switch_set(
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_switch_node_t *nodes = ecs_vector_first(
-        sw->nodes, ecs_switch_node_t);
-
-    ecs_switch_node_t *node = &nodes[element];
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    uint64_t cur_value = values[element];
 
     /* If the node is already assigned to the value, nothing to be done */
-    if (node->value == value) {
+    if (cur_value == value) {
         return;
     }
 
-    ecs_switch_header_t *cur_hdr = get_header(sw, node->value);
+    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
+    ecs_switch_node_t *node = &nodes[element];
+
+    ecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
     ecs_switch_header_t *dst_hdr = get_header(sw, value);
 
     if (cur_hdr) {
@@ -10179,7 +10188,7 @@ void ecs_switch_set(
     /* Now update the node itself by adding it as the first node of dst */
     node->next = dst_hdr->element;
     node->prev = -1;
-    node->value = value;
+    values[element] = value;
 
     /* Also update the dst header */
     dst_hdr->element = element;
@@ -10193,22 +10202,21 @@ void ecs_switch_remove(
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_switch_node_t *nodes = ecs_vector_first(
-        sw->nodes, ecs_switch_node_t);
-
-    ecs_switch_node_t *node = &nodes[element];
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    uint64_t value = values[element];
 
     /* If the node is not assigned to a value, nothing to be done */
-    if (node->value == 0) {
+    if (value == 0) {
         return;
     }
 
-    ecs_switch_header_t *hdr = get_header(sw, node->value);
+    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
+    ecs_switch_node_t *node = &nodes[element];
+    ecs_switch_header_t *hdr = get_header(sw, value);
     ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
-
     remove_node(hdr, nodes, node, element);
 
-    node->value = 0;
+    values[element] = 0;
     node->prev = -1;
     node->next = -1;
 }
@@ -10219,11 +10227,8 @@ uint64_t ecs_switch_get_case(
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
-
-    ecs_switch_node_t *nodes = ecs_vector_first(
-        sw->nodes, ecs_switch_node_t);
-
-    return nodes[element].value;
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    return values[element];
 }
 
 int32_t ecs_switch_first(
@@ -11902,12 +11907,31 @@ ecs_type_t ecs_type_find(
     return ecs_type_find_intern(world, stage, array, count);
 }
 
+static
+bool has_trait(
+    ecs_entity_t trait,
+    ecs_entity_t e)
+{
+    return trait == ecs_entity_t_hi(e & ECS_ENTITY_MASK);
+}
+
+static
+bool has_case(
+    ecs_world_t *world,
+    ecs_entity_t sw_case,
+    ecs_entity_t e)
+{
+    const EcsType *type_ptr = ecs_get(world, e & ECS_ENTITY_MASK, EcsType);
+    ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_type_has_entity(world, type_ptr->normalized, sw_case);
+}
+
 bool ecs_type_has_entity(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity)
 {
-    ecs_entity_t trait = 0;
+    ecs_entity_t trait = 0, sw_case = 0;
 
     if (!entity) {
         return true;
@@ -11915,6 +11939,9 @@ bool ecs_type_has_entity(
 
     if (ECS_HAS_ROLE(entity, TRAIT)) {
         trait = entity & ECS_ENTITY_MASK;
+    } else
+    if (ECS_HAS_ROLE(entity, CASE)) {
+        sw_case = entity & ECS_ENTITY_MASK;
     }
 
     ecs_vector_each(type, ecs_entity_t, c_ptr, {
@@ -11929,11 +11956,11 @@ bool ecs_type_has_entity(
                 return true;
             }
         } else 
-        if (trait && ECS_HAS_ROLE(e, TRAIT)) {
-            e &= ECS_ENTITY_MASK;
-            if (trait == ecs_entity_t_hi(e)) {
-                return true;
-            }
+        if (trait && ECS_HAS_ROLE(e, TRAIT) && has_trait(trait, e)) {
+            return true;
+        } else
+        if (sw_case && ECS_HAS_ROLE(e, SWITCH) && has_case(world, sw_case, e)) {
+            return true;
         }
     });
 
@@ -11946,29 +11973,34 @@ bool ecs_type_owns_entity(
     ecs_entity_t entity,
     bool owned)
 {
-    bool is_trait = false;
+    ecs_entity_t trait = 0, sw_case = 0;
 
     if (!type) {
         return false;
     }
+    if (!entity) {
+        return true;
+    }
 
     if (ECS_HAS_ROLE(entity, TRAIT)) {
-        is_trait = true;
-        entity = entity & ECS_ENTITY_MASK;
+        trait = entity & ECS_ENTITY_MASK;
+    } else
+    if (ECS_HAS_ROLE(entity, CASE)) {
+        sw_case = entity & ECS_ENTITY_MASK;
     }
     
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     int i, count = ecs_vector_count(type);
 
     if (owned) {
-        if (is_trait) {
+        if (trait || sw_case) {
              for (i = 0; i < count; i ++) {
                  ecs_entity_t e = array[i];
-                 if (ECS_HAS_ROLE(e, TRAIT)) {
-                     e &= ECS_ENTITY_MASK;
-                     if (ecs_entity_t_hi(e) == entity) {
-                         return true;
-                     }
+                 if (trait && ECS_HAS_ROLE(e, TRAIT) && has_trait(trait, e)) {
+                     return true;
+                 } else
+                 if (sw_case && ECS_HAS_ROLE(e, SWITCH) && has_case(world, sw_case, e)) {
+                     return true;
                  }
              }
         } else {
@@ -12747,6 +12779,7 @@ void get_comp_and_src(
 static
 int32_t get_component_index(
     ecs_world_t *world,
+    ecs_table_t *table,
     ecs_type_t table_type,
     ecs_entity_t *component_out,
     int32_t column_index,
@@ -12757,6 +12790,16 @@ int32_t get_component_index(
     ecs_entity_t component = *component_out;
 
     if (component) {
+        /* If requested component is a case, find the corresponding switch to
+         * lookup in the table */
+        if (ECS_HAS_ROLE(component, CASE)) {
+            int32_t index = ecs_table_switch_from_case(
+                world, table, component);
+            ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
+
+            index += table->sw_column_offset;
+
+        } else
         if (ECS_HAS_ROLE(component, TRAIT)) {
             ecs_assert(trait_index_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -13043,8 +13086,8 @@ add_trait:
         /* This column does not retrieve data from a static entity (either
          * EcsFromSystem or EcsFromParent) and is not just a handle */
         if (!entity && from != EcsFromEmpty) {
-            int32_t index = get_component_index(
-                world, table_type, &component, c, op, trait_index_offsets);
+            int32_t index = get_component_index(world, table, table_type, 
+                &component, c, op, trait_index_offsets);
             
             table_data->columns[c] = index;
         }

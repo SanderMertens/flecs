@@ -58,6 +58,7 @@ ecs_switch_t* ecs_switch_new(
     int32_t count = (int32_t)(max - min);
     result->headers = ecs_os_calloc(ECS_SIZEOF(ecs_switch_header_t) * count);
     result->nodes = ecs_vector_new(ecs_switch_node_t, elements);
+    result->values = ecs_vector_new(uint64_t, elements);
 
     int64_t i;
     for (i = 0; i < count; i ++) {
@@ -67,11 +68,13 @@ ecs_switch_t* ecs_switch_new(
 
     ecs_switch_node_t *nodes = ecs_vector_first(
         result->nodes, ecs_switch_node_t);
+    uint64_t *values = ecs_vector_first(
+        result->values, uint64_t);        
 
     for (i = 0; i < elements; i ++) {
         nodes[i].prev = -1;
         nodes[i].next = -1;
-        nodes[i].value = 0;
+        values[i] = 0;
     }
 
     return result;
@@ -82,6 +85,7 @@ void ecs_switch_free(
 {
     ecs_os_free(sw->headers);
     ecs_vector_free(sw->nodes);
+    ecs_vector_free(sw->values);
     ecs_os_free(sw);
 }
 
@@ -89,9 +93,10 @@ void ecs_switch_add(
     ecs_switch_t *sw)
 {
     ecs_switch_node_t *node = ecs_vector_add(&sw->nodes, ecs_switch_node_t);
+    uint64_t *value = ecs_vector_add(&sw->values, uint64_t);
     node->prev = -1;
     node->next = -1;
-    node->value = 0;
+    *value = 0;
 }
 
 void ecs_switch_set_count(
@@ -100,14 +105,17 @@ void ecs_switch_set_count(
 {
     int32_t old_count = ecs_vector_count(sw->nodes);
     ecs_vector_set_count(&sw->nodes, ecs_switch_node_t, count);
+    ecs_vector_set_count(&sw->values, uint64_t, count);
 
     ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+
     int32_t i;
     for (i = old_count; i < count; i ++) {
         ecs_switch_node_t *node = &nodes[i];
         node->prev = -1;
         node->next = -1;
-        node->value = 0;        
+        values[i] = 0;
     }
 }
 
@@ -127,17 +135,18 @@ void ecs_switch_set(
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_switch_node_t *nodes = ecs_vector_first(
-        sw->nodes, ecs_switch_node_t);
-
-    ecs_switch_node_t *node = &nodes[element];
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    uint64_t cur_value = values[element];
 
     /* If the node is already assigned to the value, nothing to be done */
-    if (node->value == value) {
+    if (cur_value == value) {
         return;
     }
 
-    ecs_switch_header_t *cur_hdr = get_header(sw, node->value);
+    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
+    ecs_switch_node_t *node = &nodes[element];
+
+    ecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
     ecs_switch_header_t *dst_hdr = get_header(sw, value);
 
     if (cur_hdr) {
@@ -147,7 +156,7 @@ void ecs_switch_set(
     /* Now update the node itself by adding it as the first node of dst */
     node->next = dst_hdr->element;
     node->prev = -1;
-    node->value = value;
+    values[element] = value;
 
     /* Also update the dst header */
     dst_hdr->element = element;
@@ -161,22 +170,21 @@ void ecs_switch_remove(
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_switch_node_t *nodes = ecs_vector_first(
-        sw->nodes, ecs_switch_node_t);
-
-    ecs_switch_node_t *node = &nodes[element];
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    uint64_t value = values[element];
 
     /* If the node is not assigned to a value, nothing to be done */
-    if (node->value == 0) {
+    if (value == 0) {
         return;
     }
 
-    ecs_switch_header_t *hdr = get_header(sw, node->value);
+    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
+    ecs_switch_node_t *node = &nodes[element];
+    ecs_switch_header_t *hdr = get_header(sw, value);
     ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
-
     remove_node(hdr, nodes, node, element);
 
-    node->value = 0;
+    values[element] = 0;
     node->prev = -1;
     node->next = -1;
 }
@@ -187,11 +195,8 @@ uint64_t ecs_switch_get_case(
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
-
-    ecs_switch_node_t *nodes = ecs_vector_first(
-        sw->nodes, ecs_switch_node_t);
-
-    return nodes[element].value;
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    return values[element];
 }
 
 int32_t ecs_switch_first(

@@ -11,7 +11,6 @@ typedef struct ecs_switch_header_t {
 typedef struct ecs_switch_node_t {
     int32_t next;
     int32_t prev;
-    uint64_t value;
 } ecs_switch_node_t;
 
 typedef struct ecs_switch_t {
@@ -19,6 +18,7 @@ typedef struct ecs_switch_t {
     uint64_t max;
     ecs_switch_header_t *headers;
     ecs_vector_t *nodes;
+    ecs_vector_t *values;
 } ecs_switch_t;
 
 FLECS_EXPORT
