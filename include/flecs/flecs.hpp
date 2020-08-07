@@ -1157,7 +1157,7 @@ public:
         , m_id(0) { }
 
     static
-    flecs::entity nil(const world& world) {
+    flecs::entity zero(const world& world) {
         return flecs::entity(world.c_ptr(), (ecs_entity_t)0);
     }
 
@@ -1200,6 +1200,14 @@ public:
             ecs_get_w_entity(m_world, m_id, component_info<T>::s_entity));
     }
 
+    const void* get(flecs::entity component) const {
+        return ecs_get_w_entity(m_world, m_id, component.id());
+    }
+
+    const void* get(entity_t component_id) const {
+        return ecs_get_w_entity(m_world, m_id, component_id);
+    }    
+
     template <typename T>
     T* get_mut(bool *is_added = nullptr) const {
         return static_cast<T*>(
@@ -1207,10 +1215,22 @@ public:
                 m_world, m_id, component_info<T>::s_entity, is_added));
     }
 
+    void* get_mut(flecs::entity component, bool *is_added = nullptr) const {
+        return ecs_get_mut_w_entity(m_world, m_id, component.id(), is_added);
+    }
+
+    void* get_mut(entity_t component_id, bool *is_added = nullptr) const {
+        return ecs_get_mut_w_entity(m_world, m_id, component_id, is_added);
+    }
+
     template <typename T>
     void modified() {
         ecs_modified_w_entity(m_world, m_id, component_info<T>::s_entity);
     }
+
+    void modified(flecs::entity component) {
+        ecs_modified_w_entity(m_world, m_id, component.id());
+    }    
 
     template <typename T>
     ref<T> get_ref() const {

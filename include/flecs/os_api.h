@@ -199,10 +199,10 @@ typedef struct ecs_os_api_t {
     ecs_os_api_get_time_t get_time;
 
     /* Logging */
-    ecs_os_api_log_t log;
-    ecs_os_api_log_t log_error;
-    ecs_os_api_log_t log_debug;
-    ecs_os_api_log_t log_warning;
+    ecs_os_api_log_t _log;
+    ecs_os_api_log_t _log_error;
+    ecs_os_api_log_t _log_debug;
+    ecs_os_api_log_t _log_warning;
 
     /* Application termination */
     ecs_os_api_abort_t abort;

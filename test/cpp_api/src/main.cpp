@@ -28,6 +28,10 @@ void Entity_remove_instanceof(void);
 void Entity_set(void);
 void Entity_set_2(void);
 void Entity_replace(void);
+void Entity_get_generic(void);
+void Entity_get_mut_generic(void);
+void Entity_get_generic_w_id(void);
+void Entity_get_mut_generic_w_id(void);
 
 // Testsuite 'Paths'
 void Paths_name(void);
@@ -174,6 +178,22 @@ bake_test_case Entity_testcases[] = {
     {
         "replace",
         Entity_replace
+    },
+    {
+        "get_generic",
+        Entity_get_generic
+    },
+    {
+        "get_mut_generic",
+        Entity_get_mut_generic
+    },
+    {
+        "get_generic_w_id",
+        Entity_get_generic_w_id
+    },
+    {
+        "get_mut_generic_w_id",
+        Entity_get_mut_generic_w_id
     }
 };
 
@@ -423,7 +443,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        19,
+        23,
         Entity_testcases
     },
     {

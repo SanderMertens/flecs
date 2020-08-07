@@ -299,3 +299,82 @@ void Entity_remove_instanceof() {
     test_assert(!entity.has(flecs::Instanceof | base.id()));
 }
 
+void Entity_get_generic() {
+    flecs::world world;
+
+    auto position = flecs::component<Position>(world, "Position");
+
+    auto entity = flecs::entity(world)
+        .set<Position>({10, 20});
+
+    test_assert(entity.id() != 0);
+    test_assert(entity.has<Position>());
+    test_assert(entity.has<Velocity>());
+
+    const void *void_p = entity.get(position);
+    test_assert(void_p != nullptr);
+
+    const Position *p = static_cast<const Position*>(void_p);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_mut_generic() {
+    flecs::world world;
+
+    auto position = flecs::component<Position>(world, "Position");
+
+    auto entity = flecs::entity(world)
+        .set<Position>({10, 20});
+
+    test_assert(entity.id() != 0);
+    test_assert(entity.has<Position>());
+    test_assert(entity.has<Velocity>());
+
+    void *void_p = entity.get_mut(position);
+    test_assert(void_p != nullptr);
+
+    Position *p = static_cast<Position*>(void_p);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_generic_w_id() {
+    flecs::world world;
+
+    auto position = flecs::component<Position>(world, "Position");
+
+    auto entity = flecs::entity(world)
+        .set<Position>({10, 20});
+
+    test_assert(entity.id() != 0);
+    test_assert(entity.has<Position>());
+    test_assert(entity.has<Velocity>());
+
+    const void *void_p = entity.get(position.id());
+    test_assert(void_p != nullptr);
+
+    const Position *p = static_cast<const Position*>(void_p);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_mut_generic_w_id() {
+    flecs::world world;
+
+    auto position = flecs::component<Position>(world, "Position");
+
+    auto entity = flecs::entity(world)
+        .set<Position>({10, 20});
+
+    test_assert(entity.id() != 0);
+    test_assert(entity.has<Position>());
+    test_assert(entity.has<Velocity>());
+
+    void *void_p = entity.get_mut(position.id());
+    test_assert(void_p != nullptr);
+
+    Position *p = static_cast<Position*>(void_p);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}

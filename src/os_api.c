@@ -46,8 +46,8 @@ void ecs_os_dbg(const char *fmt, ...) {
 #ifndef NDEBUG
     va_list args;
     va_start(args, fmt);
-    if (ecs_os_api.log_debug) {
-        ecs_os_api.log_debug(fmt, args);
+    if (ecs_os_api._log_debug) {
+        ecs_os_api._log_debug(fmt, args);
     }
     va_end(args);
 #else
@@ -58,8 +58,8 @@ void ecs_os_dbg(const char *fmt, ...) {
 void ecs_os_warn(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    if (ecs_os_api.log_warning) {
-        ecs_os_api.log_warning(fmt, args);
+    if (ecs_os_api._log_warning) {
+        ecs_os_api._log_warning(fmt, args);
     }
     va_end(args);
 }
@@ -67,8 +67,8 @@ void ecs_os_warn(const char *fmt, ...) {
 void ecs_os_log(const char *fmt, ...) {
     va_list args;;
     va_start(args, fmt);
-    if (ecs_os_api.log) {
-        ecs_os_api.log(fmt, args);
+    if (ecs_os_api._log) {
+        ecs_os_api._log(fmt, args);
     }
     va_end(args);
 }
@@ -76,8 +76,8 @@ void ecs_os_log(const char *fmt, ...) {
 void ecs_os_err(const char *fmt, ...) {
     va_list args;;
     va_start(args, fmt);
-    if (ecs_os_api.log_error) {
-        ecs_os_api.log_error(fmt, args);
+    if (ecs_os_api._log_error) {
+        ecs_os_api._log_error(fmt, args);
     }
     va_end(args);
 }
@@ -220,10 +220,10 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.get_time = ecs_os_gettime;
 
     /* Logging */
-    ecs_os_api.log = ecs_log;
-    ecs_os_api.log_error = ecs_log_error;
-    ecs_os_api.log_debug = ecs_log_debug;
-    ecs_os_api.log_warning = ecs_log_warning;
+    ecs_os_api._log = ecs_log;
+    ecs_os_api._log_error = ecs_log_error;
+    ecs_os_api._log_debug = ecs_log_debug;
+    ecs_os_api._log_warning = ecs_log_warning;
 
     /* Modules */
     if (!ecs_os_api.module_to_dl) {

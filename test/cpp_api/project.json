@@ -33,7 +33,11 @@
                 "remove_instanceof",
                 "set",
                 "set_2",
-                "replace"
+                "replace",
+                "get_generic",
+                "get_mut_generic",
+                "get_generic_w_id",
+                "get_mut_generic_w_id"
             ]
         }, {
             "id": "Paths",
