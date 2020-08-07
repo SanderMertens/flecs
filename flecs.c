@@ -11861,7 +11861,7 @@ void ecs_os_warn(const char *fmt, ...) {
 }
 
 void ecs_os_log(const char *fmt, ...) {
-    va_list args;;
+    va_list args;
     va_start(args, fmt);
     if (ecs_os_api._log) {
         ecs_os_api._log(fmt, args);
@@ -11870,7 +11870,7 @@ void ecs_os_log(const char *fmt, ...) {
 }
 
 void ecs_os_err(const char *fmt, ...) {
-    va_list args;;
+    va_list args;
     va_start(args, fmt);
     if (ecs_os_api._log_error) {
         ecs_os_api._log_error(fmt, args);
@@ -15701,7 +15701,7 @@ double ecs_time_to_double(
 {
     double result;
     result = t.sec;
-    return result + (double)t.nanosec / (double)1000000000;;
+    return result + (double)t.nanosec / (double)1000000000;
 }
 
 ecs_time_t ecs_time_sub(

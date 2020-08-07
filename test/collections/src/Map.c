@@ -141,7 +141,7 @@ void Map_get_all() {
     ecs_map_t *map = ecs_map_new(char*, 16);
     fill_map(map);
 
-    char *value = ecs_map_get_ptr(map, char*, 1);;
+    char *value = ecs_map_get_ptr(map, char*, 1);
     test_assert(value != NULL);
     test_str(value, "hello");
 

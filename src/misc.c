@@ -48,7 +48,7 @@ double ecs_time_to_double(
 {
     double result;
     result = t.sec;
-    return result + (double)t.nanosec / (double)1000000000;;
+    return result + (double)t.nanosec / (double)1000000000;
 }
 
 ecs_time_t ecs_time_sub(

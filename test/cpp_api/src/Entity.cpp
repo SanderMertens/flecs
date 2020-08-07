@@ -309,7 +309,6 @@ void Entity_get_generic() {
 
     test_assert(entity.id() != 0);
     test_assert(entity.has<Position>());
-    test_assert(entity.has<Velocity>());
 
     const void *void_p = entity.get(position);
     test_assert(void_p != nullptr);
@@ -329,7 +328,6 @@ void Entity_get_mut_generic() {
 
     test_assert(entity.id() != 0);
     test_assert(entity.has<Position>());
-    test_assert(entity.has<Velocity>());
 
     bool invoked;
     flecs::system<Position>(world)
@@ -359,7 +357,6 @@ void Entity_get_generic_w_id() {
 
     test_assert(entity.id() != 0);
     test_assert(entity.has<Position>());
-    test_assert(entity.has<Velocity>());
 
     const void *void_p = entity.get(position.id());
     test_assert(void_p != nullptr);
@@ -379,7 +376,6 @@ void Entity_get_mut_generic_w_id() {
 
     test_assert(entity.id() != 0);
     test_assert(entity.has<Position>());
-    test_assert(entity.has<Velocity>());
 
     bool invoked;
     flecs::system<Position>(world)

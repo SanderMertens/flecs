@@ -899,6 +899,29 @@ public:
      */
     base_type& add(type type) const;
 
+    /** Add a trait
+     */
+    base_type& add_trait(entity_t entity, entity_t trait) const {
+        static_cast<base_type*>(this)->invoke(
+        [entity, trait](world_t *world, entity_t id) {
+            ecs_add_entity(world, id, 
+                ecs_trait(entity, trait));
+        });
+        return *static_cast<base_type*>(this); 
+    }
+
+    template<typename C, typename T>
+    base_type& add_trait() const {
+        return add_trait(
+            component_info<C>::s_entity, component_info<T>::s_entity);
+    }
+
+    /** Add a trait
+     */
+    template<typename C>
+    base_type& add_trait(flecs::entity trait) const;
+    base_type& add_trait(flecs::entity entity, flecs::entity trait) const;
+
     /** Remove an entity from an entity by id.
      */
     base_type& remove(entity_t entity) const {
@@ -933,6 +956,29 @@ public:
     /** Remove a type from an entity.
      */
     base_type& remove(type type) const;
+
+    /** Remove a trait
+     */
+    base_type& remove_trait(entity_t entity, entity_t trait) const {
+        static_cast<base_type*>(this)->invoke(
+        [entity, trait](world_t *world, entity_t id) {
+            ecs_remove_entity(world, id, 
+                ecs_trait(entity, trait));
+        });
+        return *static_cast<base_type*>(this);         
+    }
+
+    template<typename C, typename T>
+    base_type& remove_trait() const {
+        return remove_trait(
+            component_info<C>::s_entity, component_info<T>::s_entity);
+    }
+
+    /** Remove a trait
+     */
+    template<typename C>
+    base_type& remove_trait(flecs::entity trait) const;
+    base_type& remove_trait(flecs::entity entity, flecs::entity trait) const;
 
     /** Add a parent entity to an entity by id.
      */    
@@ -1011,6 +1057,25 @@ public:
         });
         return *static_cast<base_type*>(this);
     }
+
+    /** Set a trait for an entity.
+     */
+    template <typename C, typename T>
+    const base_type& set_trait(const T& value) const {
+        static_cast<base_type*>(this)->invoke(
+        [&value](world_t *world, entity_t id) {
+            ecs_set_ptr_w_entity(world, id, 
+                ecs_trait(component_info<C>::s_entity, 
+                          component_info<T>::s_entity),
+                sizeof(T), &value);
+        });
+        return *static_cast<base_type*>(this);
+    } 
+
+    /** Set a trait tag for an entity.
+     */
+    template <typename T>
+    const base_type& set_trait(flecs::entity trait, const T& value) const;
 
     /** Patch a component value.
      * This operation allows an application to partially overwrite a component 
@@ -1291,6 +1356,24 @@ public:
         return owns(component_info<T>::s_entity);
     }
 
+    template<typename C, typename T>
+    bool has_trait() const {
+        return ecs_has_entity(m_world, m_id, ecs_trait(
+            component_info<C>::s_entity, 
+            component_info<T>::s_entity));
+    }
+
+    template<typename C>
+    bool has_trait(flecs::entity trait) const {
+        return ecs_has_entity(m_world, m_id, ecs_trait(
+            component_info<C>::s_entity, trait.id()));
+    }
+
+    bool has_trait(flecs::entity entity, flecs::entity trait) const {
+        return ecs_has_entity(m_world, m_id, ecs_trait(
+            entity.id(), trait.id()));
+    }
+
     float delta_time() {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->delta_time;
@@ -1472,7 +1555,7 @@ class component_info final {
 public:
     static void init(const world& world, entity_t entity) {
         s_entity = entity;
-        s_type = ecs_type_from_entity(world.c_ptr(), entity);;
+        s_type = ecs_type_from_entity(world.c_ptr(), entity);
         s_name = ecs_get_fullpath(world.c_ptr(), entity);
     }
 
@@ -2532,6 +2615,17 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(type ty
 }
 
 template <typename base>
+template <typename C>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_trait(flecs::entity trait) const {
+    return add_trait(component_info<C>::s_entity, trait.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_trait(flecs::entity entity, flecs::entity trait) const {
+    return add_trait(entity.id(), trait.id()); 
+}
+
+template <typename base>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(const entity& entity) const {
     return remove(entity.id());
 }
@@ -2539,6 +2633,17 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(cons
 template <typename base>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(type type) const {
     return remove(type.c_ptr());
+}
+
+template <typename base>
+template <typename C>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_trait(flecs::entity trait) const {
+    return remove_trait(component_info<C>::s_entity, trait.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_trait(flecs::entity entity, flecs::entity trait) const {
+    return remove_trait(entity.id(), trait.id());
 }
 
 template <typename base>
@@ -2560,6 +2665,20 @@ template <typename base>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_instanceof(const entity& entity) const {
     return remove_instanceof(entity.id());
 }
+
+template <typename base>
+template <typename T>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(flecs::entity trait, const T& value) const
+{
+    static_cast<base_type*>(this)->invoke(
+    [trait, &value](world_t *world, entity_t id) {
+        ecs_set_ptr_w_entity(world, id, 
+            ecs_trait(component_info<T>::s_entity, 
+                        trait.id()),
+            sizeof(T), &value);
+    });
+    return *static_cast<base_type*>(this);
+}        
 
 inline entity world::lookup(const char *name) const {
     auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");

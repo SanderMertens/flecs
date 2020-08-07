@@ -33,6 +33,16 @@ void Entity_get_mut_generic(void);
 void Entity_get_generic_w_id(void);
 void Entity_get_mut_generic_w_id(void);
 
+// Testsuite 'Traits'
+void Traits_add_component_trait(void);
+void Traits_add_tag_trait(void);
+void Traits_add_tag_trait_to_tag(void);
+void Traits_remove_component_trait(void);
+void Traits_remove_tag_trait(void);
+void Traits_remove_tag_trait_to_tag(void);
+void Traits_set_component_trait(void);
+void Traits_set_tag_trait(void);
+
 // Testsuite 'Paths'
 void Paths_name(void);
 void Paths_path_depth_1(void);
@@ -194,6 +204,41 @@ bake_test_case Entity_testcases[] = {
     {
         "get_mut_generic_w_id",
         Entity_get_mut_generic_w_id
+    }
+};
+
+bake_test_case Traits_testcases[] = {
+    {
+        "add_component_trait",
+        Traits_add_component_trait
+    },
+    {
+        "add_tag_trait",
+        Traits_add_tag_trait
+    },
+    {
+        "add_tag_trait_to_tag",
+        Traits_add_tag_trait_to_tag
+    },
+    {
+        "remove_component_trait",
+        Traits_remove_component_trait
+    },
+    {
+        "remove_tag_trait",
+        Traits_remove_tag_trait
+    },
+    {
+        "remove_tag_trait_to_tag",
+        Traits_remove_tag_trait_to_tag
+    },
+    {
+        "set_component_trait",
+        Traits_set_component_trait
+    },
+    {
+        "set_tag_trait",
+        Traits_set_tag_trait
     }
 };
 
@@ -447,6 +492,13 @@ static bake_test_suite suites[] = {
         Entity_testcases
     },
     {
+        "Traits",
+        NULL,
+        NULL,
+        8,
+        Traits_testcases
+    },
+    {
         "Paths",
         NULL,
         NULL,
@@ -499,5 +551,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 8);
+    return bake_test_run("cpp_api", argc, argv, suites, 9);
 }

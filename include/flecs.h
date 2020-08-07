@@ -945,7 +945,7 @@ void ecs_add_remove_type(
  * @param trait The trait to remove.
  */
 #define ecs_add_trait(world, entity, component, trait)\
-    ecs_add_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)))
+    ecs_add_entity(world, entity, ecs_trait(component, trait))
 
 /** Remove a trait
  * This operation removes a trait from an entity.
@@ -956,7 +956,7 @@ void ecs_add_remove_type(
  * @param trait The trait to remove.
  */
 #define ecs_remove_trait(world, entity, component, trait)\
-    ecs_remove_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)))
+    ecs_remove_entity(world, entity, ecs_trait(component, trait))
 
 /** Test if an entity has a trait.
  * This operation returns true if the entity has the provided trait for the
@@ -969,7 +969,7 @@ void ecs_add_remove_type(
  * @return True if the entity has the trait, false if not.
  */
 #define ecs_has_trait(world, entity, component, trait)\
-    ecs_has_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)))
+    ecs_has_entity(world, entity, ecs_trait(component, trait))
 
 
 #ifndef FLECS_LEGACY

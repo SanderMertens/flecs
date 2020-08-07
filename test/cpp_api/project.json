@@ -40,6 +40,18 @@
                 "get_mut_generic_w_id"
             ]
         }, {
+            "id": "Traits",
+            "testcases": [
+                "add_component_trait",
+                "add_tag_trait",
+                "add_tag_trait_to_tag",
+                "remove_component_trait",
+                "remove_tag_trait",
+                "remove_tag_trait_to_tag",                
+                "set_component_trait",
+                "set_tag_trait"
+            ]
+        }, {
             "id": "Paths",
             "testcases": [
                 "name",
