@@ -1271,7 +1271,24 @@ public:
 
     const void* get(entity_t component_id) const {
         return ecs_get_w_entity(m_world, m_id, component_id);
-    }    
+    } 
+
+    template<typename C, typename T>
+    const T* get_trait() const {
+        return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
+            component_info<C>::s_entity, component_info<T>::s_entity)));
+    }   
+
+    template<typename T>
+    const T* get_trait(flecs::entity trait) const {
+        return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
+            component_info<T>::s_entity, trait.id())));
+    } 
+
+    const void* get_trait(flecs::entity component, flecs::entity trait) const {
+        return ecs_get_w_entity(m_world, m_id, ecs_trait(
+            component.id(), trait.id()));
+    }       
 
     template <typename T>
     T* get_mut(bool *is_added = nullptr) const {

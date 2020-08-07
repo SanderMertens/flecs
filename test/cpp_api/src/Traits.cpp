@@ -115,6 +115,9 @@ void Traits_set_component_trait() {
     test_assert((!entity.has_trait<Trait, Position>()));
 
     test_str(entity.type().str().c_str(), "TRAIT|Position<Trait");
+
+    const Trait *t = entity.get_trait<Position, Trait>();
+    test_int(t->value, 10);
 }
 
 void Traits_set_tag_trait() {
@@ -129,4 +132,8 @@ void Traits_set_tag_trait() {
     test_assert(entity.id() != 0);
     test_assert(entity.has_trait<Position>(Trait));
     test_str(entity.type().str().c_str(), "TRAIT|Position<Trait");
+
+    const Position *p = entity.get_trait<Position>(Trait);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 }
