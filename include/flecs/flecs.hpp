@@ -1255,7 +1255,7 @@ public:
         , m_id(0) { }
 
     static
-    flecs::entity zero(const world& world) {
+    flecs::entity null(const world& world) {
         return flecs::entity(world.c_ptr(), (ecs_entity_t)0);
     }
 

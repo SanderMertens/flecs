@@ -438,8 +438,8 @@ typedef struct ecs_matched_table_t {
     int32_t *columns;              /**< Mapping of system columns to table */
     ecs_entity_t *components;      /**< Actual components of system columns */
     ecs_vector_t *references;      /**< Reference columns and cached pointers */
-    int32_t rank;                  /**< Rank used to sort tables */
     int32_t *monitor;              /**< Used to monitor table for changes */
+    int32_t rank;                  /**< Rank used to sort tables */
 } ecs_matched_table_t;
 
 /** Type storing an entity range within a table.
@@ -447,11 +447,11 @@ typedef struct ecs_matched_table_t {
  * constructs a list of the ranges across archetypes that are in order so that
  * when the query iterates over the archetypes, it only needs to iterate the
  * list of ranges. */
-typedef struct ecs_table_range_t {
+typedef struct ecs_table_slice_t {
     ecs_matched_table_t *table;     /**< Reference to the matched table */
     int32_t start_row;              /**< Start of range  */
     int32_t count;                  /**< Number of entities in range */
-} ecs_table_range_t;
+} ecs_table_slice_t;
 
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
 #define EcsQueryMonitor (2)          /* Query needs to be registered as a monitor */
@@ -482,7 +482,7 @@ struct ecs_query_t {
     /* Used for sorting */
     ecs_entity_t sort_on_component;
     ecs_compare_action_t compare;   
-    ecs_vector_t *table_ranges;     
+    ecs_vector_t *table_slices;     
 
     /* Used for table sorting */
     ecs_entity_t rank_on_component;
@@ -13667,7 +13667,7 @@ void build_sorted_table_range(
         to_sort ++;
     }
 
-    ecs_table_range_t *cur = NULL;
+    ecs_table_slice_t *cur = NULL;
 
     bool proceed;
     do {
@@ -13704,8 +13704,7 @@ void build_sorted_table_range(
         sort_helper_t *cur_helper = &helper[min];
 
         if (!cur || cur->table != cur_helper->table) {
-            cur = ecs_vector_add(
-                &query->table_ranges, ecs_table_range_t);
+            cur = ecs_vector_add(&query->table_slices, ecs_table_slice_t);
             ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
             cur->table = cur_helper->table;
             cur->start_row = cur_helper->row;
@@ -13726,8 +13725,8 @@ void build_sorted_tables(
     ecs_query_t *query)
 {
     /* Clean previous sorted tables */
-    ecs_vector_free(query->table_ranges);
-    query->table_ranges = NULL;
+    ecs_vector_free(query->table_slices);
+    query->table_slices = NULL;
 
     int32_t i, count = ecs_vector_count(query->tables);
     ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
@@ -14252,7 +14251,7 @@ void ecs_query_free(
 
     ecs_vector_free(query->tables);
     ecs_vector_free(query->empty_tables);
-    ecs_vector_free(query->table_ranges);
+    ecs_vector_free(query->table_slices);
     ecs_sig_deinit(&query->sig);
 }
 
@@ -14269,17 +14268,19 @@ ecs_iter_t ecs_query_iter_page(
     tables_reset_dirty(query);
 
     int32_t table_count;
-    if (query->table_ranges) {
-        table_count = ecs_vector_count(query->table_ranges);
+    if (query->table_slices) {
+        table_count = ecs_vector_count(query->table_slices);
     } else {
         table_count = ecs_vector_count(query->tables);
     }
 
     ecs_query_iter_t it = {
         .query = query,
-        .offset = offset,
-        .limit = limit,
-        .remaining = limit,
+        .page_iter = {
+            .offset = offset,
+            .limit = limit,
+            .remaining = limit
+        },
         .index = 0,
     };
 
@@ -14334,99 +14335,100 @@ void ecs_query_set_iter(
     it->total_count = count;
 }
 
+int ecs_page_iter_next(
+    ecs_page_iter_t *it,
+    ecs_page_cursor_t *cur)
+{
+    int32_t offset = it->offset;
+    int32_t limit = it->limit;
+    if (!(offset || limit)) {
+        return cur->count == 0;
+    }
+
+    int32_t count = cur->count;
+    int32_t remaining = it->remaining;
+
+    if (offset) {
+        if (offset > count) {
+            /* No entities to iterate in current table */
+            it->offset -= count;
+            return 1;
+        } else {
+            cur->first += offset;
+            count = cur->count -= offset;
+            it->offset = 0;
+        }
+    }
+
+    if (remaining) {
+        if (remaining > count) {
+            it->remaining -= count;
+        } else {
+            count = cur->count = remaining;
+            it->remaining = 0;
+        }
+    } else if (limit) {
+        /* Limit hit: no more entities left to iterate */
+        return -1;
+    }
+
+    return count == 0;
+}
+
 /* Return next table */
 bool ecs_query_next(
     ecs_iter_t *it)
 {
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_query_iter_t *iter = &it->iter.query;
-    ecs_query_t *query = iter->query;
+    ecs_page_iter_t *piter = &iter->page_iter;
     ecs_world_t *world = it->world;
-
-    ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
-    ecs_table_range_t *ranges = ecs_vector_first(query->table_ranges, ecs_table_range_t);
-
-    ecs_assert(!ranges || query->compare, ECS_INTERNAL_ERROR, NULL);
-    
-    int32_t table_count;
-    if (ranges) {
-        table_count = ecs_vector_count(query->table_ranges);
-    } else {
-        table_count = ecs_vector_count(query->tables);
-    }
+    ecs_query_t *query = iter->query;
 
     ecs_get_stage(&world);
+    ecs_table_slice_t *slice = ecs_vector_first(
+        query->table_slices, ecs_table_slice_t);
+    ecs_matched_table_t *tables = ecs_vector_first(
+        query->tables, ecs_matched_table_t);
 
-    int32_t offset = iter->offset;
-    int32_t limit = iter->limit;
-    int32_t remaining = iter->remaining;
+    ecs_assert(!slice || query->compare, ECS_INTERNAL_ERROR, NULL);
+    
+    ecs_page_cursor_t cur;
+    int32_t table_count = it->table_count;
     int32_t prev_count = it->total_count;
-    bool offset_limit = (offset | limit) != 0;
 
     int i;
     for (i = iter->index; i < table_count; i ++) {
-        ecs_matched_table_t *table;
-
-        if (ranges) {
-            table = ranges[i].table;
-        } else {
-            table = &tables[i];
-        }
-
+        ecs_matched_table_t *table = slice ? slice[i].table : &tables[i];
         ecs_table_t *world_table = table->table;
         ecs_data_t *table_data = NULL;
-        int32_t first = 0, count = 0;
-
+        
         if (world_table) {
             table_data = ecs_table_get_data(world, world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
             it->table_columns = table_data->columns;
             
-            if (ranges) {
-                first = ranges[i].start_row;
-                count = ranges[i].count;
+            if (slice) {
+                cur.first = slice[i].start_row;
+                cur.count = slice[i].count;
             } else {
-                count = ecs_table_count(world_table);
-            }
-        }
-
-        if (table_data) {
-            if (offset_limit) {
-                if (offset) {
-                    if (offset > count) {
-                        /* No entities to iterate in current table */
-                        offset = iter->offset -= count;
-                        continue;
-                    } else {
-                        first += offset;
-                        count -= offset;
-                        offset = iter->offset = 0;
-                    }
-                }
-
-                if (remaining) {
-                    if (remaining > count) {
-                        remaining = iter->remaining -= count;
-                    } else {
-                        count = remaining;
-                        remaining = iter->remaining = 0;
-                    }
-                } else if (limit) {
-                    /* Limit hit: no more entities left to iterate */
-                    return false;
-                }
+                cur.first = 0;
+                cur.count = ecs_table_count(world_table);
             }
 
-            if (!count) {
-                /* No entities to iterate in current table */
+            int ret = ecs_page_iter_next(piter, &cur);
+            if (ret < 0) {
+                return false;
+            } else if (ret > 0) {
                 continue;
             }
 
-            ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t); 
-            it->entities = &entity_buffer[first];
-            it->offset = first;
-            it->count = count;
-            it->total_count = count;
+            ecs_entity_t *entity_buffer = ecs_vector_first(
+                table_data->entities, ecs_entity_t); 
+            it->entities = &entity_buffer[cur.first];
+            it->offset = cur.first;
+            it->count = cur.count;
+            it->total_count = cur.count;
         }
 
         it->table = world_table;
@@ -14500,12 +14502,12 @@ void ecs_query_order_by(
     query->sort_on_component = sort_component;
     query->compare = compare;
 
-    ecs_vector_free(query->table_ranges);
-    query->table_ranges = NULL;
+    ecs_vector_free(query->table_slices);
+    query->table_slices = NULL;
 
     sort_tables(world, query);    
 
-    if (!query->table_ranges) {
+    if (!query->table_slices) {
         build_sorted_tables(world, query);
     }
 }

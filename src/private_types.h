@@ -169,8 +169,8 @@ typedef struct ecs_matched_table_t {
     int32_t *columns;              /**< Mapping of system columns to table */
     ecs_entity_t *components;      /**< Actual components of system columns */
     ecs_vector_t *references;      /**< Reference columns and cached pointers */
-    int32_t rank;                  /**< Rank used to sort tables */
     int32_t *monitor;              /**< Used to monitor table for changes */
+    int32_t rank;                  /**< Rank used to sort tables */
 } ecs_matched_table_t;
 
 /** Type storing an entity range within a table.
@@ -178,11 +178,11 @@ typedef struct ecs_matched_table_t {
  * constructs a list of the ranges across archetypes that are in order so that
  * when the query iterates over the archetypes, it only needs to iterate the
  * list of ranges. */
-typedef struct ecs_table_range_t {
+typedef struct ecs_table_slice_t {
     ecs_matched_table_t *table;     /**< Reference to the matched table */
     int32_t start_row;              /**< Start of range  */
     int32_t count;                  /**< Number of entities in range */
-} ecs_table_range_t;
+} ecs_table_slice_t;
 
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
 #define EcsQueryMonitor (2)          /* Query needs to be registered as a monitor */
@@ -213,7 +213,7 @@ struct ecs_query_t {
     /* Used for sorting */
     ecs_entity_t sort_on_component;
     ecs_compare_action_t compare;   
-    ecs_vector_t *table_ranges;     
+    ecs_vector_t *table_slices;     
 
     /* Used for table sorting */
     ecs_entity_t rank_on_component;
