@@ -331,12 +331,22 @@ void Entity_get_mut_generic() {
     test_assert(entity.has<Position>());
     test_assert(entity.has<Velocity>());
 
+    bool invoked;
+    flecs::system<Position>(world)
+        .kind(flecs::OnSet)
+        .each([&invoked](flecs::entity e, Position& p) {
+            invoked = true;
+        });
+
     void *void_p = entity.get_mut(position);
     test_assert(void_p != nullptr);
 
     Position *p = static_cast<Position*>(void_p);
     test_int(p->x, 10);
     test_int(p->y, 20);
+
+    entity.modified(position);
+    test_bool(invoked, true);
 }
 
 void Entity_get_generic_w_id() {
@@ -371,10 +381,20 @@ void Entity_get_mut_generic_w_id() {
     test_assert(entity.has<Position>());
     test_assert(entity.has<Velocity>());
 
+    bool invoked;
+    flecs::system<Position>(world)
+        .kind(flecs::OnSet)
+        .each([&invoked](flecs::entity e, Position& p) {
+            invoked = true;
+        });
+
     void *void_p = entity.get_mut(position.id());
     test_assert(void_p != nullptr);
 
     Position *p = static_cast<Position*>(void_p);
     test_int(p->x, 10);
     test_int(p->y, 20);
+
+    entity.modified(position.id());
+    test_bool(invoked, true);
 }

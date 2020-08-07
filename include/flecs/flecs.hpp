@@ -1230,7 +1230,11 @@ public:
 
     void modified(flecs::entity component) {
         ecs_modified_w_entity(m_world, m_id, component.id());
-    }    
+    }
+
+    void modified(entity_t component_id) {
+        ecs_modified_w_entity(m_world, m_id, component_id);
+    }        
 
     template <typename T>
     ref<T> get_ref() const {
