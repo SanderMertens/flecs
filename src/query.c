@@ -541,6 +541,7 @@ add_trait:
     table_data->table = table;
     table_data->references = NULL;
     table_data->columns = NULL;
+    table_data->sparse_columns = NULL;
     table_data->components = NULL;
     table_data->monitor = NULL;
 
@@ -585,6 +586,17 @@ add_trait:
                 &component, c, op, trait_index_offsets);
             
             table_data->columns[c] = index;
+
+            /* If the column is a case, we should only iterate the entities in
+             * the column for this specific case. Add a sparse column with the
+             * case id so we can find the correct entities when iterating */
+            if (ECS_HAS_ROLE(component, CASE)) {
+                ecs_sparse_column_t *sc = ecs_vector_add(
+                    &table_data->sparse_columns, ecs_sparse_column_t);
+                sc->signature_column_index = c;
+                sc->sw_case = component & ECS_ENTITY_MASK;
+                sc->sw_column = NULL;
+            }
         }
 
         /* Check if a the component is a reference. If 'entity' is set, the
@@ -1763,6 +1775,70 @@ int ecs_page_iter_next(
     return count == 0;
 }
 
+static
+int find_smallest_column(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_matched_table_t *matched_table,
+    ecs_vector_t *sparse_columns)
+{
+    ecs_sparse_column_t *sparse_column_array = 
+        ecs_vector_first(sparse_columns, ecs_sparse_column_t);
+    int32_t i, count = ecs_vector_count(sparse_columns);
+    int32_t min = INT_MAX, index = 0;
+
+    for (i = 0; i < count; i ++) {
+        /* The array with sparse queries for the matched table */
+        ecs_sparse_column_t *sparse_column = &sparse_column_array[i];
+
+        /* Pointer to the switch column struct of the table */
+        ecs_sw_column_t *sc = sparse_column->sw_column;
+
+        /* If the sparse column pointer hadn't been retrieved yet, do it now */
+        if (!sc) {
+            /* Get the table column index from the signature column index */
+            int32_t table_column_index =
+                 matched_table->columns[sparse_column->signature_column_index];
+
+            /* Translate the table column index to switch column index */
+            table_column_index -= table->sw_column_offset;
+            ecs_assert(table_column_index >= 1, ECS_INTERNAL_ERROR, NULL);
+
+            /* Get the sparse column */
+            ecs_data_t *data = ecs_table_get_data(world, table);
+            sc = sparse_column->sw_column = 
+                &data->sw_columns[table_column_index - 1];
+        }
+
+        /* Find the smallest column */
+        ecs_switch_t *sw = sc->data;
+        int32_t case_count = ecs_switch_case_count(sw, sparse_column->sw_case);
+        if (case_count < min) {
+            min = case_count;
+            index = i + 1;
+        }
+    }
+
+    return index;
+}
+
+static
+int sparse_column_next(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_matched_table_t *matched_table,
+    ecs_vector_t *sparse_columns,
+    ecs_query_iter_t *iter,
+    ecs_page_cursor_t *cur)
+{
+    if (!iter->sparse_smallest) {
+        iter->sparse_smallest = find_smallest_column(
+            world, table, matched_table, sparse_columns);
+    }
+
+    return 0;
+}
+
 /* Return next table */
 bool ecs_query_next(
     ecs_iter_t *it)
@@ -1792,6 +1868,7 @@ bool ecs_query_next(
         ecs_data_t *table_data = NULL;
         
         if (world_table) {
+            ecs_vector_t *sparse_columns = table->sparse_columns;
             table_data = ecs_table_get_data(world, world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
             it->table_columns = table_data->columns;
@@ -1804,10 +1881,19 @@ bool ecs_query_next(
                 cur.count = ecs_table_count(world_table);
             }
 
-            int ret = ecs_page_iter_next(piter, &cur);
-            if (ret < 0) {
-                return false;
-            } else if (ret > 0) {
+            if (cur.count) {
+                if (sparse_columns) {
+                    sparse_column_next(
+                        world, world_table, table, sparse_columns, iter, &cur);
+                }
+
+                int ret = ecs_page_iter_next(piter, &cur);
+                if (ret < 0) {
+                    return false;
+                } else if (ret > 0) {
+                    continue;
+                }
+            } else {
                 continue;
             }
 

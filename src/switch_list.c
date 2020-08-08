@@ -9,7 +9,11 @@ ecs_switch_header_t *get_header(
         return NULL;
     }
 
+    ecs_assert(value >= sw->min, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(value <= sw->max, ECS_INTERNAL_ERROR, NULL);
+
     uint64_t index = value - sw->min;
+
     return &sw->headers[index];
 }
 
@@ -231,6 +235,18 @@ ecs_vector_t* ecs_switch_values(
     const ecs_switch_t *sw)
 {
     return sw->values;
+}
+
+int32_t ecs_switch_case_count(
+    const ecs_switch_t *sw,
+    uint64_t value)
+{
+    ecs_switch_header_t *hdr = get_header(sw, value);
+    if (!hdr) {
+        return 0;
+    }
+
+    return hdr->count;
 }
 
 int32_t ecs_switch_first(

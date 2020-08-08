@@ -163,10 +163,18 @@ struct ecs_table_t {
     int32_t sw_column_offset;
 };
 
+/* Sparse query column */
+typedef struct ecs_sparse_column_t {
+    ecs_sw_column_t *sw_column;
+    ecs_entity_t sw_case; 
+    int32_t signature_column_index;
+} ecs_sparse_column_t;
+
 /** Type containing data for a table matched with a query. */
 typedef struct ecs_matched_table_t {
     ecs_table_t *table;            /**< Reference to the table */
     int32_t *columns;              /**< Mapping of system columns to table */
+    ecs_vector_t *sparse_columns;  /**< Column ids of sparse columns */
     ecs_entity_t *components;      /**< Actual components of system columns */
     ecs_vector_t *references;      /**< Reference columns and cached pointers */
     int32_t *monitor;              /**< Used to monitor table for changes */

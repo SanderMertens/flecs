@@ -66,6 +66,11 @@ ecs_vector_t* ecs_switch_values(
     const ecs_switch_t *sw);    
 
 FLECS_EXPORT
+int32_t ecs_switch_case_count(
+    const ecs_switch_t *sw,
+    uint64_t value);
+
+FLECS_EXPORT
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value);

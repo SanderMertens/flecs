@@ -62,6 +62,7 @@ typedef struct ecs_entities_t {
 typedef struct ecs_page_cursor_t {
     int32_t first;
     int32_t count;
+    int32_t sparse_row;
 } ecs_page_cursor_t;
 
 typedef struct ecs_page_iter_t {
@@ -89,6 +90,7 @@ typedef struct ecs_query_iter_t {
     ecs_query_t *query;
     ecs_page_iter_t page_iter;
     int32_t index;
+    int32_t sparse_smallest;
 } ecs_query_iter_t;  
 
 /** Query-iterator specific data */
