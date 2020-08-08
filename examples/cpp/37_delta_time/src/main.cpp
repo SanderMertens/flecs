@@ -15,9 +15,6 @@ struct Velocity {
 int main(int argc, char *argv[]) {
     flecs::world world(argc, argv);
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-
     flecs::system<Position, Velocity>(world)
         .each([](flecs::entity e, Position& p, Velocity& v) {
             // Use delta_time to update the entity proportionally to the amount 

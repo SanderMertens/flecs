@@ -16,9 +16,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-
     auto Movable = flecs::type(world, "Movable")
         .add<Position>()
         .add<Velocity>();

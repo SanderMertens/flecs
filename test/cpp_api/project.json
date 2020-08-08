@@ -148,6 +148,7 @@
                 "remove_trait",
                 "module",
                 "system",
+                "system_optional",
                 "query",
                 "implicit_name"
             ]

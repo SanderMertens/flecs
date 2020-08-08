@@ -11,9 +11,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    /* Register components */
-    flecs::component<Position>(world, "Position");
-
     /* Create root prefab */
     auto RootPrefab = flecs::prefab(world, "RootPrefab")
         .set<Position>({10, 20});

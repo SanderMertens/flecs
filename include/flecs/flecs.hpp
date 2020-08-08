@@ -1618,6 +1618,15 @@ private:
 
 namespace internal
 {
+    struct name_util {
+        static void trim_name(char *typeName) {
+            size_t len = strlen(typeName);
+            if (typeName[len - 1] == '*') {
+                typeName[len - 2] = '\0';
+            }
+        }
+    };
+
 #if defined(__clang__)
   static const unsigned int FRONT_SIZE = sizeof("static const char* flecs::internal::name_helper<") - 1u;
   static const unsigned int BACK_SIZE = sizeof(">::name() [T = ]") - 1u;
@@ -1629,6 +1638,7 @@ namespace internal
       static const size_t size = (sizeof(__PRETTY_FUNCTION__) - FRONT_SIZE - BACK_SIZE) / 2 + 1u;
       static char typeName[size] = {};
       memcpy(typeName, __PRETTY_FUNCTION__ + FRONT_SIZE, size - 1u);
+      name_util::trim_name(typeName);
       return typeName;
     }
   };    
@@ -1643,6 +1653,7 @@ namespace internal
       static const size_t size = sizeof(__PRETTY_FUNCTION__) - FRONT_SIZE - BACK_SIZE;
       static char typeName[size] = {};
       memcpy(typeName, __PRETTY_FUNCTION__ + FRONT_SIZE, size - 1u);
+      name_util::trim_name(typeName);
       return typeName;
     }
   };
@@ -1657,6 +1668,7 @@ namespace internal
       static const size_t size = sizeof(__FUNCTION__) - FRONT_SIZE - BACK_SIZE;
       static char typeName[size] = {};
       memcpy(typeName, __FUNCTION__ + FRONT_SIZE, size - 1u);
+      name_util::trim_name(typeName);
       return typeName;
     }
   };
@@ -1824,46 +1836,40 @@ void component_move(
 }
 
 template <typename T>
-class pod_component : public entity {
-public:
-    pod_component(const flecs::world& world, const char *name = nullptr) : 
-        entity(world, get_name(name), true) 
-    {
-        world_t *world_ptr = world.c_ptr();
-        ecs_new_component(world_ptr, this->m_id, nullptr, sizeof(T), alignof(T));
-        component_info<T>::init(world_ptr, this->m_id);
-        component_info<const T>::init(world_ptr, this->m_id);
-        component_info<T*>::init(world_ptr, this->m_id);
-        component_info<T&>::init(world_ptr, this->m_id); 
+flecs::entity pod_component(flecs::world& world, const char *name = nullptr) {
+    if (!name) {
+        name = internal::name_helper<T>::name();
     }
 
-private:
-    static const char* get_name(const char *name) {
-        if (name) {
-            return name;
-        }
-        return internal::name_helper<T>::name();
-    }
-};
+    flecs::entity result = entity(world, name, true);
+
+    world_t *world_ptr = world.c_ptr();
+    ecs_new_component(world_ptr, result.id(), nullptr, sizeof(T), alignof(T));
+    component_info<T>::init(world_ptr, result.id());
+    component_info<const T>::init(world_ptr, result.id());
+    component_info<T*>::init(world_ptr, result.id());
+    component_info<T&>::init(world_ptr, result.id()); 
+    
+    return result;
+}
 
 template <typename T>
-class component : public pod_component<T> {
-public:
-    component(const flecs::world& world, const char *name = nullptr) 
-        : pod_component<T>(world, name) 
-    { 
-        EcsComponentLifecycle cl{};
-        cl.ctor = component_ctor<T>;
-        cl.dtor = component_dtor<T>;
-        cl.copy = component_copy<T>;
-        cl.move = component_move<T>;
-        
-        ecs_set_component_actions_w_entity(
-            world.c_ptr(), 
-            component_info<T>::id(world.c_ptr()), 
-            &cl);
-    }
-};
+flecs::entity component(flecs::world& world, const char *name = nullptr) {
+    flecs::entity result = pod_component<T>(world, name);
+
+    EcsComponentLifecycle cl{};
+    cl.ctor = component_ctor<T>;
+    cl.dtor = component_dtor<T>;
+    cl.copy = component_copy<T>;
+    cl.move = component_move<T>;
+    
+    ecs_set_component_actions_w_entity(
+        world.c_ptr(), 
+        component_info<T>::id(world.c_ptr()), 
+        &cl);
+
+    return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1871,12 +1877,11 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class module final : public pod_component<T> {
-public:
-    module(flecs::world& world, const char *name = nullptr) : pod_component<T>(world, name) { 
-        ecs_set_scope(this->m_world, this->m_id);
-    }
-};
+flecs::entity module(flecs::world& world, const char *name = nullptr) {
+    flecs::entity result = pod_component<T>(world, name);
+    ecs_set_scope(world.c_ptr(), result.id());
+    return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

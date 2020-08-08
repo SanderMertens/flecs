@@ -51,9 +51,6 @@ int main(int argc, char *argv[]) {
     {
         flecs::world world(argc, argv);
 
-        flecs::component<Position>(world, "Position");
-        flecs::component<Velocity>(world, "Velocity");
-
         flecs::entity(world, "E1")
             .set<Position>({1, 2})
             .set<Velocity>({1, 1});

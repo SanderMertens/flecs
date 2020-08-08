@@ -10,9 +10,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    /* Register component */
-    flecs::component<Mass>(world, "Mass");
-
     /* Create base entity */
     auto base = flecs::entity(world)
         .set<Mass>({10});

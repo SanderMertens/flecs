@@ -124,6 +124,7 @@ void ImplicitComponents_add_trait(void);
 void ImplicitComponents_remove_trait(void);
 void ImplicitComponents_module(void);
 void ImplicitComponents_system(void);
+void ImplicitComponents_system_optional(void);
 void ImplicitComponents_query(void);
 void ImplicitComponents_implicit_name(void);
 
@@ -544,6 +545,10 @@ bake_test_case ImplicitComponents_testcases[] = {
         ImplicitComponents_system
     },
     {
+        "system_optional",
+        ImplicitComponents_system_optional
+    },
+    {
         "query",
         ImplicitComponents_query
     },
@@ -621,7 +626,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        11,
+        12,
         ImplicitComponents_testcases
     }
 };

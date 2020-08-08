@@ -11,8 +11,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    flecs::component<Message>(world, "Message");
-
     flecs::system<Message>(world)
         .each([](flecs::entity e, Message& messages) {
             std::cout << messages.text << std::endl;

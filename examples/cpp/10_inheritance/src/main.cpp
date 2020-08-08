@@ -47,11 +47,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    /* Register components */
-    flecs::component<Position>(world, "Position");
-    flecs::component<Force>(world, "Force");
-    flecs::component<Mass>(world, "Mass");
-
     /* Define a system called Move that is executed every frame, and subscribes
      * for the 'Position', 'Force' and 'Mass' components. The Mass component
      * will be either shared or owned. */

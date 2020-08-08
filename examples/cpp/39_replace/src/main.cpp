@@ -27,8 +27,6 @@ int main(int argc, char *argv[]) {
     // or for starting the admin dashboard (see flecs.h for details).
     flecs::world world(argc, argv);
 
-    flecs::component<Counter>(world, "Counter");
-
     // System that is invoked when Counter is added
     flecs::system<Counter>(world).kind(flecs::OnAdd).each(
         [](flecs::entity e, Counter&) {

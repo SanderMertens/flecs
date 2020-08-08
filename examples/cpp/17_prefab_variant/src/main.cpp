@@ -16,10 +16,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    /* Register components */
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-
     /* Create a prefab. Prefabs are entities that are solely intended as
      * templates for other entities. Prefabs are by default not matched with
      * systems. In that way they are similar to regular entities with the
