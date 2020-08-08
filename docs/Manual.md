@@ -77,6 +77,40 @@ A module groups components, systems and more into reusable units that can be imp
 ### Stage
 A stage is a temporary storage where structural changes to entities (new, add, remove, delete) are stored while an application is iterating. Flecs systems access raw C arrays, and this ensures that these arrays are not modified as the application is iterating over them. Data in a stage is merged at least once per frame, or more when necessary.
 
+## Building
+The easiest way to add Flecs to a project is to add [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) to your source code. These files can be added to both C and C++ projects (the C++ API is embedded in flecs.h). Alternatively you can also build Flecs as a library by using the cmake, meson, bazel or bake buildfiles.
+
+### Custom builds
+Whether you're looking for a minimal ECS library or a full-fledged system runtime, customizable builds let you remove Flecs features you don't need. By default all features are included. To customize a build, follow these steps:
+
+- define `FLECS_CUSTOM_BUILD`. This removes all optional features from the build.
+- define constants for the features you want to include (see below)
+- remove the files of the features you don't need
+
+Features are split up in addons and modules. Addons implement a specific Flecs feature, like snapshots. Modules are like addons but register their own components and systems, and therefore need to be imported.
+
+#### Addons
+Addons are located in the `src/addons` and `include/addons` folders. The following addons are available:
+
+Addon         | Description                                      | Constant            |
+--------------|--------------------------------------------------|---------------------|
+Bulk          | Efficient operations that run on many entities   | FLECS_BULK          | 
+Dbg           | Debug API for inspection of internals            | FLECS_DBG           |
+Module        | Organize components and systems in modules       | FLECS_MODULE        | 
+Queue         | A queue data structure                           | FLECS_QUEUE         |
+Reader_writer | Serialize components to series of bytes          | FLECS_READER_WRITER | 
+Snapshot      | Take a snapshot that can be restored  afterwards | FLECS_SNAPSHOT      |
+
+#### Builtin modules
+Modules are located in the `src/modules` and `include/modules` folders. The following modules are available:
+
+Module        | Description                                      | Constant            |
+--------------|--------------------------------------------------|---------------------|
+System        | Support for systems, monitors and triggers       | FLECS_SYSTEM        | 
+Pipeline      | Run systems each frame and/or multithreaded      | FLECS_PIPELINE      |
+Timer         | Run systems at intervals, timeouts or fixed rate | FLECS_TIMER         | 
+Stats         | Collect statistics on entities and systems       | FLECS_STATS         |
+
 ## API design
 
 ### Naming conventions
