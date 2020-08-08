@@ -136,6 +136,21 @@
                 "import",
                 "lookup_from_scope"
             ]
+        }, {
+            "id": "ImplicitComponents",
+            "testcases": [
+                "add",
+                "remove",
+                "has",
+                "set",
+                "get",
+                "add_trait",
+                "remove_trait",
+                "module",
+                "system",
+                "query",
+                "implicit_name"
+            ]
         }]
     }
 }

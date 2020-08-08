@@ -1636,6 +1636,10 @@ const char* ecs_strerror(
         return "component registered twice with a different name";
     case ECS_TYPE_CONSTRAINT_VIOLATION:
         return "type constraint violated";
+    case ECS_COMPONENT_NOT_REGISTERED:
+        return "component is not registered";
+    case ECS_INCONSISTENT_COMPONENT_ID:
+        return "component registered twice with a different id";        
     }
 
     return "unknown error code";
