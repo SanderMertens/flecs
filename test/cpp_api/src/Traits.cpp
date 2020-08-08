@@ -172,7 +172,7 @@ void Traits_system_2_trait_instances() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
-    flecs::component<Position>(world, "Velocity");
+    flecs::component<Velocity>(world, "Velocity");
     flecs::component<Trait>(world, "Trait");
 
     flecs::entity(world)

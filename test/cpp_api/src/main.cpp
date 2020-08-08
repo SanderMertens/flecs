@@ -114,6 +114,19 @@ void Refs_ref_before_set(void);
 void Module_import(void);
 void Module_lookup_from_scope(void);
 
+// Testsuite 'ImplicitComponents'
+void ImplicitComponents_add(void);
+void ImplicitComponents_remove(void);
+void ImplicitComponents_has(void);
+void ImplicitComponents_set(void);
+void ImplicitComponents_get(void);
+void ImplicitComponents_add_trait(void);
+void ImplicitComponents_remove_trait(void);
+void ImplicitComponents_module(void);
+void ImplicitComponents_system(void);
+void ImplicitComponents_query(void);
+void ImplicitComponents_implicit_name(void);
+
 bake_test_case Entity_testcases[] = {
     {
         "new",
@@ -493,6 +506,53 @@ bake_test_case Module_testcases[] = {
     }
 };
 
+bake_test_case ImplicitComponents_testcases[] = {
+    {
+        "add",
+        ImplicitComponents_add
+    },
+    {
+        "remove",
+        ImplicitComponents_remove
+    },
+    {
+        "has",
+        ImplicitComponents_has
+    },
+    {
+        "set",
+        ImplicitComponents_set
+    },
+    {
+        "get",
+        ImplicitComponents_get
+    },
+    {
+        "add_trait",
+        ImplicitComponents_add_trait
+    },
+    {
+        "remove_trait",
+        ImplicitComponents_remove_trait
+    },
+    {
+        "module",
+        ImplicitComponents_module
+    },
+    {
+        "system",
+        ImplicitComponents_system
+    },
+    {
+        "query",
+        ImplicitComponents_query
+    },
+    {
+        "implicit_name",
+        ImplicitComponents_implicit_name
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -556,10 +616,17 @@ static bake_test_suite suites[] = {
         NULL,
         2,
         Module_testcases
+    },
+    {
+        "ImplicitComponents",
+        NULL,
+        NULL,
+        11,
+        ImplicitComponents_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 9);
+    return bake_test_run("cpp_api", argc, argv, suites, 10);
 }

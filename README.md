@@ -48,9 +48,6 @@ struct Speed {
 int main(int argc, char *argv[]) {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Speed>(world, "Speed");
-
     flecs::system<Position, Speed>(world)
         .each([](flecs::entity e, Position& p, Speed& s) {
             p.x += s.value * e.delta_time();
