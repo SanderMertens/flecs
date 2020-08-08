@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
      * role the system would look for entities that added ExpiryTimer as usual,
      * but with the role the system will be matched against every component to
      * which the trait has been applied. */
-    flecs::system<>(world).signature("TRAIT | ExpiryTimer")
+    flecs::system<>(world, nullptr, "TRAIT | ExpiryTimer")
         .action([](flecs::iter it) {
             /* First, get the trait component */
             flecs::column<ExpiryTimer> et(it, 1);

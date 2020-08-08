@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     /* The 'Move' is marked as on_demand which means Flecs will only
      * run this system if there is interest in any of its [out] columns. In this
      * case the system will only be ran if there is interest in Position. */
-    flecs::system<>(world).signature("[out] Position, Velocity").on_demand()
+    flecs::system<>(world, nullptr, "[out] Position, Velocity").on_demand()
         .action([](flecs::iter& it){
             flecs::column<Position> p(it, 1);
             flecs::column<Velocity> v(it, 2);
