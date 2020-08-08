@@ -331,6 +331,8 @@ namespace flecs {
 template <typename T>
 class vector {
 public:
+    explicit vector(ecs_vector_t *vector) : m_vector( vector ) { }
+
     vector(int32_t count = 0) : m_vector( nullptr ) { 
         if (count) {
             init(count);

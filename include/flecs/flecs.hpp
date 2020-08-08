@@ -487,7 +487,13 @@ private:
     /* Get column, check if correct type is used */
     template <typename T>
     flecs::column<T> get_column(int32_t column_id) const {
-        ecs_assert(ecs_column_entity(m_iter, column_id) == component_info<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
+#ifndef NDEBUG
+        ecs_entity_t column_entity = ecs_column_entity(m_iter, column_id);
+        ecs_assert(column_entity & ECS_TRAIT || 
+            column_entity == component_info<T>::s_entity, 
+            ECS_COLUMN_TYPE_MISMATCH, NULL);
+#endif
+
         int32_t count;
         bool is_shared = !ecs_is_owned(m_iter, column_id);
 
@@ -1230,6 +1236,14 @@ public:
         return m_id;
     }
 
+    flecs::entity lo() {
+        return flecs::entity(m_world, ecs_entity_t_lo(m_id));
+    }
+
+    flecs::entity hi() {
+        return flecs::entity(m_world, ecs_entity_t_hi(m_id));
+    }    
+
     std::string name() const {
         const EcsName *name = static_cast<const EcsName*>(
             ecs_get_w_entity(m_world, m_id, ecs_entity(EcsName)));
@@ -1539,6 +1553,10 @@ public:
 
     void disable() {
         ecs_enable(m_world, m_id, false);
+    }
+
+    flecs::vector<entity_t> vector() {
+        return flecs::vector<entity_t>( (ecs_vector_t*)m_normalized );
     }
 
 private:
@@ -2145,9 +2163,10 @@ private:
 template<typename ... Components>
 class system final : public entity {
 public:
-    system(const flecs::world& world, const char *name = nullptr)
+    system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr)
         : m_kind(static_cast<ecs_entity_t>(OnUpdate))
         , m_name(name) 
+        , m_signature(signature)
         , m_period(0.0)
         , m_on_demand(false)
         , m_hidden(false)
@@ -2157,6 +2176,7 @@ public:
 
     system& signature(const char *signature) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(!m_signature, ECS_INVALID_PARAMETER, NULL);
         m_signature = signature;
         return *this;
     }

@@ -137,3 +137,65 @@ void Traits_set_tag_trait() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
+
+void Traits_system_1_trait_instance() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    flecs::component<Trait>(world, "Trait");
+
+    flecs::entity(world)
+        .set_trait<Position, Trait>({10});
+
+    int invoke_count = 0;
+    int entity_count = 0;
+    int trait_value = 0;
+
+    flecs::system<>(world, nullptr, "TRAIT | Trait")
+        .action([&](flecs::iter it) {
+            flecs::column<Trait> tr(it, 1);
+            invoke_count ++;            
+            for (auto i : it) {
+                entity_count ++;
+                trait_value = tr[i].value;
+            }
+        });
+
+    world.progress();
+
+    test_int(invoke_count, 1);
+    test_int(entity_count, 1);
+    test_int(trait_value, 10);
+}
+
+void Traits_system_2_trait_instances() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    flecs::component<Position>(world, "Velocity");
+    flecs::component<Trait>(world, "Trait");
+
+    flecs::entity(world)
+        .set_trait<Position, Trait>({10})
+        .set_trait<Velocity, Trait>({20});
+
+    int invoke_count = 0;
+    int entity_count = 0;
+    int trait_value = 0;
+
+    flecs::system<>(world, nullptr, "TRAIT | Trait")
+        .action([&](flecs::iter it) {
+            flecs::column<Trait> tr(it, 1);
+            invoke_count ++;            
+            for (auto i : it) {
+                entity_count ++;
+                trait_value += tr[i].value;
+            }
+        });
+
+    world.progress();
+
+    test_int(invoke_count, 2);
+    test_int(entity_count, 2);
+    test_int(trait_value, 30);
+}

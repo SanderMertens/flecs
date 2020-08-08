@@ -49,7 +49,9 @@
                 "remove_tag_trait",
                 "remove_tag_trait_to_tag",                
                 "set_component_trait",
-                "set_tag_trait"
+                "set_tag_trait",
+                "system_1_trait_instance",
+                "system_2_trait_instances"
             ]
         }, {
             "id": "Paths",

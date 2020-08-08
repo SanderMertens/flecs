@@ -42,6 +42,8 @@ void Traits_remove_tag_trait(void);
 void Traits_remove_tag_trait_to_tag(void);
 void Traits_set_component_trait(void);
 void Traits_set_tag_trait(void);
+void Traits_system_1_trait_instance(void);
+void Traits_system_2_trait_instances(void);
 
 // Testsuite 'Paths'
 void Paths_name(void);
@@ -239,6 +241,14 @@ bake_test_case Traits_testcases[] = {
     {
         "set_tag_trait",
         Traits_set_tag_trait
+    },
+    {
+        "system_1_trait_instance",
+        Traits_system_1_trait_instance
+    },
+    {
+        "system_2_trait_instances",
+        Traits_system_2_trait_instances
     }
 };
 
@@ -495,7 +505,7 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        8,
+        10,
         Traits_testcases
     },
     {
