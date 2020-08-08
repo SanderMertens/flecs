@@ -15,9 +15,6 @@ struct Velocity {
 int main(int argc, char *argv[]) {
     flecs::world world(argc, argv);
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-
     // Create 3 entities with Position
     flecs::entity_range(world, 3)
         .add<Position>();

@@ -16,10 +16,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    /* Register components */
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-
     /* Create entity with default values for Position and Velocity. Add the
      * EcsDisabled tag to ensure the entity will not be matched by systems,
      * since it is only used to provide initial component values. */

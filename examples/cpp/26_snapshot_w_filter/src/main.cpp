@@ -21,10 +21,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-    flecs::component<Mass>(world, "Mass");
-
     flecs::system<Position, Velocity>(world)
         .action([](const flecs::iter& it, 
             flecs::column<Position> p, 

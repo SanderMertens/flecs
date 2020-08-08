@@ -19,10 +19,6 @@ struct Mass {
 int main(int argc, char *argv[]) {
     flecs::world world(argc, argv);
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-    flecs::component<Mass>(world, "Mass");
-
     // Create 3 entities with Position and Mass
     flecs::entity_range(world, 3)
         .add<Position>()

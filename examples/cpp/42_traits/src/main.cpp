@@ -25,10 +25,8 @@ struct ExpiryTimer {
 int main(int argc, char *argv[]) {
     flecs::world world(argc, argv);
 
-    /* Register components and trait as a regular component */
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-    flecs::component<ExpiryTimer>(world, "ExpiryTimer");
+    /* Register trait component so that the system can resolve it by name */
+    flecs::component<ExpiryTimer>(world);
 
     /* Create a system that matches ExpiryTimer as a trait. Without the TRAIT
      * role the system would look for entities that added ExpiryTimer as usual,

@@ -16,10 +16,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    /* Register components */
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-
     /* Create a prefab with a child entity. When this prefab is instantiated, 
      * the child will be instantiated too as a child of the instance.  */
     auto Root = flecs::prefab(world, "Root")

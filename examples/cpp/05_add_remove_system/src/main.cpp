@@ -24,8 +24,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    flecs::component<Position>(world, "Position");
-
     /* Register two systems that are executed when Position is added or removed */
     flecs::system<Position>(world).kind(flecs::OnAdd).each(AddPosition);
     flecs::system<Position>(world).kind(flecs::OnRemove).each(RemovePosition);

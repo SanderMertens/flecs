@@ -98,7 +98,7 @@ void ImplicitComponents_remove_trait() {
 void ImplicitComponents_module() {
     flecs::world world;
 
-    flecs::module<Position> module(world);
+    flecs::module<Position>(world);
 
     auto position = world.lookup("Position");
     test_assert(position.id() != 0);
@@ -116,6 +116,26 @@ void ImplicitComponents_system() {
 
     auto velocity = world.lookup("Velocity");
     test_assert(velocity.id() != 0);    
+}
+
+void ImplicitComponents_system_optional() {
+    flecs::world world;
+
+    flecs::system<Position*, Velocity*>(world)
+        .each([](flecs::entity e, Position* p, Velocity* v) {
+        });
+
+    auto position = world.lookup("Position");
+    test_assert(position.id() != 0);
+
+    auto velocity = world.lookup("Velocity");
+    test_assert(velocity.id() != 0);  
+
+    auto pcomp = flecs::component<Position>(world);
+    test_assert(pcomp == position);
+
+    auto vcomp = flecs::component<Velocity>(world);
+    test_assert(vcomp == velocity);    
 }
 
 void ImplicitComponents_query() {

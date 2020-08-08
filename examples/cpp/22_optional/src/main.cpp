@@ -18,11 +18,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
-    /* Register components */
-    flecs::component<Health>(world, "Health");
-    flecs::component<Stamina>(world, "Stamina");
-    flecs::component<Mana>(world, "Mana");
-
     /* Create system with three optional columns. Pointer template arguments are
      * converted to components with the optional operator. 
      *
