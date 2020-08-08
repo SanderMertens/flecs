@@ -1622,8 +1622,11 @@ namespace internal
         static void trim_name(char *typeName) {
             size_t len = strlen(typeName);
             if (typeName[len - 1] == '*') {
-                typeName[len - 2] = '\0';
-            }
+                typeName[len - 1] = '\0';
+                if (typeName[len - 2] == ' ') {
+                    typeName[len - 2] = '\0';
+                }   
+            }           
         }
     };
 
