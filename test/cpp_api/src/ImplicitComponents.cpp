@@ -67,10 +67,10 @@ void ImplicitComponents_get() {
 void ImplicitComponents_add_trait() {
     flecs::world world;
 
-    auto e = flecs::entity(world).add_trait<Position, Trait>();
+    auto e = flecs::entity(world).add_trait<Trait, Position>();
 
-    test_str(e.type().str().c_str(), "TRAIT|Position<Trait");
-    test_assert((e.has_trait<Position, Trait>()));
+    test_str(e.type().str().c_str(), "TRAIT|Trait>Position");
+    test_assert((e.has_trait<Trait, Position>()));
 
     auto position = world.lookup("Position");
     test_assert(position.id() != 0);

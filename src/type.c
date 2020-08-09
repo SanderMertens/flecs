@@ -478,13 +478,13 @@ char* ecs_type_str(
             ecs_os_memcpy(dst, "NOT|", len);
         }
 
-        append_name(world, &chbuf, h);
-
         if (trait) {
-            char *ch = ecs_vector_add(&chbuf, char);
-            *ch = '<';
             append_name(world, &chbuf, trait);
+            char *ch = ecs_vector_add(&chbuf, char);
+            *ch = '>';
         }
+
+        append_name(world, &chbuf, h);
     }
 
     *(char*)ecs_vector_add(&chbuf, char) = '\0';
