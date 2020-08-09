@@ -6973,7 +6973,8 @@ public:
      */
     template <typename T>
     int count() const {
-        return ecs_count_type(m_world, component_info<T>::s_type);
+        return ecs_count_type(
+            m_world, component_info<T>::type(m_world));
     }
 
     /** Count entities matching a filter.
@@ -7757,13 +7758,40 @@ private:
 //// Register component, provide global access to component handles / metadata
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Trick to obtain typename from type, as described 
- * by https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
+/* Trick to obtain typename from type, as described here
+ * https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
  */
 
 namespace internal
 {
-#ifdef __GNUC__
+    struct name_util {
+        static void trim_name(char *typeName) {
+            size_t len = strlen(typeName);
+            if (typeName[len - 1] == '*') {
+                typeName[len - 1] = '\0';
+                if (typeName[len - 2] == ' ') {
+                    typeName[len - 2] = '\0';
+                }   
+            }           
+        }
+    };
+
+#if defined(__clang__)
+  static const unsigned int FRONT_SIZE = sizeof("static const char* flecs::internal::name_helper<") - 1u;
+  static const unsigned int BACK_SIZE = sizeof(">::name() [T = ]") - 1u;
+ 
+  template <typename T>
+  struct name_helper
+  {
+    static const char* name(void) {
+      static const size_t size = (sizeof(__PRETTY_FUNCTION__) - FRONT_SIZE - BACK_SIZE) / 2 + 1u;
+      static char typeName[size] = {};
+      memcpy(typeName, __PRETTY_FUNCTION__ + FRONT_SIZE, size - 1u);
+      name_util::trim_name(typeName);
+      return typeName;
+    }
+  };    
+#elif defined(__GNUC__)
   static const unsigned int FRONT_SIZE = sizeof("static const char* flecs::internal::name_helper<T>::name() [with T = ") - 1u;
   static const unsigned int BACK_SIZE = sizeof("]") - 1u;
  
@@ -7774,10 +7802,11 @@ namespace internal
       static const size_t size = sizeof(__PRETTY_FUNCTION__) - FRONT_SIZE - BACK_SIZE;
       static char typeName[size] = {};
       memcpy(typeName, __PRETTY_FUNCTION__ + FRONT_SIZE, size - 1u);
+      name_util::trim_name(typeName);
       return typeName;
     }
   };
-#else
+#elif defined(_WIN32)
   static const unsigned int FRONT_SIZE = sizeof("flecs::internal::name_helper<") - 1u;
   static const unsigned int BACK_SIZE = sizeof(">::name") - 1u;
  
@@ -7788,9 +7817,12 @@ namespace internal
       static const size_t size = sizeof(__FUNCTION__) - FRONT_SIZE - BACK_SIZE;
       static char typeName[size] = {};
       memcpy(typeName, __FUNCTION__ + FRONT_SIZE, size - 1u);
+      name_util::trim_name(typeName);
       return typeName;
     }
   };
+#elif
+#error "implicit component registration not supported"
 #endif
 }
 
@@ -7842,7 +7874,16 @@ public:
         return s_name;
     }
 
-    static type_t type() {
+    static type_t type(world_t *world = nullptr) {
+        if (!s_id) {
+            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
+                internal::name_helper<T>::name());
+
+            id(world);
+        }
+
+        ecs_assert(s_type != nullptr, ECS_INTERNAL_ERROR, NULL);
+
         return s_type;
     }
 
@@ -7944,38 +7985,40 @@ void component_move(
 }
 
 template <typename T>
-class pod_component : public entity {
-public:
-    pod_component(const flecs::world& world, const char *name) : 
-        entity(world, name, true) 
-    {
-        world_t *world_ptr = world.c_ptr();
-        ecs_new_component(world_ptr, this->m_id, nullptr, sizeof(T), alignof(T));
-        component_info<T>::init(world_ptr, this->m_id);
-        component_info<const T>::init(world_ptr, this->m_id);
-        component_info<T*>::init(world_ptr, this->m_id);
-        component_info<T&>::init(world_ptr, this->m_id); 
+flecs::entity pod_component(flecs::world& world, const char *name = nullptr) {
+    if (!name) {
+        name = internal::name_helper<T>::name();
     }
-};
+
+    flecs::entity result = entity(world, name, true);
+
+    world_t *world_ptr = world.c_ptr();
+    ecs_new_component(world_ptr, result.id(), nullptr, sizeof(T), alignof(T));
+    component_info<T>::init(world_ptr, result.id());
+    component_info<const T>::init(world_ptr, result.id());
+    component_info<T*>::init(world_ptr, result.id());
+    component_info<T&>::init(world_ptr, result.id()); 
+    
+    return result;
+}
 
 template <typename T>
-class component : public pod_component<T> {
-public:
-    component(const flecs::world& world, const char *name) 
-        : pod_component<T>(world, name) 
-    { 
-        EcsComponentLifecycle cl{};
-        cl.ctor = component_ctor<T>;
-        cl.dtor = component_dtor<T>;
-        cl.copy = component_copy<T>;
-        cl.move = component_move<T>;
-        
-        ecs_set_component_actions_w_entity(
-            world.c_ptr(), 
-            component_info<T>::id(world.c_ptr()), 
-            &cl);
-    }
-};
+flecs::entity component(flecs::world& world, const char *name = nullptr) {
+    flecs::entity result = pod_component<T>(world, name);
+
+    EcsComponentLifecycle cl{};
+    cl.ctor = component_ctor<T>;
+    cl.dtor = component_dtor<T>;
+    cl.copy = component_copy<T>;
+    cl.move = component_move<T>;
+    
+    ecs_set_component_actions_w_entity(
+        world.c_ptr(), 
+        component_info<T>::id(world.c_ptr()), 
+        &cl);
+
+    return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7983,12 +8026,11 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class module final : public pod_component<T> {
-public:
-    module(flecs::world& world, const char *name) : pod_component<T>(world, name) { 
-        ecs_set_scope(this->m_world, this->m_id);
-    }
-};
+flecs::entity module(flecs::world& world, const char *name = nullptr) {
+    flecs::entity result = pod_component<T>(world, name);
+    ecs_set_scope(world.c_ptr(), result.id());
+    return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9033,12 +9075,14 @@ inline void world::delete_entities(flecs::filter filter) const {
 
 template <typename T>
 inline void world::add() const {
-    ecs_bulk_add_remove_type(m_world, component_info<T>::s_type, nullptr, nullptr);
+    ecs_bulk_add_remove_type(
+        m_world, component_info<T>::type(m_world), nullptr, nullptr);
 }
 
 template <typename T>
 inline void world::add(flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, component_info<T>::s_type, nullptr, filter.c_ptr());
+    ecs_bulk_add_remove_type(
+        m_world, component_info<T>::type(m_world), nullptr, filter.c_ptr());
 }
 
 inline void world::add(type type) const {
@@ -9059,12 +9103,14 @@ inline void world::add(entity entity, flecs::filter filter) const {
 
 template <typename T>
 inline void world::remove() const {
-    ecs_bulk_add_remove_type(m_world, nullptr, component_info<T>::s_type, nullptr);
+    ecs_bulk_add_remove_type(
+        m_world, nullptr, component_info<T>::type(m_world), nullptr);
 }
 
 template <typename T>
 inline void world::remove(flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, component_info<T>::s_type, filter.c_ptr());
+    ecs_bulk_add_remove_type(
+        m_world, nullptr, component_info<T>::type(m_world), filter.c_ptr());
 }
 
 inline void world::remove(type type) const {

@@ -107,6 +107,7 @@ static const ecs_entity_t Singleton = EcsSingleton;
 /** Builtin roles */
 static const ecs_entity_t Childof = ECS_CHILDOF;
 static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
+static const ecs_entity_t Trait = ECS_TRAIT;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1269,7 +1270,24 @@ public:
 
     flecs::entity hi() {
         return flecs::entity(m_world, ecs_entity_t_hi(m_id));
-    }    
+    }
+
+    static flecs::entity comb(flecs::entity a, flecs::entity b) {
+        return flecs::entity(a.world(), 
+            ecs_entity_t_comb(a.id(), b.id()));
+    }
+
+    flecs::entity add_role(entity_t role) {
+        return flecs::entity(m_world, m_id | role);
+    }
+
+    flecs::entity remove_role() {
+        return flecs::entity(m_world, m_id & ECS_ENTITY_MASK);
+    }
+
+    bool has_role(entity_t role) {        
+        return m_id & role;
+    }
 
     std::string name() const {
         const EcsName *name = static_cast<const EcsName*>(
