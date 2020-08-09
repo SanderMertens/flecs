@@ -1831,12 +1831,66 @@ int sparse_column_next(
     ecs_query_iter_t *iter,
     ecs_page_cursor_t *cur)
 {
-    if (!iter->sparse_smallest) {
-        iter->sparse_smallest = find_smallest_column(
+    bool first_iteration = false;
+    int32_t sparse_smallest;
+
+    if (!(sparse_smallest = iter->sparse_smallest)) {
+        sparse_smallest = iter->sparse_smallest = find_smallest_column(
             world, table, matched_table, sparse_columns);
+        first_iteration = true;
     }
 
+    sparse_smallest -= 1;
+
+    ecs_sparse_column_t *columns = ecs_vector_first(
+        sparse_columns, ecs_sparse_column_t);
+    ecs_sparse_column_t *column = &columns[sparse_smallest];
+    ecs_switch_t *sw, *sw_smallest = column->sw_column->data;
+    ecs_entity_t case_smallest = column->sw_case;
+
+    /* Find next entity to iterate in sparse column */
+    int32_t first;
+    if (first_iteration) {
+        first = ecs_switch_first(sw_smallest, case_smallest);
+    } else {
+        first = ecs_switch_next(sw_smallest, iter->sparse_first);
+        if (first == -1) {
+            goto done;
+        }
+    }
+
+    /* Check if entity matches with other sparse columns, if any */
+    int32_t i, count = ecs_vector_count(sparse_columns);
+    do {
+        for (i = 0; i < count; i ++) {
+            if (i == sparse_smallest) {
+                /* Already validated this one */
+                continue;
+            }
+
+            column = &columns[i];
+            sw = column->sw_column->data;
+
+            if (ecs_switch_get(sw, first) != column->sw_case) {
+                first = ecs_switch_next(sw_smallest, first);
+                if (first == -1) {
+                    goto done;
+                }
+            }
+        }
+    } while (i != count);
+
+    cur->first = iter->sparse_first = first;
+    cur->count = 1;
+
     return 0;
+done:
+    /* Iterated all elements in the sparse list, we should move to the
+     * next matched table. */
+    iter->sparse_smallest = 0;
+    iter->sparse_first = 0;
+
+    return -1;
 }
 
 /* Return next table */
@@ -1866,6 +1920,8 @@ bool ecs_query_next(
         ecs_matched_table_t *table = slice ? slice[i].table : &tables[i];
         ecs_table_t *world_table = table->table;
         ecs_data_t *table_data = NULL;
+
+        iter->index = i + 1;
         
         if (world_table) {
             ecs_vector_t *sparse_columns = table->sparse_columns;
@@ -1883,8 +1939,14 @@ bool ecs_query_next(
 
             if (cur.count) {
                 if (sparse_columns) {
-                    sparse_column_next(
-                        world, world_table, table, sparse_columns, iter, &cur);
+                    if (sparse_column_next(world, world_table, table, 
+                        sparse_columns, iter, &cur) == -1)
+                    {
+                        /* No more elements in sparse column */
+                        continue;    
+                    } else {
+                        iter->index = i;
+                    }
                 }
 
                 int ret = ecs_page_iter_next(piter, &cur);
@@ -1910,9 +1972,6 @@ bool ecs_query_next(
         it->components = table->components;
         it->references = ecs_vector_first(table->references, ecs_ref_t);
         it->frame_offset += prev_count;
-
-        /* Table is ready to be iterated, return it struct */
-        iter->index = i + 1;
 
         return true;
     }

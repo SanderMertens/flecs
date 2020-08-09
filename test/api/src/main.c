@@ -93,6 +93,11 @@ void Switch_bulk_new_w_type(void);
 void Switch_3_entities_same_case(void);
 void Switch_2_entities_1_change_case(void);
 void Switch_3_entities_change_case(void);
+void Switch_query_switch(void);
+void Switch_query_1_case_1_type(void);
+void Switch_query_1_case_2_types(void);
+void Switch_query_2_cases_1_type(void);
+void Switch_query_2_cases_2_types(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -1401,6 +1406,26 @@ bake_test_case Switch_testcases[] = {
     {
         "3_entities_change_case",
         Switch_3_entities_change_case
+    },
+    {
+        "query_switch",
+        Switch_query_switch
+    },
+    {
+        "query_1_case_1_type",
+        Switch_query_1_case_1_type
+    },
+    {
+        "query_1_case_2_types",
+        Switch_query_1_case_2_types
+    },
+    {
+        "query_2_cases_1_type",
+        Switch_query_2_cases_1_type
+    },
+    {
+        "query_2_cases_2_types",
+        Switch_query_2_cases_2_types
     }
 };
 
@@ -5125,7 +5150,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        11,
+        16,
         Switch_testcases
     },
     {

@@ -1133,6 +1133,11 @@ ecs_vector_t* ecs_switch_values(
     const ecs_switch_t *sw);    
 
 FLECS_EXPORT
+int32_t ecs_switch_case_count(
+    const ecs_switch_t *sw,
+    uint64_t value);
+
+FLECS_EXPORT
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value);
@@ -1865,6 +1870,8 @@ typedef struct ecs_query_iter_t {
     ecs_query_t *query;
     ecs_page_iter_t page_iter;
     int32_t index;
+    int32_t sparse_smallest;
+    int32_t sparse_first;
 } ecs_query_iter_t;  
 
 /** Query-iterator specific data */
