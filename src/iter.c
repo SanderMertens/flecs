@@ -50,7 +50,7 @@ bool get_table_column(
     int32_t column,
     int32_t *table_column_out)
 {
-    ecs_assert(column <= it->column_count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column <= it->column_count, ECS_INVALID_PARAMETER, NULL);
 
     int32_t table_column = 0;
 

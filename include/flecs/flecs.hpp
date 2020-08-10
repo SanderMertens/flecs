@@ -492,7 +492,8 @@ private:
     flecs::column<T> get_column(int32_t column_id) const {
 #ifndef NDEBUG
         ecs_entity_t column_entity = ecs_column_entity(m_iter, column_id);
-        ecs_assert(column_entity & ECS_TRAIT || 
+        ecs_assert(column_entity & ECS_TRAIT || column_entity & ECS_SWITCH || 
+            column_entity & ECS_CASE ||
             column_entity == component_info<T>::id(m_iter->world), 
             ECS_COLUMN_TYPE_MISMATCH, NULL);
 #endif
@@ -1064,6 +1065,64 @@ public:
      */
     base_type& remove_instanceof(const entity& base_entity) const;
 
+    /** Add a switch entity to an entity by id.
+     */    
+    base_type& add_switch(entity_t sw) const {
+        static_cast<base_type*>(this)->invoke(
+        [sw](world_t *world, entity_t id) {
+            ecs_add_entity(world, id, ECS_SWITCH | sw);
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
+    /** Add a switch entity to an entity.
+     */ 
+    base_type& add_switch(const entity& sw) const;
+    base_type& add_switch(const type& sw) const;
+
+    /** Remove a switch entity to an entity by id.
+     */    
+    base_type& remove_switch(entity_t sw) const {
+        static_cast<base_type*>(this)->invoke(
+        [sw](world_t *world, entity_t id) {
+            ecs_remove_entity(world, id, ECS_SWITCH | sw);
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
+    /** Remove a switch entity to an entity.
+     */ 
+    base_type& remove_switch(const entity& sw) const;    
+    base_type& remove_switch(const type& sw) const;
+
+    /** Add a switch entity to an entity by id.
+     */    
+    base_type& add_case(entity_t sw_case) const {
+        static_cast<base_type*>(this)->invoke(
+        [sw_case](world_t *world, entity_t id) {
+            ecs_add_entity(world, id, ECS_CASE | sw_case);
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
+    /** Add a switch entity to an entity.
+     */ 
+    base_type& add_case(const entity& sw_case) const;
+
+    /** Remove a switch entity to an entity by id.
+     */    
+    base_type& remove_case(entity_t sw_case) const {
+        static_cast<base_type*>(this)->invoke(
+        [sw_case](world_t *world, entity_t id) {
+            ecs_remove_entity(world, id, ECS_CASE | sw_case);
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
+    /** Remove a switch entity to an entity.
+     */ 
+    base_type& remove_case(const entity& sw_case) const;
+
     /** Set a component for an entity.
      */
     template <typename T>
@@ -1568,6 +1627,11 @@ public:
 
     type_t c_ptr() const {
         return m_type;
+    }
+
+    // Expose entity id without making the entity class public.
+    entity_t id() const {
+        return m_id;
     }
 
     type_t c_normalized() const {
@@ -2868,7 +2932,37 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(f
             sizeof(T), &value);
     });
     return *static_cast<base_type*>(this);
-}        
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_switch(const entity& sw) const {
+    return add_switch(sw.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_switch(const type& sw) const {
+    return add_switch(sw.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_switch(const entity& sw) const {
+    return remove_switch(sw.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_switch(const type& sw) const {
+    return remove_switch(sw.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_case(const entity& sw_case) const {
+    return add_case(sw_case.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_case(const entity& sw_case) const {
+    return remove_case(sw_case.id());
+}
 
 inline entity world::lookup(const char *name) const {
     auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");

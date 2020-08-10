@@ -7332,6 +7332,62 @@ public:
      */
     base_type& remove_instanceof(const entity& base_entity) const;
 
+    /** Add a switch entity to an entity by id.
+     */    
+    base_type& add_switch(entity_t base_entity) const {
+        static_cast<base_type*>(this)->invoke(
+        [base_entity](world_t *world, entity_t id) {
+            ecs_add_entity(world, id, ECS_SWITCH | base_entity);
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
+    /** Add a switch entity to an entity.
+     */ 
+    base_type& add_switch(const entity& base_entity) const;
+
+    /** Remove a switch entity to an entity by id.
+     */    
+    base_type& remove_switch(entity_t base_entity) const {
+        static_cast<base_type*>(this)->invoke(
+        [base_entity](world_t *world, entity_t id) {
+            ecs_remove_entity(world, id, ECS_SWITCH | base_entity);
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
+    /** Remove a switch entity to an entity.
+     */ 
+    base_type& remove_switch(const entity& base_entity) const;    
+
+    /** Add a switch entity to an entity by id.
+     */    
+    base_type& add_case(entity_t base_entity) const {
+        static_cast<base_type*>(this)->invoke(
+        [base_entity](world_t *world, entity_t id) {
+            ecs_add_entity(world, id, ECS_CASE | base_entity);
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
+    /** Add a switch entity to an entity.
+     */ 
+    base_type& add_case(const entity& base_entity) const;
+
+    /** Remove a switch entity to an entity by id.
+     */    
+    base_type& remove_case(entity_t base_entity) const {
+        static_cast<base_type*>(this)->invoke(
+        [base_entity](world_t *world, entity_t id) {
+            ecs_remove_entity(world, id, ECS_CASE | base_entity);
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
+    /** Remove a switch entity to an entity.
+     */ 
+    base_type& remove_case(const entity& base_entity) const;
+
     /** Set a component for an entity.
      */
     template <typename T>
@@ -9137,6 +9193,24 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(f
     });
     return *static_cast<base_type*>(this);
 }        
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_switch(const entity& entity) const {
+    return add_switch(entity.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_switch(const entity& entity) const {
+    return remove_switch(entity.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_case(const entity& entity) const {
+    return add_case(entity.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_case(const entity& entity) const {
+    return remove_case(entity.id());
+}
 
 inline entity world::lookup(const char *name) const {
     auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
