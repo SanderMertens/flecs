@@ -37,7 +37,12 @@
                 "get_generic",
                 "get_mut_generic",
                 "get_generic_w_id",
-                "get_mut_generic_w_id"
+                "get_mut_generic_w_id",
+                "add_role",
+                "remove_role",
+                "has_role",
+                "trait_role",
+                "equals"
             ]
         }, {
             "id": "Traits",
@@ -52,6 +57,13 @@
                 "set_tag_trait",
                 "system_1_trait_instance",
                 "system_2_trait_instances"
+            ]
+        }, {
+            "id": "Switch",
+            "testcases": [
+                "add_case",
+                "system_w_case",
+                "system_w_switch"
             ]
         }, {
             "id": "Paths",

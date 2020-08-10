@@ -1,7 +1,5 @@
 #include <cpp_api.h>
 
-using namespace flecs;
-
 struct Trait {
     int value;
 };
@@ -9,7 +7,7 @@ struct Trait {
 void ImplicitComponents_add() {
     flecs::world world;
 
-    auto e = entity(world).add<Position>();
+    auto e = flecs::entity(world).add<Position>();
 
     test_str(e.type().str().c_str(), "Position");
     test_assert(e.has<Position>());
@@ -21,7 +19,7 @@ void ImplicitComponents_add() {
 void ImplicitComponents_remove() {
     flecs::world world;
 
-    auto e = entity(world).remove<Position>();
+    auto e = flecs::entity(world).remove<Position>();
 
     test_assert(!e.has<Position>());
 
@@ -32,7 +30,7 @@ void ImplicitComponents_remove() {
 void ImplicitComponents_has() {
     flecs::world world;
 
-    auto e = entity(world);
+    auto e = flecs::entity(world);
     test_assert(!e.has<Position>());
 
     auto position = world.lookup("Position");
@@ -42,7 +40,7 @@ void ImplicitComponents_has() {
 void ImplicitComponents_set() {
     flecs::world world;
 
-    auto e = entity(world).set<Position>({10, 20});
+    auto e = flecs::entity(world).set<Position>({10, 20});
 
     test_str(e.type().str().c_str(), "Position");
     test_assert(e.has<Position>());
@@ -57,7 +55,7 @@ void ImplicitComponents_set() {
 void ImplicitComponents_get() {
     flecs::world world;
 
-    auto e = entity(world);
+    auto e = flecs::entity(world);
 
     auto *p = e.get<Position>();
     test_assert(p == nullptr);
@@ -69,10 +67,10 @@ void ImplicitComponents_get() {
 void ImplicitComponents_add_trait() {
     flecs::world world;
 
-    auto e = entity(world).add_trait<Position, Trait>();
+    auto e = flecs::entity(world).add_trait<Trait, Position>();
 
-    test_str(e.type().str().c_str(), "TRAIT|Position<Trait");
-    test_assert((e.has_trait<Position, Trait>()));
+    test_str(e.type().str().c_str(), "TRAIT|Trait>Position");
+    test_assert((e.has_trait<Trait, Position>()));
 
     auto position = world.lookup("Position");
     test_assert(position.id() != 0);
@@ -84,7 +82,7 @@ void ImplicitComponents_add_trait() {
 void ImplicitComponents_remove_trait() {
     flecs::world world;
 
-    auto e = entity(world).remove_trait<Position, Trait>();
+    auto e = flecs::entity(world).remove_trait<Position, Trait>();
 
     test_assert((!e.has_trait<Position, Trait>()));
 

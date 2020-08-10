@@ -12294,15 +12294,15 @@ char* ecs_type_str(
             int len = sizeof("CASE|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             ecs_os_memcpy(dst, "CASE|", len);
+        }        
+
+        if (trait) {
+            append_name(world, &chbuf, trait);
+            char *ch = ecs_vector_add(&chbuf, char);
+            *ch = '>';
         }                
 
         append_name(world, &chbuf, h);
-
-        if (trait) {
-            char *ch = ecs_vector_add(&chbuf, char);
-            *ch = '<';
-            append_name(world, &chbuf, trait);
-        }
     }
 
     *(char*)ecs_vector_add(&chbuf, char) = '\0';
@@ -16292,7 +16292,7 @@ bool get_table_column(
     int32_t column,
     int32_t *table_column_out)
 {
-    ecs_assert(column <= it->column_count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column <= it->column_count, ECS_INVALID_PARAMETER, NULL);
 
     int32_t table_column = 0;
 

@@ -11,13 +11,13 @@ void Traits_add_component_trait() {
     flecs::component<Trait>(world, "Trait");
 
     auto entity = flecs::entity(world)
-        .add_trait<Position, Trait>();
+        .add_trait<Trait, Position>();
 
     test_assert(entity.id() != 0);
-    test_assert((entity.has_trait<Position, Trait>()));
-    test_assert((!entity.has_trait<Trait, Position>()));
+    test_assert((entity.has_trait<Trait, Position>()));
+    test_assert((!entity.has_trait<Position, Trait>()));
 
-    test_str(entity.type().str().c_str(), "TRAIT|Position<Trait");
+    test_str(entity.type().str().c_str(), "TRAIT|Trait>Position");
 }
 
 void Traits_add_tag_trait() {
@@ -31,7 +31,7 @@ void Traits_add_tag_trait() {
 
     test_assert(entity.id() != 0);
     test_assert(entity.has_trait<Position>(Trait));
-    test_str(entity.type().str().c_str(), "TRAIT|Position<Trait");
+    test_str(entity.type().str().c_str(), "TRAIT|Trait>Position");
 }
 
 void Traits_add_tag_trait_to_tag() {
@@ -41,11 +41,11 @@ void Traits_add_tag_trait_to_tag() {
     auto Trait = flecs::entity(world, "Trait");
 
     auto entity = flecs::entity(world)
-        .add_trait(Tag, Trait);
+        .add_trait(Trait, Tag);
 
     test_assert(entity.id() != 0);
-    test_assert(entity.has_trait(Tag, Trait));
-    test_str(entity.type().str().c_str(), "TRAIT|Tag<Trait");
+    test_assert(entity.has_trait(Trait, Tag));
+    test_str(entity.type().str().c_str(), "TRAIT|Trait>Tag");
 }
 
 void Traits_remove_component_trait() {
@@ -55,13 +55,13 @@ void Traits_remove_component_trait() {
     flecs::component<Trait>(world, "Trait");
 
     auto entity = flecs::entity(world)
-        .add_trait<Position, Trait>();
+        .add_trait<Trait, Position>();
 
     test_assert(entity.id() != 0);
-    test_assert((entity.has_trait<Position, Trait>()));
-    test_assert((!entity.has_trait<Trait, Position>()));
+    test_assert((entity.has_trait<Trait, Position>()));
+    test_assert((!entity.has_trait<Position, Trait>()));
 
-    test_str(entity.type().str().c_str(), "TRAIT|Position<Trait");
+    test_str(entity.type().str().c_str(), "TRAIT|Trait>Position");
 
     entity.remove_trait<Position, Trait>();
     test_assert(!(entity.has_trait<Position, Trait>()));
@@ -78,7 +78,7 @@ void Traits_remove_tag_trait() {
 
     test_assert(entity.id() != 0);
     test_assert(entity.has_trait<Position>(Trait));
-    test_str(entity.type().str().c_str(), "TRAIT|Position<Trait");
+    test_str(entity.type().str().c_str(), "TRAIT|Trait>Position");
 
     entity.remove_trait<Position>(Trait);
     test_assert(!entity.has_trait<Position>(Trait));
@@ -91,11 +91,11 @@ void Traits_remove_tag_trait_to_tag() {
     auto Trait = flecs::entity(world, "Trait");
 
     auto entity = flecs::entity(world)
-        .add_trait(Tag, Trait);
+        .add_trait(Trait, Tag);
 
     test_assert(entity.id() != 0);
-    test_assert(entity.has_trait(Tag, Trait));
-    test_str(entity.type().str().c_str(), "TRAIT|Tag<Trait");
+    test_assert(entity.has_trait(Trait, Tag));
+    test_str(entity.type().str().c_str(), "TRAIT|Trait>Tag");
 
     entity.remove_trait(Tag, Trait);
     test_assert(!entity.has_trait(Tag, Trait));
@@ -108,15 +108,15 @@ void Traits_set_component_trait() {
     flecs::component<Trait>(world, "Trait");
 
     auto entity = flecs::entity(world)
-        .set_trait<Position, Trait>({10});
+        .set_trait<Trait, Position>({10});
 
     test_assert(entity.id() != 0);
-    test_assert((entity.has_trait<Position, Trait>()));
-    test_assert((!entity.has_trait<Trait, Position>()));
+    test_assert((entity.has_trait<Trait, Position>()));
+    test_assert((!entity.has_trait<Position, Trait>()));
 
-    test_str(entity.type().str().c_str(), "TRAIT|Position<Trait");
+    test_str(entity.type().str().c_str(), "TRAIT|Trait>Position");
 
-    const Trait *t = entity.get_trait<Position, Trait>();
+    const Trait *t = entity.get_trait<Trait, Position>();
     test_int(t->value, 10);
 }
 
@@ -131,7 +131,7 @@ void Traits_set_tag_trait() {
 
     test_assert(entity.id() != 0);
     test_assert(entity.has_trait<Position>(Trait));
-    test_str(entity.type().str().c_str(), "TRAIT|Position<Trait");
+    test_str(entity.type().str().c_str(), "TRAIT|Trait>Position");
 
     const Position *p = entity.get_trait<Position>(Trait);
     test_int(p->x, 10);
@@ -145,7 +145,7 @@ void Traits_system_1_trait_instance() {
     flecs::component<Trait>(world, "Trait");
 
     flecs::entity(world)
-        .set_trait<Position, Trait>({10});
+        .set_trait<Trait, Position>({10});
 
     int invoke_count = 0;
     int entity_count = 0;
@@ -176,8 +176,8 @@ void Traits_system_2_trait_instances() {
     flecs::component<Trait>(world, "Trait");
 
     flecs::entity(world)
-        .set_trait<Position, Trait>({10})
-        .set_trait<Velocity, Trait>({20});
+        .set_trait<Trait, Position>({10})
+        .set_trait<Trait, Velocity>({20});
 
     int invoke_count = 0;
     int entity_count = 0;

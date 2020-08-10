@@ -394,3 +394,75 @@ void Entity_get_mut_generic_w_id() {
     entity.modified(position.id());
     test_bool(invoked, true);
 }
+
+void Entity_add_role() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world);
+
+    entity = entity.add_role(flecs::Trait);
+
+    test_assert(entity.id() & ECS_TRAIT);
+}
+
+void Entity_remove_role() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world);
+
+    flecs::entity_t id = entity.id();
+
+    entity = entity.add_role(flecs::Trait);
+
+    test_assert(entity.id() & ECS_TRAIT);
+
+    entity = entity.remove_role();
+
+    test_assert(entity.id() == id);
+}
+
+void Entity_has_role() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world);
+
+    entity = entity.add_role(flecs::Trait);
+
+    test_assert(entity.has_role(flecs::Trait));
+
+    entity = entity.remove_role();
+
+    test_assert(!entity.has_role(flecs::Trait));
+}
+
+void Entity_trait_role() {
+    flecs::world world;
+
+    auto a = flecs::entity(world);
+    auto b = flecs::entity(world);
+
+    auto comb = flecs::entity::comb(a, b);
+    comb = comb.add_role(flecs::Trait);
+    
+    test_assert(comb.has_role(flecs::Trait));
+
+    auto lo = comb.lo();
+    auto hi = comb.remove_role().hi();
+
+    test_assert(lo == a);
+    test_assert(hi == b);
+}
+
+void Entity_equals() {
+    flecs::world world;
+
+    auto e1 = flecs::entity(world);
+    auto e2 = flecs::entity(world);
+
+    auto id1 = flecs::entity(world, e1.id());
+    auto id2 = flecs::entity(world, e2.id());
+
+    test_assert(e1 == id1);
+    test_assert(e2 == id2);
+    test_assert(e1 != e2);
+}

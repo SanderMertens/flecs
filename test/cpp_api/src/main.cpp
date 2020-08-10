@@ -32,6 +32,11 @@ void Entity_get_generic(void);
 void Entity_get_mut_generic(void);
 void Entity_get_generic_w_id(void);
 void Entity_get_mut_generic_w_id(void);
+void Entity_add_role(void);
+void Entity_remove_role(void);
+void Entity_has_role(void);
+void Entity_trait_role(void);
+void Entity_equals(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -44,6 +49,11 @@ void Traits_set_component_trait(void);
 void Traits_set_tag_trait(void);
 void Traits_system_1_trait_instance(void);
 void Traits_system_2_trait_instances(void);
+
+// Testsuite 'Switch'
+void Switch_add_case(void);
+void Switch_system_w_case(void);
+void Switch_system_w_switch(void);
 
 // Testsuite 'Paths'
 void Paths_name(void);
@@ -220,6 +230,26 @@ bake_test_case Entity_testcases[] = {
     {
         "get_mut_generic_w_id",
         Entity_get_mut_generic_w_id
+    },
+    {
+        "add_role",
+        Entity_add_role
+    },
+    {
+        "remove_role",
+        Entity_remove_role
+    },
+    {
+        "has_role",
+        Entity_has_role
+    },
+    {
+        "trait_role",
+        Entity_trait_role
+    },
+    {
+        "equals",
+        Entity_equals
     }
 };
 
@@ -263,6 +293,21 @@ bake_test_case Traits_testcases[] = {
     {
         "system_2_trait_instances",
         Traits_system_2_trait_instances
+    }
+};
+
+bake_test_case Switch_testcases[] = {
+    {
+        "add_case",
+        Switch_add_case
+    },
+    {
+        "system_w_case",
+        Switch_system_w_case
+    },
+    {
+        "system_w_switch",
+        Switch_system_w_switch
     }
 };
 
@@ -563,7 +608,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        23,
+        28,
         Entity_testcases
     },
     {
@@ -572,6 +617,13 @@ static bake_test_suite suites[] = {
         NULL,
         10,
         Traits_testcases
+    },
+    {
+        "Switch",
+        NULL,
+        NULL,
+        3,
+        Switch_testcases
     },
     {
         "Paths",
@@ -633,5 +685,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 10);
+    return bake_test_run("cpp_api", argc, argv, suites, 11);
 }

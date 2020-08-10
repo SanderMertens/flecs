@@ -107,6 +107,9 @@ static const ecs_entity_t Singleton = EcsSingleton;
 /** Builtin roles */
 static const ecs_entity_t Childof = ECS_CHILDOF;
 static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
+static const ecs_entity_t Trait = ECS_TRAIT;
+static const ecs_entity_t Switch = ECS_SWITCH;
+static const ecs_entity_t Case = ECS_CASE;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -916,7 +919,7 @@ public:
 
     /** Add a trait
      */
-    base_type& add_trait(entity_t entity, entity_t trait) const {
+    base_type& add_trait(entity_t trait, entity_t entity) const {
         static_cast<base_type*>(this)->invoke(
         [entity, trait](world_t *world, entity_t id) {
             ecs_add_entity(world, id, 
@@ -927,12 +930,12 @@ public:
 
     /** Add a trait
      */
-    template<typename C, typename T>
+    template<typename T, typename C>
     base_type& add_trait() const {
         static_cast<base_type*>(this)->invoke(
         [this](world_t *world, entity_t id) {        
             return add_trait(
-                component_info<C>::id(world), component_info<T>::id(world));
+                component_info<T>::id(world), component_info<C>::id(world));
         });
         return *static_cast<base_type*>(this); 
     }
@@ -941,7 +944,7 @@ public:
      */
     template<typename C>
     base_type& add_trait(flecs::entity trait) const;
-    base_type& add_trait(flecs::entity entity, flecs::entity trait) const;
+    base_type& add_trait(flecs::entity trait, flecs::entity entity) const;
 
     /** Remove an entity from an entity by id.
      */
@@ -984,7 +987,7 @@ public:
 
     /** Remove a trait
      */
-    base_type& remove_trait(entity_t entity, entity_t trait) const {
+    base_type& remove_trait(entity_t trait, entity_t entity) const {
         static_cast<base_type*>(this)->invoke(
         [entity, trait](world_t *world, entity_t id) {
             ecs_remove_entity(world, id, 
@@ -993,12 +996,12 @@ public:
         return *static_cast<base_type*>(this);         
     }
 
-    template<typename C, typename T>
+    template<typename T, typename C>
     base_type& remove_trait() const {
         static_cast<base_type*>(this)->invoke(
         [this](world_t *world, entity_t id) {        
             remove_trait(
-                component_info<C>::id(world), component_info<T>::id(world));
+                component_info<T>::id(world), component_info<C>::id(world));
         });
         return *static_cast<base_type*>(this);
     }
@@ -1007,7 +1010,7 @@ public:
      */
     template<typename C>
     base_type& remove_trait(flecs::entity trait) const;
-    base_type& remove_trait(flecs::entity entity, flecs::entity trait) const;
+    base_type& remove_trait(flecs::entity trait, flecs::entity entity) const;
 
     /** Add a parent entity to an entity by id.
      */    
@@ -1152,7 +1155,7 @@ public:
 
     /** Set a trait for an entity.
      */
-    template <typename C, typename T>
+    template <typename T, typename C>
     const base_type& set_trait(const T& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
@@ -1164,10 +1167,15 @@ public:
         return *static_cast<base_type*>(this);
     } 
 
-    /** Set a trait tag for an entity.
+    /** Set a trait tag for a component.
      */
     template <typename T>
     const base_type& set_trait(flecs::entity trait, const T& value) const;
+
+    /** Set a trait for a tag.
+     */
+    template <typename T>
+    const base_type& set_trait(const T& value, flecs::entity tag) const;
 
     /** Patch a component value.
      * This operation allows an application to partially overwrite a component 
@@ -1313,6 +1321,14 @@ public:
         : m_world(nullptr)
         , m_id(0) { }
 
+    bool operator==(const entity& e) {
+        return this->id() == e.id();
+    }  
+
+    bool operator!=(const entity& e) {
+        return this->id() != e.id();
+    }            
+
     static
     flecs::entity null(const world& world) {
         return flecs::entity(world.c_ptr(), (ecs_entity_t)0);
@@ -1328,7 +1344,24 @@ public:
 
     flecs::entity hi() {
         return flecs::entity(m_world, ecs_entity_t_hi(m_id));
-    }    
+    }
+
+    static flecs::entity comb(flecs::entity a, flecs::entity b) {
+        return flecs::entity(a.world(), 
+            ecs_entity_t_comb(a.id(), b.id()));
+    }
+
+    flecs::entity add_role(entity_t role) {
+        return flecs::entity(m_world, m_id | role);
+    }
+
+    flecs::entity remove_role() {
+        return flecs::entity(m_world, m_id & ECS_ENTITY_MASK);
+    }
+
+    bool has_role(entity_t role) {        
+        return m_id & role;
+    }
 
     std::string name() const {
         const EcsName *name = static_cast<const EcsName*>(
@@ -1373,7 +1406,7 @@ public:
         return ecs_get_w_entity(m_world, m_id, component_id);
     } 
 
-    template<typename C, typename T>
+    template<typename T, typename C>
     const T* get_trait() const {
         return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
             component_info<C>::id(m_world), component_info<T>::id(m_world))));
@@ -1385,7 +1418,7 @@ public:
             component_info<T>::id(m_world), trait.id())));
     } 
 
-    const void* get_trait(flecs::entity component, flecs::entity trait) const {
+    const void* get_trait(flecs::entity trait, flecs::entity component) const {
         return ecs_get_w_entity(m_world, m_id, ecs_trait(
             component.id(), trait.id()));
     }       
@@ -1473,7 +1506,7 @@ public:
         return owns(component_info<T>::id(m_world));
     }
 
-    template<typename C, typename T>
+    template<typename T, typename C>
     bool has_trait() const {
         return ecs_has_entity(m_world, m_id, ecs_trait(
             component_info<C>::id(m_world), 
@@ -1486,10 +1519,16 @@ public:
             component_info<C>::id(m_world), trait.id()));
     }
 
-    bool has_trait(flecs::entity entity, flecs::entity trait) const {
+    bool has_trait(flecs::entity trait, flecs::entity entity) const {
         return ecs_has_entity(m_world, m_id, ecs_trait(
             entity.id(), trait.id()));
     }
+
+    bool has_switch(flecs::type type) const;
+
+    bool has_case(flecs::entity sw_case) const {
+        return ecs_has_entity(m_world, m_id, flecs::Case | sw_case.id());
+    }    
 
     float delta_time() {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
@@ -2872,12 +2911,12 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(type ty
 template <typename base>
 template <typename C>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_trait(flecs::entity trait) const {
-    return add_trait(component_info<C>::id(), trait.id());
+    return add_trait(trait.id(), component_info<C>::id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_trait(flecs::entity entity, flecs::entity trait) const {
-    return add_trait(entity.id(), trait.id()); 
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_trait(flecs::entity trait, flecs::entity entity) const {
+    return add_trait(trait.id(), entity.id()); 
 }
 
 template <typename base>
@@ -2893,12 +2932,12 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(type
 template <typename base>
 template <typename C>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_trait(flecs::entity trait) const {
-    return remove_trait(component_info<C>::id(), trait.id());
+    return remove_trait(trait.id(), component_info<C>::id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_trait(flecs::entity entity, flecs::entity trait) const {
-    return remove_trait(entity.id(), trait.id());
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_trait(flecs::entity trait, flecs::entity entity) const {
+    return remove_trait(trait.id(), entity.id());
 }
 
 template <typename base>
@@ -2964,14 +3003,22 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_case
     return remove_case(sw_case.id());
 }
 
-inline entity world::lookup(const char *name) const {
-    auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
-    return entity(*this, id);
-}
+template <typename base>
+template <typename T>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(const T& value, flecs::entity tag) const
+{
+    static_cast<base_type*>(this)->invoke(
+    [tag, &value](world_t *world, entity_t id) {
+        ecs_set_ptr_w_entity(world, id, 
+            ecs_trait(tag.id(), component_info<T>::id(world)),
+            sizeof(T), &value);
+    });
+    return *static_cast<base_type*>(this);
+}  
 
-inline entity world::lookup(std::string& name) const {
-    auto id = ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::");
-    return entity(*this, id);
+
+inline bool entity::has_switch(flecs::type type) const {
+    return ecs_has_entity(m_world, m_id, flecs::Switch | type.id());
 }
 
 
@@ -3097,6 +3144,16 @@ inline void world::init_builtin_components() {
     pod_component<Component>(*this, "EcsComponent");
     pod_component<Type>(*this, "EcsType");
     pod_component<Name>(*this, "EcsName");
+}
+
+inline entity world::lookup(const char *name) const {
+    auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
+    return entity(*this, id);
+}
+
+inline entity world::lookup(std::string& name) const {
+    auto id = ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::");
+    return entity(*this, id);
 }
 
 /** Utilities to convert type trait to flecs signature syntax */
