@@ -329,6 +329,33 @@ ecs_vector_t* _ecs_vector_copy(
 namespace flecs {
 
 template <typename T>
+class vector_iterator
+{
+public:
+    explicit vector_iterator(T* value)
+        : m_value(value){}
+
+    bool operator!=(vector_iterator const& other) const
+    {
+        return m_value != other.m_value;
+    }
+
+    T const& operator*() const
+    {
+        return *m_value;
+    }
+
+    vector_iterator& operator++()
+    {
+        ++m_value;
+        return *this;
+    }
+
+private:
+    T* m_value;
+};
+
+template <typename T>
 class vector {
 public:
     explicit vector(ecs_vector_t *vector) : m_vector( vector ) { }
@@ -349,6 +376,14 @@ public:
             this->add(elem);
         }
     }
+
+    vector_iterator<T> begin() {
+        return vector_iterator<T>(static_cast<T*>(ecs_vector_first(m_vector, T)));
+    }
+
+    vector_iterator<T> end() {
+        return vector_iterator<T>(static_cast<T*>(ecs_vector_last(m_vector, T)) + 1);
+    }    
 
     void clear() {
         ecs_vector_clear(m_vector);

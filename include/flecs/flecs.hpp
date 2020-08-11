@@ -2978,7 +2978,21 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(f
             sizeof(T), &value);
     });
     return *static_cast<base_type*>(this);
-}
+}  
+
+template <typename base>
+template <typename T>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(const T& value, flecs::entity tag) const
+{
+    static_cast<base_type*>(this)->invoke(
+    [tag, &value](world_t *world, entity_t id) {
+        ecs_set_ptr_w_entity(world, id, 
+            ecs_trait(tag.id(), component_info<T>::id(world)),
+            sizeof(T), &value);
+    });
+    return *static_cast<base_type*>(this);
+}  
+
 
 template <typename base>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_switch(const entity& sw) const {
@@ -3009,20 +3023,6 @@ template <typename base>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_case(const entity& sw_case) const {
     return remove_case(sw_case.id());
 }
-
-template <typename base>
-template <typename T>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(const T& value, flecs::entity tag) const
-{
-    static_cast<base_type*>(this)->invoke(
-    [tag, &value](world_t *world, entity_t id) {
-        ecs_set_ptr_w_entity(world, id, 
-            ecs_trait(tag.id(), component_info<T>::id(world)),
-            sizeof(T), &value);
-    });
-    return *static_cast<base_type*>(this);
-}  
-
 
 inline bool entity::has_switch(flecs::type type) const {
     return ecs_has_entity(m_world, m_id, flecs::Switch | type.id());

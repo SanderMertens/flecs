@@ -656,6 +656,33 @@ ecs_vector_t* _ecs_vector_copy(
 namespace flecs {
 
 template <typename T>
+class vector_iterator
+{
+public:
+    explicit vector_iterator(T* value)
+        : m_value(value){}
+
+    bool operator!=(vector_iterator const& other) const
+    {
+        return m_value != other.m_value;
+    }
+
+    T const& operator*() const
+    {
+        return *m_value;
+    }
+
+    vector_iterator& operator++()
+    {
+        ++m_value;
+        return *this;
+    }
+
+private:
+    T* m_value;
+};
+
+template <typename T>
 class vector {
 public:
     explicit vector(ecs_vector_t *vector) : m_vector( vector ) { }
@@ -676,6 +703,14 @@ public:
             this->add(elem);
         }
     }
+
+    vector_iterator<T> begin() {
+        return vector_iterator<T>(static_cast<T*>(ecs_vector_first(m_vector, T)));
+    }
+
+    vector_iterator<T> end() {
+        return vector_iterator<T>(static_cast<T*>(ecs_vector_last(m_vector, T)) + 1);
+    }    
 
     void clear() {
         ecs_vector_clear(m_vector);
@@ -3395,6 +3430,7 @@ void ecs_add_remove_type(
  * @param sw The switch for which to obtain the case.
  * @return The current case for the specified switch. 
  */
+FLECS_EXPORT
 ecs_entity_t ecs_get_case(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -7997,7 +8033,14 @@ namespace internal
                 if (typeName[len - 2] == ' ') {
                     typeName[len - 2] = '\0';
                 }   
-            }           
+            }
+
+            /* Remove 'struct' */
+            size_t struct_len = strlen("struct ");
+            if (!ecs_os_strncmp(typeName, "struct ", struct_len)) {
+                memmove(typeName, typeName + struct_len, len - struct_len);
+                typeName[len - struct_len] = '\0';
+            }
         }
     };
 
@@ -9239,7 +9282,21 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(f
             sizeof(T), &value);
     });
     return *static_cast<base_type*>(this);
-}
+}  
+
+template <typename base>
+template <typename T>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(const T& value, flecs::entity tag) const
+{
+    static_cast<base_type*>(this)->invoke(
+    [tag, &value](world_t *world, entity_t id) {
+        ecs_set_ptr_w_entity(world, id, 
+            ecs_trait(tag.id(), component_info<T>::id(world)),
+            sizeof(T), &value);
+    });
+    return *static_cast<base_type*>(this);
+}  
+
 
 template <typename base>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_switch(const entity& sw) const {
@@ -9270,20 +9327,6 @@ template <typename base>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_case(const entity& sw_case) const {
     return remove_case(sw_case.id());
 }
-
-template <typename base>
-template <typename T>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(const T& value, flecs::entity tag) const
-{
-    static_cast<base_type*>(this)->invoke(
-    [tag, &value](world_t *world, entity_t id) {
-        ecs_set_ptr_w_entity(world, id, 
-            ecs_trait(tag.id(), component_info<T>::id(world)),
-            sizeof(T), &value);
-    });
-    return *static_cast<base_type*>(this);
-}  
-
 
 inline bool entity::has_switch(flecs::type type) const {
     return ecs_has_entity(m_world, m_id, flecs::Switch | type.id());
