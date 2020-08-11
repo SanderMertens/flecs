@@ -133,51 +133,6 @@ void ComponentLifecycle_copy_on_override() {
     test_int(pod->value, 10);
 }
 
-void ComponentLifecycle_move_on_merge() {
-    flecs::world world;
-
-    flecs::component<POD>(world, "POD");
-
-    auto e = flecs::entity(world);
-    test_assert(e.id() != 0);
-
-    e.set<POD>({10});
-    test_int(POD::ctor_invoked, 2);
-    test_int(POD::dtor_invoked, 1);
-    test_int(POD::copy_invoked, 1);
-    test_int(POD::move_invoked, 0);
-
-    POD::ctor_invoked = 0;
-    POD::dtor_invoked = 0;
-    POD::copy_invoked = 0;
-    POD::move_invoked = 0;
-
-    flecs::system<POD>(world)
-        .each([](flecs::entity e_arg, POD& pod) {
-            e_arg.set<POD>({20});
-            test_int(POD::ctor_invoked, 2); // 1 for construction in stage
-            test_int(POD::dtor_invoked, 1);
-            test_int(POD::copy_invoked, 2); // 1 for copy to stage
-            test_int(POD::move_invoked, 0);
-
-            POD::ctor_invoked = 0;
-            POD::dtor_invoked = 0;
-            POD::copy_invoked = 0;
-            POD::move_invoked = 0;            
-        });
-        
-    world.progress();
-
-    test_int(POD::ctor_invoked, 1); // construct new value
-    test_int(POD::dtor_invoked, 1); // destruct old value
-    test_int(POD::copy_invoked, 0);
-    test_int(POD::move_invoked, 1); // move staged value to main stage
-
-    // The reason why the main stage value is destructed before merging is so
-    // that entities can be merged in bulk, vs copying values one by one from
-    // the stage to the main stage
-}
-
 void ComponentLifecycle_non_pod_add() {
     flecs::world world;
 

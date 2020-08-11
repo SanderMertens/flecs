@@ -125,7 +125,6 @@
                 "dtor_on_remove",
                 "copy_on_set",
                 "copy_on_override",
-                "move_on_merge",
                 "non_pod_add",
                 "non_pod_remove",
                 "non_pod_set",
