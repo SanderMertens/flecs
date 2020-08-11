@@ -288,10 +288,12 @@ void ecs_table_replace_data(
     ecs_data_t *data);
 
 /* Merge data of one table into another table */
-void ecs_table_merge(
+ecs_data_t* ecs_table_merge(
     ecs_world_t *world,
     ecs_table_t *new_table,
-    ecs_table_t *old_table);
+    ecs_table_t *old_table,
+    ecs_data_t *new_data,
+    ecs_data_t *old_data);
 
 void ecs_table_swap(
     ecs_world_t *world,

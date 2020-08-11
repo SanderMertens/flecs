@@ -23,7 +23,7 @@ void remove_node(
     ecs_switch_node_t *nodes,
     ecs_switch_node_t *node,
     int32_t element)
-{
+{    
     /* The node is currently assigned to a value */
     if (hdr->element == element) {
         ecs_assert(node->prev == -1, ECS_INVALID_PARAMETER, NULL);
@@ -113,6 +113,10 @@ void ecs_switch_set_count(
     int32_t count)
 {
     int32_t old_count = ecs_vector_count(sw->nodes);
+    if (old_count == count) {
+        return;
+    }
+
     ecs_vector_set_count(&sw->nodes, ecs_switch_node_t, count);
     ecs_vector_set_count(&sw->values, uint64_t, count);
 
@@ -199,23 +203,25 @@ void ecs_switch_remove(
         ecs_switch_header_t *hdr = get_header(sw, value);
         ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
         remove_node(hdr, nodes, node, element);
-
-        /* If header is pointing to last element, change it to current element,
-         * as the last element will be moved to the current element. */
-        if (hdr->element == ecs_vector_count(sw->nodes)) {
-            hdr->element = element;
-        }
     }
 
     /* Remove element from arrays */
     ecs_vector_remove_index(sw->nodes, ecs_switch_node_t, element);
     ecs_vector_remove_index(sw->values, uint64_t, element);
 
-    /* Update linked list references (node now points to previous last elem) */
-    int32_t prev = node->prev;
-    if (prev != -1) {
-        ecs_assert(prev >= 0, ECS_INVALID_PARAMETER, NULL);
-        nodes[prev].next = element;
+    if (ecs_vector_count(sw->nodes)) {
+        int32_t prev = node->prev;
+        if (prev != -1) {
+            ecs_assert(prev >= 0, ECS_INVALID_PARAMETER, NULL);
+            nodes[prev].next = element;
+        } else {
+            ecs_switch_header_t *hdr = get_header(sw, values[element]);
+            if (hdr && hdr->element != -1) {
+                ecs_assert(hdr->element == ecs_vector_count(sw->nodes), 
+                    ECS_INTERNAL_ERROR, NULL);
+                hdr->element = element;
+            }             
+        }
     }
 }
 

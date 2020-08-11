@@ -98,6 +98,11 @@ void Switch_query_1_case_1_type(void);
 void Switch_query_1_case_2_types(void);
 void Switch_query_2_cases_1_type(void);
 void Switch_query_2_cases_2_types(void);
+void Switch_add_switch_in_stage(void);
+void Switch_add_case_in_stage(void);
+void Switch_change_case_in_stage(void);
+void Switch_change_one_case_in_stage(void);
+void Switch_remove_switch_in_stage(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -342,7 +347,6 @@ void ComponentLifecycle_copy_on_new_w_data(void);
 void ComponentLifecycle_copy_on_clone(void);
 void ComponentLifecycle_copy_on_stage(void);
 void ComponentLifecycle_no_copy_on_move(void);
-void ComponentLifecycle_move_on_merge(void);
 void ComponentLifecycle_ctor_on_bulk_add(void);
 void ComponentLifecycle_dtor_on_bulk_remove(void);
 void ComponentLifecycle_ctor_on_bulk_add_entity(void);
@@ -1426,6 +1430,26 @@ bake_test_case Switch_testcases[] = {
     {
         "query_2_cases_2_types",
         Switch_query_2_cases_2_types
+    },
+    {
+        "add_switch_in_stage",
+        Switch_add_switch_in_stage
+    },
+    {
+        "add_case_in_stage",
+        Switch_add_case_in_stage
+    },
+    {
+        "change_case_in_stage",
+        Switch_change_case_in_stage
+    },
+    {
+        "change_one_case_in_stage",
+        Switch_change_one_case_in_stage
+    },
+    {
+        "remove_switch_in_stage",
+        Switch_remove_switch_in_stage
     }
 };
 
@@ -2327,10 +2351,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "no_copy_on_move",
         ComponentLifecycle_no_copy_on_move
-    },
-    {
-        "move_on_merge",
-        ComponentLifecycle_move_on_merge
     },
     {
         "ctor_on_bulk_add",
@@ -5150,7 +5170,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        16,
+        21,
         Switch_testcases
     },
     {
@@ -5255,7 +5275,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        23,
+        22,
         ComponentLifecycle_testcases
     },
     {

@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     auto Direction = flecs::type(world, "Direction", 
         "Front, Back, Left, Right");
 
-    /* Create a system that subscribers for all entities that have a Direction
+    /* Create a system that subscribes for all entities that have a Direction
      * and that are walking */
     flecs::system<>(world, "Walk", "CASE | Walking, SWITCH | Direction")
         .action([](flecs::iter it) {

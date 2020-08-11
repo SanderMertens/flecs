@@ -480,3 +480,174 @@ void Switch_query_2_cases_2_types() {
 
     ecs_fini(world);
 }
+
+static
+void AddSwitch(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    ecs_entity_t movement = ecs_column_entity(it, 2);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_add_entity(world, it->entities[i], ECS_SWITCH | movement);
+        test_assert(ecs_has_entity(world, it->entities[i], ECS_SWITCH | movement));
+    }
+}
+
+void Switch_add_switch_in_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+
+    ECS_SYSTEM(world, AddSwitch, EcsOnUpdate, Position, :Movement);
+
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has_entity(world, e1, ECS_SWITCH | Movement));
+    test_assert(ecs_has_entity(world, e2, ECS_SWITCH | Movement));
+    test_assert(ecs_has_entity(world, e3, ECS_SWITCH | Movement));
+
+    ecs_fini(world);
+}
+
+static
+void SetCase(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    ecs_entity_t sw_case = ecs_column_entity(it, 2);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_add_entity(world, it->entities[i], ECS_CASE | sw_case);
+        test_assert(ecs_has_entity(world, it->entities[i], ECS_CASE | sw_case));
+    }
+}
+
+void Switch_add_case_in_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+
+    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, :Walking);
+
+    ECS_ENTITY(world, e1, Position, SWITCH | Movement);
+    ECS_ENTITY(world, e2, Position, SWITCH | Movement);
+    ECS_ENTITY(world, e3, Position, SWITCH | Movement);
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has_entity(world, e1, ECS_CASE | Walking));
+    test_assert(ecs_has_entity(world, e2, ECS_CASE | Walking));
+    test_assert(ecs_has_entity(world, e3, ECS_CASE | Walking));
+
+    ecs_fini(world);
+}
+
+void Switch_change_case_in_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+
+    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, :Walking);
+
+    ECS_ENTITY(world, e1, Position, SWITCH | Movement, CASE | Running);
+    ECS_ENTITY(world, e2, Position, SWITCH | Movement, CASE | Running);
+    ECS_ENTITY(world, e3, Position, SWITCH | Movement, CASE | Running);
+
+    ecs_progress(world, 0);
+
+    test_assert(!ecs_has_entity(world, e1, ECS_CASE | Running));
+    test_assert(!ecs_has_entity(world, e2, ECS_CASE | Running));
+    test_assert(!ecs_has_entity(world, e3, ECS_CASE | Running));
+
+    test_assert(ecs_has_entity(world, e1, ECS_CASE | Walking));
+    test_assert(ecs_has_entity(world, e2, ECS_CASE | Walking));
+    test_assert(ecs_has_entity(world, e3, ECS_CASE | Walking));
+
+    ecs_fini(world);
+}
+
+void Switch_change_one_case_in_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+
+    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, :Jumping, CASE | Walking);
+
+    ECS_ENTITY(world, e0, Position, SWITCH | Movement, CASE | Jumping);
+    ECS_ENTITY(world, e1, Position, SWITCH | Movement, CASE | Walking);
+    ECS_ENTITY(world, e2, Position, SWITCH | Movement, CASE | Running);
+    ECS_ENTITY(world, e3, Position, SWITCH | Movement, CASE | Walking);
+    ECS_ENTITY(world, e4, Position, SWITCH | Movement, CASE | Running);
+    ECS_ENTITY(world, e5, Position, SWITCH | Movement, CASE | Jumping);
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has_entity(world, e0, ECS_CASE | Jumping));
+    test_assert(ecs_has_entity(world, e1, ECS_CASE | Jumping));
+    test_assert(ecs_has_entity(world, e2, ECS_CASE | Running));
+    test_assert(ecs_has_entity(world, e3, ECS_CASE | Jumping));
+    test_assert(ecs_has_entity(world, e4, ECS_CASE | Running));
+    test_assert(ecs_has_entity(world, e5, ECS_CASE | Jumping));
+
+    ecs_fini(world);
+}
+
+static
+void RemoveSwitch(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    ecs_entity_t movement = ecs_column_entity(it, 1);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_remove_entity(world, it->entities[i], ECS_SWITCH | movement);
+        test_assert(!ecs_has_entity(world, it->entities[i], ECS_SWITCH | movement));
+    }
+}
+
+void Switch_remove_switch_in_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+
+    ECS_SYSTEM(world, RemoveSwitch, EcsOnUpdate, SWITCH | Movement);
+
+    ECS_ENTITY(world, e1, Position, SWITCH | Movement);
+    ECS_ENTITY(world, e2, Position, SWITCH | Movement);
+    ECS_ENTITY(world, e3, Position, SWITCH | Movement);
+
+    ecs_progress(world, 0);
+
+    test_assert(!ecs_has_entity(world, e1, ECS_SWITCH | Movement));
+    test_assert(!ecs_has_entity(world, e2, ECS_SWITCH | Movement));
+    test_assert(!ecs_has_entity(world, e3, ECS_SWITCH | Movement));
+
+    ecs_fini(world);
+}

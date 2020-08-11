@@ -1130,7 +1130,7 @@ int32_t move_entity(
     }
 
     /* If components were added, invoke add actions */
-    if (src_table != dst_table) {
+    if (src_table != dst_table || (added && added->count)) {
         if (added && (dst_table->flags & EcsTableHasAddActions)) {
             ecs_comp_mask_t set_mask = {0};
             ecs_run_add_actions(
@@ -1274,7 +1274,7 @@ void commit(
         /* Only move entity when it is not moved to the root table, unless we're
          * iterating. In this case the entities need to be kept around so that
          * the merge knows to remove them from their previous tables. */
-        if (dst_table->type || in_progress) {            
+        if (dst_table->type || in_progress) {   
             info->row = move_entity(world, stage, entity, info, src_table, 
                 src_data, info->row, dst_table, added, removed);
             info->table = dst_table;

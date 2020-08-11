@@ -180,7 +180,7 @@ void ecs_snapshot_restore(
         ecs_map_free(world->stage.entity_index.hi);
         world->stage.entity_index.hi = snapshot->entity_index.hi;
         is_filtered = false;
-    }   
+    }
 
     if (!is_filtered) {
         world->stats.last_id = snapshot->last_id;
@@ -226,7 +226,16 @@ void ecs_snapshot_restore(
                     }
                 });
 
-                ecs_table_merge_data(world, table, leaf->data);
+                int32_t old_count = ecs_table_count(table);
+                int32_t new_count = ecs_table_data_count(leaf->data);
+
+                ecs_data_t *data = ecs_table_get_data(world, table);
+                data = ecs_table_merge(world, table, table, data, leaf->data);
+
+                /* Run OnSet systems for merged entities */
+                ecs_entities_t components = ecs_type_to_entities(table->type);
+                ecs_run_set_systems(world, &world->stage, &components, table, data,
+                    old_count, new_count, true);
             } else {
                 ecs_table_replace_data(world, table, leaf->data);
             }
