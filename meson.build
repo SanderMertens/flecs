@@ -73,6 +73,7 @@ helloworld_inc = include_directories('examples/c/01_helloworld/include')
 helloworld_exe = executable('helloworld',
     'examples/c/01_helloworld/src/main.c',
     include_directories : helloworld_inc,
+    implicit_include_directories : false,
     dependencies : flecs_dep
 )
 
