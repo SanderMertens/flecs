@@ -21,9 +21,9 @@ flecs_src = files(
     'src/entity_index.c',
     'src/strbuf.c',
     'src/iter.c',
-    'src/addons/bulk.c'
+    'src/addons/bulk.c',
     'src/addons/dbg.c',
-    'src/addons/hierarchy.c',
+    'src/hierarchy.c',
     'src/addons/module.c',
     'src/addons/os_api_impl.c',
     'src/addons/queue.c',
@@ -32,6 +32,7 @@ flecs_src = files(
     'src/addons/writer.c',
     'src/table.c',
     'src/signature.c',
+    'src/switch_list.c',
     'src/world.c',
     'src/stage.c',
     'src/bootstrap.c',
@@ -56,7 +57,8 @@ flecs_lib = library('flecs',
     install : true,
     c_args : [ '-Dflecs_EXPORTS', flecs_args ],
     dependencies : flecs_deps,
-    include_directories : flecs_inc
+    include_directories : flecs_inc,
+    implicit_include_directories : false
 )
 
 flecs_dep = declare_dependency(
@@ -68,7 +70,7 @@ flecs_dep = declare_dependency(
 
 helloword_inc = include_directories('examples/c/01_helloworld/include')
 
-helloworld_exe = executable('helloword',
+helloworld_exe = executable('helloworld',
     'examples/c/01_helloworld/src/main.c',
     include_directories : helloword_inc,
     dependencies : flecs_dep
