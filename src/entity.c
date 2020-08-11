@@ -2241,7 +2241,7 @@ ecs_entity_t ecs_get_case(
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_info_t info;
-    if (!ecs_get_info(world, stage, entity, &info)) {
+    if (!ecs_get_info(world, stage, entity, &info) || !info.table) {
         return 0;
     }
 

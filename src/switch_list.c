@@ -231,6 +231,7 @@ uint64_t ecs_switch_get(
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->values), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t *values = ecs_vector_first(sw->values, uint64_t);
