@@ -105,7 +105,6 @@ void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_dtor_on_remove(void);
 void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
-void ComponentLifecycle_move_on_merge(void);
 void ComponentLifecycle_non_pod_add(void);
 void ComponentLifecycle_non_pod_remove(void);
 void ComponentLifecycle_non_pod_set(void);
@@ -489,10 +488,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_copy_on_override
     },
     {
-        "move_on_merge",
-        ComponentLifecycle_move_on_merge
-    },
-    {
         "non_pod_add",
         ComponentLifecycle_non_pod_add
     },
@@ -657,7 +652,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        11,
+        10,
         ComponentLifecycle_testcases
     },
     {

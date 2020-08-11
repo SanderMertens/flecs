@@ -1729,7 +1729,14 @@ namespace internal
                 if (typeName[len - 2] == ' ') {
                     typeName[len - 2] = '\0';
                 }   
-            }           
+            }
+
+            /* Remove 'struct' */
+            size_t struct_len = strlen("struct ");
+            if (!ecs_os_strncmp(typeName, "struct ", struct_len)) {
+                memmove(typeName, typeName + struct_len, len - struct_len);
+                typeName[len - struct_len] = '\0';
+            }
         }
     };
 
