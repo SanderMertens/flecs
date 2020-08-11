@@ -433,6 +433,42 @@ void ExpireComponents(ecs_iter_t *it) {
 
 Note that this system doesn't contain any code that is specific for the components to which the traits were added. This means this system can be applied to any component.
 
+## Switchable tags
+Switchable tags are sets of regular tags that can be added to an entity, except that only one of the set can be active at the same time. This is particularly useful when storing state machines. Consider the following example:
+
+```cpp
+/* Create a Movement switch machine with 3 cases */
+ECS_TAG(world, Standing);
+ECS_TAG(world, Walking);
+ECS_TAG(world, Running);
+ECS_TYPE(world, Movement, Standing, Walking, Running); 
+
+/* Create a few entities with various state combinations */
+ecs_entity_t e = ecs_new(world, 0);
+
+/* Add the switch to the entity. This lets Flecs know that only one of the tags
+ * in the Movement type may be active at the same time. */
+ecs_add_entity(world, e, ECS_SWITCH | Movement);
+
+/* Add the Standing case to the entity */
+ecs_add_entity(world, e, ECS_CASE | Standing);
+
+/* Add the Walking case to the entity. This removes Standing */
+ecs_add_entity(world, e, ECS_CASE | Walking);
+
+/* Add the Running case to the entity. This removes Walking */
+ecs_add_entity(world, e, ECS_CASE | Running);
+```
+
+Switchable tags aren't just convenient, they are also very fast, as changing a case does not move the entity between archetypes like regular tags do. This makes switchable components particularly useful for fast-changing data, like states in a state machine. Systems can query for switchable tags by using the `SWITCH` and `CASE` roles:
+
+```c
+/* Subscribe for all entities that are Walking, and have the switch Direction */
+ECS_SYSTEM(world, Walk, EcsOnUpdate, CASE | Walking, SWITCH | Direction);
+```
+
+See the [switch example](https://github.com/SanderMertens/flecs/blob/master/examples/c/44_switch/src/main.c) for more details.
+
 ## Queries
 Queries are like systems in that they let applications iterate over entities, but without having to create a separate function. Systems use queries internally however, so their APIs are similar:
 
