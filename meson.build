@@ -68,11 +68,11 @@ flecs_dep = declare_dependency(
     include_directories : flecs_inc
 )
 
-helloword_inc = include_directories('examples/c/01_helloworld/include')
+helloworld_inc = include_directories('examples/c/01_helloworld/include')
 
 helloworld_exe = executable('helloworld',
     'examples/c/01_helloworld/src/main.c',
-    include_directories : helloword_inc,
+    include_directories : helloworld_inc,
     dependencies : flecs_dep
 )
 
