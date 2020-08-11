@@ -1036,6 +1036,7 @@ void ecs_add_remove_type(
  * @param sw The switch for which to obtain the case.
  * @return The current case for the specified switch. 
  */
+FLECS_EXPORT
 ecs_entity_t ecs_get_case(
     ecs_world_t *world,
     ecs_entity_t e,
