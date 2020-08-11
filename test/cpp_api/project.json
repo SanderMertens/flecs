@@ -41,7 +41,8 @@
                 "add_role",
                 "remove_role",
                 "has_role",
-                "trait_role"
+                "trait_role",
+                "equals"
             ]
         }, {
             "id": "Traits",
@@ -56,6 +57,13 @@
                 "set_tag_trait",
                 "system_1_trait_instance",
                 "system_2_trait_instances"
+            ]
+        }, {
+            "id": "Switch",
+            "testcases": [
+                "add_case",
+                "system_w_case",
+                "system_w_switch"
             ]
         }, {
             "id": "Paths",
@@ -117,7 +125,6 @@
                 "dtor_on_remove",
                 "copy_on_set",
                 "copy_on_override",
-                "move_on_merge",
                 "non_pod_add",
                 "non_pod_remove",
                 "non_pod_set",

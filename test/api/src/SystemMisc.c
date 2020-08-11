@@ -305,18 +305,6 @@ void SystemMisc_invalid_or_w_empty() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_phase() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, -1, 0);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_invalid_component_id() {
     install_test_abort();
 

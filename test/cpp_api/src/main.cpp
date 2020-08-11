@@ -36,6 +36,7 @@ void Entity_add_role(void);
 void Entity_remove_role(void);
 void Entity_has_role(void);
 void Entity_trait_role(void);
+void Entity_equals(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -48,6 +49,11 @@ void Traits_set_component_trait(void);
 void Traits_set_tag_trait(void);
 void Traits_system_1_trait_instance(void);
 void Traits_system_2_trait_instances(void);
+
+// Testsuite 'Switch'
+void Switch_add_case(void);
+void Switch_system_w_case(void);
+void Switch_system_w_switch(void);
 
 // Testsuite 'Paths'
 void Paths_name(void);
@@ -99,7 +105,6 @@ void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_dtor_on_remove(void);
 void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
-void ComponentLifecycle_move_on_merge(void);
 void ComponentLifecycle_non_pod_add(void);
 void ComponentLifecycle_non_pod_remove(void);
 void ComponentLifecycle_non_pod_set(void);
@@ -240,6 +245,10 @@ bake_test_case Entity_testcases[] = {
     {
         "trait_role",
         Entity_trait_role
+    },
+    {
+        "equals",
+        Entity_equals
     }
 };
 
@@ -283,6 +292,21 @@ bake_test_case Traits_testcases[] = {
     {
         "system_2_trait_instances",
         Traits_system_2_trait_instances
+    }
+};
+
+bake_test_case Switch_testcases[] = {
+    {
+        "add_case",
+        Switch_add_case
+    },
+    {
+        "system_w_case",
+        Switch_system_w_case
+    },
+    {
+        "system_w_switch",
+        Switch_system_w_switch
     }
 };
 
@@ -464,10 +488,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_copy_on_override
     },
     {
-        "move_on_merge",
-        ComponentLifecycle_move_on_merge
-    },
-    {
         "non_pod_add",
         ComponentLifecycle_non_pod_add
     },
@@ -583,7 +603,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        27,
+        28,
         Entity_testcases
     },
     {
@@ -592,6 +612,13 @@ static bake_test_suite suites[] = {
         NULL,
         10,
         Traits_testcases
+    },
+    {
+        "Switch",
+        NULL,
+        NULL,
+        3,
+        Switch_testcases
     },
     {
         "Paths",
@@ -625,7 +652,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        11,
+        10,
         ComponentLifecycle_testcases
     },
     {
@@ -653,5 +680,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 10);
+    return bake_test_run("cpp_api", argc, argv, suites, 11);
 }

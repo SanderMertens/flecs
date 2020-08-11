@@ -220,6 +220,7 @@ ecs_query_t* ecs_query_new_w_sig(
 #define ECS_TYPE_CONSTRAINT_VIOLATION (43)
 #define ECS_COMPONENT_NOT_REGISTERED (44)
 #define ECS_INCONSISTENT_COMPONENT_ID (45)
+#define ECS_INVALID_CASE (46)
 
 /** Declare type variable */
 #define ECS_TYPE_VAR(type)\

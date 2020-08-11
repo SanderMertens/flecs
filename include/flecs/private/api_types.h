@@ -59,6 +59,17 @@ typedef struct ecs_entities_t {
     int32_t count;          /**< The number of entities in the array */
 } ecs_entities_t;
 
+typedef struct ecs_page_cursor_t {
+    int32_t first;
+    int32_t count;
+} ecs_page_cursor_t;
+
+typedef struct ecs_page_iter_t {
+    int32_t offset;
+    int32_t limit;
+    int32_t remaining;
+} ecs_page_iter_t;
+
 /** Scope-iterator specific data */
 typedef struct ecs_scope_iter_t {
     ecs_filter_t filter;
@@ -76,10 +87,10 @@ typedef struct ecs_filter_iter_t {
 /** Query-iterator specific data */
 typedef struct ecs_query_iter_t {
     ecs_query_t *query;
-    int32_t offset;
-    int32_t limit;
-    int32_t remaining;
+    ecs_page_iter_t page_iter;
     int32_t index;
+    int32_t sparse_smallest;
+    int32_t sparse_first;
 } ecs_query_iter_t;  
 
 /** Query-iterator specific data */

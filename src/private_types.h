@@ -67,19 +67,26 @@ typedef int (*ecs_parse_action_t)(
     const char *source,
     void *ctx);
 
-/** A component array in a table. */
+/** A component column. */
 struct ecs_column_t {
-    ecs_vector_t *data;         /**< Column data */
+    ecs_vector_t *data;        /**< Column data */
     int16_t size;              /**< Column element size */
     int16_t alignment;         /**< Column element alignment */
 };
 
+/** A switch column. */
+typedef struct ecs_sw_column_t {
+    ecs_switch_t *data;   /**< Column data */
+    ecs_type_t type;      /**< Switch type */
+} ecs_sw_column_t;
+
 /** Stage-specific component data */
 struct ecs_data_t {
-    ecs_vector_t *entities;     /**< Entity identifiers */
-    ecs_vector_t *record_ptrs;  /**< Pointers to records in main entity index */
-    ecs_column_t *columns;      /**< Component data */
-    bool marked_dirty;          /**< Was table marked dirty by stage? */  
+    ecs_vector_t *entities;      /**< Entity identifiers */
+    ecs_vector_t *record_ptrs;   /**< Ptrs to records in main entity index */
+    ecs_column_t *columns;       /**< Component columns */
+    ecs_sw_column_t *sw_columns; /**< Switch columns */
+    bool marked_dirty;           /**< Was table marked dirty by stage? */  
 };
 
 /** Small footprint data structure for storing data associated with a table. */
@@ -104,10 +111,11 @@ typedef struct ecs_table_leaf_t {
 #define EcsTableHasOnSet            2048u
 #define EcsTableHasUnSet            4096u
 #define EcsTableHasMonitors         8192u
+#define EcsTableHasSwitch           16384u
 
 /* Composite constants */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
-#define EcsTableHasAddActions       (EcsTableHasBase | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
+#define EcsTableHasAddActions       (EcsTableHasBase | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
 #define EcsTableHasRemoveActions    (EcsTableHasBase | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors)
 
 /** Edge used for traversing the table graph. */
@@ -151,16 +159,26 @@ struct ecs_table_t {
 
     ecs_flags32_t flags;             /**< Flags for testing table properties */
     int32_t column_count;            /**< Number of data columns in table */
+    int32_t sw_column_count;
+    int32_t sw_column_offset;
 };
+
+/* Sparse query column */
+typedef struct ecs_sparse_column_t {
+    ecs_sw_column_t *sw_column;
+    ecs_entity_t sw_case; 
+    int32_t signature_column_index;
+} ecs_sparse_column_t;
 
 /** Type containing data for a table matched with a query. */
 typedef struct ecs_matched_table_t {
     ecs_table_t *table;            /**< Reference to the table */
     int32_t *columns;              /**< Mapping of system columns to table */
+    ecs_vector_t *sparse_columns;  /**< Column ids of sparse columns */
     ecs_entity_t *components;      /**< Actual components of system columns */
     ecs_vector_t *references;      /**< Reference columns and cached pointers */
-    int32_t rank;                  /**< Rank used to sort tables */
     int32_t *monitor;              /**< Used to monitor table for changes */
+    int32_t rank;                  /**< Rank used to sort tables */
 } ecs_matched_table_t;
 
 /** Type storing an entity range within a table.
@@ -168,11 +186,11 @@ typedef struct ecs_matched_table_t {
  * constructs a list of the ranges across archetypes that are in order so that
  * when the query iterates over the archetypes, it only needs to iterate the
  * list of ranges. */
-typedef struct ecs_table_range_t {
+typedef struct ecs_table_slice_t {
     ecs_matched_table_t *table;     /**< Reference to the matched table */
     int32_t start_row;              /**< Start of range  */
     int32_t count;                  /**< Number of entities in range */
-} ecs_table_range_t;
+} ecs_table_slice_t;
 
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
 #define EcsQueryMonitor (2)          /* Query needs to be registered as a monitor */
@@ -203,7 +221,7 @@ struct ecs_query_t {
     /* Used for sorting */
     ecs_entity_t sort_on_component;
     ecs_compare_action_t compare;   
-    ecs_vector_t *table_ranges;     
+    ecs_vector_t *table_slices;     
 
     /* Used for table sorting */
     ecs_entity_t rank_on_component;

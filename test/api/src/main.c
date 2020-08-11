@@ -81,6 +81,29 @@ void Add_add_w_xor(void);
 void Add_add_same_w_xor(void);
 void Add_add_after_remove_xor(void);
 
+// Testsuite 'Switch'
+void Switch_get_case_empty(void);
+void Switch_get_case_no_switch(void);
+void Switch_get_case_unset(void);
+void Switch_get_case_set(void);
+void Switch_get_case_change(void);
+void Switch_new_w_type(void);
+void Switch_add_w_type(void);
+void Switch_bulk_new_w_type(void);
+void Switch_3_entities_same_case(void);
+void Switch_2_entities_1_change_case(void);
+void Switch_3_entities_change_case(void);
+void Switch_query_switch(void);
+void Switch_query_1_case_1_type(void);
+void Switch_query_1_case_2_types(void);
+void Switch_query_2_cases_1_type(void);
+void Switch_query_2_cases_2_types(void);
+void Switch_add_switch_in_stage(void);
+void Switch_add_case_in_stage(void);
+void Switch_change_case_in_stage(void);
+void Switch_change_one_case_in_stage(void);
+void Switch_remove_switch_in_stage(void);
+
 // Testsuite 'Remove'
 void Remove_zero(void);
 void Remove_zero_from_nonzero(void);
@@ -324,7 +347,6 @@ void ComponentLifecycle_copy_on_new_w_data(void);
 void ComponentLifecycle_copy_on_clone(void);
 void ComponentLifecycle_copy_on_stage(void);
 void ComponentLifecycle_no_copy_on_move(void);
-void ComponentLifecycle_move_on_merge(void);
 void ComponentLifecycle_ctor_on_bulk_add(void);
 void ComponentLifecycle_dtor_on_bulk_remove(void);
 void ComponentLifecycle_ctor_on_bulk_add_entity(void);
@@ -381,7 +403,6 @@ void SystemMisc_invalid_or_w_empty(void);
 void SystemMisc_invalid_component_id(void);
 void SystemMisc_invalid_entity_id(void);
 void SystemMisc_invalid_or_from_system(void);
-void SystemMisc_invalid_phase(void);
 void SystemMisc_invalid_null_string(void);
 void SystemMisc_invalid_empty_string(void);
 void SystemMisc_invalid_empty_string_w_space(void);
@@ -1345,6 +1366,93 @@ bake_test_case Add_testcases[] = {
     }
 };
 
+bake_test_case Switch_testcases[] = {
+    {
+        "get_case_empty",
+        Switch_get_case_empty
+    },
+    {
+        "get_case_no_switch",
+        Switch_get_case_no_switch
+    },
+    {
+        "get_case_unset",
+        Switch_get_case_unset
+    },
+    {
+        "get_case_set",
+        Switch_get_case_set
+    },
+    {
+        "get_case_change",
+        Switch_get_case_change
+    },
+    {
+        "new_w_type",
+        Switch_new_w_type
+    },
+    {
+        "add_w_type",
+        Switch_add_w_type
+    },
+    {
+        "bulk_new_w_type",
+        Switch_bulk_new_w_type
+    },
+    {
+        "3_entities_same_case",
+        Switch_3_entities_same_case
+    },
+    {
+        "2_entities_1_change_case",
+        Switch_2_entities_1_change_case
+    },
+    {
+        "3_entities_change_case",
+        Switch_3_entities_change_case
+    },
+    {
+        "query_switch",
+        Switch_query_switch
+    },
+    {
+        "query_1_case_1_type",
+        Switch_query_1_case_1_type
+    },
+    {
+        "query_1_case_2_types",
+        Switch_query_1_case_2_types
+    },
+    {
+        "query_2_cases_1_type",
+        Switch_query_2_cases_1_type
+    },
+    {
+        "query_2_cases_2_types",
+        Switch_query_2_cases_2_types
+    },
+    {
+        "add_switch_in_stage",
+        Switch_add_switch_in_stage
+    },
+    {
+        "add_case_in_stage",
+        Switch_add_case_in_stage
+    },
+    {
+        "change_case_in_stage",
+        Switch_change_case_in_stage
+    },
+    {
+        "change_one_case_in_stage",
+        Switch_change_one_case_in_stage
+    },
+    {
+        "remove_switch_in_stage",
+        Switch_remove_switch_in_stage
+    }
+};
+
 bake_test_case Remove_testcases[] = {
     {
         "zero",
@@ -2245,10 +2353,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_no_copy_on_move
     },
     {
-        "move_on_merge",
-        ComponentLifecycle_move_on_merge
-    },
-    {
         "ctor_on_bulk_add",
         ComponentLifecycle_ctor_on_bulk_add
     },
@@ -2461,10 +2565,6 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "invalid_or_from_system",
         SystemMisc_invalid_or_from_system
-    },
-    {
-        "invalid_phase",
-        SystemMisc_invalid_phase
     },
     {
         "invalid_null_string",
@@ -5067,6 +5167,13 @@ static bake_test_suite suites[] = {
         Add_testcases
     },
     {
+        "Switch",
+        NULL,
+        NULL,
+        21,
+        Switch_testcases
+    },
+    {
         "Remove",
         NULL,
         NULL,
@@ -5168,7 +5275,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        23,
+        22,
         ComponentLifecycle_testcases
     },
     {
@@ -5182,7 +5289,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        50,
+        49,
         SystemMisc_testcases
     },
     {
@@ -5413,5 +5520,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 52);
+    return bake_test_run("api", argc, argv, suites, 53);
 }

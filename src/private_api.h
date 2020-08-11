@@ -288,10 +288,12 @@ void ecs_table_replace_data(
     ecs_data_t *data);
 
 /* Merge data of one table into another table */
-void ecs_table_merge(
+ecs_data_t* ecs_table_merge(
     ecs_world_t *world,
     ecs_table_t *new_table,
-    ecs_table_t *old_table);
+    ecs_table_t *old_table,
+    ecs_data_t *new_data,
+    ecs_data_t *old_data);
 
 void ecs_table_swap(
     ecs_world_t *world,
@@ -326,6 +328,11 @@ void ecs_table_mark_dirty(
 const EcsComponent* ecs_component_from_id(
     ecs_world_t *world,
     ecs_entity_t e);
+
+int32_t ecs_table_switch_from_case(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t add);    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
@@ -438,6 +445,13 @@ ecs_size_t ecs_from_size_t(
 /* Convert int64_t to entity */
 ecs_entity_t ecs_to_entity(
     int64_t v);
+
+/* Convert int64_t from entity */
+int64_t ecs_from_entity(
+    ecs_entity_t v);   
+
+int32_t ecs_from_entity_to_i32(
+    ecs_entity_t v);        
 
 /* Convert 64bit value to ecs_record_t type. ecs_record_t is stored as 64bit int in the
  * entity index */

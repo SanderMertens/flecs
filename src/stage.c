@@ -52,57 +52,6 @@ void clear_columns(
 }
 
 static
-void merge_columns(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *dst_data,
-    ecs_data_t *src_data,
-    int32_t dst_entity_count,
-    int32_t src_entity_count)
-{
-    /* Copy data column by column from the stage to the main stage */
-    int32_t c, column_count = table->column_count;
-    ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
-    ecs_entity_t *dst_entities = ecs_vector_first(dst_data->entities, ecs_entity_t);
-    ecs_entity_t *src_entities = ecs_vector_first(src_data->entities, ecs_entity_t);
-
-    for (c = 0; c < column_count; c ++) {
-        ecs_column_t *main_column = &dst_data->columns[c];
-        if (!main_column->size) {
-            continue;
-        }
-        
-        ecs_column_t *column = &src_data->columns[c];
-        int16_t size = column->size;
-        int16_t alignment = column->alignment;
-        ecs_assert(size == main_column->size, ECS_INTERNAL_ERROR, NULL);
-
-        void *src = ecs_vector_first_t(column->data, size, alignment);
-        ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        void *dst = ecs_vector_first_t(main_column->data, size, alignment);
-        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
-        dst = ECS_OFFSET(dst, dst_entity_count * size);
-
-        ecs_entity_t component = components[c];
-        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
-        ecs_xtor_t ctor;
-        ecs_move_t move;
-        if (cdata && (move = cdata->lifecycle.move) && (ctor = cdata->lifecycle.ctor)) {
-            void *ctx = cdata->lifecycle.ctx;
-            ctor(world, component, dst_entities, dst, ecs_to_size_t(size), 
-                src_entity_count, ctx);
-            move(world, component, dst_entities, src_entities, dst, src, 
-                ecs_to_size_t(size), src_entity_count, ctx);
-        } else {
-            ecs_os_memcpy(dst, src, size * src_entity_count);
-        }
-
-        ecs_vector_clear(column->data);
-    } 
-}
-
-static
 void merge_commits(
     ecs_world_t *world,
     ecs_stage_t *stage)
@@ -169,52 +118,12 @@ void merge_commits(
                 /* Delete entity from old table */
                 ecs_data_t *src_data = ecs_table_get_data(world, src_table);
                 ecs_table_destruct(world, src_table, src_data, row, 1);
+
                 ecs_table_delete(world, stage, src_table, src_data, row);
             }
         }
 
-        /* Ensure that the main table is large enough to store new entities */
-        int32_t main_entity_count = ecs_table_count(table);
-        ecs_table_set_count(world, table, main_data, 
-            main_entity_count + entity_count);
-
-        /* Copy entity ids */
-        ecs_entity_t *main_entities = ecs_vector_first(main_data->entities, ecs_entity_t);
-        ecs_os_memcpy(&main_entities[main_entity_count], entities, 
-            entity_count * ECS_SIZEOF(ecs_entity_t));
-
-        /* Copy record ptrs */
-        ecs_record_t **main_record_ptrs = ecs_vector_first(main_data->record_ptrs, ecs_record_t*);
-        ecs_os_memcpy(&main_record_ptrs[main_entity_count], record_ptrs, 
-            entity_count * ECS_SIZEOF(ecs_record_t*));
-
-        /* Copy component data */
-        merge_columns(
-            world, table, main_data, data, main_entity_count, 
-            entity_count);
-
-        /* Update entity index */
-        for (e = 0; e < entity_count; e ++) {
-            ecs_record_t *record = record_ptrs[e];
-
-            /* We just retrieved or created the record, it should be there */
-            ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            bool is_watched;
-            ecs_record_to_row(record->row, &is_watched);  
-
-            record->table = table;
-            record->row = ecs_row_to_record(main_entity_count + e, is_watched);
-        }
-
-        /* Clear staged table data */
-        ecs_table_clear_data(table, data);
-
-        /* If the table was empty, activate it explicitly since we bypassed the
-         * regular append path */
-        if (!main_entity_count) {
-            ecs_table_activate(world, table, NULL, true);
-        }
+        ecs_table_merge(world, table, table, main_data, data);        
     }
 
     /* All dirty tables are processed, clear array for next frame. */

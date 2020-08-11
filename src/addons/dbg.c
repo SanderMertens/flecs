@@ -36,7 +36,7 @@ void ecs_dbg_table(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
-        if (e & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(e, CHILDOF)) {
             ecs_dbg_entity_t parent_dbg;
             ecs_dbg_entity(world, e & ECS_ENTITY_MASK, &parent_dbg);
 
@@ -54,7 +54,7 @@ void ecs_dbg_table(
                 world, dbg_out->parent_entities, e & ECS_ENTITY_MASK);
         }
 
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             ecs_dbg_entity_t base_dbg;
             ecs_dbg_entity(world, e & ECS_ENTITY_MASK, &base_dbg);
 

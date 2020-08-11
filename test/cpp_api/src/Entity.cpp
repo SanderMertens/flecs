@@ -447,8 +447,22 @@ void Entity_trait_role() {
     test_assert(comb.has_role(flecs::Trait));
 
     auto lo = comb.lo();
-    auto hi = comb.hi().remove_role();
+    auto hi = comb.remove_role().hi();
 
     test_assert(lo == a);
     test_assert(hi == b);
+}
+
+void Entity_equals() {
+    flecs::world world;
+
+    auto e1 = flecs::entity(world);
+    auto e2 = flecs::entity(world);
+
+    auto id1 = flecs::entity(world, e1.id());
+    auto id2 = flecs::entity(world, e2.id());
+
+    test_assert(e1 == id1);
+    test_assert(e2 == id2);
+    test_assert(e1 != e2);
 }

@@ -625,6 +625,7 @@ void World_phases_w_merging() {
 
     ecs_run(world, TMergeManual, 0, NULL);
 
+    p = ecs_get(world, e, Position);
     test_int(p->x, 9);
 
     ecs_fini(world);

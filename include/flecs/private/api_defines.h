@@ -114,9 +114,10 @@ typedef int32_t ecs_size_t;
 //// Type role macro's
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_TYPE_ROLE_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF | ECS_TRAIT | ECS_AND | ECS_OR | ECS_XOR | ECS_NOT))
-#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_TYPE_ROLE_MASK)
+#define ECS_ROLE_MASK ((ecs_entity_t)0xFF << 56)
+#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ROLE_MASK)
 #define ECS_TYPE_ROLE_START ECS_CHILDOF
+#define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -137,6 +137,7 @@ bool get_info(
     ecs_entity_info_t *info)
 {
     ecs_record_t *record = ecs_eis_get(&world->stage, entity);
+
     if (!record) {
         info->table = NULL;
         info->is_watched = false;
@@ -219,7 +220,7 @@ void ecs_get_column_info(
     ecs_entity_t *type_array = ecs_vector_first(table->type, ecs_entity_t);
 
     if (get_all) {
-        int32_t i, count = components->count;
+        int32_t i, count = ecs_vector_count(table->type);
         for (i = 0; i < count; i ++) {
             ecs_entity_t id = type_array[i];
             cinfo[i].id = id;
@@ -443,7 +444,7 @@ int32_t find_prefab(
 
     for (i = n + 1; i < count; i ++) {
         ecs_entity_t e = buffer[i];
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             return i;
         }
     }
@@ -506,7 +507,7 @@ void instantiate_children(
         /* Keep track of the element that creates the CHILDOF relationship with
         * the prefab parent. We need to replace this element to make sure the
         * created children point to the instance and not the prefab */ 
-        if (c & ECS_CHILDOF && (c & ECS_ENTITY_MASK) == base) {
+        if (ECS_HAS_ROLE(c, CHILDOF) && (c & ECS_ENTITY_MASK) == base) {
             base_index = pos;
         }        
 
@@ -603,6 +604,7 @@ bool override_from_base(
     int32_t count)
 {
     ecs_entity_info_t base_info;
+
     if (!get_info(world, base, &base_info)) {
         return false;
     }
@@ -664,7 +666,7 @@ bool override_component(
             break;
         }
 
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             return override_from_base(world, e & ECS_ENTITY_MASK, component, 
                 data, column, row, count);
         }
@@ -778,7 +780,7 @@ void ecs_components_override(
         ecs_entity_t component = component_info[i].id;
 
         if (component >= ECS_HI_COMPONENT_ID) {
-            if (component & ECS_INSTANCEOF) {
+            if (ECS_HAS_ROLE(component, INSTANCEOF)) {
                 ecs_entity_t base = component & ECS_ENTITY_MASK;
                 instantiate(world, stage, base, data, row, count);
 
@@ -821,6 +823,36 @@ void ecs_components_override(
     if (run_on_set && table_without_base != table) {
         ecs_run_monitors(world, stage, table, table->on_set_all, row, count, 
             table_without_base->on_set_all);
+    }
+}
+
+void ecs_components_switch(
+    ecs_world_t *world,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    ecs_entities_t *added)
+{
+    (void)world;
+
+    ecs_entity_t *array = added->array;
+    int32_t i, add_count = added->count;
+
+    for (i = 0; i < add_count; i ++) {
+        ecs_entity_t e = array[i];
+
+        if (ECS_HAS_ROLE(e, CASE)) {
+            e = e & ECS_ENTITY_MASK;
+
+            ecs_entity_t sw_case = ecs_entity_t_lo(e);
+            ecs_entity_t sw_index = ecs_entity_t_hi(e);
+
+            ecs_switch_t *sw = data->sw_columns[sw_index].data;
+            int32_t r;
+            for (r = 0; r < count; r ++) {
+                ecs_switch_set(sw, row + r, sw_case);
+            }
+        }
     }
 }
 
@@ -922,6 +954,11 @@ void ecs_run_add_actions(
             added_count, set_mask, run_on_set);
     }
 
+    if (table->flags & EcsTableHasSwitch) {
+        ecs_components_switch(
+            world, data, row, count, added);
+    }
+
     if (table->flags & EcsTableHasOnAdd) {
         ecs_components_on_add(world, stage, table, data, row, count, 
             cinfo, added_count);
@@ -997,6 +1034,7 @@ int32_t new_entity(
 
     if (new_table->flags & EcsTableHasAddActions) {
         ecs_comp_mask_t set_mask = {0};
+        
         ecs_run_add_actions(
             world, stage, new_table, new_data, new_row, 1, added, set_mask, 
             true, true);
@@ -1092,7 +1130,7 @@ int32_t move_entity(
     }
 
     /* If components were added, invoke add actions */
-    if (src_table != dst_table) {
+    if (src_table != dst_table || (added && added->count)) {
         if (added && (dst_table->flags & EcsTableHasAddActions)) {
             ecs_comp_mask_t set_mask = {0};
             ecs_run_add_actions(
@@ -1165,7 +1203,7 @@ bool update_component_monitor_w_array(
         ecs_entity_t component = entities->array[i];
         if (component < ECS_HI_COMPONENT_ID) {
             ecs_component_monitor_mark(mon, component);
-        } else if (component & ECS_CHILDOF) {
+        } else if (ECS_HAS_ROLE(component, CHILDOF)) {
             childof_changed = true;
         }
     }
@@ -1216,6 +1254,16 @@ void commit(
          * no action is required. When this is not the main stage, this can
          * happen when an entity is copied from the main stage table to the
          * same table in the stage, for example when ecs_set is invoked. */
+
+        /* However, if a component was added in the process of traversing a
+         * table, this suggests that a case switch could have occured. */
+        if (added && added->count && src_table && 
+            src_table->flags & EcsTableHasSwitch) 
+        {
+            ecs_components_switch(
+                world, info->data, info->row, 1, added);
+        }
+
         return;
     }
 
@@ -1226,7 +1274,7 @@ void commit(
         /* Only move entity when it is not moved to the root table, unless we're
          * iterating. In this case the entities need to be kept around so that
          * the merge knows to remove them from their previous tables. */
-        if (dst_table->type || in_progress) {            
+        if (dst_table->type || in_progress) {   
             info->row = move_entity(world, stage, entity, info, src_table, 
                 src_data, info->row, dst_table, added, removed);
             info->table = dst_table;
@@ -1581,7 +1629,7 @@ void *get_mutable(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert((component & ECS_ENTITY_MASK) == component || component & ECS_TRAIT, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((component & ECS_ENTITY_MASK) == component || ECS_HAS_ROLE(component, TRAIT), ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
     if (stage == &world->stage) {
@@ -1787,13 +1835,13 @@ ecs_entity_t ecs_new_w_entity(
         };
 
         ecs_entity_t old_scope = 0;
-        if (component & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(component, CHILDOF)) {
             old_scope = ecs_set_scope(world, 0);
         }
 
         new(world, stage, entity, &to_add);
 
-        if (component & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(component, CHILDOF)) {
             ecs_set_scope(world, old_scope);
         }
     } else {
@@ -2186,13 +2234,63 @@ ecs_entity_t ecs_set_ptr_w_entity(
     return entity;
 }
 
+ecs_entity_t ecs_get_case(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t sw_id)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_entity_info_t info;
+    if (!ecs_get_info(world, stage, entity, &info) || !info.table) {
+        return 0;
+    }
+
+    sw_id = sw_id | ECS_SWITCH;
+
+    ecs_table_t *table = info.table;
+    ecs_data_t *data = info.data;
+    if (!data) {
+        return 0;
+    }
+
+    ecs_type_t type = table->type;
+    int32_t index = ecs_type_index_of(type, sw_id);
+    if (index == -1) {
+        return 0;
+    }
+
+    index -= table->sw_column_offset;
+    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_switch_t *sw = data->sw_columns[index].data;  
+    return ecs_switch_get(sw, info.row);  
+}
+
 bool ecs_has_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
 {
-    ecs_type_t type = ecs_get_type(world, entity);
-    return ecs_type_has_entity(world, type, component);
+    if (ECS_HAS_ROLE(component, CASE)) {
+        ecs_stage_t *stage = ecs_get_stage(&world);
+        ecs_entity_info_t info;
+        if (!ecs_get_info(world, stage, entity, &info)) {
+            return false;
+        }
+
+        ecs_table_t *table = info.table;
+        int32_t index = ecs_table_switch_from_case(world, table, component);
+        ecs_assert(index < table->sw_column_count, ECS_INTERNAL_ERROR, NULL);
+        
+        ecs_data_t *data = info.data;
+        ecs_switch_t *sw = data->sw_columns[index].data;
+        ecs_entity_t value = ecs_switch_get(sw, info.row);
+
+        return value == (component & ECS_ENTITY_MASK);
+    } else {
+        ecs_type_t type = ecs_get_type(world, entity);
+        return ecs_type_has_entity(world, type, component);
+    }
 }
 
 bool ecs_has_type(

@@ -77,8 +77,9 @@ void merge_table(
                     src_data, 0, src_count, to_remove, false);
             }
 
-            ecs_table_merge(world, dst_table, src_table);
             ecs_data_t *dst_data = ecs_table_get_data(world, dst_table);
+            dst_data = ecs_table_merge(
+                world, dst_table, src_table, dst_data, src_data);
 
             if (to_add && to_add->count && dst_data) {
                 ecs_comp_mask_t set_mask = {0};
