@@ -200,6 +200,7 @@ typedef struct ecs_table_slice_t {
 #define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
 #define EcsQueryHasRefs (64)         /* Does query have references */
 #define EcsQueryHasTraits (128)      /* Does query have traits */
+#define EcsQueryIsSubquery (256)     /* Is query a subquery */
 
 #define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
@@ -226,6 +227,9 @@ struct ecs_query_t {
     /* Used for table sorting */
     ecs_entity_t rank_on_component;
     ecs_rank_type_action_t group_table;
+
+    /* Subqueries */
+    ecs_vector_t *subqueries;
 
     /* The query kind determines how it is registered with tables */
     ecs_flags32_t flags;
@@ -383,6 +387,7 @@ struct ecs_world_t {
     /* Persistent queries registered with the world. Persistent queries are
      * stateful and automatically matched with existing and new tables. */
     ecs_sparse_t *queries;
+    ecs_sparse_t *subqueries;
 
     /* Keep track of components that were added/removed to/from monitored
      * entities. Monitored entities are entities that a query has matched with

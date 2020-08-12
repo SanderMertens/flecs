@@ -622,7 +622,7 @@ add_trait:
         table_data->components[c] = component;
     }
 
-    if (table) {
+    if (table && !(query->flags & EcsQueryIsSubquery)) {
         int32_t matched_table_index = 0;
         if (!has_auto_activation(query)) {
             /* If query doesn't automatically activates/inactivates tables, the
@@ -831,9 +831,7 @@ int32_t get_table_param_index(
         }
     }
 
-    ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
-
-    return i;
+    return i == count ? -1 : i;
 }
 
 /** Check if a table was matched with the system */
@@ -1430,6 +1428,35 @@ void process_signature(
     register_monitors(world, query);
 }
 
+static
+void add_subquery(
+    ecs_world_t *world, 
+    ecs_query_t *parent, 
+    ecs_query_t *subquery) 
+{
+    ecs_query_t **elem = ecs_vector_add(&parent->subqueries, ecs_query_t*);
+    *elem = subquery;
+
+    /* Iterate matched tables, match them with subquery */
+    ecs_matched_table_t *tables = ecs_vector_first(parent->tables, ecs_matched_table_t);
+    int32_t i, count = ecs_vector_count(parent->tables);
+
+    for (i = 0; i < count; i ++) {
+        ecs_matched_table_t *table = &tables[i];
+        ecs_query_match_table(world, subquery, table->table);
+        ecs_query_activate_table(world, subquery, table->table, true);
+    }
+
+    /* Do the same for inactive tables */
+    tables = ecs_vector_first(parent->empty_tables, ecs_matched_table_t);
+    count = ecs_vector_count(parent->empty_tables);
+
+    for (i = 0; i < count; i ++) {
+        ecs_matched_table_t *table = &tables[i];
+        ecs_query_match_table(world, subquery, table->table);
+    }    
+}
+
 
 /* -- Private API -- */
 
@@ -1440,6 +1467,16 @@ void ecs_query_match_table(
 {
     if (ecs_query_match(world, table, query, NULL)) {
         add_table(world, query, table);
+
+        if (query->subqueries) {
+            ecs_query_t **queries = ecs_vector_first(query->subqueries, ecs_query_t*);
+            int32_t i, count = ecs_vector_count(query->subqueries);
+
+            for (i = 0; i < count; i ++) {
+                ecs_query_t *sub = queries[i];
+                ecs_query_match_table(world, sub, table);
+            }
+        }
     }
 }
 
@@ -1462,6 +1499,14 @@ void ecs_query_activate_table(
     }
 
     int32_t i = get_table_param_index(table, src_array);
+    if (i == -1) {
+        /* Received an activate event for a table we're not matched with. This
+         * can only happen if this is a subquery */
+        ecs_assert((query->flags & EcsQueryIsSubquery) != 0, 
+            ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
+
     int32_t src_count = ecs_vector_move_index(
         &dst_array, src_array, ecs_matched_table_t, i);
 
@@ -1488,6 +1533,16 @@ void ecs_query_activate_table(
 #endif
 
     order_ranked_tables(world, query);
+
+    if (query->subqueries) {
+        ecs_query_t **queries = ecs_vector_first(query->subqueries, ecs_query_t*);
+        int32_t i, count = ecs_vector_count(query->subqueries);
+
+        for (i = 0; i < count; i ++) {
+            ecs_query_t *sub = queries[i];
+            ecs_query_activate_table(world, sub, table, active);
+        }
+    }
 }
 
 static
@@ -1574,21 +1629,26 @@ void ecs_query_rematch(
 
 /* -- Public API -- */
 
-ecs_query_t* ecs_query_new_w_sig(
+ecs_query_t* ecs_query_new_w_sig_intern(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_sig_t *sig)
+    ecs_sig_t *sig,
+    bool is_subquery)
 {
-    ecs_query_t *result = ecs_sparse_add(world->queries, ecs_query_t);
+    ecs_query_t *result;
+    if (is_subquery) {
+        result = ecs_sparse_add(world->subqueries, ecs_query_t);
+    } else {
+        result = ecs_sparse_add(world->queries, ecs_query_t);
+    }
+
     memset(result, 0, sizeof(ecs_query_t));
     result->world = world;
     result->sig = *sig;
     result->tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->empty_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = system;
-    result->match_count = 0;
     result->prev_match_count = -1;
-    result->flags = 0;
 
     process_signature(world, result);
 
@@ -1597,24 +1657,28 @@ ecs_query_t* ecs_query_new_w_sig(
 
     ecs_log_push();
 
-    if (result->flags & EcsQueryNeedsTables) {
-        if (ecs_has_entity(world, system, EcsMonitor)) {
-            result->flags |= EcsQueryMonitor;
-        }
-        
-        if (ecs_has_entity(world, system, EcsOnSet)) {
-            result->flags |= EcsQueryOnSet;
-        }
+    if (!is_subquery) {
+        if (result->flags & EcsQueryNeedsTables) {
+            if (ecs_has_entity(world, system, EcsMonitor)) {
+                result->flags |= EcsQueryMonitor;
+            }
+            
+            if (ecs_has_entity(world, system, EcsOnSet)) {
+                result->flags |= EcsQueryOnSet;
+            }
 
-        if (ecs_has_entity(world, system, EcsUnSet)) {
-            result->flags |= EcsQueryUnSet;
-        }        
+            if (ecs_has_entity(world, system, EcsUnSet)) {
+                result->flags |= EcsQueryUnSet;
+            }        
 
-        match_tables(world, result);
+            match_tables(world, result);
+        } else {
+            /* Add stub table that resolves references (if any) so everything is
+            * preprocessed when the query is evaluated. */
+            add_table(world, result, NULL);
+        }
     } else {
-        /* Add stub table that resolves references (if any) so everything is
-         * preprocessed when the query is evaluated. */
-        add_table(world, result, NULL);
+        result->flags |= EcsQueryIsSubquery;
     }
 
     if (result->cascade_by) {
@@ -1629,6 +1693,14 @@ ecs_query_t* ecs_query_new_w_sig(
     return result;
 }
 
+ecs_query_t* ecs_query_new_w_sig(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_sig_t *sig)
+{
+    return ecs_query_new_w_sig_intern(world, system, sig, false);
+}
+
 ecs_query_t* ecs_query_new(
     ecs_world_t *world,
     const char *expr)
@@ -1636,6 +1708,18 @@ ecs_query_t* ecs_query_new(
     ecs_sig_t sig = { 0 };
     ecs_sig_init(world, NULL, expr, &sig);
     return ecs_query_new_w_sig(world, 0, &sig);
+}
+
+ecs_query_t* ecs_subquery_new(
+    ecs_world_t *world,
+    ecs_query_t *parent,
+    const char *expr)
+{
+    ecs_sig_t sig = { 0 };
+    ecs_sig_init(world, NULL, expr, &sig);
+    ecs_query_t *result = ecs_query_new_w_sig_intern(world, 0, &sig, true);
+    add_subquery(world, parent, result);
+    return result;
 }
 
 void ecs_query_free(

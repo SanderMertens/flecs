@@ -174,6 +174,7 @@ ecs_world_t *ecs_mini(void) {
     world->fini_actions = NULL; 
 
     world->queries = ecs_sparse_new(ecs_query_t, 0);
+    world->subqueries = ecs_sparse_new(ecs_query_t, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->child_tables = NULL;
     world->name_prefix = NULL;
