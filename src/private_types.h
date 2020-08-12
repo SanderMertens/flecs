@@ -204,6 +204,20 @@ typedef struct ecs_table_slice_t {
 
 #define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
+typedef enum ecs_query_eventkind_t {
+    EcsQueryTableMatch,
+    EcsQueryTableEmpty,
+    EcsQueryTableNonEmpty,
+    EcsQueryTableRematch,
+    EcsQueryTableUnmatch
+} ecs_query_eventkind_t;
+
+typedef struct ecs_query_event_t {
+    ecs_query_eventkind_t kind;
+    ecs_table_t *table;
+    ecs_query_t *parent_query;
+} ecs_query_event_t;
+
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
     /* Signature of query */

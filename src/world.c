@@ -71,7 +71,9 @@ void eval_component_monitor(
 
     for (i = 0; i < eval_count; i ++) {
         ecs_vector_each(eval[i], ecs_query_t*, q_ptr, {
-            ecs_query_rematch(world, *q_ptr);
+            ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
+                .kind = EcsQueryTableRematch
+            });
         });
     }
     
