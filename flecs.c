@@ -469,8 +469,23 @@ typedef struct ecs_table_slice_t {
 #define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
 #define EcsQueryHasRefs (64)         /* Does query have references */
 #define EcsQueryHasTraits (128)      /* Does query have traits */
+#define EcsQueryIsSubquery (256)     /* Is query a subquery */
 
 #define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
+
+typedef enum ecs_query_eventkind_t {
+    EcsQueryTableMatch,
+    EcsQueryTableEmpty,
+    EcsQueryTableNonEmpty,
+    EcsQueryTableRematch,
+    EcsQueryTableUnmatch
+} ecs_query_eventkind_t;
+
+typedef struct ecs_query_event_t {
+    ecs_query_eventkind_t kind;
+    ecs_table_t *table;
+    ecs_query_t *parent_query;
+} ecs_query_event_t;
 
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
@@ -495,6 +510,9 @@ struct ecs_query_t {
     /* Used for table sorting */
     ecs_entity_t rank_on_component;
     ecs_rank_type_action_t group_table;
+
+    /* Subqueries */
+    ecs_vector_t *subqueries;
 
     /* The query kind determines how it is registered with tables */
     ecs_flags32_t flags;
@@ -652,6 +670,7 @@ struct ecs_world_t {
     /* Persistent queries registered with the world. Persistent queries are
      * stateful and automatically matched with existing and new tables. */
     ecs_sparse_t *queries;
+    ecs_sparse_t *subqueries;
 
     /* Keep track of components that were added/removed to/from monitored
      * entities. Monitored entities are entities that a query has matched with
@@ -1090,17 +1109,6 @@ ecs_query_t* ecs_query_new_w_sig(
     ecs_entity_t system, 
     ecs_sig_t *sig);
 
-void ecs_query_activate_table(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_table_t *table,
-    bool active);
-
-void ecs_query_match_table(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_table_t *table);
-
 void ecs_query_set_iter(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -1128,6 +1136,11 @@ bool ecs_query_match(
     ecs_table_t *table,
     ecs_query_t *query,
     ecs_match_failure_t *failure_info);
+
+void ecs_query_notify(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_query_event_t *event);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
@@ -2053,7 +2066,11 @@ void ecs_table_activate(
     bool activate)
 {
     if (query) {
-        ecs_query_activate_table(world, query, table, activate);
+        ecs_query_notify(world, query, &(ecs_query_event_t) {
+            .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
+            .table = table
+        });
+
         #ifndef NDEBUG
             char *expr = ecs_type_str(world, table->type);
             ecs_trace_2("table #[green][%s]#[reset] %s for single query", expr, 
@@ -2067,7 +2084,10 @@ void ecs_table_activate(
             ecs_query_t **buffer = ecs_vector_first(queries, ecs_query_t*);
             int32_t i, count = ecs_vector_count(queries);
             for (i = 0; i < count; i ++) {
-                ecs_query_activate_table(world, buffer[i], table, activate);
+                ecs_query_notify(world, buffer[i], &(ecs_query_event_t) {
+                    .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
+                    .table = table
+                });
             }
         }
 
@@ -9261,7 +9281,9 @@ void eval_component_monitor(
 
     for (i = 0; i < eval_count; i ++) {
         ecs_vector_each(eval[i], ecs_query_t*, q_ptr, {
-            ecs_query_rematch(world, *q_ptr);
+            ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
+                .kind = EcsQueryTableRematch
+            });
         });
     }
     
@@ -9364,6 +9386,7 @@ ecs_world_t *ecs_mini(void) {
     world->fini_actions = NULL; 
 
     world->queries = ecs_sparse_new(ecs_query_t, 0);
+    world->subqueries = ecs_sparse_new(ecs_query_t, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->child_tables = NULL;
     world->name_prefix = NULL;
@@ -9664,6 +9687,13 @@ int ecs_fini(
         ecs_query_free(q);
     }
     ecs_sparse_free(world->queries);
+
+    count = ecs_sparse_count(world->subqueries);
+    for (i = 0; i < count; i ++) {
+        ecs_query_t *q = ecs_sparse_get(world->subqueries, ecs_query_t, i);
+        ecs_query_free(q);
+    }
+    ecs_sparse_free(world->subqueries);
 
     /* Cleanup child tables */
     it = ecs_map_iter(world->child_tables);
@@ -13160,7 +13190,7 @@ add_trait:
         table_data->components[c] = component;
     }
 
-    if (table) {
+    if (table && !(query->flags & EcsQueryIsSubquery)) {
         int32_t matched_table_index = 0;
         if (!has_auto_activation(query)) {
             /* If query doesn't automatically activates/inactivates tables, the
@@ -13369,9 +13399,7 @@ int32_t get_table_param_index(
         }
     }
 
-    ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
-
-    return i;
+    return i == count ? -1 : i;
 }
 
 /** Check if a table was matched with the system */
@@ -13968,10 +13996,7 @@ void process_signature(
     register_monitors(world, query);
 }
 
-
-/* -- Private API -- */
-
-void ecs_query_match_table(
+void match_table(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_table_t *table)
@@ -13983,7 +14008,7 @@ void ecs_query_match_table(
 
 /** Table activation happens when a table was or becomes empty. Deactivated
  * tables are not considered by the system in the main loop. */
-void ecs_query_activate_table(
+void activate_table(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_table_t *table,
@@ -14000,6 +14025,14 @@ void ecs_query_activate_table(
     }
 
     int32_t i = get_table_param_index(table, src_array);
+    if (i == -1) {
+        /* Received an activate event for a table we're not matched with. This
+         * can only happen if this is a subquery */
+        ecs_assert((query->flags & EcsQueryIsSubquery) != 0, 
+            ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
+
     int32_t src_count = ecs_vector_move_index(
         &dst_array, src_array, ecs_matched_table_t, i);
 
@@ -14029,6 +14062,55 @@ void ecs_query_activate_table(
 }
 
 static
+void add_subquery(
+    ecs_world_t *world, 
+    ecs_query_t *parent, 
+    ecs_query_t *subquery) 
+{
+    ecs_query_t **elem = ecs_vector_add(&parent->subqueries, ecs_query_t*);
+    *elem = subquery;
+
+    /* Iterate matched tables, match them with subquery */
+    ecs_matched_table_t *tables = ecs_vector_first(parent->tables, ecs_matched_table_t);
+    int32_t i, count = ecs_vector_count(parent->tables);
+
+    for (i = 0; i < count; i ++) {
+        ecs_matched_table_t *table = &tables[i];
+        match_table(world, subquery, table->table);
+        activate_table(world, subquery, table->table, true);
+    }
+
+    /* Do the same for inactive tables */
+    tables = ecs_vector_first(parent->empty_tables, ecs_matched_table_t);
+    count = ecs_vector_count(parent->empty_tables);
+
+    for (i = 0; i < count; i ++) {
+        ecs_matched_table_t *table = &tables[i];
+        match_table(world, subquery, table->table);
+    }    
+}
+
+static
+void notify_subqueries(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_query_event_t *event)
+{
+    if (query->subqueries) {
+        ecs_query_t **queries = ecs_vector_first(query->subqueries, ecs_query_t*);
+        int32_t i, count = ecs_vector_count(query->subqueries);
+
+        ecs_query_event_t sub_event = *event;
+        sub_event.parent_query = query;
+
+        for (i = 0; i < count; i ++) {
+            ecs_query_t *sub = queries[i];
+            ecs_query_notify(world, sub, &sub_event);
+        }
+    }
+}
+
+static
 void free_matched_table(
     ecs_matched_table_t *table)
 {
@@ -14050,52 +14132,107 @@ void remove_table(
     ecs_vector_remove_index(tables, ecs_matched_table_t, index);
 }
 
-/* Rematch system with tables after a change happened to a watched entity */
-void ecs_query_rematch(
+static
+void unmatch_table_w_index(
     ecs_world_t *world,
-    ecs_query_t *query)
+    ecs_query_t *query,
+    ecs_table_t *table,
+    int32_t match)
+{
+    /* If table no longer matches, remove it */
+    if (match != -1) {
+        remove_table(query->tables, match);
+        notify_subqueries(world, query, &(ecs_query_event_t){
+            .kind = EcsQueryTableUnmatch,
+            .table = table
+        });
+    } else {
+        /* Make sure the table is removed if it was inactive */
+        match = table_matched(
+            query->empty_tables, table);
+        if (match != -1) {
+            remove_table(query->empty_tables, match);
+            notify_subqueries(world, query, &(ecs_query_event_t){
+                .kind = EcsQueryTableUnmatch,
+                .table = table
+            });
+        }
+    }  
+}
+
+static
+void unmatch_table(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_table_t *table)
+{
+    unmatch_table_w_index(
+        world, query, table, table_matched(query->tables, table));
+}
+
+static
+void rematch_table(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_table_t *table)
+{
+    int32_t match = table_matched(query->tables, table);
+
+    if (ecs_query_match(world, table, query, NULL)) {
+        /* If the table matches, and it is not currently matched, add */
+        if (match == -1) {
+            if (table_matched(query->empty_tables, table) == -1) {
+                add_table(world, query, table);
+            }
+
+        /* If table still matches and has cascade column, reevaluate the
+         * sources of references. This may have changed in case 
+         * components were added/removed to container entities */ 
+        } else if (query->cascade_by) {
+            resolve_cascade_container(
+                world, query, match, table->type);
+        }
+    } else {
+        /* Table no longer matches, remove */
+        unmatch_table(world, query, table);
+    }
+}
+
+/* Rematch system with tables after a change happened to a watched entity */
+static
+void rematch_tables(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_query_t *parent_query)
 {
     ecs_trace_1("rematch query %s", query_name(world, query));
 
-    ecs_sparse_t *tables = world->stage.tables;
-    int32_t i, count = ecs_sparse_count(tables);
+    if (parent_query) {
+        ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
+        int32_t i, count = ecs_vector_count(query->tables);
+        for (i = 0; i < count; i ++) {
+            ecs_table_t *table = tables[i].table;
+            rematch_table(world, query, table);
+        }
 
-    for (i = 0; i < count; i ++) {
-        /* Is the system currently matched with the table? */
-        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
-        int32_t match = table_matched(query->tables, table);
+        tables = ecs_vector_first(query->empty_tables, ecs_matched_table_t);
+        count = ecs_vector_count(query->empty_tables);
+        for (i = 0; i < count; i ++) {
+            ecs_table_t *table = tables[i].table;
+            rematch_table(world, query, table);
+        }        
+    } else {
+        ecs_sparse_t *tables = world->stage.tables;
+        int32_t i, count = ecs_sparse_count(tables);
 
-        if (ecs_query_match(world, table, query, NULL)) {
-            /* If the table matches, and it is not currently matched, add */
-            if (match == -1) {
-                if (table_matched(query->empty_tables, table) == -1) {
-                    add_table(world, query, table);
-                }
-
-            /* If table still matches and has cascade column, reevaluate the
-                * sources of references. This may have changed in case 
-                * components were added/removed to container entities */ 
-            } else if (query->cascade_by) {
-                resolve_cascade_container(
-                    world, query, match, table->type);
-            }
-        } else {
-            /* If table no longer matches, remove it */
-            if (match != -1) {
-                remove_table(query->tables, match);
-            } else {
-                /* Make sure the table is removed if it was inactive */
-                match = table_matched(
-                    query->empty_tables, table);
-                if (match != -1) {
-                    remove_table(query->empty_tables, match);
-                }
-            }
+        for (i = 0; i < count; i ++) {
+            /* Is the system currently matched with the table? */
+            ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
+            rematch_table(world, query, table);
         }
     }
 
     group_tables(world, query);
-
     order_ranked_tables(world, query);
 
     /* Enable/disable system if constraints are (not) met. If the system is
@@ -14109,24 +14246,56 @@ void ecs_query_rematch(
     }
 }
 
+/* -- Private API -- */
+
+void ecs_query_notify(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_query_event_t *event)
+{
+    switch(event->kind) {
+    case EcsQueryTableMatch:
+        match_table(world, query, event->table);
+        break;
+    case EcsQueryTableUnmatch:
+        unmatch_table(world, query, event->table);
+        break;
+    case EcsQueryTableRematch:
+        rematch_tables(world, query, event->parent_query);
+        break;        
+    case EcsQueryTableEmpty:
+        activate_table(world, query, event->table, false);
+        break;
+    case EcsQueryTableNonEmpty:
+        activate_table(world, query, event->table, true);
+        break;
+    }
+
+    notify_subqueries(world, query, event);
+}
 
 /* -- Public API -- */
 
-ecs_query_t* ecs_query_new_w_sig(
+ecs_query_t* ecs_query_new_w_sig_intern(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_sig_t *sig)
+    ecs_sig_t *sig,
+    bool is_subquery)
 {
-    ecs_query_t *result = ecs_sparse_add(world->queries, ecs_query_t);
+    ecs_query_t *result;
+    if (is_subquery) {
+        result = ecs_sparse_add(world->subqueries, ecs_query_t);
+    } else {
+        result = ecs_sparse_add(world->queries, ecs_query_t);
+    }
+
     memset(result, 0, sizeof(ecs_query_t));
     result->world = world;
     result->sig = *sig;
     result->tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->empty_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = system;
-    result->match_count = 0;
     result->prev_match_count = -1;
-    result->flags = 0;
 
     process_signature(world, result);
 
@@ -14135,24 +14304,28 @@ ecs_query_t* ecs_query_new_w_sig(
 
     ecs_log_push();
 
-    if (result->flags & EcsQueryNeedsTables) {
-        if (ecs_has_entity(world, system, EcsMonitor)) {
-            result->flags |= EcsQueryMonitor;
-        }
-        
-        if (ecs_has_entity(world, system, EcsOnSet)) {
-            result->flags |= EcsQueryOnSet;
-        }
+    if (!is_subquery) {
+        if (result->flags & EcsQueryNeedsTables) {
+            if (ecs_has_entity(world, system, EcsMonitor)) {
+                result->flags |= EcsQueryMonitor;
+            }
+            
+            if (ecs_has_entity(world, system, EcsOnSet)) {
+                result->flags |= EcsQueryOnSet;
+            }
 
-        if (ecs_has_entity(world, system, EcsUnSet)) {
-            result->flags |= EcsQueryUnSet;
-        }        
+            if (ecs_has_entity(world, system, EcsUnSet)) {
+                result->flags |= EcsQueryUnSet;
+            }        
 
-        match_tables(world, result);
+            match_tables(world, result);
+        } else {
+            /* Add stub table that resolves references (if any) so everything is
+            * preprocessed when the query is evaluated. */
+            add_table(world, result, NULL);
+        }
     } else {
-        /* Add stub table that resolves references (if any) so everything is
-         * preprocessed when the query is evaluated. */
-        add_table(world, result, NULL);
+        result->flags |= EcsQueryIsSubquery;
     }
 
     if (result->cascade_by) {
@@ -14167,6 +14340,14 @@ ecs_query_t* ecs_query_new_w_sig(
     return result;
 }
 
+ecs_query_t* ecs_query_new_w_sig(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_sig_t *sig)
+{
+    return ecs_query_new_w_sig_intern(world, system, sig, false);
+}
+
 ecs_query_t* ecs_query_new(
     ecs_world_t *world,
     const char *expr)
@@ -14174,6 +14355,18 @@ ecs_query_t* ecs_query_new(
     ecs_sig_t sig = { 0 };
     ecs_sig_init(world, NULL, expr, &sig);
     return ecs_query_new_w_sig(world, 0, &sig);
+}
+
+ecs_query_t* ecs_subquery_new(
+    ecs_world_t *world,
+    ecs_query_t *parent,
+    const char *expr)
+{
+    ecs_sig_t sig = { 0 };
+    ecs_sig_init(world, NULL, expr, &sig);
+    ecs_query_t *result = ecs_query_new_w_sig_intern(world, 0, &sig, true);
+    add_subquery(world, parent, result);
+    return result;
 }
 
 void ecs_query_free(
@@ -14618,7 +14811,11 @@ void ecs_notify_queries_of_table(
 
     for (i = 0; i < count; i ++) {
         ecs_query_t *query = ecs_sparse_get(world->queries, ecs_query_t, i);
-        ecs_query_match_table(world, query, table);
+
+        ecs_query_notify(world, query, &(ecs_query_event_t) {
+            .kind = EcsQueryTableMatch,
+            .table = table
+        });
     }
 }
 

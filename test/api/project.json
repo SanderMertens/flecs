@@ -499,7 +499,11 @@
                 "query_changed_after_remove",
                 "query_changed_after_set",
                 "query_change_after_out_system",
-                "query_change_after_in_system"
+                "query_change_after_in_system",
+                "subquery_match_existing",
+                "subquery_match_new",
+                "subquery_inactive",
+                "subquery_rematch"
             ]
         }, {
             "id": "Traits",

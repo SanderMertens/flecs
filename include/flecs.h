@@ -1475,6 +1475,12 @@ ecs_query_t* ecs_query_new(
     ecs_world_t *world,
     const char *sig);
 
+FLECS_EXPORT
+ecs_query_t* ecs_subquery_new(
+    ecs_world_t *world,
+    ecs_query_t *parent,
+    const char *sig);    
+
 /** Cleanup a query.
  * This operation frees a query.
  *

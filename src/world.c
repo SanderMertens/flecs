@@ -71,7 +71,9 @@ void eval_component_monitor(
 
     for (i = 0; i < eval_count; i ++) {
         ecs_vector_each(eval[i], ecs_query_t*, q_ptr, {
-            ecs_query_rematch(world, *q_ptr);
+            ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
+                .kind = EcsQueryTableRematch
+            });
         });
     }
     
@@ -174,6 +176,7 @@ ecs_world_t *ecs_mini(void) {
     world->fini_actions = NULL; 
 
     world->queries = ecs_sparse_new(ecs_query_t, 0);
+    world->subqueries = ecs_sparse_new(ecs_query_t, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->child_tables = NULL;
     world->name_prefix = NULL;
@@ -474,6 +477,13 @@ int ecs_fini(
         ecs_query_free(q);
     }
     ecs_sparse_free(world->queries);
+
+    count = ecs_sparse_count(world->subqueries);
+    for (i = 0; i < count; i ++) {
+        ecs_query_t *q = ecs_sparse_get(world->subqueries, ecs_query_t, i);
+        ecs_query_free(q);
+    }
+    ecs_sparse_free(world->subqueries);
 
     /* Cleanup child tables */
     it = ecs_map_iter(world->child_tables);

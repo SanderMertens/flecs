@@ -451,6 +451,10 @@ void Queries_query_changed_after_remove(void);
 void Queries_query_changed_after_set(void);
 void Queries_query_change_after_out_system(void);
 void Queries_query_change_after_in_system(void);
+void Queries_subquery_match_existing(void);
+void Queries_subquery_match_new(void);
+void Queries_subquery_inactive(void);
+void Queries_subquery_rematch(void);
 
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
@@ -2747,6 +2751,22 @@ bake_test_case Queries_testcases[] = {
     {
         "query_change_after_in_system",
         Queries_query_change_after_in_system
+    },
+    {
+        "subquery_match_existing",
+        Queries_subquery_match_existing
+    },
+    {
+        "subquery_match_new",
+        Queries_subquery_match_new
+    },
+    {
+        "subquery_inactive",
+        Queries_subquery_inactive
+    },
+    {
+        "subquery_rematch",
+        Queries_subquery_rematch
     }
 };
 
@@ -5303,7 +5323,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        7,
+        11,
         Queries_testcases
     },
     {

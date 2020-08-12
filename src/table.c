@@ -374,7 +374,11 @@ void ecs_table_activate(
     bool activate)
 {
     if (query) {
-        ecs_query_activate_table(world, query, table, activate);
+        ecs_query_notify(world, query, &(ecs_query_event_t) {
+            .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
+            .table = table
+        });
+
         #ifndef NDEBUG
             char *expr = ecs_type_str(world, table->type);
             ecs_trace_2("table #[green][%s]#[reset] %s for single query", expr, 
@@ -388,7 +392,10 @@ void ecs_table_activate(
             ecs_query_t **buffer = ecs_vector_first(queries, ecs_query_t*);
             int32_t i, count = ecs_vector_count(queries);
             for (i = 0; i < count; i ++) {
-                ecs_query_activate_table(world, buffer[i], table, activate);
+                ecs_query_notify(world, buffer[i], &(ecs_query_event_t) {
+                    .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
+                    .table = table
+                });
             }
         }
 

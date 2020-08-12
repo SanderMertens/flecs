@@ -11,7 +11,11 @@ void ecs_notify_queries_of_table(
 
     for (i = 0; i < count; i ++) {
         ecs_query_t *query = ecs_sparse_get(world->queries, ecs_query_t, i);
-        ecs_query_match_table(world, query, table);
+
+        ecs_query_notify(world, query, &(ecs_query_event_t) {
+            .kind = EcsQueryTableMatch,
+            .table = table
+        });
     }
 }
 
