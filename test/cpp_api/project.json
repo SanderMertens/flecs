@@ -116,7 +116,9 @@
                 "signature",
                 "signature_const",
                 "signature_shared",
-                "signature_optional"
+                "signature_optional",
+                "subquery",
+                "subquery_w_expr"
             ]
         }, {
             "id": "ComponentLifecycle",

@@ -435,3 +435,61 @@ void Query_signature_optional() {
     test_int(p->x, 71);
     test_int(p->y, 81); 
 }
+
+void Query_subquery() {
+    flecs::world world;
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e2 = flecs::entity(world)
+        .set<Velocity>({1, 2});        
+
+    flecs::query<Position> q(world);
+    flecs::query<Velocity> sq(world, q);
+
+    sq.each([](flecs::entity e, Velocity& v) {
+        v.x ++;
+        v.y ++;
+    });
+
+    const Velocity *v = e1.get<Velocity>();
+    test_int(v->x, 2);
+    test_int(v->y, 3);
+
+    v = e2.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void Query_subquery_w_expr() {
+    flecs::world world;
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e2 = flecs::entity(world)
+        .set<Velocity>({1, 2});        
+
+    flecs::query<Position> q(world);
+    flecs::query<> sq(world, "Velocity", q);
+
+    sq.action([](flecs::iter it) {
+        flecs::column<Velocity> v(it, 1);
+
+        for (auto i : it) {
+            v[i].x ++;
+            v[i].y ++;
+        }
+    });
+
+    const Velocity *v = e1.get<Velocity>();
+    test_int(v->x, 2);
+    test_int(v->y, 3);
+
+    v = e2.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
