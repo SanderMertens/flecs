@@ -478,6 +478,13 @@ int ecs_fini(
     }
     ecs_sparse_free(world->queries);
 
+    count = ecs_sparse_count(world->subqueries);
+    for (i = 0; i < count; i ++) {
+        ecs_query_t *q = ecs_sparse_get(world->subqueries, ecs_query_t, i);
+        ecs_query_free(q);
+    }
+    ecs_sparse_free(world->subqueries);
+
     /* Cleanup child tables */
     it = ecs_map_iter(world->child_tables);
     ecs_vector_t *tables;

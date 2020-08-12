@@ -1598,8 +1598,8 @@ void unmatch_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    return unmatch_table_w_index(world, query, table, 
-        table_matched(query->tables, table));
+    unmatch_table_w_index(
+        world, query, table, table_matched(query->tables, table));
 }
 
 static
@@ -1812,6 +1812,7 @@ void ecs_query_free(
         free_matched_table(table);
     });
 
+    ecs_vector_free(query->subqueries);
     ecs_vector_free(query->tables);
     ecs_vector_free(query->empty_tables);
     ecs_vector_free(query->table_slices);
