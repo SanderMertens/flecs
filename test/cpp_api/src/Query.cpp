@@ -474,7 +474,7 @@ void Query_subquery_w_expr() {
         .set<Velocity>({1, 2});        
 
     flecs::query<Position> q(world);
-    flecs::query<> sq(world, "Velocity", q);
+    flecs::query<> sq(world, q, "Velocity");
 
     sq.action([](flecs::iter it) {
         flecs::column<Velocity> v(it, 1);

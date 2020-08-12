@@ -2277,7 +2277,7 @@ public:
         }
     }
 
-    explicit query(world& world, const char *expr, query_base& parent) {
+    explicit query(world& world, query_base& parent, const char *expr) {
         std::stringstream str;
         if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
