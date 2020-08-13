@@ -195,6 +195,70 @@ void Type_type_has_prefab_container() {
     ecs_fini(world);
 }
 
+void Type_type_has_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, Type, TRAIT | Trait > Position);
+
+    ecs_entity_t entities[2] = {ecs_trait(ecs_entity(Position), Trait)};
+    ecs_type_t t = ecs_type_find(world, entities, 1);
+    test_assert(t == ecs_type(Type));
+    test_assert( ecs_type_has_entity(world, t, ECS_TRAIT | Trait));
+
+    ecs_fini(world);
+}
+
+void Type_type_has_trait_exact() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, Type, TRAIT | Trait > Position);
+
+    ecs_entity_t entities[2] = {ecs_trait(ecs_entity(Position), Trait)};
+    ecs_type_t t = ecs_type_find(world, entities, 1);
+    test_assert(t == ecs_type(Type));
+    test_assert( ecs_type_has_entity(world, t, ecs_trait(ecs_entity(Position), Trait)));
+
+    ecs_fini(world);
+}
+
+void Type_type_owns_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, Type, TRAIT | Trait > Position);
+
+    ecs_entity_t entities[2] = {ecs_trait(ecs_entity(Position), Trait)};
+    ecs_type_t t = ecs_type_find(world, entities, 1);
+    test_assert(t == ecs_type(Type));
+    test_assert( ecs_type_owns_entity(world, t, ECS_TRAIT | Trait, true));
+
+    ecs_fini(world);
+}
+
+void Type_type_owns_trait_exact() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, Type, TRAIT | Trait > Position);
+
+    ecs_entity_t entities[2] = {ecs_trait(ecs_entity(Position), Trait)};
+    ecs_type_t t = ecs_type_find(world, entities, 1);
+    test_assert(t == ecs_type(Type));
+    test_assert( ecs_type_owns_entity(world, t, ecs_trait(ecs_entity(Position), Trait), true));
+
+    ecs_fini(world);
+}
+
 void Type_type_merge() {
     ecs_world_t *world = ecs_init();
 

@@ -388,3 +388,92 @@ void Queries_subquery_rematch() {
     it = ecs_query_iter(sq);
     test_int(it.table_count, 0);
 }
+
+void Queries_query_single_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Trait);
+
+    ECS_ENTITY(world, e1, TRAIT|Trait>Position);
+    ECS_ENTITY(world, e2, TRAIT|Trait>Velocity);
+    ECS_ENTITY(world, e3, TRAIT|Trait);
+    ECS_ENTITY(world, e4, Position);
+    ECS_ENTITY(world, e5, Velocity);
+
+    int32_t table_count = 0, entity_count = 0;
+
+    ecs_query_t *q = ecs_query_new(world, "TRAIT | Trait > Velocity");
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e2);
+            entity_count ++;
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
+
+    ecs_fini(world);
+}
+
+void Queries_query_single_instanceof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, BaseA, 0);
+    ECS_ENTITY(world, BaseB, 0);
+    ECS_ENTITY(world, e1, INSTANCEOF | BaseB);
+    ECS_ENTITY(world, e2, INSTANCEOF | BaseA);
+
+    int32_t table_count = 0, entity_count = 0;
+
+    ecs_query_t *q = ecs_query_new(world, "INSTANCEOF | BaseA");
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e2);
+            entity_count ++;
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
+
+    ecs_fini(world);
+}
+
+void Queries_query_single_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, BaseA, 0);
+    ECS_ENTITY(world, BaseB, 0);
+    ECS_ENTITY(world, e1, CHILDOF | BaseB);
+    ECS_ENTITY(world, e2, CHILDOF | BaseA);
+
+    int32_t table_count = 0, entity_count = 0;
+
+    ecs_query_t *q = ecs_query_new(world, "CHILDOF | BaseA");
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e2);
+            entity_count ++;
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
+
+    ecs_fini(world);
+}

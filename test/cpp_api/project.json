@@ -125,7 +125,8 @@
                 "signature_shared",
                 "signature_optional",
                 "subquery",
-                "subquery_w_expr"
+                "subquery_w_expr",
+                "query_single_trait"
             ]
         }, {
             "id": "ComponentLifecycle",

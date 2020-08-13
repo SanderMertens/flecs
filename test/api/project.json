@@ -503,7 +503,10 @@
                 "subquery_match_existing",
                 "subquery_match_new",
                 "subquery_inactive",
-                "subquery_rematch"
+                "subquery_rematch",
+                "query_single_trait",
+                "query_single_instanceof",
+                "query_single_childof"
             ]
         }, {
             "id": "Traits",
@@ -898,6 +901,10 @@
                 "type_has_prefab",
                 "type_has_container",
                 "type_has_prefab_container",
+                "type_has_trait",
+                "type_has_trait_exact",
+                "type_owns_trait",
+                "type_owns_trait_exact",
                 "type_merge",
                 "type_merge_overlap",
                 "type_merge_overlap_one",

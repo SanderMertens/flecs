@@ -345,6 +345,9 @@ bool ecs_type_owns_entity(
         if (trait || sw_case) {
              for (i = 0; i < count; i ++) {
                  ecs_entity_t e = array[i];
+                 if (trait && e == entity) {
+                     return true;
+                 }
                  if (trait && ECS_HAS_ROLE(e, TRAIT) && has_trait(trait, e)) {
                      return true;
                  } else

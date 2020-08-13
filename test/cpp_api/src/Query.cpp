@@ -1,5 +1,9 @@
 #include <cpp_api.h>
 
+struct Trait {
+    float value;
+};
+
 void Query_action() {
     flecs::world world;
 
@@ -492,4 +496,28 @@ void Query_subquery_w_expr() {
     v = e2.get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
+}
+
+void Query_query_single_trait() {
+    flecs::world world;
+
+    flecs::entity(world).add_trait<Trait, Position>();
+    auto e2 = flecs::entity(world).add_trait<Trait, Velocity>();
+    flecs::entity(world).add_trait<Trait>(flecs::entity::null(world));
+    
+    flecs::query<> q(world, "TRAIT | Trait > Velocity");
+
+    int32_t table_count = 0;
+    int32_t entity_count = 0;
+
+    q.action([&](flecs::iter it) {
+        table_count ++;
+        for (auto i : it) {
+            test_assert(it.entity(i) == e2);
+            entity_count ++;
+        }
+    });
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
 }

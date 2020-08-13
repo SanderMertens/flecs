@@ -455,6 +455,9 @@ void Queries_subquery_match_existing(void);
 void Queries_subquery_match_new(void);
 void Queries_subquery_inactive(void);
 void Queries_subquery_rematch(void);
+void Queries_query_single_trait(void);
+void Queries_query_single_instanceof(void);
+void Queries_query_single_childof(void);
 
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
@@ -811,6 +814,10 @@ void Type_zero_type_has_not(void);
 void Type_type_has_prefab(void);
 void Type_type_has_container(void);
 void Type_type_has_prefab_container(void);
+void Type_type_has_trait(void);
+void Type_type_has_trait_exact(void);
+void Type_type_owns_trait(void);
+void Type_type_owns_trait_exact(void);
 void Type_type_merge(void);
 void Type_type_merge_overlap(void);
 void Type_type_merge_overlap_one(void);
@@ -2779,6 +2786,18 @@ bake_test_case Queries_testcases[] = {
     {
         "subquery_rematch",
         Queries_subquery_rematch
+    },
+    {
+        "query_single_trait",
+        Queries_query_single_trait
+    },
+    {
+        "query_single_instanceof",
+        Queries_query_single_instanceof
+    },
+    {
+        "query_single_childof",
+        Queries_query_single_childof
     }
 };
 
@@ -4110,6 +4129,22 @@ bake_test_case Type_testcases[] = {
         Type_type_has_prefab_container
     },
     {
+        "type_has_trait",
+        Type_type_has_trait
+    },
+    {
+        "type_has_trait_exact",
+        Type_type_has_trait_exact
+    },
+    {
+        "type_owns_trait",
+        Type_type_owns_trait
+    },
+    {
+        "type_owns_trait_exact",
+        Type_type_owns_trait_exact
+    },
+    {
         "type_merge",
         Type_type_merge
     },
@@ -5383,7 +5418,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        11,
+        14,
         Queries_testcases
     },
     {
@@ -5516,7 +5551,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        58,
+        62,
         Type_testcases
     },
     {

@@ -291,7 +291,7 @@ int32_t get_component_index(
 
             result += table->sw_column_offset;
         } else
-        if (ECS_HAS_ROLE(component, TRAIT)) {
+        if (ECS_HAS_ROLE(component, TRAIT) && !(ecs_entity_t_hi(component & ECS_ENTITY_MASK))) {
             ecs_assert(trait_index_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
 
             component &= ECS_ENTITY_MASK;
@@ -418,8 +418,9 @@ ecs_entity_t is_column_trait(
 
     /* For now traits are only supported on owned columns */
     if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
-        if (ECS_HAS_ROLE(column->is.component, TRAIT)) {
-            return column->is.component;
+        ecs_entity_t c = column->is.component;
+        if (ECS_HAS_ROLE(c, TRAIT) && !(ecs_entity_t_hi(c & ECS_ENTITY_MASK))) {
+            return c;
         }
     }
 
@@ -510,7 +511,6 @@ void add_table(
     if (trait_count) {
         trait_index_offsets = ecs_os_calloc(ECS_SIZEOF(int32_t) * column_count);
     }
-
 
     /* From here we recurse */
 add_trait:
