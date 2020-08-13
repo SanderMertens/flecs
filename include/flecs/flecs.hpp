@@ -2807,12 +2807,24 @@ private:
 //// Persistent queries
 ////////////////////////////////////////////////////////////////////////////////
 
+class query_base {
+public:
+    query_t* c_ptr() const {
+        return m_query;
+    }
+
+protected:
+    query_t *m_query;
+};
+
 template<typename ... Components>
-class query final {
+class query : public query_base {
     using Columns = typename column_args<Components...>::Columns;
 
 public:
-    query() : m_query(nullptr) { }
+    query() { 
+        m_query = nullptr;
+    }
 
     explicit query(world& world) {
         std::stringstream str;
@@ -2823,6 +2835,15 @@ public:
         m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
     }
 
+    explicit query(world& world, query_base& parent) {
+        std::stringstream str;
+        if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
+    }    
+
     explicit query(world& world, const char *expr) {
         std::stringstream str;
         if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
@@ -2832,6 +2853,16 @@ public:
             m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
         }
     }
+
+    explicit query(world& world, query_base& parent, const char *expr) {
+        std::stringstream str;
+        if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+            m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
+        } else {
+            str << "," << expr;
+            m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
+        }
+    }    
 
     query_iterator<Components...> begin() const;
 
@@ -2858,13 +2889,6 @@ public:
             ctx.call_system(&iter, func, 0, columns.m_columns);
         }
     }    
-
-    query_t* c_ptr() const {
-        return m_query;
-    }
-
-private:
-    query_t *m_query;
 };
 
 

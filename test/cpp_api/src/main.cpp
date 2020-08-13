@@ -99,6 +99,8 @@ void Query_signature(void);
 void Query_signature_const(void);
 void Query_signature_shared(void);
 void Query_signature_optional(void);
+void Query_subquery(void);
+void Query_subquery_w_expr(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -467,6 +469,14 @@ bake_test_case Query_testcases[] = {
     {
         "signature_optional",
         Query_signature_optional
+    },
+    {
+        "subquery",
+        Query_subquery
+    },
+    {
+        "subquery_w_expr",
+        Query_subquery_w_expr
     }
 };
 
@@ -645,7 +655,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        12,
+        14,
         Query_testcases
     },
     {

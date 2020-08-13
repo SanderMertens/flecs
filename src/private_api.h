@@ -343,17 +343,6 @@ ecs_query_t* ecs_query_new_w_sig(
     ecs_entity_t system, 
     ecs_sig_t *sig);
 
-void ecs_query_activate_table(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_table_t *table,
-    bool active);
-
-void ecs_query_match_table(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_table_t *table);
-
 void ecs_query_set_iter(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -381,6 +370,11 @@ bool ecs_query_match(
     ecs_table_t *table,
     ecs_query_t *query,
     ecs_match_failure_t *failure_info);
+
+void ecs_query_notify(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_query_event_t *event);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
