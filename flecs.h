@@ -7174,15 +7174,25 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Fluent API for chaining entity operations
-////////////////////////////////////////////////////////////////////////////////
 
-template <typename base>
-class entity_fluent {
-    using base_type = const base;
+/** Fluent API for chaining entity operations
+ * This class contains entity operations that can be chained. For example, by
+ * using this class, an entity can be created like this:
+ *
+ * flecs::entity e = flecs::entity(world)
+ *   .add<Position>()
+ *   .add<Velocity>();
+ */
+template <typename Base>
+class entity_builder {
+    using base_type = const Base;
 public:
 
     /** Add an entity to an entity by id.
+     * This adds a raw entity id (64 bit integer) to the type of the current
+     * entity.
+     * 
+     * @param entity The entity id to add.
      */
     base_type& add(entity_t entity) const {
         static_cast<base_type*>(this)->invoke(
@@ -7193,6 +7203,9 @@ public:
     }
 
     /** Add a component to an entity.
+     * To ensure the component is initialized, it should have a constructor.
+     * 
+     * @tparam T the component type to add.
      */
     template <typename T>
     base_type& add() const {
@@ -7204,10 +7217,18 @@ public:
     }
 
     /** Add an entity to an entity.
+     * Add an entity to the entity. This is typically used for tagging.
+     *
+     * @param entity The entity to add.
      */
     base_type& add(const entity& entity) const;
 
     /** Add a type to an entity by its C pointer.
+     * A type is a vector of component ids. This operation adds all components
+     * in a single operation, and is a more efficient version of doing 
+     * individual add operations.
+     *
+     * @param type The C type to add.
      */
     base_type& add(type_t type) const {
         static_cast<base_type*>(this)->invoke(
@@ -7218,10 +7239,23 @@ public:
     }
 
     /** Add a type to an entity.
+     * A type is a vector of component ids. This operation adds all components
+     * in a single operation, and is a more efficient version of doing 
+     * individual add operations.
+     * 
+     * @param type The type to add.
      */
     base_type& add(type type) const;
 
-    /** Add a trait
+    /** Add a trait.
+     * This operation adds a trait for an entity by entity id. If the trait
+     * is a component, a value of the trait type will be associated with the
+     * entity. If the trait is not a component, a value of the component type
+     * will be associated with the entity. If both the trait and component ids
+     * are regular entities, no values will be associated with the entity.
+     *
+     * @param trait The trait id.
+     * @param entity The entity identifier.
      */
     base_type& add_trait(entity_t trait, entity_t entity) const {
         static_cast<base_type*>(this)->invoke(
@@ -7232,7 +7266,12 @@ public:
         return *static_cast<base_type*>(this); 
     }
 
-    /** Add a trait
+    /** Add a trait.
+     * This operation adds a trait for a component. A value of the trait type
+     * will be associated with the entity.
+     *
+     * @tparam T the trait type.
+     * @tparam C the component type.
      */
     template<typename T, typename C>
     base_type& add_trait() const {
@@ -7244,13 +7283,42 @@ public:
         return *static_cast<base_type*>(this); 
     }
 
-    /** Add a trait
+    /** Add a trait.
+     * This operation adds a trait for a component. A value of the trait 
+     * type will be associated with the entity. 
+     *
+     * @tparam T The trait to add.
+     * @param component The component for which to add the trait.
+     */
+    template<typename T>
+    base_type& add_trait(flecs::entity component) const;
+
+    /** Add a trait tag.
+     * This operation adds a trait tag for a component. A value of the component 
+     * type will be associated with the entity. Note that the trait tag passed 
+     * into this function should not be a component.
+     *
+     * @tparam C The component type.
+     * @param trait The trait identifier.
      */
     template<typename C>
-    base_type& add_trait(flecs::entity trait) const;
+    base_type& add_trait_tag(flecs::entity trait) const;
+
+    /** Add a trait.
+     * This operation adds a trait for an entity by entity id. If the trait
+     * is a component, a value of the trait type will be associated with the
+     * entity. If the trait is not a component, a value of the component type
+     * will be associated with the entity. If both the trait and component ids
+     * are regular entities, no values will be associated with the entity.
+     *
+     * @param trait The trait to add.
+     * @param entity The tag for which to add the trait.
+     */
     base_type& add_trait(flecs::entity trait, flecs::entity entity) const;
 
     /** Remove an entity from an entity by id.
+     *
+     * @param entity The entity id to remove.
      */
     base_type& remove(entity_t entity) const {
         static_cast<base_type*>(this)->invoke(
@@ -7261,6 +7329,8 @@ public:
     }    
 
     /** Remove a component from an entity.
+     *
+     * @tparam T the type of the component to remove.
      */
     template <typename T>
     base_type& remove() const {
@@ -7272,10 +7342,17 @@ public:
     }
 
     /** Remove an entity from an entity.
+     *
+     * @param entity The entity to remove.
      */
     base_type& remove(const entity& entity) const;
 
     /** Remove a type from an entity by its C pointer.
+     * A type is a vector of component ids. This operation adds all components
+     * in a single operation, and is a more efficient version of doing 
+     * individual add operations.
+     *
+     * @param type the pointer to the type to remove.
      */
     base_type& remove(type_t type) const {
         static_cast<base_type*>(this)->invoke(
@@ -7286,10 +7363,19 @@ public:
     }
 
     /** Remove a type from an entity.
+     * A type is a vector of component ids. This operation adds all components
+     * in a single operation, and is a more efficient version of doing 
+     * individual add operations.
+     *
+     * @param type the type to remove.
      */
     base_type& remove(type type) const;
 
-    /** Remove a trait
+    /** Remove a trait.
+     * This operation removes a trait for an entity by entity id.
+     *
+     * @param trait The trait to remove.
+     * @param entity The entity for which to remove the trait.
      */
     base_type& remove_trait(entity_t trait, entity_t entity) const {
         static_cast<base_type*>(this)->invoke(
@@ -7300,6 +7386,12 @@ public:
         return *static_cast<base_type*>(this);         
     }
 
+    /** Remove a trait.
+     * This operation removes a trait for a component.
+     *
+     * @tparam T The trait to remove.
+     * @tparam C The component for which to remove the trait.
+     */
     template<typename T, typename C>
     base_type& remove_trait() const {
         static_cast<base_type*>(this)->invoke(
@@ -7310,13 +7402,37 @@ public:
         return *static_cast<base_type*>(this);
     }
 
-    /** Remove a trait
+    /** Remove a trait.
+     * This operation removes a trait tag for a component. The trait should not
+     * be a component.
+     *
+     * @tparam T The trait to remove.
+     * @param component The component for which to remove the trait.
+     */
+    template<typename T>
+    base_type& remove_trait(flecs::entity component) const;
+
+    /** Remove a trait tag.
+     * This operation removes a trait tag for a component. The trait should not
+     * be a component.
+     *
+     * @tparam C The component for which to remove the trait.
+     * @param trait The trait to remove.
      */
     template<typename C>
-    base_type& remove_trait(flecs::entity trait) const;
+    base_type& remove_trait_tag(flecs::entity trait) const;
+
+    /** Remove a trait.
+     * This operation removes a trait for an entity.
+     *
+     * @param trait The trait to remove.
+     * @param entity The entity for which to remove the trait.
+     */
     base_type& remove_trait(flecs::entity trait, flecs::entity entity) const;
 
     /** Add a parent entity to an entity by id.
+     *
+     * @param parent The id of the parent to add.
      */    
     base_type& add_childof(entity_t parent) const {
         static_cast<base_type*>(this)->invoke(
@@ -7327,10 +7443,14 @@ public:
     }
 
     /** Add a parent entity to an entity.
+     * 
+     * @param parent The parent to add.
      */
     base_type& add_childof(const entity& parent) const;
 
     /** Remove a parent entity from an entity by id.
+     *
+     * @param parent The id of the parent to remove.
      */
     base_type& remove_childof(entity_t parent) const {
         static_cast<base_type*>(this)->invoke(
@@ -7341,38 +7461,52 @@ public:
     }
 
     /** Remove a parent entity from an entity.
+     *
+     * @param parent The parent to remove.
      */
     base_type& remove_childof(const entity& parent) const;
 
     /** Add a base entity to an entity by id.
+     *
+     * @param base The base id to add.
      */    
-    base_type& add_instanceof(entity_t base_entity) const {
+    base_type& add_instanceof(entity_t base) const {
         static_cast<base_type*>(this)->invoke(
-        [base_entity](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, ECS_INSTANCEOF | base_entity);
+        [base](world_t *world, entity_t id) {
+            ecs_add_entity(world, id, ECS_INSTANCEOF | base);
         });
         return *static_cast<base_type*>(this);  
     }
 
     /** Add a base entity to an entity.
-     */    
-    base_type& add_instanceof(const entity& base_entity) const;  
+     *
+     * @param base The base to add.
+     */
+    base_type& add_instanceof(const entity& base) const;  
 
     /** Remove a base entity from an entity by id.
+     *
+     * @param base The base id to remove.
      */
-    base_type& remove_instanceof(entity_t base_entity) const {
+    base_type& remove_instanceof(entity_t base) const {
         static_cast<base_type*>(this)->invoke(
-        [base_entity](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, ECS_INSTANCEOF | base_entity);
+        [base](world_t *world, entity_t id) {
+            ecs_remove_entity(world, id, ECS_INSTANCEOF | base);
         });
         return *static_cast<base_type*>(this);
     }
 
     /** Remove a base entity from an entity.
+     *
+     * @param base The base to remove.
      */
-    base_type& remove_instanceof(const entity& base_entity) const;
+    base_type& remove_instanceof(const entity& base) const;
 
-    /** Add a switch entity to an entity by id.
+    /** Add a switch to an entity by id.
+     * The switch entity must be a type, that is it must have the EcsType
+     * component. Entities created with flecs::type are valid here.
+     *
+     * @param sw The switch entity id to add.
      */    
     base_type& add_switch(entity_t sw) const {
         static_cast<base_type*>(this)->invoke(
@@ -7382,12 +7516,24 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
-    /** Add a switch entity to an entity.
+    /** Add a switch to an entity.
+     * The switch entity must be a type, that is it must have the EcsType
+     * component.
+     *
+     * @param sw The switch entity to add.
      */ 
     base_type& add_switch(const entity& sw) const;
+
+    /** Add a switch to an entity.
+     * Any instance of flecs::type can be used as a switch.
+     *
+     * @param sw The switch to add.
+     */     
     base_type& add_switch(const type& sw) const;
 
-    /** Remove a switch entity to an entity by id.
+    /** Remove a switch from an entity by id.
+     *
+     * @param sw The switch entity id to remove.
      */    
     base_type& remove_switch(entity_t sw) const {
         static_cast<base_type*>(this)->invoke(
@@ -7397,12 +7543,23 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
-    /** Remove a switch entity to an entity.
+    /** Remove a switch from an entity.
+     *
+     * @param sw The switch entity to remove.
      */ 
-    base_type& remove_switch(const entity& sw) const;    
+    base_type& remove_switch(const entity& sw) const;
+    
+    /** Remove a switch from an entity.
+     * Any instance of flecs::type can be used as a switch.
+     *
+     * @param sw The switch to remove.
+     */      
     base_type& remove_switch(const type& sw) const;
 
-    /** Add a switch entity to an entity by id.
+    /** Add a switch to an entity by id.
+     * The case must belong to a switch that is already added to the entity.
+     *
+     * @param sw_case The case entity id to add.
      */    
     base_type& add_case(entity_t sw_case) const {
         static_cast<base_type*>(this)->invoke(
@@ -7412,11 +7569,17 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
-    /** Add a switch entity to an entity.
+    /** Add a case to an entity.
+     * The case must belong to a switch that is already added to the entity.
+     *
+     * @param sw_case The case entity to add.
      */ 
     base_type& add_case(const entity& sw_case) const;
 
-    /** Remove a switch entity to an entity by id.
+    /** Remove a case from an entity by id.
+     * The case must belong to a switch that is already added to the entity.
+     *
+     * @param sw_case The case entity id to remove.
      */    
     base_type& remove_case(entity_t sw_case) const {
         static_cast<base_type*>(this)->invoke(
@@ -7426,38 +7589,54 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
-    /** Remove a switch entity to an entity.
+    /** Remove a case from an entity.
+     * The case must belong to a switch that is already added to the entity.
+     *
+     * @param sw_case The case entity id to remove.
      */ 
     base_type& remove_case(const entity& sw_case) const;
 
     /** Set a component for an entity.
+     * This operation overwrites the component value. If the entity did not yet
+     * have the component, this operation will add it.
+     *
+     * @tparam T The component to set.
+     * @param value The value to assign to the component.
      */
     template <typename T>
     const base_type& set(const T&& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
-            ecs_set_ptr_w_entity(world, id, component_info<T>::id(world), sizeof(T), &value);
+            ecs_set_ptr_w_entity(
+                world, id, component_info<T>::id(world), sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
     }
 
     /** Set a component for an entity.
+     * This operation overwrites the component value. If the entity did not yet
+     * have the component, this operation will add it.
+     *
+     * @tparam T The component to set.
+     * @param value The value to assign to the component.
      */
     template <typename T>
     const base_type& set(const T& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
             ecs_set_ptr_w_entity(
-                world, 
-                id, 
-                component_info<T>::id(world), 
-                sizeof(T), 
-                &value);
+                world, id, component_info<T>::id(world), sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
     }
 
     /** Set a trait for an entity.
+     * This operation overwrites the trait value. If the entity did not yet
+     * have the trait, this operation will add it.
+     *
+     * @tparam T The trait to set.
+     * @tparam C The component for which to set the trait.
+     * @param value The value to assign to the trait.     
      */
     template <typename T, typename C>
     const base_type& set_trait(const T& value) const {
@@ -7472,28 +7651,45 @@ public:
     } 
 
     /** Set a trait tag for a component.
+     * This operation overwrites the trait value. If the entity did not yet
+     * have the trait, this operation will add it.
+     *
+     * This operation should be used for traits that are not components. If a
+     * trait is not a component, it will assume the type of the component it is
+     * assigned to.
+     *
+     * @tparam C The component for which to set the trait.
+     * @param value The value to assign to the trait.      
      */
-    template <typename T>
-    const base_type& set_trait(flecs::entity trait, const T& value) const;
+    template <typename C>
+    const base_type& set_trait_tag(flecs::entity trait, const C& value) const;
 
-    /** Set a trait for a tag.
+    /** Set a trait for an entity.
+     * This operation overwrites the trait value. If the entity did not yet
+     * have the trait, this operation will add it.
+     *
+     * @tparam T The trait to set.
+     * @param value The value to assign to the trait. 
+     * @param entity The entity for which to set the trait.
      */
     template <typename T>
-    const base_type& set_trait(const T& value, flecs::entity tag) const;
+    const base_type& set_trait(const T& value, flecs::entity entity) const;
 
     /** Patch a component value.
      * This operation allows an application to partially overwrite a component 
-     * value.
+     * value. The operation invokes a function with a reference to the value to
+     * write, and a boolean indicating if the component already existed.
+     *
+     * @tparam T The component to patch.
+     * @param func The function invoked by this operation.
      */
     template <typename T>
     const base_type& patch(std::function<void(T&, bool)> func) const {
         static_cast<base_type*>(this)->invoke(
         [&func](world_t *world, entity_t id) {
             bool is_added;
-
             T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
                 world, id, component_info<T>::id(world), &is_added));
-
             if (ptr) {
                 func(*ptr, !is_added);
                 ecs_modified_w_entity(world, id, component_info<T>::id(world));
@@ -7504,17 +7700,19 @@ public:
 
     /** Patch a component value.
      * This operation allows an application to partially overwrite a component 
-     * value.
+     * value. The operation invokes a function with a reference to the value to
+     * write.
+     *
+     * @tparam T The component to patch.
+     * @param func The function invoked by this operation.
      */
     template <typename T>
     const base_type& patch(std::function<void(T&)> func) const {
         static_cast<base_type*>(this)->invoke(
         [&func](world_t *world, entity_t id) {
             bool is_added;
-
             T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
                 world, id, component_info<T>::id(world), &is_added));
-
             if (ptr) {
                 func(*ptr);
                 ecs_modified_w_entity(world, id, component_info<T>::id(world));
@@ -7525,7 +7723,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Cached component pointer
+//// Quick and safe access to a component pointer
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
@@ -7572,19 +7770,38 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Entity
-////////////////////////////////////////////////////////////////////////////////
 
-class entity : public entity_fluent<entity> {
+/** Entity class
+ * This class provides access to entity operations.
+ */
+class entity : public entity_builder<entity> {
 public:
+    /** Create entity.
+     *
+     * @param world The world in which to create the entity.
+     */
     explicit entity(const world& world) 
         : m_world( world.c_ptr() )
         , m_id( ecs_new_w_type(m_world, 0) ) { }
 
+    /** Create entity.
+     *
+     * @param world Pointer to the world in which to create the entity.
+     */
     explicit entity(world_t *world) 
         : m_world( world )
         , m_id( ecs_new_w_type(m_world, 0) ) { }
 
+    /** Create a named entity.
+     * Named entities can be looked up with the lookup functions. Entity names
+     * may be scoped, where each element in the name is separated by "::".
+     * For example: "Foo::Bar". If parts of the hierarchy in the scoped name do
+     * not yet exist, they will be automatically created.
+     *
+     * @param world The world in which to create the entity.
+     * @param name The entity name.
+     * @param is_component If true, the entity will be created from the pool of component ids (default = false).
+     */
     entity(const world& world, const char *name, bool is_component = false) 
         : m_world( world.c_ptr() )
         , m_id( ecs_lookup_path_w_sep(m_world, 0, name, "::", "::") ) 
@@ -7599,6 +7816,16 @@ public:
             }
         }
 
+    /** Create a named entity.
+     * Named entities can be looked up with the lookup functions. Entity names
+     * may be scoped, where each element in the name is separated by "::".
+     * For example: "Foo::Bar". If parts of the hierarchy in the scoped name do
+     * not yet exist, they will be automatically created.
+     *
+     * @param world The world in which to create the entity.
+     * @param name The entity name.
+     * @param is_component If true, the entity will be created from the pool of component ids (default = false).
+     */
     entity(const world& world, std::string name, bool is_component = false) 
         : m_world( world.c_ptr() )
         , m_id( ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::") ) 
@@ -7613,60 +7840,115 @@ public:
             }
         }         
 
+    /** Wrap an existing entity id.
+     *
+     * @param world The world in which the entity is created.
+     * @param id The entity id.
+     */
     entity(const world& world, entity_t id) 
         : m_world( world.c_ptr() )
         , m_id(id) { }
 
+    /** Wrap an existing entity id.
+     *
+     * @param world Pointer to the world in which the entity is created.
+     * @param id The entity id.
+     */
     entity(world_t *world, entity_t id) 
         : m_world( world )
         , m_id(id) { }
 
+    /** Default constructor.
+     */
     entity() 
         : m_world(nullptr)
         , m_id(0) { }
 
+    /** Equality operator. */
     bool operator==(const entity& e) {
         return this->id() == e.id();
     }  
 
+    /** Inequality operator. */
     bool operator!=(const entity& e) {
         return this->id() != e.id();
     }            
 
+    /** Entity id 0.
+     * This function is useful when the API must provide an entity object that
+     * belongs to a world, but the entity id is 0.
+     *
+     * @param world The world.
+     */
     static
     flecs::entity null(const world& world) {
         return flecs::entity(world.c_ptr(), (ecs_entity_t)0);
     }
 
+    /** Get entity id.
+     * @return The integer entity id.
+     */
     entity_t id() const {
         return m_id;
     }
 
+    /** Get lo entity id.
+     * @return A new entity containing the lower 32 bits of the entity id.
+     */
     flecs::entity lo() {
         return flecs::entity(m_world, ecs_entity_t_lo(m_id));
     }
 
+    /** Get hi entity id.
+     * @return A new entity containing the higher 32 bits of the entity id.
+     */
     flecs::entity hi() {
         return flecs::entity(m_world, ecs_entity_t_hi(m_id));
     }
 
-    static flecs::entity comb(flecs::entity a, flecs::entity b) {
-        return flecs::entity(a.world(), 
-            ecs_entity_t_comb(a.id(), b.id()));
+    /** Combine two entity ids.
+     * @return A new entity that combines the provided entity ids in the lower
+     *         and higher 32 bits of the entity id.
+     */
+    static flecs::entity comb(flecs::entity lo, flecs::entity hi) {
+        return flecs::entity(lo.world(), 
+            ecs_entity_t_comb(lo.id(), hi.id()));
     }
 
+    /** Add role.
+     * Roles are added to entity ids in types to indicate which role they play.
+     * Examples of roles are flecs::Instanceof and flecs::Childof. 
+     *
+     * @return A new entity with the specified role set.
+     */
     flecs::entity add_role(entity_t role) {
         return flecs::entity(m_world, m_id | role);
     }
 
+    /** Remove role.
+     * Roles are added to entity ids in types to indicate which role they play.
+     * Examples of roles are flecs::Instanceof and flecs::Childof. 
+     *    
+     * @return A new entity with any roles removed.
+     */
     flecs::entity remove_role() {
         return flecs::entity(m_world, m_id & ECS_ENTITY_MASK);
     }
 
+    /** Check if entity has specified role.
+     * Roles are added to entity ids in types to indicate which role they play.
+     * Examples of roles are flecs::Instanceof and flecs::Childof. 
+     *    
+     * @return True if the entity has the role, false otherwise.
+     */
     bool has_role(entity_t role) {        
         return m_id & role;
     }
 
+    /** Return the entity name.
+     *
+     * @return The entity name, or an empty string if the entity has no name.
+     */
     std::string name() const {
         const EcsName *name = static_cast<const EcsName*>(
             ecs_get_w_entity(m_world, m_id, ecs_entity(EcsName)));
@@ -7677,6 +7959,11 @@ public:
         }
     }
 
+    /** Return the entity path.
+     *
+     * @return The hierarchical entity path, or an empty string if the entity 
+     *         has no name.
+     */
     std::string path() const {
         char *path = ecs_get_path_w_sep(m_world, 0, m_id, 0, "::", "::");
         if (path) {
@@ -7688,45 +7975,68 @@ public:
         }
     }    
 
+    /** Return the world.
+     *
+     * @return The world the entity is stored in.
+     */
     flecs::world world() const {
         return flecs::world(m_world);
     }
 
+    /** Return the type.
+     *
+     * @return Returns the entity type.
+     */
     flecs::type type() const;
 
+    /** Return type containing the entity.
+     *
+     * @return A type that contains only this entity.
+     */
     flecs::type to_type() const;
 
+    /** Get component value.
+     * 
+     * @tparam T The component to get.
+     * @return Pointer to the component value, nullptr if the entity does not
+     *         have the component.
+     */
     template <typename T>
     const T* get() const {
         return static_cast<const T*>(
             ecs_get_w_entity(m_world, m_id, component_info<T>::id(m_world)));
     }
 
+    /** Get component value (untyped).
+     * 
+     * @param component The component to get.
+     * @return Pointer to the component value, nullptr if the entity does not
+     *         have the component.
+     */
     const void* get(flecs::entity component) const {
         return ecs_get_w_entity(m_world, m_id, component.id());
     }
 
+    /** Get component value (untyped).
+     * 
+     * @param component The id of the component to get.
+     * @return Pointer to the component value, nullptr if the entity does not
+     *         have the component.
+     */
     const void* get(entity_t component_id) const {
         return ecs_get_w_entity(m_world, m_id, component_id);
     } 
 
-    template<typename T, typename C>
-    const T* get_trait() const {
-        return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            component_info<C>::id(m_world), component_info<T>::id(m_world))));
-    }   
-
-    template<typename T>
-    const T* get_trait(flecs::entity trait) const {
-        return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            component_info<T>::id(m_world), trait.id())));
-    } 
-
-    const void* get_trait(flecs::entity trait, flecs::entity component) const {
-        return ecs_get_w_entity(m_world, m_id, ecs_trait(
-            component.id(), trait.id()));
-    }       
-
+    /** Get mutable component value.
+     * This operation returns a mutable pointer to the component. If the entity
+     * did not yet have the component, it will be added. If a base entity had
+     * the component, it will be overridden, and the value of the base component
+     * will be copied to the entity before this function returns.
+     *
+     * @tparam T The component to get.
+     * @param is_added If provided, this parameter will be set to true if the component was added.
+     * @return Pointer to the component value.
+     */
     template <typename T>
     T* get_mut(bool *is_added = nullptr) const {
         return static_cast<T*>(
@@ -7734,82 +8044,295 @@ public:
                 m_world, m_id, component_info<T>::id(m_world), is_added));
     }
 
+    /** Get mutable component value (untyped).
+     * This operation returns a mutable pointer to the component. If the entity
+     * did not yet have the component, it will be added. If a base entity had
+     * the component, it will be overridden, and the value of the base component
+     * will be copied to the entity before this function returns.
+     *
+     * @param component The component to get.
+     * @param is_added If provided, this parameter will be set to true if the component was added.
+     * @return Pointer to the component value.
+     */
     void* get_mut(flecs::entity component, bool *is_added = nullptr) const {
         return ecs_get_mut_w_entity(m_world, m_id, component.id(), is_added);
     }
 
+    /** Get mutable component value (untyped).
+     * This operation returns a mutable pointer to the component. If the entity
+     * did not yet have the component, it will be added. If a base entity had
+     * the component, it will be overridden, and the value of the base component
+     * will be copied to the entity before this function returns.
+     *
+     * @param component The id of the component to get.
+     * @param is_added If provided, this parameter will be set to true if the component was added.
+     * @return Pointer to the component value.
+     */
     void* get_mut(entity_t component_id, bool *is_added = nullptr) const {
         return ecs_get_mut_w_entity(m_world, m_id, component_id, is_added);
     }
 
+    /** Get trait value.
+     * 
+     * @tparam T The trait to get.
+     * @tparam C The component for which to get the trait.
+     * @return Pointer to the trait value, nullptr if the entity does not
+     *         have the trait.
+     */
+    template<typename T, typename C>
+    const T* get_trait() const {
+        return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
+            component_info<C>::id(m_world), component_info<T>::id(m_world))));
+    }   
+
+    /** Get trait value.
+     * 
+     * @tparam T The trait to get.
+     * @param component The component for which to get the trait.
+     * @return Pointer to the trait value, nullptr if the entity does not
+     *         have the trait.
+     */
+    template<typename T>
+    const T* get_trait(flecs::entity component) const {
+        return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
+            component.id(), component_info<T>::id(m_world))));
+    }
+
+    /** Get trait tag value.
+     * The trait passed to this function should not be a component. If a trait
+     * is not a component, the trait assumes the type of the component it is
+     * assigned to.
+     * 
+     * @tparam C The component for which to get the trait
+     * @param trait The trait to get.
+     * @return Pointer to the trait value, nullptr if the entity does not
+     *         have the trait.
+     */
+    template<typename C>
+    const C* get_trait_tag(flecs::entity trait) const {
+        return static_cast<const C*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
+            component_info<C>::id(m_world), trait.id())));
+    }
+
+    /** Get trait tag value (untyped).
+     * If a trait is not a component, the trait assumes the type of the 
+     * component it is assigned to.
+     * 
+     * @param trait The trait to get.
+     * @param component The component for which to get the trait.
+     * @return Pointer to the trait value, nullptr if the entity does not
+     *         have the trait.
+     */
+    const void* get_trait(flecs::entity trait, flecs::entity component) const {
+        return ecs_get_w_entity(m_world, m_id, ecs_trait(
+            component.id(), trait.id()));
+    }
+
+    /** Get mutable trait value.
+     * This operation returns a mutable pointer to the trait. If the entity
+     * did not yet have the trait, it will be added. If a base entity had
+     * the trait, it will be overridden, and the value of the base trait
+     * will be copied to the entity before this function returns.
+     *
+     * @tparam T The trait to get.
+     * @tparam C The component for which to get the trait.
+     * @param is_added If provided, this parameter will be set to true if the trait was added.
+     * @return Pointer to the trait value.
+     */
+    template <typename T, typename C>
+    T* get_trait_mut(bool *is_added = nullptr) const {
+        return static_cast<T*>(
+            ecs_get_mut_w_entity(
+                m_world, m_id, ecs_trait(
+                    component_info<C>::id(m_world), 
+                    component_info<T>::id(m_world)), 
+                    is_added));
+    }    
+
+    /** Get mutable trait value.
+     * This operation returns a mutable pointer to the trait. If the entity
+     * did not yet have the trait, it will be added. If a base entity had
+     * the trait, it will be overridden, and the value of the base trait
+     * will be copied to the entity before this function returns.
+     *
+     * @tparam T The trait to get.
+     * @param component The component for which to get the trait.
+     * @param is_added If provided, this parameter will be set to true if the trait was added.
+     * @return Pointer to the trait value.
+     */
+    template <typename T>
+    T* get_trait_mut(flecs::entity component, bool *is_added = nullptr) const {
+        return static_cast<T*>(
+            ecs_get_mut_w_entity(
+                m_world, m_id, ecs_trait(
+                    component_info<T>::id(m_world),
+                    component.id()), 
+                    is_added));
+    }
+
+    /** Get mutable trait tag value.
+     * This operation returns a mutable pointer to the trait. If the entity
+     * did not yet have the trait, it will be added. If a base entity had
+     * the trait, it will be overridden, and the value of the base trait
+     * will be copied to the entity before this function returns.
+     *
+     * The trait passed to the function should not be a component.
+     *
+     * @tparam C The component for which to get the trait.
+     * @param trait The trait to get.
+     * @param is_added If provided, this parameter will be set to true if the trait was added.
+     * @return Pointer to the trait value.
+     */
+    template <typename C>
+    C* get_trait_tag_mut(flecs::entity trait, bool *is_added = nullptr) const {
+        return static_cast<C*>(
+            ecs_get_mut_w_entity(
+                m_world, m_id, ecs_trait(
+                    trait.id(), 
+                    component_info<C>::id(m_world)),
+                    is_added));
+    }    
+
+    /** Signal that component was modified.
+     *
+     * @tparam T component that was modified.
+     */
     template <typename T>
     void modified() {
         ecs_modified_w_entity(m_world, m_id, component_info<T>::id(m_world));
     }
 
+    /** Signal that component was modified.
+     *
+     * @param component component that was modified.
+     */
     void modified(flecs::entity component) {
         ecs_modified_w_entity(m_world, m_id, component.id());
     }
 
-    void modified(entity_t component_id) {
-        ecs_modified_w_entity(m_world, m_id, component_id);
+    /** Signal that component was modified.
+     *
+     * @param component id of component that was modified.
+     */
+    void modified(entity_t component) {
+        ecs_modified_w_entity(m_world, m_id, component);
     }        
 
+    /** Get reference to component.
+     * A reference allows for quick and safe access to a component value, and is
+     * a faster alternative to repeatedly calling 'get' for the same component.
+     *
+     * @tparam T component for which to get a reference.
+     */
     template <typename T>
     ref<T> get_ref() const {
         return ref<T>(m_world, m_id);
     }
 
-    template <typename Func>
-    void invoke(Func&& action) const {
-        action(m_world, m_id);
-    } 
-
+    /** Delete an entity.
+     * Entities have to be deleted explicitly, and are not deleted when the
+     * flecs::entity object goes out of scope.
+     */
     void destruct() const {
         ecs_delete(m_world, m_id);
     }
 
-    entity lookup(const char *name) const {
-        auto id = ecs_lookup_path_w_sep(m_world, m_id, name, "::", "::");
+    /** Lookup an entity by name.
+     * Lookup an entity in the scope of this entity. The provided path may
+     * contain double colons as scope separators, for example: "Foo::Bar".
+     *
+     * @param path The name of the entity to lookup.
+     * @return The found entity, or entity::null if no entity matched.
+     */
+    entity lookup(const char *path) const {
+        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::");
         return entity(m_world, id);
     }
 
-    /* -- has -- */
-
-    bool has(entity_t id) const {
-        return ecs_has_entity(m_world, m_id, id);
+    /** Check if entity has the provided entity.
+     *
+     * @param entity The entity id to check.
+     * @return True if the entity has the provided entity id, false otherwise.
+     */
+    bool has(entity_t entity) const {
+        return ecs_has_entity(m_world, m_id, entity);
     }
 
+    /** Check if entity has the provided type.
+     *
+     * @param entity The type pointer to check.
+     * @return True if the entity has the provided type, false otherwise.
+     */
     bool has(type_t type) const {
         return ecs_has_type(m_world, m_id, type);
     }
 
-    bool has(const entity& e) const {
-        return has(e.id());
+    /** Check if entity has the provided entity.
+     *
+     * @param entity The entity to check.
+     * @return True if the entity has the provided entity, false otherwise.
+     */
+    bool has(const entity& entity) const {
+        return has(entity.id());
     }
 
+    /** Check if entity has the provided component.
+     *
+     * @tparam T The component to check.
+     * @return True if the entity has the provided component, false otherwise.
+     */
     template <typename T>
     bool has() const {
         return has(component_info<T>::id(m_world));
     }
 
-    bool owns(entity_t id) const {
-        return ecs_owns_entity(m_world, m_id, id, true);
+    /** Check if entity owns the provided entity id.
+     * An entity id is owned if it is not shared from a base entity.
+     *
+     * @param entity The entity id to check.
+     * @return True if the entity owns the provided entity id, false otherwise.
+     */
+    bool owns(entity_t entity) const {
+        return ecs_owns_entity(m_world, m_id, entity, true);
     }
 
+    /** Check if entity owns the provided type.
+     * An type is owned if it is not shared from a base entity.
+     *
+     * @param type The type to check.
+     * @return True if the entity owns the provided type, false otherwise.
+     */
     bool owns(type_t type) const {
         return ecs_type_owns_type(m_world, ecs_get_type(m_world, m_id), type, true);
     }
 
-    bool owns(const entity& e) const {
-        return owns(e.id());
+    /** Check if entity owns the provided entity.
+     * An entity is owned if it is not shared from a base entity.
+     *
+     * @param entity The entity to check.
+     * @return True if the entity owns the provided entity, false otherwise.
+     */
+    bool owns(const entity& entity) const {
+        return owns(entity.id());
     }
 
+    /** Check if entity owns the provided component.
+     * An component is owned if it is not shared from a base entity.
+     *
+     * @tparam T The component to check.
+     * @return True if the entity owns the provided component, false otherwise.
+     */
     template <typename T>
     bool owns() const {
         return owns(component_info<T>::id(m_world));
     }
 
+    /** Check if entity has the provided trait.
+     *
+     * @tparam T The trait to check.
+     * @tparam C The component for which to check the trait.
+     * @return True if the entity has the provided trait, false otherwise.
+     */
     template<typename T, typename C>
     bool has_trait() const {
         return ecs_has_entity(m_world, m_id, ecs_trait(
@@ -7817,35 +8340,89 @@ public:
             component_info<T>::id(m_world)));
     }
 
-    template<typename C>
-    bool has_trait(flecs::entity trait) const {
+    /** Check if entity has the provided trait.
+     *
+     * @tparam T The trait to check.
+     * @param component The component for which to check the trait.
+     * @return True if the entity has the provided trait, false otherwise.
+     */
+    template<typename T>
+    bool has_trait(flecs::entity component) const {
         return ecs_has_entity(m_world, m_id, ecs_trait(
-            component_info<C>::id(m_world), trait.id()));
+            component.id(), component_info<T>::id(m_world)));
     }
 
+    /** Check if entity has the provided trait tag.
+     * The provided trait tag should not be a component.
+     *
+     * @tparam C The component for which to check the trait tag.
+     * @param trait The trait tag to check.
+     * @return True if the entity has the provided trait tag, false otherwise.
+     */
+    template<typename C>
+    bool has_trait_tag(flecs::entity trait) const {
+        return ecs_has_entity(m_world, m_id, ecs_trait(
+           component_info<C>::id(m_world), trait.id()));
+    }
+
+    /** Check if entity has the provided trait.
+     * The provided trait should not be a component.
+     *
+     * @param trait The trait to check.
+     * @param component The component for which to check the trait.
+     * @return True if the entity has the provided trait, false otherwise.
+     */
     bool has_trait(flecs::entity trait, flecs::entity entity) const {
         return ecs_has_entity(m_world, m_id, ecs_trait(
             entity.id(), trait.id()));
     }
 
-    bool has_switch(flecs::type type) const;
+    /** Check if entity has the provided switch.
+     *
+     * @param sw The switch to check.
+     * @return True if the entity has the provided switch, false otherwise.
+     */
+    bool has_switch(flecs::type sw) const;
 
+    /** Check if entity has the provided case.
+     *
+     * @param sw_case The case to check.
+     * @return True if the entity has the provided case, false otherwise.
+     */
     bool has_case(flecs::entity sw_case) const {
         return ecs_has_entity(m_world, m_id, flecs::Case | sw_case.id());
     }    
 
+    /** Get current delta time.
+     * Convenience function so system implementations can get delta_time, even
+     * if they are using the .each() function.
+     *
+     * @return Current delta_time.
+     */
     float delta_time() {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->delta_time;
     }
 
+    /** Return iterator to entity children.
+     * Enables depth-first iteration over entity children.
+     *
+     * @return Iterator to child entities.
+     */
     child_iterator children() const;
 
     operator bool() {
         return m_id != 0;
     }
 
+    /** Used by builder class. Do not invoke. */
+    template <typename Func>
+    void invoke(Func&& action) const {
+        action(m_world, m_id);
+    }    
+
 protected:
+
     world_t *m_world;
     entity_t m_id; 
 };
@@ -7865,7 +8442,7 @@ public:
 //// Entity range, allows for operating on a range of consecutive entities
 ////////////////////////////////////////////////////////////////////////////////
 
-class entity_range final : public entity_fluent<entity_range> {
+class entity_range final : public entity_builder<entity_range> {
     using entity_iterator = range_iterator<entity_t>;
 public:
     entity_range(const world& world, std::int32_t count) 
@@ -9210,83 +9787,95 @@ inline child_iterator entity::children() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(const entity& entity) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::add(const entity& entity) const {
     return add(entity.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(type type) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::add(type type) const {
     return add(type.c_ptr());
 }
 
 template <typename base>
+template <typename T>
+inline typename entity_builder<base>::base_type& entity_builder<base>::add_trait(flecs::entity component) const {
+    return add_trait(component_info<T>::id(), component.id());
+}
+
+template <typename base>
 template <typename C>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_trait(flecs::entity trait) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::add_trait_tag(flecs::entity trait) const {
     return add_trait(trait.id(), component_info<C>::id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_trait(flecs::entity trait, flecs::entity entity) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::add_trait(flecs::entity trait, flecs::entity entity) const {
     return add_trait(trait.id(), entity.id()); 
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(const entity& entity) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::remove(const entity& entity) const {
     return remove(entity.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(type type) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::remove(type type) const {
     return remove(type.c_ptr());
 }
 
 template <typename base>
+template <typename T>
+inline typename entity_builder<base>::base_type& entity_builder<base>::remove_trait(flecs::entity component) const {
+    return remove_trait(component_info<T>::id(), component.id());
+}
+
+template <typename base>
 template <typename C>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_trait(flecs::entity trait) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::remove_trait_tag(flecs::entity trait) const {
     return remove_trait(trait.id(), component_info<C>::id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_trait(flecs::entity trait, flecs::entity entity) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::remove_trait(flecs::entity trait, flecs::entity entity) const {
     return remove_trait(trait.id(), entity.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_childof(const entity& entity) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::add_childof(const entity& entity) const {
     return add_childof(entity.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_childof(const entity& entity) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::remove_childof(const entity& entity) const {
     return remove_childof(entity.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_instanceof(const entity& entity) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::add_instanceof(const entity& entity) const {
     return add_instanceof(entity.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_instanceof(const entity& entity) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::remove_instanceof(const entity& entity) const {
     return remove_instanceof(entity.id());
 }
 
 template <typename base>
-template <typename T>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(flecs::entity trait, const T& value) const
+template <typename C>
+inline typename entity_builder<base>::base_type& entity_builder<base>::set_trait_tag(flecs::entity trait, const C& value) const
 {
     static_cast<base_type*>(this)->invoke(
     [trait, &value](world_t *world, entity_t id) {
         ecs_set_ptr_w_entity(world, id, 
-            ecs_trait(component_info<T>::id(world), trait.id()),
-            sizeof(T), &value);
+            ecs_trait(component_info<C>::id(world), trait.id()),
+            sizeof(C), &value);
     });
     return *static_cast<base_type*>(this);
 }  
 
 template <typename base>
 template <typename T>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(const T& value, flecs::entity tag) const
+inline typename entity_builder<base>::base_type& entity_builder<base>::set_trait(const T& value, flecs::entity tag) const
 {
     static_cast<base_type*>(this)->invoke(
     [tag, &value](world_t *world, entity_t id) {
@@ -9299,32 +9888,32 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::set_trait(c
 
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_switch(const entity& sw) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::add_switch(const entity& sw) const {
     return add_switch(sw.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_switch(const type& sw) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::add_switch(const type& sw) const {
     return add_switch(sw.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_switch(const entity& sw) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::remove_switch(const entity& sw) const {
     return remove_switch(sw.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_switch(const type& sw) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::remove_switch(const type& sw) const {
     return remove_switch(sw.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_case(const entity& sw_case) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::add_case(const entity& sw_case) const {
     return add_case(sw_case.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_case(const entity& sw_case) const {
+inline typename entity_builder<base>::base_type& entity_builder<base>::remove_case(const entity& sw_case) const {
     return remove_case(sw_case.id());
 }
 
