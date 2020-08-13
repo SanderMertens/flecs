@@ -1,10 +1,10 @@
 ![flecs](https://user-images.githubusercontent.com/9919222/84740976-2ecc8580-af63-11ea-963e-c5da3be54101.png)
 
 [![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/MRSAZqb) 
+[![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
 ![CI build](https://github.com/SanderMertens/flecs/workflows/CI/badge.svg)
 [![Build Status](https://travis-ci.org/SanderMertens/flecs.svg?branch=master)](https://travis-ci.org/SanderMertens/flecs)
 [![codecov](https://codecov.io/gh/SanderMertens/flecs/branch/master/graph/badge.svg)](https://codecov.io/gh/SanderMertens/flecs)
-[![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
 
 Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-component-system) for C89 / C99 / C++11 that packs a lot of punch in a small footprint:
 
