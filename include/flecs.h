@@ -1488,6 +1488,29 @@ ecs_query_t* ecs_query_new(
     ecs_world_t *world,
     const char *sig);
 
+/** Create a subquery.
+ * A subquery is just like a regular query, except that it is matched against 
+ * the matched tables of a parent query. Reducing the number of global (normal)
+ * queries can improve performance, as new archetypes have to be matched against
+ * fewer queries.
+ *
+ * Subqueries are cheaper to create than regular queries, because the initial
+ * set of tables they have to match against is smaller. This makes subqueries
+ * more suitable for creating while the simulation.
+ *
+ * Subqueries are not registered with tables directly, and instead receive new
+ * table notifications from their parent query. This means that there is less
+ * administrative overhead associated with subqueries.
+ *
+ * Subqueries can be nested, which allows for the creation of increasingly more
+ * specific query hierarchies that are considerably more efficient than when all
+ * queries would be created as global queries.
+ *
+ * @param world The world.
+ * @param parent The parent query.
+ * @param sig The query signature expression.
+ * @return The new subquery.
+ */
 FLECS_EXPORT
 ecs_query_t* ecs_subquery_new(
     ecs_world_t *world,

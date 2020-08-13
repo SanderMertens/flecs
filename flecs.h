@@ -3882,6 +3882,29 @@ ecs_query_t* ecs_query_new(
     ecs_world_t *world,
     const char *sig);
 
+/** Create a subquery.
+ * A subquery is just like a regular query, except that it is matched against 
+ * the matched tables of a parent query. Reducing the number of global (normal)
+ * queries can improve performance, as new archetypes have to be matched against
+ * fewer queries.
+ *
+ * Subqueries are cheaper to create than regular queries, because the initial
+ * set of tables they have to match against is smaller. This makes subqueries
+ * more suitable for creating while the simulation.
+ *
+ * Subqueries are not registered with tables directly, and instead receive new
+ * table notifications from their parent query. This means that there is less
+ * administrative overhead associated with subqueries.
+ *
+ * Subqueries can be nested, which allows for the creation of increasingly more
+ * specific query hierarchies that are considerably more efficient than when all
+ * queries would be created as global queries.
+ *
+ * @param world The world.
+ * @param parent The parent query.
+ * @param sig The query signature expression.
+ * @return The new subquery.
+ */
 FLECS_EXPORT
 ecs_query_t* ecs_subquery_new(
     ecs_world_t *world,
@@ -8277,6 +8300,24 @@ public:
         return ecs_has_entity(m_world, m_id, entity);
     }
 
+    /** Check if entity has the provided parent.
+     *
+     * @param parent The parent id to check.
+     * @return True if the entity has the provided parent id, false otherwise.
+     */
+    bool has_childof(entity_t parent) const {
+        return ecs_has_entity(m_world, m_id, ECS_CHILDOF | parent);
+    }    
+
+    /** Check if entity has the provided base.
+     *
+     * @param base The entity id to check.
+     * @return True if the entity has the provided base id, false otherwise.
+     */
+    bool has_instanceof(entity_t base) const {
+        return ecs_has_entity(m_world, m_id, ECS_INSTANCEOF | base);
+    }
+
     /** Check if entity has the provided type.
      *
      * @param entity The type pointer to check.
@@ -8294,6 +8335,24 @@ public:
     bool has(const entity& entity) const {
         return has(entity.id());
     }
+
+    /** Check if entity has the provided parent.
+     *
+     * @param parent The entity to check.
+     * @return True if the entity has the provided parent, false otherwise.
+     */
+    bool has_childof(const entity& parent) const {
+        return has_childof(parent.id());
+    }  
+
+    /** Check if entity has the provided base.
+     *
+     * @param base The entity to check.
+     * @return True if the entity has the provided base, false otherwise.
+     */
+    bool has_instanceof(const entity& base) const {
+        return has_instanceof(base.id());
+    }        
 
     /** Check if entity has the provided component.
      *

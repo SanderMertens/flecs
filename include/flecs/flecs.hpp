@@ -1954,6 +1954,24 @@ public:
         return ecs_has_entity(m_world, m_id, entity);
     }
 
+    /** Check if entity has the provided parent.
+     *
+     * @param parent The parent id to check.
+     * @return True if the entity has the provided parent id, false otherwise.
+     */
+    bool has_childof(entity_t parent) const {
+        return ecs_has_entity(m_world, m_id, ECS_CHILDOF | parent);
+    }    
+
+    /** Check if entity has the provided base.
+     *
+     * @param base The entity id to check.
+     * @return True if the entity has the provided base id, false otherwise.
+     */
+    bool has_instanceof(entity_t base) const {
+        return ecs_has_entity(m_world, m_id, ECS_INSTANCEOF | base);
+    }
+
     /** Check if entity has the provided type.
      *
      * @param entity The type pointer to check.
@@ -1971,6 +1989,24 @@ public:
     bool has(const entity& entity) const {
         return has(entity.id());
     }
+
+    /** Check if entity has the provided parent.
+     *
+     * @param parent The entity to check.
+     * @return True if the entity has the provided parent, false otherwise.
+     */
+    bool has_childof(const entity& parent) const {
+        return has_childof(parent.id());
+    }  
+
+    /** Check if entity has the provided base.
+     *
+     * @param base The entity to check.
+     * @return True if the entity has the provided base, false otherwise.
+     */
+    bool has_instanceof(const entity& base) const {
+        return has_instanceof(base.id());
+    }        
 
     /** Check if entity has the provided component.
      *

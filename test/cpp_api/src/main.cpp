@@ -37,6 +37,9 @@ void Entity_remove_role(void);
 void Entity_has_role(void);
 void Entity_trait_role(void);
 void Entity_equals(void);
+void Entity_has_childof(void);
+void Entity_has_instanceof(void);
+void Entity_has_instanceof_indirect(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -259,6 +262,18 @@ bake_test_case Entity_testcases[] = {
     {
         "equals",
         Entity_equals
+    },
+    {
+        "has_childof",
+        Entity_has_childof
+    },
+    {
+        "has_instanceof",
+        Entity_has_instanceof
+    },
+    {
+        "has_instanceof_indirect",
+        Entity_has_instanceof_indirect
     }
 };
 
@@ -653,7 +668,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        28,
+        31,
         Entity_testcases
     },
     {

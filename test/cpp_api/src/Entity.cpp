@@ -466,3 +466,39 @@ void Entity_equals() {
     test_assert(e2 == id2);
     test_assert(e1 != e2);
 }
+
+void Entity_has_childof() {
+    flecs::world world;
+
+    auto parent = flecs::entity(world);
+
+    auto e = flecs::entity(world)
+        .add_childof(parent);
+
+    test_assert(e.has_childof(parent));
+}
+
+void Entity_has_instanceof() {
+    flecs::world world;
+
+    auto base = flecs::entity(world);
+
+    auto e = flecs::entity(world)
+        .add_instanceof(base);
+
+    test_assert(e.has_instanceof(base));
+}
+
+void Entity_has_instanceof_indirect() {
+    flecs::world world;
+
+    auto base_of_base = flecs::entity(world);
+
+    auto base = flecs::entity(world)
+        .add_instanceof(base_of_base);
+
+    auto e = flecs::entity(world)
+        .add_instanceof(base);
+
+    test_assert(e.has_instanceof(base_of_base));
+}

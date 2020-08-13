@@ -42,7 +42,10 @@
                 "remove_role",
                 "has_role",
                 "trait_role",
-                "equals"
+                "equals",
+                "has_childof",
+                "has_instanceof",
+                "has_instanceof_indirect"
             ]
         }, {
             "id": "Traits",
