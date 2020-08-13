@@ -69,6 +69,7 @@ typedef int (*ecs_parse_action_t)(
     ecs_entity_t flags,
     const char *component,
     const char *source,
+    const char *trait,
     void *ctx);
 
 /** A component column. */

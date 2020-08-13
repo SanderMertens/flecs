@@ -338,6 +338,7 @@ typedef int (*ecs_parse_action_t)(
     ecs_entity_t flags,
     const char *component,
     const char *source,
+    const char *trait,
     void *ctx);
 
 /** A component column. */
@@ -11114,6 +11115,7 @@ bool ecs_strbuf_list_appendstr(
 #define TOK_NOT '!'
 #define TOK_OPTIONAL '?'
 #define TOK_ROLE '|'
+#define TOK_TRAIT '>'
 #define TOK_NAME_SEP '.'
 #define TOK_ANNOTATE_OPEN '['
 #define TOK_ANNOTATE_CLOSE ']'
@@ -11139,6 +11141,10 @@ bool ecs_strbuf_list_appendstr(
 #define TOK_OUT "out"
 #define TOK_INOUT "inout"
 
+#define ECS_MAX_TOKEN_SIZE (256)
+
+typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
+
 /** Skip spaces when parsing signature */
 static
 const char *skip_space(
@@ -11150,46 +11156,16 @@ const char *skip_space(
     return ptr;
 }
 
-/** Parse element with a dot-separated qualifier ('PARENT:Foo') */
 static
-char* parse_complex_elem(
+char* parse_source(
     const char *name,
     const char *sig,
     int64_t column,
-    char *ptr,
+    const char *ptr,
+    char *bptr,
     ecs_sig_from_kind_t *from_kind,
-    ecs_sig_oper_kind_t *oper_kind,
-    ecs_entity_t *flags,
-    const char * *source)
+    char *source)
 {
-    char *bptr = ptr;
-    if (bptr[0] == TOK_NOT) {
-        *oper_kind = EcsOperNot;
-        if (!bptr[1]) {
-            if (!name) {
-                return NULL;
-            }
-
-            ecs_parser_error(name, sig, column, 
-                "not must be followed by an identifier");
-        }
-        bptr ++;
-
-    } else if (bptr[0] == TOK_OPTIONAL) {
-        *oper_kind = EcsOperOptional;
-        if (!bptr[1]) {
-            if (!name) {
-                return NULL;
-            }
-
-            ecs_parser_error(name, sig, column, 
-                "optional must be followed by an identifier");
-        }
-        bptr ++;
-    }
-
-    *source = NULL;
-
     char *src = strchr(bptr, TOK_SOURCE);
     if (src) {
         size_t token_len = ecs_to_size_t(src - bptr);
@@ -11209,7 +11185,9 @@ char* parse_complex_elem(
             *from_kind = EcsCascade;   
         } else {
             *from_kind = EcsFromEntity;
-            *source = bptr;
+            ecs_assert(token_len < ECS_MAX_TOKEN_SIZE, ECS_INVALID_SIGNATURE, sig);
+            ecs_os_strncpy(source, bptr, token_len);
+            source[token_len] = '\0';
         }
         
         bptr = src + 1;
@@ -11226,6 +11204,18 @@ char* parse_complex_elem(
         }
     }
 
+    return bptr;
+}
+
+static
+char* parse_roles(
+    const char *name,
+    const char *sig,
+    int64_t column,
+    const char *ptr,
+    char *bptr,
+    ecs_entity_t *flags)
+{
     char *or = strchr(bptr, TOK_ROLE);
     if (or) {
         size_t token_len = ecs_to_size_t(or - bptr);
@@ -11270,6 +11260,81 @@ char* parse_complex_elem(
                  "%s must be followed by an identifier", 
                  ptr);
         }        
+    }
+
+    return bptr;  
+}
+
+static
+char* parse_trait(
+    const char *sig,
+    char *bptr,
+    char *trait_out)
+{
+    char *trait = strchr(bptr, TOK_TRAIT);
+    if (trait) {
+        size_t token_len = ecs_to_size_t(trait - bptr);
+        ecs_assert(token_len < ECS_MAX_TOKEN_SIZE, ECS_INVALID_SIGNATURE, sig);
+        ecs_os_strncpy(trait_out, bptr, token_len);
+        trait_out[token_len] = '\0';
+        bptr = trait + 1;
+    }
+    
+    return bptr;
+}
+
+/** Parse element with a dot-separated qualifier ('PARENT:Foo') */
+static
+char* parse_complex_elem(
+    const char *name,
+    const char *sig,
+    int64_t column,
+    char *ptr,
+    ecs_sig_from_kind_t *from_kind,
+    ecs_sig_oper_kind_t *oper_kind,
+    ecs_entity_t *flags,
+    char *source,
+    char *trait)
+{
+    char *bptr = ptr;
+    if (bptr[0] == TOK_NOT) {
+        *oper_kind = EcsOperNot;
+        if (!bptr[1]) {
+            if (!name) {
+                return NULL;
+            }
+
+            ecs_parser_error(name, sig, column, 
+                "not must be followed by an identifier");
+        }
+        bptr ++;
+
+    } else if (bptr[0] == TOK_OPTIONAL) {
+        *oper_kind = EcsOperOptional;
+        if (!bptr[1]) {
+            if (!name) {
+                return NULL;
+            }
+
+            ecs_parser_error(name, sig, column, 
+                "optional must be followed by an identifier");
+        }
+        bptr ++;
+    }
+
+    bptr = parse_source(name, sig, column, ptr, bptr, from_kind, source);
+    if (!bptr) {
+        return NULL;
+    }
+
+    bptr = parse_roles(name, sig, column, ptr, bptr, flags);
+    if (!bptr) {
+        return NULL;
+    }
+
+    bptr = parse_trait(sig, bptr, trait);
+    if (!bptr) {
+        return NULL;
     }
 
     return bptr;
@@ -11388,7 +11453,6 @@ int ecs_parse_expr(
     ecs_sig_oper_kind_t oper_kind = EcsOperAnd;
     ecs_sig_inout_kind_t inout_kind = EcsInOut;
     ecs_entity_t flags = 0;
-    const char *source;
 
     for (bptr = buffer, ch = sig[0], ptr = sig; ch; ptr++) {
         ptr = skip_space(ptr);
@@ -11443,13 +11507,17 @@ int ecs_parse_expr(
             *bptr = '\0';
             bptr = buffer;
 
-            source = NULL;
+            ecs_token_t source;
+            ecs_token_t trait;
+
+            source[0] = '\0';
+            trait[0] = '\0';
 
             if (complex_expr) {
                 ecs_sig_oper_kind_t prev = oper_kind;
                 bptr = parse_complex_elem(
                     name, sig, ptr - sig, bptr, &from_kind, &oper_kind, 
-                    &flags, &source);
+                    &flags, source, trait);
                 if (!bptr) {
                     return -1;
                 }
@@ -11504,30 +11572,17 @@ int ecs_parse_expr(
 
                 ecs_parser_error(name, sig, ptr - sig,
                     "invalid operator for SYSTEM column");
-            }     
-
-            char *source_id = NULL;
-            if (source) {
-                char *src = strchr(source, TOK_SOURCE);
-                source_id = ecs_os_malloc(ecs_to_i32(src - source + 1));
-                ecs_assert(source_id != NULL, ECS_OUT_OF_MEMORY, NULL);
-
-                ecs_os_strncpy(source_id, source, ecs_to_i32(src - source));
-                source_id[src - source] = '\0';
             }
 
-            if (action(world, name, sig, ptr - sig, 
-                from_kind, oper_kind, inout_kind, flags, bptr, source_id, ctx)) 
+            if (action(world, name, sig, ptr - sig, from_kind, oper_kind, 
+                inout_kind, flags, bptr, source[0] ? source : NULL, 
+                trait[0] ? trait : NULL, ctx)) 
             {
                 if (!name) {
                     return -1;
                 }
                 
                 ecs_abort(ECS_INVALID_SIGNATURE, sig);
-            }
-
-            if (source_id) {
-                ecs_os_free(source_id);
             }
 
             /* Reset variables for next column */
@@ -11580,13 +11635,14 @@ int ecs_parse_signature_action(
     ecs_entity_t flags,
     const char *component_id,
     const char *source_id,
+    const char *trait_id,
     void *data)
 {
     ecs_sig_t *sig = data;
 
     ecs_assert(sig != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Lookup component handly by string identifier */
+    /* Lookup component handle by string identifier */
     ecs_entity_t component = ecs_lookup_fullpath(world, component_id);
     if (!component) {
         /* "0" is a valid expression used to indicate that a system matches no
@@ -11597,6 +11653,17 @@ int ecs_parse_signature_action(
         } else {
             /* No need to add 0 component to signature */
             return 0;
+        }
+    }
+
+    /* Lookup trait handle by string identifier */
+    if (trait_id) {
+        ecs_entity_t trait = ecs_lookup_fullpath(world, trait_id);
+        if (!trait) {
+            ecs_parser_error(system_id, expr, column, 
+                "unresolved trait identifier '%s'", trait_id);
+        } else {
+            component = ecs_entity_t_comb(component, trait);
         }
     }
 
@@ -20116,6 +20183,7 @@ int parse_type_action(
     ecs_entity_t flags,
     const char *entity_id,
     const char *source_id,
+    const char *trait_id,
     void *data)
 {
     ecs_vector_t **array = data;
@@ -20145,6 +20213,17 @@ int parse_type_action(
                 "unresolved identifier '%s'", entity_id);
             return -1;
         }
+
+        if (trait_id) {
+            ecs_entity_t trait = ecs_lookup_fullpath(world, trait_id);
+            if (!trait) {
+                ecs_parser_error(name, sig, column, 
+                    "unresolved trait identifier '%s'", trait_id);
+                return -1;
+            }
+
+            entity = ecs_entity_t_comb(entity, trait);
+        }        
 
         if (oper_kind == EcsOperAnd) {
             ecs_entity_t* e_ptr = ecs_vector_add(array, ecs_entity_t);
@@ -20907,6 +20986,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     const char *sep,
     const char *prefix)
 {
+    ecs_assert(path != NULL, ECS_INVALID_PARAMETER, NULL);
+    
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr;
     ecs_entity_t cur;

@@ -275,6 +275,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     const char *sep,
     const char *prefix)
 {
+    ecs_assert(path != NULL, ECS_INVALID_PARAMETER, NULL);
+    
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr;
     ecs_entity_t cur;

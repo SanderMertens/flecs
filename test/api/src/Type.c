@@ -823,3 +823,141 @@ void Type_type_to_expr_childof() {
 
     ecs_fini(world);
 }
+
+void Type_type_to_expr_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, TRAIT | Position);
+
+    char *expr = ecs_type_str(world, ecs_type(Type));
+    test_str(expr, "TRAIT|Position");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void Type_type_to_expr_trait_w_comp() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, TRAIT | Position > Velocity);
+
+    char *expr = ecs_type_str(world, ecs_type(Type));
+    test_str(expr, "TRAIT|Position>Velocity");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void Type_type_to_expr_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, scope, 0);
+    ecs_set_scope(world, scope);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+    ecs_set_scope(world, 0);
+
+    char *expr = ecs_type_str(world, ecs_type(Type));
+    test_str(expr, "Position,scope.Velocity");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void Type_type_from_expr() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_type_t type = ecs_type_from_str(world, "Position, Velocity");
+    test_int(ecs_vector_count(type), 2);
+    test_assert(ecs_type_has_entity(world, type, ecs_entity(Position)));
+    test_assert(ecs_type_has_entity(world, type, ecs_entity(Velocity)));
+
+    ecs_fini(world);
+}
+
+void Type_type_from_expr_scope() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, scope, 0);
+    ecs_set_scope(world, scope);
+    ECS_COMPONENT(world, Velocity);
+    ecs_set_scope(world, 0);
+
+    ecs_type_t type = ecs_type_from_str(world, "Position, scope.Velocity");
+    test_int(ecs_vector_count(type), 2);
+    test_assert(ecs_type_has_entity(world, type, ecs_entity(Position)));
+    test_assert(ecs_type_has_entity(world, type, ecs_entity(Velocity)));
+
+    ecs_fini(world);
+}
+
+void Type_type_from_expr_digit() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_type_t type = ecs_type_from_str(world, "10, 20");
+    test_int(ecs_vector_count(type), 2);
+    test_assert(ecs_type_has_entity(world, type, 10));
+    test_assert(ecs_type_has_entity(world, type, 20));
+
+    ecs_fini(world);
+}
+
+void Type_type_from_expr_instanceof() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_ENTITY(world, Base, 0);
+
+    ecs_type_t type = ecs_type_from_str(world, "INSTANCEOF | Base");
+    test_int(ecs_vector_count(type), 1);
+    test_assert(ecs_type_has_entity(world, type, ECS_INSTANCEOF | Base));
+
+    ecs_fini(world);
+}
+
+void Type_type_from_expr_childof() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_ENTITY(world, Parent, 0);
+
+    ecs_type_t type = ecs_type_from_str(world, "CHILDOF | Parent");
+    test_int(ecs_vector_count(type), 1);
+    test_assert(ecs_type_has_entity(world, type, ECS_CHILDOF | Parent));
+
+    ecs_fini(world);
+}
+
+void Type_type_from_expr_trait() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_TAG(world, Trait);
+
+    ecs_type_t type = ecs_type_from_str(world, "TRAIT | Trait");
+    test_int(ecs_vector_count(type), 1);
+    test_assert(ecs_type_has_entity(world, type, ECS_TRAIT | Trait));
+
+    ecs_fini(world);
+}
+
+void Type_type_from_expr_trait_w_comp() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ecs_type_t type = ecs_type_from_str(world, "TRAIT | Trait > Position");
+    test_int(ecs_vector_count(type), 1);
+    test_assert(ecs_type_has_entity(world, type, ecs_trait(ecs_entity(Position), Trait)));
+
+    ecs_fini(world);
+}

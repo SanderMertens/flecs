@@ -933,7 +933,17 @@
                 "type_to_expr_1_comp",
                 "type_to_expr_2_comp",
                 "type_to_expr_instanceof",
-                "type_to_expr_childof"
+                "type_to_expr_childof",
+                "type_to_expr_trait",
+                "type_to_expr_trait_w_comp",
+                "type_to_expr_scope",
+                "type_from_expr",
+                "type_from_expr_scope",
+                "type_from_expr_digit",
+                "type_from_expr_instanceof",
+                "type_from_expr_childof",
+                "type_from_expr_trait",
+                "type_from_expr_trait_w_comp"
             ]
         }, {
             "id": "Run",

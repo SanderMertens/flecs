@@ -13,6 +13,7 @@ int parse_type_action(
     ecs_entity_t flags,
     const char *entity_id,
     const char *source_id,
+    const char *trait_id,
     void *data)
 {
     ecs_vector_t **array = data;
@@ -42,6 +43,17 @@ int parse_type_action(
                 "unresolved identifier '%s'", entity_id);
             return -1;
         }
+
+        if (trait_id) {
+            ecs_entity_t trait = ecs_lookup_fullpath(world, trait_id);
+            if (!trait) {
+                ecs_parser_error(name, sig, column, 
+                    "unresolved trait identifier '%s'", trait_id);
+                return -1;
+            }
+
+            entity = ecs_entity_t_comb(entity, trait);
+        }        
 
         if (oper_kind == EcsOperAnd) {
             ecs_entity_t* e_ptr = ecs_vector_add(array, ecs_entity_t);

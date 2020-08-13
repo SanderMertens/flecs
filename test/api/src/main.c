@@ -847,6 +847,16 @@ void Type_type_to_expr_1_comp(void);
 void Type_type_to_expr_2_comp(void);
 void Type_type_to_expr_instanceof(void);
 void Type_type_to_expr_childof(void);
+void Type_type_to_expr_trait(void);
+void Type_type_to_expr_trait_w_comp(void);
+void Type_type_to_expr_scope(void);
+void Type_type_from_expr(void);
+void Type_type_from_expr_scope(void);
+void Type_type_from_expr_digit(void);
+void Type_type_from_expr_instanceof(void);
+void Type_type_from_expr_childof(void);
+void Type_type_from_expr_trait(void);
+void Type_type_from_expr_trait_w_comp(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -4242,6 +4252,46 @@ bake_test_case Type_testcases[] = {
     {
         "type_to_expr_childof",
         Type_type_to_expr_childof
+    },
+    {
+        "type_to_expr_trait",
+        Type_type_to_expr_trait
+    },
+    {
+        "type_to_expr_trait_w_comp",
+        Type_type_to_expr_trait_w_comp
+    },
+    {
+        "type_to_expr_scope",
+        Type_type_to_expr_scope
+    },
+    {
+        "type_from_expr",
+        Type_type_from_expr
+    },
+    {
+        "type_from_expr_scope",
+        Type_type_from_expr_scope
+    },
+    {
+        "type_from_expr_digit",
+        Type_type_from_expr_digit
+    },
+    {
+        "type_from_expr_instanceof",
+        Type_type_from_expr_instanceof
+    },
+    {
+        "type_from_expr_childof",
+        Type_type_from_expr_childof
+    },
+    {
+        "type_from_expr_trait",
+        Type_type_from_expr_trait
+    },
+    {
+        "type_from_expr_trait_w_comp",
+        Type_type_from_expr_trait_w_comp
     }
 };
 
@@ -5466,7 +5516,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        48,
+        58,
         Type_testcases
     },
     {
