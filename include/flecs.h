@@ -40,9 +40,10 @@ extern "C" {
 #endif
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Basic API types
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup api_types Basic API types
+ * @{
+ */
 
 /** An entity identifier. */
 typedef uint64_t ecs_entity_t;
@@ -105,10 +106,12 @@ typedef struct ecs_world_info_t {
     int32_t systems_ran_frame;  /**< Total number of systems ran in last frame */
 } ecs_world_info_t;
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Function types
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup function_types Function Types
+ * @{
+ */
 
 /** Action callback for systems and triggers */
 typedef void (*ecs_iter_action_t)(
@@ -144,10 +147,13 @@ typedef void (*ecs_fini_action_t)(
 #include "flecs/private/log.h"              /* Logging API */
 #include "flecs/type.h"                     /* Type API */
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Builtin components
-////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @defgroup builtin_types Builtin Types
+ * @{
+ */
 
 /** Entity name. */
 typedef struct EcsName {
@@ -189,10 +195,13 @@ typedef struct EcsTrigger {
     void *ctx;
 } EcsTrigger;
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Type roles
-////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @defgroup type_roles Type Roles
+ * @{
+ */
 
 /* Type roles are used to indicate the role of an entity in a type. If no flag
  * is specified, the entity is interpreted as a regular component or tag. Flags
@@ -244,10 +253,12 @@ typedef struct EcsTrigger {
 /** Switches allow for fast switching between mutually exclusive components */
 #define ECS_SWITCH ((ecs_entity_t)0xF6 << 56)
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Builtin tags
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup builtin_tags Builtin Tags
+ * @{
+ */
 
 /* Builtin tag ids */
 #define EcsModule (ECS_HI_COMPONENT_ID + 0)
@@ -298,10 +309,12 @@ typedef struct EcsTrigger {
  * are reserved for builtin components */
 #define EcsFirstUserEntityId (ECS_HI_COMPONENT_ID + 32)
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Convenience macro's
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup convenience_macros Convenience Macro's
+ * @{
+ */
 
 /* Macro's rely on variadic arguments which are C99 and above */
 #ifndef FLECS_LEGACY
@@ -387,10 +400,12 @@ typedef struct EcsTrigger {
 
 #endif /* FLECS_LEGACY */
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// World API
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup world_api World API
+ * @{
+ */
 
 /** Create a new world.
  * A world manages all the ECS data and supporting infrastructure. Applications 
@@ -662,10 +677,12 @@ FLECS_EXPORT
 void ecs_tracing_enable(
     int level);
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Entity Creation
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup creating_entities Creating Entities
+ * @{
+ */
 
 /** Create new entity id.
  * This operation returns an unused entity id.
@@ -792,10 +809,30 @@ ecs_entity_t ecs_bulk_new_w_data(
 #define ecs_bulk_new(world, component, count)\
     ecs_bulk_new_w_type(world, ecs_type(component), count)
 
+/** Clone an entity
+ * This operation clones the components of one entity into another entity. If
+ * no destination entity is provided, a new entity will be created. Component
+ * values are not copied unless copy_value is true.
+ *
+ * @param world The world.
+ * @param dst The entity to copy the components to.
+ * @param src The entity to copy the components from.
+ * @param copy_value If true, the value of components will be copied to dst.
+ * @return The destination entity.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_clone(
+    ecs_world_t *world,
+    ecs_entity_t dst,
+    ecs_entity_t src,
+    bool copy_value);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Adding components
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup adding_removing Adding & Removing
+ * @{
+ */
 
 /** Add an entity to an entity.
  * This operation adds a single entity to the type of an entity. Type roles may
@@ -843,10 +880,6 @@ void ecs_add_type(
     ecs_add_type(world, entity, ecs_type(component))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Removing components
-////////////////////////////////////////////////////////////////////////////////
-
 /** Remove an entity from an entity.
  * This operation removes a single entity from the type of an entity. Type roles
  * may be used in combination with the added entity. If the entity does not have
@@ -893,10 +926,6 @@ void ecs_remove_type(
     ecs_remove_type(world, entity, ecs_type(type))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Adding + removing components
-////////////////////////////////////////////////////////////////////////////////
-
 /** Add / remove entity from entities matching a filter.
  * Combination of ecs_add_entity and ecs_remove_entity.
  *
@@ -939,9 +968,12 @@ void ecs_add_remove_type(
     ecs_add_remove_type(world, entity, ecs_type(to_add), ecs_type(to_remove))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Traits
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup traits Traits
+ * @{
+ */
 
 /** Add a trait
  * This operation adds a trait from an entity.
@@ -1055,9 +1087,12 @@ ecs_entity_t ecs_get_case(
     ecs_entity_t e,
     ecs_entity_t sw);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Deleting entities
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup deleting Deleting Entities
+ * @{
+ */
 
 /** Delete an entity.
  * This operation will delete an entity and all of its components. The entity id
@@ -1073,33 +1108,12 @@ void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity);
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Cloning entities
-////////////////////////////////////////////////////////////////////////////////
-
-/** Clone an entity
- * This operation clones the components of one entity into another entity. If
- * no destination entity is provided, a new entity will be created. Component
- * values are not copied unless copy_value is true.
- *
- * @param world The world.
- * @param dst The entity to copy the components to.
- * @param src The entity to copy the components from.
- * @param copy_value If true, the value of components will be copied to dst.
- * @return The destination entity.
+/**
+ * @defgroup getting Getting Components
+ * @{
  */
-FLECS_EXPORT
-ecs_entity_t ecs_clone(
-    ecs_world_t *world,
-    ecs_entity_t dst,
-    ecs_entity_t src,
-    bool copy_value);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Getting components
-////////////////////////////////////////////////////////////////////////////////
 
 /** Get an immutable pointer to a component.
  * This operation obtains a const pointer to the requested component. The
@@ -1219,9 +1233,12 @@ void ecs_modified_w_entity(
     ecs_modified_w_entity(world, entity, ecs_entity(component))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Setting components
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup setting Setting Components
+ * @{
+ */
 
 /** Set the value of a component.
  * This operation allows an application to set the value of a component. The
@@ -1275,9 +1292,12 @@ ecs_entity_t ecs_set_ptr_w_entity(
 #endif
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Testing for components
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup testing Testing Components
+ * @{
+ */
 
 /** Test if an entity has an entity.
  * This operation returns true if the entity has the provided entity in its 
@@ -1348,9 +1368,12 @@ bool ecs_has_type(
     ecs_type_owns_entity(world, ecs_get_type(world, entity), has, owned)
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Entity information
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup metadata Entity Metadata
+ * @{
+ */
 
 /** Get the type of an entity.
  *
@@ -1403,10 +1426,6 @@ ecs_entity_t ecs_get_parent_w_entity(
     ecs_get_parent_w_entity(world, entity, ecs_entity(component))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Enabling / disabling entities
-////////////////////////////////////////////////////////////////////////////////
-
 /** Enable or disable an entity.
  * This operation enables or disables an entity by adding or removing the
  * EcsDisabled tag. A disabled entity will not be matched with any systems,
@@ -1422,10 +1441,406 @@ void ecs_enable(
     ecs_entity_t entity,
     bool enabled);
 
+/** Count entities that have an entity.
+ * Returns the number of entities that have the specified entity.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return The number of entities that have the entity.
+ */
+FLECS_EXPORT
+int32_t ecs_count_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Filter API
-////////////////////////////////////////////////////////////////////////////////
+/** Count entities that have a type.
+ * Returns the number of entities that have the specified type.
+ *
+ * @param world The world.
+ * @param type The type.
+ * @return The number of entities that have the type.
+ */
+FLECS_EXPORT
+int32_t ecs_count_type(
+    ecs_world_t *world,
+    ecs_type_t type);
+
+/** Count entities that have a component, type or tag.
+ * Returns the number of entities that have the specified component, type or tag.
+ *
+ * @param world The world.
+ * @param type The component, type or tag.
+ * @return The number of entities that have the component, type or tag.
+ */
+#define ecs_count(world, type)\
+    ecs_count_type(world, ecs_type(type))
+
+/** Count entities that match a filter.
+ * Returns the number of entities that match the specified filter.
+ *
+ * @param world The world.
+ * @param type The type.
+ * @return The number of entities that match the specified filter.
+ */
+FLECS_EXPORT
+int32_t ecs_count_w_filter(
+    ecs_world_t *world,
+    const ecs_filter_t *filter);
+
+
+/** @} */
+
+/**
+ * @defgroup lookup Lookups
+ * @{
+ */
+
+/** Lookup an entity by name.
+ * Returns an entity that matches the specified name. Only looks for entities in
+ * the current scope (root if no scope is provided).
+ *
+ * @param world The world.
+ * @param name The entity name.
+ * @return The entity with the specified name, or 0 if no entity was found.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup(
+    ecs_world_t *world,
+    const char *name);
+
+/** Lookup a child entity by name.
+ * Returns an entity that matches the specified name. Only looks for entities in
+ * the provided parent. If no parent is provided, look in the current scope (
+ * root if no scope is provided).
+ *
+ * @param world The world.
+ * @param name The entity name.
+ * @return The entity with the specified name, or 0 if no entity was found.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup_child(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *name);
+
+/** Lookup an entity from a path.
+ * Lookup an entity from a provided path, relative to the provided parent. The
+ * operation will use the provided separator to tokenize the path expression. If
+ * the provided path contains the prefix, the search will start from the root.
+ *
+ * If the entity is not found in the provided parent, the operation will 
+ * continue to search in the parent of the parent, until the root is reached. If
+ * the entity is still not found, the lookup will search in the flecs.core
+ * scope. If the entity is not found there either, the function returns 0.
+ *
+ * @param world The world.
+ * @param parent The entity from which to resolve the path.
+ * @param path The path to resolve.
+ * @param sep The path separator.
+ * @param prefix The path prefix.
+ * @return The entity if found, else 0.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+/** Lookup an entity from a path.
+ * Same as ecs_lookup_path_w_sep, but with defaults for the separator and
+ * prefix. These defaults are used when looking up identifiers in a type or
+ * signature expression.
+ *
+ * @param world The world.
+ * @param parent The entity from which to resolve the path.
+ * @param path The path to resolve.
+ * @return The entity if found, else 0. 
+ */
+#define ecs_lookup_path(world, parent, path)\
+    ecs_lookup_path_w_sep(world, parent, path, ".", NULL)
+
+/** Lookup an entity from a full path.
+ * Same as ecs_lookup_pat, but  searches from the current scope, or root scope
+ * if no scope is set.
+ *
+ * @param world The world.
+ * @param path The path to resolve.
+ * @return The entity if found, else 0. 
+ */
+#define ecs_lookup_fullpath(world, path)\
+    ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
+
+/** Lookup an entity by its symbol name.
+ * This looks up an entity by the symbol name that was provided in EcsName. The
+ * operation does not take into account scoping, which means it will search all
+ * entities that have an EcsName.
+ *
+ * This operation can be useful to resolve, for example, a type by its C 
+ * identifier, which does not include the Flecs namespacing.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup_symbol(
+    ecs_world_t *world,
+    const char *name);
+
+
+/** @} */
+
+/**
+ * @defgroup paths Paths
+ * @{
+ */
+
+/** Get a path identifier for an entity.
+ * This operation creates a path that contains the names of the entities from
+ * the specified parent to the provided entity, separated by the provided 
+ * separator. If no parent is provided the path will be relative to the root. If
+ * a prefix is provided, the path will be prefixed by the prefix.
+ *
+ * If the parent is equal to the provided child, the operation will return an
+ * empty string. If a nonzero component is provided, the path will be created by 
+ * looking for parents with that component.
+ *
+ * The returned path should be freed by the application.
+ *
+ * @param world The world.
+ * @param parent The entity from which to create the path.
+ * @param child The entity to which to create the path.
+ * @param component The component of the parent.
+ * @return The relative entity path.
+ */
+FLECS_EXPORT
+char* ecs_get_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    ecs_entity_t component,
+    const char *sep,
+    const char *prefix);
+
+/** Get a path identifier for an entity.
+ * Same as ecs_get_path_w_sep, but with default values for the separator and
+ * prefix. These defaults are used throughout Flecs whenever identifiers are
+ * used in type or signature expressions.
+ *
+ * @param world The world.
+ * @param parent The entity from which to create the path.
+ * @param child The entity to which to create the path.
+ * @return The relative entity path.
+ */
+#define ecs_get_path(world, parent, child)\
+    ecs_get_path_w_sep(world, parent, child, 0, ".", NULL)
+
+/** Get a full path for an entity.
+ * Same as ecs_get_path, but with default values for the separator and
+ * prefix, and the path is created from the current scope, or root if no scope
+ * is provided.
+ *
+ * @param world The world.
+ * @param child The entity to which to create the path.
+ * @return The entity path.
+ */
+#define ecs_get_fullpath(world, child)\
+    ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
+
+/** Find or create entity from path.
+ * This operation will find or create an entity from a path, and will create any
+ * intermediate entities if required. If the entity already exists, no entities
+ * will be created.
+ *
+ * If the path starts with the prefix, then the entity will be created from the
+ * root scope.
+ *
+ * @param world The world.
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @param sep The separator used in the path.
+ * @param prefix The prefix used in the path.
+ * @return The entity.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_new_from_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+/** Find or create entity from path.
+ * Same as ecs_new_from_path_w_sep, but with defaults for sep and prefix.
+ *
+ * @param world The world.
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_new_from_path(world, parent, path)\
+    ecs_new_from_path_w_sep(world, parent, path, ".", NULL)
+
+/** Find or create entity from full path.
+ * Same as ecs_new_from_path, but entity will be created from the current scope,
+ * or root scope if no scope is set.
+ *
+ * @param world The world.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_new_from_fullpath(world, path)\
+    ecs_new_from_path_w_sep(world, 0, path, ".", NULL)
+
+/** Add specified path to entity.
+ * This operation is similar to ecs_new_from_path, but will instead add the path
+ * to an existing entity.
+ *
+ * If an entity already exists for the path, it will be returned instead.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path.
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @param sep The separator used in the path.
+ * @param prefix The prefix used in the path.
+ * @return The entity.
+ */ 
+FLECS_EXPORT
+ecs_entity_t ecs_add_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+/** Add specified path to entity.
+ * Same as ecs_add_from_path_w_sep, but with defaults for sep and prefix.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path. 
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_add_path(world, entity, parent, path)\
+    ecs_add_path_w_sep(world, entity, parent, path, ".", NULL)
+
+/** Add specified path to entity.
+ * Same as ecs_add_from_path, but entity will be created from the current scope,
+ * or root scope if no scope is set.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_add_fullpath(world, entity, path)\
+    ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
+
+
+/** @} */
+
+/**
+ * @defgroup scopes Scopes
+ * @{
+ */
+
+/** Does entity have children.
+ *
+ * @param world The world
+ * @param entity The entity
+ * @return True if the entity has children, false if not.
+ */
+FLECS_EXPORT
+int32_t ecs_get_child_count(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Return a scope iterator.
+ * A scope iterator iterates over all the child entities of the specified 
+ * parent.
+ *
+ * @param world The world.
+ * @param parent The parent entity for which to iterate the children.
+ * @return The iterator.
+ */
+FLECS_EXPORT
+ecs_iter_t ecs_scope_iter(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
+/** Return a filtered scope iterator.
+ * Same as ecs_scope_iter, but results will be filtered.
+ *
+ * @param world The world.
+ * @param parent The parent entity for which to iterate the children.
+ * @return The iterator.
+ */
+FLECS_EXPORT
+ecs_iter_t ecs_scope_iter_w_filter(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_filter_t *filter);
+
+/** Progress the scope iterator.
+ * This operation progresses the scope iterator to the next table. The iterator
+ * must have been initialized with `ecs_scope_iter`. This operation must be
+ * invoked at least once before interpreting the contents of the iterator.
+ *
+ * @param it The iterator
+ * @return True if more data is available, false if not.
+ */
+FLECS_EXPORT
+bool ecs_scope_next(
+    ecs_iter_t *it);
+
+/** Set the current scope.
+ * This operation sets the scope of the current stage to the provided entity.
+ * As a result new entities will be created in this scope, and lookups will be
+ * relative to the provided scope.
+ *
+ * It is considered good practice to restore the scope to the old value.
+ *
+ * @param world The world.
+ * @param scope The entity to use as scope.
+ * @return The previous scope.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_set_scope(
+    ecs_world_t *world,
+    ecs_entity_t scope);
+
+/** Get the current scope.
+ * Get the scope set by ecs_set_scope. If no scope is set, this operation will
+ * return 0.
+ *
+ * @param world The world.
+ * @return The current scope.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_get_scope(
+    ecs_world_t *world);
+
+/** Set a name prefix for newly created entities.
+ * This is a utility that lets C modules use prefixed names for C types and
+ * C functions, while using names for the entity names that do not have the 
+ * prefix. The name prefix is currently only used by ECS_COMPONENT.
+ *
+ * @param world The world.
+ * @param prefix The name prefix to use.
+ * @return The previous prefix.
+ */
+FLECS_EXPORT
+const char* ecs_set_name_prefix(
+    ecs_world_t *world,
+    const char *prefix);    
+
+/** @} */
+
+/**
+ * @defgroup filters Filters
+ * @{
+ */
 
 /** Return a filter iterator.
  * A filter iterator lets an application iterate over entities that match the
@@ -1455,9 +1870,12 @@ bool ecs_filter_next(
     ecs_iter_t *iter);
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Query API
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup queries Queries
+ * @{
+ */
 
 /** Create a query.
  * This operation creates a query. Queries are used to iterate over entities
@@ -1653,398 +2071,13 @@ FLECS_EXPORT
 bool ecs_query_changed(
     ecs_query_t *query);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Counting entities
-////////////////////////////////////////////////////////////////////////////////
 
-/** Count entities that have an entity.
- * Returns the number of entities that have the specified entity.
- *
- * @param world The world.
- * @param entity The entity.
- * @return The number of entities that have the entity.
+/** @} */
+
+/**
+ * @defgroup iterator Iterators
+ * @{
  */
-FLECS_EXPORT
-int32_t ecs_count_entity(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Count entities that have a type.
- * Returns the number of entities that have the specified type.
- *
- * @param world The world.
- * @param type The type.
- * @return The number of entities that have the type.
- */
-FLECS_EXPORT
-int32_t ecs_count_type(
-    ecs_world_t *world,
-    ecs_type_t type);
-
-/** Count entities that have a component, type or tag.
- * Returns the number of entities that have the specified component, type or tag.
- *
- * @param world The world.
- * @param type The component, type or tag.
- * @return The number of entities that have the component, type or tag.
- */
-#define ecs_count(world, type)\
-    ecs_count_type(world, ecs_type(type))
-
-/** Count entities that match a filter.
- * Returns the number of entities that match the specified filter.
- *
- * @param world The world.
- * @param type The type.
- * @return The number of entities that match the specified filter.
- */
-FLECS_EXPORT
-int32_t ecs_count_w_filter(
-    ecs_world_t *world,
-    const ecs_filter_t *filter);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Looking up entities
-////////////////////////////////////////////////////////////////////////////////
-
-/** Lookup an entity by name.
- * Returns an entity that matches the specified name. Only looks for entities in
- * the current scope (root if no scope is provided).
- *
- * @param world The world.
- * @param name The entity name.
- * @return The entity with the specified name, or 0 if no entity was found.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_lookup(
-    ecs_world_t *world,
-    const char *name);
-
-/** Lookup a child entity by name.
- * Returns an entity that matches the specified name. Only looks for entities in
- * the provided parent. If no parent is provided, look in the current scope (
- * root if no scope is provided).
- *
- * @param world The world.
- * @param name The entity name.
- * @return The entity with the specified name, or 0 if no entity was found.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_lookup_child(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *name);
-
-/** Lookup an entity from a path.
- * Lookup an entity from a provided path, relative to the provided parent. The
- * operation will use the provided separator to tokenize the path expression. If
- * the provided path contains the prefix, the search will start from the root.
- *
- * If the entity is not found in the provided parent, the operation will 
- * continue to search in the parent of the parent, until the root is reached. If
- * the entity is still not found, the lookup will search in the flecs.core
- * scope. If the entity is not found there either, the function returns 0.
- *
- * @param world The world.
- * @param parent The entity from which to resolve the path.
- * @param path The path to resolve.
- * @param sep The path separator.
- * @param prefix The path prefix.
- * @return The entity if found, else 0.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_lookup_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *path,
-    const char *sep,
-    const char *prefix);
-
-/** Lookup an entity from a path.
- * Same as ecs_lookup_path_w_sep, but with defaults for the separator and
- * prefix. These defaults are used when looking up identifiers in a type or
- * signature expression.
- *
- * @param world The world.
- * @param parent The entity from which to resolve the path.
- * @param path The path to resolve.
- * @return The entity if found, else 0. 
- */
-#define ecs_lookup_path(world, parent, path)\
-    ecs_lookup_path_w_sep(world, parent, path, ".", NULL)
-
-/** Lookup an entity from a full path.
- * Same as ecs_lookup_pat, but  searches from the current scope, or root scope
- * if no scope is set.
- *
- * @param world The world.
- * @param path The path to resolve.
- * @return The entity if found, else 0. 
- */
-#define ecs_lookup_fullpath(world, path)\
-    ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
-
-/** Lookup an entity by its symbol name.
- * This looks up an entity by the symbol name that was provided in EcsName. The
- * operation does not take into account scoping, which means it will search all
- * entities that have an EcsName.
- *
- * This operation can be useful to resolve, for example, a type by its C 
- * identifier, which does not include the Flecs namespacing.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_lookup_symbol(
-    ecs_world_t *world,
-    const char *name);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Path utilities
-////////////////////////////////////////////////////////////////////////////////
-
-/** Get a path identifier for an entity.
- * This operation creates a path that contains the names of the entities from
- * the specified parent to the provided entity, separated by the provided 
- * separator. If no parent is provided the path will be relative to the root. If
- * a prefix is provided, the path will be prefixed by the prefix.
- *
- * If the parent is equal to the provided child, the operation will return an
- * empty string. If a nonzero component is provided, the path will be created by 
- * looking for parents with that component.
- *
- * The returned path should be freed by the application.
- *
- * @param world The world.
- * @param parent The entity from which to create the path.
- * @param child The entity to which to create the path.
- * @param component The component of the parent.
- * @return The relative entity path.
- */
-FLECS_EXPORT
-char* ecs_get_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_entity_t child,
-    ecs_entity_t component,
-    const char *sep,
-    const char *prefix);
-
-/** Get a path identifier for an entity.
- * Same as ecs_get_path_w_sep, but with default values for the separator and
- * prefix. These defaults are used throughout Flecs whenever identifiers are
- * used in type or signature expressions.
- *
- * @param world The world.
- * @param parent The entity from which to create the path.
- * @param child The entity to which to create the path.
- * @return The relative entity path.
- */
-#define ecs_get_path(world, parent, child)\
-    ecs_get_path_w_sep(world, parent, child, 0, ".", NULL)
-
-/** Get a full path for an entity.
- * Same as ecs_get_path, but with default values for the separator and
- * prefix, and the path is created from the current scope, or root if no scope
- * is provided.
- *
- * @param world The world.
- * @param child The entity to which to create the path.
- * @return The entity path.
- */
-#define ecs_get_fullpath(world, child)\
-    ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
-
-/** Find or create entity from path.
- * This operation will find or create an entity from a path, and will create any
- * intermediate entities if required. If the entity already exists, no entities
- * will be created.
- *
- * If the path starts with the prefix, then the entity will be created from the
- * root scope.
- *
- * @param world The world.
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @param sep The separator used in the path.
- * @param prefix The prefix used in the path.
- * @return The entity.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_new_from_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *path,
-    const char *sep,
-    const char *prefix);
-
-/** Find or create entity from path.
- * Same as ecs_new_from_path_w_sep, but with defaults for sep and prefix.
- *
- * @param world The world.
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_new_from_path(world, parent, path)\
-    ecs_new_from_path_w_sep(world, parent, path, ".", NULL)
-
-/** Find or create entity from full path.
- * Same as ecs_new_from_path, but entity will be created from the current scope,
- * or root scope if no scope is set.
- *
- * @param world The world.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_new_from_fullpath(world, path)\
-    ecs_new_from_path_w_sep(world, 0, path, ".", NULL)
-
-/** Add specified path to entity.
- * This operation is similar to ecs_new_from_path, but will instead add the path
- * to an existing entity.
- *
- * If an entity already exists for the path, it will be returned instead.
- *
- * @param world The world.
- * @param entity The entity to which to add the path.
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @param sep The separator used in the path.
- * @param prefix The prefix used in the path.
- * @return The entity.
- */ 
-FLECS_EXPORT
-ecs_entity_t ecs_add_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t parent,
-    const char *path,
-    const char *sep,
-    const char *prefix);
-
-/** Add specified path to entity.
- * Same as ecs_add_from_path_w_sep, but with defaults for sep and prefix.
- *
- * @param world The world.
- * @param entity The entity to which to add the path. 
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_add_path(world, entity, parent, path)\
-    ecs_add_path_w_sep(world, entity, parent, path, ".", NULL)
-
-/** Add specified path to entity.
- * Same as ecs_add_from_path, but entity will be created from the current scope,
- * or root scope if no scope is set.
- *
- * @param world The world.
- * @param entity The entity to which to add the path.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_add_fullpath(world, entity, path)\
-    ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Scope API
-////////////////////////////////////////////////////////////////////////////////
-
-/** Does entity have children.
- *
- * @param world The world
- * @param entity The entity
- * @return True if the entity has children, false if not.
- */
-FLECS_EXPORT
-int32_t ecs_get_child_count(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Return a scope iterator.
- * A scope iterator iterates over all the child entities of the specified 
- * parent.
- *
- * @param world The world.
- * @param parent The parent entity for which to iterate the children.
- * @return The iterator.
- */
-FLECS_EXPORT
-ecs_iter_t ecs_scope_iter(
-    ecs_world_t *world,
-    ecs_entity_t parent);
-
-/** Return a filtered scope iterator.
- * Same as ecs_scope_iter, but results will be filtered.
- *
- * @param world The world.
- * @param parent The parent entity for which to iterate the children.
- * @return The iterator.
- */
-FLECS_EXPORT
-ecs_iter_t ecs_scope_iter_w_filter(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_filter_t *filter);
-
-/** Progress the scope iterator.
- * This operation progresses the scope iterator to the next table. The iterator
- * must have been initialized with `ecs_scope_iter`. This operation must be
- * invoked at least once before interpreting the contents of the iterator.
- *
- * @param it The iterator
- * @return True if more data is available, false if not.
- */
-FLECS_EXPORT
-bool ecs_scope_next(
-    ecs_iter_t *it);
-
-/** Set the current scope.
- * This operation sets the scope of the current stage to the provided entity.
- * As a result new entities will be created in this scope, and lookups will be
- * relative to the provided scope.
- *
- * It is considered good practice to restore the scope to the old value.
- *
- * @param world The world.
- * @param scope The entity to use as scope.
- * @return The previous scope.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_set_scope(
-    ecs_world_t *world,
-    ecs_entity_t scope);
-
-/** Get the current scope.
- * Get the scope set by ecs_set_scope. If no scope is set, this operation will
- * return 0.
- *
- * @param world The world.
- * @return The current scope.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_get_scope(
-    ecs_world_t *world);
-
-/** Set a name prefix for newly created entities.
- * This is a utility that lets C modules use prefixed names for C types and
- * C functions, while using names for the entity names that do not have the 
- * prefix. The name prefix is currently only used by ECS_COMPONENT.
- *
- * @param world The world.
- * @param prefix The name prefix to use.
- * @return The previous prefix.
- */
-FLECS_EXPORT
-const char* ecs_set_name_prefix(
-    ecs_world_t *world,
-    const char *prefix);    
-
-////////////////////////////////////////////////////////////////////////////////
-//// Iter API
-////////////////////////////////////////////////////////////////////////////////
 
 /** Obtain column data. 
  * This operation is to be used to obtain a component array for a specific 
@@ -2280,9 +2313,12 @@ int32_t ecs_table_component_index(
     module##ImportHandles(ecs_module(module))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Staging API
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup staging Staging
+ * @{
+ */
 
 /** Begin staging.
  * When staging is enabled, modifications to entities are stored to a stage.
@@ -2329,6 +2365,8 @@ FLECS_EXPORT
 void ecs_set_automerge(
     ecs_world_t *world,
     bool auto_merge);
+
+/** @} */
 
 /* Optional modules */
 #ifdef FLECS_SYSTEM
