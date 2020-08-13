@@ -3409,6 +3409,7 @@ void ecs_add_remove_type(
     ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_entity(component), trait), sizeof(component), &(component)__VA_ARGS__)
 
 #endif
+
 /** Get trait for component. 
  * This operation obtains the value of a trait for a componetn that has been 
  * added by ecs_set_trait.
@@ -3420,6 +3421,18 @@ void ecs_add_remove_type(
  */
 #define ecs_get_trait(world, entity, component, trait)\
     ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait))))
+
+/** Get trait tag for component. 
+ * This operation obtains the value of a trait for a componetn that has been 
+ * added by ecs_set_trait.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param trait The trait that was added.
+ * @param component The component to which the trait was added.
+ */
+#define ecs_get_trait_tag(world, entity, trait, component)\
+    ((component*)ecs_get_w_entity(world, entity, ecs_trait(ecs_entity(component), trait)))
 
 /** Get case for switch.
  * This operation gets the current case for the specified switch. If the current
@@ -8194,8 +8207,8 @@ public:
         return static_cast<C*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
-                    trait.id(), 
-                    component_info<C>::id(m_world)),
+                    component_info<C>::id(m_world),
+                    trait.id()),
                     is_added));
     }    
 
@@ -8397,7 +8410,14 @@ public:
      */
     bool has_case(flecs::entity sw_case) const {
         return ecs_has_entity(m_world, m_id, flecs::Case | sw_case.id());
-    }    
+    }  
+
+    /** Get case for switch.
+     *
+     * @param sw The switch for which to obtain the case.
+     * @return True if the entity has the provided case, false otherwise.
+     */
+    flecs::entity get_case(flecs::type sw) const;
 
     /** Get current delta time.
      * Convenience function so system implementations can get delta_time, even
@@ -9117,12 +9137,24 @@ private:
 //// Persistent queries
 ////////////////////////////////////////////////////////////////////////////////
 
+class query_base {
+public:
+    query_t* c_ptr() const {
+        return m_query;
+    }
+
+protected:
+    query_t *m_query;
+};
+
 template<typename ... Components>
-class query final {
+class query : public query_base {
     using Columns = typename column_args<Components...>::Columns;
 
 public:
-    query() : m_query(nullptr) { }
+    query() { 
+        m_query = nullptr;
+    }
 
     explicit query(world& world) {
         std::stringstream str;
@@ -9133,6 +9165,15 @@ public:
         m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
     }
 
+    explicit query(world& world, query_base& parent) {
+        std::stringstream str;
+        if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
+    }    
+
     explicit query(world& world, const char *expr) {
         std::stringstream str;
         if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
@@ -9142,6 +9183,16 @@ public:
             m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
         }
     }
+
+    explicit query(world& world, query_base& parent, const char *expr) {
+        std::stringstream str;
+        if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+            m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
+        } else {
+            str << "," << expr;
+            m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
+        }
+    }    
 
     query_iterator<Components...> begin() const;
 
@@ -9168,13 +9219,6 @@ public:
             ctx.call_system(&iter, func, 0, columns.m_columns);
         }
     }    
-
-    query_t* c_ptr() const {
-        return m_query;
-    }
-
-private:
-    query_t *m_query;
 };
 
 
@@ -9925,6 +9969,10 @@ inline typename entity_builder<base>::base_type& entity_builder<base>::remove_ca
 
 inline bool entity::has_switch(flecs::type type) const {
     return ecs_has_entity(m_world, m_id, flecs::Switch | type.id());
+}
+
+inline flecs::entity entity::get_case(flecs::type sw) const {
+    return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw.id()));
 }
 
 

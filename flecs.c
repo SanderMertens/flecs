@@ -320,7 +320,11 @@ int32_t* ecs_table_get_monitor(
 
 /* Simple bitmask structure to store a set of components. This is used amongst
  * others to keep track of which components have been overridden from a base. */
-typedef ecs_entity_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
+typedef struct ecs_comp_set_t {
+    int32_t hi_count;
+    ecs_entity_t hi_array[ECS_MAX_ADD_REMOVE];
+    ecs_entity_t lo_mask[ECS_HI_COMPONENT_ID / 64];
+} ecs_comp_set_t;
 
 /** Callback used by the system signature expression parser. */
 typedef int (*ecs_parse_action_t)(
@@ -983,7 +987,7 @@ void ecs_run_add_actions(
     int32_t row,
     int32_t count,
     ecs_entities_t *added,
-    ecs_comp_mask_t set_mask,
+    ecs_comp_set_t *set_mask,
     bool get_all,
     bool run_on_set);   
 
@@ -3202,24 +3206,36 @@ int32_t comp_mask_index(
 
 static
 void comp_mask_set(
-    ecs_comp_mask_t mask,
+    ecs_comp_set_t *set,
     ecs_entity_t value)
 {
-    ecs_assert(value < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(value < ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
-    int32_t index = comp_mask_index((int32_t)value);
-    mask[index] |= (ecs_entity_t)1 << (value & 0x3F);
+    if (value < ECS_HI_COMPONENT_ID) {
+        int32_t index = comp_mask_index((int32_t)value);
+        set->lo_mask[index] |= (ecs_entity_t)1 << (value & 0x3F);
+    } else {
+        int32_t count = set->hi_count++;
+        set->hi_array[count] = value;
+    }
 }
 
 static
 bool comp_mask_is_set(
-    ecs_comp_mask_t mask,
+    ecs_comp_set_t *set,
     ecs_entity_t value)
 {
-    ecs_assert(value < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(value < ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
-    int32_t index = comp_mask_index((int32_t)value);
-    return (mask[index] & (ecs_entity_t)1 << (value & 0x3F)) != 0;
+    if (value < ECS_HI_COMPONENT_ID) {
+        int32_t index = comp_mask_index((int32_t)value);
+        return (set->lo_mask[index] & (ecs_entity_t)1 << (value & 0x3F)) != 0;
+    } else {
+        int32_t i, count = set->hi_count;
+        for (i = 0; i < count; i ++) {
+            if (set->hi_array[i] == value) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 static
@@ -3953,7 +3969,7 @@ void ecs_components_override(
     int32_t count,
     ecs_column_info_t *component_info,
     int32_t component_count,
-    ecs_comp_mask_t set_mask,
+    ecs_comp_set_t *set_mask,
     bool run_on_set)
 {
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -4124,7 +4140,7 @@ void ecs_run_add_actions(
     int32_t row,
     int32_t count,
     ecs_entities_t *added,
-    ecs_comp_mask_t set_mask,
+    ecs_comp_set_t *set_mask,
     bool get_all,
     bool run_on_set)
 {
@@ -4225,10 +4241,10 @@ int32_t new_entity(
         ECS_INTERNAL_ERROR, NULL);    
 
     if (new_table->flags & EcsTableHasAddActions) {
-        ecs_comp_mask_t set_mask = {0};
+        ecs_comp_set_t set_mask = {0};
         
         ecs_run_add_actions(
-            world, stage, new_table, new_data, new_row, 1, added, set_mask, 
+            world, stage, new_table, new_data, new_row, 1, added, &set_mask, 
             true, true);
 
         if (new_table->flags & EcsTableHasMonitors) {
@@ -4324,9 +4340,9 @@ int32_t move_entity(
     /* If components were added, invoke add actions */
     if (src_table != dst_table || (added && added->count)) {
         if (added && (dst_table->flags & EcsTableHasAddActions)) {
-            ecs_comp_mask_t set_mask = {0};
+            ecs_comp_set_t set_mask = {0};
             ecs_run_add_actions(
-                world, stage, dst_table, dst_data, dst_row, 1, added, set_mask, 
+                world, stage, dst_table, dst_data, dst_row, 1, added, &set_mask, 
                 false, true);
         }
 
@@ -4605,8 +4621,8 @@ int32_t new_w_data(
     
     ecs_defer_begin(world, stage, EcsOpNone, 0, 0, NULL, 0);
 
-    ecs_comp_mask_t set_mask = { 0 };
-    ecs_run_add_actions(world, stage, table, data, row, count, &added, set_mask, 
+    ecs_comp_set_t set_mask = { 0 };
+    ecs_run_add_actions(world, stage, table, data, row, count, &added, &set_mask, 
         true, component_data == NULL);
 
     if (component_data) {
@@ -4620,7 +4636,7 @@ int32_t new_w_data(
                 break;
             }
             
-            comp_mask_set(set_mask, c);
+            comp_mask_set(&set_mask, c);
 
             /* Copy component data */
             void *src_ptr = component_data[c_i];
@@ -8795,9 +8811,9 @@ void merge_table(
                 world, dst_table, src_table, dst_data, src_data);
 
             if (to_add && to_add->count && dst_data) {
-                ecs_comp_mask_t set_mask = {0};
+                ecs_comp_set_t set_mask = {0};
                 ecs_run_add_actions(world, &world->stage, dst_table, dst_data, 
-                    dst_count, src_count, to_add, set_mask, false, true);
+                    dst_count, src_count, to_add, &set_mask, false, true);
             }
         }
     }
@@ -14380,6 +14396,7 @@ void ecs_query_free(
         free_matched_table(table);
     });
 
+    ecs_vector_free(query->subqueries);
     ecs_vector_free(query->tables);
     ecs_vector_free(query->empty_tables);
     ecs_vector_free(query->table_slices);
