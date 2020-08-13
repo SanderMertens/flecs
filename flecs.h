@@ -1716,9 +1716,10 @@ extern "C" {
 #endif
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Basic API types
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup api_types Basic API types
+ * @{
+ */
 
 /** An entity identifier. */
 typedef uint64_t ecs_entity_t;
@@ -1781,10 +1782,12 @@ typedef struct ecs_world_info_t {
     int32_t systems_ran_frame;  /**< Total number of systems ran in last frame */
 } ecs_world_info_t;
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Function types
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup function_types Function Types
+ * @{
+ */
 
 /** Action callback for systems and triggers */
 typedef void (*ecs_iter_action_t)(
@@ -2538,10 +2541,13 @@ int32_t ecs_type_trait_index_of(
 
 #endif
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Builtin components
-////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @defgroup builtin_types Builtin Types
+ * @{
+ */
 
 /** Entity name. */
 typedef struct EcsName {
@@ -2583,10 +2589,13 @@ typedef struct EcsTrigger {
     void *ctx;
 } EcsTrigger;
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Type roles
-////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @defgroup type_roles Type Roles
+ * @{
+ */
 
 /* Type roles are used to indicate the role of an entity in a type. If no flag
  * is specified, the entity is interpreted as a regular component or tag. Flags
@@ -2638,10 +2647,12 @@ typedef struct EcsTrigger {
 /** Switches allow for fast switching between mutually exclusive components */
 #define ECS_SWITCH ((ecs_entity_t)0xF6 << 56)
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Builtin tags
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup builtin_tags Builtin Tags
+ * @{
+ */
 
 /* Builtin tag ids */
 #define EcsModule (ECS_HI_COMPONENT_ID + 0)
@@ -2692,10 +2703,12 @@ typedef struct EcsTrigger {
  * are reserved for builtin components */
 #define EcsFirstUserEntityId (ECS_HI_COMPONENT_ID + 32)
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Convenience macro's
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup convenience_macros Convenience Macro's
+ * @{
+ */
 
 /* Macro's rely on variadic arguments which are C99 and above */
 #ifndef FLECS_LEGACY
@@ -2781,10 +2794,12 @@ typedef struct EcsTrigger {
 
 #endif /* FLECS_LEGACY */
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// World API
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup world_api World API
+ * @{
+ */
 
 /** Create a new world.
  * A world manages all the ECS data and supporting infrastructure. Applications 
@@ -3056,10 +3071,12 @@ FLECS_EXPORT
 void ecs_tracing_enable(
     int level);
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Entity Creation
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup creating_entities Creating Entities
+ * @{
+ */
 
 /** Create new entity id.
  * This operation returns an unused entity id.
@@ -3186,10 +3203,30 @@ ecs_entity_t ecs_bulk_new_w_data(
 #define ecs_bulk_new(world, component, count)\
     ecs_bulk_new_w_type(world, ecs_type(component), count)
 
+/** Clone an entity
+ * This operation clones the components of one entity into another entity. If
+ * no destination entity is provided, a new entity will be created. Component
+ * values are not copied unless copy_value is true.
+ *
+ * @param world The world.
+ * @param dst The entity to copy the components to.
+ * @param src The entity to copy the components from.
+ * @param copy_value If true, the value of components will be copied to dst.
+ * @return The destination entity.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_clone(
+    ecs_world_t *world,
+    ecs_entity_t dst,
+    ecs_entity_t src,
+    bool copy_value);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Adding components
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup adding_removing Adding & Removing
+ * @{
+ */
 
 /** Add an entity to an entity.
  * This operation adds a single entity to the type of an entity. Type roles may
@@ -3237,10 +3274,6 @@ void ecs_add_type(
     ecs_add_type(world, entity, ecs_type(component))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Removing components
-////////////////////////////////////////////////////////////////////////////////
-
 /** Remove an entity from an entity.
  * This operation removes a single entity from the type of an entity. Type roles
  * may be used in combination with the added entity. If the entity does not have
@@ -3287,10 +3320,6 @@ void ecs_remove_type(
     ecs_remove_type(world, entity, ecs_type(type))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Adding + removing components
-////////////////////////////////////////////////////////////////////////////////
-
 /** Add / remove entity from entities matching a filter.
  * Combination of ecs_add_entity and ecs_remove_entity.
  *
@@ -3333,9 +3362,12 @@ void ecs_add_remove_type(
     ecs_add_remove_type(world, entity, ecs_type(to_add), ecs_type(to_remove))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Traits
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup traits Traits
+ * @{
+ */
 
 /** Add a trait
  * This operation adds a trait from an entity.
@@ -3449,9 +3481,12 @@ ecs_entity_t ecs_get_case(
     ecs_entity_t e,
     ecs_entity_t sw);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Deleting entities
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup deleting Deleting Entities
+ * @{
+ */
 
 /** Delete an entity.
  * This operation will delete an entity and all of its components. The entity id
@@ -3467,33 +3502,12 @@ void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity);
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Cloning entities
-////////////////////////////////////////////////////////////////////////////////
-
-/** Clone an entity
- * This operation clones the components of one entity into another entity. If
- * no destination entity is provided, a new entity will be created. Component
- * values are not copied unless copy_value is true.
- *
- * @param world The world.
- * @param dst The entity to copy the components to.
- * @param src The entity to copy the components from.
- * @param copy_value If true, the value of components will be copied to dst.
- * @return The destination entity.
+/**
+ * @defgroup getting Getting Components
+ * @{
  */
-FLECS_EXPORT
-ecs_entity_t ecs_clone(
-    ecs_world_t *world,
-    ecs_entity_t dst,
-    ecs_entity_t src,
-    bool copy_value);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Getting components
-////////////////////////////////////////////////////////////////////////////////
 
 /** Get an immutable pointer to a component.
  * This operation obtains a const pointer to the requested component. The
@@ -3613,9 +3627,12 @@ void ecs_modified_w_entity(
     ecs_modified_w_entity(world, entity, ecs_entity(component))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Setting components
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup setting Setting Components
+ * @{
+ */
 
 /** Set the value of a component.
  * This operation allows an application to set the value of a component. The
@@ -3669,9 +3686,12 @@ ecs_entity_t ecs_set_ptr_w_entity(
 #endif
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Testing for components
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup testing Testing Components
+ * @{
+ */
 
 /** Test if an entity has an entity.
  * This operation returns true if the entity has the provided entity in its 
@@ -3742,9 +3762,12 @@ bool ecs_has_type(
     ecs_type_owns_entity(world, ecs_get_type(world, entity), has, owned)
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Entity information
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup metadata Entity Metadata
+ * @{
+ */
 
 /** Get the type of an entity.
  *
@@ -3797,10 +3820,6 @@ ecs_entity_t ecs_get_parent_w_entity(
     ecs_get_parent_w_entity(world, entity, ecs_entity(component))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Enabling / disabling entities
-////////////////////////////////////////////////////////////////////////////////
-
 /** Enable or disable an entity.
  * This operation enables or disables an entity by adding or removing the
  * EcsDisabled tag. A disabled entity will not be matched with any systems,
@@ -3816,10 +3835,406 @@ void ecs_enable(
     ecs_entity_t entity,
     bool enabled);
 
+/** Count entities that have an entity.
+ * Returns the number of entities that have the specified entity.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return The number of entities that have the entity.
+ */
+FLECS_EXPORT
+int32_t ecs_count_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Filter API
-////////////////////////////////////////////////////////////////////////////////
+/** Count entities that have a type.
+ * Returns the number of entities that have the specified type.
+ *
+ * @param world The world.
+ * @param type The type.
+ * @return The number of entities that have the type.
+ */
+FLECS_EXPORT
+int32_t ecs_count_type(
+    ecs_world_t *world,
+    ecs_type_t type);
+
+/** Count entities that have a component, type or tag.
+ * Returns the number of entities that have the specified component, type or tag.
+ *
+ * @param world The world.
+ * @param type The component, type or tag.
+ * @return The number of entities that have the component, type or tag.
+ */
+#define ecs_count(world, type)\
+    ecs_count_type(world, ecs_type(type))
+
+/** Count entities that match a filter.
+ * Returns the number of entities that match the specified filter.
+ *
+ * @param world The world.
+ * @param type The type.
+ * @return The number of entities that match the specified filter.
+ */
+FLECS_EXPORT
+int32_t ecs_count_w_filter(
+    ecs_world_t *world,
+    const ecs_filter_t *filter);
+
+
+/** @} */
+
+/**
+ * @defgroup lookup Lookups
+ * @{
+ */
+
+/** Lookup an entity by name.
+ * Returns an entity that matches the specified name. Only looks for entities in
+ * the current scope (root if no scope is provided).
+ *
+ * @param world The world.
+ * @param name The entity name.
+ * @return The entity with the specified name, or 0 if no entity was found.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup(
+    ecs_world_t *world,
+    const char *name);
+
+/** Lookup a child entity by name.
+ * Returns an entity that matches the specified name. Only looks for entities in
+ * the provided parent. If no parent is provided, look in the current scope (
+ * root if no scope is provided).
+ *
+ * @param world The world.
+ * @param name The entity name.
+ * @return The entity with the specified name, or 0 if no entity was found.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup_child(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *name);
+
+/** Lookup an entity from a path.
+ * Lookup an entity from a provided path, relative to the provided parent. The
+ * operation will use the provided separator to tokenize the path expression. If
+ * the provided path contains the prefix, the search will start from the root.
+ *
+ * If the entity is not found in the provided parent, the operation will 
+ * continue to search in the parent of the parent, until the root is reached. If
+ * the entity is still not found, the lookup will search in the flecs.core
+ * scope. If the entity is not found there either, the function returns 0.
+ *
+ * @param world The world.
+ * @param parent The entity from which to resolve the path.
+ * @param path The path to resolve.
+ * @param sep The path separator.
+ * @param prefix The path prefix.
+ * @return The entity if found, else 0.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+/** Lookup an entity from a path.
+ * Same as ecs_lookup_path_w_sep, but with defaults for the separator and
+ * prefix. These defaults are used when looking up identifiers in a type or
+ * signature expression.
+ *
+ * @param world The world.
+ * @param parent The entity from which to resolve the path.
+ * @param path The path to resolve.
+ * @return The entity if found, else 0. 
+ */
+#define ecs_lookup_path(world, parent, path)\
+    ecs_lookup_path_w_sep(world, parent, path, ".", NULL)
+
+/** Lookup an entity from a full path.
+ * Same as ecs_lookup_pat, but  searches from the current scope, or root scope
+ * if no scope is set.
+ *
+ * @param world The world.
+ * @param path The path to resolve.
+ * @return The entity if found, else 0. 
+ */
+#define ecs_lookup_fullpath(world, path)\
+    ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
+
+/** Lookup an entity by its symbol name.
+ * This looks up an entity by the symbol name that was provided in EcsName. The
+ * operation does not take into account scoping, which means it will search all
+ * entities that have an EcsName.
+ *
+ * This operation can be useful to resolve, for example, a type by its C 
+ * identifier, which does not include the Flecs namespacing.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup_symbol(
+    ecs_world_t *world,
+    const char *name);
+
+
+/** @} */
+
+/**
+ * @defgroup paths Paths
+ * @{
+ */
+
+/** Get a path identifier for an entity.
+ * This operation creates a path that contains the names of the entities from
+ * the specified parent to the provided entity, separated by the provided 
+ * separator. If no parent is provided the path will be relative to the root. If
+ * a prefix is provided, the path will be prefixed by the prefix.
+ *
+ * If the parent is equal to the provided child, the operation will return an
+ * empty string. If a nonzero component is provided, the path will be created by 
+ * looking for parents with that component.
+ *
+ * The returned path should be freed by the application.
+ *
+ * @param world The world.
+ * @param parent The entity from which to create the path.
+ * @param child The entity to which to create the path.
+ * @param component The component of the parent.
+ * @return The relative entity path.
+ */
+FLECS_EXPORT
+char* ecs_get_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    ecs_entity_t component,
+    const char *sep,
+    const char *prefix);
+
+/** Get a path identifier for an entity.
+ * Same as ecs_get_path_w_sep, but with default values for the separator and
+ * prefix. These defaults are used throughout Flecs whenever identifiers are
+ * used in type or signature expressions.
+ *
+ * @param world The world.
+ * @param parent The entity from which to create the path.
+ * @param child The entity to which to create the path.
+ * @return The relative entity path.
+ */
+#define ecs_get_path(world, parent, child)\
+    ecs_get_path_w_sep(world, parent, child, 0, ".", NULL)
+
+/** Get a full path for an entity.
+ * Same as ecs_get_path, but with default values for the separator and
+ * prefix, and the path is created from the current scope, or root if no scope
+ * is provided.
+ *
+ * @param world The world.
+ * @param child The entity to which to create the path.
+ * @return The entity path.
+ */
+#define ecs_get_fullpath(world, child)\
+    ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
+
+/** Find or create entity from path.
+ * This operation will find or create an entity from a path, and will create any
+ * intermediate entities if required. If the entity already exists, no entities
+ * will be created.
+ *
+ * If the path starts with the prefix, then the entity will be created from the
+ * root scope.
+ *
+ * @param world The world.
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @param sep The separator used in the path.
+ * @param prefix The prefix used in the path.
+ * @return The entity.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_new_from_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+/** Find or create entity from path.
+ * Same as ecs_new_from_path_w_sep, but with defaults for sep and prefix.
+ *
+ * @param world The world.
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_new_from_path(world, parent, path)\
+    ecs_new_from_path_w_sep(world, parent, path, ".", NULL)
+
+/** Find or create entity from full path.
+ * Same as ecs_new_from_path, but entity will be created from the current scope,
+ * or root scope if no scope is set.
+ *
+ * @param world The world.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_new_from_fullpath(world, path)\
+    ecs_new_from_path_w_sep(world, 0, path, ".", NULL)
+
+/** Add specified path to entity.
+ * This operation is similar to ecs_new_from_path, but will instead add the path
+ * to an existing entity.
+ *
+ * If an entity already exists for the path, it will be returned instead.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path.
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @param sep The separator used in the path.
+ * @param prefix The prefix used in the path.
+ * @return The entity.
+ */ 
+FLECS_EXPORT
+ecs_entity_t ecs_add_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+/** Add specified path to entity.
+ * Same as ecs_add_from_path_w_sep, but with defaults for sep and prefix.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path. 
+ * @param parent The entity relative to which the entity should be created.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_add_path(world, entity, parent, path)\
+    ecs_add_path_w_sep(world, entity, parent, path, ".", NULL)
+
+/** Add specified path to entity.
+ * Same as ecs_add_from_path, but entity will be created from the current scope,
+ * or root scope if no scope is set.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the path.
+ * @param path The path to create the entity for.
+ * @return The entity.
+ */
+#define ecs_add_fullpath(world, entity, path)\
+    ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
+
+
+/** @} */
+
+/**
+ * @defgroup scopes Scopes
+ * @{
+ */
+
+/** Does entity have children.
+ *
+ * @param world The world
+ * @param entity The entity
+ * @return True if the entity has children, false if not.
+ */
+FLECS_EXPORT
+int32_t ecs_get_child_count(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Return a scope iterator.
+ * A scope iterator iterates over all the child entities of the specified 
+ * parent.
+ *
+ * @param world The world.
+ * @param parent The parent entity for which to iterate the children.
+ * @return The iterator.
+ */
+FLECS_EXPORT
+ecs_iter_t ecs_scope_iter(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
+/** Return a filtered scope iterator.
+ * Same as ecs_scope_iter, but results will be filtered.
+ *
+ * @param world The world.
+ * @param parent The parent entity for which to iterate the children.
+ * @return The iterator.
+ */
+FLECS_EXPORT
+ecs_iter_t ecs_scope_iter_w_filter(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_filter_t *filter);
+
+/** Progress the scope iterator.
+ * This operation progresses the scope iterator to the next table. The iterator
+ * must have been initialized with `ecs_scope_iter`. This operation must be
+ * invoked at least once before interpreting the contents of the iterator.
+ *
+ * @param it The iterator
+ * @return True if more data is available, false if not.
+ */
+FLECS_EXPORT
+bool ecs_scope_next(
+    ecs_iter_t *it);
+
+/** Set the current scope.
+ * This operation sets the scope of the current stage to the provided entity.
+ * As a result new entities will be created in this scope, and lookups will be
+ * relative to the provided scope.
+ *
+ * It is considered good practice to restore the scope to the old value.
+ *
+ * @param world The world.
+ * @param scope The entity to use as scope.
+ * @return The previous scope.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_set_scope(
+    ecs_world_t *world,
+    ecs_entity_t scope);
+
+/** Get the current scope.
+ * Get the scope set by ecs_set_scope. If no scope is set, this operation will
+ * return 0.
+ *
+ * @param world The world.
+ * @return The current scope.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_get_scope(
+    ecs_world_t *world);
+
+/** Set a name prefix for newly created entities.
+ * This is a utility that lets C modules use prefixed names for C types and
+ * C functions, while using names for the entity names that do not have the 
+ * prefix. The name prefix is currently only used by ECS_COMPONENT.
+ *
+ * @param world The world.
+ * @param prefix The name prefix to use.
+ * @return The previous prefix.
+ */
+FLECS_EXPORT
+const char* ecs_set_name_prefix(
+    ecs_world_t *world,
+    const char *prefix);    
+
+/** @} */
+
+/**
+ * @defgroup filters Filters
+ * @{
+ */
 
 /** Return a filter iterator.
  * A filter iterator lets an application iterate over entities that match the
@@ -3849,9 +4264,12 @@ bool ecs_filter_next(
     ecs_iter_t *iter);
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Query API
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup queries Queries
+ * @{
+ */
 
 /** Create a query.
  * This operation creates a query. Queries are used to iterate over entities
@@ -4047,398 +4465,13 @@ FLECS_EXPORT
 bool ecs_query_changed(
     ecs_query_t *query);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Counting entities
-////////////////////////////////////////////////////////////////////////////////
 
-/** Count entities that have an entity.
- * Returns the number of entities that have the specified entity.
- *
- * @param world The world.
- * @param entity The entity.
- * @return The number of entities that have the entity.
+/** @} */
+
+/**
+ * @defgroup iterator Iterators
+ * @{
  */
-FLECS_EXPORT
-int32_t ecs_count_entity(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Count entities that have a type.
- * Returns the number of entities that have the specified type.
- *
- * @param world The world.
- * @param type The type.
- * @return The number of entities that have the type.
- */
-FLECS_EXPORT
-int32_t ecs_count_type(
-    ecs_world_t *world,
-    ecs_type_t type);
-
-/** Count entities that have a component, type or tag.
- * Returns the number of entities that have the specified component, type or tag.
- *
- * @param world The world.
- * @param type The component, type or tag.
- * @return The number of entities that have the component, type or tag.
- */
-#define ecs_count(world, type)\
-    ecs_count_type(world, ecs_type(type))
-
-/** Count entities that match a filter.
- * Returns the number of entities that match the specified filter.
- *
- * @param world The world.
- * @param type The type.
- * @return The number of entities that match the specified filter.
- */
-FLECS_EXPORT
-int32_t ecs_count_w_filter(
-    ecs_world_t *world,
-    const ecs_filter_t *filter);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Looking up entities
-////////////////////////////////////////////////////////////////////////////////
-
-/** Lookup an entity by name.
- * Returns an entity that matches the specified name. Only looks for entities in
- * the current scope (root if no scope is provided).
- *
- * @param world The world.
- * @param name The entity name.
- * @return The entity with the specified name, or 0 if no entity was found.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_lookup(
-    ecs_world_t *world,
-    const char *name);
-
-/** Lookup a child entity by name.
- * Returns an entity that matches the specified name. Only looks for entities in
- * the provided parent. If no parent is provided, look in the current scope (
- * root if no scope is provided).
- *
- * @param world The world.
- * @param name The entity name.
- * @return The entity with the specified name, or 0 if no entity was found.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_lookup_child(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *name);
-
-/** Lookup an entity from a path.
- * Lookup an entity from a provided path, relative to the provided parent. The
- * operation will use the provided separator to tokenize the path expression. If
- * the provided path contains the prefix, the search will start from the root.
- *
- * If the entity is not found in the provided parent, the operation will 
- * continue to search in the parent of the parent, until the root is reached. If
- * the entity is still not found, the lookup will search in the flecs.core
- * scope. If the entity is not found there either, the function returns 0.
- *
- * @param world The world.
- * @param parent The entity from which to resolve the path.
- * @param path The path to resolve.
- * @param sep The path separator.
- * @param prefix The path prefix.
- * @return The entity if found, else 0.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_lookup_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *path,
-    const char *sep,
-    const char *prefix);
-
-/** Lookup an entity from a path.
- * Same as ecs_lookup_path_w_sep, but with defaults for the separator and
- * prefix. These defaults are used when looking up identifiers in a type or
- * signature expression.
- *
- * @param world The world.
- * @param parent The entity from which to resolve the path.
- * @param path The path to resolve.
- * @return The entity if found, else 0. 
- */
-#define ecs_lookup_path(world, parent, path)\
-    ecs_lookup_path_w_sep(world, parent, path, ".", NULL)
-
-/** Lookup an entity from a full path.
- * Same as ecs_lookup_pat, but  searches from the current scope, or root scope
- * if no scope is set.
- *
- * @param world The world.
- * @param path The path to resolve.
- * @return The entity if found, else 0. 
- */
-#define ecs_lookup_fullpath(world, path)\
-    ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
-
-/** Lookup an entity by its symbol name.
- * This looks up an entity by the symbol name that was provided in EcsName. The
- * operation does not take into account scoping, which means it will search all
- * entities that have an EcsName.
- *
- * This operation can be useful to resolve, for example, a type by its C 
- * identifier, which does not include the Flecs namespacing.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_lookup_symbol(
-    ecs_world_t *world,
-    const char *name);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Path utilities
-////////////////////////////////////////////////////////////////////////////////
-
-/** Get a path identifier for an entity.
- * This operation creates a path that contains the names of the entities from
- * the specified parent to the provided entity, separated by the provided 
- * separator. If no parent is provided the path will be relative to the root. If
- * a prefix is provided, the path will be prefixed by the prefix.
- *
- * If the parent is equal to the provided child, the operation will return an
- * empty string. If a nonzero component is provided, the path will be created by 
- * looking for parents with that component.
- *
- * The returned path should be freed by the application.
- *
- * @param world The world.
- * @param parent The entity from which to create the path.
- * @param child The entity to which to create the path.
- * @param component The component of the parent.
- * @return The relative entity path.
- */
-FLECS_EXPORT
-char* ecs_get_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_entity_t child,
-    ecs_entity_t component,
-    const char *sep,
-    const char *prefix);
-
-/** Get a path identifier for an entity.
- * Same as ecs_get_path_w_sep, but with default values for the separator and
- * prefix. These defaults are used throughout Flecs whenever identifiers are
- * used in type or signature expressions.
- *
- * @param world The world.
- * @param parent The entity from which to create the path.
- * @param child The entity to which to create the path.
- * @return The relative entity path.
- */
-#define ecs_get_path(world, parent, child)\
-    ecs_get_path_w_sep(world, parent, child, 0, ".", NULL)
-
-/** Get a full path for an entity.
- * Same as ecs_get_path, but with default values for the separator and
- * prefix, and the path is created from the current scope, or root if no scope
- * is provided.
- *
- * @param world The world.
- * @param child The entity to which to create the path.
- * @return The entity path.
- */
-#define ecs_get_fullpath(world, child)\
-    ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
-
-/** Find or create entity from path.
- * This operation will find or create an entity from a path, and will create any
- * intermediate entities if required. If the entity already exists, no entities
- * will be created.
- *
- * If the path starts with the prefix, then the entity will be created from the
- * root scope.
- *
- * @param world The world.
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @param sep The separator used in the path.
- * @param prefix The prefix used in the path.
- * @return The entity.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_new_from_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *path,
-    const char *sep,
-    const char *prefix);
-
-/** Find or create entity from path.
- * Same as ecs_new_from_path_w_sep, but with defaults for sep and prefix.
- *
- * @param world The world.
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_new_from_path(world, parent, path)\
-    ecs_new_from_path_w_sep(world, parent, path, ".", NULL)
-
-/** Find or create entity from full path.
- * Same as ecs_new_from_path, but entity will be created from the current scope,
- * or root scope if no scope is set.
- *
- * @param world The world.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_new_from_fullpath(world, path)\
-    ecs_new_from_path_w_sep(world, 0, path, ".", NULL)
-
-/** Add specified path to entity.
- * This operation is similar to ecs_new_from_path, but will instead add the path
- * to an existing entity.
- *
- * If an entity already exists for the path, it will be returned instead.
- *
- * @param world The world.
- * @param entity The entity to which to add the path.
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @param sep The separator used in the path.
- * @param prefix The prefix used in the path.
- * @return The entity.
- */ 
-FLECS_EXPORT
-ecs_entity_t ecs_add_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t parent,
-    const char *path,
-    const char *sep,
-    const char *prefix);
-
-/** Add specified path to entity.
- * Same as ecs_add_from_path_w_sep, but with defaults for sep and prefix.
- *
- * @param world The world.
- * @param entity The entity to which to add the path. 
- * @param parent The entity relative to which the entity should be created.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_add_path(world, entity, parent, path)\
-    ecs_add_path_w_sep(world, entity, parent, path, ".", NULL)
-
-/** Add specified path to entity.
- * Same as ecs_add_from_path, but entity will be created from the current scope,
- * or root scope if no scope is set.
- *
- * @param world The world.
- * @param entity The entity to which to add the path.
- * @param path The path to create the entity for.
- * @return The entity.
- */
-#define ecs_add_fullpath(world, entity, path)\
-    ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Scope API
-////////////////////////////////////////////////////////////////////////////////
-
-/** Does entity have children.
- *
- * @param world The world
- * @param entity The entity
- * @return True if the entity has children, false if not.
- */
-FLECS_EXPORT
-int32_t ecs_get_child_count(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Return a scope iterator.
- * A scope iterator iterates over all the child entities of the specified 
- * parent.
- *
- * @param world The world.
- * @param parent The parent entity for which to iterate the children.
- * @return The iterator.
- */
-FLECS_EXPORT
-ecs_iter_t ecs_scope_iter(
-    ecs_world_t *world,
-    ecs_entity_t parent);
-
-/** Return a filtered scope iterator.
- * Same as ecs_scope_iter, but results will be filtered.
- *
- * @param world The world.
- * @param parent The parent entity for which to iterate the children.
- * @return The iterator.
- */
-FLECS_EXPORT
-ecs_iter_t ecs_scope_iter_w_filter(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_filter_t *filter);
-
-/** Progress the scope iterator.
- * This operation progresses the scope iterator to the next table. The iterator
- * must have been initialized with `ecs_scope_iter`. This operation must be
- * invoked at least once before interpreting the contents of the iterator.
- *
- * @param it The iterator
- * @return True if more data is available, false if not.
- */
-FLECS_EXPORT
-bool ecs_scope_next(
-    ecs_iter_t *it);
-
-/** Set the current scope.
- * This operation sets the scope of the current stage to the provided entity.
- * As a result new entities will be created in this scope, and lookups will be
- * relative to the provided scope.
- *
- * It is considered good practice to restore the scope to the old value.
- *
- * @param world The world.
- * @param scope The entity to use as scope.
- * @return The previous scope.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_set_scope(
-    ecs_world_t *world,
-    ecs_entity_t scope);
-
-/** Get the current scope.
- * Get the scope set by ecs_set_scope. If no scope is set, this operation will
- * return 0.
- *
- * @param world The world.
- * @return The current scope.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_get_scope(
-    ecs_world_t *world);
-
-/** Set a name prefix for newly created entities.
- * This is a utility that lets C modules use prefixed names for C types and
- * C functions, while using names for the entity names that do not have the 
- * prefix. The name prefix is currently only used by ECS_COMPONENT.
- *
- * @param world The world.
- * @param prefix The name prefix to use.
- * @return The previous prefix.
- */
-FLECS_EXPORT
-const char* ecs_set_name_prefix(
-    ecs_world_t *world,
-    const char *prefix);    
-
-////////////////////////////////////////////////////////////////////////////////
-//// Iter API
-////////////////////////////////////////////////////////////////////////////////
 
 /** Obtain column data. 
  * This operation is to be used to obtain a component array for a specific 
@@ -4674,9 +4707,12 @@ int32_t ecs_table_component_index(
     module##ImportHandles(ecs_module(module))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Staging API
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
+
+/**
+ * @defgroup staging Staging
+ * @{
+ */
 
 /** Begin staging.
  * When staging is enabled, modifications to entities are stored to a stage.
@@ -4723,6 +4759,8 @@ FLECS_EXPORT
 void ecs_set_automerge(
     ecs_world_t *world,
     bool auto_merge);
+
+/** @} */
 
 /* Optional modules */
 #ifdef FLECS_SYSTEM
@@ -6383,21 +6421,23 @@ class query_iterator;
 template<typename ... Components>
 class query;
 
-template <typename T>
-class component_info;
-
 enum match_kind {
     MatchAll = EcsMatchAll,
     MatchAny = EcsMatchAny,
     MatchExact = EcsMatchExact
 };
 
+namespace _
+{
+template <typename T>
+class component_info;
+
 template <typename ...Components>
 bool pack_args_to_string(
     world_t *world, 
     std::stringstream& str, 
     bool is_each = false);
-
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Builtin components and tags 
@@ -6533,6 +6573,8 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace _ {
+
 /** Similar to flecs::column, but abstracts away from shared / owned columns.
  * 
  * @tparam T component type of the column.
@@ -6609,13 +6651,15 @@ private:
     T m_value;
 };
 
+} // namespace _
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Class that enables iterating over table columns.
  */
 class iter final {
-    using row_iterator = range_iterator<int>;
+    using row_iterator = _::range_iterator<int>;
 public:
     /** Construct iterator from C iterator object.
      * This operation is typically not invoked directly by the user.
@@ -6743,7 +6787,7 @@ public:
     template <typename T>
     flecs::column<T> table_column() const {
         auto type = ecs_iter_type(m_iter);
-        auto col = ecs_type_index_of(type, component_info<T>::id());
+        auto col = ecs_type_index_of(type, _::component_info<T>::id());
         ecs_assert(col != -1, ECS_INVALID_PARAMETER, NULL);
         return flecs::column<T>(static_cast<T*>(ecs_table_column(m_iter, col)), m_iter->count, false);
     }
@@ -6799,7 +6843,7 @@ public:
      */
     template <typename T>
     const T& shared(int32_t col) const {
-        ecs_assert(ecs_column_entity(m_iter, col) == component_info<T>::id(m_iter->world), ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(ecs_column_entity(m_iter, col) == _::component_info<T>::id(m_iter->world), ECS_COLUMN_TYPE_MISMATCH, NULL);
         ecs_assert(!ecs_is_owned(m_iter, col), ECS_COLUMN_IS_NOT_SHARED, NULL);
         return *static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), col));
     }
@@ -6843,7 +6887,7 @@ private:
         ecs_entity_t column_entity = ecs_column_entity(m_iter, column_id);
         ecs_assert(column_entity & ECS_TRAIT || column_entity & ECS_SWITCH || 
             column_entity & ECS_CASE ||
-            column_entity == component_info<T>::id(m_iter->world), 
+            column_entity == _::component_info<T>::id(m_iter->world), 
             ECS_COLUMN_TYPE_MISMATCH, NULL);
 #endif
 
@@ -6867,7 +6911,7 @@ private:
     /* Get single field, check if correct type is used */
     template <typename T>
     T& get_element(int32_t col, int32_t row) const {
-        ecs_assert(ecs_column_entity(m_iter, col) == component_info<T>::id(m_iter->world), ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(ecs_column_entity(m_iter, col) == _::component_info<T>::id(m_iter->world), ECS_COLUMN_TYPE_MISMATCH, NULL);
         return *static_cast<T*>(ecs_element_w_size(m_iter, sizeof(T), col, row));
     }       
 
@@ -7178,7 +7222,7 @@ public:
     template <typename T>
     int count() const {
         return ecs_count_type(
-            m_world, component_info<T>::type(m_world));
+            m_world, _::component_info<T>::type(m_world));
     }
 
     /** Count entities matching a filter.
@@ -7253,7 +7297,7 @@ public:
     base_type& add() const {
         static_cast<base_type*>(this)->invoke(
         [this](world_t *world, entity_t id) {
-            add(component_info<T>::id(world));
+            add(_::component_info<T>::id(world));
         });
         return *static_cast<base_type*>(this);
     }
@@ -7320,7 +7364,7 @@ public:
         static_cast<base_type*>(this)->invoke(
         [this](world_t *world, entity_t id) {        
             return add_trait(
-                component_info<T>::id(world), component_info<C>::id(world));
+                _::component_info<T>::id(world), _::component_info<C>::id(world));
         });
         return *static_cast<base_type*>(this); 
     }
@@ -7378,7 +7422,7 @@ public:
     base_type& remove() const {
         static_cast<base_type*>(this)->invoke(
         [this](world_t *world, entity_t id) {        
-            remove(component_info<T>::id(world));
+            remove(_::component_info<T>::id(world));
         });
         return *static_cast<base_type*>(this);
     }
@@ -7439,7 +7483,7 @@ public:
         static_cast<base_type*>(this)->invoke(
         [this](world_t *world, entity_t id) {        
             remove_trait(
-                component_info<T>::id(world), component_info<C>::id(world));
+                _::component_info<T>::id(world), _::component_info<C>::id(world));
         });
         return *static_cast<base_type*>(this);
     }
@@ -7650,7 +7694,7 @@ public:
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
             ecs_set_ptr_w_entity(
-                world, id, component_info<T>::id(world), sizeof(T), &value);
+                world, id, _::component_info<T>::id(world), sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
     }
@@ -7667,7 +7711,7 @@ public:
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
             ecs_set_ptr_w_entity(
-                world, id, component_info<T>::id(world), sizeof(T), &value);
+                world, id, _::component_info<T>::id(world), sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
     }
@@ -7685,8 +7729,8 @@ public:
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
             ecs_set_ptr_w_entity(world, id, 
-                ecs_trait(component_info<C>::id(world), 
-                    component_info<T>::id(world)),
+                ecs_trait(_::component_info<C>::id(world), 
+                    _::component_info<T>::id(world)),
                         sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
@@ -7731,10 +7775,10 @@ public:
         [&func](world_t *world, entity_t id) {
             bool is_added;
             T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-                world, id, component_info<T>::id(world), &is_added));
+                world, id, _::component_info<T>::id(world), &is_added));
             if (ptr) {
                 func(*ptr, !is_added);
-                ecs_modified_w_entity(world, id, component_info<T>::id(world));
+                ecs_modified_w_entity(world, id, _::component_info<T>::id(world));
             }
         });
         return *static_cast<base_type*>(this);
@@ -7754,10 +7798,10 @@ public:
         [&func](world_t *world, entity_t id) {
             bool is_added;
             T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-                world, id, component_info<T>::id(world), &is_added));
+                world, id, _::component_info<T>::id(world), &is_added));
             if (ptr) {
                 func(*ptr);
-                ecs_modified_w_entity(world, id, component_info<T>::id(world));
+                ecs_modified_w_entity(world, id, _::component_info<T>::id(world));
             }
         });
         return *static_cast<base_type*>(this);
@@ -7781,12 +7825,12 @@ public:
         , m_entity( entity )
         , m_ref() {
         ecs_get_ref_w_entity(
-            m_world, &m_ref, m_entity, component_info<T>::id(world));
+            m_world, &m_ref, m_entity, _::component_info<T>::id(world));
     }
 
     const T* operator->() {
         const T* result = static_cast<const T*>(ecs_get_ref_w_entity(
-            m_world, &m_ref, m_entity, component_info<T>::id(m_world)));
+            m_world, &m_ref, m_entity, _::component_info<T>::id(m_world)));
 
         ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -7796,7 +7840,7 @@ public:
     const T* get() {
         if (m_entity) {
             ecs_get_ref_w_entity(
-                m_world, &m_ref, m_entity, component_info<T>::id(m_world));    
+                m_world, &m_ref, m_entity, _::component_info<T>::id(m_world));    
         }
 
         return static_cast<T*>(m_ref.ptr);
@@ -8046,7 +8090,7 @@ public:
     template <typename T>
     const T* get() const {
         return static_cast<const T*>(
-            ecs_get_w_entity(m_world, m_id, component_info<T>::id(m_world)));
+            ecs_get_w_entity(m_world, m_id, _::component_info<T>::id(m_world)));
     }
 
     /** Get component value (untyped).
@@ -8083,7 +8127,7 @@ public:
     T* get_mut(bool *is_added = nullptr) const {
         return static_cast<T*>(
             ecs_get_mut_w_entity(
-                m_world, m_id, component_info<T>::id(m_world), is_added));
+                m_world, m_id, _::component_info<T>::id(m_world), is_added));
     }
 
     /** Get mutable component value (untyped).
@@ -8124,7 +8168,7 @@ public:
     template<typename T, typename C>
     const T* get_trait() const {
         return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            component_info<C>::id(m_world), component_info<T>::id(m_world))));
+            _::component_info<C>::id(m_world), _::component_info<T>::id(m_world))));
     }   
 
     /** Get trait value.
@@ -8137,7 +8181,7 @@ public:
     template<typename T>
     const T* get_trait(flecs::entity component) const {
         return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            component.id(), component_info<T>::id(m_world))));
+            component.id(), _::component_info<T>::id(m_world))));
     }
 
     /** Get trait tag value.
@@ -8153,7 +8197,7 @@ public:
     template<typename C>
     const C* get_trait_tag(flecs::entity trait) const {
         return static_cast<const C*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            component_info<C>::id(m_world), trait.id())));
+            _::component_info<C>::id(m_world), trait.id())));
     }
 
     /** Get trait tag value (untyped).
@@ -8186,8 +8230,8 @@ public:
         return static_cast<T*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
-                    component_info<C>::id(m_world), 
-                    component_info<T>::id(m_world)), 
+                    _::component_info<C>::id(m_world), 
+                    _::component_info<T>::id(m_world)), 
                     is_added));
     }    
 
@@ -8207,7 +8251,7 @@ public:
         return static_cast<T*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
-                    component_info<T>::id(m_world),
+                    _::component_info<T>::id(m_world),
                     component.id()), 
                     is_added));
     }
@@ -8230,7 +8274,7 @@ public:
         return static_cast<C*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
-                    component_info<C>::id(m_world),
+                    _::component_info<C>::id(m_world),
                     trait.id()),
                     is_added));
     }    
@@ -8241,7 +8285,7 @@ public:
      */
     template <typename T>
     void modified() {
-        ecs_modified_w_entity(m_world, m_id, component_info<T>::id(m_world));
+        ecs_modified_w_entity(m_world, m_id, _::component_info<T>::id(m_world));
     }
 
     /** Signal that component was modified.
@@ -8361,7 +8405,7 @@ public:
      */
     template <typename T>
     bool has() const {
-        return has(component_info<T>::id(m_world));
+        return has(_::component_info<T>::id(m_world));
     }
 
     /** Check if entity owns the provided entity id.
@@ -8402,7 +8446,7 @@ public:
      */
     template <typename T>
     bool owns() const {
-        return owns(component_info<T>::id(m_world));
+        return owns(_::component_info<T>::id(m_world));
     }
 
     /** Check if entity has the provided trait.
@@ -8414,8 +8458,8 @@ public:
     template<typename T, typename C>
     bool has_trait() const {
         return ecs_has_entity(m_world, m_id, ecs_trait(
-            component_info<C>::id(m_world), 
-            component_info<T>::id(m_world)));
+            _::component_info<C>::id(m_world), 
+            _::component_info<T>::id(m_world)));
     }
 
     /** Check if entity has the provided trait.
@@ -8427,7 +8471,7 @@ public:
     template<typename T>
     bool has_trait(flecs::entity component) const {
         return ecs_has_entity(m_world, m_id, ecs_trait(
-            component.id(), component_info<T>::id(m_world)));
+            component.id(), _::component_info<T>::id(m_world)));
     }
 
     /** Check if entity has the provided trait tag.
@@ -8440,7 +8484,7 @@ public:
     template<typename C>
     bool has_trait_tag(flecs::entity trait) const {
         return ecs_has_entity(m_world, m_id, ecs_trait(
-           component_info<C>::id(m_world), trait.id()));
+           _::component_info<C>::id(m_world), trait.id()));
     }
 
     /** Check if entity has the provided trait.
@@ -8528,7 +8572,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 class entity_range final : public entity_builder<entity_range> {
-    using entity_iterator = range_iterator<entity_t>;
+    using entity_iterator = _::range_iterator<entity_t>;
 public:
     entity_range(const world& world, std::int32_t count) 
         : m_world(world.c_ptr())
@@ -8610,7 +8654,7 @@ public:
     template <typename ... Components>
     type& add() {
         std::stringstream str;
-        if (!pack_args_to_string<Components...>(m_world, str)) {
+        if (!_::pack_args_to_string<Components...>(m_world, str)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
@@ -8685,7 +8729,7 @@ private:
  * https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
  */
 
-namespace internal
+namespace _
 {
     struct name_util {
         static void trim_name(char *typeName) {
@@ -8707,7 +8751,7 @@ namespace internal
     };
 
 #if defined(__clang__)
-  static const unsigned int FRONT_SIZE = sizeof("static const char* flecs::internal::name_helper<") - 1u;
+  static const unsigned int FRONT_SIZE = sizeof("static const char* flecs::_::name_helper<") - 1u;
   static const unsigned int BACK_SIZE = sizeof(">::name() [T = ]") - 1u;
  
   template <typename T>
@@ -8722,7 +8766,7 @@ namespace internal
     }
   };    
 #elif defined(__GNUC__)
-  static const unsigned int FRONT_SIZE = sizeof("static const char* flecs::internal::name_helper<T>::name() [with T = ") - 1u;
+  static const unsigned int FRONT_SIZE = sizeof("static const char* flecs::_::name_helper<T>::name() [with T = ") - 1u;
   static const unsigned int BACK_SIZE = sizeof("]") - 1u;
  
   template <typename T>
@@ -8737,7 +8781,7 @@ namespace internal
     }
   };
 #elif defined(_WIN32)
-  static const unsigned int FRONT_SIZE = sizeof("flecs::internal::name_helper<") - 1u;
+  static const unsigned int FRONT_SIZE = sizeof("flecs::_::name_helper<") - 1u;
   static const unsigned int BACK_SIZE = sizeof(">::name") - 1u;
  
   template <typename T>
@@ -8754,7 +8798,6 @@ namespace internal
 #elif
 #error "implicit component registration not supported"
 #endif
-}
 
 template <typename T>
 class component_info final {
@@ -8762,11 +8805,11 @@ public:
     static void init(world_t* world, entity_t entity) {
         if (s_id) {
             ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
-                internal::name_helper<T>::name());
+                _::name_helper<T>::name());
 
             ecs_assert(!strcmp(ecs_get_name(world, entity), s_name), 
                 ECS_INCONSISTENT_COMPONENT_NAME, 
-                internal::name_helper<T>::name());
+                _::name_helper<T>::name());
         }
 
         s_id = entity;
@@ -8777,10 +8820,10 @@ public:
     static entity_t id(world_t *world = nullptr) {
         if (!s_id) {
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
-                internal::name_helper<T>::name());
+                _::name_helper<T>::name());
 
             entity_t entity = ecs_new_component(
-                world, 0, internal::name_helper<T>::name(), 
+                world, 0, _::name_helper<T>::name(), 
                 sizeof(T), alignof(T));
 
             init(world, entity);
@@ -8794,7 +8837,7 @@ public:
     static const char* name(world_t *world = nullptr) {
         if (!s_id) {
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
-                internal::name_helper<T>::name());
+                _::name_helper<T>::name());
 
             id(world);
         }
@@ -8807,7 +8850,7 @@ public:
     static type_t type(world_t *world = nullptr) {
         if (!s_id) {
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
-                internal::name_helper<T>::name());
+                _::name_helper<T>::name());
 
             id(world);
         }
@@ -8914,20 +8957,22 @@ void component_move(
     }
 }
 
+} // namespace _
+
 template <typename T>
 flecs::entity pod_component(flecs::world& world, const char *name = nullptr) {
     if (!name) {
-        name = internal::name_helper<T>::name();
+        name = _::name_helper<T>::name();
     }
 
     flecs::entity result = entity(world, name, true);
 
     world_t *world_ptr = world.c_ptr();
     ecs_new_component(world_ptr, result.id(), nullptr, sizeof(T), alignof(T));
-    component_info<T>::init(world_ptr, result.id());
-    component_info<const T>::init(world_ptr, result.id());
-    component_info<T*>::init(world_ptr, result.id());
-    component_info<T&>::init(world_ptr, result.id()); 
+    _::component_info<T>::init(world_ptr, result.id());
+    _::component_info<const T>::init(world_ptr, result.id());
+    _::component_info<T*>::init(world_ptr, result.id());
+    _::component_info<T&>::init(world_ptr, result.id()); 
     
     return result;
 }
@@ -8937,14 +8982,14 @@ flecs::entity component(flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
     EcsComponentLifecycle cl{};
-    cl.ctor = component_ctor<T>;
-    cl.dtor = component_dtor<T>;
-    cl.copy = component_copy<T>;
-    cl.move = component_move<T>;
+    cl.ctor = _::component_ctor<T>;
+    cl.dtor = _::component_dtor<T>;
+    cl.copy = _::component_copy<T>;
+    cl.move = _::component_move<T>;
     
     ecs_set_component_actions_w_entity(
         world.c_ptr(), 
-        component_info<T>::id(world.c_ptr()), 
+        _::component_info<T>::id(world.c_ptr()), 
         &cl);
 
     return result;
@@ -8969,7 +9014,7 @@ flecs::entity module(flecs::world& world, const char *name = nullptr) {
 
 template <typename T>
 void import(world& world) {
-    if (!component_info<T>::registered()) {
+    if (!_::component_info<T>::registered()) {
         ecs_entity_t scope = ecs_get_scope(world.c_ptr());
 
         // Allocate module, so the this ptr will remain stable
@@ -8977,7 +9022,7 @@ void import(world& world) {
 
         ecs_set_scope(world.c_ptr(), scope);
 
-        flecs::entity m = world.lookup(component_info<T>::name(world.c_ptr()));
+        flecs::entity m = world.lookup(_::component_info<T>::name(world.c_ptr()));
 
         m.set<T>(*module_data);
     }
@@ -9010,7 +9055,7 @@ public:
 
     template <typename T>
     filter& include() {
-        m_filter.include = ecs_type_add(m_world, m_filter.include, component_info<T>::id(m_world));
+        m_filter.include = ecs_type_add(m_world, m_filter.include, _::component_info<T>::id(m_world));
         return *this;
     }
 
@@ -9035,7 +9080,7 @@ public:
 
     template <typename T>
     filter& exclude() {
-        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, component_info<T>::id(m_world));
+        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, _::component_info<T>::id(m_world));
         return *this;
     }
  
@@ -9065,6 +9110,8 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility to convert template argument pack to array of columns
 ////////////////////////////////////////////////////////////////////////////////
+
+namespace _ {
 
 template <typename ... Components>
 class column_args {
@@ -9120,7 +9167,7 @@ public:
 
         // Use any_column so we can transparently use shared components
         for (auto row : iter_wrapper) {
-            func(iter_wrapper.entity(row), (any_column<typename std::remove_reference<Components>::type>(
+            func(iter_wrapper.entity(row), (_::any_column<typename std::remove_reference<Components>::type>(
                  (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, iter->count, comps.is_shared))[row]...);
         }
     }
@@ -9191,6 +9238,8 @@ private:
     Func m_func;
 };
 
+} // namespace _
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Persistent queries
@@ -9208,7 +9257,7 @@ protected:
 
 template<typename ... Components>
 class query : public query_base {
-    using Columns = typename column_args<Components...>::Columns;
+    using Columns = typename _::column_args<Components...>::Columns;
 
 public:
     query() { 
@@ -9217,7 +9266,7 @@ public:
 
     explicit query(world& world) {
         std::stringstream str;
-        if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
@@ -9226,7 +9275,7 @@ public:
 
     explicit query(world& world, query_base& parent) {
         std::stringstream str;
-        if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
@@ -9235,7 +9284,7 @@ public:
 
     explicit query(world& world, const char *expr) {
         std::stringstream str;
-        if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_query_new(world.c_ptr(), expr);
         } else {
             str << "," << expr;
@@ -9245,7 +9294,7 @@ public:
 
     explicit query(world& world, query_base& parent, const char *expr) {
         std::stringstream str;
-        if (!pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
         } else {
             str << "," << expr;
@@ -9262,8 +9311,8 @@ public:
         ecs_iter_t iter = ecs_query_iter(m_query);
 
         while (ecs_query_next(&iter)) {
-            column_args<Components...> columns(&iter);
-            each_invoker<Func, Components...> ctx(func);
+            _::column_args<Components...> columns(&iter);
+            _::each_invoker<Func, Components...> ctx(func);
             ctx.call_system(&iter, func, 0, columns.m_columns);
         }
     }
@@ -9273,8 +9322,8 @@ public:
         ecs_iter_t iter = ecs_query_iter(m_query);
 
         while (ecs_query_next(&iter)) {
-            column_args<Components...> columns(&iter);
-            action_invoker<Func, Components...> ctx(func);
+            _::column_args<Components...> columns(&iter);
+            _::action_invoker<Func, Components...> ctx(func);
             ctx.call_system(&iter, func, 0, columns.m_columns);
         }
     }    
@@ -9495,7 +9544,7 @@ public:
     template <typename Func>
     system& action(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        auto ctx = new action_invoker<Func, Components...>(func);
+        auto ctx = new _::action_invoker<Func, Components...>(func);
 
         std::string signature = build_signature(false);
 
@@ -9505,7 +9554,7 @@ public:
             m_name, 
             m_kind, 
             signature.c_str(), 
-            action_invoker<Func, Components...>::run);
+            _::action_invoker<Func, Components...>::run);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
@@ -9523,7 +9572,7 @@ public:
      * single entity */
     template <typename Func>
     system& each(Func func) {
-        auto ctx = new each_invoker<Func, Components...>(func);
+        auto ctx = new _::each_invoker<Func, Components...>(func);
 
         std::string signature = build_signature(true);
 
@@ -9537,7 +9586,7 @@ public:
             m_name, 
             m_kind, 
             signature.c_str(), 
-            each_invoker<Func, Components...>::run);
+            _::each_invoker<Func, Components...>::run);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
@@ -9557,7 +9606,7 @@ private:
         bool is_set = false;
 
         std::stringstream str;
-        if (pack_args_to_string<Components ...>(m_world, str, is_each)) {
+        if (_::pack_args_to_string<Components ...>(m_world, str, is_each)) {
             is_set = true;
         }
 
@@ -9908,13 +9957,13 @@ inline typename entity_builder<base>::base_type& entity_builder<base>::add(type 
 template <typename base>
 template <typename T>
 inline typename entity_builder<base>::base_type& entity_builder<base>::add_trait(flecs::entity component) const {
-    return add_trait(component_info<T>::id(), component.id());
+    return add_trait(_::component_info<T>::id(), component.id());
 }
 
 template <typename base>
 template <typename C>
 inline typename entity_builder<base>::base_type& entity_builder<base>::add_trait_tag(flecs::entity trait) const {
-    return add_trait(trait.id(), component_info<C>::id());
+    return add_trait(trait.id(), _::component_info<C>::id());
 }
 
 template <typename base>
@@ -9935,13 +9984,13 @@ inline typename entity_builder<base>::base_type& entity_builder<base>::remove(ty
 template <typename base>
 template <typename T>
 inline typename entity_builder<base>::base_type& entity_builder<base>::remove_trait(flecs::entity component) const {
-    return remove_trait(component_info<T>::id(), component.id());
+    return remove_trait(_::component_info<T>::id(), component.id());
 }
 
 template <typename base>
 template <typename C>
 inline typename entity_builder<base>::base_type& entity_builder<base>::remove_trait_tag(flecs::entity trait) const {
-    return remove_trait(trait.id(), component_info<C>::id());
+    return remove_trait(trait.id(), _::component_info<C>::id());
 }
 
 template <typename base>
@@ -9976,7 +10025,7 @@ inline typename entity_builder<base>::base_type& entity_builder<base>::set_trait
     static_cast<base_type*>(this)->invoke(
     [trait, &value](world_t *world, entity_t id) {
         ecs_set_ptr_w_entity(world, id, 
-            ecs_trait(component_info<C>::id(world), trait.id()),
+            ecs_trait(_::component_info<C>::id(world), trait.id()),
             sizeof(C), &value);
     });
     return *static_cast<base_type*>(this);
@@ -9989,7 +10038,7 @@ inline typename entity_builder<base>::base_type& entity_builder<base>::set_trait
     static_cast<base_type*>(this)->invoke(
     [tag, &value](world_t *world, entity_t id) {
         ecs_set_ptr_w_entity(world, id, 
-            ecs_trait(tag.id(), component_info<T>::id(world)),
+            ecs_trait(tag.id(), _::component_info<T>::id(world)),
             sizeof(T), &value);
     });
     return *static_cast<base_type*>(this);
@@ -10084,13 +10133,13 @@ inline void world::delete_entities(flecs::filter filter) const {
 template <typename T>
 inline void world::add() const {
     ecs_bulk_add_remove_type(
-        m_world, component_info<T>::type(m_world), nullptr, nullptr);
+        m_world, _::component_info<T>::type(m_world), nullptr, nullptr);
 }
 
 template <typename T>
 inline void world::add(flecs::filter filter) const {
     ecs_bulk_add_remove_type(
-        m_world, component_info<T>::type(m_world), nullptr, filter.c_ptr());
+        m_world, _::component_info<T>::type(m_world), nullptr, filter.c_ptr());
 }
 
 inline void world::add(type type) const {
@@ -10112,13 +10161,13 @@ inline void world::add(entity entity, flecs::filter filter) const {
 template <typename T>
 inline void world::remove() const {
     ecs_bulk_add_remove_type(
-        m_world, nullptr, component_info<T>::type(m_world), nullptr);
+        m_world, nullptr, _::component_info<T>::type(m_world), nullptr);
 }
 
 template <typename T>
 inline void world::remove(flecs::filter filter) const {
     ecs_bulk_add_remove_type(
-        m_world, nullptr, component_info<T>::type(m_world), filter.c_ptr());
+        m_world, nullptr, _::component_info<T>::type(m_world), filter.c_ptr());
 }
 
 inline void world::remove(type type) const {
@@ -10170,6 +10219,10 @@ inline entity world::lookup(std::string& name) const {
 }
 
 /** Utilities to convert type trait to flecs signature syntax */
+
+namespace _
+{
+
 template <typename T,
     typename std::enable_if< std::is_const<T>::value == true, void>::type* = nullptr>
 constexpr const char *inout_modifier() {
@@ -10206,7 +10259,7 @@ bool pack_args_to_string(world_t *world, std::stringstream& str, bool is_each) {
     (void)world;
 
     std::array<const char*, sizeof...(Components)> ids = {
-        (component_info<Components>::name(world))...
+        (_::component_info<Components>::name(world))...
     };
 
     std::array<const char*, sizeof...(Components)> inout_modifiers = {
@@ -10236,7 +10289,10 @@ bool pack_args_to_string(world_t *world, std::stringstream& str, bool is_each) {
     return i != 0;
 }
 
-}
+} // namespace _
+
+} // namespace flecs
+
 #endif
 #endif
 
