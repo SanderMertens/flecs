@@ -202,3 +202,149 @@ void Traits_system_2_trait_instances() {
     test_int(entity_count, 2);
     test_int(trait_value, 30);
 }
+
+void Traits_override_trait() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    flecs::component<Trait>(world, "Trait");
+
+    auto base = flecs::entity(world)
+        .set_trait<Trait, Position>({10});
+
+    auto instance = flecs::entity(world)
+        .add_instanceof(base);
+
+    test_assert((instance.has_trait<Trait, Position>()));
+    const Trait *t = instance.get_trait<Trait, Position>();
+    test_int(t->value, 10);
+
+    const Trait *t_2 = base.get_trait<Trait, Position>();
+    test_assert(t == t_2);
+
+    instance.add_trait<Trait, Position>();
+    t = instance.get_trait<Trait, Position>();
+    test_int(t->value, 10);
+    test_assert(t != t_2);
+
+    instance.remove_trait<Trait, Position>();
+    t = instance.get_trait<Trait, Position>();
+    test_int(t->value, 10);
+    test_assert(t == t_2);    
+}
+
+void Traits_override_tag_trait() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    auto Trait = flecs::entity(world);
+
+    auto base = flecs::entity(world)
+        .set_trait_tag<Position>(Trait, {10, 20});
+
+    auto instance = flecs::entity(world)
+        .add_instanceof(base);
+
+    test_assert((instance.has_trait_tag<Position>(Trait)));
+    const Position *t = instance.get_trait_tag<Position>(Trait);
+    test_int(t->x, 10);
+    test_int(t->y, 20);
+
+    const Position *t_2 = base.get_trait_tag<Position>(Trait);
+    test_assert(t == t_2);
+
+    instance.add_trait_tag<Position>(Trait);
+    t = instance.get_trait_tag<Position>(Trait);
+    test_int(t->x, 10);
+    test_int(t->y, 20);
+    test_assert(t != t_2);
+
+    instance.remove_trait_tag<Position>(Trait);
+    t = instance.get_trait_tag<Position>(Trait);
+    test_int(t->x, 10);
+    test_int(t->y, 20);
+    test_assert(t == t_2); 
+}
+
+void Traits_get_mut_trait() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    flecs::component<Trait>(world, "Trait");
+
+    auto e = flecs::entity(world);
+
+    bool added = false;
+    Trait *t = e.get_trait_mut<Trait, Position>(&added);
+    test_assert(t != NULL);
+    test_bool(added, true);
+    t->value = 10;
+
+    const Trait *t_2 = e.get_trait<Trait, Position>();
+    test_assert(t == t_2);
+    test_int(t->value, 10);
+}
+
+void Traits_get_mut_trait_existing() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    flecs::component<Trait>(world, "Trait");
+
+    auto e = flecs::entity(world)
+        .set_trait<Trait, Position>({20});
+
+    bool added = false;
+    Trait *t = e.get_trait_mut<Trait, Position>(&added);
+    test_assert(t != NULL);
+    test_bool(added, false);
+    test_int(t->value, 20);
+    t->value = 10;
+
+    const Trait *t_2 = e.get_trait<Trait, Position>();
+    test_assert(t == t_2);
+    test_int(t->value, 10);
+}
+
+void Traits_get_mut_trait_tag() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    auto Trait = flecs::entity(world);
+
+    auto e = flecs::entity(world);
+
+    bool added = false;
+    Position *p = e.get_trait_tag_mut<Position>(Trait, &added);
+    test_assert(p != NULL);
+    test_bool(added, true);
+    p->x = 10;
+    p->y = 20;
+
+    const Position *p_2 = e.get_trait_tag<Position>(Trait);
+    test_assert(p == p_2);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Traits_get_mut_trait_tag_existing() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+    auto Trait = flecs::entity(world);
+
+    auto e = flecs::entity(world)
+        .set_trait_tag<Position>(Trait, {10, 20});
+
+    bool added = false;
+    Position *p = e.get_trait_tag_mut<Position>(Trait, &added);
+    test_assert(p != NULL);
+    test_bool(added, false);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Position *p_2 = e.get_trait_tag<Position>(Trait);
+    test_assert(p == p_2);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}

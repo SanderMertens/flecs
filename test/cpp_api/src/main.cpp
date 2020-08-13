@@ -49,9 +49,16 @@ void Traits_set_component_trait(void);
 void Traits_set_tag_trait(void);
 void Traits_system_1_trait_instance(void);
 void Traits_system_2_trait_instances(void);
+void Traits_override_trait(void);
+void Traits_override_tag_trait(void);
+void Traits_get_mut_trait(void);
+void Traits_get_mut_trait_existing(void);
+void Traits_get_mut_trait_tag(void);
+void Traits_get_mut_trait_tag_existing(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
+void Switch_get_case(void);
 void Switch_system_w_case(void);
 void Switch_system_w_switch(void);
 
@@ -294,6 +301,30 @@ bake_test_case Traits_testcases[] = {
     {
         "system_2_trait_instances",
         Traits_system_2_trait_instances
+    },
+    {
+        "override_trait",
+        Traits_override_trait
+    },
+    {
+        "override_tag_trait",
+        Traits_override_tag_trait
+    },
+    {
+        "get_mut_trait",
+        Traits_get_mut_trait
+    },
+    {
+        "get_mut_trait_existing",
+        Traits_get_mut_trait_existing
+    },
+    {
+        "get_mut_trait_tag",
+        Traits_get_mut_trait_tag
+    },
+    {
+        "get_mut_trait_tag_existing",
+        Traits_get_mut_trait_tag_existing
     }
 };
 
@@ -301,6 +332,10 @@ bake_test_case Switch_testcases[] = {
     {
         "add_case",
         Switch_add_case
+    },
+    {
+        "get_case",
+        Switch_get_case
     },
     {
         "system_w_case",
@@ -620,14 +655,14 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        10,
+        16,
         Traits_testcases
     },
     {
         "Switch",
         NULL,
         NULL,
-        3,
+        4,
         Switch_testcases
     },
     {

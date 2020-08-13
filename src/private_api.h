@@ -217,7 +217,7 @@ void ecs_run_add_actions(
     int32_t row,
     int32_t count,
     ecs_entities_t *added,
-    ecs_comp_mask_t set_mask,
+    ecs_comp_set_t *set_mask,
     bool get_all,
     bool run_on_set);   
 

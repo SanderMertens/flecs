@@ -1884,8 +1884,8 @@ public:
         return static_cast<C*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
-                    trait.id(), 
-                    component_info<C>::id(m_world)),
+                    component_info<C>::id(m_world),
+                    trait.id()),
                     is_added));
     }    
 
@@ -2087,7 +2087,14 @@ public:
      */
     bool has_case(flecs::entity sw_case) const {
         return ecs_has_entity(m_world, m_id, flecs::Case | sw_case.id());
-    }    
+    }  
+
+    /** Get case for switch.
+     *
+     * @param sw The switch for which to obtain the case.
+     * @return True if the entity has the provided case, false otherwise.
+     */
+    flecs::entity get_case(flecs::type sw) const;
 
     /** Get current delta time.
      * Convenience function so system implementations can get delta_time, even
@@ -3639,6 +3646,10 @@ inline typename entity_builder<base>::base_type& entity_builder<base>::remove_ca
 
 inline bool entity::has_switch(flecs::type type) const {
     return ecs_has_entity(m_world, m_id, flecs::Switch | type.id());
+}
+
+inline flecs::entity entity::get_case(flecs::type sw) const {
+    return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw.id()));
 }
 
 

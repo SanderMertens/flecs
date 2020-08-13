@@ -21,6 +21,24 @@ void Switch_add_case() {
     test_assert(!e.has_case(Standing));
 }
 
+void Switch_get_case() {
+    flecs::world world;
+
+    auto Standing = flecs::entity(world, "Standing");
+    flecs::entity(world, "Walking");
+    auto Movement = flecs::type(world, "Movement", 
+        "Standing, Walking");
+
+    auto e = flecs::entity(world)
+        .add_switch(Movement)
+        .add_case(Standing);
+
+    test_assert(e.has_switch(Movement));
+    test_assert(e.has_case(Standing));
+
+    test_assert(e.get_case(Movement) == Standing);
+}
+
 void Switch_system_w_case() {
     flecs::world world;
 

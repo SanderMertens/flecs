@@ -1015,6 +1015,7 @@ void ecs_add_remove_type(
     ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_entity(component), trait), sizeof(component), &(component)__VA_ARGS__)
 
 #endif
+
 /** Get trait for component. 
  * This operation obtains the value of a trait for a componetn that has been 
  * added by ecs_set_trait.
@@ -1026,6 +1027,18 @@ void ecs_add_remove_type(
  */
 #define ecs_get_trait(world, entity, component, trait)\
     ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait))))
+
+/** Get trait tag for component. 
+ * This operation obtains the value of a trait for a componetn that has been 
+ * added by ecs_set_trait.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param trait The trait that was added.
+ * @param component The component to which the trait was added.
+ */
+#define ecs_get_trait_tag(world, entity, trait, component)\
+    ((component*)ecs_get_w_entity(world, entity, ecs_trait(ecs_entity(component), trait)))
 
 /** Get case for switch.
  * This operation gets the current case for the specified switch. If the current

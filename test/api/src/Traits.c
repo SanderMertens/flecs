@@ -504,3 +504,63 @@ void Traits_query_2_traits_2_instances_per_type() {
 
     ecs_fini(world);
 }
+
+void Traits_override_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Trait);
+
+    ecs_entity_t base = ecs_new(world, 0);
+    ecs_set_trait(world, base, Position, Trait, {.value = 10});
+
+    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    test_assert(ecs_has_trait(world, instance, ecs_entity(Position), ecs_entity(Trait)));
+
+    const Trait *t = ecs_get_trait(world, instance, Position, Trait);
+    test_assert(t != NULL);
+    test_int(t->value, 10);
+
+    const Trait *t_2 = ecs_get_trait(world, base, Position, Trait);
+    test_assert(t_2 != NULL);
+    test_assert(t == t_2);
+
+    ecs_add_trait(world, instance, ecs_entity(Position), ecs_entity(Trait));
+    t = ecs_get_trait(world, instance, Position, Trait);
+    test_assert(t != NULL);
+    test_int(t->value, 10);
+    test_assert(t != t_2);
+
+    ecs_fini(world);
+}
+
+void Traits_override_tag_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ecs_entity_t base = ecs_new(world, 0);
+    ecs_set_trait_tag(world, base, Trait, Position, {.x = 10, .y = 20});
+
+    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    test_assert(ecs_has_trait(world, instance, ecs_entity(Position), Trait));
+
+    const Position *t = ecs_get_trait_tag(world, instance, Trait, Position);
+    test_assert(t != NULL);
+    test_int(t->x, 10);
+    test_int(t->y, 20);
+
+    const Position *t_2 = ecs_get_trait_tag(world, base, Trait, Position);
+    test_assert(t_2 != NULL);
+    test_assert(t == t_2);
+
+    ecs_add_trait(world, instance, ecs_entity(Position), Trait);
+    t = ecs_get_trait_tag(world, instance, Trait, Position);
+    test_assert(t != NULL);
+    test_int(t->x, 10);
+    test_int(t->y, 20);
+    test_assert(t != t_2);
+
+    ecs_fini(world);
+}

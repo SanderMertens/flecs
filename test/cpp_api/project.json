@@ -56,12 +56,19 @@
                 "set_component_trait",
                 "set_tag_trait",
                 "system_1_trait_instance",
-                "system_2_trait_instances"
+                "system_2_trait_instances",
+                "override_trait",
+                "override_tag_trait",
+                "get_mut_trait",
+                "get_mut_trait_existing",
+                "get_mut_trait_tag",
+                "get_mut_trait_tag_existing"
             ]
         }, {
             "id": "Switch",
             "testcases": [
                 "add_case",
+                "get_case",
                 "system_w_case",
                 "system_w_switch"
             ]

@@ -465,6 +465,8 @@ void Traits_add_tag_trait_for_tag(void);
 void Traits_add_tag_trait_for_component(void);
 void Traits_query_2_traits(void);
 void Traits_query_2_traits_2_instances_per_type(void);
+void Traits_override_trait(void);
+void Traits_override_tag_trait(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -2802,6 +2804,14 @@ bake_test_case Traits_testcases[] = {
     {
         "query_2_traits_2_instances_per_type",
         Traits_query_2_traits_2_instances_per_type
+    },
+    {
+        "override_trait",
+        Traits_override_trait
+    },
+    {
+        "override_tag_trait",
+        Traits_override_tag_trait
     }
 };
 
@@ -5330,7 +5340,7 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        8,
+        10,
         Traits_testcases
     },
     {

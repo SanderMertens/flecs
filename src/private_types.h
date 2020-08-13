@@ -51,7 +51,11 @@
 
 /* Simple bitmask structure to store a set of components. This is used amongst
  * others to keep track of which components have been overridden from a base. */
-typedef ecs_entity_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
+typedef struct ecs_comp_set_t {
+    int32_t hi_count;
+    ecs_entity_t hi_array[ECS_MAX_ADD_REMOVE];
+    ecs_entity_t lo_mask[ECS_HI_COMPONENT_ID / 64];
+} ecs_comp_set_t;
 
 /** Callback used by the system signature expression parser. */
 typedef int (*ecs_parse_action_t)(
