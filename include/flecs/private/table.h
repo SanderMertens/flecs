@@ -104,7 +104,8 @@ void ecs_table_move(
     ecs_table_t *old_table,
     ecs_data_t *old_data,
     int32_t old_index,
-    bool is_copy);
+    bool is_copy,
+    bool is_move);
 
 /* Grow table with specified number of records. Populate table with entities,
  * starting from specified entity id. */

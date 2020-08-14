@@ -652,15 +652,15 @@ void trigger_set(
 
     int i;
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = ct[i].component;
+        ecs_entity_t c = ct[i].component;
 
-        ecs_c_info_t *cdata = ecs_get_or_create_c_info(world, e);
+        ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, c);
         switch(ct[i].kind) {
         case EcsOnAdd:
-            el = trigger_find_or_create(&cdata->on_add, entities[i]);
+            el = trigger_find_or_create(&c_info->on_add, entities[i]);
             break;
         case EcsOnRemove:
-            el = trigger_find_or_create(&cdata->on_remove, entities[i]);
+            el = trigger_find_or_create(&c_info->on_remove, entities[i]);
             break;
         default:
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
@@ -672,12 +672,16 @@ void trigger_set(
         *el = ct[i];
         el->self = entities[i];
 
-        ecs_notify_tables_of_component_actions(world, e, cdata);
+        ecs_notify_tables(world, &(ecs_table_event_t) {
+            .kind = EcsTableComponentInfo,
+            .component = c,
+            .c_info = c_info
+        });        
 
         ecs_trace_1("trigger #[green]%s#[normal] created for component #[red]%s",
             ct[i].kind == EcsOnAdd
                 ? "OnAdd"
-                : "OnRemove", ecs_get_name(world, e));
+                : "OnRemove", ecs_get_name(world, c));
     }
 }
 

@@ -378,36 +378,16 @@ void ecs_table_activate(
             .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
             .table = table
         });
-
-        #ifndef NDEBUG
-            char *expr = ecs_type_str(world, table->type);
-            ecs_trace_2("table #[green][%s]#[reset] %s for single query", expr, 
-                activate ? "activated" : "deactivatd");
-            ecs_os_free(expr);
-        #endif           
     } else {
         ecs_vector_t *queries = table->queries;
-        
-        if (queries) {
-            ecs_query_t **buffer = ecs_vector_first(queries, ecs_query_t*);
-            int32_t i, count = ecs_vector_count(queries);
-            for (i = 0; i < count; i ++) {
-                ecs_query_notify(world, buffer[i], &(ecs_query_event_t) {
-                    .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
-                    .table = table
-                });
-            }
+        ecs_query_t **buffer = ecs_vector_first(queries, ecs_query_t*);
+        int32_t i, count = ecs_vector_count(queries);
+        for (i = 0; i < count; i ++) {
+            ecs_query_notify(world, buffer[i], &(ecs_query_event_t) {
+                .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
+                .table = table
+            });                
         }
-
-        #ifndef NDEBUG
-            if (ecs_vector_count(queries)) {
-                char *expr = ecs_type_str(world, table->type);
-                ecs_trace_2("table #[green][%s]#[reset] %s for %d queries", expr, 
-                    activate ? "activated" : "deactivated",
-                    ecs_vector_count(queries));
-                ecs_os_free(expr);
-            }
-        #endif         
     }     
 }
 
@@ -1372,7 +1352,8 @@ void ecs_table_move(
     ecs_table_t *old_table,
     ecs_data_t *old_data,
     int32_t old_index,
-    bool is_copy)
+    bool do_copy,
+    bool do_move)
 {
     ecs_assert(new_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1411,21 +1392,29 @@ void ecs_table_move(
                 ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                if (is_copy) {
-                    ecs_c_info_t *cdata = ecs_get_c_info(
-                        world, new_component);
+                ecs_c_info_t *cdata = NULL;
+                ecs_xtor_t ctor;
+                ecs_copy_t copy;
+                ecs_move_t move;
+                void *ctx;
+                if (do_copy || do_move) {
+                    cdata = ecs_get_c_info( world, new_component);
+                    ctx = cdata->lifecycle.ctx;
+                }
 
-                    ecs_xtor_t ctor;
-                    ecs_copy_t copy;
-                    if (cdata && (ctor = cdata->lifecycle.ctor) && (copy = cdata->lifecycle.copy)) {
-                        void *ctx = cdata->lifecycle.ctx;
-                        ctor(world, new_component, &dst_entity, dst, 
-                            ecs_to_size_t(size), 1, ctx);
-                        copy(world, new_component, &dst_entity, &src_entity, 
-                            dst, src, ecs_to_size_t(size), 1, ctx);
-                    } else {
-                        ecs_os_memcpy(dst, src, size);
-                    }
+                if (do_copy && cdata && 
+                   (ctor = cdata->lifecycle.ctor) && 
+                   (copy = cdata->lifecycle.copy)) 
+                {
+                    ctor(world, new_component, &dst_entity, dst, 
+                                ecs_to_size_t(size), 1, ctx);
+                    copy(world, new_component, &dst_entity, &src_entity, 
+                        dst, src, ecs_to_size_t(size), 1, ctx);
+                } else if (do_move && cdata &&
+                    (move = cdata->lifecycle.move))
+                {
+                    move(world, new_component, &dst_entity, &src_entity, 
+                        dst, src, ecs_to_size_t(size), 1, ctx);
                 } else {
                     ecs_os_memcpy(dst, src, size);
                 }

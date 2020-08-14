@@ -427,6 +427,8 @@ void SystemMisc_add_own_component(void);
 void SystemMisc_change_system_action(void);
 void SystemMisc_system_readeactivate(void);
 void SystemMisc_system_readeactivate_w_2_systems(void);
+void SystemMisc_add_to_system_in_progress(void);
+void SystemMisc_add_to_lazy_system_in_progress(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -2708,6 +2710,14 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "system_readeactivate_w_2_systems",
         SystemMisc_system_readeactivate_w_2_systems
+    },
+    {
+        "add_to_system_in_progress",
+        SystemMisc_add_to_system_in_progress
+    },
+    {
+        "add_to_lazy_system_in_progress",
+        SystemMisc_add_to_lazy_system_in_progress
     }
 };
 
@@ -5512,7 +5522,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        49,
+        51,
         SystemMisc_testcases
     },
     {

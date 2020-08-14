@@ -1,7 +1,5 @@
 #include "private_api.h"
 
-/* -- Global variables -- */
-
 #ifndef NDEBUG
 static
 void no_threading(
@@ -168,8 +166,7 @@ ecs_world_t *ecs_mini(void) {
     world->t_info = ecs_map_new(ecs_c_info_t, 0);  
     world->fini_actions = NULL; 
 
-    world->queries = ecs_sparse_new(ecs_query_t, 0);
-    world->subqueries = ecs_sparse_new(ecs_query_t, 0);
+    world->queries = ecs_vector_new(ecs_query_t*, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->child_tables = NULL;
     world->name_prefix = NULL;
@@ -316,47 +313,16 @@ void ctor_init_zero(
     ecs_os_memset(ptr, 0, ecs_from_size_t(size) * count);
 }
 
-ecs_flags32_t ecs_get_component_action_flags(
-    ecs_c_info_t *c_info) 
-{
-    ecs_flags32_t flags = 0;
-
-    if (c_info->lifecycle.ctor) {
-        flags |= EcsTableHasCtors;
-    }
-    if (c_info->lifecycle.dtor) {
-        flags |= EcsTableHasDtors;
-    }
-    if (c_info->on_add) {
-        flags |= EcsTableHasOnAdd;
-    }
-    if (c_info->on_remove) {
-        flags |= EcsTableHasOnRemove;
-    }    
-
-    return flags;  
-}
-
-void ecs_notify_tables_of_component_actions(
+void ecs_notify_tables(
     ecs_world_t *world,
-    ecs_entity_t component,
-    ecs_c_info_t *c_info)
+    ecs_table_event_t *event)
 {
-    ecs_flags32_t flags = ecs_get_component_action_flags(c_info);
-
-    /* Iterate tables to set flags based on what actions have been registered */
     ecs_sparse_t *tables = world->stage.tables;
     int32_t i, count = ecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
-        if (ecs_type_owns_entity(world, table->type, component, true)) {
-            /* Reset lifecycle flags before setting */
-            table->flags &= ~EcsTableHasLifecycle;
-
-            /* Set lifecycle flags */
-            table->flags |= flags;
-        }
+        ecs_table_notify(world, table, event);
     }
 }
 
@@ -386,7 +352,11 @@ void ecs_set_component_actions_w_entity(
         c_info->lifecycle.ctor = ctor_init_zero;   
     }
 
-    ecs_notify_tables_of_component_actions(world, component, c_info);
+    ecs_notify_tables(world, &(ecs_table_event_t) {
+        .kind = EcsTableComponentInfo,
+        .component = component,
+        .c_info = c_info
+    });
 }
 
 void ecs_atfini(
@@ -420,34 +390,33 @@ void ecs_run_post_frame(
     elem->ctx = ctx;    
 }
 
-int ecs_fini(
+/* Unset data in tables */
+static
+void fini_unset_tables(
     ecs_world_t *world)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
-    assert(!world->in_progress);
-    assert(!world->is_merging);
-
-    /* Unset data in tables */
     ecs_sparse_each(world->stage.tables, ecs_table_t, table, {
         ecs_table_unset(world, table);
     });
+}
 
-    /* Execute fini actions */
+/* Invoke fini actions */
+static
+void fini_actions(
+    ecs_world_t *world)
+{
     ecs_vector_each(world->fini_actions, ecs_action_elem_t, elem, {
         elem->action(world, elem->ctx);
     });
 
     ecs_vector_free(world->fini_actions);
+}
 
-    if (world->locking_enabled) {
-        ecs_os_mutex_free(world->mutex);
-    }
-
-    /* Cleanup stages */
-    ecs_stage_deinit(world, &world->stage);
-    ecs_stage_deinit(world, &world->temp_stage);
-
-    /* Cleanup component lifecycle callbacks & systems */
+/* Cleanup component lifecycle callbacks & systems */
+static
+void fini_component_lifecycle(
+    ecs_world_t *world)
+{
     int32_t i;
     for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
         ecs_vector_free(world->c_info[i].on_add);
@@ -462,38 +431,88 @@ int ecs_fini(
     }    
 
     ecs_map_free(world->t_info);
+}
 
-    /* Cleanup queries */
-    int32_t count = ecs_sparse_count(world->queries);
+/* Cleanup queries */
+static
+void fini_queries(
+    ecs_world_t *world)
+{
+    /* Set world->queries to NULL, so ecs_query_free won't attempt to remove
+     * itself from the vector */
+    ecs_vector_t *query_vec = world->queries;
+    world->queries = NULL;
+
+    int32_t i, count = ecs_vector_count(query_vec);
+    ecs_query_t **queries = ecs_vector_first(query_vec, ecs_query_t*);
     for (i = 0; i < count; i ++) {
-        ecs_query_t *q = ecs_sparse_get(world->queries, ecs_query_t, i);
-        ecs_query_free(q);
+        ecs_query_free(queries[i]);
     }
-    ecs_sparse_free(world->queries);
 
-    count = ecs_sparse_count(world->subqueries);
-    for (i = 0; i < count; i ++) {
-        ecs_query_t *q = ecs_sparse_get(world->subqueries, ecs_query_t, i);
-        ecs_query_free(q);
-    }
-    ecs_sparse_free(world->subqueries);
+    ecs_vector_free(query_vec);
+}
 
-    /* Cleanup child tables */
-    it = ecs_map_iter(world->child_tables);
+/* Cleanup stages */
+static
+void fini_stages(
+    ecs_world_t *world)
+{
+    ecs_stage_deinit(world, &world->stage);
+    ecs_stage_deinit(world, &world->temp_stage);
+}
+
+/* Cleanup child table admin */
+static
+void fini_child_tables(
+    ecs_world_t *world)
+{
+    ecs_map_iter_t it = ecs_map_iter(world->child_tables);
     ecs_vector_t *tables;
     while ((tables = ecs_map_next_ptr(&it, ecs_vector_t*, NULL))) {
         ecs_vector_free(tables);
     }
 
     ecs_map_free(world->child_tables);
+}
 
-    /* Cleanup misc data structures */
+/* Cleanup misc structures */
+static
+void fini_misc(
+    ecs_world_t *world)
+{
     on_demand_in_map_deinit(world->on_activate_components);
     on_demand_in_map_deinit(world->on_enable_components);
     ecs_map_free(world->type_handles);
     ecs_vector_free(world->fini_tasks);
     ecs_component_monitor_free(&world->component_monitors);
     ecs_component_monitor_free(&world->parent_monitors);
+}
+
+/* The destroyer of worlds */
+int ecs_fini(
+    ecs_world_t *world)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+    assert(!world->in_progress);
+    assert(!world->is_merging);
+
+    fini_unset_tables(world);
+
+    fini_actions(world);    
+
+    if (world->locking_enabled) {
+        ecs_os_mutex_free(world->mutex);
+    }
+
+    fini_stages(world);
+
+    fini_component_lifecycle(world);
+
+    fini_queries(world);
+
+    fini_child_tables(world);
+
+    fini_misc(world);
 
     /* In case the application tries to use the memory of the freed world, this
      * will trigger an assert */
@@ -501,7 +520,7 @@ int ecs_fini(
 
     ecs_increase_timer_resolution(0);
 
-    /* The end of the world */
+    /* End of the world */
     ecs_os_free(world);
 
     ecs_os_fini(); 
@@ -782,7 +801,7 @@ ecs_c_info_t * ecs_get_or_create_c_info(
         ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);      
     }
 
-    return c_info;      
+    return c_info;
 }
 
 bool ecs_staging_begin(
@@ -813,4 +832,16 @@ const ecs_world_info_t* ecs_get_world_info(
     ecs_world_t *world)
 {
     return &world->stats;
+}
+
+void ecs_notify_queries(
+    ecs_world_t *world,
+    ecs_query_event_t *event)
+{
+    int32_t i, count = ecs_vector_count(world->queries);
+    ecs_query_t **queries = ecs_vector_first(world->queries, ecs_query_t*);
+
+    for (i = 0; i < count; i ++) {
+        ecs_query_notify(world, queries[i], event);
+    }    
 }

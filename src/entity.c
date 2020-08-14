@@ -1122,7 +1122,7 @@ int32_t move_entity(
     if (src_table->type) {
         ecs_table_move(
             world, entity, entity, dst_table, dst_data, dst_row, src_table, 
-            src_data, src_row, !same_stage);
+            src_data, src_row, !same_stage, false);
 
         /* If entity was moved, invoke UnSet monitors for each component that
          * the entity no longer has */
@@ -2043,7 +2043,7 @@ ecs_entity_t ecs_clone(
 
     if (copy_value) {
         ecs_table_move(world, dst, src, src_table, dst_info.data, dst_info.row,
-            src_table, src_info.data, src_info.row, true);
+            src_table, src_info.data, src_info.row, true, false);
 
         int i;
         for (i = 0; i < to_add.count; i ++) {

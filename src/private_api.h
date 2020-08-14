@@ -121,13 +121,14 @@ void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable);
 
-ecs_flags32_t ecs_get_component_action_flags(
-    ecs_c_info_t *c_info);    
-
-void ecs_notify_tables_of_component_actions(
+void ecs_notify_tables(
     ecs_world_t *world,
-    ecs_entity_t component,
-    ecs_c_info_t *c_info);
+    ecs_table_event_t *event);
+
+void ecs_notify_queries(
+    ecs_world_t *world,
+    ecs_query_event_t *event);
+    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
@@ -333,6 +334,11 @@ int32_t ecs_table_switch_from_case(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t add);    
+
+void ecs_table_notify(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_event_t *event);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API

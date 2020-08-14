@@ -1,5 +1,7 @@
 #include "private_api.h"
 
+void ecs_os_api_impl(ecs_os_api_t *api);
+
 static bool ecs_os_api_initialized = false;
 static int ecs_os_api_init_count = 0;
 
@@ -218,7 +220,7 @@ char* ecs_os_api_module_to_etc(const char *module) {
 void ecs_os_set_api_defaults(void)
 {
     /* Don't overwrite if already initialized */
-    if (ecs_os_api_initialized) {
+    if (ecs_os_api_initialized != 0) {
         return;
     }
 

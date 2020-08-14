@@ -117,8 +117,8 @@ void merge_commits(
             if (src_table) {
                 /* Delete entity from old table */
                 ecs_data_t *src_data = ecs_table_get_data(world, src_table);
-                ecs_table_destruct(world, src_table, src_data, row, 1);
 
+                ecs_table_destruct(world, src_table, src_data, row, 1);
                 ecs_table_delete(world, stage, src_table, src_data, row);
             }
         }

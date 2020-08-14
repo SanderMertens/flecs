@@ -631,8 +631,12 @@ add_trait:
             matched_table_index = ecs_vector_count(query->tables) - 1;
             ecs_assert(matched_table_index >= 0, ECS_INTERNAL_ERROR, NULL);
         }
-        
-        ecs_table_register_query(world, table, query, matched_table_index);
+
+        ecs_table_notify(world, table, &(ecs_table_event_t){
+            .kind = EcsTableQueryMatch,
+            .query = query,
+            .matched_table_index = matched_table_index
+        });
     }
 
     /* Use tail recursion when adding table for multiple traits */
@@ -1714,14 +1718,7 @@ ecs_query_t* ecs_query_new_w_sig_intern(
     ecs_sig_t *sig,
     bool is_subquery)
 {
-    ecs_query_t *result;
-    if (is_subquery) {
-        result = ecs_sparse_add(world->subqueries, ecs_query_t);
-    } else {
-        result = ecs_sparse_add(world->queries, ecs_query_t);
-    }
-
-    memset(result, 0, sizeof(ecs_query_t));
+    ecs_query_t *result = ecs_os_calloc(sizeof(ecs_query_t));
     result->world = world;
     result->sig = *sig;
     result->tables = ecs_vector_new(ecs_matched_table_t, 0);
@@ -1756,6 +1753,10 @@ ecs_query_t* ecs_query_new_w_sig_intern(
             * preprocessed when the query is evaluated. */
             add_table(world, result, NULL);
         }
+
+        /* Register query with world */
+        ecs_query_t **elem = ecs_vector_add(&world->queries, ecs_query_t*);
+        *elem = result;
     } else {
         result->flags |= EcsQueryIsSubquery;
     }
@@ -1804,6 +1805,8 @@ ecs_query_t* ecs_subquery_new(
 void ecs_query_free(
     ecs_query_t *query)
 {
+    ecs_world_t *world = query->world;
+
     ecs_vector_each(query->empty_tables, ecs_matched_table_t, table, {
         free_matched_table(table);
     });
@@ -1817,6 +1820,21 @@ void ecs_query_free(
     ecs_vector_free(query->empty_tables);
     ecs_vector_free(query->table_slices);
     ecs_sig_deinit(&query->sig);
+
+    /* Find query in vector */
+    if (!(query->flags & EcsQueryIsSubquery) && world->queries) {
+        int32_t index = -1;
+        ecs_vector_each(world->queries, ecs_query_t*, q_ptr, {
+            if (*q_ptr == query) {
+                index = q_ptr_i;
+            }
+        });
+
+        ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
+        ecs_vector_remove_index(world->queries, ecs_query_t*, index);
+    }
+
+    ecs_os_free(query);
 }
 
 /* Create query iterator */

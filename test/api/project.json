@@ -472,7 +472,9 @@
                 "add_own_component",
                 "change_system_action",
                 "system_readeactivate",
-                "system_readeactivate_w_2_systems"
+                "system_readeactivate_w_2_systems",
+                "add_to_system_in_progress",
+                "add_to_lazy_system_in_progress"
             ]
         }, {
             "id": "Sorting",

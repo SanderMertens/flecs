@@ -1,24 +1,5 @@
 #include "private_api.h"
 
-/* When a new table is created, match it with the queries registered with the
- * world. If a query matches, it will call the esc_table_register_query 
- * function which will add the query to the table administration. */
-void ecs_notify_queries_of_table(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    int32_t i, count = ecs_sparse_count(world->queries);
-
-    for (i = 0; i < count; i ++) {
-        ecs_query_t *query = ecs_sparse_get(world->queries, ecs_query_t, i);
-
-        ecs_query_notify(world, query, &(ecs_query_event_t) {
-            .kind = EcsQueryTableMatch,
-            .table = table
-        });
-    }
-}
-
 const EcsComponent* ecs_component_from_id(
     ecs_world_t *world,
     ecs_entity_t e)
@@ -131,6 +112,34 @@ void register_child_table(
 }
 
 static
+ecs_flags32_t get_component_action_flags(
+    ecs_c_info_t *c_info) 
+{
+    ecs_flags32_t flags = 0;
+
+    if (c_info->lifecycle.ctor) {
+        flags |= EcsTableHasCtors;
+    }
+    if (c_info->lifecycle.dtor) {
+        flags |= EcsTableHasDtors;
+    }
+    if (c_info->lifecycle.copy) {
+        flags |= EcsTableHasCopy;
+    }
+    if (c_info->lifecycle.move) {
+        flags |= EcsTableHasMove;
+    }
+    if (c_info->on_add) {
+        flags |= EcsTableHasOnAdd;
+    }
+    if (c_info->on_remove) {
+        flags |= EcsTableHasOnRemove;
+    }    
+
+    return flags;  
+}
+
+static
 void init_edges(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -216,13 +225,31 @@ void init_edges(
         /* Set flags based on component actions */
         ecs_c_info_t *ci = ecs_get_c_info(world, e & ECS_ENTITY_MASK);
         if (ci) {
-            table->flags |= ecs_get_component_action_flags(ci);
+            table->flags |= get_component_action_flags(ci);
         }
     }
     
     /* Register as root table */
     if (!(table->flags & EcsTableHasParent)) {
         register_child_table(world, stage, table, 0);
+    }
+}
+
+static
+void notify_component_info(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t component,
+    ecs_c_info_t *c_info)
+{
+    ecs_flags32_t flags = get_component_action_flags(c_info);
+
+    if (ecs_type_owns_entity(world, table->type, component, true)) {
+        /* Reset lifecycle flags before setting */
+        table->flags &= ~EcsTableHasLifecycle;
+
+        /* Set lifecycle flags */
+        table->flags |= flags;
     }
 }
 
@@ -273,24 +300,15 @@ ecs_table_t *create_table(
 
     /* Don't notify queries if table is created in stage */
     if (stage == &world->stage) {
-        ecs_notify_queries_of_table(world, result);
+        ecs_notify_queries(world, &(ecs_query_event_t) {
+            .kind = EcsQueryTableMatch,
+            .table = result
+        });
     }
 
     ecs_log_pop();
 
     return result;
-}
-
-void ecs_init_root_table(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{
-    ecs_entities_t entities = {
-        .array = NULL,
-        .count = 0
-    };
-
-    init_table(world, stage, &stage->root, &entities);
 }
 
 static
@@ -969,4 +987,35 @@ ecs_table_t* ecs_table_from_type(
     ecs_entities_t components = ecs_type_to_entities(type);
     return ecs_table_find_or_create(
         world, stage, &components);
+}
+
+void ecs_init_root_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    ecs_entities_t entities = {
+        .array = NULL,
+        .count = 0
+    };
+
+    init_table(world, stage, &stage->root, &entities);
+}
+
+void ecs_table_notify(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_event_t *event)
+{
+    switch(event->kind) {
+    case EcsTableQueryMatch:
+        ecs_table_register_query(
+            world, table, event->query, event->matched_table_index);
+        break;
+    case EcsTableQueryUnmatch:
+        /* TODO */
+        break;
+    case EcsTableComponentInfo:
+        notify_component_info(world, table, event->component, event->c_info);
+        break;
+    }
 }
