@@ -1107,7 +1107,8 @@
                 "set_entity_random_components_12_threads",
                 "create_2m_entities_1_comp",
                 "create_2m_entities_bulk_1_comp",
-                "add_1k_tags"
+                "add_1k_tags",
+                "create_1m_set_two_components"
             ]
         }, {
             "id": "Snapshot",

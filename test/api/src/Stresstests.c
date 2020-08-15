@@ -284,3 +284,26 @@ void Stresstests_add_1k_tags() {
 
     ecs_fini(world);
 }
+
+void Stresstests_create_1m_set_two_components() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t i, j;
+    for (i = e; i < 1000000 + e; i ++) {
+        ecs_set(world, i, Position, {10, 20});
+    }
+
+    for (j = e; j < 1000000 + e; j ++) {
+        test_assert(ecs_get_type(world, j) != NULL);
+    }    
+
+    for (i = e; i < e + 1000000 + e; i ++) {
+        ecs_set(world, i, Velocity, {1, 2});
+    }    
+
+    ecs_fini(world);
+}
