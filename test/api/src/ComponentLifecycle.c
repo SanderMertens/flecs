@@ -906,3 +906,258 @@ void ComponentLifecycle_move_on_tag() {
 
     ecs_fini(world);
 }
+
+/* Position */
+
+static int ctor_position = 0;
+ECS_CTOR(Position, ptr, {
+    ctor_position ++;
+});
+
+static int dtor_position = 0;
+ECS_DTOR(Position, ptr, {
+    dtor_position ++;
+});
+
+static int copy_position = 0;
+ECS_COPY(Position, dst, src, {
+    copy_position ++;
+});
+
+static int move_position = 0;
+ECS_MOVE(Position, dst, src, {
+    move_position ++;
+});
+
+/* Velocity */
+
+static int ctor_velocity = 0;
+ECS_CTOR(Velocity, ptr, {
+    ctor_velocity ++;
+});
+
+static int dtor_velocity = 0;
+ECS_DTOR(Velocity, ptr, {
+    dtor_velocity ++;
+});
+
+static int copy_velocity = 0;
+ECS_COPY(Velocity, dst, src, {
+    copy_velocity ++;
+});
+
+static int move_velocity = 0;
+ECS_MOVE(Velocity, dst, src, {
+    move_velocity ++;
+});
+
+/* Mass */
+
+static int ctor_mass = 0;
+ECS_CTOR(Mass, ptr, {
+    ctor_mass ++;
+});
+
+static int dtor_mass = 0;
+ECS_DTOR(Mass, ptr, {
+    dtor_mass ++;
+});
+
+static int copy_mass = 0;
+ECS_COPY(Mass, dst, src, {
+    copy_mass ++;
+});
+
+static int move_mass = 0;
+ECS_MOVE(Mass, dst, src, {
+    move_mass ++;
+});
+
+/* Rotation */
+
+static int ctor_rotation = 0;
+ECS_CTOR(Rotation, ptr, {
+    ctor_rotation ++;
+});
+
+static int dtor_rotation = 0;
+ECS_DTOR(Rotation, ptr, {
+    dtor_rotation ++;
+});
+
+static int copy_rotation = 0;
+ECS_COPY(Rotation, dst, src, {
+    copy_rotation ++;
+});
+
+static int move_rotation = 0;
+ECS_MOVE(Rotation, dst, src, {
+    move_rotation ++;
+});
+
+void ComponentLifecycle_merge_to_different_table() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e, Position, Velocity, Rotation);
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Position),
+        .dtor = ecs_dtor(Position),
+        .copy = ecs_copy(Position),
+        .move = ecs_move(Position)
+    });
+
+    ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Velocity),
+        .dtor = ecs_dtor(Velocity),
+        .copy = ecs_copy(Velocity),
+        .move = ecs_move(Velocity)
+    });   
+
+    ecs_set(world, ecs_entity(Mass), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Mass),
+        .dtor = ecs_dtor(Mass),
+        .copy = ecs_copy(Mass),
+        .move = ecs_move(Mass)
+    });
+
+    ecs_set(world, ecs_entity(Rotation), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Rotation),
+        .dtor = ecs_dtor(Rotation),
+        .copy = ecs_copy(Rotation),
+        .move = ecs_move(Rotation)
+    });    
+
+    ecs_staging_begin(world);
+
+    /* Position is not destroyed here. It was never copied to the stage, and it
+     * still exists in the main stage, so it will only be destroyed after the
+     * data is merged from stage to main stage. */
+    ecs_remove(world, e, Position);
+    test_int(ctor_position, 0);
+    test_int(dtor_position, 0);
+    test_int(copy_position, 0);
+    test_int(move_position, 0);
+
+    /* Velocity, Rotation is constructed and copied to stage */
+    test_int(ctor_velocity, 1);
+    test_int(copy_velocity, 1);
+    test_int(ctor_rotation, 1);
+    test_int(copy_rotation, 1);
+
+    /* Mass is constructed in stage */
+    ecs_add(world, e, Mass);
+    test_int(ctor_mass, 1);
+    test_int(ctor_velocity, 1);
+    test_int(copy_velocity, 1);
+
+    /* Destroy Rotation in stage. This should trigger the destructor, as it
+     * was copied to the stage. */
+    ecs_remove(world, e, Rotation);
+    test_int(dtor_rotation, 1);
+    test_int(ctor_velocity, 1);
+    test_int(copy_velocity, 1);
+
+    ecs_staging_end(world, false);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+    test_assert(ecs_has(world, e, Mass));
+    test_assert(!ecs_has(world, e, Rotation));
+
+    /* Position is destroyed in main stage */
+    test_int(ctor_position, 0);
+    test_int(dtor_position, 1);
+    test_int(copy_position, 0);
+    test_int(move_position, 0);
+
+    /* Velocity should have been moved */ 
+    test_int(ctor_velocity, 1); /* 1 because constructed in stage */
+    test_int(dtor_velocity, 0);
+    test_int(copy_velocity, 1); /* 1 because copied to stage */
+    test_int(move_velocity, 1);
+
+    /* Rotation is also destroyed in the main stage. A copy of Rotation was made
+     * to the stage, and thus it needs to be destructed twice. */
+    test_int(ctor_rotation, 1); /* 1 because constructed in stage */
+    test_int(dtor_rotation, 2); /* 2 because destroyed in stage */
+    test_int(copy_rotation, 1); /* 1 because copied to stage */
+    test_int(move_rotation, 0);
+
+    /* Mass is moved to main stage */
+    test_int(ctor_mass, 2); /* Component constructed in stage and main stage */
+    test_int(dtor_mass, 0);
+    test_int(copy_mass, 0);
+    test_int(move_mass, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_delete_in_stage() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, e, Position, Velocity, Mass);
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Position),
+        .dtor = ecs_dtor(Position),
+        .copy = ecs_copy(Position),
+        .move = ecs_move(Position)
+    });
+
+    ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Velocity),
+        .dtor = ecs_dtor(Velocity),
+        .copy = ecs_copy(Velocity),
+        .move = ecs_move(Velocity)
+    });   
+
+    ecs_set(world, ecs_entity(Mass), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Mass),
+        .dtor = ecs_dtor(Mass),
+        .copy = ecs_copy(Mass),
+        .move = ecs_move(Mass)
+    }); 
+
+    ecs_staging_begin(world);
+
+    /* None of the components should be destructed while in the stage as they
+     * were never copied to the stage */
+    ecs_delete(world, e);
+    test_int(dtor_position, 0);
+    test_int(dtor_velocity, 0);
+    test_int(dtor_mass, 0);
+
+    ecs_staging_end(world, false);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_has(world, e, Mass));
+
+    /* Position is destroyed in main stage */
+    test_int(ctor_position, 0);
+    test_int(dtor_position, 1);
+    test_int(copy_position, 0);
+    test_int(move_position, 0);
+
+    /* Velocity is destroyed in main stage */
+    test_int(ctor_velocity, 0);
+    test_int(dtor_velocity, 1);
+    test_int(copy_velocity, 0);
+    test_int(move_velocity, 0);
+
+    /* Mass is destroyed in main stage */
+    test_int(ctor_mass, 0);
+    test_int(dtor_mass, 1);
+    test_int(copy_mass, 0);
+    test_int(move_mass, 0);    
+}

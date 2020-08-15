@@ -102,7 +102,7 @@ void ecs_table_writer_finalize_table(
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 ecs_table_delete(world, &world->stage, 
-                    table, table_data, record_ptr->row - 1);
+                    table, table_data, record_ptr->row - 1, false);
             }
         }
 

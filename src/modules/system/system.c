@@ -674,8 +674,7 @@ void trigger_set(
 
         ecs_notify_tables(world, &(ecs_table_event_t) {
             .kind = EcsTableComponentInfo,
-            .component = c,
-            .c_info = c_info
+            .component = c
         });        
 
         ecs_trace_1("trigger #[green]%s#[normal] created for component #[red]%s",

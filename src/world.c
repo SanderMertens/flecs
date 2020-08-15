@@ -342,6 +342,7 @@ void ecs_set_component_actions_w_entity(
 #endif
 
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
+    c_info->component = component;
     c_info->lifecycle = *lifecycle;
 
     /* If no constructor is set, invoking any of the other lifecycle actions is
@@ -354,8 +355,7 @@ void ecs_set_component_actions_w_entity(
 
     ecs_notify_tables(world, &(ecs_table_event_t) {
         .kind = EcsTableComponentInfo,
-        .component = component,
-        .c_info = c_info
+        .component = component
     });
 }
 

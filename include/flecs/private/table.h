@@ -83,7 +83,8 @@ int32_t ecs_table_append(
     ecs_table_t *table,
     ecs_data_t *data,
     ecs_entity_t entity,
-    ecs_record_t *record);
+    ecs_record_t *record,
+    bool construct);
 
 /* Delete an entity from the table. */
 void ecs_table_delete(
@@ -91,11 +92,13 @@ void ecs_table_delete(
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
-    int32_t index);
+    int32_t index,
+    bool destruct);
 
 /* Move a row from one table to another */
 void ecs_table_move(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_entity_t dst_entity,
     ecs_entity_t src_entity,
     ecs_table_t *new_table,
@@ -104,8 +107,7 @@ void ecs_table_move(
     ecs_table_t *old_table,
     ecs_data_t *old_data,
     int32_t old_index,
-    bool is_copy,
-    bool is_move);
+    bool same_stage);
 
 /* Grow table with specified number of records. Populate table with entities,
  * starting from specified entity id. */

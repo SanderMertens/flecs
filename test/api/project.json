@@ -400,7 +400,9 @@
                 "ctor_on_tag",
                 "dtor_on_tag",
                 "copy_on_tag",
-                "move_on_tag"
+                "move_on_tag",
+                "merge_to_different_table",
+                "delete_in_stage"
             ]
         }, {
             "id": "Pipeline",
@@ -1121,6 +1123,7 @@
             "id": "Stresstests",
             "setup": true,
             "testcases": [
+                "create_1m_set_two_components",
                 "create_delete_entity_random_components",
                 "set_entity_random_components",
                 "create_delete_entity_random_components_staged",

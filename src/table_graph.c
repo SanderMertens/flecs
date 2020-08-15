@@ -112,34 +112,6 @@ void register_child_table(
 }
 
 static
-ecs_flags32_t get_component_action_flags(
-    ecs_c_info_t *c_info) 
-{
-    ecs_flags32_t flags = 0;
-
-    if (c_info->lifecycle.ctor) {
-        flags |= EcsTableHasCtors;
-    }
-    if (c_info->lifecycle.dtor) {
-        flags |= EcsTableHasDtors;
-    }
-    if (c_info->lifecycle.copy) {
-        flags |= EcsTableHasCopy;
-    }
-    if (c_info->lifecycle.move) {
-        flags |= EcsTableHasMove;
-    }
-    if (c_info->on_add) {
-        flags |= EcsTableHasOnAdd;
-    }
-    if (c_info->on_remove) {
-        flags |= EcsTableHasOnRemove;
-    }    
-
-    return flags;  
-}
-
-static
 void init_edges(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -221,35 +193,16 @@ void init_edges(
                 ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
             }
         }
-
-        /* Set flags based on component actions */
-        ecs_c_info_t *ci = ecs_get_c_info(world, e & ECS_ENTITY_MASK);
-        if (ci) {
-            table->flags |= get_component_action_flags(ci);
-        }
     }
+
+    /* Register component info flags for all columns */
+    ecs_table_notify(world, table, &(ecs_table_event_t){
+        .kind = EcsTableComponentInfo
+    });
     
     /* Register as root table */
     if (!(table->flags & EcsTableHasParent)) {
         register_child_table(world, stage, table, 0);
-    }
-}
-
-static
-void notify_component_info(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t component,
-    ecs_c_info_t *c_info)
-{
-    ecs_flags32_t flags = get_component_action_flags(c_info);
-
-    if (ecs_type_owns_entity(world, table->type, component, true)) {
-        /* Reset lifecycle flags before setting */
-        table->flags &= ~EcsTableHasLifecycle;
-
-        /* Set lifecycle flags */
-        table->flags |= flags;
     }
 }
 
@@ -261,6 +214,7 @@ void init_table(
     ecs_entities_t *entities)
 {
     table->type = entities_to_type(entities);
+    table->c_info = NULL;
     table->data = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
@@ -270,12 +224,12 @@ void init_table(
     table->on_set_override = NULL;
     table->un_set_all = NULL;
     table->alloc_count = 0;
-    
-    init_edges(world, stage, table);
 
     table->queries = NULL;
     table->column_count = data_column_count(world, table);
     table->sw_column_count = switch_column_count(table);
+
+    init_edges(world, stage, table);
 }
 
 static
@@ -286,7 +240,6 @@ ecs_table_t *create_table(
 {
     ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-
     init_table(world, stage, result, entities);
 
 #ifndef NDEBUG
@@ -999,23 +952,4 @@ void ecs_init_root_table(
     };
 
     init_table(world, stage, &stage->root, &entities);
-}
-
-void ecs_table_notify(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_table_event_t *event)
-{
-    switch(event->kind) {
-    case EcsTableQueryMatch:
-        ecs_table_register_query(
-            world, table, event->query, event->matched_table_index);
-        break;
-    case EcsTableQueryUnmatch:
-        /* TODO */
-        break;
-    case EcsTableComponentInfo:
-        notify_component_info(world, table, event->component, event->c_info);
-        break;
-    }
 }

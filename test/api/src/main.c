@@ -359,6 +359,8 @@ void ComponentLifecycle_ctor_on_tag(void);
 void ComponentLifecycle_dtor_on_tag(void);
 void ComponentLifecycle_copy_on_tag(void);
 void ComponentLifecycle_move_on_tag(void);
+void ComponentLifecycle_merge_to_different_table(void);
+void ComponentLifecycle_delete_in_stage(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -1023,6 +1025,7 @@ void MultiThreadStaging_new_w_count(void);
 
 // Testsuite 'Stresstests'
 void Stresstests_setup(void);
+void Stresstests_create_1m_set_two_components(void);
 void Stresstests_create_delete_entity_random_components(void);
 void Stresstests_set_entity_random_components(void);
 void Stresstests_create_delete_entity_random_components_staged(void);
@@ -2448,6 +2451,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "move_on_tag",
         ComponentLifecycle_move_on_tag
+    },
+    {
+        "merge_to_different_table",
+        ComponentLifecycle_merge_to_different_table
+    },
+    {
+        "delete_in_stage",
+        ComponentLifecycle_delete_in_stage
     }
 };
 
@@ -4954,6 +4965,10 @@ bake_test_case MultiThreadStaging_testcases[] = {
 
 bake_test_case Stresstests_testcases[] = {
     {
+        "create_1m_set_two_components",
+        Stresstests_create_1m_set_two_components
+    },
+    {
         "create_delete_entity_random_components",
         Stresstests_create_delete_entity_random_components
     },
@@ -5508,7 +5523,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        22,
+        24,
         ComponentLifecycle_testcases
     },
     {
@@ -5704,7 +5719,7 @@ static bake_test_suite suites[] = {
         "Stresstests",
         Stresstests_setup,
         NULL,
-        14,
+        15,
         Stresstests_testcases
     },
     {

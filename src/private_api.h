@@ -252,12 +252,6 @@ void ecs_init_root_table(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-void ecs_table_register_query(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query,
-    int32_t matched_table_index);
-
 /* Unset components in table */
 void ecs_table_unset(
     ecs_world_t *world,

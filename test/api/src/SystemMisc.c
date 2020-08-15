@@ -1035,8 +1035,6 @@ void SystemMisc_system_readeactivate_w_2_systems() {
 void SystemMisc_add_to_system_in_progress() {
     ecs_world_t *world = ecs_init();
 
-    ecs_tracing_enable(true);
-
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
@@ -1050,15 +1048,35 @@ void SystemMisc_add_to_system_in_progress() {
 
     ecs_staging_end(world, false);
 
-    printf("progress\n");
     ecs_progress(world, 0);
     test_assert(dummy_invoked == true);
-
-    abort();
 
     ecs_fini(world);
 }
 
+static
+void Foo(ecs_iter_t *it) { }
+
 void SystemMisc_add_to_lazy_system_in_progress() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, [out] Position, SYSTEM:OnDemand);
+
+    ecs_new(world, Position);
+
+    ecs_staging_begin(world);
+
+    ecs_add(world, Dummy, Tag);
+
+    ecs_staging_end(world, false);
+
+    ECS_SYSTEM(world, Foo, EcsOnUpdate, [in] Position);
+
+    ecs_progress(world, 0);
+    test_assert(dummy_invoked == true);
+
+    ecs_fini(world);
 }
