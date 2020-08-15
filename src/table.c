@@ -689,6 +689,10 @@ int32_t ecs_table_append(
     int32_t sw_column_count = table->sw_column_count;
     bool realloc = false;
 
+    if (entity > ECS_HI_ENTITY_ID) {
+        record = NULL;
+    }
+
     if (column_count || sw_column_count) {
         ecs_column_t *columns = data->columns;
         ecs_sw_column_t *sw_columns = data->sw_columns;
