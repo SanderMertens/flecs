@@ -31,7 +31,9 @@ jobs:
         bake examples/cpp
          
     - name: Run tests
-      run: bake test
+      run: |
+        bake examples/os_api/flecs-os_api-bake
+        bake test
 
   macos:
     timeout-minutes: 20
@@ -52,7 +54,9 @@ jobs:
       run: bake --strict --cfg release
          
     - name: Run tests
-      run: bake test 
+      run: |
+        bake examples/os_api/flecs-os_api-bake
+        bake test
 
   windows:
     timeout-minutes: 10
@@ -74,6 +78,7 @@ jobs:
 
     - name: Run tests
       run: |
+        bake examples/os_api/flecs-os_api-bake
         bake/bake run test\cpp_api
         bake/bake run test\api
         bake/bake run test\collections
