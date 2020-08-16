@@ -121,17 +121,10 @@ void ecs_component_monitor_free(
 /* -- Public functions -- */
 
 ecs_world_t *ecs_mini(void) {
-    ecs_os_set_api_defaults();
+    ecs_os_init();
 
     ecs_trace_1("bootstrap");
     ecs_log_push();
-
-#ifdef __BAKE__
-    ut_init(NULL);
-    if (ut_load_init(NULL, NULL, NULL, NULL)) {
-        ecs_os_err("warning: failed to initialize package loader");
-    }
-#endif
 
     ecs_assert(ecs_os_api.malloc != NULL, ECS_MISSING_OS_API, "malloc");
     ecs_assert(ecs_os_api.realloc != NULL, ECS_MISSING_OS_API, "realloc");
@@ -511,9 +504,7 @@ int ecs_fini(
     /* The end of the world */
     ecs_os_free(world);
 
-#ifdef __BAKE__
-    ut_deinit();
-#endif    
+    ecs_os_fini(); 
 
     return 0;
 }

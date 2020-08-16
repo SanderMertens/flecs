@@ -1,6 +1,4 @@
-#include "flecs.h"
-
-#ifdef __BAKE__
+#include <flecs_os_api_bake.h>
 
 static
 ecs_os_thread_t bake_thread_new(
@@ -130,31 +128,47 @@ char* bake_module_to_etc(
     }
 }
 
-void ecs_os_api_impl(ecs_os_api_t *api) {
-    api->thread_new = bake_thread_new;
-    api->thread_join = bake_thread_join;
-    api->ainc = bake_ainc;
-    api->adec = bake_adec;
-    api->mutex_new = bake_mutex_new;
-    api->mutex_free = bake_mutex_free;
-    api->mutex_lock = bake_mutex_lock;
-    api->mutex_unlock = bake_mutex_unlock;
-    api->cond_new = bake_cond_new;
-    api->cond_free = bake_cond_free;
-    api->cond_signal = bake_cond_signal;
-    api->cond_broadcast = bake_cond_broadcast;
-    api->cond_wait = bake_cond_wait;
-    api->dlopen = bake_dlopen;
-    api->dlproc = bake_dlproc;
-    api->dlclose = bake_dlclose;
-    api->module_to_dl = bake_module_to_dl;
-    api->module_to_etc = bake_module_to_etc;
+static
+void bake_init(void)
+{
+    ut_init(NULL);
+    if (ut_load_init(NULL, NULL, NULL, NULL)) {
+        ecs_os_err("warning: failed to initialize package loader");
+    }
 }
 
-#else
-
-void ecs_os_api_impl(ecs_os_api_t *api) {
-    (void)api;
+static
+void bake_fini(void)
+{
+    ut_deinit();
 }
 
-#endif
+void bake_set_os_api(void) {
+    ecs_os_set_api_defaults();
+
+    ecs_os_api_t api = ecs_os_api;
+
+    api.init = bake_init;
+    api.fini = bake_fini;
+    api.thread_new = bake_thread_new;
+    api.thread_join = bake_thread_join;
+    api.ainc = bake_ainc;
+    api.adec = bake_adec;
+    api.mutex_new = bake_mutex_new;
+    api.mutex_free = bake_mutex_free;
+    api.mutex_lock = bake_mutex_lock;
+    api.mutex_unlock = bake_mutex_unlock;
+    api.cond_new = bake_cond_new;
+    api.cond_free = bake_cond_free;
+    api.cond_signal = bake_cond_signal;
+    api.cond_broadcast = bake_cond_broadcast;
+    api.cond_wait = bake_cond_wait;
+    api.dlopen = bake_dlopen;
+    api.dlproc = bake_dlproc;
+    api.dlclose = bake_dlclose;
+    api.module_to_dl = bake_module_to_dl;
+    api.module_to_etc = bake_module_to_etc;
+
+    ecs_os_set_api(&api);
+}
+

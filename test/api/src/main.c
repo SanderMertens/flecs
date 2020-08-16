@@ -892,6 +892,7 @@ void Run_run_w_interrupt(void);
 void Run_run_staging(void);
 
 // Testsuite 'MultiThread'
+void MultiThread_setup(void);
 void MultiThread_2_thread_1_entity(void);
 void MultiThread_2_thread_2_entity(void);
 void MultiThread_2_thread_5_entity(void);
@@ -989,6 +990,7 @@ void SingleThreadStaging_get_mutable_w_add(void);
 void SingleThreadStaging_on_add_after_new_type_in_progress(void);
 
 // Testsuite 'MultiThreadStaging'
+void MultiThreadStaging_setup(void);
 void MultiThreadStaging_2_threads_add_to_current(void);
 void MultiThreadStaging_3_threads_add_to_current(void);
 void MultiThreadStaging_4_threads_add_to_current(void);
@@ -998,6 +1000,7 @@ void MultiThreadStaging_2_threads_on_add(void);
 void MultiThreadStaging_new_w_count(void);
 
 // Testsuite 'Stresstests'
+void Stresstests_setup(void);
 void Stresstests_create_delete_entity_random_components(void);
 void Stresstests_set_entity_random_components(void);
 void Stresstests_create_delete_entity_random_components_staged(void);
@@ -5568,7 +5571,7 @@ static bake_test_suite suites[] = {
     },
     {
         "MultiThread",
-        NULL,
+        MultiThread_setup,
         NULL,
         34,
         MultiThread_testcases
@@ -5582,14 +5585,14 @@ static bake_test_suite suites[] = {
     },
     {
         "MultiThreadStaging",
-        NULL,
+        MultiThreadStaging_setup,
         NULL,
         7,
         MultiThreadStaging_testcases
     },
     {
         "Stresstests",
-        NULL,
+        Stresstests_setup,
         NULL,
         14,
         Stresstests_testcases

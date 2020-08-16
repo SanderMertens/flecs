@@ -25,7 +25,6 @@ flecs_src = files(
     'src/addons/dbg.c',
     'src/hierarchy.c',
     'src/addons/module.c',
-    'src/addons/os_api_impl.c',
     'src/addons/queue.c',
     'src/addons/reader.c',
     'src/addons/snapshot.c',
