@@ -58,6 +58,13 @@ void Traits_get_mut_trait(void);
 void Traits_get_mut_trait_existing(void);
 void Traits_get_mut_trait_tag(void);
 void Traits_get_mut_trait_tag_existing(void);
+void Traits_type_w_trait(void);
+void Traits_type_w_trait_tag(void);
+void Traits_type_w_trait_tags(void);
+void Traits_type_w_tag_trait(void);
+void Traits_override_trait_w_type(void);
+void Traits_override_trait_w_type_tag(void);
+void Traits_override_tag_trait_w_type(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -341,6 +348,34 @@ bake_test_case Traits_testcases[] = {
     {
         "get_mut_trait_tag_existing",
         Traits_get_mut_trait_tag_existing
+    },
+    {
+        "type_w_trait",
+        Traits_type_w_trait
+    },
+    {
+        "type_w_trait_tag",
+        Traits_type_w_trait_tag
+    },
+    {
+        "type_w_trait_tags",
+        Traits_type_w_trait_tags
+    },
+    {
+        "type_w_tag_trait",
+        Traits_type_w_tag_trait
+    },
+    {
+        "override_trait_w_type",
+        Traits_override_trait_w_type
+    },
+    {
+        "override_trait_w_type_tag",
+        Traits_override_trait_w_type_tag
+    },
+    {
+        "override_tag_trait_w_type",
+        Traits_override_tag_trait_w_type
     }
 };
 
@@ -675,7 +710,7 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        16,
+        23,
         Traits_testcases
     },
     {

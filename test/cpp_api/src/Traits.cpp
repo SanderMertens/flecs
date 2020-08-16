@@ -348,3 +348,142 @@ void Traits_get_mut_trait_tag_existing() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
+
+void Traits_type_w_trait() {
+    flecs::world world;
+
+    auto Type = flecs::type(world)
+        .add_trait<Trait, Position>();
+
+    auto e = flecs::entity(world)
+        .add(Type);
+
+    test_assert((e.has_trait<Trait, Position>()));
+}
+
+void Traits_type_w_trait_tag() {
+    flecs::world world;
+
+    auto Tag = flecs::entity(world);
+
+    auto Type = flecs::type(world)
+        .add_trait<Trait>(Tag);
+
+    auto e = flecs::entity(world)
+        .add(Type);
+
+    test_assert((e.has_trait<Trait>(Tag)));
+}
+
+void Traits_type_w_trait_tags() {
+    flecs::world world;
+
+    auto Tag = flecs::entity(world);
+    auto Trait = flecs::entity(world);
+
+    auto Type = flecs::type(world)
+        .add_trait(Trait, Tag);
+
+    auto e = flecs::entity(world)
+        .add(Type);
+
+    test_assert((e.has_trait(Trait, Tag)));
+}
+
+void Traits_type_w_tag_trait() {
+    flecs::world world;
+
+    auto Tag = flecs::entity(world);
+
+    auto Type = flecs::type(world)
+        .add_trait<Trait>(Tag);
+
+    auto e = flecs::entity(world)
+        .add(Type);
+
+    test_assert((e.has_trait<Trait>(Tag)));
+}
+
+void Traits_override_trait_w_type() {
+    flecs::world world;
+
+    auto Prefab = flecs::prefab(world, "Prefab")
+        .set_trait<Trait, Position>({10});
+
+    auto Type = flecs::type(world)
+        .add_instanceof(Prefab)
+        .add_trait<Trait, Position>();
+
+    auto e = flecs::entity(world)
+        .add(Type);
+
+    test_assert((e.has_trait<Trait, Position>()));
+
+    const Trait *t_1 = Prefab.get_trait<Trait, Position>();
+    test_assert(t_1 != nullptr);
+    test_int(t_1->value, 10);
+
+    const Trait *t_2 = e.get_trait<Trait, Position>();
+    test_assert(t_2 != nullptr);
+
+    test_assert(t_1 != t_2);
+    test_int(t_2->value, 10);
+}
+
+void Traits_override_trait_w_type_tag() {
+    flecs::world world;
+
+    auto Tag = flecs::entity(world);
+
+    auto Prefab = flecs::prefab(world, "Prefab")
+        .set_trait<Trait>({10}, Tag);
+
+    auto Type = flecs::type(world)
+        .add_instanceof(Prefab)
+        .add_trait<Trait>(Tag);
+
+    auto e = flecs::entity(world)
+        .add(Type);
+
+    test_assert((e.has_trait<Trait>(Tag)));
+
+    const Trait *t_1 = Prefab.get_trait<Trait>(Tag);
+    test_assert(t_1 != nullptr);
+    test_int(t_1->value, 10);
+
+    const Trait *t_2 = e.get_trait<Trait>(Tag);
+    test_assert(t_2 != nullptr);
+
+    test_assert(t_1 != t_2);
+    test_int(t_2->value, 10);    
+}
+
+void Traits_override_tag_trait_w_type() {
+    flecs::world world;
+
+    auto Trait = flecs::entity(world);
+
+    auto Prefab = flecs::prefab(world, "Prefab")
+        .set_trait_tag<Position>(Trait, {10, 20});
+
+    auto Type = flecs::type(world)
+        .add_instanceof(Prefab)
+        .add_trait_tag<Position>(Trait);
+
+    auto e = flecs::entity(world)
+        .add(Type);
+
+    test_assert((e.has_trait_tag<Position>(Trait)));
+
+    const Position *p_1 = Prefab.get_trait_tag<Position>(Trait);
+    test_assert(p_1 != nullptr);
+    test_int(p_1->x, 10);
+    test_int(p_1->y, 20);
+
+    const Position *p_2 = e.get_trait_tag<Position>(Trait);
+    test_assert(p_2 != nullptr);
+
+    test_assert(p_1 != p_2);
+    test_int(p_2->x, 10);
+    test_int(p_2->y, 20);
+}

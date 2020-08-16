@@ -65,7 +65,14 @@
                 "get_mut_trait",
                 "get_mut_trait_existing",
                 "get_mut_trait_tag",
-                "get_mut_trait_tag_existing"
+                "get_mut_trait_tag_existing",
+                "type_w_trait",
+                "type_w_trait_tag",
+                "type_w_trait_tags",
+                "type_w_tag_trait",
+                "override_trait_w_type",
+                "override_trait_w_type_tag",
+                "override_tag_trait_w_type"
             ]
         }, {
             "id": "Switch",

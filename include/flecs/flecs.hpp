@@ -2267,6 +2267,57 @@ public:
         return *this;
     }
 
+    template <typename T, typename C>
+    type& add_trait() {
+        m_type = ecs_type_add(m_world, m_type, 
+            ecs_trait(_::component_info<C>::id(m_world),
+                      _::component_info<T>::id(m_world)));
+
+        m_normalized = ecs_type_add(m_world, m_normalized, 
+            ecs_trait(_::component_info<C>::id(m_world),
+                      _::component_info<T>::id(m_world)));
+        
+        sync_from_me();
+        return *this;
+    }
+
+    template <typename T>
+    type& add_trait(flecs::entity component) {
+        m_type = ecs_type_add(m_world, m_type, 
+            ecs_trait(component.id(),
+                      _::component_info<T>::id(m_world)));
+
+        m_normalized = ecs_type_add(m_world, m_normalized, 
+            ecs_trait(component.id(),
+                      _::component_info<T>::id(m_world)));
+        
+        sync_from_me();
+        return *this;
+    }
+
+    type& add_trait(flecs::entity trait, flecs::entity component) {
+        m_type = ecs_type_add(m_world, m_type, 
+            ecs_trait(component.id(), trait.id()));
+
+        m_normalized = ecs_type_add(m_world, m_normalized, 
+            ecs_trait(component.id(), trait.id()));
+        
+        sync_from_me();
+        return *this;
+    }      
+
+    template <typename C>
+    type& add_trait_tag(flecs::entity trait) {
+        m_type = ecs_type_add(m_world, m_type, 
+            ecs_trait(_::component_info<C>::id(), trait.id()));
+
+        m_normalized = ecs_type_add(m_world, m_normalized, 
+            ecs_trait(_::component_info<C>::id(), trait.id()));
+        
+        sync_from_me();
+        return *this;
+    }            
+
     template <typename ... Components>
     type& add() {
         std::stringstream str;
