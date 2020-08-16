@@ -78,7 +78,7 @@ jobs:
 
     - name: Run tests
       run: |
-        bake examples/os_api/flecs-os_api-bake
+        bake/bake examples/os_api/flecs-os_api-bake
         bake/bake run test\cpp_api
         bake/bake run test\api
         bake/bake run test\collections
