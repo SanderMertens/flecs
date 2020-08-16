@@ -34,6 +34,8 @@ ECS (Entity Component System) is a design pattern often found in gaming and simu
 - [C examples](examples/c)
 - [C++ examples](examples/cpp)
 
+See [Docsforge](http://flecs.docsforge.com/) for a more readable version of the documentation.
+
 ## Example
 This is a simple flecs example in the C++11 API:
 
