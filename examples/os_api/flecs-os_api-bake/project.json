@@ -1,0 +1,12 @@
+{
+    "id": "flecs.os_api.bake",
+    "type": "package",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "Bake OS API implementation",
+        "use": [
+            "flecs",
+            "bake.util"
+        ]
+    }
+}

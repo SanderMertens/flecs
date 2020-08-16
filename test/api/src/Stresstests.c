@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Stresstests_setup() {
+    bake_set_os_api();
+}
+
 static
 void add_random(
     ecs_world_t *world,

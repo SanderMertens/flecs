@@ -1,6 +1,7 @@
 #include "private_api.h"
 
 static bool ecs_os_api_initialized = false;
+static int ecs_os_api_init_count = 0;
 
 ecs_os_api_t ecs_os_api;
 
@@ -15,6 +16,27 @@ void ecs_os_set_api(
     if (!ecs_os_api_initialized) {
         ecs_os_api = *os_api;
         ecs_os_api_initialized = true;
+    }
+}
+
+void ecs_os_init(void)
+{
+    if (!ecs_os_api_initialized) {
+        ecs_os_set_api_defaults();
+    }
+    
+    if (!(ecs_os_api_init_count ++)) {
+        if (ecs_os_api.init) {
+            ecs_os_api.init();
+        }
+    }
+}
+
+void ecs_os_fini(void) {
+    if (!--ecs_os_api_init_count) {
+        if (ecs_os_api.fini) {
+            ecs_os_api.fini();
+        }
     }
 }
 
@@ -193,8 +215,6 @@ char* ecs_os_api_module_to_etc(const char *module) {
     return ecs_strbuf_get(&lib);
 }
 
-void ecs_os_api_impl(ecs_os_api_t *api);
-
 void ecs_os_set_api_defaults(void)
 {
     /* Don't overwrite if already initialized */
@@ -212,8 +232,6 @@ void ecs_os_set_api_defaults(void)
 
     /* Strings */
     ecs_os_api.strdup = ecs_os_api_strdup;
-
-    ecs_os_api_impl(&ecs_os_api);
 
     /* Time */
     ecs_os_api.sleep = ecs_os_time_sleep;

@@ -20,11 +20,8 @@
 #include <limits.h>
 #include <string.h>
 
-/* Non-standard but required. If not provided by platform, add manually. If
- * flecs is built by bake, stdint.h from bake is included. */
-#ifndef __BAKE__
+/* Non-standard but required. If not provided by platform, add manually. */
 #include <stdint.h>
-#endif
 
 /* Contains macro's for importing / exporting symbols */
 #include "flecs/bake_config.h"

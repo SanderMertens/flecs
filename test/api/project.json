@@ -7,7 +7,8 @@
         "public": false,
         "coverage": false,
         "use": [
-            "flecs"
+            "flecs",
+            "flecs.os_api.bake"
         ]
     },
     "test": {
@@ -982,6 +983,7 @@
             ]
         }, {
             "id": "MultiThread",
+            "setup": true,
             "testcases": [
                 "2_thread_1_entity",
                 "2_thread_2_entity",
@@ -1083,6 +1085,7 @@
             ]
         }, {
             "id": "MultiThreadStaging",
+            "setup": true,
             "testcases": [
                 "2_threads_add_to_current",
                 "3_threads_add_to_current",
@@ -1094,6 +1097,7 @@
             ]
         }, {
             "id": "Stresstests",
+            "setup": true,
             "testcases": [
                 "create_delete_entity_random_components",
                 "set_entity_random_components",

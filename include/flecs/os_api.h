@@ -43,6 +43,14 @@ typedef uintptr_t ecs_os_dl_t;
 /* Generic function pointer type */
 typedef void (*ecs_os_proc_t)(void);
 
+/* OS API init */
+typedef 
+void (*ecs_os_api_init_t)(void);
+
+/* OS API deinit */
+typedef 
+void (*ecs_os_api_fini_t)(void);
+
 /* Memory management */
 typedef 
 void* (*ecs_os_api_malloc_t)(
@@ -164,6 +172,10 @@ char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
 typedef struct ecs_os_api_t {
+    /* API init / deinit */
+    ecs_os_api_init_t init;
+    ecs_os_api_fini_t fini;
+
     /* Memory management */
     ecs_os_api_malloc_t malloc;
     ecs_os_api_realloc_t realloc;
@@ -223,6 +235,12 @@ typedef struct ecs_os_api_t {
 
 FLECS_EXPORT
 extern ecs_os_api_t ecs_os_api;
+
+FLECS_EXPORT
+void ecs_os_init(void);
+
+FLECS_EXPORT
+void ecs_os_fini(void);
 
 FLECS_EXPORT
 void ecs_os_set_api(

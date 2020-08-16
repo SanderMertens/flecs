@@ -1,5 +1,9 @@
 #include <api.h>
 
+void MultiThreadStaging_setup() {
+    bake_set_os_api();
+}
+
 static
 void Add_to_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);

@@ -18,9 +18,7 @@
 #define FLECS_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
-#ifdef __BAKE__
-#include <bake_util.h>
-#endif
+/* No dependencies */
 
 /* Convenience macro for exporting symbols */
 #ifndef flecs_STATIC

@@ -1,5 +1,9 @@
 #include <api.h>
 
+void MultiThread_setup() {
+    bake_set_os_api();
+}
+
 void Progress(ecs_iter_t *it) {
     int row;
     for (row = 0; row < it->count; row ++) {
@@ -1049,3 +1053,4 @@ void MultiThread_reactive_system() {
 
     ecs_fini(world);
 }
+
