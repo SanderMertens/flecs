@@ -192,24 +192,6 @@ void ecs_get_column_info(
     ecs_column_info_t *cinfo,
     bool get_all);
 
-void ecs_components_construct(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count,
-    ecs_column_info_t *component_info,
-    int32_t component_count);
-
-void ecs_components_destruct(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count,
-    ecs_column_info_t *component_info,
-    int32_t component_count);
-
 void ecs_run_add_actions(
     ecs_world_t *world,
     ecs_stage_t *stage,

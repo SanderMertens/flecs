@@ -205,54 +205,6 @@ void run_un_set_handlers(
 }
 
 static
-void run_remove_actions(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count,
-    bool dtor_only)
-{
-    if (count) {
-        ecs_entities_t components = ecs_type_to_entities(table->type);
-        ecs_column_info_t *cinfo = NULL;
-        ecs_column_info_t cinfo_buff[ECS_MAX_ADD_REMOVE];
-        if (components.count < ECS_MAX_ADD_REMOVE) {
-            cinfo = cinfo_buff;
-            ecs_get_column_info(world, table, &components, cinfo, true);
-        } else {
-            cinfo = ecs_os_malloc(ECS_SIZEOF(ecs_column_info_t) * components.count);
-            ecs_get_column_info(world, table, &components, cinfo, true);
-        }
-
-        if (!dtor_only) {
-            ecs_run_monitors(world, &world->stage, table, NULL, 
-                    row, count, table->un_set_all);
-        }
-
-        /* Run deinit actions (dtors) for components. Don't run triggers */
-        ecs_components_destruct(world, &world->stage, data, row, count, 
-            cinfo, components.count);
-
-        if (cinfo != cinfo_buff) {
-            ecs_os_free(cinfo);
-        }
-    }
-}
-
-void ecs_table_destruct(
-    ecs_world_t *world, 
-    ecs_table_t *table, 
-    ecs_data_t *data, 
-    int32_t row, 
-    int32_t count)
-{
-    if (table->flags & EcsTableHasDtors) {
-        run_remove_actions(world, table, data, row, count, true);
-    }
-}
-
-static
 int compare_matched_query(
     const void *ptr1,
     const void *ptr2)
@@ -583,6 +535,123 @@ ecs_data_t* ecs_table_get_or_create_data(
     return result;   
 }
 
+static
+void ctor_component(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_column_t *column,
+    ecs_entity_t *entities,
+    int32_t row,
+    int32_t count)
+{
+    /* A new component is constructed */
+    ecs_xtor_t ctor;
+    ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+    if (cdata && (ctor = cdata->lifecycle.ctor)) {
+        void *ctx = cdata->lifecycle.ctx;
+        int16_t size = column->size;
+        int16_t alignment = column->alignment;
+
+        void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
+
+        ctor(world, component, entities, ptr, 
+            ecs_to_size_t(size), count, ctx);
+    }
+}
+
+static
+void dtor_component(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_column_t *column,
+    ecs_entity_t *entities,
+    int32_t row,
+    int32_t count)
+{
+    /* An old component is destructed */
+    ecs_xtor_t dtor;
+    ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+    if (cdata && (dtor = cdata->lifecycle.dtor)) {
+        void *ctx = cdata->lifecycle.ctx;
+        int16_t size = column->size;
+        int16_t alignment = column->alignment;    
+
+        void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
+
+        dtor(world, component, entities, ptr,
+            ecs_to_size_t(size), count, ctx);
+    }
+}
+
+static
+void ctor_all_components(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count)
+{
+    ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);    
+    int32_t column_count = table->column_count;
+    int32_t i;
+    for (i = 0; i < column_count; i ++) {
+        ecs_column_t *column = &data->columns[i];
+        ctor_component(
+            world, components[i], column, entities, row, count);
+    }
+}
+
+static
+void dtor_all_components(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count)
+{
+    ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
+    int32_t column_count = table->column_count;
+    int32_t i;
+    for (i = 0; i < column_count; i ++) {
+        ecs_column_t *column = &data->columns[i];
+        dtor_component(
+            world, components[i], column, entities, row, count);
+    }
+}
+
+static
+void run_remove_actions(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    bool dtor_only)
+{
+    if (count) {
+        if (!dtor_only) {
+            ecs_run_monitors(world, &world->stage, table, NULL, 
+                    row, count, table->un_set_all);
+        }
+
+        dtor_all_components(world, table, data, row, count);
+    }
+}
+
+void ecs_table_destruct(
+    ecs_world_t *world, 
+    ecs_table_t *table, 
+    ecs_data_t *data, 
+    int32_t row, 
+    int32_t count)
+{
+    if (table->flags & EcsTableHasDtors) {
+        run_remove_actions(world, table, data, row, count, true);
+    }
+}
+
 void ecs_table_clear_data(
     ecs_table_t *table,
     ecs_data_t *data)
@@ -669,6 +738,10 @@ void ecs_table_free(
     ecs_vector_free(table->on_set_all);
     ecs_vector_free(table->on_set_override);
     ecs_vector_free(table->un_set_all);
+
+    if (table->c_info) {
+        ecs_os_free(table->c_info);
+    }
     
     if (table->on_set) {
         int32_t i;
@@ -956,54 +1029,6 @@ void ecs_table_delete(
     }
 }
 
-static
-void ctor_component(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    ecs_column_t *column,
-    ecs_entity_t *entities,
-    int32_t row,
-    int32_t count)
-{
-    /* A new component is constructed */
-    ecs_xtor_t ctor;
-    ecs_c_info_t *cdata = ecs_get_c_info(world, component);
-    if (cdata && (ctor = cdata->lifecycle.ctor)) {
-        void *ctx = cdata->lifecycle.ctx;
-        int16_t size = column->size;
-        int16_t alignment = column->alignment;
-
-        void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
-
-        ctor(world, component, entities, ptr, 
-            ecs_to_size_t(size), count, ctx);
-    }
-}
-
-static
-void dtor_component(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    ecs_column_t *column,
-    ecs_entity_t *entities,
-    int32_t row,
-    int32_t count)
-{
-    /* An old component is destructed */
-    ecs_xtor_t dtor;
-    ecs_c_info_t *cdata = ecs_get_c_info(world, component);
-    if (cdata && (dtor = cdata->lifecycle.dtor)) {
-        void *ctx = cdata->lifecycle.ctx;
-        int16_t size = column->size;
-        int16_t alignment = column->alignment;    
-
-        void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
-
-        dtor(world, component, entities, ptr,
-            ecs_to_size_t(size), count, ctx);
-    }
-}
-
 void ecs_table_move(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -1142,6 +1167,7 @@ int32_t ecs_table_grow(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    int32_t cur_count = ecs_table_data_count(data);
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
     ecs_column_t *columns = NULL;
@@ -1187,7 +1213,10 @@ int32_t ecs_table_grow(
     for (i = 0; i < sw_column_count; i ++) {
         ecs_switch_t *sw = sw_columns[i].data;
         ecs_switch_addn(sw, count);
-    }    
+    }
+
+    /* Construct new values */
+    ctor_all_components(world, table, data, cur_count, count);
 
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);    
@@ -1221,7 +1250,7 @@ int16_t ecs_table_set_size(
     }
 
     ecs_vector_set_size(&data->entities, ecs_entity_t, count);
-    ecs_vector_set_size(&data->record_ptrs, ecs_record_t*, count);
+    ecs_vector_set_size(&data->record_ptrs, ecs_record_t*, count);    
 
     for (i = 0; i < column_count; i ++) {
         int16_t size = columns[i].size;
@@ -1245,6 +1274,7 @@ int16_t ecs_table_set_count(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    int32_t cur_count = ecs_table_data_count(data);
     ecs_column_t *columns = data->columns;
     int32_t i, column_count = table->column_count;
 
@@ -1262,6 +1292,10 @@ int16_t ecs_table_set_count(
         if (size) {
             ecs_vector_set_count_t(&columns[i].data, size, alignment, count);
         }
+    }
+
+    if (count > cur_count) {
+        ctor_all_components(world, table, data, cur_count, count - cur_count);
     }
 
     table->alloc_count ++;
