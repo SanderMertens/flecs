@@ -3805,6 +3805,17 @@ const char* ecs_get_name(
     ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Convert type role to string.
+ * This operation converts a type role to a string.
+ * 
+ * @param world The world.
+ * @param entity The entity containing the type role.
+ * @return The type role string, or NULL if no type role is provided.
+ */
+FLECS_EXPORT
+const char* ecs_role_str(
+    ecs_entity_t entity);
+
 /** Convert entity identifier to string.
  * This operation interprets type roles and translates them to a string.
  *

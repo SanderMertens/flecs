@@ -431,7 +431,7 @@ char* ecs_type_str(
 
         if (e == 1) {
             ecs_os_strcpy(buffer, "EcsComponent");
-            len = strlen("EcsComponent");
+            len = ecs_os_strlen("EcsComponent");
         } else {
             len = ecs_from_size_t(ecs_entity_str(world, e, buffer, 256));
         }
