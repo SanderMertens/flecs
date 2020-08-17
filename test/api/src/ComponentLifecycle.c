@@ -910,21 +910,25 @@ void ComponentLifecycle_move_on_tag() {
 /* Position */
 
 static int ctor_position = 0;
+static
 ECS_CTOR(Position, ptr, {
     ctor_position ++;
 });
 
 static int dtor_position = 0;
+static
 ECS_DTOR(Position, ptr, {
     dtor_position ++;
 });
 
 static int copy_position = 0;
+static
 ECS_COPY(Position, dst, src, {
     copy_position ++;
 });
 
 static int move_position = 0;
+static
 ECS_MOVE(Position, dst, src, {
     move_position ++;
 });
@@ -932,21 +936,25 @@ ECS_MOVE(Position, dst, src, {
 /* Velocity */
 
 static int ctor_velocity = 0;
+static
 ECS_CTOR(Velocity, ptr, {
     ctor_velocity ++;
 });
 
 static int dtor_velocity = 0;
+static
 ECS_DTOR(Velocity, ptr, {
     dtor_velocity ++;
 });
 
 static int copy_velocity = 0;
+static
 ECS_COPY(Velocity, dst, src, {
     copy_velocity ++;
 });
 
 static int move_velocity = 0;
+static
 ECS_MOVE(Velocity, dst, src, {
     move_velocity ++;
 });
@@ -954,21 +962,25 @@ ECS_MOVE(Velocity, dst, src, {
 /* Mass */
 
 static int ctor_mass = 0;
+static
 ECS_CTOR(Mass, ptr, {
     ctor_mass ++;
 });
 
 static int dtor_mass = 0;
+static
 ECS_DTOR(Mass, ptr, {
     dtor_mass ++;
 });
 
 static int copy_mass = 0;
+static
 ECS_COPY(Mass, dst, src, {
     copy_mass ++;
 });
 
 static int move_mass = 0;
+static
 ECS_MOVE(Mass, dst, src, {
     move_mass ++;
 });
@@ -976,21 +988,25 @@ ECS_MOVE(Mass, dst, src, {
 /* Rotation */
 
 static int ctor_rotation = 0;
+static
 ECS_CTOR(Rotation, ptr, {
     ctor_rotation ++;
 });
 
 static int dtor_rotation = 0;
+static
 ECS_DTOR(Rotation, ptr, {
     dtor_rotation ++;
 });
 
 static int copy_rotation = 0;
+static
 ECS_COPY(Rotation, dst, src, {
     copy_rotation ++;
 });
 
 static int move_rotation = 0;
+static
 ECS_MOVE(Rotation, dst, src, {
     move_rotation ++;
 });

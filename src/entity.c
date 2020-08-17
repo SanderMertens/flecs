@@ -2065,7 +2065,11 @@ const void* ecs_get_ref_w_entity(
     ref->alloc_count = table->alloc_count;
 
     ecs_entity_info_t info = {0};
-    set_info_from_record(world, entity, &info, record);
+    if (stage == &world->stage) {
+        set_info_from_record(world, entity, &info, record);
+    } else {
+        get_staged_info(world, stage, entity, &info);
+    }
     ref->ptr = get_component(&info, component);
 
     if (&world->stage == stage) {

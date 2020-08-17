@@ -284,6 +284,19 @@
                 "get_both_from_2_add_remove_in_progress"
             ]
         }, {
+            "id": "Reference",
+            "testcases": [
+                "get_ref",
+                "get_ref_after_add",
+                "get_ref_after_remove",
+                "get_ref_after_delete",
+                "get_ref_after_realloc",
+                "get_ref_staged",
+                "get_ref_after_new_in_stage",
+                "get_ref_monitored",
+                "get_nonexisting"
+            ]
+        }, {
             "id": "Delete",
             "testcases": [
                 "delete_1",
@@ -1102,6 +1115,7 @@
                 "override_after_remove_in_progress",
                 "get_parent_in_progress",
                 "merge_once",
+                "clear_stage_after_merge",
                 "get_mutable",
                 "get_mutable_from_main",
                 "get_mutable_w_add",

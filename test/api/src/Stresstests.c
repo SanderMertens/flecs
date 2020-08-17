@@ -123,7 +123,6 @@ void create_delete_entity_random_components_staged(
 
     uint64_t i;
     for (i = 0; i < 100; i ++) {
-        printf("-> progress\n");
         ecs_progress(world, 1);
     }
 

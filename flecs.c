@@ -5553,7 +5553,11 @@ const void* ecs_get_ref_w_entity(
     ref->alloc_count = table->alloc_count;
 
     ecs_entity_info_t info = {0};
-    set_info_from_record(world, entity, &info, record);
+    if (stage == &world->stage) {
+        set_info_from_record(world, entity, &info, record);
+    } else {
+        get_staged_info(world, stage, entity, &info);
+    }
     ref->ptr = get_component(&info, component);
 
     if (&world->stage == stage) {
@@ -6175,7 +6179,6 @@ void merge_commits(
              * in the main stage, so that we can move the values from the stage
              * into the current values. */
             if (src_table != table) {
-                
                 /* Insert row for entity into target table */
                 int32_t dst_row = ecs_table_append(
                     world, table, main_data, entity, record, false);
@@ -6206,6 +6209,8 @@ void merge_commits(
                     main_data, row, table, data, e, false);
             }
         }
+
+        ecs_table_clear_data(table, data);
     }
 
     /* All dirty tables are processed, clear array for next frame. */
@@ -8430,6 +8435,8 @@ void ecs_snapshot_restore(
                 ecs_entities_t components = ecs_type_to_entities(table->type);
                 ecs_run_set_systems(world, &world->stage, &components, table, data,
                     old_count, new_count, true);
+
+                ecs_os_free(leaf->data->columns);
             } else {
                 ecs_table_replace_data(world, table, leaf->data);
             }
@@ -8538,7 +8545,6 @@ void ecs_snapshot_free(
     for (i = 0; i < count; i ++) {
         ecs_table_leaf_t *leaf = &tables[i];
         ecs_table_clear_data(leaf->table, leaf->data);
-        ecs_os_free(leaf->data->columns);
         ecs_os_free(leaf->data);
     }    
 

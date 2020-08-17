@@ -116,7 +116,6 @@ void merge_commits(
              * in the main stage, so that we can move the values from the stage
              * into the current values. */
             if (src_table != table) {
-                
                 /* Insert row for entity into target table */
                 int32_t dst_row = ecs_table_append(
                     world, table, main_data, entity, record, false);
@@ -147,6 +146,8 @@ void merge_commits(
                     main_data, row, table, data, e, false);
             }
         }
+
+        ecs_table_clear_data(table, data);
     }
 
     /* All dirty tables are processed, clear array for next frame. */

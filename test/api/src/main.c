@@ -255,6 +255,17 @@ void Get_component_get_1_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_remove_in_progress(void);
 
+// Testsuite 'Reference'
+void Reference_get_ref(void);
+void Reference_get_ref_after_add(void);
+void Reference_get_ref_after_remove(void);
+void Reference_get_ref_after_delete(void);
+void Reference_get_ref_after_realloc(void);
+void Reference_get_ref_staged(void);
+void Reference_get_ref_after_new_in_stage(void);
+void Reference_get_ref_monitored(void);
+void Reference_get_nonexisting(void);
+
 // Testsuite 'Delete'
 void Delete_delete_1(void);
 void Delete_delete_1_again(void);
@@ -1008,6 +1019,7 @@ void SingleThreadStaging_merge_after_tasks(void);
 void SingleThreadStaging_override_after_remove_in_progress(void);
 void SingleThreadStaging_get_parent_in_progress(void);
 void SingleThreadStaging_merge_once(void);
+void SingleThreadStaging_clear_stage_after_merge(void);
 void SingleThreadStaging_get_mutable(void);
 void SingleThreadStaging_get_mutable_from_main(void);
 void SingleThreadStaging_get_mutable_w_add(void);
@@ -2066,6 +2078,45 @@ bake_test_case Get_component_testcases[] = {
     {
         "get_both_from_2_add_remove_in_progress",
         Get_component_get_both_from_2_add_remove_in_progress
+    }
+};
+
+bake_test_case Reference_testcases[] = {
+    {
+        "get_ref",
+        Reference_get_ref
+    },
+    {
+        "get_ref_after_add",
+        Reference_get_ref_after_add
+    },
+    {
+        "get_ref_after_remove",
+        Reference_get_ref_after_remove
+    },
+    {
+        "get_ref_after_delete",
+        Reference_get_ref_after_delete
+    },
+    {
+        "get_ref_after_realloc",
+        Reference_get_ref_after_realloc
+    },
+    {
+        "get_ref_staged",
+        Reference_get_ref_staged
+    },
+    {
+        "get_ref_after_new_in_stage",
+        Reference_get_ref_after_new_in_stage
+    },
+    {
+        "get_ref_monitored",
+        Reference_get_ref_monitored
+    },
+    {
+        "get_nonexisting",
+        Reference_get_nonexisting
     }
 };
 
@@ -4915,6 +4966,10 @@ bake_test_case SingleThreadStaging_testcases[] = {
         SingleThreadStaging_merge_once
     },
     {
+        "clear_stage_after_merge",
+        SingleThreadStaging_clear_stage_after_merge
+    },
+    {
         "get_mutable",
         SingleThreadStaging_get_mutable
     },
@@ -5478,6 +5533,13 @@ static bake_test_suite suites[] = {
         Get_component_testcases
     },
     {
+        "Reference",
+        NULL,
+        NULL,
+        9,
+        Reference_testcases
+    },
+    {
         "Delete",
         NULL,
         NULL,
@@ -5705,7 +5767,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         NULL,
         NULL,
-        59,
+        60,
         SingleThreadStaging_testcases
     },
     {
@@ -5768,5 +5830,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 53);
+    return bake_test_run("api", argc, argv, suites, 54);
 }
