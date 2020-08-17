@@ -919,6 +919,7 @@ void ecs_table_delete(
     /* Move last record ptr to index */
     ecs_vector_t *record_column = data->record_ptrs;     
     ecs_record_t **records = ecs_vector_first(record_column, ecs_record_t*);
+
     ecs_assert(count < ecs_vector_count(record_column), ECS_INTERNAL_ERROR, NULL);
     ecs_record_t *record_to_move = records[count];
 

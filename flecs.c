@@ -2645,6 +2645,8 @@ void ecs_table_delete(
     /* Move last record ptr to index */
     ecs_vector_t *record_column = data->record_ptrs;     
     ecs_record_t **records = ecs_vector_first(record_column, ecs_record_t*);
+
+    printf("[%s] count = %d, vector count = %d\n", ecs_type_str(world, table->type), count, ecs_vector_count(record_column));
     ecs_assert(count < ecs_vector_count(record_column), ECS_INTERNAL_ERROR, NULL);
     ecs_record_t *record_to_move = records[count];
 
@@ -7619,14 +7621,12 @@ void ecs_table_writer_finalize_table(
                 ecs_table_delete(world, &world->stage, 
                     table, table_data, record_ptr->row - 1, false);
             }
+        } else {
+            record_ptr = ecs_eis_get_or_create(&world->stage, entities[i]);
         }
 
-        ecs_record_t record = (ecs_record_t){
-            .row = i + 1,
-            .table = writer->table
-        };
-
-        ecs_eis_set(&world->stage, entities[i], &record);
+        record_ptr->row = i + 1;
+        record_ptr->table = writer->table;
 
         if (entities[i] >= world->stats.last_id) {
             world->stats.last_id = entities[i] + 1;
@@ -7664,6 +7664,9 @@ void ecs_table_writer_prepare_column(
     } else {
         ecs_vector_set_count(
             &data->entities, ecs_entity_t, writer->row_count);
+
+        ecs_vector_set_count(
+            &data->record_ptrs, ecs_record_t*, writer->row_count);            
 
         writer->column_vector = data->entities;
         writer->column_size = ECS_SIZEOF(ecs_entity_t);      
@@ -13952,8 +13955,6 @@ void build_sorted_table_range(
             if (!e2) {
                 continue;
             }
-
-            printf("min = %d\n", min);
 
             void *ptr1 = ptr_from_helper(&helper[min]);
             void *ptr2 = ptr_from_helper(&helper[j]);

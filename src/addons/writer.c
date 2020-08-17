@@ -104,14 +104,12 @@ void ecs_table_writer_finalize_table(
                 ecs_table_delete(world, &world->stage, 
                     table, table_data, record_ptr->row - 1, false);
             }
+        } else {
+            record_ptr = ecs_eis_get_or_create(&world->stage, entities[i]);
         }
 
-        ecs_record_t record = (ecs_record_t){
-            .row = i + 1,
-            .table = writer->table
-        };
-
-        ecs_eis_set(&world->stage, entities[i], &record);
+        record_ptr->row = i + 1;
+        record_ptr->table = writer->table;
 
         if (entities[i] >= world->stats.last_id) {
             world->stats.last_id = entities[i] + 1;
@@ -149,6 +147,9 @@ void ecs_table_writer_prepare_column(
     } else {
         ecs_vector_set_count(
             &data->entities, ecs_entity_t, writer->row_count);
+
+        ecs_vector_set_count(
+            &data->record_ptrs, ecs_record_t*, writer->row_count);            
 
         writer->column_vector = data->entities;
         writer->column_size = ECS_SIZEOF(ecs_entity_t);      
