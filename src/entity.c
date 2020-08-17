@@ -2571,6 +2571,42 @@ size_t append_to_str(
     return bytes_left;
 }
 
+const char* ecs_role_str(
+    ecs_entity_t entity)
+{
+    if (ECS_HAS_ROLE(entity, CHILDOF)) {
+        return "CHILDOF";
+    } else
+    if (ECS_HAS_ROLE(entity, INSTANCEOF)) {
+        return "INSTANCEOF";
+    } else
+    if (ECS_HAS_ROLE(entity, TRAIT)) {
+        return "TRAIT";
+    } else
+    if (ECS_HAS_ROLE(entity, SWITCH)) {
+        return "SWITCH";
+    } else
+    if (ECS_HAS_ROLE(entity, XOR)) {
+        return "XOR";
+    } else
+    if (ECS_HAS_ROLE(entity, OR)) {
+        return "OR";
+    } else
+    if (ECS_HAS_ROLE(entity, AND)) {
+        return "AND";
+    } else
+    if (ECS_HAS_ROLE(entity, NOT)) {
+        return "NOT";
+    } else
+    if (ECS_HAS_ROLE(entity, SWITCH)) {
+        return "SWITCH";
+    } else
+    if (ECS_HAS_ROLE(entity, CASE)) {
+        return "CASE";
+    } else {
+        return "UNKNOWN";
+    }
+}
 
 size_t ecs_entity_str(
     ecs_world_t *world,
@@ -2582,41 +2618,7 @@ size_t ecs_entity_str(
     size_t bytes_left = buffer_len, required = 0;
 
     if (entity & ECS_ROLE_MASK) {
-        const char *role = NULL;
-
-        if (ECS_HAS_ROLE(entity, CHILDOF)) {
-            role = "CHILDOF";
-        } else
-        if (ECS_HAS_ROLE(entity, INSTANCEOF)) {
-            role = "INSTANCEOF";
-        } else
-        if (ECS_HAS_ROLE(entity, TRAIT)) {
-            role = "TRAIT";
-        } else
-        if (ECS_HAS_ROLE(entity, SWITCH)) {
-            role = "SWITCH";
-        } else
-        if (ECS_HAS_ROLE(entity, XOR)) {
-            role = "XOR";
-        } else
-        if (ECS_HAS_ROLE(entity, OR)) {
-            role = "OR";
-        } else
-        if (ECS_HAS_ROLE(entity, AND)) {
-            role = "AND";
-        } else
-        if (ECS_HAS_ROLE(entity, NOT)) {
-            role = "NOT";
-        } else
-        if (ECS_HAS_ROLE(entity, SWITCH)) {
-            role = "SWITCH";
-        } else
-        if (ECS_HAS_ROLE(entity, CASE)) {
-            role = "CASE";
-        } else {
-            role = "UNKNOWN";
-        }
-
+        const char *role = ecs_role_str(entity);
         bytes_left = append_to_str(&ptr, role, bytes_left, &required);
         bytes_left = append_to_str(&ptr, "|", bytes_left, &required);
     }

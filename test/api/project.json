@@ -962,7 +962,16 @@
                 "entity_and_str",
                 "entity_or_str",
                 "entity_xor_str",
-                "entity_not_str"
+                "entity_not_str",
+                "role_childof_str",
+                "role_instanceof_str",
+                "role_trait_str",
+                "role_switch_str",
+                "role_case_str",
+                "role_and_str",
+                "role_or_str",
+                "role_xor_str",
+                "role_not_str"
             ]
         }, {
             "id": "Run",
