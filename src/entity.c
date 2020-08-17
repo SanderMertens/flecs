@@ -2646,11 +2646,7 @@ size_t ecs_entity_str(
         ecs_os_free(path);
     }
 
-    if (bytes_left) {
-        ptr[1] = '\0';
-    } else {
-        ptr[0] = '\0';
-    }
+    ptr[0] = '\0';
 
     return required;
 }
