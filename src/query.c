@@ -1559,6 +1559,7 @@ void free_matched_table(
     ecs_matched_table_t *table)
 {
     ecs_os_free(table->columns);
+    ecs_os_free(table->sparse_columns);
     ecs_os_free(table->components);
     ecs_vector_free(table->references);
     ecs_os_free(table->monitor);

@@ -1159,5 +1159,7 @@ void ComponentLifecycle_delete_in_stage() {
     test_int(ctor_mass, 0);
     test_int(dtor_mass, 1);
     test_int(copy_mass, 0);
-    test_int(move_mass, 0);    
+    test_int(move_mass, 0); 
+
+    ecs_fini(world);
 }

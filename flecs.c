@@ -1761,7 +1761,7 @@ ecs_data_t* init_data(
 
     if (sw_count) {
         int32_t sw_offset = table->sw_column_offset;
-        result->sw_columns = ecs_os_calloc(ECS_SIZEOF(ecs_column_t) * sw_count);
+        result->sw_columns = ecs_os_calloc(ECS_SIZEOF(ecs_sw_column_t) * sw_count);
 
         for (i = 0; i < sw_count; i ++) {
             ecs_entity_t e = entities[i + sw_offset];
@@ -1805,6 +1805,16 @@ void deinit_data(
         }
         ecs_os_free(columns);
         data->columns = NULL;
+    }
+
+    ecs_sw_column_t *sw_columns = data->sw_columns;
+    if (sw_columns) {
+        int32_t c, column_count = table->sw_column_count;
+        for (c = 0; c < column_count; c ++) {
+            ecs_switch_free(sw_columns[c].data);
+        }
+        ecs_os_free(sw_columns);
+        data->sw_columns = NULL;
     }
 
     ecs_vector_free(data->entities);
@@ -7511,12 +7521,14 @@ void ecs_table_writer_register_table(
     ecs_world_t *world = stream->world;
     ecs_table_writer_t *writer = &stream->table;
     ecs_type_t type = ecs_type_find(world, writer->type_array, writer->type_count);
-
     ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
 
     writer->table = ecs_table_from_type(world, &world->stage, type);
     ecs_assert(writer->table != NULL, ECS_INTERNAL_ERROR, NULL);
-    
+
+    ecs_os_free(writer->type_array);
+    writer->type_array = NULL;
+
     ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, writer->table);
     if (data->entities) {
         /* Remove any existing entities from entity index */
@@ -7700,11 +7712,8 @@ ecs_size_t ecs_table_writer(
     switch(writer->state) {
     case EcsTableTypeSize:
         writer->type_count = *(int32_t*)buffer;
-        if (writer->type_count > writer->type_max_count) {
-            ecs_os_free(writer->type_array);
-            writer->type_array = ecs_os_malloc(writer->type_count * ECS_SIZEOF(ecs_entity_t));
-            writer->type_max_count = writer->type_count;
-        }
+        writer->type_array = ecs_os_malloc(writer->type_count * ECS_SIZEOF(ecs_entity_t));
+        writer->type_max_count = writer->type_count;
         writer->type_written = 0;
         written = ECS_SIZEOF(int32_t);
         ecs_table_writer_next(stream);
@@ -7715,7 +7724,7 @@ ecs_size_t ecs_table_writer(
         written = ECS_SIZEOF(int32_t);
         writer->type_written += written;
 
-        if (writer->type_written == writer->type_count * ECS_SIZEOF(ecs_entity_t)) {
+        if (writer->type_written == (writer->type_count * ECS_SIZEOF(ecs_entity_t))) {
             ecs_table_writer_register_table(stream);
             ecs_table_writer_next(stream);
         }
@@ -8529,6 +8538,7 @@ void ecs_snapshot_free(
     for (i = 0; i < count; i ++) {
         ecs_table_leaf_t *leaf = &tables[i];
         ecs_table_clear_data(leaf->table, leaf->data);
+        ecs_os_free(leaf->data->columns);
         ecs_os_free(leaf->data);
     }    
 
@@ -14350,6 +14360,7 @@ void free_matched_table(
     ecs_matched_table_t *table)
 {
     ecs_os_free(table->columns);
+    ecs_os_free(table->sparse_columns);
     ecs_os_free(table->components);
     ecs_vector_free(table->references);
     ecs_os_free(table->monitor);

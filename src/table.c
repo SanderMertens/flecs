@@ -53,7 +53,7 @@ ecs_data_t* init_data(
 
     if (sw_count) {
         int32_t sw_offset = table->sw_column_offset;
-        result->sw_columns = ecs_os_calloc(ECS_SIZEOF(ecs_column_t) * sw_count);
+        result->sw_columns = ecs_os_calloc(ECS_SIZEOF(ecs_sw_column_t) * sw_count);
 
         for (i = 0; i < sw_count; i ++) {
             ecs_entity_t e = entities[i + sw_offset];
@@ -97,6 +97,16 @@ void deinit_data(
         }
         ecs_os_free(columns);
         data->columns = NULL;
+    }
+
+    ecs_sw_column_t *sw_columns = data->sw_columns;
+    if (sw_columns) {
+        int32_t c, column_count = table->sw_column_count;
+        for (c = 0; c < column_count; c ++) {
+            ecs_switch_free(sw_columns[c].data);
+        }
+        ecs_os_free(sw_columns);
+        data->sw_columns = NULL;
     }
 
     ecs_vector_free(data->entities);
