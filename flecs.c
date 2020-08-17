@@ -1737,7 +1737,6 @@ ecs_data_t* init_data(
     
     result->entities = NULL;
     result->record_ptrs = NULL;
-    result->marked_dirty = false;
 
     /* Root tables don't have columns */
     if (!count && !sw_count) {
@@ -2487,7 +2486,7 @@ void move_switch_columns(
             ecs_switch_t *old_switch = old_columns[i_old].data;
             ecs_switch_t *new_switch = new_columns[i_new].data;
 
-            ecs_switch_set_count(new_switch, new_index + count);
+            ecs_switch_set_min_count(new_switch, new_index + count);
 
             int i;
             for (i = 0; i < count; i ++) {
@@ -4567,6 +4566,7 @@ int32_t move_entity(
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record, false);
     bool same_stage = compare_stage_w_data(stage, src_table, src_data);
 
+
     if (main_stage && record) {
         record->table = dst_table;
         record->row = ecs_row_to_record(dst_row, info->is_watched);
@@ -4597,7 +4597,7 @@ int32_t move_entity(
                 world, stage, src_table, src_data, src_row, 1, removed, false);
         }            
     }
-
+    
     /* Only delete from source table if moving to the same stage */
     if (same_stage) {
         ecs_table_delete(world, stage, src_table, src_data, src_row, false);
@@ -6181,7 +6181,6 @@ void merge_commits(
         int32_t component_count = ecs_vector_count(table->type);
         
         ecs_assert(main_data != data, ECS_INTERNAL_ERROR, NULL);
-
         data->marked_dirty = false;
 
         /* If the table contains no data, this was a staged table that was
@@ -10435,6 +10434,18 @@ void ecs_switch_set_count(
         node->next = -1;
         values[i] = 0;
     }
+}
+
+void ecs_switch_set_min_count(
+    ecs_switch_t *sw,
+    int32_t count)
+{
+    int32_t old_count = ecs_vector_count(sw->nodes);
+    if (old_count >= count) {
+        return;
+    }
+
+    return ecs_switch_set_count(sw, count);
 }
 
 void ecs_switch_addn(

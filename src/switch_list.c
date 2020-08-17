@@ -132,6 +132,18 @@ void ecs_switch_set_count(
     }
 }
 
+void ecs_switch_set_min_count(
+    ecs_switch_t *sw,
+    int32_t count)
+{
+    int32_t old_count = ecs_vector_count(sw->nodes);
+    if (old_count >= count) {
+        return;
+    }
+
+    return ecs_switch_set_count(sw, count);
+}
+
 void ecs_switch_addn(
     ecs_switch_t *sw,
     int32_t count)

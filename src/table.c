@@ -11,7 +11,6 @@ ecs_data_t* init_data(
     
     result->entities = NULL;
     result->record_ptrs = NULL;
-    result->marked_dirty = false;
 
     /* Root tables don't have columns */
     if (!count && !sw_count) {
@@ -761,7 +760,7 @@ void move_switch_columns(
             ecs_switch_t *old_switch = old_columns[i_old].data;
             ecs_switch_t *new_switch = new_columns[i_new].data;
 
-            ecs_switch_set_count(new_switch, new_index + count);
+            ecs_switch_set_min_count(new_switch, new_index + count);
 
             int i;
             for (i = 0; i < count; i ++) {

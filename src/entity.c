@@ -1105,6 +1105,7 @@ int32_t move_entity(
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record, false);
     bool same_stage = compare_stage_w_data(stage, src_table, src_data);
 
+
     if (main_stage && record) {
         record->table = dst_table;
         record->row = ecs_row_to_record(dst_row, info->is_watched);
@@ -1135,7 +1136,7 @@ int32_t move_entity(
                 world, stage, src_table, src_data, src_row, 1, removed, false);
         }            
     }
-
+    
     /* Only delete from source table if moving to the same stage */
     if (same_stage) {
         ecs_table_delete(world, stage, src_table, src_data, src_row, false);
