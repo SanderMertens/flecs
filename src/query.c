@@ -1020,6 +1020,8 @@ void* ptr_from_helper(
     sort_helper_t *helper)
 {
     ecs_assert(helper->row < helper->count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(helper->elem_size >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(helper->row >= 0, ECS_INTERNAL_ERROR, NULL);
     return ELEM(helper->ptr, helper->elem_size, helper->row);
 }
 
@@ -1063,13 +1065,16 @@ void build_sorted_table_range(
             int16_t align = column->alignment;
             helper[to_sort].ptr = ecs_vector_first_t(column->data, size, align);
             helper[to_sort].elem_size = size;
+        } else {
+            helper[to_sort].ptr = NULL;
+            helper[to_sort].elem_size = 0;
         }
 
         helper[to_sort].table = table;
         helper[to_sort].entities = ecs_vector_first(data->entities, ecs_entity_t);
         helper[to_sort].row = 0;
-        helper[to_sort].count = ecs_table_count(table->table);
-        to_sort ++;
+        helper[to_sort].count = ecs_table_count(table->table);  
+        to_sort ++;      
     }
 
     ecs_table_slice_t *cur = NULL;
