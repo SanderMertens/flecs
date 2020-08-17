@@ -2542,4 +2542,113 @@ void ecs_defer_end(
     }
 }
 
+static
+size_t append_to_str(
+    char **buffer,
+    const char *str,
+    size_t bytes_left,
+    size_t *required)
+{
+    char *ptr = *buffer;
 
+    size_t len = strlen(str);
+    size_t to_write;
+    if (bytes_left < len) {
+        to_write = bytes_left;
+        bytes_left = 0;
+    } else {
+        to_write = len;
+        bytes_left -= len;
+    }
+    
+    if (to_write) {
+        ecs_os_strncpy(ptr, str, to_write);
+    }
+
+    (*required) += len;
+    (*buffer) += to_write;
+
+    return bytes_left;
+}
+
+
+size_t ecs_entity_str(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    char *buffer,
+    size_t buffer_len)
+{
+    char *ptr = buffer;
+    size_t bytes_left = buffer_len, required = 0;
+
+    if (entity & ECS_ROLE_MASK) {
+        const char *role = NULL;
+
+        if (ECS_HAS_ROLE(entity, CHILDOF)) {
+            role = "CHILDOF";
+        } else
+        if (ECS_HAS_ROLE(entity, INSTANCEOF)) {
+            role = "INSTANCEOF";
+        } else
+        if (ECS_HAS_ROLE(entity, TRAIT)) {
+            role = "TRAIT";
+        } else
+        if (ECS_HAS_ROLE(entity, SWITCH)) {
+            role = "SWITCH";
+        } else
+        if (ECS_HAS_ROLE(entity, XOR)) {
+            role = "XOR";
+        } else
+        if (ECS_HAS_ROLE(entity, OR)) {
+            role = "OR";
+        } else
+        if (ECS_HAS_ROLE(entity, AND)) {
+            role = "AND";
+        } else
+        if (ECS_HAS_ROLE(entity, NOT)) {
+            role = "NOT";
+        } else
+        if (ECS_HAS_ROLE(entity, SWITCH)) {
+            role = "SWITCH";
+        } else
+        if (ECS_HAS_ROLE(entity, CASE)) {
+            role = "CASE";
+        } else {
+            role = "UNKNOWN";
+        }
+
+        bytes_left = append_to_str(&ptr, role, bytes_left, &required);
+        bytes_left = append_to_str(&ptr, "|", bytes_left, &required);
+    }
+
+    ecs_entity_t e = entity & ECS_ENTITY_MASK;
+
+    if (ECS_HAS_ROLE(entity, TRAIT)) {
+        ecs_entity_t lo = ecs_entity_t_lo(e);
+        ecs_entity_t hi = ecs_entity_t_hi(e);
+
+        if (hi) {
+            char *hi_path = ecs_get_fullpath(world, hi);
+            bytes_left = append_to_str(&ptr, hi_path, bytes_left, &required);
+            ecs_os_free(hi_path);
+
+            bytes_left = append_to_str(&ptr, ">", bytes_left, &required);
+        }            
+
+        char *lo_path = ecs_get_fullpath(world, lo);
+        bytes_left = append_to_str(&ptr, lo_path, bytes_left, &required);
+        ecs_os_free(lo_path);
+    } else {
+        char *path = ecs_get_fullpath(world, e);
+        bytes_left = append_to_str(&ptr, path, bytes_left, &required);
+        ecs_os_free(path);
+    }
+
+    if (bytes_left) {
+        ptr[1] = '\0';
+    } else {
+        ptr[0] = '\0';
+    }
+
+    return required;
+}

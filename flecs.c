@@ -5743,7 +5743,116 @@ void ecs_defer_end(
     }
 }
 
+static
+size_t append_to_str(
+    char **buffer,
+    const char *str,
+    size_t bytes_left,
+    size_t *required)
+{
+    char *ptr = *buffer;
 
+    size_t len = strlen(str);
+    size_t to_write;
+    if (bytes_left < len) {
+        to_write = bytes_left;
+        bytes_left = 0;
+    } else {
+        to_write = len;
+        bytes_left -= len;
+    }
+    
+    if (to_write) {
+        ecs_os_strncpy(ptr, str, to_write);
+    }
+
+    (*required) += len;
+    (*buffer) += to_write;
+
+    return bytes_left;
+}
+
+
+size_t ecs_entity_str(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    char *buffer,
+    size_t buffer_len)
+{
+    char *ptr = buffer;
+    size_t bytes_left = buffer_len, required = 0;
+
+    if (entity & ECS_ROLE_MASK) {
+        const char *role = NULL;
+
+        if (ECS_HAS_ROLE(entity, CHILDOF)) {
+            role = "CHILDOF";
+        } else
+        if (ECS_HAS_ROLE(entity, INSTANCEOF)) {
+            role = "INSTANCEOF";
+        } else
+        if (ECS_HAS_ROLE(entity, TRAIT)) {
+            role = "TRAIT";
+        } else
+        if (ECS_HAS_ROLE(entity, SWITCH)) {
+            role = "SWITCH";
+        } else
+        if (ECS_HAS_ROLE(entity, XOR)) {
+            role = "XOR";
+        } else
+        if (ECS_HAS_ROLE(entity, OR)) {
+            role = "OR";
+        } else
+        if (ECS_HAS_ROLE(entity, AND)) {
+            role = "AND";
+        } else
+        if (ECS_HAS_ROLE(entity, NOT)) {
+            role = "NOT";
+        } else
+        if (ECS_HAS_ROLE(entity, SWITCH)) {
+            role = "SWITCH";
+        } else
+        if (ECS_HAS_ROLE(entity, CASE)) {
+            role = "CASE";
+        } else {
+            role = "UNKNOWN";
+        }
+
+        bytes_left = append_to_str(&ptr, role, bytes_left, &required);
+        bytes_left = append_to_str(&ptr, "|", bytes_left, &required);
+    }
+
+    ecs_entity_t e = entity & ECS_ENTITY_MASK;
+
+    if (ECS_HAS_ROLE(entity, TRAIT)) {
+        ecs_entity_t lo = ecs_entity_t_lo(e);
+        ecs_entity_t hi = ecs_entity_t_hi(e);
+
+        if (hi) {
+            char *hi_path = ecs_get_fullpath(world, hi);
+            bytes_left = append_to_str(&ptr, hi_path, bytes_left, &required);
+            ecs_os_free(hi_path);
+
+            bytes_left = append_to_str(&ptr, ">", bytes_left, &required);
+        }            
+
+        char *lo_path = ecs_get_fullpath(world, lo);
+        bytes_left = append_to_str(&ptr, lo_path, bytes_left, &required);
+        ecs_os_free(lo_path);
+    } else {
+        char *path = ecs_get_fullpath(world, e);
+        bytes_left = append_to_str(&ptr, path, bytes_left, &required);
+        ecs_os_free(path);
+    }
+
+    if (bytes_left) {
+        ptr[1] = '\0';
+    } else {
+        ptr[0] = '\0';
+    }
+
+    return required;
+}
 
 /* If all components were removed, don't store the entity in a table. If the
  * entity was deleted, also remove the entity from the entity index so that its
@@ -11630,15 +11739,6 @@ bool ecs_sig_check_constraints(
     return true;
 }
 
-static
-ecs_entity_t split_entity_id(
-    ecs_entity_t id,
-    ecs_entity_t *entity)
-{
-    *entity = (id & ECS_ENTITY_MASK);
-    return id;
-}
-
 ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -12045,32 +12145,6 @@ ecs_type_t ecs_type_remove(
     return ecs_type_remove_intern(world, stage, type, e);
 }
 
-static
-void append_name(
-    ecs_world_t *world,
-    ecs_vector_t **chbuf,
-    ecs_entity_t h)
-{
-    const char *str = NULL;
-    char *dst;
-
-    if (h == 1) {
-        /* Prevent issues during bootstrap */
-        str = "EcsComponent";
-    } else {
-        str = ecs_get_fullpath(world, h);
-    }
-
-    ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t len = ecs_os_strlen(str);
-    dst = ecs_vector_addn(chbuf, char, len);
-    ecs_os_memcpy(dst, str, len);
-    if (h != 1) {
-        ecs_os_free((char*)str);
-    }
-}
-
 char* ecs_type_str(
     ecs_world_t *world,
     ecs_type_t type)
@@ -12082,81 +12156,27 @@ char* ecs_type_str(
     ecs_vector_t *chbuf = ecs_vector_new(char, 32);
     char *dst;
 
-    ecs_entity_t *handles = ecs_vector_first(type, ecs_entity_t);
+    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
-        ecs_entity_t h;
-        ecs_entity_t trait = 0;
-        ecs_entity_t flags = split_entity_id(handles[i], &h) & ECS_ROLE_MASK;
+        ecs_entity_t e = entities[i];
+        char buffer[256];
+        ecs_size_t len;
 
         if (i) {
             *(char*)ecs_vector_add(&chbuf, char) = ',';
         }
 
-        if (ECS_HAS_ROLE(flags, INSTANCEOF)) {
-            int len = sizeof("INSTANCEOF|") - 1;
-            dst = ecs_vector_addn(&chbuf, char, len);
-            ecs_os_memcpy(dst, "INSTANCEOF|", len);
+        if (e == 1) {
+            ecs_os_strcpy(buffer, "EcsComponent");
+            len = strlen("EcsComponent");
+        } else {
+            len = ecs_from_size_t(ecs_entity_str(world, e, buffer, 256));
         }
 
-        if (ECS_HAS_ROLE(flags, CHILDOF)) {
-            int len = sizeof("CHILDOF|") - 1;
-            dst = ecs_vector_addn(&chbuf, char, len);
-            ecs_os_memcpy(dst, "CHILDOF|", len);
-        }
-
-        if (ECS_HAS_ROLE(flags, TRAIT)) {
-            int len = sizeof("TRAIT|") - 1;
-            dst = ecs_vector_addn(&chbuf, char, len);
-            ecs_os_memcpy(dst, "TRAIT|", len);
-            trait = ecs_entity_t_hi(h);
-            h = ecs_entity_t_lo(h);
-        }
-
-        if (ECS_HAS_ROLE(flags, XOR)) {
-            int len = sizeof("XOR|") - 1;
-            dst = ecs_vector_addn(&chbuf, char, len);
-            ecs_os_memcpy(dst, "XOR|", len);
-        }
-
-        if (ECS_HAS_ROLE(flags, OR)) {
-            int len = sizeof("OR|") - 1;
-            dst = ecs_vector_addn(&chbuf, char, len);
-            ecs_os_memcpy(dst, "OR|", len);
-        }
-
-        if (ECS_HAS_ROLE(flags, AND)) {
-            int len = sizeof("AND|") - 1;
-            dst = ecs_vector_addn(&chbuf, char, len);
-            ecs_os_memcpy(dst, "AND|", len);
-        }
-
-        if (ECS_HAS_ROLE(flags, NOT)) {
-            int len = sizeof("NOT|") - 1;
-            dst = ecs_vector_addn(&chbuf, char, len);
-            ecs_os_memcpy(dst, "NOT|", len);
-        }
-
-        if (ECS_HAS_ROLE(flags, SWITCH)) {
-            int len = sizeof("SWITCH|") - 1;
-            dst = ecs_vector_addn(&chbuf, char, len);
-            ecs_os_memcpy(dst, "SWITCH|", len);
-        }
-
-        if (ECS_HAS_ROLE(flags, CASE)) {
-            int len = sizeof("CASE|") - 1;
-            dst = ecs_vector_addn(&chbuf, char, len);
-            ecs_os_memcpy(dst, "CASE|", len);
-        }        
-
-        if (trait) {
-            append_name(world, &chbuf, trait);
-            char *ch = ecs_vector_add(&chbuf, char);
-            *ch = '>';
-        }                
-
-        append_name(world, &chbuf, h);
+        dst = ecs_vector_addn(&chbuf, char, len);
+        ecs_os_memcpy(dst, buffer, len);
     }
 
     *(char*)ecs_vector_add(&chbuf, char) = '\0';

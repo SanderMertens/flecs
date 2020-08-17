@@ -2473,7 +2473,7 @@ ecs_entity_t ecs_type_to_entity(
 FLECS_EXPORT
 char* ecs_type_str(
     ecs_world_t *world,
-    ecs_type_t type);
+    ecs_type_t type);  
 
 FLECS_EXPORT
 ecs_type_t ecs_type_from_str(
@@ -3804,6 +3804,22 @@ FLECS_EXPORT
 const char* ecs_get_name(
     ecs_world_t *world,
     ecs_entity_t entity);
+
+/** Convert entity identifier to string.
+ * This operation interprets type roles and translates them to a string.
+ *
+ * @param world The world.
+ * @param entity The entity to convert to a string.
+ * @param buffer The buffer in which to store the string.
+ * @param buffer_len The length of the provided buffer.
+ * @return The number of characters required to write the string.
+ */
+FLECS_EXPORT
+size_t ecs_entity_str(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    char *buffer,
+    size_t buffer_len);
 
 /** Get the parent of an entity.
  * This will return a parent of the entity that has the specified component. If

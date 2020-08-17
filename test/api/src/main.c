@@ -864,6 +864,17 @@ void Type_type_from_expr_instanceof(void);
 void Type_type_from_expr_childof(void);
 void Type_type_from_expr_trait(void);
 void Type_type_from_expr_trait_w_comp(void);
+void Type_entity_str(void);
+void Type_entity_path_str(void);
+void Type_entity_instanceof_str(void);
+void Type_entity_childof_str(void);
+void Type_entity_trait_str(void);
+void Type_entity_switch_str(void);
+void Type_entity_case_str(void);
+void Type_entity_and_str(void);
+void Type_entity_or_str(void);
+void Type_entity_xor_str(void);
+void Type_entity_not_str(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -4331,6 +4342,50 @@ bake_test_case Type_testcases[] = {
     {
         "type_from_expr_trait_w_comp",
         Type_type_from_expr_trait_w_comp
+    },
+    {
+        "entity_str",
+        Type_entity_str
+    },
+    {
+        "entity_path_str",
+        Type_entity_path_str
+    },
+    {
+        "entity_instanceof_str",
+        Type_entity_instanceof_str
+    },
+    {
+        "entity_childof_str",
+        Type_entity_childof_str
+    },
+    {
+        "entity_trait_str",
+        Type_entity_trait_str
+    },
+    {
+        "entity_switch_str",
+        Type_entity_switch_str
+    },
+    {
+        "entity_case_str",
+        Type_entity_case_str
+    },
+    {
+        "entity_and_str",
+        Type_entity_and_str
+    },
+    {
+        "entity_or_str",
+        Type_entity_or_str
+    },
+    {
+        "entity_xor_str",
+        Type_entity_xor_str
+    },
+    {
+        "entity_not_str",
+        Type_entity_not_str
     }
 };
 
@@ -5559,7 +5614,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        62,
+        73,
         Type_testcases
     },
     {

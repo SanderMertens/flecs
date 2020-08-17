@@ -951,7 +951,18 @@
                 "type_from_expr_instanceof",
                 "type_from_expr_childof",
                 "type_from_expr_trait",
-                "type_from_expr_trait_w_comp"
+                "type_from_expr_trait_w_comp",
+                "entity_str",
+                "entity_path_str",
+                "entity_instanceof_str",
+                "entity_childof_str",
+                "entity_trait_str",
+                "entity_switch_str",
+                "entity_case_str",
+                "entity_and_str",
+                "entity_or_str",
+                "entity_xor_str",
+                "entity_not_str"
             ]
         }, {
             "id": "Run",
