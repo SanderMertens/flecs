@@ -2195,6 +2195,11 @@ public:
         , m_id_start( ecs_bulk_new_w_type(m_world, nullptr, count))
         , m_count(count) { }
 
+    entity_range(const world& world, std::int32_t count, flecs::type& type) 
+        : m_world(world.c_ptr())
+        , m_id_start( ecs_bulk_new_w_type(m_world, type.c_ptr(), count))
+        , m_count(count) { }
+
     template <typename Func>
     void invoke(Func&& action) const {
         for (auto id : *this) {

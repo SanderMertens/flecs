@@ -511,6 +511,7 @@ typedef struct ecs_table_slice_t {
 #define EcsQueryHasRefs (64)         /* Does query have references */
 #define EcsQueryHasTraits (128)      /* Does query have traits */
 #define EcsQueryIsSubquery (256)     /* Is query a subquery */
+#define EcsQueryHasOutColumns (512)  /* Does query have out columns */
 
 #define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
@@ -12787,7 +12788,6 @@ typedef struct EcsSystem {
     int32_t invoke_count;                 /* Number of times system is invoked */
     float time_spent;                     /* Time spent on running system */
     float time_passed;                    /* Time passed since last invocation */
-    bool has_out_columns;                 /* True if system has out columns */
 } EcsSystem;
 
 /* Invoked when system becomes active / inactive */
@@ -14072,6 +14072,7 @@ void sort_tables(
          * we're sorting on has changed (index + 1) */
         if (is_dirty) {
             /* Sort the table */
+            printf("SORT [%s]\n", ecs_type_str(world, table->type));
             sort_table(world, table, index, compare);
             tables_sorted = true;
         }
@@ -14188,6 +14189,11 @@ void process_signature(
         ecs_sig_column_t *column = &columns[i];
         ecs_sig_oper_kind_t op = column->oper_kind; 
         ecs_sig_from_kind_t from = column->from_kind; 
+        ecs_sig_inout_kind_t inout = column->inout_kind;
+
+        if (inout != EcsIn) {
+            query->flags |= EcsQueryHasOutColumns;
+        }
 
         if (!(query->flags & EcsQueryMatchDisabled)) {
             if (op == EcsOperOr) {
@@ -14892,6 +14898,29 @@ done:
     return -1;
 }
 
+static
+void mark_columns_dirty(
+    ecs_query_t *query,
+    ecs_matched_table_t *matched_table)
+{
+    ecs_table_t *table = matched_table->table;
+
+    if (table && table->dirty_state) {
+        int32_t i, count = ecs_vector_count(query->sig.columns);
+        ecs_sig_column_t *columns = ecs_vector_first(
+            query->sig.columns, ecs_sig_column_t);
+
+        for (i = 0; i < count; i ++) {
+            if (columns[i].inout_kind != EcsIn) {
+                int32_t table_column = matched_table->columns[i];
+                if (table_column > 0) {
+                    table->dirty_state[table_column - 1] ++;
+                }
+            }
+        }
+    }
+}
+
 /* Return next table */
 bool ecs_query_next(
     ecs_iter_t *it)
@@ -14971,6 +15000,10 @@ bool ecs_query_next(
         it->components = table->components;
         it->references = ecs_vector_first(table->references, ecs_ref_t);
         it->frame_offset += prev_count;
+
+        if (query->flags & EcsQueryHasOutColumns) {
+            mark_columns_dirty(query, table);
+        }
 
         return true;
     }
@@ -19377,29 +19410,6 @@ void invoke_status_action(
     }
 }
 
-static
-void mark_columns_dirty(
-    ecs_iter_t *it,
-    EcsSystem *system_data)
-{
-    ecs_table_t *table = it->table;
-    if (table && table->dirty_state) {
-        ecs_query_t *q = system_data->query;
-        int32_t i, count = ecs_vector_count(q->sig.columns);
-        ecs_sig_column_t *columns = ecs_vector_first(
-            q->sig.columns, ecs_sig_column_t);
-
-        for (i = 0; i < count; i ++) {
-            if (columns[i].inout_kind != EcsIn) {
-                int32_t table_column = it->columns[i];
-                if (table_column > 0) {
-                    table->dirty_state[table_column - 1] ++;
-                }
-            }
-        }
-    }
-}
-
 /* Invoked when system becomes active or inactive */
 void ecs_system_activate(
     ecs_world_t *world,
@@ -19485,7 +19495,6 @@ void ecs_init_system(
         sptr->entity = system;
         sptr->tick_source = 0;
         sptr->time_spent = 0;
-        sptr->has_out_columns = false;
     }
 
     /* Sanity check to make sure creating the query didn't add any additional
@@ -19537,7 +19546,6 @@ void ecs_init_system(
         
         for (i = 0; i < count; i ++) {
             if (columns[i].inout_kind != EcsIn) {
-                sptr->has_out_columns = true;
                 break;
             }
         }
@@ -19651,9 +19659,6 @@ ecs_entity_t ecs_run_intern(
         ecs_os_get_time(&time_start);
     }
 
-    /* Used to check if table columns must be marked dirty */
-    bool has_out_columns = system_data->has_out_columns;
-
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
     it.world = stage->world;
@@ -19677,9 +19682,6 @@ ecs_entity_t ecs_run_intern(
         if (ran_by_app || world == stage->world) {
             while (ecs_query_next(&it)) {
                 action(&it);
-                if (has_out_columns) {
-                    mark_columns_dirty(&it, system_data);
-                }
             }
         } else {
             ecs_thread_t *thread = (ecs_thread_t*)stage->world;
@@ -19687,10 +19689,7 @@ ecs_entity_t ecs_run_intern(
             int32_t current = thread->index;
 
             while (ecs_query_next_worker(&it, current, total)) {
-                action(&it);
-                if (has_out_columns) {
-                    mark_columns_dirty(&it, system_data);
-                }                
+                action(&it);               
             }
         }
 
@@ -19702,10 +19701,7 @@ ecs_entity_t ecs_run_intern(
                 continue;
             }
 
-            action(&it);
-            if (has_out_columns) {
-                mark_columns_dirty(&it, system_data);
-            }            
+            action(&it);           
         }        
     }
 

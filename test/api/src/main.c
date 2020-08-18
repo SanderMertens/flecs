@@ -457,6 +457,11 @@ void Sorting_sort_by_component_same_value_1(void);
 void Sorting_sort_by_component_same_value_2(void);
 void Sorting_sort_by_component_move_pivot(void);
 void Sorting_sort_1000_entities(void);
+void Sorting_sort_1000_entities_w_duplicates(void);
+void Sorting_sort_1000_entities_again(void);
+void Sorting_sort_1000_entities_2_types(void);
+void Sorting_sort_1000_entities_2_types_again(void);
+void Sorting_sort_1000_entities_add_type_after_sort(void);
 
 // Testsuite 'Queries'
 void Queries_query_changed_after_new(void);
@@ -2835,6 +2840,26 @@ bake_test_case Sorting_testcases[] = {
     {
         "sort_1000_entities",
         Sorting_sort_1000_entities
+    },
+    {
+        "sort_1000_entities_w_duplicates",
+        Sorting_sort_1000_entities_w_duplicates
+    },
+    {
+        "sort_1000_entities_again",
+        Sorting_sort_1000_entities_again
+    },
+    {
+        "sort_1000_entities_2_types",
+        Sorting_sort_1000_entities_2_types
+    },
+    {
+        "sort_1000_entities_2_types_again",
+        Sorting_sort_1000_entities_2_types_again
+    },
+    {
+        "sort_1000_entities_add_type_after_sort",
+        Sorting_sort_1000_entities_add_type_after_sort
     }
 };
 
@@ -5606,7 +5631,7 @@ static bake_test_suite suites[] = {
         "Sorting",
         NULL,
         NULL,
-        13,
+        18,
         Sorting_testcases
     },
     {

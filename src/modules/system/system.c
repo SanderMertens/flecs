@@ -154,29 +154,6 @@ void invoke_status_action(
     }
 }
 
-static
-void mark_columns_dirty(
-    ecs_iter_t *it,
-    EcsSystem *system_data)
-{
-    ecs_table_t *table = it->table;
-    if (table && table->dirty_state) {
-        ecs_query_t *q = system_data->query;
-        int32_t i, count = ecs_vector_count(q->sig.columns);
-        ecs_sig_column_t *columns = ecs_vector_first(
-            q->sig.columns, ecs_sig_column_t);
-
-        for (i = 0; i < count; i ++) {
-            if (columns[i].inout_kind != EcsIn) {
-                int32_t table_column = it->columns[i];
-                if (table_column > 0) {
-                    table->dirty_state[table_column - 1] ++;
-                }
-            }
-        }
-    }
-}
-
 /* Invoked when system becomes active or inactive */
 void ecs_system_activate(
     ecs_world_t *world,
@@ -262,7 +239,6 @@ void ecs_init_system(
         sptr->entity = system;
         sptr->tick_source = 0;
         sptr->time_spent = 0;
-        sptr->has_out_columns = false;
     }
 
     /* Sanity check to make sure creating the query didn't add any additional
@@ -314,7 +290,6 @@ void ecs_init_system(
         
         for (i = 0; i < count; i ++) {
             if (columns[i].inout_kind != EcsIn) {
-                sptr->has_out_columns = true;
                 break;
             }
         }
@@ -428,9 +403,6 @@ ecs_entity_t ecs_run_intern(
         ecs_os_get_time(&time_start);
     }
 
-    /* Used to check if table columns must be marked dirty */
-    bool has_out_columns = system_data->has_out_columns;
-
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
     it.world = stage->world;
@@ -454,9 +426,6 @@ ecs_entity_t ecs_run_intern(
         if (ran_by_app || world == stage->world) {
             while (ecs_query_next(&it)) {
                 action(&it);
-                if (has_out_columns) {
-                    mark_columns_dirty(&it, system_data);
-                }
             }
         } else {
             ecs_thread_t *thread = (ecs_thread_t*)stage->world;
@@ -464,10 +433,7 @@ ecs_entity_t ecs_run_intern(
             int32_t current = thread->index;
 
             while (ecs_query_next_worker(&it, current, total)) {
-                action(&it);
-                if (has_out_columns) {
-                    mark_columns_dirty(&it, system_data);
-                }                
+                action(&it);               
             }
         }
 
@@ -479,10 +445,7 @@ ecs_entity_t ecs_run_intern(
                 continue;
             }
 
-            action(&it);
-            if (has_out_columns) {
-                mark_columns_dirty(&it, system_data);
-            }            
+            action(&it);           
         }        
     }
 

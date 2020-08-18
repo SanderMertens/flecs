@@ -1264,6 +1264,7 @@ void sort_tables(
          * we're sorting on has changed (index + 1) */
         if (is_dirty) {
             /* Sort the table */
+            // printf("SORT [%s]\n", ecs_type_str(world, table->type));
             sort_table(world, table, index, compare);
             tables_sorted = true;
         }
@@ -1380,6 +1381,11 @@ void process_signature(
         ecs_sig_column_t *column = &columns[i];
         ecs_sig_oper_kind_t op = column->oper_kind; 
         ecs_sig_from_kind_t from = column->from_kind; 
+        ecs_sig_inout_kind_t inout = column->inout_kind;
+
+        if (inout != EcsIn) {
+            query->flags |= EcsQueryHasOutColumns;
+        }
 
         if (!(query->flags & EcsQueryMatchDisabled)) {
             if (op == EcsOperOr) {
@@ -2084,6 +2090,29 @@ done:
     return -1;
 }
 
+static
+void mark_columns_dirty(
+    ecs_query_t *query,
+    ecs_matched_table_t *matched_table)
+{
+    ecs_table_t *table = matched_table->table;
+
+    if (table && table->dirty_state) {
+        int32_t i, count = ecs_vector_count(query->sig.columns);
+        ecs_sig_column_t *columns = ecs_vector_first(
+            query->sig.columns, ecs_sig_column_t);
+
+        for (i = 0; i < count; i ++) {
+            if (columns[i].inout_kind != EcsIn) {
+                int32_t table_column = matched_table->columns[i];
+                if (table_column > 0) {
+                    table->dirty_state[table_column - 1] ++;
+                }
+            }
+        }
+    }
+}
+
 /* Return next table */
 bool ecs_query_next(
     ecs_iter_t *it)
@@ -2163,6 +2192,10 @@ bool ecs_query_next(
         it->components = table->components;
         it->references = ecs_vector_first(table->references, ecs_ref_t);
         it->frame_offset += prev_count;
+
+        if (query->flags & EcsQueryHasOutColumns) {
+            mark_columns_dirty(query, table);
+        }
 
         return true;
     }

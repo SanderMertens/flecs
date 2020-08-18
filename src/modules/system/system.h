@@ -17,7 +17,6 @@ typedef struct EcsSystem {
     int32_t invoke_count;                 /* Number of times system is invoked */
     float time_spent;                     /* Time spent on running system */
     float time_passed;                    /* Time passed since last invocation */
-    bool has_out_columns;                 /* True if system has out columns */
 } EcsSystem;
 
 /* Invoked when system becomes active / inactive */

@@ -697,6 +697,35 @@ void Sorting_sort_1000_entities() {
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
         ecs_set(world, 0, Position, {v});
+
+        ecs_iter_t it = ecs_query_iter(q);
+        while (ecs_query_next(&it)) {
+            Position *p = ecs_column(&it, Position, 1);
+
+            test_assert(it.count == (i + 1));
+
+            int32_t j, x = 0;
+            for (j = 0; j < it.count; j ++) {  
+                test_assert(x <= p[j].x);
+                x = p[j].x;
+            }
+        }
+    }
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_1000_entities_w_duplicates() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+
+    for (int i = 0; i < 500; i ++) {
+        int32_t v = rand();
+        ecs_set(world, 0, Position, {v});
         ecs_set(world, 0, Position, {v});
 
         ecs_iter_t it = ecs_query_iter(q);
@@ -712,6 +741,208 @@ void Sorting_sort_1000_entities() {
             }
         }
     }
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_1000_entities_again() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+
+    ecs_entity_t start = ecs_new(world, 0);
+
+    for (int i = 0; i < 1000; i ++) {
+        int32_t v = rand();
+        ecs_set(world, i + start, Position, {v});
+
+        ecs_iter_t it = ecs_query_iter(q);
+        while (ecs_query_next(&it)) {
+            Position *p = ecs_column(&it, Position, 1);
+
+            test_assert(it.count == (i + 1));
+
+            int32_t j, x = 0;
+            for (j = 0; j < it.count; j ++) {  
+                test_assert(x <= p[j].x);
+                x = p[j].x;
+            }
+        }
+    }
+
+    for (int i = 0; i < 1000; i ++) {
+        int32_t v = rand();
+        ecs_set(world, i + start, Position, {v});
+    }
+
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_column(&it, Position, 1);
+
+        test_assert(it.count == 1000);
+
+        int32_t j, x = 0;
+        for (j = 0; j < it.count; j ++) {  
+            test_assert(x <= p[j].x);
+            x = p[j].x;
+        }
+    }    
+
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_1000_entities_2_types() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+
+    for (int i = 0; i < 500; i ++) {
+        int32_t v = rand();
+        ecs_set(world, 0, Position, {v});
+        ecs_entity_t e = ecs_set(world, 0, Position, {v});
+        ecs_add(world, e, Velocity);
+
+        ecs_iter_t it = ecs_query_iter(q);
+        int32_t count = 0;
+        while (ecs_query_next(&it)) {
+            Position *p = ecs_column(&it, Position, 1);
+
+            count += it.count;
+
+            int32_t j, x = 0;
+            for (j = 0; j < it.count; j ++) {  
+                test_assert(x <= p[j].x);
+                x = p[j].x;
+            }
+        }
+
+        test_int(count, (i + 1) * 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_1000_entities_2_types_again() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+
+    ecs_entity_t start = ecs_new(world, 0);
+
+    for (int i = 0; i < 1000; i ++) {
+        int32_t v = rand();
+        ecs_set(world, i + start, Position, {v});
+
+        if (!(i % 2)) {
+            ecs_add(world, i + start, Velocity);
+        }
+
+        ecs_iter_t it = ecs_query_iter(q);
+        while (ecs_query_next(&it)) {
+            Position *p = ecs_column(&it, Position, 1);
+
+            int32_t j, x = 0;
+            for (j = 0; j < it.count; j ++) {  
+                test_assert(x <= p[j].x);
+                x = p[j].x;
+            }
+        }
+    }
+
+    for (int i = 0; i < 1000; i ++) {
+        int32_t v = rand();
+        ecs_set(world, i + start, Position, {v});
+    }
+
+    ecs_iter_t it = ecs_query_iter(q);
+    int32_t count = 0;
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_column(&it, Position, 1);
+
+        count += it.count;
+
+        int32_t j, x = 0;
+        for (j = 0; j < it.count; j ++) {  
+            test_assert(x <= p[j].x);
+            x = p[j].x;
+        }
+    }
+
+    test_int(count, 1000);
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_1000_entities_add_type_after_sort() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+
+    ecs_entity_t start = ecs_new(world, 0);
+
+    for (int i = 0; i < 500; i ++) {
+        int32_t v = rand();
+        ecs_set(world, i + start, Position, {v});
+
+        ecs_iter_t it = ecs_query_iter(q);
+        int32_t count = 0;
+        while (ecs_query_next(&it)) {
+            Position *p = ecs_column(&it, Position, 1);
+
+            count += it.count;
+
+            int32_t j, x = 0;
+            for (j = 0; j < it.count; j ++) {  
+                test_assert(x <= p[j].x);
+                x = p[j].x;
+            }
+        }
+
+        test_int(count, i + 1);
+    }
+
+    for (int i = 0; i < 500; i ++) {
+        int32_t v = rand();
+        ecs_set(world, i + start, Position, {v});
+    }
+
+    for (int i = 0; i < 500; i ++) {
+        int32_t v = rand();
+        ecs_set(world, i + start + 500, Position, {v});
+        ecs_add(world, i + start + 500, Velocity);
+
+        ecs_iter_t it = ecs_query_iter(q);
+        int32_t count = 0;
+        while (ecs_query_next(&it)) {
+            Position *p = ecs_column(&it, Position, 1);
+
+            count += it.count;
+
+            int32_t j, x = 0;
+            for (j = 0; j < it.count; j ++) {  
+                test_assert(x <= p[j].x);
+                x = p[j].x;
+            }
+        }
+
+        test_int(count, i + 500 + 1);
+    }    
 
     ecs_fini(world);
 }

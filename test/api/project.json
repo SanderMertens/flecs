@@ -506,7 +506,12 @@
                 "sort_by_component_same_value_1",
                 "sort_by_component_same_value_2",
                 "sort_by_component_move_pivot",
-                "sort_1000_entities"
+                "sort_1000_entities",
+                "sort_1000_entities_w_duplicates",
+                "sort_1000_entities_again",
+                "sort_1000_entities_2_types",
+                "sort_1000_entities_2_types_again",
+                "sort_1000_entities_add_type_after_sort"
             ]
         }, {
             "id": "Queries",

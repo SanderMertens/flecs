@@ -8624,6 +8624,11 @@ public:
         , m_id_start( ecs_bulk_new_w_type(m_world, nullptr, count))
         , m_count(count) { }
 
+    entity_range(const world& world, std::int32_t count, flecs::type& type) 
+        : m_world(world.c_ptr())
+        , m_id_start( ecs_bulk_new_w_type(m_world, type.c_ptr(), count))
+        , m_count(count) { }
+
     template <typename Func>
     void invoke(Func&& action) const {
         for (auto id : *this) {
@@ -9642,15 +9647,8 @@ public:
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         auto ctx = new _::action_invoker<Func, Components...>(func);
 
-        std::string signature = build_signature(false);
-
-        entity_t e = ecs_new_system(
-            m_world, 
-            0,
-            m_name, 
-            m_kind, 
-            signature.c_str(), 
-            _::action_invoker<Func, Components...>::run);
+        entity_t e = create_system(
+            func, _::action_invoker<Func, Components...>::run, false);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
@@ -9670,19 +9668,8 @@ public:
     system& each(Func func) {
         auto ctx = new _::each_invoker<Func, Components...>(func);
 
-        std::string signature = build_signature(true);
-
-        if (!signature.length()) {
-            signature = "0";
-        }
-
-        entity_t e = ecs_new_system(
-            m_world, 
-            0,
-            m_name, 
-            m_kind, 
-            signature.c_str(), 
-            _::each_invoker<Func, Components...>::run);
+        entity_t e = create_system(func,
+            _::each_invoker<Func, Components...>::run, true);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
@@ -9698,6 +9685,43 @@ public:
 
     ~system() = default;
 private:
+    template <typename Func, typename Invoker>
+    entity_t create_system(Func func, Invoker invoker, bool is_each) {
+        entity_t e;
+        bool is_trigger = m_kind == flecs::OnAdd || m_kind == flecs::OnRemove;
+
+        if (is_trigger) {
+            // Don't add ANY source to each function if this is a trigger
+            is_each = false;
+        }
+
+        std::string signature = build_signature(is_each);
+
+        if (!signature.length()) {
+            signature = "0";
+        }        
+
+        if (is_trigger) {
+            e = ecs_new_trigger(
+                m_world, 
+                0,
+                m_name, 
+                m_kind, 
+                signature.c_str(), 
+                invoker);
+        } else {
+            e = ecs_new_system(
+                m_world, 
+                0,
+                m_name, 
+                m_kind, 
+                signature.c_str(), 
+                invoker);
+        }
+
+        return e;
+    }
+
     std::string build_signature(bool is_each) {
         bool is_set = false;
 
