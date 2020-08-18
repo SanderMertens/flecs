@@ -28,6 +28,7 @@ ECS (Entity Component System) is a design pattern often found in gaming and simu
 
 ## Documentation
 - [Quickstart](docs/Quickstart.md)
+- [FAQ](docs/FAQ.md)
 - [Manual](docs/Manual.md)
 - [Migration guide](docs/MigrationGuide.md)
 - [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
