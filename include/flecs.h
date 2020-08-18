@@ -2011,6 +2011,19 @@ FLECS_EXPORT
 bool ecs_query_next(
     ecs_iter_t *iter);      
 
+/** Progress the query iterator with filter.
+ * This operation is the same as ecs_query_next, but accepts a filter as an
+ * argument. Entities not matching the filter will be skipped by the iterator.
+ *
+ * @param iter The iterator.
+ * @param filter The filter to apply to the iterator.
+ * @returns True if more data is available, false if not.
+ */
+FLECS_EXPORT
+bool ecs_query_next_w_filter(
+    ecs_iter_t *iter,
+    const ecs_filter_t *filter); 
+
 /** Progress the query iterator for a worker thread.
  * This operation is similar to ecs_query_next, but provides the ability to 
  * divide entities up across multiple worker threads. The operation accepts a

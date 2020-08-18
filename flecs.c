@@ -15012,6 +15012,22 @@ bool ecs_query_next(
     return false;
 }
 
+bool ecs_query_next_w_filter(
+    ecs_iter_t *iter,
+    const ecs_filter_t *filter)
+{
+    ecs_table_t *table;
+
+    do {
+        if (!ecs_query_next(iter)) {
+            return false;
+        }
+        table = iter->table;
+    } while (filter && !ecs_table_match_filter(iter->world, table, filter));
+    
+    return true;
+}
+
 bool ecs_query_next_worker(
     ecs_iter_t *it,
     int32_t current,
@@ -19679,31 +19695,18 @@ ecs_entity_t ecs_run_intern(
     ecs_iter_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
-    if (!filter) {
-        if (ran_by_app || world == stage->world) {
-            while (ecs_query_next(&it)) {
-                action(&it);
-            }
-        } else {
-            ecs_thread_t *thread = (ecs_thread_t*)stage->world;
-            int32_t total = ecs_vector_count(world->workers);
-            int32_t current = thread->index;
-
-            while (ecs_query_next_worker(&it, current, total)) {
-                action(&it);               
-            }
+    if (ran_by_app || world == stage->world) {
+        while (ecs_query_next_w_filter(&it, filter)) {
+            action(&it);
         }
-
-    /* If filter is provided, match each table with the provided filter */
     } else {
-        while (ecs_query_next(&it)) {
-            ecs_table_t *table = it.table;
-            if (!ecs_table_match_filter(world, table, filter)) {
-                continue;
-            }
+        ecs_thread_t *thread = (ecs_thread_t*)stage->world;
+        int32_t total = ecs_vector_count(world->workers);
+        int32_t current = thread->index;
 
-            action(&it);           
-        }        
+        while (ecs_query_next_worker(&it, current, total)) {
+            action(&it);               
+        }
     }
 
     if (measure_time) {

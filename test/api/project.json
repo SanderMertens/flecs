@@ -530,7 +530,8 @@
                 "subquery_rematch",
                 "query_single_trait",
                 "query_single_instanceof",
-                "query_single_childof"
+                "query_single_childof",
+                "query_w_filter"
             ]
         }, {
             "id": "Traits",

@@ -487,3 +487,39 @@ void Queries_query_single_childof() {
 
     ecs_fini(world);
 }
+
+void Queries_query_w_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_new(world, Position);
+    ecs_add(world, ecs_new(world, 
+        Position), 
+        Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_filter_t f = {
+        .include = ecs_type(Velocity)
+    };
+
+    ecs_iter_t it = ecs_query_iter(q);
+    int32_t table_count = 0, entity_count = 0;
+    while (ecs_query_next_w_filter(&it, &f)) {
+        table_count ++;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            ecs_entity_t e = it.entities[i];
+            test_assert(ecs_has(world, e, Position));
+            test_assert(ecs_has(world, e, Velocity));
+            entity_count ++;
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
+
+    ecs_fini(world);
+}

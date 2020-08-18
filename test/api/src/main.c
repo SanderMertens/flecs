@@ -479,6 +479,7 @@ void Queries_subquery_rematch(void);
 void Queries_query_single_trait(void);
 void Queries_query_single_instanceof(void);
 void Queries_query_single_childof(void);
+void Queries_query_w_filter(void);
 
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
@@ -2924,6 +2925,10 @@ bake_test_case Queries_testcases[] = {
     {
         "query_single_childof",
         Queries_query_single_childof
+    },
+    {
+        "query_w_filter",
+        Queries_query_w_filter
     }
 };
 
@@ -5643,7 +5648,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        14,
+        15,
         Queries_testcases
     },
     {
