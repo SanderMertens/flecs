@@ -1885,7 +1885,7 @@ void notify_component_info(
         }
         
         if (!table->c_info) {
-            table->c_info = ecs_os_calloc(sizeof(ecs_c_info_t*) * column_count);
+            table->c_info = ecs_os_calloc(ECS_SIZEOF(ecs_c_info_t*) * column_count);
         }
 
         /* Reset lifecycle flags before recomputing */
@@ -2611,8 +2611,8 @@ int32_t ecs_table_append(
                 if (construct && (c_info_array = table->c_info) &&
                   (c_info = c_info_array[i]) && (ctor = c_info->lifecycle.ctor)) 
                 {
-                    ctor(world, c_info->component, &entity, elem, size, 1, 
-                        c_info->lifecycle.ctx);
+                    ctor(world, c_info->component, &entity, elem, 
+                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
                 }
             }
         }
@@ -2694,8 +2694,8 @@ void ecs_table_delete(
             {
                 void *ptr = ecs_vector_get_t(
                     column->data, size, alignment, index);
-                dtor(world, c_info->component, &entities[index], ptr, size, 1,
-                    c_info->lifecycle.ctx);
+                dtor(world, c_info->component, &entities[index], ptr, 
+                    ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
             }  
 
             ecs_vector_remove_index_t(column->data, size, alignment, index);
@@ -10261,6 +10261,7 @@ void ecs_notify_queries(
         ecs_query_notify(world, queries[i], event);
     }    
 }
+
 static
 ecs_switch_header_t *get_header(
     const ecs_switch_t *sw,
@@ -10402,7 +10403,7 @@ void ecs_switch_set_min_count(
         return;
     }
 
-    return ecs_switch_set_count(sw, count);
+    ecs_switch_set_count(sw, count);
 }
 
 void ecs_switch_addn(

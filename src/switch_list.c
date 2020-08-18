@@ -141,7 +141,7 @@ void ecs_switch_set_min_count(
         return;
     }
 
-    return ecs_switch_set_count(sw, count);
+    ecs_switch_set_count(sw, count);
 }
 
 void ecs_switch_addn(
