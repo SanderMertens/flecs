@@ -19,6 +19,8 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 This is Flecs v2, which is a breaking change from v1. For the last v1 release, see:
 https://github.com/SanderMertens/flecs/releases/tag/v1.3
 
+If you have questions, suggestions or a Flecs project you'd like to show off, [join the Flecs Discord](https://discord.gg/MRSAZqb):
+
 ## What is an Entity Component System?
 ECS (Entity Component System) is a design pattern often found in gaming and simulation which produces code that is fast and reusable. Dynamic omposition is a first-class citizen in ECS, and there is a strict separation between data and behavior. A framework is an Entity Component System if it:
 
