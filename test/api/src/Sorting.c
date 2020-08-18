@@ -589,8 +589,8 @@ void FlipP(ecs_iter_t *it) {
 void Sorting_sort_after_system() {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
     ECS_SYSTEM(world, FlipP, EcsOnUpdate, Position);
@@ -611,7 +611,7 @@ void Sorting_sort_after_system() {
     ecs_add(world, e2, Mass);
     ecs_add(world, e3, Mass);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, [in] Velocity");
     ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
@@ -634,6 +634,8 @@ void Sorting_sort_after_system() {
 
     ecs_progress(world, 0);
 
+    /* First iteration, query will register monitor with table, so table is
+     * always marked dirty */
     it = ecs_query_iter(q);
 
     test_assert(ecs_query_next(&it));
@@ -648,6 +650,129 @@ void Sorting_sort_after_system() {
     test_int(it.count, 2);    
     test_assert(it.entities[0] == e5);
     test_assert(it.entities[1] == e1);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);    
+    test_assert(it.entities[0] == e3);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_progress(world, 0);
+
+    /* Second iteration, query now needs to check dirty admin to see if system
+     * updated component */
+    it = ecs_query_iter(q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e2);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 3);
+    test_assert(it.entities[0] == e4);
+    test_assert(it.entities[1] == e1);
+    test_assert(it.entities[2] == e5);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);    
+    test_assert(it.entities[0] == e3);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_after_query() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 5});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {6, 6});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 1});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {5, 3});
+
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e2, Velocity);   
+
+    ecs_add(world, e3, Velocity);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e5, Velocity);
+
+    ecs_add(world, e2, Mass);
+    ecs_add(world, e3, Mass);
+
+    ecs_query_t *flip_q = ecs_query_new(world, "Position");
+    ecs_query_t *q = ecs_query_new(world, "Position, [in] Velocity");
+    ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+
+    ecs_iter_t it = ecs_query_iter(q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e2);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 3);
+    test_assert(it.entities[0] == e4);
+    test_assert(it.entities[1] == e1);
+    test_assert(it.entities[2] == e5);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);    
+    test_assert(it.entities[0] == e3);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_iter_t qit = ecs_query_iter(flip_q);
+    while (ecs_query_next(&qit)) {
+        FlipP(&qit);
+    }
+
+    /* First iteration, query will register monitor with table, so table is
+     * always marked dirty */
+    it = ecs_query_iter(q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e4);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e2);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 2);    
+    test_assert(it.entities[0] == e5);
+    test_assert(it.entities[1] == e1);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);    
+    test_assert(it.entities[0] == e3);
+
+    test_assert(!ecs_query_next(&it));
+
+    qit = ecs_query_iter(flip_q);
+    while (ecs_query_next(&qit)) {
+        FlipP(&qit);
+    }
+
+    /* Second iteration, query now needs to check dirty admin to see if system
+     * updated component */
+    it = ecs_query_iter(q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e2);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 3);
+    test_assert(it.entities[0] == e4);
+    test_assert(it.entities[1] == e1);
+    test_assert(it.entities[2] == e5);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);    

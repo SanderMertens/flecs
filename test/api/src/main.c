@@ -453,6 +453,7 @@ void Sorting_sort_after_remove(void);
 void Sorting_sort_after_delete(void);
 void Sorting_sort_after_set(void);
 void Sorting_sort_after_system(void);
+void Sorting_sort_after_query(void);
 void Sorting_sort_by_component_same_value_1(void);
 void Sorting_sort_by_component_same_value_2(void);
 void Sorting_sort_by_component_move_pivot(void);
@@ -2824,6 +2825,10 @@ bake_test_case Sorting_testcases[] = {
     {
         "sort_after_system",
         Sorting_sort_after_system
+    },
+    {
+        "sort_after_query",
+        Sorting_sort_after_query
     },
     {
         "sort_by_component_same_value_1",
@@ -5631,7 +5636,7 @@ static bake_test_suite suites[] = {
         "Sorting",
         NULL,
         NULL,
-        18,
+        19,
         Sorting_testcases
     },
     {

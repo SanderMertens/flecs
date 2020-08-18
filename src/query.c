@@ -1264,7 +1264,6 @@ void sort_tables(
          * we're sorting on has changed (index + 1) */
         if (is_dirty) {
             /* Sort the table */
-            // printf("SORT [%s]\n", ecs_type_str(world, table->type));
             sort_table(world, table, index, compare);
             tables_sorted = true;
         }
@@ -2106,7 +2105,7 @@ void mark_columns_dirty(
             if (columns[i].inout_kind != EcsIn) {
                 int32_t table_column = matched_table->columns[i];
                 if (table_column > 0) {
-                    table->dirty_state[table_column - 1] ++;
+                    table->dirty_state[table_column] ++;
                 }
             }
         }
@@ -2194,7 +2193,9 @@ bool ecs_query_next(
         it->frame_offset += prev_count;
 
         if (query->flags & EcsQueryHasOutColumns) {
-            mark_columns_dirty(query, table);
+            if (world_table) {
+                mark_columns_dirty(query, table);
+            }
         }
 
         return true;
