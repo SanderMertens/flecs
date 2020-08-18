@@ -120,6 +120,12 @@
                 "signature_optional"
             ]
         }, {
+            "id": "Trigger",
+            "testcases": [
+                "on_add",
+                "on_remove"
+            ]
+        }, {
             "id": "Query",
             "testcases": [
                 "action",

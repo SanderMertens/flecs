@@ -103,6 +103,10 @@ void System_signature_const(void);
 void System_signature_shared(void);
 void System_signature_optional(void);
 
+// Testsuite 'Trigger'
+void Trigger_on_add(void);
+void Trigger_on_remove(void);
+
 // Testsuite 'Query'
 void Query_action(void);
 void Query_action_const(void);
@@ -507,6 +511,17 @@ bake_test_case System_testcases[] = {
     }
 };
 
+bake_test_case Trigger_testcases[] = {
+    {
+        "on_add",
+        Trigger_on_add
+    },
+    {
+        "on_remove",
+        Trigger_on_remove
+    }
+};
+
 bake_test_case Query_testcases[] = {
     {
         "action",
@@ -742,6 +757,13 @@ static bake_test_suite suites[] = {
         System_testcases
     },
     {
+        "Trigger",
+        NULL,
+        NULL,
+        2,
+        Trigger_testcases
+    },
+    {
         "Query",
         NULL,
         NULL,
@@ -780,5 +802,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 11);
+    return bake_test_run("cpp_api", argc, argv, suites, 12);
 }
