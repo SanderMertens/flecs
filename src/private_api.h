@@ -121,13 +121,14 @@ void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable);
 
-ecs_flags32_t ecs_get_component_action_flags(
-    ecs_c_info_t *c_info);    
-
-void ecs_notify_tables_of_component_actions(
+void ecs_notify_tables(
     ecs_world_t *world,
-    ecs_entity_t component,
-    ecs_c_info_t *c_info);
+    ecs_table_event_t *event);
+
+void ecs_notify_queries(
+    ecs_world_t *world,
+    ecs_query_event_t *event);
+    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
@@ -191,24 +192,6 @@ void ecs_get_column_info(
     ecs_column_info_t *cinfo,
     bool get_all);
 
-void ecs_components_construct(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count,
-    ecs_column_info_t *component_info,
-    int32_t component_count);
-
-void ecs_components_destruct(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count,
-    ecs_column_info_t *component_info,
-    int32_t component_count);
-
 void ecs_run_add_actions(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -250,12 +233,6 @@ void ecs_run_set_systems(
 void ecs_init_root_table(
     ecs_world_t *world,
     ecs_stage_t *stage);
-
-void ecs_table_register_query(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query,
-    int32_t matched_table_index);
 
 /* Unset components in table */
 void ecs_table_unset(
@@ -333,6 +310,11 @@ int32_t ecs_table_switch_from_case(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t add);    
+
+void ecs_table_notify(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_event_t *event);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API

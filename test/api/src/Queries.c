@@ -213,7 +213,9 @@ void Queries_subquery_match_existing() {
     } 
 
     test_int(table_count, 1);
-    test_int(entity_count, 3);  
+    test_int(entity_count, 3); 
+
+    ecs_query_free(sq); 
 
     ecs_fini(world);
 }
@@ -266,6 +268,8 @@ void Queries_subquery_match_new() {
     test_int(table_count, 1);
     test_int(entity_count, 3);  
 
+    ecs_query_free(sq);
+
     ecs_fini(world);
 }
 
@@ -316,6 +320,8 @@ void Queries_subquery_inactive() {
     }
 
     test_int(table_count, 0);
+
+    ecs_query_free(sq);
 
     ecs_fini(world);
 }
@@ -387,6 +393,10 @@ void Queries_subquery_rematch() {
 
     it = ecs_query_iter(sq);
     test_int(it.table_count, 0);
+
+    ecs_query_free(sq);
+
+    ecs_fini(world);
 }
 
 void Queries_query_single_trait() {

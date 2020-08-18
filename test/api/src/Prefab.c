@@ -1729,7 +1729,7 @@ void Prefab_ref_after_realloc() {
     ECS_COMPONENT(world, Mass);
 
     ECS_PREFAB(world, Prefab, Mass);
-    ecs_set(world, Prefab, Mass, {1});
+    ecs_set(world, Prefab, Mass, {2});
 
     ECS_ENTITY(world, e_1, Position, Mass);
     ecs_set(world, e_1, Mass, {3});
@@ -1744,7 +1744,6 @@ void Prefab_ref_after_realloc() {
      * cause systems with refs to re-resolve their cached ref ptrs  */
     ecs_bulk_new_w_type(world, prefab_type, 1000);
     
-    ecs_set(world, Prefab, Mass, {2});
     ecs_progress(world, 1);
 
     const Position *p = ecs_get(world, e_1, Position);

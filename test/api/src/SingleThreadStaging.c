@@ -2638,6 +2638,48 @@ void SingleThreadStaging_merge_once() {
     ecs_fini(world);
 }
 
+static int move_position = 0;
+static
+ECS_MOVE(Position, dst, src, {
+    move_position ++;
+    dst->x = src->x;
+    dst->y = src->y;
+});
+
+void SingleThreadStaging_clear_stage_after_merge() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    /* If component was moved multiple times, the merge contains multiple 
+     * instances of the entity */
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .move = ecs_move(Position)
+    });
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_staging_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_staging_end(world, false);
+    
+    test_int(move_position, 1);
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_staging_begin(world);
+    ecs_set(world, e, Position, {30, 40});
+    ecs_staging_end(world, false);  
+
+    test_int(move_position, 2);
+    p = ecs_get(world, e, Position);
+    test_int(p->x, 30);
+    test_int(p->y, 40);      
+
+    ecs_fini(world);
+}
+
 void MutableTest(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 

@@ -29,7 +29,9 @@ void clear_columns(
             ecs_table_t *src_table = record->table;
             if (record && record->table) {
                 ecs_data_t *src_data = ecs_table_get_data(world, src_table);
-                ecs_table_delete(world, stage, src_table, src_data, row);
+
+                ecs_table_delete(
+                    world, &world->stage, src_table, src_data, row, true);
             }
 
             /* If the staged record has the table set to the root, this is an entity
@@ -70,7 +72,6 @@ void merge_commits(
         int32_t component_count = ecs_vector_count(table->type);
         
         ecs_assert(main_data != data, ECS_INTERNAL_ERROR, NULL);
-
         data->marked_dirty = false;
 
         /* If the table contains no data, this was a staged table that was
@@ -96,10 +97,6 @@ void merge_commits(
             continue;
         }
 
-        /* Delete the entity from its previous main stage table, if it already 
-         * existed. Doing this before copying the component data ensures that if 
-         * an entity was staged for the same table, it can be simply appended to 
-         * the end of the table without creating a duplicate record. */
         for (e = 0; e < entity_count; e ++) {
             ecs_record_t *record = record_ptrs[e];            
             ecs_entity_t entity = entities[e];
@@ -112,18 +109,45 @@ void merge_commits(
 
             bool is_watched;
             int32_t row = ecs_record_to_row(record->row, &is_watched);            
-
             ecs_table_t *src_table = record->table;
-            if (src_table) {
-                /* Delete entity from old table */
-                ecs_data_t *src_data = ecs_table_get_data(world, src_table);
-                ecs_table_destruct(world, src_table, src_data, row, 1);
 
-                ecs_table_delete(world, stage, src_table, src_data, row);
+            /* If one or more of the components in the table have a move action
+             * we need to move the entity from source to destination table first
+             * in the main stage, so that we can move the values from the stage
+             * into the current values. */
+            if (src_table != table) {
+                /* Insert row for entity into target table */
+                int32_t dst_row = ecs_table_append(
+                    world, table, main_data, entity, record, false);
+
+                if (src_table) {
+                    ecs_data_t *src_data = ecs_table_get_data(world, src_table);
+
+                    /* Move entity from src table to destination table */
+                    if (src_table->flags & EcsTableHasMove) {
+                        ecs_table_move(world, &world->stage, entity, entity, table, 
+                            main_data, dst_row, src_table, src_data, row, true);
+                    }
+
+                    /* Delete data from source table */
+                    ecs_table_delete(
+                        world, &world->stage, src_table, src_data, row, false);
+                }
+
+                /* Now move data from stage into the main stage */
+                ecs_table_move(world, &world->stage, entity, entity, table, 
+                    main_data, dst_row, table, data, e, false);
+
+                record->table = table;
+                record->row = ecs_row_to_record(dst_row, is_watched);
+            } else {
+                /* If entity is already in this table, simply move */
+                ecs_table_move(world, &world->stage, entity, entity, table, 
+                    main_data, row, table, data, e, false);
             }
         }
 
-        ecs_table_merge(world, table, table, main_data, data);        
+        ecs_table_clear_data(table, data);
     }
 
     /* All dirty tables are processed, clear array for next frame. */

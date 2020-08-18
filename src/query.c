@@ -134,8 +134,11 @@ void order_ranked_tables(
      * monitor is executed we can quickly find the right matched_table. */
     if (query->flags & EcsQueryMonitor) {
         ecs_vector_each(query->tables, ecs_matched_table_t, table, {
-            ecs_table_register_query(
-                world, table->table, query, table_i);
+            ecs_table_notify(world, table->table, &(ecs_table_event_t){
+                .kind = EcsTableQueryMatch,
+                .query = query,
+                .matched_table_index = table_i
+            });
         });
     }
 
@@ -631,8 +634,12 @@ add_trait:
             matched_table_index = ecs_vector_count(query->tables) - 1;
             ecs_assert(matched_table_index >= 0, ECS_INTERNAL_ERROR, NULL);
         }
-        
-        ecs_table_register_query(world, table, query, matched_table_index);
+
+        ecs_table_notify(world, table, &(ecs_table_event_t){
+            .kind = EcsTableQueryMatch,
+            .query = query,
+            .matched_table_index = matched_table_index
+        });
     }
 
     /* Use tail recursion when adding table for multiple traits */
@@ -1013,6 +1020,8 @@ void* ptr_from_helper(
     sort_helper_t *helper)
 {
     ecs_assert(helper->row < helper->count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(helper->elem_size >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(helper->row >= 0, ECS_INTERNAL_ERROR, NULL);
     return ELEM(helper->ptr, helper->elem_size, helper->row);
 }
 
@@ -1056,13 +1065,16 @@ void build_sorted_table_range(
             int16_t align = column->alignment;
             helper[to_sort].ptr = ecs_vector_first_t(column->data, size, align);
             helper[to_sort].elem_size = size;
+        } else {
+            helper[to_sort].ptr = NULL;
+            helper[to_sort].elem_size = 0;
         }
 
         helper[to_sort].table = table;
         helper[to_sort].entities = ecs_vector_first(data->entities, ecs_entity_t);
         helper[to_sort].row = 0;
-        helper[to_sort].count = ecs_table_count(table->table);
-        to_sort ++;
+        helper[to_sort].count = ecs_table_count(table->table);  
+        to_sort ++;      
     }
 
     ecs_table_slice_t *cur = NULL;
@@ -1547,6 +1559,7 @@ void free_matched_table(
     ecs_matched_table_t *table)
 {
     ecs_os_free(table->columns);
+    ecs_os_free(table->sparse_columns);
     ecs_os_free(table->components);
     ecs_vector_free(table->references);
     ecs_os_free(table->monitor);
@@ -1714,14 +1727,7 @@ ecs_query_t* ecs_query_new_w_sig_intern(
     ecs_sig_t *sig,
     bool is_subquery)
 {
-    ecs_query_t *result;
-    if (is_subquery) {
-        result = ecs_sparse_add(world->subqueries, ecs_query_t);
-    } else {
-        result = ecs_sparse_add(world->queries, ecs_query_t);
-    }
-
-    memset(result, 0, sizeof(ecs_query_t));
+    ecs_query_t *result = ecs_os_calloc(sizeof(ecs_query_t));
     result->world = world;
     result->sig = *sig;
     result->tables = ecs_vector_new(ecs_matched_table_t, 0);
@@ -1756,6 +1762,10 @@ ecs_query_t* ecs_query_new_w_sig_intern(
             * preprocessed when the query is evaluated. */
             add_table(world, result, NULL);
         }
+
+        /* Register query with world */
+        ecs_query_t **elem = ecs_vector_add(&world->queries, ecs_query_t*);
+        *elem = result;
     } else {
         result->flags |= EcsQueryIsSubquery;
     }
@@ -1804,6 +1814,8 @@ ecs_query_t* ecs_subquery_new(
 void ecs_query_free(
     ecs_query_t *query)
 {
+    ecs_world_t *world = query->world;
+
     ecs_vector_each(query->empty_tables, ecs_matched_table_t, table, {
         free_matched_table(table);
     });
@@ -1817,6 +1829,21 @@ void ecs_query_free(
     ecs_vector_free(query->empty_tables);
     ecs_vector_free(query->table_slices);
     ecs_sig_deinit(&query->sig);
+
+    /* Find query in vector */
+    if (!(query->flags & EcsQueryIsSubquery) && world->queries) {
+        int32_t index = -1;
+        ecs_vector_each(world->queries, ecs_query_t*, q_ptr, {
+            if (*q_ptr == query) {
+                index = q_ptr_i;
+            }
+        });
+
+        ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
+        ecs_vector_remove_index(world->queries, ecs_query_t*, index);
+    }
+
+    ecs_os_free(query);
 }
 
 /* Create query iterator */

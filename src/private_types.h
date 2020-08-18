@@ -72,6 +72,36 @@ typedef int (*ecs_parse_action_t)(
     const char *trait,
     void *ctx);
 
+/** Component-specific data */
+typedef struct ecs_c_info_t {
+    ecs_entity_t component;
+    ecs_vector_t *on_add;       /* Systems ran after adding this component */
+    ecs_vector_t *on_remove;    /* Systems ran after removing this component */
+    EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
+} ecs_c_info_t;
+
+/* Table event type for notifying tables of world events */
+typedef enum ecs_table_eventkind_t {
+    EcsTableQueryMatch,
+    EcsTableQueryUnmatch,
+    EcsTableComponentInfo
+} ecs_table_eventkind_t;
+
+typedef struct ecs_table_event_t {
+    ecs_table_eventkind_t kind;
+
+    /* Query event */
+    ecs_query_t *query;
+    int32_t matched_table_index;
+
+    /* Component info event */
+    ecs_entity_t component;
+
+    /* If the nubmer of fields gets out of hand, this can be turned into a union
+     * but since events are very temporary objects, this works for now and makes
+     * initializing an event a bit simpler. */
+} ecs_table_event_t;    
+
 /** A component column. */
 struct ecs_column_t {
     ecs_vector_t *data;        /**< Column data */
@@ -111,12 +141,14 @@ typedef struct ecs_table_leaf_t {
 #define EcsTableIsDisabled          64u   /**< Does the table type has EcsDisabled */
 #define EcsTableHasCtors            128u
 #define EcsTableHasDtors            256u
-#define EcsTableHasOnAdd            512u
-#define EcsTableHasOnRemove         1024u
-#define EcsTableHasOnSet            2048u
-#define EcsTableHasUnSet            4096u
-#define EcsTableHasMonitors         8192u
-#define EcsTableHasSwitch           16384u
+#define EcsTableHasCopy             512u
+#define EcsTableHasMove             1024u
+#define EcsTableHasOnAdd            2048u
+#define EcsTableHasOnRemove         4096u
+#define EcsTableHasOnSet            8192u
+#define EcsTableHasUnSet            16384u
+#define EcsTableHasMonitors         32768u
+#define EcsTableHasSwitch           65536u
 
 /* Composite constants */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
@@ -146,6 +178,7 @@ typedef struct ecs_matched_query_t {
  * table is created, it is automatically matched with existing column systems */
 struct ecs_table_t {
     ecs_type_t type;                 /**< Identifies table type in type_index */
+    ecs_c_info_t **c_info;           /**< Cached pointers to component info */
 
     ecs_edge_t *lo_edges;            /**< Edges to low entity ids */
     ecs_map_t *hi_edges;             /**< Edges to high entity ids */
@@ -209,6 +242,7 @@ typedef struct ecs_table_slice_t {
 
 #define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
+/* Query event type for notifying queries of world events */
 typedef enum ecs_query_eventkind_t {
     EcsQueryTableMatch,
     EcsQueryTableEmpty,
@@ -363,13 +397,6 @@ typedef struct ecs_thread_t {
     int32_t index;                           /* Index of thread */
 } ecs_thread_t;
 
-/** Component-specific data */
-typedef struct ecs_c_info_t {
-    ecs_vector_t *on_add;       /* Systems ran after adding this component */
-    ecs_vector_t *on_remove;    /* Systems ran after removing this component */
-    EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
-} ecs_c_info_t;
-
 /** Supporting type to store looked up component data in specific table */
 typedef struct ecs_column_info_t {
     ecs_entity_t id;
@@ -405,8 +432,7 @@ struct ecs_world_t {
 
     /* Persistent queries registered with the world. Persistent queries are
      * stateful and automatically matched with existing and new tables. */
-    ecs_sparse_t *queries;
-    ecs_sparse_t *subqueries;
+    ecs_vector_t *queries;
 
     /* Keep track of components that were added/removed to/from monitored
      * entities. Monitored entities are entities that a query has matched with

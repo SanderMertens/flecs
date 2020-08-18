@@ -69,7 +69,7 @@ void _bootstrap_component(
     record->table = table;
 
     /* Insert row into table to store EcsComponent itself */
-    int32_t index = ecs_table_append(world, table, data, entity, record);
+    int32_t index = ecs_table_append(world, table, data, entity, record, false);
     record->row = index + 1;
 
     /* Set size and id */

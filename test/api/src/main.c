@@ -255,6 +255,17 @@ void Get_component_get_1_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_remove_in_progress(void);
 
+// Testsuite 'Reference'
+void Reference_get_ref(void);
+void Reference_get_ref_after_add(void);
+void Reference_get_ref_after_remove(void);
+void Reference_get_ref_after_delete(void);
+void Reference_get_ref_after_realloc(void);
+void Reference_get_ref_staged(void);
+void Reference_get_ref_after_new_in_stage(void);
+void Reference_get_ref_monitored(void);
+void Reference_get_nonexisting(void);
+
 // Testsuite 'Delete'
 void Delete_delete_1(void);
 void Delete_delete_1_again(void);
@@ -359,6 +370,8 @@ void ComponentLifecycle_ctor_on_tag(void);
 void ComponentLifecycle_dtor_on_tag(void);
 void ComponentLifecycle_copy_on_tag(void);
 void ComponentLifecycle_move_on_tag(void);
+void ComponentLifecycle_merge_to_different_table(void);
+void ComponentLifecycle_delete_in_stage(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -427,6 +440,8 @@ void SystemMisc_add_own_component(void);
 void SystemMisc_change_system_action(void);
 void SystemMisc_system_readeactivate(void);
 void SystemMisc_system_readeactivate_w_2_systems(void);
+void SystemMisc_add_to_system_in_progress(void);
+void SystemMisc_add_to_lazy_system_in_progress(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -1004,6 +1019,7 @@ void SingleThreadStaging_merge_after_tasks(void);
 void SingleThreadStaging_override_after_remove_in_progress(void);
 void SingleThreadStaging_get_parent_in_progress(void);
 void SingleThreadStaging_merge_once(void);
+void SingleThreadStaging_clear_stage_after_merge(void);
 void SingleThreadStaging_get_mutable(void);
 void SingleThreadStaging_get_mutable_from_main(void);
 void SingleThreadStaging_get_mutable_w_add(void);
@@ -1021,6 +1037,7 @@ void MultiThreadStaging_new_w_count(void);
 
 // Testsuite 'Stresstests'
 void Stresstests_setup(void);
+void Stresstests_create_1m_set_two_components(void);
 void Stresstests_create_delete_entity_random_components(void);
 void Stresstests_set_entity_random_components(void);
 void Stresstests_create_delete_entity_random_components_staged(void);
@@ -2064,6 +2081,45 @@ bake_test_case Get_component_testcases[] = {
     }
 };
 
+bake_test_case Reference_testcases[] = {
+    {
+        "get_ref",
+        Reference_get_ref
+    },
+    {
+        "get_ref_after_add",
+        Reference_get_ref_after_add
+    },
+    {
+        "get_ref_after_remove",
+        Reference_get_ref_after_remove
+    },
+    {
+        "get_ref_after_delete",
+        Reference_get_ref_after_delete
+    },
+    {
+        "get_ref_after_realloc",
+        Reference_get_ref_after_realloc
+    },
+    {
+        "get_ref_staged",
+        Reference_get_ref_staged
+    },
+    {
+        "get_ref_after_new_in_stage",
+        Reference_get_ref_after_new_in_stage
+    },
+    {
+        "get_ref_monitored",
+        Reference_get_ref_monitored
+    },
+    {
+        "get_nonexisting",
+        Reference_get_nonexisting
+    }
+};
+
 bake_test_case Delete_testcases[] = {
     {
         "delete_1",
@@ -2446,6 +2502,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "move_on_tag",
         ComponentLifecycle_move_on_tag
+    },
+    {
+        "merge_to_different_table",
+        ComponentLifecycle_merge_to_different_table
+    },
+    {
+        "delete_in_stage",
+        ComponentLifecycle_delete_in_stage
     }
 };
 
@@ -2708,6 +2772,14 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "system_readeactivate_w_2_systems",
         SystemMisc_system_readeactivate_w_2_systems
+    },
+    {
+        "add_to_system_in_progress",
+        SystemMisc_add_to_system_in_progress
+    },
+    {
+        "add_to_lazy_system_in_progress",
+        SystemMisc_add_to_lazy_system_in_progress
     }
 };
 
@@ -4894,6 +4966,10 @@ bake_test_case SingleThreadStaging_testcases[] = {
         SingleThreadStaging_merge_once
     },
     {
+        "clear_stage_after_merge",
+        SingleThreadStaging_clear_stage_after_merge
+    },
+    {
         "get_mutable",
         SingleThreadStaging_get_mutable
     },
@@ -4943,6 +5019,10 @@ bake_test_case MultiThreadStaging_testcases[] = {
 };
 
 bake_test_case Stresstests_testcases[] = {
+    {
+        "create_1m_set_two_components",
+        Stresstests_create_1m_set_two_components
+    },
     {
         "create_delete_entity_random_components",
         Stresstests_create_delete_entity_random_components
@@ -5453,6 +5533,13 @@ static bake_test_suite suites[] = {
         Get_component_testcases
     },
     {
+        "Reference",
+        NULL,
+        NULL,
+        9,
+        Reference_testcases
+    },
+    {
         "Delete",
         NULL,
         NULL,
@@ -5498,7 +5585,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        22,
+        24,
         ComponentLifecycle_testcases
     },
     {
@@ -5512,7 +5599,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        49,
+        51,
         SystemMisc_testcases
     },
     {
@@ -5680,7 +5767,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         NULL,
         NULL,
-        59,
+        60,
         SingleThreadStaging_testcases
     },
     {
@@ -5694,7 +5781,7 @@ static bake_test_suite suites[] = {
         "Stresstests",
         Stresstests_setup,
         NULL,
-        14,
+        15,
         Stresstests_testcases
     },
     {
@@ -5743,5 +5830,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 53);
+    return bake_test_run("api", argc, argv, suites, 54);
 }

@@ -222,7 +222,7 @@ void ecs_snapshot_restore(
                         /* Always delete entity, so that even if the entity is
                         * in the current table, there won't be duplicates */
                         ecs_table_delete(world, &world->stage, r->table, 
-                            data, row);
+                            data, row, false);
                     }
                 });
 
@@ -236,6 +236,8 @@ void ecs_snapshot_restore(
                 ecs_entities_t components = ecs_type_to_entities(table->type);
                 ecs_run_set_systems(world, &world->stage, &components, table, data,
                     old_count, new_count, true);
+
+                ecs_os_free(leaf->data->columns);
             } else {
                 ecs_table_replace_data(world, table, leaf->data);
             }

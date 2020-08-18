@@ -1,24 +1,5 @@
 #include "private_api.h"
 
-/* When a new table is created, match it with the queries registered with the
- * world. If a query matches, it will call the esc_table_register_query 
- * function which will add the query to the table administration. */
-void ecs_notify_queries_of_table(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    int32_t i, count = ecs_sparse_count(world->queries);
-
-    for (i = 0; i < count; i ++) {
-        ecs_query_t *query = ecs_sparse_get(world->queries, ecs_query_t, i);
-
-        ecs_query_notify(world, query, &(ecs_query_event_t) {
-            .kind = EcsQueryTableMatch,
-            .table = table
-        });
-    }
-}
-
 const EcsComponent* ecs_component_from_id(
     ecs_world_t *world,
     ecs_entity_t e)
@@ -212,13 +193,12 @@ void init_edges(
                 ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
             }
         }
-
-        /* Set flags based on component actions */
-        ecs_c_info_t *ci = ecs_get_c_info(world, e & ECS_ENTITY_MASK);
-        if (ci) {
-            table->flags |= ecs_get_component_action_flags(ci);
-        }
     }
+
+    /* Register component info flags for all columns */
+    ecs_table_notify(world, table, &(ecs_table_event_t){
+        .kind = EcsTableComponentInfo
+    });
     
     /* Register as root table */
     if (!(table->flags & EcsTableHasParent)) {
@@ -234,6 +214,7 @@ void init_table(
     ecs_entities_t *entities)
 {
     table->type = entities_to_type(entities);
+    table->c_info = NULL;
     table->data = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
@@ -243,12 +224,12 @@ void init_table(
     table->on_set_override = NULL;
     table->un_set_all = NULL;
     table->alloc_count = 0;
-    
-    init_edges(world, stage, table);
 
     table->queries = NULL;
     table->column_count = data_column_count(world, table);
     table->sw_column_count = switch_column_count(table);
+
+    init_edges(world, stage, table);
 }
 
 static
@@ -259,7 +240,6 @@ ecs_table_t *create_table(
 {
     ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-
     init_table(world, stage, result, entities);
 
 #ifndef NDEBUG
@@ -273,24 +253,15 @@ ecs_table_t *create_table(
 
     /* Don't notify queries if table is created in stage */
     if (stage == &world->stage) {
-        ecs_notify_queries_of_table(world, result);
+        ecs_notify_queries(world, &(ecs_query_event_t) {
+            .kind = EcsQueryTableMatch,
+            .table = result
+        });
     }
 
     ecs_log_pop();
 
     return result;
-}
-
-void ecs_init_root_table(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{
-    ecs_entities_t entities = {
-        .array = NULL,
-        .count = 0
-    };
-
-    init_table(world, stage, &stage->root, &entities);
 }
 
 static
@@ -969,4 +940,16 @@ ecs_table_t* ecs_table_from_type(
     ecs_entities_t components = ecs_type_to_entities(type);
     return ecs_table_find_or_create(
         world, stage, &components);
+}
+
+void ecs_init_root_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    ecs_entities_t entities = {
+        .array = NULL,
+        .count = 0
+    };
+
+    init_table(world, stage, &stage->root, &entities);
 }

@@ -284,6 +284,19 @@
                 "get_both_from_2_add_remove_in_progress"
             ]
         }, {
+            "id": "Reference",
+            "testcases": [
+                "get_ref",
+                "get_ref_after_add",
+                "get_ref_after_remove",
+                "get_ref_after_delete",
+                "get_ref_after_realloc",
+                "get_ref_staged",
+                "get_ref_after_new_in_stage",
+                "get_ref_monitored",
+                "get_nonexisting"
+            ]
+        }, {
             "id": "Delete",
             "testcases": [
                 "delete_1",
@@ -400,7 +413,9 @@
                 "ctor_on_tag",
                 "dtor_on_tag",
                 "copy_on_tag",
-                "move_on_tag"
+                "move_on_tag",
+                "merge_to_different_table",
+                "delete_in_stage"
             ]
         }, {
             "id": "Pipeline",
@@ -472,7 +487,9 @@
                 "add_own_component",
                 "change_system_action",
                 "system_readeactivate",
-                "system_readeactivate_w_2_systems"
+                "system_readeactivate_w_2_systems",
+                "add_to_system_in_progress",
+                "add_to_lazy_system_in_progress"
             ]
         }, {
             "id": "Sorting",
@@ -1098,6 +1115,7 @@
                 "override_after_remove_in_progress",
                 "get_parent_in_progress",
                 "merge_once",
+                "clear_stage_after_merge",
                 "get_mutable",
                 "get_mutable_from_main",
                 "get_mutable_w_add",
@@ -1119,6 +1137,7 @@
             "id": "Stresstests",
             "setup": true,
             "testcases": [
+                "create_1m_set_two_components",
                 "create_delete_entity_random_components",
                 "set_entity_random_components",
                 "create_delete_entity_random_components_staged",

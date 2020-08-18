@@ -189,10 +189,10 @@ bool build_pipeline(
     /* Iterate systems in pipeline, add ops for running / merging */
     ecs_iter_t it = ecs_query_iter(query);
     while (ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);
+        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);        
 
         int i;
-        for (i = 0; i < it.count; i ++) {
+        for (i = 0; i < it.count; i ++) {            
             ecs_query_t *q = sys[i].query;
             if (!q) {
                 continue;

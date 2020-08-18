@@ -1138,6 +1138,11 @@ void ecs_switch_set_count(
     int32_t count);
 
 FLECS_EXPORT
+void ecs_switch_set_min_count(
+    ecs_switch_t *sw,
+    int32_t count);
+
+FLECS_EXPORT
 void ecs_switch_addn(
     ecs_switch_t *sw,
     int32_t count);    
