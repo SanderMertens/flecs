@@ -161,6 +161,11 @@ void ImplicitComponents_system_optional(void);
 void ImplicitComponents_query(void);
 void ImplicitComponents_implicit_name(void);
 
+// Testsuite 'Snapshot'
+void Snapshot_simple_snapshot(void);
+void Snapshot_snapshot_iter(void);
+void Snapshot_snapshot_iter_w_filter(void);
+
 bake_test_case Entity_testcases[] = {
     {
         "new",
@@ -713,6 +718,21 @@ bake_test_case ImplicitComponents_testcases[] = {
     }
 };
 
+bake_test_case Snapshot_testcases[] = {
+    {
+        "simple_snapshot",
+        Snapshot_simple_snapshot
+    },
+    {
+        "snapshot_iter",
+        Snapshot_snapshot_iter
+    },
+    {
+        "snapshot_iter_w_filter",
+        Snapshot_snapshot_iter_w_filter
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -797,10 +817,17 @@ static bake_test_suite suites[] = {
         NULL,
         12,
         ImplicitComponents_testcases
+    },
+    {
+        "Snapshot",
+        NULL,
+        NULL,
+        3,
+        Snapshot_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 12);
+    return bake_test_run("cpp_api", argc, argv, suites, 13);
 }

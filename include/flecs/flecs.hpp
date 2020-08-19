@@ -3378,23 +3378,26 @@ private:
 class filter_iterator
 {
 public:
-    filter_iterator()
+    filter_iterator(ecs_iter_next_action_t action)
         : m_world(nullptr)
         , m_has_next(false)
-        , m_iter{ } { }
+        , m_iter{ } 
+        , m_action(action) { }
 
-    filter_iterator(const world& world, const filter& filter)
+    filter_iterator(const world& world, const filter& filter, ecs_iter_next_action_t action)
         : m_world( world.c_ptr() )
         , m_iter( ecs_filter_iter(m_world, filter.c_ptr()) ) 
+        , m_action(action)
     { 
-        m_has_next = ecs_filter_next(&m_iter);
+        m_has_next = m_action(&m_iter);
     }
 
-    filter_iterator(const world& world, const snapshot& snapshot, const filter& filter) 
+    filter_iterator(const world& world, const snapshot& snapshot, const filter& filter, ecs_iter_next_action_t action) 
         : m_world( world.c_ptr() )
         , m_iter( ecs_snapshot_iter(snapshot.c_ptr(), filter.c_ptr()) )
+        , m_action(action)
     {
-        m_has_next = ecs_filter_next(&m_iter);
+        m_has_next = m_action(&m_iter);
     }
 
     bool operator!=(filter_iterator const& other) const {
@@ -3406,7 +3409,7 @@ public:
     }
 
     filter_iterator& operator++() {
-        m_has_next = ecs_filter_next(&m_iter);
+        m_has_next = m_action(&m_iter);
         return *this;
     }
 
@@ -3414,6 +3417,7 @@ private:
     world_t *m_world;
     bool m_has_next;
     ecs_iter_t m_iter;
+    ecs_iter_next_action_t m_action;
 };
 
 
@@ -3463,11 +3467,11 @@ public:
         , m_filter( filter ) { }
 
     inline filter_iterator begin() const {
-        return filter_iterator(m_world, m_filter);
+        return filter_iterator(m_world, m_filter, ecs_filter_next);
     }
 
     inline filter_iterator end() const {
-        return filter_iterator();
+        return filter_iterator(ecs_filter_next);
     }
 
 private:
@@ -3488,11 +3492,11 @@ public:
         , m_filter( filter ) { }
 
     inline filter_iterator begin() const {
-        return filter_iterator(m_world, m_snapshot, m_filter);
+        return filter_iterator(m_world, m_snapshot, m_filter, ecs_snapshot_next);
     }
 
     inline filter_iterator end() const {
-        return filter_iterator();
+        return filter_iterator(ecs_snapshot_next);
     }
 
 private:
@@ -3577,11 +3581,11 @@ inline snapshot_filter snapshot::filter(const flecs::filter& filter) {
 }
 
 inline filter_iterator snapshot::begin() {
-    return filter_iterator(m_world, *this, flecs::filter(m_world));
+    return filter_iterator(m_world, *this, flecs::filter(m_world), ecs_snapshot_next);
 }
 
 inline filter_iterator snapshot::end() {
-    return filter_iterator();
+    return filter_iterator(ecs_snapshot_next);
 }
 
 
@@ -3878,11 +3882,11 @@ inline flecs::world_filter world::filter(const flecs::filter& filter) const {
 }
 
 inline filter_iterator world::begin() const {
-    return filter_iterator(*this, flecs::filter(*this));
+    return filter_iterator(*this, flecs::filter(*this), ecs_filter_next);
 }
 
 inline filter_iterator world::end() const {
-    return filter_iterator();
+    return filter_iterator(ecs_filter_next);
 }
 
 inline int world::count(flecs::filter filter) const {

@@ -189,6 +189,13 @@
                 "query",
                 "implicit_name"
             ]
+        }, {
+            "id": "Snapshot",
+            "testcases": [
+                "simple_snapshot",
+                "snapshot_iter",
+                "snapshot_iter_w_filter"
+            ]
         }]
     }
 }
