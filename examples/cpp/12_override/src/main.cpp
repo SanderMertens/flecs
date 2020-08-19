@@ -29,8 +29,9 @@ int main(int argc, char *argv[]) {
      * Mass component. */
     instance.set<Mass>({20});
 
-    /* Print value before overriding Mass. The component is not owned, as it is
-     * shared with the base entity. */
+    /* Print values after overriding Mass. The value of Mass for instance_1 will
+     * be the value assigned in the override (20). Instance now owns Mass,
+     * confirming it has a private copy of the component. */
     std::cout << "After overriding:" << std::endl;
     std::cout << "instance: " 
         << instance.get<Mass>()->value << " (owned = " 
