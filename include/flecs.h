@@ -2313,6 +2313,7 @@ size_t ecs_table_column_size(
  * @param it The iterator.
  * @param component The component for which to obtain the index.
  */
+FLECS_EXPORT
 int32_t ecs_table_component_index(
     const ecs_iter_t *it,
     ecs_entity_t component);

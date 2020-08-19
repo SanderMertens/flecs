@@ -2491,7 +2491,8 @@ public:
 
             entity_t entity = ecs_new_component(
                 world, 0, _::name_helper<T>::name(), 
-                sizeof(T), alignof(T));
+                sizeof(typename std::remove_pointer<T>::type), 
+                alignof(typename std::remove_pointer<T>::type));
 
             init(world, entity);
         }

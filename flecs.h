@@ -4725,6 +4725,7 @@ size_t ecs_table_column_size(
  * @param it The iterator.
  * @param component The component for which to obtain the index.
  */
+FLECS_EXPORT
 int32_t ecs_table_component_index(
     const ecs_iter_t *it,
     ecs_entity_t component);
@@ -8933,7 +8934,8 @@ public:
 
             entity_t entity = ecs_new_component(
                 world, 0, _::name_helper<T>::name(), 
-                sizeof(T), alignof(T));
+                sizeof(typename std::remove_pointer<T>::type), 
+                alignof(typename std::remove_pointer<T>::type));
 
             init(world, entity);
         }

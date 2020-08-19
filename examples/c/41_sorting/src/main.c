@@ -14,7 +14,7 @@ int compare_position(
 {
     Position *p1 = ptr1;
     Position *p2 = ptr2;
-    return p1->x - p2->x;
+    return (p1->x > p2->x) - (p1->x < p2->x);
 }
 
 /* Iterate query, printed values will be ordered */

@@ -119,21 +119,42 @@ void ImplicitComponents_system() {
 void ImplicitComponents_system_optional() {
     flecs::world world;
 
-    flecs::system<Position*, Velocity*>(world)
-        .each([](flecs::entity e, Position* p, Velocity* v) {
+    int rotation_count = 0;
+    int mass_count = 0;
+
+    flecs::system<Rotation*, Mass*>(world)
+        .each([&](flecs::entity e, Rotation* r, Mass* m) {
+            if (r) {
+                rotation_count ++;
+            }
+            if (m) {
+                mass_count ++;
+            }
         });
 
-    auto position = world.lookup("Position");
-    test_assert(position.id() != 0);
+    flecs::entity(world).set<Rotation>({10});
+    flecs::entity(world).set<Mass>({20});
 
-    auto velocity = world.lookup("Velocity");
-    test_assert(velocity.id() != 0);  
+    flecs::entity(world)
+        .set<Rotation>({30})
+        .set<Mass>({40});
 
-    auto pcomp = flecs::component<Position>(world);
-    test_assert(pcomp == position);
+    auto rotation = world.lookup("Rotation");
+    test_assert(rotation.id() != 0);
 
-    auto vcomp = flecs::component<Velocity>(world);
-    test_assert(vcomp == velocity);    
+    auto mass = world.lookup("Mass");
+    test_assert(mass.id() != 0);  
+
+    auto rcomp = flecs::component<Rotation>(world);
+    test_assert(rcomp == rotation);
+
+    auto mcomp = flecs::component<Mass>(world);
+    test_assert(mcomp == mass);    
+
+    world.progress();
+
+    test_int(rotation_count, 2);
+    test_int(mass_count, 2);
 }
 
 void ImplicitComponents_query() {
