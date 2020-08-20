@@ -80,7 +80,8 @@
                 "add_case",
                 "get_case",
                 "system_w_case",
-                "system_w_switch"
+                "system_w_switch",
+                "add_case_w_type"
             ]
         }, {
             "id": "Paths",

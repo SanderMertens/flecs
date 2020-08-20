@@ -71,6 +71,7 @@ void Switch_add_case(void);
 void Switch_get_case(void);
 void Switch_system_w_case(void);
 void Switch_system_w_switch(void);
+void Switch_add_case_w_type(void);
 
 // Testsuite 'Paths'
 void Paths_name(void);
@@ -404,6 +405,10 @@ bake_test_case Switch_testcases[] = {
     {
         "system_w_switch",
         Switch_system_w_switch
+    },
+    {
+        "add_case_w_type",
+        Switch_add_case_w_type
     }
 };
 
@@ -752,7 +757,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        4,
+        5,
         Switch_testcases
     },
     {

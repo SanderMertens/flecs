@@ -118,3 +118,29 @@ void Switch_system_w_switch() {
     test_int(invoke_count, 1);
     test_int(count, 3);
 }
+
+struct Standing { };
+struct Walking { };
+
+void Switch_add_case_w_type() {
+    flecs::world world;
+
+    flecs::component<Standing>(world);
+    flecs::component<Walking>(world);
+
+    auto Movement = flecs::type(world, "Movement", 
+        "Standing, Walking");
+
+    auto e = flecs::entity(world)
+        .add_switch(Movement)
+        .add_case<Standing>();
+
+    test_assert(e.has_switch(Movement));
+    test_assert(e.has_case<Standing>());
+
+    e.add_case<Walking>();
+
+    test_assert(e.has_case<Walking>());
+    test_assert(!e.has_case<Standing>());
+}
+

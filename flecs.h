@@ -7714,6 +7714,21 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
+    /** Add a switch to an entity by id.
+     * The case must belong to a switch that is already added to the entity.
+     *
+     * @tparam T The case to add.
+     */   
+    template<typename T>
+    base_type& add_case() const {
+        static_cast<base_type*>(this)->invoke(
+        [](world_t *world, entity_t id) {
+            ecs_add_entity(world, id, 
+                ECS_CASE | _::component_info<T>::id(world));
+        });
+        return *static_cast<base_type*>(this);
+    }
+
     /** Add a case to an entity.
      * The case must belong to a switch that is already added to the entity.
      *
@@ -7733,6 +7748,21 @@ public:
         });
         return *static_cast<base_type*>(this);  
     }
+
+    /** Remove a switch from an entity by id.
+     * The case must belong to a switch that is already added to the entity.
+     *
+     * @tparam T The case to remove.
+     */   
+    template<typename T>
+    base_type& remove_case() const {
+        static_cast<base_type*>(this)->invoke(
+        [](world_t *world, entity_t id) {
+            ecs_remove_entity(world, id, 
+                ECS_CASE | _::component_info<T>::id(world));
+        });
+        return *static_cast<base_type*>(this);
+    }    
 
     /** Remove a case from an entity.
      * The case must belong to a switch that is already added to the entity.
@@ -8118,7 +8148,23 @@ public:
         } else {
             return std::string();
         }
-    }    
+    }   
+
+    /** Enable an entity.
+     * Enabled entities are matched with systems and can be searched with
+     * queries.
+     */
+    void enable() {
+        ecs_enable(m_world, m_id, true);
+    }
+
+    /** Disable an entity.
+     * Disabled entities are not matched with systems and cannot be searched 
+     * with queries, unless explicitly specified in the query expression.
+     */
+    void disable() {
+        ecs_enable(m_world, m_id, false);
+    }     
 
     /** Return the world.
      *
@@ -8565,14 +8611,28 @@ public:
      */
     bool has_switch(flecs::type sw) const;
 
+    /** Check if entity has the provided case id.
+     *
+     * @param sw_case The case id to check.
+     * @return True if the entity has the provided case, false otherwise.
+     */
+    bool has_case(entity_t sw_case) const {
+        return ecs_has_entity(m_world, m_id, flecs::Case | sw_case);
+    }
+
     /** Check if entity has the provided case.
      *
      * @param sw_case The case to check.
      * @return True if the entity has the provided case, false otherwise.
      */
     bool has_case(flecs::entity sw_case) const {
-        return ecs_has_entity(m_world, m_id, flecs::Case | sw_case.id());
-    }  
+        return this->has_case(sw_case.id());
+    }
+
+    template<typename T>
+    bool has_case() const {
+        return this->has_case(_::component_info<T>::id(m_world));
+    }
 
     /** Get case for switch.
      *
