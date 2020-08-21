@@ -28,16 +28,16 @@ void ecs_os_init(void)
     }
     
     if (!(ecs_os_api_init_count ++)) {
-        if (ecs_os_api.init) {
-            ecs_os_api.init();
+        if (ecs_os_api._init) {
+            ecs_os_api._init();
         }
     }
 }
 
 void ecs_os_fini(void) {
     if (!--ecs_os_api_init_count) {
-        if (ecs_os_api.fini) {
-            ecs_os_api.fini();
+        if (ecs_os_api._fini) {
+            ecs_os_api._fini();
         }
     }
 }
@@ -231,17 +231,17 @@ void ecs_os_set_api_defaults(void)
     ecs_os_time_setup();
     
     /* Memory management */
-    ecs_os_api.malloc = ecs_os_api_malloc;
-    ecs_os_api.free = ecs_os_api_free;
-    ecs_os_api.realloc = ecs_os_api_realloc;
-    ecs_os_api.calloc = ecs_os_api_calloc;
+    ecs_os_api._malloc = ecs_os_api_malloc;
+    ecs_os_api._free = ecs_os_api_free;
+    ecs_os_api._realloc = ecs_os_api_realloc;
+    ecs_os_api._calloc = ecs_os_api_calloc;
 
     /* Strings */
-    ecs_os_api.strdup = ecs_os_api_strdup;
+    ecs_os_api._strdup = ecs_os_api_strdup;
 
     /* Time */
-    ecs_os_api.sleep = ecs_os_time_sleep;
-    ecs_os_api.get_time = ecs_os_gettime;
+    ecs_os_api._sleep = ecs_os_time_sleep;
+    ecs_os_api._get_time = ecs_os_gettime;
 
     /* Logging */
     ecs_os_api._log = ecs_log;
@@ -250,13 +250,63 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api._log_warning = ecs_log_warning;
 
     /* Modules */
-    if (!ecs_os_api.module_to_dl) {
-        ecs_os_api.module_to_dl = ecs_os_api_module_to_dl;
+    if (!ecs_os_api._module_to_dl) {
+        ecs_os_api._module_to_dl = ecs_os_api_module_to_dl;
     }
 
-    if (!ecs_os_api.module_to_etc) {
-        ecs_os_api.module_to_etc = ecs_os_api_module_to_etc;
+    if (!ecs_os_api._module_to_etc) {
+        ecs_os_api._module_to_etc = ecs_os_api_module_to_etc;
     }
 
-    ecs_os_api.abort = abort;
+    ecs_os_api._abort = abort;
+}
+
+bool ecs_os_has_heap(void) {
+    return 
+        (ecs_os_api._malloc != NULL) &&
+        (ecs_os_api._calloc != NULL) &&
+        (ecs_os_api._realloc != NULL) &&
+        (ecs_os_api._free != NULL);
+}
+
+bool ecs_os_has_threading(void) {
+    return
+        (ecs_os_api._mutex_new != NULL) &&
+        (ecs_os_api._mutex_free != NULL) &&
+        (ecs_os_api._mutex_lock != NULL) &&
+        (ecs_os_api._mutex_unlock != NULL) &&
+        (ecs_os_api._cond_new != NULL) &&
+        (ecs_os_api._cond_free != NULL) &&
+        (ecs_os_api._cond_wait != NULL) &&
+        (ecs_os_api._cond_signal != NULL) &&
+        (ecs_os_api._cond_broadcast != NULL) &&
+        (ecs_os_api._thread_new != NULL) &&
+        (ecs_os_api._thread_join != NULL);   
+}
+
+bool ecs_os_has_time(void) {
+    return 
+        (ecs_os_api._get_time != NULL) &&
+        (ecs_os_api._sleep != NULL);
+}
+
+bool ecs_os_has_logging(void) {
+    return 
+        (ecs_os_api._log != NULL) &&
+        (ecs_os_api._log_error != NULL) &&
+        (ecs_os_api._log_debug != NULL) &&
+        (ecs_os_api._log_warning != NULL);
+}
+
+bool ecs_os_has_dl(void) {
+    return 
+        (ecs_os_api._dlopen != NULL) &&
+        (ecs_os_api._dlproc != NULL) &&
+        (ecs_os_api._dlclose != NULL);  
+}
+
+bool ecs_os_has_modules(void) {
+    return 
+        (ecs_os_api._module_to_dl != NULL) &&
+        (ecs_os_api._module_to_etc != NULL);
 }

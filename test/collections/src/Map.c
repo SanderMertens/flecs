@@ -42,9 +42,9 @@ void *test_realloc(void *old_ptr, ecs_size_t size) {
 void Map_setup() {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
-    os_api.malloc = test_malloc;
-    os_api.calloc = test_calloc;
-    os_api.realloc = test_realloc;
+    os_api._malloc = test_malloc;
+    os_api._calloc = test_calloc;
+    os_api._realloc = test_realloc;
     ecs_os_set_api(&os_api);    
 }
 

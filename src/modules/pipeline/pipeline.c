@@ -590,7 +590,7 @@ float ecs_frame_begin(
     float user_delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(user_delta_time != 0 || ecs_os_api.get_time, ECS_MISSING_OS_API, "get_time");
+    ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
 
     if (world->locking_enabled) {
         ecs_lock(world);
