@@ -45,7 +45,8 @@
                 "equals",
                 "has_childof",
                 "has_instanceof",
-                "has_instanceof_indirect"
+                "has_instanceof_indirect",
+                "null_string"
             ]
         }, {
             "id": "Traits",
@@ -118,7 +119,9 @@
                 "signature",
                 "signature_const",
                 "signature_shared",
-                "signature_optional"
+                "signature_optional",
+                "copy_name_on_create",
+                "nested_system"
             ]
         }, {
             "id": "Trigger",

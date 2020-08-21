@@ -19737,9 +19737,13 @@ ecs_entity_t ecs_new_system(
     const char *e_name = ecs_name_from_symbol(world, name);
     
     ecs_entity_t result = ecs_lookup_w_type(world, name, ecs_type(EcsSignatureExpr));
+
     if (!result) {
         result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
+        if (name) {
+            ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
+        }
+        
         if (tag) {
             ecs_add_entity(world, result, tag);
         }
@@ -20815,7 +20819,9 @@ ecs_entity_t ecs_lookup_path_w_sep(
     const char *sep,
     const char *prefix)
 {
-    ecs_assert(path != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (!path) {
+        return 0;
+    }
     
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr;
@@ -20998,6 +21004,18 @@ ecs_entity_t ecs_add_path_w_sep(
     const char *sep,
     const char *prefix)
 {
+    if (!path) {
+        if (!entity) {
+            entity = ecs_new_id(world);
+        }
+
+        if (parent) {
+            ecs_add_entity(world, entity, ECS_CHILDOF | entity);
+        }
+
+        return entity;
+    }
+
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr = path;
 

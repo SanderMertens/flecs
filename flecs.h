@@ -9637,15 +9637,15 @@ private:
 template<typename ... Components>
 class system final : public entity {
 public:
-    system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr)
-        : m_kind(static_cast<ecs_entity_t>(OnUpdate))
-        , m_name(name) 
+    system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr) 
+        : entity(world, name)
+        , m_kind(static_cast<ecs_entity_t>(OnUpdate)) 
         , m_signature(signature)
-        , m_period(0.0)
+        , m_interval(0.0)
         , m_on_demand(false)
         , m_hidden(false)
         , m_finalized(false) { 
-            m_world = world.c_ptr();
+            ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
         }
 
     system& signature(const char *signature) {
@@ -9661,10 +9661,18 @@ public:
         return *this;
     }
 
-    system& period(float period) {
-        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        m_period = period;
+    system& interval(float interval) {
+        if (!m_finalized) {
+            m_interval = interval;
+        } else {
+            ecs_set_interval(m_world, m_id, interval);
+        }
         return *this;
+    }
+
+    // DEPRECATED: use interval instead
+    system& period(float period) {
+        return this->interval(period);
     }
 
     system& on_demand() {
@@ -9717,17 +9725,10 @@ public:
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         auto ctx = new _::action_invoker<Func, Components...>(func);
 
-        entity_t e = create_system(
-            func, _::action_invoker<Func, Components...>::run, false);
+        create_system(func, _::action_invoker<Func, Components...>::run, false);
 
         EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
-
-        if (m_period) {
-            ecs_set_interval(m_world, e, m_period);
-        }
-
-        m_id = e;
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }
@@ -9738,17 +9739,10 @@ public:
     system& each(Func func) {
         auto ctx = new _::each_invoker<Func, Components...>(func);
 
-        entity_t e = create_system(func,
-            _::each_invoker<Func, Components...>::run, true);
+        create_system(func, _::each_invoker<Func, Components...>::run, true);
 
         EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
-
-        if (m_period) {
-            ecs_set_interval(m_world, e, m_period);
-        }        
-
-        m_id = e;
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }
@@ -9757,6 +9751,8 @@ public:
 private:
     template <typename Func, typename Invoker>
     entity_t create_system(Func func, Invoker invoker, bool is_each) {
+        ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
+
         entity_t e;
         bool is_trigger = m_kind == flecs::OnAdd || m_kind == flecs::OnRemove;
 
@@ -9774,19 +9770,25 @@ private:
         if (is_trigger) {
             e = ecs_new_trigger(
                 m_world, 
-                0,
-                m_name, 
+                m_id,
+                nullptr, 
                 m_kind, 
                 signature.c_str(), 
                 invoker);
         } else {
             e = ecs_new_system(
                 m_world, 
-                0,
-                m_name, 
+                m_id,
+                nullptr, 
                 m_kind, 
                 signature.c_str(), 
                 invoker);
+        }
+
+        ecs_assert(e == m_id, ECS_INTERNAL_ERROR, NULL);
+
+        if (m_interval) {
+            ecs_set_interval(m_world, e, m_interval);
         }
 
         return e;
@@ -9828,9 +9830,8 @@ private:
     }       
 
     ecs_entity_t m_kind;
-    const char *m_name;
     const char *m_signature = nullptr;
-    float m_period;
+    float m_interval;
     bool m_on_demand;
     bool m_hidden;
     bool m_finalized; // After set to true, call no more fluent functions

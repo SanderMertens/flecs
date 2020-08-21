@@ -502,3 +502,11 @@ void Entity_has_instanceof_indirect() {
 
     test_assert(e.has_instanceof(base_of_base));
 }
+
+void Entity_null_string() {
+    flecs::world world;
+
+    auto e = flecs::entity(world);
+
+    test_str(e.name().c_str(), "");
+}

@@ -40,6 +40,7 @@ void Entity_equals(void);
 void Entity_has_childof(void);
 void Entity_has_instanceof(void);
 void Entity_has_instanceof_indirect(void);
+void Entity_null_string(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -103,6 +104,8 @@ void System_signature(void);
 void System_signature_const(void);
 void System_signature_shared(void);
 void System_signature_optional(void);
+void System_copy_name_on_create(void);
+void System_nested_system(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -291,6 +294,10 @@ bake_test_case Entity_testcases[] = {
     {
         "has_instanceof_indirect",
         Entity_has_instanceof_indirect
+    },
+    {
+        "null_string",
+        Entity_null_string
     }
 };
 
@@ -518,6 +525,14 @@ bake_test_case System_testcases[] = {
     {
         "signature_optional",
         System_signature_optional
+    },
+    {
+        "copy_name_on_create",
+        System_copy_name_on_create
+    },
+    {
+        "nested_system",
+        System_nested_system
     }
 };
 
@@ -743,7 +758,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        31,
+        32,
         Entity_testcases
     },
     {
@@ -778,7 +793,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        12,
+        14,
         System_testcases
     },
     {
