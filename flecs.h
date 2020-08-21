@@ -7726,16 +7726,7 @@ public:
      */   
     template<typename T>
     base_type& add_case() const {
-<<<<<<< HEAD
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, 
-                ECS_CASE | _::component_info<T>::id(world));
-        });
-        return *static_cast<base_type*>(this);
-=======
-        this->add_case(_::component_info<T>::id());
->>>>>>> 30b79b1... #229 reimplement sparse set for optimized bulk operations & memory utilization
+        return this->add_case(_::component_info<T>::id());
     }
 
     /** Add a case to an entity.
@@ -7765,16 +7756,7 @@ public:
      */   
     template<typename T>
     base_type& remove_case() const {
-<<<<<<< HEAD
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, 
-                ECS_CASE | _::component_info<T>::id(world));
-        });
-        return *static_cast<base_type*>(this);
-=======
-        this->remove_case(_::component_info<T>::id());
->>>>>>> 30b79b1... #229 reimplement sparse set for optimized bulk operations & memory utilization
+        return this->remove_case(_::component_info<T>::id());
     }    
 
     /** Remove a case from an entity.

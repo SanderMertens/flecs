@@ -1278,7 +1278,7 @@ public:
      */   
     template<typename T>
     base_type& add_case() const {
-        this->add_case(_::component_info<T>::id());
+        return this->add_case(_::component_info<T>::id());
     }
 
     /** Add a case to an entity.
@@ -1308,7 +1308,7 @@ public:
      */   
     template<typename T>
     base_type& remove_case() const {
-        this->remove_case(_::component_info<T>::id());
+        return this->remove_case(_::component_info<T>::id());
     }    
 
     /** Remove a case from an entity.
