@@ -124,7 +124,7 @@ uint64_t inc_id(
 
 static
 uint64_t get_id(
-    ecs_sparse_t *sparse)
+    const ecs_sparse_t *sparse)
 {
     return sparse->max_id[0];
 }
@@ -247,12 +247,15 @@ void ecs_sparse_set_id_source(
     ecs_sparse_t *sparse,
     uint64_t *id_source)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     sparse->max_id = id_source;
 }
 
 void ecs_sparse_clear(
     ecs_sparse_t *sparse)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_vector_each(sparse->chunks, chunk_t, chunk, {
         chunk_free(chunk);
     });
@@ -268,14 +271,17 @@ void ecs_sparse_clear(
 void ecs_sparse_free(
     ecs_sparse_t *sparse)
 {
-    ecs_sparse_clear(sparse);
-    ecs_vector_free(sparse->dense);
-    ecs_os_free(sparse);
+    if (sparse) {
+        ecs_sparse_clear(sparse);
+        ecs_vector_free(sparse->dense);
+        ecs_os_free(sparse);
+    }
 }
 
 uint64_t ecs_sparse_new_id(
     ecs_sparse_t *sparse)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     return new_index(sparse);
 }
 
@@ -283,6 +289,7 @@ uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
     int32_t new_count)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     int32_t dense_count = ecs_vector_count(sparse->dense);
     int32_t count = sparse->count;
     int32_t remaining = dense_count - count;
@@ -307,6 +314,7 @@ void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
     ecs_size_t size)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     uint64_t index = new_index(sparse);
     chunk_t *chunk = get_chunk(sparse, CHUNK(index));
@@ -319,6 +327,7 @@ void* _ecs_sparse_get_or_create(
     ecs_size_t size,
     uint64_t index)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -379,6 +388,7 @@ void _ecs_sparse_remove(
     ecs_sparse_t *sparse,
     uint64_t index)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
@@ -410,6 +420,7 @@ void* _ecs_sparse_get(
     ecs_size_t size,
     int32_t dense_index)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(dense_index < sparse->count, ECS_INVALID_PARAMETER, NULL);
 
@@ -424,6 +435,7 @@ void* _ecs_sparse_get_sparse(
     ecs_size_t size,
     uint64_t index)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     return try_sparse(sparse, index);
@@ -452,6 +464,7 @@ int32_t ecs_sparse_size(
 const uint64_t* ecs_sparse_ids(
     const ecs_sparse_t *sparse)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     return &(ecs_vector_first(sparse->dense, uint64_t)[1]);
 }
 
@@ -459,6 +472,7 @@ void ecs_sparse_set_size(
     ecs_sparse_t *sparse,
     int32_t elem_count)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_vector_set_size(&sparse->dense, uint64_t, elem_count);
 }
 
@@ -466,6 +480,7 @@ void ecs_sparse_grow(
     ecs_sparse_t *sparse,
     int32_t elem_count)
 {
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_vector_grow(&sparse->dense, uint64_t, elem_count);
 }
 
@@ -487,11 +502,7 @@ void sparse_copy(
         ecs_os_memcpy(dst_ptr, src_ptr, size);
     }
 
-    if (dst->max_id != &dst->max_id_local) {
-        dst->max_id = src->max_id;
-    } else {
-        dst->max_id_local = src->max_id_local;
-    }
+    set_id(dst, get_id(src));
 
     ecs_assert(src->count == dst->count, ECS_INTERNAL_ERROR, NULL);
 }
@@ -513,6 +524,7 @@ void ecs_sparse_restore(
     ecs_sparse_t *dst,
     const ecs_sparse_t *src)
 {
+    ecs_assert(dst != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_sparse_clear(dst);
     if (src) {
         sparse_copy(dst, src);

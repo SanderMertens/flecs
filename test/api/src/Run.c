@@ -1165,16 +1165,16 @@ void Run_run_comb_10_entities_1_type() {
 
     int i, ENTITIES = 10;
 
-    ecs_entity_t start = ecs_bulk_new(world, Position, ENTITIES);
+    ecs_entity_t *ids = ecs_bulk_new(world, Position, ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        ecs_set(world, start + i, Position, {1, 2});
+        ecs_set(world, ids[i], Position, {1, 2});
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get(world, start + i, Position);
+        const Position *p = ecs_get(world, ids[i], Position);
         test_int(p->x, ENTITIES - i);
     }
 
@@ -1193,18 +1193,24 @@ void Run_run_comb_10_entities_2_types() {
 
     int i, ENTITIES = 10;
 
-    ecs_entity_t start = ecs_bulk_new(world, Position, ENTITIES / 2);
-    ecs_bulk_new(world, Type, ENTITIES / 2);
+    ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, ENTITIES / 2);
+    ecs_entity_t ids_1[5];
+    memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * ENTITIES / 2);
+    ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, ENTITIES / 2);
 
-    for (i = 0; i < ENTITIES; i ++) {
-        ecs_set(world, start + i, Position, {1, 2});
-    }
+    for (i = 0; i < 5; i ++) {
+        ecs_set(world, ids_1[i], Position, {1, 2});
+        ecs_set(world, ids_2[i], Position, {1, 2});
+    }  
 
     ecs_progress(world, 0);
 
-    for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get(world, start + i, Position);
+    for (i = 0; i < 5; i ++) {
+        const Position *p = ecs_get(world, ids_1[i], Position);
         test_int(p->x, ENTITIES - i);
+
+        p = ecs_get(world, ids_2[i], Position);
+        test_int(p->x, ENTITIES - (i + 5));
     }
 
     ecs_fini(world);

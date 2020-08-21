@@ -115,7 +115,7 @@ static
 void NewEmpty_w_count(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
 
-    ctx->new_entities[ctx->entity_count] = ecs_bulk_new(it->world, 0, 1000);
+    ctx->new_entities[ctx->entity_count] = ecs_bulk_new(it->world, 0, 1000)[0];
     ctx->entity_count ++;
 }
 
@@ -147,13 +147,12 @@ void New_w_component_w_count(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     
     ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
-    ctx->new_entities[ctx->entity_count] = ecs_bulk_new_w_type(it->world, type, 1000);
+    ecs_entity_t *ids = ecs_bulk_new_w_type(it->world, type, 1000);
+    ctx->new_entities[ctx->entity_count] = ids[0];
 
     int i;
     for (i = 0; i < 1000; i ++) {
-        test_assert( 
-            ecs_has_type(it->world, ctx->new_entities[ctx->entity_count] + i, 
-                type));
+        test_assert( ecs_has_type(it->world, ids[i], type));
     }
 
     ctx->entity_count ++;

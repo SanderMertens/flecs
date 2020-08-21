@@ -2040,24 +2040,24 @@ void Prefab_nested_prefab_in_progress_w_count_set_after_override() {
     ECS_SYSTEM(world, NewPrefab_w_count, EcsOnUpdate, :Prefab);
     ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
 
-    ecs_entity_t result = 0;
-    ecs_set_context(world, &result);
+    ecs_entity_t *ids = 0;
+    ecs_set_context(world, &ids);
 
     ecs_progress(world, 1);
 
-    test_assert(result != 0);
+    test_assert(ids != NULL);
     test_int(on_set_velocity_invoked, 3);
 
     int i;
     for (i = 0; i < 3; i ++) {
-        ecs_has_entity(world, result + i, ECS_INSTANCEOF | Prefab);
+        ecs_has_entity(world, ids[i], ECS_INSTANCEOF | Prefab);
 
-        const Position *p = ecs_get(world, result + i, Position);
+        const Position *p = ecs_get(world, ids[i], Position);
         test_assert(p != NULL); 
         test_int(p->x, 1);
         test_int(p->y, 2);
 
-        ecs_entity_t child = ecs_lookup_child(world, result + i, "ChildPrefab");
+        ecs_entity_t child = ecs_lookup_child(world, ids[i], "ChildPrefab");
         test_assert(child != 0);
 
         const Velocity *v = ecs_get(world, child, Velocity);

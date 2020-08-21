@@ -257,7 +257,7 @@ void SystemOnSet_bulk_new_1() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){ecs_entity(Position)}, 
             .count = 1
@@ -276,9 +276,9 @@ void SystemOnSet_bulk_new_1() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e);
-    test_int(ctx.e[1], e + 1);
-    test_int(ctx.e[2], e + 2);
+    test_int(ctx.e[0], ids[0]);
+    test_int(ctx.e[1], ids[1]);
+    test_int(ctx.e[2], ids[2]);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
@@ -296,7 +296,7 @@ void SystemOnSet_bulk_new_2() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Position),
@@ -323,9 +323,9 @@ void SystemOnSet_bulk_new_2() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e);
-    test_int(ctx.e[1], e + 1);
-    test_int(ctx.e[2], e + 2);
+    test_int(ctx.e[0], ids[0]);
+    test_int(ctx.e[1], ids[1]);
+    test_int(ctx.e[2], ids[2]);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_entity(Velocity));
@@ -345,7 +345,7 @@ void SystemOnSet_bulk_new_2_of_1() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Position),
@@ -372,9 +372,9 @@ void SystemOnSet_bulk_new_2_of_1() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e);
-    test_int(ctx.e[1], e + 1);
-    test_int(ctx.e[2], e + 2);
+    test_int(ctx.e[0], ids[0]);
+    test_int(ctx.e[1], ids[1]);
+    test_int(ctx.e[2], ids[2]);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
@@ -393,7 +393,7 @@ void SystemOnSet_bulk_new_3() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Position),
@@ -426,9 +426,9 @@ void SystemOnSet_bulk_new_3() {
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e);
-    test_int(ctx.e[1], e + 1);
-    test_int(ctx.e[2], e + 2);
+    test_int(ctx.e[0], ids[0]);
+    test_int(ctx.e[1], ids[1]);
+    test_int(ctx.e[2], ids[2]);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_entity(Velocity));
@@ -451,7 +451,7 @@ void SystemOnSet_bulk_new_3_of_2() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Position),
@@ -484,9 +484,9 @@ void SystemOnSet_bulk_new_3_of_2() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e);
-    test_int(ctx.e[1], e + 1);
-    test_int(ctx.e[2], e + 2);
+    test_int(ctx.e[0], ids[0]);
+    test_int(ctx.e[1], ids[1]);
+    test_int(ctx.e[2], ids[2]);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_entity(Velocity));
@@ -508,7 +508,7 @@ void SystemOnSet_bulk_new_1_from_base() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Velocity),
@@ -536,9 +536,9 @@ void SystemOnSet_bulk_new_1_from_base() {
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e);
-    test_int(ctx.e[1], e + 1);
-    test_int(ctx.e[2], e + 2);
+    test_int(ctx.e[0], ids[0]);
+    test_int(ctx.e[1], ids[1]);
+    test_int(ctx.e[2], ids[2]);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], Base);
     test_int(ctx.c[0][1], ecs_entity(Velocity));
