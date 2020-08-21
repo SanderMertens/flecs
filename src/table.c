@@ -1172,7 +1172,7 @@ int32_t ecs_table_grow(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count,
-    ecs_entity_t *ids)
+    const ecs_entity_t *ids)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);

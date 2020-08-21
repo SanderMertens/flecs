@@ -56,14 +56,14 @@ int32_t get_bucket_count(
 }
 
 static
-int32_t get_bucket_id(
+uint64_t get_bucket_id(
     int32_t bucket_count,
     ecs_map_key_t key) 
 {
     ecs_assert(bucket_count > 0, ECS_INTERNAL_ERROR, NULL);
     uint64_t result = key & ((uint64_t)bucket_count - 1);
     ecs_assert(result < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
-    return (int32_t)result;
+    return result;
 }
 
 static
@@ -77,9 +77,9 @@ ecs_bucket_t* find_bucket(
         return NULL;
     }
 
-    int32_t bucket_id = get_bucket_id(bucket_count, key);
+    uint64_t bucket_id = get_bucket_id(bucket_count, key);
 
-    return _ecs_sparse_get_sparse(buckets, 0, (uint64_t)bucket_id);
+    return _ecs_sparse_get_sparse(buckets, 0, bucket_id);
 }
 
 static
@@ -95,8 +95,8 @@ ecs_bucket_t* find_or_create_bucket(
         bucket_count = 8;
     }
 
-    int32_t bucket_id = get_bucket_id(bucket_count, key);
-    return _ecs_sparse_get_or_create(buckets, 0, (uint64_t)bucket_id);    
+    uint64_t bucket_id = get_bucket_id(bucket_count, key);
+    return _ecs_sparse_get_or_create(buckets, 0, bucket_id);    
 }
 
 static
@@ -105,8 +105,8 @@ void remove_bucket(
     ecs_map_key_t key)
 {
     int32_t bucket_count = map->bucket_count;
-    int32_t bucket_id = get_bucket_id(bucket_count, key);
-    ecs_sparse_remove(map->buckets, (uint64_t)bucket_id);
+    uint64_t bucket_id = get_bucket_id(bucket_count, key);
+    ecs_sparse_remove(map->buckets, bucket_id);
 }
 
 static
@@ -192,7 +192,7 @@ void rehash(
 
                 if (new_bucket_id != bucket_id) {
                     ecs_bucket_t *new_bucket = _ecs_sparse_get_or_create(
-                        buckets, 0, (uint64_t)new_bucket_id);
+                        buckets, 0, new_bucket_id);
 
                     indices = ecs_sparse_ids(buckets);
 

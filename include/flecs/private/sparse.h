@@ -42,7 +42,7 @@ uint64_t ecs_sparse_new_id(
     ecs_sparse_t *sparse);
 
 FLECS_EXPORT
-uint64_t* ecs_sparse_new_ids(
+const uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
     int32_t count);
 

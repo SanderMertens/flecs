@@ -146,14 +146,17 @@ void Switch_bulk_new_w_type() {
     ECS_TYPE(world, Movement, Walking, Running, Jumping);
     ECS_TYPE(world, Type, SWITCH | Movement, CASE | Running);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 100);
-    test_assert(e != 0);
+    ecs_entity_t *ids = ecs_bulk_new(world, Type, 100);
+    test_assert(ids != NULL);
 
-    ecs_add(world, e, Type);
+    int i;
+    for (i = 0; i < 100; i ++) {
+        ecs_add(world, ids[i], Type);
 
-    test_assert( ecs_has_entity(world, e, ECS_CASE | Running));
-    ecs_entity_t case_id = ecs_get_case(world, e, Movement);
-    test_int(case_id, Running);
+        test_assert( ecs_has_entity(world, ids[i], ECS_CASE | Running));
+        ecs_entity_t case_id = ecs_get_case(world, ids[i], Movement);
+        test_int(case_id, Running);        
+    }
 
     ecs_fini(world);
 }

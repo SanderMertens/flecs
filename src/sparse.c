@@ -35,7 +35,7 @@ chunk_t* chunk_new(
     if (count <= chunk_index) {
         ecs_vector_set_count(&sparse->chunks, chunk_t, chunk_index + 1);
         chunks = ecs_vector_first(sparse->chunks, chunk_t);
-        memset(&chunks[count], 0, (1 + chunk_index - count) * ECS_SIZEOF(chunk_t));
+        ecs_os_memset(&chunks[count], 0, (1 + chunk_index - count) * ECS_SIZEOF(chunk_t));
     } else {
         chunks = ecs_vector_first(sparse->chunks, chunk_t);
     }
@@ -285,7 +285,7 @@ uint64_t ecs_sparse_new_id(
     return new_index(sparse);
 }
 
-uint64_t* ecs_sparse_new_ids(
+const uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
     int32_t new_count)
 {
@@ -412,7 +412,7 @@ void _ecs_sparse_remove(
     /* Reset memory to zero on remove */
     ecs_size_t size = sparse->size;
     void *ptr = DATA(chunk->data, size, offset);
-    memset(ptr, 0, size);
+    ecs_os_memset(ptr, 0, size);
 }
 
 void* _ecs_sparse_get(
@@ -525,7 +525,7 @@ void ecs_sparse_restore(
     const ecs_sparse_t *src)
 {
     ecs_assert(dst != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_sparse_clear(dst);
+    dst->count = 1;
     if (src) {
         sparse_copy(dst, src);
     }

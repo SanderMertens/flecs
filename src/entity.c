@@ -2,7 +2,7 @@
 #include "private_api.h"
 
 static
-ecs_entity_t* new_w_data(
+const ecs_entity_t* new_w_data(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
@@ -1297,7 +1297,7 @@ void new(
 }
 
 static
-ecs_entity_t* new_w_data(
+const ecs_entity_t* new_w_data(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
@@ -1311,7 +1311,8 @@ ecs_entity_t* new_w_data(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
     
-    ecs_entity_t *ids = ecs_sparse_new_ids(stage->entity_index.lo, count);
+    int32_t sparse_count = ecs_sparse_count(stage->entity_index.lo);
+    const ecs_entity_t *ids = ecs_sparse_new_ids(stage->entity_index.lo, count);
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_type_t type = table->type;
 
@@ -1407,7 +1408,9 @@ ecs_entity_t* new_w_data(
         *row_out = row;
     }
 
-    return ids;
+    ids = ecs_sparse_ids(stage->entity_index.lo);
+
+    return &ids[sparse_count];
 }
 
 static
@@ -1795,7 +1798,7 @@ ecs_entity_t ecs_new_w_entity(
     return entity;
 }
 
-ecs_entity_t* ecs_bulk_new_w_data(
+const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
     ecs_entities_t *component_ids,
@@ -1808,7 +1811,7 @@ ecs_entity_t* ecs_bulk_new_w_data(
     return new_w_data(world, stage, table, NULL, count, data, NULL);
 }
 
-ecs_entity_t* ecs_bulk_new_w_type(
+const ecs_entity_t* ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
     int32_t count)
@@ -1818,7 +1821,7 @@ ecs_entity_t* ecs_bulk_new_w_type(
     return new_w_data(world, stage, table, NULL, count, NULL, NULL);
 }
 
-ecs_entity_t* ecs_bulk_new_w_entity(
+const ecs_entity_t* ecs_bulk_new_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     int32_t count)

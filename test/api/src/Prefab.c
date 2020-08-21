@@ -2364,7 +2364,7 @@ void CloneInOnAdd(ecs_iter_t *it)
             test_int(p_clone->x, 10);
             test_int(p_clone->y, 20);
 
-            ecs_add_entity(it->world, ECS_INSTANCEOF | clone, e);
+            ecs_add_entity(it->world, e, ECS_INSTANCEOF | clone);
         }
     }
 }

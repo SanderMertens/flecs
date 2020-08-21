@@ -188,7 +188,7 @@ void init_edges(
             register_child_table(world, stage, table, parent);
         }
 
-        if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {
+        if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
             if (stage == &world->stage) {
                 ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
             }

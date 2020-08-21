@@ -266,7 +266,7 @@ int32_t ecs_table_grow(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count,
-    ecs_entity_t *ids);
+    const ecs_entity_t *ids);
 
 /* Set table to a fixed size. Useful for preallocating memory in advance. */
 int16_t ecs_table_set_size(
@@ -2882,7 +2882,7 @@ int32_t ecs_table_grow(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count,
-    ecs_entity_t *ids)
+    const ecs_entity_t *ids)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -3492,7 +3492,7 @@ void ecs_table_notify(
 
 
 static
-ecs_entity_t* new_w_data(
+const ecs_entity_t* new_w_data(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
@@ -4787,7 +4787,7 @@ void new(
 }
 
 static
-ecs_entity_t* new_w_data(
+const ecs_entity_t* new_w_data(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
@@ -4801,7 +4801,8 @@ ecs_entity_t* new_w_data(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
     
-    ecs_entity_t *ids = ecs_sparse_new_ids(stage->entity_index.lo, count);
+    int32_t sparse_count = ecs_sparse_count(stage->entity_index.lo);
+    const ecs_entity_t *ids = ecs_sparse_new_ids(stage->entity_index.lo, count);
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_type_t type = table->type;
 
@@ -4897,7 +4898,9 @@ ecs_entity_t* new_w_data(
         *row_out = row;
     }
 
-    return ids;
+    ids = ecs_sparse_ids(stage->entity_index.lo);
+
+    return &ids[sparse_count];
 }
 
 static
@@ -5285,7 +5288,7 @@ ecs_entity_t ecs_new_w_entity(
     return entity;
 }
 
-ecs_entity_t* ecs_bulk_new_w_data(
+const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
     ecs_entities_t *component_ids,
@@ -5298,7 +5301,7 @@ ecs_entity_t* ecs_bulk_new_w_data(
     return new_w_data(world, stage, table, NULL, count, data, NULL);
 }
 
-ecs_entity_t* ecs_bulk_new_w_type(
+const ecs_entity_t* ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
     int32_t count)
@@ -5308,7 +5311,7 @@ ecs_entity_t* ecs_bulk_new_w_type(
     return new_w_data(world, stage, table, NULL, count, NULL, NULL);
 }
 
-ecs_entity_t* ecs_bulk_new_w_entity(
+const ecs_entity_t* ecs_bulk_new_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     int32_t count)
@@ -6985,7 +6988,7 @@ chunk_t* chunk_new(
     if (count <= chunk_index) {
         ecs_vector_set_count(&sparse->chunks, chunk_t, chunk_index + 1);
         chunks = ecs_vector_first(sparse->chunks, chunk_t);
-        memset(&chunks[count], 0, (1 + chunk_index - count) * ECS_SIZEOF(chunk_t));
+        ecs_os_memset(&chunks[count], 0, (1 + chunk_index - count) * ECS_SIZEOF(chunk_t));
     } else {
         chunks = ecs_vector_first(sparse->chunks, chunk_t);
     }
@@ -7235,7 +7238,7 @@ uint64_t ecs_sparse_new_id(
     return new_index(sparse);
 }
 
-uint64_t* ecs_sparse_new_ids(
+const uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
     int32_t new_count)
 {
@@ -7362,7 +7365,7 @@ void _ecs_sparse_remove(
     /* Reset memory to zero on remove */
     ecs_size_t size = sparse->size;
     void *ptr = DATA(chunk->data, size, offset);
-    memset(ptr, 0, size);
+    ecs_os_memset(ptr, 0, size);
 }
 
 void* _ecs_sparse_get(
@@ -7475,7 +7478,7 @@ void ecs_sparse_restore(
     const ecs_sparse_t *src)
 {
     ecs_assert(dst != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_sparse_clear(dst);
+    dst->count = 1;
     if (src) {
         sparse_copy(dst, src);
     }
@@ -10583,13 +10586,8 @@ ecs_record_t* ecs_ei_get(
     ecs_ei_t *entity_index,
     ecs_entity_t entity)
 {
-    if (entity > ECS_HI_ENTITY_ID) {
-        return ecs_map_get(
-            entity_index->hi, ecs_record_t, entity);
-    } else {
-        return ecs_sparse_get_sparse(
-            entity_index->lo, ecs_record_t, entity);
-    }
+    return ecs_sparse_get_sparse(
+        entity_index->lo, ecs_record_t, entity);
 }
 
 /* Get or create entity */
@@ -10597,27 +10595,8 @@ ecs_record_t* ecs_ei_get_or_create(
     ecs_ei_t *entity_index,
     ecs_entity_t entity)
 {
-    if (entity > ECS_HI_ENTITY_ID) {
-        ecs_record_t *record =  ecs_map_get(
-            entity_index->hi, ecs_record_t, entity);
-
-        if (!record) {
-            ecs_record_t new_record = { 0 };
-            ecs_map_set(
-                entity_index->hi, entity, &new_record);
-
-            record = ecs_map_get(
-                entity_index->hi, ecs_record_t, entity);  
-
-            record->table = NULL;  
-            record->row = 0;            
-        }
-
-        return record;
-    } else {
-        return ecs_sparse_get_or_create(
-            entity_index->lo, ecs_record_t, entity);
-    }
+    return ecs_sparse_get_or_create(
+        entity_index->lo, ecs_record_t, entity);
 }
 
 /* Set entity */
@@ -10628,19 +10607,13 @@ ecs_record_t* ecs_ei_set(
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (entity > ECS_HI_ENTITY_ID) {
-        ecs_map_set(entity_index->hi, entity, record);
-    } else {
-        ecs_record_t *dst_record = ecs_sparse_get_or_create(
-            entity_index->lo, ecs_record_t, entity);
-        *dst_record = *record;
+    ecs_record_t *dst_record = ecs_sparse_get_or_create(
+        entity_index->lo, ecs_record_t, entity);
+    *dst_record = *record;
 
-        /* Only return record ptrs of the sparse set, as these pointers are
-         * stable. Tables store pointers to records only of they are stable */
-        return dst_record;
-    }
-
-    return NULL;
+    /* Only return record ptrs of the sparse set, as these pointers are
+        * stable. Tables store pointers to records only of they are stable */
+    return dst_record;
 }
 
 /* Delete entity */
@@ -10649,12 +10622,7 @@ void ecs_ei_delete(
     ecs_entity_t entity)
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (entity > ECS_HI_ENTITY_ID) {
-        ecs_map_remove(entity_index->hi, entity);
-    } else {
-        ecs_sparse_remove(entity_index->lo, entity);
-    }
+    ecs_sparse_remove(entity_index->lo, entity);
 }
 
 void ecs_ei_clear_entity(
@@ -10662,21 +10630,10 @@ void ecs_ei_clear_entity(
     ecs_entity_t entity,
     bool is_watched)
 {
-    if (entity > ECS_HI_ENTITY_ID) {
-        if (!is_watched) {
-            ecs_map_remove(entity_index->hi, entity);
-        } else {
-            ecs_ei_set(entity_index, entity, &(ecs_record_t){
-                .table = NULL,
-                .row = -1
-            });
-        }
-    } else {
-        ecs_ei_set(entity_index, entity, &(ecs_record_t){
-            .table = NULL,
-            .row = -is_watched
-        });
-    }    
+    ecs_ei_set(entity_index, entity, &(ecs_record_t){
+        .table = NULL,
+        .row = -is_watched
+    });  
 }
 
 ecs_entity_t ecs_ei_recycle(
@@ -10690,24 +10647,7 @@ void ecs_ei_grow(
     ecs_ei_t *entity_index,
     int32_t count)
 {
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t sparse_size = ecs_sparse_size(entity_index->lo);
-    int32_t to_grow = count;
-
-    if (sparse_size < ECS_HI_ENTITY_ID) {
-        if (to_grow + sparse_size > ECS_HI_ENTITY_ID) {
-            to_grow -= ECS_HI_ENTITY_ID - sparse_size;
-        }
-
-        ecs_sparse_grow(entity_index->lo, to_grow);
-
-        count -= to_grow;
-    }
-
-    if (count) {   
-        ecs_map_grow(entity_index->hi, count);
-    }
+    ecs_sparse_grow(entity_index->lo, count);
 }
 
 /* Set size of entity index */
@@ -10716,14 +10656,7 @@ void ecs_ei_set_size(
     int32_t size)
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (size > ECS_HI_ENTITY_ID) {
-        ecs_sparse_set_size(entity_index->lo, ECS_HI_ENTITY_ID);
-        ecs_map_set_size(entity_index->hi, size - ECS_HI_ENTITY_ID);
-    } else {
-        ecs_sparse_set_size(entity_index->lo, size);
-        ecs_map_set_size(entity_index->hi, 0);
-    }
+    ecs_sparse_set_size(entity_index->lo, size);
 }
 
 /* Count number of entities in index */
@@ -10731,9 +10664,7 @@ int32_t ecs_ei_count(
     ecs_ei_t *entity_index)
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return ecs_map_count(entity_index->hi) + 
-        ecs_sparse_count(entity_index->lo);
+    return ecs_sparse_count(entity_index->lo);
 }
 
 /* Create new entity index */
@@ -10742,8 +10673,6 @@ void ecs_ei_new(
     ecs_ei_t *entity_index)
 {
     entity_index->lo = ecs_sparse_new(ecs_record_t);
-    entity_index->hi = ecs_map_new(ecs_record_t, 0);
-
     ecs_sparse_set_id_source(entity_index->lo, &world->stats.last_id);
 }
 
@@ -10752,8 +10681,6 @@ void ecs_ei_clear(
     ecs_ei_t *entity_index)
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_map_clear(entity_index->hi);
     ecs_sparse_clear(entity_index->lo);
 }
 
@@ -10762,8 +10689,6 @@ void ecs_ei_free(
     ecs_ei_t *entity_index)
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    ecs_map_free(entity_index->hi);
     ecs_sparse_free(entity_index->lo);
 }
 
@@ -10772,7 +10697,6 @@ ecs_ei_t ecs_ei_copy(
     const ecs_ei_t *entity_index)
 {
     return (ecs_ei_t){
-        .hi = ecs_map_copy(entity_index->hi),
         .lo = ecs_sparse_copy(entity_index->lo)
     };
 }
@@ -10784,7 +10708,6 @@ void ecs_ei_memory(
     int32_t *used)
 {
     ecs_sparse_memory(entity_index->lo, allocd, used);
-    ecs_map_memory(entity_index->hi, allocd, used);
 }
 
 ecs_ei_iter_t ecs_ei_iter(
@@ -10794,7 +10717,6 @@ ecs_ei_iter_t ecs_ei_iter(
     result.index = 0;
     result.sparse_indices = ecs_sparse_ids(entity_index->lo);
     result.sparse_count = ecs_sparse_count(entity_index->lo);
-    result.map_iter = ecs_map_iter(entity_index->hi);
     result.lo = entity_index->lo;
     return result;
 }
@@ -10806,21 +10728,17 @@ ecs_record_t *ecs_ei_next(
 {
     const uint64_t *sparse_indices = iter->sparse_indices;
 
-    if (sparse_indices) {
-        uint64_t index = iter->index;
-        if (iter->index < iter->sparse_count) {
-            ecs_entity_t entity = (ecs_entity_t)sparse_indices[index];
-            ecs_record_t *result = ecs_sparse_get_sparse(
-                    iter->lo, ecs_record_t, entity);
-            *entity_out = entity;
-            iter->index ++;
-            return result;
-        } else {
-            iter->sparse_indices = NULL;
-        }
+    int32_t index = iter->index;
+    if (iter->index < iter->sparse_count) {
+        ecs_entity_t entity = (ecs_entity_t)sparse_indices[index];
+        ecs_record_t *result = ecs_sparse_get_sparse(
+                iter->lo, ecs_record_t, entity);
+        *entity_out = entity;
+        iter->index ++;
+        return result;
+    } else {
+        return NULL;
     }
-
-    return ecs_map_next(&iter->map_iter, ecs_record_t, entity_out);
 }
 
 
@@ -15316,7 +15234,7 @@ void init_edges(
             register_child_table(world, stage, table, parent);
         }
 
-        if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {
+        if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
             if (stage == &world->stage) {
                 ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
             }
@@ -16138,14 +16056,14 @@ int32_t get_bucket_count(
 }
 
 static
-int32_t get_bucket_id(
+uint64_t get_bucket_id(
     int32_t bucket_count,
     ecs_map_key_t key) 
 {
     ecs_assert(bucket_count > 0, ECS_INTERNAL_ERROR, NULL);
     uint64_t result = key & ((uint64_t)bucket_count - 1);
     ecs_assert(result < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
-    return (int32_t)result;
+    return result;
 }
 
 static
@@ -16159,9 +16077,9 @@ ecs_bucket_t* find_bucket(
         return NULL;
     }
 
-    int32_t bucket_id = get_bucket_id(bucket_count, key);
+    uint64_t bucket_id = get_bucket_id(bucket_count, key);
 
-    return _ecs_sparse_get_sparse(buckets, 0, (uint64_t)bucket_id);
+    return _ecs_sparse_get_sparse(buckets, 0, bucket_id);
 }
 
 static
@@ -16177,8 +16095,8 @@ ecs_bucket_t* find_or_create_bucket(
         bucket_count = 8;
     }
 
-    int32_t bucket_id = get_bucket_id(bucket_count, key);
-    return _ecs_sparse_get_or_create(buckets, 0, (uint64_t)bucket_id);    
+    uint64_t bucket_id = get_bucket_id(bucket_count, key);
+    return _ecs_sparse_get_or_create(buckets, 0, bucket_id);    
 }
 
 static
@@ -16187,8 +16105,8 @@ void remove_bucket(
     ecs_map_key_t key)
 {
     int32_t bucket_count = map->bucket_count;
-    int32_t bucket_id = get_bucket_id(bucket_count, key);
-    ecs_sparse_remove(map->buckets, (uint64_t)bucket_id);
+    uint64_t bucket_id = get_bucket_id(bucket_count, key);
+    ecs_sparse_remove(map->buckets, bucket_id);
 }
 
 static
@@ -16274,7 +16192,7 @@ void rehash(
 
                 if (new_bucket_id != bucket_id) {
                     ecs_bucket_t *new_bucket = _ecs_sparse_get_or_create(
-                        buckets, 0, (uint64_t)new_bucket_id);
+                        buckets, 0, new_bucket_id);
 
                     indices = ecs_sparse_ids(buckets);
 

@@ -295,7 +295,7 @@ typedef struct EcsTrigger {
 #define EcsFlecs (ECS_HI_COMPONENT_ID + 23)
 #define EcsFlecsCore (ECS_HI_COMPONENT_ID + 24)
 #define EcsWorld (ECS_HI_COMPONENT_ID + 25)
-#define EcsSingleton ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
+#define EcsSingleton (ECS_HI_COMPONENT_ID + 26)
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
@@ -756,7 +756,7 @@ ecs_entity_t ecs_new_w_type(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t* ecs_bulk_new_w_entity(
+const ecs_entity_t* ecs_bulk_new_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     int32_t count);
@@ -772,7 +772,7 @@ ecs_entity_t* ecs_bulk_new_w_entity(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t* ecs_bulk_new_w_type(
+const ecs_entity_t* ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
     int32_t count);
@@ -790,7 +790,7 @@ ecs_entity_t* ecs_bulk_new_w_type(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t* ecs_bulk_new_w_data(
+const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
     ecs_entities_t *component_ids,
