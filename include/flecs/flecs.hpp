@@ -2234,40 +2234,6 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Entity range, allows for operating on a range of consecutive entities
-////////////////////////////////////////////////////////////////////////////////
-
-class entity_range final : public entity_builder<entity_range> {
-    using entity_iterator = _::range_iterator<entity_t>;
-public:
-    entity_range(const world& world, std::int32_t count) 
-        : m_world(world.c_ptr())
-        , m_id_start( ecs_bulk_new_w_type(m_world, nullptr, count))
-        , m_count(count) { }
-
-    template <typename Func>
-    void invoke(Func&& action) const {
-        for (auto id : *this) {
-            action(m_world, id);
-        }
-    }
-    
-    entity_iterator begin() const {
-        return entity_iterator(m_id_start);
-    }
-
-    entity_iterator end() const {
-        return entity_iterator(m_id_start + m_count);
-    }
-
-private:
-    world_t *m_world;
-    entity_t m_id_start;
-    std::int32_t m_count;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
 //// A collection of component ids used to describe the contents of a table
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2435,6 +2401,45 @@ private:
 
     type_t m_type;
     type_t m_normalized;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Entity range, allows for operating on a range of consecutive entities
+////////////////////////////////////////////////////////////////////////////////
+
+class entity_range final : public entity_builder<entity_range> {
+    using entity_iterator = _::range_iterator<const entity_t*>;
+public:
+    entity_range(const world& world, std::int32_t count) 
+        : m_world(world.c_ptr())
+        , m_ids( ecs_bulk_new_w_type(m_world, nullptr, count))
+        , m_count(count) { }
+
+    entity_range(const world& world, std::int32_t count, flecs::type type) 
+        : m_world(world.c_ptr())
+        , m_ids( ecs_bulk_new_w_type(m_world, type.c_ptr(), count))
+        , m_count(count) { }
+
+    template <typename Func>
+    void invoke(Func&& action) const {
+        for (auto id : *this) {
+            action(m_world, *id);
+        }
+    }
+    
+    entity_iterator begin() const {
+        return entity_iterator(m_ids);
+    }
+
+    entity_iterator end() const {
+        return entity_iterator(&m_ids[m_count]);
+    }
+
+private:
+    world_t *m_world;
+    const entity_t *m_ids;
+    std::int32_t m_count;
 };
 
 
