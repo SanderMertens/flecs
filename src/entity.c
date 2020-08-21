@@ -123,11 +123,7 @@ void set_info_from_record(
 {
     ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (e < ECS_HI_ENTITY_ID) {
-        info->record = record;
-    } else {
-        info->record = NULL;
-    }
+    info->record = record;
 
     ecs_table_t *table = record->table;
 
@@ -944,13 +940,8 @@ int32_t new_entity(
             record = ecs_eis_get_or_create(stage, entity);
         }
 
-        if (entity < ECS_HI_ENTITY_ID) {
-            new_row = ecs_table_append(
-                world, new_table, new_data, entity, record, true);
-        } else {
-            new_row = ecs_table_append(
-                world, new_table, new_data, entity, NULL, true);
-        }
+        new_row = ecs_table_append(
+            world, new_table, new_data, entity, record, true);
 
         record->table = new_table;
         record->row = ecs_row_to_record(new_row, info->is_watched);
@@ -1029,8 +1020,7 @@ int32_t move_entity(
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record, false);
     bool same_stage = compare_stage_w_data(stage, src_table, src_data);
 
-
-    if (main_stage && record) {
+    if (main_stage) {
         record->table = dst_table;
         record->row = ecs_row_to_record(dst_row, info->is_watched);
     } else {
@@ -1713,9 +1703,7 @@ ecs_entity_t ecs_new_id(
     ecs_entity_t entity;
 
     if (!world->in_progress) {
-        if (!(entity = ecs_eis_recycle(&world->stage))) {
-            entity = ++ world->stats.last_id;
-        }
+        entity = ecs_eis_recycle(&world->stage);
     } else {
         int32_t thread_count = ecs_vector_count(world->workers);
         if (thread_count >= 1) { 
