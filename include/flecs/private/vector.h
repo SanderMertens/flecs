@@ -98,7 +98,7 @@ void* _ecs_vector_add(
     int16_t offset);
 
 #define ecs_vector_add(vector, T) \
-    (T*)_ecs_vector_add(vector, ECS_VECTOR_T(T))
+    ((T*)_ecs_vector_add(vector, ECS_VECTOR_T(T)))
 
 #define ecs_vector_add_t(vector, size, alignment) \
     _ecs_vector_add(vector, ECS_VECTOR_U(size, alignment))
@@ -111,7 +111,7 @@ void* _ecs_vector_addn(
     int32_t elem_count);
 
 #define ecs_vector_addn(vector, T, elem_count) \
-    (T*)_ecs_vector_addn(vector, ECS_VECTOR_T(T), elem_count)
+    ((T*)_ecs_vector_addn(vector, ECS_VECTOR_T(T), elem_count))
 
 #define ecs_vector_addn_t(vector, size, alignment, elem_count) \
     _ecs_vector_addn(vector, ECS_VECTOR_U(size, alignment), elem_count)
@@ -124,7 +124,7 @@ void* _ecs_vector_get(
     int32_t index);
 
 #define ecs_vector_get(vector, T, index) \
-    (T*)_ecs_vector_get(vector, ECS_VECTOR_T(T), index)
+    ((T*)_ecs_vector_get(vector, ECS_VECTOR_T(T), index))
 
 #define ecs_vector_get_t(vector, size, alignment, index) \
     _ecs_vector_get(vector, ECS_VECTOR_U(size, alignment), index)
@@ -266,7 +266,7 @@ void* _ecs_vector_first(
     int16_t offset);
 
 #define ecs_vector_first(vector, T) \
-    (T*)_ecs_vector_first(vector, ECS_VECTOR_T(T))
+    ((T*)_ecs_vector_first(vector, ECS_VECTOR_T(T)))
 
 #define ecs_vector_first_t(vector, size, alignment) \
     _ecs_vector_first(vector, ECS_VECTOR_U(size, alignment))

@@ -162,9 +162,9 @@ static
 void CreateEntity(ecs_iter_t *it) {
     ECS_COLUMN_COMPONENT(it, Position, 1);
 
-    ecs_entity_t e = ecs_bulk_new(it->world, Position, 10);
-    test_assert(e != 0);
-    test_assert( ecs_has(it->world, e, Position));
+    ecs_entity_t *e = ecs_bulk_new(it->world, Position, 10);
+    test_assert(e != NULL);
+    test_assert( ecs_has(it->world, e[0], Position));
 }
 
 static

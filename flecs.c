@@ -46,7 +46,7 @@ struct ecs_record_t {
 
 typedef struct ecs_ei_iter_t {
     int32_t index;
-    const int32_t *sparse_indices;
+    const uint64_t *sparse_indices;
     int32_t sparse_count;
     ecs_map_iter_t map_iter;
     ecs_sparse_t *lo;
@@ -99,6 +99,7 @@ int32_t ecs_ei_count(
 
 /* Initialize entity index for stage */
 void ecs_ei_new(
+    ecs_world_t *world,
     ecs_ei_t *entity_index);
 
 /* Clear all entities from a stage */
@@ -137,7 +138,7 @@ ecs_record_t *ecs_ei_next(
 #define ecs_eis_grow(stage, count) ecs_ei_grow(&(stage)->entity_index, count)
 #define ecs_eis_set_size(stage, size) ecs_ei_set_size(&(stage)->entity_index, size)
 #define ecs_eis_count(stage) ecs_ei_count(&(stage)->entity_index)
-#define ecs_eis_new(stage) ecs_ei_new(&(stage)->entity_index)
+#define ecs_eis_new(world, stage) ecs_ei_new(world, &(stage)->entity_index)
 #define ecs_eis_clear(stage) ecs_ei_clear(&(stage)->entity_index)
 #define ecs_eis_copy(stage) ecs_ei_copy(&(stage)->entity_index)
 #define ecs_eis_free(stage) ecs_ei_free(&(stage)->entity_index)
@@ -265,7 +266,7 @@ int32_t ecs_table_grow(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count,
-    ecs_entity_t first_entity);
+    ecs_entity_t *ids);
 
 /* Set table to a fixed size. Useful for preallocating memory in advance. */
 int16_t ecs_table_set_size(
@@ -2881,7 +2882,7 @@ int32_t ecs_table_grow(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count,
-    ecs_entity_t first_entity)
+    ecs_entity_t *ids)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2913,7 +2914,7 @@ int32_t ecs_table_grow(
 
     int32_t i;
     for (i = 0; i < count; i ++) {
-        e[i] = first_entity + (ecs_entity_t)i;
+        e[i] = ids[i];
         r[i] = NULL;
     }
 
@@ -3491,6 +3492,16 @@ void ecs_table_notify(
 
 
 static
+ecs_entity_t* new_w_data(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_entities_t *component_ids,
+    int32_t count,
+    void **c_info,
+    int32_t *row_out);
+
+static
 int32_t comp_mask_index(
     int32_t value)
 {
@@ -3530,15 +3541,6 @@ bool comp_mask_is_set(
 
     return false;
 }
-
-static
-int32_t new_w_data(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_entities_t *component_ids,
-    int32_t count,
-    void **c_info);
 
 static 
 void* get_component_w_index(
@@ -4048,8 +4050,8 @@ void instantiate_children(
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Create children */
-        int32_t child_row = new_w_data(
-            world, stage, table, NULL, child_count, c_info);
+        int32_t child_row; 
+        new_w_data(world, stage, table, NULL, child_count, c_info, &child_row);
 
         /* If prefab child table has children itself, recursively instantiate */
         ecs_data_t *i_data = ecs_table_get_staged_data(world, stage, table);
@@ -4785,25 +4787,26 @@ void new(
 }
 
 static
-int32_t new_w_data(
+ecs_entity_t* new_w_data(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_entities_t *component_ids,
     int32_t count,
-    void **component_data)
+    void **component_data,
+    int32_t *row_out)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
     
+    ecs_entity_t *ids = ecs_sparse_new_ids(stage->entity_index.lo, count);
+    ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_type_t type = table->type;
-    ecs_entity_t e = world->stats.last_id + 1;
-    world->stats.last_id += ecs_to_entity(count);
 
     if (!type) {
-        return 0;
+        return ids;
     }
 
     ecs_entities_t component_array = { 0 };
@@ -4814,7 +4817,7 @@ int32_t new_w_data(
     }
 
     ecs_data_t *data = ecs_table_get_or_create_data(world, stage, table);
-    int32_t row = ecs_table_grow(world, table, data, count, e);
+    int32_t row = ecs_table_grow(world, table, data, count, ids);
     ecs_entities_t added = ecs_type_to_entities(type);
     
     /* Update entity index. If entities are being created in the main stage,
@@ -4823,7 +4826,7 @@ int32_t new_w_data(
     if (stage == &world->stage) {
         ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
         for (i = 0; i < count; i ++) { 
-            record_ptrs[row + i] = ecs_eis_set(stage, e + ecs_to_entity(i), 
+            record_ptrs[row + i] = ecs_eis_set(stage, ids[i], 
             &(ecs_record_t){
                 .table = table,
                 .row = row + i + 1
@@ -4831,7 +4834,7 @@ int32_t new_w_data(
         }
     } else {
         for (i = 0; i < count; i ++) {
-            ecs_eis_set(stage, e + ecs_to_entity(i), &(ecs_record_t){
+            ecs_eis_set(stage, ids[i], &(ecs_record_t){
                 .table = table,
                 .row = row + i + 1
             });
@@ -4890,7 +4893,11 @@ int32_t new_w_data(
 
     ecs_defer_end(world, stage);
 
-    return row;
+    if (row_out) {
+        *row_out = row;
+    }
+
+    return ids;
 }
 
 static
@@ -5278,7 +5285,7 @@ ecs_entity_t ecs_new_w_entity(
     return entity;
 }
 
-ecs_entity_t ecs_bulk_new_w_data(
+ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
     ecs_entities_t *component_ids,
@@ -5287,25 +5294,21 @@ ecs_entity_t ecs_bulk_new_w_data(
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_type_t type = ecs_type_find(world, 
         component_ids->array, component_ids->count);
-    ecs_table_t *table = ecs_table_from_type(world, stage, type);
-    ecs_entity_t result = world->stats.last_id + 1;
-    new_w_data(world, stage, table, NULL, count, data);
-    return result;
+    ecs_table_t *table = ecs_table_from_type(world, stage, type);    
+    return new_w_data(world, stage, table, NULL, count, data, NULL);
 }
 
-ecs_entity_t ecs_bulk_new_w_type(
+ecs_entity_t* ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
     int32_t count)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_table_t *table = ecs_table_from_type(world, stage, type);
-    ecs_entity_t result = world->stats.last_id + 1;
-    new_w_data(world, stage, table, NULL, count, NULL);
-    return result;
+    return new_w_data(world, stage, table, NULL, count, NULL, NULL);
 }
 
-ecs_entity_t ecs_bulk_new_w_entity(
+ecs_entity_t* ecs_bulk_new_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     int32_t count)
@@ -5316,9 +5319,7 @@ ecs_entity_t ecs_bulk_new_w_entity(
         .count = 1
     };
     ecs_table_t *table = ecs_table_find_or_create(world, stage, &type);
-    ecs_entity_t result = world->stats.last_id + 1;
-    new_w_data(world, stage, table, NULL, count, NULL);
-    return result;
+    return new_w_data(world, stage, table, NULL, count, NULL, NULL);
 }
 
 void ecs_delete(
@@ -5438,7 +5439,7 @@ ecs_entity_t ecs_clone(
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
     
     if (!dst) {
-        dst = ++ world->stats.last_id;
+        dst = ecs_new_id(world);
     }
 
     ecs_entity_info_t src_info;
@@ -5578,6 +5579,7 @@ void* ecs_get_mut_w_entity(
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_info_t info;
+
     return get_mutable(world, stage, entity, component, &info, is_added);
 }
 
@@ -6444,7 +6446,7 @@ void ecs_stage_init(
     memset(stage, 0, sizeof(ecs_stage_t));
 
     /* Initialize entity index */
-    ecs_eis_new(stage);
+    ecs_eis_new(world, stage);
 
     if (is_main_stage) {
         stage->id = 0;
@@ -6453,7 +6455,7 @@ void ecs_stage_init(
     }
 
     /* Initialize root table */
-    stage->tables = ecs_sparse_new(ecs_table_t, 64);
+    stage->tables = ecs_sparse_new(ecs_table_t);
 
     /* Initialize one root table per stage */
     ecs_init_root_table(world, stage);
@@ -6948,341 +6950,433 @@ ecs_vector_t* _ecs_vector_copy(
     return dst;
 }
 
-#define CHUNK_ALLOC_SIZE (65536)
+#define CHUNK_COUNT (4096)
+#define CHUNK(index) (int32_t)(index >> 12)
+#define OFFSET(index) (int32_t)(index & 0xFFF)
+#define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
 
 typedef struct chunk_t {
-    void *data;
-    int32_t count;
+    int32_t *sparse;            /* Sparse array with indices to dense array */
+    void *data;                 /* Store data in sparse array to reduce  
+                                 * indirection and provide stable pointers. */
 } chunk_t;
 
-typedef struct sparse_elem_t {
-    int32_t dense;
-    void *ptr;
-} sparse_elem_t;
-
 struct ecs_sparse_t {
-    ecs_vector_t *chunks;       /* Vector with chunk pointers */
-    ecs_vector_t *dense;        /* Dense array */
-    ecs_vector_t *sparse;       /* Sparse array + element pointers */
-    ecs_vector_t *unused_chunks;   /* Unused chunks */
-    ecs_vector_t *unused_elements; /* Unused elements */
-    ecs_size_t elem_size;          /* Side of payload */
-    int32_t chunk_size;            /* Number of elements in chunk */
+    ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
+                                 * dense array stores both alive and not alive
+                                 * sparse indices. The 'count' member keeps
+                                 * track of which indices are alive. */
+
+    ecs_vector_t *chunks;       /* Chunks with sparse arrays & data */
+    ecs_size_t size;            /* Element size */
+    int32_t count;              /* Number of alive entries */
+    uint64_t max_id_local;      /* Local max index (if no global is set) */
+    uint64_t *max_id;           /* Maximum issued sparse index */
 };
 
 static
-void add_chunk(
+chunk_t* chunk_new(
+    ecs_sparse_t *sparse,
+    int32_t chunk_index)
+{
+    int32_t count = ecs_vector_count(sparse->chunks);
+    chunk_t *chunks;
+
+    if (count <= chunk_index) {
+        ecs_vector_set_count(&sparse->chunks, chunk_t, chunk_index + 1);
+        chunks = ecs_vector_first(sparse->chunks, chunk_t);
+        memset(&chunks[count], 0, (1 + chunk_index - count) * ECS_SIZEOF(chunk_t));
+    } else {
+        chunks = ecs_vector_first(sparse->chunks, chunk_t);
+    }
+
+    ecs_assert(chunks != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    chunk_t *result = &chunks[chunk_index];
+    ecs_assert(result->sparse == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result->data == NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Initialize sparse array with zero's, as zero is used to indicate that the
+     * sparse element has not been paired with a dense element. Use zero
+     * as this means we can take advantage of calloc having a possibly better 
+     * performance than malloc + memset. */
+    result->sparse = ecs_os_calloc(ECS_SIZEOF(int32_t) * CHUNK_COUNT);
+
+    /* Initialize the data array with zero's to guarantee that data is 
+     * always initialized. When an entry is removed, data is reset back to
+     * zero. Initialize now, as this can take advantage of calloc. */
+    result->data = ecs_os_calloc(sparse->size * CHUNK_COUNT);
+
+    ecs_assert(result->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result->data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return result;
+}
+
+static
+void chunk_free(
+    chunk_t *chunk)
+{
+    ecs_os_free(chunk->sparse);
+    ecs_os_free(chunk->data);
+}
+
+static
+chunk_t* get_chunk(
+    const ecs_sparse_t *sparse,
+    int32_t chunk_index)
+{
+    chunk_t *result = ecs_vector_get(sparse->chunks, chunk_t, chunk_index);
+    if (result && !result->sparse) {
+        return NULL;
+    }
+
+    return result;
+}
+
+static
+chunk_t* get_or_create_chunk(
+    ecs_sparse_t *sparse,
+    int32_t chunk_index)
+{
+    chunk_t *chunk = get_chunk(sparse, chunk_index);
+    if (chunk) {
+        return chunk;
+    }
+
+    return chunk_new(sparse, chunk_index);
+}
+
+static
+void grow_dense(
     ecs_sparse_t *sparse)
 {
-    /* Add chunk to sparse instance */
-    int32_t chunk_count = ecs_vector_count(sparse->chunks);
-    
-    chunk_t recycled_chunk, *chunk = ecs_vector_add(&sparse->chunks, chunk_t);
-
-    /* Check if we have chunks we can recycle */
-    if (ecs_vector_pop(sparse->unused_chunks, chunk_t, &recycled_chunk)) {
-        *chunk = recycled_chunk;
-    } else {
-        chunk->data = ecs_os_malloc(CHUNK_ALLOC_SIZE);
-    }
-
-    int32_t chunk_size = sparse->chunk_size;
-    ecs_size_t elem_size = sparse->elem_size;
-
-    /* Allocate data vector for chunk */
-    chunk->count = 0;
-
-    /* Create room in sparse array for chunk */
-    int32_t prev_total = chunk_count * chunk_size;
-
-    ecs_vector_set_count(&sparse->sparse, sparse_elem_t, prev_total + chunk_size);
-
-    ecs_assert(sparse->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Prepare cached pointers to chunk elements in sparse array */
-    sparse_elem_t *sparse_array = ecs_vector_first(sparse->sparse, sparse_elem_t);
-    ecs_assert(sparse_array != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    sparse_array = &sparse_array[prev_total];
-
-    int32_t i;
-    for (i = 0; i < chunk_size; i ++) {
-        sparse_array[i].dense = 0;
-        sparse_array[i].ptr = ECS_OFFSET(chunk->data, i * elem_size);
-    }
+    ecs_vector_add(&sparse->dense, uint64_t);
 }
 
 static
-chunk_t* last_chunk(
-    const ecs_sparse_t *sparse)
+void assign_index(
+    chunk_t *chunk, 
+    uint64_t *dense_array, 
+    uint64_t index, 
+    int32_t dense)
 {
-    return ecs_vector_last(sparse->chunks, chunk_t);
+    chunk->sparse[OFFSET(index)] = dense;
+    dense_array[dense] = index;
 }
 
 static
-void* add_sparse(
+uint64_t inc_id(
+    ecs_sparse_t *sparse)
+{
+    return ++(sparse->max_id[0]);
+}
+
+static
+uint64_t get_id(
+    ecs_sparse_t *sparse)
+{
+    return sparse->max_id[0];
+}
+
+static
+void set_id(
     ecs_sparse_t *sparse,
-    int32_t index)
+    uint64_t value)
 {
-    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse, sparse_elem_t);
+    sparse->max_id[0] = value;
+}
+
+static
+uint64_t create_id(
+    ecs_sparse_t *sparse,
+    int32_t dense)
+{
+    uint64_t index = inc_id(sparse);
+    grow_dense(sparse);
+
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    ecs_assert(chunk->sparse[OFFSET(index)] == 0, ECS_INTERNAL_ERROR, NULL);
     
-    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    assign_index(chunk, dense_array, index, dense);
+    
+    return index;
+}
 
-    sparse_arr[index].dense = ecs_vector_count(sparse->dense);
-    int32_t *dense = ecs_vector_add(&sparse->dense, int32_t);
-    *dense = index;
+static
+uint64_t new_index(
+    ecs_sparse_t *sparse)
+{
+    ecs_vector_t *dense = sparse->dense;
+    int32_t dense_count = ecs_vector_count(dense);
+    int32_t count = sparse->count ++;
 
-    return sparse_arr[index].ptr;
+    ecs_assert(count <= dense_count, ECS_INTERNAL_ERROR, NULL);
+
+    if (count < dense_count) {
+        /* If there are unused elements in the dense array, return first */
+        uint64_t *dense_array = ecs_vector_first(dense, uint64_t);
+        return dense_array[count];
+    } else {
+        return create_id(sparse, count);
+    }    
+}
+
+static
+void* try_sparse(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{    
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return NULL;
+    }
+
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    bool in_use = dense && (dense < sparse->count);
+    if (!in_use) {
+        return NULL;
+    }
+
+    ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
+    return DATA(chunk->data, sparse->size, offset);
 }
 
 static
 void* get_sparse(
     const ecs_sparse_t *sparse,
-    int32_t index,
-    bool remove)
+    int32_t dense,
+    uint64_t index)
 {
-    if (index >= ecs_vector_count(sparse->sparse)) {
-        return NULL;
-    }
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    int32_t offset = OFFSET(index);
+    
+    ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
 
-    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse, sparse_elem_t);
-    int32_t dense = sparse_arr[index].dense;
-
-    int32_t *dense_array = ecs_vector_first(sparse->dense, int32_t);
-    int32_t dense_count = ecs_vector_count(sparse->dense);
-
-    if (dense >= dense_count) {
-        return NULL;
-    }
-
-    if (dense_array[dense] != index) {
-        return NULL;
-    }
-
-    if (remove) {
-        int32_t last_sparse_index = dense_array[dense_count - 1];
-        dense_array[dense] = last_sparse_index;
-        sparse_arr[last_sparse_index].dense = dense;
-        ecs_vector_remove_last(sparse->dense);
-    }
-
-    return sparse_arr[index].ptr;  
+    return DATA(chunk->data, sparse->size, offset);
 }
 
 static
-void* get_or_set_sparse(
+void swap_dense(
     ecs_sparse_t *sparse,
-    int32_t index,
-    bool *is_new)
+    chunk_t *chunk_a,
+    int32_t a,
+    int32_t b,
+    uint64_t index_a)
 {
-    if (index >= ecs_vector_count(sparse->sparse)) {
-        ecs_sparse_set_size(sparse, index + 1);
-        ecs_assert(index < ecs_vector_count(sparse->sparse), ECS_INTERNAL_ERROR, NULL);
-    }
+    ecs_assert(a != b, ECS_INTERNAL_ERROR, NULL);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t index_b = dense_array[b];
 
-    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse, sparse_elem_t);
-    int32_t dense = sparse_arr[index].dense;
-
-    int32_t *dense_array = ecs_vector_first(sparse->dense, int32_t);
-    int32_t dense_count = ecs_vector_count(sparse->dense);
-
-    if (dense >= dense_count || dense_array[dense] != index) {
-        ecs_assert(index < ecs_vector_count(sparse->sparse), ECS_INVALID_PARAMETER, NULL);
-
-        ecs_vector_add(&sparse->dense, int32_t);
-
-        dense_array = ecs_vector_first(sparse->dense, int32_t);
-        sparse_arr[index].dense = dense_count;
-        dense_array[dense_count] = index;
-
-        if (is_new) {
-            *is_new = true;
-        }
-    }
-
-    return sparse_arr[index].ptr;  
+    chunk_t *chunk_b = get_or_create_chunk(sparse, CHUNK(index_b));
+    assign_index(chunk_a, dense_array, index_a, b);
+    assign_index(chunk_b, dense_array, index_b, a);
 }
 
 ecs_sparse_t* _ecs_sparse_new(
-    ecs_size_t elem_size,
-    int32_t element_count)
+    ecs_size_t size)
 {
     ecs_sparse_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_sparse_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+    result->size = size;
+    result->max_id = &result->max_id_local;
 
-    result->chunk_size = CHUNK_ALLOC_SIZE / elem_size;
-    result->elem_size = elem_size;
-
-    ecs_sparse_set_size(result, element_count);
+    /* Consume first value in dense array as 0 is used in the sparse array to
+     * indicate that a sparse element hasn't been paired yet. */
+    ecs_vector_add(&result->dense, uint64_t);
+    result->count = 1;
 
     return result;
 }
 
-static
-void free_chunks(ecs_vector_t *chunks) {
-    int i, count = ecs_vector_count(chunks);
-    chunk_t *array = ecs_vector_first(chunks, chunk_t);
+void ecs_sparse_set_id_source(
+    ecs_sparse_t *sparse,
+    uint64_t *id_source)
+{
+    sparse->max_id = id_source;
+}
 
-    for (i = 0; i < count; i ++) {
-        ecs_os_free(array[i].data);
-    }    
+void ecs_sparse_clear(
+    ecs_sparse_t *sparse)
+{
+    ecs_vector_each(sparse->chunks, chunk_t, chunk, {
+        chunk_free(chunk);
+    });
 
-    ecs_vector_free(chunks);
+    ecs_vector_free(sparse->chunks);
+    ecs_vector_set_count(&sparse->dense, uint64_t, 1);
+
+    sparse->chunks = NULL;   
+    sparse->count = 1;
+    sparse->max_id_local = 0;
 }
 
 void ecs_sparse_free(
     ecs_sparse_t *sparse)
 {
-    if (sparse) {
-        free_chunks(sparse->chunks);
-        free_chunks(sparse->unused_chunks);
-
-        ecs_vector_free(sparse->unused_elements);
-        ecs_vector_free(sparse->sparse);
-        ecs_vector_free(sparse->dense);
-
-        ecs_os_free(sparse);
-    }
+    ecs_sparse_clear(sparse);
+    ecs_vector_free(sparse->dense);
+    ecs_os_free(sparse);
 }
 
-void ecs_sparse_clear(
+uint64_t ecs_sparse_new_id(
     ecs_sparse_t *sparse)
-{        
-    /* Recycle chunks */
-    if (!sparse->unused_chunks) {
-        sparse->unused_chunks = sparse->chunks;
-        sparse->chunks = NULL;
-    } else {
-        chunk_t chunk;
-        while (ecs_vector_pop(sparse->chunks, chunk_t, &chunk)) {
-            chunk_t *unused = ecs_vector_add(&sparse->unused_chunks, chunk_t);
-            *unused = chunk;
-        }
-    }
-
-    ecs_vector_clear(sparse->dense);
-    ecs_vector_clear(sparse->sparse);
-    ecs_vector_clear(sparse->unused_elements);
+{
+    return new_index(sparse);
 }
 
-void* _ecs_sparse_recycle(
+uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t *sparse_index_out)
+    int32_t new_count)
 {
-    (void)elem_size;
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
+    int32_t dense_count = ecs_vector_count(sparse->dense);
+    int32_t count = sparse->count;
+    int32_t remaining = dense_count - count;
+    int32_t i, to_create = new_count - remaining;
 
-    int32_t index = 0;
-    
-    if (ecs_vector_pop(sparse->unused_elements, int32_t, &index)) {
-        if (sparse_index_out) {
-            *sparse_index_out = index;
+    if (to_create > 0) {
+        ecs_sparse_set_size(sparse, dense_count + to_create);
+        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+
+        for (i = 0; i < to_create; i ++) {
+            uint64_t index = create_id(sparse, count + i);
+            dense_array[dense_count + i] = index;
         }
-        return add_sparse(sparse, index);
-    } else {
-        return NULL;
     }
+
+    sparse->count += new_count;
+
+    return ecs_vector_get(sparse->dense, uint64_t, count);
 }
 
 void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
-    ecs_size_t elem_size)
+    ecs_size_t size)
 {
-    (void)elem_size;
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
-
-    void *result = _ecs_sparse_recycle(sparse, elem_size, NULL);
-    if (!result) {
-        int32_t index = 0;
-        chunk_t *chunk = last_chunk(sparse);
-
-        int32_t elements_per_chunk = sparse->chunk_size;
-        if (!chunk || chunk->count == elements_per_chunk) {
-            add_chunk(sparse);
-            chunk = last_chunk(sparse);
-        }
-
-        ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(chunk->count < elements_per_chunk, ECS_INTERNAL_ERROR, NULL);
-
-        int32_t chunk_count = ecs_vector_count(sparse->chunks);
-        ecs_assert(chunk_count > 0, ECS_INTERNAL_ERROR, NULL);
-
-        index = (chunk_count - 1) * elements_per_chunk + chunk->count;
-        chunk->count ++;
-
-        result = add_sparse(sparse, index);
-    }
-
-    return result;
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    uint64_t index = new_index(sparse);
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
+    return DATA(chunk->data, size, OFFSET(index));
 }
 
-void* _ecs_sparse_remove(
+void* _ecs_sparse_get_or_create(
     ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index)
-{   
-    (void)elem_size;
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
+    ecs_size_t size,
+    uint64_t index)
+{
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
 
-    void *result = get_sparse(sparse, index, true);
-    if (result) {
-        /* Only add to unused elements if index was set */
-        int32_t *free_elem = ecs_vector_add(&sparse->unused_elements, int32_t);
-        *free_elem = index;
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (dense) {
+        /* Element is already paired, check consistency */
+        ecs_assert(index == *ecs_vector_get(sparse->dense, uint64_t, dense), 
+            ECS_INTERNAL_ERROR, NULL);
+
+        /* Check if element is alive. If element is not alive, update indices so
+         * that the first unused dense element points to the sparse element. */
+        int32_t count = sparse->count;
+        if (dense == count) {
+            /* If dense is the next unused element in the array, simply increase
+             * the count to make it part of the alive set. */
+            sparse->count ++;
+        } else if (dense > count) {
+            /* If dense is not alive, swap it with the first unused element. */
+            swap_dense(sparse, chunk, dense, count, index);
+
+            /* First unused element is now last used element */
+            sparse->count ++;
+        } else {
+            /* Dense is already alive, nothing to be done */
+        }
+    } else {
+        /* Element is not paired yet. Must add a new element to dense array */
+        grow_dense(sparse);
+
+        ecs_vector_t *dense_vector = sparse->dense;
+        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);
+        int32_t dense_count = ecs_vector_count(dense_vector) - 1;
+        int32_t count = sparse->count ++;
+
+        /* If index is larger than max id, update max id */
+        if (index >= get_id(sparse)) {
+            set_id(sparse, index + 1);
+        }
+
+        if (count < dense_count) {
+            /* If there are unused elements in the list, move the first unused
+             * element to the end of the list */
+            uint64_t unused = dense_array[count];
+            chunk_t *unused_chunk = get_or_create_chunk(sparse, CHUNK(unused));
+            assign_index(unused_chunk, dense_array, unused, dense_count);
+        }
+
+        assign_index(chunk, dense_array, index, count);
     }
 
-    return result;
+    return DATA(chunk->data, sparse->size, offset);
+}
+
+void _ecs_sparse_remove(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (dense) {
+        int32_t count = sparse->count;
+        if (dense == (count - 1)) {
+            /* If dense is the last used element, simply decrease count */
+            sparse->count --;
+        } else if (dense < count) {
+            /* If element is alive, move it to unused elements */
+            swap_dense(sparse, chunk, dense, count - 1, index);
+            sparse->count --;
+        } else {
+            /* Element is not alive, nothing to be done */
+        }
+    } else {
+        /* Element is not paired and thus not alive, nothing to be done */
+    }
+    
+    /* Reset memory to zero on remove */
+    ecs_size_t size = sparse->size;
+    void *ptr = DATA(chunk->data, size, offset);
+    memset(ptr, 0, size);
 }
 
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index)
+    ecs_size_t size,
+    int32_t dense_index)
 {
-    (void)elem_size;
-    ecs_assert(index < ecs_vector_count(sparse->dense), 
-        ECS_INVALID_PARAMETER, NULL);
-    
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(dense_index < sparse->count, ECS_INVALID_PARAMETER, NULL);
 
-    const int32_t *it = ecs_vector_first(sparse->dense, int32_t);
+    dense_index ++;
 
-    void *result = get_sparse(sparse, it[index], false);
-
-    ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    return result;
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    return get_sparse(sparse, dense_index, dense_array[dense_index]);
 }
 
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index)
+    ecs_size_t size,
+    uint64_t index)
 {
-    (void)elem_size;
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
-
-    return get_sparse(sparse, index, false);
-}
-
-void* _ecs_sparse_get_or_set_sparse(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index,
-    bool *is_new)
-{
-    (void)elem_size;
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
-
-    return get_or_set_sparse(sparse, index, is_new);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    return try_sparse(sparse, index);
 }
 
 int32_t ecs_sparse_count(
@@ -7292,7 +7386,7 @@ int32_t ecs_sparse_count(
         return 0;
     }
 
-    return ecs_vector_count(sparse->dense);
+    return sparse->count - 1;
 }
 
 int32_t ecs_sparse_size(
@@ -7302,25 +7396,54 @@ int32_t ecs_sparse_size(
         return 0;
     }
         
-    return ecs_vector_count(sparse->sparse);
+    return ecs_vector_count(sparse->dense) - 1;
 }
 
-const int32_t* ecs_sparse_indices(
+const uint64_t* ecs_sparse_ids(
     const ecs_sparse_t *sparse)
 {
-    return ecs_vector_first(sparse->dense, int32_t);
+    return &(ecs_vector_first(sparse->dense, uint64_t)[1]);
 }
 
-const int32_t* ecs_sparse_unused_indices(
-    const ecs_sparse_t *sparse)
+void ecs_sparse_set_size(
+    ecs_sparse_t *sparse,
+    int32_t elem_count)
 {
-    return ecs_vector_first(sparse->unused_elements, int32_t);
+    ecs_vector_set_size(&sparse->dense, uint64_t, elem_count);
 }
 
-int32_t ecs_sparse_unused_count(
-    const ecs_sparse_t *sparse)
+void ecs_sparse_grow(
+    ecs_sparse_t *sparse,
+    int32_t elem_count)
 {
-    return ecs_vector_count(sparse->unused_elements);
+    ecs_vector_grow(&sparse->dense, uint64_t, elem_count);
+}
+
+static
+void sparse_copy(
+    ecs_sparse_t *dst,
+    const ecs_sparse_t *src)
+{
+    ecs_sparse_set_size(dst, ecs_sparse_size(src));
+    const uint64_t *indices = ecs_sparse_ids(src);
+    
+    ecs_size_t size = src->size;
+    int32_t i, count = src->count;
+
+    for (i = 0; i < count - 1; i ++) {
+        uint64_t index = indices[i];
+        void *src_ptr = _ecs_sparse_get_sparse(src, size, index);
+        void *dst_ptr = _ecs_sparse_get_or_create(dst, size, index);
+        ecs_os_memcpy(dst_ptr, src_ptr, size);
+    }
+
+    if (dst->max_id != &dst->max_id_local) {
+        dst->max_id = src->max_id;
+    } else {
+        dst->max_id_local = src->max_id_local;
+    }
+
+    ecs_assert(src->count == dst->count, ECS_INTERNAL_ERROR, NULL);
 }
 
 ecs_sparse_t* ecs_sparse_copy(
@@ -7329,84 +7452,20 @@ ecs_sparse_t* ecs_sparse_copy(
     if (!src) {
         return NULL;
     }
-    
-    ecs_sparse_t *dst = ecs_os_memdup(src, ECS_SIZEOF(ecs_sparse_t));
-    dst->chunks = ecs_vector_copy(src->chunks, chunk_t);
-    dst->dense = ecs_vector_copy(src->dense, int32_t);
-    dst->sparse = ecs_vector_copy(src->sparse, sparse_elem_t);
-    dst->unused_elements = ecs_vector_copy(src->unused_elements, int32_t);
 
-    /* Iterate chunks, copy data */
-    sparse_elem_t *sparse_array = ecs_vector_first(dst->sparse, sparse_elem_t);
-    chunk_t *chunks = ecs_vector_first(dst->chunks, chunk_t);
-    int32_t i, count = ecs_vector_count(dst->chunks);
-
-    for (i = 0; i < count; i ++) {
-        chunks[i].data = ecs_os_memdup(
-            chunks[i].data, dst->chunk_size * dst->elem_size);
-        
-        int32_t j;
-        for (j = 0; j < dst->chunk_size; j ++) {
-            sparse_array[i * dst->chunk_size + j].ptr = 
-                ECS_OFFSET(chunks[i].data, j * dst->elem_size);
-        }
-    }
+    ecs_sparse_t *dst = _ecs_sparse_new(src->size);
+    sparse_copy(dst, src);
 
     return dst;
 }
 
 void ecs_sparse_restore(
     ecs_sparse_t *dst,
-    ecs_sparse_t *src)
+    const ecs_sparse_t *src)
 {
-    ecs_assert(dst->elem_size == src->elem_size, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(dst->chunk_size == src->chunk_size, ECS_INVALID_PARAMETER, NULL);
-
-    /* Copy chunk data */
-    chunk_t *src_chunks = ecs_vector_first(src->chunks, chunk_t);
-    chunk_t *dst_chunks = ecs_vector_first(dst->chunks, chunk_t);
-    int32_t i, count = ecs_vector_count(src->chunks);
-
-    for (i = 0; i < count; i ++) {
-        ecs_os_memcpy(dst_chunks[i].data, src_chunks[i].data,
-            dst->chunk_size * dst->elem_size);
-    }
-
-    /* Clean up remaining chunks */
-    int32_t dst_count = ecs_vector_count(dst->chunks);
-    for (i = count; i < dst_count; i ++) {
-        ecs_os_free(dst_chunks[i].data);
-    }
-
-    ecs_vector_set_count(&dst->chunks, chunk_t, count);
-
-    /* Copy dense array */
-    int32_t elem_count = ecs_vector_count(src->dense);
-    ecs_vector_set_count(&dst->dense, int32_t, elem_count);
-
-    int32_t *dst_dense = ecs_vector_first(dst->dense, int32_t);
-    int32_t *src_dense = ecs_vector_first(src->dense, int32_t);
-    ecs_os_memcpy(dst_dense, src_dense, elem_count * ECS_SIZEOF(int32_t));
-
-    /* Copy sparse array */
-    int32_t sparse_count = ecs_vector_count(src->sparse);
-    ecs_vector_set_count(&dst->sparse, sparse_elem_t, sparse_count);
-
-    sparse_elem_t *dst_sparse = ecs_vector_first(dst->sparse, sparse_elem_t);
-    sparse_elem_t *src_sparse = ecs_vector_first(src->sparse, sparse_elem_t);
-    
-    for (i = 0; i < sparse_count; i ++) {
-        dst_sparse[i].dense = src_sparse[i].dense;
-    }
-
-    /* Copy unused elements */
-    int32_t unused_count = ecs_vector_count(src->unused_elements);
-    ecs_vector_set_count(&dst->unused_elements, int32_t, unused_count);
-
-    if (unused_count) {
-        int32_t *dst_unused = ecs_vector_first(dst->unused_elements, int32_t);
-        int32_t *src_unused = ecs_vector_first(src->unused_elements, int32_t);
-        ecs_os_memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
+    ecs_sparse_clear(dst);
+    if (src) {
+        sparse_copy(dst, src);
     }
 }
 
@@ -7415,61 +7474,9 @@ void ecs_sparse_memory(
     int32_t *allocd,
     int32_t *used)
 {
-    if (!sparse) {
-        return;
-    }
-
-    ecs_vector_memory(sparse->chunks, chunk_t, allocd, used);
-    ecs_vector_memory(sparse->dense, int32_t, allocd, used);
-    ecs_vector_memory(sparse->sparse, sparse_elem_t, allocd, used);
-    ecs_vector_memory(sparse->unused_elements, int32_t, allocd, used);
-
-    int32_t data_total = sparse->chunk_size * 
-        sparse->elem_size * ecs_vector_count(sparse->chunks);
-
-    int32_t data_not_used = ecs_vector_count(sparse->unused_elements) * 
-        sparse->elem_size;
-
-    if (allocd) {
-        *allocd += data_total;
-    }
-
-    if (used) {
-        *used += data_total - data_not_used;
-    }
-}
-
-void ecs_sparse_set_size(
-    ecs_sparse_t *sparse,
-    int32_t elem_count)
-{   
-    int32_t current = ecs_sparse_size(sparse);
-    int32_t to_add = elem_count - current;
-
-    if (to_add > 0) {
-        ecs_vector_set_size(&sparse->sparse, sparse_elem_t, elem_count);
-        int32_t cur = ecs_vector_count(sparse->chunks) * sparse->chunk_size;
-        
-        while (cur < elem_count) {
-            add_chunk(sparse);
-            cur += sparse->chunk_size;
-        }
-    }
-
-    if (ecs_vector_size(sparse->dense) < elem_count) {
-        ecs_vector_set_size(&sparse->dense, int32_t, elem_count);
-    }
-}
-
-void ecs_sparse_grow(
-    ecs_sparse_t *sparse,
-    int32_t count)
-{
-    int32_t current = ecs_sparse_count(sparse);
-
-    while (ecs_sparse_size(sparse) <= (count + current)) {
-        add_chunk(sparse);
-    }
+    (void)sparse;
+    (void)allocd;
+    (void)used;
 }
 
 #ifdef FLECS_READER_WRITER
@@ -10569,7 +10576,7 @@ ecs_record_t* ecs_ei_get(
             entity_index->hi, ecs_record_t, entity);
     } else {
         return ecs_sparse_get_sparse(
-            entity_index->lo, ecs_record_t, (int32_t)entity);
+            entity_index->lo, ecs_record_t, entity);
     }
 }
 
@@ -10596,17 +10603,8 @@ ecs_record_t* ecs_ei_get_or_create(
 
         return record;
     } else {
-        bool is_new = false;
-
-        ecs_record_t *record = ecs_sparse_get_or_set_sparse(
-            entity_index->lo, ecs_record_t, (int32_t)entity, &is_new);
-
-        if (is_new) {
-            record->table = NULL;
-            record->row = 0;
-        }
-        
-        return record;
+        return ecs_sparse_get_or_create(
+            entity_index->lo, ecs_record_t, entity);
     }
 }
 
@@ -10621,9 +10619,8 @@ ecs_record_t* ecs_ei_set(
     if (entity > ECS_HI_ENTITY_ID) {
         ecs_map_set(entity_index->hi, entity, record);
     } else {
-        bool is_new;
-        ecs_record_t *dst_record = ecs_sparse_get_or_set_sparse(
-            entity_index->lo, ecs_record_t, (int32_t)entity, &is_new);
+        ecs_record_t *dst_record = ecs_sparse_get_or_create(
+            entity_index->lo, ecs_record_t, entity);
         *dst_record = *record;
 
         /* Only return record ptrs of the sparse set, as these pointers are
@@ -10644,7 +10641,7 @@ void ecs_ei_delete(
     if (entity > ECS_HI_ENTITY_ID) {
         ecs_map_remove(entity_index->hi, entity);
     } else {
-        ecs_sparse_remove(entity_index->lo, ecs_record_t, (int32_t)entity);
+        ecs_sparse_remove(entity_index->lo, entity);
     }
 }
 
@@ -10673,13 +10670,7 @@ void ecs_ei_clear_entity(
 ecs_entity_t ecs_ei_recycle(
     ecs_ei_t *entity_index)
 {
-    int32_t result;
-    if (ecs_sparse_recycle(entity_index->lo, ecs_record_t, &result)) {
-        ecs_assert(result > 0, ECS_INTERNAL_ERROR, NULL);
-        return (ecs_entity_t)result; // implicit upcast
-    } else {
-        return 0;
-    }
+    return ecs_sparse_new_id(entity_index->lo);
 }
 
 /* Grow entity idex */
@@ -10735,10 +10726,13 @@ int32_t ecs_ei_count(
 
 /* Create new entity index */
 void ecs_ei_new(
+    ecs_world_t *world,
     ecs_ei_t *entity_index)
 {
-    entity_index->lo = ecs_sparse_new(ecs_record_t, 0);
+    entity_index->lo = ecs_sparse_new(ecs_record_t);
     entity_index->hi = ecs_map_new(ecs_record_t, 0);
+
+    ecs_sparse_set_id_source(entity_index->lo, &world->stats.last_id);
 }
 
 /* Clear entities from index */
@@ -10786,7 +10780,7 @@ ecs_ei_iter_t ecs_ei_iter(
 {
     ecs_ei_iter_t result;
     result.index = 0;
-    result.sparse_indices = ecs_sparse_indices(entity_index->lo);
+    result.sparse_indices = ecs_sparse_ids(entity_index->lo);
     result.sparse_count = ecs_sparse_count(entity_index->lo);
     result.map_iter = ecs_map_iter(entity_index->hi);
     result.lo = entity_index->lo;
@@ -10798,14 +10792,14 @@ ecs_record_t *ecs_ei_next(
     ecs_ei_iter_t *iter,
     ecs_entity_t *entity_out)
 {
-    const int32_t *sparse_indices = iter->sparse_indices;
+    const uint64_t *sparse_indices = iter->sparse_indices;
 
     if (sparse_indices) {
-        int32_t index = iter->index;
+        uint64_t index = iter->index;
         if (iter->index < iter->sparse_count) {
             ecs_entity_t entity = (ecs_entity_t)sparse_indices[index];
             ecs_record_t *result = ecs_sparse_get_sparse(
-                    iter->lo, ecs_record_t, (int32_t)entity);
+                    iter->lo, ecs_record_t, entity);
             *entity_out = entity;
             iter->index ++;
             return result;
@@ -12639,6 +12633,10 @@ void* ecs_os_api_malloc(ecs_size_t size) {
 
 static
 void* ecs_os_api_calloc(ecs_size_t size) {
+    if (size >= 13107200) {
+        abort();
+    }
+
     ecs_os_api_calloc_count ++;
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     return calloc(1, (size_t)size);
@@ -16151,7 +16149,7 @@ ecs_bucket_t* find_bucket(
 
     int32_t bucket_id = get_bucket_id(bucket_count, key);
 
-    return _ecs_sparse_get_sparse(buckets, 0, bucket_id);
+    return _ecs_sparse_get_sparse(buckets, 0, (uint64_t)bucket_id);
 }
 
 static
@@ -16168,16 +16166,7 @@ ecs_bucket_t* find_or_create_bucket(
     }
 
     int32_t bucket_id = get_bucket_id(bucket_count, key);
-    
-    bool is_new = false;
-    ecs_bucket_t *bucket = _ecs_sparse_get_or_set_sparse(
-        buckets, 0, bucket_id, &is_new);
-
-    if (is_new) {
-        bucket->count = 0;
-    }
-
-    return bucket;    
+    return _ecs_sparse_get_or_create(buckets, 0, (uint64_t)bucket_id);    
 }
 
 static
@@ -16187,7 +16176,7 @@ void remove_bucket(
 {
     int32_t bucket_count = map->bucket_count;
     int32_t bucket_id = get_bucket_id(bucket_count, key);
-    _ecs_sparse_remove(map->buckets, 0, bucket_id);
+    ecs_sparse_remove(map->buckets, (uint64_t)bucket_id);
 }
 
 static
@@ -16254,13 +16243,13 @@ void rehash(
 
         /* Only iterate over old buckets with elements */
         int32_t b, filled_bucket_count = ecs_sparse_count(buckets);
-        const int32_t *indices = ecs_sparse_indices(buckets);
+        const uint64_t *indices = ecs_sparse_ids(buckets);
 
         /* Iterate backwards as elements could otherwise be moved to existing
          * buckets which could temporarily cause the number of elements in a
          * bucket to exceed BUCKET_COUNT. */
         for (b = filled_bucket_count - 1; b >= 0; b --) {
-            int32_t bucket_id = indices[b];
+            uint64_t bucket_id = indices[b];
             ecs_bucket_t *bucket = _ecs_sparse_get_sparse(buckets, 0, bucket_id);
 
             int i, count = bucket->count;
@@ -16269,17 +16258,13 @@ void rehash(
             for (i = 0; i < count; i ++) {
                 ecs_map_key_t *elem = GET_ELEM(array, elem_size, i);
                 ecs_map_key_t key = *elem;
-                int32_t new_bucket_id = get_bucket_id(bucket_count, key);
+                uint64_t new_bucket_id = get_bucket_id(bucket_count, key);
 
                 if (new_bucket_id != bucket_id) {
-                    bool is_new = false;
-                    ecs_bucket_t *new_bucket = _ecs_sparse_get_or_set_sparse(
-                        buckets, 0, new_bucket_id, &is_new);
+                    ecs_bucket_t *new_bucket = _ecs_sparse_get_or_create(
+                        buckets, 0, (uint64_t)new_bucket_id);
 
-                    if (is_new) {
-                        new_bucket->count = 0;
-                        indices = ecs_sparse_indices(buckets);
-                    }
+                    indices = ecs_sparse_ids(buckets);
 
                     if (add_to_bucket(new_bucket, elem_size, offset, 
                         key, PAYLOAD(elem)) == BUCKET_COUNT) 
@@ -16325,7 +16310,7 @@ ecs_map_t* _ecs_map_new(
     }
 
     result->bucket_count = bucket_count;
-    result->buckets = _ecs_sparse_new(BUCKET_SIZE(elem_size, result->offset), bucket_count);
+    result->buckets = _ecs_sparse_new(BUCKET_SIZE(elem_size, result->offset));
 
     return result;
 }
@@ -17847,8 +17832,10 @@ void ecs_pipeline_progress(
     float delta_time)
 {
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);

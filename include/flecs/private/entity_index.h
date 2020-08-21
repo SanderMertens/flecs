@@ -16,7 +16,7 @@ struct ecs_record_t {
 
 typedef struct ecs_ei_iter_t {
     int32_t index;
-    const int32_t *sparse_indices;
+    const uint64_t *sparse_indices;
     int32_t sparse_count;
     ecs_map_iter_t map_iter;
     ecs_sparse_t *lo;
@@ -69,6 +69,7 @@ int32_t ecs_ei_count(
 
 /* Initialize entity index for stage */
 void ecs_ei_new(
+    ecs_world_t *world,
     ecs_ei_t *entity_index);
 
 /* Clear all entities from a stage */
@@ -107,7 +108,7 @@ ecs_record_t *ecs_ei_next(
 #define ecs_eis_grow(stage, count) ecs_ei_grow(&(stage)->entity_index, count)
 #define ecs_eis_set_size(stage, size) ecs_ei_set_size(&(stage)->entity_index, size)
 #define ecs_eis_count(stage) ecs_ei_count(&(stage)->entity_index)
-#define ecs_eis_new(stage) ecs_ei_new(&(stage)->entity_index)
+#define ecs_eis_new(world, stage) ecs_ei_new(world, &(stage)->entity_index)
 #define ecs_eis_clear(stage) ecs_ei_clear(&(stage)->entity_index)
 #define ecs_eis_copy(stage) ecs_ei_copy(&(stage)->entity_index)
 #define ecs_eis_free(stage) ecs_ei_free(&(stage)->entity_index)

@@ -1172,7 +1172,7 @@ int32_t ecs_table_grow(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count,
-    ecs_entity_t first_entity)
+    ecs_entity_t *ids)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1204,7 +1204,7 @@ int32_t ecs_table_grow(
 
     int32_t i;
     for (i = 0; i < count; i ++) {
-        e[i] = first_entity + (ecs_entity_t)i;
+        e[i] = ids[i];
         r[i] = NULL;
     }
 

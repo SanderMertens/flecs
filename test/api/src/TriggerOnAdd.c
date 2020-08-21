@@ -436,8 +436,8 @@ void TriggerOnAdd_new_w_count_match_1_of_1() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
-    test_assert(e != 0);
+    ecs_entity_t *ids = ecs_bulk_new(world, Position, 3);
+    test_assert(ids != NULL);
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
@@ -445,15 +445,18 @@ void TriggerOnAdd_new_w_count_match_1_of_1() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e);
-    test_int(ctx.e[1], e + 1);
-    test_int(ctx.e[2], e + 2);
+    test_int(ctx.e[0], ids[0]);
+    test_int(ctx.e[1], ids[1]);
+    test_int(ctx.e[2], ids[2]);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get(world, e, Position);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    int i;
+    for (i = 0; i < 3; i ++) {
+        const Position *p = ecs_get(world, ids[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
 
     ecs_fini(world);
 }

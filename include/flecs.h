@@ -756,7 +756,7 @@ ecs_entity_t ecs_new_w_type(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_bulk_new_w_entity(
+ecs_entity_t* ecs_bulk_new_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     int32_t count);
@@ -772,7 +772,7 @@ ecs_entity_t ecs_bulk_new_w_entity(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_bulk_new_w_type(
+ecs_entity_t* ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
     int32_t count);
@@ -790,7 +790,7 @@ ecs_entity_t ecs_bulk_new_w_type(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_bulk_new_w_data(
+ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
     ecs_entities_t *component_ids,

@@ -420,7 +420,7 @@ void* _ecs_vector_add(
     int16_t offset);
 
 #define ecs_vector_add(vector, T) \
-    (T*)_ecs_vector_add(vector, ECS_VECTOR_T(T))
+    ((T*)_ecs_vector_add(vector, ECS_VECTOR_T(T)))
 
 #define ecs_vector_add_t(vector, size, alignment) \
     _ecs_vector_add(vector, ECS_VECTOR_U(size, alignment))
@@ -433,7 +433,7 @@ void* _ecs_vector_addn(
     int32_t elem_count);
 
 #define ecs_vector_addn(vector, T, elem_count) \
-    (T*)_ecs_vector_addn(vector, ECS_VECTOR_T(T), elem_count)
+    ((T*)_ecs_vector_addn(vector, ECS_VECTOR_T(T), elem_count))
 
 #define ecs_vector_addn_t(vector, size, alignment, elem_count) \
     _ecs_vector_addn(vector, ECS_VECTOR_U(size, alignment), elem_count)
@@ -446,7 +446,7 @@ void* _ecs_vector_get(
     int32_t index);
 
 #define ecs_vector_get(vector, T, index) \
-    (T*)_ecs_vector_get(vector, ECS_VECTOR_T(T), index)
+    ((T*)_ecs_vector_get(vector, ECS_VECTOR_T(T), index))
 
 #define ecs_vector_get_t(vector, size, alignment, index) \
     _ecs_vector_get(vector, ECS_VECTOR_U(size, alignment), index)
@@ -588,7 +588,7 @@ void* _ecs_vector_first(
     int16_t offset);
 
 #define ecs_vector_first(vector, T) \
-    (T*)_ecs_vector_first(vector, ECS_VECTOR_T(T))
+    ((T*)_ecs_vector_first(vector, ECS_VECTOR_T(T)))
 
 #define ecs_vector_first_t(vector, size, alignment) \
     _ecs_vector_first(vector, ECS_VECTOR_U(size, alignment))
@@ -767,11 +767,15 @@ typedef struct ecs_sparse_t ecs_sparse_t;
 
 FLECS_EXPORT
 ecs_sparse_t* _ecs_sparse_new(
-    ecs_size_t elem_size,
-    int32_t element_count);
+    ecs_size_t elem_size);
 
-#define ecs_sparse_new(type, element_count)\
-    _ecs_sparse_new(sizeof(type), element_count)
+FLECS_EXPORT
+void ecs_sparse_set_id_source(
+    ecs_sparse_t *sparse,
+    uint64_t *id_source);
+
+#define ecs_sparse_new(type)\
+    _ecs_sparse_new(sizeof(type))
 
 FLECS_EXPORT
 void ecs_sparse_free(
@@ -790,22 +794,21 @@ void* _ecs_sparse_add(
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
 
 FLECS_EXPORT
-void* _ecs_sparse_recycle(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t *sparse_index_out);
-
-#define ecs_sparse_recycle(sparse, T, sparse_index_out) \
-    _ecs_sparse_recycle(sparse, sizeof(T), sparse_index_out)
+uint64_t ecs_sparse_new_id(
+    ecs_sparse_t *sparse);
 
 FLECS_EXPORT
-void* _ecs_sparse_remove(
+uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index);
+    int32_t count);
 
-#define ecs_sparse_remove(sparse, type, index)\
-    ((type*)_ecs_sparse_remove(sparse, sizeof(type), index))
+FLECS_EXPORT
+void _ecs_sparse_remove(
+    ecs_sparse_t *sparse,
+    uint64_t index);
+
+#define ecs_sparse_remove(sparse, index)\
+    _ecs_sparse_remove(sparse, index)
 
 FLECS_EXPORT
 void* _ecs_sparse_get(
@@ -828,31 +831,22 @@ FLECS_EXPORT
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
-    int32_t index);
+    uint64_t index);
 
 #define ecs_sparse_get_sparse(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
 
 FLECS_EXPORT
-void* _ecs_sparse_get_or_set_sparse(
+void* _ecs_sparse_get_or_create(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
-    int32_t index,
-    bool *is_new);
+    uint64_t index);
 
-#define ecs_sparse_get_or_set_sparse(sparse, type, index, is_new)\
-    ((type*)_ecs_sparse_get_or_set_sparse(sparse, sizeof(type), index, is_new))
-
-FLECS_EXPORT
-const int32_t* ecs_sparse_indices(
-    const ecs_sparse_t *sparse);
+#define ecs_sparse_get_or_create(sparse, type, index)\
+    ((type*)_ecs_sparse_get_or_create(sparse, sizeof(type), index))
 
 FLECS_EXPORT
-const int32_t* ecs_sparse_unused_indices(
-    const ecs_sparse_t *sparse);
-
-FLECS_EXPORT
-int32_t ecs_sparse_unused_count(
+const uint64_t* ecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
 FLECS_EXPORT
@@ -872,7 +866,7 @@ ecs_sparse_t* ecs_sparse_copy(
 FLECS_EXPORT
 void ecs_sparse_restore(
     ecs_sparse_t *dst,
-    ecs_sparse_t *src);
+    const ecs_sparse_t *src);
 
 FLECS_EXPORT
 void ecs_sparse_memory(
@@ -3168,7 +3162,7 @@ ecs_entity_t ecs_new_w_type(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_bulk_new_w_entity(
+ecs_entity_t* ecs_bulk_new_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     int32_t count);
@@ -3184,7 +3178,7 @@ ecs_entity_t ecs_bulk_new_w_entity(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_bulk_new_w_type(
+ecs_entity_t* ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
     int32_t count);
@@ -3202,7 +3196,7 @@ ecs_entity_t ecs_bulk_new_w_type(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_bulk_new_w_data(
+ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
     ecs_entities_t *component_ids,
@@ -7721,12 +7715,16 @@ public:
      */   
     template<typename T>
     base_type& add_case() const {
+<<<<<<< HEAD
         static_cast<base_type*>(this)->invoke(
         [](world_t *world, entity_t id) {
             ecs_add_entity(world, id, 
                 ECS_CASE | _::component_info<T>::id(world));
         });
         return *static_cast<base_type*>(this);
+=======
+        this->add_case(_::component_info<T>::id());
+>>>>>>> 30b79b1... #229 reimplement sparse set for optimized bulk operations & memory utilization
     }
 
     /** Add a case to an entity.
@@ -7756,12 +7754,16 @@ public:
      */   
     template<typename T>
     base_type& remove_case() const {
+<<<<<<< HEAD
         static_cast<base_type*>(this)->invoke(
         [](world_t *world, entity_t id) {
             ecs_remove_entity(world, id, 
                 ECS_CASE | _::component_info<T>::id(world));
         });
         return *static_cast<base_type*>(this);
+=======
+        this->remove_case(_::component_info<T>::id());
+>>>>>>> 30b79b1... #229 reimplement sparse set for optimized bulk operations & memory utilization
     }    
 
     /** Remove a case from an entity.

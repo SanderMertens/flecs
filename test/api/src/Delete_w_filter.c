@@ -6,8 +6,8 @@ void Delete_w_filter_delete_1() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Position, 3);
-    ecs_entity_t e2 = ecs_bulk_new(world, Mass, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Position, 3)[0];
+    ecs_entity_t e2 = ecs_bulk_new(world, Mass, 3)[0];
 
     test_int( ecs_count(world, Position), 3);
     test_int( ecs_count(world, Mass), 3);
@@ -38,8 +38,8 @@ void Delete_w_filter_delete_2() {
 
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Type, 3);
-    ecs_entity_t e2 = ecs_bulk_new(world, Mass, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Type, 3)[0];
+    ecs_entity_t e2 = ecs_bulk_new(world, Mass, 3)[0];
 
     test_int( ecs_count(world, Type), 3);
     test_int( ecs_count(world, Mass), 3);
@@ -71,9 +71,9 @@ void Delete_w_filter_delete_1_2_types() {
     ECS_TYPE(world, Type_1, Position);
     ECS_TYPE(world, Type_2, Position, Velocity);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3);
-    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3);
-    ecs_entity_t e3 = ecs_bulk_new(world, Mass, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3)[0];
+    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3)[0];
+    ecs_entity_t e3 = ecs_bulk_new(world, Mass, 3)[0];
 
     /* Type_1 is superset of Type_2 */
     test_int( ecs_count(world, Type_1), 6);
@@ -112,9 +112,9 @@ void Delete_w_filter_delete_2_2_types() {
     ECS_TYPE(world, Type_1, Position, Velocity);
     ECS_TYPE(world, Type_2, Position, Velocity, Mass);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3);
-    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3);
-    ecs_entity_t e3 = ecs_bulk_new(world, Mass, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3)[0];
+    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3)[0];
+    ecs_entity_t e3 = ecs_bulk_new(world, Mass, 3)[0];
 
     /* Type_1 is superset of Type_2 */
     test_int( ecs_count(world, Type_1), 6);
@@ -157,10 +157,10 @@ void Delete_w_filter_delete_except_1() {
     ECS_TYPE(world, Type_2, Position, Velocity, Mass);
     ECS_TYPE(world, Type_3, Position, Velocity, Rotation);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3);
-    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3);
-    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3);
-    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3)[0];
+    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3)[0];
+    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3)[0];
+    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3)[0];
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -209,10 +209,10 @@ void Delete_w_filter_delete_except_2() {
     ECS_TYPE(world, Type_3, Position, Velocity, Rotation);
     ECS_TYPE(world, Except, Mass, Rotation);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3);
-    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3);
-    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3);
-    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3)[0];
+    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3)[0];
+    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3)[0];
+    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3)[0];
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -260,10 +260,10 @@ void Delete_w_filter_delete_with_any_of_2() {
     ECS_TYPE(world, Type_3, Position, Velocity, Rotation);
     ECS_TYPE(world, Include, Mass, Rotation);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3);
-    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3);
-    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3);
-    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3)[0];
+    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3)[0];
+    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3)[0];
+    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3)[0];
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -314,10 +314,10 @@ void Delete_w_filter_delete_except_all_of_2() {
     ECS_TYPE(world, Type_3, Position, Velocity, Mass, Rotation);
     ECS_TYPE(world, Exclude, Mass, Rotation);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3);
-    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3);
-    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3);
-    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3)[0];
+    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3)[0];
+    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3)[0];
+    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3)[0];
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -368,10 +368,10 @@ void Delete_w_filter_include_exact() {
     ECS_TYPE(world, Type_2, Position, Velocity, Mass);
     ECS_TYPE(world, Type_3, Position, Velocity, Mass, Rotation);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3);
-    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3);
-    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3);
-    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3)[0];
+    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3)[0];
+    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3)[0];
+    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3)[0];
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -420,10 +420,10 @@ void Delete_w_filter_exclude_exact() {
     ECS_TYPE(world, Type_2, Position, Velocity, Mass);
     ECS_TYPE(world, Type_3, Position, Velocity, Mass, Rotation);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3);
-    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3);
-    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3);
-    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Type_1, 3)[0];
+    ecs_entity_t e2 = ecs_bulk_new(world, Type_2, 3)[0];
+    ecs_entity_t e3 = ecs_bulk_new(world, Type_3, 3)[0];
+    ecs_entity_t e4 = ecs_bulk_new(world, Mass, 3)[0];
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -475,7 +475,7 @@ void Delete_w_filter_system_activate_test() {
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Position, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Position, 3)[0];
 
     test_int( ecs_count(world, Position), 3);
 
@@ -505,7 +505,7 @@ void Delete_w_filter_skip_builtin_tables() {
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    ecs_entity_t e1 = ecs_bulk_new(world, Position, 3);
+    ecs_entity_t e1 = ecs_bulk_new(world, Position, 3)[0];
 
     test_int( ecs_count(world, Position), 3);
 

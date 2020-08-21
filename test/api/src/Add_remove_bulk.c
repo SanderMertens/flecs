@@ -6,13 +6,13 @@ void Add_remove_bulk_add_remove_add_only() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
-    test_assert(e != 0);
+    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        ecs_set(world, e + i, Position, {i, i * 2});
+        test_assert( ecs_has(world, ids[i], Position));
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
     ecs_bulk_add_remove(world, Velocity, 0, &(ecs_filter_t){
@@ -20,15 +20,15 @@ void Add_remove_bulk_add_remove_add_only() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( ecs_has(world, e + i, Velocity));
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( ecs_has(world, ids[i], Velocity));
 
-        const Position *p = ecs_get(world, e + i, Position);
+        const Position *p = ecs_get(world, ids[i], Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
 
-        test_assert(ecs_get(world, e + i, Velocity) != NULL);
+        test_assert(ecs_get(world, ids[i], Velocity) != NULL);
     }
 
     test_int( ecs_count(world, Position), 10);
@@ -44,14 +44,14 @@ void Add_remove_bulk_add_remove_remove_only() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( ecs_has(world, e + i, Velocity));
-        ecs_set(world, e + i, Position, {i, i * 2});
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( ecs_has(world, ids[i], Velocity));
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
     ecs_bulk_add_remove(world, 0, Velocity, &(ecs_filter_t){
@@ -59,10 +59,10 @@ void Add_remove_bulk_add_remove_remove_only() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( !ecs_has(world, e + i, Velocity));
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( !ecs_has(world, ids[i], Velocity));
 
-        const Position *p = ecs_get(world, e + i, Position);
+        const Position *p = ecs_get(world, ids[i], Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -82,14 +82,14 @@ void Add_remove_bulk_add_remove_both() {
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( ecs_has(world, e + i, Velocity));
-        ecs_set(world, e + i, Position, {i, i * 2});
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( ecs_has(world, ids[i], Velocity));
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
     ecs_bulk_add_remove(world, Mass, Velocity, &(ecs_filter_t){
@@ -97,16 +97,16 @@ void Add_remove_bulk_add_remove_both() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( !ecs_has(world, e + i, Velocity));
-        test_assert( ecs_has(world, e + i, Mass));
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( !ecs_has(world, ids[i], Velocity));
+        test_assert( ecs_has(world, ids[i], Mass));
 
-        const Position *p = ecs_get(world, e + i, Position);
+        const Position *p = ecs_get(world, ids[i], Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
 
-        test_assert(ecs_get(world, e + i, Mass) != NULL);
+        test_assert(ecs_get(world, ids[i], Mass) != NULL);
     }
 
     test_int( ecs_count(world, Position), 10);
@@ -123,15 +123,15 @@ void Add_remove_bulk_add_remove_same() {
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( ecs_has(world, e + i, Velocity));
-        ecs_set(world, e + i, Position, {i, i * 2});
-        ecs_set(world, e + i, Velocity, {i * 3, i * 4});
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( ecs_has(world, ids[i], Velocity));
+        ecs_set(world, ids[i], Position, {i, i * 2});
+        ecs_set(world, ids[i], Velocity, {i * 3, i * 4});
     }
 
     ecs_bulk_add_remove(world, Velocity, Velocity, &(ecs_filter_t){
@@ -139,15 +139,15 @@ void Add_remove_bulk_add_remove_same() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( ecs_has(world, e + i, Velocity));
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( ecs_has(world, ids[i], Velocity));
 
-        const Position *p = ecs_get(world, e + i, Position);
+        const Position *p = ecs_get(world, ids[i], Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
 
-        const Velocity *v = ecs_get(world, e + i, Velocity);
+        const Velocity *v = ecs_get(world, ids[i], Velocity);
         test_assert(v != NULL);
         test_int(v->x, i * 3);
         test_int(v->y, i * 4);

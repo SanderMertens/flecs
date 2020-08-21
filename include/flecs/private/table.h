@@ -116,7 +116,7 @@ int32_t ecs_table_grow(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count,
-    ecs_entity_t first_entity);
+    ecs_entity_t *ids);
 
 /* Set table to a fixed size. Useful for preallocating memory in advance. */
 int16_t ecs_table_set_size(

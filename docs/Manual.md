@@ -448,7 +448,7 @@ When using multiple threads, the `ecs_new` operation guarantees that the returne
 When creating entities in bulk, the returned entity identifiers are guaranteed to be contiguous. For example, the following operation:
 
 ```c
-ecs_entity_t e = ecs_bulk_new(world, 0, 1000);
+ecs_entity_t *ids = ecs_bulk_new(world, 0, 1000);
 ```
 
 is guaranteed to return entity identifiers `e .. e + 1000`. As a consequence, this operation also does not recycle ids, as ids are unlikely to be deleted in contiguous order.
