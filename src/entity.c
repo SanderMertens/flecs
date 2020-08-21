@@ -1041,13 +1041,13 @@ int32_t move_entity(
             world, stage, entity, entity, dst_table, dst_data, dst_row, src_table, 
             src_data, src_row, same_stage);
 
-        /* If entity was moved, invoke UnSet monitors for each component that
-         * the entity no longer has */
-        ecs_run_monitors(world, stage, dst_table, src_table->un_set_all, 
-            dst_row, 1, dst_table->un_set_all);
-
         /* If components were removed, invoke remove actions before deleting */
-        if (removed && (src_table->flags & EcsTableHasRemoveActions)) {   
+        if (removed && (src_table->flags & EcsTableHasRemoveActions)) {
+            /* If entity was moved, invoke UnSet monitors for each component that
+            * the entity no longer has */
+            ecs_run_monitors(world, stage, dst_table, src_table->un_set_all, 
+                dst_row, 1, dst_table->un_set_all);
+
             ecs_run_remove_actions(
                 world, stage, src_table, src_data, src_row, 1, removed, false);
         }            
