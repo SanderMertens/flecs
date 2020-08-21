@@ -4655,7 +4655,7 @@ void* get_base_component(
         }
 
         ecs_entity_info_t prefab_info;
-        if (get_info(world, prefab, &prefab_info)) {
+        if (get_info(world, prefab, &prefab_info) && prefab_info.table) {
             ptr = get_component(&prefab_info, component);
             if (!ptr) {
                 ptr = get_base_component(
@@ -6965,7 +6965,7 @@ static
 uint64_t inc_id(
     ecs_sparse_t *sparse)
 {
-    return ++(sparse->max_id[0]);
+    return ++ (sparse->max_id[0]);
 }
 
 static
@@ -7079,6 +7079,7 @@ ecs_sparse_t* _ecs_sparse_new(
     ecs_sparse_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_sparse_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
     result->size = size;
+    result->max_id_local = UINT64_MAX;
     result->max_id = &result->max_id_local;
 
     /* Consume first value in dense array as 0 is used in the sparse array to

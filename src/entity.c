@@ -1263,7 +1263,7 @@ void* get_base_component(
         }
 
         ecs_entity_info_t prefab_info;
-        if (get_info(world, prefab, &prefab_info)) {
+        if (get_info(world, prefab, &prefab_info) && prefab_info.table) {
             ptr = get_component(&prefab_info, component);
             if (!ptr) {
                 ptr = get_base_component(
