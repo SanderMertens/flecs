@@ -6,7 +6,7 @@ void Add_bulk_add_comp_from_comp_to_empty() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != 0);
 
     int i;
@@ -47,7 +47,7 @@ void Add_bulk_add_comp_from_tag_to_empty() {
     ECS_TAG(world, Tag);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Tag, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Tag, 10);
     test_assert(ids != NULL);
 
     int i;
@@ -83,7 +83,7 @@ void Add_bulk_add_comp_from_comp_to_existing() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ecs_entity_t existing[10];
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
     test_assert(ids != NULL);
     memcpy(existing, ids, sizeof(ecs_entity_t) * 10);
 
@@ -158,7 +158,7 @@ void Add_bulk_add_comp_from_tag_to_existing() {
     ECS_TYPE(world, Type, Tag, Velocity);
 
     ecs_entity_t existing[10];
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
     test_assert(ids != NULL);
     memcpy(existing, ids, sizeof(ecs_entity_t) * 10);
 
@@ -216,7 +216,7 @@ void Add_bulk_add_tag_from_tag_to_empty() {
     ECS_TAG(world, Tag);
     ECS_TAG(world, Tag2);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Tag, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Tag, 10);
     test_assert(ids != NULL);
 
     int i;
@@ -251,7 +251,7 @@ void Add_bulk_add_tag_from_tag_to_existing() {
     ECS_TYPE(world, Type, Tag, Tag2);
 
     ecs_entity_t existing[10];
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
     test_assert(ids != NULL);
     memcpy(existing, ids, sizeof(ecs_entity_t) * 10);
 
@@ -304,7 +304,7 @@ void Add_bulk_add_comp_to_more_existing() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ecs_entity_t existing[20];
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 20);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 20);
     test_assert(ids != NULL);
     memcpy(existing, ids, sizeof(ecs_entity_t) * 20);
 
@@ -376,7 +376,7 @@ void Add_bulk_add_comp_to_fewer_existing() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ecs_entity_t existing[5];
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 5);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 5);
     test_assert(ids != NULL);
     memcpy(existing, ids, sizeof(ecs_entity_t) * 5);
 
@@ -457,7 +457,7 @@ void Add_bulk_on_add() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     ecs_bulk_add(world, Velocity, &(ecs_filter_t){
@@ -486,7 +486,7 @@ void Add_bulk_add_entity_comp() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     int i;
@@ -527,7 +527,7 @@ void Add_bulk_add_entity_tag() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     int i;
@@ -571,7 +571,7 @@ void Add_bulk_add_entity_on_add() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     ecs_bulk_add_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
@@ -599,7 +599,7 @@ void Add_bulk_add_entity_existing() {
     
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     int i;

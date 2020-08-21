@@ -37,112 +37,24 @@
 extern "C" {
 #endif
 
-typedef struct ecs_ei_t ecs_ei_t;
-
 struct ecs_record_t {
-    ecs_table_t *table;            /* Identifies a type (and table) in world */
-    int32_t row;                  /* Table row of the entity */
+    ecs_table_t *table;  /* Identifies a type (and table) in world */
+    int32_t row;         /* Table row of the entity */
 };
 
-typedef struct ecs_ei_iter_t {
-    int32_t index;
-    const uint64_t *sparse_indices;
-    int32_t sparse_count;
-    ecs_map_iter_t map_iter;
-    ecs_sparse_t *lo;
-} ecs_ei_iter_t;
-
-/* Get entity record */
-ecs_record_t* ecs_ei_get(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity);
-
-/* Set entity */
-ecs_record_t* ecs_ei_set(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity,
-    ecs_record_t *record);
-
-/* Get or set entity */
-ecs_record_t* ecs_ei_get_or_create(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity);
-
-/* Delete entity from stage */
-void ecs_ei_clear_entity(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity,
-    bool is_watched);
-
-/* Delete entity from stage */
-void ecs_ei_delete(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity);
-
-/* Recycle deleted entity id (returns 0 if no available) */
-ecs_entity_t ecs_ei_recycle(
-    ecs_ei_t *entity_index);
-
-/* Grow entity index */
-void ecs_ei_grow(
-    ecs_ei_t *entity_index,
-    int32_t count);
-
-/* Grow entity index to specific size */
-void ecs_ei_set_size(
-    ecs_ei_t *entity_index,
-    int32_t size);    
-
-/* Count entities in stage */
-int32_t ecs_ei_count(
-    ecs_ei_t *entity_index);      
-
-/* Initialize entity index for stage */
-void ecs_ei_new(
-    ecs_world_t *world,
-    ecs_ei_t *entity_index);
-
-/* Clear all entities from a stage */
-void ecs_ei_clear(
-    ecs_ei_t *entity_index);
-
-/* Clear all entities from a stage */
-ecs_ei_t ecs_ei_copy(
-    const ecs_ei_t *entity_index);    
-
-/* Free entity index for stage */
-void ecs_ei_free(
-    ecs_ei_t *entity_index);
-
-void ecs_ei_memory(
-    ecs_ei_t *entity_index,
-    int32_t *allocd,
-    int32_t *used);
-
-/* Create iterator for entity index */
-ecs_ei_iter_t ecs_ei_iter(
-    ecs_ei_t *entity_index);
-
-/* Return next record for iterator (return NULL when end is reached) */
-ecs_record_t *ecs_ei_next(
-    ecs_ei_iter_t *iter,
-    ecs_entity_t *entity_out);
-
-// Convenience macro's for directly calling operations for stage
-#define ecs_eis_get(stage, entity) ecs_ei_get(&(stage)->entity_index, entity)
-#define ecs_eis_set(stage, entity, ...) ecs_ei_set(&(stage)->entity_index, entity, __VA_ARGS__)
-#define ecs_eis_get_or_create(stage, entity) ecs_ei_get_or_create(&(stage)->entity_index, entity)
-#define ecs_eis_delete(stage, entity) ecs_ei_delete(&(stage)->entity_index, entity)
-#define ecs_eis_recycle(stage) ecs_ei_recycle(&(stage)->entity_index)
-#define ecs_eis_clear_entity(stage, entity, is_watched) ecs_ei_clear_entity(&(stage)->entity_index, entity, is_watched)
-#define ecs_eis_grow(stage, count) ecs_ei_grow(&(stage)->entity_index, count)
-#define ecs_eis_set_size(stage, size) ecs_ei_set_size(&(stage)->entity_index, size)
-#define ecs_eis_count(stage) ecs_ei_count(&(stage)->entity_index)
-#define ecs_eis_new(world, stage) ecs_ei_new(world, &(stage)->entity_index)
-#define ecs_eis_clear(stage) ecs_ei_clear(&(stage)->entity_index)
-#define ecs_eis_copy(stage) ecs_ei_copy(&(stage)->entity_index)
-#define ecs_eis_free(stage) ecs_ei_free(&(stage)->entity_index)
-#define ecs_eis_memory(stage, allocd, used) ecs_ei_memory(&(stage)->entity_index, allocd, used)
+#define ecs_eis_get(stage, entity) ecs_sparse_get_sparse((stage)->entity_index, ecs_record_t, entity)
+#define ecs_eis_set(stage, entity, ...) (ecs_sparse_set((stage)->entity_index, ecs_record_t, entity, (__VA_ARGS__)))
+#define ecs_eis_get_or_create(stage, entity) ecs_sparse_get_or_create((stage)->entity_index, ecs_record_t, entity)
+#define ecs_eis_delete(stage, entity) ecs_sparse_remove((stage)->entity_index, entity)
+#define ecs_eis_recycle(stage) ecs_sparse_new_id((stage)->entity_index)
+#define ecs_eis_clear_entity(stage, entity, is_watched) ecs_eis_set(stage, entity, &(ecs_record_t){NULL, is_watched})
+#define ecs_eis_grow(stage, count) ecs_sparse_grow((stage)->entity_index, count)
+#define ecs_eis_set_size(stage, size) ecs_sparse_set_size((stage)->entity_index, size)
+#define ecs_eis_count(stage) ecs_sparse_count((stage)->entity_index)
+#define ecs_eis_clear(stage) ecs_sparse_clear((stage)->entity_index)
+#define ecs_eis_copy(stage) ecs_sparse_copy((stage)->entity_index)
+#define ecs_eis_free(stage) ecs_sparse_free((stage)->entity_index)
+#define ecs_eis_memory(stage, allocd, used) ecs_sparse_memory((stage)->entity_index, allocd, used)
 
 #ifdef __cplusplus
 }
@@ -579,12 +491,6 @@ typedef struct ecs_on_demand_in_t {
     ecs_vector_t *systems;  /* Systems that have this column as [out] column */
 } ecs_on_demand_in_t;
 
-/** Entity index */
-struct ecs_ei_t {
-    ecs_sparse_t *lo;       /* Low entity ids are stored in a sparse set */
-    ecs_map_t *hi;          /* To save memory high ids are stored in a map */
-};
-
 /** Types for deferred operations */
 typedef enum ecs_op_kind_t {
     EcsOpNone,
@@ -621,7 +527,7 @@ struct ecs_stage_t {
     /* If this is not main stage, 
      * changes to the entity index 
      * are buffered here */
-    ecs_ei_t entity_index; /* Entity lookup table for (table, row) */
+    ecs_sparse_t *entity_index; /* Entity lookup table for (table, row) */
 
     /* If this is not a thread
      * stage, these are the same
@@ -4801,8 +4707,8 @@ const ecs_entity_t* new_w_data(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t sparse_count = ecs_sparse_count(stage->entity_index.lo);
-    const ecs_entity_t *ids = ecs_sparse_new_ids(stage->entity_index.lo, count);
+    int32_t sparse_count = ecs_eis_count(stage);
+    const ecs_entity_t *ids = ecs_sparse_new_ids(stage->entity_index, count);
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_type_t type = table->type;
 
@@ -4898,7 +4804,7 @@ const ecs_entity_t* new_w_data(
         *row_out = row;
     }
 
-    ids = ecs_sparse_ids(stage->entity_index.lo);
+    ids = ecs_sparse_ids(stage->entity_index);
 
     return &ids[sparse_count];
 }
@@ -6449,7 +6355,8 @@ void ecs_stage_init(
     memset(stage, 0, sizeof(ecs_stage_t));
 
     /* Initialize entity index */
-    ecs_eis_new(world, stage);
+    stage->entity_index = ecs_sparse_new(ecs_record_t);
+    ecs_sparse_set_id_source(stage->entity_index, &world->stats.last_id);
 
     if (is_main_stage) {
         stage->id = 0;
@@ -7335,6 +7242,17 @@ void* _ecs_sparse_get_or_create(
     }
 
     return DATA(chunk->data, sparse->size, offset);
+}
+
+void* _ecs_sparse_set(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index,
+    void *value)
+{
+    void *ptr = _ecs_sparse_get_or_create(sparse, elem_size, index);
+    ecs_os_memcpy(ptr, value, elem_size);
+    return ptr;
 }
 
 void _ecs_sparse_remove(
@@ -8229,7 +8147,7 @@ int32_t ecs_queue_count(
 /* World snapshot */
 struct ecs_snapshot_t {
     ecs_world_t *world;
-    ecs_ei_t entity_index;
+    ecs_sparse_t *entity_index;
     ecs_vector_t *tables;
     ecs_entity_t last_id;
     ecs_filter_t filter;
@@ -8300,7 +8218,7 @@ ecs_data_t* duplicate_data(
 static
 ecs_snapshot_t* snapshot_create(
     ecs_world_t *world,
-    const ecs_ei_t *entity_index,
+    const ecs_sparse_t *entity_index,
     ecs_iter_t *iter,
     ecs_iter_next_action_t next)
 {
@@ -8313,7 +8231,7 @@ ecs_snapshot_t* snapshot_create(
      * world, and we can simply copy the entity index as it will be restored
      * entirely upon snapshote restore. */
     if (!iter && entity_index) {
-        result->entity_index = ecs_ei_copy(entity_index);
+        result->entity_index = ecs_sparse_copy(entity_index);
         result->tables = ecs_vector_new(ecs_table_leaf_t, 0);
     }
 
@@ -8328,8 +8246,7 @@ ecs_snapshot_t* snapshot_create(
      * have to patch the entity index one by one upon restore, as we don't want
      * to affect entities that were not part of the snapshot. */
     else {
-        result->entity_index.hi = NULL;
-        result->entity_index.lo = NULL;
+        result->entity_index = NULL;
     }
 
     /* Iterate tables in iterator */
@@ -8361,7 +8278,7 @@ ecs_snapshot_t* ecs_snapshot_take(
 {
     ecs_snapshot_t *result = snapshot_create(
         world,
-        &world->stage.entity_index,
+        world->stage.entity_index,
         NULL,
         NULL);
 
@@ -8380,7 +8297,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
 
     ecs_snapshot_t *result = snapshot_create(
         world,
-        &world->stage.entity_index,
+        world->stage.entity_index,
         iter,
         next);
 
@@ -8396,11 +8313,9 @@ void ecs_snapshot_restore(
 {
     bool is_filtered = true;
 
-    if (snapshot->entity_index.lo || snapshot->entity_index.hi) {
-        ecs_sparse_restore(world->stage.entity_index.lo, snapshot->entity_index.lo);
-        ecs_sparse_free(snapshot->entity_index.lo);
-        ecs_map_free(world->stage.entity_index.hi);
-        world->stage.entity_index.hi = snapshot->entity_index.hi;
+    if (snapshot->entity_index) {
+        ecs_sparse_restore(world->stage.entity_index, snapshot->entity_index);
+        ecs_sparse_free(snapshot->entity_index);
         is_filtered = false;
     }
 
@@ -8561,7 +8476,7 @@ bool ecs_snapshot_next(
 void ecs_snapshot_free(
     ecs_snapshot_t *snapshot)
 {
-    ecs_ei_free(&snapshot->entity_index);
+    ecs_sparse_free(snapshot->entity_index);
 
     ecs_table_leaf_t *tables = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
     int32_t i, count = ecs_vector_count(snapshot->tables);
@@ -10579,166 +10494,6 @@ int32_t ecs_switch_next(
         sw->nodes, ecs_switch_node_t);
 
     return nodes[element].next;
-}
-
-/* Get entity */
-ecs_record_t* ecs_ei_get(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity)
-{
-    return ecs_sparse_get_sparse(
-        entity_index->lo, ecs_record_t, entity);
-}
-
-/* Get or create entity */
-ecs_record_t* ecs_ei_get_or_create(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity)
-{
-    return ecs_sparse_get_or_create(
-        entity_index->lo, ecs_record_t, entity);
-}
-
-/* Set entity */
-ecs_record_t* ecs_ei_set(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity,
-    ecs_record_t *record)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_record_t *dst_record = ecs_sparse_get_or_create(
-        entity_index->lo, ecs_record_t, entity);
-    *dst_record = *record;
-
-    /* Only return record ptrs of the sparse set, as these pointers are
-        * stable. Tables store pointers to records only of they are stable */
-    return dst_record;
-}
-
-/* Delete entity */
-void ecs_ei_delete(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_sparse_remove(entity_index->lo, entity);
-}
-
-void ecs_ei_clear_entity(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity,
-    bool is_watched)
-{
-    ecs_ei_set(entity_index, entity, &(ecs_record_t){
-        .table = NULL,
-        .row = -is_watched
-    });  
-}
-
-ecs_entity_t ecs_ei_recycle(
-    ecs_ei_t *entity_index)
-{
-    return ecs_sparse_new_id(entity_index->lo);
-}
-
-/* Grow entity idex */
-void ecs_ei_grow(
-    ecs_ei_t *entity_index,
-    int32_t count)
-{
-    ecs_sparse_grow(entity_index->lo, count);
-}
-
-/* Set size of entity index */
-void ecs_ei_set_size(
-    ecs_ei_t *entity_index,
-    int32_t size)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_sparse_set_size(entity_index->lo, size);
-}
-
-/* Count number of entities in index */
-int32_t ecs_ei_count(
-    ecs_ei_t *entity_index)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_sparse_count(entity_index->lo);
-}
-
-/* Create new entity index */
-void ecs_ei_new(
-    ecs_world_t *world,
-    ecs_ei_t *entity_index)
-{
-    entity_index->lo = ecs_sparse_new(ecs_record_t);
-    ecs_sparse_set_id_source(entity_index->lo, &world->stats.last_id);
-}
-
-/* Clear entities from index */
-void ecs_ei_clear(
-    ecs_ei_t *entity_index)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_sparse_clear(entity_index->lo);
-}
-
-/* Free entity index */
-void ecs_ei_free(
-    ecs_ei_t *entity_index)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_sparse_free(entity_index->lo);
-}
-
-/* Copy entity index */
-ecs_ei_t ecs_ei_copy(
-    const ecs_ei_t *entity_index)
-{
-    return (ecs_ei_t){
-        .lo = ecs_sparse_copy(entity_index->lo)
-    };
-}
-
-/* Get memory occupied by entity index */
-void ecs_ei_memory(
-    ecs_ei_t *entity_index,
-    int32_t *allocd,
-    int32_t *used)
-{
-    ecs_sparse_memory(entity_index->lo, allocd, used);
-}
-
-ecs_ei_iter_t ecs_ei_iter(
-    ecs_ei_t *entity_index)
-{
-    ecs_ei_iter_t result;
-    result.index = 0;
-    result.sparse_indices = ecs_sparse_ids(entity_index->lo);
-    result.sparse_count = ecs_sparse_count(entity_index->lo);
-    result.lo = entity_index->lo;
-    return result;
-}
-
-/* Return next record for iterator (return NULL when end is reached) */
-ecs_record_t *ecs_ei_next(
-    ecs_ei_iter_t *iter,
-    ecs_entity_t *entity_out)
-{
-    const uint64_t *sparse_indices = iter->sparse_indices;
-
-    int32_t index = iter->index;
-    if (iter->index < iter->sparse_count) {
-        ecs_entity_t entity = (ecs_entity_t)sparse_indices[index];
-        ecs_record_t *result = ecs_sparse_get_sparse(
-                iter->lo, ecs_record_t, entity);
-        *entity_out = entity;
-        iter->index ++;
-        return result;
-    } else {
-        return NULL;
-    }
 }
 
 

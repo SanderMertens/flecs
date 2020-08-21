@@ -292,7 +292,7 @@ void ComponentLifecycle_copy_on_new_w_data() {
         .ctx = &ctx
     });
 
-    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 2, 
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 2, 
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Position)
@@ -406,7 +406,7 @@ void ComponentLifecycle_ctor_on_bulk_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     cl_ctx ctx = { { 0 } };
@@ -460,7 +460,7 @@ void ComponentLifecycle_dtor_on_bulk_remove() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
     test_assert(ids != NULL);
 
     cl_ctx ctx = { { 0 } };
@@ -509,7 +509,7 @@ void ComponentLifecycle_ctor_on_bulk_add_entity() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     cl_ctx ctx = { { 0 } };
@@ -563,7 +563,7 @@ void ComponentLifecycle_dtor_on_bulk_remove_entity() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
     test_assert(ids != NULL);
 
     cl_ctx ctx = { { 0 } };
@@ -614,7 +614,7 @@ void ComponentLifecycle_ctor_dtor_on_bulk_add_remove() {
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Mass);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
     test_assert(ids != NULL);
 
     cl_ctx ctx_ctor = { { 0 } };
@@ -688,7 +688,7 @@ void ComponentLifecycle_copy_on_snapshot() {
         .ctx = &ctx
     });
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     int32_t i;
@@ -740,7 +740,7 @@ void ComponentLifecycle_ctor_copy_on_snapshot() {
         .ctx = &ctx
     });
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     int32_t i;
@@ -798,7 +798,7 @@ void ComponentLifecycle_dtor_on_restore() {
         .ctx = &ctx
     });
 
-    ecs_entity_t *temp_ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *temp_ids = ecs_bulk_new(world, Position, 10);
     test_assert(temp_ids != NULL);
     ecs_entity_t ids[10];
     memcpy(ids, temp_ids, sizeof(ecs_entity_t) * 10);

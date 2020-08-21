@@ -384,6 +384,17 @@ void* _ecs_sparse_get_or_create(
     return DATA(chunk->data, sparse->size, offset);
 }
 
+void* _ecs_sparse_set(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index,
+    void *value)
+{
+    void *ptr = _ecs_sparse_get_or_create(sparse, elem_size, index);
+    ecs_os_memcpy(ptr, value, elem_size);
+    return ptr;
+}
+
 void _ecs_sparse_remove(
     ecs_sparse_t *sparse,
     uint64_t index)

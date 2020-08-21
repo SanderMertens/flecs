@@ -652,7 +652,7 @@ void test_combs_100_entity(int THREADS) {
 
     int i, ENTITIES = 100;
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, ENTITIES);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, ids[i], Position, {1, 2});
@@ -703,10 +703,10 @@ void test_combs_100_entity_2_types(int THREADS) {
 
     int i, ENTITIES = 100;
 
-    ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, ENTITIES / 2);
+    const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, ENTITIES / 2);
     ecs_entity_t ids_1[50];
     memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * ENTITIES / 2);
-    ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, ENTITIES / 2);
+    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES / 2; i ++) {
         ecs_set(world, ids_1[i], Position, {1, 2});
@@ -760,10 +760,10 @@ void MultiThread_change_thread_count() {
 
     int i, ENTITIES = 100;
 
-    ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, ENTITIES / 2);
+    const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, ENTITIES / 2);
     ecs_entity_t ids_1[50];
     memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * ENTITIES / 2);
-    ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, ENTITIES / 2);
+    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES / 2; i ++) {
         ecs_set(world, ids_1[i], Position, {1, 2});

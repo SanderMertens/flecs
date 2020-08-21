@@ -1311,8 +1311,8 @@ const ecs_entity_t* new_w_data(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t sparse_count = ecs_sparse_count(stage->entity_index.lo);
-    const ecs_entity_t *ids = ecs_sparse_new_ids(stage->entity_index.lo, count);
+    int32_t sparse_count = ecs_eis_count(stage);
+    const ecs_entity_t *ids = ecs_sparse_new_ids(stage->entity_index, count);
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_type_t type = table->type;
 
@@ -1408,7 +1408,7 @@ const ecs_entity_t* new_w_data(
         *row_out = row;
     }
 
-    ids = ecs_sparse_ids(stage->entity_index.lo);
+    ids = ecs_sparse_ids(stage->entity_index);
 
     return &ids[sparse_count];
 }

@@ -169,7 +169,7 @@ void Stresstests_create_delete_entity_random_components() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, 0, 1000);
+    const ecs_entity_t *ids = ecs_bulk_new(world, 0, 1000);
     test_assert(ids != NULL);
 
     int i;
@@ -191,7 +191,7 @@ void Stresstests_set_entity_random_components() {
 
     ECS_SYSTEM(world, Set_velocity_callback, EcsOnSet, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, 0, 1000);
+    const ecs_entity_t *ids = ecs_bulk_new(world, 0, 1000);
     test_assert(ids != NULL);
 
     int i;
@@ -262,7 +262,7 @@ void Stresstests_create_2m_entities_bulk_1_comp() {
     
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 2000 * 1000);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 2000 * 1000);
     test_assert(ids != NULL);
 
     int32_t i;

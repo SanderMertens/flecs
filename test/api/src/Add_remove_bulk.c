@@ -6,7 +6,7 @@ void Add_remove_bulk_add_remove_add_only() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     int i;
@@ -44,7 +44,7 @@ void Add_remove_bulk_add_remove_remove_only() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
     test_assert(ids != NULL);
 
     int i;
@@ -82,7 +82,7 @@ void Add_remove_bulk_add_remove_both() {
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
     test_assert(ids != NULL);
 
     int i;
@@ -123,7 +123,7 @@ void Add_remove_bulk_add_remove_same() {
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
     test_assert(ids != NULL);
 
     int i;

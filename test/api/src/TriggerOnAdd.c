@@ -436,7 +436,7 @@ void TriggerOnAdd_new_w_count_match_1_of_1() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 3);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 3);
     test_assert(ids != NULL);
 
     test_int(ctx.count, 3);

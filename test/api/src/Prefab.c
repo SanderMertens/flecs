@@ -106,7 +106,7 @@ void Prefab_new_w_count_prefab() {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    ecs_entity_t *ids = ecs_bulk_new_w_entity(world, ECS_INSTANCEOF | Prefab, 10);
+    const ecs_entity_t *ids = ecs_bulk_new_w_entity(world, ECS_INSTANCEOF | Prefab, 10);
     test_assert(ids != NULL);
 
     ecs_entity_t i;
@@ -955,7 +955,7 @@ void Prefab_new_w_count_w_override() {
     ecs_set(world, Prefab, Position, {10, 20});
     ecs_set(world, Prefab, Velocity, {30, 40});
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 100);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 100);
     test_assert(ids != NULL);
 
     const Position *prefab_p = ecs_get(world, Prefab, Position);
@@ -999,7 +999,7 @@ void Prefab_override_2_components_different_size() {
 
     // TODO: investigate crash when replacing ecs_bulk_new with 
     // ecs_new_w_entity_w_count
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 100);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 100);
     test_assert(ids != NULL);
 
     const Position *prefab_p = ecs_get(world, Prefab, Position);
@@ -1418,7 +1418,7 @@ void Prefab_prefab_w_child_new_w_count() {
         ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, Position);
             ecs_set(world, Child, Position, {2, 3});
 
-    ecs_entity_t *ids = ecs_bulk_new_w_entity(world, ECS_INSTANCEOF | Parent, 3);
+    const ecs_entity_t *ids = ecs_bulk_new_w_entity(world, ECS_INSTANCEOF | Parent, 3);
     test_assert(ids != NULL);
 
     int i;
@@ -1623,7 +1623,7 @@ void Prefab_instantiate_in_progress() {
 
     ECS_SYSTEM(world, InstantiateInProgress, EcsOnUpdate, Position, :Prefab);
 
-    ecs_entity_t *dummy_ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *dummy_ids = ecs_bulk_new(world, Position, 10);
     test_assert(dummy_ids != NULL);
 
     ecs_entity_t ids[10];
@@ -1671,7 +1671,7 @@ void Prefab_copy_from_prefab_in_progress() {
     ecs_entity_t ids[10];
     ecs_set_context(world, ids);
 
-    ecs_entity_t *dummy_ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *dummy_ids = ecs_bulk_new(world, Position, 10);
     test_assert(dummy_ids != NULL);
 
     /* Create one prefab instance so table is already created (case where table
@@ -1709,7 +1709,7 @@ void Prefab_copy_from_prefab_first_instance_in_progress() {
     ecs_entity_t ids[10];
     ecs_set_context(world, ids);
 
-    ecs_entity_t *dummy_ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *dummy_ids = ecs_bulk_new(world, Position, 10);
     test_assert(dummy_ids != NULL);
 
     ecs_progress(world, 1);
@@ -1956,7 +1956,7 @@ void Prefab_no_instantiate_on_2nd_add_in_progress() {
 }
 
 void NewPrefab_w_count(ecs_iter_t *it) {
-    ecs_entity_t **ids = ecs_get_context(it->world);
+    const ecs_entity_t **ids = ecs_get_context(it->world);
     ECS_COLUMN_ENTITY(it, Prefab, 1);
     *ids = ecs_bulk_new_w_entity(it->world, ECS_INSTANCEOF | Prefab, 3);
 }

@@ -146,7 +146,7 @@ void Switch_bulk_new_w_type() {
     ECS_TYPE(world, Movement, Walking, Running, Jumping);
     ECS_TYPE(world, Type, SWITCH | Movement, CASE | Running);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 100);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 100);
     test_assert(ids != NULL);
 
     int i;

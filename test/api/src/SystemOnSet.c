@@ -257,7 +257,7 @@ void SystemOnSet_bulk_new_1() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){ecs_entity(Position)}, 
             .count = 1
@@ -296,7 +296,7 @@ void SystemOnSet_bulk_new_2() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Position),
@@ -345,7 +345,7 @@ void SystemOnSet_bulk_new_2_of_1() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Position),
@@ -393,7 +393,7 @@ void SystemOnSet_bulk_new_3() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Position),
@@ -451,7 +451,7 @@ void SystemOnSet_bulk_new_3_of_2() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Position),
@@ -508,7 +508,7 @@ void SystemOnSet_bulk_new_1_from_base() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
                 ecs_entity(Velocity),

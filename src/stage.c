@@ -380,7 +380,8 @@ void ecs_stage_init(
     memset(stage, 0, sizeof(ecs_stage_t));
 
     /* Initialize entity index */
-    ecs_eis_new(world, stage);
+    stage->entity_index = ecs_sparse_new(ecs_record_t);
+    ecs_sparse_set_id_source(stage->entity_index, &world->stats.last_id);
 
     if (is_main_stage) {
         stage->id = 0;

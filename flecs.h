@@ -846,6 +846,17 @@ void* _ecs_sparse_get_or_create(
     ((type*)_ecs_sparse_get_or_create(sparse, sizeof(type), index))
 
 FLECS_EXPORT
+void* _ecs_sparse_set(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index,
+    void *value);
+
+#define ecs_sparse_set(sparse, type, index, value)\
+    ((type*)_ecs_sparse_set(sparse, sizeof(type), index, value))
+
+
+FLECS_EXPORT
 const uint64_t* ecs_sparse_ids(
     const ecs_sparse_t *sparse);
 

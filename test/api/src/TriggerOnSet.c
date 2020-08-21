@@ -431,7 +431,7 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Type, 3);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 3);
     test_assert(ids != NULL);
 
     test_int(ctx.count, 3);
@@ -501,7 +501,7 @@ void TriggerOnSet_on_set_after_snapshot_restore() {
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, SetPosition, EcsOnSet, Position);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
     ecs_entity_t id_arr[10];
