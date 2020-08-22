@@ -1904,10 +1904,10 @@ This adds the ExpiryTimer trait twice to the entity, once for HealthBuff and onc
 
 ```c
 // Get ExpiryTime for Position
-const ExpiryTime *et_pos = ecs_get_trait(world, Position, ExpiryTime);
+const ExpiryTime *et_pos = ecs_get_trait(world, e, Position, ExpiryTime);
 
 // Get ExpiryTime for Velocity
-const ExpiryTime *et_vel = ecs_get_trait(world, Position, ExpiryTime);
+const ExpiryTime *et_vel = ecs_get_trait(world, e, Position, ExpiryTime);
 ```
 
 ### Traits and queries
@@ -2041,6 +2041,14 @@ Jeff.add_trait(HasFater, Bob);
 
 Jane.add_trait(HasSibling, Jeff);
 Jeff.add_trait(HasSibling, Jane);
+```
+
+To test if an entity has a trait, applications can use the `has_trait` function:
+
+```c
+if (Jane.has_trait(IsSibling, Jeff)) {
+    std::cout << "Jane is a sibling of Jeff" << std::endl;
+}
 ```
 
 ## Pipelines
