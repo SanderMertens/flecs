@@ -37,111 +37,24 @@
 extern "C" {
 #endif
 
-typedef struct ecs_ei_t ecs_ei_t;
-
 struct ecs_record_t {
-    ecs_table_t *table;            /* Identifies a type (and table) in world */
-    int32_t row;                  /* Table row of the entity */
+    ecs_table_t *table;  /* Identifies a type (and table) in world */
+    int32_t row;         /* Table row of the entity */
 };
 
-typedef struct ecs_ei_iter_t {
-    int32_t index;
-    const int32_t *sparse_indices;
-    int32_t sparse_count;
-    ecs_map_iter_t map_iter;
-    ecs_sparse_t *lo;
-} ecs_ei_iter_t;
-
-/* Get entity record */
-ecs_record_t* ecs_ei_get(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity);
-
-/* Set entity */
-ecs_record_t* ecs_ei_set(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity,
-    ecs_record_t *record);
-
-/* Get or set entity */
-ecs_record_t* ecs_ei_get_or_create(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity);
-
-/* Delete entity from stage */
-void ecs_ei_clear_entity(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity,
-    bool is_watched);
-
-/* Delete entity from stage */
-void ecs_ei_delete(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity);
-
-/* Recycle deleted entity id (returns 0 if no available) */
-ecs_entity_t ecs_ei_recycle(
-    ecs_ei_t *entity_index);
-
-/* Grow entity index */
-void ecs_ei_grow(
-    ecs_ei_t *entity_index,
-    int32_t count);
-
-/* Grow entity index to specific size */
-void ecs_ei_set_size(
-    ecs_ei_t *entity_index,
-    int32_t size);    
-
-/* Count entities in stage */
-int32_t ecs_ei_count(
-    ecs_ei_t *entity_index);      
-
-/* Initialize entity index for stage */
-void ecs_ei_new(
-    ecs_ei_t *entity_index);
-
-/* Clear all entities from a stage */
-void ecs_ei_clear(
-    ecs_ei_t *entity_index);
-
-/* Clear all entities from a stage */
-ecs_ei_t ecs_ei_copy(
-    const ecs_ei_t *entity_index);    
-
-/* Free entity index for stage */
-void ecs_ei_free(
-    ecs_ei_t *entity_index);
-
-void ecs_ei_memory(
-    ecs_ei_t *entity_index,
-    int32_t *allocd,
-    int32_t *used);
-
-/* Create iterator for entity index */
-ecs_ei_iter_t ecs_ei_iter(
-    ecs_ei_t *entity_index);
-
-/* Return next record for iterator (return NULL when end is reached) */
-ecs_record_t *ecs_ei_next(
-    ecs_ei_iter_t *iter,
-    ecs_entity_t *entity_out);
-
-// Convenience macro's for directly calling operations for stage
-#define ecs_eis_get(stage, entity) ecs_ei_get(&(stage)->entity_index, entity)
-#define ecs_eis_set(stage, entity, ...) ecs_ei_set(&(stage)->entity_index, entity, __VA_ARGS__)
-#define ecs_eis_get_or_create(stage, entity) ecs_ei_get_or_create(&(stage)->entity_index, entity)
-#define ecs_eis_delete(stage, entity) ecs_ei_delete(&(stage)->entity_index, entity)
-#define ecs_eis_recycle(stage) ecs_ei_recycle(&(stage)->entity_index)
-#define ecs_eis_clear_entity(stage, entity, is_watched) ecs_ei_clear_entity(&(stage)->entity_index, entity, is_watched)
-#define ecs_eis_grow(stage, count) ecs_ei_grow(&(stage)->entity_index, count)
-#define ecs_eis_set_size(stage, size) ecs_ei_set_size(&(stage)->entity_index, size)
-#define ecs_eis_count(stage) ecs_ei_count(&(stage)->entity_index)
-#define ecs_eis_new(stage) ecs_ei_new(&(stage)->entity_index)
-#define ecs_eis_clear(stage) ecs_ei_clear(&(stage)->entity_index)
-#define ecs_eis_copy(stage) ecs_ei_copy(&(stage)->entity_index)
-#define ecs_eis_free(stage) ecs_ei_free(&(stage)->entity_index)
-#define ecs_eis_memory(stage, allocd, used) ecs_ei_memory(&(stage)->entity_index, allocd, used)
+#define ecs_eis_get(stage, entity) ecs_sparse_get_sparse((stage)->entity_index, ecs_record_t, entity)
+#define ecs_eis_set(stage, entity, ...) (ecs_sparse_set((stage)->entity_index, ecs_record_t, entity, (__VA_ARGS__)))
+#define ecs_eis_get_or_create(stage, entity) ecs_sparse_get_or_create((stage)->entity_index, ecs_record_t, entity)
+#define ecs_eis_delete(stage, entity) ecs_sparse_remove((stage)->entity_index, entity)
+#define ecs_eis_recycle(stage) ecs_sparse_new_id((stage)->entity_index)
+#define ecs_eis_clear_entity(stage, entity, is_watched) ecs_eis_set(stage, entity, &(ecs_record_t){NULL, is_watched})
+#define ecs_eis_grow(stage, count) ecs_sparse_grow((stage)->entity_index, count)
+#define ecs_eis_set_size(stage, size) ecs_sparse_set_size((stage)->entity_index, size)
+#define ecs_eis_count(stage) ecs_sparse_count((stage)->entity_index)
+#define ecs_eis_clear(stage) ecs_sparse_clear((stage)->entity_index)
+#define ecs_eis_copy(stage) ecs_sparse_copy((stage)->entity_index)
+#define ecs_eis_free(stage) ecs_sparse_free((stage)->entity_index)
+#define ecs_eis_memory(stage, allocd, used) ecs_sparse_memory((stage)->entity_index, allocd, used)
 
 #ifdef __cplusplus
 }
@@ -265,7 +178,7 @@ int32_t ecs_table_grow(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count,
-    ecs_entity_t first_entity);
+    const ecs_entity_t *ids);
 
 /* Set table to a fixed size. Useful for preallocating memory in advance. */
 int16_t ecs_table_set_size(
@@ -578,12 +491,6 @@ typedef struct ecs_on_demand_in_t {
     ecs_vector_t *systems;  /* Systems that have this column as [out] column */
 } ecs_on_demand_in_t;
 
-/** Entity index */
-struct ecs_ei_t {
-    ecs_sparse_t *lo;       /* Low entity ids are stored in a sparse set */
-    ecs_map_t *hi;          /* To save memory high ids are stored in a map */
-};
-
 /** Types for deferred operations */
 typedef enum ecs_op_kind_t {
     EcsOpNone,
@@ -620,7 +527,7 @@ struct ecs_stage_t {
     /* If this is not main stage, 
      * changes to the entity index 
      * are buffered here */
-    ecs_ei_t entity_index; /* Entity lookup table for (table, row) */
+    ecs_sparse_t *entity_index; /* Entity lookup table for (table, row) */
 
     /* If this is not a thread
      * stage, these are the same
@@ -2566,6 +2473,36 @@ void move_switch_columns(
     }
 }
 
+static
+void fast_append(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data)
+{
+    int32_t column_count = table->column_count;
+
+    if (column_count) {
+        ecs_column_t *columns = data->columns;
+
+        /* It is possible that the table data was created without content. Now 
+         * that data is going to be written to the table, initialize it */ 
+        if (!columns) {
+            init_data(world, table, data);
+            columns = data->columns;
+        }
+
+        /* Add elements to each column array */
+        int32_t i;
+        for (i = 0; i < column_count; i ++) {
+            int16_t size = columns[i].size;
+            if (size) {
+                int16_t alignment = columns[i].alignment;
+                ecs_vector_add_t(&columns[i].data, size, alignment);
+            }
+        }      
+    }
+}
+
 int32_t ecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -2576,69 +2513,67 @@ int32_t ecs_table_append(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t column_count = table->column_count;
+
     int32_t sw_column_count = table->sw_column_count;
-    bool realloc = false;
+    if (!sw_column_count && !(table->flags & EcsTableHasLifecycle)) {
+        fast_append(world, table, data);
+    } else {
+        int32_t column_count = table->column_count;
 
-    if (entity > ECS_HI_ENTITY_ID) {
-        record = NULL;
-    }
+        if (column_count || sw_column_count) {
+            ecs_column_t *columns = data->columns;
+            ecs_sw_column_t *sw_columns = data->sw_columns;
 
-    if (column_count || sw_column_count) {
-        ecs_column_t *columns = data->columns;
-        ecs_sw_column_t *sw_columns = data->sw_columns;
+            /* It is possible that the table data was created without content. Now 
+            * that data is going to be written to the table, initialize it */ 
+            if (!columns && !sw_columns) {
+                init_data(world, table, data);
+                columns = data->columns;
+                sw_columns = data->sw_columns;
+            }
 
-        /* It is possible that the table data was created without content. Now 
-         * that data is going to be written to the table, initialize it */ 
-        if (!columns && !sw_columns) {
-            init_data(world, table, data);
-            columns = data->columns;
-            sw_columns = data->sw_columns;
-        }
+            /* Add elements to each column array */
+            int32_t i;
+            for (i = 0; i < column_count; i ++) {
+                int16_t size = columns[i].size;
+                if (size) {
+                    int16_t alignment = columns[i].alignment;
+                    void *elem = ecs_vector_add_t(
+                        &columns[i].data, size, alignment);
 
-        /* Add elements to each column array */
-        int32_t i;
-        for (i = 0; i < column_count; i ++) {
-            int16_t size = columns[i].size;
-            int16_t alignment = columns[i].alignment;
-            if (size) {
-                ecs_vector_t *prev = columns[i].data;
-                void *elem = ecs_vector_add_t(
-                    &columns[i].data, size, alignment);
-                realloc = realloc || (prev != columns[i].data);
-
-                ecs_c_info_t **c_info_array, *c_info;
-                ecs_xtor_t ctor;
-                if (construct && (c_info_array = table->c_info) &&
-                  (c_info = c_info_array[i]) && (ctor = c_info->lifecycle.ctor)) 
-                {
-                    ctor(world, c_info->component, &entity, elem, 
-                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+                    ecs_c_info_t **c_info_array, *c_info;
+                    ecs_xtor_t ctor;
+                    if (construct && (c_info_array = table->c_info) &&
+                    (c_info = c_info_array[i]) && (ctor = c_info->lifecycle.ctor)) 
+                    {
+                        ctor(world, c_info->component, &entity, elem, 
+                            ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+                    }
                 }
             }
-        }
 
-        for (i = 0; i < sw_column_count; i ++) {
-            ecs_switch_t *sw = sw_columns[i].data;
-            ecs_switch_add(sw);
-            columns[i + table->sw_column_offset].data = ecs_switch_values(sw);
-        }        
-    }
+            for (i = 0; i < sw_column_count; i ++) {
+                ecs_switch_t *sw = sw_columns[i].data;
+                ecs_switch_add(sw);
+                columns[i + table->sw_column_offset].data = ecs_switch_values(sw);
+            }        
+        }
+    } 
 
     /* Fist add entity to array with entity ids */
-    ecs_vector_t *prev_e = data->entities;
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
     *e = entity;
-    realloc = realloc || (prev_e != data->entities);
 
     /* Add record ptr to array with record ptrs */
     ecs_vector_t *prev_r = data->record_ptrs;
     ecs_record_t **r = ecs_vector_add(&data->record_ptrs, ecs_record_t*);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     *r = record;
-    realloc = realloc || (prev_r != data->record_ptrs);
 
+    /* Keep track of alloc count */
+    table->alloc_count = (prev_r != data->record_ptrs);
+ 
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);
 
@@ -2647,9 +2582,6 @@ int32_t ecs_table_append(
     if (!world->in_progress && !index) {
         ecs_table_activate(world, table, 0, true);
     }
-
-    /* Keep track of alloc count */
-    table->alloc_count += realloc;
 
     /* Return index of last added entity */
     return index;
@@ -2748,6 +2680,51 @@ void ecs_table_delete(
     }
 }
 
+static
+void fast_move(
+    ecs_table_t *new_table,
+    ecs_data_t *new_data,
+    int32_t new_index,
+    ecs_table_t *old_table,
+    ecs_data_t *old_data,
+    int32_t old_index)
+{
+    ecs_type_t new_type = new_table->type;
+    ecs_type_t old_type = old_table->type;
+
+    int32_t i_new = 0, new_column_count = new_table->column_count;
+    int32_t i_old = 0, old_column_count = old_table->column_count;
+    ecs_entity_t *new_components = ecs_vector_first(new_type, ecs_entity_t);
+    ecs_entity_t *old_components = ecs_vector_first(old_type, ecs_entity_t);
+
+    ecs_column_t *old_columns = old_data->columns;
+    ecs_column_t *new_columns = new_data->columns;
+
+    for (; (i_new < new_column_count) && (i_old < old_column_count);) {
+        ecs_entity_t new_component = new_components[i_new];
+        ecs_entity_t old_component = old_components[i_old];
+
+        if (new_component == old_component) {
+            ecs_column_t *new_column = &new_columns[i_new];
+            ecs_column_t *old_column = &old_columns[i_old];
+            int16_t size = new_column->size;
+
+            if (size) {
+                int16_t alignment = new_column->alignment;
+                void *dst = ecs_vector_get_t(new_column->data, size, alignment, new_index);
+                void *src = ecs_vector_get_t(old_column->data, size, alignment, old_index);
+
+                ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_os_memcpy(dst, src, size); 
+            }
+        }
+
+        i_new += new_component <= old_component;
+        i_old += new_component >= old_component;
+    }
+}
+
 void ecs_table_move(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -2764,6 +2741,22 @@ void ecs_table_move(
     ecs_assert(new_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_assert(old_index >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new_index >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_assert(old_data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    move_switch_columns(
+        new_table, new_data, new_index, old_table, old_data, old_index, 1);
+
+    if (!(new_table->flags & EcsTableHasLifecycle) && 
+        !(old_table->flags & EcsTableHasLifecycle)) 
+    {
+        fast_move(new_table, new_data, new_index, old_table, old_data, old_index);
+        return;
+    }
+
     bool to_main_stage = !same_stage && (stage == &world->stage);
     bool same_entity = dst_entity == src_entity;
 
@@ -2774,12 +2767,6 @@ void ecs_table_move(
     int32_t i_old = 0, old_column_count = old_table->column_count;
     ecs_entity_t *new_components = ecs_vector_first(new_type, ecs_entity_t);
     ecs_entity_t *old_components = ecs_vector_first(old_type, ecs_entity_t);
-
-    ecs_assert(old_index >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(new_index >= 0, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_assert(old_data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(new_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *old_columns = old_data->columns;
     ecs_column_t *new_columns = new_data->columns;
@@ -2871,9 +2858,6 @@ void ecs_table_move(
                 component, &old_columns[i_old], &src_entity, old_index, 1);
         }
     }
-
-    move_switch_columns(
-        new_table, new_data, new_index, old_table, old_data, old_index, 1);
 }
 
 int32_t ecs_table_grow(
@@ -2881,7 +2865,7 @@ int32_t ecs_table_grow(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count,
-    ecs_entity_t first_entity)
+    const ecs_entity_t *ids)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2913,19 +2897,17 @@ int32_t ecs_table_grow(
 
     int32_t i;
     for (i = 0; i < count; i ++) {
-        e[i] = first_entity + (ecs_entity_t)i;
+        e[i] = ids[i];
         r[i] = NULL;
     }
 
     /* Add elements to each column array */
     for (i = 0; i < column_count; i ++) {
         int16_t size = columns[i].size;
-        if (!size) {
-            continue;
+        if (size) {
+            int16_t alignment = columns[i].alignment;
+            ecs_vector_addn_t(&columns[i].data, size, alignment, count);
         }
-        int16_t alignment = columns[i].alignment;
-
-        ecs_vector_addn_t(&columns[i].data, size, alignment, count);
     }
 
     /* Add elements to each switch column */
@@ -2973,8 +2955,8 @@ int16_t ecs_table_set_size(
 
     for (i = 0; i < column_count; i ++) {
         int16_t size = columns[i].size;
-        int16_t alignment = columns[i].alignment;
         if (size) {
+            int16_t alignment = columns[i].alignment;
             ecs_vector_set_size_t(&columns[i].data, size, alignment, count);
         }
     }
@@ -3007,8 +2989,8 @@ int16_t ecs_table_set_count(
 
     for (i = 0; i < column_count; i ++) {
         int16_t size = columns[i].size;
-        int16_t alignment = columns[i].alignment;
         if (size) {
+            int16_t alignment = columns[i].alignment;
             ecs_vector_set_count_t(&columns[i].data, size, alignment, count);
         }
     }
@@ -3491,6 +3473,16 @@ void ecs_table_notify(
 
 
 static
+const ecs_entity_t* new_w_data(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_entities_t *component_ids,
+    int32_t count,
+    void **c_info,
+    int32_t *row_out);
+
+static
 int32_t comp_mask_index(
     int32_t value)
 {
@@ -3530,15 +3522,6 @@ bool comp_mask_is_set(
 
     return false;
 }
-
-static
-int32_t new_w_data(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_entities_t *component_ids,
-    int32_t count,
-    void **c_info);
 
 static 
 void* get_component_w_index(
@@ -3609,13 +3592,11 @@ void set_info_from_record(
     ecs_entity_info_t *info,
     ecs_record_t *record)
 {
+    (void)e;
+    
     ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (e < ECS_HI_ENTITY_ID) {
-        info->record = record;
-    } else {
-        info->record = NULL;
-    }
+    info->record = record;
 
     ecs_table_t *table = record->table;
 
@@ -4048,8 +4029,8 @@ void instantiate_children(
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Create children */
-        int32_t child_row = new_w_data(
-            world, stage, table, NULL, child_count, c_info);
+        int32_t child_row; 
+        new_w_data(world, stage, table, NULL, child_count, c_info, &child_row);
 
         /* If prefab child table has children itself, recursively instantiate */
         ecs_data_t *i_data = ecs_table_get_staged_data(world, stage, table);
@@ -4432,13 +4413,8 @@ int32_t new_entity(
             record = ecs_eis_get_or_create(stage, entity);
         }
 
-        if (entity < ECS_HI_ENTITY_ID) {
-            new_row = ecs_table_append(
-                world, new_table, new_data, entity, record, true);
-        } else {
-            new_row = ecs_table_append(
-                world, new_table, new_data, entity, NULL, true);
-        }
+        new_row = ecs_table_append(
+            world, new_table, new_data, entity, record, true);
 
         record->table = new_table;
         record->row = ecs_row_to_record(new_row, info->is_watched);
@@ -4517,8 +4493,7 @@ int32_t move_entity(
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record, false);
     bool same_stage = compare_stage_w_data(stage, src_table, src_data);
 
-
-    if (main_stage && record) {
+    if (main_stage) {
         record->table = dst_table;
         record->row = ecs_row_to_record(dst_row, info->is_watched);
     } else {
@@ -4537,13 +4512,13 @@ int32_t move_entity(
             world, stage, entity, entity, dst_table, dst_data, dst_row, src_table, 
             src_data, src_row, same_stage);
 
-        /* If entity was moved, invoke UnSet monitors for each component that
-         * the entity no longer has */
-        ecs_run_monitors(world, stage, dst_table, src_table->un_set_all, 
-            dst_row, 1, dst_table->un_set_all);
-
         /* If components were removed, invoke remove actions before deleting */
-        if (removed && (src_table->flags & EcsTableHasRemoveActions)) {   
+        if (removed && (src_table->flags & EcsTableHasRemoveActions)) {
+            /* If entity was moved, invoke UnSet monitors for each component that
+            * the entity no longer has */
+            ecs_run_monitors(world, stage, dst_table, src_table->un_set_all, 
+                dst_row, 1, dst_table->un_set_all);
+
             ecs_run_remove_actions(
                 world, stage, src_table, src_data, src_row, 1, removed, false);
         }            
@@ -4759,7 +4734,7 @@ void* get_base_component(
         }
 
         ecs_entity_info_t prefab_info;
-        if (get_info(world, prefab, &prefab_info)) {
+        if (get_info(world, prefab, &prefab_info) && prefab_info.table) {
             ptr = get_component(&prefab_info, component);
             if (!ptr) {
                 ptr = get_base_component(
@@ -4785,25 +4760,27 @@ void new(
 }
 
 static
-int32_t new_w_data(
+const ecs_entity_t* new_w_data(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_entities_t *component_ids,
     int32_t count,
-    void **component_data)
+    void **component_data,
+    int32_t *row_out)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
     
+    int32_t sparse_count = ecs_eis_count(stage);
+    const ecs_entity_t *ids = ecs_sparse_new_ids(stage->entity_index, count);
+    ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_type_t type = table->type;
-    ecs_entity_t e = world->stats.last_id + 1;
-    world->stats.last_id += ecs_to_entity(count);
 
     if (!type) {
-        return 0;
+        return ids;
     }
 
     ecs_entities_t component_array = { 0 };
@@ -4814,7 +4791,7 @@ int32_t new_w_data(
     }
 
     ecs_data_t *data = ecs_table_get_or_create_data(world, stage, table);
-    int32_t row = ecs_table_grow(world, table, data, count, e);
+    int32_t row = ecs_table_grow(world, table, data, count, ids);
     ecs_entities_t added = ecs_type_to_entities(type);
     
     /* Update entity index. If entities are being created in the main stage,
@@ -4823,7 +4800,7 @@ int32_t new_w_data(
     if (stage == &world->stage) {
         ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
         for (i = 0; i < count; i ++) { 
-            record_ptrs[row + i] = ecs_eis_set(stage, e + ecs_to_entity(i), 
+            record_ptrs[row + i] = ecs_eis_set(stage, ids[i], 
             &(ecs_record_t){
                 .table = table,
                 .row = row + i + 1
@@ -4831,7 +4808,7 @@ int32_t new_w_data(
         }
     } else {
         for (i = 0; i < count; i ++) {
-            ecs_eis_set(stage, e + ecs_to_entity(i), &(ecs_record_t){
+            ecs_eis_set(stage, ids[i], &(ecs_record_t){
                 .table = table,
                 .row = row + i + 1
             });
@@ -4890,7 +4867,13 @@ int32_t new_w_data(
 
     ecs_defer_end(world, stage);
 
-    return row;
+    if (row_out) {
+        *row_out = row;
+    }
+
+    ids = ecs_sparse_ids(stage->entity_index);
+
+    return &ids[sparse_count];
 }
 
 static
@@ -5193,9 +5176,7 @@ ecs_entity_t ecs_new_id(
     ecs_entity_t entity;
 
     if (!world->in_progress) {
-        if (!(entity = ecs_eis_recycle(&world->stage))) {
-            entity = ++ world->stats.last_id;
-        }
+        entity = ecs_eis_recycle(&world->stage);
     } else {
         int32_t thread_count = ecs_vector_count(world->workers);
         if (thread_count >= 1) { 
@@ -5278,7 +5259,7 @@ ecs_entity_t ecs_new_w_entity(
     return entity;
 }
 
-ecs_entity_t ecs_bulk_new_w_data(
+const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
     ecs_entities_t *component_ids,
@@ -5287,25 +5268,21 @@ ecs_entity_t ecs_bulk_new_w_data(
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_type_t type = ecs_type_find(world, 
         component_ids->array, component_ids->count);
-    ecs_table_t *table = ecs_table_from_type(world, stage, type);
-    ecs_entity_t result = world->stats.last_id + 1;
-    new_w_data(world, stage, table, NULL, count, data);
-    return result;
+    ecs_table_t *table = ecs_table_from_type(world, stage, type);    
+    return new_w_data(world, stage, table, NULL, count, data, NULL);
 }
 
-ecs_entity_t ecs_bulk_new_w_type(
+const ecs_entity_t* ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
     int32_t count)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_table_t *table = ecs_table_from_type(world, stage, type);
-    ecs_entity_t result = world->stats.last_id + 1;
-    new_w_data(world, stage, table, NULL, count, NULL);
-    return result;
+    return new_w_data(world, stage, table, NULL, count, NULL, NULL);
 }
 
-ecs_entity_t ecs_bulk_new_w_entity(
+const ecs_entity_t* ecs_bulk_new_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     int32_t count)
@@ -5316,9 +5293,7 @@ ecs_entity_t ecs_bulk_new_w_entity(
         .count = 1
     };
     ecs_table_t *table = ecs_table_find_or_create(world, stage, &type);
-    ecs_entity_t result = world->stats.last_id + 1;
-    new_w_data(world, stage, table, NULL, count, NULL);
-    return result;
+    return new_w_data(world, stage, table, NULL, count, NULL, NULL);
 }
 
 void ecs_delete(
@@ -5438,7 +5413,7 @@ ecs_entity_t ecs_clone(
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
     
     if (!dst) {
-        dst = ++ world->stats.last_id;
+        dst = ecs_new_id(world);
     }
 
     ecs_entity_info_t src_info;
@@ -5578,6 +5553,7 @@ void* ecs_get_mut_w_entity(
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_info_t info;
+
     return get_mutable(world, stage, entity, component, &info, is_added);
 }
 
@@ -6444,7 +6420,8 @@ void ecs_stage_init(
     memset(stage, 0, sizeof(ecs_stage_t));
 
     /* Initialize entity index */
-    ecs_eis_new(stage);
+    stage->entity_index = ecs_sparse_new(ecs_record_t);
+    ecs_sparse_set_id_source(stage->entity_index, &world->stats.last_id);
 
     if (is_main_stage) {
         stage->id = 0;
@@ -6453,7 +6430,7 @@ void ecs_stage_init(
     }
 
     /* Initialize root table */
-    stage->tables = ecs_sparse_new(ecs_table_t, 64);
+    stage->tables = ecs_sparse_new(ecs_table_t);
 
     /* Initialize one root table per stage */
     ecs_init_root_table(world, stage);
@@ -6948,341 +6925,457 @@ ecs_vector_t* _ecs_vector_copy(
     return dst;
 }
 
-#define CHUNK_ALLOC_SIZE (65536)
+#define CHUNK_COUNT (4096)
+#define CHUNK(index) (int32_t)(index >> 12)
+#define OFFSET(index) (int32_t)(index & 0xFFF)
+#define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
 
 typedef struct chunk_t {
-    void *data;
-    int32_t count;
+    int32_t *sparse;            /* Sparse array with indices to dense array */
+    void *data;                 /* Store data in sparse array to reduce  
+                                 * indirection and provide stable pointers. */
 } chunk_t;
 
-typedef struct sparse_elem_t {
-    int32_t dense;
-    void *ptr;
-} sparse_elem_t;
-
 struct ecs_sparse_t {
-    ecs_vector_t *chunks;       /* Vector with chunk pointers */
-    ecs_vector_t *dense;        /* Dense array */
-    ecs_vector_t *sparse;       /* Sparse array + element pointers */
-    ecs_vector_t *unused_chunks;   /* Unused chunks */
-    ecs_vector_t *unused_elements; /* Unused elements */
-    ecs_size_t elem_size;          /* Side of payload */
-    int32_t chunk_size;            /* Number of elements in chunk */
+    ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
+                                 * dense array stores both alive and not alive
+                                 * sparse indices. The 'count' member keeps
+                                 * track of which indices are alive. */
+
+    ecs_vector_t *chunks;       /* Chunks with sparse arrays & data */
+    ecs_size_t size;            /* Element size */
+    int32_t count;              /* Number of alive entries */
+    uint64_t max_id_local;      /* Local max index (if no global is set) */
+    uint64_t *max_id;           /* Maximum issued sparse index */
 };
 
 static
-void add_chunk(
-    ecs_sparse_t *sparse)
+chunk_t* chunk_new(
+    ecs_sparse_t *sparse,
+    int32_t chunk_index)
 {
-    /* Add chunk to sparse instance */
-    int32_t chunk_count = ecs_vector_count(sparse->chunks);
-    
-    chunk_t recycled_chunk, *chunk = ecs_vector_add(&sparse->chunks, chunk_t);
+    int32_t count = ecs_vector_count(sparse->chunks);
+    chunk_t *chunks;
 
-    /* Check if we have chunks we can recycle */
-    if (ecs_vector_pop(sparse->unused_chunks, chunk_t, &recycled_chunk)) {
-        *chunk = recycled_chunk;
+    if (count <= chunk_index) {
+        ecs_vector_set_count(&sparse->chunks, chunk_t, chunk_index + 1);
+        chunks = ecs_vector_first(sparse->chunks, chunk_t);
+        ecs_os_memset(&chunks[count], 0, (1 + chunk_index - count) * ECS_SIZEOF(chunk_t));
     } else {
-        chunk->data = ecs_os_malloc(CHUNK_ALLOC_SIZE);
+        chunks = ecs_vector_first(sparse->chunks, chunk_t);
     }
 
-    int32_t chunk_size = sparse->chunk_size;
-    ecs_size_t elem_size = sparse->elem_size;
+    ecs_assert(chunks != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Allocate data vector for chunk */
-    chunk->count = 0;
+    chunk_t *result = &chunks[chunk_index];
+    ecs_assert(result->sparse == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result->data == NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Create room in sparse array for chunk */
-    int32_t prev_total = chunk_count * chunk_size;
+    /* Initialize sparse array with zero's, as zero is used to indicate that the
+     * sparse element has not been paired with a dense element. Use zero
+     * as this means we can take advantage of calloc having a possibly better 
+     * performance than malloc + memset. */
+    result->sparse = ecs_os_calloc(ECS_SIZEOF(int32_t) * CHUNK_COUNT);
 
-    ecs_vector_set_count(&sparse->sparse, sparse_elem_t, prev_total + chunk_size);
+    /* Initialize the data array with zero's to guarantee that data is 
+     * always initialized. When an entry is removed, data is reset back to
+     * zero. Initialize now, as this can take advantage of calloc. */
+    result->data = ecs_os_calloc(sparse->size * CHUNK_COUNT);
 
-    ecs_assert(sparse->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Prepare cached pointers to chunk elements in sparse array */
-    sparse_elem_t *sparse_array = ecs_vector_first(sparse->sparse, sparse_elem_t);
-    ecs_assert(sparse_array != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    sparse_array = &sparse_array[prev_total];
-
-    int32_t i;
-    for (i = 0; i < chunk_size; i ++) {
-        sparse_array[i].dense = 0;
-        sparse_array[i].ptr = ECS_OFFSET(chunk->data, i * elem_size);
-    }
-}
-
-static
-chunk_t* last_chunk(
-    const ecs_sparse_t *sparse)
-{
-    return ecs_vector_last(sparse->chunks, chunk_t);
-}
-
-static
-void* add_sparse(
-    ecs_sparse_t *sparse,
-    int32_t index)
-{
-    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse, sparse_elem_t);
-    
-    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-
-    sparse_arr[index].dense = ecs_vector_count(sparse->dense);
-    int32_t *dense = ecs_vector_add(&sparse->dense, int32_t);
-    *dense = index;
-
-    return sparse_arr[index].ptr;
-}
-
-static
-void* get_sparse(
-    const ecs_sparse_t *sparse,
-    int32_t index,
-    bool remove)
-{
-    if (index >= ecs_vector_count(sparse->sparse)) {
-        return NULL;
-    }
-
-    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse, sparse_elem_t);
-    int32_t dense = sparse_arr[index].dense;
-
-    int32_t *dense_array = ecs_vector_first(sparse->dense, int32_t);
-    int32_t dense_count = ecs_vector_count(sparse->dense);
-
-    if (dense >= dense_count) {
-        return NULL;
-    }
-
-    if (dense_array[dense] != index) {
-        return NULL;
-    }
-
-    if (remove) {
-        int32_t last_sparse_index = dense_array[dense_count - 1];
-        dense_array[dense] = last_sparse_index;
-        sparse_arr[last_sparse_index].dense = dense;
-        ecs_vector_remove_last(sparse->dense);
-    }
-
-    return sparse_arr[index].ptr;  
-}
-
-static
-void* get_or_set_sparse(
-    ecs_sparse_t *sparse,
-    int32_t index,
-    bool *is_new)
-{
-    if (index >= ecs_vector_count(sparse->sparse)) {
-        ecs_sparse_set_size(sparse, index + 1);
-        ecs_assert(index < ecs_vector_count(sparse->sparse), ECS_INTERNAL_ERROR, NULL);
-    }
-
-    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse, sparse_elem_t);
-    int32_t dense = sparse_arr[index].dense;
-
-    int32_t *dense_array = ecs_vector_first(sparse->dense, int32_t);
-    int32_t dense_count = ecs_vector_count(sparse->dense);
-
-    if (dense >= dense_count || dense_array[dense] != index) {
-        ecs_assert(index < ecs_vector_count(sparse->sparse), ECS_INVALID_PARAMETER, NULL);
-
-        ecs_vector_add(&sparse->dense, int32_t);
-
-        dense_array = ecs_vector_first(sparse->dense, int32_t);
-        sparse_arr[index].dense = dense_count;
-        dense_array[dense_count] = index;
-
-        if (is_new) {
-            *is_new = true;
-        }
-    }
-
-    return sparse_arr[index].ptr;  
-}
-
-ecs_sparse_t* _ecs_sparse_new(
-    ecs_size_t elem_size,
-    int32_t element_count)
-{
-    ecs_sparse_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_sparse_t));
-    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
-
-    result->chunk_size = CHUNK_ALLOC_SIZE / elem_size;
-    result->elem_size = elem_size;
-
-    ecs_sparse_set_size(result, element_count);
+    ecs_assert(result->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result->data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return result;
 }
 
 static
-void free_chunks(ecs_vector_t *chunks) {
-    int i, count = ecs_vector_count(chunks);
-    chunk_t *array = ecs_vector_first(chunks, chunk_t);
+void chunk_free(
+    chunk_t *chunk)
+{
+    ecs_os_free(chunk->sparse);
+    ecs_os_free(chunk->data);
+}
 
-    for (i = 0; i < count; i ++) {
-        ecs_os_free(array[i].data);
+static
+chunk_t* get_chunk(
+    const ecs_sparse_t *sparse,
+    int32_t chunk_index)
+{
+    chunk_t *result = ecs_vector_get(sparse->chunks, chunk_t, chunk_index);
+    if (result && !result->sparse) {
+        return NULL;
+    }
+
+    return result;
+}
+
+static
+chunk_t* get_or_create_chunk(
+    ecs_sparse_t *sparse,
+    int32_t chunk_index)
+{
+    chunk_t *chunk = get_chunk(sparse, chunk_index);
+    if (chunk) {
+        return chunk;
+    }
+
+    return chunk_new(sparse, chunk_index);
+}
+
+static
+void grow_dense(
+    ecs_sparse_t *sparse)
+{
+    ecs_vector_add(&sparse->dense, uint64_t);
+}
+
+static
+void assign_index(
+    chunk_t *chunk, 
+    uint64_t *dense_array, 
+    uint64_t index, 
+    int32_t dense)
+{
+    chunk->sparse[OFFSET(index)] = dense;
+    dense_array[dense] = index;
+}
+
+static
+uint64_t inc_id(
+    ecs_sparse_t *sparse)
+{
+    return ++ (sparse->max_id[0]);
+}
+
+static
+uint64_t get_id(
+    const ecs_sparse_t *sparse)
+{
+    return sparse->max_id[0];
+}
+
+static
+void set_id(
+    ecs_sparse_t *sparse,
+    uint64_t value)
+{
+    sparse->max_id[0] = value;
+}
+
+static
+uint64_t create_id(
+    ecs_sparse_t *sparse,
+    int32_t dense)
+{
+    uint64_t index = inc_id(sparse);
+    grow_dense(sparse);
+
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    ecs_assert(chunk->sparse[OFFSET(index)] == 0, ECS_INTERNAL_ERROR, NULL);
+    
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    assign_index(chunk, dense_array, index, dense);
+    
+    return index;
+}
+
+static
+uint64_t new_index(
+    ecs_sparse_t *sparse)
+{
+    ecs_vector_t *dense = sparse->dense;
+    int32_t dense_count = ecs_vector_count(dense);
+    int32_t count = sparse->count ++;
+
+    ecs_assert(count <= dense_count, ECS_INTERNAL_ERROR, NULL);
+
+    if (count < dense_count) {
+        /* If there are unused elements in the dense array, return first */
+        uint64_t *dense_array = ecs_vector_first(dense, uint64_t);
+        return dense_array[count];
+    } else {
+        return create_id(sparse, count);
     }    
+}
 
-    ecs_vector_free(chunks);
+static
+void* try_sparse(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{    
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return NULL;
+    }
+
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    bool in_use = dense && (dense < sparse->count);
+    if (!in_use) {
+        return NULL;
+    }
+
+    ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
+    return DATA(chunk->data, sparse->size, offset);
+}
+
+static
+void* get_sparse(
+    const ecs_sparse_t *sparse,
+    int32_t dense,
+    uint64_t index)
+{
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    int32_t offset = OFFSET(index);
+    
+    ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
+
+    return DATA(chunk->data, sparse->size, offset);
+}
+
+static
+void swap_dense(
+    ecs_sparse_t *sparse,
+    chunk_t *chunk_a,
+    int32_t a,
+    int32_t b,
+    uint64_t index_a)
+{
+    ecs_assert(a != b, ECS_INTERNAL_ERROR, NULL);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t index_b = dense_array[b];
+
+    chunk_t *chunk_b = get_or_create_chunk(sparse, CHUNK(index_b));
+    assign_index(chunk_a, dense_array, index_a, b);
+    assign_index(chunk_b, dense_array, index_b, a);
+}
+
+ecs_sparse_t* _ecs_sparse_new(
+    ecs_size_t size)
+{
+    ecs_sparse_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_sparse_t));
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+    result->size = size;
+    result->max_id_local = UINT64_MAX;
+    result->max_id = &result->max_id_local;
+
+    /* Consume first value in dense array as 0 is used in the sparse array to
+     * indicate that a sparse element hasn't been paired yet. */
+    ecs_vector_add(&result->dense, uint64_t);
+    result->count = 1;
+
+    return result;
+}
+
+void ecs_sparse_set_id_source(
+    ecs_sparse_t *sparse,
+    uint64_t *id_source)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    sparse->max_id = id_source;
+}
+
+void ecs_sparse_clear(
+    ecs_sparse_t *sparse)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_vector_each(sparse->chunks, chunk_t, chunk, {
+        chunk_free(chunk);
+    });
+
+    ecs_vector_free(sparse->chunks);
+    ecs_vector_set_count(&sparse->dense, uint64_t, 1);
+
+    sparse->chunks = NULL;   
+    sparse->count = 1;
+    sparse->max_id_local = 0;
 }
 
 void ecs_sparse_free(
     ecs_sparse_t *sparse)
 {
     if (sparse) {
-        free_chunks(sparse->chunks);
-        free_chunks(sparse->unused_chunks);
-
-        ecs_vector_free(sparse->unused_elements);
-        ecs_vector_free(sparse->sparse);
+        ecs_sparse_clear(sparse);
         ecs_vector_free(sparse->dense);
-
         ecs_os_free(sparse);
     }
 }
 
-void ecs_sparse_clear(
+uint64_t ecs_sparse_new_id(
     ecs_sparse_t *sparse)
-{        
-    /* Recycle chunks */
-    if (!sparse->unused_chunks) {
-        sparse->unused_chunks = sparse->chunks;
-        sparse->chunks = NULL;
-    } else {
-        chunk_t chunk;
-        while (ecs_vector_pop(sparse->chunks, chunk_t, &chunk)) {
-            chunk_t *unused = ecs_vector_add(&sparse->unused_chunks, chunk_t);
-            *unused = chunk;
-        }
-    }
-
-    ecs_vector_clear(sparse->dense);
-    ecs_vector_clear(sparse->sparse);
-    ecs_vector_clear(sparse->unused_elements);
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    return new_index(sparse);
 }
 
-void* _ecs_sparse_recycle(
+const uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t *sparse_index_out)
+    int32_t new_count)
 {
-    (void)elem_size;
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    int32_t dense_count = ecs_vector_count(sparse->dense);
+    int32_t count = sparse->count;
+    int32_t remaining = dense_count - count;
+    int32_t i, to_create = new_count - remaining;
 
-    int32_t index = 0;
-    
-    if (ecs_vector_pop(sparse->unused_elements, int32_t, &index)) {
-        if (sparse_index_out) {
-            *sparse_index_out = index;
+    if (to_create > 0) {
+        ecs_sparse_set_size(sparse, dense_count + to_create);
+        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+
+        for (i = 0; i < to_create; i ++) {
+            uint64_t index = create_id(sparse, count + i);
+            dense_array[dense_count + i] = index;
         }
-        return add_sparse(sparse, index);
-    } else {
-        return NULL;
     }
+
+    sparse->count += new_count;
+
+    return ecs_vector_get(sparse->dense, uint64_t, count);
 }
 
 void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
-    ecs_size_t elem_size)
+    ecs_size_t size)
 {
-    (void)elem_size;
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
-
-    void *result = _ecs_sparse_recycle(sparse, elem_size, NULL);
-    if (!result) {
-        int32_t index = 0;
-        chunk_t *chunk = last_chunk(sparse);
-
-        int32_t elements_per_chunk = sparse->chunk_size;
-        if (!chunk || chunk->count == elements_per_chunk) {
-            add_chunk(sparse);
-            chunk = last_chunk(sparse);
-        }
-
-        ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(chunk->count < elements_per_chunk, ECS_INTERNAL_ERROR, NULL);
-
-        int32_t chunk_count = ecs_vector_count(sparse->chunks);
-        ecs_assert(chunk_count > 0, ECS_INTERNAL_ERROR, NULL);
-
-        index = (chunk_count - 1) * elements_per_chunk + chunk->count;
-        chunk->count ++;
-
-        result = add_sparse(sparse, index);
-    }
-
-    return result;
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    uint64_t index = new_index(sparse);
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
+    return DATA(chunk->data, size, OFFSET(index));
 }
 
-void* _ecs_sparse_remove(
+void* _ecs_sparse_get_or_create(
     ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index)
-{   
-    (void)elem_size;
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
+    ecs_size_t size,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
 
-    void *result = get_sparse(sparse, index, true);
-    if (result) {
-        /* Only add to unused elements if index was set */
-        int32_t *free_elem = ecs_vector_add(&sparse->unused_elements, int32_t);
-        *free_elem = index;
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (dense) {
+        /* Element is already paired, check consistency */
+        ecs_assert(index == *ecs_vector_get(sparse->dense, uint64_t, dense), 
+            ECS_INTERNAL_ERROR, NULL);
+
+        /* Check if element is alive. If element is not alive, update indices so
+         * that the first unused dense element points to the sparse element. */
+        int32_t count = sparse->count;
+        if (dense == count) {
+            /* If dense is the next unused element in the array, simply increase
+             * the count to make it part of the alive set. */
+            sparse->count ++;
+        } else if (dense > count) {
+            /* If dense is not alive, swap it with the first unused element. */
+            swap_dense(sparse, chunk, dense, count, index);
+
+            /* First unused element is now last used element */
+            sparse->count ++;
+        } else {
+            /* Dense is already alive, nothing to be done */
+        }
+    } else {
+        /* Element is not paired yet. Must add a new element to dense array */
+        grow_dense(sparse);
+
+        ecs_vector_t *dense_vector = sparse->dense;
+        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);
+        int32_t dense_count = ecs_vector_count(dense_vector) - 1;
+        int32_t count = sparse->count ++;
+
+        /* If index is larger than max id, update max id */
+        if (index >= get_id(sparse)) {
+            set_id(sparse, index + 1);
+        }
+
+        if (count < dense_count) {
+            /* If there are unused elements in the list, move the first unused
+             * element to the end of the list */
+            uint64_t unused = dense_array[count];
+            chunk_t *unused_chunk = get_or_create_chunk(sparse, CHUNK(unused));
+            assign_index(unused_chunk, dense_array, unused, dense_count);
+        }
+
+        assign_index(chunk, dense_array, index, count);
     }
 
-    return result;
+    return DATA(chunk->data, sparse->size, offset);
+}
+
+void* _ecs_sparse_set(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index,
+    void *value)
+{
+    void *ptr = _ecs_sparse_get_or_create(sparse, elem_size, index);
+    ecs_os_memcpy(ptr, value, elem_size);
+    return ptr;
+}
+
+void _ecs_sparse_remove(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (dense) {
+        int32_t count = sparse->count;
+        if (dense == (count - 1)) {
+            /* If dense is the last used element, simply decrease count */
+            sparse->count --;
+        } else if (dense < count) {
+            /* If element is alive, move it to unused elements */
+            swap_dense(sparse, chunk, dense, count - 1, index);
+            sparse->count --;
+        } else {
+            /* Element is not alive, nothing to be done */
+        }
+    } else {
+        /* Element is not paired and thus not alive, nothing to be done */
+    }
+    
+    /* Reset memory to zero on remove */
+    ecs_size_t size = sparse->size;
+    void *ptr = DATA(chunk->data, size, offset);
+    ecs_os_memset(ptr, 0, size);
 }
 
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index)
+    ecs_size_t size,
+    int32_t dense_index)
 {
-    (void)elem_size;
-    ecs_assert(index < ecs_vector_count(sparse->dense), 
-        ECS_INVALID_PARAMETER, NULL);
-    
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(dense_index < sparse->count, ECS_INVALID_PARAMETER, NULL);
 
-    const int32_t *it = ecs_vector_first(sparse->dense, int32_t);
+    dense_index ++;
 
-    void *result = get_sparse(sparse, it[index], false);
-
-    ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    return result;
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    return get_sparse(sparse, dense_index, dense_array[dense_index]);
 }
 
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index)
+    ecs_size_t size,
+    uint64_t index)
 {
-    (void)elem_size;
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
-
-    return get_sparse(sparse, index, false);
-}
-
-void* _ecs_sparse_get_or_set_sparse(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index,
-    bool *is_new)
-{
-    (void)elem_size;
-    ecs_assert(!elem_size || elem_size == sparse->elem_size, 
-        ECS_INVALID_PARAMETER, NULL);
-
-    return get_or_set_sparse(sparse, index, is_new);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    return try_sparse(sparse, index);
 }
 
 int32_t ecs_sparse_count(
@@ -7292,7 +7385,7 @@ int32_t ecs_sparse_count(
         return 0;
     }
 
-    return ecs_vector_count(sparse->dense);
+    return sparse->count - 1;
 }
 
 int32_t ecs_sparse_size(
@@ -7302,25 +7395,53 @@ int32_t ecs_sparse_size(
         return 0;
     }
         
-    return ecs_vector_count(sparse->sparse);
+    return ecs_vector_count(sparse->dense) - 1;
 }
 
-const int32_t* ecs_sparse_indices(
+const uint64_t* ecs_sparse_ids(
     const ecs_sparse_t *sparse)
 {
-    return ecs_vector_first(sparse->dense, int32_t);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    return &(ecs_vector_first(sparse->dense, uint64_t)[1]);
 }
 
-const int32_t* ecs_sparse_unused_indices(
-    const ecs_sparse_t *sparse)
+void ecs_sparse_set_size(
+    ecs_sparse_t *sparse,
+    int32_t elem_count)
 {
-    return ecs_vector_first(sparse->unused_elements, int32_t);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_vector_set_size(&sparse->dense, uint64_t, elem_count);
 }
 
-int32_t ecs_sparse_unused_count(
-    const ecs_sparse_t *sparse)
+void ecs_sparse_grow(
+    ecs_sparse_t *sparse,
+    int32_t elem_count)
 {
-    return ecs_vector_count(sparse->unused_elements);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_vector_grow(&sparse->dense, uint64_t, elem_count);
+}
+
+static
+void sparse_copy(
+    ecs_sparse_t *dst,
+    const ecs_sparse_t *src)
+{
+    ecs_sparse_set_size(dst, ecs_sparse_size(src));
+    const uint64_t *indices = ecs_sparse_ids(src);
+    
+    ecs_size_t size = src->size;
+    int32_t i, count = src->count;
+
+    for (i = 0; i < count - 1; i ++) {
+        uint64_t index = indices[i];
+        void *src_ptr = _ecs_sparse_get_sparse(src, size, index);
+        void *dst_ptr = _ecs_sparse_get_or_create(dst, size, index);
+        ecs_os_memcpy(dst_ptr, src_ptr, size);
+    }
+
+    set_id(dst, get_id(src));
+
+    ecs_assert(src->count == dst->count, ECS_INTERNAL_ERROR, NULL);
 }
 
 ecs_sparse_t* ecs_sparse_copy(
@@ -7329,84 +7450,21 @@ ecs_sparse_t* ecs_sparse_copy(
     if (!src) {
         return NULL;
     }
-    
-    ecs_sparse_t *dst = ecs_os_memdup(src, ECS_SIZEOF(ecs_sparse_t));
-    dst->chunks = ecs_vector_copy(src->chunks, chunk_t);
-    dst->dense = ecs_vector_copy(src->dense, int32_t);
-    dst->sparse = ecs_vector_copy(src->sparse, sparse_elem_t);
-    dst->unused_elements = ecs_vector_copy(src->unused_elements, int32_t);
 
-    /* Iterate chunks, copy data */
-    sparse_elem_t *sparse_array = ecs_vector_first(dst->sparse, sparse_elem_t);
-    chunk_t *chunks = ecs_vector_first(dst->chunks, chunk_t);
-    int32_t i, count = ecs_vector_count(dst->chunks);
-
-    for (i = 0; i < count; i ++) {
-        chunks[i].data = ecs_os_memdup(
-            chunks[i].data, dst->chunk_size * dst->elem_size);
-        
-        int32_t j;
-        for (j = 0; j < dst->chunk_size; j ++) {
-            sparse_array[i * dst->chunk_size + j].ptr = 
-                ECS_OFFSET(chunks[i].data, j * dst->elem_size);
-        }
-    }
+    ecs_sparse_t *dst = _ecs_sparse_new(src->size);
+    sparse_copy(dst, src);
 
     return dst;
 }
 
 void ecs_sparse_restore(
     ecs_sparse_t *dst,
-    ecs_sparse_t *src)
+    const ecs_sparse_t *src)
 {
-    ecs_assert(dst->elem_size == src->elem_size, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(dst->chunk_size == src->chunk_size, ECS_INVALID_PARAMETER, NULL);
-
-    /* Copy chunk data */
-    chunk_t *src_chunks = ecs_vector_first(src->chunks, chunk_t);
-    chunk_t *dst_chunks = ecs_vector_first(dst->chunks, chunk_t);
-    int32_t i, count = ecs_vector_count(src->chunks);
-
-    for (i = 0; i < count; i ++) {
-        ecs_os_memcpy(dst_chunks[i].data, src_chunks[i].data,
-            dst->chunk_size * dst->elem_size);
-    }
-
-    /* Clean up remaining chunks */
-    int32_t dst_count = ecs_vector_count(dst->chunks);
-    for (i = count; i < dst_count; i ++) {
-        ecs_os_free(dst_chunks[i].data);
-    }
-
-    ecs_vector_set_count(&dst->chunks, chunk_t, count);
-
-    /* Copy dense array */
-    int32_t elem_count = ecs_vector_count(src->dense);
-    ecs_vector_set_count(&dst->dense, int32_t, elem_count);
-
-    int32_t *dst_dense = ecs_vector_first(dst->dense, int32_t);
-    int32_t *src_dense = ecs_vector_first(src->dense, int32_t);
-    ecs_os_memcpy(dst_dense, src_dense, elem_count * ECS_SIZEOF(int32_t));
-
-    /* Copy sparse array */
-    int32_t sparse_count = ecs_vector_count(src->sparse);
-    ecs_vector_set_count(&dst->sparse, sparse_elem_t, sparse_count);
-
-    sparse_elem_t *dst_sparse = ecs_vector_first(dst->sparse, sparse_elem_t);
-    sparse_elem_t *src_sparse = ecs_vector_first(src->sparse, sparse_elem_t);
-    
-    for (i = 0; i < sparse_count; i ++) {
-        dst_sparse[i].dense = src_sparse[i].dense;
-    }
-
-    /* Copy unused elements */
-    int32_t unused_count = ecs_vector_count(src->unused_elements);
-    ecs_vector_set_count(&dst->unused_elements, int32_t, unused_count);
-
-    if (unused_count) {
-        int32_t *dst_unused = ecs_vector_first(dst->unused_elements, int32_t);
-        int32_t *src_unused = ecs_vector_first(src->unused_elements, int32_t);
-        ecs_os_memcpy(dst_unused, src_unused, unused_count * ECS_SIZEOF(int32_t));
+    ecs_assert(dst != NULL, ECS_INVALID_PARAMETER, NULL);
+    dst->count = 1;
+    if (src) {
+        sparse_copy(dst, src);
     }
 }
 
@@ -7415,61 +7473,9 @@ void ecs_sparse_memory(
     int32_t *allocd,
     int32_t *used)
 {
-    if (!sparse) {
-        return;
-    }
-
-    ecs_vector_memory(sparse->chunks, chunk_t, allocd, used);
-    ecs_vector_memory(sparse->dense, int32_t, allocd, used);
-    ecs_vector_memory(sparse->sparse, sparse_elem_t, allocd, used);
-    ecs_vector_memory(sparse->unused_elements, int32_t, allocd, used);
-
-    int32_t data_total = sparse->chunk_size * 
-        sparse->elem_size * ecs_vector_count(sparse->chunks);
-
-    int32_t data_not_used = ecs_vector_count(sparse->unused_elements) * 
-        sparse->elem_size;
-
-    if (allocd) {
-        *allocd += data_total;
-    }
-
-    if (used) {
-        *used += data_total - data_not_used;
-    }
-}
-
-void ecs_sparse_set_size(
-    ecs_sparse_t *sparse,
-    int32_t elem_count)
-{   
-    int32_t current = ecs_sparse_size(sparse);
-    int32_t to_add = elem_count - current;
-
-    if (to_add > 0) {
-        ecs_vector_set_size(&sparse->sparse, sparse_elem_t, elem_count);
-        int32_t cur = ecs_vector_count(sparse->chunks) * sparse->chunk_size;
-        
-        while (cur < elem_count) {
-            add_chunk(sparse);
-            cur += sparse->chunk_size;
-        }
-    }
-
-    if (ecs_vector_size(sparse->dense) < elem_count) {
-        ecs_vector_set_size(&sparse->dense, int32_t, elem_count);
-    }
-}
-
-void ecs_sparse_grow(
-    ecs_sparse_t *sparse,
-    int32_t count)
-{
-    int32_t current = ecs_sparse_count(sparse);
-
-    while (ecs_sparse_size(sparse) <= (count + current)) {
-        add_chunk(sparse);
-    }
+    (void)sparse;
+    (void)allocd;
+    (void)used;
 }
 
 #ifdef FLECS_READER_WRITER
@@ -7962,10 +7968,10 @@ ecs_entity_t ecs_import_from_library(
     char *import_func = (char*)module_name; /* safe */
     char *module = (char*)module_name;
 
-    if (!ecs_os_api.module_to_dl || 
-        !ecs_os_api.dlopen || 
-        !ecs_os_api.dlproc || 
-        !ecs_os_api.dlclose) 
+    if (!ecs_os_api._module_to_dl || 
+        !ecs_os_api._dlopen || 
+        !ecs_os_api._dlproc || 
+        !ecs_os_api._dlclose) 
     {
         ecs_os_err(
             "library loading not supported, set module_to_dl, dlopen, dlclose "
@@ -8207,7 +8213,7 @@ int32_t ecs_queue_count(
 /* World snapshot */
 struct ecs_snapshot_t {
     ecs_world_t *world;
-    ecs_ei_t entity_index;
+    ecs_sparse_t *entity_index;
     ecs_vector_t *tables;
     ecs_entity_t last_id;
     ecs_filter_t filter;
@@ -8278,7 +8284,7 @@ ecs_data_t* duplicate_data(
 static
 ecs_snapshot_t* snapshot_create(
     ecs_world_t *world,
-    const ecs_ei_t *entity_index,
+    const ecs_sparse_t *entity_index,
     ecs_iter_t *iter,
     ecs_iter_next_action_t next)
 {
@@ -8291,7 +8297,7 @@ ecs_snapshot_t* snapshot_create(
      * world, and we can simply copy the entity index as it will be restored
      * entirely upon snapshote restore. */
     if (!iter && entity_index) {
-        result->entity_index = ecs_ei_copy(entity_index);
+        result->entity_index = ecs_sparse_copy(entity_index);
         result->tables = ecs_vector_new(ecs_table_leaf_t, 0);
     }
 
@@ -8306,8 +8312,7 @@ ecs_snapshot_t* snapshot_create(
      * have to patch the entity index one by one upon restore, as we don't want
      * to affect entities that were not part of the snapshot. */
     else {
-        result->entity_index.hi = NULL;
-        result->entity_index.lo = NULL;
+        result->entity_index = NULL;
     }
 
     /* Iterate tables in iterator */
@@ -8339,7 +8344,7 @@ ecs_snapshot_t* ecs_snapshot_take(
 {
     ecs_snapshot_t *result = snapshot_create(
         world,
-        &world->stage.entity_index,
+        world->stage.entity_index,
         NULL,
         NULL);
 
@@ -8358,7 +8363,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
 
     ecs_snapshot_t *result = snapshot_create(
         world,
-        &world->stage.entity_index,
+        world->stage.entity_index,
         iter,
         next);
 
@@ -8374,11 +8379,9 @@ void ecs_snapshot_restore(
 {
     bool is_filtered = true;
 
-    if (snapshot->entity_index.lo || snapshot->entity_index.hi) {
-        ecs_sparse_restore(world->stage.entity_index.lo, snapshot->entity_index.lo);
-        ecs_sparse_free(snapshot->entity_index.lo);
-        ecs_map_free(world->stage.entity_index.hi);
-        world->stage.entity_index.hi = snapshot->entity_index.hi;
+    if (snapshot->entity_index) {
+        ecs_sparse_restore(world->stage.entity_index, snapshot->entity_index);
+        ecs_sparse_free(snapshot->entity_index);
         is_filtered = false;
     }
 
@@ -8539,7 +8542,7 @@ bool ecs_snapshot_next(
 void ecs_snapshot_free(
     ecs_snapshot_t *snapshot)
 {
-    ecs_ei_free(&snapshot->entity_index);
+    ecs_sparse_free(snapshot->entity_index);
 
     ecs_table_leaf_t *tables = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
     int32_t i, count = ecs_vector_count(snapshot->tables);
@@ -9417,22 +9420,6 @@ void ecs_bulk_remove_entity(
 
 #endif
 
-#ifndef NDEBUG
-static
-void no_threading(
-    const char *function)
-{
-    ecs_trace(1, "threading unavailable: %s not implemented", function);
-}
-
-static
-void no_time(
-    const char *function)
-{
-    ecs_trace(1, "time management: %s not implemented", function);
-}
-#endif
-
 /* -- Private functions -- */
 
 ecs_stage_t *ecs_get_stage(
@@ -9535,45 +9522,48 @@ void ecs_component_monitor_free(
 
 /* -- Public functions -- */
 
+
+FLECS_EXPORT
+bool ecs_os_has_heap(void);
+
+/** Are threading functions available? */
+FLECS_EXPORT
+bool ecs_os_has_threading(void);
+
+/** Are time functions available? */
+FLECS_EXPORT
+bool ecs_os_has_time(void);
+
+/** Are logging functions available? */
+FLECS_EXPORT
+bool ecs_os_has_logging(void);
+
+/** Are dynamic library functions available? */
+FLECS_EXPORT
+bool ecs_os_has_dl(void);
+
+/** Are module path functions available? */
+FLECS_EXPORT
+bool ecs_os_has_modules(void);
+
+
 ecs_world_t *ecs_mini(void) {
     ecs_os_init();
 
     ecs_trace_1("bootstrap");
     ecs_log_push();
 
-    ecs_assert(ecs_os_api.malloc != NULL, ECS_MISSING_OS_API, "malloc");
-    ecs_assert(ecs_os_api.realloc != NULL, ECS_MISSING_OS_API, "realloc");
-    ecs_assert(ecs_os_api.calloc != NULL, ECS_MISSING_OS_API, "calloc");
-
-    bool time_ok = true;
-
-#ifndef NDEBUG
-    bool thr_ok = true;
-    if (!ecs_os_api.mutex_new) {thr_ok = false; no_threading("mutex_new");}
-    if (!ecs_os_api.mutex_free) {thr_ok = false; no_threading("mutex_free");}
-    if (!ecs_os_api.mutex_lock) {thr_ok = false; no_threading("mutex_lock");}
-    if (!ecs_os_api.mutex_unlock) {thr_ok = false; no_threading("mutex_unlock");}
-    if (!ecs_os_api.cond_new) {thr_ok = false; no_threading("cond_new");}
-    if (!ecs_os_api.cond_free) {thr_ok = false; no_threading("cond_free");}
-    if (!ecs_os_api.cond_wait) {thr_ok = false; no_threading("cond_wait");}
-    if (!ecs_os_api.cond_signal) {thr_ok = false; no_threading("cond_signal");}
-    if (!ecs_os_api.cond_broadcast) {thr_ok = false; no_threading("cond_broadcast"); }
-    if (!ecs_os_api.thread_new) {thr_ok = false; no_threading("thread_new");}
-    if (!ecs_os_api.thread_join) {thr_ok = false; no_threading("thread_join");}
-    if (thr_ok) {
-        ecs_trace_1("threading available");
-    } else {
-        ecs_trace_1("threading unavailable");
+    if (!ecs_os_has_heap()) {
+        ecs_abort(ECS_MISSING_OS_API, NULL);
     }
 
-    if (!ecs_os_api.get_time) {time_ok = false; no_time("get_time");}
-    if (!ecs_os_api.sleep) {time_ok = false; no_time("sleep");}
-    if (time_ok) {
-        ecs_trace_1("time management available");
-    } else {
-        ecs_trace_1("time management unavailable");
+    if (!ecs_os_has_threading()) {
+        ecs_trace_1("threading not available");
     }
-#endif
+
+    if (!ecs_os_has_time()) {
+        ecs_trace_1("time management not available");
+    }
 
     ecs_world_t *world = ecs_os_malloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
@@ -9612,7 +9602,7 @@ ecs_world_t *ecs_mini(void) {
     world->pipeline = 0;
 
     world->frame_start_time = (ecs_time_t){0, 0};
-    if (time_ok) {
+    if (ecs_os_has_time()) {
         ecs_os_get_time(&world->world_start_time);
     }
 
@@ -10043,7 +10033,7 @@ void ecs_measure_frame_time(
     bool enable)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     if (world->stats.target_fps == 0.0 || enable) {
         world->measure_frame_time = enable;
@@ -10055,7 +10045,7 @@ void ecs_measure_system_time(
     bool enable)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
     world->measure_system_time = enable;
 }
 
@@ -10071,8 +10061,7 @@ void ecs_set_target_fps(
     float fps)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
-    ecs_assert(ecs_os_api.sleep != NULL, ECS_MISSING_OS_API, "sleep");
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     if (!world->arg_fps) {
         ecs_measure_frame_time(world, true);
@@ -10557,264 +10546,6 @@ int32_t ecs_switch_next(
         sw->nodes, ecs_switch_node_t);
 
     return nodes[element].next;
-}
-
-/* Get entity */
-ecs_record_t* ecs_ei_get(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity)
-{
-    if (entity > ECS_HI_ENTITY_ID) {
-        return ecs_map_get(
-            entity_index->hi, ecs_record_t, entity);
-    } else {
-        return ecs_sparse_get_sparse(
-            entity_index->lo, ecs_record_t, (int32_t)entity);
-    }
-}
-
-/* Get or create entity */
-ecs_record_t* ecs_ei_get_or_create(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity)
-{
-    if (entity > ECS_HI_ENTITY_ID) {
-        ecs_record_t *record =  ecs_map_get(
-            entity_index->hi, ecs_record_t, entity);
-
-        if (!record) {
-            ecs_record_t new_record = { 0 };
-            ecs_map_set(
-                entity_index->hi, entity, &new_record);
-
-            record = ecs_map_get(
-                entity_index->hi, ecs_record_t, entity);  
-
-            record->table = NULL;  
-            record->row = 0;            
-        }
-
-        return record;
-    } else {
-        bool is_new = false;
-
-        ecs_record_t *record = ecs_sparse_get_or_set_sparse(
-            entity_index->lo, ecs_record_t, (int32_t)entity, &is_new);
-
-        if (is_new) {
-            record->table = NULL;
-            record->row = 0;
-        }
-        
-        return record;
-    }
-}
-
-/* Set entity */
-ecs_record_t* ecs_ei_set(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity,
-    ecs_record_t *record)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (entity > ECS_HI_ENTITY_ID) {
-        ecs_map_set(entity_index->hi, entity, record);
-    } else {
-        bool is_new;
-        ecs_record_t *dst_record = ecs_sparse_get_or_set_sparse(
-            entity_index->lo, ecs_record_t, (int32_t)entity, &is_new);
-        *dst_record = *record;
-
-        /* Only return record ptrs of the sparse set, as these pointers are
-         * stable. Tables store pointers to records only of they are stable */
-        return dst_record;
-    }
-
-    return NULL;
-}
-
-/* Delete entity */
-void ecs_ei_delete(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (entity > ECS_HI_ENTITY_ID) {
-        ecs_map_remove(entity_index->hi, entity);
-    } else {
-        ecs_sparse_remove(entity_index->lo, ecs_record_t, (int32_t)entity);
-    }
-}
-
-void ecs_ei_clear_entity(
-    ecs_ei_t *entity_index,
-    ecs_entity_t entity,
-    bool is_watched)
-{
-    if (entity > ECS_HI_ENTITY_ID) {
-        if (!is_watched) {
-            ecs_map_remove(entity_index->hi, entity);
-        } else {
-            ecs_ei_set(entity_index, entity, &(ecs_record_t){
-                .table = NULL,
-                .row = -1
-            });
-        }
-    } else {
-        ecs_ei_set(entity_index, entity, &(ecs_record_t){
-            .table = NULL,
-            .row = -is_watched
-        });
-    }    
-}
-
-ecs_entity_t ecs_ei_recycle(
-    ecs_ei_t *entity_index)
-{
-    int32_t result;
-    if (ecs_sparse_recycle(entity_index->lo, ecs_record_t, &result)) {
-        ecs_assert(result > 0, ECS_INTERNAL_ERROR, NULL);
-        return (ecs_entity_t)result; // implicit upcast
-    } else {
-        return 0;
-    }
-}
-
-/* Grow entity idex */
-void ecs_ei_grow(
-    ecs_ei_t *entity_index,
-    int32_t count)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t sparse_size = ecs_sparse_size(entity_index->lo);
-    int32_t to_grow = count;
-
-    if (sparse_size < ECS_HI_ENTITY_ID) {
-        if (to_grow + sparse_size > ECS_HI_ENTITY_ID) {
-            to_grow -= ECS_HI_ENTITY_ID - sparse_size;
-        }
-
-        ecs_sparse_grow(entity_index->lo, to_grow);
-
-        count -= to_grow;
-    }
-
-    if (count) {   
-        ecs_map_grow(entity_index->hi, count);
-    }
-}
-
-/* Set size of entity index */
-void ecs_ei_set_size(
-    ecs_ei_t *entity_index,
-    int32_t size)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (size > ECS_HI_ENTITY_ID) {
-        ecs_sparse_set_size(entity_index->lo, ECS_HI_ENTITY_ID);
-        ecs_map_set_size(entity_index->hi, size - ECS_HI_ENTITY_ID);
-    } else {
-        ecs_sparse_set_size(entity_index->lo, size);
-        ecs_map_set_size(entity_index->hi, 0);
-    }
-}
-
-/* Count number of entities in index */
-int32_t ecs_ei_count(
-    ecs_ei_t *entity_index)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return ecs_map_count(entity_index->hi) + 
-        ecs_sparse_count(entity_index->lo);
-}
-
-/* Create new entity index */
-void ecs_ei_new(
-    ecs_ei_t *entity_index)
-{
-    entity_index->lo = ecs_sparse_new(ecs_record_t, 0);
-    entity_index->hi = ecs_map_new(ecs_record_t, 0);
-}
-
-/* Clear entities from index */
-void ecs_ei_clear(
-    ecs_ei_t *entity_index)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_map_clear(entity_index->hi);
-    ecs_sparse_clear(entity_index->lo);
-}
-
-/* Free entity index */
-void ecs_ei_free(
-    ecs_ei_t *entity_index)
-{
-    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    ecs_map_free(entity_index->hi);
-    ecs_sparse_free(entity_index->lo);
-}
-
-/* Copy entity index */
-ecs_ei_t ecs_ei_copy(
-    const ecs_ei_t *entity_index)
-{
-    return (ecs_ei_t){
-        .hi = ecs_map_copy(entity_index->hi),
-        .lo = ecs_sparse_copy(entity_index->lo)
-    };
-}
-
-/* Get memory occupied by entity index */
-void ecs_ei_memory(
-    ecs_ei_t *entity_index,
-    int32_t *allocd,
-    int32_t *used)
-{
-    ecs_sparse_memory(entity_index->lo, allocd, used);
-    ecs_map_memory(entity_index->hi, allocd, used);
-}
-
-ecs_ei_iter_t ecs_ei_iter(
-    ecs_ei_t *entity_index)
-{
-    ecs_ei_iter_t result;
-    result.index = 0;
-    result.sparse_indices = ecs_sparse_indices(entity_index->lo);
-    result.sparse_count = ecs_sparse_count(entity_index->lo);
-    result.map_iter = ecs_map_iter(entity_index->hi);
-    result.lo = entity_index->lo;
-    return result;
-}
-
-/* Return next record for iterator (return NULL when end is reached) */
-ecs_record_t *ecs_ei_next(
-    ecs_ei_iter_t *iter,
-    ecs_entity_t *entity_out)
-{
-    const int32_t *sparse_indices = iter->sparse_indices;
-
-    if (sparse_indices) {
-        int32_t index = iter->index;
-        if (iter->index < iter->sparse_count) {
-            ecs_entity_t entity = (ecs_entity_t)sparse_indices[index];
-            ecs_record_t *result = ecs_sparse_get_sparse(
-                    iter->lo, ecs_record_t, (int32_t)entity);
-            *entity_out = entity;
-            iter->index ++;
-            return result;
-        } else {
-            iter->sparse_indices = NULL;
-        }
-    }
-
-    return ecs_map_next(&iter->map_iter, ecs_record_t, entity_out);
 }
 
 
@@ -12540,16 +12271,16 @@ void ecs_os_init(void)
     }
     
     if (!(ecs_os_api_init_count ++)) {
-        if (ecs_os_api.init) {
-            ecs_os_api.init();
+        if (ecs_os_api._init) {
+            ecs_os_api._init();
         }
     }
 }
 
 void ecs_os_fini(void) {
     if (!--ecs_os_api_init_count) {
-        if (ecs_os_api.fini) {
-            ecs_os_api.fini();
+        if (ecs_os_api._fini) {
+            ecs_os_api._fini();
         }
     }
 }
@@ -12639,6 +12370,10 @@ void* ecs_os_api_malloc(ecs_size_t size) {
 
 static
 void* ecs_os_api_calloc(ecs_size_t size) {
+    if (size >= 13107200) {
+        abort();
+    }
+
     ecs_os_api_calloc_count ++;
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     return calloc(1, (size_t)size);
@@ -12739,17 +12474,17 @@ void ecs_os_set_api_defaults(void)
     ecs_os_time_setup();
     
     /* Memory management */
-    ecs_os_api.malloc = ecs_os_api_malloc;
-    ecs_os_api.free = ecs_os_api_free;
-    ecs_os_api.realloc = ecs_os_api_realloc;
-    ecs_os_api.calloc = ecs_os_api_calloc;
+    ecs_os_api._malloc = ecs_os_api_malloc;
+    ecs_os_api._free = ecs_os_api_free;
+    ecs_os_api._realloc = ecs_os_api_realloc;
+    ecs_os_api._calloc = ecs_os_api_calloc;
 
     /* Strings */
-    ecs_os_api.strdup = ecs_os_api_strdup;
+    ecs_os_api._strdup = ecs_os_api_strdup;
 
     /* Time */
-    ecs_os_api.sleep = ecs_os_time_sleep;
-    ecs_os_api.get_time = ecs_os_gettime;
+    ecs_os_api._sleep = ecs_os_time_sleep;
+    ecs_os_api._get_time = ecs_os_gettime;
 
     /* Logging */
     ecs_os_api._log = ecs_log;
@@ -12758,15 +12493,65 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api._log_warning = ecs_log_warning;
 
     /* Modules */
-    if (!ecs_os_api.module_to_dl) {
-        ecs_os_api.module_to_dl = ecs_os_api_module_to_dl;
+    if (!ecs_os_api._module_to_dl) {
+        ecs_os_api._module_to_dl = ecs_os_api_module_to_dl;
     }
 
-    if (!ecs_os_api.module_to_etc) {
-        ecs_os_api.module_to_etc = ecs_os_api_module_to_etc;
+    if (!ecs_os_api._module_to_etc) {
+        ecs_os_api._module_to_etc = ecs_os_api_module_to_etc;
     }
 
-    ecs_os_api.abort = abort;
+    ecs_os_api._abort = abort;
+}
+
+bool ecs_os_has_heap(void) {
+    return 
+        (ecs_os_api._malloc != NULL) &&
+        (ecs_os_api._calloc != NULL) &&
+        (ecs_os_api._realloc != NULL) &&
+        (ecs_os_api._free != NULL);
+}
+
+bool ecs_os_has_threading(void) {
+    return
+        (ecs_os_api._mutex_new != NULL) &&
+        (ecs_os_api._mutex_free != NULL) &&
+        (ecs_os_api._mutex_lock != NULL) &&
+        (ecs_os_api._mutex_unlock != NULL) &&
+        (ecs_os_api._cond_new != NULL) &&
+        (ecs_os_api._cond_free != NULL) &&
+        (ecs_os_api._cond_wait != NULL) &&
+        (ecs_os_api._cond_signal != NULL) &&
+        (ecs_os_api._cond_broadcast != NULL) &&
+        (ecs_os_api._thread_new != NULL) &&
+        (ecs_os_api._thread_join != NULL);   
+}
+
+bool ecs_os_has_time(void) {
+    return 
+        (ecs_os_api._get_time != NULL) &&
+        (ecs_os_api._sleep != NULL);
+}
+
+bool ecs_os_has_logging(void) {
+    return 
+        (ecs_os_api._log != NULL) &&
+        (ecs_os_api._log_error != NULL) &&
+        (ecs_os_api._log_debug != NULL) &&
+        (ecs_os_api._log_warning != NULL);
+}
+
+bool ecs_os_has_dl(void) {
+    return 
+        (ecs_os_api._dlopen != NULL) &&
+        (ecs_os_api._dlproc != NULL) &&
+        (ecs_os_api._dlclose != NULL);  
+}
+
+bool ecs_os_has_modules(void) {
+    return 
+        (ecs_os_api._module_to_dl != NULL) &&
+        (ecs_os_api._module_to_etc != NULL);
 }
 
 #ifdef FLECS_SYSTEMS_H
@@ -15306,7 +15091,7 @@ void init_edges(
             register_child_table(world, stage, table, parent);
         }
 
-        if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {
+        if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
             if (stage == &world->stage) {
                 ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
             }
@@ -16128,14 +15913,14 @@ int32_t get_bucket_count(
 }
 
 static
-int32_t get_bucket_id(
+uint64_t get_bucket_id(
     int32_t bucket_count,
     ecs_map_key_t key) 
 {
     ecs_assert(bucket_count > 0, ECS_INTERNAL_ERROR, NULL);
     uint64_t result = key & ((uint64_t)bucket_count - 1);
     ecs_assert(result < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
-    return (int32_t)result;
+    return result;
 }
 
 static
@@ -16149,7 +15934,7 @@ ecs_bucket_t* find_bucket(
         return NULL;
     }
 
-    int32_t bucket_id = get_bucket_id(bucket_count, key);
+    uint64_t bucket_id = get_bucket_id(bucket_count, key);
 
     return _ecs_sparse_get_sparse(buckets, 0, bucket_id);
 }
@@ -16167,17 +15952,8 @@ ecs_bucket_t* find_or_create_bucket(
         bucket_count = 8;
     }
 
-    int32_t bucket_id = get_bucket_id(bucket_count, key);
-    
-    bool is_new = false;
-    ecs_bucket_t *bucket = _ecs_sparse_get_or_set_sparse(
-        buckets, 0, bucket_id, &is_new);
-
-    if (is_new) {
-        bucket->count = 0;
-    }
-
-    return bucket;    
+    uint64_t bucket_id = get_bucket_id(bucket_count, key);
+    return _ecs_sparse_get_or_create(buckets, 0, bucket_id);    
 }
 
 static
@@ -16186,8 +15962,8 @@ void remove_bucket(
     ecs_map_key_t key)
 {
     int32_t bucket_count = map->bucket_count;
-    int32_t bucket_id = get_bucket_id(bucket_count, key);
-    _ecs_sparse_remove(map->buckets, 0, bucket_id);
+    uint64_t bucket_id = get_bucket_id(bucket_count, key);
+    ecs_sparse_remove(map->buckets, bucket_id);
 }
 
 static
@@ -16254,13 +16030,13 @@ void rehash(
 
         /* Only iterate over old buckets with elements */
         int32_t b, filled_bucket_count = ecs_sparse_count(buckets);
-        const int32_t *indices = ecs_sparse_indices(buckets);
+        const uint64_t *indices = ecs_sparse_ids(buckets);
 
         /* Iterate backwards as elements could otherwise be moved to existing
          * buckets which could temporarily cause the number of elements in a
          * bucket to exceed BUCKET_COUNT. */
         for (b = filled_bucket_count - 1; b >= 0; b --) {
-            int32_t bucket_id = indices[b];
+            uint64_t bucket_id = indices[b];
             ecs_bucket_t *bucket = _ecs_sparse_get_sparse(buckets, 0, bucket_id);
 
             int i, count = bucket->count;
@@ -16269,17 +16045,13 @@ void rehash(
             for (i = 0; i < count; i ++) {
                 ecs_map_key_t *elem = GET_ELEM(array, elem_size, i);
                 ecs_map_key_t key = *elem;
-                int32_t new_bucket_id = get_bucket_id(bucket_count, key);
+                uint64_t new_bucket_id = get_bucket_id(bucket_count, key);
 
                 if (new_bucket_id != bucket_id) {
-                    bool is_new = false;
-                    ecs_bucket_t *new_bucket = _ecs_sparse_get_or_set_sparse(
-                        buckets, 0, new_bucket_id, &is_new);
+                    ecs_bucket_t *new_bucket = _ecs_sparse_get_or_create(
+                        buckets, 0, new_bucket_id);
 
-                    if (is_new) {
-                        new_bucket->count = 0;
-                        indices = ecs_sparse_indices(buckets);
-                    }
+                    indices = ecs_sparse_ids(buckets);
 
                     if (add_to_bucket(new_bucket, elem_size, offset, 
                         key, PAYLOAD(elem)) == BUCKET_COUNT) 
@@ -16325,7 +16097,7 @@ ecs_map_t* _ecs_map_new(
     }
 
     result->bucket_count = bucket_count;
-    result->buckets = _ecs_sparse_new(BUCKET_SIZE(elem_size, result->offset), bucket_count);
+    result->buckets = _ecs_sparse_new(BUCKET_SIZE(elem_size, result->offset));
 
     return result;
 }
@@ -17479,17 +17251,7 @@ void ecs_set_threads(
     ecs_world_t *world,
     int32_t threads)
 {
-    ecs_assert(!threads || ecs_os_api.thread_new, ECS_MISSING_OS_API, "thread_new");
-    ecs_assert(!threads || ecs_os_api.thread_join, ECS_MISSING_OS_API, "thread_join");
-    ecs_assert(!threads || ecs_os_api.mutex_new, ECS_MISSING_OS_API, "mutex_new");
-    ecs_assert(!threads || ecs_os_api.mutex_free, ECS_MISSING_OS_API, "mutex_free");
-    ecs_assert(!threads || ecs_os_api.mutex_lock, ECS_MISSING_OS_API, "mutex_lock");
-    ecs_assert(!threads || ecs_os_api.mutex_unlock, ECS_MISSING_OS_API, "mutex_unlock");
-    ecs_assert(!threads || ecs_os_api.cond_new, ECS_MISSING_OS_API, "cond_new");
-    ecs_assert(!threads || ecs_os_api.cond_free, ECS_MISSING_OS_API, "cond_free");
-    ecs_assert(!threads || ecs_os_api.cond_wait, ECS_MISSING_OS_API, "cond_wait");
-    ecs_assert(!threads || ecs_os_api.cond_signal, ECS_MISSING_OS_API, "cond_signal");
-    ecs_assert(!threads || ecs_os_api.cond_broadcast, ECS_MISSING_OS_API, "cond_broadcast");
+    ecs_assert(ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
 
     int32_t thread_count = ecs_vector_count(world->workers);
 
@@ -17847,8 +17609,10 @@ void ecs_pipeline_progress(
     float delta_time)
 {
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
@@ -18107,7 +17871,7 @@ float ecs_frame_begin(
     float user_delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(user_delta_time != 0 || ecs_os_api.get_time, ECS_MISSING_OS_API, "get_time");
+    ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
 
     if (world->locking_enabled) {
         ecs_lock(world);
@@ -20078,9 +19842,13 @@ ecs_entity_t ecs_new_system(
     const char *e_name = ecs_name_from_symbol(world, name);
     
     ecs_entity_t result = ecs_lookup_w_type(world, name, ecs_type(EcsSignatureExpr));
+
     if (!result) {
         result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
+        if (name) {
+            ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
+        }
+        
         if (tag) {
             ecs_add_entity(world, result, tag);
         }
@@ -21156,7 +20924,9 @@ ecs_entity_t ecs_lookup_path_w_sep(
     const char *sep,
     const char *prefix)
 {
-    ecs_assert(path != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (!path) {
+        return 0;
+    }
     
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr;
@@ -21339,6 +21109,18 @@ ecs_entity_t ecs_add_path_w_sep(
     const char *sep,
     const char *prefix)
 {
+    if (!path) {
+        if (!entity) {
+            entity = ecs_new_id(world);
+        }
+
+        if (parent) {
+            ecs_add_entity(world, entity, ECS_CHILDOF | entity);
+        }
+
+        return entity;
+    }
+
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr = path;
 

@@ -7,14 +7,14 @@ void Remove_bulk_remove_comp_from_comp_to_empty() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( ecs_has(world, e + i, Velocity));
-        ecs_set(world, e + i, Position, {i, i * 2});
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( ecs_has(world, ids[i], Velocity));
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
     ecs_bulk_remove(world, Velocity, &(ecs_filter_t){
@@ -22,10 +22,10 @@ void Remove_bulk_remove_comp_from_comp_to_empty() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( !ecs_has(world, e + i, Velocity));
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( !ecs_has(world, ids[i], Velocity));
 
-        const Position *p = ecs_get(world, e + i, Position);
+        const Position *p = ecs_get(world, ids[i], Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -44,22 +44,24 @@ void Remove_bulk_remove_comp_from_comp_to_existing() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t existing = ecs_bulk_new(world, Position, 10);
-    test_assert(existing != 0);
+    ecs_entity_t existing[10];
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    test_assert(ids != NULL);
+    memcpy(existing, ids, sizeof(ecs_entity_t) * 10);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, existing + i, Position));
-        ecs_set(world, existing + i, Position, {i * 3, i * 4});
+        test_assert( ecs_has(world, existing[i], Position));
+        ecs_set(world, existing[i], Position, {i * 3, i * 4});
     }   
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( ecs_has(world, e + i, Velocity));
-        ecs_set(world, e + i, Position, {i, i * 2});
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( ecs_has(world, ids[i], Velocity));
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
     ecs_bulk_remove(world, Velocity, &(ecs_filter_t){
@@ -67,10 +69,10 @@ void Remove_bulk_remove_comp_from_comp_to_existing() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( !ecs_has(world, e + i, Velocity));
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( !ecs_has(world, ids[i], Velocity));
 
-        const Position *p = ecs_get(world, e + i, Position);
+        const Position *p = ecs_get(world, ids[i], Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -89,13 +91,13 @@ void Remove_bulk_remove_comp_from_tag_to_empty() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Tag, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Tag));
-        test_assert( ecs_has(world, e + i, Velocity));
+        test_assert( ecs_has(world, ids[i], Tag));
+        test_assert( ecs_has(world, ids[i], Velocity));
     }
 
     ecs_bulk_remove(world, Velocity, &(ecs_filter_t){
@@ -103,8 +105,8 @@ void Remove_bulk_remove_comp_from_tag_to_empty() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Tag));
-        test_assert( !ecs_has(world, e + i, Velocity));
+        test_assert( ecs_has(world, ids[i], Tag));
+        test_assert( !ecs_has(world, ids[i], Velocity));
     }
 
     test_int( ecs_count(world, Tag), 10);
@@ -120,16 +122,18 @@ void Remove_bulk_remove_comp_from_tag_to_existing() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Tag, Velocity);
 
-    ecs_entity_t existing = ecs_bulk_new(world, Tag, 10);
-    test_assert(existing != 0);
+    ecs_entity_t existing[10];
+    const ecs_entity_t *ids = ecs_bulk_new(world, Tag, 10);
+    test_assert(ids != NULL);
+    memcpy(existing, ids, sizeof(ecs_entity_t) * 10);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != 0);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Tag));
-        test_assert( ecs_has(world, e + i, Velocity));
+        test_assert( ecs_has(world, ids[i], Tag));
+        test_assert( ecs_has(world, ids[i], Velocity));
     }
 
     ecs_bulk_remove(world, Velocity, &(ecs_filter_t){
@@ -137,8 +141,8 @@ void Remove_bulk_remove_comp_from_tag_to_existing() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Tag));
-        test_assert( !ecs_has(world, e + i, Velocity));
+        test_assert( ecs_has(world, ids[i], Tag));
+        test_assert( !ecs_has(world, ids[i], Velocity));
     }
 
     test_int( ecs_count(world, Tag), 20);
@@ -154,13 +158,13 @@ void Remove_bulk_remove_tag_from_tag_to_empty() {
     ECS_TAG(world, Tag2);
     ECS_TYPE(world, Type, Tag, Tag2);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Tag));
-        test_assert( ecs_has(world, e + i, Tag2));
+        test_assert( ecs_has(world, ids[i], Tag));
+        test_assert( ecs_has(world, ids[i], Tag2));
     }
 
     ecs_bulk_remove(world, Tag2, &(ecs_filter_t){
@@ -168,8 +172,8 @@ void Remove_bulk_remove_tag_from_tag_to_empty() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Tag));
-        test_assert( !ecs_has(world, e + i, Tag2));
+        test_assert( ecs_has(world, ids[i], Tag));
+        test_assert( !ecs_has(world, ids[i], Tag2));
     }
 
     test_int( ecs_count(world, Tag), 10);
@@ -185,16 +189,18 @@ void Remove_bulk_remove_tag_from_tag_to_existing() {
     ECS_TAG(world, Tag2);
     ECS_TYPE(world, Type, Tag, Tag2);
 
-    ecs_entity_t existing = ecs_bulk_new(world, Tag, 10);
-    test_assert(existing != 0);
+    ecs_entity_t existing[10];
+    const ecs_entity_t *ids = ecs_bulk_new(world, Tag, 10);
+    test_assert(ids != NULL);
+    memcpy(existing, ids, sizeof(ecs_entity_t) * 10);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Tag));
-        test_assert( ecs_has(world, e + i, Tag2));
+        test_assert( ecs_has(world, ids[i], Tag));
+        test_assert( ecs_has(world, ids[i], Tag2));
     }
 
     ecs_bulk_remove(world, Tag2, &(ecs_filter_t){
@@ -202,8 +208,8 @@ void Remove_bulk_remove_tag_from_tag_to_existing() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Tag));
-        test_assert( !ecs_has(world, e + i, Tag2));
+        test_assert( ecs_has(world, ids[i], Tag));
+        test_assert( !ecs_has(world, ids[i], Tag2));
     }
 
     test_int( ecs_count(world, Tag), 20);
@@ -217,12 +223,12 @@ void Remove_bulk_remove_all_comp() {
     
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
+        test_assert( ecs_has(world, ids[i], Position));
     }
 
     ecs_bulk_remove(world, Position, &(ecs_filter_t){
@@ -230,7 +236,7 @@ void Remove_bulk_remove_all_comp() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( !ecs_has(world, e + i, Position));
+        test_assert( !ecs_has(world, ids[i], Position));
     }
 
     test_int( ecs_count(world, Position), 0);
@@ -243,12 +249,12 @@ void Remove_bulk_remove_all_tag() {
     
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_bulk_new(world, Tag, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Tag, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Tag));
+        test_assert( ecs_has(world, ids[i], Tag));
     }
 
     ecs_bulk_remove(world, Tag, &(ecs_filter_t){
@@ -256,7 +262,7 @@ void Remove_bulk_remove_all_tag() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( !ecs_has(world, e + i, Tag));
+        test_assert( !ecs_has(world, ids[i], Tag));
     }
 
     test_int( ecs_count(world, Tag), 0);
@@ -280,8 +286,8 @@ void Remove_bulk_on_remove() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     ecs_bulk_remove(world, Velocity, &(ecs_filter_t){
         .include = ecs_type(Position)
@@ -295,7 +301,7 @@ void Remove_bulk_on_remove() {
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_int(ctx.e[i], e + i);
+        test_int(ctx.e[i], ids[i]);
     }
 
     test_int(ctx.c[0][0], ecs_entity(Velocity));
@@ -310,14 +316,14 @@ void Remove_bulk_remove_entity_comp() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( ecs_has(world, e + i, Velocity));
-        ecs_set(world, e + i, Position, {i, i * 2});
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( ecs_has(world, ids[i], Velocity));
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
     ecs_bulk_remove_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
@@ -325,10 +331,10 @@ void Remove_bulk_remove_entity_comp() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( !ecs_has(world, e + i, Velocity));
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( !ecs_has(world, ids[i], Velocity));
 
-        const Position *p = ecs_get(world, e + i, Position);
+        const Position *p = ecs_get(world, ids[i], Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -347,14 +353,14 @@ void Remove_bulk_remove_entity_tag() {
     ECS_TAG(world, Tag);
     ECS_TYPE(world, Type, Position, Tag);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( ecs_has_entity(world, e + i, Tag));
-        ecs_set(world, e + i, Position, {i, i * 2});
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( ecs_has_entity(world, ids[i], Tag));
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
     ecs_bulk_remove_entity(world, Tag, &(ecs_filter_t){
@@ -362,10 +368,10 @@ void Remove_bulk_remove_entity_tag() {
     });
 
     for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(world, e + i, Position));
-        test_assert( !ecs_has_entity(world, e + i, Tag));
+        test_assert( ecs_has(world, ids[i], Position));
+        test_assert( !ecs_has_entity(world, ids[i], Tag));
 
-        const Position *p = ecs_get(world, e + i, Position);
+        const Position *p = ecs_get(world, ids[i], Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -389,8 +395,8 @@ void Remove_bulk_remove_entity_on_remove() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
+    test_assert(ids != NULL);
 
     ecs_bulk_remove_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
         .include = ecs_type(Position)
@@ -404,7 +410,7 @@ void Remove_bulk_remove_entity_on_remove() {
 
     int i;
     for (i = 0; i < 10; i ++) {
-        test_int(ctx.e[i], e + i);
+        test_int(ctx.e[i], ids[i]);
     }
 
     test_int(ctx.c[0][0], ecs_entity(Velocity));

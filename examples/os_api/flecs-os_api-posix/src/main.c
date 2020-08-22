@@ -130,19 +130,19 @@ void posix_set_os_api(void) {
 
     ecs_os_api_t api = ecs_os_api;
 
-    api.thread_new = posix_thread_new;
-    api.thread_join = posix_thread_join;
-    api.ainc = posix_ainc;
-    api.adec = posix_adec;
-    api.mutex_new = posix_mutex_new;
-    api.mutex_free = posix_mutex_free;
-    api.mutex_lock = posix_mutex_lock;
-    api.mutex_unlock = posix_mutex_unlock;
-    api.cond_new = posix_cond_new;
-    api.cond_free = posix_cond_free;
-    api.cond_signal = posix_cond_signal;
-    api.cond_broadcast = posix_cond_broadcast;
-    api.cond_wait = posix_cond_wait;
+    api._thread_new = posix_thread_new;
+    api._thread_join = posix_thread_join;
+    api._ainc = posix_ainc;
+    api._adec = posix_adec;
+    api._mutex_new = posix_mutex_new;
+    api._mutex_free = posix_mutex_free;
+    api._mutex_lock = posix_mutex_lock;
+    api._mutex_unlock = posix_mutex_unlock;
+    api._cond_new = posix_cond_new;
+    api._cond_free = posix_cond_free;
+    api._cond_signal = posix_cond_signal;
+    api._cond_broadcast = posix_cond_broadcast;
+    api._cond_wait = posix_cond_wait;
 
     ecs_os_set_api(&api);
 }

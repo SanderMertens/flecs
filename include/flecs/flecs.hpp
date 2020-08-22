@@ -1278,12 +1278,7 @@ public:
      */   
     template<typename T>
     base_type& add_case() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, 
-                ECS_CASE | _::component_info<T>::id(world));
-        });
-        return *static_cast<base_type*>(this);
+        return this->add_case(_::component_info<T>::id());
     }
 
     /** Add a case to an entity.
@@ -1313,12 +1308,7 @@ public:
      */   
     template<typename T>
     base_type& remove_case() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, 
-                ECS_CASE | _::component_info<T>::id(world));
-        });
-        return *static_cast<base_type*>(this);
+        return this->remove_case(_::component_info<T>::id());
     }    
 
     /** Remove a case from an entity.
@@ -2244,40 +2234,6 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Entity range, allows for operating on a range of consecutive entities
-////////////////////////////////////////////////////////////////////////////////
-
-class entity_range final : public entity_builder<entity_range> {
-    using entity_iterator = _::range_iterator<entity_t>;
-public:
-    entity_range(const world& world, std::int32_t count) 
-        : m_world(world.c_ptr())
-        , m_id_start( ecs_bulk_new_w_type(m_world, nullptr, count))
-        , m_count(count) { }
-
-    template <typename Func>
-    void invoke(Func&& action) const {
-        for (auto id : *this) {
-            action(m_world, id);
-        }
-    }
-    
-    entity_iterator begin() const {
-        return entity_iterator(m_id_start);
-    }
-
-    entity_iterator end() const {
-        return entity_iterator(m_id_start + m_count);
-    }
-
-private:
-    world_t *m_world;
-    entity_t m_id_start;
-    std::int32_t m_count;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
 //// A collection of component ids used to describe the contents of a table
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2445,6 +2401,45 @@ private:
 
     type_t m_type;
     type_t m_normalized;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Entity range, allows for operating on a range of consecutive entities
+////////////////////////////////////////////////////////////////////////////////
+
+class entity_range final : public entity_builder<entity_range> {
+    using entity_iterator = _::range_iterator<const entity_t*>;
+public:
+    entity_range(const world& world, std::int32_t count) 
+        : m_world(world.c_ptr())
+        , m_ids( ecs_bulk_new_w_type(m_world, nullptr, count))
+        , m_count(count) { }
+
+    entity_range(const world& world, std::int32_t count, flecs::type type) 
+        : m_world(world.c_ptr())
+        , m_ids( ecs_bulk_new_w_type(m_world, type.c_ptr(), count))
+        , m_count(count) { }
+
+    template <typename Func>
+    void invoke(Func&& action) const {
+        for (auto id : *this) {
+            action(m_world, *id);
+        }
+    }
+    
+    entity_iterator begin() const {
+        return entity_iterator(m_ids);
+    }
+
+    entity_iterator end() const {
+        return entity_iterator(&m_ids[m_count]);
+    }
+
+private:
+    world_t *m_world;
+    const entity_t *m_ids;
+    std::int32_t m_count;
 };
 
 
@@ -3194,15 +3189,15 @@ private:
 template<typename ... Components>
 class system final : public entity {
 public:
-    system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr)
-        : m_kind(static_cast<ecs_entity_t>(OnUpdate))
-        , m_name(name) 
+    system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr) 
+        : entity(world, name)
+        , m_kind(static_cast<ecs_entity_t>(OnUpdate)) 
         , m_signature(signature)
-        , m_period(0.0)
+        , m_interval(0.0)
         , m_on_demand(false)
         , m_hidden(false)
         , m_finalized(false) { 
-            m_world = world.c_ptr();
+            ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
         }
 
     system& signature(const char *signature) {
@@ -3218,10 +3213,18 @@ public:
         return *this;
     }
 
-    system& period(float period) {
-        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        m_period = period;
+    system& interval(float interval) {
+        if (!m_finalized) {
+            m_interval = interval;
+        } else {
+            ecs_set_interval(m_world, m_id, interval);
+        }
         return *this;
+    }
+
+    // DEPRECATED: use interval instead
+    system& period(float period) {
+        return this->interval(period);
     }
 
     system& on_demand() {
@@ -3274,17 +3277,10 @@ public:
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         auto ctx = new _::action_invoker<Func, Components...>(func);
 
-        entity_t e = create_system(
-            func, _::action_invoker<Func, Components...>::run, false);
+        create_system(func, _::action_invoker<Func, Components...>::run, false);
 
         EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
-
-        if (m_period) {
-            ecs_set_interval(m_world, e, m_period);
-        }
-
-        m_id = e;
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }
@@ -3295,17 +3291,10 @@ public:
     system& each(Func func) {
         auto ctx = new _::each_invoker<Func, Components...>(func);
 
-        entity_t e = create_system(func,
-            _::each_invoker<Func, Components...>::run, true);
+        create_system(func, _::each_invoker<Func, Components...>::run, true);
 
         EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
-
-        if (m_period) {
-            ecs_set_interval(m_world, e, m_period);
-        }        
-
-        m_id = e;
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }
@@ -3314,6 +3303,8 @@ public:
 private:
     template <typename Func, typename Invoker>
     entity_t create_system(Func func, Invoker invoker, bool is_each) {
+        ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
+
         entity_t e;
         bool is_trigger = m_kind == flecs::OnAdd || m_kind == flecs::OnRemove;
 
@@ -3331,19 +3322,25 @@ private:
         if (is_trigger) {
             e = ecs_new_trigger(
                 m_world, 
-                0,
-                m_name, 
+                m_id,
+                nullptr, 
                 m_kind, 
                 signature.c_str(), 
                 invoker);
         } else {
             e = ecs_new_system(
                 m_world, 
-                0,
-                m_name, 
+                m_id,
+                nullptr, 
                 m_kind, 
                 signature.c_str(), 
                 invoker);
+        }
+
+        ecs_assert(e == m_id, ECS_INTERNAL_ERROR, NULL);
+
+        if (m_interval) {
+            ecs_set_interval(m_world, e, m_interval);
         }
 
         return e;
@@ -3385,9 +3382,8 @@ private:
     }       
 
     ecs_entity_t m_kind;
-    const char *m_name;
     const char *m_signature = nullptr;
-    float m_period;
+    float m_interval;
     bool m_on_demand;
     bool m_hidden;
     bool m_finalized; // After set to true, call no more fluent functions

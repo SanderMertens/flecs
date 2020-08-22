@@ -42,7 +42,7 @@ Here are the highlights of v2:
 ### Entity ids
 In v2 the first `ECS_HI_COMPONENT_ID` ids (defined in `include/flecs/util/api_support.h`) are reserved for components. Ids returned by `ecs_new` will be `ECS_HI_COMPONENT_ID` or higher.
 
-Another change is that entity ids will be recycled when using `ecs_delete`. In v2 an application should never use `ecs_delete` without `ecs_new`. Id recycling relies on a stack with unused entity ids, and if `ecs_delete` is invoked but `ecs_new` is not, this stack will grow unbounded. Bulk operations (`ecs_bulk_new`) do recycle ids.
+Another change is that entity ids will be recycled when using `ecs_delete`. In v2 an application should never use `ecs_delete` without `ecs_new`. Id recycling relies on a stack with unused entity ids, and if `ecs_delete` is invoked but `ecs_new` is not, this stack will grow unbounded.
 
 It is still possible to do operations on bare entity ids like in this example:
 

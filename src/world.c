@@ -1,21 +1,5 @@
 #include "private_api.h"
 
-#ifndef NDEBUG
-static
-void no_threading(
-    const char *function)
-{
-    ecs_trace(1, "threading unavailable: %s not implemented", function);
-}
-
-static
-void no_time(
-    const char *function)
-{
-    ecs_trace(1, "time management: %s not implemented", function);
-}
-#endif
-
 /* -- Private functions -- */
 
 ecs_stage_t *ecs_get_stage(
@@ -118,45 +102,48 @@ void ecs_component_monitor_free(
 
 /* -- Public functions -- */
 
+
+FLECS_EXPORT
+bool ecs_os_has_heap(void);
+
+/** Are threading functions available? */
+FLECS_EXPORT
+bool ecs_os_has_threading(void);
+
+/** Are time functions available? */
+FLECS_EXPORT
+bool ecs_os_has_time(void);
+
+/** Are logging functions available? */
+FLECS_EXPORT
+bool ecs_os_has_logging(void);
+
+/** Are dynamic library functions available? */
+FLECS_EXPORT
+bool ecs_os_has_dl(void);
+
+/** Are module path functions available? */
+FLECS_EXPORT
+bool ecs_os_has_modules(void);
+
+
 ecs_world_t *ecs_mini(void) {
     ecs_os_init();
 
     ecs_trace_1("bootstrap");
     ecs_log_push();
 
-    ecs_assert(ecs_os_api.malloc != NULL, ECS_MISSING_OS_API, "malloc");
-    ecs_assert(ecs_os_api.realloc != NULL, ECS_MISSING_OS_API, "realloc");
-    ecs_assert(ecs_os_api.calloc != NULL, ECS_MISSING_OS_API, "calloc");
-
-    bool time_ok = true;
-
-#ifndef NDEBUG
-    bool thr_ok = true;
-    if (!ecs_os_api.mutex_new) {thr_ok = false; no_threading("mutex_new");}
-    if (!ecs_os_api.mutex_free) {thr_ok = false; no_threading("mutex_free");}
-    if (!ecs_os_api.mutex_lock) {thr_ok = false; no_threading("mutex_lock");}
-    if (!ecs_os_api.mutex_unlock) {thr_ok = false; no_threading("mutex_unlock");}
-    if (!ecs_os_api.cond_new) {thr_ok = false; no_threading("cond_new");}
-    if (!ecs_os_api.cond_free) {thr_ok = false; no_threading("cond_free");}
-    if (!ecs_os_api.cond_wait) {thr_ok = false; no_threading("cond_wait");}
-    if (!ecs_os_api.cond_signal) {thr_ok = false; no_threading("cond_signal");}
-    if (!ecs_os_api.cond_broadcast) {thr_ok = false; no_threading("cond_broadcast"); }
-    if (!ecs_os_api.thread_new) {thr_ok = false; no_threading("thread_new");}
-    if (!ecs_os_api.thread_join) {thr_ok = false; no_threading("thread_join");}
-    if (thr_ok) {
-        ecs_trace_1("threading available");
-    } else {
-        ecs_trace_1("threading unavailable");
+    if (!ecs_os_has_heap()) {
+        ecs_abort(ECS_MISSING_OS_API, NULL);
     }
 
-    if (!ecs_os_api.get_time) {time_ok = false; no_time("get_time");}
-    if (!ecs_os_api.sleep) {time_ok = false; no_time("sleep");}
-    if (time_ok) {
-        ecs_trace_1("time management available");
-    } else {
-        ecs_trace_1("time management unavailable");
+    if (!ecs_os_has_threading()) {
+        ecs_trace_1("threading not available");
     }
-#endif
+
+    if (!ecs_os_has_time()) {
+        ecs_trace_1("time management not available");
+    }
 
     ecs_world_t *world = ecs_os_malloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
@@ -195,7 +182,7 @@ ecs_world_t *ecs_mini(void) {
     world->pipeline = 0;
 
     world->frame_start_time = (ecs_time_t){0, 0};
-    if (time_ok) {
+    if (ecs_os_has_time()) {
         ecs_os_get_time(&world->world_start_time);
     }
 
@@ -626,7 +613,7 @@ void ecs_measure_frame_time(
     bool enable)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     if (world->stats.target_fps == 0.0 || enable) {
         world->measure_frame_time = enable;
@@ -638,7 +625,7 @@ void ecs_measure_system_time(
     bool enable)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
     world->measure_system_time = enable;
 }
 
@@ -654,8 +641,7 @@ void ecs_set_target_fps(
     float fps)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
-    ecs_assert(ecs_os_api.sleep != NULL, ECS_MISSING_OS_API, "sleep");
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     if (!world->arg_fps) {
         ecs_measure_frame_time(world, true);

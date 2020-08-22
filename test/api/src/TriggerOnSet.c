@@ -431,7 +431,8 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new(world, Type, 3);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 3);
+    test_assert(ids != NULL);
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
@@ -439,24 +440,17 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e);
+    test_int(ctx.e[0], ids[0]);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0); 
 
-    const Position *p = ecs_get(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 2);
-    test_int(p->y, 3);
-
-    p = ecs_get(world, e + 1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 2);
-    test_int(p->y, 3);
-
-    p = ecs_get(world, e + 2, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 2);
-    test_int(p->y, 3);
+    int i;
+    for (i = 0; i < 3; i ++) {
+        const Position *p = ecs_get(world, ids[i], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 2);
+        test_int(p->y, 3);
+    }
 
     ecs_fini(world);
 }
@@ -507,13 +501,16 @@ void TriggerOnSet_on_set_after_snapshot_restore() {
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, SetPosition, EcsOnSet, Position);
 
-    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    test_assert(ids != NULL);
+
+    ecs_entity_t id_arr[10];
+    memcpy(id_arr, ids, sizeof(ecs_entity_t) * 10);
 
     int32_t i;
     for (i = 0; i < 10; i ++) {
-        test_assert(ecs_has(world, e + i, Position));
-        ecs_set(world, e + i, Position, {i, i * 2});
+        test_assert(ecs_has(world, ids[i], Position));
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
     Probe ctx = { 0 };
@@ -525,7 +522,7 @@ void TriggerOnSet_on_set_after_snapshot_restore() {
 
     /* Delete one entity, so we have more confidence we're triggering on the 
      * right entities */
-    ecs_delete(world, e);
+    ecs_delete(world, id_arr[0]);
     
     test_int(ctx.invoked, 0);
 
@@ -539,8 +536,8 @@ void TriggerOnSet_on_set_after_snapshot_restore() {
     test_null(ctx.param);
     
     for (i = 0; i < 10; i ++) {
-        test_int(ctx.e[i], e + i);
-    }   
+        test_int(ctx.e[i], id_arr[i]);
+    }
 
     ecs_fini(world);
 }

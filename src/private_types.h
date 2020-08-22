@@ -306,12 +306,6 @@ typedef struct ecs_on_demand_in_t {
     ecs_vector_t *systems;  /* Systems that have this column as [out] column */
 } ecs_on_demand_in_t;
 
-/** Entity index */
-struct ecs_ei_t {
-    ecs_sparse_t *lo;       /* Low entity ids are stored in a sparse set */
-    ecs_map_t *hi;          /* To save memory high ids are stored in a map */
-};
-
 /** Types for deferred operations */
 typedef enum ecs_op_kind_t {
     EcsOpNone,
@@ -348,7 +342,7 @@ struct ecs_stage_t {
     /* If this is not main stage, 
      * changes to the entity index 
      * are buffered here */
-    ecs_ei_t entity_index; /* Entity lookup table for (table, row) */
+    ecs_sparse_t *entity_index; /* Entity lookup table for (table, row) */
 
     /* If this is not a thread
      * stage, these are the same

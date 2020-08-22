@@ -420,7 +420,7 @@ void* _ecs_vector_add(
     int16_t offset);
 
 #define ecs_vector_add(vector, T) \
-    (T*)_ecs_vector_add(vector, ECS_VECTOR_T(T))
+    ((T*)_ecs_vector_add(vector, ECS_VECTOR_T(T)))
 
 #define ecs_vector_add_t(vector, size, alignment) \
     _ecs_vector_add(vector, ECS_VECTOR_U(size, alignment))
@@ -433,7 +433,7 @@ void* _ecs_vector_addn(
     int32_t elem_count);
 
 #define ecs_vector_addn(vector, T, elem_count) \
-    (T*)_ecs_vector_addn(vector, ECS_VECTOR_T(T), elem_count)
+    ((T*)_ecs_vector_addn(vector, ECS_VECTOR_T(T), elem_count))
 
 #define ecs_vector_addn_t(vector, size, alignment, elem_count) \
     _ecs_vector_addn(vector, ECS_VECTOR_U(size, alignment), elem_count)
@@ -446,7 +446,7 @@ void* _ecs_vector_get(
     int32_t index);
 
 #define ecs_vector_get(vector, T, index) \
-    (T*)_ecs_vector_get(vector, ECS_VECTOR_T(T), index)
+    ((T*)_ecs_vector_get(vector, ECS_VECTOR_T(T), index))
 
 #define ecs_vector_get_t(vector, size, alignment, index) \
     _ecs_vector_get(vector, ECS_VECTOR_U(size, alignment), index)
@@ -588,7 +588,7 @@ void* _ecs_vector_first(
     int16_t offset);
 
 #define ecs_vector_first(vector, T) \
-    (T*)_ecs_vector_first(vector, ECS_VECTOR_T(T))
+    ((T*)_ecs_vector_first(vector, ECS_VECTOR_T(T)))
 
 #define ecs_vector_first_t(vector, size, alignment) \
     _ecs_vector_first(vector, ECS_VECTOR_U(size, alignment))
@@ -767,11 +767,15 @@ typedef struct ecs_sparse_t ecs_sparse_t;
 
 FLECS_EXPORT
 ecs_sparse_t* _ecs_sparse_new(
-    ecs_size_t elem_size,
-    int32_t element_count);
+    ecs_size_t elem_size);
 
-#define ecs_sparse_new(type, element_count)\
-    _ecs_sparse_new(sizeof(type), element_count)
+FLECS_EXPORT
+void ecs_sparse_set_id_source(
+    ecs_sparse_t *sparse,
+    uint64_t *id_source);
+
+#define ecs_sparse_new(type)\
+    _ecs_sparse_new(sizeof(type))
 
 FLECS_EXPORT
 void ecs_sparse_free(
@@ -790,22 +794,21 @@ void* _ecs_sparse_add(
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
 
 FLECS_EXPORT
-void* _ecs_sparse_recycle(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t *sparse_index_out);
-
-#define ecs_sparse_recycle(sparse, T, sparse_index_out) \
-    _ecs_sparse_recycle(sparse, sizeof(T), sparse_index_out)
+uint64_t ecs_sparse_new_id(
+    ecs_sparse_t *sparse);
 
 FLECS_EXPORT
-void* _ecs_sparse_remove(
+const uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index);
+    int32_t count);
 
-#define ecs_sparse_remove(sparse, type, index)\
-    ((type*)_ecs_sparse_remove(sparse, sizeof(type), index))
+FLECS_EXPORT
+void _ecs_sparse_remove(
+    ecs_sparse_t *sparse,
+    uint64_t index);
+
+#define ecs_sparse_remove(sparse, index)\
+    _ecs_sparse_remove(sparse, index)
 
 FLECS_EXPORT
 void* _ecs_sparse_get(
@@ -828,31 +831,33 @@ FLECS_EXPORT
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
-    int32_t index);
+    uint64_t index);
 
 #define ecs_sparse_get_sparse(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
 
 FLECS_EXPORT
-void* _ecs_sparse_get_or_set_sparse(
+void* _ecs_sparse_get_or_create(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
-    int32_t index,
-    bool *is_new);
+    uint64_t index);
 
-#define ecs_sparse_get_or_set_sparse(sparse, type, index, is_new)\
-    ((type*)_ecs_sparse_get_or_set_sparse(sparse, sizeof(type), index, is_new))
-
-FLECS_EXPORT
-const int32_t* ecs_sparse_indices(
-    const ecs_sparse_t *sparse);
+#define ecs_sparse_get_or_create(sparse, type, index)\
+    ((type*)_ecs_sparse_get_or_create(sparse, sizeof(type), index))
 
 FLECS_EXPORT
-const int32_t* ecs_sparse_unused_indices(
-    const ecs_sparse_t *sparse);
+void* _ecs_sparse_set(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index,
+    void *value);
+
+#define ecs_sparse_set(sparse, type, index, value)\
+    ((type*)_ecs_sparse_set(sparse, sizeof(type), index, value))
+
 
 FLECS_EXPORT
-int32_t ecs_sparse_unused_count(
+const uint64_t* ecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
 FLECS_EXPORT
@@ -872,7 +877,7 @@ ecs_sparse_t* ecs_sparse_copy(
 FLECS_EXPORT
 void ecs_sparse_restore(
     ecs_sparse_t *dst,
-    ecs_sparse_t *src);
+    const ecs_sparse_t *src);
 
 FLECS_EXPORT
 void ecs_sparse_memory(
@@ -1533,44 +1538,47 @@ typedef
 char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
+/* Prefix members of struct with '_' as some system headers may define macro's
+ * for functions like "strdup" or "log" */
+
 typedef struct ecs_os_api_t {
     /* API init / deinit */
-    ecs_os_api_init_t init;
-    ecs_os_api_fini_t fini;
+    ecs_os_api_init_t _init;
+    ecs_os_api_fini_t _fini;
 
     /* Memory management */
-    ecs_os_api_malloc_t malloc;
-    ecs_os_api_realloc_t realloc;
-    ecs_os_api_calloc_t calloc;
-    ecs_os_api_free_t free;
+    ecs_os_api_malloc_t _malloc;
+    ecs_os_api_realloc_t _realloc;
+    ecs_os_api_calloc_t _calloc;
+    ecs_os_api_free_t _free;
 
     /* Strings */
-    ecs_os_api_strdup_t strdup;
+    ecs_os_api_strdup_t _strdup;
 
     /* Threads */
-    ecs_os_api_thread_new_t thread_new;
-    ecs_os_api_thread_join_t thread_join;
+    ecs_os_api_thread_new_t _thread_new;
+    ecs_os_api_thread_join_t _thread_join;
 
     /* Atomic incremenet / decrement */
-    ecs_os_api_ainc_t ainc;
-    ecs_os_api_ainc_t adec;
+    ecs_os_api_ainc_t _ainc;
+    ecs_os_api_ainc_t _adec;
 
     /* Mutex */
-    ecs_os_api_mutex_new_t mutex_new;
-    ecs_os_api_mutex_free_t mutex_free;
-    ecs_os_api_mutex_lock_t mutex_lock;
-    ecs_os_api_mutex_lock_t mutex_unlock;
+    ecs_os_api_mutex_new_t _mutex_new;
+    ecs_os_api_mutex_free_t _mutex_free;
+    ecs_os_api_mutex_lock_t _mutex_lock;
+    ecs_os_api_mutex_lock_t _mutex_unlock;
 
     /* Condition variable */
-    ecs_os_api_cond_new_t cond_new;
-    ecs_os_api_cond_free_t cond_free;
-    ecs_os_api_cond_signal_t cond_signal;
-    ecs_os_api_cond_broadcast_t cond_broadcast;
-    ecs_os_api_cond_wait_t cond_wait;
+    ecs_os_api_cond_new_t _cond_new;
+    ecs_os_api_cond_free_t _cond_free;
+    ecs_os_api_cond_signal_t _cond_signal;
+    ecs_os_api_cond_broadcast_t _cond_broadcast;
+    ecs_os_api_cond_wait_t _cond_wait;
 
     /* Time */
-    ecs_os_api_sleep_t sleep;
-    ecs_os_api_get_time_t get_time;
+    ecs_os_api_sleep_t _sleep;
+    ecs_os_api_get_time_t _get_time;
 
     /* Logging */
     ecs_os_api_log_t _log;
@@ -1579,20 +1587,20 @@ typedef struct ecs_os_api_t {
     ecs_os_api_log_t _log_warning;
 
     /* Application termination */
-    ecs_os_api_abort_t abort;
+    ecs_os_api_abort_t _abort;
 
     /* Dynamic library loading */
-    ecs_os_api_dlopen_t dlopen;
-    ecs_os_api_dlproc_t dlproc;
-    ecs_os_api_dlclose_t dlclose;
+    ecs_os_api_dlopen_t _dlopen;
+    ecs_os_api_dlproc_t _dlproc;
+    ecs_os_api_dlclose_t _dlclose;
 
     /* Overridable function that translates from a logical module id to a
      * shared library filename */
-    ecs_os_api_module_to_path_t module_to_dl;
+    ecs_os_api_module_to_path_t _module_to_dl;
 
     /* Overridable function that translates from a logical module id to a
      * path that contains module-specif resources or assets */
-    ecs_os_api_module_to_path_t module_to_etc;    
+    ecs_os_api_module_to_path_t _module_to_etc;    
 } ecs_os_api_t;
 
 FLECS_EXPORT
@@ -1612,10 +1620,10 @@ FLECS_EXPORT
 void ecs_os_set_api_defaults(void);
 
 /* Memory management */
-#define ecs_os_malloc(size) ecs_os_api.malloc(size);
-#define ecs_os_free(ptr) ecs_os_api.free(ptr);
-#define ecs_os_realloc(ptr, size) ecs_os_api.realloc(ptr, size)
-#define ecs_os_calloc(size) ecs_os_api.calloc(size)
+#define ecs_os_malloc(size) ecs_os_api._malloc(size);
+#define ecs_os_free(ptr) ecs_os_api._free(ptr);
+#define ecs_os_realloc(ptr, size) ecs_os_api._realloc(ptr, size)
+#define ecs_os_calloc(size) ecs_os_api._calloc(size)
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #define ecs_os_alloca(size) _alloca((size_t)(size))
 #else
@@ -1623,7 +1631,7 @@ void ecs_os_set_api_defaults(void);
 #endif
 
 /* Strings */
-#define ecs_os_strdup(str) ecs_os_api.strdup(str)
+#define ecs_os_strdup(str) ecs_os_api._strdup(str)
 #define ecs_os_strlen(str) (ecs_size_t)strlen(str)
 #define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
 #define ecs_os_strncmp(str1, str2, num) strncmp(str1, str2, (size_t)(num))
@@ -1647,29 +1655,29 @@ void ecs_os_set_api_defaults(void);
 
 
 /* Threads */
-#define ecs_os_thread_new(callback, param) ecs_os_api.thread_new(callback, param)
-#define ecs_os_thread_join(thread) ecs_os_api.thread_join(thread)
+#define ecs_os_thread_new(callback, param) ecs_os_api._thread_new(callback, param)
+#define ecs_os_thread_join(thread) ecs_os_api._thread_join(thread)
 
 /* Atomic increment / decrement */
-#define ecs_os_ainc(value) ecs_os_api.ainc(value)
-#define ecs_os_adec(value) ecs_os_api.adec(value)
+#define ecs_os_ainc(value) ecs_os_api._ainc(value)
+#define ecs_os_adec(value) ecs_os_api._adec(value)
 
 /* Mutex */
-#define ecs_os_mutex_new() ecs_os_api.mutex_new()
-#define ecs_os_mutex_free(mutex) ecs_os_api.mutex_free(mutex)
-#define ecs_os_mutex_lock(mutex) ecs_os_api.mutex_lock(mutex)
-#define ecs_os_mutex_unlock(mutex) ecs_os_api.mutex_unlock(mutex)
+#define ecs_os_mutex_new() ecs_os_api._mutex_new()
+#define ecs_os_mutex_free(mutex) ecs_os_api._mutex_free(mutex)
+#define ecs_os_mutex_lock(mutex) ecs_os_api._mutex_lock(mutex)
+#define ecs_os_mutex_unlock(mutex) ecs_os_api._mutex_unlock(mutex)
 
 /* Condition variable */
-#define ecs_os_cond_new() ecs_os_api.cond_new()
-#define ecs_os_cond_free(cond) ecs_os_api.cond_free(cond)
-#define ecs_os_cond_signal(cond) ecs_os_api.cond_signal(cond)
-#define ecs_os_cond_broadcast(cond) ecs_os_api.cond_broadcast(cond)
-#define ecs_os_cond_wait(cond, mutex) ecs_os_api.cond_wait(cond, mutex)
+#define ecs_os_cond_new() ecs_os_api._cond_new()
+#define ecs_os_cond_free(cond) ecs_os_api._cond_free(cond)
+#define ecs_os_cond_signal(cond) ecs_os_api._cond_signal(cond)
+#define ecs_os_cond_broadcast(cond) ecs_os_api._cond_broadcast(cond)
+#define ecs_os_cond_wait(cond, mutex) ecs_os_api._cond_wait(cond, mutex)
 
 /* Time */
-#define ecs_os_sleep(sec, nanosec) ecs_os_api.sleep(sec, nanosec)
-#define ecs_os_get_time(time_out) ecs_os_api.get_time(time_out)
+#define ecs_os_sleep(sec, nanosec) ecs_os_api._sleep(sec, nanosec)
+#define ecs_os_get_time(time_out) ecs_os_api._get_time(time_out)
 
 /* Logging (use functions to avoid using variadic macro arguments) */
 FLECS_EXPORT
@@ -1685,16 +1693,16 @@ FLECS_EXPORT
 void ecs_os_dbg(const char *fmt, ...);
 
 /* Application termination */
-#define ecs_os_abort() ecs_os_api.abort()
+#define ecs_os_abort() ecs_os_api._abort()
 
 /* Dynamic libraries */
-#define ecs_os_dlopen(libname) ecs_os_api.dlopen(libname)
-#define ecs_os_dlproc(lib, procname) ecs_os_api.dlproc(lib, procname)
-#define ecs_os_dlclose(lib) ecs_os_api.dlclose(lib)
+#define ecs_os_dlopen(libname) ecs_os_api._dlopen(libname)
+#define ecs_os_dlproc(lib, procname) ecs_os_api._dlproc(lib, procname)
+#define ecs_os_dlclose(lib) ecs_os_api._dlclose(lib)
 
 /* Module id translation */
-#define ecs_os_module_to_dl(lib) ecs_os_api.module_to_dl(lib)
-#define ecs_os_module_to_etc(lib) ecs_os_api.module_to_etc(lib)
+#define ecs_os_module_to_dl(lib) ecs_os_api._module_to_dl(lib)
+#define ecs_os_module_to_etc(lib) ecs_os_api._module_to_etc(lib)
 
 /* Sleep with floating point time */
 FLECS_EXPORT
@@ -1721,7 +1729,30 @@ FLECS_EXPORT
 void* ecs_os_memdup(
     const void *src, 
     ecs_size_t size);
-    
+
+/** Are heap functions available? */
+FLECS_EXPORT
+bool ecs_os_has_heap(void);
+
+/** Are threading functions available? */
+FLECS_EXPORT
+bool ecs_os_has_threading(void);
+
+/** Are time functions available? */
+FLECS_EXPORT
+bool ecs_os_has_time(void);
+
+/** Are logging functions available? */
+FLECS_EXPORT
+bool ecs_os_has_logging(void);
+
+/** Are dynamic library functions available? */
+FLECS_EXPORT
+bool ecs_os_has_dl(void);
+
+/** Are module path functions available? */
+FLECS_EXPORT
+bool ecs_os_has_modules(void);
 
 #ifdef __cplusplus
 }
@@ -2707,7 +2738,7 @@ typedef struct EcsTrigger {
 #define EcsFlecs (ECS_HI_COMPONENT_ID + 23)
 #define EcsFlecsCore (ECS_HI_COMPONENT_ID + 24)
 #define EcsWorld (ECS_HI_COMPONENT_ID + 25)
-#define EcsSingleton ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
+#define EcsSingleton (ECS_HI_COMPONENT_ID + 26)
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
@@ -3168,7 +3199,7 @@ ecs_entity_t ecs_new_w_type(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_bulk_new_w_entity(
+const ecs_entity_t* ecs_bulk_new_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     int32_t count);
@@ -3184,7 +3215,7 @@ ecs_entity_t ecs_bulk_new_w_entity(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_bulk_new_w_type(
+const ecs_entity_t* ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
     int32_t count);
@@ -3202,7 +3233,7 @@ ecs_entity_t ecs_bulk_new_w_type(
  * @return The first entity id of the newly created entities.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_bulk_new_w_data(
+const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
     ecs_entities_t *component_ids,
@@ -7721,12 +7752,7 @@ public:
      */   
     template<typename T>
     base_type& add_case() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, 
-                ECS_CASE | _::component_info<T>::id(world));
-        });
-        return *static_cast<base_type*>(this);
+        return this->add_case(_::component_info<T>::id());
     }
 
     /** Add a case to an entity.
@@ -7756,12 +7782,7 @@ public:
      */   
     template<typename T>
     base_type& remove_case() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, 
-                ECS_CASE | _::component_info<T>::id(world));
-        });
-        return *static_cast<base_type*>(this);
+        return this->remove_case(_::component_info<T>::id());
     }    
 
     /** Remove a case from an entity.
@@ -8687,40 +8708,6 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Entity range, allows for operating on a range of consecutive entities
-////////////////////////////////////////////////////////////////////////////////
-
-class entity_range final : public entity_builder<entity_range> {
-    using entity_iterator = _::range_iterator<entity_t>;
-public:
-    entity_range(const world& world, std::int32_t count) 
-        : m_world(world.c_ptr())
-        , m_id_start( ecs_bulk_new_w_type(m_world, nullptr, count))
-        , m_count(count) { }
-
-    template <typename Func>
-    void invoke(Func&& action) const {
-        for (auto id : *this) {
-            action(m_world, id);
-        }
-    }
-    
-    entity_iterator begin() const {
-        return entity_iterator(m_id_start);
-    }
-
-    entity_iterator end() const {
-        return entity_iterator(m_id_start + m_count);
-    }
-
-private:
-    world_t *m_world;
-    entity_t m_id_start;
-    std::int32_t m_count;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
 //// A collection of component ids used to describe the contents of a table
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -8888,6 +8875,45 @@ private:
 
     type_t m_type;
     type_t m_normalized;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Entity range, allows for operating on a range of consecutive entities
+////////////////////////////////////////////////////////////////////////////////
+
+class entity_range final : public entity_builder<entity_range> {
+    using entity_iterator = _::range_iterator<const entity_t*>;
+public:
+    entity_range(const world& world, std::int32_t count) 
+        : m_world(world.c_ptr())
+        , m_ids( ecs_bulk_new_w_type(m_world, nullptr, count))
+        , m_count(count) { }
+
+    entity_range(const world& world, std::int32_t count, flecs::type type) 
+        : m_world(world.c_ptr())
+        , m_ids( ecs_bulk_new_w_type(m_world, type.c_ptr(), count))
+        , m_count(count) { }
+
+    template <typename Func>
+    void invoke(Func&& action) const {
+        for (auto id : *this) {
+            action(m_world, *id);
+        }
+    }
+    
+    entity_iterator begin() const {
+        return entity_iterator(m_ids);
+    }
+
+    entity_iterator end() const {
+        return entity_iterator(&m_ids[m_count]);
+    }
+
+private:
+    world_t *m_world;
+    const entity_t *m_ids;
+    std::int32_t m_count;
 };
 
 
@@ -9637,15 +9663,15 @@ private:
 template<typename ... Components>
 class system final : public entity {
 public:
-    system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr)
-        : m_kind(static_cast<ecs_entity_t>(OnUpdate))
-        , m_name(name) 
+    system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr) 
+        : entity(world, name)
+        , m_kind(static_cast<ecs_entity_t>(OnUpdate)) 
         , m_signature(signature)
-        , m_period(0.0)
+        , m_interval(0.0)
         , m_on_demand(false)
         , m_hidden(false)
         , m_finalized(false) { 
-            m_world = world.c_ptr();
+            ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
         }
 
     system& signature(const char *signature) {
@@ -9661,10 +9687,18 @@ public:
         return *this;
     }
 
-    system& period(float period) {
-        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        m_period = period;
+    system& interval(float interval) {
+        if (!m_finalized) {
+            m_interval = interval;
+        } else {
+            ecs_set_interval(m_world, m_id, interval);
+        }
         return *this;
+    }
+
+    // DEPRECATED: use interval instead
+    system& period(float period) {
+        return this->interval(period);
     }
 
     system& on_demand() {
@@ -9717,17 +9751,10 @@ public:
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         auto ctx = new _::action_invoker<Func, Components...>(func);
 
-        entity_t e = create_system(
-            func, _::action_invoker<Func, Components...>::run, false);
+        create_system(func, _::action_invoker<Func, Components...>::run, false);
 
         EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
-
-        if (m_period) {
-            ecs_set_interval(m_world, e, m_period);
-        }
-
-        m_id = e;
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }
@@ -9738,17 +9765,10 @@ public:
     system& each(Func func) {
         auto ctx = new _::each_invoker<Func, Components...>(func);
 
-        entity_t e = create_system(func,
-            _::each_invoker<Func, Components...>::run, true);
+        create_system(func, _::each_invoker<Func, Components...>::run, true);
 
         EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
-
-        if (m_period) {
-            ecs_set_interval(m_world, e, m_period);
-        }        
-
-        m_id = e;
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }
@@ -9757,6 +9777,8 @@ public:
 private:
     template <typename Func, typename Invoker>
     entity_t create_system(Func func, Invoker invoker, bool is_each) {
+        ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
+
         entity_t e;
         bool is_trigger = m_kind == flecs::OnAdd || m_kind == flecs::OnRemove;
 
@@ -9774,19 +9796,25 @@ private:
         if (is_trigger) {
             e = ecs_new_trigger(
                 m_world, 
-                0,
-                m_name, 
+                m_id,
+                nullptr, 
                 m_kind, 
                 signature.c_str(), 
                 invoker);
         } else {
             e = ecs_new_system(
                 m_world, 
-                0,
-                m_name, 
+                m_id,
+                nullptr, 
                 m_kind, 
                 signature.c_str(), 
                 invoker);
+        }
+
+        ecs_assert(e == m_id, ECS_INTERNAL_ERROR, NULL);
+
+        if (m_interval) {
+            ecs_set_interval(m_world, e, m_interval);
         }
 
         return e;
@@ -9828,9 +9856,8 @@ private:
     }       
 
     ecs_entity_t m_kind;
-    const char *m_name;
     const char *m_signature = nullptr;
-    float m_period;
+    float m_interval;
     bool m_on_demand;
     bool m_hidden;
     bool m_finalized; // After set to true, call no more fluent functions

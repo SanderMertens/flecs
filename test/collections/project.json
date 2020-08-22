@@ -85,7 +85,10 @@
                 "clear_empty",
                 "clear_n",
                 "clear_n_chunks",
-                "memory_null"
+                "add_after_clear",
+                "memory_null",
+                "copy",
+                "restore"
             ]
         }]
     }

@@ -275,7 +275,9 @@ ecs_entity_t ecs_lookup_path_w_sep(
     const char *sep,
     const char *prefix)
 {
-    ecs_assert(path != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (!path) {
+        return 0;
+    }
     
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr;
@@ -458,6 +460,18 @@ ecs_entity_t ecs_add_path_w_sep(
     const char *sep,
     const char *prefix)
 {
+    if (!path) {
+        if (!entity) {
+            entity = ecs_new_id(world);
+        }
+
+        if (parent) {
+            ecs_add_entity(world, entity, ECS_CHILDOF | entity);
+        }
+
+        return entity;
+    }
+
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr = path;
 

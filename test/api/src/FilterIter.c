@@ -6,12 +6,12 @@ void FilterIter_iter_one_table() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 3);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 3; i ++) {
-        ecs_set(world, e + i, Position, {i, i * 2});
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
@@ -48,19 +48,19 @@ void FilterIter_iter_two_tables() {
 
     ECS_TYPE(world, Movable, Position, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 3);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 3; i ++) {
-        ecs_set(world, e + i, Position, {i, i * 2});
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
-    e = ecs_bulk_new(world, Movable, 3);
-    test_assert(e != 0);
+    ids = ecs_bulk_new(world, Movable, 3);
+    test_assert(ids != NULL);
 
     for (i = 0; i < 3; i ++) {
-        ecs_set(world, e + i, Position, {i, i * 2});
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }    
 
    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
@@ -97,13 +97,13 @@ void FilterIter_iter_two_comps() {
 
     ECS_TYPE(world, Movable, Position, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Movable, 3);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Movable, 3);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 3; i ++) {
-        ecs_set(world, e + i, Position, {i, i * 2});
-        ecs_set(world, e + i, Velocity, {i + 1, i * 2 + 1});
+        ecs_set(world, ids[i], Position, {i, i * 2});
+        ecs_set(world, ids[i], Velocity, {i + 1, i * 2 + 1});
     }
 
    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
@@ -148,12 +148,12 @@ void FilterIter_iter_snapshot_one_table() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 3);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 3; i ++) {
-        ecs_set(world, e + i, Position, {i, i * 2});
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
     ecs_snapshot_t *s = ecs_snapshot_take(world);
@@ -205,19 +205,19 @@ void FilterIter_iter_snapshot_two_tables() {
 
     ECS_TYPE(world, Movable, Position, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 3);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 3; i ++) {
-        ecs_set(world, e + i, Position, {i, i * 2});
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
-    e = ecs_bulk_new(world, Movable, 3);
-    test_assert(e != 0);
+    ids = ecs_bulk_new(world, Movable, 3);
+    test_assert(ids != NULL);
 
     for (i = 0; i < 3; i ++) {
-        ecs_set(world, e + i, Position, {i, i * 2});
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
     ecs_snapshot_t *s = ecs_snapshot_take(world);
@@ -269,13 +269,13 @@ void FilterIter_iter_snapshot_two_comps() {
 
     ECS_TYPE(world, Movable, Position, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Movable, 3);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Movable, 3);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 3; i ++) {
-        ecs_set(world, e + i, Position, {i, i * 2});
-        ecs_set(world, e + i, Velocity, {i + 1, i * 2 + 1});
+        ecs_set(world, ids[i], Position, {i, i * 2});
+        ecs_set(world, ids[i], Velocity, {i + 1, i * 2 + 1});
     }
 
     ecs_snapshot_t *s = ecs_snapshot_take(world);
@@ -334,19 +334,19 @@ void FilterIter_iter_snapshot_filtered_table() {
 
     ECS_TYPE(world, Movable, Position, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, Movable, 3);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Movable, 3);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 3; i ++) {
-        ecs_set(world, e + i, Position, {i, i * 2});
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
-    e = ecs_bulk_new(world, Position, 3);
-    test_assert(e != 0);
+    ids = ecs_bulk_new(world, Position, 3);
+    test_assert(ids != NULL);
 
     for (i = 0; i < 3; i ++) {
-        ecs_set(world, e + i, Position, {i, i * 2});
+        ecs_set(world, ids[i], Position, {i, i * 2});
     }    
 
     ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
