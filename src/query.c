@@ -222,10 +222,10 @@ void get_comp_and_src(
     if (from == EcsFromAny || from == EcsFromEntity || 
         from == EcsFromOwned || from == EcsFromShared) 
     {
-        if (op == EcsOperAnd || op == EcsOperNot) {
+        if (op == EcsOperAnd || op == EcsOperNot || op == EcsOperOptional) {
             component = column->is.component;
-        } else if (op == EcsOperOptional) {
-            component = column->is.component;
+        } else if (op == EcsOperAll) {
+            component = column->is.component & ECS_ENTITY_MASK;
         } else if (op == EcsOperOr) {
             component = ecs_type_contains(
                 world, table_type, column->is.type, 
@@ -344,11 +344,13 @@ int32_t get_component_index(
         }
         
         /* ecs_table_column_offset may return -1 if the component comes
-        * from a prefab. If so, the component will be resolved as a
-        * reference (see below) */           
+         * from a prefab. If so, the component will be resolved as a
+         * reference (see below) */           
     }
 
-    if (op == EcsOperOptional) {
+    if (op == EcsOperAll) {
+        result = 0;
+    } else if (op == EcsOperOptional) {
         /* If table doesn't have the field, mark it as no data */
         if (!ecs_type_has_entity(
             world, table_type, component))
@@ -756,30 +758,36 @@ bool ecs_query_match(
                 elem->source, failure_info)) 
             {
                 return false;
-            }
+            }           
 
-        } else if (oper_kind == EcsOperOr) {
-            type = elem->is.type;
+        } else if (oper_kind == EcsOperOr || oper_kind == EcsOperAll) {
+            bool match_all = oper_kind == EcsOperAll;
+            if (match_all) {
+                const EcsType *type_ptr = ecs_get(world, elem->is.component, EcsType);
+                type = type_ptr->normalized;
+            } else {
+                type = elem->is.type;
+            }
 
             if (from_kind == EcsFromAny) {
                 if (!ecs_type_contains(
-                    world, table_type, type, false, true))
+                    world, table_type, type, match_all, true))
                 {
                     failure_info->reason = EcsMatchOrFromSelf;
                     return false;
                 }
             } else if (from_kind == EcsFromOwned) {
                 if (!ecs_type_contains(
-                    world, table_type, type, false, false))
+                    world, table_type, type, match_all, false))
                 {
                     failure_info->reason = EcsMatchOrFromOwned;
                     return false;
                 }
             } else if (from_kind == EcsFromShared) {
                 if (ecs_type_contains(
-                        world, table_type, type, false, false) ||
+                        world, table_type, type, match_all, false) ||
                     !ecs_type_contains(
-                        world, table_type, type, false, true))
+                        world, table_type, type, match_all, true))
                 {
                     failure_info->reason = EcsMatchOrFromShared;
                     return false;
@@ -791,7 +799,7 @@ bool ecs_query_match(
                 }
 
                 if (!components_contains(
-                    world, table_type, type, NULL, false))
+                    world, table_type, type, NULL, match_all))
                 {
                     failure_info->reason = EcsMatchOrFromContainer;
                     return false;

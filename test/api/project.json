@@ -697,7 +697,9 @@
                 "owned_only",
                 "shared_only",
                 "is_in_readonly",
-                "get_period"
+                "get_period",
+                "and_type",
+                "or_type"
             ]
         }, {
             "id": "Timer",

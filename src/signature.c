@@ -574,7 +574,7 @@ int ecs_parse_signature_action(
     }
 
     return ecs_sig_add(
-        sig, from_kind, oper_kind, inout_kind, component, source);
+        world, sig, from_kind, oper_kind, inout_kind, component, source);
 }
 
 void ecs_sig_init(
@@ -594,6 +594,7 @@ void ecs_sig_init(
 }
 
 int ecs_sig_add(
+    ecs_world_t *world,
     ecs_sig_t *sig,
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
@@ -602,6 +603,39 @@ int ecs_sig_add(
     ecs_entity_t source)
 {
     ecs_sig_column_t *elem;
+
+    /* If component has AND role, all components of specified type must match */
+    if (ECS_HAS_ROLE(component, AND)) {
+        elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
+        const EcsType *type = ecs_get(world, component, EcsType);
+        if (!type) {
+            ecs_parser_error(sig->name, sig->expr, 0, 
+                "AND flag can only be applied to types");
+        }
+
+        elem->is.component = component;
+        elem->from_kind = from_kind;
+        elem->oper_kind = EcsOperAll;
+        elem->inout_kind = inout_kind;
+        elem->source = source;
+
+    } else 
+
+    /* If component has OR role, add type as OR column */
+    if (ECS_HAS_ROLE(component, OR)) {
+        elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
+        const EcsType *type = ecs_get(world, component, EcsType);
+        if (!type) {
+            ecs_parser_error(sig->name, sig->expr, 0, 
+                "OR flag can only be applied to types");
+        }
+
+        elem->is.type = ecs_vector_copy(type->normalized, ecs_entity_t);
+        elem->from_kind = from_kind;
+        elem->oper_kind = EcsOperOr;
+        elem->inout_kind = inout_kind;
+        elem->source = source;
+    } else
 
     /* AND (default) and optional columns are stored the same way */
     if (oper_kind != EcsOperOr) {

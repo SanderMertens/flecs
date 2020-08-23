@@ -387,9 +387,11 @@ void add_pipeline_tags_to_sig(
 
     for (i = 0; i < count; i ++) {
         if (!i) {
-            ecs_sig_add(sig, EcsFromAny, EcsOperAnd, EcsIn, entities[i], 0);
+            ecs_sig_add(
+                world, sig, EcsFromAny, EcsOperAnd, EcsIn, entities[i], 0);
         } else {
-            ecs_sig_add(sig, EcsFromAny, EcsOperOr, EcsIn, entities[i], 0);
+            ecs_sig_add(
+                world, sig, EcsFromAny, EcsOperOr, EcsIn, entities[i], 0);
         }
     }
 }
@@ -421,9 +423,11 @@ void EcsOnAddPipeline(
          * pipeline as a XOR column, and ignores systems with EcsInactive and
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
-        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
+            ecs_entity(EcsSystem), 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
+            EcsDisabledIntern, 0);
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Create the query. Sort the query by system id and phase */
@@ -435,8 +439,10 @@ void EcsOnAddPipeline(
          * systems that are inactive, as an inactive system may become active as
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
-        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
+            ecs_entity(EcsSystem), 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
+            EcsDisabledIntern, 0);
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Use the same sorting functions for the build query */

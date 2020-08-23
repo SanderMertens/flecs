@@ -2216,7 +2216,8 @@ typedef enum ecs_sig_oper_kind_t {
     EcsOperOr = 1,
     EcsOperNot = 2,
     EcsOperOptional = 3,
-    EcsOperLast = 4
+    EcsOperAll = 4,
+    EcsOperLast = 5
 } ecs_sig_oper_kind_t;
 
 /** Type that describes a single column in the system signature */
@@ -2241,6 +2242,7 @@ typedef struct ecs_sig_t {
 /** Add column to signature. */
 FLECS_EXPORT
 int ecs_sig_add(
+    ecs_world_t *world,
     ecs_sig_t *sig,
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,

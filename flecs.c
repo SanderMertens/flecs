@@ -11636,7 +11636,7 @@ int ecs_parse_signature_action(
     }
 
     return ecs_sig_add(
-        sig, from_kind, oper_kind, inout_kind, component, source);
+        world, sig, from_kind, oper_kind, inout_kind, component, source);
 }
 
 void ecs_sig_init(
@@ -11656,6 +11656,7 @@ void ecs_sig_init(
 }
 
 int ecs_sig_add(
+    ecs_world_t *world,
     ecs_sig_t *sig,
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
@@ -11664,6 +11665,39 @@ int ecs_sig_add(
     ecs_entity_t source)
 {
     ecs_sig_column_t *elem;
+
+    /* If component has AND role, all components of specified type must match */
+    if (ECS_HAS_ROLE(component, AND)) {
+        elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
+        const EcsType *type = ecs_get(world, component, EcsType);
+        if (!type) {
+            ecs_parser_error(sig->name, sig->expr, 0, 
+                "AND flag can only be applied to types");
+        }
+
+        elem->is.component = component;
+        elem->from_kind = from_kind;
+        elem->oper_kind = EcsOperAll;
+        elem->inout_kind = inout_kind;
+        elem->source = source;
+
+    } else 
+
+    /* If component has OR role, add type as OR column */
+    if (ECS_HAS_ROLE(component, OR)) {
+        elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
+        const EcsType *type = ecs_get(world, component, EcsType);
+        if (!type) {
+            ecs_parser_error(sig->name, sig->expr, 0, 
+                "OR flag can only be applied to types");
+        }
+
+        elem->is.type = ecs_vector_copy(type->normalized, ecs_entity_t);
+        elem->from_kind = from_kind;
+        elem->oper_kind = EcsOperOr;
+        elem->inout_kind = inout_kind;
+        elem->source = source;
+    } else
 
     /* AND (default) and optional columns are stored the same way */
     if (oper_kind != EcsOperOr) {
@@ -12815,10 +12849,10 @@ void get_comp_and_src(
     if (from == EcsFromAny || from == EcsFromEntity || 
         from == EcsFromOwned || from == EcsFromShared) 
     {
-        if (op == EcsOperAnd || op == EcsOperNot) {
+        if (op == EcsOperAnd || op == EcsOperNot || op == EcsOperOptional) {
             component = column->is.component;
-        } else if (op == EcsOperOptional) {
-            component = column->is.component;
+        } else if (op == EcsOperAll) {
+            component = column->is.component & ECS_ENTITY_MASK;
         } else if (op == EcsOperOr) {
             component = ecs_type_contains(
                 world, table_type, column->is.type, 
@@ -12937,11 +12971,13 @@ int32_t get_component_index(
         }
         
         /* ecs_table_column_offset may return -1 if the component comes
-        * from a prefab. If so, the component will be resolved as a
-        * reference (see below) */           
+         * from a prefab. If so, the component will be resolved as a
+         * reference (see below) */           
     }
 
-    if (op == EcsOperOptional) {
+    if (op == EcsOperAll) {
+        result = 0;
+    } else if (op == EcsOperOptional) {
         /* If table doesn't have the field, mark it as no data */
         if (!ecs_type_has_entity(
             world, table_type, component))
@@ -13349,30 +13385,36 @@ bool ecs_query_match(
                 elem->source, failure_info)) 
             {
                 return false;
-            }
+            }           
 
-        } else if (oper_kind == EcsOperOr) {
-            type = elem->is.type;
+        } else if (oper_kind == EcsOperOr || oper_kind == EcsOperAll) {
+            bool match_all = oper_kind == EcsOperAll;
+            if (match_all) {
+                const EcsType *type_ptr = ecs_get(world, elem->is.component, EcsType);
+                type = type_ptr->normalized;
+            } else {
+                type = elem->is.type;
+            }
 
             if (from_kind == EcsFromAny) {
                 if (!ecs_type_contains(
-                    world, table_type, type, false, true))
+                    world, table_type, type, match_all, true))
                 {
                     failure_info->reason = EcsMatchOrFromSelf;
                     return false;
                 }
             } else if (from_kind == EcsFromOwned) {
                 if (!ecs_type_contains(
-                    world, table_type, type, false, false))
+                    world, table_type, type, match_all, false))
                 {
                     failure_info->reason = EcsMatchOrFromOwned;
                     return false;
                 }
             } else if (from_kind == EcsFromShared) {
                 if (ecs_type_contains(
-                        world, table_type, type, false, false) ||
+                        world, table_type, type, match_all, false) ||
                     !ecs_type_contains(
-                        world, table_type, type, false, true))
+                        world, table_type, type, match_all, true))
                 {
                     failure_info->reason = EcsMatchOrFromShared;
                     return false;
@@ -13384,7 +13426,7 @@ bool ecs_query_match(
                 }
 
                 if (!components_contains(
-                    world, table_type, type, NULL, false))
+                    world, table_type, type, NULL, match_all))
                 {
                     failure_info->reason = EcsMatchOrFromContainer;
                     return false;
@@ -16587,7 +16629,21 @@ ecs_type_t ecs_column_type(
     ecs_assert(it->components != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t component = it->components[index - 1];
-    return ecs_type_from_entity(it->world, component);
+
+    ecs_sig_column_t *column_data = NULL;
+    if (it->query) {
+        column_data = ecs_vector_get(
+                it->query->sig.columns, ecs_sig_column_t, index - 1);
+        ecs_assert(column_data != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    if (column_data && column_data->oper_kind == EcsOperAll) {
+        const EcsType *type = ecs_get(it->world, component, EcsType);
+        ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
+        return type->normalized;
+    } else {
+        return ecs_type_from_entity(it->world, component);
+    }
 }
 
 ecs_entity_t ecs_column_entity(
@@ -17668,9 +17724,11 @@ void add_pipeline_tags_to_sig(
 
     for (i = 0; i < count; i ++) {
         if (!i) {
-            ecs_sig_add(sig, EcsFromAny, EcsOperAnd, EcsIn, entities[i], 0);
+            ecs_sig_add(
+                world, sig, EcsFromAny, EcsOperAnd, EcsIn, entities[i], 0);
         } else {
-            ecs_sig_add(sig, EcsFromAny, EcsOperOr, EcsIn, entities[i], 0);
+            ecs_sig_add(
+                world, sig, EcsFromAny, EcsOperOr, EcsIn, entities[i], 0);
         }
     }
 }
@@ -17702,9 +17760,11 @@ void EcsOnAddPipeline(
          * pipeline as a XOR column, and ignores systems with EcsInactive and
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
-        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
+            ecs_entity(EcsSystem), 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
+            EcsDisabledIntern, 0);
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Create the query. Sort the query by system id and phase */
@@ -17716,8 +17776,10 @@ void EcsOnAddPipeline(
          * systems that are inactive, as an inactive system may become active as
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
-        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
+            ecs_entity(EcsSystem), 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
+            EcsDisabledIntern, 0);
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Use the same sorting functions for the build query */

@@ -2116,3 +2116,73 @@ void SystemPeriodic_get_period() {
 
     ecs_fini(world);
 }
+
+void TypeSystem(ecs_iter_t *it) {
+    probe_system(it);
+}
+
+void SystemPeriodic_and_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, MyType, Position, Velocity);
+
+    ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, AND | MyType);
+
+    ecs_new(world, Position);
+    ecs_new(world, Velocity);
+    ecs_entity_t e3 = ecs_new(world, MyType);
+
+    Probe ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, TypeSystem);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e3);
+    test_int(ctx.c[0][0], MyType);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void SystemPeriodic_or_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, MyType, Position, Velocity);
+
+    ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, OR | MyType);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Velocity);
+    ecs_entity_t e3 = ecs_new(world, MyType);
+
+    Probe ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.invoked, 3);
+    test_int(ctx.system, TypeSystem);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[1][0], ecs_entity(Velocity));
+    test_int(ctx.c[2][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}

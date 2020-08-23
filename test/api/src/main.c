@@ -632,6 +632,8 @@ void SystemPeriodic_owned_only(void);
 void SystemPeriodic_shared_only(void);
 void SystemPeriodic_is_in_readonly(void);
 void SystemPeriodic_get_period(void);
+void SystemPeriodic_and_type(void);
+void SystemPeriodic_or_type(void);
 
 // Testsuite 'Timer'
 void Timer_timeout(void);
@@ -3502,6 +3504,14 @@ bake_test_case SystemPeriodic_testcases[] = {
     {
         "get_period",
         SystemPeriodic_get_period
+    },
+    {
+        "and_type",
+        SystemPeriodic_and_type
+    },
+    {
+        "or_type",
+        SystemPeriodic_or_type
     }
 };
 
@@ -5697,7 +5707,7 @@ static bake_test_suite suites[] = {
         "SystemPeriodic",
         NULL,
         NULL,
-        51,
+        53,
         SystemPeriodic_testcases
     },
     {
