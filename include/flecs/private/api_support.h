@@ -224,23 +224,6 @@ ecs_query_t* ecs_query_new_w_sig(
 #define ECS_INCONSISTENT_COMPONENT_ID (45)
 #define ECS_INVALID_CASE (46)
 
-/** Declare type variable */
-#define ECS_TYPE_VAR(type)\
-    ecs_type_t ecs_type(type)
-
-/** Declare entity variable */
-#define ECS_ENTITY_VAR(type)\
-    ecs_entity_t ecs_entity(type)
-
-/** Utility macro for setting a component in a module function */
-#define ECS_SET_COMPONENT(type)\
-    if (handles) handles->ecs_entity(type) = ecs_entity(type);\
-    if (handles) handles->ecs_type(type) = ecs_type(type)
-
-/** Utility macro for setting a system in a module function */
-#define ECS_SET_ENTITY(entity)\
-    if (handles) handles->entity = entity;
-
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 

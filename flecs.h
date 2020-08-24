@@ -2305,23 +2305,6 @@ ecs_query_t* ecs_query_new_w_sig(
 #define ECS_INCONSISTENT_COMPONENT_ID (45)
 #define ECS_INVALID_CASE (46)
 
-/** Declare type variable */
-#define ECS_TYPE_VAR(type)\
-    ecs_type_t ecs_type(type)
-
-/** Declare entity variable */
-#define ECS_ENTITY_VAR(type)\
-    ecs_entity_t ecs_entity(type)
-
-/** Utility macro for setting a component in a module function */
-#define ECS_SET_COMPONENT(type)\
-    if (handles) handles->ecs_entity(type) = ecs_entity(type);\
-    if (handles) handles->ecs_type(type) = ecs_type(type)
-
-/** Utility macro for setting a system in a module function */
-#define ECS_SET_ENTITY(entity)\
-    if (handles) handles->entity = entity;
-
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 
@@ -4967,33 +4950,69 @@ ecs_entity_t ecs_import_from_library(
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
 
+/** Declare type variable */
+#define ECS_TYPE_VAR(id)\
+    ecs_type_t ecs_type(id)
+
+/** Declare entity variable */
+#define ECS_ENTITY_VAR(id)\
+    ecs_entity_t ecs_entity(id)
+
 /** Utility macro for declaring a component inside a handles type */
-#define ECS_DECLARE_COMPONENT(type)\
-    ECS_ENTITY_VAR(type);\
-    ECS_TYPE_VAR(type)
+#define ECS_DECLARE_COMPONENT(id)\
+    ECS_ENTITY_VAR(id);\
+    ECS_TYPE_VAR(id)
 
-/** Utility macro for declaring a system inside a handles type */
-#define ECS_DECLARE_ENTITY(entity)\
-    ecs_entity_t entity;\
-    ECS_TYPE_VAR(entity)
+/** Utility macro for declaring an entity inside a handles type */
+#define ECS_DECLARE_ENTITY(id)\
+    ecs_entity_t id;\
+    ECS_TYPE_VAR(id)
 
-#define ECS_EXPORT_COMPONENT(type)\
-    ECS_SET_COMPONENT(type)
+/** Utility macro for declaring a type inside a handles type */
+#define ECS_DECLARE_TYPE(id)\
+    ECS_DECLARE_ENTITY(id)
 
-#define ECS_EXPORT_ENTITY(type)\
-    ECS_SET_ENTITY(type)
+/** Utility macro for setting a component in a module function */
+#define ECS_SET_COMPONENT(id)\
+    if (handles) handles->ecs_entity(id) = ecs_entity(id);\
+    if (handles) handles->ecs_type(id) = ecs_type(id)
 
-/** Utility macro for declaring handles by modules */
+/** Utility macro for setting an entity in a module function */
+#define ECS_SET_ENTITY(id)\
+    if (handles) handles->id = id;
+
+/** Utility macro for setting a type in a module function */
+#define ECS_SET_TYPE(id)\
+    if (handles) handles->id = id;\
+    if (handles) handles->ecs_type(id) = ecs_type(id);
+
+#define ECS_EXPORT_COMPONENT(id)\
+    ECS_SET_COMPONENT(id)
+
+#define ECS_EXPORT_ENTITY(id)\
+    ECS_SET_ENTITY(id)
+
+#define ECS_EXPORT_TYPE(id)\
+    ECS_SET_TYPE(id)
+
+/** Utility macro for importing a component */
 #define ECS_IMPORT_COMPONENT(handles, id)\
     ECS_ENTITY_VAR(id) = (handles).ecs_entity(id); (void)ecs_entity(id);\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     (void)ecs_entity(id);\
     (void)ecs_type(id)
 
-/** Utility macro for declaring handles by modules */
+/** Utility macro for importing an entity */
 #define ECS_IMPORT_ENTITY(handles, id)\
     ecs_entity_t id = (handles).id;\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
+    (void)id;\
+    (void)ecs_type(id)
+
+/** Utility macro for importing a type */
+#define ECS_IMPORT_TYPE(handles, id)\
+    ecs_entity_t id = (handles).id;\
+    ecs_type_t ecs_type(id) = (handles).ecs_type(id);\
     (void)id;\
     (void)ecs_type(id)
 

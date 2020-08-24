@@ -25,7 +25,7 @@ typedef struct SimpleModule {
     ECS_DECLARE_ENTITY(SimpleFooEntity);
     ECS_DECLARE_ENTITY(Move);
     ECS_DECLARE_ENTITY(SimpleFooSystem);
-    ECS_DECLARE_ENTITY(SimpleFooType);
+    ECS_DECLARE_TYPE(SimpleFooType);
     ECS_DECLARE_ENTITY(SimpleFooPrefab);
     ECS_DECLARE_ENTITY(SimpleFooPipeline);
     ECS_DECLARE_ENTITY(SimpleFooTrigger);
@@ -42,7 +42,7 @@ typedef struct SimpleModule {
     ECS_IMPORT_ENTITY(handles, SimpleFooEntity);\
     ECS_IMPORT_ENTITY(handles, Move);\
     ECS_IMPORT_ENTITY(handles, SimpleFooSystem);\
-    ECS_IMPORT_ENTITY(handles, SimpleFooType);\
+    ECS_IMPORT_TYPE(handles, SimpleFooType);\
     ECS_IMPORT_ENTITY(handles, SimpleFooPrefab);\
     ECS_IMPORT_ENTITY(handles, SimpleFooPipeline);\
     ECS_IMPORT_ENTITY(handles, SimpleFooTrigger);\
@@ -72,20 +72,20 @@ void SimpleModuleImport(
     ECS_TRIGGER(world, SimpleFooTrigger, EcsOnAdd, Position);
     ECS_TAG(world, Simple_underscore);
 
-    ECS_SET_COMPONENT(Position);
-    ECS_SET_COMPONENT(Velocity);
-    ECS_SET_COMPONENT(SimpleFooComponent);
-    ECS_SET_ENTITY(Tag);
-    ECS_SET_ENTITY(SimpleFooTag);
-    ECS_SET_ENTITY(Entity);
-    ECS_SET_ENTITY(SimpleFooEntity);
-    ECS_SET_ENTITY(Move);
-    ECS_SET_ENTITY(SimpleFooSystem);
-    ECS_SET_ENTITY(SimpleFooPrefab);
-    ECS_SET_ENTITY(SimpleFooType);
-    ECS_SET_ENTITY(SimpleFooPipeline);
-    ECS_SET_ENTITY(SimpleFooTrigger);
-    ECS_SET_ENTITY(Simple_underscore);
+    ECS_EXPORT_COMPONENT(Position);
+    ECS_EXPORT_COMPONENT(Velocity);
+    ECS_EXPORT_COMPONENT(SimpleFooComponent);
+    ECS_EXPORT_ENTITY(Tag);
+    ECS_EXPORT_ENTITY(SimpleFooTag);
+    ECS_EXPORT_ENTITY(Entity);
+    ECS_EXPORT_ENTITY(SimpleFooEntity);
+    ECS_EXPORT_ENTITY(Move);
+    ECS_EXPORT_ENTITY(SimpleFooSystem);
+    ECS_EXPORT_ENTITY(SimpleFooPrefab);
+    ECS_EXPORT_TYPE(SimpleFooType);
+    ECS_EXPORT_ENTITY(SimpleFooPipeline);
+    ECS_EXPORT_ENTITY(SimpleFooTrigger);
+    ECS_EXPORT_ENTITY(Simple_underscore);
 }
 
 /* -- End module code -- */
@@ -323,6 +323,21 @@ void Modules_lookup_by_symbol() {
     e = ecs_lookup_symbol(world, "Simple_underscore");
     test_assert(e != 0);
     test_assert(e == Simple_underscore);
+
+    ecs_fini(world);
+}
+
+void Modules_import_type() {
+   ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, SimpleModule);
+
+    ecs_type_t type = ecs_type(SimpleFooType);
+    test_assert(type != NULL);
+
+    test_int(ecs_vector_count(type), 2);
+    test_assert(ecs_type_has_entity(world, type, ecs_entity(Position)));
+    test_assert(ecs_type_has_entity(world, type, ecs_entity(Velocity)));
 
     ecs_fini(world);
 }
