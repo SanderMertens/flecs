@@ -1140,6 +1140,7 @@ void Modules_name_prefix_trigger(void);
 void Modules_name_prefix_underscore(void);
 void Modules_lookup_by_symbol(void);
 void Modules_import_type(void);
+void Modules_nested_module(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -5420,6 +5421,10 @@ bake_test_case Modules_testcases[] = {
     {
         "import_type",
         Modules_import_type
+    },
+    {
+        "nested_module",
+        Modules_nested_module
     }
 };
 
@@ -5859,7 +5864,7 @@ static bake_test_suite suites[] = {
         "Modules",
         NULL,
         NULL,
-        18,
+        19,
         Modules_testcases
     },
     {

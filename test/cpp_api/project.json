@@ -175,7 +175,8 @@
             "id": "Module",
             "testcases": [
                 "import",
-                "lookup_from_scope"
+                "lookup_from_scope",
+                "nested_module"
             ]
         }, {
             "id": "ImplicitComponents",

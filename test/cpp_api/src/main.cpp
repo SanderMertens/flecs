@@ -150,6 +150,7 @@ void Refs_ref_before_set(void);
 // Testsuite 'Module'
 void Module_import(void);
 void Module_lookup_from_scope(void);
+void Module_nested_module(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -684,6 +685,10 @@ bake_test_case Module_testcases[] = {
     {
         "lookup_from_scope",
         Module_lookup_from_scope
+    },
+    {
+        "nested_module",
+        Module_nested_module
     }
 };
 
@@ -828,7 +833,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        2,
+        3,
         Module_testcases
     },
     {

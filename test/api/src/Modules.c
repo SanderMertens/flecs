@@ -6,6 +6,11 @@ typedef struct SimpleFooComponent {
     float value;
 } SimpleFooComponent;
 
+
+typedef struct NestedComponent {
+    float value;
+} NestedComponent;
+
 static
 void Move(ecs_iter_t *it) { }
 
@@ -14,6 +19,10 @@ void SimpleFooSystem(ecs_iter_t *it) { }
 
 static
 void SimpleFooTrigger(ecs_iter_t *it) { }
+
+typedef struct NestedModule {
+    ECS_DECLARE_COMPONENT(NestedComponent);
+} NestedModule;
 
 typedef struct SimpleModule {
     ECS_DECLARE_COMPONENT(Position);
@@ -32,6 +41,9 @@ typedef struct SimpleModule {
     ECS_DECLARE_ENTITY(Simple_underscore);
 } SimpleModule;
 
+#define NestedModuleImportHandles(handles)\
+    ECS_IMPORT_COMPONENT(handles, NestedComponent);\
+
 #define SimpleModuleImportHandles(handles)\
     ECS_IMPORT_COMPONENT(handles, Position);\
     ECS_IMPORT_COMPONENT(handles, Velocity);\
@@ -48,10 +60,24 @@ typedef struct SimpleModule {
     ECS_IMPORT_ENTITY(handles, SimpleFooTrigger);\
     ECS_IMPORT_ENTITY(handles, Simple_underscore);
 
+void NestedModuleImport(
+    ecs_world_t *world)
+{
+    ECS_MODULE(world, NestedModule);
+
+    ecs_set_name_prefix(world, "Nested");
+
+    ECS_COMPONENT(world, NestedComponent);
+
+    ECS_EXPORT_COMPONENT(NestedComponent);
+}
+
 void SimpleModuleImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, SimpleModule);
+
+    ECS_IMPORT(world, NestedModule);
 
     ecs_set_name_prefix(world, "Simple");
 
@@ -296,7 +322,7 @@ void Modules_name_prefix_trigger() {
 }
 
 void Modules_name_prefix_underscore() {
-   ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
 
@@ -308,7 +334,7 @@ void Modules_name_prefix_underscore() {
 }
 
 void Modules_lookup_by_symbol() {
-   ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
 
@@ -328,7 +354,7 @@ void Modules_lookup_by_symbol() {
 }
 
 void Modules_import_type() {
-   ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
 
@@ -338,6 +364,21 @@ void Modules_import_type() {
     test_int(ecs_vector_count(type), 2);
     test_assert(ecs_type_has_entity(world, type, ecs_entity(Position)));
     test_assert(ecs_type_has_entity(world, type, ecs_entity(Velocity)));
+
+    ecs_fini(world);
+}
+
+void Modules_nested_module() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, SimpleModule);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "nested.module.Component");
+    test_assert(e != 0);
+
+    char *path = ecs_get_fullpath(world, e);
+    test_str(path, "nested.module.Component");
+    ecs_os_free(path);
 
     ecs_fini(world);
 }

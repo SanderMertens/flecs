@@ -1247,7 +1247,8 @@
                 "name_prefix_trigger",
                 "name_prefix_underscore",
                 "lookup_by_symbol",
-                "import_type"
+                "import_type",
+                "nested_module"
             ]
         }, {
             "id": "Internals",

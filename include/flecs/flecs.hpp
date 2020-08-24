@@ -2725,6 +2725,7 @@ flecs::entity component(flecs::world& world, const char *name = nullptr) {
 
 template <typename T>
 flecs::entity module(flecs::world& world, const char *name = nullptr) {
+    ecs_set_scope(world.c_ptr(), 0);
     flecs::entity result = pod_component<T>(world, name);
     ecs_set_scope(world.c_ptr(), result.id());
     return result;
