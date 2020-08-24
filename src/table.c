@@ -956,7 +956,7 @@ int32_t ecs_table_append(
     *r = record;
 
     /* Keep track of alloc count */
-    table->alloc_count = (prev_r != data->record_ptrs);
+    table->alloc_count += (prev_r != data->record_ptrs);
  
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);
