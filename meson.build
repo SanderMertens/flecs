@@ -18,7 +18,6 @@ flecs_src = files(
     'src/type.c',
     'src/sparse.c',
     'src/entity.c',
-    'src/entity_index.c',
     'src/strbuf.c',
     'src/iter.c',
     'src/addons/bulk.c',
