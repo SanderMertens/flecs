@@ -2538,6 +2538,7 @@ int32_t ecs_table_append(
                 int16_t size = columns[i].size;
                 if (size) {
                     int16_t alignment = columns[i].alignment;
+
                     void *elem = ecs_vector_add_t(
                         &columns[i].data, size, alignment);
 
@@ -2560,6 +2561,10 @@ int32_t ecs_table_append(
         }
     } 
 
+    /* Keep track of alloc count */
+    table->alloc_count += 
+        ecs_vector_size(data->entities) == ecs_vector_count(data->entities);
+
     /* Fist add entity to array with entity ids */
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2570,9 +2575,6 @@ int32_t ecs_table_append(
     ecs_record_t **r = ecs_vector_add(&data->record_ptrs, ecs_record_t*);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     *r = record;
-
-    /* Keep track of alloc count */
-    table->alloc_count += (prev_r != data->record_ptrs);
  
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);
@@ -20933,6 +20935,9 @@ const char *path_elem(
     char *bptr, ch;
 
     for (bptr = buff, ptr = path; (ch = *ptr); ptr ++) {
+        ecs_assert(bptr - buff < ECS_MAX_NAME_LENGTH, ECS_INVALID_PARAMETER, 
+            NULL);
+            
         if (is_sep(&ptr, sep)) {
             *bptr = '\0';
             return ptr + 1;
