@@ -2571,7 +2571,6 @@ int32_t ecs_table_append(
     *e = entity;
 
     /* Add record ptr to array with record ptrs */
-    ecs_vector_t *prev_r = data->record_ptrs;
     ecs_record_t **r = ecs_vector_add(&data->record_ptrs, ecs_record_t*);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     *r = record;
