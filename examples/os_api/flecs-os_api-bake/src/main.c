@@ -29,7 +29,7 @@ int32_t bake_adec(int32_t *value) {
 
 static
 ecs_os_mutex_t bake_mutex_new(void) {
-    struct ut_mutex_s *m = ecs_os_api._malloc(sizeof(struct ut_mutex_s));
+    struct ut_mutex_s *m = ecs_os_malloc(sizeof(struct ut_mutex_s));
     ut_mutex_new(m);
     return (ecs_os_mutex_t)(uintptr_t)m;
 }
@@ -37,7 +37,7 @@ ecs_os_mutex_t bake_mutex_new(void) {
 static
 void bake_mutex_free(ecs_os_mutex_t mutex) {
     ut_mutex_free((struct ut_mutex_s*)mutex);
-    ecs_os_api._free((struct ut_mutex_s*)mutex);
+    ecs_os_free((struct ut_mutex_s*)mutex);
 }
 
 static
@@ -52,7 +52,7 @@ void bake_mutex_unlock(ecs_os_mutex_t mutex) {
 
 static
 ecs_os_cond_t bake_cond_new(void) {
-    struct ut_cond_s *c = ecs_os_api._malloc(sizeof(struct ut_cond_s));
+    struct ut_cond_s *c = ecs_os_malloc(sizeof(struct ut_cond_s));
     ut_cond_new(c);
     return (ecs_os_cond_t)(uintptr_t)c;
 }
@@ -60,7 +60,7 @@ ecs_os_cond_t bake_cond_new(void) {
 static 
 void bake_cond_free(ecs_os_cond_t cond) {
     ut_cond_free((struct ut_cond_s *)cond);
-    ecs_os_api._free((struct ut_cond_s *)cond);
+    ecs_os_free((struct ut_cond_s *)cond);
 }
 
 static 
@@ -148,26 +148,26 @@ void bake_set_os_api(void) {
 
     ecs_os_api_t api = ecs_os_api;
 
-    api._init = bake_init;
-    api._fini = bake_fini;
-    api._thread_new = bake_thread_new;
-    api._thread_join = bake_thread_join;
-    api._ainc = bake_ainc;
-    api._adec = bake_adec;
-    api._mutex_new = bake_mutex_new;
-    api._mutex_free = bake_mutex_free;
-    api._mutex_lock = bake_mutex_lock;
-    api._mutex_unlock = bake_mutex_unlock;
-    api._cond_new = bake_cond_new;
-    api._cond_free = bake_cond_free;
-    api._cond_signal = bake_cond_signal;
-    api._cond_broadcast = bake_cond_broadcast;
-    api._cond_wait = bake_cond_wait;
-    api._dlopen = bake_dlopen;
-    api._dlproc = bake_dlproc;
-    api._dlclose = bake_dlclose;
-    api._module_to_dl = bake_module_to_dl;
-    api._module_to_etc = bake_module_to_etc;
+    api.init_ = bake_init;
+    api.fini_ = bake_fini;
+    api.thread_new_ = bake_thread_new;
+    api.thread_join_ = bake_thread_join;
+    api.ainc_ = bake_ainc;
+    api.adec_ = bake_adec;
+    api.mutex_new_ = bake_mutex_new;
+    api.mutex_free_ = bake_mutex_free;
+    api.mutex_lock_ = bake_mutex_lock;
+    api.mutex_unlock_ = bake_mutex_unlock;
+    api.cond_new_ = bake_cond_new;
+    api.cond_free_ = bake_cond_free;
+    api.cond_signal_ = bake_cond_signal;
+    api.cond_broadcast_ = bake_cond_broadcast;
+    api.cond_wait_ = bake_cond_wait;
+    api.dlopen_ = bake_dlopen;
+    api.dlproc_ = bake_dlproc;
+    api.dlclose_ = bake_dlclose;
+    api.module_to_dl_ = bake_module_to_dl;
+    api.module_to_etc_ = bake_module_to_etc;
 
     ecs_os_set_api(&api);
 }

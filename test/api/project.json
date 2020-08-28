@@ -114,7 +114,8 @@
                 "add_case_in_stage",
                 "change_case_in_stage",
                 "change_one_case_in_stage",
-                "remove_switch_in_stage"
+                "remove_switch_in_stage",
+                "switch_no_match_for_case"
             ]
         }, {
             "id": "Remove",

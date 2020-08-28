@@ -2058,10 +2058,11 @@ int sparse_column_next(
         first = ecs_switch_first(sw_smallest, case_smallest);
     } else {
         first = ecs_switch_next(sw_smallest, iter->sparse_first);
-        if (first == -1) {
-            goto done;
-        }
     }
+
+    if (first == -1) {
+        goto done;
+    }    
 
     /* Check if entity matches with other sparse columns, if any */
     int32_t i, count = ecs_vector_count(sparse_columns);

@@ -75,11 +75,7 @@ ecs_entity_t ecs_import_from_library(
     char *import_func = (char*)module_name; /* safe */
     char *module = (char*)module_name;
 
-    if (!ecs_os_api._module_to_dl || 
-        !ecs_os_api._dlopen || 
-        !ecs_os_api._dlproc || 
-        !ecs_os_api._dlclose) 
-    {
+    if (!ecs_os_has_modules() || !ecs_os_has_dl()) {
         ecs_os_err(
             "library loading not supported, set module_to_dl, dlopen, dlclose "
             "and dlproc os API callbacks first");

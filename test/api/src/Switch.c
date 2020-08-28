@@ -654,3 +654,30 @@ void Switch_remove_switch_in_stage() {
 
     ecs_fini(world);
 }
+
+void Switch_switch_no_match_for_case() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_entity(world, e, ECS_SWITCH | Movement);
+    ecs_add_entity(world, e, ECS_CASE | Walking);
+
+    ecs_query_t *q = ecs_query_new(world, "CASE | Running");
+    ecs_iter_t it = ecs_query_iter(q);
+
+    int count = 0;
+    while (ecs_query_next(&it)) {
+        count ++;
+    }
+
+    test_assert(count == 0);
+
+    ecs_fini(world);
+}

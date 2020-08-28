@@ -6,7 +6,7 @@ static
 void install_test_abort() {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
-    os_api._abort = test_abort;
+    os_api.abort_ = test_abort;
     ecs_os_set_api(&os_api);
 }
 
@@ -285,9 +285,9 @@ void *test_realloc(void *old_ptr, ecs_size_t size) {
 void World_dim() {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
-    os_api._malloc = test_malloc;
-    os_api._calloc = test_calloc;
-    os_api._realloc = test_realloc;
+    os_api.malloc_ = test_malloc;
+    os_api.calloc_ = test_calloc;
+    os_api.realloc_ = test_realloc;
     ecs_os_set_api(&os_api);    
 
     ecs_world_t *world = ecs_init();
@@ -318,9 +318,9 @@ void World_dim() {
 void World_dim_dim_type() {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
-    os_api._malloc = test_malloc;
-    os_api._calloc = test_calloc;
-    os_api._realloc = test_realloc;
+    os_api.malloc_ = test_malloc;
+    os_api.calloc_ = test_calloc;
+    os_api.realloc_ = test_realloc;
     ecs_os_set_api(&os_api);    
 
     ecs_world_t *world = ecs_init();
@@ -1066,7 +1066,7 @@ void World_recreate_world_w_component() {
 void World_no_threading() {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
-    os_api._mutex_new = NULL;
+    os_api.mutex_new_ = NULL;
     ecs_os_set_api(&os_api);
 
     ecs_world_t *world = ecs_init();
@@ -1077,7 +1077,7 @@ void World_no_threading() {
 void World_no_time() {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
-    os_api._get_time = NULL;
+    os_api.get_time_ = NULL;
     ecs_os_set_api(&os_api);
 
     ecs_world_t *world = ecs_init();

@@ -103,6 +103,7 @@ void Switch_add_case_in_stage(void);
 void Switch_change_case_in_stage(void);
 void Switch_change_one_case_in_stage(void);
 void Switch_remove_switch_in_stage(void);
+void Switch_switch_no_match_for_case(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -1525,6 +1526,10 @@ bake_test_case Switch_testcases[] = {
     {
         "remove_switch_in_stage",
         Switch_remove_switch_in_stage
+    },
+    {
+        "switch_no_match_for_case",
+        Switch_switch_no_match_for_case
     }
 };
 
@@ -5528,7 +5533,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        21,
+        22,
         Switch_testcases
     },
     {

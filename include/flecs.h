@@ -747,8 +747,7 @@ ecs_entity_t ecs_new_w_type(
 
 /** Create N new entities.
  * This operation is the same as ecs_new_w_entity, but creates N entities
- * instead of one and does not recycle ids. Ids of created entities are
- * guaranteed to be consecutive.
+ * instead of one and does not recycle ids.
  * 
  * @param world The world.
  * @param entity The entity.
@@ -763,8 +762,7 @@ const ecs_entity_t* ecs_bulk_new_w_entity(
 
 /** Create N new entities.
  * This operation is the same as ecs_new_w_type, but creates N entities
- * instead of one and does not recycle ids. Ids of created entities are
- * guaranteed to be consecutive.
+ * instead of one and does not recycle ids.
  * 
  * @param world The world.
  * @param type The type.
@@ -798,8 +796,7 @@ const ecs_entity_t* ecs_bulk_new_w_data(
 
 /** Create N new entities.
  * This operation is the same as ecs_new, but creates N entities
- * instead of one and does not recycle ids. Ids of created entities are
- * guaranteed to be consecutive.
+ * instead of one and does not recycle ids.
  * 
  * @param world The world.
  * @param component The component type.

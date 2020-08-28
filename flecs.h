@@ -1538,69 +1538,69 @@ typedef
 char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
-/* Prefix members of struct with '_' as some system headers may define macro's
- * for functions like "strdup" or "log" */
+/* Prefix members of struct with 'ecs_' as some system headers may define 
+ * macro's for functions like "strdup", "log" or "_free" */
 
 typedef struct ecs_os_api_t {
     /* API init / deinit */
-    ecs_os_api_init_t _init;
-    ecs_os_api_fini_t _fini;
+    ecs_os_api_init_t init_;
+    ecs_os_api_fini_t fini_;
 
     /* Memory management */
-    ecs_os_api_malloc_t _malloc;
-    ecs_os_api_realloc_t _realloc;
-    ecs_os_api_calloc_t _calloc;
-    ecs_os_api_free_t _free;
+    ecs_os_api_malloc_t malloc_;
+    ecs_os_api_realloc_t realloc_;
+    ecs_os_api_calloc_t calloc_;
+    ecs_os_api_free_t free_;
 
     /* Strings */
-    ecs_os_api_strdup_t _strdup;
+    ecs_os_api_strdup_t strdup_;
 
     /* Threads */
-    ecs_os_api_thread_new_t _thread_new;
-    ecs_os_api_thread_join_t _thread_join;
+    ecs_os_api_thread_new_t thread_new_;
+    ecs_os_api_thread_join_t thread_join_;
 
     /* Atomic incremenet / decrement */
-    ecs_os_api_ainc_t _ainc;
-    ecs_os_api_ainc_t _adec;
+    ecs_os_api_ainc_t ainc_;
+    ecs_os_api_ainc_t adec_;
 
     /* Mutex */
-    ecs_os_api_mutex_new_t _mutex_new;
-    ecs_os_api_mutex_free_t _mutex_free;
-    ecs_os_api_mutex_lock_t _mutex_lock;
-    ecs_os_api_mutex_lock_t _mutex_unlock;
+    ecs_os_api_mutex_new_t mutex_new_;
+    ecs_os_api_mutex_free_t mutex_free_;
+    ecs_os_api_mutex_lock_t mutex_lock_;
+    ecs_os_api_mutex_lock_t mutex_unlock_;
 
     /* Condition variable */
-    ecs_os_api_cond_new_t _cond_new;
-    ecs_os_api_cond_free_t _cond_free;
-    ecs_os_api_cond_signal_t _cond_signal;
-    ecs_os_api_cond_broadcast_t _cond_broadcast;
-    ecs_os_api_cond_wait_t _cond_wait;
+    ecs_os_api_cond_new_t cond_new_;
+    ecs_os_api_cond_free_t cond_free_;
+    ecs_os_api_cond_signal_t cond_signal_;
+    ecs_os_api_cond_broadcast_t cond_broadcast_;
+    ecs_os_api_cond_wait_t cond_wait_;
 
     /* Time */
-    ecs_os_api_sleep_t _sleep;
-    ecs_os_api_get_time_t _get_time;
+    ecs_os_api_sleep_t sleep_;
+    ecs_os_api_get_time_t get_time_;
 
     /* Logging */
-    ecs_os_api_log_t _log;
-    ecs_os_api_log_t _log_error;
-    ecs_os_api_log_t _log_debug;
-    ecs_os_api_log_t _log_warning;
+    ecs_os_api_log_t log_;
+    ecs_os_api_log_t log_error_;
+    ecs_os_api_log_t log_debug_;
+    ecs_os_api_log_t log_warning_;
 
     /* Application termination */
-    ecs_os_api_abort_t _abort;
+    ecs_os_api_abort_t abort_;
 
     /* Dynamic library loading */
-    ecs_os_api_dlopen_t _dlopen;
-    ecs_os_api_dlproc_t _dlproc;
-    ecs_os_api_dlclose_t _dlclose;
+    ecs_os_api_dlopen_t dlopen_;
+    ecs_os_api_dlproc_t dlproc_;
+    ecs_os_api_dlclose_t dlclose_;
 
     /* Overridable function that translates from a logical module id to a
      * shared library filename */
-    ecs_os_api_module_to_path_t _module_to_dl;
+    ecs_os_api_module_to_path_t module_to_dl_;
 
     /* Overridable function that translates from a logical module id to a
      * path that contains module-specif resources or assets */
-    ecs_os_api_module_to_path_t _module_to_etc;    
+    ecs_os_api_module_to_path_t module_to_etc_;    
 } ecs_os_api_t;
 
 FLECS_EXPORT
@@ -1620,10 +1620,10 @@ FLECS_EXPORT
 void ecs_os_set_api_defaults(void);
 
 /* Memory management */
-#define ecs_os_malloc(size) ecs_os_api._malloc(size);
-#define ecs_os_free(ptr) ecs_os_api._free(ptr);
-#define ecs_os_realloc(ptr, size) ecs_os_api._realloc(ptr, size)
-#define ecs_os_calloc(size) ecs_os_api._calloc(size)
+#define ecs_os_malloc(size) ecs_os_api.malloc_(size);
+#define ecs_os_free(ptr) ecs_os_api.free_(ptr);
+#define ecs_os_realloc(ptr, size) ecs_os_api.realloc_(ptr, size)
+#define ecs_os_calloc(size) ecs_os_api.calloc_(size)
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #define ecs_os_alloca(size) _alloca((size_t)(size))
 #else
@@ -1631,7 +1631,7 @@ void ecs_os_set_api_defaults(void);
 #endif
 
 /* Strings */
-#define ecs_os_strdup(str) ecs_os_api._strdup(str)
+#define ecs_os_strdup(str) ecs_os_api.strdup_(str)
 #define ecs_os_strlen(str) (ecs_size_t)strlen(str)
 #define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
 #define ecs_os_strncmp(str1, str2, num) strncmp(str1, str2, (size_t)(num))
@@ -1655,29 +1655,29 @@ void ecs_os_set_api_defaults(void);
 
 
 /* Threads */
-#define ecs_os_thread_new(callback, param) ecs_os_api._thread_new(callback, param)
-#define ecs_os_thread_join(thread) ecs_os_api._thread_join(thread)
+#define ecs_os_thread_new(callback, param) ecs_os_api.thread_new_(callback, param)
+#define ecs_os_thread_join(thread) ecs_os_api.thread_join_(thread)
 
 /* Atomic increment / decrement */
-#define ecs_os_ainc(value) ecs_os_api._ainc(value)
-#define ecs_os_adec(value) ecs_os_api._adec(value)
+#define ecs_os_ainc(value) ecs_os_api.ainc_(value)
+#define ecs_os_adec(value) ecs_os_api.adec_(value)
 
 /* Mutex */
-#define ecs_os_mutex_new() ecs_os_api._mutex_new()
-#define ecs_os_mutex_free(mutex) ecs_os_api._mutex_free(mutex)
-#define ecs_os_mutex_lock(mutex) ecs_os_api._mutex_lock(mutex)
-#define ecs_os_mutex_unlock(mutex) ecs_os_api._mutex_unlock(mutex)
+#define ecs_os_mutex_new() ecs_os_api.mutex_new_()
+#define ecs_os_mutex_free(mutex) ecs_os_api.mutex_free_(mutex)
+#define ecs_os_mutex_lock(mutex) ecs_os_api.mutex_lock_(mutex)
+#define ecs_os_mutex_unlock(mutex) ecs_os_api.mutex_unlock_(mutex)
 
 /* Condition variable */
-#define ecs_os_cond_new() ecs_os_api._cond_new()
-#define ecs_os_cond_free(cond) ecs_os_api._cond_free(cond)
-#define ecs_os_cond_signal(cond) ecs_os_api._cond_signal(cond)
-#define ecs_os_cond_broadcast(cond) ecs_os_api._cond_broadcast(cond)
-#define ecs_os_cond_wait(cond, mutex) ecs_os_api._cond_wait(cond, mutex)
+#define ecs_os_cond_new() ecs_os_api.cond_new_()
+#define ecs_os_cond_free(cond) ecs_os_api.cond_free_(cond)
+#define ecs_os_cond_signal(cond) ecs_os_api.cond_signal_(cond)
+#define ecs_os_cond_broadcast(cond) ecs_os_api.cond_broadcast_(cond)
+#define ecs_os_cond_wait(cond, mutex) ecs_os_api.cond_wait_(cond, mutex)
 
 /* Time */
-#define ecs_os_sleep(sec, nanosec) ecs_os_api._sleep(sec, nanosec)
-#define ecs_os_get_time(time_out) ecs_os_api._get_time(time_out)
+#define ecs_os_sleep(sec, nanosec) ecs_os_api.sleep_(sec, nanosec)
+#define ecs_os_get_time(time_out) ecs_os_api.get_time_(time_out)
 
 /* Logging (use functions to avoid using variadic macro arguments) */
 FLECS_EXPORT
@@ -1693,16 +1693,16 @@ FLECS_EXPORT
 void ecs_os_dbg(const char *fmt, ...);
 
 /* Application termination */
-#define ecs_os_abort() ecs_os_api._abort()
+#define ecs_os_abort() ecs_os_api.abort_()
 
 /* Dynamic libraries */
-#define ecs_os_dlopen(libname) ecs_os_api._dlopen(libname)
-#define ecs_os_dlproc(lib, procname) ecs_os_api._dlproc(lib, procname)
-#define ecs_os_dlclose(lib) ecs_os_api._dlclose(lib)
+#define ecs_os_dlopen(libname) ecs_os_api.dlopen_(libname)
+#define ecs_os_dlproc(lib, procname) ecs_os_api.dlproc_(lib, procname)
+#define ecs_os_dlclose(lib) ecs_os_api.dlclose_(lib)
 
 /* Module id translation */
-#define ecs_os_module_to_dl(lib) ecs_os_api._module_to_dl(lib)
-#define ecs_os_module_to_etc(lib) ecs_os_api._module_to_etc(lib)
+#define ecs_os_module_to_dl(lib) ecs_os_api.module_to_dl_(lib)
+#define ecs_os_module_to_etc(lib) ecs_os_api.module_to_etc_(lib)
 
 /* Sleep with floating point time */
 FLECS_EXPORT
