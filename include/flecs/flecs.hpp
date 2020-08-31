@@ -2609,6 +2609,7 @@ public:
             init(world, entity);
         }
 
+
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
 
         return s_id;
@@ -2745,14 +2746,36 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         name = _::name_helper<T>::name();
     }
 
-    flecs::entity result = entity(world, name, true);
-
     world_t *world_ptr = world.c_ptr();
+    entity_t id = 0;
+
+    if (_::component_info<T>::registered()) {
+        /* To support components across multiple worlds, ensure that the
+         * component ids are the same. */
+        id = _::component_info<T>::id(world_ptr);
+
+        /* If entity is not empty check if the name matches */
+        if (ecs_get_type(world_ptr, id) != nullptr) {
+            char *path = ecs_get_fullpath(world_ptr, id);
+            ecs_assert(!strcmp(path, name), 
+                ECS_INCONSISTENT_COMPONENT_NAME, name);
+            ecs_os_free(path);
+        }
+
+        /* Register name with entity, so that when the entity is created the
+         * correct id will be resolved from the name. */
+        ecs_add_path_w_sep(world_ptr, id, 0, name, "::", "::");
+
+        /* If a component was already registered with this id but with a 
+         * different size, the ecs_new_component function will fail. */
+    }
+
+    flecs::entity result = entity(world, name, true);
     ecs_new_component(world_ptr, result.id(), nullptr, sizeof(T), alignof(T));
     _::component_info<T>::init(world_ptr, result.id());
     _::component_info<const T>::init(world_ptr, result.id());
     _::component_info<T*>::init(world_ptr, result.id());
-    _::component_info<T&>::init(world_ptr, result.id()); 
+    _::component_info<T&>::init(world_ptr, result.id());
     
     return result;
 }
@@ -4012,9 +4035,9 @@ inline int world::count(flecs::filter filter) const {
 }
 
 inline void world::init_builtin_components() {
-    pod_component<Component>(*this, "EcsComponent");
-    pod_component<Type>(*this, "EcsType");
-    pod_component<Name>(*this, "EcsName");
+    pod_component<Component>(*this, "flecs.core.Component");
+    pod_component<Type>(*this, "flecs.core.Type");
+    pod_component<Name>(*this, "flecs.core.Name");
 }
 
 inline entity world::lookup(const char *name) const {

@@ -190,6 +190,10 @@ void WorldFactory_snapshot(void);
 void WorldFactory_module(void);
 void WorldFactory_module_w_name(void);
 
+// Testsuite 'World'
+void World_multi_world_empty(void);
+void World_multi_world_component(void);
+
 bake_test_case Entity_testcases[] = {
     {
         "new",
@@ -848,6 +852,17 @@ bake_test_case WorldFactory_testcases[] = {
     }
 };
 
+bake_test_case World_testcases[] = {
+    {
+        "multi_world_empty",
+        World_multi_world_empty
+    },
+    {
+        "multi_world_component",
+        World_multi_world_component
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -946,10 +961,17 @@ static bake_test_suite suites[] = {
         NULL,
         15,
         WorldFactory_testcases
+    },
+    {
+        "World",
+        NULL,
+        NULL,
+        2,
+        World_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 14);
+    return bake_test_run("cpp_api", argc, argv, suites, 15);
 }

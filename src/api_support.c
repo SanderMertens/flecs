@@ -290,6 +290,10 @@ ecs_entity_t ecs_new_component(
         }        
     }
 
+    if (e > world->stats.last_component_id && e < ECS_HI_COMPONENT_ID) {
+        world->stats.last_component_id = e + 1;
+    }
+
     return result;
 }
 

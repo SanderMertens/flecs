@@ -222,6 +222,12 @@
                 "module",
                 "module_w_name"
             ]
+        }, {
+            "id": "World",
+            "testcases": [
+                "multi_world_empty",
+                "multi_world_component"
+            ]
         }]
     }
 }
