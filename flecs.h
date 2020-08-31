@@ -141,7 +141,7 @@ typedef int32_t ecs_size_t;
 #define ECS_UNUSED
 #endif
 
-#define ECS_ALIGN(size, alignment) (((((size) - 1) / (alignment)) + 1) * (alignment))
+#define ECS_ALIGN(size, alignment) (ecs_size_t)((((((size_t)size) - 1) / ((size_t)alignment)) + 1) * ((size_t)alignment))
 
 /* Simple utility for determining the max of two values */
 #define ECS_MAX(a, b) ((a > b) ? a : b)
@@ -8136,6 +8136,10 @@ public:
         return this->id() != e.id();
     }            
 
+    operator bool() {
+        return m_id != 0;
+    }
+
     /** Entity id 0.
      * This function is useful when the API must provide an entity object that
      * belongs to a world, but the entity id is 0.
@@ -8157,14 +8161,14 @@ public:
     /** Get lo entity id.
      * @return A new entity containing the lower 32 bits of the entity id.
      */
-    flecs::entity lo() {
+    flecs::entity lo() const {
         return flecs::entity(m_world, ecs_entity_t_lo(m_id));
     }
 
     /** Get hi entity id.
      * @return A new entity containing the higher 32 bits of the entity id.
      */
-    flecs::entity hi() {
+    flecs::entity hi() const {
         return flecs::entity(m_world, ecs_entity_t_hi(m_id));
     }
 
@@ -8172,7 +8176,8 @@ public:
      * @return A new entity that combines the provided entity ids in the lower
      *         and higher 32 bits of the entity id.
      */
-    static flecs::entity comb(flecs::entity lo, flecs::entity hi) {
+    static 
+    flecs::entity comb(flecs::entity lo, flecs::entity hi) {
         return flecs::entity(lo.world(), 
             ecs_entity_t_comb(lo.id(), hi.id()));
     }
@@ -8183,7 +8188,7 @@ public:
      *
      * @return A new entity with the specified role set.
      */
-    flecs::entity add_role(entity_t role) {
+    flecs::entity add_role(entity_t role) const {
         return flecs::entity(m_world, m_id | role);
     }
 
@@ -8193,7 +8198,7 @@ public:
      *    
      * @return A new entity with any roles removed.
      */
-    flecs::entity remove_role() {
+    flecs::entity remove_role() const {
         return flecs::entity(m_world, m_id & ECS_ENTITY_MASK);
     }
 
@@ -8203,7 +8208,7 @@ public:
      *    
      * @return True if the entity has the role, false otherwise.
      */
-    bool has_role(entity_t role) {        
+    bool has_role(entity_t role) const {        
         return m_id & role;
     }
 
@@ -8241,7 +8246,7 @@ public:
      * Enabled entities are matched with systems and can be searched with
      * queries.
      */
-    void enable() {
+    void enable() const {
         ecs_enable(m_world, m_id, true);
     }
 
@@ -8249,7 +8254,7 @@ public:
      * Disabled entities are not matched with systems and cannot be searched 
      * with queries, unless explicitly specified in the query expression.
      */
-    void disable() {
+    void disable() const {
         ecs_enable(m_world, m_id, false);
     }     
 
@@ -8476,7 +8481,7 @@ public:
      * @tparam T component that was modified.
      */
     template <typename T>
-    void modified() {
+    void modified() const {
         ecs_modified_w_entity(m_world, m_id, _::component_info<T>::id(m_world));
     }
 
@@ -8484,7 +8489,7 @@ public:
      *
      * @param component component that was modified.
      */
-    void modified(flecs::entity component) {
+    void modified(flecs::entity component) const {
         ecs_modified_w_entity(m_world, m_id, component.id());
     }
 
@@ -8492,7 +8497,7 @@ public:
      *
      * @param component id of component that was modified.
      */
-    void modified(entity_t component) {
+    void modified(entity_t component) const {
         ecs_modified_w_entity(m_world, m_id, component);
     }        
 
@@ -8734,7 +8739,7 @@ public:
      *
      * @return Current delta_time.
      */
-    float delta_time() {
+    float delta_time() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->delta_time;
     }
@@ -8745,10 +8750,6 @@ public:
      * @return Iterator to child entities.
      */
     child_iterator children() const;
-
-    operator bool() {
-        return m_id != 0;
-    }
 
     /** Used by builder class. Do not invoke. */
     template <typename Func>
@@ -8910,11 +8911,11 @@ public:
         return m_normalized;
     }
 
-    void enable() {
+    void enable() const {
         ecs_enable(m_world, m_id, true);
     }
 
-    void disable() {
+    void disable() const {
         ecs_enable(m_world, m_id, false);
     }
 
@@ -9231,7 +9232,7 @@ void component_move(
 } // namespace _
 
 template <typename T>
-flecs::entity pod_component(flecs::world& world, const char *name = nullptr) {
+flecs::entity pod_component(const flecs::world& world, const char *name = nullptr) {
     if (!name) {
         name = _::name_helper<T>::name();
     }
@@ -9249,7 +9250,7 @@ flecs::entity pod_component(flecs::world& world, const char *name = nullptr) {
 }
 
 template <typename T>
-flecs::entity component(flecs::world& world, const char *name = nullptr) {
+flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
     EcsComponentLifecycle cl{};
@@ -9272,7 +9273,7 @@ flecs::entity component(flecs::world& world, const char *name = nullptr) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-flecs::entity module(flecs::world& world, const char *name = nullptr) {
+flecs::entity module(const flecs::world& world, const char *name = nullptr) {
     ecs_set_scope(world.c_ptr(), 0);
     flecs::entity result = pod_component<T>(world, name);
     ecs_set_scope(world.c_ptr(), result.id());
@@ -9540,7 +9541,7 @@ public:
         m_query = nullptr;
     }
 
-    explicit query(world& world) {
+    explicit query(const world& world) {
         std::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
@@ -9549,7 +9550,7 @@ public:
         m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
     }
 
-    explicit query(world& world, query_base& parent) {
+    explicit query(const world& world, query_base& parent) {
         std::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
@@ -9558,7 +9559,7 @@ public:
         m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
     }    
 
-    explicit query(world& world, const char *expr) {
+    explicit query(const world& world, const char *expr) {
         std::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_query_new(world.c_ptr(), expr);
@@ -9568,7 +9569,7 @@ public:
         }
     }
 
-    explicit query(world& world, query_base& parent, const char *expr) {
+    explicit query(const world& world, query_base& parent, const char *expr) {
         std::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
