@@ -14,29 +14,29 @@ struct Velocity {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
     /* Create a base prefab which will be inherited from by a child prefab */
-    auto ChildBase = flecs::prefab(world, "ChildBase")
+    auto ChildBase = ecs.prefab("ChildBase")
         .set<Position>({15, 25});
 
     /* Create the root of the prefab hierarchy  */
-    auto Root = flecs::prefab(world, "RootPrefab")
+    auto Root = ecs.prefab("RootPrefab")
         .set<Position>({10, 20});
         
         /* Create two child prefabs that inherit from ChildBase */
-        flecs::prefab(world, "Child1")
+        ecs.prefab("Child1")
             .add_childof(Root)
             .add_instanceof(ChildBase)
             .set<Velocity>({30, 40});
 
-        flecs::prefab(world, "Child2")
+        ecs.prefab("Child2")
             .add_childof(Root)
             .add_instanceof(ChildBase)
             .set<Velocity>({50, 60});            
 
     /* Create instance of Root */
-    auto e = flecs::entity(world)
+    auto e = ecs.entity()
         .add_instanceof(Root);
 
     /* Print types of child1 and child2 */

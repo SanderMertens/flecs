@@ -14,21 +14,21 @@ struct Velocity {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
     /* Create a prefab. Prefabs are entities that are solely intended as
      * templates for other entities. Prefabs are by default not matched with
      * systems. In that way they are similar to regular entities with the
      * EcsDisbled tag, except that they have more features which are 
      * demonstrated in the nested_prefab example. */
-    auto BasePrefab = flecs::prefab(world, "BasePrefab")
+    auto BasePrefab = ecs.prefab("BasePrefab")
         .set<Position>({10, 20});
 
-    auto SubPrefab1 = flecs::prefab(world, "SubPrefab1")
+    auto SubPrefab1 = ecs.prefab("SubPrefab1")
         .add_instanceof(BasePrefab)
         .set<Velocity>({1, 2});
 
-    auto SubPrefab2 = flecs::prefab(world, "SubPrefab2")
+    auto SubPrefab2 = ecs.prefab("SubPrefab2")
         .add_instanceof(BasePrefab)
         .set<Velocity>({3, 4});
 
@@ -38,21 +38,21 @@ int main(int argc, char *argv[]) {
      * override the component values. The Position component will be overridden
      * from the BasePrefab, while Velocity will be overridden from SubPrefab1
      * and SubPrefab2 respectively. */
-    auto Sub1 = flecs::type(world, "Sub1")
+    auto Sub1 = ecs.type("Sub1")
         .add_instanceof(SubPrefab1)
         .add<Position>()
         .add<Velocity>();
 
-    auto Sub2 = flecs::type(world, "Sub2")
+    auto Sub2 = ecs.type("Sub2")
         .add_instanceof(SubPrefab2)
         .add<Position>()
         .add<Velocity>();
 
     /* Create new entities from Sub1 and Sub2 */
-    auto e1 = flecs::entity(world)
+    auto e1 = ecs.entity()
         .add(Sub1);
 
-    auto e2 = flecs::entity(world)
+    auto e2 = ecs.entity()
         .add(Sub2);        
 
     /* Print values of e1 */

@@ -15,17 +15,17 @@ struct Velocity {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
-    flecs::entity(world, "E1")
+    ecs.entity("E1")
         .set<Position>({10, 20})
         .set<Velocity>({1, 1});
 
-    flecs::entity(world, "E2")
+    ecs.entity("E2")
         .set<Position>({30, 40})
         .set<Velocity>({1, 1});    
 
-    for (auto it : world) {
+    for (auto it : ecs) {
         flecs::type table_type = it.table_type();
         std::cout << "Iterating table [" << table_type.str() << "]" 
                   << " (" << it.count() << " entities)" << std::endl;

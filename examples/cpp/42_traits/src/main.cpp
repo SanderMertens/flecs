@@ -23,16 +23,16 @@ struct ExpiryTimer {
 };
 
 int main(int argc, char *argv[]) {
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
     /* Register trait component so that the system can resolve it by name */
-    flecs::component<ExpiryTimer>(world);
+    ecs.component<ExpiryTimer>();
 
     /* Create a system that matches ExpiryTimer as a trait. Without the TRAIT
      * role the system would look for entities that added ExpiryTimer as usual,
      * but with the role the system will be matched against every component to
      * which the trait has been applied. */
-    flecs::system<>(world, nullptr, "TRAIT | ExpiryTimer")
+    ecs.system<>(nullptr, "TRAIT | ExpiryTimer")
         .action([](flecs::iter it) {
             /* First, get the trait component */
             flecs::column<ExpiryTimer> et(it, 1);
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
         });
 
     /* Create an entity with Position and Velocity */
-    auto e = flecs::entity(world)
+    auto e = ecs.entity()
         .add<Position>()
         .add<Velocity>();
 
@@ -80,10 +80,10 @@ int main(int argc, char *argv[]) {
      * something that is ordinarily possible with a component. */
 
     /* Run the main loop until both components have been removed */
-    world.set_target_fps(1);
+    ecs.set_target_fps(1);
 
     /* Run systems */
-    while (world.progress()) { 
+    while (ecs.progress()) { 
         /* As soon as both components are removed, exit main loop */
         if (e.type().vector().count() == 0) {
             break;

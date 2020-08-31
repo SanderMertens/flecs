@@ -16,26 +16,25 @@
  */
 
 int main(int argc, char *argv[]) {
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
     /* Create a Movement state machine with 3 states */
-    auto Standing = flecs::entity(world, "Standing");
-    auto Walking = flecs::entity(world, "Walking");
-    auto Running = flecs::entity(world, "Running");
-    auto Movement = flecs::type(world, "Movement", 
-        "Standing, Walking, Running");
+    auto Walking = ecs.entity("Walking");
+    auto Running = ecs.entity("Running");
+    auto Movement = ecs.type("Movement", 
+        "Walking, Running");
 
     /* Create a Direction state machine with 4 states */
-    auto Front = flecs::entity(world, "Front");
-    auto Back = flecs::entity(world, "Back");
-    auto Left = flecs::entity(world, "Left");
-    auto Right = flecs::entity(world, "Right");
-    auto Direction = flecs::type(world, "Direction", 
+    auto Front = ecs.entity("Front");
+    auto Back = ecs.entity("Back");
+    auto Left = ecs.entity("Left");
+    auto Right = ecs.entity("Right");
+    auto Direction = ecs.type("Direction", 
         "Front, Back, Left, Right");
 
     /* Create a system that subscribes for all entities that have a Direction
      * and that are walking */
-    flecs::system<>(world, "Walk", "CASE | Walking, SWITCH | Direction")
+    ecs.system<>("Walk", "CASE | Walking, SWITCH | Direction")
         .action([](flecs::iter it) {
             /* Get the column with direction states. This is stored as an array
              * with identifiers to the individual states */
@@ -53,25 +52,25 @@ int main(int argc, char *argv[]) {
         });
 
     /* Create a few entities with various state combinations */
-    auto e1 = flecs::entity(world, "e1")
+    ecs.entity("e1")
         .add_switch(Movement)
             .add_case(Walking)
         .add_switch(Direction)
             .add_case(Front);
 
-    auto e2 = flecs::entity(world, "e2")
+    ecs.entity("e2")
         .add_switch(Movement)
             .add_case(Running)
         .add_switch(Direction)
             .add_case(Left);
 
-    auto e3 = flecs::entity(world, "e3")
+    ecs.entity("e3")
         .add_switch(Movement)
             .add_case(Walking)
         .add_switch(Direction)
             .add_case(Right);
 
-    auto e4 = flecs::entity(world, "e4")
+    auto e4 = ecs.entity("e4")
         .add_switch(Movement)
             .add_case(Running)
         .add_switch(Direction)
@@ -81,7 +80,7 @@ int main(int argc, char *argv[]) {
     e4.add_case(Walking);
 
     /* Set target FPS for main loop */
-    world.set_target_fps(1);
+    ecs.set_target_fps(1);
 
-    while (world.progress()) { }
+    while (ecs.progress()) { }
 }

@@ -19,24 +19,24 @@ struct Velocity {
 };
 
 int main(int argc, char *argv[]) {
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
-    flecs::entity(world, "e1")
+    ecs.entity("e1")
         .add<Position>();
 
-    flecs::entity(world, "e2")
+    ecs.entity("e2")
         .add<Position>()
         .add<Velocity>();
         
-    flecs::entity(world, "e3")
+    ecs.entity("e3")
         .add<Velocity>();
 
     /* Create a parent query that subscribes for all entities with Position */
-    auto q_parent = flecs::query<Position>(world);
+    auto q_parent = ecs.query<Position>();
 
     /* Create a subquery that selects the subset of entities matched by q_parent
      * that have the Velocity component. */
-    auto q_sub = flecs::query<Velocity>(world, q_parent);
+    auto q_sub = ecs.query<Velocity>(q_parent);
 
     /* Iterate the subquery. Note that only e2 is matched, since it has both
      * Position and Velocity */

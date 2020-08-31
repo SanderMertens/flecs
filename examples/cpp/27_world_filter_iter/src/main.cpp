@@ -19,23 +19,23 @@ struct Mass {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
-    flecs::entity(world, "E1")
+    ecs.entity("E1")
         .set<Position>({10, 20})
         .set<Velocity>({1, 1});
 
-    flecs::entity(world, "E2")
+    ecs.entity("E2")
         .set<Position>({30, 40})
         .set<Velocity>({1, 1})
         .set<Mass>({1});
 
-    auto f = flecs::filter(world)
+    auto f = flecs::filter(ecs)
         .include<Position>()
         .include<Velocity>()
         .include_kind(flecs::MatchAll);
 
-    for (auto it : world.filter(f)) {
+    for (auto it : ecs.filter(f)) {
         /* Get the Position and Velocity columns from the current table */
         auto p = it.table_column<Position>();
         auto v = it.table_column<Velocity>();

@@ -16,8 +16,8 @@ struct Velocity {
     float y;
 };
 
-void save_to_file(flecs::world& world, const char *filename) {
-    flecs::reader reader(world);
+void save_to_file(flecs::world& ecs, const char *filename) {
+    flecs::reader reader(ecs);
     std::fstream file(filename, std::fstream::out | std::fstream::binary);
 
     char buffer[BUFFER_SIZE];
@@ -31,8 +31,8 @@ void save_to_file(flecs::world& world, const char *filename) {
     file.close();
 }
 
-void load_from_file(flecs::world& world, const char *filename) {
-    flecs::writer writer(world);
+void load_from_file(flecs::world& ecs, const char *filename) {
+    flecs::writer writer(ecs);
     std::fstream file(filename, std::fstream::in | std::fstream::binary);
 
     char buffer[BUFFER_SIZE];
@@ -49,43 +49,37 @@ void load_from_file(flecs::world& world, const char *filename) {
 int main(int argc, char *argv[]) {
     // Create world with some entities, save it to disk
     {
-        flecs::world world(argc, argv);
+        flecs::world ecs(argc, argv);
 
-        flecs::entity(world, "E1")
+        ecs.entity("E1")
             .set<Position>({1, 2})
             .set<Velocity>({1, 1});
 
-        flecs::entity(world, "E2")
+        ecs.entity("E2")
             .set<Position>({3, 4})
             .set<Velocity>({1, 1});
 
         // Save entities to file
-        save_to_file(world, FILENAME);
+        save_to_file(ecs, FILENAME);
     }
 
     // Create new world, restore entities from disk
     {
-        flecs::world world(argc, argv);
+        flecs::world ecs(argc, argv);
 
         // Load entities from file. Note that components don't have to be 
         // redefined, they are restored by the writer.
-        load_from_file(world, FILENAME);
+        load_from_file(ecs, FILENAME);
 
         // Define a system to do something with the restored entities
-        flecs::system<Position, Velocity>(world)
-            .action([](const flecs::iter& it, 
-                flecs::column<Position> p, 
-                flecs::column<Velocity> v) 
-            {    
-                for (auto row : it) {
-                    p[row].x += v[row].x;
-                    p[row].y += v[row].y;
-
-                    std::cout << "Moved " << it.entity(row).name() << " to {"
-                            << p[row].x << ", " << p[row].y << "}" << std::endl;
-                }
+        ecs.system<Position, const Velocity>()
+            .each([](flecs::entity e, Position& p, const Velocity& v) {    
+                p.x += v.x;
+                p.y += v.y;
+                std::cout << "Moved " << e.name() << " to {"
+                        << p.x << ", " << p.y << "}" << std::endl;
             });
 
-        world.progress();
+        ecs.progress();
     }
 }

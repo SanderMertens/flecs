@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     flecs::world world(argc, argv);
 
     // Create a new empty entity. Entity names are optional.
-    auto e = flecs::entity(world, "MyEntity");
+    auto e = world.entity("MyEntity");
 
     // Set the Position component on the entity.
     e.set<Position>({10, 20});

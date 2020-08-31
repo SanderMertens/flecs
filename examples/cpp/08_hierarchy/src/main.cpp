@@ -17,7 +17,7 @@ struct Velocity {
 };
 
 /* Implement a simple move system */
-void Move(flecs::entity e, Position& p, Velocity& v) {
+void Move(flecs::entity e, Position& p, const Velocity& v) {
     p.x += v.x;
     p.y += v.y;
 
@@ -62,13 +62,13 @@ void Transform(flecs::iter& it, flecs::column<WorldPosition> wp, flecs::column<P
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
     /* Register WorldPosition, since our system refers to it by name */
-    flecs::component<WorldPosition>(world);
+    ecs.component<WorldPosition>();
 
     /* Move entities with Position and Velocity */
-    flecs::system<Position, Velocity>(world).each(Move);
+    ecs.system<Position, const Velocity>().each(Move);
 
     /* Transform local coordinates to world coordinates. A CASCADE column
      * guarantees that entities are evaluated breadth-first, according to the
@@ -88,43 +88,43 @@ int main(int argc, char *argv[]) {
      * In this case we need to use 'action', since otherwise we cannot access
      * the WorldPosition component from the parent.
      */
-    flecs::system<WorldPosition, Position>(world, nullptr, "CASCADE:WorldPosition")
+    ecs.system<WorldPosition, Position>(nullptr, "CASCADE:WorldPosition")
         .action(Transform);
 
     /* Create root of the hierachy which moves around */
-    auto Root = flecs::entity(world, "Root")
+    auto Root = ecs.entity("Root")
         .add<WorldPosition>()
         .set<Position>({0, 0})
         .set<Velocity>({1, 2});
 
-        auto Child1 = flecs::entity(world, "Child1")
+        auto Child1 = ecs.entity("Child1")
             .add_childof(Root)
             .add<WorldPosition>()
             .set<Position>({100, 100});
 
-            flecs::entity(world, "GChild1")
+            ecs.entity("GChild1")
                 .add_childof(Child1)
                 .add<WorldPosition>()
                 .set<Position>({1000, 1000});
 
-        auto Child2 = flecs::entity(world, "Child2")
+        auto Child2 = ecs.entity("Child2")
             .add_childof(Root)
             .add<WorldPosition>()
             .set<Position>({200, 200});
 
-            flecs::entity(world, "GChild2")
+            ecs.entity("GChild2")
                 .add_childof(Child2)
                 .add<WorldPosition>()
                 .set<Position>({2000, 2000});
 
-    world.set_target_fps(1);
+    ecs.set_target_fps(1);
 
     std::cout 
         << "Application move_system is running, press CTRL-C to exit..." 
         << std::endl;
 
     /* Run systems */
-    while ( world.progress()) {
+    while ( ecs.progress()) {
         std::cout << "----" << std::endl;
     }
 }

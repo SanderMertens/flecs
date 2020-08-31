@@ -45,50 +45,50 @@ void Move(flecs::iter& it, flecs::column<Position> p, flecs::column<Force> f, fl
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
     /* Define a system called Move that is executed every frame, and subscribes
      * for the 'Position', 'Force' and 'Mass' components. The Mass component
      * will be either shared or owned. */
-    flecs::system<Position, Force, Mass>(world).action(Move);
+    ecs.system<Position, Force, Mass>().action(Move);
 
     /* Demonstrate that a system can also use 'each' to abstract away from the
      * difference between shared and owned components */
-    flecs::system<Mass>(world).each(
+    ecs.system<Mass>().each(
         [](flecs::entity e, Mass& m) {
             std::cout << e.name() << ": Mass = " << m.value << std::endl;
         });
 
     /* Create two base entities */
-    auto LightEntity = flecs::entity(world, "LightEntity").set<Mass>({100});
-    auto HeavyEntity = flecs::entity(world, "HeavyEntity").set<Mass>({200});
+    auto LightEntity = ecs.entity("LightEntity").set<Mass>({100});
+    auto HeavyEntity = ecs.entity("HeavyEntity").set<Mass>({200});
 
     /* Create an entity which does not share Mass from a base */
-    flecs::entity(world, "MyEntity")
+    ecs.entity("MyEntity")
         .set<Position>({0, 0})
         .set<Force>({10, 10})
         .set<Mass>({50});
 
     /* Create entities which share the Mass component from a base */
-    flecs::entity(world, "MyInstance1")
+    ecs.entity("MyInstance1")
         .add_instanceof(LightEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10});
 
-    flecs::entity(world, "MyInstance2")
+    ecs.entity("MyInstance2")
         .add_instanceof(HeavyEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10}); 
 
-    flecs::entity(world, "MyInstance3")
+    ecs.entity("MyInstance3")
         .add_instanceof(HeavyEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10});                
 
-    world.set_target_fps(1);
+    ecs.set_target_fps(1);
 
     std::cout << "Application inheritance is running, press CTRL-C to exit..." << std::endl;
 
     /* Run systems */
-    while (world.progress()) { }
+    while (ecs.progress()) { }
 }

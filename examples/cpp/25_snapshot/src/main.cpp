@@ -15,39 +15,33 @@ struct Velocity {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
-    flecs::system<Position, Velocity>(world)
-        .action([](const flecs::iter& it, 
-            flecs::column<Position> p, 
-            flecs::column<Velocity> v) 
-        {    
-            for (auto row : it) {
-                p[row].x += v[row].x;
-                p[row].y += v[row].y;
-
-                std::cout << "Moved " << it.entity(row).name() << " to {" <<
-                    p[row].x << ", " << p[row].y << "}" << std::endl;
-            }
+    ecs.system<Position, const Velocity>()
+        .each([](flecs::entity e, Position& p, const Velocity& v) {    
+                p.x += v.x;
+                p.y += v.y;
+                std::cout << "Moved " << e.name() << " to {" <<
+                    p.x << ", " << p.y << "}" << std::endl;
         });
 
-    flecs::entity(world, "MyEntity")
+    ecs.entity("MyEntity")
         .set<Position>({0, 0})
         .set<Velocity>({1, 1});
 
     /* Take a snapshot of the world */
     std::cout << "Take snapshot" << std::endl;
-    flecs::snapshot s(world);
+    auto s = ecs.snapshot();
     s.take();
 
     /* Progress the world a few times, updates position */
-    world.progress();
-    world.progress();
-    world.progress();
+    ecs.progress();
+    ecs.progress();
+    ecs.progress();
 
     /* Restore snapshot */
     std::cout << std::endl << "Restore snapshot" << std::endl;
     s.restore();
 
-    world.progress();
+    ecs.progress();
 }

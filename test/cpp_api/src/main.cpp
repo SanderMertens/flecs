@@ -106,6 +106,7 @@ void System_signature_shared(void);
 void System_signature_optional(void);
 void System_copy_name_on_create(void);
 void System_nested_system(void);
+void System_empty_signature(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -163,6 +164,7 @@ void ImplicitComponents_remove_trait(void);
 void ImplicitComponents_module(void);
 void ImplicitComponents_system(void);
 void ImplicitComponents_system_optional(void);
+void ImplicitComponents_system_const(void);
 void ImplicitComponents_query(void);
 void ImplicitComponents_implicit_name(void);
 
@@ -170,6 +172,23 @@ void ImplicitComponents_implicit_name(void);
 void Snapshot_simple_snapshot(void);
 void Snapshot_snapshot_iter(void);
 void Snapshot_snapshot_iter_w_filter(void);
+
+// Testsuite 'WorldFactory'
+void WorldFactory_entity(void);
+void WorldFactory_entity_w_name(void);
+void WorldFactory_entity_w_id(void);
+void WorldFactory_prefab(void);
+void WorldFactory_prefab_w_name(void);
+void WorldFactory_type(void);
+void WorldFactory_type_w_name(void);
+void WorldFactory_system(void);
+void WorldFactory_system_w_name(void);
+void WorldFactory_system_w_expr(void);
+void WorldFactory_query(void);
+void WorldFactory_query_w_expr(void);
+void WorldFactory_snapshot(void);
+void WorldFactory_module(void);
+void WorldFactory_module_w_name(void);
 
 bake_test_case Entity_testcases[] = {
     {
@@ -534,6 +553,10 @@ bake_test_case System_testcases[] = {
     {
         "nested_system",
         System_nested_system
+    },
+    {
+        "empty_signature",
+        System_empty_signature
     }
 };
 
@@ -734,6 +757,10 @@ bake_test_case ImplicitComponents_testcases[] = {
         ImplicitComponents_system_optional
     },
     {
+        "system_const",
+        ImplicitComponents_system_const
+    },
+    {
         "query",
         ImplicitComponents_query
     },
@@ -755,6 +782,69 @@ bake_test_case Snapshot_testcases[] = {
     {
         "snapshot_iter_w_filter",
         Snapshot_snapshot_iter_w_filter
+    }
+};
+
+bake_test_case WorldFactory_testcases[] = {
+    {
+        "entity",
+        WorldFactory_entity
+    },
+    {
+        "entity_w_name",
+        WorldFactory_entity_w_name
+    },
+    {
+        "entity_w_id",
+        WorldFactory_entity_w_id
+    },
+    {
+        "prefab",
+        WorldFactory_prefab
+    },
+    {
+        "prefab_w_name",
+        WorldFactory_prefab_w_name
+    },
+    {
+        "type",
+        WorldFactory_type
+    },
+    {
+        "type_w_name",
+        WorldFactory_type_w_name
+    },
+    {
+        "system",
+        WorldFactory_system
+    },
+    {
+        "system_w_name",
+        WorldFactory_system_w_name
+    },
+    {
+        "system_w_expr",
+        WorldFactory_system_w_expr
+    },
+    {
+        "query",
+        WorldFactory_query
+    },
+    {
+        "query_w_expr",
+        WorldFactory_query_w_expr
+    },
+    {
+        "snapshot",
+        WorldFactory_snapshot
+    },
+    {
+        "module",
+        WorldFactory_module
+    },
+    {
+        "module_w_name",
+        WorldFactory_module_w_name
     }
 };
 
@@ -798,7 +888,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        14,
+        15,
         System_testcases
     },
     {
@@ -840,7 +930,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        12,
+        13,
         ImplicitComponents_testcases
     },
     {
@@ -849,10 +939,17 @@ static bake_test_suite suites[] = {
         NULL,
         3,
         Snapshot_testcases
+    },
+    {
+        "WorldFactory",
+        NULL,
+        NULL,
+        15,
+        WorldFactory_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 13);
+    return bake_test_run("cpp_api", argc, argv, suites, 14);
 }

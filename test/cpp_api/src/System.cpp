@@ -498,3 +498,18 @@ void System_nested_system() {
     test_assert(se.id() != 0);
     test_str(se.name().c_str(), "bar");
 }
+
+void System_empty_signature() {
+    flecs::world world;
+
+    int count = 0;
+
+    flecs::system<>(world)
+        .action([&](flecs::iter it) {
+            count ++;
+        });
+
+    world.progress();
+
+    test_int(count, 1); 
+}

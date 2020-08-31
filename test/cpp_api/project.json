@@ -121,7 +121,8 @@
                 "signature_shared",
                 "signature_optional",
                 "copy_name_on_create",
-                "nested_system"
+                "nested_system",
+                "empty_signature"
             ]
         }, {
             "id": "Trigger",
@@ -191,6 +192,7 @@
                 "module",
                 "system",
                 "system_optional",
+                "system_const",
                 "query",
                 "implicit_name"
             ]
@@ -200,6 +202,25 @@
                 "simple_snapshot",
                 "snapshot_iter",
                 "snapshot_iter_w_filter"
+            ]
+        }, {
+            "id": "WorldFactory",
+            "testcases": [
+                "entity",
+                "entity_w_name",
+                "entity_w_id",
+                "prefab",
+                "prefab_w_name",
+                "type",
+                "type_w_name",
+                "system",
+                "system_w_name",
+                "system_w_expr",
+                "query",
+                "query_w_expr",
+                "snapshot",
+                "module",
+                "module_w_name"
             ]
         }]
     }

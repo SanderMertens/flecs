@@ -19,27 +19,21 @@ struct Mass {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
-    flecs::system<Position, Velocity>(world)
-        .action([](const flecs::iter& it, 
-            flecs::column<Position> p, 
-            flecs::column<Velocity> v) 
-        {    
-            for (auto row : it) {
-                p[row].x += v[row].x;
-                p[row].y += v[row].y;
-
-                std::cout << "Moved " << it.entity(row).name() << " to {" <<
-                    p[row].x << ", " << p[row].y << "}" << std::endl;
-            }
+    ecs.system<Position, const Velocity>()
+        .each([](flecs::entity e, Position& p, const Velocity& v) {    
+                p.x += v.x;
+                p.y += v.y;
+                std::cout << "Moved " << e.name() << " to {" <<
+                    p.x << ", " << p.y << "}" << std::endl;
         });
 
-    flecs::entity(world, "E1")
+    ecs.entity("E1")
         .set<Position>({10, 20})
         .set<Velocity>({1, 1});
 
-    flecs::entity(world, "E2")
+    ecs.entity("E2")
         .set<Position>({30, 40})
         .set<Velocity>({1, 1})
         .set<Mass>({1});
@@ -47,18 +41,18 @@ int main(int argc, char *argv[]) {
     /* Take a snapshot that records the current state of the entity. Filter out
      * any entities that have the 'Mass' component. */
     std::cout << "Take snapshot" << std::endl;
-    flecs::snapshot s(world);
-    s.take(flecs::filter(world).exclude<Mass>());
+    auto s = ecs.snapshot();
+    s.take(flecs::filter(ecs).exclude<Mass>());
 
     /* Progress the world a few times, updates position */
-    world.progress();
-    world.progress();
-    world.progress();
+    ecs.progress();
+    ecs.progress();
+    ecs.progress();
 
     /* Restore snapshot. This will only restore the state for entity E1. */
     std::cout << std::endl << "Restore snapshot" << std::endl;
     s.restore();
 
     /* Progress the world again, note that the state of E1 has been restored */
-    world.progress();
+    ecs.progress();
 }

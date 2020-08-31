@@ -157,6 +157,42 @@ void ImplicitComponents_system_optional() {
     test_int(mass_count, 2);
 }
 
+void ImplicitComponents_system_const() {
+    flecs::world world;
+
+    int count = 0;
+    flecs::system<Position, const Velocity>(world)
+        .each([&](flecs::entity e, Position& p, const Velocity& v) {
+            p.x += v.x;
+            p.y += v.y;
+            count ++;
+        });
+
+    auto position = world.lookup("Position");
+    test_assert(position.id() != 0);
+
+    auto velocity = world.lookup("Velocity");
+    test_assert(velocity.id() != 0);  
+
+    auto e = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto pcomp = flecs::component<Position>(world);
+    test_assert(pcomp == position);
+
+    auto vcomp = flecs::component<Velocity>(world);
+    test_assert(vcomp == velocity);    
+
+    world.progress();
+
+    test_int(count, 1);
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
 void ImplicitComponents_query() {
     flecs::world world;
 

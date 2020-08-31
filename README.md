@@ -10,9 +10,9 @@
 Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-component-system) for C89 / C99 / C++11 that packs a lot of punch in a small footprint:
 
 - Blazing fast iteration speeds with direct access to raw C arrays across multiple components
-- Built-in support for entity hierarchies, prefabs, nested prefabs and prefab variants
+- Support for hierarchies, prefabs, traits, state machines, snapshots and more
 - An efficient lock-free architecture allows for modifying entities across multiple threads
-- Expressive entity queries with support for and, or, not and optional operators
+- Queries with builtin support for sorting, change tracking, read-write permissions and more
 - Systems that are time triggered, rate triggered, run every frame or run only when needed
 - A customizable core that lets you include only the features you need
 
@@ -48,24 +48,26 @@ struct Position {
     float y;
 };
 
-struct Speed {
-    float value;
+struct Velocity {
+    float x;
+    float y;
 };
 
 int main(int argc, char *argv[]) {
-    flecs::world world;
+    flecs::world ecs;
 
-    flecs::system<Position, Speed>(world)
-        .each([](flecs::entity e, Position& p, Speed& s) {
-            p.x += s.value * e.delta_time();
-            p.y += s.value * e.delta_time();
+    ecs.system<Position, const Velocity>()
+        .each([](flecs::entity e, Position& p, const Velocity& v) {
+            p.x += v.x * e.delta_time();
+            p.y += v.y * e.delta_time();
+            std::cout << "Entity " << e.name() << " moved!" << std::endl;
         });
 
-    flecs::entity(world, "MyEntity")
+    ecs.entity("MyEntity")
         .set<Position>({0, 0})
-        .set<Speed>({1});
+        .set<Velocity>({1, 1});
 
-    while (world.progress()) { }
+    while (ecs.progress()) { }
 }
 ```
 
@@ -85,11 +87,15 @@ Module      | Description
 [flecs.rest](https://github.com/flecs-hub/flecs-rest) | A REST interface for introspecting & editing entities
 [flecs.player](https://github.com/flecs-hub/flecs-player) | Play, stop and pause simulations
 [flecs.dash](https://github.com/flecs-hub/flecs-dash) | Web-frontend for remote monitoring and debugging of Flecs apps
+[flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input
+[flecs.components.transform](https://github.com/flecs-hub/flecs-components-transform) | Components that describe position, rotation and scale
+[flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe movement and collisions
 [flecs.components.geometry](https://github.com/flecs-hub/flecs-components-geometry) | Components that describe geometry
 [flecs.components.graphics](https://github.com/flecs-hub/flecs-components-graphics) | Components used for computer graphics
 [flecs.components.gui](https://github.com/flecs-hub/flecs-components-gui) | Components used to describe GUI components
 [flecs.components.http](https://github.com/flecs-hub/flecs-components-http) | Components describing an HTTP server
-[flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input
 [flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe physics and movement
+[flecs.systems.transform](https://github.com/flecs-hub/flecs-systems-transform) | Hierarchical transforms for scene graphs
+[flecs.systems.sdl2](https://github.com/flecs-hub/flecs-systems-sdl2) | SDL window creation & input management
+[flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sdl2) | Sokol-based renderer
 [flecs.systems.civetweb](https://github.com/flecs-hub/flecs-systems-civetweb) | A civetweb-based implementation of flecs.components.http
-

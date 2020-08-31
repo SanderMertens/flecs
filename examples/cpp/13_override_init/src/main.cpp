@@ -8,15 +8,13 @@ struct Mass {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
     /* Create base entity */
-    auto base = flecs::entity(world)
-        .set<Mass>({10});
+    auto base = ecs.entity().set<Mass>({10});
 
     /* Create instances which share the Mass component from a base */
-    auto instance = flecs::entity(world)
-        .add_instanceof(base);
+    auto instance = ecs.entity().add_instanceof(base);
 
     /* Add component without setting it. This will initialize the new component
      * with the value from the base, which is a common approach to initializing

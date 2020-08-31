@@ -37,6 +37,9 @@ class query_iterator;
 template<typename ... Components>
 class query;
 
+template<typename ... Components>
+class system;
+
 enum match_kind {
     MatchAll = EcsMatchAll,
     MatchAny = EcsMatchAny,
@@ -726,13 +729,13 @@ public:
      * 
      * @param name Entity name.
      */
-    entity lookup(const char *name) const;
+    flecs::entity lookup(const char *name) const;
 
     /** Lookup entity by name.
      *
      * @overload
      */    
-    entity lookup(std::string& name) const;
+    flecs::entity lookup(std::string& name) const;
 
     /** Delete all entities matching a filter.
      *
@@ -759,27 +762,27 @@ public:
      *
      * @param type The type to add.
      */
-    void add(type type) const;
+    void add(flecs::type type) const;
 
     /** Add type to all entities matching a filter.
      *
      * @param type The type to add.
      * @param filter The filter to use for matching.
      */    
-    void add(type type, flecs::filter filter) const;
+    void add(flecs::type type, flecs::filter filter) const;
 
     /** Add entity to all entities.
      *
      * @param entity The entity to add.
      */
-    void add(entity entity) const;
+    void add(flecs::entity entity) const;
 
     /** Add entity to all entities matching a filter.
      *
      * @param entity The entity to add.
      * @param filter The filter to use for matching.
      */    
-    void add(entity entity, flecs::filter filter) const;
+    void add(flecs::entity entity, flecs::filter filter) const;
 
     /** Remove component from all entities.
      *
@@ -800,27 +803,27 @@ public:
      *
      * @param type The component to remove.
      */ 
-    void remove(type type) const;
+    void remove(flecs::type type) const;
 
     /** Remove type from all entities matching a filter.
      *
      * @tparam T The component to remove.
      * @param filter The filter to use for matching.
      */     
-    void remove(type type, flecs::filter filter) const;
+    void remove(flecs::type type, flecs::filter filter) const;
 
     /** Remove entity from all entities.
      *
      * @param entity The entity to remove.
      */ 
-    void remove(entity entity) const;
+    void remove(flecs::entity entity) const;
 
     /** Remove entity from all entities matching a filter.
      *
      * @param entity The entity to remove.
      * @param filter The filter to use for matching.
      */     
-    void remove(entity entity, flecs::filter filter) const;
+    void remove(flecs::entity entity, flecs::filter filter) const;
 
     /** Create iterable filter for entities in world.
      *
@@ -828,8 +831,8 @@ public:
      */ 
     world_filter filter(const flecs::filter& filter) const;
 
-    filter_iterator begin() const;
-    filter_iterator end() const;
+    flecs::filter_iterator begin() const;
+    flecs::filter_iterator end() const;
 
     /** Count entities matching a component.
      *
@@ -866,6 +869,51 @@ public:
     void unlock() {
         ecs_unlock(m_world);
     }
+
+    /** Create a prefab.
+     */
+    template <typename... Args>
+    flecs::entity entity(Args &&... args);
+
+    /** Create an entity.
+     */
+    template <typename... Args>
+    flecs::entity prefab(Args &&... args);
+
+    /** Create a type.
+     */
+    template <typename... Args>
+    flecs::type type(Args &&... args);
+
+    /** Create a module.
+     */
+    template <typename Module, typename... Args>
+    flecs::entity module(Args &&... args);
+
+    /** Import a module.
+     */
+    template <typename Module>
+    flecs::entity import();
+
+    /** Create an system.
+     */
+    template <typename... Comps, typename... Args>
+    flecs::system<Comps...> system(Args &&... args);
+
+    /** Create a query.
+     */
+    template <typename... Comps, typename... Args>
+    flecs::query<Comps...> query(Args &&... args);
+
+    /** Create a component.
+     */
+    template <typename T, typename... Args>
+    flecs::entity component(Args &&... args);
+
+    /** Create a snapshot.
+     */
+    template <typename... Args>
+    flecs::snapshot snapshot(Args &&... args);
     
 private:
     void init_builtin_components();
@@ -1596,6 +1644,10 @@ public:
         return this->id() != e.id();
     }            
 
+    operator bool() {
+        return m_id != 0;
+    }
+
     /** Entity id 0.
      * This function is useful when the API must provide an entity object that
      * belongs to a world, but the entity id is 0.
@@ -1617,14 +1669,14 @@ public:
     /** Get lo entity id.
      * @return A new entity containing the lower 32 bits of the entity id.
      */
-    flecs::entity lo() {
+    flecs::entity lo() const {
         return flecs::entity(m_world, ecs_entity_t_lo(m_id));
     }
 
     /** Get hi entity id.
      * @return A new entity containing the higher 32 bits of the entity id.
      */
-    flecs::entity hi() {
+    flecs::entity hi() const {
         return flecs::entity(m_world, ecs_entity_t_hi(m_id));
     }
 
@@ -1632,7 +1684,8 @@ public:
      * @return A new entity that combines the provided entity ids in the lower
      *         and higher 32 bits of the entity id.
      */
-    static flecs::entity comb(flecs::entity lo, flecs::entity hi) {
+    static 
+    flecs::entity comb(flecs::entity lo, flecs::entity hi) {
         return flecs::entity(lo.world(), 
             ecs_entity_t_comb(lo.id(), hi.id()));
     }
@@ -1643,7 +1696,7 @@ public:
      *
      * @return A new entity with the specified role set.
      */
-    flecs::entity add_role(entity_t role) {
+    flecs::entity add_role(entity_t role) const {
         return flecs::entity(m_world, m_id | role);
     }
 
@@ -1653,7 +1706,7 @@ public:
      *    
      * @return A new entity with any roles removed.
      */
-    flecs::entity remove_role() {
+    flecs::entity remove_role() const {
         return flecs::entity(m_world, m_id & ECS_ENTITY_MASK);
     }
 
@@ -1663,7 +1716,7 @@ public:
      *    
      * @return True if the entity has the role, false otherwise.
      */
-    bool has_role(entity_t role) {        
+    bool has_role(entity_t role) const {        
         return m_id & role;
     }
 
@@ -1701,7 +1754,7 @@ public:
      * Enabled entities are matched with systems and can be searched with
      * queries.
      */
-    void enable() {
+    void enable() const {
         ecs_enable(m_world, m_id, true);
     }
 
@@ -1709,7 +1762,7 @@ public:
      * Disabled entities are not matched with systems and cannot be searched 
      * with queries, unless explicitly specified in the query expression.
      */
-    void disable() {
+    void disable() const {
         ecs_enable(m_world, m_id, false);
     }     
 
@@ -1936,7 +1989,7 @@ public:
      * @tparam T component that was modified.
      */
     template <typename T>
-    void modified() {
+    void modified() const {
         ecs_modified_w_entity(m_world, m_id, _::component_info<T>::id(m_world));
     }
 
@@ -1944,7 +1997,7 @@ public:
      *
      * @param component component that was modified.
      */
-    void modified(flecs::entity component) {
+    void modified(flecs::entity component) const {
         ecs_modified_w_entity(m_world, m_id, component.id());
     }
 
@@ -1952,7 +2005,7 @@ public:
      *
      * @param component id of component that was modified.
      */
-    void modified(entity_t component) {
+    void modified(entity_t component) const {
         ecs_modified_w_entity(m_world, m_id, component);
     }        
 
@@ -2194,7 +2247,7 @@ public:
      *
      * @return Current delta_time.
      */
-    float delta_time() {
+    float delta_time() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->delta_time;
     }
@@ -2205,10 +2258,6 @@ public:
      * @return Iterator to child entities.
      */
     child_iterator children() const;
-
-    operator bool() {
-        return m_id != 0;
-    }
 
     /** Used by builder class. Do not invoke. */
     template <typename Func>
@@ -2225,7 +2274,7 @@ protected:
 /** Prefab class */
 class prefab final : public entity {
 public:
-    prefab(const flecs::world& world, const char *name) 
+    prefab(const flecs::world& world, const char *name = nullptr) 
         : entity(world, name)
     {
         this->add(flecs::Prefab);
@@ -2370,11 +2419,11 @@ public:
         return m_normalized;
     }
 
-    void enable() {
+    void enable() const {
         ecs_enable(m_world, m_id, true);
     }
 
-    void disable() {
+    void disable() const {
         ecs_enable(m_world, m_id, false);
     }
 
@@ -2456,6 +2505,14 @@ namespace _
     struct name_util {
         static void trim_name(char *typeName) {
             size_t len = strlen(typeName);
+            
+            /* Remove 'const' */
+            size_t const_len = strlen("const ");
+            if (!ecs_os_strncmp(typeName, "const ", const_len)) {
+                memmove(typeName, typeName + const_len, len - const_len);
+                typeName[len - const_len] = '\0';
+            }
+
             if (typeName[len - 1] == '*') {
                 typeName[len - 1] = '\0';
                 if (typeName[len - 2] == ' ') {
@@ -2683,7 +2740,7 @@ void component_move(
 } // namespace _
 
 template <typename T>
-flecs::entity pod_component(flecs::world& world, const char *name = nullptr) {
+flecs::entity pod_component(const flecs::world& world, const char *name = nullptr) {
     if (!name) {
         name = _::name_helper<T>::name();
     }
@@ -2701,7 +2758,7 @@ flecs::entity pod_component(flecs::world& world, const char *name = nullptr) {
 }
 
 template <typename T>
-flecs::entity component(flecs::world& world, const char *name = nullptr) {
+flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
     EcsComponentLifecycle cl{};
@@ -2724,7 +2781,7 @@ flecs::entity component(flecs::world& world, const char *name = nullptr) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-flecs::entity module(flecs::world& world, const char *name = nullptr) {
+flecs::entity module(const flecs::world& world, const char *name = nullptr) {
     ecs_set_scope(world.c_ptr(), 0);
     flecs::entity result = pod_component<T>(world, name);
     ecs_set_scope(world.c_ptr(), result.id());
@@ -2737,7 +2794,7 @@ flecs::entity module(flecs::world& world, const char *name = nullptr) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-void import(world& world) {
+flecs::entity import(world& world) {
     if (!_::component_info<T>::registered()) {
         ecs_entity_t scope = ecs_get_scope(world.c_ptr());
 
@@ -2749,6 +2806,10 @@ void import(world& world) {
         flecs::entity m = world.lookup(_::component_info<T>::name(world.c_ptr()));
 
         m.set<T>(*module_data);
+
+        return m;
+    } else {
+        return flecs::entity(world, _::component_info<T>::id(world.c_ptr()));
     }
 }
 
@@ -2988,7 +3049,7 @@ public:
         m_query = nullptr;
     }
 
-    explicit query(world& world) {
+    explicit query(const world& world) {
         std::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
@@ -2997,7 +3058,7 @@ public:
         m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
     }
 
-    explicit query(world& world, query_base& parent) {
+    explicit query(const world& world, query_base& parent) {
         std::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
@@ -3006,7 +3067,7 @@ public:
         m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
     }    
 
-    explicit query(world& world, const char *expr) {
+    explicit query(const world& world, const char *expr) {
         std::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_query_new(world.c_ptr(), expr);
@@ -3016,7 +3077,7 @@ public:
         }
     }
 
-    explicit query(world& world, query_base& parent, const char *expr) {
+    explicit query(const world& world, query_base& parent, const char *expr) {
         std::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
@@ -3890,19 +3951,19 @@ inline void world::add(flecs::filter filter) const {
         m_world, _::component_info<T>::type(m_world), nullptr, filter.c_ptr());
 }
 
-inline void world::add(type type) const {
+inline void world::add(flecs::type type) const {
     ecs_bulk_add_remove_type(m_world, type.c_ptr(), nullptr, nullptr);
 }
 
-inline void world::add(type type, flecs::filter filter) const {
+inline void world::add(flecs::type type, flecs::filter filter) const {
     ecs_bulk_add_remove_type(m_world, type.c_ptr(), nullptr, filter.c_ptr());
 }
 
-inline void world::add(entity entity) const {
+inline void world::add(class flecs::entity entity) const {
     ecs_bulk_add_remove_type(m_world, entity.to_type().c_ptr(), nullptr, nullptr);
 }
 
-inline void world::add(entity entity, flecs::filter filter) const {
+inline void world::add(class flecs::entity entity, flecs::filter filter) const {
     ecs_bulk_add_remove_type(m_world, entity.to_type().c_ptr(), nullptr, filter.c_ptr());
 }
 
@@ -3918,19 +3979,19 @@ inline void world::remove(flecs::filter filter) const {
         m_world, nullptr, _::component_info<T>::type(m_world), filter.c_ptr());
 }
 
-inline void world::remove(type type) const {
+inline void world::remove(flecs::type type) const {
     ecs_bulk_add_remove_type(m_world, nullptr, type.c_ptr(), nullptr);
 }
 
-inline void world::remove(type type, flecs::filter filter) const {
+inline void world::remove(flecs::type type, flecs::filter filter) const {
     ecs_bulk_add_remove_type(m_world, nullptr, type.c_ptr(), filter.c_ptr());
 }
 
-inline void world::remove(entity entity) const {
+inline void world::remove(class entity entity) const {
     ecs_bulk_add_remove_type(m_world, nullptr, entity.to_type().c_ptr(), nullptr);
 }
 
-inline void world::remove(entity entity, flecs::filter filter) const {
+inline void world::remove(class entity entity, flecs::filter filter) const {
     ecs_bulk_add_remove_type(m_world, nullptr, entity.to_type().c_ptr(), filter.c_ptr());
 }
 
@@ -3958,12 +4019,57 @@ inline void world::init_builtin_components() {
 
 inline entity world::lookup(const char *name) const {
     auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
-    return entity(*this, id);
+    return flecs::entity(*this, id);
 }
 
 inline entity world::lookup(std::string& name) const {
     auto id = ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::");
-    return entity(*this, id);
+    return flecs::entity(*this, id);
+}
+
+template <typename... Args>
+inline flecs::entity world::entity(Args &&... args) {
+    return flecs::entity(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+inline flecs::entity world::prefab(Args &&... args) {
+    return flecs::prefab(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+inline flecs::type world::type(Args &&... args) {
+    return flecs::type(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::system<Comps...> world::system(Args &&... args) {
+    return flecs::system<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::query<Comps...> world::query(Args &&... args) {
+    return flecs::query<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename Module, typename... Args>
+inline flecs::entity world::module(Args &&... args) {
+    return flecs::module<Module>(*this, std::forward<Args>(args)...);
+}
+
+template <typename Module>
+inline flecs::entity world::import() {
+    return flecs::import<Module>(*this);
+}
+
+template <typename T, typename... Args>
+inline flecs::entity world::component(Args &&... args) {
+    return flecs::component<T>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+inline flecs::snapshot world::snapshot(Args &&... args) {
+    return flecs::snapshot(*this, std::forward<Args>(args)...);
 }
 
 /** Utilities to convert type trait to flecs signature syntax */
