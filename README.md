@@ -89,12 +89,11 @@ Module      | Description
 [flecs.dash](https://github.com/flecs-hub/flecs-dash) | Web-frontend for remote monitoring and debugging of Flecs apps
 [flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input
 [flecs.components.transform](https://github.com/flecs-hub/flecs-components-transform) | Components that describe position, rotation and scale
-[flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe movement and collisions
+[flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe physics and movement
 [flecs.components.geometry](https://github.com/flecs-hub/flecs-components-geometry) | Components that describe geometry
 [flecs.components.graphics](https://github.com/flecs-hub/flecs-components-graphics) | Components used for computer graphics
 [flecs.components.gui](https://github.com/flecs-hub/flecs-components-gui) | Components used to describe GUI components
 [flecs.components.http](https://github.com/flecs-hub/flecs-components-http) | Components describing an HTTP server
-[flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe physics and movement
 [flecs.systems.transform](https://github.com/flecs-hub/flecs-systems-transform) | Hierarchical transforms for scene graphs
 [flecs.systems.sdl2](https://github.com/flecs-hub/flecs-systems-sdl2) | SDL window creation & input management
 [flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sdl2) | Sokol-based renderer
