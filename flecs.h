@@ -9003,13 +9003,7 @@ namespace _
             if (!ecs_os_strncmp(typeName, "const ", const_len)) {
                 memmove(typeName, typeName + const_len, len - const_len);
                 typeName[len - const_len] = '\0';
-            }
-
-            if (typeName[len - 1] == '*') {
-                typeName[len - 1] = '\0';
-                if (typeName[len - 2] == ' ') {
-                    typeName[len - 2] = '\0';
-                }   
+                len -= const_len;
             }
 
             /* Remove 'struct' */
@@ -9017,6 +9011,28 @@ namespace _
             if (!ecs_os_strncmp(typeName, "struct ", struct_len)) {
                 memmove(typeName, typeName + struct_len, len - struct_len);
                 typeName[len - struct_len] = '\0';
+                len -= struct_len;
+            }
+
+            /* Remove 'class' */
+            size_t class_len = strlen("class ");
+            if (!ecs_os_strncmp(typeName, "class ", class_len)) {
+                memmove(typeName, typeName + class_len, len - class_len);
+                typeName[len - class_len] = '\0';
+                len -= class_len;
+            }            
+
+            while (typeName[len - 1] == ' ' ||
+                   typeName[len - 1] == '&' ||
+                   typeName[len - 1] == '*') 
+            {
+                len --;
+                typeName[len] = '\0';
+            }
+
+            /* Remove const at end of string */
+            if (!ecs_os_strncmp(&typeName[len - const_len], " const", const_len)) {
+                typeName[len - const_len] = '\0';
             }
         }
     };
