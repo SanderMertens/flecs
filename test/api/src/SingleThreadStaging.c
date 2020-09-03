@@ -2671,7 +2671,7 @@ void SingleThreadStaging_clear_stage_after_merge() {
     ecs_set(world, e, Position, {30, 40});
     ecs_staging_end(world, false);  
 
-    test_int(move_position, 2);
+    test_int(move_position, 3);
     p = ecs_get(world, e, Position);
     test_int(p->x, 30);
     test_int(p->y, 40);      

@@ -1218,11 +1218,28 @@ void ecs_table_move(
                 ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
+                ecs_c_info_t *cdata = new_table->c_info[i_new];
+
                 if (same_stage && same_entity) {
                     /* If moving in the same stage, simply copy */
-                    ecs_os_memcpy(dst, src, size); 
+                    ecs_move_t move;
+                    if (cdata && (move = cdata->lifecycle.move)) {
+                        void *ctx = cdata->lifecycle.ctx;
+                        ecs_xtor_t ctor = cdata->lifecycle.ctor;
+
+                        /* Ctor should always be set if copy is set */
+                        ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                        /* Construct a new value, move the value to it */
+                        ctor(world, new_component, &dst_entity, dst, 
+                                ecs_to_size_t(size), 1, ctx);
+
+                        move(world, new_component, &dst_entity, &src_entity, 
+                            dst, src, ecs_to_size_t(size), 1, ctx);
+                    } else {
+                        ecs_os_memcpy(dst, src, size);
+                    }
                 } else {
-                    ecs_c_info_t *cdata = ecs_get_c_info(world, new_component);
                     if (to_main_stage) {
                         /* When copying from stage to main stage, move data */
                         ecs_move_t move;
@@ -1251,7 +1268,14 @@ void ecs_table_move(
                             copy(world, new_component, &dst_entity, &src_entity, 
                                 dst, src, ecs_to_size_t(size), 1, ctx);
                         } else {
-                            ecs_os_memcpy(dst, src, size); 
+                            ecs_move_t move;
+                            if (cdata && (move = cdata->lifecycle.move)) {
+                                void *ctx = cdata->lifecycle.ctx;
+                                move(world, new_component, &dst_entity, &src_entity, 
+                                    dst, src, ecs_to_size_t(size), 1, ctx);
+                            } else {
+                                ecs_os_memcpy(dst, src, size);
+                            }
                         }
                     }
                 }
