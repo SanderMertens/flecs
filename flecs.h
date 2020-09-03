@@ -699,6 +699,10 @@ public:
         }
     }
 
+    T& operator[](size_t index) {
+        return ecs_vector_get(m_vector, T, index)[0];
+    }
+
     vector_iterator<T> begin() {
         return vector_iterator<T>(static_cast<T*>(ecs_vector_first(m_vector, T)));
     }
@@ -6864,6 +6868,20 @@ public:
         return m_iter->count;
     }
 
+    /** Number of columns in iteator.
+     */
+    int32_t column_count() const {
+        return m_iter->column_count;
+    }
+
+    /** Size of column data type.
+     *
+     * @param col The column id.
+     */
+    int32_t column_size(int32_t col) const {
+        return ecs_column_size(m_iter, col);
+    }    
+
     /** Return delta_time of current frame. 
      */
     float delta_time() const {
@@ -6882,6 +6900,14 @@ public:
      */
     bool is_shared(int32_t col) const {
         return !ecs_is_owned(m_iter, col);
+    }
+
+    /** Returns whether column is set.
+     * 
+     * @param col The column id.
+     */
+    bool is_set(int32_t col) const {
+        return ecs_column_w_size(m_iter, 0, col) != NULL;
     }
     
     /** Access param field. 
@@ -8298,7 +8324,7 @@ public:
      * @return True if the entity has the role, false otherwise.
      */
     bool has_role(entity_t role) const {        
-        return m_id & role;
+        return ((m_id & ECS_ROLE_MASK) == role);
     }
 
     /** Return the entity name.
@@ -8320,8 +8346,8 @@ public:
      * @return The hierarchical entity path, or an empty string if the entity 
      *         has no name.
      */
-    std::string path() const {
-        char *path = ecs_get_path_w_sep(m_world, 0, m_id, 0, "::", "::");
+    std::string path(const char *sep = "::", const char *init_sep = "::") const {
+        char *path = ecs_get_path_w_sep(m_world, 0, m_id, 0, sep, init_sep);
         if (path) {
             std::string result = std::string(path);
             ecs_os_free(path);

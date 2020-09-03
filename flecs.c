@@ -12176,7 +12176,7 @@ bool search_type(
     }
 
     if (!matched && !owned && entity != EcsPrefab && entity != EcsDisabled) {
-        for (i = count - 1; i >= 0; i ++) {
+        for (i = count - 1; i >= 0; i --) {
             ecs_entity_t e = ids[i];
             if (!ECS_HAS_ROLE(e, INSTANCEOF)) {
                 break;
