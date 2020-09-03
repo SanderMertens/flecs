@@ -227,6 +227,58 @@ void Type_type_has_trait_exact() {
     ecs_fini(world);
 }
 
+void Type_type_has_trait_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, TypeMatch, TRAIT | Trait > Position, Position);
+    ECS_TYPE(world, TypeNoMatch, TRAIT | Trait > Position);
+
+    test_assert( ecs_type_has_entity(world, ecs_type(TypeMatch), 
+        ecs_trait(EcsWildcard, Trait)));
+
+    test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
+        ecs_trait(EcsWildcard, Trait)));
+
+    ecs_fini(world);
+}
+
+void Type_type_has_trait_wildcard_multiple() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, TypeMatch, TRAIT | Trait > Position, Position, TRAIT | Trait > Velocity, Velocity);
+    ECS_TYPE(world, TypeNoMatch, TRAIT | Trait > Position, Position, TRAIT | Trait > Velocity);
+
+    test_assert( ecs_type_has_entity(world, ecs_type(TypeMatch),
+        ecs_trait(EcsWildcard, Trait)));
+
+    test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
+        ecs_trait(EcsWildcard, Trait)));
+
+    ecs_fini(world);
+}
+
+void Type_type_has_trait_wildcard_no_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, TypeNoMatch, Position);
+
+    test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
+        ecs_trait(EcsWildcard, Trait)));
+
+    ecs_fini(world);
+}
+
 void Type_type_owns_trait() {
     ecs_world_t *world = ecs_init();
 
@@ -255,6 +307,58 @@ void Type_type_owns_trait_exact() {
     ecs_type_t t = ecs_type_find(world, entities, 1);
     test_assert(t == ecs_type(Type));
     test_assert( ecs_type_owns_entity(world, t, ecs_trait(ecs_entity(Position), Trait), true));
+
+    ecs_fini(world);
+}
+
+void Type_type_owns_trait_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, TypeMatch, TRAIT | Trait > Position, Position);
+    ECS_TYPE(world, TypeNoMatch, TRAIT | Trait > Position);
+
+    test_assert( ecs_type_owns_entity(world, ecs_type(TypeMatch), 
+        ecs_trait(EcsWildcard, Trait), true));
+
+    test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
+        ecs_trait(EcsWildcard, Trait), true));
+
+    ecs_fini(world);
+}
+
+void Type_type_owns_trait_wildcard_multiple() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, TypeMatch, TRAIT | Trait > Position, Position, TRAIT | Trait > Velocity, Velocity);
+    ECS_TYPE(world, TypeNoMatch, TRAIT | Trait > Position, Position, TRAIT | Trait > Velocity);
+
+    test_assert( ecs_type_owns_entity(world, ecs_type(TypeMatch), 
+        ecs_trait(EcsWildcard, Trait), true));
+
+    test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
+        ecs_trait(EcsWildcard, Trait), true));
+
+    ecs_fini(world);
+}
+
+void Type_type_owns_trait_wildcard_no_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, TypeNoMatch, Position);
+
+    test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
+        ecs_trait(EcsWildcard, Trait), true));
 
     ecs_fini(world);
 }

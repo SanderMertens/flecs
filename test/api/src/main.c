@@ -493,6 +493,8 @@ void Traits_query_2_traits(void);
 void Traits_query_2_traits_2_instances_per_type(void);
 void Traits_override_trait(void);
 void Traits_override_tag_trait(void);
+void Traits_trait_wildcard_system(void);
+void Traits_trait_only_wildcard_system(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -841,8 +843,14 @@ void Type_type_has_container(void);
 void Type_type_has_prefab_container(void);
 void Type_type_has_trait(void);
 void Type_type_has_trait_exact(void);
+void Type_type_has_trait_wildcard(void);
+void Type_type_has_trait_wildcard_multiple(void);
+void Type_type_has_trait_wildcard_no_trait(void);
 void Type_type_owns_trait(void);
 void Type_type_owns_trait_exact(void);
+void Type_type_owns_trait_wildcard(void);
+void Type_type_owns_trait_wildcard_multiple(void);
+void Type_type_owns_trait_wildcard_no_trait(void);
 void Type_type_merge(void);
 void Type_type_merge_overlap(void);
 void Type_type_merge_overlap_one(void);
@@ -2981,6 +2989,14 @@ bake_test_case Traits_testcases[] = {
     {
         "override_tag_trait",
         Traits_override_tag_trait
+    },
+    {
+        "trait_wildcard_system",
+        Traits_trait_wildcard_system
+    },
+    {
+        "trait_only_wildcard_system",
+        Traits_trait_only_wildcard_system
     }
 };
 
@@ -4285,12 +4301,36 @@ bake_test_case Type_testcases[] = {
         Type_type_has_trait_exact
     },
     {
+        "type_has_trait_wildcard",
+        Type_type_has_trait_wildcard
+    },
+    {
+        "type_has_trait_wildcard_multiple",
+        Type_type_has_trait_wildcard_multiple
+    },
+    {
+        "type_has_trait_wildcard_no_trait",
+        Type_type_has_trait_wildcard_no_trait
+    },
+    {
         "type_owns_trait",
         Type_type_owns_trait
     },
     {
         "type_owns_trait_exact",
         Type_type_owns_trait_exact
+    },
+    {
+        "type_owns_trait_wildcard",
+        Type_type_owns_trait_wildcard
+    },
+    {
+        "type_owns_trait_wildcard_multiple",
+        Type_type_owns_trait_wildcard_multiple
+    },
+    {
+        "type_owns_trait_wildcard_no_trait",
+        Type_type_owns_trait_wildcard_no_trait
     },
     {
         "type_merge",
@@ -5680,7 +5720,7 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        10,
+        12,
         Traits_testcases
     },
     {
@@ -5806,7 +5846,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        82,
+        88,
         Type_testcases
     },
     {

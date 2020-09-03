@@ -229,7 +229,7 @@ void Has_has_entity_0_component() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    test_assert( ecs_has_entity(world, e, 0));
+    test_assert( !ecs_has_entity(world, e, 0));
  
     ecs_fini(world);
 }

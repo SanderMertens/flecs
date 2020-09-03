@@ -540,12 +540,12 @@ int ecs_parse_signature_action(
     if (!component) {
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
-        if (strcmp(component_id, "0")) {
-            ecs_parser_error(system_id, expr, column, 
-                "unresolved component identifier '%s'", component_id);
-        } else {
+        if (!strcmp(component_id, "0")) {
             /* No need to add 0 component to signature */
             return 0;
+        } else {
+            ecs_parser_error(system_id, expr, column, 
+                "unresolved component identifier '%s'", component_id);
         }
     }
 
