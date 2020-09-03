@@ -373,6 +373,10 @@ void ComponentLifecycle_copy_on_tag(void);
 void ComponentLifecycle_move_on_tag(void);
 void ComponentLifecycle_merge_to_different_table(void);
 void ComponentLifecycle_delete_in_stage(void);
+void ComponentLifecycle_ctor_on_add_trait(void);
+void ComponentLifecycle_ctor_on_add_trait_set_ctor_after_table(void);
+void ComponentLifecycle_ctor_on_add_trait_tag(void);
+void ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -2535,6 +2539,22 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "delete_in_stage",
         ComponentLifecycle_delete_in_stage
+    },
+    {
+        "ctor_on_add_trait",
+        ComponentLifecycle_ctor_on_add_trait
+    },
+    {
+        "ctor_on_add_trait_set_ctor_after_table",
+        ComponentLifecycle_ctor_on_add_trait_set_ctor_after_table
+    },
+    {
+        "ctor_on_add_trait_tag",
+        ComponentLifecycle_ctor_on_add_trait_tag
+    },
+    {
+        "ctor_on_add_trait_tag_set_ctor_after_table",
+        ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table
     }
 };
 
@@ -5690,7 +5710,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        24,
+        28,
         ComponentLifecycle_testcases
     },
     {

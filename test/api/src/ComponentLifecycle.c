@@ -1181,3 +1181,130 @@ void ComponentLifecycle_delete_in_stage() {
 
     ecs_fini(world);
 }
+
+typedef struct Trait {
+    float value;
+} Trait;
+
+void ComponentLifecycle_ctor_on_add_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Trait);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Trait), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(ctx.ctor.invoked, 0);
+
+    ecs_add_trait(world, e, ecs_entity(Position), ecs_entity(Trait));
+    test_int(ctx.ctor.invoked, 1);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Trait));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Trait));
+    test_int(ctx.ctor.count, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_ctor_on_add_trait_set_ctor_after_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Trait);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(ctx.ctor.invoked, 0);
+    ecs_add_trait(world, e, ecs_entity(Position), ecs_entity(Trait));
+
+    /* Remove trait so we can add it again after registering the ctor */
+    ecs_remove_trait(world, e, ecs_entity(Position), ecs_entity(Trait));
+
+    /* Register component after table has been created */
+    ecs_set(world, ecs_entity(Trait), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .ctx = &ctx
+    });
+
+    /* Re-add */
+    ecs_add_trait(world, e, ecs_entity(Position), ecs_entity(Trait));    
+
+    test_int(ctx.ctor.invoked, 1);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Trait));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Trait));
+    test_int(ctx.ctor.count, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_ctor_on_add_trait_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(ctx.ctor.invoked, 0);
+
+    ecs_add_trait(world, e, ecs_entity(Position), Trait);
+
+    test_int(ctx.ctor.invoked, 1);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Position));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Position));
+    test_int(ctx.ctor.count, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(ctx.ctor.invoked, 0);
+    ecs_add_trait(world, e, ecs_entity(Position), Trait);
+
+    /* Remove trait so we can add it again after registering the ctor */
+    ecs_remove_trait(world, e, ecs_entity(Position), Trait);
+
+    /* Register component after table has been created */
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .ctx = &ctx
+    });
+
+    /* Re-add */
+    ecs_add_trait(world, e, ecs_entity(Position), Trait); 
+
+    test_int(ctx.ctor.invoked, 1);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Position));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Position));
+    test_int(ctx.ctor.count, 1);
+
+    ecs_fini(world);
+}
