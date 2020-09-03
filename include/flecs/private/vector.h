@@ -377,6 +377,10 @@ public:
         }
     }
 
+    T& operator[](size_t index) {
+        return ecs_vector_get(m_vector, T, index)[0];
+    }
+
     vector_iterator<T> begin() {
         return vector_iterator<T>(static_cast<T*>(ecs_vector_first(m_vector, T)));
     }
