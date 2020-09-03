@@ -2258,6 +2258,16 @@ ecs_type_t ecs_column_type(
     const ecs_iter_t *it,
     int32_t column);
 
+/** Get the size of the component of the specified column.
+ *
+ * @param it The iterator.
+ * @param column The column for which to obtain the size.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_column_size(
+    const ecs_iter_t *it,
+    int32_t column);
+
 /** Is the column readonly.
  * This operation returns if the column is a readonly column. Readonly columns
  * are marked in the system signature with the [in] modifier. 
@@ -2299,12 +2309,12 @@ void* ecs_table_column(
 /** Get the size of a table column.
  *
  * @param it The iterator.
- * @param component The component for which to obtain the index. 
+ * @param column The column for which to obtain the size.
  */
 FLECS_EXPORT
 size_t ecs_table_column_size(
     const ecs_iter_t *it,
-    int32_t column_index);
+    int32_t column);
 
 /** Get the index of the table column for a component.
  * 

@@ -16809,6 +16809,19 @@ ecs_entity_t ecs_column_entity(
     return it->components[index - 1];
 }
 
+ecs_entity_t ecs_column_size(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t table_column = it->columns[index - 1];
+
+    return ecs_table_column_size(it, table_column - 1);
+}
+
 ecs_type_t ecs_iter_type(
     const ecs_iter_t *it)
 {
