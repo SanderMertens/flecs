@@ -694,3 +694,48 @@ void Traits_trait_only_wildcard_system() {
 
     ecs_fini(world);
 }
+
+static int set_trait_invoked = 0;
+
+static
+void SetTrait(ecs_iter_t *it) {
+    set_trait_invoked ++;
+    probe_system(it);
+}
+
+void Traits_trait_wildcard_on_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Trait);
+
+    ECS_SYSTEM(world, SetTrait, EcsOnSet, TRAIT | Trait > *);
+
+    /* Ensure that trait is matched against different components */
+    ecs_entity_t e1 = 
+    ecs_set_trait(world, 0, Position, Trait, { .value = 10 });
+    ecs_add(world, e1, Position);
+    test_int(set_trait_invoked, 0);
+
+    ecs_entity_t e2 = 
+    ecs_set_trait(world, 0, Velocity, Trait, { .value = 20 });
+    ecs_add(world, e2, Velocity);
+    test_int(set_trait_invoked, 0);
+
+    /* This entity should not trigger as it doesn't have the trait */
+    ecs_set(world, 0, Position, { 10, 20 });
+    test_int(set_trait_invoked, 0);
+
+    /* Set Position on e1, should trigger OnSet */
+    ecs_set(world, e1, Position, {10, 20});
+    test_int(set_trait_invoked, 1);
+
+    ecs_set(world, e2, Position, {10, 20});
+    test_int(set_trait_invoked, 1);
+
+    ecs_set(world, e2, Velocity, {10, 20});
+    test_int(set_trait_invoked, 2);
+
+    ecs_fini(world);
+}

@@ -548,7 +548,8 @@
                 "override_trait",
                 "override_tag_trait",
                 "trait_wildcard_system",
-                "trait_only_wildcard_system"
+                "trait_only_wildcard_system",
+                "trait_wildcard_on_set"
             ]
         }, {
             "id": "TriggerOnAdd",

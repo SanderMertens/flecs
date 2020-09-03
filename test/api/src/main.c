@@ -495,6 +495,7 @@ void Traits_override_trait(void);
 void Traits_override_tag_trait(void);
 void Traits_trait_wildcard_system(void);
 void Traits_trait_only_wildcard_system(void);
+void Traits_trait_wildcard_on_set(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -2997,6 +2998,10 @@ bake_test_case Traits_testcases[] = {
     {
         "trait_only_wildcard_system",
         Traits_trait_only_wildcard_system
+    },
+    {
+        "trait_wildcard_on_set",
+        Traits_trait_wildcard_on_set
     }
 };
 
@@ -5720,7 +5725,7 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        12,
+        13,
         Traits_testcases
     },
     {
