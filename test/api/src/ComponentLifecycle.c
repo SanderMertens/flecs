@@ -1308,3 +1308,33 @@ void ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table() {
 
     ecs_fini(world);
 }
+
+void ComponentLifecycle_ctor_on_move_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Trait);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Trait), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .ctx = &ctx
+    });
+
+    /* Create entity in existing table */
+    ecs_entity_t e = ecs_new(world, Position);
+    test_int(ctx.ctor.invoked, 0);
+
+    /* Add trait to existing table */
+    ecs_add_trait(world, e, ecs_entity(Position), ecs_entity(Trait));
+
+    test_int(ctx.ctor.invoked, 1);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Trait));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Trait));
+    test_int(ctx.ctor.count, 1);
+
+    ecs_fini(world);
+}

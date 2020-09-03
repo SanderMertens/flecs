@@ -377,6 +377,7 @@ void ComponentLifecycle_ctor_on_add_trait(void);
 void ComponentLifecycle_ctor_on_add_trait_set_ctor_after_table(void);
 void ComponentLifecycle_ctor_on_add_trait_tag(void);
 void ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table(void);
+void ComponentLifecycle_ctor_on_move_trait(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -2555,6 +2556,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_on_add_trait_tag_set_ctor_after_table",
         ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table
+    },
+    {
+        "ctor_on_move_trait",
+        ComponentLifecycle_ctor_on_move_trait
     }
 };
 
@@ -5710,7 +5715,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        28,
+        29,
         ComponentLifecycle_testcases
     },
     {

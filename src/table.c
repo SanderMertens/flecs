@@ -596,7 +596,7 @@ ecs_data_t* ecs_table_get_or_create_data(
 static
 void ctor_component(
     ecs_world_t *world,
-    ecs_entity_t component,
+    ecs_c_info_t *cdata,
     ecs_column_t *column,
     ecs_entity_t *entities,
     int32_t row,
@@ -604,7 +604,6 @@ void ctor_component(
 {
     /* A new component is constructed */
     ecs_xtor_t ctor;
-    ecs_c_info_t *cdata = ecs_get_c_info(world, component);
     if (cdata && (ctor = cdata->lifecycle.ctor)) {
         void *ctx = cdata->lifecycle.ctx;
         int16_t size = column->size;
@@ -612,7 +611,7 @@ void ctor_component(
 
         void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
 
-        ctor(world, component, entities, ptr, 
+        ctor(world, cdata->component, entities, ptr, 
             ecs_to_size_t(size), count, ctx);
     }
 }
@@ -620,7 +619,7 @@ void ctor_component(
 static
 void dtor_component(
     ecs_world_t *world,
-    ecs_entity_t component,
+    ecs_c_info_t *cdata,
     ecs_column_t *column,
     ecs_entity_t *entities,
     int32_t row,
@@ -628,7 +627,6 @@ void dtor_component(
 {
     /* An old component is destructed */
     ecs_xtor_t dtor;
-    ecs_c_info_t *cdata = ecs_get_c_info(world, component);
     if (cdata && (dtor = cdata->lifecycle.dtor)) {
         void *ctx = cdata->lifecycle.ctx;
         int16_t size = column->size;
@@ -636,7 +634,7 @@ void dtor_component(
 
         void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
 
-        dtor(world, component, entities, ptr,
+        dtor(world, cdata->component, entities, ptr,
             ecs_to_size_t(size), count, ctx);
     }
 }
@@ -649,14 +647,13 @@ void ctor_all_components(
     int32_t row,
     int32_t count)
 {
-    ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);    
     int32_t column_count = table->column_count;
     int32_t i;
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &data->columns[i];
-        ctor_component(
-            world, components[i], column, entities, row, count);
+        ctor_component(world, table->c_info[i], column, entities, 
+            row, count);
     }
 }
 
@@ -668,14 +665,14 @@ void dtor_all_components(
     int32_t row,
     int32_t count)
 {
-    ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
     int32_t column_count = table->column_count;
     int32_t i;
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &data->columns[i];
         dtor_component(
-            world, components[i], column, entities, row, count);
+            world, table->c_info[i], column, entities, row, 
+            count);
     }
 }
 
@@ -1261,16 +1258,16 @@ void ecs_table_move(
             }
         } else {
             if (new_component < old_component) {
-                ctor_component(world, 
-                    new_component, &new_columns[i_new], &dst_entity, new_index, 1);
+                ctor_component(world, new_table->c_info[i_new],
+                    &new_columns[i_new], &dst_entity, new_index, 1);
             } else if (same_stage) {
                 /* An old component is destroyed. Never destroy components when
                  * moving from main stage to stage, as we don't want to destroy
                  * a component that has not been copied.
                  * Note that a component is never copied between different 
                  * tables when copying from stage to main stage. */
-                dtor_component(world, 
-                    old_component, &old_columns[i_old], &src_entity, old_index, 1);
+                dtor_component(world, old_table->c_info[i_new],
+                    &old_columns[i_old], &src_entity, old_index, 1);
             }
         }
 
@@ -1279,16 +1276,14 @@ void ecs_table_move(
     }
 
     for (; (i_new < new_column_count); i_new ++) {
-        ecs_entity_t component = new_components[i_new];
-        ctor_component(world, 
-            component, &new_columns[i_new], &dst_entity, new_index, 1);
+        ctor_component(world, new_table->c_info[i_new],
+            &new_columns[i_new], &dst_entity, new_index, 1);
     }
 
     if (same_stage) {
         for (; (i_old < old_column_count); i_old ++) {
-            ecs_entity_t component = old_components[i_old];
-            dtor_component(world, 
-                component, &old_columns[i_old], &src_entity, old_index, 1);
+            dtor_component(world, old_table->c_info[i_old],
+                &old_columns[i_old], &src_entity, old_index, 1);
         }
     }
 }
@@ -1639,8 +1634,8 @@ void merge_table_data(
                 if ((c_info = new_table->c_info[i_new]) && 
                     (ctor = c_info->lifecycle.ctor)) 
                 {
-                    ctor_component(world, new_component, column, entities, 
-                        0, old_count + new_count);
+                    ctor_component(world, c_info, column, 
+                        entities, 0, old_count + new_count);
                 }
             }
             
@@ -1655,8 +1650,8 @@ void merge_table_data(
                 if ((c_info = old_table->c_info[i_old]) && 
                     (dtor = c_info->lifecycle.dtor)) 
                 {
-                    dtor_component(world, old_component, column, entities, 0, 
-                        old_count);
+                    dtor_component(world, c_info, column, 
+                        entities, 0, old_count);
                 }
 
                 /* Old column does not occur in new table, remove */
@@ -1687,8 +1682,8 @@ void merge_table_data(
             if ((c_info = new_table->c_info[i_new]) && 
                 (ctor = c_info->lifecycle.ctor)) 
             {
-                ctor_component(world, c_info->component, column, entities, 
-                    0, old_count + new_count);
+                ctor_component(world, c_info, column, 
+                    entities, 0, old_count + new_count);
             }
         }
     }
@@ -1703,8 +1698,8 @@ void merge_table_data(
         if ((c_info = old_table->c_info[i_old]) && 
             (dtor = c_info->lifecycle.dtor)) 
         {
-            dtor_component(world, c_info->component, column, entities, 0, 
-                old_count);
+            dtor_component(world, c_info, column, entities, 
+                0, old_count);
         }
 
         /* Old column does not occur in new table, remove */
