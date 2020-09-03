@@ -207,6 +207,12 @@ void ecs_bootstrap(
     ecs_assert(ecs_lookup(world, "$") == EcsSingleton, ECS_INTERNAL_ERROR, NULL);
     ecs_add_entity(world, EcsSingleton, ECS_CHILDOF | EcsFlecsCore);
 
+    /* Initialize EcsWildcard */
+    ecs_set(world, EcsWildcard, EcsName, {.value = "*"});
+    ecs_assert(ecs_get_name(world, EcsWildcard) != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_lookup(world, "*") == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
+    ecs_add_entity(world, EcsWildcard, ECS_CHILDOF | EcsFlecsCore);    
+
     ecs_set_scope(world, 0);
 
     ecs_log_pop();

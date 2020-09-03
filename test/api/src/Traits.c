@@ -564,3 +564,178 @@ void Traits_override_tag_trait() {
 
     ecs_fini(world);
 }
+
+void Traits_trait_wildcard_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Trait);
+
+    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, TRAIT | Trait, TRAIT | Trait > *);
+
+    /* Ensure that trait is matched against different components */
+    ecs_entity_t e1 = 
+    ecs_set_trait(world, 0, Position, Trait, {
+        .value = 10
+    });
+    ecs_add(world, e1, Position);
+
+    ecs_entity_t e2 = 
+    ecs_set_trait(world, 0, Velocity, Trait, {
+        .value = 20
+    });
+    ecs_add(world, e2, Velocity);
+
+    /* This entity should not be matched as it doesn't have Position */
+    ecs_set_trait(world, 0, Position, Trait, {
+        .value = 20
+    });
+
+    /* This entity should not be matched as it doesn't have the trait */
+    ecs_set(world, 0, Position, { 10, 20 });
+
+    Probe ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 0);
+
+    const Trait* tr = ecs_get_trait(world, e1, Position, Trait);
+    test_assert(tr != NULL);
+    test_int(tr->value, 11);
+
+    tr = ecs_get_trait(world, e2, Velocity, Trait);
+    test_assert(tr != NULL);
+    test_int(tr->value, 21); 
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.system, ProcessTraits);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+
+    ecs_entity_t c = ctx.c[0][0];
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t lo = ecs_entity_t_lo(c);
+    test_int(hi, ecs_entity(Trait));
+    test_int(lo, ecs_entity(Position));
+    test_int(ctx.c[0][1], ecs_entity(Position));
+
+    c = ctx.c[1][0] & ECS_ENTITY_MASK;
+    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    lo = ecs_entity_t_lo(c);
+    test_int(hi, ecs_entity(Trait));
+    test_int(lo, ecs_entity(Velocity));
+    test_int(ctx.c[1][1], ecs_entity(Velocity));
+
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.s[1][0], 0);
+
+    ecs_fini(world);
+}
+
+static
+void IterTraitWildcard(ecs_iter_t *it) {
+    probe_system(it);
+}
+
+void Traits_trait_only_wildcard_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Trait);
+
+    ECS_SYSTEM(world, IterTraitWildcard, EcsOnUpdate, TRAIT | Trait > *);
+
+    /* Ensure that trait is matched against different components */
+    ecs_entity_t e1 = 
+    ecs_set_trait(world, 0, Position, Trait, {
+        .value = 10
+    });
+    ecs_add(world, e1, Position);
+
+    ecs_entity_t e2 = 
+    ecs_set_trait(world, 0, Velocity, Trait, {
+        .value = 20
+    });
+    ecs_add(world, e2, Velocity);
+
+    /* This entity should not be matched as it doesn't have Position */
+    ecs_set_trait(world, 0, Position, Trait, {
+        .value = 20
+    });
+
+    /* This entity should not be matched as it doesn't have the trait */
+    ecs_set(world, 0, Position, { 10, 20 });
+
+    Probe ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 0);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.system, IterTraitWildcard);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[1][0], ecs_entity(Velocity));
+
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.s[1][0], 0);
+
+    ecs_fini(world);
+}
+
+static int set_trait_invoked = 0;
+
+static
+void SetTrait(ecs_iter_t *it) {
+    set_trait_invoked ++;
+    probe_system(it);
+}
+
+void Traits_trait_wildcard_on_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Trait);
+
+    ECS_SYSTEM(world, SetTrait, EcsOnSet, TRAIT | Trait > *);
+
+    /* Ensure that trait is matched against different components */
+    ecs_entity_t e1 = 
+    ecs_set_trait(world, 0, Position, Trait, { .value = 10 });
+    ecs_add(world, e1, Position);
+    test_int(set_trait_invoked, 0);
+
+    ecs_entity_t e2 = 
+    ecs_set_trait(world, 0, Velocity, Trait, { .value = 20 });
+    ecs_add(world, e2, Velocity);
+    test_int(set_trait_invoked, 0);
+
+    /* This entity should not trigger as it doesn't have the trait */
+    ecs_set(world, 0, Position, { 10, 20 });
+    test_int(set_trait_invoked, 0);
+
+    /* Set Position on e1, should trigger OnSet */
+    ecs_set(world, e1, Position, {10, 20});
+    test_int(set_trait_invoked, 1);
+
+    ecs_set(world, e2, Position, {10, 20});
+    test_int(set_trait_invoked, 1);
+
+    ecs_set(world, e2, Velocity, {10, 20});
+    test_int(set_trait_invoked, 2);
+
+    ecs_fini(world);
+}

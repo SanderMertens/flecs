@@ -162,13 +162,51 @@ ecs_flags32_t get_component_action_flags(
 }
 
 static
+ecs_entity_t get_component_id(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    if (ECS_HAS_ROLE(e, TRAIT)) {
+        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_ENTITY_MASK);
+        if (ecs_has(world, trait, EcsComponent)) {
+            /* This is not a trait tag, trait is the value */
+            return trait;
+        } else {
+            /* This is a trait tag, component is the value */
+            return ecs_entity_t_lo(e);
+        }
+    }
+
+    return e;
+}
+
+/* Check if table has instance of component, including traits */
+static
+bool has_component(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t component)
+{
+    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
+    int32_t i, count = ecs_vector_count(type);
+
+    for (i = 0; i < count; i ++) {
+        if (component == get_component_id(world, entities[i])) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+static
 void notify_component_info(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t component)
 {
     ecs_type_t table_type = table->type;
-    if (!component || ecs_type_owns_entity(world, table_type, component, true)){
+    if (!component || has_component(world, table_type, component)){
         int32_t column_count = ecs_vector_count(table_type);
         ecs_assert(!component || column_count != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -177,7 +215,8 @@ void notify_component_info(
         }
         
         if (!table->c_info) {
-            table->c_info = ecs_os_calloc(ECS_SIZEOF(ecs_c_info_t*) * column_count);
+            table->c_info = ecs_os_calloc(
+                ECS_SIZEOF(ecs_c_info_t*) * column_count);
         }
 
         /* Reset lifecycle flags before recomputing */
@@ -187,7 +226,7 @@ void notify_component_info(
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         int32_t i;
         for (i = 0; i < column_count; i ++) {
-            ecs_entity_t c = array[i];
+            ecs_entity_t c = get_component_id(world, array[i]);
             ecs_c_info_t *c_info = ecs_get_c_info(world, c);
             if (c_info) {
                 ecs_flags32_t flags = get_component_action_flags(c_info);
@@ -331,8 +370,13 @@ void register_on_set(
 
     if (table->column_count) {
         if (!table->on_set) {
-            table->on_set = ecs_os_calloc(ECS_SIZEOF(ecs_vector_t) * table->column_count);
+            table->on_set = 
+                ecs_os_calloc(ECS_SIZEOF(ecs_vector_t) * table->column_count);
         }
+
+        /* Get the matched table which holds the list of actual components */
+        ecs_matched_table_t *matched_table = ecs_vector_get(
+            query->tables, ecs_matched_table_t, matched_table_index);
 
         /* Keep track of whether query matches overrides. When a component is
          * removed, diffing these arrays between the source and detination
@@ -340,36 +384,40 @@ void register_on_set(
          * component that was overridden. */
         bool match_override = false;
 
-        /* Add system to each matched column. This makes it easy to get the list of
-        * systems when setting a single component. */
-        ecs_vector_each(query->sig.columns, ecs_sig_column_t, column, {
+        /* Add system to each matched column. This makes it easy to get the list 
+         * of systems when setting a single component. */
+        ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns,
+            ecs_sig_column_t);
+        int32_t i, count = ecs_vector_count(query->sig.columns);
+        for (i = 0; i < count; i ++) {
+            ecs_sig_column_t *column = &columns[i];
             ecs_sig_oper_kind_t oper_kind = column->oper_kind;
             ecs_sig_from_kind_t from_kind = column->from_kind;
 
-            if (from_kind != EcsFromAny && from_kind != EcsFromOwned) {
+            if ((from_kind != EcsFromAny && from_kind != EcsFromOwned) ||
+                (oper_kind != EcsOperAnd && oper_kind != EcsOperOptional)) 
+            {
                 continue;
             }
 
-            if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
-                ecs_entity_t comp = column->is.component;
-                int32_t index = ecs_type_index_of(table->type, comp);
-                if (index == -1) {
-                    continue;
-                }
-
-                if (index >= table->column_count) {
-                    continue;
-                }
-                
-                ecs_vector_t *set_c = table->on_set[index];
-                ecs_matched_query_t *m = ecs_vector_add(&set_c, ecs_matched_query_t);
-                m->query = query;
-                m->matched_table_index = matched_table_index;
-                table->on_set[index] = set_c;
-                
-                match_override |= is_override(world, table, comp);
+            ecs_entity_t comp = matched_table->components[i];
+            int32_t index = ecs_type_index_of(table->type, comp);
+            if (index == -1) {
+                continue;
             }
-        });   
+
+            if (index >= table->column_count) {
+                continue;
+            }
+            
+            ecs_vector_t *set_c = table->on_set[index];
+            ecs_matched_query_t *m = ecs_vector_add(&set_c, ecs_matched_query_t);
+            m->query = query;
+            m->matched_table_index = matched_table_index;
+            table->on_set[index] = set_c;
+            
+            match_override |= is_override(world, table, comp);
+        } 
 
         if (match_override) {
             add_monitor(&table->on_set_override, query, matched_table_index);

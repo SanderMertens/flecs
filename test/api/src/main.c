@@ -373,6 +373,10 @@ void ComponentLifecycle_copy_on_tag(void);
 void ComponentLifecycle_move_on_tag(void);
 void ComponentLifecycle_merge_to_different_table(void);
 void ComponentLifecycle_delete_in_stage(void);
+void ComponentLifecycle_ctor_on_add_trait(void);
+void ComponentLifecycle_ctor_on_add_trait_set_ctor_after_table(void);
+void ComponentLifecycle_ctor_on_add_trait_tag(void);
+void ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -493,6 +497,9 @@ void Traits_query_2_traits(void);
 void Traits_query_2_traits_2_instances_per_type(void);
 void Traits_override_trait(void);
 void Traits_override_tag_trait(void);
+void Traits_trait_wildcard_system(void);
+void Traits_trait_only_wildcard_system(void);
+void Traits_trait_wildcard_on_set(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -841,8 +848,14 @@ void Type_type_has_container(void);
 void Type_type_has_prefab_container(void);
 void Type_type_has_trait(void);
 void Type_type_has_trait_exact(void);
+void Type_type_has_trait_wildcard(void);
+void Type_type_has_trait_wildcard_multiple(void);
+void Type_type_has_trait_wildcard_no_trait(void);
 void Type_type_owns_trait(void);
 void Type_type_owns_trait_exact(void);
+void Type_type_owns_trait_wildcard(void);
+void Type_type_owns_trait_wildcard_multiple(void);
+void Type_type_owns_trait_wildcard_no_trait(void);
 void Type_type_merge(void);
 void Type_type_merge_overlap(void);
 void Type_type_merge_overlap_one(void);
@@ -2526,6 +2539,22 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "delete_in_stage",
         ComponentLifecycle_delete_in_stage
+    },
+    {
+        "ctor_on_add_trait",
+        ComponentLifecycle_ctor_on_add_trait
+    },
+    {
+        "ctor_on_add_trait_set_ctor_after_table",
+        ComponentLifecycle_ctor_on_add_trait_set_ctor_after_table
+    },
+    {
+        "ctor_on_add_trait_tag",
+        ComponentLifecycle_ctor_on_add_trait_tag
+    },
+    {
+        "ctor_on_add_trait_tag_set_ctor_after_table",
+        ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table
     }
 };
 
@@ -2981,6 +3010,18 @@ bake_test_case Traits_testcases[] = {
     {
         "override_tag_trait",
         Traits_override_tag_trait
+    },
+    {
+        "trait_wildcard_system",
+        Traits_trait_wildcard_system
+    },
+    {
+        "trait_only_wildcard_system",
+        Traits_trait_only_wildcard_system
+    },
+    {
+        "trait_wildcard_on_set",
+        Traits_trait_wildcard_on_set
     }
 };
 
@@ -4285,12 +4326,36 @@ bake_test_case Type_testcases[] = {
         Type_type_has_trait_exact
     },
     {
+        "type_has_trait_wildcard",
+        Type_type_has_trait_wildcard
+    },
+    {
+        "type_has_trait_wildcard_multiple",
+        Type_type_has_trait_wildcard_multiple
+    },
+    {
+        "type_has_trait_wildcard_no_trait",
+        Type_type_has_trait_wildcard_no_trait
+    },
+    {
         "type_owns_trait",
         Type_type_owns_trait
     },
     {
         "type_owns_trait_exact",
         Type_type_owns_trait_exact
+    },
+    {
+        "type_owns_trait_wildcard",
+        Type_type_owns_trait_wildcard
+    },
+    {
+        "type_owns_trait_wildcard_multiple",
+        Type_type_owns_trait_wildcard_multiple
+    },
+    {
+        "type_owns_trait_wildcard_no_trait",
+        Type_type_owns_trait_wildcard_no_trait
     },
     {
         "type_merge",
@@ -5645,7 +5710,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        24,
+        28,
         ComponentLifecycle_testcases
     },
     {
@@ -5680,7 +5745,7 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        10,
+        13,
         Traits_testcases
     },
     {
@@ -5806,7 +5871,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        82,
+        88,
         Type_testcases
     },
     {

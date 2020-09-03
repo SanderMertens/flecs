@@ -118,6 +118,55 @@ static const ecs_entity_t Case = ECS_CASE;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Unsafe wrapper class around a column.
+ * This class can be used when a system does not know the type of a column at
+ * compile time.
+ */
+class unsafe_column {
+public:
+    unsafe_column(void* array, std::size_t size, std::size_t count, bool is_shared = false)
+        : m_array(array)
+        , m_size(size)
+        , m_count(count) 
+        , m_is_shared(is_shared) {}
+
+    /** Return element in component array.
+     * This operator may only be used if the column is not shared.
+     * 
+     * @param index Index of element.
+     * @return Reference to element.
+     */
+    void* operator[](size_t index) {
+        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+        ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER, NULL);
+        return ECS_OFFSET(m_array, m_size * index);
+    }
+
+    /** Return whether component is set.
+     * If the column is optional, this method may return false.
+     * 
+     * @return True if component is set, false if component is not set.
+     */
+    bool is_set() const {
+        return m_array != nullptr;
+    }
+
+    /** Return whether component is shared.
+     * If the column is shared, this method returns true.
+     * 
+     * @return True if component is shared, false if component is owned.
+     */
+    bool is_shared() const {
+        return m_is_shared;
+    }
+
+protected:
+    void* m_array;
+    size_t m_size;
+    size_t m_count;
+    bool m_is_shared;        
+};
+
 /** Wrapper class around a column.
  * 
  * @tparam T component type of the column.
@@ -440,6 +489,16 @@ public:
         return get_column<T>(col);
     }  
 
+    /** Obtain unsafe column.
+     * Unsafe columns are required when a system does not know at compile time
+     * which component will be passed to it. 
+     *
+     * @param col The column id. 
+     */
+    flecs::unsafe_column column(int32_t col) const {
+        return get_unsafe_column(col);
+    }
+
     /** Obtain owned column.
      * Same as iter::column, but ensures that column is owned.
      *
@@ -525,7 +584,26 @@ private:
         }
 
         return flecs::column<T>(static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), column_id)), count, is_shared);
-    }   
+    } 
+
+    flecs::unsafe_column get_unsafe_column(int32_t column_id) const {
+        size_t count;
+        size_t size = ecs_column_size(m_iter, column_id);
+        bool is_shared = !ecs_is_owned(m_iter, column_id);
+
+        /* If a shared column is retrieved with 'column', there will only be a
+         * single value. Ensure that the application does not accidentally read
+         * out of bounds. */
+        if (is_shared) {
+            count = 1;
+        } else {
+            /* If column is owned, there will be as many values as there are
+             * entities. */
+            count = m_iter->count;
+        }
+
+        return flecs::unsafe_column(ecs_column_w_size(m_iter, 0, column_id), size, count, is_shared);
+    }       
 
     /* Get single field, check if correct type is used */
     template <typename T>

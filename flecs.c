@@ -1778,13 +1778,51 @@ ecs_flags32_t get_component_action_flags(
 }
 
 static
+ecs_entity_t get_component_id(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    if (ECS_HAS_ROLE(e, TRAIT)) {
+        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_ENTITY_MASK);
+        if (ecs_has(world, trait, EcsComponent)) {
+            /* This is not a trait tag, trait is the value */
+            return trait;
+        } else {
+            /* This is a trait tag, component is the value */
+            return ecs_entity_t_lo(e);
+        }
+    }
+
+    return e;
+}
+
+/* Check if table has instance of component, including traits */
+static
+bool has_component(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t component)
+{
+    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
+    int32_t i, count = ecs_vector_count(type);
+
+    for (i = 0; i < count; i ++) {
+        if (component == get_component_id(world, entities[i])) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+static
 void notify_component_info(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t component)
 {
     ecs_type_t table_type = table->type;
-    if (!component || ecs_type_owns_entity(world, table_type, component, true)){
+    if (!component || has_component(world, table_type, component)){
         int32_t column_count = ecs_vector_count(table_type);
         ecs_assert(!component || column_count != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -1793,7 +1831,8 @@ void notify_component_info(
         }
         
         if (!table->c_info) {
-            table->c_info = ecs_os_calloc(ECS_SIZEOF(ecs_c_info_t*) * column_count);
+            table->c_info = ecs_os_calloc(
+                ECS_SIZEOF(ecs_c_info_t*) * column_count);
         }
 
         /* Reset lifecycle flags before recomputing */
@@ -1803,7 +1842,7 @@ void notify_component_info(
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         int32_t i;
         for (i = 0; i < column_count; i ++) {
-            ecs_entity_t c = array[i];
+            ecs_entity_t c = get_component_id(world, array[i]);
             ecs_c_info_t *c_info = ecs_get_c_info(world, c);
             if (c_info) {
                 ecs_flags32_t flags = get_component_action_flags(c_info);
@@ -1947,8 +1986,13 @@ void register_on_set(
 
     if (table->column_count) {
         if (!table->on_set) {
-            table->on_set = ecs_os_calloc(ECS_SIZEOF(ecs_vector_t) * table->column_count);
+            table->on_set = 
+                ecs_os_calloc(ECS_SIZEOF(ecs_vector_t) * table->column_count);
         }
+
+        /* Get the matched table which holds the list of actual components */
+        ecs_matched_table_t *matched_table = ecs_vector_get(
+            query->tables, ecs_matched_table_t, matched_table_index);
 
         /* Keep track of whether query matches overrides. When a component is
          * removed, diffing these arrays between the source and detination
@@ -1956,36 +2000,40 @@ void register_on_set(
          * component that was overridden. */
         bool match_override = false;
 
-        /* Add system to each matched column. This makes it easy to get the list of
-        * systems when setting a single component. */
-        ecs_vector_each(query->sig.columns, ecs_sig_column_t, column, {
+        /* Add system to each matched column. This makes it easy to get the list 
+         * of systems when setting a single component. */
+        ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns,
+            ecs_sig_column_t);
+        int32_t i, count = ecs_vector_count(query->sig.columns);
+        for (i = 0; i < count; i ++) {
+            ecs_sig_column_t *column = &columns[i];
             ecs_sig_oper_kind_t oper_kind = column->oper_kind;
             ecs_sig_from_kind_t from_kind = column->from_kind;
 
-            if (from_kind != EcsFromAny && from_kind != EcsFromOwned) {
+            if ((from_kind != EcsFromAny && from_kind != EcsFromOwned) ||
+                (oper_kind != EcsOperAnd && oper_kind != EcsOperOptional)) 
+            {
                 continue;
             }
 
-            if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
-                ecs_entity_t comp = column->is.component;
-                int32_t index = ecs_type_index_of(table->type, comp);
-                if (index == -1) {
-                    continue;
-                }
-
-                if (index >= table->column_count) {
-                    continue;
-                }
-                
-                ecs_vector_t *set_c = table->on_set[index];
-                ecs_matched_query_t *m = ecs_vector_add(&set_c, ecs_matched_query_t);
-                m->query = query;
-                m->matched_table_index = matched_table_index;
-                table->on_set[index] = set_c;
-                
-                match_override |= is_override(world, table, comp);
+            ecs_entity_t comp = matched_table->components[i];
+            int32_t index = ecs_type_index_of(table->type, comp);
+            if (index == -1) {
+                continue;
             }
-        });   
+
+            if (index >= table->column_count) {
+                continue;
+            }
+            
+            ecs_vector_t *set_c = table->on_set[index];
+            ecs_matched_query_t *m = ecs_vector_add(&set_c, ecs_matched_query_t);
+            m->query = query;
+            m->matched_table_index = matched_table_index;
+            table->on_set[index] = set_c;
+            
+            match_override |= is_override(world, table, comp);
+        } 
 
         if (match_override) {
             add_monitor(&table->on_set_override, query, matched_table_index);
@@ -11599,12 +11647,12 @@ int ecs_parse_signature_action(
     if (!component) {
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
-        if (strcmp(component_id, "0")) {
-            ecs_parser_error(system_id, expr, column, 
-                "unresolved component identifier '%s'", component_id);
-        } else {
+        if (!strcmp(component_id, "0")) {
             /* No need to add 0 component to signature */
             return 0;
+        } else {
+            ecs_parser_error(system_id, expr, column, 
+                "unresolved component identifier '%s'", component_id);
         }
     }
 
@@ -12046,45 +12094,112 @@ bool has_case(
     return ecs_type_has_entity(world, type_ptr->normalized, sw_case);
 }
 
-bool ecs_type_has_entity(
+static
+int match_entity(
     ecs_world_t *world,
     ecs_type_t type,
-    ecs_entity_t entity)
+    ecs_entity_t e,
+    ecs_entity_t match_with)
 {
-    ecs_entity_t trait = 0, sw_case = 0;
+    if (ECS_HAS_ROLE(match_with, TRAIT)) {
+        ecs_entity_t hi = ecs_entity_t_hi(match_with & ECS_ENTITY_MASK);
+        ecs_entity_t lo = ecs_entity_t_lo(match_with);
+
+        if (lo == EcsWildcard) {
+            ecs_assert(hi != 0, ECS_INTERNAL_ERROR, NULL);
+            
+            if (!ECS_HAS_ROLE(e, TRAIT) || !has_trait(hi, e)) {
+                return 0;
+            }
+
+            ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
+            int32_t i, count = ecs_vector_count(type);
+
+            ecs_entity_t comp = ecs_entity_t_lo(e);
+            for (i = 0; i < count; i ++) {
+                if (comp == ids[i]) {
+                    return 2;
+                }
+            }
+
+            return -1;
+        } else if (!hi) {
+            if (ECS_HAS_ROLE(e, TRAIT) && has_trait(lo, e)) {
+                return 1;
+            }
+        }
+    } else 
+    if (ECS_HAS_ROLE(match_with, CASE)) {
+        ecs_entity_t sw_case = match_with & ECS_ENTITY_MASK;
+        if (ECS_HAS_ROLE(e, SWITCH) && has_case(world, sw_case, e)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    if (e == match_with) {
+        return 1;
+    }
+
+    return 0;
+}
+
+static
+bool search_type(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity,
+    bool owned)
+{
+    if (!type) {
+        return false;
+    }
 
     if (!entity) {
         return true;
     }
 
-    if (ECS_HAS_ROLE(entity, TRAIT)) {
-        trait = entity & ECS_ENTITY_MASK;
-    } else
-    if (ECS_HAS_ROLE(entity, CASE)) {
-        sw_case = entity & ECS_ENTITY_MASK;
+    ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
+    int32_t i, count = ecs_vector_count(type);
+    int matched = 0;
+
+    for (i = 0; i < count; i ++) {
+        int ret = match_entity(world, type, ids[i], entity);
+        switch(ret) {
+        case 0: break;
+        case 1: return true;
+        case -1: return false;
+        case 2: matched ++; break;
+        default: ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        }
     }
 
-    ecs_vector_each(type, ecs_entity_t, c_ptr, {
-        ecs_entity_t e = *c_ptr;
-        if (e == entity) {
-            return true;
-        }
+    if (!matched && !owned && entity != EcsPrefab && entity != EcsDisabled) {
+        for (i = count - 1; i >= 0; i ++) {
+            ecs_entity_t e = ids[i];
+            if (!ECS_HAS_ROLE(e, INSTANCEOF)) {
+                break;
+            }
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF) && entity != EcsPrefab && entity != EcsDisabled){
             ecs_entity_t base = e & ECS_ENTITY_MASK;
-            if (ecs_has_entity(world, base, entity)) {
+            ecs_type_t base_type = ecs_get_type(world, base);
+
+            if (search_type(world, base_type, entity, false)) {
                 return true;
             }
-        } else 
-        if (trait && ECS_HAS_ROLE(e, TRAIT) && has_trait(trait, e)) {
-            return true;
-        } else
-        if (sw_case && ECS_HAS_ROLE(e, SWITCH) && has_case(world, sw_case, e)) {
-            return true;
         }
-    });
+    }
 
-    return false;
+    return matched != 0;
+}
+
+bool ecs_type_has_entity(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity)
+{
+    return search_type(world, type, entity, false);
 }
 
 bool ecs_type_owns_entity(
@@ -12093,62 +12208,7 @@ bool ecs_type_owns_entity(
     ecs_entity_t entity,
     bool owned)
 {
-    ecs_entity_t trait = 0, sw_case = 0;
-
-    if (!type) {
-        return false;
-    }
-    if (!entity) {
-        return true;
-    }
-
-    if (ECS_HAS_ROLE(entity, TRAIT)) {
-        trait = entity & ECS_ENTITY_MASK;
-    } else
-    if (ECS_HAS_ROLE(entity, CASE)) {
-        sw_case = entity & ECS_ENTITY_MASK;
-    }
-    
-    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
-    int i, count = ecs_vector_count(type);
-
-    if (owned) {
-        if (trait || sw_case) {
-             for (i = 0; i < count; i ++) {
-                 ecs_entity_t e = array[i];
-                 if (trait && e == entity) {
-                     return true;
-                 }
-                 if (trait && ECS_HAS_ROLE(e, TRAIT) && has_trait(trait, e)) {
-                     return true;
-                 } else
-                 if (sw_case && ECS_HAS_ROLE(e, SWITCH) && has_case(world, sw_case, e)) {
-                     return true;
-                 }
-             }
-        } else {
-            ecs_entity_t e = array[0];
-            for (i = 0; i < count && entity != e && e < entity; i ++) {
-                e = array[i];
-            }
-            return e == entity;
-        }
-    } else {
-        for (i = count - 1; i >= 0; i --) {
-            ecs_entity_t e = array[i];
-            if (e < ECS_INSTANCEOF) {
-                return false;
-            } else
-            if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-                ecs_entity_t base = e & ECS_ENTITY_MASK;
-                if (ecs_has_entity(world, base, entity)) {
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
+    return search_type(world, type, entity, owned);
 }
 
 bool ecs_type_has_type(
@@ -12895,6 +12955,43 @@ void get_comp_and_src(
     *entity_out = entity;
 }
 
+typedef struct trait_offset_t {
+    int32_t index;
+    int32_t count;
+} trait_offset_t;
+
+/* Get index for specified trait. Take into account that a trait can be matched
+ * multiple times per table, by keeping an offset of the last found index */
+static
+int32_t get_trait_index(
+    ecs_type_t table_type,
+    ecs_entity_t component,
+    int32_t column_index,
+    trait_offset_t *trait_offsets,
+    int32_t count)
+{
+    int32_t result;
+
+    /* The count variable keeps track of the number of times a trait has been
+     * matched with the current table. Compare the count to check if the index
+     * was already resolved for this iteration */
+    if (trait_offsets[column_index].count == count) {
+        /* If it was resolved, return the last stored index. Subtract one as the
+         * index is offset by one, to ensure we're not getting stuck on the same
+         * index. */
+        result = trait_offsets[column_index].index - 1;
+    } else {
+        /* First time for this iteration that the trait index is resolved, look
+         * it up in the type. */
+        result = ecs_type_trait_index_of(table_type, 
+            trait_offsets[column_index].index, component);
+        trait_offsets[column_index].index = result + 1;
+        trait_offsets[column_index].count = count;
+    }
+    
+    return result;
+}
+
 static
 int32_t get_component_index(
     ecs_world_t *world,
@@ -12903,7 +13000,8 @@ int32_t get_component_index(
     ecs_entity_t *component_out,
     int32_t column_index,
     ecs_sig_oper_kind_t op,
-    int32_t *trait_index_offsets)
+    trait_offset_t *trait_offsets,
+    int32_t count)
 {
     int32_t result = 0;
     ecs_entity_t component = *component_out;
@@ -12918,30 +13016,79 @@ int32_t get_component_index(
 
             result += table->sw_column_offset;
         } else
-        if (ECS_HAS_ROLE(component, TRAIT) && !(ecs_entity_t_hi(component & ECS_ENTITY_MASK))) {
-            ecs_assert(trait_index_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (ECS_HAS_ROLE(component, TRAIT)) { 
+            /* If only the lo part of the trait identifier is set, interpret it
+             * as the trait to match. This will match any instance of the trait
+             * on the entity and in a signature looks like "TRAIT | MyTrait". */
+            if (!ecs_entity_t_hi(component & ECS_ENTITY_MASK)) {
+                ecs_assert(trait_offsets != NULL, 
+                    ECS_INTERNAL_ERROR, NULL);
 
-            component &= ECS_ENTITY_MASK;
+                /* Strip the TRAIT role */
+                component &= ECS_ENTITY_MASK;
 
-            result = ecs_type_trait_index_of(table_type, 
-                trait_index_offsets[column_index], component);
+                /* Get index of trait. Start looking from the last trait index
+                 * as this may not be the first instance of the trait. */
+                result = get_trait_index(
+                    table_type, component, column_index, trait_offsets, count);
+                
+                if (result != -1) {
+                    /* If component of current column is a trait, get the actual 
+                     * trait type for the table, so the system can see which 
+                     * component the trait was applied to */   
+                    ecs_entity_t *trait = ecs_vector_get(
+                        table_type, ecs_entity_t, result);
+                    *component_out = *trait;
 
-            if (result != -1) {
-                trait_index_offsets[column_index] = result + 1;
-
-                /* If component of current column is a trait, get the actual trait
-                 * type for the table, so the system can see which component the
-                 * trait was applied to */   
-                ecs_entity_t *trait = ecs_vector_get(
-                    table_type, ecs_entity_t, result);
-                *component_out = *trait;
-
-                /* Check if the trait is a tag or whether it has data */
-                if (ecs_get(world, component, EcsComponent) == NULL) {
-                    /* If trait has no data associated with it, use the
-                     * component to which the trait has been added */
-                    component = ecs_entity_t_lo(*trait);
+                    /* Check if the trait is a tag or whether it has data */
+                    if (ecs_get(world, component, EcsComponent) == NULL) {
+                        /* If trait has no data associated with it, use the
+                         * component to which the trait has been added */
+                        component = ecs_entity_t_lo(*trait);
+                    }
                 }
+            } else {
+                /* If trait does have the hi part of the identifier set, this is
+                 * a fully qualified trait identifier. In a signature this looks
+                 * like "TRAIT | MyTrait > Comp". */
+                ecs_entity_t lo = ecs_entity_t_lo(component);
+                if (lo == EcsWildcard) {
+                    ecs_assert(trait_offsets != NULL, 
+                        ECS_INTERNAL_ERROR, NULL);
+
+                    /* Get id for the trait to lookup by taking the trait from
+                     * the high 32 bits, move it to the low 32 bits, and reapply
+                     * the TRAIT mask. */
+                    component = ecs_entity_t_hi(component & ECS_ENTITY_MASK);
+
+                    /* If the low part of the identifier is the wildcard entity,
+                     * this column is requesting the component to which the 
+                     * trait is applied. First, find the component identifier */
+                    result = get_trait_index(table_type, component, 
+                        column_index, trait_offsets, count);
+
+                    /* Type must have the trait, otherwise table would not have
+                     * matched */
+                    ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
+
+                    /* Get component id at returned index */
+                    ecs_entity_t *trait = ecs_vector_get(
+                        table_type, ecs_entity_t, result);
+                    ecs_assert(trait != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                    /* Get the lower part of the trait id. This is the component
+                     * we're looking for. */
+                    component = ecs_entity_t_lo(*trait);
+                    *component_out = component;
+
+                    /* Now lookup the component as usual */
+                }
+
+                /* If the low part is a regular entity (component), then
+                 * this query exactly matches a single trait instance. In
+                 * this case we can simply do a lookup of the trait 
+                 * identifier in the table type. */
+                result = ecs_type_index_of(table_type, component);
             }
         } else {
             /* Get column index for component */
@@ -13048,8 +13195,13 @@ ecs_entity_t is_column_trait(
     /* For now traits are only supported on owned columns */
     if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
         ecs_entity_t c = column->is.component;
-        if (ECS_HAS_ROLE(c, TRAIT) && !(ecs_entity_t_hi(c & ECS_ENTITY_MASK))) {
-            return c;
+        if (ECS_HAS_ROLE(c, TRAIT)) {
+            if (!(ecs_entity_t_hi(c & ECS_ENTITY_MASK))) {
+                return c;
+            } else
+            if (ecs_entity_t_lo(c) == EcsWildcard) {
+                return ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+            }
         }
     }
 
@@ -13136,9 +13288,10 @@ void add_table(
      * table columns. If so, allocate a small array for each trait in which the
      * last added table index of the trait is stored, so that in the next 
      * iteration we can start the search from the correct offset type. */
-    int32_t *trait_index_offsets = NULL;
+    trait_offset_t *trait_offsets = NULL;
     if (trait_count) {
-        trait_index_offsets = ecs_os_calloc(ECS_SIZEOF(int32_t) * column_count);
+        trait_offsets = ecs_os_calloc(
+            ECS_SIZEOF(trait_offset_t) * column_count);
     }
 
     /* From here we recurse */
@@ -13212,7 +13365,7 @@ add_trait:
          * EcsFromSystem or EcsFromParent) and is not just a handle */
         if (!entity && from != EcsFromEmpty) {
             int32_t index = get_component_index(world, table, table_type, 
-                &component, c, op, trait_index_offsets);
+                &component, c, op, trait_offsets, trait_cur + 1);
             
             table_data->columns[c] = index;
 
@@ -13274,8 +13427,8 @@ add_trait:
         goto add_trait;
     }
 
-    if (trait_index_offsets) {
-        ecs_os_free(trait_index_offsets);
+    if (trait_offsets) {
+        ecs_os_free(trait_offsets);
     }
 }
 
@@ -15354,6 +15507,7 @@ int32_t ecs_table_switch_from_case(
     ecs_type_t type = table->type;
     ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
+
     int32_t i, count = table->sw_column_count;
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -16653,6 +16807,19 @@ ecs_entity_t ecs_column_entity(
     ecs_assert(it->components != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return it->components[index - 1];
+}
+
+ecs_entity_t ecs_column_size(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t table_column = it->columns[index - 1];
+
+    return ecs_table_column_size(it, table_column - 1);
 }
 
 ecs_type_t ecs_iter_type(
@@ -20707,6 +20874,12 @@ void ecs_bootstrap(
     ecs_assert(ecs_get_name(world, EcsSingleton) != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_lookup(world, "$") == EcsSingleton, ECS_INTERNAL_ERROR, NULL);
     ecs_add_entity(world, EcsSingleton, ECS_CHILDOF | EcsFlecsCore);
+
+    /* Initialize EcsWildcard */
+    ecs_set(world, EcsWildcard, EcsName, {.value = "*"});
+    ecs_assert(ecs_get_name(world, EcsWildcard) != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_lookup(world, "*") == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
+    ecs_add_entity(world, EcsWildcard, ECS_CHILDOF | EcsFlecsCore);    
 
     ecs_set_scope(world, 0);
 

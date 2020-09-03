@@ -411,6 +411,7 @@ int32_t ecs_table_switch_from_case(
     ecs_type_t type = table->type;
     ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
+
     int32_t i, count = table->sw_column_count;
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
