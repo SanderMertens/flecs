@@ -941,6 +941,20 @@ void grow_column(
     int32_t new_count = count + to_add;
     bool can_realloc = new_count >= alloc_count;
     int16_t alignment = columns[i].alignment;
+    int32_t old_size = ecs_vector_size(vec);
+
+    if (!new_size) {
+        new_size = old_size;
+        if (can_realloc) {
+            new_size *= 2;
+        }
+        if (new_size < new_count) {
+            new_size = new_count;
+        }
+        if (!new_size) {
+            new_size = 1;
+        }
+    }
 
     ecs_c_info_t *c_info = NULL;
     if (c_info_array) {
@@ -1145,8 +1159,7 @@ int32_t ecs_table_append(
     /* Grow component arrays with 1 element */
     int32_t i;
     for (i = 0; i < column_count; i ++) {
-        grow_column(world, entities, columns, c_info_array, i, 1, 1 + count,
-            construct);
+        grow_column(world, entities, columns, c_info_array, i, 1, 0, construct);
     }
 
     /* Add element to each switch column */
