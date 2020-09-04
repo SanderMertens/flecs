@@ -112,18 +112,32 @@ void* _ecs_vector_add(
     int16_t offset)
 {
     ecs_vector_t *vector = *array_inout;
+    int32_t count, size;
 
     if (vector) {
         ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+        count = vector->count;
+        size = vector->size;
 
-        int32_t count = vector->count;
-        if (count < vector->size) {
-            vector->count ++;
-            return ECS_OFFSET(vector, offset + elem_size * count);
+        if (count >= size) {
+            size *= 2;
+            if (!size) {
+                size = 2;
+            }
+            vector = resize(vector, offset, size * elem_size);
+            *array_inout = vector;
+            vector->size = size;
         }
+
+        vector->count = count + 1;
+        return ECS_OFFSET(vector, offset + elem_size * count);
     }
 
-    return _ecs_vector_addn(array_inout, elem_size, offset, 1);
+    vector = _ecs_vector_new(elem_size, offset, 2);
+    *array_inout = vector;
+    vector->count = 1;
+    vector->size = 2;
+    return ECS_OFFSET(vector, offset);
 }
 
 int32_t _ecs_vector_move_index(
@@ -179,7 +193,7 @@ int32_t _ecs_vector_remove(
 void ecs_vector_remove_last(
     ecs_vector_t *vector)
 {
-    if (vector->count) vector->count --;
+    if (vector && vector->count) vector->count --;
 }
 
 bool _ecs_vector_pop(
@@ -224,12 +238,12 @@ int32_t _ecs_vector_remove_index(
 
     ecs_assert(index < count, ECS_INVALID_PARAMETER, NULL);
 
-    if (index != (count - 1)) {
-        void *last_elem = ECS_OFFSET(buffer, elem_size * (count - 1));
+    count --;
+    if (index != count) {
+        void *last_elem = ECS_OFFSET(buffer, elem_size * count);
         ecs_os_memcpy(elem, last_elem, elem_size);
     }
 
-    count --;
     vector->count = count;
 
     return count;

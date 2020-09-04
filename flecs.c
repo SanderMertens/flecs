@@ -2686,31 +2686,18 @@ int32_t grow_data(
 
 static
 void fast_append(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data)
+    ecs_column_t *columns,
+    int32_t column_count)
 {
-    int32_t column_count = table->column_count;
-
-    if (column_count) {
-        ecs_column_t *columns = data->columns;
-
-        /* It is possible that the table data was created without content. Now 
-         * that data is going to be written to the table, initialize it */ 
-        if (!columns) {
-            init_data(world, table, data);
-            columns = data->columns;
+    /* Add elements to each column array */
+    int32_t i;
+    for (i = 0; i < column_count; i ++) {
+        ecs_column_t *column = &columns[i];
+        int16_t size = column->size;
+        if (size) {
+            int16_t alignment = column->alignment;
+            ecs_vector_add_t(&column->data, size, alignment);
         }
-
-        /* Add elements to each column array */
-        int32_t i;
-        for (i = 0; i < column_count; i ++) {
-            int16_t size = columns[i].size;
-            if (size) {
-                int16_t alignment = columns[i].alignment;
-                ecs_vector_add_t(&columns[i].data, size, alignment);
-            }
-        }      
     }
 }
 
@@ -2764,7 +2751,7 @@ int32_t ecs_table_append(
 
     /* Fast path: no switch columns, no lifecycle actions */
     if (!(table->flags & EcsTableIsComplex)) {
-        fast_append(world, table, data);
+        fast_append(columns, column_count);
         return count;
     }
 
@@ -2787,6 +2774,18 @@ int32_t ecs_table_append(
     }
 
     return count;
+}
+
+static
+void fast_delete_last(
+    ecs_column_t *columns,
+    int32_t column_count) 
+{
+    int i;
+    for (i = 0; i < column_count; i ++) {
+        ecs_column_t *column = &columns[i];
+        ecs_vector_remove_last(column->data);
+    }
 }
 
 static
@@ -2874,7 +2873,11 @@ void ecs_table_delete(
     ecs_column_t *columns = data->columns;
 
     if (!(table->flags & EcsTableIsComplex)) {
-        fast_delete(columns, column_count, index);
+        if (index == count) {
+            fast_delete_last(columns, column_count);
+        } else {
+            fast_delete(columns, column_count, index);
+        }
         return;
     }
 
@@ -6739,18 +6742,32 @@ void* _ecs_vector_add(
     int16_t offset)
 {
     ecs_vector_t *vector = *array_inout;
+    int32_t count, size;
 
     if (vector) {
         ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+        count = vector->count;
+        size = vector->size;
 
-        int32_t count = vector->count;
-        if (count < vector->size) {
-            vector->count ++;
-            return ECS_OFFSET(vector, offset + elem_size * count);
+        if (count >= size) {
+            size *= 2;
+            if (!size) {
+                size = 2;
+            }
+            vector = resize(vector, offset, size * elem_size);
+            *array_inout = vector;
+            vector->size = size;
         }
+
+        vector->count = count + 1;
+        return ECS_OFFSET(vector, offset + elem_size * count);
     }
 
-    return _ecs_vector_addn(array_inout, elem_size, offset, 1);
+    vector = _ecs_vector_new(elem_size, offset, 2);
+    *array_inout = vector;
+    vector->count = 1;
+    vector->size = 2;
+    return ECS_OFFSET(vector, offset);
 }
 
 int32_t _ecs_vector_move_index(
@@ -6806,7 +6823,7 @@ int32_t _ecs_vector_remove(
 void ecs_vector_remove_last(
     ecs_vector_t *vector)
 {
-    if (vector->count) vector->count --;
+    if (vector && vector->count) vector->count --;
 }
 
 bool _ecs_vector_pop(
@@ -6851,12 +6868,12 @@ int32_t _ecs_vector_remove_index(
 
     ecs_assert(index < count, ECS_INVALID_PARAMETER, NULL);
 
-    if (index != (count - 1)) {
-        void *last_elem = ECS_OFFSET(buffer, elem_size * (count - 1));
+    count --;
+    if (index != count) {
+        void *last_elem = ECS_OFFSET(buffer, elem_size * count);
         ecs_os_memcpy(elem, last_elem, elem_size);
     }
 
-    count --;
     vector->count = count;
 
     return count;

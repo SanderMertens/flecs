@@ -1069,31 +1069,18 @@ int32_t grow_data(
 
 static
 void fast_append(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data)
+    ecs_column_t *columns,
+    int32_t column_count)
 {
-    int32_t column_count = table->column_count;
-
-    if (column_count) {
-        ecs_column_t *columns = data->columns;
-
-        /* It is possible that the table data was created without content. Now 
-         * that data is going to be written to the table, initialize it */ 
-        if (!columns) {
-            init_data(world, table, data);
-            columns = data->columns;
+    /* Add elements to each column array */
+    int32_t i;
+    for (i = 0; i < column_count; i ++) {
+        ecs_column_t *column = &columns[i];
+        int16_t size = column->size;
+        if (size) {
+            int16_t alignment = column->alignment;
+            ecs_vector_add_t(&column->data, size, alignment);
         }
-
-        /* Add elements to each column array */
-        int32_t i;
-        for (i = 0; i < column_count; i ++) {
-            int16_t size = columns[i].size;
-            if (size) {
-                int16_t alignment = columns[i].alignment;
-                ecs_vector_add_t(&columns[i].data, size, alignment);
-            }
-        }      
     }
 }
 
@@ -1147,7 +1134,7 @@ int32_t ecs_table_append(
 
     /* Fast path: no switch columns, no lifecycle actions */
     if (!(table->flags & EcsTableIsComplex)) {
-        fast_append(world, table, data);
+        fast_append(columns, column_count);
         return count;
     }
 
@@ -1170,6 +1157,18 @@ int32_t ecs_table_append(
     }
 
     return count;
+}
+
+static
+void fast_delete_last(
+    ecs_column_t *columns,
+    int32_t column_count) 
+{
+    int i;
+    for (i = 0; i < column_count; i ++) {
+        ecs_column_t *column = &columns[i];
+        ecs_vector_remove_last(column->data);
+    }
 }
 
 static
@@ -1257,7 +1256,11 @@ void ecs_table_delete(
     ecs_column_t *columns = data->columns;
 
     if (!(table->flags & EcsTableIsComplex)) {
-        fast_delete(columns, column_count, index);
+        if (index == count) {
+            fast_delete_last(columns, column_count);
+        } else {
+            fast_delete(columns, column_count, index);
+        }
         return;
     }
 
