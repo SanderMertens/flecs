@@ -1193,10 +1193,12 @@ void ecs_table_delete(
     
     ecs_assert(index <= count, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_c_info_t **c_info_array = table->c_info;
     int32_t column_count = table->column_count;
     int32_t i;
 
     ecs_entity_t *entities = ecs_vector_first(entity_column, ecs_entity_t);
+    ecs_entity_t entity_to_move = entities[count];
 
     /* Move each component value in array to index */
     ecs_column_t *components = data->columns;
@@ -1205,23 +1207,47 @@ void ecs_table_delete(
         int16_t size = column->size;
         int16_t alignment = column->alignment;
         if (size) {
-            ecs_c_info_t **c_info_array, *c_info;
+            ecs_c_info_t *c_info = c_info_array ? c_info_array[i] : NULL;
             ecs_xtor_t dtor;
-            if (destruct && (c_info_array = table->c_info) &&
-                (c_info = c_info_array[i]) && (dtor = c_info->lifecycle.dtor)) 
-            {
-                void *ptr = ecs_vector_get_t(
-                    column->data, size, alignment, index);
-                dtor(world, c_info->component, &entities[index], ptr, 
-                    ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
-            }  
 
-            ecs_vector_remove_index_t(column->data, size, alignment, index);
+            void *dst = ecs_vector_get_t(column->data, size, alignment, index);
+
+            ecs_move_t move;
+            if (c_info && (count != index) && (move = c_info->lifecycle.move)) {
+                void *ctx = c_info->lifecycle.ctx;
+                void *src = ecs_vector_get_t(column->data, size, alignment, count);
+                ecs_entity_t component = c_info->component;
+
+                /* If the delete is not destructing the component, the component
+                 * was already deleted, most likely by a move. In that case we
+                 * still need to move, but we need to make sure we're moving
+                 * into an element that is initialized with valid memory, so
+                 * call the constructor. */
+                if (!destruct) {
+                    ecs_xtor_t ctor = c_info->lifecycle.ctor;
+                    ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ctor(world, c_info->component, &entity_to_move, dst,
+                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);   
+                }
+
+                /* Move last element into deleted element */
+                move(world, component, &entity_to_move, &entity_to_move, dst, src,
+                    ecs_to_size_t(size), 1, ctx);
+
+                /* Memory has been copied, we can now simply remove last */
+                ecs_vector_remove_last(column->data);                              
+            } else {
+                if (destruct && c_info && (dtor = c_info->lifecycle.dtor)) {
+                    dtor(world, c_info->component, &entities[index], dst, 
+                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+                }
+
+                ecs_vector_remove_index_t(column->data, size, alignment, index);
+            }
         }
     }
 
     /* Move last entity id to index */
-    ecs_entity_t entity_to_move = entities[count];
     entities[index] = entity_to_move;
     ecs_vector_remove_last(entity_column);
 

@@ -381,6 +381,7 @@ void ComponentLifecycle_ctor_on_move_trait(void);
 void ComponentLifecycle_move_on_realloc(void);
 void ComponentLifecycle_move_on_dim(void);
 void ComponentLifecycle_move_on_bulk_new(void);
+void ComponentLifecycle_move_on_delete(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -2575,6 +2576,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "move_on_bulk_new",
         ComponentLifecycle_move_on_bulk_new
+    },
+    {
+        "move_on_delete",
+        ComponentLifecycle_move_on_delete
     }
 };
 
@@ -5730,7 +5735,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        32,
+        33,
         ComponentLifecycle_testcases
     },
     {

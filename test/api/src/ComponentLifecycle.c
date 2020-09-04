@@ -1458,3 +1458,35 @@ void ComponentLifecycle_move_on_bulk_new() {
 
     ecs_fini(world);
 }
+
+void ComponentLifecycle_move_on_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .move = comp_move,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    test_int(ctx.ctor.invoked, 2);
+
+    ctx = (cl_ctx){ { 0 } };
+
+    ecs_delete(world, e1); /* Should trigger move of e2 */
+
+    test_int(ctx.ctor.invoked, 0);
+    test_int(ctx.move.invoked, 1);
+    test_assert(ctx.move.world == world);
+    test_int(ctx.move.component, ecs_entity(Position));
+    test_int(ctx.move.entity, e2);
+    test_int(ctx.move.size, sizeof(Position));
+    test_int(ctx.move.count, 1);
+
+    ecs_fini(world);
+}

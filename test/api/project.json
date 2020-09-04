@@ -424,7 +424,8 @@
                 "ctor_on_move_trait",
                 "move_on_realloc",
                 "move_on_dim",
-                "move_on_bulk_new"
+                "move_on_bulk_new",
+                "move_on_delete"
             ]
         }, {
             "id": "Pipeline",

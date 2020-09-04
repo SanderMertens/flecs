@@ -7513,10 +7513,20 @@ public:
     template <typename... Comps, typename... Args>
     flecs::query<Comps...> query(Args &&... args);
 
-    /** Create a component.
+    /** Register a component.
      */
     template <typename T, typename... Args>
     flecs::entity component(Args &&... args);
+
+    /** Register a POD component.
+     */
+    template <typename T, typename... Args>
+    flecs::entity pod_component(Args &&... args);
+
+    /** Register a relocatable component.
+     */
+    template <typename T, typename... Args>
+    flecs::entity relocatable_component(Args &&... args);
 
     /** Create a snapshot.
      */
@@ -7569,7 +7579,7 @@ public:
     base_type& add() const {
         static_cast<base_type*>(this)->invoke(
         [this](world_t *world, entity_t id) {
-            add(_::component_info<T>::id(world));
+            ecs_add_entity(world, id, _::component_info<T>::id(world));
         });
         return *static_cast<base_type*>(this);
     }
@@ -7634,9 +7644,10 @@ public:
     template<typename T, typename C>
     base_type& add_trait() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {        
-            return add_trait(
-                _::component_info<T>::id(world), _::component_info<C>::id(world));
+        [this](world_t *world, entity_t id) {       
+            ecs_add_entity(world, id, 
+                ecs_trait(_::component_info<C>::id(world), 
+                          _::component_info<T>::id(world)));
         });
         return *static_cast<base_type*>(this); 
     }
@@ -7693,8 +7704,8 @@ public:
     template <typename T>
     base_type& remove() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {        
-            remove(_::component_info<T>::id(world));
+        [this](world_t *world, entity_t id) {
+            ecs_remove_entity(world, id, _::component_info<T>::id(world));
         });
         return *static_cast<base_type*>(this);
     }
@@ -7753,9 +7764,10 @@ public:
     template<typename T, typename C>
     base_type& remove_trait() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {        
-            remove_trait(
-                _::component_info<T>::id(world), _::component_info<C>::id(world));
+        [this](world_t *world, entity_t id) {   
+            ecs_remove_entity(world, id,
+                ecs_trait(_::component_info<C>::id(world), 
+                          _::component_info<T>::id(world)));
         });
         return *static_cast<base_type*>(this);
     }
@@ -9066,7 +9078,6 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 class entity_range final : public entity_builder<entity_range> {
-    using entity_iterator = _::range_iterator<const entity_t*>;
 public:
     entity_range(const world& world, std::int32_t count) 
         : m_world(world.c_ptr())
@@ -9080,17 +9091,9 @@ public:
 
     template <typename Func>
     void invoke(Func&& action) const {
-        for (auto id : *this) {
-            action(m_world, *id);
+        for (int i = 0; i < m_count; i ++) {
+            action(m_world, m_ids[i]);
         }
-    }
-    
-    entity_iterator begin() const {
-        return entity_iterator(m_ids);
-    }
-
-    entity_iterator end() const {
-        return entity_iterator(&m_ids[m_count]);
     }
 
 private:
@@ -9364,6 +9367,7 @@ void component_move(
 
 } // namespace _
 
+/** Plain old datatype, no lifecycle actions are registered */
 template <typename T>
 flecs::entity pod_component(const flecs::world& world, const char *name = nullptr) {
     if (!name) {
@@ -9404,6 +9408,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     return result;
 }
 
+/** Regular component with ctor, dtor copy and move actions */
 template <typename T>
 flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
@@ -9413,6 +9418,24 @@ flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     cl.dtor = _::component_dtor<T>;
     cl.copy = _::component_copy<T>;
     cl.move = _::component_move<T>;
+    
+    ecs_set_component_actions_w_entity(
+        world.c_ptr(), 
+        _::component_info<T>::id(world.c_ptr()), 
+        &cl);
+
+    return result;
+}
+
+/** Trivially relocatable component that can be memcpy'd. */
+template <typename T>
+flecs::entity relocatable_component(const flecs::world& world, const char *name = nullptr) {
+    flecs::entity result = pod_component<T>(world, name);
+
+    EcsComponentLifecycle cl{};
+    cl.ctor = _::component_ctor<T>;
+    cl.dtor = _::component_dtor<T>;
+    cl.copy = _::component_copy<T>;
     
     ecs_set_component_actions_w_entity(
         world.c_ptr(), 
@@ -10659,9 +10682,9 @@ inline int world::count(flecs::filter filter) const {
 }
 
 inline void world::init_builtin_components() {
-    pod_component<Component>(*this, "flecs.core.Component");
-    pod_component<Type>(*this, "flecs.core.Type");
-    pod_component<Name>(*this, "flecs.core.Name");
+    pod_component<Component>("flecs.core.Component");
+    pod_component<Type>("flecs.core.Type");
+    pod_component<Name>("flecs.core.Name");
 }
 
 inline entity world::lookup(const char *name) const {
@@ -10712,6 +10735,16 @@ inline flecs::entity world::import() {
 template <typename T, typename... Args>
 inline flecs::entity world::component(Args &&... args) {
     return flecs::component<T>(*this, std::forward<Args>(args)...);
+}
+
+template <typename T, typename... Args>
+inline flecs::entity world::pod_component(Args &&... args) {
+    return flecs::pod_component<T>(*this, std::forward<Args>(args)...);
+}
+
+template <typename T, typename... Args>
+inline flecs::entity world::relocatable_component(Args &&... args) {
+    return flecs::relocatable_component<T>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
