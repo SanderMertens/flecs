@@ -2778,6 +2778,39 @@ typedef struct EcsTrigger {
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
 
+/** Declare an extern component variable.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_COMPONENT_DECLARE.
+ *
+ * Example:
+ *   ECS_COMPONENT_EXTERN(Position);
+ */
+#define ECS_COMPONENT_EXTERN(id)\
+    extern ECS_ENTITY_VAR(id);\
+    extern ecs_type_t ecs_type(id);\
+
+/** Declare a component variable outside the scope of a function.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_COMPONENT_DEFINE.
+ *
+ * Example:
+ *   ECS_COMPONENT_IMPL(Position);
+ */
+#define ECS_COMPONENT_DECLARE(id)\
+    ECS_ENTITY_VAR(id);\
+    ecs_type_t ecs_type(id);\
+
+/** Define a component, store in variable outside of the current scope.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_COMPONENT_DECLARE.
+ *
+ * Example:
+ *   ECS_COMPONENT_IMPL(Position);
+ */
+#define ECS_COMPONENT_DEFINE(world, id)\
+    ecs_entity(id) = ecs_new_component(world, ecs_entity(id), #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_type(id) = ecs_type_from_entity(world, ecs_entity(id));
+
 /** Declare a tag.
  * Example:
  *   ECS_TAG(world, MyTag);
@@ -9206,88 +9239,6 @@ namespace _
 #endif
 
 template <typename T>
-class component_info final {
-public:
-    static void init(world_t* world, entity_t entity) {
-        if (s_id) {
-            ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
-                _::name_helper<T>::name());
-
-            ecs_assert(!strcmp(ecs_get_name(world, entity), s_name), 
-                ECS_INCONSISTENT_COMPONENT_NAME, 
-                _::name_helper<T>::name());
-        }
-
-        s_id = entity;
-        s_type = ecs_type_from_entity(world, entity);
-        s_name = ecs_get_fullpath(world, entity);
-    }
-
-    static entity_t id(world_t *world = nullptr) {
-        if (!s_id) {
-            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
-                _::name_helper<T>::name());
-
-            entity_t entity = ecs_new_component(
-                world, 0, _::name_helper<T>::name(), 
-                sizeof(typename std::remove_pointer<T>::type), 
-                alignof(typename std::remove_pointer<T>::type));
-
-            init(world, entity);
-        }
-
-
-        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
-
-        return s_id;
-    }
-
-    static const char* name(world_t *world = nullptr) {
-        if (!s_id) {
-            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
-                _::name_helper<T>::name());
-
-            id(world);
-        }
-
-        ecs_assert(s_name != nullptr, ECS_INTERNAL_ERROR, NULL);
-
-        return s_name;
-    }
-
-    static type_t type(world_t *world = nullptr) {
-        if (!s_id) {
-            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
-                _::name_helper<T>::name());
-
-            id(world);
-        }
-
-        ecs_assert(s_type != nullptr, ECS_INTERNAL_ERROR, NULL);
-
-        return s_type;
-    }
-
-    static bool registered() {
-        return s_id != 0;
-    }
-
-private:
-    static entity_t s_id;
-    static type_t s_type;
-    static const char *s_name;
-};
-
-template <typename T> entity_t component_info<T>::s_id( 0 );
-template <typename T> type_t component_info<T>::s_type( nullptr );
-template <typename T> const char* component_info<T>::s_name( nullptr );
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Register a component with flecs
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename T>
 void component_ctor(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -9365,6 +9316,96 @@ void component_move(
     }
 }
 
+template <typename T>
+class component_info final {
+public:
+    static void init(world_t* world, entity_t entity) {
+        if (s_id) {
+            ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
+                _::name_helper<T>::name());
+
+            ecs_assert(!strcmp(ecs_get_name(world, entity), s_name), 
+                ECS_INCONSISTENT_COMPONENT_NAME, 
+                _::name_helper<T>::name());
+        }
+
+        s_id = entity;
+        s_type = ecs_type_from_entity(world, entity);
+        s_name = ecs_get_fullpath(world, entity);
+    }
+
+    static entity_t id(world_t *world = nullptr, bool register_lifecycle = true) {
+        if (!s_id) {
+            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
+                _::name_helper<T>::name());
+
+            entity_t entity = ecs_new_component(
+                world, 0, _::name_helper<T>::name(), 
+                sizeof(typename std::remove_pointer<T>::type), 
+                alignof(typename std::remove_pointer<T>::type));
+
+            init(world, entity);
+
+            if (register_lifecycle) {
+                EcsComponentLifecycle cl{};
+                cl.ctor = _::component_ctor<T>;
+                cl.dtor = _::component_dtor<T>;
+                cl.copy = _::component_copy<T>;
+                cl.move = _::component_move<T>;
+                ecs_set_component_actions_w_entity( world, entity, &cl);
+            }
+        }
+
+        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
+
+        return s_id;
+    }
+
+    static const char* name(world_t *world = nullptr) {
+        if (!s_id) {
+            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
+                _::name_helper<T>::name());
+
+            id(world);
+        }
+
+        ecs_assert(s_name != nullptr, ECS_INTERNAL_ERROR, NULL);
+
+        return s_name;
+    }
+
+    static type_t type(world_t *world = nullptr) {
+        if (!s_id) {
+            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
+                _::name_helper<T>::name());
+
+            id(world);
+        }
+
+        ecs_assert(s_type != nullptr, ECS_INTERNAL_ERROR, NULL);
+
+        return s_type;
+    }
+
+    static bool registered() {
+        return s_id != 0;
+    }
+
+private:
+    static entity_t s_id;
+    static type_t s_type;
+    static const char *s_name;
+};
+
+template <typename T> entity_t component_info<T>::s_id( 0 );
+template <typename T> type_t component_info<T>::s_type( nullptr );
+template <typename T> const char* component_info<T>::s_name( nullptr );
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Register a component with flecs
+////////////////////////////////////////////////////////////////////////////////
+
 } // namespace _
 
 /** Plain old datatype, no lifecycle actions are registered */
@@ -9380,7 +9421,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     if (_::component_info<T>::registered()) {
         /* To support components across multiple worlds, ensure that the
          * component ids are the same. */
-        id = _::component_info<T>::id(world_ptr);
+        id = _::component_info<T>::id(world_ptr, false);
 
         /* If entity is not empty check if the name matches */
         if (ecs_get_type(world_ptr, id) != nullptr) {

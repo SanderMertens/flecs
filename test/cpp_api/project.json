@@ -163,7 +163,8 @@
                 "get_mut_new",
                 "get_mut_existing",
                 "pod_component",
-                "relocatable_component"
+                "relocatable_component",
+                "implicit_component"
             ]
         }, {
             "id": "Refs",

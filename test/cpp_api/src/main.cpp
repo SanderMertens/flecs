@@ -142,6 +142,7 @@ void ComponentLifecycle_get_mut_new(void);
 void ComponentLifecycle_get_mut_existing(void);
 void ComponentLifecycle_pod_component(void);
 void ComponentLifecycle_relocatable_component(void);
+void ComponentLifecycle_implicit_component(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref(void);
@@ -688,6 +689,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "relocatable_component",
         ComponentLifecycle_relocatable_component
+    },
+    {
+        "implicit_component",
+        ComponentLifecycle_implicit_component
     }
 };
 
@@ -934,7 +939,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        12,
+        13,
         ComponentLifecycle_testcases
     },
     {

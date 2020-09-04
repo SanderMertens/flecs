@@ -296,3 +296,25 @@ void ComponentLifecycle_relocatable_component() {
     test_int(POD::ctor_invoked, 2);
     test_int(POD::move_invoked, 0);     
 }
+
+void ComponentLifecycle_implicit_component() {
+    flecs::world world;
+
+    auto e = flecs::entity(world).add<POD>();
+    test_assert(e.id() != 0);
+    test_assert(e.has<POD>());
+
+    const POD *pod = e.get<POD>();
+    test_assert(pod != NULL);
+
+    test_int(pod->value, 10);
+
+    test_int(POD::ctor_invoked, 1);
+    test_int(POD::dtor_invoked, 0);
+    test_int(POD::copy_invoked, 0);
+    test_int(POD::move_invoked, 0);
+
+    flecs::entity(world).add<POD>();
+    test_int(POD::ctor_invoked, 3);
+    test_int(POD::move_invoked, 1); 
+}
