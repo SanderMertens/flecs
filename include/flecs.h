@@ -346,6 +346,39 @@ typedef struct EcsTrigger {
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
 
+/** Declare an extern component variable.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_COMPONENT_DECLARE.
+ *
+ * Example:
+ *   ECS_COMPONENT_EXTERN(Position);
+ */
+#define ECS_COMPONENT_EXTERN(id)\
+    extern ECS_ENTITY_VAR(id);\
+    extern ecs_type_t ecs_type(id);\
+
+/** Declare a component variable outside the scope of a function.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_COMPONENT_DEFINE.
+ *
+ * Example:
+ *   ECS_COMPONENT_IMPL(Position);
+ */
+#define ECS_COMPONENT_DECLARE(id)\
+    ECS_ENTITY_VAR(id);\
+    ecs_type_t ecs_type(id);\
+
+/** Define a component, store in variable outside of the current scope.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_COMPONENT_DECLARE.
+ *
+ * Example:
+ *   ECS_COMPONENT_IMPL(Position);
+ */
+#define ECS_COMPONENT_DEFINE(world, id)\
+    ecs_entity(id) = ecs_new_component(world, ecs_entity(id), #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_type(id) = ecs_type_from_entity(world, ecs_entity(id));
+
 /** Declare a tag.
  * Example:
  *   ECS_TAG(world, MyTag);

@@ -137,6 +137,12 @@
                 "not_added"
             ]
         }, {
+            "id": "GlobalComponentIds",
+            "testcases": [
+                "declare",
+                "declare_2_world"
+            ]
+        }, {
             "id": "Hierarchies",
             "testcases": [
                 "empty_scope",

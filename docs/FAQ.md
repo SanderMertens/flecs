@@ -59,7 +59,7 @@ Because Flecs systems provide direct access to C arrays, a system is invoked mul
 Flecs has an operating system abstraction API with threading functions that are not set by default. Check (or use) the OS API examples to see how to set the OS API.
 
 ### Why am I getting errors like FLECS__TPosition or FLECS_EPosition not found?
-Flecs functions need access to component handles before they can do anything. In C++ this is abstracted away behind templates, but in the C API this is the responsibility of the application. See [this section of the manual](https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#macros) on how to pass component handles around in the application.
+Flecs functions need access to component handles before they can do anything. In C++ this is abstracted away behind templates, but in the C API this is the responsibility of the application. See [this section of the manual](https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#component_handles) on how to pass component handles around in the application.
 
 ### How do I pass component handles around in an application?
 See the previous question.

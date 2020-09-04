@@ -122,6 +122,10 @@ void Remove_1_from_empty(void);
 void Remove_type_from_empty(void);
 void Remove_not_added(void);
 
+// Testsuite 'GlobalComponentIds'
+void GlobalComponentIds_declare(void);
+void GlobalComponentIds_declare_2_world(void);
+
 // Testsuite 'Hierarchies'
 void Hierarchies_empty_scope(void);
 void Hierarchies_get_parent(void);
@@ -1611,6 +1615,17 @@ bake_test_case Remove_testcases[] = {
     {
         "not_added",
         Remove_not_added
+    }
+};
+
+bake_test_case GlobalComponentIds_testcases[] = {
+    {
+        "declare",
+        GlobalComponentIds_declare
+    },
+    {
+        "declare_2_world",
+        GlobalComponentIds_declare_2_world
     }
 };
 
@@ -5634,6 +5649,13 @@ static bake_test_suite suites[] = {
         Remove_testcases
     },
     {
+        "GlobalComponentIds",
+        NULL,
+        NULL,
+        2,
+        GlobalComponentIds_testcases
+    },
+    {
         "Hierarchies",
         NULL,
         NULL,
@@ -5980,5 +6002,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 54);
+    return bake_test_run("api", argc, argv, suites, 55);
 }

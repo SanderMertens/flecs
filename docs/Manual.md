@@ -677,7 +677,44 @@ ecs_modified(world, p, Position);
 ```
 
 ### Component handles
-In order to be able to add, remove and set components on an entity, the API needs access to the component handle. A component handle uniquely identifies a component and is passed to API functions. There are two types of handles that are accepted by API functions, a type handle and an entity handle. These handles are automatically defined as variables by the `ECS_COMPONENT` macro, however if an application wants to use the component in another scope, the handle will have to be passed to that scope.
+In order to be able to add, remove and set components on an entity, the API needs access to the component handle. A component handle uniquely identifies a component and is passed to API functions. There are two types of handles that are accepted by API functions, a type handle and an entity handle. These handles are automatically defined as variables by the `ECS_COMPONENT` macro. If an application wants to use the component in another scope, the handle will have to be either declared globally or passed to that scope explicitly.
+
+#### Global component handles
+To globally declare a component, an application can use the `ECS_COMPONENT_DECLARE` and `ECS_COMPONENT_DEFINE` macro's:
+
+```c
+// Declare component variable in the global scope
+ECS_COMPONENT_DECLARE(Position);
+
+// Function that uses the global component variable
+ecs_entity_t create_entity(ecs_world_t *world) {
+    return ecs_new(world, Position);
+}
+
+int main(int argc, char *argv[]) {
+    ecs_world_t *world = ecs_init();
+
+    // Register component, assign id to the global component variable
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_entity_t e = create_entity(world);
+
+    return ecs_fini(world);
+}
+```
+
+To make a component available for other source files, an application can use the `ECS_COMPONENT_EXTERN` macro in a header:
+
+```c
+ECS_COMPONENT_EXTERN(Position);
+```
+
+Declaring components globally works with multiple worlds, as the second time a component is registered it will use the same id. There is one caveat: an application should not define a component in world 2 that is not defined in world 1 _before_ defining the shared components. The reason for this is that if world 2 does not know that the shared component exists, it may assign its id to another component, which can cause a conflict.
+
+If this is something you cannot guarantee in an application, a better (though more verbose) way is to use local component handles.
+
+#### Local component handles
+When an application cannot declare component handles globally, it can pass component handles manually. Manually passing component handles takes the variables that are declared by the `ECS_COMPONENT` macro and passes them to other functions. This section describes how to pass those handles around.
 
 Some operations can process multiple components in a single operation, like `ecs_add` and `ecs_remove`. Such operations require a handle of `ecs_type_t`. The `ECS_COMPONENT` macro defines a variable of `ecs_type_t` that contains only the id of the component. The variable defined by `ECS_COMPONENT` can be accessed with `ecs_type(ComponentName)`. This escapes the component name, which is necessary as it would otherwise conflict with the C type name. The following example shows how to pass a type handle to another function:
 
