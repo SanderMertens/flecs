@@ -1006,10 +1006,20 @@ public:
     template <typename... Comps, typename... Args>
     flecs::query<Comps...> query(Args &&... args);
 
-    /** Create a component.
+    /** Register a component.
      */
     template <typename T, typename... Args>
     flecs::entity component(Args &&... args);
+
+    /** Register a POD component.
+     */
+    template <typename T, typename... Args>
+    flecs::entity pod_component(Args &&... args);
+
+    /** Register a relocatable component.
+     */
+    template <typename T, typename... Args>
+    flecs::entity relocatable_component(Args &&... args);
 
     /** Create a snapshot.
      */
@@ -4165,9 +4175,9 @@ inline int world::count(flecs::filter filter) const {
 }
 
 inline void world::init_builtin_components() {
-    pod_component<Component>(*this, "flecs.core.Component");
-    pod_component<Type>(*this, "flecs.core.Type");
-    pod_component<Name>(*this, "flecs.core.Name");
+    pod_component<Component>("flecs.core.Component");
+    pod_component<Type>("flecs.core.Type");
+    pod_component<Name>("flecs.core.Name");
 }
 
 inline entity world::lookup(const char *name) const {
@@ -4218,6 +4228,16 @@ inline flecs::entity world::import() {
 template <typename T, typename... Args>
 inline flecs::entity world::component(Args &&... args) {
     return flecs::component<T>(*this, std::forward<Args>(args)...);
+}
+
+template <typename T, typename... Args>
+inline flecs::entity world::pod_component(Args &&... args) {
+    return flecs::pod_component<T>(*this, std::forward<Args>(args)...);
+}
+
+template <typename T, typename... Args>
+inline flecs::entity world::relocatable_component(Args &&... args) {
+    return flecs::relocatable_component<T>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Args>

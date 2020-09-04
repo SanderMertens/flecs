@@ -161,7 +161,9 @@
                 "non_pod_set",
                 "non_pod_override",
                 "get_mut_new",
-                "get_mut_existing"
+                "get_mut_existing",
+                "pod_component",
+                "relocatable_component"
             ]
         }, {
             "id": "Refs",
