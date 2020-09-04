@@ -337,6 +337,7 @@ typedef struct ecs_table_leaf_t {
 
 /* Composite constants */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
+#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasSwitch)
 #define EcsTableHasAddActions       (EcsTableHasBase | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
 #define EcsTableHasRemoveActions    (EcsTableHasBase | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors)
 
@@ -2741,29 +2742,6 @@ int32_t ecs_table_append(
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
     *e = entity;    
 
-    if (!sw_column_count && !(table->flags & EcsTableHasLifecycle)) {
-        /* Fast path: no switch columns, no lifecycle actions */
-        fast_append(world, table, data);
-    } else {
-        ecs_c_info_t **c_info_array = table->c_info;
-        ecs_entity_t *entities = ecs_vector_first(
-            data->entities, ecs_entity_t);
-
-        /* Grow component arrays with 1 element */
-        int32_t i;
-        for (i = 0; i < column_count; i ++) {
-            grow_column(world, entities, columns, c_info_array, i, 1, 1 + count,
-                construct);
-        }
-
-        /* Add element to each switch column */
-        for (i = 0; i < sw_column_count; i ++) {
-            ecs_switch_t *sw = sw_columns[i].data;
-            ecs_switch_add(sw);
-            columns[i + table->sw_column_offset].data = ecs_switch_values(sw);
-        }
-    }
-
     /* Keep track of alloc count. This allows references to check if cached
      * pointers need to be updated. */  
     table->alloc_count += (count == size);
@@ -2782,10 +2760,50 @@ int32_t ecs_table_append(
         ecs_table_activate(world, table, 0, true);
     }
 
-    ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);    
 
-    /* Return index of last added entity */
+    /* Fast path: no switch columns, no lifecycle actions */
+    if (!(table->flags & EcsTableIsComplex)) {
+        fast_append(world, table, data);
+        return count;
+    }
+
+    ecs_c_info_t **c_info_array = table->c_info;
+    ecs_entity_t *entities = ecs_vector_first(
+        data->entities, ecs_entity_t);
+
+    /* Grow component arrays with 1 element */
+    int32_t i;
+    for (i = 0; i < column_count; i ++) {
+        grow_column(world, entities, columns, c_info_array, i, 1, 1 + count,
+            construct);
+    }
+
+    /* Add element to each switch column */
+    for (i = 0; i < sw_column_count; i ++) {
+        ecs_switch_t *sw = sw_columns[i].data;
+        ecs_switch_add(sw);
+        columns[i + table->sw_column_offset].data = ecs_switch_values(sw);
+    }
+
     return count;
+}
+
+static
+void fast_delete(
+    ecs_column_t *columns,
+    int32_t column_count,
+    int32_t index) 
+{
+    int i;
+    for (i = 0; i < column_count; i ++) {
+        ecs_column_t *column = &columns[i];
+        int16_t size = column->size;
+        if (size) {
+            int16_t alignment = column->alignment;
+            ecs_vector_remove_index_t(column->data, size, alignment, index);
+        } 
+    }
 }
 
 void ecs_table_delete(
@@ -2816,53 +2834,6 @@ void ecs_table_delete(
     ecs_entity_t *entities = ecs_vector_first(entity_column, ecs_entity_t);
     ecs_entity_t entity_to_move = entities[count];
 
-    /* Move each component value in array to index */
-    ecs_column_t *components = data->columns;
-    for (i = 0; i < column_count; i ++) {
-        ecs_column_t *column = &components[i];
-        int16_t size = column->size;
-        int16_t alignment = column->alignment;
-        if (size) {
-            ecs_c_info_t *c_info = c_info_array ? c_info_array[i] : NULL;
-            ecs_xtor_t dtor;
-
-            void *dst = ecs_vector_get_t(column->data, size, alignment, index);
-
-            ecs_move_t move;
-            if (c_info && (count != index) && (move = c_info->lifecycle.move)) {
-                void *ctx = c_info->lifecycle.ctx;
-                void *src = ecs_vector_get_t(column->data, size, alignment, count);
-                ecs_entity_t component = c_info->component;
-
-                /* If the delete is not destructing the component, the component
-                 * was already deleted, most likely by a move. In that case we
-                 * still need to move, but we need to make sure we're moving
-                 * into an element that is initialized with valid memory, so
-                 * call the constructor. */
-                if (!destruct) {
-                    ecs_xtor_t ctor = c_info->lifecycle.ctor;
-                    ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
-                    ctor(world, c_info->component, &entity_to_move, dst,
-                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);   
-                }
-
-                /* Move last element into deleted element */
-                move(world, component, &entity_to_move, &entity_to_move, dst, src,
-                    ecs_to_size_t(size), 1, ctx);
-
-                /* Memory has been copied, we can now simply remove last */
-                ecs_vector_remove_last(column->data);                              
-            } else {
-                if (destruct && c_info && (dtor = c_info->lifecycle.dtor)) {
-                    dtor(world, c_info->component, &entities[index], dst, 
-                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
-                }
-
-                ecs_vector_remove_index_t(column->data, size, alignment, index);
-            }
-        }
-    }
-
     /* Move last entity id to index */
     entities[index] = entity_to_move;
     ecs_vector_remove_last(entity_column);
@@ -2890,6 +2861,66 @@ void ecs_table_delete(
             row.row = index + 1;
             ecs_eis_set(stage, entity_to_move, &row);
         }
+    } 
+
+    /* If the table is monitored indicate that there has been a change */
+    mark_table_dirty(table, 0);    
+
+    if (!world->in_progress && !count) {
+        ecs_table_activate(world, table, NULL, false);
+    }
+
+    /* Move each component value in array to index */
+    ecs_column_t *columns = data->columns;
+
+    if (!(table->flags & EcsTableIsComplex)) {
+        fast_delete(columns, column_count, index);
+        return;
+    }
+
+    for (i = 0; i < column_count; i ++) {
+        ecs_column_t *column = &columns[i];
+        int16_t size = column->size;
+        int16_t alignment = column->alignment;
+        if (size) {
+            ecs_c_info_t *c_info = c_info_array ? c_info_array[i] : NULL;
+            ecs_xtor_t dtor;
+
+            void *dst = ecs_vector_get_t(column->data, size, alignment, index);
+
+            ecs_move_t move;
+            if (c_info && (count != index) && (move = c_info->lifecycle.move)) {
+                void *ctx = c_info->lifecycle.ctx;
+                void *src = ecs_vector_get_t(column->data, size, alignment, count);
+                ecs_entity_t component = c_info->component;
+
+                /* If the delete is not destructing the component, the component
+                * was already deleted, most likely by a move. In that case we
+                * still need to move, but we need to make sure we're moving
+                * into an element that is initialized with valid memory, so
+                * call the constructor. */
+                if (!destruct) {
+                    ecs_xtor_t ctor = c_info->lifecycle.ctor;
+                    ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ctor(world, c_info->component, &entity_to_move, dst,
+                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);   
+                }
+
+                /* Move last element into deleted element */
+                move(world, component, &entity_to_move, &entity_to_move, dst, src,
+                    ecs_to_size_t(size), 1, ctx);
+
+                /* Memory has been copied, we can now simply remove last */
+                ecs_vector_remove_last(column->data);                              
+            } else {
+                if (destruct && c_info && (dtor = c_info->lifecycle.dtor)) {
+                    dtor(world, c_info->component, &entities[index], dst, 
+                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+                }
+
+                ecs_vector_remove_index_t(column->data, size, alignment, index);
+            }
+        }
     }
 
     /* Remove elements from switch columns */
@@ -2897,13 +2928,6 @@ void ecs_table_delete(
     int32_t sw_column_count = table->sw_column_count;
     for (i = 0; i < sw_column_count; i ++) {
         ecs_switch_remove(sw_columns[i].data, index);
-    }    
-
-    /* If the table is monitored indicate that there has been a change */
-    mark_table_dirty(table, 0);    
-
-    if (!world->in_progress && !count) {
-        ecs_table_activate(world, table, NULL, false);
     }
 }
 
@@ -2974,15 +2998,13 @@ void ecs_table_move(
     ecs_assert(old_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    move_switch_columns(
-        new_table, new_data, new_index, old_table, old_data, old_index, 1);
-
-    if (!(new_table->flags & EcsTableHasLifecycle) && 
-        !(old_table->flags & EcsTableHasLifecycle)) 
-    {
+    if (!((new_table->flags | old_table->flags) & EcsTableIsComplex)) {
         fast_move(new_table, new_data, new_index, old_table, old_data, old_index);
         return;
     }
+
+    move_switch_columns(
+        new_table, new_data, new_index, old_table, old_data, old_index, 1);
 
     bool to_main_stage = !same_stage && (stage == &world->stage);
     bool same_entity = dst_entity == src_entity;

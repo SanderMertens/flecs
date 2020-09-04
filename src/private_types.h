@@ -152,6 +152,7 @@ typedef struct ecs_table_leaf_t {
 
 /* Composite constants */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
+#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasSwitch)
 #define EcsTableHasAddActions       (EcsTableHasBase | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
 #define EcsTableHasRemoveActions    (EcsTableHasBase | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors)
 
