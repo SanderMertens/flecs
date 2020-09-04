@@ -111,7 +111,7 @@ void ecs_table_move(
 
 /* Grow table with specified number of records. Populate table with entities,
  * starting from specified entity id. */
-int32_t ecs_table_grow(
+int32_t ecs_table_appendn(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -119,14 +119,14 @@ int32_t ecs_table_grow(
     const ecs_entity_t *ids);
 
 /* Set table to a fixed size. Useful for preallocating memory in advance. */
-int16_t ecs_table_set_size(
+void ecs_table_set_size(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count); 
 
 /* Set table to a fixed count. Useful for copying data in bulk. */
-int16_t ecs_table_set_count(
+void ecs_table_set_count(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,

@@ -1158,7 +1158,7 @@ void ComponentLifecycle_delete_in_stage() {
         .dtor = ecs_dtor(Mass),
         .copy = ecs_copy(Mass),
         .move = ecs_move(Mass)
-    }); 
+    });
 
     ecs_staging_begin(world);
 
@@ -1197,7 +1197,8 @@ void ComponentLifecycle_delete_in_stage() {
 }
 
 typedef struct Trait {
-    float value;
+    float value_1;
+    float value_2;
 } Trait;
 
 void ComponentLifecycle_ctor_on_add_trait() {
@@ -1349,6 +1350,111 @@ void ComponentLifecycle_ctor_on_move_trait() {
     test_int(ctx.ctor.entity, e);
     test_int(ctx.ctor.size, sizeof(Trait));
     test_int(ctx.ctor.count, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_move_on_realloc() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .move = comp_move,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(ctx.ctor.invoked, 0);
+
+    ecs_add(world, e, Position);
+    test_int(ctx.ctor.invoked, 1);
+    test_int(ctx.move.invoked, 0);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Position));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Position));
+    test_int(ctx.ctor.count, 1);
+
+    ctx = (cl_ctx){ { 0 } };
+
+    /* Trigger realloc & move */
+    ecs_new(world, Position);
+    test_int(ctx.ctor.invoked, 1);
+    test_int(ctx.move.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_move_on_dim() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .move = comp_move,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(ctx.ctor.invoked, 0);
+
+    ecs_add(world, e, Position);
+    test_int(ctx.ctor.invoked, 1);
+    test_int(ctx.move.invoked, 0);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Position));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Position));
+    test_int(ctx.ctor.count, 1);
+
+    ctx = (cl_ctx){ { 0 } };
+
+    /* Trigger realloc & move */
+    ecs_dim_type(world, ecs_type(Position), 1000);
+    test_int(ctx.ctor.invoked, 1);
+    test_int(ctx.move.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_move_on_bulk_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .move = comp_move,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(ctx.ctor.invoked, 0);
+
+    ecs_add(world, e, Position);
+    test_int(ctx.ctor.invoked, 1);
+    test_int(ctx.move.invoked, 0);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Position));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Position));
+    test_int(ctx.ctor.count, 1);
+
+    ctx = (cl_ctx){ { 0 } };
+
+    /* Trigger realloc & move */
+    ecs_bulk_new(world, Position, 1000);
+    test_int(ctx.ctor.invoked, 1);
+    test_int(ctx.move.invoked, 1);
 
     ecs_fini(world);
 }

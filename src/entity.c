@@ -1320,7 +1320,7 @@ const ecs_entity_t* new_w_data(
     }
 
     ecs_data_t *data = ecs_table_get_or_create_data(world, stage, table);
-    int32_t row = ecs_table_grow(world, table, data, count, ids);
+    int32_t row = ecs_table_appendn(world, table, data, count, ids);
     ecs_entities_t added = ecs_type_to_entities(type);
     
     /* Update entity index. If entities are being created in the main stage,

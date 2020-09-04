@@ -421,7 +421,10 @@
                 "ctor_on_add_trait_set_ctor_after_table",
                 "ctor_on_add_trait_tag",
                 "ctor_on_add_trait_tag_set_ctor_after_table",
-                "ctor_on_move_trait"
+                "ctor_on_move_trait",
+                "move_on_realloc",
+                "move_on_dim",
+                "move_on_bulk_new"
             ]
         }, {
             "id": "Pipeline",
