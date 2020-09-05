@@ -1071,7 +1071,7 @@ public:
     template <typename T>
     base_type& add() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {
+        [](world_t *world, entity_t id) {
             ecs_add_entity(world, id, _::component_info<T>::id(world));
         });
         return *static_cast<base_type*>(this);
@@ -1137,7 +1137,7 @@ public:
     template<typename T, typename C>
     base_type& add_trait() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {       
+        [](world_t *world, entity_t id) {       
             ecs_add_entity(world, id, 
                 ecs_trait(_::component_info<C>::id(world), 
                           _::component_info<T>::id(world)));
@@ -1197,7 +1197,7 @@ public:
     template <typename T>
     base_type& remove() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {
+        [](world_t *world, entity_t id) {
             ecs_remove_entity(world, id, _::component_info<T>::id(world));
         });
         return *static_cast<base_type*>(this);
@@ -1257,7 +1257,7 @@ public:
     template<typename T, typename C>
     base_type& remove_trait() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {   
+        [](world_t *world, entity_t id) {   
             ecs_remove_entity(world, id,
                 ecs_trait(_::component_info<C>::id(world), 
                           _::component_info<T>::id(world)));
@@ -2608,10 +2608,10 @@ namespace _
 {
     struct name_util {
         static void trim_name(char *typeName) {
-            size_t len = strlen(typeName);
+            ecs_size_t len = ecs_os_strlen(typeName);
             
             /* Remove 'const' */
-            size_t const_len = strlen("const ");
+            ecs_size_t const_len = ecs_os_strlen("const ");
             if (!ecs_os_strncmp(typeName, "const ", const_len)) {
                 memmove(typeName, typeName + const_len, len - const_len);
                 typeName[len - const_len] = '\0';
@@ -2619,7 +2619,7 @@ namespace _
             }
 
             /* Remove 'struct' */
-            size_t struct_len = strlen("struct ");
+            ecs_size_t struct_len = ecs_os_strlen("struct ");
             if (!ecs_os_strncmp(typeName, "struct ", struct_len)) {
                 memmove(typeName, typeName + struct_len, len - struct_len);
                 typeName[len - struct_len] = '\0';
@@ -2627,7 +2627,7 @@ namespace _
             }
 
             /* Remove 'class' */
-            size_t class_len = strlen("class ");
+            ecs_size_t class_len = ecs_os_strlen("class ");
             if (!ecs_os_strncmp(typeName, "class ", class_len)) {
                 memmove(typeName, typeName + class_len, len - class_len);
                 typeName[len - class_len] = '\0';
@@ -2643,8 +2643,10 @@ namespace _
             }
 
             /* Remove const at end of string */
-            if (!ecs_os_strncmp(&typeName[len - const_len], " const", const_len)) {
-                typeName[len - const_len] = '\0';
+            if (len > const_len) {
+                if (!ecs_os_strncmp(&typeName[len - const_len], " const", const_len)) {
+                    typeName[len - const_len] = '\0';
+                }
             }
         }
     };
