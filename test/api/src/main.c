@@ -266,6 +266,7 @@ void Reference_get_ref_after_add(void);
 void Reference_get_ref_after_remove(void);
 void Reference_get_ref_after_delete(void);
 void Reference_get_ref_after_realloc(void);
+void Reference_get_ref_after_realloc_w_lifecycle(void);
 void Reference_get_ref_staged(void);
 void Reference_get_ref_after_new_in_stage(void);
 void Reference_get_ref_monitored(void);
@@ -2160,6 +2161,10 @@ bake_test_case Reference_testcases[] = {
     {
         "get_ref_after_realloc",
         Reference_get_ref_after_realloc
+    },
+    {
+        "get_ref_after_realloc_w_lifecycle",
+        Reference_get_ref_after_realloc_w_lifecycle
     },
     {
         "get_ref_staged",
@@ -5758,7 +5763,7 @@ static bake_test_suite suites[] = {
         "Reference",
         NULL,
         NULL,
-        9,
+        10,
         Reference_testcases
     },
     {

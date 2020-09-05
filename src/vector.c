@@ -75,6 +75,10 @@ void* _ecs_vector_addn(
     int16_t offset,
     int32_t elem_count)
 {
+    if (elem_count == 1) {
+        return _ecs_vector_add(array_inout, elem_size, offset);
+    }
+    
     ecs_vector_t *vector = *array_inout;
     if (!vector) {
         vector = _ecs_vector_new(elem_size, offset, 1);

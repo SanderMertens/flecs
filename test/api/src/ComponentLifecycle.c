@@ -35,6 +35,7 @@ typedef struct cl_ctx {
     copy_ctx move;
 } cl_ctx;
 
+static
 void comp_ctor(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -60,6 +61,7 @@ void comp_ctor(
     }
 }
 
+static
 void comp_dtor(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -78,6 +80,7 @@ void comp_dtor(
     data->dtor.invoked ++;
 }
 
+static
 void comp_copy(
     ecs_world_t *world,
     ecs_entity_t component,    
@@ -101,6 +104,7 @@ void comp_copy(
     memcpy(dst_ptr, src_ptr, size * count);
 }
 
+static
 void comp_move(
     ecs_world_t *world,
     ecs_entity_t component,    
@@ -1383,7 +1387,8 @@ void ComponentLifecycle_move_on_realloc() {
 
     /* Trigger realloc & move */
     ecs_new(world, Position);
-    test_int(ctx.ctor.invoked, 1);
+    ecs_new(world, Position);
+    test_int(ctx.ctor.invoked, 2);
     test_int(ctx.move.invoked, 1);
 
     ecs_fini(world);

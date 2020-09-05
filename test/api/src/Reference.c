@@ -211,3 +211,47 @@ void Reference_get_nonexisting() {
     ecs_fini(world);
 }
 
+static
+void comp_move(
+    ecs_world_t *world,
+    ecs_entity_t component,    
+    const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity,
+    void *dst_ptr,
+    void *src_ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    memcpy(dst_ptr, src_ptr, size * count);
+}
+
+void Reference_get_ref_after_realloc_w_lifecycle() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .move = comp_move
+    });
+
+    ECS_ENTITY(world, e, Position);
+    ECS_ENTITY(world, e2, Position);
+    ecs_set(world, e, Position, {10, 20});
+    
+    ecs_ref_t ref = {0};
+    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ECS_TYPE(world, Type, Position, Name);
+    ecs_dim_type(world, ecs_type(Type), 1000);
+
+    p = ecs_get_ref(world, &ref, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
