@@ -418,6 +418,17 @@ typedef struct EcsTrigger {
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
     (void)ecs_type(id)
 
+/** Declare an extern component variable.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_COMPONENT_DECLARE.
+ *
+ * Example:
+ *   ECS_COMPONENT_EXTERN(Position);
+ */
+#define ECS_TAG_EXTERN(id)\
+    extern ecs_entity_t id;\
+    extern ecs_type_t ecs_type(id)
+
 /** Declare a tag variable outside the scope of a function.
  * Use this macro in a header when defining a tag identifier globally.
  * Must be used together with ECS_TAG_DEFINE.
