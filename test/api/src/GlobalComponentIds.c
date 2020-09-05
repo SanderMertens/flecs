@@ -1,10 +1,32 @@
 #include <api.h>
 
+ECS_TAG_DECLARE(MyTag);
+ECS_ENTITY_DECLARE(MyEntity);
 ECS_COMPONENT_DECLARE(Position);
 ECS_COMPONENT_DECLARE(Velocity);
 
+static
 ecs_entity_t create_entity(ecs_world_t *world) {
     return ecs_new(world, Position);
+}
+
+static
+ecs_entity_t create_entity_w_entity(ecs_world_t *world) {
+    return ecs_new_w_entity(world, ecs_entity(Position));
+}
+
+static
+ecs_entity_t create_tag_entity(ecs_world_t *world) {
+    return ecs_new(world, MyTag);
+}
+
+static
+ecs_entity_t create_tag_entity_w_entity(ecs_world_t *world) {
+    return ecs_new_w_entity(world, MyTag);
+}
+
+static ecs_entity_t return_entity() {
+    return MyEntity;
 }
 
 void GlobalComponentIds_declare() {
@@ -13,6 +35,18 @@ void GlobalComponentIds_declare() {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t e = create_entity(world);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void GlobalComponentIds_declare_w_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_entity_t e = create_entity_w_entity(world);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -39,4 +73,42 @@ void GlobalComponentIds_declare_2_world() {
 
     ecs_fini(world_1);
     ecs_fini(world_2);
+}
+
+void GlobalComponentIds_declare_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, MyTag);
+
+    ecs_entity_t e = create_tag_entity(world);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, MyTag));
+
+    ecs_fini(world);
+}
+
+void GlobalComponentIds_declare_tag_w_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, MyTag);
+
+    ecs_entity_t e = create_tag_entity_w_entity(world);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, MyTag));
+
+    ecs_fini(world);
+}
+
+void GlobalComponentIds_declare_entity() {
+ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_ENTITY_DEFINE(world, MyEntity, Position);
+
+    ecs_entity_t e = return_entity();
+    test_assert(e != 0);
+    test_assert(e == MyEntity);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
 }

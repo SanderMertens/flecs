@@ -140,7 +140,11 @@
             "id": "GlobalComponentIds",
             "testcases": [
                 "declare",
-                "declare_2_world"
+                "declare_w_entity",
+                "declare_2_world",
+                "declare_tag",
+                "declare_tag_w_entity",
+                "declare_entity"
             ]
         }, {
             "id": "Hierarchies",

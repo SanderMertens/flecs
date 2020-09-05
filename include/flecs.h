@@ -320,13 +320,43 @@ typedef struct EcsTrigger {
 /* Macro's rely on variadic arguments which are C99 and above */
 #ifndef FLECS_LEGACY
 
+/** Declare an extern component variable.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_ENTITY_DECLARE.
+ *
+ * Example:
+ *   ECS_COMPONENT_EXTERN(Position);
+ */
+#define ECS_ENTITY_EXTERN(id)\
+    extern ecs_entity_t id
+
+/** Declare an entity variable outside the scope of a function.
+ * Use this macro in a header when defining a tag identifier globally.
+ * Must be used together with ECS_ENTITY_DEFINE.
+ *
+ * Example:
+ *   ECS_ENTITY_DECLARE(Position);
+ */
+#define ECS_ENTITY_DECLARE(id)\
+    ecs_entity_t id
+
+/** Define a component, store in variable outside of the current scope.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_ENTITY_DECLARE.
+ *
+ * Example:
+ *   ECS_ENTITY_DEFINE(world, Position);
+ */
+#define ECS_ENTITY_DEFINE(world, id, ...)\
+    id = ecs_new_entity(world, id, #id, #__VA_ARGS__)
+
 /** Declare a named entity with a type expression. 
  * Example:
  *   ECS_ENTITY(world, MyEntity, Position, Velocity);
  */ 
 #define ECS_ENTITY(world, id, ...)\
     ecs_entity_t id = ecs_new_entity(world, 0, #id, #__VA_ARGS__);\
-    (void)id;
+    (void)id
 
 /** Declare a prefab with a type expression. 
  * Example:
@@ -334,7 +364,7 @@ typedef struct EcsTrigger {
  */
 #define ECS_PREFAB(world, id, ...) \
     ecs_entity_t id = ecs_new_prefab(world, 0, #id, #__VA_ARGS__);\
-    (void)id;
+    (void)id
 
 /** Declare a component.
  * Example:
@@ -344,7 +374,7 @@ typedef struct EcsTrigger {
     ECS_ENTITY_VAR(id) = ecs_new_component(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     (void)ecs_entity(id);\
-    (void)ecs_type(id);\
+    (void)ecs_type(id)
 
 /** Declare an extern component variable.
  * Use this macro in a header when defining a component identifier globally.
@@ -355,7 +385,7 @@ typedef struct EcsTrigger {
  */
 #define ECS_COMPONENT_EXTERN(id)\
     extern ECS_ENTITY_VAR(id);\
-    extern ecs_type_t ecs_type(id);\
+    extern ecs_type_t ecs_type(id)
 
 /** Declare a component variable outside the scope of a function.
  * Use this macro in a header when defining a component identifier globally.
@@ -366,27 +396,49 @@ typedef struct EcsTrigger {
  */
 #define ECS_COMPONENT_DECLARE(id)\
     ECS_ENTITY_VAR(id);\
-    ecs_type_t ecs_type(id);\
+    ecs_type_t ecs_type(id)
 
 /** Define a component, store in variable outside of the current scope.
  * Use this macro in a header when defining a component identifier globally.
  * Must be used together with ECS_COMPONENT_DECLARE.
  *
  * Example:
- *   ECS_COMPONENT_IMPL(Position);
+ *   ECS_COMPONENT_DEFINE(world, Position);
  */
 #define ECS_COMPONENT_DEFINE(world, id)\
     ecs_entity(id) = ecs_new_component(world, ecs_entity(id), #id, sizeof(id), ECS_ALIGNOF(id));\
-    ecs_type(id) = ecs_type_from_entity(world, ecs_entity(id));
+    ecs_type(id) = ecs_type_from_entity(world, ecs_entity(id))
 
 /** Declare a tag.
  * Example:
  *   ECS_TAG(world, MyTag);
  */
-#define ECS_TAG(world, id) \
+#define ECS_TAG(world, id)\
     ECS_ENTITY(world, id, 0);\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
-    (void)ecs_type(id);\
+    (void)ecs_type(id)
+
+/** Declare a tag variable outside the scope of a function.
+ * Use this macro in a header when defining a tag identifier globally.
+ * Must be used together with ECS_TAG_DEFINE.
+ *
+ * Example:
+ *   ECS_TAG_DECLARE(Position);
+ */
+#define ECS_TAG_DECLARE(id)\
+    ecs_entity_t id;\
+    ecs_type_t ecs_type(id)
+
+/** Define a component, store in variable outside of the current scope.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_CTAG_DECLARE.
+ *
+ * Example:
+ *   ECS_TAG_DEFINE(world, Position);
+ */
+#define ECS_TAG_DEFINE(world, id)\
+    id = ecs_new_entity(world, id, #id, 0);\
+    ecs_type(id) = ecs_type_from_entity(world, id)
 
 /** Declare a type.
  * Example:
@@ -396,7 +448,7 @@ typedef struct EcsTrigger {
     ecs_entity_t id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    (void)ecs_type(id);\
+    (void)ecs_type(id)
 
 /** Declare a constructor.
  * Example:

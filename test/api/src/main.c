@@ -124,7 +124,11 @@ void Remove_not_added(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
+void GlobalComponentIds_declare_w_entity(void);
 void GlobalComponentIds_declare_2_world(void);
+void GlobalComponentIds_declare_tag(void);
+void GlobalComponentIds_declare_tag_w_entity(void);
+void GlobalComponentIds_declare_entity(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_empty_scope(void);
@@ -1635,8 +1639,24 @@ bake_test_case GlobalComponentIds_testcases[] = {
         GlobalComponentIds_declare
     },
     {
+        "declare_w_entity",
+        GlobalComponentIds_declare_w_entity
+    },
+    {
         "declare_2_world",
         GlobalComponentIds_declare_2_world
+    },
+    {
+        "declare_tag",
+        GlobalComponentIds_declare_tag
+    },
+    {
+        "declare_tag_w_entity",
+        GlobalComponentIds_declare_tag_w_entity
+    },
+    {
+        "declare_entity",
+        GlobalComponentIds_declare_entity
     }
 };
 
@@ -5707,7 +5727,7 @@ static bake_test_suite suites[] = {
         "GlobalComponentIds",
         NULL,
         NULL,
-        2,
+        6,
         GlobalComponentIds_testcases
     },
     {
