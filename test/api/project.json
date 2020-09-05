@@ -514,7 +514,9 @@
                 "system_readeactivate",
                 "system_readeactivate_w_2_systems",
                 "add_to_system_in_progress",
-                "add_to_lazy_system_in_progress"
+                "add_to_lazy_system_in_progress",
+                "redefine_null_signature",
+                "redefine_0_signature"
             ]
         }, {
             "id": "Sorting",

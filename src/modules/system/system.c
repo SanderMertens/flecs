@@ -822,6 +822,11 @@ ecs_entity_t ecs_new_system(
         EcsSignatureExpr *ptr = ecs_get_mut(world, result, EcsSignatureExpr, NULL);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
+        if (!ptr->expr || !signature) {
+            if (ptr->expr != signature) {
+                ecs_abort(ECS_ALREADY_DEFINED, NULL);
+            } 
+        } else
         if (strcmp(ptr->expr, signature)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }

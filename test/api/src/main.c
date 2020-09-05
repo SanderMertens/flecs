@@ -465,6 +465,8 @@ void SystemMisc_system_readeactivate(void);
 void SystemMisc_system_readeactivate_w_2_systems(void);
 void SystemMisc_add_to_system_in_progress(void);
 void SystemMisc_add_to_lazy_system_in_progress(void);
+void SystemMisc_redefine_null_signature(void);
+void SystemMisc_redefine_0_signature(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -2916,6 +2918,14 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "add_to_lazy_system_in_progress",
         SystemMisc_add_to_lazy_system_in_progress
+    },
+    {
+        "redefine_null_signature",
+        SystemMisc_redefine_null_signature
+    },
+    {
+        "redefine_0_signature",
+        SystemMisc_redefine_0_signature
     }
 };
 
@@ -5846,7 +5856,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        51,
+        53,
         SystemMisc_testcases
     },
     {

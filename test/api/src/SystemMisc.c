@@ -1080,3 +1080,34 @@ void SystemMisc_add_to_lazy_system_in_progress() {
 
     ecs_fini(world);
 }
+
+static
+void Action(ecs_iter_t *it) { }
+
+void SystemMisc_redefine_null_signature() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s_1 = ecs_new_system(
+        world, 0, "System", EcsOnUpdate, NULL, Action);
+
+    ecs_entity_t s_2 = ecs_new_system(
+        world, 0, "System", EcsOnUpdate, NULL, Action);        
+
+    test_assert(s_1 == s_2);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_redefine_0_signature() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s_1 = ecs_new_system(
+        world, 0, "System", EcsOnUpdate, "0", Action);
+
+    ecs_entity_t s_2 = ecs_new_system(
+        world, 0, "System", EcsOnUpdate, "0", Action);
+
+    test_assert(s_1 == s_2);
+
+    ecs_fini(world);
+}
