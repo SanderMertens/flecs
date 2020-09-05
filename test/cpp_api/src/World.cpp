@@ -26,6 +26,26 @@ void World_multi_world_component() {
     test_assert(p_1.id() == p_2.id());
 }
 
+namespace A {
+    struct Comp {
+        float x;
+        float y;
+    };
+}
+
+void World_multi_world_component_namespace() {
+    flecs::world *w = new flecs::world();
+    auto c = w->component<A::Comp>();
+    auto id_1 = c.id();
+    delete w;
+
+    w = new flecs::world();
+    c = w->component<A::Comp>();
+    auto id_2 = c.id();
+
+    test_assert(id_1 == id_2);
+}
+
 void World_type_id() {
     flecs::world w;
 

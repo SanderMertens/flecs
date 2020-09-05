@@ -9406,9 +9406,11 @@ public:
             ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
                 _::name_helper<T>::name());
 
-            ecs_assert(!strcmp(ecs_get_name(world, entity), s_name), 
+            char *path = ecs_get_fullpath(world, entity);
+            ecs_assert(!strcmp(path, s_name), 
                 ECS_INCONSISTENT_COMPONENT_NAME, 
                 _::name_helper<T>::name());
+            ecs_os_free(path);
         }
 
         s_id = entity;

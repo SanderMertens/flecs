@@ -196,6 +196,7 @@ void WorldFactory_module_w_name(void);
 // Testsuite 'World'
 void World_multi_world_empty(void);
 void World_multi_world_component(void);
+void World_multi_world_component_namespace(void);
 void World_type_id(void);
 
 bake_test_case Entity_testcases[] = {
@@ -878,6 +879,10 @@ bake_test_case World_testcases[] = {
         World_multi_world_component
     },
     {
+        "multi_world_component_namespace",
+        World_multi_world_component_namespace
+    },
+    {
         "type_id",
         World_type_id
     }
@@ -986,7 +991,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        3,
+        4,
         World_testcases
     }
 };

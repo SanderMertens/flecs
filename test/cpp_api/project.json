@@ -230,6 +230,7 @@
             "testcases": [
                 "multi_world_empty",
                 "multi_world_component",
+                "multi_world_component_namespace",
                 "type_id"
             ]
         }]
