@@ -2968,6 +2968,11 @@ flecs::entity relocatable_component(const flecs::world& world, const char *name 
     return result;
 }
 
+template <typename T>
+flecs::entity_t type_id() {
+    return _::component_info<T>::id();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Define a module

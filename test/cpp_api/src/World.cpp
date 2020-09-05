@@ -25,3 +25,11 @@ void World_multi_world_component() {
     auto p_2 = w2.component<Position>();
     test_assert(p_1.id() == p_2.id());
 }
+
+void World_type_id() {
+    flecs::world w;
+
+    auto p = w.component<Position>();
+
+    test_assert(p.id() == flecs::type_id<Position>());
+}

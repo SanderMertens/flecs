@@ -229,7 +229,8 @@
             "id": "World",
             "testcases": [
                 "multi_world_empty",
-                "multi_world_component"
+                "multi_world_component",
+                "type_id"
             ]
         }]
     }
