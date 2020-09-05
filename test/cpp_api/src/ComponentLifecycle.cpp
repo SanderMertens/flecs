@@ -315,6 +315,7 @@ void ComponentLifecycle_implicit_component() {
     test_int(POD::move_invoked, 0);
 
     flecs::entity(world).add<POD>();
-    test_int(POD::ctor_invoked, 3);
-    test_int(POD::move_invoked, 1); 
+    flecs::entity(world).add<POD>();
+    test_int(POD::ctor_invoked, 5);
+    test_int(POD::move_invoked, 2); 
 }
