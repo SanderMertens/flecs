@@ -2752,13 +2752,43 @@ typedef struct EcsTrigger {
 /* Macro's rely on variadic arguments which are C99 and above */
 #ifndef FLECS_LEGACY
 
+/** Declare an extern component variable.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_ENTITY_DECLARE.
+ *
+ * Example:
+ *   ECS_COMPONENT_EXTERN(Position);
+ */
+#define ECS_ENTITY_EXTERN(id)\
+    extern ecs_entity_t id
+
+/** Declare an entity variable outside the scope of a function.
+ * Use this macro in a header when defining a tag identifier globally.
+ * Must be used together with ECS_ENTITY_DEFINE.
+ *
+ * Example:
+ *   ECS_ENTITY_DECLARE(Position);
+ */
+#define ECS_ENTITY_DECLARE(id)\
+    ecs_entity_t id
+
+/** Define a component, store in variable outside of the current scope.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_ENTITY_DECLARE.
+ *
+ * Example:
+ *   ECS_ENTITY_DEFINE(world, Position);
+ */
+#define ECS_ENTITY_DEFINE(world, id, ...)\
+    id = ecs_new_entity(world, id, #id, #__VA_ARGS__)
+
 /** Declare a named entity with a type expression. 
  * Example:
  *   ECS_ENTITY(world, MyEntity, Position, Velocity);
  */ 
 #define ECS_ENTITY(world, id, ...)\
     ecs_entity_t id = ecs_new_entity(world, 0, #id, #__VA_ARGS__);\
-    (void)id;
+    (void)id
 
 /** Declare a prefab with a type expression. 
  * Example:
@@ -2766,7 +2796,7 @@ typedef struct EcsTrigger {
  */
 #define ECS_PREFAB(world, id, ...) \
     ecs_entity_t id = ecs_new_prefab(world, 0, #id, #__VA_ARGS__);\
-    (void)id;
+    (void)id
 
 /** Declare a component.
  * Example:
@@ -2776,7 +2806,7 @@ typedef struct EcsTrigger {
     ECS_ENTITY_VAR(id) = ecs_new_component(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     (void)ecs_entity(id);\
-    (void)ecs_type(id);\
+    (void)ecs_type(id)
 
 /** Declare an extern component variable.
  * Use this macro in a header when defining a component identifier globally.
@@ -2787,7 +2817,7 @@ typedef struct EcsTrigger {
  */
 #define ECS_COMPONENT_EXTERN(id)\
     extern ECS_ENTITY_VAR(id);\
-    extern ecs_type_t ecs_type(id);\
+    extern ecs_type_t ecs_type(id)
 
 /** Declare a component variable outside the scope of a function.
  * Use this macro in a header when defining a component identifier globally.
@@ -2798,27 +2828,60 @@ typedef struct EcsTrigger {
  */
 #define ECS_COMPONENT_DECLARE(id)\
     ECS_ENTITY_VAR(id);\
-    ecs_type_t ecs_type(id);\
+    ecs_type_t ecs_type(id)
 
 /** Define a component, store in variable outside of the current scope.
  * Use this macro in a header when defining a component identifier globally.
  * Must be used together with ECS_COMPONENT_DECLARE.
  *
  * Example:
- *   ECS_COMPONENT_IMPL(Position);
+ *   ECS_COMPONENT_DEFINE(world, Position);
  */
 #define ECS_COMPONENT_DEFINE(world, id)\
     ecs_entity(id) = ecs_new_component(world, ecs_entity(id), #id, sizeof(id), ECS_ALIGNOF(id));\
-    ecs_type(id) = ecs_type_from_entity(world, ecs_entity(id));
+    ecs_type(id) = ecs_type_from_entity(world, ecs_entity(id))
 
 /** Declare a tag.
  * Example:
  *   ECS_TAG(world, MyTag);
  */
-#define ECS_TAG(world, id) \
+#define ECS_TAG(world, id)\
     ECS_ENTITY(world, id, 0);\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
-    (void)ecs_type(id);\
+    (void)ecs_type(id)
+
+/** Declare an extern component variable.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_COMPONENT_DECLARE.
+ *
+ * Example:
+ *   ECS_COMPONENT_EXTERN(Position);
+ */
+#define ECS_TAG_EXTERN(id)\
+    extern ecs_entity_t id;\
+    extern ecs_type_t ecs_type(id)
+
+/** Declare a tag variable outside the scope of a function.
+ * Use this macro in a header when defining a tag identifier globally.
+ * Must be used together with ECS_TAG_DEFINE.
+ *
+ * Example:
+ *   ECS_TAG_DECLARE(Position);
+ */
+#define ECS_TAG_DECLARE(id)\
+    ecs_entity_t id;\
+    ecs_type_t ecs_type(id)
+
+/** Define a component, store in variable outside of the current scope.
+ * Use this macro in a header when defining a component identifier globally.
+ * Must be used together with ECS_CTAG_DECLARE.
+ *
+ * Example:
+ *   ECS_TAG_DEFINE(world, Position);
+ */
+#define ECS_TAG_DEFINE(world, id)\
+    id = ecs_new_entity(world, id, #id, 0);\
+    ecs_type(id) = ecs_type_from_entity(world, id)
 
 /** Declare a type.
  * Example:
@@ -2828,7 +2891,7 @@ typedef struct EcsTrigger {
     ecs_entity_t id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    (void)ecs_type(id);\
+    (void)ecs_type(id)
 
 /** Declare a constructor.
  * Example:
@@ -7611,7 +7674,7 @@ public:
     template <typename T>
     base_type& add() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {
+        [](world_t *world, entity_t id) {
             ecs_add_entity(world, id, _::component_info<T>::id(world));
         });
         return *static_cast<base_type*>(this);
@@ -7677,7 +7740,7 @@ public:
     template<typename T, typename C>
     base_type& add_trait() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {       
+        [](world_t *world, entity_t id) {       
             ecs_add_entity(world, id, 
                 ecs_trait(_::component_info<C>::id(world), 
                           _::component_info<T>::id(world)));
@@ -7737,7 +7800,7 @@ public:
     template <typename T>
     base_type& remove() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {
+        [](world_t *world, entity_t id) {
             ecs_remove_entity(world, id, _::component_info<T>::id(world));
         });
         return *static_cast<base_type*>(this);
@@ -7797,7 +7860,7 @@ public:
     template<typename T, typename C>
     base_type& remove_trait() const {
         static_cast<base_type*>(this)->invoke(
-        [this](world_t *world, entity_t id) {   
+        [](world_t *world, entity_t id) {   
             ecs_remove_entity(world, id,
                 ecs_trait(_::component_info<C>::id(world), 
                           _::component_info<T>::id(world)));
@@ -9148,10 +9211,10 @@ namespace _
 {
     struct name_util {
         static void trim_name(char *typeName) {
-            size_t len = strlen(typeName);
+            ecs_size_t len = ecs_os_strlen(typeName);
             
             /* Remove 'const' */
-            size_t const_len = strlen("const ");
+            ecs_size_t const_len = ecs_os_strlen("const ");
             if (!ecs_os_strncmp(typeName, "const ", const_len)) {
                 memmove(typeName, typeName + const_len, len - const_len);
                 typeName[len - const_len] = '\0';
@@ -9159,7 +9222,7 @@ namespace _
             }
 
             /* Remove 'struct' */
-            size_t struct_len = strlen("struct ");
+            ecs_size_t struct_len = ecs_os_strlen("struct ");
             if (!ecs_os_strncmp(typeName, "struct ", struct_len)) {
                 memmove(typeName, typeName + struct_len, len - struct_len);
                 typeName[len - struct_len] = '\0';
@@ -9167,7 +9230,7 @@ namespace _
             }
 
             /* Remove 'class' */
-            size_t class_len = strlen("class ");
+            ecs_size_t class_len = ecs_os_strlen("class ");
             if (!ecs_os_strncmp(typeName, "class ", class_len)) {
                 memmove(typeName, typeName + class_len, len - class_len);
                 typeName[len - class_len] = '\0';
@@ -9183,8 +9246,10 @@ namespace _
             }
 
             /* Remove const at end of string */
-            if (!ecs_os_strncmp(&typeName[len - const_len], " const", const_len)) {
-                typeName[len - const_len] = '\0';
+            if (len > const_len) {
+                if (!ecs_os_strncmp(&typeName[len - const_len], " const", const_len)) {
+                    typeName[len - const_len] = '\0';
+                }
             }
         }
     };
@@ -9504,6 +9569,11 @@ flecs::entity relocatable_component(const flecs::world& world, const char *name 
         &cl);
 
     return result;
+}
+
+template <typename T>
+flecs::entity_t type_id() {
+    return _::component_info<T>::id();
 }
 
 

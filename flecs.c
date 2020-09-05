@@ -15154,7 +15154,6 @@ bool ecs_query_next(
         }
 
         it->table = world_table;
-
         it->columns = table->columns;
         it->components = table->components;
         it->references = ecs_vector_first(table->references, ecs_ref_t);
