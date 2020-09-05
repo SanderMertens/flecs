@@ -767,6 +767,9 @@ ecs_c_info_t * ecs_get_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
+
     if (component < ECS_HI_COMPONENT_ID) {
         return &world->c_info[component];
     } else {
@@ -777,7 +780,7 @@ ecs_c_info_t * ecs_get_c_info(
 ecs_c_info_t * ecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
-{
+{    
     ecs_c_info_t *c_info = ecs_get_c_info(world, component);
     if (!c_info) {
         ecs_assert(component >= ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);

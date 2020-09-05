@@ -161,25 +161,6 @@ ecs_flags32_t get_component_action_flags(
     return flags;  
 }
 
-static
-ecs_entity_t get_component_id(
-    ecs_world_t *world,
-    ecs_entity_t e)
-{
-    if (ECS_HAS_ROLE(e, TRAIT)) {
-        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_ENTITY_MASK);
-        if (ecs_has(world, trait, EcsComponent)) {
-            /* This is not a trait tag, trait is the value */
-            return trait;
-        } else {
-            /* This is a trait tag, component is the value */
-            return ecs_entity_t_lo(e);
-        }
-    }
-
-    return e;
-}
-
 /* Check if table has instance of component, including traits */
 static
 bool has_component(
@@ -191,7 +172,7 @@ bool has_component(
     int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
-        if (component == get_component_id(world, entities[i])) {
+        if (component == ecs_component_id_from_id(world, entities[i])) {
             return true;
         }
     }
@@ -226,7 +207,11 @@ void notify_component_info(
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         int32_t i;
         for (i = 0; i < column_count; i ++) {
-            ecs_entity_t c = get_component_id(world, array[i]);
+            ecs_entity_t c = ecs_component_id_from_id(world, array[i]);
+            if (!c) {
+                continue;
+            }
+            
             ecs_c_info_t *c_info = ecs_get_c_info(world, c);
             if (c_info) {
                 ecs_flags32_t flags = get_component_action_flags(c_info);

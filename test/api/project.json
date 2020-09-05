@@ -431,7 +431,11 @@
                 "move_on_realloc",
                 "move_on_dim",
                 "move_on_bulk_new",
-                "move_on_delete"
+                "move_on_delete",
+                "copy_on_override_trait",
+                "copy_on_override_trait_tag",
+                "copy_on_set_trait",
+                "copy_on_set_trait_tag"
             ]
         }, {
             "id": "Pipeline",
@@ -564,7 +568,13 @@
                 "override_tag_trait",
                 "trait_wildcard_system",
                 "trait_only_wildcard_system",
-                "trait_wildcard_on_set"
+                "trait_wildcard_on_set",
+                "on_add_trait",
+                "on_add_trait_tag",
+                "on_remove_trait",
+                "on_remove_trait_tag",
+                "on_remove_trait_on_delete",
+                "on_remove_trait_tag_on_delete"
             ]
         }, {
             "id": "TriggerOnAdd",

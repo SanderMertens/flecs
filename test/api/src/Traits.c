@@ -739,3 +739,261 @@ void Traits_trait_wildcard_on_set() {
 
     ecs_fini(world);
 }
+
+static
+void TraitTrigger(ecs_iter_t *it) {
+    probe_system(it);
+}
+
+void Traits_on_add_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Trait);
+
+    ECS_TRIGGER(world, TraitTrigger, EcsOnAdd, Trait);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_trait(world, e, ecs_entity(Position), ecs_entity(Trait));
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, TraitTrigger);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+
+    ecs_entity_t c = ctx.c[0][0];
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t lo = ecs_entity_t_lo(c);
+    test_int(hi, ecs_entity(Trait));
+    test_int(lo, ecs_entity(Position));  
+
+    ctx = (Probe){ 0 };
+    ecs_add_trait(world, e, ecs_entity(Velocity), ecs_entity(Trait));
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, TraitTrigger);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+
+    c = ctx.c[0][0];
+    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    lo = ecs_entity_t_lo(c);
+    test_int(hi, ecs_entity(Trait));
+    test_int(lo, ecs_entity(Velocity));
+
+    ecs_fini(world);
+}
+
+void Traits_on_add_trait_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ECS_TRIGGER(world, TraitTrigger, EcsOnAdd, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_trait(world, e, ecs_entity(Position), Trait);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, TraitTrigger);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+
+    ecs_entity_t c = ctx.c[0][0];
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t lo = ecs_entity_t_lo(c);
+    test_int(hi, Trait);
+    test_int(lo, ecs_entity(Position));  
+
+    ecs_fini(world);
+}
+
+void Traits_on_remove_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Trait);
+
+    ECS_TRIGGER(world, TraitTrigger, EcsOnRemove, Trait);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_trait(world, e, ecs_entity(Position), ecs_entity(Trait));
+    ecs_add_trait(world, e, ecs_entity(Velocity), ecs_entity(Trait));
+    test_int(ctx.count, 0);
+
+    ecs_remove_trait(world, e, ecs_entity(Position), ecs_entity(Trait));
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, TraitTrigger);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+
+    ecs_entity_t c = ctx.c[0][0];
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t lo = ecs_entity_t_lo(c);
+    test_int(hi, ecs_entity(Trait));
+    test_int(lo, ecs_entity(Position));  
+
+    ctx = (Probe){ 0 };
+    ecs_remove_trait(world, e, ecs_entity(Velocity), ecs_entity(Trait));
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, TraitTrigger);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+
+    c = ctx.c[0][0];
+    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    lo = ecs_entity_t_lo(c);
+    test_int(hi, ecs_entity(Trait));
+    test_int(lo, ecs_entity(Velocity));
+
+    ecs_fini(world);
+}
+
+void Traits_on_remove_trait_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ECS_TRIGGER(world, TraitTrigger, EcsOnRemove, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_trait(world, e, ecs_entity(Position), Trait);
+    test_int(ctx.count, 0);
+
+    ecs_remove_trait(world, e, ecs_entity(Position), Trait);    
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, TraitTrigger);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+
+    ecs_entity_t c = ctx.c[0][0];
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t lo = ecs_entity_t_lo(c);
+    test_int(hi, Trait);
+    test_int(lo, ecs_entity(Position));  
+
+    ecs_fini(world);
+}
+
+void Traits_on_remove_trait_on_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Trait);
+
+    ECS_TRIGGER(world, TraitTrigger, EcsOnRemove, Trait);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_trait(world, e, ecs_entity(Position), ecs_entity(Trait));
+    ecs_add_trait(world, e, ecs_entity(Velocity), ecs_entity(Trait));
+    test_int(ctx.count, 0);
+
+    ecs_delete(world, e);
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.system, TraitTrigger);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+
+    ecs_entity_t c = ctx.c[0][0];
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t lo = ecs_entity_t_lo(c);
+    test_int(hi, ecs_entity(Trait));
+    test_int(lo, ecs_entity(Position));  
+
+    test_int(ctx.e[1], e);
+
+    c = ctx.c[1][0];
+    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    lo = ecs_entity_t_lo(c);
+    test_int(hi, ecs_entity(Trait));
+    test_int(lo, ecs_entity(Velocity));
+
+    ecs_fini(world);
+}
+
+static
+void TraitTriggerPosition(ecs_iter_t *it) {
+    TraitTrigger(it);
+}
+
+static
+void TraitTriggerVelocity(ecs_iter_t *it) {
+    TraitTrigger(it);
+}
+
+void Traits_on_remove_trait_tag_on_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Trait);
+
+    ECS_TRIGGER(world, TraitTriggerPosition, EcsOnRemove, Position);
+    ECS_TRIGGER(world, TraitTriggerVelocity, EcsOnRemove, Velocity);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_trait(world, e, ecs_entity(Position), Trait);
+    ecs_add_trait(world, e, ecs_entity(Velocity), Trait);
+    test_int(ctx.count, 0);
+
+    ecs_delete(world, e);
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.system, TraitTriggerVelocity);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+
+    ecs_entity_t c = ctx.c[0][0];
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t lo = ecs_entity_t_lo(c);
+    test_int(hi, Trait);
+    test_int(lo, ecs_entity(Position));  
+
+    test_int(ctx.e[1], e);
+
+    c = ctx.c[1][0];
+    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    lo = ecs_entity_t_lo(c);
+    test_int(hi, Trait);
+    test_int(lo, ecs_entity(Velocity));
+
+    ecs_fini(world);
+}

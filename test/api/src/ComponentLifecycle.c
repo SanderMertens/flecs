@@ -263,13 +263,13 @@ void ComponentLifecycle_copy_on_override() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t base = ecs_new(world, Position);
     test_int(ctx.copy.invoked, 0);
 
-    ecs_entity_t base = ecs_new_w_entity(world, ECS_INSTANCEOF | e);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
     test_int(ctx.copy.invoked, 0);
 
-    ecs_add(world, base, Position);
+    ecs_add(world, e, Position);
     test_int(ctx.copy.invoked, 1);
     test_assert(ctx.copy.world == world);
     test_int(ctx.copy.component, ecs_entity(Position));
@@ -1487,6 +1487,138 @@ void ComponentLifecycle_move_on_delete() {
     test_int(ctx.move.entity, e2);
     test_int(ctx.move.size, sizeof(Position));
     test_int(ctx.move.count, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_on_override_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Trait);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Trait), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .copy = comp_copy,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new(world, 0);
+    ecs_add_trait(world, base, ecs_entity(Position), ecs_entity(Trait));
+    test_int(ctx.ctor.invoked, 1);
+    test_int(ctx.copy.invoked, 0);
+
+    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    test_int(ctx.ctor.invoked, 1); /* No change */
+    test_int(ctx.copy.invoked, 0);
+
+    ctx = (cl_ctx){ { 0 } };
+
+    /* Override */
+    ecs_add_trait(world, instance, ecs_entity(Position), ecs_entity(Trait));
+
+    test_int(ctx.ctor.invoked, 1);
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Trait));
+    test_int(ctx.copy.entity, instance);
+    test_int(ctx.copy.size, sizeof(Trait));
+    test_int(ctx.copy.count, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_on_override_trait_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .copy = comp_copy,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new(world, 0);
+    ecs_add_trait(world, base, ecs_entity(Position), Trait);
+    test_int(ctx.ctor.invoked, 1);
+    test_int(ctx.copy.invoked, 0);
+
+    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    test_int(ctx.ctor.invoked, 1); /* No change */
+    test_int(ctx.copy.invoked, 0);
+
+    ctx = (cl_ctx){ { 0 } };
+
+    /* Override */
+    ecs_add_trait(world, instance, ecs_entity(Position), Trait);
+
+    test_int(ctx.ctor.invoked, 1);
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, instance);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_on_set_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Trait);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Trait), EcsComponentLifecycle, {
+        .copy = comp_copy,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(ctx.copy.invoked, 0);
+    
+    ecs_set_trait(world, e, Position, Trait, {0, 0});
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Trait));
+    test_int(ctx.copy.entity, e);
+    test_int(ctx.copy.size, sizeof(Trait));
+    test_int(ctx.copy.count, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_on_set_trait_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .copy = comp_copy,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(ctx.copy.invoked, 0);
+    
+    ecs_set_trait_tag(world, e, Trait, Position, {0, 0});
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, e);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 1);
 
     ecs_fini(world);
 }

@@ -302,6 +302,10 @@ void ecs_table_mark_dirty(
     ecs_table_t *table,
     ecs_entity_t component);
 
+ecs_entity_t ecs_component_id_from_id(
+    ecs_world_t *world,
+    ecs_entity_t e);
+
 const EcsComponent* ecs_component_from_id(
     ecs_world_t *world,
     ecs_entity_t e);

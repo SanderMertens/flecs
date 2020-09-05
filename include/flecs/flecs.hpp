@@ -2776,6 +2776,23 @@ void component_move(
     }
 }
 
+template<typename T>
+void register_lifecycle_actions(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    bool ctor,
+    bool dtor,
+    bool copy,
+    bool move)
+{
+    EcsComponentLifecycle cl{};
+    cl.ctor = _::component_ctor<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+    cl.dtor = _::component_dtor<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+    cl.copy = _::component_copy<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+    cl.move = _::component_move<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+    ecs_set_component_actions_w_entity( world, component, &cl);
+}
+
 template <typename T>
 class component_info final {
 public:
@@ -2794,7 +2811,7 @@ public:
         s_name = ecs_get_fullpath(world, entity);
     }
 
-    static entity_t id(world_t *world = nullptr, bool register_lifecycle = true) {
+    static entity_t id_no_lifecycle(world_t *world = nullptr) {
         if (!s_id) {
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
                 _::name_helper<T>::name());
@@ -2805,15 +2822,18 @@ public:
                 alignof(typename std::remove_pointer<T>::type));
 
             init(world, entity);
+        }
 
-            if (register_lifecycle) {
-                EcsComponentLifecycle cl{};
-                cl.ctor = _::component_ctor<T>;
-                cl.dtor = _::component_dtor<T>;
-                cl.copy = _::component_copy<T>;
-                cl.move = _::component_move<T>;
-                ecs_set_component_actions_w_entity( world, entity, &cl);
-            }
+        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
+
+        return s_id;        
+    }
+
+    static entity_t id(world_t *world = nullptr) {
+        if (!s_id) {
+            id_no_lifecycle(world);
+            register_lifecycle_actions<T>(world, s_id,
+                true, true, true, true);
         }
 
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
@@ -2826,7 +2846,7 @@ public:
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
                 _::name_helper<T>::name());
 
-            id(world);
+            id_no_lifecycle(world);
         }
 
         ecs_assert(s_name != nullptr, ECS_INTERNAL_ERROR, NULL);
@@ -2839,7 +2859,7 @@ public:
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
                 _::name_helper<T>::name());
 
-            id(world);
+            id_no_lifecycle(world);
         }
 
         ecs_assert(s_type != nullptr, ECS_INTERNAL_ERROR, NULL);
@@ -2881,7 +2901,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     if (_::component_info<T>::registered()) {
         /* To support components across multiple worlds, ensure that the
          * component ids are the same. */
-        id = _::component_info<T>::id(world_ptr, false);
+        id = _::component_info<T>::id_no_lifecycle(world_ptr);
 
         /* If entity is not empty check if the name matches */
         if (ecs_get_type(world_ptr, id) != nullptr) {
@@ -2976,11 +2996,17 @@ flecs::entity import(world& world) {
 
         flecs::entity m = world.lookup(_::component_info<T>::name(world.c_ptr()));
 
-        m.set<T>(*module_data);
+        ecs_set_ptr_w_entity(
+            world.c_ptr(),
+             m.id(),
+             _::component_info<T>::id_no_lifecycle(world.c_ptr()), 
+             sizeof(T),
+             module_data);
 
         return m;
     } else {
-        return flecs::entity(world, _::component_info<T>::id(world.c_ptr()));
+        return flecs::entity(world, 
+            _::component_info<T>::id_no_lifecycle(world.c_ptr()));
     }
 }
 

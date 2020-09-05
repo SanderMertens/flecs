@@ -386,6 +386,10 @@ void ComponentLifecycle_move_on_realloc(void);
 void ComponentLifecycle_move_on_dim(void);
 void ComponentLifecycle_move_on_bulk_new(void);
 void ComponentLifecycle_move_on_delete(void);
+void ComponentLifecycle_copy_on_override_trait(void);
+void ComponentLifecycle_copy_on_override_trait_tag(void);
+void ComponentLifecycle_copy_on_set_trait(void);
+void ComponentLifecycle_copy_on_set_trait_tag(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -509,6 +513,12 @@ void Traits_override_tag_trait(void);
 void Traits_trait_wildcard_system(void);
 void Traits_trait_only_wildcard_system(void);
 void Traits_trait_wildcard_on_set(void);
+void Traits_on_add_trait(void);
+void Traits_on_add_trait_tag(void);
+void Traits_on_remove_trait(void);
+void Traits_on_remove_trait_tag(void);
+void Traits_on_remove_trait_on_delete(void);
+void Traits_on_remove_trait_tag_on_delete(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -2595,6 +2605,22 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "move_on_delete",
         ComponentLifecycle_move_on_delete
+    },
+    {
+        "copy_on_override_trait",
+        ComponentLifecycle_copy_on_override_trait
+    },
+    {
+        "copy_on_override_trait_tag",
+        ComponentLifecycle_copy_on_override_trait_tag
+    },
+    {
+        "copy_on_set_trait",
+        ComponentLifecycle_copy_on_set_trait
+    },
+    {
+        "copy_on_set_trait_tag",
+        ComponentLifecycle_copy_on_set_trait_tag
     }
 };
 
@@ -3062,6 +3088,30 @@ bake_test_case Traits_testcases[] = {
     {
         "trait_wildcard_on_set",
         Traits_trait_wildcard_on_set
+    },
+    {
+        "on_add_trait",
+        Traits_on_add_trait
+    },
+    {
+        "on_add_trait_tag",
+        Traits_on_add_trait_tag
+    },
+    {
+        "on_remove_trait",
+        Traits_on_remove_trait
+    },
+    {
+        "on_remove_trait_tag",
+        Traits_on_remove_trait_tag
+    },
+    {
+        "on_remove_trait_on_delete",
+        Traits_on_remove_trait_on_delete
+    },
+    {
+        "on_remove_trait_tag_on_delete",
+        Traits_on_remove_trait_tag_on_delete
     }
 };
 
@@ -5757,7 +5807,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        33,
+        37,
         ComponentLifecycle_testcases
     },
     {
@@ -5792,7 +5842,7 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        13,
+        19,
         Traits_testcases
     },
     {

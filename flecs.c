@@ -1011,6 +1011,10 @@ void ecs_table_mark_dirty(
     ecs_table_t *table,
     ecs_entity_t component);
 
+ecs_entity_t ecs_component_id_from_id(
+    ecs_world_t *world,
+    ecs_entity_t e);
+
 const EcsComponent* ecs_component_from_id(
     ecs_world_t *world,
     ecs_entity_t e);
@@ -1778,25 +1782,6 @@ ecs_flags32_t get_component_action_flags(
     return flags;  
 }
 
-static
-ecs_entity_t get_component_id(
-    ecs_world_t *world,
-    ecs_entity_t e)
-{
-    if (ECS_HAS_ROLE(e, TRAIT)) {
-        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_ENTITY_MASK);
-        if (ecs_has(world, trait, EcsComponent)) {
-            /* This is not a trait tag, trait is the value */
-            return trait;
-        } else {
-            /* This is a trait tag, component is the value */
-            return ecs_entity_t_lo(e);
-        }
-    }
-
-    return e;
-}
-
 /* Check if table has instance of component, including traits */
 static
 bool has_component(
@@ -1808,7 +1793,7 @@ bool has_component(
     int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
-        if (component == get_component_id(world, entities[i])) {
+        if (component == ecs_component_id_from_id(world, entities[i])) {
             return true;
         }
     }
@@ -1843,7 +1828,11 @@ void notify_component_info(
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         int32_t i;
         for (i = 0; i < column_count; i ++) {
-            ecs_entity_t c = get_component_id(world, array[i]);
+            ecs_entity_t c = ecs_component_id_from_id(world, array[i]);
+            if (!c) {
+                continue;
+            }
+            
             ecs_c_info_t *c_info = ecs_get_c_info(world, c);
             if (c_info) {
                 ecs_flags32_t flags = get_component_action_flags(c_info);
@@ -3884,6 +3873,19 @@ bool ecs_get_info(
     }    
 }
 
+static
+ecs_c_info_t *get_c_info(
+    ecs_world_t *world,
+    ecs_entity_t component)
+{
+    ecs_entity_t real_id = ecs_component_id_from_id(world, component);
+    if (real_id) {
+        return ecs_get_c_info(world, real_id);
+    } else {
+        return NULL;
+    }
+}
+
 void ecs_get_column_info(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -3899,7 +3901,7 @@ void ecs_get_column_info(
         for (i = 0; i < count; i ++) {
             ecs_entity_t id = type_array[i];
             cinfo[i].id = id;
-            cinfo[i].ci = ecs_get_c_info(world, id);
+            cinfo[i].ci = get_c_info(world, id);
             cinfo[i].column = i;            
         }
     } else {
@@ -3908,7 +3910,7 @@ void ecs_get_column_info(
         for (i = 0; i < count; i ++) {
             ecs_entity_t id = array[i];
             cinfo[i].id = id;
-            cinfo[i].ci = ecs_get_c_info(world, id);
+            cinfo[i].ci = get_c_info(world, id);
             cinfo[i].column = -1;
 
             for (cur = 0; cur < column_count; cur ++) {
@@ -4289,6 +4291,7 @@ bool override_from_base(
         int16_t data_size = column->size;
         void *data_array = ecs_vector_first_t(column->data, column->size, column->alignment);
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
+        component = ecs_component_id_from_id(world, component);
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         int32_t index;
 
@@ -4299,7 +4302,7 @@ bool override_from_base(
 
             void *ctx = cdata->lifecycle.ctx;
             for (index = 0; index < count; index ++) {
-                copy(world, component, &base, &entities[row], 
+                copy(world, component, &entities[row], &base,
                     data_ptr, base_ptr, ecs_to_size_t(data_size), 1, ctx);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
             }
@@ -5800,11 +5803,12 @@ ecs_entity_t ecs_set_ptr_w_entity(
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ptr) {
-        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+        ecs_entity_t real_id = ecs_component_id_from_id(world, component);
+        ecs_c_info_t *cdata = get_c_info(world, real_id);
         ecs_copy_t copy;
 
         if (cdata && (copy = cdata->lifecycle.copy)) {
-            copy(world, component, &entity, &entity, dst, ptr, size, 1, 
+            copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
         } else {
             ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
@@ -10385,6 +10389,9 @@ ecs_c_info_t * ecs_get_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
+
     if (component < ECS_HI_COMPONENT_ID) {
         return &world->c_info[component];
     } else {
@@ -10395,7 +10402,7 @@ ecs_c_info_t * ecs_get_c_info(
 ecs_c_info_t * ecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
-{
+{    
     ecs_c_info_t *c_info = ecs_get_c_info(world, component);
     if (!c_info) {
         ecs_assert(component >= ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
@@ -15247,6 +15254,26 @@ bool ecs_query_changed(
     ecs_query_t *query)
 {
     return tables_dirty(query);
+}
+
+ecs_entity_t ecs_component_id_from_id(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    if (ECS_HAS_ROLE(e, TRAIT)) {
+        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_ENTITY_MASK);
+        if (ecs_has(world, trait, EcsComponent)) {
+            /* This is not a trait tag, trait is the value */
+            return trait;
+        } else {
+            /* This is a trait tag, component is the value */
+            return ecs_entity_t_lo(e);
+        }
+    } else if (e & ECS_ROLE_MASK) {
+        return 0;
+    }
+
+    return e;
 }
 
 const EcsComponent* ecs_component_from_id(
