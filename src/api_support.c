@@ -10,10 +10,11 @@ int parse_type_action(
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t flags,
+    ecs_entity_t role,
     const char *entity_id,
     const char *source_id,
     const char *trait_id,
+    const char *arg_name,
     void *data)
 {
     ecs_vector_t **array = data;
@@ -57,7 +58,7 @@ int parse_type_action(
 
         if (oper_kind == EcsOperAnd) {
             ecs_entity_t* e_ptr = ecs_vector_add(array, ecs_entity_t);
-            *e_ptr = entity | flags;
+            *e_ptr = entity | role;
         } else {
             if (!name) {
                 return -1;
@@ -139,7 +140,7 @@ EcsType type_from_expr(
 {
     if (expr) {
         ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_parse_expr(world, expr, parse_type_action, name, &vec);
+        ecs_parse_expr(world, name, expr, parse_type_action, &vec);
         EcsType result = type_from_vec(world, vec);
         ecs_vector_free(vec);
         return result;

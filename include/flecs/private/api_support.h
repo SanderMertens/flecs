@@ -149,6 +149,7 @@ typedef struct ecs_sig_column_t {
         ecs_entity_t component;      /* Used for AND operator */
     } is;
     ecs_entity_t source;             /* Source entity (used with FromEntity) */
+    const char *name;                /* Name of column */
 } ecs_sig_column_t;
 
 /** Type that stores a parsed signature */
@@ -157,6 +158,19 @@ typedef struct ecs_sig_t {
     char *expr;                 /* Original expression string */
     ecs_vector_t *columns;      /* Columns that contain parsed data */
 } ecs_sig_t;
+
+/** Parse signature. */
+FLECS_EXPORT
+void ecs_sig_init(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_sig_t *sig);
+
+/** Release signature resources */
+FLECS_EXPORT
+void ecs_sig_deinit(
+    ecs_sig_t *sig);
 
 /** Add column to signature. */
 FLECS_EXPORT
@@ -167,7 +181,8 @@ int ecs_sig_add(
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t access_kind,
     ecs_entity_t component,
-    ecs_entity_t source);
+    ecs_entity_t source,
+    const char *arg_name);
 
 /** Create query based on signature object. */
 FLECS_EXPORT
