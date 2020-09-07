@@ -20,6 +20,12 @@ int parse_type_action(
     ecs_vector_t **array = data;
     (void)source_id;
     (void)inout_kind;
+    
+    if (arg_name) {
+        ecs_parser_error(name, sig, column, 
+            "column names not supported in type expression");
+        return -1;
+    }
 
     if (strcmp(entity_id, "0")) {
         ecs_entity_t entity = 0;

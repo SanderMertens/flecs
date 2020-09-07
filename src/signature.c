@@ -240,7 +240,6 @@ typedef struct sig_element_t {
 } sig_element_t;
 
 const char* parse_element(
-    ecs_world_t *world,
     const char *name,
     const char *sig,
     sig_element_t *elem_out)
@@ -448,14 +447,9 @@ int ecs_parse_expr(
 {
     sig_element_t elem;
 
-    // printf("expr = %s\n", sig);
-
     bool is_or = false;
     const char *ptr = sig;
-    while ((ptr = parse_element(world, name, ptr, &elem))) {
-        // printf("src = %s, trait = %s, component = %s, name = %s\n",
-        //     elem.source, elem.trait, elem.component, elem.name);
-
+    while ((ptr = parse_element(name, ptr, &elem))) {
         if (is_or) {
             ecs_assert(elem.oper_kind == EcsOperAnd, ECS_INVALID_SIGNATURE, sig);
             elem.oper_kind = EcsOperOr;
