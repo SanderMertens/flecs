@@ -1175,3 +1175,76 @@ void SystemMisc_two_named_columns_of_two() {
 
     ecs_fini(world);
 }
+
+void SystemMisc_get_column_by_name() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position p, Velocity v");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+
+    while (ecs_query_next(&it)) {
+        int32_t p_i = ecs_column_index_from_name(&it, "p");
+        test_assert(p_i == 1);
+        int32_t v_i = ecs_column_index_from_name(&it, "v");
+        test_assert(v_i == 2);
+    }
+
+    ecs_fini(world);
+}
+
+void SystemMisc_get_column_by_name_not_found() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position p, Velocity v");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+
+    while (ecs_query_next(&it)) {
+        int32_t p_i = ecs_column_index_from_name(&it, "r");
+        test_assert(p_i == 0);
+    }
+
+    ecs_fini(world);
+}
+
+void SystemMisc_get_column_by_name_no_names() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+
+    while (ecs_query_next(&it)) {
+        int32_t p_i = ecs_column_index_from_name(&it, "p");
+        test_assert(p_i == 0);
+        int32_t v_i = ecs_column_index_from_name(&it, "v");
+        test_assert(v_i == 0);
+    }
+
+    ecs_fini(world);
+}

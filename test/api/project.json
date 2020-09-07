@@ -518,7 +518,10 @@
                 "redefine_null_signature",
                 "redefine_0_signature",
                 "one_named_column_of_two",
-                "two_named_columns_of_two"
+                "two_named_columns_of_two",
+                "get_column_by_name",
+                "get_column_by_name_not_found",
+                "get_column_by_name_no_names"
             ]
         }, {
             "id": "Sorting",
