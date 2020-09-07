@@ -467,6 +467,11 @@ void SystemMisc_add_to_system_in_progress(void);
 void SystemMisc_add_to_lazy_system_in_progress(void);
 void SystemMisc_redefine_null_signature(void);
 void SystemMisc_redefine_0_signature(void);
+void SystemMisc_one_named_column_of_two(void);
+void SystemMisc_two_named_columns_of_two(void);
+void SystemMisc_get_column_by_name(void);
+void SystemMisc_get_column_by_name_not_found(void);
+void SystemMisc_get_column_by_name_no_names(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -2926,6 +2931,26 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "redefine_0_signature",
         SystemMisc_redefine_0_signature
+    },
+    {
+        "one_named_column_of_two",
+        SystemMisc_one_named_column_of_two
+    },
+    {
+        "two_named_columns_of_two",
+        SystemMisc_two_named_columns_of_two
+    },
+    {
+        "get_column_by_name",
+        SystemMisc_get_column_by_name
+    },
+    {
+        "get_column_by_name_not_found",
+        SystemMisc_get_column_by_name_not_found
+    },
+    {
+        "get_column_by_name_no_names",
+        SystemMisc_get_column_by_name_no_names
     }
 };
 
@@ -5856,7 +5881,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        53,
+        58,
         SystemMisc_testcases
     },
     {

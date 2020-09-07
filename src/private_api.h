@@ -366,15 +366,6 @@ void ecs_query_notify(
 //// Signature API
 ////////////////////////////////////////////////////////////////////////////////
 
-void ecs_sig_init(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_sig_t *sig);
-
-void ecs_sig_deinit(
-    ecs_sig_t *sig);
-
 /* Check if all non-table column constraints are met */
 bool ecs_sig_check_constraints(
     ecs_world_t *world,
@@ -474,9 +465,9 @@ ecs_entity_t ecs_lookup_w_type(
 /* Utility that parses system signature */
 int ecs_parse_expr(
     ecs_world_t *world,
+    const char *name,
     const char *sig,
     ecs_parse_action_t action,
-    const char *system_id,
     void *ctx);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)

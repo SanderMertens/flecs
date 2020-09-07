@@ -70,6 +70,7 @@ typedef int (*ecs_parse_action_t)(
     const char *component,
     const char *source,
     const char *trait,
+    const char *name,
     void *ctx);
 
 /** Component-specific data */
