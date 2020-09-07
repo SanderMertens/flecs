@@ -4700,6 +4700,19 @@ void* ecs_column_w_size(
 #define ecs_column(it, type, column)\
     ((type*)ecs_column_w_size(it, sizeof(type), column))
 
+/** Get column index by name.
+ * This function obtains a column index by name. This function can only be used
+ * if a query signature contains names.
+ *
+ * @param it The iterator.
+ * @param name The column name.
+ * @return Index of the column (to be used with ecs_column_* functions).
+ */
+FLECS_EXPORT
+int32_t ecs_column_index_from_name(
+    const ecs_iter_t *it,
+    const char *name);
+
 /** Test if column is owned or not.
  * The following signature shows an example of one owned components and two
  * components that are not owned by the current entity:
