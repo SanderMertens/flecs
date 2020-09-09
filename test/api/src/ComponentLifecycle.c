@@ -1113,7 +1113,7 @@ void ComponentLifecycle_merge_to_different_table() {
     test_int(move_position, 0);
 
     /* Velocity should have been moved */ 
-    test_int(ctor_velocity, 4); /* 1 because constructed in stage */
+    test_int(ctor_velocity, 5); /* 1 because constructed in stage */
     test_int(dtor_velocity, 0);
     test_int(copy_velocity, 1); /* 1 because copied to stage */
     test_int(move_velocity, 4);
@@ -1126,10 +1126,36 @@ void ComponentLifecycle_merge_to_different_table() {
     test_int(move_rotation, 1);
 
     /* Mass is moved to main stage */
-    test_int(ctor_mass, 3); /* Component constructed in stage and main stage */
+    test_int(ctor_mass, 4); /* Component constructed in stage and main stage */
     test_int(dtor_mass, 0);
     test_int(copy_mass, 0);
     test_int(move_mass, 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_merge_to_new_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Position),
+        .dtor = ecs_dtor(Position),
+        .copy = ecs_copy(Position),
+        .move = ecs_move(Position)
+    });
+
+    ecs_staging_begin(world);
+
+    ecs_add(world, e, Position);
+
+    ecs_staging_end(world, false);
+
+    test_int(ctor_position, 2);
+    test_int(move_position, 1);
 
     ecs_fini(world);
 }

@@ -381,6 +381,7 @@ void ComponentLifecycle_dtor_on_tag(void);
 void ComponentLifecycle_copy_on_tag(void);
 void ComponentLifecycle_move_on_tag(void);
 void ComponentLifecycle_merge_to_different_table(void);
+void ComponentLifecycle_merge_to_new_table(void);
 void ComponentLifecycle_delete_in_stage(void);
 void ComponentLifecycle_ctor_on_add_trait(void);
 void ComponentLifecycle_ctor_on_add_trait_set_ctor_after_table(void);
@@ -2597,6 +2598,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "merge_to_different_table",
         ComponentLifecycle_merge_to_different_table
+    },
+    {
+        "merge_to_new_table",
+        ComponentLifecycle_merge_to_new_table
     },
     {
         "delete_in_stage",
@@ -5867,7 +5872,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        37,
+        38,
         ComponentLifecycle_testcases
     },
     {

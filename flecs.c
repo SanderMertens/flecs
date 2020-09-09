@@ -6359,7 +6359,7 @@ void merge_commits(
             if (src_table != table) {
                 /* Insert row for entity into target table */
                 int32_t dst_row = ecs_table_append(
-                    world, table, main_data, entity, record, false);
+                    world, table, main_data, entity, record, true);
 
                 if (src_table) {
                     ecs_data_t *src_data = ecs_table_get_data(world, src_table);

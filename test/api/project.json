@@ -427,6 +427,7 @@
                 "copy_on_tag",
                 "move_on_tag",
                 "merge_to_different_table",
+                "merge_to_new_table",
                 "delete_in_stage",
                 "ctor_on_add_trait",
                 "ctor_on_add_trait_set_ctor_after_table",
