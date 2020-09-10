@@ -2234,7 +2234,7 @@ typedef struct ecs_sig_column_t {
         ecs_entity_t component;      /* Used for AND operator */
     } is;
     ecs_entity_t source;             /* Source entity (used with FromEntity) */
-    const char *name;                /* Name of column */
+    char *name;                /* Name of column */
 } ecs_sig_column_t;
 
 /** Type that stores a parsed signature */
@@ -9434,11 +9434,13 @@ public:
             ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
                 _::name_helper<T>::name());
 
-            char *path = ecs_get_fullpath(world, entity);
-            ecs_assert(!strcmp(path, s_name), 
-                ECS_INCONSISTENT_COMPONENT_NAME, 
-                _::name_helper<T>::name());
-            ecs_os_free(path);
+            if (s_id >= EcsFirstUserComponentId) {
+                char *path = ecs_get_fullpath(world, entity);
+                ecs_assert(!strcmp(path, s_name), 
+                    ECS_INCONSISTENT_COMPONENT_NAME, 
+                    _::name_helper<T>::name());
+                ecs_os_free(path);
+            }
         }
 
         s_id = entity;
@@ -9446,13 +9448,15 @@ public:
         s_name = ecs_get_fullpath(world, entity);
     }
 
-    static entity_t id_no_lifecycle(world_t *world = nullptr) {
+    static entity_t id_no_lifecycle(world_t *world = nullptr, const char *name = nullptr) {
         if (!s_id) {
-            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, 
-                _::name_helper<T>::name());
+            if (!name) {
+                name = _::name_helper<T>::name();
+            }
+            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, name);
 
             entity_t entity = ecs_new_component(
-                world, 0, _::name_helper<T>::name(), 
+                world, 0, name, 
                 sizeof(typename std::remove_pointer<T>::type), 
                 alignof(typename std::remove_pointer<T>::type));
 
@@ -9464,9 +9468,9 @@ public:
         return s_id;        
     }
 
-    static entity_t id(world_t *world = nullptr) {
+    static entity_t id(world_t *world = nullptr, const char *name = nullptr) {
         if (!s_id) {
-            id_no_lifecycle(world);
+            id_no_lifecycle(world, name);
             register_lifecycle_actions<T>(world, s_id,
                 true, true, true, true);
         }
@@ -9536,14 +9540,16 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     if (_::component_info<T>::registered()) {
         /* To support components across multiple worlds, ensure that the
          * component ids are the same. */
-        id = _::component_info<T>::id_no_lifecycle(world_ptr);
+        id = _::component_info<T>::id_no_lifecycle(world_ptr, name);
 
         /* If entity is not empty check if the name matches */
         if (ecs_get_type(world_ptr, id) != nullptr) {
-            char *path = ecs_get_fullpath(world_ptr, id);
-            ecs_assert(!strcmp(path, name), 
-                ECS_INCONSISTENT_COMPONENT_NAME, name);
-            ecs_os_free(path);
+            if (id >= EcsFirstUserComponentId) {
+                char *path = ecs_get_fullpath(world_ptr, id);
+                ecs_assert(!strcmp(path, name), 
+                    ECS_INCONSISTENT_COMPONENT_NAME, name);
+                ecs_os_free(path);
+            }
         }
 
         /* Register name with entity, so that when the entity is created the
@@ -10849,9 +10855,9 @@ inline int world::count(flecs::filter filter) const {
 }
 
 inline void world::init_builtin_components() {
-    pod_component<Component>("flecs.core.Component");
-    pod_component<Type>("flecs.core.Type");
-    pod_component<Name>("flecs.core.Name");
+    pod_component<Component>("flecs::core::Component");
+    pod_component<Type>("flecs::core::Type");
+    pod_component<Name>("flecs::core::Name");
 }
 
 inline entity world::lookup(const char *name) const {

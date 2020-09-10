@@ -149,7 +149,7 @@ typedef struct ecs_sig_column_t {
         ecs_entity_t component;      /* Used for AND operator */
     } is;
     ecs_entity_t source;             /* Source entity (used with FromEntity) */
-    const char *name;                /* Name of column */
+    char *name;                /* Name of column */
 } ecs_sig_column_t;
 
 /** Type that stores a parsed signature */

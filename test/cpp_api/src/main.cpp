@@ -41,6 +41,8 @@ void Entity_has_childof(void);
 void Entity_has_instanceof(void);
 void Entity_has_instanceof_indirect(void);
 void Entity_null_string(void);
+void Entity_set_name(void);
+void Entity_change_name(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -327,6 +329,14 @@ bake_test_case Entity_testcases[] = {
     {
         "null_string",
         Entity_null_string
+    },
+    {
+        "set_name",
+        Entity_set_name
+    },
+    {
+        "change_name",
+        Entity_change_name
     }
 };
 
@@ -893,7 +903,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        32,
+        34,
         Entity_testcases
     },
     {

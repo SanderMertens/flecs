@@ -510,3 +510,23 @@ void Entity_null_string() {
 
     test_str(e.name().c_str(), "");
 }
+
+void Entity_set_name() {
+    flecs::world world;
+
+    auto e = world.entity();
+    test_str(e.name().c_str(), "");
+
+    e.set<flecs::Name>({"Foo"});
+    test_str(e.name().c_str(), "Foo");
+}
+
+void Entity_change_name() {
+    flecs::world world;
+
+    auto e = world.entity("Bar");
+    test_str(e.name().c_str(), "Bar");
+
+    e.set<flecs::Name>({"Foo"});
+    test_str(e.name().c_str(), "Foo");
+}

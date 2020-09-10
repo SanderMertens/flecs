@@ -21,6 +21,11 @@ ECS_DTOR(EcsName, ptr, {
 })
 
 ECS_COPY(EcsName, dst, src, {
+    if (dst->alloc_value) {
+        ecs_os_free(dst->alloc_value);
+        dst->alloc_value = NULL;
+    }
+    
     if (src->alloc_value) {
         dst->alloc_value = ecs_os_strdup(src->alloc_value);
         dst->value = dst->alloc_value;

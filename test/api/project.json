@@ -370,7 +370,9 @@
                 "get_name",
                 "get_name_no_name",
                 "get_name_from_empty",
-                "lookup_by_id"
+                "lookup_by_id",
+                "set_name_of_existing",
+                "change_name_of_existing"
             ]
         }, {
             "id": "Singleton",

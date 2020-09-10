@@ -597,6 +597,7 @@ void ecs_sig_deinit(
         if (column->oper_kind == EcsOperOr) {
             ecs_vector_free(column->is.type);
         }
+        ecs_os_free(column->name);
     });
 
     ecs_vector_free(sig->columns);

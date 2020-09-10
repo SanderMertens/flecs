@@ -5816,7 +5816,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
         ecs_c_info_t *cdata = get_c_info(world, real_id);
         ecs_copy_t copy;
 
-        if (cdata && (copy = cdata->lifecycle.copy)) {
+        if (cdata && (copy = cdata->lifecycle.copy)) {;
             copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
         } else {
@@ -11877,6 +11877,7 @@ void ecs_sig_deinit(
         if (column->oper_kind == EcsOperOr) {
             ecs_vector_free(column->is.type);
         }
+        ecs_os_free(column->name);
     });
 
     ecs_vector_free(sig->columns);
@@ -20918,6 +20919,11 @@ ECS_DTOR(EcsName, ptr, {
 })
 
 ECS_COPY(EcsName, dst, src, {
+    if (dst->alloc_value) {
+        ecs_os_free(dst->alloc_value);
+        dst->alloc_value = NULL;
+    }
+    
     if (src->alloc_value) {
         dst->alloc_value = ecs_os_strdup(src->alloc_value);
         dst->value = dst->alloc_value;

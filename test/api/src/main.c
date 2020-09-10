@@ -331,6 +331,8 @@ void Lookup_get_name(void);
 void Lookup_get_name_no_name(void);
 void Lookup_get_name_from_empty(void);
 void Lookup_lookup_by_id(void);
+void Lookup_set_name_of_existing(void);
+void Lookup_change_name_of_existing(void);
 
 // Testsuite 'Singleton'
 void Singleton_set(void);
@@ -2413,6 +2415,14 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_by_id",
         Lookup_lookup_by_id
+    },
+    {
+        "set_name_of_existing",
+        Lookup_set_name_of_existing
+    },
+    {
+        "change_name_of_existing",
+        Lookup_change_name_of_existing
     }
 };
 
@@ -5851,7 +5861,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         NULL,
         NULL,
-        11,
+        13,
         Lookup_testcases
     },
     {
