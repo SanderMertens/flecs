@@ -200,6 +200,7 @@ void World_multi_world_empty(void);
 void World_multi_world_component(void);
 void World_multi_world_component_namespace(void);
 void World_type_id(void);
+void World_different_comp_same_name(void);
 
 bake_test_case Entity_testcases[] = {
     {
@@ -895,6 +896,10 @@ bake_test_case World_testcases[] = {
     {
         "type_id",
         World_type_id
+    },
+    {
+        "different_comp_same_name",
+        World_different_comp_same_name
     }
 };
 
@@ -1001,7 +1006,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        4,
+        5,
         World_testcases
     }
 };

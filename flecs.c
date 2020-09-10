@@ -1608,6 +1608,8 @@ const char* ecs_strerror(
         return "component registered twice with a different id";        
     case ECS_INVALID_CASE:
         return "case not supported for type";
+    case ECS_COMPONENT_NAME_IN_USE:
+        return "component name is already in use";
     }
 
     return "unknown error code";
@@ -5816,7 +5818,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
         ecs_c_info_t *cdata = get_c_info(world, real_id);
         ecs_copy_t copy;
 
-        if (cdata && (copy = cdata->lifecycle.copy)) {;
+        if (cdata && (copy = cdata->lifecycle.copy)) {
             copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
         } else {

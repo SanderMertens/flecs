@@ -2927,6 +2927,11 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
 
         /* If a component was already registered with this id but with a 
          * different size, the ecs_new_component function will fail. */
+    } else {
+        /* If the component is not yet registered, ensure no other component
+         * or entity has been registered with this name */
+        ecs_entity_t e = ecs_lookup_fullpath(world_ptr, name);
+        ecs_assert(e == 0, ECS_COMPONENT_NAME_IN_USE, name);
     }
 
     flecs::entity result = entity(world, name, true);

@@ -238,6 +238,7 @@ ecs_query_t* ecs_query_new_w_sig(
 #define ECS_COMPONENT_NOT_REGISTERED (44)
 #define ECS_INCONSISTENT_COMPONENT_ID (45)
 #define ECS_INVALID_CASE (46)
+#define ECS_COMPONENT_NAME_IN_USE (47)
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))

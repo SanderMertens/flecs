@@ -233,7 +233,8 @@
                 "multi_world_empty",
                 "multi_world_component",
                 "multi_world_component_namespace",
-                "type_id"
+                "type_id",
+                "different_comp_same_name"
             ]
         }]
     }

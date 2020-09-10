@@ -2323,6 +2323,7 @@ ecs_query_t* ecs_query_new_w_sig(
 #define ECS_COMPONENT_NOT_REGISTERED (44)
 #define ECS_INCONSISTENT_COMPONENT_ID (45)
 #define ECS_INVALID_CASE (46)
+#define ECS_COMPONENT_NAME_IN_USE (47)
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
@@ -9558,6 +9559,11 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
 
         /* If a component was already registered with this id but with a 
          * different size, the ecs_new_component function will fail. */
+    } else {
+        /* If the component is not yet registered, ensure no other component
+         * or entity has been registered with this name */
+        ecs_entity_t e = ecs_lookup_fullpath(world_ptr, name);
+        ecs_assert(e == 0, ECS_COMPONENT_NAME_IN_USE, name);
     }
 
     flecs::entity result = entity(world, name, true);

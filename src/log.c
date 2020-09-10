@@ -418,6 +418,8 @@ const char* ecs_strerror(
         return "component registered twice with a different id";        
     case ECS_INVALID_CASE:
         return "case not supported for type";
+    case ECS_COMPONENT_NAME_IN_USE:
+        return "component name is already in use";
     }
 
     return "unknown error code";
