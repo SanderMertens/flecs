@@ -5563,13 +5563,14 @@ void ecs_delete(
 
     if (stage == &world->stage) {
         get_info(world, entity, &info);
+        if (info.is_watched) {
+            ecs_delete_children(world, entity);
+        }
     } else {
         if (!get_staged_info(world, stage, entity, &info)) {
             get_info(world, entity, &info);
         }
     }
-
-    ecs_delete_children(world, entity);
 
     /* If entity has components, remove them */
     ecs_table_t *table = info.table;
@@ -6329,6 +6330,10 @@ void clear_columns(
                     world, &world->stage, src_table, src_data, row, true);
             }
 
+            if (is_watched) {
+                ecs_delete_children(world, e);
+            }
+
             /* If the staged record has the table set to the root, this is an entity
             * without components. If the table is NULL, this is a delete. */
             ecs_record_t *staged_record = ecs_eis_get(stage, e);
@@ -6728,6 +6733,7 @@ void ecs_stage_delete_table(
     /* Remove table from sparse set */
     ecs_sparse_remove(stage->tables, table->id);
 }
+
 /** Resize the vector buffer */
 static
 ecs_vector_t* resize(

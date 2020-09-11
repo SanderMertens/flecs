@@ -34,6 +34,10 @@ void clear_columns(
                     world, &world->stage, src_table, src_data, row, true);
             }
 
+            if (is_watched) {
+                ecs_delete_children(world, e);
+            }
+
             /* If the staged record has the table set to the root, this is an entity
             * without components. If the table is NULL, this is a delete. */
             ecs_record_t *staged_record = ecs_eis_get(stage, e);

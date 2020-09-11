@@ -195,6 +195,7 @@ void Hierarchies_delete_2_children_different_type(void);
 void Hierarchies_delete_tree_2_levels(void);
 void Hierarchies_delete_tree_3_levels(void);
 void Hierarchies_delete_tree_count_tables(void);
+void Hierarchies_delete_tree_staged(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -1934,6 +1935,10 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "delete_tree_count_tables",
         Hierarchies_delete_tree_count_tables
+    },
+    {
+        "delete_tree_staged",
+        Hierarchies_delete_tree_staged
     }
 };
 
@@ -5824,7 +5829,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         NULL,
         NULL,
-        64,
+        65,
         Hierarchies_testcases
     },
     {

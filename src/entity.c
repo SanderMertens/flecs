@@ -1897,13 +1897,14 @@ void ecs_delete(
 
     if (stage == &world->stage) {
         get_info(world, entity, &info);
+        if (info.is_watched) {
+            ecs_delete_children(world, entity);
+        }
     } else {
         if (!get_staged_info(world, stage, entity, &info)) {
             get_info(world, entity, &info);
         }
     }
-
-    ecs_delete_children(world, entity);
 
     /* If entity has components, remove them */
     ecs_table_t *table = info.table;
