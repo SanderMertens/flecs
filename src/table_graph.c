@@ -259,8 +259,8 @@ ecs_table_t *create_table(
     ecs_entities_t *entities)
 {
     ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
-    result->id = ecs_sparse_last_id(stage->tables);
-    
+    result->id = ecs_to_u32(ecs_sparse_last_id(stage->tables));
+
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     init_table(world, stage, result, entities);
 

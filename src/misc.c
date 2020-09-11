@@ -21,6 +21,13 @@ int32_t ecs_to_i32(
     return (int32_t)v;
 }
 
+uint32_t ecs_to_u32(
+    uint64_t v)
+{
+    ecs_assert(v < UINT32_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (uint32_t)v;    
+}
+
 size_t ecs_to_size_t(
     int64_t size)
 {

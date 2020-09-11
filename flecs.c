@@ -381,7 +381,7 @@ struct ecs_table_t {
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
     int32_t alloc_count;             /**< Increases when columns are reallocd */
-    int32_t id;                      /**< Table id in sparse set */
+    uint32_t id;                      /**< Table id in sparse set */
 
     ecs_flags32_t flags;             /**< Flags for testing table properties */
     int32_t column_count;            /**< Number of data columns in table */
@@ -1120,7 +1120,11 @@ int16_t ecs_to_i16(
 
 /* Convert 64 bit signed integer to 32 bit */
 int32_t ecs_to_i32(
-    int64_t v);    
+    int64_t v);  
+
+/* Convert 64 bit unsigned integer to 32 bit */
+uint32_t ecs_to_u32(
+    uint64_t v);        
 
 /* Convert signed integer to size_t */
 size_t ecs_to_size_t(
@@ -15618,8 +15622,8 @@ ecs_table_t *create_table(
     ecs_entities_t *entities)
 {
     ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
-    result->id = ecs_sparse_last_id(stage->tables);
-    
+    result->id = ecs_to_u32(ecs_sparse_last_id(stage->tables));
+
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     init_table(world, stage, result, entities);
 
@@ -17198,6 +17202,13 @@ int32_t ecs_to_i32(
 {
     ecs_assert(v < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
     return (int32_t)v;
+}
+
+uint32_t ecs_to_u32(
+    uint64_t v)
+{
+    ecs_assert(v < UINT32_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (uint32_t)v;    
 }
 
 size_t ecs_to_size_t(
