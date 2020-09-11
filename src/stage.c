@@ -34,6 +34,10 @@ void clear_columns(
                     world, &world->stage, src_table, src_data, row, true);
             }
 
+            if (is_watched) {
+                ecs_delete_children(world, e);
+            }
+
             /* If the staged record has the table set to the root, this is an entity
             * without components. If the table is NULL, this is a delete. */
             ecs_record_t *staged_record = ecs_eis_get(stage, e);
@@ -413,4 +417,23 @@ void ecs_stage_deinit(
     ecs_table_free(world, &stage->root);
     ecs_vector_free(stage->dirty_tables);
     ecs_eis_free(stage);
+}
+
+void ecs_stage_delete_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table)
+{
+    /* Notify queries that table is to be removed */
+    ecs_notify_queries(
+        world, &(ecs_query_event_t){
+            .kind = EcsQueryTableUnmatch,
+            .table = table
+        });
+
+    /* Free resources associated with table */
+    ecs_table_free(world, table);
+
+    /* Remove table from sparse set */
+    ecs_sparse_remove(stage->tables, table->id);
 }

@@ -38,6 +38,10 @@ void* _ecs_sparse_add(
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
 
 FLECS_EXPORT
+uint64_t ecs_sparse_last_id(
+    ecs_sparse_t *sparse);
+
+FLECS_EXPORT
 uint64_t ecs_sparse_new_id(
     ecs_sparse_t *sparse);
 

@@ -798,6 +798,10 @@ void* _ecs_sparse_add(
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
 
 FLECS_EXPORT
+uint64_t ecs_sparse_last_id(
+    ecs_sparse_t *sparse);
+
+FLECS_EXPORT
 uint64_t ecs_sparse_new_id(
     ecs_sparse_t *sparse);
 
@@ -3632,9 +3636,22 @@ ecs_entity_t ecs_get_case(
 /** @} */
 
 /**
- * @defgroup deleting Deleting Entities
+ * @defgroup deleting Deleting Entities and components
  * @{
  */
+
+/** Clear all components.
+ * This operation will clear all components from an entity but will not delete
+ * the entity itself. This effectively prevents the entity id from being 
+ * recycled.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ */
+FLECS_EXPORT
+void ecs_clear(
+    ecs_world_t *world,
+    ecs_entity_t entity);
 
 /** Delete an entity.
  * This operation will delete an entity and all of its components. The entity id
@@ -3649,6 +3666,19 @@ FLECS_EXPORT
 void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity);
+
+
+/** Delete children of an entity.
+ * This operation deletes all children of a parent entity. If a parent has no
+ * children this operation has no effect.
+ *
+ * @param world The world.
+ * @param parent The parent entity.
+ */
+FLECS_EXPORT
+void ecs_delete_children(
+    ecs_world_t *world,
+    ecs_entity_t parent);
 
 /** @} */
 
@@ -8763,6 +8793,14 @@ public:
     template <typename T>
     ref<T> get_ref() const {
         return ref<T>(m_world, m_id);
+    }
+
+    /** Clear an entity.
+     * This operation removes all components from an entity without recycling
+     * the entity id.
+     */
+    void clear() const {
+        ecs_clear(m_world, m_id);
     }
 
     /** Delete an entity.

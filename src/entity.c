@@ -861,22 +861,6 @@ void ecs_components_on_remove(
     }
 }
 
-static
-void ecs_delete_children(
-    ecs_world_t *world,
-    ecs_entity_t parent)
-{
-    ecs_vector_t *child_tables = ecs_map_get_ptr(
-        world->child_tables, ecs_vector_t*, parent);
-
-    if (child_tables) {
-        ecs_vector_each(child_tables, ecs_table_t*, tptr, {
-            ecs_table_t *table = *tptr;
-            ecs_table_clear(world, table);
-        });
-    }
-}
-
 void ecs_run_add_actions(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -1868,6 +1852,38 @@ void ecs_clear(
     }    
 }
 
+void ecs_delete_children(
+    ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    ecs_vector_t *child_tables = ecs_map_get_ptr(
+        world->child_tables, ecs_vector_t*, parent);
+
+    if (child_tables) {
+        ecs_table_t **tables = ecs_vector_first(child_tables, ecs_table_t*);
+        int32_t i, count = ecs_vector_count(child_tables);
+        for (i = 0; i < count; i ++) {
+            ecs_table_t *table = tables[i];
+
+            /* Recursively delete entities of children */
+            ecs_data_t *data = ecs_table_get_data(world, table);
+            ecs_entity_t *entities = ecs_vector_first(
+                data->entities, ecs_entity_t);
+
+            int32_t child, child_count = ecs_vector_count(data->entities);
+            for (child = 0; child < child_count; child ++) {
+                ecs_delete_children(world, entities[child]);
+            }
+
+            /* Clear components from table (invokes destructors, OnRemove) */
+            ecs_table_clear(world, table);
+
+            /* Delete table */
+            ecs_stage_delete_table(world, &world->stage, table);
+        };
+    }
+}
+
 void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity)
@@ -1881,13 +1897,14 @@ void ecs_delete(
 
     if (stage == &world->stage) {
         get_info(world, entity, &info);
+        if (info.is_watched) {
+            ecs_delete_children(world, entity);
+        }
     } else {
         if (!get_staged_info(world, stage, entity, &info)) {
             get_info(world, entity, &info);
         }
     }
-
-    ecs_delete_children(world, entity);
 
     /* If entity has components, remove them */
     ecs_table_t *table = info.table;

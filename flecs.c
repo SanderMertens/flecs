@@ -381,6 +381,7 @@ struct ecs_table_t {
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
     int32_t alloc_count;             /**< Increases when columns are reallocd */
+    uint32_t id;                      /**< Table id in sparse set */
 
     ecs_flags32_t flags;             /**< Flags for testing table properties */
     int32_t column_count;            /**< Number of data columns in table */
@@ -859,6 +860,12 @@ void ecs_stage_merge(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
+/* Delete table from stage */
+void ecs_stage_delete_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Type API
@@ -1113,7 +1120,11 @@ int16_t ecs_to_i16(
 
 /* Convert 64 bit signed integer to 32 bit */
 int32_t ecs_to_i32(
-    int64_t v);    
+    int64_t v);  
+
+/* Convert 64 bit unsigned integer to 32 bit */
+uint32_t ecs_to_u32(
+    uint64_t v);        
 
 /* Convert signed integer to size_t */
 size_t ecs_to_size_t(
@@ -2318,8 +2329,8 @@ void ecs_table_clear_silent(
 }
 
 /* Delete all entities in table, invoke OnRemove handlers. This function is used
- * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as the
- * table may have to be deactivated with systems. */
+ * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as 
+ * the table may have to be deactivated with systems. */
 void ecs_table_clear(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -4520,22 +4531,6 @@ void ecs_components_on_remove(
     }
 }
 
-static
-void ecs_delete_children(
-    ecs_world_t *world,
-    ecs_entity_t parent)
-{
-    ecs_vector_t *child_tables = ecs_map_get_ptr(
-        world->child_tables, ecs_vector_t*, parent);
-
-    if (child_tables) {
-        ecs_vector_each(child_tables, ecs_table_t*, tptr, {
-            ecs_table_t *table = *tptr;
-            ecs_table_clear(world, table);
-        });
-    }
-}
-
 void ecs_run_add_actions(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -5498,7 +5493,7 @@ const ecs_entity_t* ecs_bulk_new_w_entity(
     return new_w_data(world, stage, table, NULL, count, NULL, NULL);
 }
 
-void ecs_delete(
+void ecs_clear(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
@@ -5517,7 +5512,69 @@ void ecs_delete(
         }
     }
 
-    ecs_delete_children(world, entity);
+    ecs_table_t *table = info.table;
+    if (table) {
+        ecs_type_t type = table->type;
+
+        /* Remove all components */
+        ecs_entities_t to_remove = ecs_type_to_entities(type);
+        remove_entities_w_info(world, stage, entity, &info, &to_remove);
+    }    
+}
+
+void ecs_delete_children(
+    ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    ecs_vector_t *child_tables = ecs_map_get_ptr(
+        world->child_tables, ecs_vector_t*, parent);
+
+    if (child_tables) {
+        ecs_table_t **tables = ecs_vector_first(child_tables, ecs_table_t*);
+        int32_t i, count = ecs_vector_count(child_tables);
+        for (i = 0; i < count; i ++) {
+            ecs_table_t *table = tables[i];
+
+            /* Recursively delete entities of children */
+            ecs_data_t *data = ecs_table_get_data(world, table);
+            ecs_entity_t *entities = ecs_vector_first(
+                data->entities, ecs_entity_t);
+
+            int32_t child, child_count = ecs_vector_count(data->entities);
+            for (child = 0; child < child_count; child ++) {
+                ecs_delete_children(world, entities[child]);
+            }
+
+            /* Clear components from table (invokes destructors, OnRemove) */
+            ecs_table_clear(world, table);
+
+            /* Delete table */
+            ecs_stage_delete_table(world, &world->stage, table);
+        };
+    }
+}
+
+void ecs_delete(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_entity_info_t info;
+    info.table = NULL;
+
+    if (stage == &world->stage) {
+        get_info(world, entity, &info);
+        if (info.is_watched) {
+            ecs_delete_children(world, entity);
+        }
+    } else {
+        if (!get_staged_info(world, stage, entity, &info)) {
+            get_info(world, entity, &info);
+        }
+    }
 
     /* If entity has components, remove them */
     ecs_table_t *table = info.table;
@@ -6277,6 +6334,10 @@ void clear_columns(
                     world, &world->stage, src_table, src_data, row, true);
             }
 
+            if (is_watched) {
+                ecs_delete_children(world, e);
+            }
+
             /* If the staged record has the table set to the root, this is an entity
             * without components. If the table is NULL, this is a delete. */
             ecs_record_t *staged_record = ecs_eis_get(stage, e);
@@ -6656,6 +6717,25 @@ void ecs_stage_deinit(
     ecs_table_free(world, &stage->root);
     ecs_vector_free(stage->dirty_tables);
     ecs_eis_free(stage);
+}
+
+void ecs_stage_delete_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table)
+{
+    /* Notify queries that table is to be removed */
+    ecs_notify_queries(
+        world, &(ecs_query_event_t){
+            .kind = EcsQueryTableUnmatch,
+            .table = table
+        });
+
+    /* Free resources associated with table */
+    ecs_table_free(world, table);
+
+    /* Remove table from sparse set */
+    ecs_sparse_remove(stage->tables, table->id);
 }
 
 /** Resize the vector buffer */
@@ -7467,6 +7547,14 @@ void* _ecs_sparse_add(
     chunk_t *chunk = get_chunk(sparse, CHUNK(index));
     ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
     return DATA(chunk->data, size, OFFSET(index));
+}
+
+uint64_t ecs_sparse_last_id(
+    ecs_sparse_t *sparse)
+{
+    ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    return dense_array[sparse->count - 1];
 }
 
 void* _ecs_sparse_get_or_create(
@@ -15534,6 +15622,8 @@ ecs_table_t *create_table(
     ecs_entities_t *entities)
 {
     ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
+    result->id = ecs_to_u32(ecs_sparse_last_id(stage->tables));
+
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     init_table(world, stage, result, entities);
 
@@ -17112,6 +17202,13 @@ int32_t ecs_to_i32(
 {
     ecs_assert(v < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
     return (int32_t)v;
+}
+
+uint32_t ecs_to_u32(
+    uint64_t v)
+{
+    ecs_assert(v < UINT32_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (uint32_t)v;    
 }
 
 size_t ecs_to_size_t(

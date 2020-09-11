@@ -149,6 +149,12 @@ void ecs_stage_merge(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
+/* Delete table from stage */
+void ecs_stage_delete_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Type API
@@ -403,7 +409,11 @@ int16_t ecs_to_i16(
 
 /* Convert 64 bit signed integer to 32 bit */
 int32_t ecs_to_i32(
-    int64_t v);    
+    int64_t v);  
+
+/* Convert 64 bit unsigned integer to 32 bit */
+uint32_t ecs_to_u32(
+    uint64_t v);        
 
 /* Convert signed integer to size_t */
 size_t ecs_to_size_t(
