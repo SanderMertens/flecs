@@ -530,3 +530,35 @@ void Entity_change_name() {
     e.set<flecs::Name>({"Foo"});
     test_str(e.name().c_str(), "Foo");
 }
+
+void Entity_delete() {
+    flecs::world world;
+
+    auto e = world.entity()
+        .add<Position>()
+        .add<Velocity>();
+
+    e.destruct();
+
+    test_assert(!e.has<Position>());
+    test_assert(!e.has<Velocity>());
+
+    auto e2 = world.entity();
+    test_assert(e2.id() == e.id());
+}
+
+void Entity_clear() {
+    flecs::world world;
+
+    auto e = world.entity()
+        .add<Position>()
+        .add<Velocity>();
+
+    e.clear();
+
+    test_assert(!e.has<Position>());
+    test_assert(!e.has<Velocity>());
+
+    auto e2 = world.entity();
+    test_assert(e2.id() > e.id());
+}

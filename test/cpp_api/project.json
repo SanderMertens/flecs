@@ -48,7 +48,9 @@
                 "has_instanceof_indirect",
                 "null_string",
                 "set_name",
-                "change_name"
+                "change_name",
+                "delete",
+                "clear"
             ]
         }, {
             "id": "Traits",

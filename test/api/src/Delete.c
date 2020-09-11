@@ -206,3 +206,39 @@ void Delete_delete_w_on_remove() {
     
     ecs_fini(world);
 }
+
+void Delete_clear_1_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_clear(world, e);
+    test_assert(!ecs_get_type(world, e));
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 > e);
+    
+    ecs_fini(world);
+}
+
+void Delete_clear_2_components() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+    test_assert(e != 0);
+
+    ecs_clear(world, e);
+    test_assert(!ecs_get_type(world, e));
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 > e);
+    
+    ecs_fini(world);
+}

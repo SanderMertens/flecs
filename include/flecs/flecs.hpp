@@ -2133,6 +2133,14 @@ public:
         return ref<T>(m_world, m_id);
     }
 
+    /** Clear an entity.
+     * This operation removes all components from an entity without recycling
+     * the entity id.
+     */
+    void clear() const {
+        ecs_clear(m_world, m_id);
+    }
+
     /** Delete an entity.
      * Entities have to be deleted explicitly, and are not deleted when the
      * flecs::entity object goes out of scope.

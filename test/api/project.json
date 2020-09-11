@@ -319,7 +319,9 @@
                 "delete_2nd_of_3",
                 "delete_2_of_3",
                 "delete_3_of_3",
-                "delete_w_on_remove"
+                "delete_w_on_remove",
+                "clear_1_component",
+                "clear_2_components"
             ]
         }, {
             "id": "Delete_w_filter",

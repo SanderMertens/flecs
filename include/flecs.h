@@ -1184,9 +1184,22 @@ ecs_entity_t ecs_get_case(
 /** @} */
 
 /**
- * @defgroup deleting Deleting Entities
+ * @defgroup deleting Deleting Entities and components
  * @{
  */
+
+/** Clear all components.
+ * This operation will clear all components from an entity but will not delete
+ * the entity itself. This effectively prevents the entity id from being 
+ * recycled.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ */
+FLECS_EXPORT
+void ecs_clear(
+    ecs_world_t *world,
+    ecs_entity_t entity);
 
 /** Delete an entity.
  * This operation will delete an entity and all of its components. The entity id

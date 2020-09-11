@@ -43,6 +43,8 @@ void Entity_has_instanceof_indirect(void);
 void Entity_null_string(void);
 void Entity_set_name(void);
 void Entity_change_name(void);
+void Entity_delete(void);
+void Entity_clear(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -338,6 +340,14 @@ bake_test_case Entity_testcases[] = {
     {
         "change_name",
         Entity_change_name
+    },
+    {
+        "delete",
+        Entity_delete
+    },
+    {
+        "clear",
+        Entity_clear
     }
 };
 
@@ -908,7 +918,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        34,
+        36,
         Entity_testcases
     },
     {

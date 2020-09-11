@@ -1839,6 +1839,35 @@ const ecs_entity_t* ecs_bulk_new_w_entity(
     return new_w_data(world, stage, table, NULL, count, NULL, NULL);
 }
 
+void ecs_clear(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_entity_info_t info;
+    info.table = NULL;
+
+    if (stage == &world->stage) {
+        get_info(world, entity, &info);
+    } else {
+        if (!get_staged_info(world, stage, entity, &info)) {
+            get_info(world, entity, &info);
+        }
+    }
+
+    ecs_table_t *table = info.table;
+    if (table) {
+        ecs_type_t type = table->type;
+
+        /* Remove all components */
+        ecs_entities_t to_remove = ecs_type_to_entities(type);
+        remove_entities_w_info(world, stage, entity, &info, &to_remove);
+    }    
+}
+
 void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity)

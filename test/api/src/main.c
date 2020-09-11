@@ -286,6 +286,8 @@ void Delete_delete_2nd_of_3(void);
 void Delete_delete_2_of_3(void);
 void Delete_delete_3_of_3(void);
 void Delete_delete_w_on_remove(void);
+void Delete_clear_1_component(void);
+void Delete_clear_2_components(void);
 
 // Testsuite 'Delete_w_filter'
 void Delete_w_filter_delete_1(void);
@@ -2250,6 +2252,14 @@ bake_test_case Delete_testcases[] = {
     {
         "delete_w_on_remove",
         Delete_delete_w_on_remove
+    },
+    {
+        "clear_1_component",
+        Delete_clear_1_component
+    },
+    {
+        "clear_2_components",
+        Delete_clear_2_components
     }
 };
 
@@ -5840,7 +5850,7 @@ static bake_test_suite suites[] = {
         "Delete",
         NULL,
         NULL,
-        9,
+        11,
         Delete_testcases
     },
     {
