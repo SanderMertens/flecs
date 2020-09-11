@@ -703,8 +703,8 @@ void ecs_table_clear_silent(
 }
 
 /* Delete all entities in table, invoke OnRemove handlers. This function is used
- * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as the
- * table may have to be deactivated with systems. */
+ * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as 
+ * the table may have to be deactivated with systems. */
 void ecs_table_clear(
     ecs_world_t *world,
     ecs_table_t *table)

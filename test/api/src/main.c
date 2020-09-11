@@ -189,6 +189,12 @@ void Hierarchies_add_path_existing_depth_0(void);
 void Hierarchies_add_path_existing_depth_1(void);
 void Hierarchies_add_path_existing_depth_2(void);
 void Hierarchies_new_w_child_in_root(void);
+void Hierarchies_delete_child(void);
+void Hierarchies_delete_2_children(void);
+void Hierarchies_delete_2_children_different_type(void);
+void Hierarchies_delete_tree_2_levels(void);
+void Hierarchies_delete_tree_3_levels(void);
+void Hierarchies_delete_tree_count_tables(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -1904,6 +1910,30 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "new_w_child_in_root",
         Hierarchies_new_w_child_in_root
+    },
+    {
+        "delete_child",
+        Hierarchies_delete_child
+    },
+    {
+        "delete_2_children",
+        Hierarchies_delete_2_children
+    },
+    {
+        "delete_2_children_different_type",
+        Hierarchies_delete_2_children_different_type
+    },
+    {
+        "delete_tree_2_levels",
+        Hierarchies_delete_tree_2_levels
+    },
+    {
+        "delete_tree_3_levels",
+        Hierarchies_delete_tree_3_levels
+    },
+    {
+        "delete_tree_count_tables",
+        Hierarchies_delete_tree_count_tables
     }
 };
 
@@ -5794,7 +5824,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         NULL,
         NULL,
-        58,
+        64,
         Hierarchies_testcases
     },
     {

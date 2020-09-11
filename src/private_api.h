@@ -149,6 +149,12 @@ void ecs_stage_merge(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
+/* Delete table from stage */
+void ecs_stage_delete_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Type API

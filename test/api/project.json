@@ -206,7 +206,13 @@
                 "add_path_existing_depth_0",
                 "add_path_existing_depth_1",
                 "add_path_existing_depth_2",                                
-                "new_w_child_in_root"
+                "new_w_child_in_root",
+                "delete_child",
+                "delete_2_children",
+                "delete_2_children_different_type",
+                "delete_tree_2_levels",
+                "delete_tree_3_levels",
+                "delete_tree_count_tables"
             ]
         }, {
             "id": "Add_bulk",

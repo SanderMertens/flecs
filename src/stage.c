@@ -414,3 +414,22 @@ void ecs_stage_deinit(
     ecs_vector_free(stage->dirty_tables);
     ecs_eis_free(stage);
 }
+
+void ecs_stage_delete_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table)
+{
+    /* Notify queries that table is to be removed */
+    ecs_notify_queries(
+        world, &(ecs_query_event_t){
+            .kind = EcsQueryTableUnmatch,
+            .table = table
+        });
+
+    /* Free resources associated with table */
+    ecs_table_free(world, table);
+
+    /* Remove table from sparse set */
+    ecs_sparse_remove(stage->tables, table->id);
+}

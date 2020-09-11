@@ -323,6 +323,14 @@ void* _ecs_sparse_add(
     return DATA(chunk->data, size, OFFSET(index));
 }
 
+uint64_t ecs_sparse_last_id(
+    ecs_sparse_t *sparse)
+{
+    ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    return dense_array[sparse->count - 1];
+}
+
 void* _ecs_sparse_get_or_create(
     ecs_sparse_t *sparse,
     ecs_size_t size,

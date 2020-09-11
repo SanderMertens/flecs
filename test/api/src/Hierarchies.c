@@ -917,3 +917,151 @@ void Hierarchies_new_w_child_in_root() {
 
     ecs_fini(world);
 }
+
+void Hierarchies_delete_child() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(ecs_get_type(world, child) != NULL);
+
+    ecs_delete(world, parent);
+    
+    test_assert(ecs_get_type(world, parent) == NULL);
+    test_assert(ecs_get_type(world, child) == NULL);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_delete_2_children() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+
+    ecs_entity_t child_1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(child_1 != 0);
+    test_assert(ecs_get_type(world, child_1) != NULL);
+
+    ecs_entity_t child_2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(child_2 != 0);
+    test_assert(ecs_get_type(world, child_2) != NULL);
+
+    ecs_delete(world, parent);
+    
+    test_assert(ecs_get_type(world, parent) == NULL);
+    test_assert(ecs_get_type(world, child_1) == NULL);
+    test_assert(ecs_get_type(world, child_2) == NULL);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_delete_2_children_different_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+
+    ecs_entity_t child_1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(child_1 != 0);
+    test_assert(ecs_get_type(world, child_1) != NULL);
+    ecs_add(world, child_1, Position);
+
+    ecs_entity_t child_2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(child_2 != 0);
+    test_assert(ecs_get_type(world, child_2) != NULL);
+    ecs_add(world, child_2, Velocity);
+
+    ecs_delete(world, parent);
+    
+    test_assert(ecs_get_type(world, parent) == NULL);
+    test_assert(ecs_get_type(world, child_1) == NULL);
+    test_assert(ecs_get_type(world, child_2) == NULL);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_delete_tree_2_levels() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(ecs_get_type(world, child) != NULL);
+
+    ecs_entity_t grand_child = ecs_new_w_entity(world, ECS_CHILDOF | child);
+    test_assert(ecs_get_type(world, grand_child) != NULL);
+
+    ecs_delete(world, parent);
+    
+    test_assert(ecs_get_type(world, parent) == NULL);
+    test_assert(ecs_get_type(world, child) == NULL);
+    test_assert(ecs_get_type(world, grand_child) == NULL);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_delete_tree_3_levels() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(ecs_get_type(world, child) != NULL);
+
+    ecs_entity_t grand_child = ecs_new_w_entity(world, ECS_CHILDOF | child);
+    test_assert(ecs_get_type(world, grand_child) != NULL);
+
+    ecs_entity_t great_grand_child = ecs_new_w_entity(world, ECS_CHILDOF | grand_child);
+    test_assert(ecs_get_type(world, great_grand_child) != NULL);    
+
+    ecs_delete(world, parent);
+    
+    test_assert(ecs_get_type(world, parent) == NULL);
+    test_assert(ecs_get_type(world, child) == NULL);
+    test_assert(ecs_get_type(world, grand_child) == NULL);
+    test_assert(ecs_get_type(world, great_grand_child) == NULL);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_delete_tree_count_tables() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new(world, Position);
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(ecs_get_type(world, child) != NULL);
+    ecs_add(world, child, Position);
+
+    ecs_entity_t grand_child = ecs_new_w_entity(world, ECS_CHILDOF | child);
+    test_assert(ecs_get_type(world, grand_child) != NULL);
+    ecs_add(world, grand_child, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(q);
+    test_int(it.table_count, 3);
+    test_int(it.inactive_table_count, 0);
+
+    ecs_delete(world, parent);
+    
+    test_assert(ecs_get_type(world, parent) == NULL);
+    test_assert(ecs_get_type(world, child) == NULL);
+    test_assert(ecs_get_type(world, grand_child) == NULL);
+
+    it = ecs_query_iter(q);
+    test_int(it.table_count, 0);
+    test_int(it.inactive_table_count, 1); /* Parent table is still there */
+
+    ecs_fini(world);
+}
