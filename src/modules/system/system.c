@@ -802,41 +802,40 @@ ecs_entity_t ecs_new_system(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
 
-    const char *e_name = ecs_name_from_symbol(world, name);
-    
-    ecs_entity_t result = ecs_lookup_w_type(world, name, ecs_type(EcsSignatureExpr));
-
+    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
-        result = e ? e : ecs_new(world, 0);
-        if (name) {
-            ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
-        }
-        
-        if (tag) {
-            ecs_add_entity(world, result, tag);
-        }
+        result = ecs_new_entity(world, 0, name, NULL);
+    }
 
-        ecs_set(world, result, EcsSignatureExpr, {signature});
-        ecs_set(world, result, EcsIterAction, {action});
+    if (tag) {
+        ecs_add_entity(world, result, tag);
+    }
+
+    bool added = false;
+    EcsSignatureExpr *expr = ecs_get_mut(world, result, EcsSignatureExpr, &added);
+    if (added) {
+        expr->expr = signature;
     } else {
-        EcsSignatureExpr *ptr = ecs_get_mut(world, result, EcsSignatureExpr, NULL);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (!ptr->expr || !signature) {
-            if (ptr->expr != signature) {
-                if (ptr->expr && !strcmp(ptr->expr, "0")) {
+        if (!expr->expr || !signature) {
+            if (expr->expr != signature) {
+                if (expr->expr && !strcmp(expr->expr, "0")) {
                     /* Ok */
                 } else if (signature && !strcmp(signature, "0")) {
                     /* Ok */
                 } else {
                     ecs_abort(ECS_ALREADY_DEFINED, NULL);
                 }
-            } 
-        } else
-        if (strcmp(ptr->expr, signature)) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
+            }
+        } else {
+            if (strcmp(expr->expr, signature)) {
+                ecs_abort(ECS_ALREADY_DEFINED, name);
+            }
         }
     }
+
+    ecs_modified(world, result, EcsSignatureExpr);
+
+    ecs_set(world, result, EcsIterAction, {action});
 
     return result;
 }
@@ -854,34 +853,33 @@ ecs_entity_t ecs_new_trigger(
     ecs_entity_t component = ecs_lookup_fullpath(world, component_name);
     ecs_assert(component != 0, ECS_INVALID_COMPONENT_ID, component_name);
 
-    const char *e_name = ecs_name_from_symbol(world, name);
-    
-    ecs_entity_t result = ecs_lookup_w_type(world, name, ecs_type(EcsTrigger));
+    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
-        result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
-        ecs_set(world, result, EcsTrigger, {
-            .kind = kind,
-            .action = action,
-            .component = component,
-            .ctx = NULL
-        });
+        result = ecs_new_entity(world, 0, name, NULL);
+    }
+
+    bool added = false;
+    EcsTrigger *trigger = ecs_get_mut(world, result, EcsTrigger, &added);
+    if (added) {
+        trigger->kind = kind;
+        trigger->action = action;
+        trigger->component = component;
+        trigger->ctx = NULL;
     } else {
-        EcsTrigger *ptr = ecs_get_mut(world, result, EcsTrigger, NULL);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (ptr->kind != kind) {
+        if (trigger->kind != kind) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
 
-        if (ptr->component != component) {
+        if (trigger->component != component) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
 
-        if (ptr->action != action) {
-            ptr->action = action;
+        if (trigger->action != action) {
+            trigger->action = action;
         }
     }
+    
+    ecs_modified(world, result, EcsTrigger);
 
     return result;
 }

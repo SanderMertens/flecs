@@ -462,11 +462,17 @@ const char* ecs_name_from_symbol(
     ecs_world_t *world,
     const char *type_name); 
 
-/* Lookup an entity by name with a specific type */
-ecs_entity_t ecs_lookup_w_type(
+/* Lookup an entity by name with a specific id */
+ecs_entity_t ecs_lookup_w_id(
     ecs_world_t *world,
-    const char *name,
-    ecs_type_t type);      
+    ecs_entity_t e,
+    const char *name);
+
+/* Set entity name with symbol */
+void ecs_set_symbol(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name);
 
 /* Utility that print a descriptive error string*/
 //void ecs_print_error_string(const char *error_description, const char* signature, const char* system_id, const char* component_id);

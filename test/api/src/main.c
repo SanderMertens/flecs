@@ -497,6 +497,8 @@ void SystemMisc_redeclare_system_null_and_0(void);
 void SystemMisc_redeclare_system_explicit_id(void);
 void SystemMisc_redeclare_system_explicit_id_null_expr(void);
 void SystemMisc_redeclare_system_explicit_id_no_name(void);
+void SystemMisc_declare_different_id_same_name(void);
+void SystemMisc_declare_different_id_same_name_w_scope(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -3076,6 +3078,14 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "redeclare_system_explicit_id_no_name",
         SystemMisc_redeclare_system_explicit_id_no_name
+    },
+    {
+        "declare_different_id_same_name",
+        SystemMisc_declare_different_id_same_name
+    },
+    {
+        "declare_different_id_same_name_w_scope",
+        SystemMisc_declare_different_id_same_name_w_scope
     }
 };
 
@@ -6006,7 +6016,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        71,
+        73,
         SystemMisc_testcases
     },
     {

@@ -546,7 +546,9 @@
                 "redeclare_system_null_and_0",
                 "redeclare_system_explicit_id",
                 "redeclare_system_explicit_id_null_expr",
-                "redeclare_system_explicit_id_no_name"
+                "redeclare_system_explicit_id_no_name",
+                "declare_different_id_same_name",
+                "declare_different_id_same_name_w_scope"
             ]
         }, {
             "id": "Sorting",
