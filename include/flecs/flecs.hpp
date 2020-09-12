@@ -703,6 +703,14 @@ public:
         return m_world;
     }
 
+    /** Enable tracing.
+     *
+     * @param level The tracing level.
+     */
+    void enable_tracing(int level) {
+        ecs_tracing_enable(level);
+    }
+
     /** Progress world, run all systems.
      *
      * @param delta_time Custom delta_time. If 0 is provided, Flecs will automatically measure delta_tiem.
@@ -3015,6 +3023,9 @@ flecs::entity module(const flecs::world& world, const char *name = nullptr) {
 template <typename T>
 flecs::entity import(world& world) {
     if (!_::component_info<T>::registered()) {
+        ecs_trace_1("import %s", _::name_helper<T>::name());
+        ecs_log_push();
+
         ecs_entity_t scope = ecs_get_scope(world.c_ptr());
 
         // Allocate module, so the this ptr will remain stable
@@ -3030,6 +3041,8 @@ flecs::entity import(world& world) {
              _::component_info<T>::id_no_lifecycle(world.c_ptr()), 
              sizeof(T),
              module_data);
+
+        ecs_log_pop();
 
         return m;
     } else {
