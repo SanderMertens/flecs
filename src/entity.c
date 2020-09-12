@@ -581,7 +581,7 @@ void instantiate_children(
         int j;
         for (j = 0; j < child_count; j ++) {
             ecs_entity_t child = children[j];
-            instantiate(world, stage, child, i_data, child_row, 1);
+            instantiate(world, stage, child, i_data, child_row + j, 1);
         }
     }    
 }

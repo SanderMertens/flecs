@@ -786,6 +786,7 @@ void Prefab_match_table_created_in_progress(void);
 void Prefab_prefab_w_1_child(void);
 void Prefab_prefab_w_2_children(void);
 void Prefab_prefab_w_grandchild(void);
+void Prefab_prefab_tree_1_2_1(void);
 void Prefab_prefab_w_base_w_child(void);
 void Prefab_prefab_w_child_w_base(void);
 void Prefab_prefab_w_child_w_base_w_children(void);
@@ -4161,6 +4162,10 @@ bake_test_case Prefab_testcases[] = {
         Prefab_prefab_w_grandchild
     },
     {
+        "prefab_tree_1_2_1",
+        Prefab_prefab_tree_1_2_1
+    },
+    {
         "prefab_w_base_w_child",
         Prefab_prefab_w_base_w_child
     },
@@ -6121,7 +6126,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         NULL,
         NULL,
-        60,
+        61,
         Prefab_testcases
     },
     {

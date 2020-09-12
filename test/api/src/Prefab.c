@@ -1262,6 +1262,70 @@ void Prefab_prefab_w_grandchild() {
     ecs_fini(world);
 }
 
+void Prefab_prefab_tree_1_2_1() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+        ecs_set(world, Parent, Position, {1, 2});
+
+        ECS_ENTITY(world, Child_1, EcsPrefab, CHILDOF | Parent, Position);
+            ecs_set(world, Child_1, Position, {2, 3});
+
+        ECS_ENTITY(world, Child_2, EcsPrefab, CHILDOF | Parent, Position);
+            ecs_set(world, Child_2, Position, {4, 5});
+
+            ECS_ENTITY(world, GrandChild, EcsPrefab, CHILDOF | Parent.Child_2, Position);
+                ecs_set(world, GrandChild, Position, {6, 7});
+
+    test_assert(ecs_has_entity(world, Child_1, ECS_CHILDOF | Parent));
+    test_assert(ecs_has_entity(world, Child_2, ECS_CHILDOF | Parent));
+    test_assert(ecs_has_entity(world, GrandChild, ECS_CHILDOF | Child_2));
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_entity_t e_child = ecs_lookup_child(world, e, "Child_1");
+    test_assert(e_child != 0);
+    test_assert(ecs_has(world, e_child, Position));
+    test_assert(ecs_has_entity(world, e_child, ECS_CHILDOF | e));
+
+    p = ecs_get(world, e_child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+
+    e_child = ecs_lookup_child(world, e, "Child_2");
+    test_assert(e_child != 0);
+    test_assert(ecs_has(world, e_child, Position));
+    test_assert(ecs_has_entity(world, e_child, ECS_CHILDOF | e));
+
+    p = ecs_get(world, e_child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 4);
+    test_int(p->y, 5);    
+
+    ecs_entity_t e_grandchild = ecs_lookup_child(world, e_child, "GrandChild");
+    test_assert(e_grandchild != 0);
+    test_assert(ecs_has(world, e_grandchild, Position));
+    test_assert(ecs_has_entity(world, e_grandchild, ECS_CHILDOF | e_child));
+
+    p = ecs_get(world, e_grandchild, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 6);
+    test_int(p->y, 7);
+
+    ecs_fini(world);
+}
+
 void Prefab_prefab_w_base_w_child() {
     ecs_world_t *world = ecs_init();
 
@@ -2616,3 +2680,5 @@ void Prefab_single_on_set_on_child_w_override() {
 
     ecs_fini(world);
 }
+
+
