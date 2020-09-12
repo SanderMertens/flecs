@@ -484,6 +484,19 @@ void SystemMisc_two_named_columns_of_two(void);
 void SystemMisc_get_column_by_name(void);
 void SystemMisc_get_column_by_name_not_found(void);
 void SystemMisc_get_column_by_name_no_names(void);
+void SystemMisc_redeclare_system_same_expr(void);
+void SystemMisc_redeclare_system_null_expr(void);
+void SystemMisc_redeclare_system_0_expr(void);
+void SystemMisc_redeclare_system_different_expr(void);
+void SystemMisc_redeclare_system_null_and_expr(void);
+void SystemMisc_redeclare_system_expr_and_null(void);
+void SystemMisc_redeclare_system_expr_and_0(void);
+void SystemMisc_redeclare_system_0_and_expr(void);
+void SystemMisc_redeclare_system_0_and_null(void);
+void SystemMisc_redeclare_system_null_and_0(void);
+void SystemMisc_redeclare_system_explicit_id(void);
+void SystemMisc_redeclare_system_explicit_id_null_expr(void);
+void SystemMisc_redeclare_system_explicit_id_no_name(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -3011,6 +3024,58 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "get_column_by_name_no_names",
         SystemMisc_get_column_by_name_no_names
+    },
+    {
+        "redeclare_system_same_expr",
+        SystemMisc_redeclare_system_same_expr
+    },
+    {
+        "redeclare_system_null_expr",
+        SystemMisc_redeclare_system_null_expr
+    },
+    {
+        "redeclare_system_0_expr",
+        SystemMisc_redeclare_system_0_expr
+    },
+    {
+        "redeclare_system_different_expr",
+        SystemMisc_redeclare_system_different_expr
+    },
+    {
+        "redeclare_system_null_and_expr",
+        SystemMisc_redeclare_system_null_and_expr
+    },
+    {
+        "redeclare_system_expr_and_null",
+        SystemMisc_redeclare_system_expr_and_null
+    },
+    {
+        "redeclare_system_expr_and_0",
+        SystemMisc_redeclare_system_expr_and_0
+    },
+    {
+        "redeclare_system_0_and_expr",
+        SystemMisc_redeclare_system_0_and_expr
+    },
+    {
+        "redeclare_system_0_and_null",
+        SystemMisc_redeclare_system_0_and_null
+    },
+    {
+        "redeclare_system_null_and_0",
+        SystemMisc_redeclare_system_null_and_0
+    },
+    {
+        "redeclare_system_explicit_id",
+        SystemMisc_redeclare_system_explicit_id
+    },
+    {
+        "redeclare_system_explicit_id_null_expr",
+        SystemMisc_redeclare_system_explicit_id_null_expr
+    },
+    {
+        "redeclare_system_explicit_id_no_name",
+        SystemMisc_redeclare_system_explicit_id_no_name
     }
 };
 
@@ -5941,7 +6006,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        58,
+        71,
         SystemMisc_testcases
     },
     {

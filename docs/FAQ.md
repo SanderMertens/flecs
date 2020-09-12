@@ -64,11 +64,126 @@ Flecs functions need access to component handles before they can do anything. In
 ### How do I pass component handles around in an application?
 See the previous question.
 
+### When to use each vs. action when evaluating a query or system?
+Queries and systems offer two ways to iterate them, which is using `each` and `action`. Each is the simpler version of the two, which iterates each individual entity: 
+
+```cpp
+world.system<Position, Velocity>()
+    .each([](flecs::entity e, Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+```
+
+Action is more complex, but is faster to evaluate and allows for more control over how the loop is executed:
+
+```cpp
+world.system<Position, Velocity>()
+    .action([](flecs::iter& it, flecs::column<Position>& p, flecs::column<Velocity>& v) {
+        for (auto i : it) {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+        }
+    });
+```
+
+Additionally, `action` can be used for more complex queries (see next question).
+
+### Why can I create queries and systems both as template parameters and as strings?
+In the C++ API you can express simple queries with plain template parameters like this example:
+
+```cpp
+auto q = ecs.query<Position, Velocity>();
+
+q.each([](flecs::entity e, Position& p, Velocity& v) {
+    // ...
+});
+```
+
+That same query can also be specified as a string, at the cost of a slightly more complex API:
+
+```cpp
+auto q = ecs.query<>("Position, Velocity");
+
+q.action([](flecs::iter& it) {
+    auto p = it.column<Position>(1);
+    auto v = it.column<Velocity>(2);
+});
+```
+
+In most cases using template parameters is the way to go, as this provides a slightly easier to use and nicer API. However, for more complex queries, template parameters are insufficient. For example, queries can select entities in a hierarchy from top to bottom with the `CASCADE` modifier:
+
+```cpp
+auto q = ecs.query<>("CASCADE:Position, Position");
+
+q.action([](flecs::iter& it) {
+    auto p_parent = it.column<Position>(1);
+    auto p = it.column<Position>(2);
+});
+```
+
+So in short, for simple queries, use template parameters. For complex queries, use strings.
+
+### How do I attach resources to a system?
+If you want to attach data to a system, you can add the `EcsContext` component to the system entity. For example:
+
+```c
+ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, Velocity);
+
+int my_context_var = 10;
+ecs_set(world, MySystem, EcsContext, {&my_context_var});
+```
+
+This variable will now be accessible through the `param` member of the system iterator:
+
+```c
+void MySystem(ecs_iter_t *it) {
+    int *my_context_var = it->param;
+    // ...
+}
+```
+
+In C++ you can do the same thing:
+
+```c
+auto MySystem = world.system<Position, Velocity>().action([](flecs::iter& it, Position& p, Velocity& v) {
+    int *my_context_var = static_cast<int*>(it->param());
+    // ...
+});
+
+int my_context_var = 10;
+MySystem.set<flecs::Context>({&my_context_var});
+```
+
+### Why is my system (or query) unable to find a component from a module?
+When you import a module, components are automatically namespaced to prevent nameclashes between modules. In C this namespace is determined by taking the name of the module and convert it from PascalCase to a dot-separated notation, so that `MyModule` becomes `my.module`. If component `Position` is defined in module `MyModule`, a system or query will need to use `my.module.Position` in the query expression.
+
+In C++ the component name is prefixed by the C++ namespace, so that `my::module::Position` in C++ becomes `my.module.Position` in the query expression. Note that this only needs to be specified this way when providing a query expression as a string.
+
+### How do I order my systems?
+Systems can be ordered using two mechanisms. The first mechanism is the "phase". By default systems are added to the `EcsOnUpdate` phase, which is usually where all of the gameplay logic is executed. Systems can be assigned to other phases, like `EcsPreUpdate` and `EcsPostUpdate`. For a full list of all phases, see:
+https://github.com/SanderMertens/flecs/blob/master/docs/Quickstart.md#pipelines
+
+The second mechanism is declaration order. If two systems are assigned to the same phase, the order in which they are executed is the order in which they are declared.
+
+Additionally you can take full control over when to run your systems by not assigning systems to a phase (instead of `EcsOnUpdate` just specify 0). To run a system, you can use the `ecs_run` function:
+
+```c
+// delta_time and some_param may be 0
+ecs_run(world, MySystem, delta_time, &some_param);
+```
+
+### Are queries order sensitive?
+No, a query for `Position, Velocity` matches with the same entities as `Velocity, Position`.
+
 ### Can I add/remove components in a system?
 Yes.
 
 ### Why are updates to components made by my system lost?
 If you have a system in which you both write to component arrays as well as adding/removing components from your entity, it may happen that you lose your updates. A solution to this problem is to split up your system in two, one that sets the component values, and one that adds/removes the components.
+
+### What is the difference between a system and a query?
+They are very similar. A system is a query paired up with a function that is executed automatically by the framework each frame.
 
 ### When should I use queries versus filters?
 Queries are the fastest way to iterate over entities as they are "prematched", which means that a query does not need to search as you're iterating it. Queries also provide the most flexible mechanism for selecting entities, with many query operators and other features. Queries are expensive to create however, as they register themselves with other parts of the framework. 
@@ -79,4 +194,3 @@ Often a combination of queries and filters works best. See the `ecs_query_next_w
 
 ### How do I create tags in an C++ application?
 In the C API there is the `ECS_TAG` macro to create tags, but the C++ API does not have an equivalent function or class. The easiest way to create a tag in the C++ API is to create an empty struct, and use it as a regular component.
-

@@ -824,7 +824,13 @@ ecs_entity_t ecs_new_system(
 
         if (!ptr->expr || !signature) {
             if (ptr->expr != signature) {
-                ecs_abort(ECS_ALREADY_DEFINED, NULL);
+                if (ptr->expr && !strcmp(ptr->expr, "0")) {
+                    /* Ok */
+                } else if (signature && !strcmp(signature, "0")) {
+                    /* Ok */
+                } else {
+                    ecs_abort(ECS_ALREADY_DEFINED, NULL);
+                }
             } 
         } else
         if (strcmp(ptr->expr, signature)) {
