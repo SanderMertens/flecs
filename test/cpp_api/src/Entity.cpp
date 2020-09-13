@@ -562,3 +562,58 @@ void Entity_clear() {
     auto e2 = world.entity();
     test_assert(e2.id() > e.id());
 }
+
+void Entity_foce_owned() {
+    flecs::world world;
+
+    auto prefab = world.prefab()
+        .add<Position>()
+        .add<Velocity>()
+        .add_owned<Position>();
+
+    auto e = world.entity()
+        .add_instanceof(prefab);
+    
+    test_assert(e.has<Position>());
+    test_assert(e.owns<Position>());
+    test_assert(e.has<Velocity>());
+    test_assert(!e.owns<Velocity>());
+}
+
+void Entity_force_owned_2() {
+    flecs::world world;
+
+    auto prefab = world.prefab()
+        .add<Position>()
+        .add<Velocity>()
+        .add_owned<Position>()
+        .add_owned<Velocity>();
+
+    auto e = world.entity()
+        .add_instanceof(prefab);
+    
+    test_assert(e.has<Position>());
+    test_assert(e.owns<Position>());
+    test_assert(e.has<Velocity>());
+    test_assert(e.owns<Velocity>());
+}
+
+void Entity_force_owned_nested() {
+    flecs::world world;
+
+    auto prefab = world.prefab()
+        .add<Position>()
+        .add<Velocity>()
+        .add_owned<Position>();
+
+    auto prefab_2 = world.prefab()
+        .add_instanceof(prefab);
+
+    auto e = world.entity()
+        .add_instanceof(prefab_2);
+    
+    test_assert(e.has<Position>());
+    test_assert(e.owns<Position>());
+    test_assert(e.has<Velocity>());
+    test_assert(!e.owns<Velocity>());
+}

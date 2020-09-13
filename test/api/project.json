@@ -899,7 +899,10 @@
                 "override_from_nested",
                 "create_multiple_nested_w_on_set",
                 "create_multiple_nested_w_on_set_in_progress",
-                "single_on_set_on_child_w_override"
+                "single_on_set_on_child_w_override",
+                "force_owned",
+                "force_owned_2",
+                "force_owned_nested"
             ]
         }, {
             "id": "System_w_FromContainer",

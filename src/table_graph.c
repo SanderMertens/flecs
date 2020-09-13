@@ -640,6 +640,30 @@ ecs_table_t* ecs_table_traverse_remove(
 }
 
 static
+void find_owned_components(
+    ecs_world_t *world,
+    ecs_table_t *node,
+    ecs_entity_t base,
+    ecs_entities_t *owned)
+{
+    /* If we're adding an INSTANCEOF relationship, check if the base
+     * has OWNED components that need to be added to the instance */
+    ecs_type_t t = ecs_get_type(world, base);
+
+    int i, count = ecs_vector_count(t);
+    ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = entities[i];
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
+            find_owned_components(world, node, e & ECS_ENTITY_MASK, owned);
+        } else
+        if (ECS_HAS_ROLE(e, OWNED)) {
+            owned->array[owned->count ++] = e & ECS_ENTITY_MASK;
+        }
+    }
+}
+
+static
 ecs_table_t* traverse_add_hi_edges(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -650,6 +674,12 @@ ecs_table_t* traverse_add_hi_edges(
 {
     int32_t count = to_add->count;
     ecs_entity_t *entities = to_add->array;
+
+    ecs_entity_t owned_array[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t owned = {
+        .array = owned_array,
+        .count = 0
+    };
 
     for (; i < count; i ++) {
         ecs_entity_t e = entities[i];
@@ -683,10 +713,19 @@ ecs_table_t* traverse_add_hi_edges(
                 e = ECS_CASE | ecs_entity_t_comb(e, s_case);
             }
 
-            added->array[added->count ++] = e;
+            added->array[added->count ++] = e; 
         }
 
-        node = next;        
+        if ((node != next) && ECS_HAS_ROLE(e, INSTANCEOF)) {
+            find_owned_components(world, next, ECS_ENTITY_MASK & e, &owned);
+        } 
+
+        node = next;
+    }
+
+    /* In case OWNED components were found, add them as well */
+    if (owned.count) {
+        node = ecs_table_traverse_add(world, stage, node, &owned, added);
     }
 
     return node;

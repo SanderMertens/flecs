@@ -820,6 +820,9 @@ void Prefab_override_from_nested(void);
 void Prefab_create_multiple_nested_w_on_set(void);
 void Prefab_create_multiple_nested_w_on_set_in_progress(void);
 void Prefab_single_on_set_on_child_w_override(void);
+void Prefab_force_owned(void);
+void Prefab_force_owned_2(void);
+void Prefab_force_owned_nested(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -4296,6 +4299,18 @@ bake_test_case Prefab_testcases[] = {
     {
         "single_on_set_on_child_w_override",
         Prefab_single_on_set_on_child_w_override
+    },
+    {
+        "force_owned",
+        Prefab_force_owned
+    },
+    {
+        "force_owned_2",
+        Prefab_force_owned_2
+    },
+    {
+        "force_owned_nested",
+        Prefab_force_owned_nested
     }
 };
 
@@ -6126,7 +6141,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         NULL,
         NULL,
-        61,
+        64,
         Prefab_testcases
     },
     {

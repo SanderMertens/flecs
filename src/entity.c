@@ -2582,6 +2582,9 @@ const char* ecs_role_str(
     } else
     if (ECS_HAS_ROLE(entity, CASE)) {
         return "CASE";
+    } else
+    if (ECS_HAS_ROLE(entity, OWNED)) {
+        return "OWNED";
     } else {
         return "UNKNOWN";
     }

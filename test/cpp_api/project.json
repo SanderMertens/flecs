@@ -50,7 +50,10 @@
                 "set_name",
                 "change_name",
                 "delete",
-                "clear"
+                "clear",
+                "foce_owned",
+                "force_owned_2",
+                "force_owned_nested"
             ]
         }, {
             "id": "Traits",

@@ -2681,4 +2681,54 @@ void Prefab_single_on_set_on_child_w_override() {
     ecs_fini(world);
 }
 
+void Prefab_force_owned() {
+    ecs_world_t *world = ecs_init();
 
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_PREFAB(world, Prefab, Position, Velocity, OWNED | Position);
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_owns(world, e, Position, true));
+    test_assert(ecs_has(world, e, Velocity));
+    test_assert(!ecs_owns(world, e, Velocity, true));
+
+    ecs_fini(world);
+}
+
+void Prefab_force_owned_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_PREFAB(world, Prefab, Position, Velocity, OWNED | Position, OWNED | Velocity);
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_owns(world, e, Position, true));
+    test_assert(ecs_has(world, e, Velocity));
+    test_assert(ecs_owns(world, e, Velocity, true));
+
+    ecs_fini(world);
+}
+
+void Prefab_force_owned_nested() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_PREFAB(world, Prefab, Position, Velocity, OWNED | Position);
+    ECS_PREFAB(world, Prefab_2, INSTANCEOF | Prefab);
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab_2);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_owns(world, e, Position, true));
+    test_assert(ecs_has(world, e, Velocity));
+    test_assert(!ecs_owns(world, e, Velocity, true));
+
+    ecs_fini(world);
+}

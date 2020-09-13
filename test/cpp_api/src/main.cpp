@@ -45,6 +45,9 @@ void Entity_set_name(void);
 void Entity_change_name(void);
 void Entity_delete(void);
 void Entity_clear(void);
+void Entity_foce_owned(void);
+void Entity_force_owned_2(void);
+void Entity_force_owned_nested(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -348,6 +351,18 @@ bake_test_case Entity_testcases[] = {
     {
         "clear",
         Entity_clear
+    },
+    {
+        "foce_owned",
+        Entity_foce_owned
+    },
+    {
+        "force_owned_2",
+        Entity_force_owned_2
+    },
+    {
+        "force_owned_nested",
+        Entity_force_owned_nested
     }
 };
 
@@ -918,7 +933,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        36,
+        39,
         Entity_testcases
     },
     {

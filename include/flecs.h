@@ -253,6 +253,9 @@ typedef struct EcsTrigger {
 /** Switches allow for fast switching between mutually exclusive components */
 #define ECS_SWITCH ((ecs_entity_t)0xF6 << 56)
 
+/** Enforce ownership of a component */
+#define ECS_OWNED ((ecs_entity_t)0xF5 << 56)
+
 /** @} */
 
 /**

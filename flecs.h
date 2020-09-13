@@ -2706,6 +2706,9 @@ typedef struct EcsTrigger {
 /** Switches allow for fast switching between mutually exclusive components */
 #define ECS_SWITCH ((ecs_entity_t)0xF6 << 56)
 
+/** Enforce ownership of a component */
+#define ECS_OWNED ((ecs_entity_t)0xF5 << 56)
+
 /** @} */
 
 /**
@@ -8036,6 +8039,19 @@ public:
      */
     base_type& remove_instanceof(const entity& base) const;
 
+    /** Add owned flag for component (forces ownership when instantiating)
+     *
+     * @tparam T The component for which to add the OWNED flag
+     */    
+    template <typename T>
+    base_type& add_owned() const {
+        static_cast<base_type*>(this)->invoke(
+        [](world_t *world, entity_t id) {
+            ecs_add_entity(world, id, ECS_OWNED | _::component_info<T>::id(world));
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
     /** Add a switch to an entity by id.
      * The switch entity must be a type, that is it must have the EcsType
      * component. Entities created with flecs::type are valid here.
@@ -8344,7 +8360,11 @@ public:
      */
     explicit entity(world_t *world) 
         : m_world( world )
-        , m_id( ecs_new_w_type(m_world, 0) ) { }
+    {
+        if (m_world) {
+            m_id = ecs_new_w_type(m_world, 0);
+        }
+    }
 
     /** Create a named entity.
      * Named entities can be looked up with the lookup functions. Entity names
@@ -8442,6 +8462,11 @@ public:
     flecs::entity null(const world& world) {
         return flecs::entity(world.c_ptr(), (ecs_entity_t)0);
     }
+
+    static
+    flecs::entity null() {
+        return flecs::entity(nullptr, (ecs_entity_t)0);
+    }    
 
     /** Get entity id.
      * @return The integer entity id.

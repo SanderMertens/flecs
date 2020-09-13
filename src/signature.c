@@ -153,6 +153,8 @@ ecs_entity_t parse_role(
         return ECS_SWITCH;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_CASE)) {
         return ECS_CASE;
+    } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
+        return ECS_OWNED;
     } else {
         ecs_parser_error(name, sig, column, "invalid role '%s'", token);
         return 0;
