@@ -144,7 +144,8 @@
                 "declare_2_world",
                 "declare_tag",
                 "declare_tag_w_entity",
-                "declare_entity"
+                "declare_entity",
+                "declare_type"
             ]
         }, {
             "id": "Hierarchies",

@@ -421,12 +421,12 @@ typedef struct EcsTrigger {
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
     (void)ecs_type(id)
 
-/** Declare an extern component variable.
- * Use this macro in a header when defining a component identifier globally.
- * Must be used together with ECS_COMPONENT_DECLARE.
+/** Declare an extern tag variable.
+ * Use this macro in a header when defining a tag identifier globally.
+ * Must be used together with ECS_TAG_DECLARE.
  *
  * Example:
- *   ECS_COMPONENT_EXTERN(Position);
+ *   ECS_TAG_EXTERN(Enemy);
  */
 #define ECS_TAG_EXTERN(id)\
     extern ecs_entity_t id;\
@@ -437,18 +437,18 @@ typedef struct EcsTrigger {
  * Must be used together with ECS_TAG_DEFINE.
  *
  * Example:
- *   ECS_TAG_DECLARE(Position);
+ *   ECS_TAG_DECLARE(Enemy);
  */
 #define ECS_TAG_DECLARE(id)\
     ecs_entity_t id;\
     ecs_type_t ecs_type(id)
 
-/** Define a component, store in variable outside of the current scope.
- * Use this macro in a header when defining a component identifier globally.
- * Must be used together with ECS_CTAG_DECLARE.
+/** Define a tag, store in variable outside of the current scope.
+ * Use this macro in a header when defining a tag identifier globally.
+ * Must be used together with ECS_TAG_DECLARE.
  *
  * Example:
- *   ECS_TAG_DEFINE(world, Position);
+ *   ECS_TAG_DEFINE(world, Enemy);
  */
 #define ECS_TAG_DEFINE(world, id)\
     id = ecs_new_entity(world, id, #id, 0);\
@@ -463,6 +463,39 @@ typedef struct EcsTrigger {
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
     (void)ecs_type(id)
+
+/** Declare an extern type variable.
+ * Use this macro in a header when defining a type globally.
+ * Must be used together with ECS_TYPE_DECLARE.
+ *
+ * Example:
+ *   ECS_TYPE_EXTERN(Movable);
+ */
+#define ECS_TYPE_EXTERN(id)\
+    extern ecs_entity_t id;\
+    extern ecs_type_t ecs_type(id)
+
+/** Declare a type variable outside the scope of a function.
+ * Use this macro in a header when defining a type globally.
+ * Must be used together with ECS_TYPE_DEFINE.
+ *
+ * Example:
+ *   ECS_TYPE_DECLARE(Movable);
+ */
+#define ECS_TYPE_DECLARE(id)\
+    ecs_entity_t id;\
+    ecs_type_t ecs_type(id)
+
+/** Define a type, store in variable outside of the current scope.
+ * Use this macro in a header when defining a type globally.
+ * Must be used together with ECS_TYPE_DECLARE.
+ *
+ * Example:
+ *   ECS_TYPE_DEFINE(world, Movable, Position, Velocity);
+ */
+#define ECS_TYPE_DEFINE(world, id, ...)\
+    id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
+    ecs_type(id) = ecs_type_from_entity(world, id);\
 
 /** Declare a constructor.
  * Example:
