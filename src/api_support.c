@@ -110,7 +110,7 @@ EcsType type_from_vec(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
         if (ECS_HAS_ROLE(e, AND)) {
-            ecs_entity_t entity = e & ECS_ENTITY_MASK;
+            ecs_entity_t entity = e & ECS_COMPONENT_MASK;
             const EcsType *type_ptr = ecs_get(world, entity, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
                 "flag must be applied to type");

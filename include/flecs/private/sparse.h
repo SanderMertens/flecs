@@ -59,6 +59,11 @@ void _ecs_sparse_remove(
     _ecs_sparse_remove(sparse, index)
 
 FLECS_EXPORT
+void ecs_sparse_set_generation(
+    ecs_sparse_t *sparse,
+    uint64_t index);    
+
+FLECS_EXPORT
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -66,6 +71,11 @@ void* _ecs_sparse_get(
 
 #define ecs_sparse_get(sparse, type, index)\
     ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
+
+FLECS_EXPORT
+bool ecs_sparse_is_alive(
+    const ecs_sparse_t *sparse,
+    uint64_t index);
 
 FLECS_EXPORT
 int32_t ecs_sparse_count(
@@ -83,6 +93,15 @@ void* _ecs_sparse_get_sparse(
 
 #define ecs_sparse_get_sparse(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
+
+FLECS_EXPORT
+void* _ecs_sparse_get_sparse_any(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index);
+
+#define ecs_sparse_get_sparse_any(sparse, type, index)\
+    ((type*)_ecs_sparse_get_sparse_any(sparse, sizeof(type), index))
 
 FLECS_EXPORT
 void* _ecs_sparse_get_or_create(

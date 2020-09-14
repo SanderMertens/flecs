@@ -16,7 +16,7 @@ ecs_entity_t components_contains(
         ecs_entity_t entity = *c_ptr;
 
         if (ECS_HAS_ROLE(entity, CHILDOF)) {
-            entity &= ECS_ENTITY_MASK;
+            entity &= ECS_COMPONENT_MASK;
 
             ecs_record_t *record = ecs_eis_get(&world->stage, entity);
             ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
@@ -85,7 +85,7 @@ int32_t rank_by_depth(
 
     for (i = count - 1; i >= 0; i --) {
         if (ECS_HAS_ROLE(array[i], CHILDOF)) {
-            ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_ENTITY_MASK);
+            ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_COMPONENT_MASK);
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type, ecs_entity_t);
 
@@ -225,7 +225,7 @@ void get_comp_and_src(
         if (op == EcsOperAnd || op == EcsOperNot || op == EcsOperOptional) {
             component = column->is.component;
         } else if (op == EcsOperAll) {
-            component = column->is.component & ECS_ENTITY_MASK;
+            component = column->is.component & ECS_COMPONENT_MASK;
         } else if (op == EcsOperOr) {
             component = ecs_type_contains(
                 world, table_type, column->is.type, 
@@ -336,12 +336,12 @@ int32_t get_component_index(
             /* If only the lo part of the trait identifier is set, interpret it
              * as the trait to match. This will match any instance of the trait
              * on the entity and in a signature looks like "TRAIT | MyTrait". */
-            if (!ecs_entity_t_hi(component & ECS_ENTITY_MASK)) {
+            if (!ecs_entity_t_hi(component & ECS_COMPONENT_MASK)) {
                 ecs_assert(trait_offsets != NULL, 
                     ECS_INTERNAL_ERROR, NULL);
 
                 /* Strip the TRAIT role */
-                component &= ECS_ENTITY_MASK;
+                component &= ECS_COMPONENT_MASK;
 
                 /* Get index of trait. Start looking from the last trait index
                  * as this may not be the first instance of the trait. */
@@ -375,7 +375,7 @@ int32_t get_component_index(
                     /* Get id for the trait to lookup by taking the trait from
                      * the high 32 bits, move it to the low 32 bits, and reapply
                      * the TRAIT mask. */
-                    component = ecs_entity_t_hi(component & ECS_ENTITY_MASK);
+                    component = ecs_entity_t_hi(component & ECS_COMPONENT_MASK);
 
                     /* If the low part of the identifier is the wildcard entity,
                      * this column is requesting the component to which the 
@@ -512,11 +512,11 @@ ecs_entity_t is_column_trait(
     if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
         ecs_entity_t c = column->is.component;
         if (ECS_HAS_ROLE(c, TRAIT)) {
-            if (!(ecs_entity_t_hi(c & ECS_ENTITY_MASK))) {
+            if (!(ecs_entity_t_hi(c & ECS_COMPONENT_MASK))) {
                 return c;
             } else
             if (ecs_entity_t_lo(c) == EcsWildcard) {
-                return ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+                return ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
             }
         }
     }
@@ -533,12 +533,12 @@ int32_t type_trait_count(
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
     int32_t result = 0;
 
-    trait &= ECS_ENTITY_MASK;
+    trait &= ECS_COMPONENT_MASK;
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
         if (ECS_HAS_ROLE(e, TRAIT)) {
-            e &= ECS_ENTITY_MASK;
+            e &= ECS_COMPONENT_MASK;
             if (ecs_entity_t_hi(e) == trait) {
                 result ++;
             }
@@ -692,7 +692,7 @@ add_trait:
                 ecs_sparse_column_t *sc = ecs_vector_add(
                     &table_data->sparse_columns, ecs_sparse_column_t);
                 sc->signature_column_index = c;
-                sc->sw_case = component & ECS_ENTITY_MASK;
+                sc->sw_case = component & ECS_COMPONENT_MASK;
                 sc->sw_column = NULL;
             }
         }

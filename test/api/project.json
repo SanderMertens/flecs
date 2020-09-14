@@ -329,7 +329,14 @@
                 "delete_3_of_3",
                 "delete_w_on_remove",
                 "clear_1_component",
-                "clear_2_components"
+                "clear_2_components",
+                "alive_after_delete",
+                "alive_after_clear",
+                "alive_after_staged_delete",
+                "alive_while_staged",
+                "alive_while_staged_w_delete",
+                "alive_while_staged_w_delete_recycled_id",
+                "alive_after_recycle"
             ]
         }, {
             "id": "Delete_w_filter",

@@ -296,6 +296,13 @@ void Delete_delete_3_of_3(void);
 void Delete_delete_w_on_remove(void);
 void Delete_clear_1_component(void);
 void Delete_clear_2_components(void);
+void Delete_alive_after_delete(void);
+void Delete_alive_after_clear(void);
+void Delete_alive_after_staged_delete(void);
+void Delete_alive_while_staged(void);
+void Delete_alive_while_staged_w_delete(void);
+void Delete_alive_while_staged_w_delete_recycled_id(void);
+void Delete_alive_after_recycle(void);
 
 // Testsuite 'Delete_w_filter'
 void Delete_w_filter_delete_1(void);
@@ -2319,6 +2326,34 @@ bake_test_case Delete_testcases[] = {
     {
         "clear_2_components",
         Delete_clear_2_components
+    },
+    {
+        "alive_after_delete",
+        Delete_alive_after_delete
+    },
+    {
+        "alive_after_clear",
+        Delete_alive_after_clear
+    },
+    {
+        "alive_after_staged_delete",
+        Delete_alive_after_staged_delete
+    },
+    {
+        "alive_while_staged",
+        Delete_alive_while_staged
+    },
+    {
+        "alive_while_staged_w_delete",
+        Delete_alive_while_staged_w_delete
+    },
+    {
+        "alive_while_staged_w_delete_recycled_id",
+        Delete_alive_while_staged_w_delete_recycled_id
+    },
+    {
+        "alive_after_recycle",
+        Delete_alive_after_recycle
     }
 };
 
@@ -5985,7 +6020,7 @@ static bake_test_suite suites[] = {
         "Delete",
         NULL,
         NULL,
-        11,
+        18,
         Delete_testcases
     },
     {

@@ -58,7 +58,7 @@ ecs_data_t* init_data(
         for (i = 0; i < sw_count; i ++) {
             ecs_entity_t e = entities[i + sw_offset];
             ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
-            e = e & ECS_ENTITY_MASK;
+            e = e & ECS_COMPONENT_MASK;
             const EcsType *type_ptr = ecs_get(world, e, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_type_t sw_type = type_ptr->normalized;
@@ -332,7 +332,7 @@ bool is_override(
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities[i];
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            if (ecs_has_entity(world, e & ECS_ENTITY_MASK, comp)) {
+            if (ecs_has_entity(world, e & ECS_COMPONENT_MASK, comp)) {
                 return true;
             }
         } else {

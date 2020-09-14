@@ -13,9 +13,12 @@ struct ecs_record_t {
 };
 
 #define ecs_eis_get(stage, entity) ecs_sparse_get_sparse((stage)->entity_index, ecs_record_t, entity)
+#define ecs_eis_get_any(stage, entity) ecs_sparse_get_sparse_any((stage)->entity_index, ecs_record_t, entity)
 #define ecs_eis_set(stage, entity, ...) (ecs_sparse_set((stage)->entity_index, ecs_record_t, entity, (__VA_ARGS__)))
 #define ecs_eis_get_or_create(stage, entity) ecs_sparse_get_or_create((stage)->entity_index, ecs_record_t, entity)
 #define ecs_eis_delete(stage, entity) ecs_sparse_remove((stage)->entity_index, entity)
+#define ecs_eis_set_generation(stage, entity) ecs_sparse_set_generation((stage)->entity_index, entity)
+#define ecs_eis_is_alive(stage, entity) ecs_sparse_is_alive((stage)->entity_index, entity)
 #define ecs_eis_recycle(stage) ecs_sparse_new_id((stage)->entity_index)
 #define ecs_eis_clear_entity(stage, entity, is_watched) ecs_eis_set(stage, entity, &(ecs_record_t){NULL, is_watched})
 #define ecs_eis_grow(stage, count) ecs_sparse_grow((stage)->entity_index, count)

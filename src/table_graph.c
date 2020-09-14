@@ -5,7 +5,7 @@ ecs_entity_t ecs_component_id_from_id(
     ecs_entity_t e)
 {
     if (ECS_HAS_ROLE(e, TRAIT)) {
-        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_ENTITY_MASK);
+        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
         if (ecs_has(world, trait, EcsComponent)) {
             /* This is not a trait tag, trait is the value */
             return trait;
@@ -29,7 +29,7 @@ const EcsComponent* ecs_component_from_id(
     /* If this is a trait, get the trait component from the identifier */
     if (ECS_HAS_ROLE(e, TRAIT)) {
         trait = e;
-        e = e & ECS_ENTITY_MASK;
+        e = e & ECS_COMPONENT_MASK;
         e = ecs_entity_t_hi(e);
     }
 
@@ -204,13 +204,13 @@ void init_edges(
         if (ECS_HAS_ROLE(e, CHILDOF)) {
             table->flags |= EcsTableHasParent;
 
-            ecs_entity_t parent = e & ECS_ENTITY_MASK;
+            ecs_entity_t parent = e & ECS_COMPONENT_MASK;
             register_child_table(world, stage, table, parent);
         }
 
         if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
             if (stage == &world->stage) {
-                ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
+                ecs_set_watch(world, stage, e & ECS_COMPONENT_MASK);
             }
         }
     }
@@ -405,7 +405,7 @@ ecs_entity_t find_xor_replace(
         for (i = type_count - 1; i >= 0; i --) {
             ecs_entity_t e = array[i];
             if (ECS_HAS_ROLE(e, XOR)) {
-                ecs_entity_t e_type = e & ECS_ENTITY_MASK;
+                ecs_entity_t e_type = e & ECS_COMPONENT_MASK;
                 const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -437,7 +437,7 @@ int32_t ecs_table_switch_from_case(
     int32_t i, count = table->sw_column_count;
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
-    add = add & ECS_ENTITY_MASK;
+    add = add & ECS_COMPONENT_MASK;
 
     ecs_sw_column_t *sw_columns = NULL;
 
@@ -455,7 +455,7 @@ int32_t ecs_table_switch_from_case(
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = array[i + table->sw_column_offset];
             ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
-            e = e & ECS_ENTITY_MASK;
+            e = e & ECS_COMPONENT_MASK;
 
             const EcsType *type_ptr = ecs_get(world, e, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -655,10 +655,10 @@ void find_owned_components(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            find_owned_components(world, node, e & ECS_ENTITY_MASK, owned);
+            find_owned_components(world, node, e & ECS_COMPONENT_MASK, owned);
         } else
         if (ECS_HAS_ROLE(e, OWNED)) {
-            owned->array[owned->count ++] = e & ECS_ENTITY_MASK;
+            owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;
         }
     }
 }
@@ -717,7 +717,7 @@ ecs_table_t* traverse_add_hi_edges(
         }
 
         if ((node != next) && ECS_HAS_ROLE(e, INSTANCEOF)) {
-            find_owned_components(world, next, ECS_ENTITY_MASK & e, &owned);
+            find_owned_components(world, next, ECS_COMPONENT_MASK & e, &owned);
         } 
 
         node = next;
@@ -883,7 +883,7 @@ void verify_constraints(
             break;
         }
 
-        ecs_entity_t entity = e & ECS_ENTITY_MASK;
+        ecs_entity_t entity = e & ECS_COMPONENT_MASK;
         int32_t matches = count_occurrences(world, entities, entity, i);
         switch(mask) {
         case ECS_OR:

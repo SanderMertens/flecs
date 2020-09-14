@@ -16,7 +16,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
         ecs_entity_t e = array[i];
 
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            ecs_entity_t prefab = e & ECS_ENTITY_MASK;
+            ecs_entity_t prefab = e & ECS_COMPONENT_MASK;
             ecs_type_t prefab_type = ecs_get_type(world, prefab);
 
             if (prefab == previous) {
@@ -252,7 +252,7 @@ bool has_trait(
     ecs_entity_t trait,
     ecs_entity_t e)
 {
-    return trait == ecs_entity_t_hi(e & ECS_ENTITY_MASK);
+    return trait == ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
 }
 
 static
@@ -261,7 +261,7 @@ bool has_case(
     ecs_entity_t sw_case,
     ecs_entity_t e)
 {
-    const EcsType *type_ptr = ecs_get(world, e & ECS_ENTITY_MASK, EcsType);
+    const EcsType *type_ptr = ecs_get(world, e & ECS_COMPONENT_MASK, EcsType);
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_type_has_entity(world, type_ptr->normalized, sw_case);
 }
@@ -274,7 +274,7 @@ int match_entity(
     ecs_entity_t match_with)
 {
     if (ECS_HAS_ROLE(match_with, TRAIT)) {
-        ecs_entity_t hi = ecs_entity_t_hi(match_with & ECS_ENTITY_MASK);
+        ecs_entity_t hi = ecs_entity_t_hi(match_with & ECS_COMPONENT_MASK);
         ecs_entity_t lo = ecs_entity_t_lo(match_with);
 
         if (lo == EcsWildcard) {
@@ -302,7 +302,7 @@ int match_entity(
         }
     } else 
     if (ECS_HAS_ROLE(match_with, CASE)) {
-        ecs_entity_t sw_case = match_with & ECS_ENTITY_MASK;
+        ecs_entity_t sw_case = match_with & ECS_COMPONENT_MASK;
         if (ECS_HAS_ROLE(e, SWITCH) && has_case(world, sw_case, e)) {
             return 1;
         } else {
@@ -354,7 +354,7 @@ bool search_type(
                 break;
             }
 
-            ecs_entity_t base = e & ECS_ENTITY_MASK;
+            ecs_entity_t base = e & ECS_COMPONENT_MASK;
             ecs_type_t base_type = ecs_get_type(world, base);
 
             if (search_type(world, base_type, entity, false)) {
@@ -496,7 +496,7 @@ int32_t ecs_type_trait_index_of(
     for (i = start_index; i < count; i ++) {
         ecs_entity_t e = array[i];
         if (ECS_HAS_ROLE(e, TRAIT)) {
-            e &= ECS_ENTITY_MASK;
+            e &= ECS_COMPONENT_MASK;
             if (trait == ecs_entity_t_hi(e)) {
                 return i;
             }

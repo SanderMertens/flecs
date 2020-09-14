@@ -180,7 +180,10 @@ typedef int32_t ecs_size_t;
 ////////////////////////////////////////////////////////////////////////////////
 
 #define ECS_ROLE_MASK ((ecs_entity_t)0xFF << 56)
-#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ROLE_MASK)
+#define ECS_GENERATION_MASK ((ecs_entity_t)0xFFFF << 48)
+#define ECS_GENERATION_INC(entity) ((entity + ((uint64_t)1 << 48)) & ~((uint64_t)1 << 63))
+#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_GENERATION_MASK)
+#define ECS_COMPONENT_MASK ((ecs_entity_t)~ECS_ROLE_MASK)
 #define ECS_TYPE_ROLE_START ECS_CHILDOF
 #define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
 
@@ -819,6 +822,11 @@ void _ecs_sparse_remove(
     _ecs_sparse_remove(sparse, index)
 
 FLECS_EXPORT
+void ecs_sparse_set_generation(
+    ecs_sparse_t *sparse,
+    uint64_t index);    
+
+FLECS_EXPORT
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -826,6 +834,11 @@ void* _ecs_sparse_get(
 
 #define ecs_sparse_get(sparse, type, index)\
     ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
+
+FLECS_EXPORT
+bool ecs_sparse_is_alive(
+    const ecs_sparse_t *sparse,
+    uint64_t index);
 
 FLECS_EXPORT
 int32_t ecs_sparse_count(
@@ -843,6 +856,15 @@ void* _ecs_sparse_get_sparse(
 
 #define ecs_sparse_get_sparse(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
+
+FLECS_EXPORT
+void* _ecs_sparse_get_sparse_any(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index);
+
+#define ecs_sparse_get_sparse_any(sparse, type, index)\
+    ((type*)_ecs_sparse_get_sparse_any(sparse, sizeof(type), index))
 
 FLECS_EXPORT
 void* _ecs_sparse_get_or_create(
@@ -2669,24 +2691,27 @@ typedef struct EcsTrigger {
  * ECS_TYPE(world, InstanceOfBase, INSTANCEOF | Base);
  */
 
+/** Role bit added to roles to differentiate between roles and generations */
+#define ECS_ROLE ((uint64_t)1 << 63)
+
 /** The INSTANCEOF role indicates that the components from the entity should be
  * shared with the entity that instantiates the type. */
-#define ECS_INSTANCEOF ((ecs_entity_t)0xFE << 56)
+#define ECS_INSTANCEOF (ECS_ROLE | ((ecs_entity_t)0x7E << 56))
 
 /** The CHILDOF role indicates that the entity should be treated as a parent of
  * the entity that instantiates the type. */
-#define ECS_CHILDOF ((ecs_entity_t)0xFD << 56)
+#define ECS_CHILDOF (ECS_ROLE | ((ecs_entity_t)0x7D << 56))
 
 /** The TRAIT role indicates that the entity is a trait identifier. */
-#define ECS_TRAIT ((ecs_entity_t)0xFC << 56)
+#define ECS_TRAIT (ECS_ROLE | ((ecs_entity_t)0x7C << 56))
 
 /** Enforce that all entities of a type are present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_AND ((ecs_entity_t)0xFB << 56)
+#define ECS_AND (ECS_ROLE | ((ecs_entity_t)0x7B << 56))
 
 /** Enforce that at least one entity of a type must be present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_OR ((ecs_entity_t)0xFA << 56)
+#define ECS_OR (ECS_ROLE | ((ecs_entity_t)0x7A << 56))
 
 /** Enforce that exactly one entity of a type must be present in the type.
  * This flag can only be used in combination with an entity that has EcsType. 
@@ -2694,20 +2719,20 @@ typedef struct EcsTrigger {
  * previous entity is removed from the entity. This makes XOR useful for
  * implementing state machines, as it allows for traversing states while 
  * ensuring that only one state is ever active at the same time. */
-#define ECS_XOR ((ecs_entity_t)0xF9 << 56)
+#define ECS_XOR (ECS_ROLE | ((ecs_entity_t)0x79 << 56))
 
 /** None of the entities in a type may be added to the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_NOT ((ecs_entity_t)0xF8 << 56)
+#define ECS_NOT (ECS_ROLE | ((ecs_entity_t)0x78 << 56))
 
 /** Cases are used to switch between mutually exclusive components */
-#define ECS_CASE ((ecs_entity_t)0xF7 << 56)
+#define ECS_CASE (ECS_ROLE | ((ecs_entity_t)0x77 << 56))
 
 /** Switches allow for fast switching between mutually exclusive components */
-#define ECS_SWITCH ((ecs_entity_t)0xF6 << 56)
+#define ECS_SWITCH (ECS_ROLE | ((ecs_entity_t)0x76 << 56))
 
 /** Enforce ownership of a component */
-#define ECS_OWNED ((ecs_entity_t)0xF5 << 56)
+#define ECS_OWNED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
 
 /** @} */
 
@@ -2874,12 +2899,12 @@ typedef struct EcsTrigger {
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
     (void)ecs_type(id)
 
-/** Declare an extern component variable.
- * Use this macro in a header when defining a component identifier globally.
- * Must be used together with ECS_COMPONENT_DECLARE.
+/** Declare an extern tag variable.
+ * Use this macro in a header when defining a tag identifier globally.
+ * Must be used together with ECS_TAG_DECLARE.
  *
  * Example:
- *   ECS_COMPONENT_EXTERN(Position);
+ *   ECS_TAG_EXTERN(Enemy);
  */
 #define ECS_TAG_EXTERN(id)\
     extern ecs_entity_t id;\
@@ -2890,18 +2915,18 @@ typedef struct EcsTrigger {
  * Must be used together with ECS_TAG_DEFINE.
  *
  * Example:
- *   ECS_TAG_DECLARE(Position);
+ *   ECS_TAG_DECLARE(Enemy);
  */
 #define ECS_TAG_DECLARE(id)\
     ecs_entity_t id;\
     ecs_type_t ecs_type(id)
 
-/** Define a component, store in variable outside of the current scope.
- * Use this macro in a header when defining a component identifier globally.
- * Must be used together with ECS_CTAG_DECLARE.
+/** Define a tag, store in variable outside of the current scope.
+ * Use this macro in a header when defining a tag identifier globally.
+ * Must be used together with ECS_TAG_DECLARE.
  *
  * Example:
- *   ECS_TAG_DEFINE(world, Position);
+ *   ECS_TAG_DEFINE(world, Enemy);
  */
 #define ECS_TAG_DEFINE(world, id)\
     id = ecs_new_entity(world, id, #id, 0);\
@@ -2916,6 +2941,39 @@ typedef struct EcsTrigger {
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
     (void)ecs_type(id)
+
+/** Declare an extern type variable.
+ * Use this macro in a header when defining a type globally.
+ * Must be used together with ECS_TYPE_DECLARE.
+ *
+ * Example:
+ *   ECS_TYPE_EXTERN(Movable);
+ */
+#define ECS_TYPE_EXTERN(id)\
+    extern ecs_entity_t id;\
+    extern ecs_type_t ecs_type(id)
+
+/** Declare a type variable outside the scope of a function.
+ * Use this macro in a header when defining a type globally.
+ * Must be used together with ECS_TYPE_DEFINE.
+ *
+ * Example:
+ *   ECS_TYPE_DECLARE(Movable);
+ */
+#define ECS_TYPE_DECLARE(id)\
+    ecs_entity_t id;\
+    ecs_type_t ecs_type(id)
+
+/** Define a type, store in variable outside of the current scope.
+ * Use this macro in a header when defining a type globally.
+ * Must be used together with ECS_TYPE_DECLARE.
+ *
+ * Example:
+ *   ECS_TYPE_DEFINE(world, Movable, Position, Velocity);
+ */
+#define ECS_TYPE_DEFINE(world, id, ...)\
+    id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
+    ecs_type(id) = ecs_type_from_entity(world, id);\
 
 /** Declare a constructor.
  * Example:
@@ -3950,6 +4008,17 @@ bool ecs_has_type(
  * @defgroup metadata Entity Metadata
  * @{
  */
+
+/** Test whether an entity is alive.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @return True if the entity is alive, false if the entity is not alive.
+ */
+FLECS_EXPORT
+bool ecs_is_alive(
+    ecs_world_t *world,
+    ecs_entity_t e);
 
 /** Get the type of an entity.
  *
@@ -6781,6 +6850,7 @@ static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
 static const ecs_entity_t Trait = ECS_TRAIT;
 static const ecs_entity_t Switch = ECS_SWITCH;
 static const ecs_entity_t Case = ECS_CASE;
+static const ecs_entity_t Owned = ECS_OWNED;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -8346,6 +8416,12 @@ private:
  */
 class entity : public entity_builder<entity> {
 public:
+    /** Default constructor.
+     */
+    explicit entity()
+        : m_world( nullptr )
+        , m_id( 0 ) { }
+
     /** Create entity.
      *
      * @param world The world in which to create the entity.
@@ -8432,12 +8508,6 @@ public:
         : m_world( world )
         , m_id(id) { }
 
-    /** Default constructor.
-     */
-    entity() 
-        : m_world(nullptr)
-        , m_id(0) { }
-
     /** Equality operator. */
     bool operator==(const entity& e) {
         return this->id() == e.id();
@@ -8516,7 +8586,7 @@ public:
      * @return A new entity with any roles removed.
      */
     flecs::entity remove_role() const {
-        return flecs::entity(m_world, m_id & ECS_ENTITY_MASK);
+        return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
     }
 
     /** Check if entity has specified role.
@@ -8527,6 +8597,14 @@ public:
      */
     bool has_role(entity_t role) const {        
         return ((m_id & ECS_ROLE_MASK) == role);
+    }
+
+    /** Check is entity is alive.
+     *
+     * @return True if the entity is alive, false otherwise.
+     */
+    bool is_alive() {
+        return ecs_is_alive(m_world, m_id);
     }
 
     /** Return the entity name.

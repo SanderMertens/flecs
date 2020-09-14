@@ -184,7 +184,8 @@ void New_recycle_id_empty() {
 
     ecs_entity_t e2 = ecs_new(world, 0);
     test_assert(e2 != 0);
-    test_assert(e1 == e2);
+    test_assert(e1 != e2);
+    test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
 
     ecs_fini(world);
 }
@@ -200,7 +201,8 @@ void New_recycle_id_w_entity() {
 
     ecs_entity_t e2 = ecs_new_w_entity(world, tag);
     test_assert(e2 != 0);
-    test_assert(e1 == e2);
+    test_assert(e1 != e2);
+    test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
 
     ecs_fini(world);
 }
@@ -216,7 +218,8 @@ void New_recycle_id_w_type() {
 
     ecs_entity_t e2 = ecs_new_w_type(world, ecs_type(Position));
     test_assert(e2 != 0);
-    test_assert(e1 == e2);
+    test_assert(e1 != e2);
+    test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
 
     ecs_fini(world);
 }
@@ -233,7 +236,8 @@ void New_recycle_empty_staged_delete() {
 
     ecs_entity_t e2 = ecs_new(world, 0);
     test_assert(e2 != 0);
-    test_assert(e1 == e2);
+    test_assert(e1 != e2);
+    test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
 
     ecs_fini(world);
 }
@@ -252,7 +256,8 @@ void New_recycle_staged_delete() {
 
     ecs_entity_t e2 = ecs_new(world, 0);
     test_assert(e2 != 0);
-    test_assert(e1 == e2);
+    test_assert(e1 != e2);
+    test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
 
     ecs_fini(world);
 }

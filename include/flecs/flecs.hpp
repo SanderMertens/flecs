@@ -115,6 +115,7 @@ static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
 static const ecs_entity_t Trait = ECS_TRAIT;
 static const ecs_entity_t Switch = ECS_SWITCH;
 static const ecs_entity_t Case = ECS_CASE;
+static const ecs_entity_t Owned = ECS_OWNED;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1680,6 +1681,12 @@ private:
  */
 class entity : public entity_builder<entity> {
 public:
+    /** Default constructor.
+     */
+    explicit entity()
+        : m_world( nullptr )
+        , m_id( 0 ) { }
+
     /** Create entity.
      *
      * @param world The world in which to create the entity.
@@ -1766,12 +1773,6 @@ public:
         : m_world( world )
         , m_id(id) { }
 
-    /** Default constructor.
-     */
-    entity() 
-        : m_world(nullptr)
-        , m_id(0) { }
-
     /** Equality operator. */
     bool operator==(const entity& e) {
         return this->id() == e.id();
@@ -1850,7 +1851,7 @@ public:
      * @return A new entity with any roles removed.
      */
     flecs::entity remove_role() const {
-        return flecs::entity(m_world, m_id & ECS_ENTITY_MASK);
+        return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
     }
 
     /** Check if entity has specified role.
@@ -1861,6 +1862,14 @@ public:
      */
     bool has_role(entity_t role) const {        
         return ((m_id & ECS_ROLE_MASK) == role);
+    }
+
+    /** Check is entity is alive.
+     *
+     * @return True if the entity is alive, false otherwise.
+     */
+    bool is_alive() {
+        return ecs_is_alive(m_world, m_id);
     }
 
     /** Return the entity name.

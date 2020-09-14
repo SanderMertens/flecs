@@ -70,13 +70,13 @@ void Traits_type_w_one_trait() {
     test_int(ctx.e[1], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Position));
 
-    c = ctx.c[1][0] & ECS_ENTITY_MASK;
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    c = ctx.c[1][0] & ECS_COMPONENT_MASK;
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Velocity));
@@ -152,13 +152,13 @@ void Traits_type_w_two_traits() {
     test_int(ctx.e[3], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Velocity));
 
-    c = ctx.c[1][0] & ECS_ENTITY_MASK;
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    c = ctx.c[1][0] & ECS_COMPONENT_MASK;
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Position));
@@ -247,13 +247,13 @@ void Traits_add_tag_trait_for_tag() {
 
     ecs_entity_t c = ctx.c[0][0];
 
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, TraitTag);
     test_int(lo, Tag1);
 
-    c = ctx.c[1][0] & ECS_ENTITY_MASK;
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    c = ctx.c[1][0] & ECS_COMPONENT_MASK;
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, TraitTag);
     test_int(lo, Tag2);
@@ -326,13 +326,13 @@ void Traits_add_tag_trait_for_component() {
     test_int(ctx.e[1], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, TraitTag);
     test_int(lo, ecs_entity(Position));
 
-    c = ctx.c[1][0] & ECS_ENTITY_MASK;
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    c = ctx.c[1][0] & ECS_COMPONENT_MASK;
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, TraitTag);
     test_int(lo, ecs_entity(Velocity));
@@ -406,13 +406,13 @@ void Traits_query_2_traits() {
     test_int(ctx.e[0], e1);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(TraitA));
     test_int(lo, ecs_entity(Position));
 
     c = ctx.c[0][1];
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(TraitB));
     test_int(lo, ecs_entity(Position));    
@@ -479,25 +479,25 @@ void Traits_query_2_traits_2_instances_per_type() {
     test_int(ctx.e[1], e1);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(TraitA));
     test_int(lo, ecs_entity(Position));
 
     c = ctx.c[0][1];
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(TraitB));
     test_int(lo, ecs_entity(Position));    
 
     c = ctx.c[1][0];
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(TraitA));
     test_int(lo, ecs_entity(Velocity));
 
     c = ctx.c[1][1];
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(TraitB));
     test_int(lo, ecs_entity(Velocity));  
@@ -618,14 +618,14 @@ void Traits_trait_wildcard_system() {
     test_int(ctx.e[1], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Position));
     test_int(ctx.c[0][1], ecs_entity(Position));
 
-    c = ctx.c[1][0] & ECS_ENTITY_MASK;
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    c = ctx.c[1][0] & ECS_COMPONENT_MASK;
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Velocity));
@@ -768,7 +768,7 @@ void Traits_on_add_trait() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Position));  
@@ -784,7 +784,7 @@ void Traits_on_add_trait() {
     test_int(ctx.e[0], e);
 
     c = ctx.c[0][0];
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Velocity));
@@ -814,7 +814,7 @@ void Traits_on_add_trait_tag() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, Trait);
     test_int(lo, ecs_entity(Position));  
@@ -848,7 +848,7 @@ void Traits_on_remove_trait() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Position));  
@@ -863,7 +863,7 @@ void Traits_on_remove_trait() {
     test_int(ctx.e[0], e);
 
     c = ctx.c[0][0];
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Velocity));
@@ -895,7 +895,7 @@ void Traits_on_remove_trait_tag() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, Trait);
     test_int(lo, ecs_entity(Position));  
@@ -929,7 +929,7 @@ void Traits_on_remove_trait_on_delete() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Position));  
@@ -937,7 +937,7 @@ void Traits_on_remove_trait_on_delete() {
     test_int(ctx.e[1], e);
 
     c = ctx.c[1][0];
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, ecs_entity(Trait));
     test_int(lo, ecs_entity(Velocity));
@@ -982,7 +982,7 @@ void Traits_on_remove_trait_tag_on_delete() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     ecs_entity_t lo = ecs_entity_t_lo(c);
     test_int(hi, Trait);
     test_int(lo, ecs_entity(Position));  
@@ -990,7 +990,7 @@ void Traits_on_remove_trait_tag_on_delete() {
     test_int(ctx.e[1], e);
 
     c = ctx.c[1][0];
-    hi = ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
     lo = ecs_entity_t_lo(c);
     test_int(hi, Trait);
     test_int(lo, ecs_entity(Velocity));

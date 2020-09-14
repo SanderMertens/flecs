@@ -38,7 +38,7 @@ void ecs_dbg_table(
 
         if (ECS_HAS_ROLE(e, CHILDOF)) {
             ecs_dbg_entity_t parent_dbg;
-            ecs_dbg_entity(world, e & ECS_ENTITY_MASK, &parent_dbg);
+            ecs_dbg_entity(world, e & ECS_COMPONENT_MASK, &parent_dbg);
 
             ecs_dbg_table_t parent_table_dbg;
             ecs_dbg_table(world, parent_dbg.table, &parent_table_dbg);
@@ -51,12 +51,12 @@ void ecs_dbg_table(
 
             /* Add entity to list of parent entities */
             dbg_out->parent_entities = ecs_type_add(
-                world, dbg_out->parent_entities, e & ECS_ENTITY_MASK);
+                world, dbg_out->parent_entities, e & ECS_COMPONENT_MASK);
         }
 
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             ecs_dbg_entity_t base_dbg;
-            ecs_dbg_entity(world, e & ECS_ENTITY_MASK, &base_dbg);
+            ecs_dbg_entity(world, e & ECS_COMPONENT_MASK, &base_dbg);
 
             ecs_dbg_table_t base_table_dbg;
             ecs_dbg_table(world, base_dbg.table, &base_table_dbg);            
@@ -79,11 +79,11 @@ void ecs_dbg_table(
 
             /* Add entity to list of base entities */
             dbg_out->base_entities = ecs_type_add(
-                world, dbg_out->base_entities, e & ECS_ENTITY_MASK);
+                world, dbg_out->base_entities, e & ECS_COMPONENT_MASK);
 
             /* Add base entities of entity to list of base entities */
             dbg_out->base_entities = ecs_type_add(
-                world, base_table_dbg.base_entities, e & ECS_ENTITY_MASK);                                                       
+                world, base_table_dbg.base_entities, e & ECS_COMPONENT_MASK);                                                       
         }
     }
 

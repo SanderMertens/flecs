@@ -536,7 +536,7 @@ void instantiate_children(
         /* Keep track of the element that creates the CHILDOF relationship with
         * the prefab parent. We need to replace this element to make sure the
         * created children point to the instance and not the prefab */ 
-        if (ECS_HAS_ROLE(c, CHILDOF) && (c & ECS_ENTITY_MASK) == base) {
+        if (ECS_HAS_ROLE(c, CHILDOF) && (c & ECS_COMPONENT_MASK) == base) {
             base_index = pos;
         }        
 
@@ -697,7 +697,7 @@ bool override_component(
         }
 
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            return override_from_base(world, e & ECS_ENTITY_MASK, component, 
+            return override_from_base(world, e & ECS_COMPONENT_MASK, component, 
                 data, column, row, count);
         }
     } while (--i >= 0);
@@ -734,7 +734,7 @@ void ecs_components_override(
 
         if (component >= ECS_HI_COMPONENT_ID) {
             if (ECS_HAS_ROLE(component, INSTANCEOF)) {
-                ecs_entity_t base = component & ECS_ENTITY_MASK;
+                ecs_entity_t base = component & ECS_COMPONENT_MASK;
                 instantiate(world, stage, base, data, row, count);
 
                 /* If table has on_set systems, get table without the base
@@ -795,7 +795,7 @@ void ecs_components_switch(
         ecs_entity_t e = array[i];
 
         if (ECS_HAS_ROLE(e, CASE)) {
-            e = e & ECS_ENTITY_MASK;
+            e = e & ECS_COMPONENT_MASK;
 
             ecs_entity_t sw_case = ecs_entity_t_lo(e);
             ecs_entity_t sw_index = ecs_entity_t_hi(e);
@@ -1253,7 +1253,7 @@ void* get_base_component(
     void *ptr = NULL;
 
     while (!ptr && (p = find_prefab(type, p)) != -1) {
-        ecs_entity_t prefab = type_buffer[p] & ECS_ENTITY_MASK;
+        ecs_entity_t prefab = type_buffer[p] & ECS_COMPONENT_MASK;
 
         /* Detect cycles with two entities */
         if (prefab == previous) {
@@ -1566,7 +1566,7 @@ void *get_mutable(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert((component & ECS_ENTITY_MASK) == component || ECS_HAS_ROLE(component, TRAIT), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((component & ECS_COMPONENT_MASK) == component || ECS_HAS_ROLE(component, TRAIT), ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
     if (stage == &world->stage) {
@@ -1679,7 +1679,7 @@ ecs_entity_t ecs_find_in_type(
             }
         }
 
-        ecs_entity_t e = c & ECS_ENTITY_MASK;
+        ecs_entity_t e = c & ECS_COMPONENT_MASK;
 
         if (component) {
            ecs_type_t component_type = ecs_get_type(world, e);
@@ -1927,7 +1927,11 @@ void ecs_delete(
             ecs_data_t *data = ecs_table_get_or_create_data(world, stage, table);
             ecs_table_append(world, table, data, entity, NULL, false);
         }
+
         ecs_eis_set(stage, entity, &(ecs_record_t){ NULL, 0 });
+
+        /* Increase generation so that liveliness checks return false */
+        ecs_eis_set_generation(stage, ECS_GENERATION_INC(entity));
     } else {
         ecs_eis_delete(stage, entity);
     }
@@ -2151,7 +2155,7 @@ void ecs_modified_w_entity(
     ecs_entity_t entity,
     ecs_entity_t component)
 {
-    ecs_assert((component & ECS_ENTITY_MASK) == component, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((component & ECS_COMPONENT_MASK) == component, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_info_t info = {0};
@@ -2277,7 +2281,7 @@ bool ecs_has_entity(
         ecs_switch_t *sw = data->sw_columns[index].data;
         ecs_entity_t value = ecs_switch_get(sw, info.row);
 
-        return value == (component & ECS_ENTITY_MASK);
+        return value == (component & ECS_COMPONENT_MASK);
     } else {
         ecs_type_t type = ecs_get_type(world, entity);
         return ecs_type_has_entity(world, type, component);
@@ -2355,6 +2359,21 @@ ecs_entity_t ecs_type_to_entity(
     return *(ecs_vector_first(type, ecs_entity_t));
 }
 
+bool ecs_is_alive(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    
+    if (stage != &world->stage) {
+        if (ecs_eis_get_any(stage, e)) {
+            return ecs_eis_is_alive(stage, e);
+        }
+    }
+
+    return ecs_eis_is_alive(&world->stage, e);
+}
+
 ecs_type_t ecs_get_type(
     ecs_world_t *world,
     ecs_entity_t entity)
@@ -2364,7 +2383,7 @@ ecs_type_t ecs_get_type(
     ecs_record_t *record = NULL;
 
     if (stage != &world->stage) {
-        record = ecs_eis_get(stage, entity);
+        record = ecs_eis_get_any(stage, entity);
     }
 
     if (!record) {
@@ -2605,7 +2624,7 @@ size_t ecs_entity_str(
         bytes_left = append_to_str(&ptr, "|", bytes_left, &required);
     }
 
-    ecs_entity_t e = entity & ECS_ENTITY_MASK;
+    ecs_entity_t e = entity & ECS_COMPONENT_MASK;
 
     if (ECS_HAS_ROLE(entity, TRAIT)) {
         ecs_entity_t lo = ecs_entity_t_lo(e);

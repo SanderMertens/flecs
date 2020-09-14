@@ -621,6 +621,7 @@ int ecs_sig_add(
     /* If component has AND role, all components of specified type must match */
     if (ECS_HAS_ROLE(component, AND)) {
         elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
+        component &= ECS_ENTITY_MASK;
         const EcsType *type = ecs_get(world, component, EcsType);
         if (!type) {
             ecs_parser_error(sig->name, sig->expr, 0, 
@@ -638,6 +639,7 @@ int ecs_sig_add(
     /* If component has OR role, add type as OR column */
     if (ECS_HAS_ROLE(component, OR)) {
         elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
+        component &= ECS_ENTITY_MASK;
         const EcsType *type = ecs_get(world, component, EcsType);
         if (!type) {
             ecs_parser_error(sig->name, sig->expr, 0, 

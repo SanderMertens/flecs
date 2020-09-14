@@ -39,8 +39,8 @@ void clear_columns(
             }
 
             /* If the staged record has the table set to the root, this is an entity
-            * without components. If the table is NULL, this is a delete. */
-            ecs_record_t *staged_record = ecs_eis_get(stage, e);
+             * without components. If the table is NULL, this is a delete. */
+            ecs_record_t *staged_record = ecs_eis_get_any(stage, e);
             if (staged_record->table) {
                 /* Clear the entity record. This will set the table to NULL but
                  * if necessary, retain information about whether the entity is

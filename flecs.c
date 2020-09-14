@@ -43,9 +43,12 @@ struct ecs_record_t {
 };
 
 #define ecs_eis_get(stage, entity) ecs_sparse_get_sparse((stage)->entity_index, ecs_record_t, entity)
+#define ecs_eis_get_any(stage, entity) ecs_sparse_get_sparse_any((stage)->entity_index, ecs_record_t, entity)
 #define ecs_eis_set(stage, entity, ...) (ecs_sparse_set((stage)->entity_index, ecs_record_t, entity, (__VA_ARGS__)))
 #define ecs_eis_get_or_create(stage, entity) ecs_sparse_get_or_create((stage)->entity_index, ecs_record_t, entity)
 #define ecs_eis_delete(stage, entity) ecs_sparse_remove((stage)->entity_index, entity)
+#define ecs_eis_set_generation(stage, entity) ecs_sparse_set_generation((stage)->entity_index, entity)
+#define ecs_eis_is_alive(stage, entity) ecs_sparse_is_alive((stage)->entity_index, entity)
 #define ecs_eis_recycle(stage) ecs_sparse_new_id((stage)->entity_index)
 #define ecs_eis_clear_entity(stage, entity, is_watched) ecs_eis_set(stage, entity, &(ecs_record_t){NULL, is_watched})
 #define ecs_eis_grow(stage, count) ecs_sparse_grow((stage)->entity_index, count)
@@ -1692,7 +1695,7 @@ ecs_data_t* init_data(
         for (i = 0; i < sw_count; i ++) {
             ecs_entity_t e = entities[i + sw_offset];
             ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
-            e = e & ECS_ENTITY_MASK;
+            e = e & ECS_COMPONENT_MASK;
             const EcsType *type_ptr = ecs_get(world, e, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_type_t sw_type = type_ptr->normalized;
@@ -1966,7 +1969,7 @@ bool is_override(
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities[i];
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            if (ecs_has_entity(world, e & ECS_ENTITY_MASK, comp)) {
+            if (ecs_has_entity(world, e & ECS_COMPONENT_MASK, comp)) {
                 return true;
             }
         } else {
@@ -4214,7 +4217,7 @@ void instantiate_children(
         /* Keep track of the element that creates the CHILDOF relationship with
         * the prefab parent. We need to replace this element to make sure the
         * created children point to the instance and not the prefab */ 
-        if (ECS_HAS_ROLE(c, CHILDOF) && (c & ECS_ENTITY_MASK) == base) {
+        if (ECS_HAS_ROLE(c, CHILDOF) && (c & ECS_COMPONENT_MASK) == base) {
             base_index = pos;
         }        
 
@@ -4375,7 +4378,7 @@ bool override_component(
         }
 
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            return override_from_base(world, e & ECS_ENTITY_MASK, component, 
+            return override_from_base(world, e & ECS_COMPONENT_MASK, component, 
                 data, column, row, count);
         }
     } while (--i >= 0);
@@ -4412,7 +4415,7 @@ void ecs_components_override(
 
         if (component >= ECS_HI_COMPONENT_ID) {
             if (ECS_HAS_ROLE(component, INSTANCEOF)) {
-                ecs_entity_t base = component & ECS_ENTITY_MASK;
+                ecs_entity_t base = component & ECS_COMPONENT_MASK;
                 instantiate(world, stage, base, data, row, count);
 
                 /* If table has on_set systems, get table without the base
@@ -4473,7 +4476,7 @@ void ecs_components_switch(
         ecs_entity_t e = array[i];
 
         if (ECS_HAS_ROLE(e, CASE)) {
-            e = e & ECS_ENTITY_MASK;
+            e = e & ECS_COMPONENT_MASK;
 
             ecs_entity_t sw_case = ecs_entity_t_lo(e);
             ecs_entity_t sw_index = ecs_entity_t_hi(e);
@@ -4931,7 +4934,7 @@ void* get_base_component(
     void *ptr = NULL;
 
     while (!ptr && (p = find_prefab(type, p)) != -1) {
-        ecs_entity_t prefab = type_buffer[p] & ECS_ENTITY_MASK;
+        ecs_entity_t prefab = type_buffer[p] & ECS_COMPONENT_MASK;
 
         /* Detect cycles with two entities */
         if (prefab == previous) {
@@ -5244,7 +5247,7 @@ void *get_mutable(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert((component & ECS_ENTITY_MASK) == component || ECS_HAS_ROLE(component, TRAIT), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((component & ECS_COMPONENT_MASK) == component || ECS_HAS_ROLE(component, TRAIT), ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
     if (stage == &world->stage) {
@@ -5357,7 +5360,7 @@ ecs_entity_t ecs_find_in_type(
             }
         }
 
-        ecs_entity_t e = c & ECS_ENTITY_MASK;
+        ecs_entity_t e = c & ECS_COMPONENT_MASK;
 
         if (component) {
            ecs_type_t component_type = ecs_get_type(world, e);
@@ -5605,7 +5608,11 @@ void ecs_delete(
             ecs_data_t *data = ecs_table_get_or_create_data(world, stage, table);
             ecs_table_append(world, table, data, entity, NULL, false);
         }
+
         ecs_eis_set(stage, entity, &(ecs_record_t){ NULL, 0 });
+
+        /* Increase generation so that liveliness checks return false */
+        ecs_eis_set_generation(stage, ECS_GENERATION_INC(entity));
     } else {
         ecs_eis_delete(stage, entity);
     }
@@ -5829,7 +5836,7 @@ void ecs_modified_w_entity(
     ecs_entity_t entity,
     ecs_entity_t component)
 {
-    ecs_assert((component & ECS_ENTITY_MASK) == component, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((component & ECS_COMPONENT_MASK) == component, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_info_t info = {0};
@@ -5955,7 +5962,7 @@ bool ecs_has_entity(
         ecs_switch_t *sw = data->sw_columns[index].data;
         ecs_entity_t value = ecs_switch_get(sw, info.row);
 
-        return value == (component & ECS_ENTITY_MASK);
+        return value == (component & ECS_COMPONENT_MASK);
     } else {
         ecs_type_t type = ecs_get_type(world, entity);
         return ecs_type_has_entity(world, type, component);
@@ -6033,6 +6040,21 @@ ecs_entity_t ecs_type_to_entity(
     return *(ecs_vector_first(type, ecs_entity_t));
 }
 
+bool ecs_is_alive(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    
+    if (stage != &world->stage) {
+        if (ecs_eis_get_any(stage, e)) {
+            return ecs_eis_is_alive(stage, e);
+        }
+    }
+
+    return ecs_eis_is_alive(&world->stage, e);
+}
+
 ecs_type_t ecs_get_type(
     ecs_world_t *world,
     ecs_entity_t entity)
@@ -6042,7 +6064,7 @@ ecs_type_t ecs_get_type(
     ecs_record_t *record = NULL;
 
     if (stage != &world->stage) {
-        record = ecs_eis_get(stage, entity);
+        record = ecs_eis_get_any(stage, entity);
     }
 
     if (!record) {
@@ -6283,7 +6305,7 @@ size_t ecs_entity_str(
         bytes_left = append_to_str(&ptr, "|", bytes_left, &required);
     }
 
-    ecs_entity_t e = entity & ECS_ENTITY_MASK;
+    ecs_entity_t e = entity & ECS_COMPONENT_MASK;
 
     if (ECS_HAS_ROLE(entity, TRAIT)) {
         ecs_entity_t lo = ecs_entity_t_lo(e);
@@ -6350,8 +6372,8 @@ void clear_columns(
             }
 
             /* If the staged record has the table set to the root, this is an entity
-            * without components. If the table is NULL, this is a delete. */
-            ecs_record_t *staged_record = ecs_eis_get(stage, e);
+             * without components. If the table is NULL, this is a delete. */
+            ecs_record_t *staged_record = ecs_eis_get_any(stage, e);
             if (staged_record->table) {
                 /* Clear the entity record. This will set the table to NULL but
                  * if necessary, retain information about whether the entity is
@@ -7342,6 +7364,16 @@ void grow_dense(
 }
 
 static
+uint64_t strip_generation(
+    uint64_t *index_out)
+{
+    uint64_t index = *index_out;
+    uint64_t gen = index & ECS_GENERATION_MASK;
+    *index_out -= gen;
+    return gen;
+}
+
+static
 void assign_index(
     chunk_t *chunk, 
     uint64_t *dense_array, 
@@ -7350,6 +7382,13 @@ void assign_index(
 {
     chunk->sparse[OFFSET(index)] = dense;
     dense_array[dense] = index;
+}
+
+static
+uint64_t inc_gen(
+    int64_t index)
+{
+    return ECS_GENERATION_INC(index);
 }
 
 static
@@ -7407,14 +7446,16 @@ uint64_t new_index(
         return dense_array[count];
     } else {
         return create_id(sparse, count);
-    }    
+    }
 }
 
 static
-void* try_sparse(
+void* try_sparse_any(
     const ecs_sparse_t *sparse,
     uint64_t index)
 {    
+    strip_generation(&index);
+
     chunk_t *chunk = get_chunk(sparse, CHUNK(index));
     if (!chunk) {
         return NULL;
@@ -7422,9 +7463,7 @@ void* try_sparse(
 
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
-
-    bool in_use = dense && (dense < sparse->count);
-    if (!in_use) {
+    if (!dense) {
         return NULL;
     }
 
@@ -7433,11 +7472,39 @@ void* try_sparse(
 }
 
 static
+void* try_sparse(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return NULL;
+    }
+
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+    if (!dense) {
+        return NULL;
+    }
+
+    uint64_t gen = strip_generation(&index);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
+    if (cur_gen != gen) {
+        return NULL;
+    }
+
+    ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
+    return try_sparse_any(sparse, index);
+}
+
+static
 void* get_sparse(
     const ecs_sparse_t *sparse,
     int32_t dense,
     uint64_t index)
 {
+    strip_generation(&index);
     chunk_t *chunk = get_chunk(sparse, CHUNK(index));
     int32_t offset = OFFSET(index);
     
@@ -7577,13 +7644,17 @@ void* _ecs_sparse_get_or_create(
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
 
+    uint64_t index_w_gen = index;
+    uint64_t gen = strip_generation(&index);
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
 
     if (dense) {
-        /* Element is already paired, check consistency */
-        ecs_assert(index == *ecs_vector_get(sparse->dense, uint64_t, dense), 
+        /* Element is already paired, check consistency. Generation should match
+         * as the id should have been issued by a function that properly manages
+         * recycling and generations. */
+        ecs_assert(index_w_gen == *ecs_vector_get(sparse->dense, uint64_t, dense), 
             ECS_INTERNAL_ERROR, NULL);
 
         /* Check if element is alive. If element is not alive, update indices so
@@ -7625,6 +7696,7 @@ void* _ecs_sparse_get_or_create(
         }
 
         assign_index(chunk, dense_array, index, count);
+        dense_array[count] |= gen;
     }
 
     return DATA(chunk->data, sparse->size, offset);
@@ -7647,10 +7719,22 @@ void _ecs_sparse_remove(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    uint64_t gen = strip_generation(&index);
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
 
     if (dense) {
+        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+        uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
+        if (gen != cur_gen) {
+            /* Generation doesn't match which means that the provided entity is
+             * already not alive. */
+            return;
+        }
+
+        /* Increase generation */
+        dense_array[dense] = index | inc_gen(cur_gen);
+        
         int32_t count = sparse->count;
         if (dense == (count - 1)) {
             /* If dense is the last used element, simply decrease count */
@@ -7662,14 +7746,35 @@ void _ecs_sparse_remove(
         } else {
             /* Element is not alive, nothing to be done */
         }
+
+        /* Reset memory to zero on remove */
+        ecs_size_t size = sparse->size;
+        void *ptr = DATA(chunk->data, size, offset);
+        ecs_os_memset(ptr, 0, size);
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
     }
+}
+
+void ecs_sparse_set_generation(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     
-    /* Reset memory to zero on remove */
-    ecs_size_t size = sparse->size;
-    void *ptr = DATA(chunk->data, size, offset);
-    ecs_os_memset(ptr, 0, size);
+    uint64_t index_w_gen = index;
+    strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (dense) {
+        /* Increase generation */
+        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+        dense_array[dense] = index_w_gen;
+    } else {
+        /* Element is not paired and thus not alive, nothing to be done */
+    }
 }
 
 void* _ecs_sparse_get(
@@ -7687,6 +7792,13 @@ void* _ecs_sparse_get(
     return get_sparse(sparse, dense_index, dense_array[dense_index]);
 }
 
+bool ecs_sparse_is_alive(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    return try_sparse(sparse, index) != NULL;
+}
+
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -7696,6 +7808,17 @@ void* _ecs_sparse_get_sparse(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     return try_sparse(sparse, index);
+}
+
+void* _ecs_sparse_get_sparse_any(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    return try_sparse_any(sparse, index);
 }
 
 int32_t ecs_sparse_count(
@@ -7865,6 +7988,7 @@ void ecs_table_writer_register_table(
     if (data->entities) {
         /* Remove any existing entities from entity index */
         ecs_vector_each(data->entities, ecs_entity_t, e_ptr, {
+            printf("delete %lu\n", *e_ptr);
             ecs_eis_delete(&world->stage, *e_ptr);
         });
       
@@ -7891,11 +8015,12 @@ void ecs_table_writer_finalize_table(
     int32_t i, count = ecs_vector_count(entity_vector);
 
     for (i = 0; i < count; i ++) {
-        ecs_record_t *record_ptr = ecs_eis_get(&world->stage, entities[i]);
+        printf("entity = %lu\n", entities[i]);
+        ecs_record_t *record_ptr = ecs_eis_get_any(&world->stage, entities[i]);
 
         if (record_ptr) {
             if (record_ptr->table != writer->table) {
-                ecs_table_t *table = record_ptr->table;                
+                ecs_table_t *table = record_ptr->table;      
                 ecs_data_t *table_data = ecs_table_get_data(world, table);
 
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -8911,7 +9036,7 @@ void ecs_dbg_table(
 
         if (ECS_HAS_ROLE(e, CHILDOF)) {
             ecs_dbg_entity_t parent_dbg;
-            ecs_dbg_entity(world, e & ECS_ENTITY_MASK, &parent_dbg);
+            ecs_dbg_entity(world, e & ECS_COMPONENT_MASK, &parent_dbg);
 
             ecs_dbg_table_t parent_table_dbg;
             ecs_dbg_table(world, parent_dbg.table, &parent_table_dbg);
@@ -8924,12 +9049,12 @@ void ecs_dbg_table(
 
             /* Add entity to list of parent entities */
             dbg_out->parent_entities = ecs_type_add(
-                world, dbg_out->parent_entities, e & ECS_ENTITY_MASK);
+                world, dbg_out->parent_entities, e & ECS_COMPONENT_MASK);
         }
 
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             ecs_dbg_entity_t base_dbg;
-            ecs_dbg_entity(world, e & ECS_ENTITY_MASK, &base_dbg);
+            ecs_dbg_entity(world, e & ECS_COMPONENT_MASK, &base_dbg);
 
             ecs_dbg_table_t base_table_dbg;
             ecs_dbg_table(world, base_dbg.table, &base_table_dbg);            
@@ -8952,11 +9077,11 @@ void ecs_dbg_table(
 
             /* Add entity to list of base entities */
             dbg_out->base_entities = ecs_type_add(
-                world, dbg_out->base_entities, e & ECS_ENTITY_MASK);
+                world, dbg_out->base_entities, e & ECS_COMPONENT_MASK);
 
             /* Add base entities of entity to list of base entities */
             dbg_out->base_entities = ecs_type_add(
-                world, base_table_dbg.base_entities, e & ECS_ENTITY_MASK);                                                       
+                world, base_table_dbg.base_entities, e & ECS_COMPONENT_MASK);                                                       
         }
     }
 
@@ -12002,6 +12127,7 @@ int ecs_sig_add(
     /* If component has AND role, all components of specified type must match */
     if (ECS_HAS_ROLE(component, AND)) {
         elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
+        component &= ECS_ENTITY_MASK;
         const EcsType *type = ecs_get(world, component, EcsType);
         if (!type) {
             ecs_parser_error(sig->name, sig->expr, 0, 
@@ -12019,6 +12145,7 @@ int ecs_sig_add(
     /* If component has OR role, add type as OR column */
     if (ECS_HAS_ROLE(component, OR)) {
         elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
+        component &= ECS_ENTITY_MASK;
         const EcsType *type = ecs_get(world, component, EcsType);
         if (!type) {
             ecs_parser_error(sig->name, sig->expr, 0, 
@@ -12124,7 +12251,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
         ecs_entity_t e = array[i];
 
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            ecs_entity_t prefab = e & ECS_ENTITY_MASK;
+            ecs_entity_t prefab = e & ECS_COMPONENT_MASK;
             ecs_type_t prefab_type = ecs_get_type(world, prefab);
 
             if (prefab == previous) {
@@ -12360,7 +12487,7 @@ bool has_trait(
     ecs_entity_t trait,
     ecs_entity_t e)
 {
-    return trait == ecs_entity_t_hi(e & ECS_ENTITY_MASK);
+    return trait == ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
 }
 
 static
@@ -12369,7 +12496,7 @@ bool has_case(
     ecs_entity_t sw_case,
     ecs_entity_t e)
 {
-    const EcsType *type_ptr = ecs_get(world, e & ECS_ENTITY_MASK, EcsType);
+    const EcsType *type_ptr = ecs_get(world, e & ECS_COMPONENT_MASK, EcsType);
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_type_has_entity(world, type_ptr->normalized, sw_case);
 }
@@ -12382,7 +12509,7 @@ int match_entity(
     ecs_entity_t match_with)
 {
     if (ECS_HAS_ROLE(match_with, TRAIT)) {
-        ecs_entity_t hi = ecs_entity_t_hi(match_with & ECS_ENTITY_MASK);
+        ecs_entity_t hi = ecs_entity_t_hi(match_with & ECS_COMPONENT_MASK);
         ecs_entity_t lo = ecs_entity_t_lo(match_with);
 
         if (lo == EcsWildcard) {
@@ -12410,7 +12537,7 @@ int match_entity(
         }
     } else 
     if (ECS_HAS_ROLE(match_with, CASE)) {
-        ecs_entity_t sw_case = match_with & ECS_ENTITY_MASK;
+        ecs_entity_t sw_case = match_with & ECS_COMPONENT_MASK;
         if (ECS_HAS_ROLE(e, SWITCH) && has_case(world, sw_case, e)) {
             return 1;
         } else {
@@ -12462,7 +12589,7 @@ bool search_type(
                 break;
             }
 
-            ecs_entity_t base = e & ECS_ENTITY_MASK;
+            ecs_entity_t base = e & ECS_COMPONENT_MASK;
             ecs_type_t base_type = ecs_get_type(world, base);
 
             if (search_type(world, base_type, entity, false)) {
@@ -12604,7 +12731,7 @@ int32_t ecs_type_trait_index_of(
     for (i = start_index; i < count; i ++) {
         ecs_entity_t e = array[i];
         if (ECS_HAS_ROLE(e, TRAIT)) {
-            e &= ECS_ENTITY_MASK;
+            e &= ECS_COMPONENT_MASK;
             if (trait == ecs_entity_t_hi(e)) {
                 return i;
             }
@@ -12980,7 +13107,7 @@ ecs_entity_t components_contains(
         ecs_entity_t entity = *c_ptr;
 
         if (ECS_HAS_ROLE(entity, CHILDOF)) {
-            entity &= ECS_ENTITY_MASK;
+            entity &= ECS_COMPONENT_MASK;
 
             ecs_record_t *record = ecs_eis_get(&world->stage, entity);
             ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
@@ -13049,7 +13176,7 @@ int32_t rank_by_depth(
 
     for (i = count - 1; i >= 0; i --) {
         if (ECS_HAS_ROLE(array[i], CHILDOF)) {
-            ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_ENTITY_MASK);
+            ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_COMPONENT_MASK);
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type, ecs_entity_t);
 
@@ -13189,7 +13316,7 @@ void get_comp_and_src(
         if (op == EcsOperAnd || op == EcsOperNot || op == EcsOperOptional) {
             component = column->is.component;
         } else if (op == EcsOperAll) {
-            component = column->is.component & ECS_ENTITY_MASK;
+            component = column->is.component & ECS_COMPONENT_MASK;
         } else if (op == EcsOperOr) {
             component = ecs_type_contains(
                 world, table_type, column->is.type, 
@@ -13300,12 +13427,12 @@ int32_t get_component_index(
             /* If only the lo part of the trait identifier is set, interpret it
              * as the trait to match. This will match any instance of the trait
              * on the entity and in a signature looks like "TRAIT | MyTrait". */
-            if (!ecs_entity_t_hi(component & ECS_ENTITY_MASK)) {
+            if (!ecs_entity_t_hi(component & ECS_COMPONENT_MASK)) {
                 ecs_assert(trait_offsets != NULL, 
                     ECS_INTERNAL_ERROR, NULL);
 
                 /* Strip the TRAIT role */
-                component &= ECS_ENTITY_MASK;
+                component &= ECS_COMPONENT_MASK;
 
                 /* Get index of trait. Start looking from the last trait index
                  * as this may not be the first instance of the trait. */
@@ -13339,7 +13466,7 @@ int32_t get_component_index(
                     /* Get id for the trait to lookup by taking the trait from
                      * the high 32 bits, move it to the low 32 bits, and reapply
                      * the TRAIT mask. */
-                    component = ecs_entity_t_hi(component & ECS_ENTITY_MASK);
+                    component = ecs_entity_t_hi(component & ECS_COMPONENT_MASK);
 
                     /* If the low part of the identifier is the wildcard entity,
                      * this column is requesting the component to which the 
@@ -13476,11 +13603,11 @@ ecs_entity_t is_column_trait(
     if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
         ecs_entity_t c = column->is.component;
         if (ECS_HAS_ROLE(c, TRAIT)) {
-            if (!(ecs_entity_t_hi(c & ECS_ENTITY_MASK))) {
+            if (!(ecs_entity_t_hi(c & ECS_COMPONENT_MASK))) {
                 return c;
             } else
             if (ecs_entity_t_lo(c) == EcsWildcard) {
-                return ecs_entity_t_hi(c & ECS_ENTITY_MASK);
+                return ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
             }
         }
     }
@@ -13497,12 +13624,12 @@ int32_t type_trait_count(
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
     int32_t result = 0;
 
-    trait &= ECS_ENTITY_MASK;
+    trait &= ECS_COMPONENT_MASK;
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
         if (ECS_HAS_ROLE(e, TRAIT)) {
-            e &= ECS_ENTITY_MASK;
+            e &= ECS_COMPONENT_MASK;
             if (ecs_entity_t_hi(e) == trait) {
                 result ++;
             }
@@ -13656,7 +13783,7 @@ add_trait:
                 ecs_sparse_column_t *sc = ecs_vector_add(
                     &table_data->sparse_columns, ecs_sparse_column_t);
                 sc->signature_column_index = c;
-                sc->sw_case = component & ECS_ENTITY_MASK;
+                sc->sw_case = component & ECS_COMPONENT_MASK;
                 sc->sw_column = NULL;
             }
         }
@@ -15381,7 +15508,7 @@ ecs_entity_t ecs_component_id_from_id(
     ecs_entity_t e)
 {
     if (ECS_HAS_ROLE(e, TRAIT)) {
-        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_ENTITY_MASK);
+        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
         if (ecs_has(world, trait, EcsComponent)) {
             /* This is not a trait tag, trait is the value */
             return trait;
@@ -15405,7 +15532,7 @@ const EcsComponent* ecs_component_from_id(
     /* If this is a trait, get the trait component from the identifier */
     if (ECS_HAS_ROLE(e, TRAIT)) {
         trait = e;
-        e = e & ECS_ENTITY_MASK;
+        e = e & ECS_COMPONENT_MASK;
         e = ecs_entity_t_hi(e);
     }
 
@@ -15580,13 +15707,13 @@ void init_edges(
         if (ECS_HAS_ROLE(e, CHILDOF)) {
             table->flags |= EcsTableHasParent;
 
-            ecs_entity_t parent = e & ECS_ENTITY_MASK;
+            ecs_entity_t parent = e & ECS_COMPONENT_MASK;
             register_child_table(world, stage, table, parent);
         }
 
         if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
             if (stage == &world->stage) {
-                ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
+                ecs_set_watch(world, stage, e & ECS_COMPONENT_MASK);
             }
         }
     }
@@ -15781,7 +15908,7 @@ ecs_entity_t find_xor_replace(
         for (i = type_count - 1; i >= 0; i --) {
             ecs_entity_t e = array[i];
             if (ECS_HAS_ROLE(e, XOR)) {
-                ecs_entity_t e_type = e & ECS_ENTITY_MASK;
+                ecs_entity_t e_type = e & ECS_COMPONENT_MASK;
                 const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -15813,7 +15940,7 @@ int32_t ecs_table_switch_from_case(
     int32_t i, count = table->sw_column_count;
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
-    add = add & ECS_ENTITY_MASK;
+    add = add & ECS_COMPONENT_MASK;
 
     ecs_sw_column_t *sw_columns = NULL;
 
@@ -15831,7 +15958,7 @@ int32_t ecs_table_switch_from_case(
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = array[i + table->sw_column_offset];
             ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
-            e = e & ECS_ENTITY_MASK;
+            e = e & ECS_COMPONENT_MASK;
 
             const EcsType *type_ptr = ecs_get(world, e, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -16031,10 +16158,10 @@ void find_owned_components(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            find_owned_components(world, node, e & ECS_ENTITY_MASK, owned);
+            find_owned_components(world, node, e & ECS_COMPONENT_MASK, owned);
         } else
         if (ECS_HAS_ROLE(e, OWNED)) {
-            owned->array[owned->count ++] = e & ECS_ENTITY_MASK;
+            owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;
         }
     }
 }
@@ -16093,7 +16220,7 @@ ecs_table_t* traverse_add_hi_edges(
         }
 
         if ((node != next) && ECS_HAS_ROLE(e, INSTANCEOF)) {
-            find_owned_components(world, next, ECS_ENTITY_MASK & e, &owned);
+            find_owned_components(world, next, ECS_COMPONENT_MASK & e, &owned);
         } 
 
         node = next;
@@ -16259,7 +16386,7 @@ void verify_constraints(
             break;
         }
 
-        ecs_entity_t entity = e & ECS_ENTITY_MASK;
+        ecs_entity_t entity = e & ECS_COMPONENT_MASK;
         int32_t matches = count_occurrences(world, entities, entity, i);
         switch(mask) {
         case ECS_OR:
@@ -20826,7 +20953,7 @@ EcsType type_from_vec(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
         if (ECS_HAS_ROLE(e, AND)) {
-            ecs_entity_t entity = e & ECS_ENTITY_MASK;
+            ecs_entity_t entity = e & ECS_COMPONENT_MASK;
             const EcsType *type_ptr = ecs_get(world, entity, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
                 "flag must be applied to type");

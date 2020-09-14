@@ -2058,11 +2058,11 @@ To extract the component id from a trait, an application must get the lower 32 b
 ecs_entity_t comp = ecs_entity_t_lo(trait);
 ```
 
-To obtain the trait, the application first has to remove the `ECS_TRAIT` role, after which the upper 32 bits should be used. To remove the `ECS_TRAIT` role the application can apply the `ECS_ENTITY_MASK` mask with a bitwise AND, after which the trait component id can be obtained with `ecs_entity_t_hi`:
+To obtain the trait, the application first has to remove the `ECS_TRAIT` role, after which the upper 32 bits should be used. To remove the `ECS_TRAIT` role the application can apply the `ECS_COMPONENT_MASK` mask with a bitwise AND, after which the trait component id can be obtained with `ecs_entity_t_hi`:
 
 ```c
 // This extracts the id of Trait
-ecs_entity_t trait_comp = ecs_entity_t_hi(trait & ECS_ENTITY_MASK);
+ecs_entity_t trait_comp = ecs_entity_t_hi(trait & ECS_COMPONENT_MASK);
 ```
 
 ### Traits as entity relationships
