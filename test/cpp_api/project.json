@@ -204,7 +204,9 @@
                 "system_optional",
                 "system_const",
                 "query",
-                "implicit_name"
+                "implicit_name",
+                "reinit",
+                "reinit_scoped"
             ]
         }, {
             "id": "Snapshot",

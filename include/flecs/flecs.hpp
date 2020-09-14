@@ -982,57 +982,57 @@ public:
     /** Create a prefab.
      */
     template <typename... Args>
-    flecs::entity entity(Args &&... args);
+    flecs::entity entity(Args &&... args) const;
 
     /** Create an entity.
      */
     template <typename... Args>
-    flecs::entity prefab(Args &&... args);
+    flecs::entity prefab(Args &&... args) const;
 
     /** Create a type.
      */
     template <typename... Args>
-    flecs::type type(Args &&... args);
+    flecs::type type(Args &&... args) const;
 
     /** Create a module.
      */
     template <typename Module, typename... Args>
-    flecs::entity module(Args &&... args);
+    flecs::entity module(Args &&... args) const;
 
     /** Import a module.
      */
     template <typename Module>
-    flecs::entity import();
+    flecs::entity import(); // Cannot be const because modules accept a non-const world
 
     /** Create an system.
      */
     template <typename... Comps, typename... Args>
-    flecs::system<Comps...> system(Args &&... args);
+    flecs::system<Comps...> system(Args &&... args) const;
 
     /** Create a query.
      */
     template <typename... Comps, typename... Args>
-    flecs::query<Comps...> query(Args &&... args);
+    flecs::query<Comps...> query(Args &&... args) const;
 
     /** Register a component.
      */
     template <typename T, typename... Args>
-    flecs::entity component(Args &&... args);
+    flecs::entity component(Args &&... args) const;
 
     /** Register a POD component.
      */
     template <typename T, typename... Args>
-    flecs::entity pod_component(Args &&... args);
+    flecs::entity pod_component(Args &&... args) const;
 
     /** Register a relocatable component.
      */
     template <typename T, typename... Args>
-    flecs::entity relocatable_component(Args &&... args);
+    flecs::entity relocatable_component(Args &&... args) const;
 
     /** Create a snapshot.
      */
     template <typename... Args>
-    flecs::snapshot snapshot(Args &&... args);
+    flecs::snapshot snapshot(Args &&... args) const;
     
 private:
     void init_builtin_components();
@@ -2860,12 +2860,21 @@ public:
             if (!name) {
                 name = _::name_helper<T>::name();
             }
+
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, name);
 
-            entity_t entity = ecs_new_component(
-                world, 0, name, 
+            // Create entity with name first. This ensurs that the component is
+            // created in the right location in the hierarchy, in case a scoped
+            // name is used.
+            flecs::world w(world);
+            flecs::entity result = entity(w, name, true);
+            
+            ecs_entity_t entity = ecs_new_component(
+                world, result.id(), nullptr, 
                 sizeof(typename std::remove_pointer<T>::type), 
                 alignof(typename std::remove_pointer<T>::type));
+
+            ecs_assert(entity == result.id(), ECS_INTERNAL_ERROR, NULL);
 
             init(world, entity);
         }
@@ -2917,6 +2926,14 @@ public:
         return s_id != 0;
     }
 
+    // This function is only used to test cross-translation unit features. No
+    // code other than test cases should invoke this function.
+    static void reset() {
+        s_id = 0;
+        s_type = NULL;
+        s_name = NULL;
+    }
+
 private:
     static entity_t s_id;
     static type_t s_type;
@@ -2965,21 +2982,39 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
 
         /* If a component was already registered with this id but with a 
          * different size, the ecs_new_component function will fail. */
+
+        /* We need to explicitly call ecs_new_component here again. Even though
+         * the component was already registered, it may have been registered
+         * with a different world. This ensures that the component is registered
+         * with the same id for the current world. 
+         * If the component was registered already, nothing will change. */
+        ecs_entity_t entity = ecs_new_component(
+            world.c_ptr(), id, nullptr, 
+            sizeof(typename std::remove_pointer<T>::type), 
+            alignof(typename std::remove_pointer<T>::type)); 
+        
+        ecs_assert(entity == id, ECS_INTERNAL_ERROR, NULL);
+
+        /* This functionality could have been put in id_no_lifecycle, but since
+         * this code happens when a component is registered, and the entire API
+         * calls id_no_lifecycle, this would add a lot of overhead to each call.
+         * This is why when using multiple worlds, components should be 
+         * registered explicitly. */
     } else {
         /* If the component is not yet registered, ensure no other component
          * or entity has been registered with this name */
         ecs_entity_t e = ecs_lookup_fullpath(world_ptr, name);
         ecs_assert(e == 0, ECS_COMPONENT_NAME_IN_USE, name);
+
+        id = _::component_info<T>::id_no_lifecycle(world_ptr, name);
     }
 
-    flecs::entity result = entity(world, name, true);
-    ecs_new_component(world_ptr, result.id(), nullptr, sizeof(T), alignof(T));
-    _::component_info<T>::init(world_ptr, result.id());
-    _::component_info<const T>::init(world_ptr, result.id());
-    _::component_info<T*>::init(world_ptr, result.id());
-    _::component_info<T&>::init(world_ptr, result.id());
+    _::component_info<T>::init(world_ptr, id);
+    _::component_info<const T>::init(world_ptr, id);
+    _::component_info<T*>::init(world_ptr, id);
+    _::component_info<T&>::init(world_ptr, id);
     
-    return result;
+    return world.entity(id);
 }
 
 /** Regular component with ctor, dtor copy and move actions */
@@ -4288,32 +4323,32 @@ inline entity world::lookup(std::string& name) const {
 }
 
 template <typename... Args>
-inline flecs::entity world::entity(Args &&... args) {
+inline flecs::entity world::entity(Args &&... args) const {
     return flecs::entity(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-inline flecs::entity world::prefab(Args &&... args) {
+inline flecs::entity world::prefab(Args &&... args) const {
     return flecs::prefab(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-inline flecs::type world::type(Args &&... args) {
+inline flecs::type world::type(Args &&... args) const {
     return flecs::type(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Comps, typename... Args>
-inline flecs::system<Comps...> world::system(Args &&... args) {
+inline flecs::system<Comps...> world::system(Args &&... args) const {
     return flecs::system<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Comps, typename... Args>
-inline flecs::query<Comps...> world::query(Args &&... args) {
+inline flecs::query<Comps...> world::query(Args &&... args) const {
     return flecs::query<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename Module, typename... Args>
-inline flecs::entity world::module(Args &&... args) {
+inline flecs::entity world::module(Args &&... args) const {
     return flecs::module<Module>(*this, std::forward<Args>(args)...);
 }
 
@@ -4323,22 +4358,22 @@ inline flecs::entity world::import() {
 }
 
 template <typename T, typename... Args>
-inline flecs::entity world::component(Args &&... args) {
+inline flecs::entity world::component(Args &&... args) const {
     return flecs::component<T>(*this, std::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
-inline flecs::entity world::pod_component(Args &&... args) {
+inline flecs::entity world::pod_component(Args &&... args) const {
     return flecs::pod_component<T>(*this, std::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
-inline flecs::entity world::relocatable_component(Args &&... args) {
+inline flecs::entity world::relocatable_component(Args &&... args) const {
     return flecs::relocatable_component<T>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-inline flecs::snapshot world::snapshot(Args &&... args) {
+inline flecs::snapshot world::snapshot(Args &&... args) const {
     return flecs::snapshot(*this, std::forward<Args>(args)...);
 }
 
