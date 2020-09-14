@@ -387,19 +387,12 @@ void* _ecs_sparse_get_or_create(
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
 
-    uint64_t index_w_gen = index;
     uint64_t gen = strip_generation(&index);
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
 
     if (dense) {
-        /* Element is already paired, check consistency. Generation should match
-         * as the id should have been issued by a function that properly manages
-         * recycling and generations. */
-        ecs_assert(index_w_gen == *ecs_vector_get(sparse->dense, uint64_t, dense), 
-            ECS_INTERNAL_ERROR, NULL);
-
         /* Check if element is alive. If element is not alive, update indices so
          * that the first unused dense element points to the sparse element. */
         int32_t count = sparse->count;
@@ -622,6 +615,7 @@ void sparse_copy(
         uint64_t index = indices[i];
         void *src_ptr = _ecs_sparse_get_sparse(src, size, index);
         void *dst_ptr = _ecs_sparse_get_or_create(dst, size, index);
+        ecs_sparse_set_generation(dst, index);
         ecs_os_memcpy(dst_ptr, src_ptr, size);
     }
 
