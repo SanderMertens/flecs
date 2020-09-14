@@ -2863,7 +2863,7 @@ public:
         s_name = ecs_get_fullpath(world, entity);
     }
 
-    static entity_t id_no_lifecycle(world_t *world = nullptr, const char *name = nullptr) {
+    static entity_t id_no_lifecycle(world_t *world, const char *name = nullptr) {
         if (!s_id) {
             if (!name) {
                 name = _::name_helper<T>::name();
