@@ -204,7 +204,8 @@ void* try_sparse_any(
 
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
-    if (!dense) {
+    bool in_use = dense && (dense < sparse->count);
+    if (!in_use) {
         return NULL;
     }
 
@@ -224,7 +225,8 @@ void* try_sparse(
 
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
-    if (!dense) {
+    bool in_use = dense && (dense < sparse->count);
+    if (!in_use) {
         return NULL;
     }
 

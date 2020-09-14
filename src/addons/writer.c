@@ -68,7 +68,6 @@ void ecs_table_writer_register_table(
     if (data->entities) {
         /* Remove any existing entities from entity index */
         ecs_vector_each(data->entities, ecs_entity_t, e_ptr, {
-            printf("delete %lu\n", *e_ptr);
             ecs_eis_delete(&world->stage, *e_ptr);
         });
       
@@ -95,7 +94,6 @@ void ecs_table_writer_finalize_table(
     int32_t i, count = ecs_vector_count(entity_vector);
 
     for (i = 0; i < count; i ++) {
-        printf("entity = %lu\n", entities[i]);
         ecs_record_t *record_ptr = ecs_eis_get_any(&world->stage, entities[i]);
 
         if (record_ptr) {
