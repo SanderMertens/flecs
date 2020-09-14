@@ -127,7 +127,7 @@ void assign_index(
 
 static
 uint64_t inc_gen(
-    int64_t index)
+    uint64_t index)
 {
     return ECS_GENERATION_INC(index);
 }
