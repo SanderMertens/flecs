@@ -422,6 +422,8 @@ const char* ecs_strerror(
         return "component name is already in use";
     case ECS_INCONSISTENT_NAME:
         return "entity redefined with different name";
+    case ECS_INCONSISTENT_COMPONENT_ACTION:
+        return "registered mismatching component action";
     }
 
     return "unknown error code";

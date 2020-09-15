@@ -1376,8 +1376,8 @@ const ecs_entity_t* new_w_data(
             ptr = ECS_OFFSET(ptr, size * row);
 
             ecs_c_info_t *cdata = ecs_get_c_info(world, c);
-            ecs_copy_t copy = cdata->lifecycle.copy;
-            if (copy) {
+            ecs_copy_t copy;
+            if (cdata && (copy = cdata->lifecycle.copy)) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
                 copy(world, c, entities, entities, ptr, src_ptr, 
                     ecs_to_size_t(size), count, cdata->lifecycle.ctx);

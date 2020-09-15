@@ -206,7 +206,8 @@
                 "query",
                 "implicit_name",
                 "reinit",
-                "reinit_scoped"
+                "reinit_scoped",
+                "reinit_w_lifecycle"
             ]
         }, {
             "id": "Snapshot",

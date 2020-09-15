@@ -2849,12 +2849,22 @@ void register_lifecycle_actions(
     bool copy,
     bool move)
 {
-    EcsComponentLifecycle cl{};
-    cl.ctor = _::component_ctor<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
-    cl.dtor = _::component_dtor<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
-    cl.copy = _::component_copy<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
-    cl.move = _::component_move<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
-    ecs_set_component_actions_w_entity( world, component, &cl);
+    if (!ecs_component_has_actions(world, component)) {
+        EcsComponentLifecycle cl{};
+        if (ctor) {
+            cl.ctor = _::component_ctor<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+        }
+        if (dtor) {
+            cl.dtor = _::component_dtor<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+        }
+        if (copy) {
+            cl.copy = _::component_copy<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+        }
+        if (move) {
+            cl.move = _::component_move<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+        }
+        ecs_set_component_actions_w_entity( world, component, &cl);
+    }
 }
 
 template <typename T>
@@ -3046,16 +3056,8 @@ template <typename T>
 flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
-    EcsComponentLifecycle cl{};
-    cl.ctor = _::component_ctor<T>;
-    cl.dtor = _::component_dtor<T>;
-    cl.copy = _::component_copy<T>;
-    cl.move = _::component_move<T>;
-    
-    ecs_set_component_actions_w_entity(
-        world.c_ptr(), 
-        _::component_info<T>::id(world.c_ptr()), 
-        &cl);
+    _::register_lifecycle_actions<T>(world.c_ptr(), result.id(),
+        true, true, true, true);
 
     return result;
 }
@@ -3065,15 +3067,8 @@ template <typename T>
 flecs::entity relocatable_component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
-    EcsComponentLifecycle cl{};
-    cl.ctor = _::component_ctor<T>;
-    cl.dtor = _::component_dtor<T>;
-    cl.copy = _::component_copy<T>;
-    
-    ecs_set_component_actions_w_entity(
-        world.c_ptr(), 
-        _::component_info<T>::id(world.c_ptr()), 
-        &cl);
+    _::register_lifecycle_actions<T>(world.c_ptr(), result.id(),
+        true, true, true, false);
 
     return result;
 }

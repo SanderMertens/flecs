@@ -150,6 +150,7 @@ ecs_world_t *ecs_mini(void) {
 
     world->magic = ECS_WORLD_MAGIC;
     memset(&world->c_info, 0, sizeof(ecs_c_info_t) * ECS_HI_COMPONENT_ID); 
+
     world->t_info = ecs_map_new(ecs_c_info_t, 0);  
     world->fini_actions = NULL; 
 
@@ -328,22 +329,43 @@ void ecs_set_component_actions_w_entity(
     ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
 #endif
 
-    ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
-    c_info->component = component;
-    c_info->lifecycle = *lifecycle;
+    ecs_c_info_t *c_info = ecs_get_c_info(world, component);
+    if (c_info) {
+        ecs_assert(c_info->component == component, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(c_info->lifecycle.ctor == lifecycle->ctor, 
+            ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
+        ecs_assert(c_info->lifecycle.dtor == lifecycle->dtor, 
+            ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
+        ecs_assert(c_info->lifecycle.copy == lifecycle->copy, 
+            ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
+        ecs_assert(c_info->lifecycle.move == lifecycle->move, 
+            ECS_INCONSISTENT_COMPONENT_ACTION, NULL);                        
+    } else {
+        c_info = ecs_get_or_create_c_info(world, component);
+        ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
+        c_info->component = component;
+        c_info->lifecycle = *lifecycle;
 
-    /* If no constructor is set, invoking any of the other lifecycle actions is
-     * not safe as they will potentially access uninitialized memory. For ease
-     * of use, if no constructor is specified, set a default one that 
-     * initializes the component to 0. */
-    if (!lifecycle->ctor) {
-        c_info->lifecycle.ctor = ctor_init_zero;   
+        /* If no constructor is set, invoking any of the other lifecycle actions 
+         * is not safe as they will potentially access uninitialized memory. For 
+         * ease of use, if no constructor is specified, set a default one that 
+         * initializes the component to 0. */
+        if (!lifecycle->ctor) {
+            c_info->lifecycle.ctor = ctor_init_zero;   
+        }
+
+        ecs_notify_tables(world, &(ecs_table_event_t) {
+            .kind = EcsTableComponentInfo,
+            .component = component
+        });
     }
+}
 
-    ecs_notify_tables(world, &(ecs_table_event_t) {
-        .kind = EcsTableComponentInfo,
-        .component = component
-    });
+bool ecs_component_has_actions(
+    ecs_world_t *world,
+    ecs_entity_t component)
+{
+    return ecs_get_c_info(world, component) != NULL;
 }
 
 void ecs_atfini(
@@ -771,7 +793,13 @@ ecs_c_info_t * ecs_get_c_info(
     ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
 
     if (component < ECS_HI_COMPONENT_ID) {
-        return &world->c_info[component];
+        ecs_c_info_t *c_info = &world->c_info[component];
+        if (c_info->component) {
+            ecs_assert(c_info->component == component, ECS_INTERNAL_ERROR, NULL);
+            return c_info;
+        } else {
+            return NULL;
+        }
     } else {
         return ecs_map_get(world->t_info, ecs_c_info_t, component);
     }
@@ -783,11 +811,16 @@ ecs_c_info_t * ecs_get_or_create_c_info(
 {    
     ecs_c_info_t *c_info = ecs_get_c_info(world, component);
     if (!c_info) {
-        ecs_assert(component >= ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
-        ecs_c_info_t t_info = { 0 };
-        ecs_map_set(world->t_info, component, &t_info);
-        c_info = ecs_map_get(world->t_info, ecs_c_info_t, component);
-        ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);      
+        if (component < ECS_HI_COMPONENT_ID) {
+            c_info = &world->c_info[component];
+            ecs_assert(c_info->component == 0, ECS_INTERNAL_ERROR, NULL);
+            c_info->component = component;
+        } else {
+            ecs_c_info_t t_info = { 0 };
+            ecs_map_set(world->t_info, component, &t_info);
+            c_info = ecs_map_get(world->t_info, ecs_c_info_t, component);
+            ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL); 
+        }
     }
 
     return c_info;

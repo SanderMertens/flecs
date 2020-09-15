@@ -2195,6 +2195,10 @@ FLECS_EXPORT
 char* ecs_module_path_from_c(
     const char *c_name);
 
+FLECS_EXPORT
+bool ecs_component_has_actions(
+    ecs_world_t *world,
+    ecs_entity_t component);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
@@ -2329,6 +2333,7 @@ ecs_query_t* ecs_query_new_w_sig(
 #define ECS_INVALID_CASE (46)
 #define ECS_COMPONENT_NAME_IN_USE (47)
 #define ECS_INCONSISTENT_NAME (48)
+#define ECS_INCONSISTENT_COMPONENT_ACTION (49)
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
@@ -7379,6 +7384,9 @@ public:
 
     world(world&& obj) {
         m_world = obj.m_world;
+        m_owned = obj.m_owned;
+        obj.m_world = nullptr;
+        obj.m_owned = false;
     }
 
     /** Not allowed to copy a world. May only take a reference.
@@ -7386,12 +7394,17 @@ public:
     world& operator=(const world& obj) = delete;
 
     world& operator=(world&& obj) {
+        this->~world();
+
         m_world = obj.m_world;
+        m_owned = obj.m_owned;
+        obj.m_world = nullptr;
+        obj.m_owned = false;
         return *this;
     }
     
     ~world() { 
-        if (m_owned) {
+        if (m_owned && m_world) {
             ecs_fini(m_world); 
         }
     }
@@ -7470,8 +7483,24 @@ public:
     std::int32_t get_tick() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->frame_count_total;
-
     }
+
+    /** Set timescale
+     *
+     * @return Monotonically increasing frame count.
+     */
+    void set_time_scale(float mul) const {
+        ecs_set_time_scale(m_world, mul);
+    }  
+
+    /** Get timescale
+     *
+     * @return Monotonically increasing frame count.
+     */
+    float get_time_scale() const {
+        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
+        return stats->time_scale;
+    }        
 
     /** Set world context.
      * Set a context value that can be accessed by anyone that has a reference
@@ -8207,7 +8236,7 @@ public:
      * @param value The value to assign to the component.
      */
     template <typename T>
-    const base_type& set(const T&& value) const {
+    const base_type& set(T&& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
             ecs_set_ptr_w_entity(
@@ -8481,7 +8510,7 @@ public:
         return this->id() != e.id();
     }            
 
-    operator bool() {
+    explicit operator bool() {
         return m_id != 0;
     }
 
@@ -9124,7 +9153,7 @@ protected:
 /** Prefab class */
 class prefab final : public entity {
 public:
-    prefab(const flecs::world& world, const char *name = nullptr) 
+    explicit prefab(const flecs::world& world, const char *name = nullptr) 
         : entity(world, name)
     {
         this->add(flecs::Prefab);
@@ -9138,7 +9167,7 @@ public:
 
 class type final : entity {
 public:
-    type(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr)
+    explicit type(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr)
         : entity(world, ecs_new_type(world.c_ptr(), 0, name, expr))
     { 
         sync_from_flecs();
@@ -9524,12 +9553,22 @@ void register_lifecycle_actions(
     bool copy,
     bool move)
 {
-    EcsComponentLifecycle cl{};
-    cl.ctor = _::component_ctor<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
-    cl.dtor = _::component_dtor<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
-    cl.copy = _::component_copy<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
-    cl.move = _::component_move<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
-    ecs_set_component_actions_w_entity( world, component, &cl);
+    if (!ecs_component_has_actions(world, component)) {
+        EcsComponentLifecycle cl{};
+        if (ctor) {
+            cl.ctor = _::component_ctor<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+        }
+        if (dtor) {
+            cl.dtor = _::component_dtor<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+        }
+        if (copy) {
+            cl.copy = _::component_copy<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+        }
+        if (move) {
+            cl.move = _::component_move<typename std::remove_const<typename std::remove_pointer<T>::type>::type>;
+        }
+        ecs_set_component_actions_w_entity( world, component, &cl);
+    }
 }
 
 template <typename T>
@@ -9721,16 +9760,8 @@ template <typename T>
 flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
-    EcsComponentLifecycle cl{};
-    cl.ctor = _::component_ctor<T>;
-    cl.dtor = _::component_dtor<T>;
-    cl.copy = _::component_copy<T>;
-    cl.move = _::component_move<T>;
-    
-    ecs_set_component_actions_w_entity(
-        world.c_ptr(), 
-        _::component_info<T>::id(world.c_ptr()), 
-        &cl);
+    _::register_lifecycle_actions<T>(world.c_ptr(), result.id(),
+        true, true, true, true);
 
     return result;
 }
@@ -9740,15 +9771,8 @@ template <typename T>
 flecs::entity relocatable_component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
-    EcsComponentLifecycle cl{};
-    cl.ctor = _::component_ctor<T>;
-    cl.dtor = _::component_dtor<T>;
-    cl.copy = _::component_copy<T>;
-    
-    ecs_set_component_actions_w_entity(
-        world.c_ptr(), 
-        _::component_info<T>::id(world.c_ptr()), 
-        &cl);
+    _::register_lifecycle_actions<T>(world.c_ptr(), result.id(),
+        true, true, true, false);
 
     return result;
 }
@@ -10245,7 +10269,7 @@ private:
 template<typename ... Components>
 class system final : public entity {
 public:
-    system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr) 
+    explicit system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr) 
         : entity(world, name)
         , m_kind(static_cast<ecs_entity_t>(OnUpdate)) 
         , m_signature(signature)
@@ -10646,7 +10670,7 @@ private:
 
 class reader final {
 public:
-    reader(world& world) {
+    explicit reader(world& world) {
         m_reader = ecs_reader_init(world.c_ptr());
     }
 
@@ -10671,7 +10695,7 @@ private:
 
 class writer final {
 public:
-    writer(world& world) {
+    explicit writer(world& world) {
         m_writer = ecs_writer_init(world.c_ptr());
     }
 

@@ -605,6 +605,8 @@ void trigger_set(
         ecs_entity_t c = ct[i].component;
 
         ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, c);
+        c_info->component = c;
+
         switch(ct[i].kind) {
         case EcsOnAdd:
             el = trigger_find_or_create(&c_info->on_add, entities[i]);
@@ -927,10 +929,11 @@ void FlecsSystemImport(
     ECS_TYPE_IMPL(EcsContext);
 
     /* Bootstrap ctor and dtor for EcsSystem */
-    ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, ecs_entity(EcsSystem));
-    ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    c_info->lifecycle.ctor = sys_ctor_init_zero;
-    c_info->lifecycle.dtor = ecs_colsystem_dtor;
+    ecs_set_component_actions_w_entity(world, ecs_entity(EcsSystem), 
+        &(EcsComponentLifecycle) {
+            .ctor = sys_ctor_init_zero,
+            .dtor = ecs_colsystem_dtor
+        });
 
     /* Create systems necessary to create systems */
     bootstrap_set_system(world, "CreateSignature", "SignatureExpr", CreateSignature);
