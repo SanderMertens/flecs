@@ -1970,6 +1970,8 @@ public:
      */
     template <typename T>
     const T* get() const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const T*>(
             ecs_get_w_entity(m_world, m_id, _::component_info<T>::id(m_world)));
     }
@@ -1981,6 +1983,8 @@ public:
      *         have the component.
      */
     const void* get(flecs::entity component) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_get_w_entity(m_world, m_id, component.id());
     }
 
@@ -1991,6 +1995,8 @@ public:
      *         have the component.
      */
     const void* get(entity_t component_id) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_get_w_entity(m_world, m_id, component_id);
     } 
 
@@ -2006,6 +2012,8 @@ public:
      */
     template <typename T>
     T* get_mut(bool *is_added = nullptr) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<T*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, _::component_info<T>::id(m_world), is_added));
@@ -2022,6 +2030,8 @@ public:
      * @return Pointer to the component value.
      */
     void* get_mut(flecs::entity component, bool *is_added = nullptr) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_get_mut_w_entity(m_world, m_id, component.id(), is_added);
     }
 
@@ -2036,6 +2046,8 @@ public:
      * @return Pointer to the component value.
      */
     void* get_mut(entity_t component_id, bool *is_added = nullptr) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_get_mut_w_entity(m_world, m_id, component_id, is_added);
     }
 
@@ -2048,6 +2060,8 @@ public:
      */
     template<typename T, typename C>
     const T* get_trait() const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
             _::component_info<C>::id(m_world), _::component_info<T>::id(m_world))));
     }   
@@ -2061,6 +2075,8 @@ public:
      */
     template<typename T>
     const T* get_trait(flecs::entity component) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
             component.id(), _::component_info<T>::id(m_world))));
     }
@@ -2077,6 +2093,8 @@ public:
      */
     template<typename C>
     const C* get_trait_tag(flecs::entity trait) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const C*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
             _::component_info<C>::id(m_world), trait.id())));
     }
@@ -2091,6 +2109,8 @@ public:
      *         have the trait.
      */
     const void* get_trait(flecs::entity trait, flecs::entity component) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_get_w_entity(m_world, m_id, ecs_trait(
             component.id(), trait.id()));
     }
@@ -2108,6 +2128,8 @@ public:
      */
     template <typename T, typename C>
     T* get_trait_mut(bool *is_added = nullptr) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<T*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
@@ -2129,6 +2151,8 @@ public:
      */
     template <typename T>
     T* get_trait_mut(flecs::entity component, bool *is_added = nullptr) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<T*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
@@ -2152,6 +2176,8 @@ public:
      */
     template <typename C>
     C* get_trait_tag_mut(flecs::entity trait, bool *is_added = nullptr) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<C*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
@@ -2166,6 +2192,8 @@ public:
      */
     template <typename T>
     void modified() const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_modified_w_entity(m_world, m_id, _::component_info<T>::id(m_world));
     }
 
@@ -2174,6 +2202,8 @@ public:
      * @param component component that was modified.
      */
     void modified(flecs::entity component) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_modified_w_entity(m_world, m_id, component.id());
     }
 
@@ -2182,6 +2212,8 @@ public:
      * @param component id of component that was modified.
      */
     void modified(entity_t component) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_modified_w_entity(m_world, m_id, component);
     }        
 
@@ -2193,6 +2225,8 @@ public:
      */
     template <typename T>
     ref<T> get_ref() const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ref<T>(m_world, m_id);
     }
 
@@ -2201,6 +2235,8 @@ public:
      * the entity id.
      */
     void clear() const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_clear(m_world, m_id);
     }
 
@@ -2209,6 +2245,8 @@ public:
      * flecs::entity object goes out of scope.
      */
     void destruct() const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_delete(m_world, m_id);
     }
 
@@ -2220,6 +2258,8 @@ public:
      * @return The found entity, or entity::null if no entity matched.
      */
     entity lookup(const char *path) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::");
         return entity(m_world, id);
     }
@@ -2230,6 +2270,8 @@ public:
      * @return True if the entity has the provided entity id, false otherwise.
      */
     bool has(entity_t entity) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, entity);
     }
 
@@ -2239,6 +2281,8 @@ public:
      * @return True if the entity has the provided parent id, false otherwise.
      */
     bool has_childof(entity_t parent) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, ECS_CHILDOF | parent);
     }    
 
@@ -2248,6 +2292,8 @@ public:
      * @return True if the entity has the provided base id, false otherwise.
      */
     bool has_instanceof(entity_t base) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, ECS_INSTANCEOF | base);
     }
 
@@ -2257,6 +2303,8 @@ public:
      * @return True if the entity has the provided type, false otherwise.
      */
     bool has(type_t type) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_type(m_world, m_id, type);
     }
 
@@ -2304,6 +2352,8 @@ public:
      * @return True if the entity owns the provided entity id, false otherwise.
      */
     bool owns(entity_t entity) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_owns_entity(m_world, m_id, entity, true);
     }
 
@@ -2314,6 +2364,8 @@ public:
      * @return True if the entity owns the provided type, false otherwise.
      */
     bool owns(type_t type) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_type_owns_type(m_world, ecs_get_type(m_world, m_id), type, true);
     }
 
@@ -2346,6 +2398,8 @@ public:
      */
     template<typename T, typename C>
     bool has_trait() const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, ecs_trait(
             _::component_info<C>::id(m_world), 
             _::component_info<T>::id(m_world)));
@@ -2359,6 +2413,8 @@ public:
      */
     template<typename T>
     bool has_trait(flecs::entity component) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, ecs_trait(
             component.id(), _::component_info<T>::id(m_world)));
     }
@@ -2372,6 +2428,8 @@ public:
      */
     template<typename C>
     bool has_trait_tag(flecs::entity trait) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, ecs_trait(
            _::component_info<C>::id(m_world), trait.id()));
     }
@@ -2384,6 +2442,8 @@ public:
      * @return True if the entity has the provided trait, false otherwise.
      */
     bool has_trait(flecs::entity trait, flecs::entity entity) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, ecs_trait(
             entity.id(), trait.id()));
     }
@@ -2401,6 +2461,8 @@ public:
      * @return True if the entity has the provided case, false otherwise.
      */
     bool has_case(entity_t sw_case) const {
+        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, flecs::Case | sw_case);
     }
 
