@@ -158,6 +158,7 @@
                 "tree_iter_empty",
                 "tree_iter_1_table",
                 "tree_iter_2_tables",
+                "tree_iter_w_filter",
                 "path_depth_0",
                 "path_depth_1",
                 "path_depth_2",
@@ -214,7 +215,10 @@
                 "delete_tree_2_levels",
                 "delete_tree_3_levels",
                 "delete_tree_count_tables",
-                "delete_tree_staged"
+                "delete_tree_staged",
+                "get_child_count",
+                "get_child_count_2_tables",
+                "get_child_count_no_children"
             ]
         }, {
             "id": "Add_bulk",
@@ -381,6 +385,10 @@
                 "get_name_no_name",
                 "get_name_from_empty",
                 "lookup_by_id",
+                "lookup_symbol_by_id",
+                "lookup_name_w_digit",
+                "lookup_symbol_w_digit",
+                "lookup_path_w_digit",
                 "set_name_of_existing",
                 "change_name_of_existing"
             ]

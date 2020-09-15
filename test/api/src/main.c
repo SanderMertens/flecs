@@ -140,6 +140,7 @@ void Hierarchies_get_parent_from_root(void);
 void Hierarchies_tree_iter_empty(void);
 void Hierarchies_tree_iter_1_table(void);
 void Hierarchies_tree_iter_2_tables(void);
+void Hierarchies_tree_iter_w_filter(void);
 void Hierarchies_path_depth_0(void);
 void Hierarchies_path_depth_1(void);
 void Hierarchies_path_depth_2(void);
@@ -197,6 +198,9 @@ void Hierarchies_delete_tree_2_levels(void);
 void Hierarchies_delete_tree_3_levels(void);
 void Hierarchies_delete_tree_count_tables(void);
 void Hierarchies_delete_tree_staged(void);
+void Hierarchies_get_child_count(void);
+void Hierarchies_get_child_count_2_tables(void);
+void Hierarchies_get_child_count_no_children(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -341,6 +345,10 @@ void Lookup_get_name(void);
 void Lookup_get_name_no_name(void);
 void Lookup_get_name_from_empty(void);
 void Lookup_lookup_by_id(void);
+void Lookup_lookup_symbol_by_id(void);
+void Lookup_lookup_name_w_digit(void);
+void Lookup_lookup_symbol_w_digit(void);
+void Lookup_lookup_path_w_digit(void);
 void Lookup_set_name_of_existing(void);
 void Lookup_change_name_of_existing(void);
 
@@ -1741,6 +1749,10 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_tree_iter_2_tables
     },
     {
+        "tree_iter_w_filter",
+        Hierarchies_tree_iter_w_filter
+    },
+    {
         "path_depth_0",
         Hierarchies_path_depth_0
     },
@@ -1967,6 +1979,18 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "delete_tree_staged",
         Hierarchies_delete_tree_staged
+    },
+    {
+        "get_child_count",
+        Hierarchies_get_child_count
+    },
+    {
+        "get_child_count_2_tables",
+        Hierarchies_get_child_count_2_tables
+    },
+    {
+        "get_child_count_no_children",
+        Hierarchies_get_child_count_no_children
     }
 };
 
@@ -2488,6 +2512,22 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_by_id",
         Lookup_lookup_by_id
+    },
+    {
+        "lookup_symbol_by_id",
+        Lookup_lookup_symbol_by_id
+    },
+    {
+        "lookup_name_w_digit",
+        Lookup_lookup_name_w_digit
+    },
+    {
+        "lookup_symbol_w_digit",
+        Lookup_lookup_symbol_w_digit
+    },
+    {
+        "lookup_path_w_digit",
+        Lookup_lookup_path_w_digit
     },
     {
         "set_name_of_existing",
@@ -5949,7 +5989,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         NULL,
         NULL,
-        65,
+        69,
         Hierarchies_testcases
     },
     {
@@ -6026,7 +6066,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         NULL,
         NULL,
-        13,
+        17,
         Lookup_testcases
     },
     {

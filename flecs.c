@@ -10090,7 +10090,7 @@ void ecs_set_component_actions_w_entity(
          * is not safe as they will potentially access uninitialized memory. For 
          * ease of use, if no constructor is specified, set a default one that 
          * initializes the component to 0. */
-        if (!lifecycle->ctor) {
+        if (!lifecycle->ctor && (lifecycle->dtor || lifecycle->copy || lifecycle->move)) {
             c_info->lifecycle.ctor = ctor_init_zero;   
         }
 
@@ -12813,7 +12813,7 @@ void ecs_os_api_free(void *ptr) {
 static
 char* ecs_os_api_strdup(const char *str) {
     int len = ecs_os_strlen(str);
-    char *result = ecs_os_api_malloc(len + 1);
+    char *result = ecs_os_malloc(len + 1);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_os_strcpy(result, str);
     return result;
@@ -21385,6 +21385,24 @@ char* ecs_get_path_w_sep(
     return ecs_strbuf_get(&buf);
 }
 
+static
+bool is_number(
+    const char *name)
+{
+    if (!isdigit(name[0])) {
+        return false;
+    }
+
+    ecs_size_t i, s = ecs_os_strlen(name);
+    for (i = 0; i < s; i ++) {
+        if (!isdigit(name[i])) {
+            break;
+        }
+    }
+
+    return i == s;
+}
+
 static 
 ecs_entity_t name_to_id(
     const char *name)
@@ -21417,8 +21435,7 @@ ecs_entity_t find_child_in_table(
         return 0;
     }
 
-    int is_number = isdigit(name[0]);
-    if (is_number) {
+    if (is_number(name)) {
         return name_to_id(name);
     }
 
@@ -21506,7 +21523,7 @@ ecs_entity_t ecs_lookup(
         return 0;
     }
 
-    if (isdigit(name[0])) {
+    if (is_number(name)) {
         return name_to_id(name);
     }
     
@@ -21521,7 +21538,7 @@ ecs_entity_t ecs_lookup_symbol(
         return 0;
     }
 
-    if (isdigit(name[0])) {
+    if (is_number(name)) {
         return name_to_id(name);
     }
     
