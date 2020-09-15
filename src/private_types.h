@@ -79,6 +79,7 @@ typedef struct ecs_c_info_t {
     ecs_vector_t *on_add;       /* Systems ran after adding this component */
     ecs_vector_t *on_remove;    /* Systems ran after removing this component */
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
+    bool lifecycle_set;
 } ecs_c_info_t;
 
 /* Table event type for notifying tables of world events */
