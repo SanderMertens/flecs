@@ -49,7 +49,7 @@ ecs_data_t* duplicate_data(
         int16_t alignment = column->alignment;
         ecs_copy_t copy;
 
-        if ((copy = cdata->lifecycle.copy)) {
+        if (cdata && (copy = cdata->lifecycle.copy)) {
             int32_t count = ecs_vector_count(column->data);
             ecs_vector_t *dst_vec = ecs_vector_new_t(size, alignment, count);
             ecs_vector_set_count_t(&dst_vec, size, alignment, count);

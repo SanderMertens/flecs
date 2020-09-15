@@ -217,3 +217,79 @@ void ImplicitComponents_implicit_name() {
 
     test_assert(pcomp == position);
 }
+
+void ImplicitComponents_reinit() {
+    flecs::world world;
+
+    auto comp_1 = world.component<Position>();
+
+    test_assert(flecs::type_id<Position>() == comp_1.id());
+
+    // Reset component id using internals (currently the only way to simulate
+    // registration across translation units)
+    flecs::_::component_info<Position>::reset();
+
+    world.entity()
+        .add<Position>();
+
+    test_assert(flecs::type_id<Position>() == comp_1.id());
+}
+
+namespace Foo {
+    struct Position {
+        float x;
+        float y;
+    };
+}
+
+void ImplicitComponents_reinit_scoped() {
+    flecs::world world;
+
+    auto comp_1 = world.component<Foo::Position>();
+
+    test_assert(flecs::type_id<Foo::Position>() == comp_1.id());
+
+    // Reset component id using internals (currently the only way to simulate
+    // registration across translation units)
+    flecs::_::component_info<Foo::Position>::reset();
+
+    world.entity()
+        .add<Foo::Position>();
+
+    test_assert(flecs::type_id<Foo::Position>() == comp_1.id());
+}
+
+static int position_ctor_invoked = 0;
+
+ECS_CTOR(Position, ptr, {
+    position_ctor_invoked ++;
+});
+
+void ImplicitComponents_reinit_w_lifecycle() {
+    flecs::world world;
+
+    auto comp_1 = world.pod_component<Position>();
+
+    test_assert(flecs::type_id<Position>() == comp_1.id());
+
+    // Explicitly register constructor
+    EcsComponentLifecycle cl{};
+    cl.ctor = ecs_ctor(Position);
+    ecs_set_component_actions_w_entity(world.c_ptr(), comp_1.id(), &cl);
+
+    auto e = world.entity()
+        .add<Position>();
+    test_assert(e.has<Position>());
+    test_int(position_ctor_invoked, 1);
+
+    // Reset component id using internals (currently the only way to simulate
+    // registration across translation units)
+    flecs::_::component_info<Position>::reset();
+
+    e = world.entity()
+        .add<Position>();
+    test_assert(e.has<Position>());
+    test_int(position_ctor_invoked, 2);
+
+    test_assert(flecs::type_id<Position>() == comp_1.id());
+}

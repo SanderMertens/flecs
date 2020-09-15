@@ -106,6 +106,10 @@ FLECS_EXPORT
 char* ecs_module_path_from_c(
     const char *c_name);
 
+FLECS_EXPORT
+bool ecs_component_has_actions(
+    ecs_world_t *world,
+    ecs_entity_t component);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
@@ -240,6 +244,7 @@ ecs_query_t* ecs_query_new_w_sig(
 #define ECS_INVALID_CASE (46)
 #define ECS_COMPONENT_NAME_IN_USE (47)
 #define ECS_INCONSISTENT_NAME (48)
+#define ECS_INCONSISTENT_COMPONENT_ACTION (49)
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))

@@ -177,6 +177,9 @@ void ImplicitComponents_system_optional(void);
 void ImplicitComponents_system_const(void);
 void ImplicitComponents_query(void);
 void ImplicitComponents_implicit_name(void);
+void ImplicitComponents_reinit(void);
+void ImplicitComponents_reinit_scoped(void);
+void ImplicitComponents_reinit_w_lifecycle(void);
 
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
@@ -824,6 +827,18 @@ bake_test_case ImplicitComponents_testcases[] = {
     {
         "implicit_name",
         ImplicitComponents_implicit_name
+    },
+    {
+        "reinit",
+        ImplicitComponents_reinit
+    },
+    {
+        "reinit_scoped",
+        ImplicitComponents_reinit_scoped
+    },
+    {
+        "reinit_w_lifecycle",
+        ImplicitComponents_reinit_w_lifecycle
     }
 };
 
@@ -1010,7 +1025,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        13,
+        16,
         ImplicitComponents_testcases
     },
     {

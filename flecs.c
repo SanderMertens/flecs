@@ -1632,6 +1632,8 @@ const char* ecs_strerror(
         return "component name is already in use";
     case ECS_INCONSISTENT_NAME:
         return "entity redefined with different name";
+    case ECS_INCONSISTENT_COMPONENT_ACTION:
+        return "registered mismatching component action";
     }
 
     return "unknown error code";
@@ -3147,7 +3149,7 @@ void ecs_table_move(
                  * a component that has not been copied.
                  * Note that a component is never copied between different 
                  * tables when copying from stage to main stage. */
-                dtor_component(world, old_table->c_info[i_new],
+                dtor_component(world, old_table->c_info[i_old],
                     &old_columns[i_old], &src_entity, old_index, 1);
             }
         }
@@ -5057,8 +5059,8 @@ const ecs_entity_t* new_w_data(
             ptr = ECS_OFFSET(ptr, size * row);
 
             ecs_c_info_t *cdata = ecs_get_c_info(world, c);
-            ecs_copy_t copy = cdata->lifecycle.copy;
-            if (copy) {
+            ecs_copy_t copy;
+            if (cdata && (copy = cdata->lifecycle.copy)) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
                 copy(world, c, entities, entities, ptr, src_ptr, 
                     ecs_to_size_t(size), count, cdata->lifecycle.ctx);
@@ -8690,7 +8692,7 @@ ecs_data_t* duplicate_data(
         int16_t alignment = column->alignment;
         ecs_copy_t copy;
 
-        if ((copy = cdata->lifecycle.copy)) {
+        if (cdata && (copy = cdata->lifecycle.copy)) {
             int32_t count = ecs_vector_count(column->data);
             ecs_vector_t *dst_vec = ecs_vector_new_t(size, alignment, count);
             ecs_vector_set_count_t(&dst_vec, size, alignment, count);
@@ -10005,6 +10007,7 @@ ecs_world_t *ecs_mini(void) {
 
     world->magic = ECS_WORLD_MAGIC;
     memset(&world->c_info, 0, sizeof(ecs_c_info_t) * ECS_HI_COMPONENT_ID); 
+
     world->t_info = ecs_map_new(ecs_c_info_t, 0);  
     world->fini_actions = NULL; 
 
@@ -10183,22 +10186,43 @@ void ecs_set_component_actions_w_entity(
     ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
 #endif
 
-    ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
-    c_info->component = component;
-    c_info->lifecycle = *lifecycle;
+    ecs_c_info_t *c_info = ecs_get_c_info(world, component);
+    if (c_info) {
+        ecs_assert(c_info->component == component, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(c_info->lifecycle.ctor == lifecycle->ctor, 
+            ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
+        ecs_assert(c_info->lifecycle.dtor == lifecycle->dtor, 
+            ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
+        ecs_assert(c_info->lifecycle.copy == lifecycle->copy, 
+            ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
+        ecs_assert(c_info->lifecycle.move == lifecycle->move, 
+            ECS_INCONSISTENT_COMPONENT_ACTION, NULL);                        
+    } else {
+        c_info = ecs_get_or_create_c_info(world, component);
+        ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
+        c_info->component = component;
+        c_info->lifecycle = *lifecycle;
 
-    /* If no constructor is set, invoking any of the other lifecycle actions is
-     * not safe as they will potentially access uninitialized memory. For ease
-     * of use, if no constructor is specified, set a default one that 
-     * initializes the component to 0. */
-    if (!lifecycle->ctor) {
-        c_info->lifecycle.ctor = ctor_init_zero;   
+        /* If no constructor is set, invoking any of the other lifecycle actions 
+         * is not safe as they will potentially access uninitialized memory. For 
+         * ease of use, if no constructor is specified, set a default one that 
+         * initializes the component to 0. */
+        if (!lifecycle->ctor) {
+            c_info->lifecycle.ctor = ctor_init_zero;   
+        }
+
+        ecs_notify_tables(world, &(ecs_table_event_t) {
+            .kind = EcsTableComponentInfo,
+            .component = component
+        });
     }
+}
 
-    ecs_notify_tables(world, &(ecs_table_event_t) {
-        .kind = EcsTableComponentInfo,
-        .component = component
-    });
+bool ecs_component_has_actions(
+    ecs_world_t *world,
+    ecs_entity_t component)
+{
+    return ecs_get_c_info(world, component) != NULL;
 }
 
 void ecs_atfini(
@@ -10626,7 +10650,13 @@ ecs_c_info_t * ecs_get_c_info(
     ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
 
     if (component < ECS_HI_COMPONENT_ID) {
-        return &world->c_info[component];
+        ecs_c_info_t *c_info = &world->c_info[component];
+        if (c_info->component) {
+            ecs_assert(c_info->component == component, ECS_INTERNAL_ERROR, NULL);
+            return c_info;
+        } else {
+            return NULL;
+        }
     } else {
         return ecs_map_get(world->t_info, ecs_c_info_t, component);
     }
@@ -10638,11 +10668,16 @@ ecs_c_info_t * ecs_get_or_create_c_info(
 {    
     ecs_c_info_t *c_info = ecs_get_c_info(world, component);
     if (!c_info) {
-        ecs_assert(component >= ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
-        ecs_c_info_t t_info = { 0 };
-        ecs_map_set(world->t_info, component, &t_info);
-        c_info = ecs_map_get(world->t_info, ecs_c_info_t, component);
-        ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);      
+        if (component < ECS_HI_COMPONENT_ID) {
+            c_info = &world->c_info[component];
+            ecs_assert(c_info->component == 0, ECS_INTERNAL_ERROR, NULL);
+            c_info->component = component;
+        } else {
+            ecs_c_info_t t_info = { 0 };
+            ecs_map_set(world->t_info, component, &t_info);
+            c_info = ecs_map_get(world->t_info, ecs_c_info_t, component);
+            ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL); 
+        }
     }
 
     return c_info;
@@ -20362,6 +20397,8 @@ void trigger_set(
         ecs_entity_t c = ct[i].component;
 
         ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, c);
+        c_info->component = c;
+
         switch(ct[i].kind) {
         case EcsOnAdd:
             el = trigger_find_or_create(&c_info->on_add, entities[i]);
@@ -20684,10 +20721,11 @@ void FlecsSystemImport(
     ECS_TYPE_IMPL(EcsContext);
 
     /* Bootstrap ctor and dtor for EcsSystem */
-    ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, ecs_entity(EcsSystem));
-    ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    c_info->lifecycle.ctor = sys_ctor_init_zero;
-    c_info->lifecycle.dtor = ecs_colsystem_dtor;
+    ecs_set_component_actions_w_entity(world, ecs_entity(EcsSystem), 
+        &(EcsComponentLifecycle) {
+            .ctor = sys_ctor_init_zero,
+            .dtor = ecs_colsystem_dtor
+        });
 
     /* Create systems necessary to create systems */
     bootstrap_set_system(world, "CreateSignature", "SignatureExpr", CreateSignature);
