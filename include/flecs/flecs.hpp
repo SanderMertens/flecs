@@ -779,8 +779,24 @@ public:
     std::int32_t get_tick() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->frame_count_total;
-
     }
+
+    /** Set timescale
+     *
+     * @return Monotonically increasing frame count.
+     */
+    void set_time_scale(float mul) const {
+        ecs_set_time_scale(m_world, mul);
+    }  
+
+    /** Get timescale
+     *
+     * @return Monotonically increasing frame count.
+     */
+    float get_time_scale() const {
+        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
+        return stats->time_scale;
+    }        
 
     /** Set world context.
      * Set a context value that can be accessed by anyone that has a reference
