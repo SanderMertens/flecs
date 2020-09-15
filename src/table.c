@@ -1510,7 +1510,7 @@ void ecs_table_move(
                  * a component that has not been copied.
                  * Note that a component is never copied between different 
                  * tables when copying from stage to main stage. */
-                dtor_component(world, old_table->c_info[i_new],
+                dtor_component(world, old_table->c_info[i_old],
                     &old_columns[i_old], &src_entity, old_index, 1);
             }
         }
