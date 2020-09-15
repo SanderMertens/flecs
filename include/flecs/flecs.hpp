@@ -1516,7 +1516,7 @@ public:
      * @param value The value to assign to the component.
      */
     template <typename T>
-    const base_type& set(const T&& value) const {
+    const base_type& set(T&& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
             ecs_set_ptr_w_entity(
