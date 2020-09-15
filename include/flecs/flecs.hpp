@@ -680,6 +680,9 @@ public:
 
     world(world&& obj) {
         m_world = obj.m_world;
+        m_owned = obj.m_owned;
+        obj.m_world = nullptr;
+        obj.m_owned = false;
     }
 
     /** Not allowed to copy a world. May only take a reference.
@@ -687,12 +690,17 @@ public:
     world& operator=(const world& obj) = delete;
 
     world& operator=(world&& obj) {
+        this->~world();
+
         m_world = obj.m_world;
+        m_owned = obj.m_owned;
+        obj.m_world = nullptr;
+        obj.m_owned = false;
         return *this;
     }
     
     ~world() { 
-        if (m_owned) {
+        if (m_owned && m_world) {
             ecs_fini(m_world); 
         }
     }
@@ -1508,7 +1516,7 @@ public:
      * @param value The value to assign to the component.
      */
     template <typename T>
-    const base_type& set(const T&& value) const {
+    const base_type& set(T&& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
             ecs_set_ptr_w_entity(
@@ -1782,7 +1790,7 @@ public:
         return this->id() != e.id();
     }            
 
-    operator bool() {
+    explicit operator bool() {
         return m_id != 0;
     }
 
@@ -2425,7 +2433,7 @@ protected:
 /** Prefab class */
 class prefab final : public entity {
 public:
-    prefab(const flecs::world& world, const char *name = nullptr) 
+    explicit prefab(const flecs::world& world, const char *name = nullptr) 
         : entity(world, name)
     {
         this->add(flecs::Prefab);
@@ -2439,7 +2447,7 @@ public:
 
 class type final : entity {
 public:
-    type(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr)
+    explicit type(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr)
         : entity(world, ecs_new_type(world.c_ptr(), 0, name, expr))
     { 
         sync_from_flecs();
@@ -3546,7 +3554,7 @@ private:
 template<typename ... Components>
 class system final : public entity {
 public:
-    system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr) 
+    explicit system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr) 
         : entity(world, name)
         , m_kind(static_cast<ecs_entity_t>(OnUpdate)) 
         , m_signature(signature)
@@ -3947,7 +3955,7 @@ private:
 
 class reader final {
 public:
-    reader(world& world) {
+    explicit reader(world& world) {
         m_reader = ecs_reader_init(world.c_ptr());
     }
 
@@ -3972,7 +3980,7 @@ private:
 
 class writer final {
 public:
-    writer(world& world) {
+    explicit writer(world& world) {
         m_writer = ecs_writer_init(world.c_ptr());
     }
 
