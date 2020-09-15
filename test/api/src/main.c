@@ -415,6 +415,10 @@ void ComponentLifecycle_copy_on_override_trait(void);
 void ComponentLifecycle_copy_on_override_trait_tag(void);
 void ComponentLifecycle_copy_on_set_trait(void);
 void ComponentLifecycle_copy_on_set_trait_tag(void);
+void ComponentLifecycle_prevent_lifecycle_overwrite(void);
+void ComponentLifecycle_prevent_lifecycle_overwrite_null_callbacks(void);
+void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks(void);
+void ComponentLifecycle_set_lifecycle_after_trigger(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -2772,6 +2776,22 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "copy_on_set_trait_tag",
         ComponentLifecycle_copy_on_set_trait_tag
+    },
+    {
+        "prevent_lifecycle_overwrite",
+        ComponentLifecycle_prevent_lifecycle_overwrite
+    },
+    {
+        "prevent_lifecycle_overwrite_null_callbacks",
+        ComponentLifecycle_prevent_lifecycle_overwrite_null_callbacks
+    },
+    {
+        "allow_lifecycle_overwrite_equal_callbacks",
+        ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks
+    },
+    {
+        "set_lifecycle_after_trigger",
+        ComponentLifecycle_set_lifecycle_after_trigger
     }
 };
 
@@ -6062,7 +6082,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        38,
+        42,
         ComponentLifecycle_testcases
     },
     {

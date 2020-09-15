@@ -1653,3 +1653,86 @@ void ComponentLifecycle_copy_on_set_trait_tag() {
 
     ecs_fini(world);
 }
+
+void ComponentLifecycle_prevent_lifecycle_overwrite() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    test_expect_abort();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor
+    });
+
+    /* Should trigger assert */
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Position)
+    });
+
+    ecs_fini(world);    
+}
+
+void ComponentLifecycle_prevent_lifecycle_overwrite_null_callbacks() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    test_expect_abort();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        /* Leave to NULL */
+    });
+
+    /* Should trigger assert */
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Position)
+    });
+
+    ecs_fini(world);  
+}
+
+void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Position)
+    });
+
+    /* Same actions, should be ok */
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Position)
+    });
+
+    ecs_new(world, Position);
+
+    test_int(ctor_position, 1);
+
+    ecs_fini(world); 
+}
+
+static
+void AddPosition(ecs_iter_t *it) { }
+
+void ComponentLifecycle_set_lifecycle_after_trigger() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position);
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Position)
+    });
+
+    ecs_new(world, Position);
+
+    test_int(ctor_position, 1);
+
+    ecs_fini(world);  
+}
