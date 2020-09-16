@@ -1202,17 +1202,17 @@ void check_write_permissions_for_entities(
     int i;
     for (i = 0; i < entities->count; i ++) {
         ecs_entity_t comp = entities->array[i];
-        int i, count = ecs_vector_count(stage->system_columns);
+        int c, count = ecs_vector_count(stage->system_columns);
         ecs_sig_column_t *column = ecs_vector_first(
             stage->system_columns, ecs_sig_column_t);
 
-        for (i = 0; i < count; i ++) {
-            if (column[i].from_kind == EcsFromEmpty || column[i].oper_kind == EcsOperNot) {
-                if (column[i].inout_kind == EcsOut) {
-                    if (column[i].is.component == comp) {
+        for (c = 0; c < count; c ++) {
+            if (column[c].from_kind == EcsFromEmpty || column[c].oper_kind == EcsOperNot) {
+                if (column[c].inout_kind == EcsOut) {
+                    if (column[c].is.component == comp) {
                         break;
                     }
-                    if (column[i].is.component == EcsWildcard) {
+                    if (column[c].is.component == EcsWildcard) {
                         break;
                     }
                 }
