@@ -859,6 +859,22 @@ public:
         ecs_enable_range_check(m_world, enabled);
     }
 
+    /** Disables inactive systems.
+     *
+     * This removes systems that are not matched with any entities from the main
+     * loop. Systems are only added to the main loop after they first match with
+     * entities, but are not removed automatically.
+     *
+     * This function allows an application to manually disable inactive systems
+     * which removes them from the main loop. Doing so will cause Flecs to
+     * rebuild the pipeline in the next iteration.
+     *
+     * @param level The tracing level.
+     */
+    void deactivate_systems() {
+        ecs_deactivate_systems(m_world);
+    }    
+
     /** Lookup entity by name.
      * 
      * @param name Entity name.

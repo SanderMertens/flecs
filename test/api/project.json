@@ -14,6 +14,7 @@
     "test": {
         "testsuites": [{
             "id": "New",
+            "setup": true,
             "testcases": [
                 "empty",
                 "component",
@@ -93,6 +94,7 @@
             ]
         }, {
             "id": "Switch",
+            "setup": true,
             "testcases": [
                 "get_case_empty",
                 "get_case_no_switch",
@@ -149,6 +151,7 @@
             ]
         }, {
             "id": "Hierarchies",
+            "setup": true,
             "testcases": [
                 "empty_scope",
                 "get_parent",
@@ -291,6 +294,7 @@
             ]
         }, {
             "id": "Get_component",
+            "setup": true,
             "testcases": [
                 "get_empty",
                 "get_1_from_1",
@@ -304,6 +308,7 @@
             ]
         }, {
             "id": "Reference",
+            "setup": true,
             "testcases": [
                 "get_ref",
                 "get_ref_after_add",
@@ -318,6 +323,7 @@
             ]
         }, {
             "id": "Delete",
+            "setup": true,
             "testcases": [
                 "delete_1",
                 "delete_1_again",
@@ -376,6 +382,7 @@
             ]
         }, {
             "id": "Lookup",
+            "setup": true,
             "testcases": [
                 "lookup",
                 "lookup_component",
@@ -422,6 +429,7 @@
             ]
         }, {
             "id": "ComponentLifecycle",
+            "setup": true,
             "testcases": [
                 "ctor_on_add",
                 "ctor_on_new",
@@ -468,6 +476,7 @@
             ]
         }, {
             "id": "Pipeline",
+            "setup": true,
             "testcases": [
                 "system_order_same_phase",
                 "system_order_same_phase_after_disable",
@@ -487,6 +496,7 @@
             ]
         }, {
             "id": "SystemMisc",
+            "setup": true,
             "testcases": [
                 "invalid_not_without_id",
                 "invalid_optional_without_id",
@@ -629,6 +639,7 @@
             ]
         }, {
             "id": "TriggerOnAdd",
+            "setup": true,
             "testcases": [
                 "new_match_1_of_1",
                 "new_match_1_of_2",
@@ -827,6 +838,7 @@
             ]
         }, {
             "id": "SystemCascade",
+            "setup": true,
             "testcases": [
                 "cascade_depth_1",
                 "cascade_depth_2",
@@ -835,6 +847,7 @@
             ]
         }, {
             "id": "SystemManual",
+            "setup": true,
             "testcases": [
                 "1_type_1_component",
                 "activate_status",
@@ -850,6 +863,7 @@
             ]
         }, {
             "id": "Prefab",
+            "setup": true,
             "testcases": [
                 "new_w_prefab",
                 "new_w_count_prefab",
@@ -918,6 +932,7 @@
             ]
         }, {
             "id": "System_w_FromContainer",
+            "setup": true,
             "testcases": [
                 "1_column_from_container",
                 "2_column_1_from_container",
@@ -963,6 +978,7 @@
             ]
         }, {
             "id": "World",
+            "setup": true,
             "testcases": [
                 "progress_w_0",
                 "progress_w_t",
@@ -999,6 +1015,7 @@
             ]
         }, {
             "id": "Type",
+            "setup": true,
             "testcases": [
                 "type_of_1_tostr",
                 "type_of_2_tostr",
@@ -1091,6 +1108,7 @@
             ]
         }, {
             "id": "Run",
+            "setup": true,
             "testcases": [
                 "run",
                 "run_w_param",
@@ -1158,6 +1176,7 @@
             ]
         }, {
             "id": "SingleThreadStaging",
+            "setup": true,
             "testcases": [
                 "new_empty",
                 "new_w_component",
@@ -1319,6 +1338,7 @@
             ]
         }, {
             "id": "Modules",
+            "setup": true,
             "testcases": [
                 "simple_module",
                 "import_module_from_system",
@@ -1342,6 +1362,7 @@
             ]
         }, {
             "id": "Internals",
+            "setup": true,
             "testcases": [
                 "deactivate_table",
                 "activate_table",

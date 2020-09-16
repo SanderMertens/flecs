@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Get_component_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void Get_component_get_empty() {
     ecs_world_t *world = ecs_init();
 

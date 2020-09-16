@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Reference_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void Reference_get_ref() {
     ecs_world_t *world = ecs_init();
 

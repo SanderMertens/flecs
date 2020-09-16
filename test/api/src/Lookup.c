@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Lookup_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void Lookup_lookup() {
     ecs_world_t *world = ecs_init();
 

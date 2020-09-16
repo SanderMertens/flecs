@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Internals_setup() {
+    ecs_tracing_enable(-3);
+}
+
 static
 void Iter(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);

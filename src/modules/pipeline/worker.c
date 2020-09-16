@@ -160,8 +160,7 @@ void ecs_stop_threads(
 void ecs_worker_begin(
     ecs_world_t *world)
 {
-    int32_t thread_count = ecs_vector_count(world->workers);
-    if (!thread_count) {
+    if (world->magic == ECS_WORLD_MAGIC) {
         ecs_staging_begin(world);
     }
 }

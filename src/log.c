@@ -203,11 +203,11 @@ void ecs_log_print(
         ecs_os_log("%sinfo%s: %s%s%s%s",
             ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
     } else if (level == -2) {
-        ecs_os_warn("%sinfo%s: %s%s%s%s",
-            ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+        ecs_os_warn("%swarn%s: %s%s%s%s",
+            ECS_YELLOW, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
     } else if (level <= -2) {
-        ecs_os_err("%sinfo%s: %s%s%s%s",
-            ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+        ecs_os_err("%serr %s: %s%s%s%s",
+            ECS_RED, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
     }
 
     ecs_os_free(color_msg);
@@ -272,7 +272,7 @@ void _ecs_parser_error(
     const char *fmt,
     ...)
 {
-    if (trace_level != -2) {
+    if (trace_level >= -2) {
         va_list valist;
         va_start(valist, fmt);
         char *msg = ecs_vasprintf(fmt, valist);

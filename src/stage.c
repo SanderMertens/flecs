@@ -404,8 +404,8 @@ void ecs_stage_init(
     stage->defer = 0;
     stage->defer_queue = NULL;
     stage->post_frame_actions = NULL;
-
     stage->range_check_enabled = true;
+    stage->system_columns = NULL;
 }
 
 void ecs_stage_deinit(

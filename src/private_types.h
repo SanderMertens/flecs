@@ -370,6 +370,15 @@ struct ecs_stage_t {
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;
+
+    /* If a system is progressing it will set this field to its columns. This
+     * will be used in debug mode to verify that a system is not doing 
+     * unanounced adding/removing of components, as this could cause 
+     * unpredictable behavior during a merge. */
+#ifndef NDEBUG    
+    ecs_entity_t system;
+    ecs_vector_t *system_columns;
+#endif
 };
 
 /** Supporting type to store looked up or derived entity data */

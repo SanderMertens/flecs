@@ -403,6 +403,11 @@ ecs_entity_t ecs_run_intern(
         ecs_os_get_time(&time_start);
     }
 
+#ifndef NDEBUG
+    stage->system = system;
+    stage->system_columns = system_data->query->sig.columns;
+#endif
+
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
     it.world = stage->world;
@@ -439,7 +444,12 @@ ecs_entity_t ecs_run_intern(
     if (measure_time) {
         system_data->time_spent += (float)ecs_time_measure(&time_start);
     }
-    
+
+#ifndef NDEBUG
+    stage->system = 0;
+    stage->system_columns = NULL;
+#endif
+
     system_data->invoke_count ++;
 
     return it.interrupted_by;

@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Pipeline_setup() {
+    ecs_tracing_enable(-3);
+}
+
 static int sys_a_invoked;
 static int sys_b_invoked;
 static int sys_c_invoked;

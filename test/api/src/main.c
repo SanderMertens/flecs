@@ -9,6 +9,7 @@
 #include <api.h>
 
 // Testsuite 'New'
+void New_setup(void);
 void New_empty(void);
 void New_component(void);
 void New_type(void);
@@ -82,6 +83,7 @@ void Add_add_same_w_xor(void);
 void Add_add_after_remove_xor(void);
 
 // Testsuite 'Switch'
+void Switch_setup(void);
 void Switch_get_case_empty(void);
 void Switch_get_case_no_switch(void);
 void Switch_get_case_unset(void);
@@ -132,6 +134,7 @@ void GlobalComponentIds_declare_entity(void);
 void GlobalComponentIds_declare_type(void);
 
 // Testsuite 'Hierarchies'
+void Hierarchies_setup(void);
 void Hierarchies_empty_scope(void);
 void Hierarchies_get_parent(void);
 void Hierarchies_get_parent_from_nested(void);
@@ -262,6 +265,7 @@ void Count_count_3_components(void);
 void Count_count_2_types_2_comps(void);
 
 // Testsuite 'Get_component'
+void Get_component_setup(void);
 void Get_component_get_empty(void);
 void Get_component_get_1_from_1(void);
 void Get_component_get_1_from_2(void);
@@ -273,6 +277,7 @@ void Get_component_get_both_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_remove_in_progress(void);
 
 // Testsuite 'Reference'
+void Reference_setup(void);
 void Reference_get_ref(void);
 void Reference_get_ref_after_add(void);
 void Reference_get_ref_after_remove(void);
@@ -285,6 +290,7 @@ void Reference_get_ref_monitored(void);
 void Reference_get_nonexisting(void);
 
 // Testsuite 'Delete'
+void Delete_setup(void);
 void Delete_delete_1(void);
 void Delete_delete_1_again(void);
 void Delete_delete_empty(void);
@@ -337,6 +343,7 @@ void Set_get_mutable_existing(void);
 void Set_modified_w_on_set(void);
 
 // Testsuite 'Lookup'
+void Lookup_setup(void);
 void Lookup_lookup(void);
 void Lookup_lookup_component(void);
 void Lookup_lookup_not_found(void);
@@ -377,6 +384,7 @@ void Clone_1_tag_1_component(void);
 void Clone_1_tag_1_component_w_value(void);
 
 // Testsuite 'ComponentLifecycle'
+void ComponentLifecycle_setup(void);
 void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_ctor_on_new(void);
 void ComponentLifecycle_dtor_on_remove(void);
@@ -421,6 +429,7 @@ void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks(void);
 void ComponentLifecycle_set_lifecycle_after_trigger(void);
 
 // Testsuite 'Pipeline'
+void Pipeline_setup(void);
 void Pipeline_system_order_same_phase(void);
 void Pipeline_system_order_same_phase_after_disable(void);
 void Pipeline_system_order_same_phase_after_activate(void);
@@ -438,6 +447,7 @@ void Pipeline_merge_after_staged_out_before_owned(void);
 void Pipeline_switch_pipeline(void);
 
 // Testsuite 'SystemMisc'
+void SystemMisc_setup(void);
 void SystemMisc_invalid_not_without_id(void);
 void SystemMisc_invalid_optional_without_id(void);
 void SystemMisc_invalid_system_without_id(void);
@@ -572,6 +582,7 @@ void Traits_on_remove_trait_on_delete(void);
 void Traits_on_remove_trait_tag_on_delete(void);
 
 // Testsuite 'TriggerOnAdd'
+void TriggerOnAdd_setup(void);
 void TriggerOnAdd_new_match_1_of_1(void);
 void TriggerOnAdd_new_match_1_of_2(void);
 void TriggerOnAdd_new_no_match_1(void);
@@ -754,12 +765,14 @@ void SystemOnDemand_on_demand_task_w_not_from_entity(void);
 void SystemOnDemand_enable_after_user_disable(void);
 
 // Testsuite 'SystemCascade'
+void SystemCascade_setup(void);
 void SystemCascade_cascade_depth_1(void);
 void SystemCascade_cascade_depth_2(void);
 void SystemCascade_add_after_match(void);
 void SystemCascade_adopt_after_match(void);
 
 // Testsuite 'SystemManual'
+void SystemManual_setup(void);
 void SystemManual_1_type_1_component(void);
 void SystemManual_activate_status(void);
 void SystemManual_no_automerge(void);
@@ -771,6 +784,7 @@ void Tasks_from_system(void);
 void Tasks_tasks_in_phases(void);
 
 // Testsuite 'Prefab'
+void Prefab_setup(void);
 void Prefab_new_w_prefab(void);
 void Prefab_new_w_count_prefab(void);
 void Prefab_new_w_type_w_prefab(void);
@@ -837,6 +851,7 @@ void Prefab_force_owned_2(void);
 void Prefab_force_owned_nested(void);
 
 // Testsuite 'System_w_FromContainer'
+void System_w_FromContainer_setup(void);
 void System_w_FromContainer_1_column_from_container(void);
 void System_w_FromContainer_2_column_1_from_container(void);
 void System_w_FromContainer_3_column_2_from_container(void);
@@ -874,6 +889,7 @@ void System_w_FromEntity_task_from_entity(void);
 void System_w_FromEntity_task_not_from_entity(void);
 
 // Testsuite 'World'
+void World_setup(void);
 void World_progress_w_0(void);
 void World_progress_w_t(void);
 void World_get_tick(void);
@@ -908,6 +924,7 @@ void World_no_time(void);
 void World_is_entity_enabled(void);
 
 // Testsuite 'Type'
+void Type_setup(void);
 void Type_type_of_1_tostr(void);
 void Type_type_of_2_tostr(void);
 void Type_type_of_2_tostr_no_id(void);
@@ -998,6 +1015,7 @@ void Type_role_xor_str(void);
 void Type_role_not_str(void);
 
 // Testsuite 'Run'
+void Run_setup(void);
 void Run_run(void);
 void Run_run_w_param(void);
 void Run_run_no_match(void);
@@ -1061,6 +1079,7 @@ void MultiThread_schedule_w_tasks(void);
 void MultiThread_reactive_system(void);
 
 // Testsuite 'SingleThreadStaging'
+void SingleThreadStaging_setup(void);
 void SingleThreadStaging_new_empty(void);
 void SingleThreadStaging_new_w_component(void);
 void SingleThreadStaging_new_w_type_of_2(void);
@@ -1210,6 +1229,7 @@ void FilterIter_iter_snapshot_two_comps(void);
 void FilterIter_iter_snapshot_filtered_table(void);
 
 // Testsuite 'Modules'
+void Modules_setup(void);
 void Modules_simple_module(void);
 void Modules_import_module_from_system(void);
 void Modules_import_again(void);
@@ -1231,6 +1251,7 @@ void Modules_import_type(void);
 void Modules_nested_module(void);
 
 // Testsuite 'Internals'
+void Internals_setup(void);
 void Internals_deactivate_table(void);
 void Internals_activate_table(void);
 void Internals_activate_deactivate_table(void);
@@ -5940,7 +5961,7 @@ bake_test_case Error_testcases[] = {
 static bake_test_suite suites[] = {
     {
         "New",
-        NULL,
+        New_setup,
         NULL,
         20,
         New_testcases
@@ -5961,7 +5982,7 @@ static bake_test_suite suites[] = {
     },
     {
         "Switch",
-        NULL,
+        Switch_setup,
         NULL,
         22,
         Switch_testcases
@@ -5982,7 +6003,7 @@ static bake_test_suite suites[] = {
     },
     {
         "Hierarchies",
-        NULL,
+        Hierarchies_setup,
         NULL,
         65,
         Hierarchies_testcases
@@ -6024,21 +6045,21 @@ static bake_test_suite suites[] = {
     },
     {
         "Get_component",
-        NULL,
+        Get_component_setup,
         NULL,
         9,
         Get_component_testcases
     },
     {
         "Reference",
-        NULL,
+        Reference_setup,
         NULL,
         10,
         Reference_testcases
     },
     {
         "Delete",
-        NULL,
+        Delete_setup,
         NULL,
         18,
         Delete_testcases
@@ -6059,7 +6080,7 @@ static bake_test_suite suites[] = {
     },
     {
         "Lookup",
-        NULL,
+        Lookup_setup,
         NULL,
         13,
         Lookup_testcases
@@ -6080,21 +6101,21 @@ static bake_test_suite suites[] = {
     },
     {
         "ComponentLifecycle",
-        NULL,
+        ComponentLifecycle_setup,
         NULL,
         42,
         ComponentLifecycle_testcases
     },
     {
         "Pipeline",
-        NULL,
+        Pipeline_setup,
         NULL,
         15,
         Pipeline_testcases
     },
     {
         "SystemMisc",
-        NULL,
+        SystemMisc_setup,
         NULL,
         73,
         SystemMisc_testcases
@@ -6122,7 +6143,7 @@ static bake_test_suite suites[] = {
     },
     {
         "TriggerOnAdd",
-        NULL,
+        TriggerOnAdd_setup,
         NULL,
         26,
         TriggerOnAdd_testcases
@@ -6178,14 +6199,14 @@ static bake_test_suite suites[] = {
     },
     {
         "SystemCascade",
-        NULL,
+        SystemCascade_setup,
         NULL,
         4,
         SystemCascade_testcases
     },
     {
         "SystemManual",
-        NULL,
+        SystemManual_setup,
         NULL,
         3,
         SystemManual_testcases
@@ -6199,14 +6220,14 @@ static bake_test_suite suites[] = {
     },
     {
         "Prefab",
-        NULL,
+        Prefab_setup,
         NULL,
         64,
         Prefab_testcases
     },
     {
         "System_w_FromContainer",
-        NULL,
+        System_w_FromContainer_setup,
         NULL,
         20,
         System_w_FromContainer_testcases
@@ -6234,21 +6255,21 @@ static bake_test_suite suites[] = {
     },
     {
         "World",
-        NULL,
+        World_setup,
         NULL,
         32,
         World_testcases
     },
     {
         "Type",
-        NULL,
+        Type_setup,
         NULL,
         88,
         Type_testcases
     },
     {
         "Run",
-        NULL,
+        Run_setup,
         NULL,
         24,
         Run_testcases
@@ -6262,7 +6283,7 @@ static bake_test_suite suites[] = {
     },
     {
         "SingleThreadStaging",
-        NULL,
+        SingleThreadStaging_setup,
         NULL,
         60,
         SingleThreadStaging_testcases
@@ -6304,14 +6325,14 @@ static bake_test_suite suites[] = {
     },
     {
         "Modules",
-        NULL,
+        Modules_setup,
         NULL,
         19,
         Modules_testcases
     },
     {
         "Internals",
-        NULL,
+        Internals_setup,
         NULL,
         6,
         Internals_testcases

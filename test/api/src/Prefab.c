@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Prefab_setup() {
+    ecs_tracing_enable(-3);
+}
+
 static
 void Iter(ecs_iter_t *it) {
     ECS_COLUMN(it, Mass, m_ptr, 1);

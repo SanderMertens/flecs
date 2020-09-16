@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Switch_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void Switch_get_case_empty() {
     ecs_world_t *world = ecs_init();
 

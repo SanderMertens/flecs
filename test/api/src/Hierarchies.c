@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Hierarchies_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void Hierarchies_empty_scope() {
     ecs_world_t *world = ecs_init();
 

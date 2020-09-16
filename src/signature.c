@@ -12,6 +12,8 @@
 #define TOK_NAME_SEP '.'
 #define TOK_ANNOTATE_OPEN '['
 #define TOK_ANNOTATE_CLOSE ']'
+#define TOK_WILDCARD '*'
+#define TOK_SINGLETON '$'
 
 #define TOK_ANY "ANY"
 #define TOK_OWNED "OWNED"
@@ -78,7 +80,7 @@ bool valid_identifier_char(
     char ch)
 {
     if (ch && (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.' || 
-        ch == '$' || ch == '*')) 
+        ch == TOK_SINGLETON || ch == TOK_WILDCARD)) 
     {
         return true;
     }

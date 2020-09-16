@@ -1,5 +1,9 @@
 #include <api.h>
 
+void SingleThreadStaging_setup() {
+    ecs_tracing_enable(-3);
+}
+
 static
 void NewEmpty(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);

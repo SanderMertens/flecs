@@ -1,6 +1,9 @@
 #include <api.h>
-
 #include "flecs/modules/stats.h"
+
+void World_setup() {
+    ecs_tracing_enable(-3);
+}
 
 static
 void install_test_abort() {

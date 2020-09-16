@@ -2,6 +2,7 @@
 
 void Stresstests_setup() {
     bake_set_os_api();
+    ecs_tracing_enable(-3);
 }
 
 static

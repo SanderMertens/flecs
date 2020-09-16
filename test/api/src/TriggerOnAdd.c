@@ -1,5 +1,9 @@
 #include <api.h>
 
+void TriggerOnAdd_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void Init(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
     

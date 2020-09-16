@@ -558,6 +558,15 @@ struct ecs_stage_t {
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;
+
+    /* If a system is progressing it will set this field to its columns. This
+     * will be used in debug mode to verify that a system is not doing 
+     * unanounced adding/removing of components, as this could cause 
+     * unpredictable behavior during a merge. */
+#ifndef NDEBUG    
+    ecs_entity_t system;
+    ecs_vector_t *system_columns;
+#endif
 };
 
 /** Supporting type to store looked up or derived entity data */
@@ -1414,11 +1423,11 @@ void ecs_log_print(
         ecs_os_log("%sinfo%s: %s%s%s%s",
             ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
     } else if (level == -2) {
-        ecs_os_warn("%sinfo%s: %s%s%s%s",
-            ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+        ecs_os_warn("%swarn%s: %s%s%s%s",
+            ECS_YELLOW, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
     } else if (level <= -2) {
-        ecs_os_err("%sinfo%s: %s%s%s%s",
-            ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+        ecs_os_err("%serr %s: %s%s%s%s",
+            ECS_RED, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
     }
 
     ecs_os_free(color_msg);
@@ -4849,6 +4858,86 @@ void update_component_monitors(
     }
 }
 
+#ifndef NDEBUG
+static int warning_count = 0;
+
+static
+void permission_warning(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_entity_t component)
+{
+    warning_count ++;
+
+    char *component_path = ecs_get_fullpath(world, component);
+    char *system_path = ecs_get_fullpath(world, system);
+
+    ecs_warn("access violation for component '%s' by system '%s'", 
+        component_path, system_path);
+    ecs_warn(
+        "add '[out] :%s' or '[out] :*' to the signature of '%s' to fix this issue", 
+        component_path, system_path);
+
+    ecs_os_free(component_path);
+    ecs_os_free(system_path); 
+}
+
+static
+void check_write_permissions_for_entities(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entities_t *entities)
+{
+    if (!entities) {
+        return;
+    }
+
+    int i;
+    for (i = 0; i < entities->count; i ++) {
+        ecs_entity_t comp = entities->array[i];
+        int i, count = ecs_vector_count(stage->system_columns);
+        ecs_sig_column_t *column = ecs_vector_first(
+            stage->system_columns, ecs_sig_column_t);
+
+        for (i = 0; i < count; i ++) {
+            if (column[i].from_kind == EcsFromEmpty || column[i].oper_kind == EcsOperNot) {
+                if (column[i].inout_kind == EcsOut) {
+                    if (column[i].is.component == comp) {
+                        break;
+                    }
+                    if (column[i].is.component == EcsWildcard) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (i == count) {
+            permission_warning(world, stage->system, comp);
+        }
+    }    
+}
+
+static
+void check_write_permissions(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entities_t *added,
+    ecs_entities_t *removed)
+{
+    if (warning_count > 100) {
+        return;
+    }
+
+    check_write_permissions_for_entities(world, stage, added);
+    check_write_permissions_for_entities(world, stage, removed);
+
+    if (warning_count > 100) {
+        ecs_warn("reported >100 warnings, not reporting new ones");
+    }    
+}
+#endif
+
 static
 void commit(
     ecs_world_t *world,
@@ -4861,6 +4950,12 @@ void commit(
 {
     ecs_table_t *src_table = info->table;
     bool in_progress = world->in_progress;
+
+#ifndef NDEBUG
+    if (in_progress && stage != &world->stage) {
+        check_write_permissions(world, stage, added, removed);
+    }
+#endif
 
     if (src_table == dst_table && &world->stage == stage) {
         /* If source and destination table are the same, and stage is main stage
@@ -5274,6 +5369,12 @@ void *get_mutable(
             .array = &component,
             .count = 1
         };
+
+#ifndef NDEBUG
+        if (stage != &world->stage) {
+            check_write_permissions(world, stage, &to_add, NULL);
+        }
+#endif
 
         add_entities_w_info(world, stage, entity, info, &to_add);
 
@@ -6740,8 +6841,8 @@ void ecs_stage_init(
     stage->defer = 0;
     stage->defer_queue = NULL;
     stage->post_frame_actions = NULL;
-
     stage->range_check_enabled = true;
+    stage->system_columns = NULL;
 }
 
 void ecs_stage_deinit(
@@ -11550,6 +11651,8 @@ bool ecs_strbuf_list_appendstr(
 #define TOK_NAME_SEP '.'
 #define TOK_ANNOTATE_OPEN '['
 #define TOK_ANNOTATE_CLOSE ']'
+#define TOK_WILDCARD '*'
+#define TOK_SINGLETON '$'
 
 #define TOK_ANY "ANY"
 #define TOK_OWNED "OWNED"
@@ -11616,7 +11719,7 @@ bool valid_identifier_char(
     char ch)
 {
     if (ch && (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.' || 
-        ch == '$' || ch == '*')) 
+        ch == TOK_SINGLETON || ch == TOK_WILDCARD)) 
     {
         return true;
     }
@@ -17905,8 +18008,7 @@ void ecs_stop_threads(
 void ecs_worker_begin(
     ecs_world_t *world)
 {
-    int32_t thread_count = ecs_vector_count(world->workers);
-    if (!thread_count) {
+    if (world->magic == ECS_WORLD_MAGIC) {
         ecs_staging_begin(world);
     }
 }
@@ -18109,6 +18211,11 @@ typedef enum ComponentWriteState {
     WriteToStage
 } ComponentWriteState;
 
+typedef struct write_state_t {
+    ecs_map_t *components;
+    bool wildcard;
+} write_state_t;
+
 static
 int32_t get_write_state(
     ecs_map_t *write_state,
@@ -18124,18 +18231,24 @@ int32_t get_write_state(
 
 static
 void set_write_state(
-    ecs_map_t *write_state,
+    write_state_t *write_state,
     ecs_entity_t component,
     int32_t value)
 {
-    ecs_map_set(write_state, component, &value);
+    if (component == EcsWildcard) {
+        ecs_assert(value == WriteToStage, ECS_INTERNAL_ERROR, NULL);
+        write_state->wildcard = true;
+    } else {
+        ecs_map_set(write_state->components, component, &value);
+    }
 }
 
 static
 void reset_write_state(
-    ecs_map_t *write_state)
+    write_state_t *write_state)
 {
-    ecs_map_clear(write_state);
+    ecs_map_clear(write_state->components);
+    write_state->wildcard = false;
 }
 
 static
@@ -18143,15 +18256,19 @@ bool check_column_component(
     ecs_sig_column_t *column,
     bool is_active,
     ecs_entity_t component,
-    ecs_map_t *write_state)    
+    write_state_t *write_state)    
 {
-    int32_t state = get_write_state(write_state, component);
+    int32_t state = get_write_state(write_state->components, component);
 
-    if ((column->from_kind == EcsFromAny || column->from_kind == EcsFromOwned) && column->oper_kind != EcsOperNot) {
+    if ((column->from_kind == EcsFromAny || column->from_kind == EcsFromOwned) 
+      && column->oper_kind != EcsOperNot) 
+    {
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsIn:
             if (state == WriteToStage) {
+                return true;
+            } else if (write_state->wildcard) {
                 return true;
             }
             // fall through
@@ -18160,7 +18277,9 @@ bool check_column_component(
                 set_write_state(write_state, component, WriteToMain);
             }
         };
-    } else if (column->from_kind == EcsFromEmpty || column->oper_kind == EcsOperNot) {
+    } else if (column->from_kind == EcsFromEmpty || 
+               column->oper_kind == EcsOperNot) 
+    {
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsOut:
@@ -18180,11 +18299,11 @@ static
 bool check_column(
     ecs_sig_column_t *column,
     bool is_active,
-    ecs_map_t *write_state)
+    write_state_t *write_state)
 {
     if (column->oper_kind != EcsOperOr) {
         return check_column_component(
-            column, is_active,column->is.component, write_state);
+            column, is_active, column->is.component, write_state);
     }  
 
     return false;
@@ -18205,12 +18324,16 @@ bool build_pipeline(
         return false;
     }
 
-    ecs_trace_1("rebuilding pipeline #[green]%s", 
+    ecs_trace_2("rebuilding pipeline #[green]%s", 
         ecs_get_name(world, pipeline));
 
     world->stats.pipeline_build_count_total ++;
 
-    ecs_map_t *write_state = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID);
+    write_state_t ws = {
+        .components = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID),
+        .wildcard = false
+    };
+
     ecs_pipeline_op_t *op = NULL;
     ecs_vector_t *ops = NULL;
     ecs_query_t *query = pq->build_query;
@@ -18236,12 +18359,12 @@ bool build_pipeline(
                 world, it.entities[i], EcsInactive);
 
             ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
-                needs_merge |= check_column(column, is_active, write_state);
+                needs_merge |= check_column(column, is_active, &ws);
             });
 
             if (needs_merge) {
                 /* After merge all components will be merged, so reset state */
-                reset_write_state(write_state);
+                reset_write_state(&ws);
                 op = NULL;
 
                 /* Re-evaluate columns to set write flags if system is active.
@@ -18250,7 +18373,7 @@ bool build_pipeline(
                 needs_merge = false;
                 if (is_active) {
                     ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
-                        needs_merge |= check_column(column, true, write_state);
+                        needs_merge |= check_column(column, true, &ws);
                     });
                 }
 
@@ -18272,7 +18395,7 @@ bool build_pipeline(
         }
     }
 
-    ecs_map_free(write_state);
+    ecs_map_free(ws.components);
 
     /* Force sort of query as this could increase the match_count */
     pq->match_count = pq->query->match_count;
@@ -18364,13 +18487,13 @@ void ecs_pipeline_progress(
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
     ecs_worker_begin(world);
+    ecs_stage_t *stage = ecs_get_stage(&world);
     
     ecs_iter_t it = ecs_query_iter(pq->query);
     while (ecs_query_next(&it)) {
@@ -20198,6 +20321,11 @@ ecs_entity_t ecs_run_intern(
         ecs_os_get_time(&time_start);
     }
 
+#ifndef NDEBUG
+    stage->system = system;
+    stage->system_columns = system_data->query->sig.columns;
+#endif
+
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
     it.world = stage->world;
@@ -20234,7 +20362,12 @@ ecs_entity_t ecs_run_intern(
     if (measure_time) {
         system_data->time_spent += (float)ecs_time_measure(&time_start);
     }
-    
+
+#ifndef NDEBUG
+    stage->system = 0;
+    stage->system_columns = NULL;
+#endif
+
     system_data->invoke_count ++;
 
     return it.interrupted_by;

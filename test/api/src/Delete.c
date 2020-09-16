@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Delete_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void Delete_delete_1() {
     ecs_world_t *world = ecs_init();
 

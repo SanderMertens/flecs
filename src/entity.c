@@ -1165,6 +1165,86 @@ void update_component_monitors(
     }
 }
 
+#ifndef NDEBUG
+static int warning_count = 0;
+
+static
+void permission_warning(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_entity_t component)
+{
+    warning_count ++;
+
+    char *component_path = ecs_get_fullpath(world, component);
+    char *system_path = ecs_get_fullpath(world, system);
+
+    ecs_warn("access violation for component '%s' by system '%s'", 
+        component_path, system_path);
+    ecs_warn(
+        "add '[out] :%s' or '[out] :*' to the signature of '%s' to fix this issue", 
+        component_path, system_path);
+
+    ecs_os_free(component_path);
+    ecs_os_free(system_path); 
+}
+
+static
+void check_write_permissions_for_entities(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entities_t *entities)
+{
+    if (!entities) {
+        return;
+    }
+
+    int i;
+    for (i = 0; i < entities->count; i ++) {
+        ecs_entity_t comp = entities->array[i];
+        int i, count = ecs_vector_count(stage->system_columns);
+        ecs_sig_column_t *column = ecs_vector_first(
+            stage->system_columns, ecs_sig_column_t);
+
+        for (i = 0; i < count; i ++) {
+            if (column[i].from_kind == EcsFromEmpty || column[i].oper_kind == EcsOperNot) {
+                if (column[i].inout_kind == EcsOut) {
+                    if (column[i].is.component == comp) {
+                        break;
+                    }
+                    if (column[i].is.component == EcsWildcard) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (i == count) {
+            permission_warning(world, stage->system, comp);
+        }
+    }    
+}
+
+static
+void check_write_permissions(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entities_t *added,
+    ecs_entities_t *removed)
+{
+    if (warning_count > 100) {
+        return;
+    }
+
+    check_write_permissions_for_entities(world, stage, added);
+    check_write_permissions_for_entities(world, stage, removed);
+
+    if (warning_count > 100) {
+        ecs_warn("reported >100 warnings, not reporting new ones");
+    }    
+}
+#endif
+
 static
 void commit(
     ecs_world_t *world,
@@ -1177,6 +1257,12 @@ void commit(
 {
     ecs_table_t *src_table = info->table;
     bool in_progress = world->in_progress;
+
+#ifndef NDEBUG
+    if (in_progress && stage != &world->stage) {
+        check_write_permissions(world, stage, added, removed);
+    }
+#endif
 
     if (src_table == dst_table && &world->stage == stage) {
         /* If source and destination table are the same, and stage is main stage
@@ -1590,6 +1676,12 @@ void *get_mutable(
             .array = &component,
             .count = 1
         };
+
+#ifndef NDEBUG
+        if (stage != &world->stage) {
+            check_write_permissions(world, stage, &to_add, NULL);
+        }
+#endif
 
         add_entities_w_info(world, stage, entity, info, &to_add);
 

@@ -76,6 +76,11 @@ typedef enum ComponentWriteState {
     WriteToStage
 } ComponentWriteState;
 
+typedef struct write_state_t {
+    ecs_map_t *components;
+    bool wildcard;
+} write_state_t;
+
 static
 int32_t get_write_state(
     ecs_map_t *write_state,
@@ -91,18 +96,24 @@ int32_t get_write_state(
 
 static
 void set_write_state(
-    ecs_map_t *write_state,
+    write_state_t *write_state,
     ecs_entity_t component,
     int32_t value)
 {
-    ecs_map_set(write_state, component, &value);
+    if (component == EcsWildcard) {
+        ecs_assert(value == WriteToStage, ECS_INTERNAL_ERROR, NULL);
+        write_state->wildcard = true;
+    } else {
+        ecs_map_set(write_state->components, component, &value);
+    }
 }
 
 static
 void reset_write_state(
-    ecs_map_t *write_state)
+    write_state_t *write_state)
 {
-    ecs_map_clear(write_state);
+    ecs_map_clear(write_state->components);
+    write_state->wildcard = false;
 }
 
 static
@@ -110,15 +121,19 @@ bool check_column_component(
     ecs_sig_column_t *column,
     bool is_active,
     ecs_entity_t component,
-    ecs_map_t *write_state)    
+    write_state_t *write_state)    
 {
-    int32_t state = get_write_state(write_state, component);
+    int32_t state = get_write_state(write_state->components, component);
 
-    if ((column->from_kind == EcsFromAny || column->from_kind == EcsFromOwned) && column->oper_kind != EcsOperNot) {
+    if ((column->from_kind == EcsFromAny || column->from_kind == EcsFromOwned) 
+      && column->oper_kind != EcsOperNot) 
+    {
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsIn:
             if (state == WriteToStage) {
+                return true;
+            } else if (write_state->wildcard) {
                 return true;
             }
             // fall through
@@ -127,7 +142,9 @@ bool check_column_component(
                 set_write_state(write_state, component, WriteToMain);
             }
         };
-    } else if (column->from_kind == EcsFromEmpty || column->oper_kind == EcsOperNot) {
+    } else if (column->from_kind == EcsFromEmpty || 
+               column->oper_kind == EcsOperNot) 
+    {
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsOut:
@@ -147,11 +164,11 @@ static
 bool check_column(
     ecs_sig_column_t *column,
     bool is_active,
-    ecs_map_t *write_state)
+    write_state_t *write_state)
 {
     if (column->oper_kind != EcsOperOr) {
         return check_column_component(
-            column, is_active,column->is.component, write_state);
+            column, is_active, column->is.component, write_state);
     }  
 
     return false;
@@ -172,12 +189,16 @@ bool build_pipeline(
         return false;
     }
 
-    ecs_trace_1("rebuilding pipeline #[green]%s", 
+    ecs_trace_2("rebuilding pipeline #[green]%s", 
         ecs_get_name(world, pipeline));
 
     world->stats.pipeline_build_count_total ++;
 
-    ecs_map_t *write_state = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID);
+    write_state_t ws = {
+        .components = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID),
+        .wildcard = false
+    };
+
     ecs_pipeline_op_t *op = NULL;
     ecs_vector_t *ops = NULL;
     ecs_query_t *query = pq->build_query;
@@ -203,12 +224,12 @@ bool build_pipeline(
                 world, it.entities[i], EcsInactive);
 
             ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
-                needs_merge |= check_column(column, is_active, write_state);
+                needs_merge |= check_column(column, is_active, &ws);
             });
 
             if (needs_merge) {
                 /* After merge all components will be merged, so reset state */
-                reset_write_state(write_state);
+                reset_write_state(&ws);
                 op = NULL;
 
                 /* Re-evaluate columns to set write flags if system is active.
@@ -217,7 +238,7 @@ bool build_pipeline(
                 needs_merge = false;
                 if (is_active) {
                     ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
-                        needs_merge |= check_column(column, true, write_state);
+                        needs_merge |= check_column(column, true, &ws);
                     });
                 }
 
@@ -239,7 +260,7 @@ bool build_pipeline(
         }
     }
 
-    ecs_map_free(write_state);
+    ecs_map_free(ws.components);
 
     /* Force sort of query as this could increase the match_count */
     pq->match_count = pq->query->match_count;
@@ -331,13 +352,13 @@ void ecs_pipeline_progress(
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
     ecs_worker_begin(world);
+    ecs_stage_t *stage = ecs_get_stage(&world);
     
     ecs_iter_t it = ecs_query_iter(pq->query);
     while (ecs_query_next(&it)) {
