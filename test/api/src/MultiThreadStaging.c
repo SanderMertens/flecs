@@ -1,5 +1,9 @@
 #include <api.h>
 
+void MultiThreadStaging_setup() {
+    bake_set_os_api();
+}
+
 static
 void Add_to_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
@@ -39,8 +43,11 @@ void MultiThreadStaging_2_threads_add_to_current() {
     IterData ctx = {.component = ecs_entity(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t start_1 = ecs_bulk_new(world, Position, 100);
-    ecs_entity_t start_2 = ecs_bulk_new(world, Type, 100);
+    ecs_entity_t ids_1[100];
+    const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
+    memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * 100);
+
+    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, 100);
 
     ecs_set_threads(world, 2);
 
@@ -48,15 +55,15 @@ void MultiThreadStaging_2_threads_add_to_current() {
 
     int i;
     for (i = 0; i < 100; i ++) {
-        test_assert( ecs_has(world, start_1 + i, Position));
-        test_assert( ecs_has(world, start_1 + i, Rotation));
-        test_assert( !ecs_has(world, start_1 + i, Velocity));
+        test_assert( ecs_has(world, ids_1[i], Position));
+        test_assert( ecs_has(world, ids_1[i], Rotation));
+        test_assert( !ecs_has(world, ids_1[i], Velocity));
     }
 
     for (i = 0; i < 100; i ++) {
-        test_assert( ecs_has(world, start_2 + i, Position));
-        test_assert( ecs_has(world, start_2 + i, Rotation));
-        test_assert( ecs_has(world, start_2 + i, Velocity));
+        test_assert( ecs_has(world, ids_2[i], Position));
+        test_assert( ecs_has(world, ids_2[i], Rotation));
+        test_assert( ecs_has(world, ids_2[i], Velocity));
     }
 
     ecs_fini(world);
@@ -75,8 +82,11 @@ void MultiThreadStaging_3_threads_add_to_current() {
     IterData ctx = {.component = ecs_entity(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t start_1 = ecs_bulk_new(world, Position, 100);
-    ecs_entity_t start_2 = ecs_bulk_new(world, Type, 100);
+    ecs_entity_t ids_1[100];
+    const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
+    memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * 100);
+
+    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, 100);
 
     ecs_set_threads(world, 3);
 
@@ -84,15 +94,15 @@ void MultiThreadStaging_3_threads_add_to_current() {
 
     int i;
     for (i = 0; i < 100; i ++) {
-        test_assert( ecs_has(world, start_1 + i, Position));
-        test_assert( ecs_has(world, start_1 + i, Rotation));
-        test_assert( !ecs_has(world, start_1 + i, Velocity));
+        test_assert( ecs_has(world, ids_1[i], Position));
+        test_assert( ecs_has(world, ids_1[i], Rotation));
+        test_assert( !ecs_has(world, ids_1[i], Velocity));
     }
 
     for (i = 0; i < 100; i ++) {
-        test_assert( ecs_has(world, start_2 + i, Position));
-        test_assert( ecs_has(world, start_2 + i, Rotation));
-        test_assert( ecs_has(world, start_2 + i, Velocity));
+        test_assert( ecs_has(world, ids_2[i], Position));
+        test_assert( ecs_has(world, ids_2[i], Rotation));
+        test_assert( ecs_has(world, ids_2[i], Velocity));
     }
 
     ecs_fini(world);
@@ -111,8 +121,11 @@ void MultiThreadStaging_4_threads_add_to_current() {
     IterData ctx = {.component = ecs_entity(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t start_1 = ecs_bulk_new(world, Position, 100);
-    ecs_entity_t start_2 = ecs_bulk_new(world, Type, 100);
+    ecs_entity_t ids_1[100];
+    const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
+    memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * 100);
+
+    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, 100);
 
     ecs_set_threads(world, 4);
 
@@ -120,15 +133,15 @@ void MultiThreadStaging_4_threads_add_to_current() {
 
     int i;
     for (i = 0; i < 100; i ++) {
-        test_assert( ecs_has(world, start_1 + i, Position));
-        test_assert( ecs_has(world, start_1 + i, Rotation));
-        test_assert( !ecs_has(world, start_1 + i, Velocity));
+        test_assert( ecs_has(world, ids_1[i], Position));
+        test_assert( ecs_has(world, ids_1[i], Rotation));
+        test_assert( !ecs_has(world, ids_1[i], Velocity));
     }
 
     for (i = 0; i < 100; i ++) {
-        test_assert( ecs_has(world, start_2 + i, Position));
-        test_assert( ecs_has(world, start_2 + i, Rotation));
-        test_assert( ecs_has(world, start_2 + i, Velocity));
+        test_assert( ecs_has(world, ids_2[i], Position));
+        test_assert( ecs_has(world, ids_2[i], Rotation));
+        test_assert( ecs_has(world, ids_2[i], Velocity));
     }
 
     ecs_fini(world);
@@ -147,8 +160,11 @@ void MultiThreadStaging_5_threads_add_to_current() {
     IterData ctx = {.component = ecs_entity(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t start_1 = ecs_bulk_new(world, Position, 100);
-    ecs_entity_t start_2 = ecs_bulk_new(world, Type, 100);
+    ecs_entity_t ids_1[100];
+    const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
+    memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * 100);
+
+    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, 100);
 
     ecs_set_threads(world, 5);
 
@@ -156,15 +172,15 @@ void MultiThreadStaging_5_threads_add_to_current() {
 
     int i;
     for (i = 0; i < 100; i ++) {
-        test_assert( ecs_has(world, start_1 + i, Position));
-        test_assert( ecs_has(world, start_1 + i, Rotation));
-        test_assert( !ecs_has(world, start_1 + i, Velocity));
+        test_assert( ecs_has(world, ids_1[i], Position));
+        test_assert( ecs_has(world, ids_1[i], Rotation));
+        test_assert( !ecs_has(world, ids_1[i], Velocity));
     }
 
     for (i = 0; i < 100; i ++) {
-        test_assert( ecs_has(world, start_2 + i, Position));
-        test_assert( ecs_has(world, start_2 + i, Rotation));
-        test_assert( ecs_has(world, start_2 + i, Velocity));
+        test_assert( ecs_has(world, ids_2[i], Position));
+        test_assert( ecs_has(world, ids_2[i], Rotation));
+        test_assert( ecs_has(world, ids_2[i], Velocity));
     }
 
     ecs_fini(world);
@@ -183,8 +199,11 @@ void MultiThreadStaging_6_threads_add_to_current() {
     IterData ctx = {.component = ecs_entity(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t start_1 = ecs_bulk_new(world, Position, 100);
-    ecs_entity_t start_2 = ecs_bulk_new(world, Type, 100);
+    ecs_entity_t ids_1[100];
+    const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
+    memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * 100);
+
+    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, 100);
 
     ecs_set_threads(world, 6);
 
@@ -192,15 +211,15 @@ void MultiThreadStaging_6_threads_add_to_current() {
 
     int i;
     for (i = 0; i < 100; i ++) {
-        test_assert( ecs_has(world, start_1 + i, Position));
-        test_assert( ecs_has(world, start_1 + i, Rotation));
-        test_assert( !ecs_has(world, start_1 + i, Velocity));
+        test_assert( ecs_has(world, ids_1[i], Position));
+        test_assert( ecs_has(world, ids_1[i], Rotation));
+        test_assert( !ecs_has(world, ids_1[i], Velocity));
     }
 
     for (i = 0; i < 100; i ++) {
-        test_assert( ecs_has(world, start_2 + i, Position));
-        test_assert( ecs_has(world, start_2 + i, Rotation));
-        test_assert( ecs_has(world, start_2 + i, Velocity));
+        test_assert( ecs_has(world, ids_2[i], Position));
+        test_assert( ecs_has(world, ids_2[i], Rotation));
+        test_assert( ecs_has(world, ids_2[i], Velocity));
     }
 
     ecs_fini(world);
@@ -239,17 +258,18 @@ void MultiThreadStaging_2_threads_on_add() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    test_assert(ids != NULL);
 
     ecs_set_threads(world, 2);
 
     ecs_progress(world, 0);
 
-    ecs_entity_t i;
-    for (i = e; i < e + 10; i ++) {
-        test_assert( ecs_has(world, i, Velocity));
-        const Velocity *v = ecs_get(world, i, Velocity);
+    int i;
+    for (i = 0; i < 10; i ++) {
+        ecs_entity_t e = ids[i];
+        test_assert( ecs_has(world, e, Velocity));
+        const Velocity *v = ecs_get(world, e, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 10);
         test_int(v->y, 20);

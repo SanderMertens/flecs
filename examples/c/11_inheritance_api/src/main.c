@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     /* Define a system called Move that is executed every frame, and subscribes
      * for the 'Position', 'Force' and 'Mass' components. The Mass component
      * will be either shared or owned. */
-    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Force, Mass);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Force, ANY:Mass);
 
     /* Create two base entities */
     ecs_entity_t HeavyEntity = ecs_new(world, 0);

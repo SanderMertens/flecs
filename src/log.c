@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 static
 char *ecs_vasprintf(
@@ -175,7 +175,7 @@ void ecs_log_print(
 
     /* Massage filename so it doesn't take up too much space */
     char filebuff[256];
-    strcpy(filebuff, file);
+    ecs_os_strcpy(filebuff, file);
     file = filebuff;
     char *file_ptr = strrchr(file, '/');
     if (file_ptr) {
@@ -409,9 +409,21 @@ const char* ecs_strerror(
     case ECS_INVALID_REACTIVE_SIGNATURE:
         return "signature is not valid for reactive system (must contain at least one ANY column)";
     case ECS_INCONSISTENT_COMPONENT_NAME:
-        return "component registered twice with a different name";
+        return "component redefined with a different name";
     case ECS_TYPE_CONSTRAINT_VIOLATION:
         return "type constraint violated";
+    case ECS_COMPONENT_NOT_REGISTERED:
+        return "component is not registered";
+    case ECS_INCONSISTENT_COMPONENT_ID:
+        return "component redefined with a different id";
+    case ECS_INVALID_CASE:
+        return "case not supported for type";
+    case ECS_COMPONENT_NAME_IN_USE:
+        return "component name is already in use";
+    case ECS_INCONSISTENT_NAME:
+        return "entity redefined with different name";
+    case ECS_INCONSISTENT_COMPONENT_ACTION:
+        return "registered mismatching component action";
     }
 
     return "unknown error code";

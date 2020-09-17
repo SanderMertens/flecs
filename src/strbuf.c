@@ -121,8 +121,6 @@ static
 bool ecs_strbuf_vappend_intern(
     ecs_strbuf_t *b,
     const char* str,
-    int n,
-    bool fmt_string,
     va_list args)
 {
     bool result = true;
@@ -147,102 +145,117 @@ bool ecs_strbuf_vappend_intern(
     int32_t max_copy = b->buf ? memLeft : memLeftInElement;
     int32_t memRequired;
 
-    if (n < 0) n = INT_MAX;
-
-    if (!fmt_string) {
-        memRequired = fast_strncpy(ecs_strbuf_ptr(b), str, max_copy, n);
-    } else {
-        va_copy(arg_cpy, args);
-        memRequired = vsnprintf(
-            ecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
-    }
+    va_copy(arg_cpy, args);
+    memRequired = vsnprintf(
+        ecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
 
     if (memRequired <= memLeftInElement) {
         /* Element was large enough to fit string */
         b->current->pos += memRequired;
     } else if ((memRequired - memLeftInElement) < memLeft) {
-        /* Element was not large enough, but buffer still has space */
-        if (!fmt_string) {
-            b->current->pos += memLeftInElement;
-            memRequired -= memLeftInElement;
+        /* If string is a format string, a new buffer of size memRequired is
+         * needed to re-evaluate the format string and only use the part that
+         * wasn't already copied to the previous element */
+        if (memRequired <= ECS_STRBUF_ELEMENT_SIZE) {
+            /* Resulting string fits in standard-size buffer. Note that the
+             * entire string needs to fit, not just the remainder, as the
+             * format string cannot be partially evaluated */
+            ecs_strbuf_grow(b);
 
-            /* Current element was too small, copy remainder into new element */
-            if (memRequired < ECS_STRBUF_ELEMENT_SIZE) {
-                /* A standard-size buffer is large enough for the new string */
-                ecs_strbuf_grow(b);
+            /* Copy entire string to new buffer */
+            ecs_os_vsprintf(ecs_strbuf_ptr(b), str, arg_cpy);
 
-                /* Copy the remainder to the new buffer */
-                if (n) {
-                    /* If a max number of characters to write is set, only a
-                     * subset of the string should be copied to the buffer */
-                    strncpy(
-                        ecs_strbuf_ptr(b),
-                        str + memLeftInElement,
-                        (size_t)memRequired);
-                } else {
-                    strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
-                }
+            /* Ignore the part of the string that was copied into the
+             * previous buffer. The string copied into the new buffer could
+             * be memmoved so that only the remainder is left, but that is
+             * most likely more expensive than just keeping the entire
+             * string. */
 
-                /* Update to number of characters copied to new buffer */
-                b->current->pos += memRequired;
-            } else {
-                char *remainder = ecs_os_strdup(str + memLeftInElement);
-                ecs_strbuf_grow_str(b, remainder, remainder, memRequired);
-            }
+            /* Update position in buffer */
+            b->current->pos += memRequired;
         } else {
-            /* If string is a format string, a new buffer of size memRequired is
-             * needed to re-evaluate the format string and only use the part that
-             * wasn't already copied to the previous element */
-            if (memRequired <= ECS_STRBUF_ELEMENT_SIZE) {
-                /* Resulting string fits in standard-size buffer. Note that the
-                 * entire string needs to fit, not just the remainder, as the
-                 * format string cannot be partially evaluated */
-                ecs_strbuf_grow(b);
-
-                /* Copy entire string to new buffer */
-                ecs_os_vsprintf(ecs_strbuf_ptr(b), str, arg_cpy);
-
-                /* Ignore the part of the string that was copied into the
-                 * previous buffer. The string copied into the new buffer could
-                 * be memmoved so that only the remainder is left, but that is
-                 * most likely more expensive than just keeping the entire
-                 * string. */
-
-                /* Update position in buffer */
-                b->current->pos += memRequired;
-            } else {
-                /* Resulting string does not fit in standard-size buffer.
-                 * Allocate a new buffer that can hold the entire string. */
-                char *dst = ecs_os_malloc(memRequired + 1);
-                ecs_os_vsprintf(dst, str, arg_cpy);
-                ecs_strbuf_grow_str(b, dst, dst, memRequired);
-            }
+            /* Resulting string does not fit in standard-size buffer.
+             * Allocate a new buffer that can hold the entire string. */
+            char *dst = ecs_os_malloc(memRequired + 1);
+            ecs_os_vsprintf(dst, str, arg_cpy);
+            ecs_strbuf_grow_str(b, dst, dst, memRequired);
         }
     } else {
         /* Buffer max has been reached */
         result = false;
     }
 
-    if (fmt_string) {
-        va_end(arg_cpy);
-    }
+    va_end(arg_cpy);
 
     return result;
 }
 
-static 
+static
 bool ecs_strbuf_append_intern(
     ecs_strbuf_t *b,
     const char* str,
-    int n,
-    ...)
+    int n)
 {
-    va_list args;
-    va_start(args, n);
-    bool result = ecs_strbuf_vappend_intern(
-        b, str, n, false, args
-    );
-    va_end(args);
+    bool result = true;
+
+    if (!str) {
+        return result;
+    }
+
+    ecs_strbuf_init(b);
+
+    int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
+    int32_t memLeft = ecs_strbuf_memLeft(b);
+
+    if (!memLeft) {
+        return false;
+    }
+
+    /* Compute the memory required to add the string to the buffer. If user
+     * provided buffer, use space left in buffer, otherwise use space left in
+     * current element. */
+    int32_t max_copy = b->buf ? memLeft : memLeftInElement;
+    int32_t memRequired;
+
+    if (n < 0) n = INT_MAX;
+
+    memRequired = fast_strncpy(ecs_strbuf_ptr(b), str, max_copy, n);
+
+    if (memRequired <= memLeftInElement) {
+        /* Element was large enough to fit string */
+        b->current->pos += memRequired;
+    } else if ((memRequired - memLeftInElement) < memLeft) {
+        /* Element was not large enough, but buffer still has space */
+        b->current->pos += memLeftInElement;
+        memRequired -= memLeftInElement;
+
+        /* Current element was too small, copy remainder into new element */
+        if (memRequired < ECS_STRBUF_ELEMENT_SIZE) {
+            /* A standard-size buffer is large enough for the new string */
+            ecs_strbuf_grow(b);
+
+            /* Copy the remainder to the new buffer */
+            if (n) {
+                /* If a max number of characters to write is set, only a
+                    * subset of the string should be copied to the buffer */
+                ecs_os_strncpy(
+                    ecs_strbuf_ptr(b),
+                    str + memLeftInElement,
+                    (size_t)memRequired);
+            } else {
+                ecs_os_strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
+            }
+
+            /* Update to number of characters copied to new buffer */
+            b->current->pos += memRequired;
+        } else {
+            char *remainder = ecs_os_strdup(str + memLeftInElement);
+            ecs_strbuf_grow_str(b, remainder, remainder, memRequired);
+        }
+    } else {
+        /* Buffer max has been reached */
+        result = false;
+    }
 
     return result;
 }
@@ -252,8 +265,8 @@ bool ecs_strbuf_vappend(
     const char* fmt,
     va_list args)
 {
-    bool result = ecs_strbuf_append_intern(
-        b, fmt, -1, true, args
+    bool result = ecs_strbuf_vappend_intern(
+        b, fmt, args
     );
 
     return result;
@@ -267,7 +280,7 @@ bool ecs_strbuf_append(
     va_list args;
     va_start(args, fmt);
     bool result = ecs_strbuf_vappend_intern(
-        b, fmt, -1, true, args
+        b, fmt, args
     );
     va_end(args);
 
@@ -302,7 +315,6 @@ bool ecs_strbuf_appendstr_zerocpy_const(
     ecs_strbuf_grow_str(b, (char*)str, NULL, 0);
     return true;
 }
-
 
 bool ecs_strbuf_appendstr(
     ecs_strbuf_t *b,
@@ -436,7 +448,7 @@ bool ecs_strbuf_list_append(
     va_list args;
     va_start(args, fmt);
     bool result = ecs_strbuf_vappend_intern(
-        buffer, fmt, -1, true, args
+        buffer, fmt, args
     );
     va_end(args);
 

@@ -1,18 +1,18 @@
 #include <simple_module.h>
 #include <iostream>
 
-SimpleModule::SimpleModule(flecs::world& world)
+SimpleModule::SimpleModule(flecs::world& ecs)
 {
     /* Register module with world */
-    flecs::module<SimpleModule>(world, "SimpleModule");
+    ecs.module<SimpleModule>();
 
     /* Register components */
-    this->position = flecs::component<Position>(world, "Position");
-    this->velocity = flecs::component<Velocity>(world, "Velocity");
+    this->position = ecs.component<Position>();
+    this->velocity = ecs.component<Velocity>();
 
     /* Register system */
-    this->move = flecs::system<Position, Velocity>(world, "Move")
-        .each([](flecs::entity e, Position& p, Velocity& v) {    
+    this->move = ecs.system<Position, const Velocity>("Move")
+        .each([](flecs::entity e, Position& p, const Velocity& v) {    
             p.x += v.x;
             p.y += v.y;
 

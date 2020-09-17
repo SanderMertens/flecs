@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Stresstests_setup() {
+    bake_set_os_api();
+}
+
 static
 void add_random(
     ecs_world_t *world,
@@ -165,13 +169,14 @@ void Stresstests_create_delete_entity_random_components() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_entity_t e = ecs_bulk_new(world, 0, 1000);
+    const ecs_entity_t *ids = ecs_bulk_new(world, 0, 1000);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 1000; i ++) {
-        add_random(world, e, ecs_entity(Position));
-        add_random(world, e, ecs_entity(Velocity));
-        add_random(world, e, ecs_entity(Rotation));
+        add_random(world, ids[i], ecs_entity(Position));
+        add_random(world, ids[i], ecs_entity(Velocity));
+        add_random(world, ids[i], ecs_entity(Rotation));
     }
 
     ecs_fini(world);
@@ -186,19 +191,20 @@ void Stresstests_set_entity_random_components() {
 
     ECS_SYSTEM(world, Set_velocity_callback, EcsOnSet, Velocity);
 
-    ecs_entity_t e = ecs_bulk_new(world, 0, 1000);
+    const ecs_entity_t *ids = ecs_bulk_new(world, 0, 1000);
+    test_assert(ids != NULL);
 
     int i;
     for (i = 0; i < 1000; i ++) {
         Position pos = {10, 20};
-        set_random(world, e, ecs_entity(Position), &pos, &pos, sizeof(Position));
+        set_random(world, ids[i], ecs_entity(Position), &pos, &pos, sizeof(Position));
 
         Velocity vel = {30, 40};
         Velocity vel_expect = {31, 41};
-        set_random(world, e, ecs_entity(Velocity), &vel, &vel_expect, sizeof(Velocity));
+        set_random(world, ids[i], ecs_entity(Velocity), &vel, &vel_expect, sizeof(Velocity));
 
         Rotation rot = {50};
-        set_random(world, e, ecs_entity(Rotation), &rot, &rot, sizeof(Rotation));
+        set_random(world, ids[i], ecs_entity(Rotation), &rot, &rot, sizeof(Rotation));
     }
 
     ecs_fini(world);
@@ -256,12 +262,12 @@ void Stresstests_create_2m_entities_bulk_1_comp() {
     
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_bulk_new(world, Position, 2000 * 1000);
-    test_assert(e != 0);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 2000 * 1000);
+    test_assert(ids != NULL);
 
     int32_t i;
     for (i = 0; i < 2000 * 1000; i ++) {
-        test_assert(ecs_has(world, e + i, Position));
+        test_assert(ecs_has(world, ids[i], Position));
     }
 
     ecs_fini(world);
@@ -281,6 +287,29 @@ void Stresstests_add_1k_tags() {
     ecs_type_t type = ecs_get_type(world, e);
     test_assert(type != NULL);
     test_int(ecs_vector_count(type), 1000);
+
+    ecs_fini(world);
+}
+
+void Stresstests_create_1m_set_two_components() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t i, j;
+    for (i = e; i < 1000000 + e; i ++) {
+        ecs_set(world, i, Position, {10, 20});
+    }
+
+    for (j = e; j < 1000000 + e; j ++) {
+        test_assert(ecs_get_type(world, j) != NULL);
+    }    
+
+    for (i = e; i < e + 1000000 + e; i ++) {
+        ecs_set(world, i, Velocity, {1, 2});
+    }    
 
     ecs_fini(world);
 }

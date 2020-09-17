@@ -133,51 +133,6 @@ void ComponentLifecycle_copy_on_override() {
     test_int(pod->value, 10);
 }
 
-void ComponentLifecycle_move_on_merge() {
-    flecs::world world;
-
-    flecs::component<POD>(world, "POD");
-
-    auto e = flecs::entity(world);
-    test_assert(e.id() != 0);
-
-    e.set<POD>({10});
-    test_int(POD::ctor_invoked, 2);
-    test_int(POD::dtor_invoked, 1);
-    test_int(POD::copy_invoked, 1);
-    test_int(POD::move_invoked, 0);
-
-    POD::ctor_invoked = 0;
-    POD::dtor_invoked = 0;
-    POD::copy_invoked = 0;
-    POD::move_invoked = 0;
-
-    flecs::system<POD>(world)
-        .each([](flecs::entity e_arg, POD& pod) {
-            e_arg.set<POD>({20});
-            test_int(POD::ctor_invoked, 2); // 1 for construction in stage
-            test_int(POD::dtor_invoked, 1);
-            test_int(POD::copy_invoked, 2); // 1 for copy to stage
-            test_int(POD::move_invoked, 0);
-
-            POD::ctor_invoked = 0;
-            POD::dtor_invoked = 0;
-            POD::copy_invoked = 0;
-            POD::move_invoked = 0;            
-        });
-        
-    world.progress();
-
-    test_int(POD::ctor_invoked, 1); // construct new value
-    test_int(POD::dtor_invoked, 1); // destruct old value
-    test_int(POD::copy_invoked, 0);
-    test_int(POD::move_invoked, 1); // move staged value to main stage
-
-    // The reason why the main stage value is destructed before merging is so
-    // that entities can be merged in bulk, vs copying values one by one from
-    // the stage to the main stage
-}
-
 void ComponentLifecycle_non_pod_add() {
     flecs::world world;
 
@@ -240,4 +195,127 @@ void ComponentLifecycle_non_pod_override() {
     const Str *str = e.get<Str>();
     test_assert(str != NULL);
     test_assert(str->value == "Hello World");
+}
+
+void ComponentLifecycle_get_mut_new() {
+    flecs::world world;
+
+    flecs::component<POD>(world, "POD");
+
+    auto e = flecs::entity(world);
+    test_assert(e.id() != 0);
+
+    POD* value = e.get_mut<POD>();
+    test_assert(value != NULL);
+
+    POD::ctor_invoked = 1;
+    POD::dtor_invoked = 0;
+    POD::copy_invoked = 0;
+    POD::move_invoked = 0;
+
+    e.modified<POD>();
+
+    POD::ctor_invoked = 1;
+    POD::dtor_invoked = 0;
+    POD::copy_invoked = 0;
+    POD::move_invoked = 0;    
+}
+
+void ComponentLifecycle_get_mut_existing() {
+    flecs::world world;
+
+    flecs::component<POD>(world, "POD");
+
+    auto e = flecs::entity(world);
+    test_assert(e.id() != 0);
+
+    POD* value = e.get_mut<POD>();
+    test_assert(value != NULL);
+
+    POD::ctor_invoked = 1;
+    POD::dtor_invoked = 0;
+    POD::copy_invoked = 0;
+    POD::move_invoked = 0;
+
+    value = e.get_mut<POD>();
+    test_assert(value != NULL);
+
+    /* Repeated calls to get_mut should not invoke constructor */
+    POD::ctor_invoked = 1;
+    POD::dtor_invoked = 0;
+    POD::copy_invoked = 0;
+    POD::move_invoked = 0;
+}
+
+void ComponentLifecycle_pod_component() {
+    flecs::world world;
+
+    flecs::pod_component<POD>(world, "POD");
+
+    auto e = flecs::entity(world).add<POD>();
+    test_assert(e.id() != 0);
+    test_assert(e.has<POD>());
+
+    const POD *pod = e.get<POD>();
+    test_assert(pod != NULL);
+
+    e.remove<POD>();
+    test_assert(!e.has<POD>());
+
+    /* Component is registered as pod, no lifecycle actions should be invoked */
+    test_int(POD::ctor_invoked, 0);
+    test_int(POD::dtor_invoked, 0);
+    test_int(POD::copy_invoked, 0);
+    test_int(POD::move_invoked, 0);
+}
+
+void ComponentLifecycle_relocatable_component() {
+    flecs::world world;
+
+    flecs::relocatable_component<POD>(world, "POD");
+
+    auto e = flecs::entity(world).add<POD>();
+    test_assert(e.id() != 0);
+    test_assert(e.has<POD>());
+
+    const POD *pod = e.get<POD>();
+    test_assert(pod != NULL);
+
+    test_int(pod->value, 10);
+
+    /* Component is registered as relocatable, ctor/dtor/copy are registered,
+     * but move is not. */
+    test_int(POD::ctor_invoked, 1);
+    test_int(POD::dtor_invoked, 0);
+    test_int(POD::copy_invoked, 0);
+    test_int(POD::move_invoked, 0);
+
+    /* Add another entity, this moves the existing component, but should not
+     * invoke move assignment */
+    flecs::entity(world).add<POD>();
+    test_int(POD::ctor_invoked, 2);
+    test_int(POD::move_invoked, 0);     
+}
+
+void ComponentLifecycle_implicit_component() {
+    flecs::world world;
+
+    auto e = flecs::entity(world).add<POD>();
+    test_assert(e.id() != 0);
+    test_assert(e.has<POD>());
+
+    const POD *pod = e.get<POD>();
+    test_assert(pod != NULL);
+
+    test_int(pod->value, 10);
+
+    test_int(POD::ctor_invoked, 1);
+    test_int(POD::dtor_invoked, 0);
+    test_int(POD::copy_invoked, 0);
+    test_int(POD::move_invoked, 0);
+
+    flecs::entity(world).add<POD>();
+    flecs::entity(world).add<POD>();
+    test_int(POD::ctor_invoked, 5);
+    test_int(POD::move_invoked, 2); 
 }

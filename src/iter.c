@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 static
 void* get_owned_column_ptr(
@@ -50,7 +50,7 @@ bool get_table_column(
     int32_t column,
     int32_t *table_column_out)
 {
-    ecs_assert(column <= it->column_count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column <= it->column_count, ECS_INVALID_PARAMETER, NULL);
 
     int32_t table_column = 0;
 
@@ -130,14 +130,17 @@ bool ecs_is_readonly(
     const ecs_iter_t *it,
     int32_t column)
 {
-    if (!ecs_is_owned(it, column)) {
-        return true;
-    }
-
     ecs_query_t *query = it->query;
     if (query) {
         ecs_sig_column_t *column_data = ecs_vector_get(
             it->query->sig.columns, ecs_sig_column_t, column - 1);
+                    
+        if (!ecs_is_owned(it, column) && 
+            column_data->from_kind != EcsFromEntity) 
+        {
+            return true;
+        }
+
         return column_data->inout_kind == EcsIn;
     } else {
         return true;
@@ -173,7 +176,21 @@ ecs_type_t ecs_column_type(
     ecs_assert(it->components != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t component = it->components[index - 1];
-    return ecs_type_from_entity(it->world, component);
+
+    ecs_sig_column_t *column_data = NULL;
+    if (it->query) {
+        column_data = ecs_vector_get(
+                it->query->sig.columns, ecs_sig_column_t, index - 1);
+        ecs_assert(column_data != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    if (column_data && column_data->oper_kind == EcsOperAll) {
+        const EcsType *type = ecs_get(it->world, component, EcsType);
+        ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
+        return type->normalized;
+    } else {
+        return ecs_type_from_entity(it->world, component);
+    }
 }
 
 ecs_entity_t ecs_column_entity(
@@ -185,6 +202,40 @@ ecs_entity_t ecs_column_entity(
     ecs_assert(it->components != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return it->components[index - 1];
+}
+
+ecs_entity_t ecs_column_size(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t table_column = it->columns[index - 1];
+
+    return ecs_table_column_size(it, table_column - 1);
+}
+
+int32_t ecs_column_index_from_name(
+    const ecs_iter_t *it,
+    const char *name)
+{
+    ecs_sig_column_t *column = NULL;
+    if (it->query) {
+        int32_t i, count = ecs_vector_count(it->query->sig.columns);
+        for (i = 0; i < count; i ++) {
+            column = ecs_vector_get(
+                it->query->sig.columns, ecs_sig_column_t, i);
+            if (column->name) {
+                if (!strcmp(name, column->name)) {
+                    return i + 1;
+                }
+            }
+        }
+    }
+
+    return 0;
 }
 
 ecs_type_t ecs_iter_type(

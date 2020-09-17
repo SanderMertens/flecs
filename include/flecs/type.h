@@ -23,7 +23,7 @@ ecs_entity_t ecs_type_to_entity(
 FLECS_EXPORT
 char* ecs_type_str(
     ecs_world_t *world,
-    ecs_type_t type);
+    ecs_type_t type);  
 
 FLECS_EXPORT
 ecs_type_t ecs_type_from_str(

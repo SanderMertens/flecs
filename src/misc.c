@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 int8_t ecs_to_i8(
     int64_t v)
@@ -21,6 +21,13 @@ int32_t ecs_to_i32(
     return (int32_t)v;
 }
 
+uint32_t ecs_to_u32(
+    uint64_t v)
+{
+    ecs_assert(v < UINT32_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (uint32_t)v;    
+}
+
 size_t ecs_to_size_t(
     int64_t size)
 {
@@ -31,7 +38,7 @@ size_t ecs_to_size_t(
 ecs_size_t ecs_from_size_t(
     size_t size)
 {
-   ecs_assert(size < INT64_MAX, ECS_INTERNAL_ERROR, NULL); 
+   ecs_assert(size < INT32_MAX, ECS_INTERNAL_ERROR, NULL); 
    return (ecs_size_t)size;
 }
 
@@ -42,13 +49,27 @@ ecs_entity_t ecs_to_entity(
     return (ecs_entity_t)v;
 }
 
+int64_t ecs_from_entity(
+    ecs_entity_t v)
+{
+    ecs_assert(v < INT64_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (int64_t)v;
+}
+
+int32_t ecs_from_entity_to_i32(
+    ecs_entity_t v)
+{
+    ecs_assert(v < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (int32_t)v;
+}
+
 /** Convert time to double */
 double ecs_time_to_double(
     ecs_time_t t)
 {
     double result;
     result = t.sec;
-    return result + (double)t.nanosec / (double)1000000000;;
+    return result + (double)t.nanosec / (double)1000000000;
 }
 
 ecs_time_t ecs_time_sub(
@@ -124,7 +145,7 @@ void* ecs_os_memdup(
         distribution.
 */
 
-#include "flecs_private.h"
+#include "private_api.h"
 
 static int ecs_os_time_initialized;
 
@@ -184,7 +205,7 @@ uint64_t ecs_os_time_now(void) {
     #if defined(_WIN32)
         LARGE_INTEGER qpc_t;
         QueryPerformanceCounter(&qpc_t);
-        now = qpc_t.QuadPart / _ecs_os_time_win_freq;
+        now = (uint64_t)(qpc_t.QuadPart / _ecs_os_time_win_freq);
     #elif defined(__APPLE__) && defined(__MACH__)
         now = mach_absolute_time();
     #else
@@ -230,30 +251,41 @@ static ULONG win32_current_resolution;
 
 void ecs_increase_timer_resolution(bool enable)
 {
-    HMODULE hntdll = GetModuleHandle("ntdll.dll");
-    if(!hntdll) return;
+    HMODULE hntdll = GetModuleHandle((LPCTSTR)"ntdll.dll");
+    if (!hntdll) {
+        return;
+    }
 
-    LONG (__stdcall *pNtSetTimerResolution)(ULONG desired, BOOLEAN set, ULONG * current);
+    LONG (__stdcall *pNtSetTimerResolution)(
+        ULONG desired, BOOLEAN set, ULONG * current);
 
-    pNtSetTimerResolution = (LONG(__stdcall*)(ULONG, BOOLEAN, ULONG*))GetProcAddress(hntdll, "NtSetTimerResolution");
-    if(!pNtSetTimerResolution) return;
+    pNtSetTimerResolution = (LONG(__stdcall*)(ULONG, BOOLEAN, ULONG*))
+        GetProcAddress(hntdll, "NtSetTimerResolution");
+
+    if(!pNtSetTimerResolution) {
+        return;
+    }
 
     ULONG current, resolution = 10000; /* 1 ms */
 
-    if(!enable && win32_current_resolution)
-    {
+    if (!enable && win32_current_resolution) {
         pNtSetTimerResolution(win32_current_resolution, 0, &current);
         win32_current_resolution = 0;
         return;
+    } else if (!enable) {
+        return;
     }
-    else if(!enable) return;
 
-    if(resolution == win32_current_resolution) return;
+    if (resolution == win32_current_resolution) {
+        return;
+    }
 
-    if(win32_current_resolution) pNtSetTimerResolution(win32_current_resolution, 0, &current);
+    if (win32_current_resolution) {
+        pNtSetTimerResolution(win32_current_resolution, 0, &current);
+    }
 
-    if(pNtSetTimerResolution(resolution, 1, &current))
-    {/* Try setting a lower resolution */
+    if (pNtSetTimerResolution(resolution, 1, &current)) {
+        /* Try setting a lower resolution */
         resolution *= 2;
         if(pNtSetTimerResolution(resolution, 1, &current)) return;
     }

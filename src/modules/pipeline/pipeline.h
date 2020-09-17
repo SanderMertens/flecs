@@ -1,8 +1,16 @@
 #ifndef FLECS_PIPELINE_PRIVATE_H
 #define FLECS_PIPELINE_PRIVATE_H
 
-#include "../../flecs_private.h"
+#include "../../private_api.h"
+#include "../system/system.h"
 #include "flecs/modules/pipeline.h"
+
+/** Instruction data for pipeline.
+ * This type is the element type in the "ops" vector of a pipeline and contains
+ * information about the set of systems that need to be ran before a merge. */
+typedef struct ecs_pipeline_op_t {
+    int32_t count;              /**< Number of systems to run before merge */
+} ecs_pipeline_op_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Pipeline API

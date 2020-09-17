@@ -106,6 +106,10 @@ FLECS_EXPORT
 char* ecs_module_path_from_c(
     const char *c_name);
 
+FLECS_EXPORT
+bool ecs_component_has_actions(
+    ecs_world_t *world,
+    ecs_entity_t component);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
@@ -135,7 +139,8 @@ typedef enum ecs_sig_oper_kind_t {
     EcsOperOr = 1,
     EcsOperNot = 2,
     EcsOperOptional = 3,
-    EcsOperLast = 4
+    EcsOperAll = 4,
+    EcsOperLast = 5
 } ecs_sig_oper_kind_t;
 
 /** Type that describes a single column in the system signature */
@@ -148,6 +153,7 @@ typedef struct ecs_sig_column_t {
         ecs_entity_t component;      /* Used for AND operator */
     } is;
     ecs_entity_t source;             /* Source entity (used with FromEntity) */
+    char *name;                /* Name of column */
 } ecs_sig_column_t;
 
 /** Type that stores a parsed signature */
@@ -157,15 +163,30 @@ typedef struct ecs_sig_t {
     ecs_vector_t *columns;      /* Columns that contain parsed data */
 } ecs_sig_t;
 
+/** Parse signature. */
+FLECS_EXPORT
+void ecs_sig_init(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_sig_t *sig);
+
+/** Release signature resources */
+FLECS_EXPORT
+void ecs_sig_deinit(
+    ecs_sig_t *sig);
+
 /** Add column to signature. */
 FLECS_EXPORT
 int ecs_sig_add(
+    ecs_world_t *world,
     ecs_sig_t *sig,
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t access_kind,
     ecs_entity_t component,
-    ecs_entity_t source);
+    ecs_entity_t source,
+    const char *arg_name);
 
 /** Create query based on signature object. */
 FLECS_EXPORT
@@ -218,23 +239,12 @@ ecs_query_t* ecs_query_new_w_sig(
 #define ECS_INVALID_REACTIVE_SIGNATURE (41)
 #define ECS_INCONSISTENT_COMPONENT_NAME (42)
 #define ECS_TYPE_CONSTRAINT_VIOLATION (43)
-
-/** Declare type variable */
-#define ECS_TYPE_VAR(type)\
-    ecs_type_t ecs_type(type)
-
-/** Declare entity variable */
-#define ECS_ENTITY_VAR(type)\
-    ecs_entity_t ecs_entity(type)
-
-/** Utility macro for setting a component in a module function */
-#define ECS_SET_COMPONENT(type)\
-    if (handles) handles->ecs_entity(type) = ecs_entity(type);\
-    if (handles) handles->ecs_type(type) = ecs_type(type)
-
-/** Utility macro for setting a system in a module function */
-#define ECS_SET_ENTITY(entity)\
-    if (handles) handles->entity = entity;
+#define ECS_COMPONENT_NOT_REGISTERED (44)
+#define ECS_INCONSISTENT_COMPONENT_ID (45)
+#define ECS_INVALID_CASE (46)
+#define ECS_COMPONENT_NAME_IN_USE (47)
+#define ECS_INCONSISTENT_NAME (48)
+#define ECS_INCONSISTENT_COMPONENT_ACTION (49)
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))

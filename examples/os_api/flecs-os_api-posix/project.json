@@ -1,0 +1,16 @@
+{
+    "id": "flecs.os_api.posix",
+    "type": "package",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "Posix OS API implementation",
+        "use": [
+            "flecs"
+        ]
+    },
+    "lang.c": {
+        "${os linux}": {
+            "lib": ["pthread"]
+        }
+    }
+}

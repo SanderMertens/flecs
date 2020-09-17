@@ -6,6 +6,11 @@ typedef struct SimpleFooComponent {
     float value;
 } SimpleFooComponent;
 
+
+typedef struct NestedComponent {
+    float value;
+} NestedComponent;
+
 static
 void Move(ecs_iter_t *it) { }
 
@@ -14,6 +19,10 @@ void SimpleFooSystem(ecs_iter_t *it) { }
 
 static
 void SimpleFooTrigger(ecs_iter_t *it) { }
+
+typedef struct NestedModule {
+    ECS_DECLARE_COMPONENT(NestedComponent);
+} NestedModule;
 
 typedef struct SimpleModule {
     ECS_DECLARE_COMPONENT(Position);
@@ -25,12 +34,15 @@ typedef struct SimpleModule {
     ECS_DECLARE_ENTITY(SimpleFooEntity);
     ECS_DECLARE_ENTITY(Move);
     ECS_DECLARE_ENTITY(SimpleFooSystem);
-    ECS_DECLARE_ENTITY(SimpleFooType);
+    ECS_DECLARE_TYPE(SimpleFooType);
     ECS_DECLARE_ENTITY(SimpleFooPrefab);
     ECS_DECLARE_ENTITY(SimpleFooPipeline);
     ECS_DECLARE_ENTITY(SimpleFooTrigger);
     ECS_DECLARE_ENTITY(Simple_underscore);
 } SimpleModule;
+
+#define NestedModuleImportHandles(handles)\
+    ECS_IMPORT_COMPONENT(handles, NestedComponent);\
 
 #define SimpleModuleImportHandles(handles)\
     ECS_IMPORT_COMPONENT(handles, Position);\
@@ -42,16 +54,30 @@ typedef struct SimpleModule {
     ECS_IMPORT_ENTITY(handles, SimpleFooEntity);\
     ECS_IMPORT_ENTITY(handles, Move);\
     ECS_IMPORT_ENTITY(handles, SimpleFooSystem);\
-    ECS_IMPORT_ENTITY(handles, SimpleFooType);\
+    ECS_IMPORT_TYPE(handles, SimpleFooType);\
     ECS_IMPORT_ENTITY(handles, SimpleFooPrefab);\
     ECS_IMPORT_ENTITY(handles, SimpleFooPipeline);\
     ECS_IMPORT_ENTITY(handles, SimpleFooTrigger);\
     ECS_IMPORT_ENTITY(handles, Simple_underscore);
 
+void NestedModuleImport(
+    ecs_world_t *world)
+{
+    ECS_MODULE(world, NestedModule);
+
+    ecs_set_name_prefix(world, "Nested");
+
+    ECS_COMPONENT(world, NestedComponent);
+
+    ECS_EXPORT_COMPONENT(NestedComponent);
+}
+
 void SimpleModuleImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, SimpleModule);
+
+    ECS_IMPORT(world, NestedModule);
 
     ecs_set_name_prefix(world, "Simple");
 
@@ -72,20 +98,20 @@ void SimpleModuleImport(
     ECS_TRIGGER(world, SimpleFooTrigger, EcsOnAdd, Position);
     ECS_TAG(world, Simple_underscore);
 
-    ECS_SET_COMPONENT(Position);
-    ECS_SET_COMPONENT(Velocity);
-    ECS_SET_COMPONENT(SimpleFooComponent);
-    ECS_SET_ENTITY(Tag);
-    ECS_SET_ENTITY(SimpleFooTag);
-    ECS_SET_ENTITY(Entity);
-    ECS_SET_ENTITY(SimpleFooEntity);
-    ECS_SET_ENTITY(Move);
-    ECS_SET_ENTITY(SimpleFooSystem);
-    ECS_SET_ENTITY(SimpleFooPrefab);
-    ECS_SET_ENTITY(SimpleFooType);
-    ECS_SET_ENTITY(SimpleFooPipeline);
-    ECS_SET_ENTITY(SimpleFooTrigger);
-    ECS_SET_ENTITY(Simple_underscore);
+    ECS_EXPORT_COMPONENT(Position);
+    ECS_EXPORT_COMPONENT(Velocity);
+    ECS_EXPORT_COMPONENT(SimpleFooComponent);
+    ECS_EXPORT_ENTITY(Tag);
+    ECS_EXPORT_ENTITY(SimpleFooTag);
+    ECS_EXPORT_ENTITY(Entity);
+    ECS_EXPORT_ENTITY(SimpleFooEntity);
+    ECS_EXPORT_ENTITY(Move);
+    ECS_EXPORT_ENTITY(SimpleFooSystem);
+    ECS_EXPORT_ENTITY(SimpleFooPrefab);
+    ECS_EXPORT_TYPE(SimpleFooType);
+    ECS_EXPORT_ENTITY(SimpleFooPipeline);
+    ECS_EXPORT_ENTITY(SimpleFooTrigger);
+    ECS_EXPORT_ENTITY(Simple_underscore);
 }
 
 /* -- End module code -- */
@@ -296,7 +322,7 @@ void Modules_name_prefix_trigger() {
 }
 
 void Modules_name_prefix_underscore() {
-   ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
 
@@ -308,7 +334,7 @@ void Modules_name_prefix_underscore() {
 }
 
 void Modules_lookup_by_symbol() {
-   ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
 
@@ -323,6 +349,36 @@ void Modules_lookup_by_symbol() {
     e = ecs_lookup_symbol(world, "Simple_underscore");
     test_assert(e != 0);
     test_assert(e == Simple_underscore);
+
+    ecs_fini(world);
+}
+
+void Modules_import_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, SimpleModule);
+
+    ecs_type_t type = ecs_type(SimpleFooType);
+    test_assert(type != NULL);
+
+    test_int(ecs_vector_count(type), 2);
+    test_assert(ecs_type_has_entity(world, type, ecs_entity(Position)));
+    test_assert(ecs_type_has_entity(world, type, ecs_entity(Velocity)));
+
+    ecs_fini(world);
+}
+
+void Modules_nested_module() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, SimpleModule);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "nested.module.Component");
+    test_assert(e != 0);
+
+    char *path = ecs_get_fullpath(world, e);
+    test_str(path, "nested.module.Component");
+    ecs_os_free(path);
 
     ecs_fini(world);
 }

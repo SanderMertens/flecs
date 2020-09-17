@@ -14,18 +14,14 @@ struct Velocity {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
-
-    /* Register components */
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    flecs::world ecs(argc, argv);
 
     /* Create a prefab. Prefabs are entities that are solely intended as
      * templates for other entities. Prefabs are by default not matched with
      * systems. In that way they are similar to regular entities with the
      * EcsDisbled tag, except that they have more features which are 
      * demonstrated in the nested_prefab example. */
-    auto BasePrefab = flecs::prefab(world, "BasePrefab")
+    auto BasePrefab = ecs.prefab("BasePrefab")
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
@@ -34,12 +30,12 @@ int main(int argc, char *argv[]) {
      * entity with this type is created, which will initialize the private
      * values with the values of the Base entity. This is a common approach to
      * creating entities with an initialized set of components. */
-    auto Base = flecs::type(world, "Base")
+    auto Base = ecs.type("Base")
         .add_instanceof(BasePrefab)
         .add<Position>()
         .add<Velocity>();
 
-    auto e = flecs::entity(world)
+    auto e = ecs.entity()
         .add(Base);
 
     const Position *p = e.get<Position>();

@@ -464,3 +464,52 @@ void System_signature_optional() {
     test_int(p->x, 71);
     test_int(p->y, 81);
 }
+
+
+void System_copy_name_on_create() {
+    flecs::world world;
+
+    char name[6];
+    strcpy(name, "Hello");
+
+    auto system_1 = flecs::system<Position>(world, name)
+        .action([](flecs::iter&it, flecs::column<Position> p) {});
+
+    strcpy(name, "World");
+    auto system_2 = flecs::system<Position>(world, name)
+        .action([](flecs::iter&it, flecs::column<Position> p) {});
+
+    test_assert(system_1.id() != system_2.id());
+}
+
+void System_nested_system() {
+    flecs::world world;
+
+    auto system_1 = flecs::system<Position>(world, "foo::bar")
+        .action([](flecs::iter&it, flecs::column<Position> p) {});
+
+    test_str(system_1.name().c_str(), "bar");
+
+    auto e = world.lookup("foo");
+    test_assert(e.id() != 0);
+    test_str(e.name().c_str(), "foo");
+
+    auto se = e.lookup("bar");
+    test_assert(se.id() != 0);
+    test_str(se.name().c_str(), "bar");
+}
+
+void System_empty_signature() {
+    flecs::world world;
+
+    int count = 0;
+
+    flecs::system<>(world)
+        .action([&](flecs::iter it) {
+            count ++;
+        });
+
+    world.progress();
+
+    test_int(count, 1); 
+}

@@ -166,3 +166,360 @@ void Queries_query_change_after_in_system() {
 
     ecs_fini(world);
 }
+
+void Queries_subquery_match_existing() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ecs_bulk_new(world, Position, 3);
+    ecs_bulk_new(world, Velocity, 3);
+    ecs_bulk_new(world, Type, 3);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    test_assert(sq != NULL);
+
+    int32_t table_count = 0, entity_count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(ecs_has(world, it.entities[i], Position));
+        }
+    }
+
+    test_int(table_count, 2);
+    test_int(entity_count, 6);
+
+    table_count = 0, entity_count = 0;
+    it = ecs_query_iter(sq);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(ecs_has(world, it.entities[i], Position));
+            test_assert(ecs_has(world, it.entities[i], Velocity));
+        }
+    } 
+
+    test_int(table_count, 1);
+    test_int(entity_count, 3); 
+
+    ecs_query_free(sq); 
+
+    ecs_fini(world);
+}
+
+void Queries_subquery_match_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    test_assert(sq != NULL);
+
+    ECS_TYPE(world, Type, Position, Velocity);
+    ecs_bulk_new(world, Position, 3);
+    ecs_bulk_new(world, Velocity, 3);
+    ecs_bulk_new(world, Type, 3);
+
+    int32_t table_count = 0, entity_count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(ecs_has(world, it.entities[i], Position));
+        }
+    }
+
+    test_int(table_count, 2);
+    test_int(entity_count, 6);
+
+    table_count = 0, entity_count = 0;
+    it = ecs_query_iter(sq);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(ecs_has(world, it.entities[i], Position));
+            test_assert(ecs_has(world, it.entities[i], Velocity));
+        }
+    } 
+
+    test_int(table_count, 1);
+    test_int(entity_count, 3);  
+
+    ecs_query_free(sq);
+
+    ecs_fini(world);
+}
+
+void Queries_subquery_inactive() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_TYPE(world, Type, Position, Velocity);
+    ecs_bulk_new(world, Position, 3);
+    ecs_bulk_new(world, Velocity, 3);
+    ecs_entity_t e = ecs_new(world, Type);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    test_assert(sq != NULL);
+    
+    /* Create an empty table which should deactivate it for both queries */
+    ecs_delete(world, e);
+
+    int32_t table_count = 0, entity_count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(ecs_has(world, it.entities[i], Position));
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 3);
+
+    table_count = 0, entity_count = 0;
+    it = ecs_query_iter(sq);
+    test_int(it.table_count, 0);
+    test_int(it.inactive_table_count, 1);
+
+    table_count = 0, entity_count = 0;
+    it = ecs_query_iter(sq);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+    }
+
+    test_int(table_count, 0);
+
+    ecs_query_free(sq);
+
+    ecs_fini(world);
+}
+
+void Queries_subquery_rematch() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_add(world, parent, Position);
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_add(world, e2, Position);
+    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, PARENT:Position");
+    test_assert(q != NULL);
+
+    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    test_assert(sq != NULL);
+
+    int32_t table_count = 0, entity_count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(ecs_has(world, it.entities[i], Position));
+        }
+    }
+
+    test_int(table_count, 2);  
+    test_int(entity_count, 2);
+
+    table_count = 0, entity_count = 0;
+    it = ecs_query_iter(sq);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(ecs_has(world, it.entities[i], Position));
+            test_assert(ecs_has(world, it.entities[i], Velocity));
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
+
+    /* Queries now no longer match */
+    ecs_remove(world, parent, Position);
+
+    /* Force rematching */
+    ecs_progress(world, 0);
+
+    /* Test if tables have been unmatched */
+    it = ecs_query_iter(q);
+    test_int(it.table_count, 0);
+
+    it = ecs_query_iter(sq);
+    test_int(it.table_count, 0);
+
+    ecs_query_free(sq);
+
+    ecs_fini(world);
+}
+
+void Queries_query_single_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Trait);
+
+    ECS_ENTITY(world, e1, TRAIT|Trait>Position);
+    ECS_ENTITY(world, e2, TRAIT|Trait>Velocity);
+    ECS_ENTITY(world, e3, TRAIT|Trait);
+    ECS_ENTITY(world, e4, Position);
+    ECS_ENTITY(world, e5, Velocity);
+
+    int32_t table_count = 0, entity_count = 0;
+
+    ecs_query_t *q = ecs_query_new(world, "TRAIT | Trait > Velocity");
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e2);
+            entity_count ++;
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
+
+    ecs_fini(world);
+}
+
+void Queries_query_single_instanceof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, BaseA, 0);
+    ECS_ENTITY(world, BaseB, 0);
+    ECS_ENTITY(world, e1, INSTANCEOF | BaseB);
+    ECS_ENTITY(world, e2, INSTANCEOF | BaseA);
+
+    int32_t table_count = 0, entity_count = 0;
+
+    ecs_query_t *q = ecs_query_new(world, "INSTANCEOF | BaseA");
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e2);
+            entity_count ++;
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
+
+    ecs_fini(world);
+}
+
+void Queries_query_single_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, BaseA, 0);
+    ECS_ENTITY(world, BaseB, 0);
+    ECS_ENTITY(world, e1, CHILDOF | BaseB);
+    ECS_ENTITY(world, e2, CHILDOF | BaseA);
+
+    int32_t table_count = 0, entity_count = 0;
+
+    ecs_query_t *q = ecs_query_new(world, "CHILDOF | BaseA");
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e2);
+            entity_count ++;
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
+
+    ecs_fini(world);
+}
+
+void Queries_query_w_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_new(world, Position);
+    ecs_add(world, ecs_new(world, 
+        Position), 
+        Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_filter_t f = {
+        .include = ecs_type(Velocity)
+    };
+
+    ecs_iter_t it = ecs_query_iter(q);
+    int32_t table_count = 0, entity_count = 0;
+    while (ecs_query_next_w_filter(&it, &f)) {
+        table_count ++;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            ecs_entity_t e = it.entities[i];
+            test_assert(ecs_has(world, e, Position));
+            test_assert(ecs_has(world, e, Velocity));
+            entity_count ++;
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
+
+    ecs_fini(world);
+}

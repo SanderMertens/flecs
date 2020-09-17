@@ -80,6 +80,7 @@ install:
   - if [[ -z "$NO_CPP" ]]; then bake examples/cpp; fi
 
 script:
+  - bake examples/os_api/flecs-os_api-bake
   - bake run test/api --cfg test
   - bake run test/collections --cfg test
   - if [[ -z "$NO_CPP" ]]; then bake run test/cpp_api --cfg test; fi

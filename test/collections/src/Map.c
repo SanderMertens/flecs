@@ -42,9 +42,9 @@ void *test_realloc(void *old_ptr, ecs_size_t size) {
 void Map_setup() {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
-    os_api.malloc = test_malloc;
-    os_api.calloc = test_calloc;
-    os_api.realloc = test_realloc;
+    os_api.malloc_ = test_malloc;
+    os_api.calloc_ = test_calloc;
+    os_api.realloc_ = test_realloc;
     ecs_os_set_api(&os_api);    
 }
 
@@ -141,7 +141,7 @@ void Map_get_all() {
     ecs_map_t *map = ecs_map_new(char*, 16);
     fill_map(map);
 
-    char *value = ecs_map_get_ptr(map, char*, 1);;
+    char *value = ecs_map_get_ptr(map, char*, 1);
     test_assert(value != NULL);
     test_str(value, "hello");
 
@@ -272,7 +272,7 @@ void Map_grow() {
         ecs_map_set(map, i, &v);
     }
 
-    test_int(malloc_count, 0);
+    test_int(malloc_count, 3);
 }
 
 void Map_set_size_0() {

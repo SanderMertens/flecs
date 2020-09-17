@@ -1,75 +1,46 @@
 ![flecs](https://user-images.githubusercontent.com/9919222/84740976-2ecc8580-af63-11ea-963e-c5da3be54101.png)
 
-[![Join the chat at https://gitter.im/flecsdev/community](https://badges.gitter.im/flecsdev/community.svg)](https://gitter.im/flecsdev/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/MRSAZqb) [![Build Status](https://travis-ci.org/SanderMertens/flecs.svg?branch=master)](https://travis-ci.org/SanderMertens/flecs)
-[![Build status](https://ci.appveyor.com/api/projects/status/t99p1per439ctg1a/branch/master?svg=true)](https://ci.appveyor.com/project/SanderMertens/flecs/branch/master)
+[![GitHub version](https://badge.fury.io/gh/sandermertens%2Fflecs.svg)](https://badge.fury.io/gh/sandermertens%2Fflecs)
+[![CI build](https://github.com/SanderMertens/flecs/workflows/CI/badge.svg)](https://github.com/SanderMertens/flecs/actions)
+[![Build Status](https://travis-ci.org/SanderMertens/flecs.svg?branch=master)](https://travis-ci.org/SanderMertens/flecs)
 [![codecov](https://codecov.io/gh/SanderMertens/flecs/branch/master/graph/badge.svg)](https://codecov.io/gh/SanderMertens/flecs)
+[![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
+[![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/MRSAZqb) 
 
 Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-component-system) for C89 / C99 / C++11 that packs a lot of punch in a small footprint:
 
 - Blazing fast iteration speeds with direct access to raw C arrays across multiple components
-- Built-in support for entity hierarchies, prefabs, nested prefabs and prefab variants
-- An efficient lock-free staging architecture allows for modifying entities across multiple threads
-- Expressive entity queries with support for and, or, not and optional operators
+- Support for hierarchies, prefabs, traits, state machines, snapshots and more
+- An efficient lock-free architecture allows for modifying entities across multiple threads
+- Queries with builtin support for sorting, change tracking, read-write permissions and more
 - Systems that are time triggered, rate triggered, run every frame or run only when needed
-- Modules enable organizing systems & components in reusable plug & play units
-- A customizable core that makes it easy to integrate Flecs into other frameworks / game engines
+- A customizable core that lets you include only the features you need
 
 This is Flecs v2, which is a breaking change from v1. For the last v1 release, see:
 https://github.com/SanderMertens/flecs/releases/tag/v1.3
 
-## What is an Entity Component System?
-ECS (Entity Component System) is a way to organize code that is mostly used in gaming and simulation projects. ECS code generally performs better than traditional OOP, and is typically easier to reuse. The main differences between ECS and OOP are composition is a first class citizen in ECS, and that data is represented as plain data types rather than encapsulated classes.  A framework is an Entity Component System if it:
+If you have questions, suggestions or a Flecs project you'd like to show off, [join the Flecs Discord](https://discord.gg/MRSAZqb)!
 
-- Has _entities_ that are unique identifiers (integers)
-- Has _components_ that are plain data types which can be added to entities
-- Has _systems_ that are functions which are matched against entities with a set of components
+## What is an Entity Component System?
+ECS (Entity Component System) is a design pattern often found in gaming and simulation which produces code that is fast and reusable. Dynamic omposition is a first-class citizen in ECS, and there is a strict separation between data and behavior. A framework is an Entity Component System if it:
+
+- Has _entities_ that are unique identifiers
+- Has _components_ that are plain data types
+- Has _systems_ which are behavior matched with entities based on their components
 
 ## Documentation
 - [Quickstart](docs/Quickstart.md)
+- [FAQ](docs/FAQ.md)
 - [Manual](docs/Manual.md)
 - [Migration guide](docs/MigrationGuide.md)
 - [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
 - [C examples](examples/c)
 - [C++ examples](examples/cpp)
 
+See [Docsforge](http://flecs.docsforge.com/) for a more readable version of the documentation.
+
 ## Example
-This is a simple flecs example in the C99 and C++11 APIs:
-
-```c
-typedef struct Position {
-    float x;
-    float y;
-} Position;
-
-typedef float Speed;
-
-void Move(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
-    Speed *s = ecs_column(it, Speed, 2);
-    
-    for (int i = 0; i < it->count; i ++) {
-        p[i].x += s[i] * it->delta_time;
-        p[i].y += s[i] * it->delta_time;
-    }
-}
-
-int main(int argc, char *argv[]) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Speed);
-    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Speed);
-
-    ecs_entity_t e = ecs_new(world, 0);    
-    ecs_set(world, e, Position, {0, 0});
-    ecs_set(world, e, Speed, {1});
-    
-    while (ecs_progress(world, 0));
-
-    return ecs_fini(world);
-}
-```
+This is a simple flecs example in the C++11 API:
 
 ```c++
 struct Position {
@@ -77,32 +48,34 @@ struct Position {
     float y;
 };
 
-struct Speed {
-    float value;
+struct Velocity {
+    float x;
+    float y;
 };
 
 int main(int argc, char *argv[]) {
-    flecs::world world;
+    flecs::world ecs;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Speed>(world, "Speed");
-
-    flecs::system<Position, Speed>(world)
-        .each([](flecs::entity e, Position& p, Speed& s) {
-            p.x += s.value * e.delta_time();
-            p.y += s.value * e.delta_time();
+    ecs.system<Position, const Velocity>()
+        .each([](flecs::entity e, Position& p, const Velocity& v) {
+            p.x += v.x * e.delta_time();
+            p.y += v.y * e.delta_time();
+            std::cout << "Entity " << e.name() << " moved!" << std::endl;
         });
 
-    flecs::entity(world, "MyEntity")
+    ecs.entity("MyEntity")
         .set<Position>({0, 0})
-        .set<Speed>({1});
+        .set<Velocity>({1, 1});
 
-    while (world.progress()) { }
+    while (ecs.progress()) { }
 }
 ```
 
 ## Building
-Add flecs.c and flecs.h to your project.
+The easiest way to add Flecs to a project is to add [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) to your source code. These files can be added to both C and C++ projects (the C++ API is embedded in flecs.h). Alternatively you can also build Flecs as a library by using the cmake, meson, bazel or bake buildfiles.
+
+### Custom builds
+The Flecs source has a modular design which makes it easy to strip out code you don't need. At its core, Flecs is a minimalistic ECS library with a lot of optional features that you can choose to include or not. [This section of the manual](https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#custom-builds) describes how to customize which features to include. 
 
 ## Modules
 The following modules are available in [flecs-hub](https://github.com/flecs-hub) and are compatible with v2:
@@ -114,11 +87,14 @@ Module      | Description
 [flecs.rest](https://github.com/flecs-hub/flecs-rest) | A REST interface for introspecting & editing entities
 [flecs.player](https://github.com/flecs-hub/flecs-player) | Play, stop and pause simulations
 [flecs.dash](https://github.com/flecs-hub/flecs-dash) | Web-frontend for remote monitoring and debugging of Flecs apps
+[flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input
+[flecs.components.transform](https://github.com/flecs-hub/flecs-components-transform) | Components that describe position, rotation and scale
+[flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe physics and movement
 [flecs.components.geometry](https://github.com/flecs-hub/flecs-components-geometry) | Components that describe geometry
 [flecs.components.graphics](https://github.com/flecs-hub/flecs-components-graphics) | Components used for computer graphics
 [flecs.components.gui](https://github.com/flecs-hub/flecs-components-gui) | Components used to describe GUI components
 [flecs.components.http](https://github.com/flecs-hub/flecs-components-http) | Components describing an HTTP server
-[flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input
-[flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe physics and movement
+[flecs.systems.transform](https://github.com/flecs-hub/flecs-systems-transform) | Hierarchical transforms for scene graphs
+[flecs.systems.sdl2](https://github.com/flecs-hub/flecs-systems-sdl2) | SDL window creation & input management
+[flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sdl2) | Sokol-based renderer
 [flecs.systems.civetweb](https://github.com/flecs-hub/flecs-systems-civetweb) | A civetweb-based implementation of flecs.components.http
-

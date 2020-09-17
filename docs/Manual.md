@@ -77,6 +77,43 @@ A module groups components, systems and more into reusable units that can be imp
 ### Stage
 A stage is a temporary storage where structural changes to entities (new, add, remove, delete) are stored while an application is iterating. Flecs systems access raw C arrays, and this ensures that these arrays are not modified as the application is iterating over them. Data in a stage is merged at least once per frame, or more when necessary.
 
+## High level architecture
+![Architecture diagram](flecs-architecture-overview.png)
+
+## Building
+The easiest way to add Flecs to a project is to add [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) to your source code. These files can be added to both C and C++ projects (the C++ API is embedded in flecs.h). Alternatively you can also build Flecs as a library by using the cmake, meson, bazel or bake buildfiles.
+
+### Custom builds
+Whether you're looking for a minimal ECS library or a full-fledged system runtime, customizable builds let you remove Flecs features you don't need. By default all features are included. To customize a build, follow these steps:
+
+- define `FLECS_CUSTOM_BUILD`. This removes all optional features from the build.
+- define constants for the features you want to include (see below)
+- remove the files of the features you don't need
+
+Features are split up in addons and modules. Addons implement a specific Flecs feature, like snapshots. Modules are like addons but register their own components and systems, and therefore need to be imported.
+
+#### Addons
+Addons are located in the `src/addons` and `include/addons` folders. The following addons are available:
+
+Addon         | Description                                      | Constant            |
+--------------|--------------------------------------------------|---------------------|
+Bulk          | Efficient operations that run on many entities   | FLECS_BULK          | 
+Dbg           | Debug API for inspection of internals            | FLECS_DBG           |
+Module        | Organize components and systems in modules       | FLECS_MODULE        | 
+Queue         | A queue data structure                           | FLECS_QUEUE         |
+Reader_writer | Serialize components to series of bytes          | FLECS_READER_WRITER | 
+Snapshot      | Take a snapshot that can be restored  afterwards | FLECS_SNAPSHOT      |
+
+#### Builtin modules
+Modules are located in the `src/modules` and `include/modules` folders. The following modules are available:
+
+Module        | Description                                      | Constant            |
+--------------|--------------------------------------------------|---------------------|
+System        | Support for systems, monitors and triggers       | FLECS_SYSTEM        | 
+Pipeline      | Run systems each frame and/or multithreaded      | FLECS_PIPELINE      |
+Timer         | Run systems at intervals, timeouts or fixed rate | FLECS_TIMER         | 
+Stats         | Collect statistics on entities and systems       | FLECS_STATS         |
+
 ## API design
 
 ### Naming conventions
@@ -411,14 +448,6 @@ Entity identifiers can only be recycled if they have been deleted with `ecs_dele
 
 When using multiple threads, the `ecs_new` operation guarantees that the returned identifiers are unique, by using atomic increments instead of a simple increment operation. Ids will not be recycled when using multiple threads, since this would require locking global administration.
 
-When creating entities in bulk, the returned entity identifiers are guaranteed to be contiguous. For example, the following operation:
-
-```c
-ecs_entity_t e = ecs_bulk_new(world, 0, 1000);
-```
-
-is guaranteed to return entity identifiers `e .. e + 1000`. As a consequence, this operation also does not recycle ids, as ids are unlikely to be deleted in contiguous order.
-
 ### Manual id generation
 Applications do not have to rely on `ecs_new` and `ecs_delete` to create and delete entity identifiers. Entity ids may be used directly, like in this example:
 
@@ -548,6 +577,9 @@ Here, `ECS_CHILDOF` is the type flag. This is an overview of the different type 
 |------|-------------|
 | ECS_INSTANCEOF | The entity is a base |
 | ECS_CHILDOF | The entity is a parent |
+| ECS_SWITCH | The entity is a switch type |
+| ECS_CASE | The entity is a case belonging to a switch type |
+| ECS_OWNED | The entity is a component for which ownership is enforced |
 
 Entities with type flags can be dynamically added or removed:
 
@@ -648,7 +680,44 @@ ecs_modified(world, p, Position);
 ```
 
 ### Component handles
-In order to be able to add, remove and set components on an entity, the API needs access to the component handle. A component handle uniquely identifies a component and is passed to API functions. There are two types of handles that are accepted by API functions, a type handle and an entity handle. These handles are automatically defined as variables by the `ECS_COMPONENT` macro, however if an application wants to use the component in another scope, the handle will have to be passed to that scope.
+In order to be able to add, remove and set components on an entity, the API needs access to the component handle. A component handle uniquely identifies a component and is passed to API functions. There are two types of handles that are accepted by API functions, a type handle and an entity handle. These handles are automatically defined as variables by the `ECS_COMPONENT` macro. If an application wants to use the component in another scope, the handle will have to be either declared globally or passed to that scope explicitly.
+
+#### Global component handles
+To globally declare a component, an application can use the `ECS_COMPONENT_DECLARE` and `ECS_COMPONENT_DEFINE` macro's:
+
+```c
+// Declare component variable in the global scope
+ECS_COMPONENT_DECLARE(Position);
+
+// Function that uses the global component variable
+ecs_entity_t create_entity(ecs_world_t *world) {
+    return ecs_new(world, Position);
+}
+
+int main(int argc, char *argv[]) {
+    ecs_world_t *world = ecs_init();
+
+    // Register component, assign id to the global component variable
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_entity_t e = create_entity(world);
+
+    return ecs_fini(world);
+}
+```
+
+To make a component available for other source files, an application can use the `ECS_COMPONENT_EXTERN` macro in a header:
+
+```c
+ECS_COMPONENT_EXTERN(Position);
+```
+
+Declaring components globally works with multiple worlds, as the second time a component is registered it will use the same id. There is one caveat: an application should not define a component in world 2 that is not defined in world 1 _before_ defining the shared components. The reason for this is that if world 2 does not know that the shared component exists, it may assign its id to another component, which can cause a conflict.
+
+If this is something you cannot guarantee in an application, a better (though more verbose) way is to use local component handles.
+
+#### Local component handles
+When an application cannot declare component handles globally, it can pass component handles manually. Manually passing component handles takes the variables that are declared by the `ECS_COMPONENT` macro and passes them to other functions. This section describes how to pass those handles around.
 
 Some operations can process multiple components in a single operation, like `ecs_add` and `ecs_remove`. Such operations require a handle of `ecs_type_t`. The `ECS_COMPONENT` macro defines a variable of `ecs_type_t` that contains only the id of the component. The variable defined by `ECS_COMPONENT` can be accessed with `ecs_type(ComponentName)`. This escapes the component name, which is necessary as it would otherwise conflict with the C type name. The following example shows how to pass a type handle to another function:
 
@@ -1225,6 +1294,48 @@ int compare_position(ecs_entity_t e1, Posiiton *p1, ecs_entity_t e2, Position *p
 When no component is provided in the `ecs_query_order_by` function, no reordering will happen as a result of setting components or running a system with `[out]` columns.
 
 ## Filters
+Filters allow an application to iterate through matching entities in a way that is similar to queries. Contrary to queries however, filters are not prematched, which means that a filter is evaluated as it is iterated over. Filters are therefore slower to evaluate than queries, but they have less overhead and are (much) cheaper to create. This makes filters less suitable for repeated-, but useful for ad-hoc searches where the application doesn't know beforehand which set of entities it will need.
+
+A filter can be used like this:
+
+```cpp
+ECS_COMPONENT(world, Position);
+
+/* Create filter */
+ecs_filter_t filter = {
+    .include = ecs_type(Position),
+    .include_kind = EcsMatchAll
+};
+
+/* Create iterator to filter */
+ecs_iter_t it = ecs_filter_iter(world, &filter);
+
+while (ecs_filter_next(&it)) {
+    /* Because a filter does not have a signature, we need to get the component
+     * array by finding it in the current table */
+    ecs_type_t table_type = ecs_iter_type(&it);
+
+    /* First Retrieve the column index for Position */
+    int32_t p_index = ecs_type_index_of(table_type, ecs_entity(Position));
+
+    /* Now use the column index to get the Position array from the table */
+    Position *p = ecs_table_column(&it, p_index);
+
+    /* Iterate as usual */
+    for (int i = 0; i < it.count; i ++) {
+        printf("{%f, %f}\n", p[i].x, p[i].y);
+    }
+}
+```
+
+A filter can provide an `include` and an `exclude` type, where the `include` type specifies the components the entities must have in order to match the filter, and the `exclude` type specifies the components the entity should not have. In addition to these two fields, the filter provides a `kind` field for both `include` and `exclude` types which can be one of these values:
+
+Option          | Description
+----------------|------------------------------------------------------------------------
+EcsMatchDefault | Default matching: ECsMatchAny for include, and EcsMatchAll for exclude
+EcsMatchAll     | The type must include/excldue all components
+EcsMatchAny     | The type must include/exclude one of the components
+EcsMatchExact   | The type must match exactly with the components of the entity
 
 ## Systems
 Systems allow the application to run logic that is matched with a set of entities every frame, periodically or as the result of some event. An example of a simple system definition is:
@@ -1289,14 +1400,704 @@ void Move(ecs_iter_t *it) {
 ```
 
 ## Triggers
+Triggers are callbacks that are executed when a component is added or removed from an entity. Triggers are similar to systems, but unlike systems they can only match a single component. This is an example of a trigger that is executed when the Position component is added:
+
+```c
+ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position);
+```
+
+The implementation of the trigger looks similar to a system:
+
+```c
+void AddPosition(ecs_iter_t *it) {
+    Position *p = ecs_column(it, Position, 1);
+
+    for (int i = 0; i < it->count; i ++) {
+        p[i].x = 10;
+        p[i].y = 20;
+        printf("Position added\n");
+    }
+}
+```
 
 ## Modules
+Modules allow an application to split up systems and components into separate decoupled units. The purpose of modules is to make it easier to organize systems and components for large projects. Additionally, modules also make it easier to split off functionality into separate compilation units.
+
+A module consists out of a few parts:
+
+- A module type (struct) that stores handles to the contents in the modules
+- A macro to declare module contents as local variables in the scope where it is imported
+- An import function that loads the module contents for a world
+
+The module type and macro are typically located in the a separate module header file, and look like this for a module named "Vehicles":
+
+```c
+typedef struct Car {
+    float speed;
+} Car;
+
+typedef struct Bus {
+    float speed;
+} Bus;
+
+typedef struct MotorCycle {
+    float speed;
+} MotorCycle;
+
+typedef struct Vehicles {
+    /* Components are declared with ECS_DECLARE_COMPONENT */
+    ECS_DECLARE_COMPONENT(Car);
+    ECS_DECLARE_COMPONENT(Bus);
+    ECS_DECLARE_COMPONENT(MotorCycle);
+
+    /* Tags are declared with ECS_DECLARE_ENTITY */
+    ECS_DECLARE_ENTITY(Moving);
+
+    /* Systems are also declared with ECS_DECLARE_ENTITY */
+    ECS_DECLARE_ENTITY(Move);
+};
+
+/* Forward declaration to the import function */
+void VehiclesImport(ecs_world_t *world);
+
+/* The ImportHandles macro mimics the module struct */
+#define VehiclesImportHandles(handles)\
+    ECS_IMPORT_COMPONENT(handles, Car);\
+    ECS_IMPORT_COMPONENT(handles, Bus);\
+    ECS_IMPORT_COMPONENT(handles, MotorCycle);\
+    ECS_IMPORT_ENTITY(handles, Moving);\
+    ECS_IMPORT_ENTITY(handles, Move);
+```
+
+The import function for this module would look like this:
+
+```c
+void VehiclesImport(ecs_world_t *world) {
+    /* Define the module */
+    ECS_MODULE(world, Vehicles);
+
+    /* Declare components, tags and systems as usual */
+    ECS_COMPONENT(world, Car);
+    ECS_COMPONENT(world, Bus);
+    ECS_COMPONENT(world, MotorCycle);
+    ECS_TAG(world, Moving);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Car, Moving);
+
+    /* Export them so that they are assigned to the module struct */
+    ECS_EXPORT_COMPONENT(world, Car);
+    ECS_EXPORT_COMPONENT(world, Bus);
+    ECS_EXPORT_COMPONENT(world, Motorcycle);
+    ECS_EXPORT_ENTITY(world, Moving);
+    ECS_EXPORT_ENTITY(world, Move);
+}
+```
+
+After the module has been defined, it can be imported in an application like this:
+
+```c
+ecs_world_t *world = ecs_init();
+
+/* Import module, which invokes the module import function */
+ECS_IMPORT(world, Vehicles);
+
+/* The module contents can now be used */
+ecs_entity_t e = ecs_new(world, Car);
+```
+
+Module contents are namespaced, which means that the identifiers of the contenst of the module (components, tags, systems) are stored in the scope of the module. For the above example module, everything would be stored in the `vehicles` scope. To resolve the `Car` component by name, an application would have to do:
+
+```c
+ecs_entity_t car_entity = ecs_lookup_fullpath(world, "vehicles.Car");
+```
+
+Note that even though the module name is specified with uppercase, the name is stored with lowercase. This is because the naming convention for modules in C is PascalCase, whereas the stored identifiers use snake_case. If a module name contains several uppercase letters, this will be translated to a nested module. For example, the C module name `MySimpleModule` will be translated to `my.simple.module`.
+
+### Modules in C++
+A module in C++ is defined as a class where the module contents are defined in the constructor. The above Vehicles module would look like this in C++:
+
+```cpp
+/* In C++ it is more convenient to define tags as empty structs */
+struct Moving { };
+
+/* Module implementation */
+class vehicles {
+public:
+    vehicles(flecs::world& world) {
+        flecs::module<Vehicles>(world, "vehicles");
+
+        m_car = flecs::component<Car>(world, "Car");
+        m_bus = flecs::component<Bus>(world, "Bus");
+        m_motor_cycle = flecs::component<MotorCycle>(world, "MotorCycle");
+
+        m_moving = flecs::component<Moving>(world, "Moving");
+        m_move = flecs::system<Car, Moving>(world, "Move")
+            .each([](flecs::entity e, Car &car, Moving&) {
+                /* System implementation */
+            });
+    }
+
+    flecs::entity m_car;
+    flecs::entity m_bus;
+    flecs::entity m_motor_cycle;
+    flecs::entity m_moving;
+    flecs::entity m_move;
+}
+```
+
+An application can import the module in C++ like this:
+
+```cpp
+flecs::world world;
+flecs::import<vehicles>(world);
+```
 
 ## Hierarchies
+Entities in Flecs can be organized in hierarchies, which is useful when for example constructing a scene graph. To create hierarchies, applications can add "CHILDOF" relationships to entities. This creates a relationship between a parent entity and a child entity that the application can later traverse. This is an example of a simple hierarchy:
+
+```c
+ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+```
+
+CHILDOF relationships can be added and removed dynamically, similar to how components can be added and removed:
+
+```c
+ecs_add_entity(world, child, ECS_CHILDOF | parent);
+ecs_remove_entity(world, child, ECS_CHILDOF | parent);
+```
+
+CHILDOF relationships can also be created through the `ECS_ENTITY` macro:
+
+```c
+ECS_ENTITY(world, parent, 0);
+ECS_ENTITY(world, child, CHILDOF | parent);
+```
+
+### Iteration
+Applications can iterate hierarchies depth first with the `ecs_scope_iter` API in C, and the `children()` iterator in C++. This example shows how to iterate all the children of an entity:
+
+```cpp
+ecs_iter_t it = ecs_scope_iter(world, parent);
+
+while(ecs_scope_next(&it)) {
+    for (int i = 0; i < it.count; i ++) {
+        ecs_entity_t child = it.entities[i];
+        char *path = ecs_get_fullpath(world, child);
+        printf(" - %s\n", path);
+        free(path);
+    }
+}
+```
+
+Additionally, applications can request all children that have a specific set of components, by adding a filter to the scope iterator:
+
+```c
+ecs_filter_t f = {
+    .include = ecs_type(Position)
+};
+
+// Iterate all children that have Position
+ecs_iter_t it = ecs_scope_iter_w_filter(world, parent, &f);
+```
+
+### Hierarchical queries
+Queries and systems can request data from parents of the entity being iterated over with the `PARENT` modifier:
+
+```c
+// Iterate all entities with Position that have a parent that also has Position
+ecs_query_t *q = ecs_query_new(world, "PARENT:Position, Position");
+```
+
+Additionally, a query can iterate the hierarchy in breadth-first order by providing the `CASCADE` modifier:
+
+```c
+// Iterate all entities with Position that have a parent that also has Position
+ecs_query_t *q = ecs_query_new(world, "CASCADE:Position, Position");
+```
+
+This does two things. First, it will iterate over all entities that have Position and that _optionally_ have a parent that has `Position`. By making the parent component optional, it is ensured that if an application is iterating a tree of entities, the root is also included. Secondly, the query iterates over the children in breadth-first order. This is particularly useful when writing transform systems, as they require parent entities to be transformed before child entities.
+
+See the [Signatures](Signatures) section for more details.
+
+### Path identifiers
+When entities in a hierarchy have names assigned to them, they can be looked up with path expressions. A path expression is a list of entity names, separated by a scope separator character (by default a `.`, and `::` in the C++ API). This example shows how to request the path expression from an entity:
+
+```c
+ECS_ENTITY(world, parent, 0);
+ECS_ENTITY(world, child, CHILDOF | parent);
+
+char *path = ecs_get_fullpath(world, child);
+printf("%s\n", path); // Prints  "parent.child"
+free(path);
+```
+
+To lookup an entity using a path, use `ecs_lookup_fullpath`:
+
+```c
+ecs_entity_t e = ecs_lookup_fullpath(world, "parent.child");
+```
+
+Applications can also lookup entities using a relative path expression:
+
+```c
+ecs_entity_t e = ecs_lookup_path(world, parent, "child.grand_child");
+```
+
+Additionally, applications can specify a custom path separator when looking up or requesting paths:
+
+```c
+// Lookup child::grand_child relative to parent
+ecs_entity_t e = ecs_lookup_path_w_sep(
+    world, parent, "child::grand_child", "::", "::");
+
+// Get path of child relative to parent
+char *path = ecs_get_path_w_sep(world, parent, child, "::", "::");
+```
+
+Note that the path separator is provided twice, once for the prefix and once for the separator. This lets the API correctly handle expressions like `::parent::child::grand_child"`.
+
+### Scoping
+Applications can set a default scope with the `ecs_set_scope` function, so that all operations are evaluated relative to a scope. The scope is set on a stage, which makes it thread safe when executed from within a flecs worker thread. This example shows how to set the scope:
+
+```c
+ecs_entity_t parent = ecs_new(world, 0);
+
+// Set the current scope to the parent
+ecs_entity_t prev_scope = ecs_set_scope(world, parent);
+
+// This entity is created as child of parent
+ecs_entity_t child = ecs_new(world, 0);
+
+// Look for "child" relative to parent
+ecs_entity_t e = ecs_lookup_fullpath(world, "child");
+
+// It's good practice to restore the previous scope
+ecs_set_scope(prev_scope);
+```
+
+Modules automatically set the scope to the module itself, so that the module acts as a namespace for its contents.
+
+### Paths and signatures
+When referencing entities or components in a signature or type expression that are not stored in the root, an application will have to provide the path. Signatures and type expressions always use the dot (`.`) as separator. For example, if a component "Position" is defined in the module "transform", a system subscribing for the component would have to be defined like this:
+
+```c
+ECS_SYSTEM(world, Move, EcsOnUpdate, transform.Position);
+```
+
+The same goes for other parts of the API that accept a type expression, like `ECS_ENTITY` or `ECS_TYPE`:
+
+```c
+ECS_TYPE(world, Movable, transform.Position);
+```
+
+If the system would be defined in the same scope as the `Position` component, it would not need to specify the path:
+
+```c
+ECS_ENTITY(world, transform, 0);
+
+ecs_entity_t prev_scope = ecs_set_scope(world, transform);
+
+ECS_COMPONENT(world, Position);
+
+// System is in the same scope, no need to add "transform"
+ECS_SYSTEM(world, MoveInScope, EcsOnUpdate, Position);
+
+ecs_set_scope(world, prev_scope);
+
+// This system is not in the same scope, and needs to add transform
+ECS_SYSTEM(world, MoveNotInScope, EcsOnUpdate, transform.Position);
+```
 
 ## Instancing
+Instancing is the ability to share components between entities by _instantiating_ them, by using the INSTANCEOF role. This is a simple example in the C API:
+
+```c
+// Create a base entity
+ecs_entity_t base = ecs_new(world, 0);
+ecs_set(world, base, Position, {10, 20});
+
+// Create an instance of the base
+ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+
+// Instance now shares Position with base
+ecs_get(world, base, Position) == ecs_get(world, instance, Position); // 1
+```
+
+INSTANCEOF relationships can be added and removed dynamically, similar to how components can be added and removed:
+
+```c
+ecs_add_entity(world, instance, ECS_INSTANCEOF | base);
+ecs_remove_entity(world, instance, ECS_INSTANCEOF | base);
+```
+
+INSTANCEOF relationships can also be created through the `ECS_ENTITY` macro:
+
+```c
+ECS_ENTITY(world, base, Position);
+ECS_ENTITY(world, instance, INSTANCEOF | base);
+```
+
+INSTANCEOF relationships can be nested:
+
+```c
+ecs_entity_t base = ecs_new(world, 0);
+ecs_set(world, base, Position, {10, 20});
+
+ecs_entity_t derived = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+
+// Create instance of 'derived', which is also an instance of base
+ecs_entity_t base = ecs_new_w_entity(world, ECS_INSTANCEOF | derived);
+
+// All three entities now share Position
+ecs_get(world, base, Position) == ecs_get(world, instance, Position); // 1
+ecs_get(world, base, Position) == ecs_get(world, derived, Position);  // 1
+```
+
+### Overriding
+Instances can override components from their base by adding the component as they would normally. When overriding a component, the value of the base component is copied to the instance. This example shows how an instance overrides the Position component:
+
+```c
+// Shortcut for creating a base entity and setting Position
+ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+
+// Create an instance of the base
+ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+
+// Override Position
+ecs_add(world, instance, Position);
+
+// Position component no longer matches with base
+ecs_get(world, base, Position) != ecs_get(world, instance, Position); // 1
+
+// Prints {10, 20}
+const Position *p = ecs_get(world, instance, Position);
+printf("{%f, %f}\n", p->x, p->y); 
+```
+
+When an instance shared a component from a base entity, we say that the component is "shared". If the component is not shared, it is "owned". After an entity overrides a component, it will own the component.
+
+It is possible to remove an override, in which case the component will be shared with the base entity again:
+
+```c
+// Removes override on Position
+ecs_remove(world, instance, Position);
+
+// Position is again shared with base
+ecs_get(world, base, Position) == ecs_get(world, instance, Position); // 1
+```
+
+Overrides work with nested INSTANCEOF relationships:
+
+```c
+// Shortcut for creating a base entity and setting Position
+ecs_entity_t base = ecs_new(world, 0);
+ecs_set(world, base, Position, {10, 20});
+ecs_set(world, base, Velocity, {1, 1});
+
+// Create derived entity, override Position
+ecs_entity_t derived = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+ecs_add(world, base, Position);
+
+// Create instance of 'derived', which is also an instance of base
+ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | derived);
+
+// The instance now shares Position from derived, and Velocity from base
+```
+
+### Automatic overriding
+In some scenarios it is desirable that an entity is initialized with a specific set of values, yet does not share the components from the base entity. In this case the instance can override each component individually, but this can become hard to maintain as components are added or removed to the base. This can be achieved by marking components as owned. Consider the following example:
+
+```c
+// Create a base. Simply creating an instance of base will share the component, but not override it.
+ecs_entity_t Base = ecs_set(world, 0, Position, {10, 20});
+
+// Mark as OWNED. This ensures that when base is instantiated, Position is overridden
+ecs_add_entity(world, world, Base, ECS_OWNED | ecs_entity(Position));
+
+// Create entity from BaseType. This adds the INSTANCEOF relationship in addition 
+// to overriding Position, effectively initializing the Position component for the instance.
+ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | Base);
+```
+
+The combination of instancing, overriding and OWNED is one of the fastest and easiest ways to create an entity with a set of initialized components. The OWNED relationship can also be specified inside type expressions. The following example is equivalent to the previous one:
+
+```c
+ECS_ENTITY(world, Base, Position, OWNED | Position);
+
+ecs_set(world, Base, Position, {10, 20});
+
+ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | Base);
+```
+
+### Instance hierarchies
+If a base entity has children, instances of that base entity will, when the INSTANCEOF relationship is added, acquire the same set of children. Take this example:
+
+```c
+ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t child_1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+ecs_entity_t child_2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+
+// Create instance of parent, two childs are added to the instance
+ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | parent);
+```
+
+The children that are copied to the instance will have exactly the same set of components as the children of the base. For example, if the base child has components `Position, Velocity`, the instance child will also have `Position, Velocity`. Furthermore, the values of the base child components will be copied to the instance child:
+
+```c
+ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+ecs_set(world, child, EcsName, {"Child"}); // Give child a name, so we can look it up
+ecs_set(world, child, Position, {10, 20});
+
+// Create instance of parent, two childs are added to the instance
+ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | parent);
+ecs_entity_t instance_child = ecs_lookup_path(world, instance, "Child");
+const Position *p = ecs_get(world, instance_child, Position);
+printf("{%f, %f}\n", p->x, p->y); // Prints {10, 20}
+
+// The components are not shared with the instance child!
+ecs_get(world, child, Position) != ecs_get(world, instance_child, Position); // 1
+```
+
+Since the instance children have the exact same components as the base children, their components are not shared. Component sharing between children is possible however, as INSTANCEOF relationships are also copied over to the instance child:
+
+```c
+ecs_entity_t parent = ecs_new(world, 0);
+
+// Create child base from which we will share components
+ecs_entity_t child_base = ecs_new(world, 0);
+ecs_set(world, child_base, Position, {10, 20});
+ecs_set(world, child, EcsName, {"Child"});
+
+// Create actual child that is an instance of child base
+ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+ecs_add_entity(world, child, ECS_INSTANCEOF | child_base);
+
+// Create instance of parent, two childs are added to the instance
+ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | parent);
+ecs_entity_t instance_child = ecs_lookup_path(world, instance, "Child");
+
+// The component is now shared with the child and child_base
+ecs_get(world, child, Position) == ecs_get(world, instance_child, Position); // 1
+```
+
+### Prefabs
+Prefabs are entities that can be used as templates for other entities. Prefabs are regular entities, except that they are not matched by default with systems. To create a prefab, add the `EcsPrefab` tag when creating an entity:
+
+```c
+ecs_entity_t prefab = ecs_new_w_entity(world, EcsPrefab);
+```
+
+The `EcsPrefab` tag can also be added or removed dynamically:
+
+```c
+ecs_add_entity(world, prefab, EcsPrefab);
+ecs_remove_entity(world, prefab, EcsPrefab);
+```
+
+Prefabs can also be created with the `ECS_PREFAB` macro:
+
+```c
+ECS_PREFAB(world, prefab, Position, Velocity);
+```
+
+To instantiate a prefab, an application can use regular instancing:
+
+```c
+ecs_entity_t instance = ecs_new(world, ECS_INSTANCEOF | prefab);
+```
+
+This behaves exactly the same as regular instancing, with as only difference that the `EcsPrefab` tag is not shared.
 
 ## Traits
+Traits are a special kind of component that can be used for many purposes. The most common one is to let applications implement generic behavior that can be applied to multiple components. A typical example is an "ExpiryTimer" trait, which deletes a component after a timeout expires. This behavior is not specific to a component, in that it does not require the value of the component that is being expired.
+
+The ExpiryTime logic is difficult to implement with regular systems and components, as a single entity may need to expire multiple components at the same time. If ExpiryTime were to be implemented as a regular component, this component would have to be added multiple times, which is is not possible. Another alternative would be to store a vector of to be expired components, but this is both less efficient and harder to implement than working with regular components.
+
+Traits address this by allowing an application to add components ("traits") to other components. To implement the ExpiryTime behavior, an application could for example apply an `ExpiryTime` trait to both a `HealthBuff` and `StaminaBuff` component.
+
+Traits are regular types, just like components:
+
+```c
+typedef struct ExpiryTimer {
+    float expiry_time;
+    float t;
+} ExpiryTimer;
+```
+
+This example show how to add the ExpiryTime component to a HealthBuff and a StaminaBuff component:
+
+```c
+// Register trait like a regular component
+ECS_COMPONENT(world, ExpiryTimer);
+
+ecs_entity_t e = ecs_new(world, 0);
+
+// Add HealthBuff, set the ExpiryTimer trait for HealthBuff to 10 seconds
+ecs_add(world, e, HealthBuff);
+
+ecs_set_trait(world, e, HealthBuff, ExpiryTimer, {
+    .expiry_time = 10
+});
+
+// Add StaminaBuff, set the ExpiryTimer trait for StaminaBuff to 5 seconds
+ecs_add(world, e, StaminaBuff);
+
+ecs_set_trait(world, e, StaminaBuff, ExpiryTimer, {
+    .expiry_time = 5
+});
+```
+
+This adds the ExpiryTimer trait twice to the entity, once for HealthBuff and once for StaminaBuff. The trait can be obtained with the `ecs_get_trait` function:
+
+```c
+// Get ExpiryTime for Position
+const ExpiryTime *et_pos = ecs_get_trait(world, e, Position, ExpiryTime);
+
+// Get ExpiryTime for Velocity
+const ExpiryTime *et_vel = ecs_get_trait(world, e, Position, ExpiryTime);
+```
+
+### Traits and queries
+To write a query (or system) that iterates over a trait, the TRAIT role should be added to the query signature:
+
+```c
+ecs_query_t *q = ecs_query_new(world, "TRAIT | ExpiryTimer");
+```
+
+This will iterate all entities with the ExpiryTimer trait, for each instance of the trait. If an entity has the trait instantiated two times, the query will iterate that entity two times. Other than that traits are much like regular components, in that a query provides a trait like a regular C array. This is an example of what an `ExpireComponents` system could look like:
+
+```c
+void ExpireComponents(ecs_iter_t *it) {
+    /* Obtain the array containing the trait component */
+    ExpiryTimer *et = ecs_column(it, ExpiryTimer, 1);
+
+    /* Get the handle to the trait. This will tell us on which component the
+     * trait is applied */
+    ecs_entity_t trait = ecs_column_entity(it, 1);
+
+    /* Obtain the component to which the trait is applied */
+    ecs_entity_t comp = ecs_entity_t_lo(trait);
+
+    /* Iterate trait component as a regular component */
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        /* Increase timer. When timer hits expiry time, remove component */
+        et[i].t += it->delta_time;
+        if (et[i].t >= et[i].expiry_time) {
+            /* Remove both the component and the trait. If the trait would not
+             * be removed, the system would still be invoked after this. */
+            printf("Remove component '%s'\n", ecs_get_name(it->world, comp));
+
+            /* Removes component (Position or Velocity) */
+            ecs_remove_entity(it->world, it->entities[i], comp);
+
+            /* Removes trait */
+            ecs_remove_entity(it->world, it->entities[i], trait);
+        }
+    }
+}
+```
+
+Additionally, a query can also subscribe for a trait applied to a specific component:
+
+```c
+ecs_query_t *q = ecs_query_new(world, "TRAIT | ExpiryTimer > Position");
+```
+
+### Trait tags
+Tags can also be used as traits, in which case they assume the type of the component. This example uses a trait tag to add the `Position` component twice, once as a regular component, and once for the `WorldSpace` trait:
+
+```c
+// Define the trait as a tag
+ECS_TAG(world, WorldSpace);
+
+// Define a regular component
+ECS_COMPONENT(world, Position);
+
+ecs_entity_t e = ecs_new(world, 0);
+
+// Add regular Position to the entity
+ecs_set(world, e, Position, {10, 20});
+
+// Add Position for the WorldSpace trait:
+ecs_set_trait_tag(world, WorldSpace, Position, {10, 20});
+```
+
+Data for trait tags can be retrieved with the `ecs_get_trait_tag` function:
+
+```c
+const Position *p = ecs_get_trait_tag(world, e, WorldSpace, Position);
+```
+
+### Trait encoding
+Traits are encoded in the entity id, by using the upper 32 bits of the identifier to store the id of the trait. The lower 32 bits of the identifier are used to store the component to which the trait is applied. To indicate that the combined identifiers are a trait, the `TRAIT` role is added.
+
+To create a trait from a trait identifier and a component identifier, an application could use the following code:
+
+```c
+ECS_COMPONENT(world, Trait);
+ECS_COMPONENT(world, Component);
+
+ecs_entity_t lo = ecs_entity(Component);
+ecs_entity_t hi = ecs_entity(Trait);
+
+ecs_entity_t trait = (lo + hi << 32) | ECS_TRAIT;
+```
+
+The API provides a convenience macro to make this easier:
+
+```c
+ecs_entity_t trait = ecs_trait(ecs_entity(Component), ecs_entity(Trait));
+```
+
+To extract the component id from a trait, an application must get the lower 32 bits of an entity identifier. The API provides the convenience `ecs_entity_t_lo` macro to do this:
+
+```c
+// This extracts the id of Component
+ecs_entity_t comp = ecs_entity_t_lo(trait);
+```
+
+To obtain the trait, the application first has to remove the `ECS_TRAIT` role, after which the upper 32 bits should be used. To remove the `ECS_TRAIT` role the application can apply the `ECS_ENTITY_MASK` mask with a bitwise AND, after which the trait component id can be obtained with `ecs_entity_t_hi`:
+
+```c
+// This extracts the id of Trait
+ecs_entity_t trait_comp = ecs_entity_t_hi(trait & ECS_ENTITY_MASK);
+```
+
+### Traits as entity relationships
+Traits can also be used as a tool to describe relationships between entities. In this case both the trait and the entity are not components, and the trait does not add any data to the entity. The following example shows how to describe family relationships between different entities in the C++ API:
+
+```c
+// Create traits that describe the different kinds of relationships
+auto HasMother = flecs::entity(world);
+auto HasFather = flecs::entity(world);
+auto HasSibling = flecs::entity(world);
+
+// Create a few entities
+auto Bob = flecs::entity(world);
+auto Alice = flecs::entity(world);
+auto Jane = flecs::entity(world);
+auto Jeff = flecs::entity(world);
+
+// Create the relationships
+Jane.add_trait(HasMother, Alice);
+Jane.add_trait(HasFather, Bob);
+
+Jeff.add_trait(HasMother, Alice);
+Jeff.add_trait(HasFater, Bob);
+
+Jane.add_trait(HasSibling, Jeff);
+Jeff.add_trait(HasSibling, Jane);
+```
+
+To test if an entity has a trait, applications can use the `has_trait` function:
+
+```c
+if (Jane.has_trait(IsSibling, Jeff)) {
+    std::cout << "Jane is a sibling of Jeff" << std::endl;
+}
+```
 
 ## Pipelines
 

@@ -44,7 +44,7 @@ struct {\
     } header;\
     T array[elem_count];\
 } __##name##_value = {\
-    .header.vector = ECS_VECTOR_VALUE(T, elem_count),\
+    .header.vector = ECS_VECTOR_VALUE(T, elem_count)\
 };\
 const ecs_vector_t *name = (ecs_vector_t*)&__##name##_value
 
@@ -98,7 +98,7 @@ void* _ecs_vector_add(
     int16_t offset);
 
 #define ecs_vector_add(vector, T) \
-    (T*)_ecs_vector_add(vector, ECS_VECTOR_T(T))
+    ((T*)_ecs_vector_add(vector, ECS_VECTOR_T(T)))
 
 #define ecs_vector_add_t(vector, size, alignment) \
     _ecs_vector_add(vector, ECS_VECTOR_U(size, alignment))
@@ -111,7 +111,7 @@ void* _ecs_vector_addn(
     int32_t elem_count);
 
 #define ecs_vector_addn(vector, T, elem_count) \
-    (T*)_ecs_vector_addn(vector, ECS_VECTOR_T(T), elem_count)
+    ((T*)_ecs_vector_addn(vector, ECS_VECTOR_T(T), elem_count))
 
 #define ecs_vector_addn_t(vector, size, alignment, elem_count) \
     _ecs_vector_addn(vector, ECS_VECTOR_U(size, alignment), elem_count)
@@ -124,7 +124,7 @@ void* _ecs_vector_get(
     int32_t index);
 
 #define ecs_vector_get(vector, T, index) \
-    (T*)_ecs_vector_get(vector, ECS_VECTOR_T(T), index)
+    ((T*)_ecs_vector_get(vector, ECS_VECTOR_T(T), index))
 
 #define ecs_vector_get_t(vector, size, alignment, index) \
     _ecs_vector_get(vector, ECS_VECTOR_U(size, alignment), index)
@@ -266,7 +266,7 @@ void* _ecs_vector_first(
     int16_t offset);
 
 #define ecs_vector_first(vector, T) \
-    (T*)_ecs_vector_first(vector, ECS_VECTOR_T(T))
+    ((T*)_ecs_vector_first(vector, ECS_VECTOR_T(T)))
 
 #define ecs_vector_first_t(vector, size, alignment) \
     _ecs_vector_first(vector, ECS_VECTOR_U(size, alignment))
@@ -329,8 +329,37 @@ ecs_vector_t* _ecs_vector_copy(
 namespace flecs {
 
 template <typename T>
+class vector_iterator
+{
+public:
+    explicit vector_iterator(T* value)
+        : m_value(value){}
+
+    bool operator!=(vector_iterator const& other) const
+    {
+        return m_value != other.m_value;
+    }
+
+    T const& operator*() const
+    {
+        return *m_value;
+    }
+
+    vector_iterator& operator++()
+    {
+        ++m_value;
+        return *this;
+    }
+
+private:
+    T* m_value;
+};
+
+template <typename T>
 class vector {
 public:
+    explicit vector(ecs_vector_t *vector) : m_vector( vector ) { }
+
     vector(int32_t count = 0) : m_vector( nullptr ) { 
         if (count) {
             init(count);
@@ -347,6 +376,18 @@ public:
             this->add(elem);
         }
     }
+
+    T& operator[](size_t index) {
+        return ecs_vector_get(m_vector, T, index)[0];
+    }
+
+    vector_iterator<T> begin() {
+        return vector_iterator<T>(static_cast<T*>(ecs_vector_first(m_vector, T)));
+    }
+
+    vector_iterator<T> end() {
+        return vector_iterator<T>(static_cast<T*>(ecs_vector_last(m_vector, T)) + 1);
+    }    
 
     void clear() {
         ecs_vector_clear(m_vector);

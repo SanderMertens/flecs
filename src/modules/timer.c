@@ -1,4 +1,9 @@
-#include "../flecs_private.h"
+#include "flecs.h"
+
+#ifdef FLECS_TIMER
+
+#include "../private_api.h"
+#include "system/system.h"
 
 ecs_type_t ecs_type(EcsTimer);
 ecs_type_t ecs_type(EcsRateFilter);
@@ -236,3 +241,5 @@ void FlecsTimerImport(
     /* Rate filter handling */
     ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, [in] RateFilter, [out] flecs.system.TickSource);
 }
+
+#endif

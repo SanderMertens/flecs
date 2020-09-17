@@ -8,6 +8,8 @@ file(GLOB_RECURSE flecs_SRC "${CMAKE_CURRENT_LIST_DIR}/src/*.c")
 add_library(flecs SHARED ${flecs_SRC})
 add_library(flecs_static STATIC ${flecs_SRC})
 
+target_compile_definitions(flecs_static PUBLIC flecs_STATIC)
+
 target_include_directories(flecs PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 target_include_directories(flecs_static PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 

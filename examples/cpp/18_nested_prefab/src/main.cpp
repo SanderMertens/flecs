@@ -14,25 +14,21 @@ struct Velocity {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
-
-    /* Register components */
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    flecs::world ecs(argc, argv);
 
     /* Create a prefab with a child entity. When this prefab is instantiated, 
      * the child will be instantiated too as a child of the instance.  */
-    auto Root = flecs::prefab(world, "Root")
+    auto Root = ecs.prefab("Root")
         .set<Position>({10, 20});
 
         /* Specify the RootPrefab as the parent for the nested prefab. This will
          * cause the child prefab to be instantiated whenever an instanceof
          * RootPrefab is created. */
-        flecs::prefab(world, "Child")
+        ecs.prefab("Child")
             .add_childof(Root)
             .set<Position>({30, 40});
 
-    auto e = flecs::entity(world)
+    auto e = ecs.entity()
         .add_instanceof(Root);
 
     /* Lookup child in the instance we just created. This child will have e in

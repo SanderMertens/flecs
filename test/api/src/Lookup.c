@@ -165,3 +165,76 @@ void Lookup_lookup_by_id() {
 
     ecs_fini(world);
 }
+
+void Lookup_lookup_name_w_digit() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"10_id"});
+    ecs_entity_t e2 = ecs_lookup(world, "10_id");
+    test_assert(e == e2);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_symbol_by_id() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_lookup_symbol(world, "1000");
+    test_int(e, 1000);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_symbol_w_digit() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {
+        .value = "id",
+        .symbol = "10_id"
+    });
+    
+    ecs_entity_t e2 = ecs_lookup_symbol(world, "10_id");
+    test_assert(e == e2);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_w_digit() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_set(world, 0, EcsName, {"parent"});
+    ecs_entity_t e = ecs_set(world, 0, EcsName, { .value = "10_id" });
+    ecs_add_entity(world, e, ECS_CHILDOF | parent);
+
+    ecs_entity_t e2 = ecs_lookup_fullpath(world, "parent.10_id");
+    test_assert(e2 == e);
+}
+
+void Lookup_set_name_of_existing() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+    test_assert(ecs_get_name(world, e) == NULL);
+
+    ecs_set(world, e, EcsName, {"Foo"});
+    test_assert(ecs_get_name(world, e) != NULL);
+    test_str(ecs_get_name(world, e), "Foo");
+
+    ecs_fini(world);
+}
+
+void Lookup_change_name_of_existing() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"Foo"});
+    test_assert(e != 0);
+    test_assert(ecs_get_name(world, e) != NULL);
+    test_str(ecs_get_name(world, e), "Foo");
+
+    ecs_set(world, e, EcsName, {"Bar"});
+    test_assert(ecs_get_name(world, e) != NULL);
+    test_str(ecs_get_name(world, e), "Bar");
+
+    ecs_fini(world);
+}

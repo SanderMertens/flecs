@@ -1164,6 +1164,8 @@ int deserialize_twice_test(int buffer_size) {
     }
 
     world = deserialize_from_vector(v, buffer_size);
+    ecs_fini(world);
+    
     world = deserialize_from_vector(v, buffer_size);
 
     {
@@ -1272,12 +1274,11 @@ void ReaderWriter_entity_conflict() {
 }
 
 void ReaderWriter_snapshot_reader_simple() {
-    ecs_world_t *world = ecs_init();
     ecs_entity_t e1, e2, e3;
     ecs_vector_t *v;
 
     {
-        world = ecs_init();
+        ecs_world_t *world = ecs_init();
 
         ECS_COMPONENT(world, Position);
         
@@ -1294,9 +1295,9 @@ void ReaderWriter_snapshot_reader_simple() {
         ecs_fini(world);
     }
 
-    world = deserialize_from_vector(v, 36);
-
     {
+        ecs_world_t *world = deserialize_from_vector(v, 36);
+
         ECS_COMPONENT(world, Position);
 
         test_int( ecs_count(world, Position), 3);

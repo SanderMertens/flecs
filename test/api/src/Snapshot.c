@@ -371,7 +371,7 @@ void Snapshot_snapshot_w_filter_after_delete() {
 
     ecs_entity_t e3 = ecs_set(world, 0, Position, {1, 2});
     test_assert(e3 != 0);
-    test_assert(ecs_has(world, e3, Position)); 
+    test_assert(ecs_has(world, e3, Position));
 
     ecs_entity_t e4 = ecs_set(world, 0, Velocity, {3, 4});
     test_assert(e4 != 0);

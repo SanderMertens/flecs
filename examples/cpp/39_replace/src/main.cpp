@@ -25,25 +25,23 @@ void inc(flecs::entity e) {
 int main(int argc, char *argv[]) {
     // Create the world, pass arguments for overriding the number of threads,fps
     // or for starting the admin dashboard (see flecs.h for details).
-    flecs::world world(argc, argv);
-
-    flecs::component<Counter>(world, "Counter");
+    flecs::world ecs(argc, argv);
 
     // System that is invoked when Counter is added
-    flecs::system<Counter>(world).kind(flecs::OnAdd).each(
+    ecs.system<Counter>().kind(flecs::OnAdd).each(
         [](flecs::entity e, Counter&) {
             std::cout << e.name() << ": Counter added" << std::endl;
         });
 
     // System that prints the value of Counter when it changes
-    flecs::system<Counter>(world).kind(flecs::OnSet).each(
+    ecs.system<Counter>().kind(flecs::OnSet).each(
         [](flecs::entity e, Counter& counter) {
             std::cout << e.name() << ": Counter changed to " 
                       << counter.value << std::endl;
         });
 
     // Create entity, increase counter twice
-    auto e = flecs::entity(world, "MyEntity");
+    auto e = ecs.entity("MyEntity");
     inc(e);
     inc(e);
 }

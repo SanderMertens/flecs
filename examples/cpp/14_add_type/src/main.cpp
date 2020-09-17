@@ -14,16 +14,13 @@ struct Velocity {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-
-    auto Movable = flecs::type(world, "Movable")
+    auto Movable = ecs.type("Movable")
         .add<Position>()
         .add<Velocity>();
 
-    auto e = flecs::entity(world)
+    auto e = ecs.entity()
         .add(Movable);
 
     /* Test if entity has the components */

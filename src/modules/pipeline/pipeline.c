@@ -1,3 +1,7 @@
+#include "flecs.h"
+
+#ifdef FLECS_PIPELINE
+
 #include "pipeline.h"
 
 ECS_TYPE_DECL(EcsPipelineQuery);
@@ -185,10 +189,10 @@ bool build_pipeline(
     /* Iterate systems in pipeline, add ops for running / merging */
     ecs_iter_t it = ecs_query_iter(query);
     while (ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);
+        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);        
 
         int i;
-        for (i = 0; i < it.count; i ++) {
+        for (i = 0; i < it.count; i ++) {            
             ecs_query_t *q = sys[i].query;
             if (!q) {
                 continue;
@@ -324,8 +328,10 @@ void ecs_pipeline_progress(
     float delta_time)
 {
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
@@ -381,9 +387,11 @@ void add_pipeline_tags_to_sig(
 
     for (i = 0; i < count; i ++) {
         if (!i) {
-            ecs_sig_add(sig, EcsFromAny, EcsOperAnd, EcsIn, entities[i], 0);
+            ecs_sig_add(world, sig, EcsFromAny, EcsOperAnd, EcsIn, entities[i], 
+                0, NULL);
         } else {
-            ecs_sig_add(sig, EcsFromAny, EcsOperOr, EcsIn, entities[i], 0);
+            ecs_sig_add(world, sig, EcsFromAny, EcsOperOr, EcsIn, entities[i], 
+                0, NULL);
         }
     }
 }
@@ -415,9 +423,11 @@ void EcsOnAddPipeline(
          * pipeline as a XOR column, and ignores systems with EcsInactive and
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
-        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
+            ecs_entity(EcsSystem), 0, NULL);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0, NULL);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
+            EcsDisabledIntern, 0, NULL);
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Create the query. Sort the query by system id and phase */
@@ -429,8 +439,10 @@ void EcsOnAddPipeline(
          * systems that are inactive, as an inactive system may become active as
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
-        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
+            ecs_entity(EcsSystem), 0, NULL);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
+            EcsDisabledIntern, 0, NULL);
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Use the same sorting functions for the build query */
@@ -584,7 +596,7 @@ float ecs_frame_begin(
     float user_delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(user_delta_time != 0 || ecs_os_api.get_time, ECS_MISSING_OS_API, "get_time");
+    ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
 
     if (world->locking_enabled) {
         ecs_lock(world);
@@ -705,6 +717,22 @@ ecs_entity_t ecs_get_pipeline(
     return world->pipeline;
 }
 
+ecs_entity_t ecs_new_pipeline(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name,
+    const char *expr)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+
+    ecs_entity_t result = ecs_new_type(world, e, name, expr);
+    ecs_assert(ecs_get(world, result, EcsType) != NULL, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_add_entity(world, result, EcsPipeline);
+
+    return result;
+}
 
 /* -- Module implementation -- */
 
@@ -763,3 +791,5 @@ void FlecsPipelineImport(
     /* Cleanup thread administration when world is destroyed */
     ecs_atfini(world, FlecsPipelineFini, NULL);
 }
+
+#endif

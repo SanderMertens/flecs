@@ -18,22 +18,22 @@ flecs_src = files(
     'src/type.c',
     'src/sparse.c',
     'src/entity.c',
-    'src/entity_index.c',
     'src/strbuf.c',
     'src/iter.c',
-    'src/addon/writer.c',
-    'src/addon/queue.c',
-    'src/addon/reader.c',
-    'src/addon/dbg.c',
-    'src/addon/snapshot.c',
-    'src/addon/os_api_impl.c',
+    'src/addons/bulk.c',
+    'src/addons/dbg.c',
+    'src/hierarchy.c',
+    'src/addons/module.c',
+    'src/addons/queue.c',
+    'src/addons/reader.c',
+    'src/addons/snapshot.c',
+    'src/addons/writer.c',
     'src/table.c',
     'src/signature.c',
+    'src/switch_list.c',
     'src/world.c',
     'src/stage.c',
     'src/bootstrap.c',
-    'src/scope.c',
-    'src/module.c',
     'src/map.c',
     'src/filter.c',
     'src/query.c',
@@ -41,10 +41,10 @@ flecs_src = files(
     'src/modules/stats.c',
     'src/modules/pipeline/pipeline.c',
     'src/modules/pipeline/worker.c',
-    'src/modules/system.c',
+    'src/modules/system/system.c',
+    'src/modules/system/system_dbg.c',
     'src/modules/timer.c',
     'src/table_graph.c',
-    'src/bulk.c'
 )
 
 install_headers('include/flecs.h')
@@ -55,7 +55,8 @@ flecs_lib = library('flecs',
     install : true,
     c_args : [ '-Dflecs_EXPORTS', flecs_args ],
     dependencies : flecs_deps,
-    include_directories : flecs_inc
+    include_directories : flecs_inc,
+    implicit_include_directories : false
 )
 
 flecs_dep = declare_dependency(
@@ -65,11 +66,12 @@ flecs_dep = declare_dependency(
     include_directories : flecs_inc
 )
 
-helloword_inc = include_directories('examples/c/01_helloworld/include')
+helloworld_inc = include_directories('examples/c/01_helloworld/include')
 
-helloworld_exe = executable('helloword',
+helloworld_exe = executable('helloworld',
     'examples/c/01_helloworld/src/main.c',
-    include_directories : helloword_inc,
+    include_directories : helloworld_inc,
+    implicit_include_directories : false,
     dependencies : flecs_dep
 )
 

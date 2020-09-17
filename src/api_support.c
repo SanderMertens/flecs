@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 /** Parse callback that adds type to type identifier for ecs_new_type */
 static
@@ -10,14 +10,22 @@ int parse_type_action(
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t flags,
+    ecs_entity_t role,
     const char *entity_id,
     const char *source_id,
+    const char *trait_id,
+    const char *arg_name,
     void *data)
 {
     ecs_vector_t **array = data;
     (void)source_id;
     (void)inout_kind;
+    
+    if (arg_name) {
+        ecs_parser_error(name, sig, column, 
+            "column names not supported in type expression");
+        return -1;
+    }
 
     if (strcmp(entity_id, "0")) {
         ecs_entity_t entity = 0;
@@ -43,9 +51,20 @@ int parse_type_action(
             return -1;
         }
 
+        if (trait_id) {
+            ecs_entity_t trait = ecs_lookup_fullpath(world, trait_id);
+            if (!trait) {
+                ecs_parser_error(name, sig, column, 
+                    "unresolved trait identifier '%s'", trait_id);
+                return -1;
+            }
+
+            entity = ecs_entity_t_comb(entity, trait);
+        }        
+
         if (oper_kind == EcsOperAnd) {
             ecs_entity_t* e_ptr = ecs_vector_add(array, ecs_entity_t);
-            *e_ptr = entity | flags;
+            *e_ptr = entity | role;
         } else {
             if (!name) {
                 return -1;
@@ -90,7 +109,7 @@ EcsType type_from_vec(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
-        if (e & ECS_AND) {
+        if (ECS_HAS_ROLE(e, AND)) {
             ecs_entity_t entity = e & ECS_ENTITY_MASK;
             const EcsType *type_ptr = ecs_get(world, entity, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
@@ -127,7 +146,7 @@ EcsType type_from_expr(
 {
     if (expr) {
         ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_parse_expr(world, expr, parse_type_action, name, &vec);
+        ecs_parse_expr(world, name, expr, parse_type_action, &vec);
         EcsType result = type_from_vec(world, vec);
         ecs_vector_free(vec);
         return result;
@@ -140,8 +159,7 @@ EcsType type_from_expr(
  * has the prefix, and if so remove it. This enables using prefixed names in C
  * for components / systems while storing a canonical / language independent 
  * identifier. */
-static
-const char* get_entity_name(
+const char* ecs_name_from_symbol(
     ecs_world_t *world,
     const char *type_name)
 {
@@ -162,27 +180,49 @@ const char* get_entity_name(
     return type_name;
 }
 
-static
-ecs_entity_t lookup(
+void ecs_set_symbol(
     ecs_world_t *world,
-    const char *name,
-    ecs_type_t type)
+    ecs_entity_t e,
+    const char *name)
 {
-    if (!name) {
-        return 0;
+    const char *e_name = ecs_name_from_symbol(world, name);
+
+    ecs_set(world, e, EcsName, { 
+        .value = e_name, 
+        .symbol = name 
+    });
+}
+
+ecs_entity_t ecs_lookup_w_id(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name)
+{
+    if (e) {
+        if (name) {
+            /* Make sure name is the same */
+            const char *existing = ecs_get_name(world, e);
+            if (existing && strcmp(existing, name)) {
+                ecs_abort(ECS_INCONSISTENT_NAME, name);
+            }
+            if (!existing) {
+                ecs_set_symbol(world, e, name);
+            }
+        }
     }
     
-    ecs_entity_t result = ecs_lookup(world, name);
-    if (result) {
-        ecs_type_t entity_type = ecs_get_type(world, result);
-        if (type && (!entity_type || !ecs_type_contains(world, entity_type, type, true, false))) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
+    ecs_entity_t result = e;
+    if (!result) {
+        if (!name) {
+            /* If neither an id nor name is specified, return 0 */
+            return 0;
         }
+
+        result = ecs_lookup(world, name);
     }
     
     return result;
 }
-
 
 /* -- Public functions -- */
 
@@ -200,16 +240,14 @@ ecs_entity_t ecs_new_entity(
     const char *name,
     const char *expr)
 {
-    EcsType type = type_from_expr(world, name, expr);
-
-    const char *e_name = get_entity_name(world, name);
-
-    ecs_entity_t result = lookup(world, name, type.normalized);
+    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
-        result = e ? e : ecs_new(world, 0);
-        ecs_add_type(world, result, type.normalized);
-        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
+        result = ecs_new(world, 0);
+        ecs_set_symbol(world, result, name);
     }
+    
+    EcsType type = type_from_expr(world, name, expr);
+    ecs_add_type(world, result, type.normalized);
 
     return result;
 }
@@ -220,21 +258,16 @@ ecs_entity_t ecs_new_prefab(
     const char *name,
     const char *expr)
 {
-    EcsType type = type_from_expr(world, name, expr);
-
-    const char *e_name = get_entity_name(world, name);
-
-    ecs_entity_t result = lookup(world, name, type.normalized);
+    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
-        result = e ? e : ecs_new(world, 0);
-        ecs_add_entity(world, result, EcsPrefab);
-        ecs_add_type(world, result, type.normalized);
-        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
-    } else {
-        if (!ecs_has_entity(world, result, EcsPrefab)) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
+        result = ecs_new(world, 0);
+        ecs_set_symbol(world, result, name);
     }
+
+    ecs_add_entity(world, result, EcsPrefab);
+
+    EcsType type = type_from_expr(world, name, expr);
+    ecs_add_type(world, result, type.normalized);
 
     return result;
 }
@@ -249,72 +282,37 @@ ecs_entity_t ecs_new_component(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    const char *e_name = get_entity_name(world, name);
+    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
+    if (!result) {
+        result = ecs_new_component_id(world);
+        ecs_set_symbol(world, result, name);
+    }
 
-    ecs_entity_t result = e ? e : lookup(world, e_name, ecs_type(EcsComponent));
-    if (!result || e) {
-        ecs_stage_t *stage = ecs_get_stage(&world);
-        result = e ? e : ++ world->stats.last_component_id;
+    /* ecs_new_component_id does not add the scope, so add it explicitly */
+    ecs_entity_t scope = world->stage.scope;
+    if (scope) {
+        ecs_add_entity(world, result, ECS_CHILDOF | scope);
+    }
 
-        ecs_set(world, result, EcsComponent, {
-            .size = ecs_from_size_t(size),
-            .alignment = ecs_from_size_t(alignment)
-        });
-
-        if (name) {
-            ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
-        }
-
-        ecs_entity_t scope = stage->scope;
-        if (scope) {
-            ecs_add_entity(world, result, ECS_CHILDOF | scope);
-        }
+    bool added = false;
+    EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent, &added);
+    if (added) {
+        ptr->size = ecs_from_size_t(size);
+        ptr->alignment = ecs_from_size_t(alignment);
     } else {
-        const EcsComponent *ptr = ecs_get(world, result, EcsComponent);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, name);
         if (ptr->size != ecs_from_size_t(size)) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, name);
         }
         if (ptr->alignment != ecs_from_size_t(alignment)) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, name);
-        }        
+        }
     }
 
-    return result;
-}
+    ecs_modified(world, result, EcsComponent);
 
-ecs_entity_t ecs_new_module(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    size_t size,
-    size_t alignment)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    assert(world->magic == ECS_WORLD_MAGIC);
-
-    if (!e) {
-        char *module_path = ecs_module_path_from_c(name);
-        e = ecs_new_from_fullpath(world, module_path);
-
-        EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
-        name_ptr->symbol = name;
-
-        ecs_os_free(module_path);
+    if (e > world->stats.last_component_id && e < ECS_HI_COMPONENT_ID) {
+        world->stats.last_component_id = e + 1;
     }
-
-    ecs_entity_t result = ecs_new_component(world, e, NULL, size, alignment);
-    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
-
-    /* Add module tag */
-    ecs_add_entity(world, result, EcsModule);
-
-    /* Add module to itself. This way we have all the module information stored
-     * in a single contained entity that we can use for namespacing */
-    ecs_set_ptr_w_entity(world, result, result, size, NULL);
-
-    /* Set the current scope to the module */
-    ecs_set_scope(world, result);
 
     return result;
 }
@@ -325,128 +323,32 @@ ecs_entity_t ecs_new_type(
     const char *name,
     const char *expr)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);  
-    EcsType type = type_from_expr(world, name, expr);
-
-    const char *e_name = get_entity_name(world, name);
-    
-    ecs_entity_t result = lookup(world, name, ecs_type(EcsType));
-    if (!result) {
-        result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
-        ecs_set(world, result, EcsType, {
-            .type = type.type, .normalized = type.normalized
-        });        
-
-        /* This will allow the type to show up in debug tools */
-        ecs_map_set(world->type_handles, (uintptr_t)type.type, &result);
-    } else {
-        const EcsType *ptr = ecs_get(world, result, EcsType);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (ptr->type != type.type || 
-            ptr->normalized != type.normalized) 
-        {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
-    }
-
-    return result;
-}
-
-ecs_entity_t ecs_new_system(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    ecs_entity_t tag,
-    const char *signature,
-    ecs_iter_action_t action)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
-
-    const char *e_name = get_entity_name(world, name);
-    
-    ecs_entity_t result = lookup(world, name, ecs_type(EcsSignatureExpr));
-    if (!result) {
-        result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
-        if (tag) {
-            ecs_add_entity(world, result, tag);
-        }
-
-        ecs_set(world, result, EcsSignatureExpr, {signature});
-        ecs_set(world, result, EcsIterAction, {action});
-    } else {
-        EcsSignatureExpr *ptr = ecs_get_mut(world, result, EcsSignatureExpr, NULL);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (strcmp(ptr->expr, signature)) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
-    }
-
-    return result;
-}
-
-ecs_entity_t ecs_new_trigger(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    ecs_entity_t kind,
-    const char *component_name,
-    ecs_iter_action_t action)
-{
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    ecs_entity_t component = ecs_lookup_fullpath(world, component_name);
-    ecs_assert(component != 0, ECS_INVALID_COMPONENT_ID, component_name);
-
-    const char *e_name = get_entity_name(world, name);
-    
-    ecs_entity_t result = lookup(world, name, ecs_type(EcsTrigger));
+    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
-        result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
-        ecs_set(world, result, EcsTrigger, {
-            .kind = kind,
-            .action = action,
-            .component = component,
-            .ctx = NULL
-        });
-    } else {
-        EcsTrigger *ptr = ecs_get_mut(world, result, EcsTrigger, NULL);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (ptr->kind != kind) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
-
-        if (ptr->component != component) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
-
-        if (ptr->action != action) {
-            ptr->action = action;
-        }
+        result = ecs_new_entity(world, 0, name, NULL);
     }
+    
+    EcsType type_parsed = type_from_expr(world, name, expr);
 
-    return result;
-}
+    bool added = false;
+    EcsType *type = ecs_get_mut(world, result, EcsType, &added);
+    if (added) {
+        type->type = type_parsed.type;
+        type->normalized = type_parsed.normalized;
+    } else {
+        if (type->type != type_parsed.type) {
+            ecs_abort(ECS_ALREADY_DEFINED, name);
+        }
 
-ecs_entity_t ecs_new_pipeline(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    const char *expr)
-{
-    assert(world->magic == ECS_WORLD_MAGIC);
+        if (type->normalized != type_parsed.normalized) {
+            ecs_abort(ECS_ALREADY_DEFINED, name);
+        }
+    }     
 
-    ecs_entity_t result = ecs_new_type(world, e, name, expr);
-    ecs_assert(ecs_get(world, result, EcsType) != NULL, 
-        ECS_INTERNAL_ERROR, NULL);
-
-    ecs_add_entity(world, result, EcsPipeline);
+    /* This will allow the type to show up in debug tools */
+    ecs_map_set(world->type_handles, (uintptr_t)type_parsed.type, &result);
 
     return result;
 }

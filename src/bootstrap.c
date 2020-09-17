@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
 /* Global type variables */
 ecs_type_t ecs_type(EcsComponent);
@@ -21,6 +21,11 @@ ECS_DTOR(EcsName, ptr, {
 })
 
 ECS_COPY(EcsName, dst, src, {
+    if (dst->alloc_value) {
+        ecs_os_free(dst->alloc_value);
+        dst->alloc_value = NULL;
+    }
+    
     if (src->alloc_value) {
         dst->alloc_value = ecs_os_strdup(src->alloc_value);
         dst->value = dst->alloc_value;
@@ -69,7 +74,7 @@ void _bootstrap_component(
     record->table = table;
 
     /* Insert row into table to store EcsComponent itself */
-    int32_t index = ecs_table_append(world, table, data, entity, record);
+    int32_t index = ecs_table_append(world, table, data, entity, record, false);
     record->row = index + 1;
 
     /* Set size and id */
@@ -206,6 +211,12 @@ void ecs_bootstrap(
     ecs_assert(ecs_get_name(world, EcsSingleton) != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_lookup(world, "$") == EcsSingleton, ECS_INTERNAL_ERROR, NULL);
     ecs_add_entity(world, EcsSingleton, ECS_CHILDOF | EcsFlecsCore);
+
+    /* Initialize EcsWildcard */
+    ecs_set(world, EcsWildcard, EcsName, {.value = "*"});
+    ecs_assert(ecs_get_name(world, EcsWildcard) != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_lookup(world, "*") == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
+    ecs_add_entity(world, EcsWildcard, ECS_CHILDOF | EcsFlecsCore);    
 
     ecs_set_scope(world, 0);
 

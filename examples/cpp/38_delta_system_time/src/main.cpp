@@ -2,7 +2,7 @@
 #include <iostream>
 
 int main(int argc, char *argv[]) {
-    flecs::world world(argc, argv);
+    flecs::world ecs(argc, argv);
 
     // Create three systems with different periods, and print for each the
     // delta_system_time.
@@ -16,28 +16,28 @@ int main(int argc, char *argv[]) {
     // aliassing issues (the main loop still ticks at its own frequency) or due
     // to variability introduced by operating system scheduling / system clock.
 
-    flecs::system<>(world)
-        .period(0.5)
+    ecs.system<>()
+        .interval(0.5)
         .action([](flecs::iter& it) {
             std::cout << "t = 0.5, time elampsed = " << it.delta_system_time() 
                       << std::endl;
         });
 
-    flecs::system<>(world)
-        .period(1.0)
+    ecs.system<>()
+        .interval(1.0)
         .action([](flecs::iter& it) {
             std::cout << "t = 1.0, time elampsed = " << it.delta_system_time() 
                       << std::endl;
         });
 
-    flecs::system<>(world)
-        .period(2.0)
+    ecs.system<>()
+        .interval(2.0)
         .action([](flecs::iter& it) {
             std::cout << "t = 2.0, time elampsed = " << it.delta_system_time() 
                       << std::endl;
         });
 
-    world.set_target_fps(60);
+    ecs.set_target_fps(60);
 
-    while (world.progress()) { }
+    while (ecs.progress()) { }
 }

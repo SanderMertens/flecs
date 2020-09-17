@@ -10,10 +10,6 @@
 #ifndef FLECS_API_DEFINES_H
 #define FLECS_API_DEFINES_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Standard library dependencies */
 #include <time.h>
 #include <stdlib.h>
@@ -24,14 +20,15 @@ extern "C" {
 #include <limits.h>
 #include <string.h>
 
-/* Non-standard but required. If not provided by platform, add manually. If
- * flecs is built by bake, stdint.h from bake is included. */
-#ifndef __BAKE__
+/* Non-standard but required. If not provided by platform, add manually. */
 #include <stdint.h>
-#endif
 
 /* Contains macro's for importing / exporting symbols */
 #include "flecs/bake_config.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef __BAKE_LEGACY__
 #define FLECS_LEGACY
@@ -68,6 +65,8 @@ typedef int32_t ecs_size_t;
 #define ECS_ALIGNOF(T) (int64_t)alignof(T)
 #elif defined(_MSC_VER)
 #define ECS_ALIGNOF(T) (int64_t)__alignof(T)
+#elif defined(__GNUC__)
+#define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
 #else
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
@@ -78,7 +77,7 @@ typedef int32_t ecs_size_t;
 #define ECS_UNUSED
 #endif
 
-#define ECS_ALIGN(size, alignment) (((((size) - 1) / (alignment)) + 1) * (alignment))
+#define ECS_ALIGN(size, alignment) (ecs_size_t)((((((size_t)size) - 1) / ((size_t)alignment)) + 1) * ((size_t)alignment))
 
 /* Simple utility for determining the max of two values */
 #define ECS_MAX(a, b) ((a > b) ? a : b)
@@ -116,9 +115,10 @@ typedef int32_t ecs_size_t;
 //// Type role macro's
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_TYPE_ROLE_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF | ECS_TRAIT | ECS_AND | ECS_OR | ECS_XOR | ECS_NOT))
-#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_TYPE_ROLE_MASK)
+#define ECS_ROLE_MASK ((ecs_entity_t)0xFF << 56)
+#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ROLE_MASK)
 #define ECS_TYPE_ROLE_START ECS_CHILDOF
+#define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
 
 
 ////////////////////////////////////////////////////////////////////////////////

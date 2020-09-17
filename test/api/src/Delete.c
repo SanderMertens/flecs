@@ -162,9 +162,13 @@ static
 void CreateEntity(ecs_iter_t *it) {
     ECS_COLUMN_COMPONENT(it, Position, 1);
 
-    ecs_entity_t e = ecs_bulk_new(it->world, Position, 10);
-    test_assert(e != 0);
-    test_assert( ecs_has(it->world, e, Position));
+    const ecs_entity_t *ids = ecs_bulk_new(it->world, Position, 10);
+    test_assert(ids != NULL);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(it->world, ids[i], Position));
+    }
 }
 
 static
@@ -199,6 +203,42 @@ void Delete_delete_w_on_remove() {
     test_int(on_remove_system_invoked, 10);
     
     test_int( ecs_count(world, Position), 0);
+    
+    ecs_fini(world);
+}
+
+void Delete_clear_1_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_clear(world, e);
+    test_assert(!ecs_get_type(world, e));
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 > e);
+    
+    ecs_fini(world);
+}
+
+void Delete_clear_2_components() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+    test_assert(e != 0);
+
+    ecs_clear(world, e);
+    test_assert(!ecs_get_type(world, e));
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 > e);
     
     ecs_fini(world);
 }

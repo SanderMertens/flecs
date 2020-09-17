@@ -22,15 +22,13 @@ void RemovePosition(flecs::entity e, Position& p) {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
-
-    flecs::component<Position>(world, "Position");
+    flecs::world ecs(argc, argv);
 
     /* Register two systems that are executed when Position is added or removed */
-    flecs::system<Position>(world).kind(flecs::OnAdd).each(AddPosition);
-    flecs::system<Position>(world).kind(flecs::OnRemove).each(RemovePosition);
+    ecs.system<Position>().kind(flecs::OnAdd).each(AddPosition);
+    ecs.system<Position>().kind(flecs::OnRemove).each(RemovePosition);
 
-    flecs::entity e(world);
+    auto e = ecs.entity();
 
     /* Add Position. This will trigger the OnAdd system */
     e.add<Position>();

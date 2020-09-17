@@ -104,7 +104,7 @@ void Vector_add_empty() {
 
     ecs_vector_add(&array, int);
     test_int(ecs_vector_count(array), 1);
-    test_int(ecs_vector_size(array), 1);
+    test_int(ecs_vector_size(array), 2);
     ecs_vector_free(array);
 }
 

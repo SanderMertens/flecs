@@ -1,5 +1,9 @@
-#include "../flecs_private.h"
-#include "flecs/modules/stats.h"
+#include "flecs.h"
+
+#ifdef FLECS_STATS
+
+#include "../private_api.h"
+#include "system/system.h"
 
 typedef struct EcsTablePtr {
     ecs_table_t *table;
@@ -564,11 +568,11 @@ void StatsCollectTypeStats(ecs_iter_t *it) {
             ecs_entity_t e = entities[j];
             bool has_flags = false;
             
-            if (e & ECS_CHILDOF) {
+            if (ECS_HAS_ROLE(e, CHILDOF)) {
                 stats[i].entities_childof_count ++;
                 has_flags = true;
             }
-            if (e & ECS_INSTANCEOF) {
+            if (ECS_HAS_ROLE(e, INSTANCEOF)) {
                 stats[i].entities_instanceof_count ++;
                 has_flags = true;
             }
@@ -723,3 +727,5 @@ void FlecsStatsImport(
     ECS_EXPORT_COMPONENT(EcsTablePtr);
     ECS_EXPORT_COMPONENT(EcsTypeStats);
 }
+
+#endif

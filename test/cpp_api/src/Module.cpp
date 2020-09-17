@@ -1,10 +1,19 @@
 #include <cpp_api.h>
 
 namespace ns {
+class NestedModule {
+public:
+    NestedModule(flecs::world& world) {
+        flecs::module<ns::NestedModule>(world, "ns::NestedModule");
+        flecs::component<Velocity>(world, "Velocity");
+    }
+};
+
 class SimpleModule {
 public:
     SimpleModule(flecs::world& world) {
         flecs::module<ns::SimpleModule>(world, "ns::SimpleModule");
+        flecs::import<ns::NestedModule>(world);
         flecs::component<Position>(world, "Position");
     }
 };
@@ -41,4 +50,14 @@ void Module_lookup_from_scope() {
 
     auto ns_position = ns_entity.lookup("SimpleModule::Position");
     test_assert(position_entity.id() == ns_position.id());    
+}
+
+void Module_nested_module() {
+    flecs::world world;
+    flecs::import<ns::SimpleModule>(world);
+
+    auto velocity = world.lookup("ns::NestedModule::Velocity");
+    test_assert(velocity.id() != 0);
+
+    test_str(velocity.path().c_str(), "::ns::NestedModule::Velocity");
 }

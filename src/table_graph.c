@@ -1,18 +1,23 @@
-#include "flecs_private.h"
+#include "private_api.h"
 
-/* When a new table is created, match it with the queries registered with the
- * world. If a query matches, it will call the esc_table_register_query 
- * function which will add the query to the table administration. */
-void ecs_notify_queries_of_table(
+ecs_entity_t ecs_component_id_from_id(
     ecs_world_t *world,
-    ecs_table_t *table)
+    ecs_entity_t e)
 {
-    int32_t i, count = ecs_sparse_count(world->queries);
-
-    for (i = 0; i < count; i ++) {
-        ecs_query_t *query = ecs_sparse_get(world->queries, ecs_query_t, i);
-        ecs_query_match_table(world, query, table);
+    if (ECS_HAS_ROLE(e, TRAIT)) {
+        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_ENTITY_MASK);
+        if (ecs_has(world, trait, EcsComponent)) {
+            /* This is not a trait tag, trait is the value */
+            return trait;
+        } else {
+            /* This is a trait tag, component is the value */
+            return ecs_entity_t_lo(e);
+        }
+    } else if (e & ECS_ROLE_MASK) {
+        return 0;
     }
+
+    return e;
 }
 
 const EcsComponent* ecs_component_from_id(
@@ -22,7 +27,7 @@ const EcsComponent* ecs_component_from_id(
     ecs_entity_t trait = 0;
 
     /* If this is a trait, get the trait component from the identifier */
-    if (e & ECS_TRAIT) {
+    if (ECS_HAS_ROLE(e, TRAIT)) {
         trait = e;
         e = e & ECS_ENTITY_MASK;
         e = ecs_entity_t_hi(e);
@@ -59,6 +64,26 @@ int32_t data_column_count(
             ecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;
+        }
+    });
+
+    return count;
+}
+
+/* Count number of switch columns */
+static
+int32_t switch_column_count(
+    ecs_table_t *table)
+{
+    int32_t count = 0;
+    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
+        ecs_entity_t component = *c_ptr;
+
+        if (ECS_HAS_ROLE(component, SWITCH)) {
+            if (!count) {
+                table->sw_column_offset = c_ptr_i;
+            }
+            count ++;
         }
     });
 
@@ -164,33 +189,36 @@ void init_edges(
             table->flags |= EcsTableHasComponentData;
         }
 
-        if (e & ECS_XOR) {
+        if (ECS_HAS_ROLE(e, XOR)) {
             table->flags |= EcsTableHasXor;
         }
 
-        if (e & ECS_INSTANCEOF) {
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             table->flags |= EcsTableHasBase;
         }
 
-        if (e & ECS_CHILDOF) {
+        if (ECS_HAS_ROLE(e, SWITCH)) {
+            table->flags |= EcsTableHasSwitch;
+        }
+
+        if (ECS_HAS_ROLE(e, CHILDOF)) {
             table->flags |= EcsTableHasParent;
 
             ecs_entity_t parent = e & ECS_ENTITY_MASK;
             register_child_table(world, stage, table, parent);
         }
 
-        if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {
+        if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
             if (stage == &world->stage) {
                 ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
             }
         }
-
-        /* Set flags based on component actions */
-        ecs_c_info_t *ci = ecs_get_c_info(world, e & ECS_ENTITY_MASK);
-        if (ci) {
-            table->flags |= ecs_get_component_action_flags(ci);
-        }
     }
+
+    /* Register component info flags for all columns */
+    ecs_table_notify(world, table, &(ecs_table_event_t){
+        .kind = EcsTableComponentInfo
+    });
     
     /* Register as root table */
     if (!(table->flags & EcsTableHasParent)) {
@@ -206,6 +234,7 @@ void init_table(
     ecs_entities_t *entities)
 {
     table->type = entities_to_type(entities);
+    table->c_info = NULL;
     table->data = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
@@ -215,11 +244,12 @@ void init_table(
     table->on_set_override = NULL;
     table->un_set_all = NULL;
     table->alloc_count = 0;
-    
-    init_edges(world, stage, table);
 
     table->queries = NULL;
     table->column_count = data_column_count(world, table);
+    table->sw_column_count = switch_column_count(table);
+
+    init_edges(world, stage, table);
 }
 
 static
@@ -229,8 +259,9 @@ ecs_table_t *create_table(
     ecs_entities_t *entities)
 {
     ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
-    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+    result->id = ecs_to_u32(ecs_sparse_last_id(stage->tables));
 
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     init_table(world, stage, result, entities);
 
 #ifndef NDEBUG
@@ -244,24 +275,15 @@ ecs_table_t *create_table(
 
     /* Don't notify queries if table is created in stage */
     if (stage == &world->stage) {
-        ecs_notify_queries_of_table(world, result);
+        ecs_notify_queries(world, &(ecs_query_event_t) {
+            .kind = EcsQueryTableMatch,
+            .table = result
+        });
     }
 
     ecs_log_pop();
 
     return result;
-}
-
-void ecs_init_root_table(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{
-    ecs_entities_t entities = {
-        .array = NULL,
-        .count = 0
-    };
-
-    init_table(world, stage, &stage->root, &entities);
 }
 
 static
@@ -369,33 +391,20 @@ void create_backlink_after_remove(
 }
 
 static
-ecs_table_t *find_or_create_table_include(
+ecs_entity_t find_xor_replace(
     ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *node,
+    ecs_table_t *table,
+    ecs_type_t type,
     ecs_entity_t add)
 {
-    ecs_type_t type = node->type;
-    int32_t count = ecs_vector_count(type);
-
-    ecs_entities_t entities = {
-        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * (count + 1)),
-        .count = count + 1
-    };
-
-    /* If table has a XOR column, check if the entity that is being added to the
-     * table is part of the XOR type, and if it is, find the current entity in
-     * the table type matching the XOR type. This entity must be replaced in
-     * the new table, to ensure the XOR constraint isn't violated. */
-    ecs_entity_t replace = 0;
-    if (node->flags & EcsTableHasXor) {
+    if (table->flags & EcsTableHasXor) {
         ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
         int32_t i, type_count = ecs_vector_count(type);
         ecs_type_t xor_type = NULL;
 
         for (i = type_count - 1; i >= 0; i --) {
             ecs_entity_t e = array[i];
-            if (e & ECS_XOR) {
+            if (ECS_HAS_ROLE(e, XOR)) {
                 ecs_entity_t e_type = e & ECS_ENTITY_MASK;
                 const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -407,24 +416,102 @@ ecs_table_t *find_or_create_table_include(
                 }
             } else if (xor_type) {
                 if (ecs_type_owns_entity(world, xor_type, e, true)) {
-                    replace = e;
-                    break;
+                    return e;
                 }
             }
         }
-
-        ecs_assert(!xor_type || replace != 0, ECS_INTERNAL_ERROR, NULL);
     }
 
-    add_entity_to_type(type, add, replace, &entities);
+    return 0;
+}
 
-    ecs_table_t *result = ecs_table_find_or_create(world, stage, &entities);
-    
-    if (result != node && stage == &world->stage) {
-        create_backlink_after_add(result, node, add);
+int32_t ecs_table_switch_from_case(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t add)
+{
+    ecs_type_t type = table->type;
+    ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
+    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
+
+    int32_t i, count = table->sw_column_count;
+    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
+
+    add = add & ECS_ENTITY_MASK;
+
+    ecs_sw_column_t *sw_columns = NULL;
+
+    if (data && (sw_columns = data->sw_columns)) {
+        /* Fast path, we can get the switch type from the column data */
+        for (i = 0; i < count; i ++) {
+            ecs_type_t sw_type = sw_columns[i].type;
+            if (ecs_type_owns_entity(world, sw_type, add, true)) {
+                return i;
+            }
+        }
+    } else {
+        /* Slow path, table is empty, so we'll have to get the switch types by
+         * actually inspecting the switch type entities. */
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t e = array[i + table->sw_column_offset];
+            ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
+            e = e & ECS_ENTITY_MASK;
+
+            const EcsType *type_ptr = ecs_get(world, e, EcsType);
+            ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            if (ecs_type_owns_entity(
+                world, type_ptr->normalized, add, true)) 
+            {
+                return i;
+            }
+        }
     }
 
-    return result;
+    /* If a table was not found, this is an invalid switch case */
+    ecs_abort(ECS_INVALID_CASE, NULL);
+
+    return -1;
+}
+
+static
+ecs_table_t *find_or_create_table_include(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *node,
+    ecs_entity_t add)
+{
+    /* If table has one or more switches and this is a case, return self */
+    if (ECS_HAS_ROLE(add, CASE)) {
+        ecs_assert((node->flags & EcsTableHasSwitch) != 0, 
+            ECS_INVALID_CASE, NULL);
+        return node;
+    } else {
+        ecs_type_t type = node->type;
+        int32_t count = ecs_vector_count(type);
+
+        ecs_entities_t entities = {
+            .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * (count + 1)),
+            .count = count + 1
+        };
+
+        /* If table has a XOR column, check if the entity that is being added to
+         * the table is part of the XOR type, and if it is, find the current 
+         * entity in the table type matching the XOR type. This entity must be 
+         * replaced in the new table, to ensure the XOR constraint isn't 
+         * violated. */
+        ecs_entity_t replace = find_xor_replace(world, node, type, add);
+
+        add_entity_to_type(type, add, replace, &entities);
+
+        ecs_table_t *result = ecs_table_find_or_create(world, stage, &entities);
+        
+        if (result != node && stage == &world->stage) {
+            create_backlink_after_add(result, node, add);
+        }
+
+        return result;
+    }
 }
 
 static
@@ -553,6 +640,30 @@ ecs_table_t* ecs_table_traverse_remove(
 }
 
 static
+void find_owned_components(
+    ecs_world_t *world,
+    ecs_table_t *node,
+    ecs_entity_t base,
+    ecs_entities_t *owned)
+{
+    /* If we're adding an INSTANCEOF relationship, check if the base
+     * has OWNED components that need to be added to the instance */
+    ecs_type_t t = ecs_get_type(world, base);
+
+    int i, count = ecs_vector_count(t);
+    ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = entities[i];
+        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
+            find_owned_components(world, node, e & ECS_ENTITY_MASK, owned);
+        } else
+        if (ECS_HAS_ROLE(e, OWNED)) {
+            owned->array[owned->count ++] = e & ECS_ENTITY_MASK;
+        }
+    }
+}
+
+static
 ecs_table_t* traverse_add_hi_edges(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -563,6 +674,12 @@ ecs_table_t* traverse_add_hi_edges(
 {
     int32_t count = to_add->count;
     ecs_entity_t *entities = to_add->array;
+
+    ecs_entity_t owned_array[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t owned = {
+        .array = owned_array,
+        .count = 0
+    };
 
     for (; i < count; i ++) {
         ecs_entity_t e = entities[i];
@@ -587,9 +704,28 @@ ecs_table_t* traverse_add_hi_edges(
             }
         }
 
-        if (added && node != next) added->array[added->count ++] = e;
+        bool has_case = ECS_HAS_ROLE(e, CASE);
+        if (added && (node != next || has_case)) {
+            /* If this is a case, find switch and encode it in added id */
+            if (has_case) {
+                int32_t s_case = ecs_table_switch_from_case(world, node, e);
+                ecs_assert(s_case != -1, ECS_INTERNAL_ERROR, NULL);
+                e = ECS_CASE | ecs_entity_t_comb(e, s_case);
+            }
 
-        node = next;        
+            added->array[added->count ++] = e; 
+        }
+
+        if ((node != next) && ECS_HAS_ROLE(e, INSTANCEOF)) {
+            find_owned_components(world, next, ECS_ENTITY_MASK & e, &owned);
+        } 
+
+        node = next;
+    }
+
+    /* In case OWNED components were found, add them as well */
+    if (owned.count) {
+        node = ecs_table_traverse_add(world, stage, node, &owned, added);
     }
 
     return node;
@@ -718,7 +854,7 @@ int32_t count_occurrences(
     int i;
     for (i = 0; i < constraint_index; i ++) {
         ecs_entity_t e = entities->array[i];
-        if (e & ECS_TYPE_ROLE_MASK) {
+        if (e & ECS_ROLE_MASK) {
             break;
         }
 
@@ -738,8 +874,12 @@ void verify_constraints(
     int i, count = entities->count;
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities->array[i];
-        ecs_entity_t mask = e & ECS_TYPE_ROLE_MASK;
-        if (!mask || !(mask & (ECS_OR | ECS_XOR | ECS_NOT))) {
+        ecs_entity_t mask = e & ECS_ROLE_MASK;
+        if (!mask || 
+            ((mask != ECS_OR) &&
+             (mask != ECS_XOR) &&
+             (mask != ECS_NOT)))
+        {
             break;
         }
 
@@ -862,4 +1002,16 @@ ecs_table_t* ecs_table_from_type(
     ecs_entities_t components = ecs_type_to_entities(type);
     return ecs_table_find_or_create(
         world, stage, &components);
+}
+
+void ecs_init_root_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    ecs_entities_t entities = {
+        .array = NULL,
+        .count = 0
+    };
+
+    init_table(world, stage, &stage->root, &entities);
 }

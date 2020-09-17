@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     ecs_iter_t it = ecs_snapshot_iter(s, &f);
 
     /* Iterate it, progress entities in snapshot */
-    while (ecs_filter_next(&it)) {
+    while (ecs_snapshot_next(&it)) {
         /* Even though we have a it ptr, we can't use it as we normally would
          * in a system with ecs_column. This is because a filter has no well
          * defined indices for the components being matched with. To obtain the

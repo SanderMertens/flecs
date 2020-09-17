@@ -22,15 +22,13 @@ void SetPosition(flecs::entity e,  Position& p) {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
-
-    flecs::component<Position>(world, "Position");
+    flecs::world ecs(argc, argv);
 
     /* Register two systems that are executed when Position is added or set */
-    flecs::system<Position>(world).kind(flecs::OnAdd).each(AddPosition);
-    flecs::system<Position>(world).kind(flecs::OnSet).each(SetPosition);
+    ecs.system<Position>().kind(flecs::OnAdd).each(AddPosition);
+    ecs.system<Position>().kind(flecs::OnSet).each(SetPosition);
 
-    flecs::entity e(world);
+    auto e = ecs.entity();
 
     /* Add Position. Because we have an OnAdd system, flecs assumes a valid 
      * value will be assigned to Position, and therefore the OnSet system is 

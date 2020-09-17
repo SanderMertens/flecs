@@ -16,19 +16,14 @@ struct Mana {
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
-    flecs::world world(argc, argv);
-
-    /* Register components */
-    flecs::component<Health>(world, "Health");
-    flecs::component<Stamina>(world, "Stamina");
-    flecs::component<Mana>(world, "Mana");
+    flecs::world ecs(argc, argv);
 
     /* Create system with three optional columns. Pointer template arguments are
      * converted to components with the optional operator. 
      *
      * This is an extreme example where all components are optional, which means
      * that this system will evaluate all entities. */
-    flecs::system<Health*, Stamina*, Mana*>(world)
+    ecs.system<Health*, Stamina*, Mana*>()
         .each([](flecs::entity e, Health* h, Stamina *s, Mana *m) {
             if (h) {
                 h->value ++;
@@ -47,14 +42,14 @@ int main(int argc, char *argv[]) {
         });
 
     /* Create three entities that will all match with the Regenerate system */
-    flecs::entity(world, "HealthEntity").set<Health>({0});
-    flecs::entity(world, "StaminaEntity").set<Stamina>({0});
-    flecs::entity(world, "ManaEntity").set<Mana>({0});
+    ecs.entity("HealthEntity").set<Health>({0});
+    ecs.entity("StaminaEntity").set<Stamina>({0});
+    ecs.entity("ManaEntity").set<Mana>({0});
 
-    world.set_target_fps(1);
+    ecs.set_target_fps(1);
 
     std::cout << "Application optional is running, press CTRL-C to exit..." << std::endl;
 
     /* Run systems */
-    while (world.progress()) { }
+    while (ecs.progress()) { }
 }
