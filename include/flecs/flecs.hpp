@@ -3424,6 +3424,48 @@ private:
     Func m_func;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+//// Utility class to invoke a system iterate action
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Func, typename ... Components>
+class iter_invoker {
+    using Columns = typename column_args<Components ...>::Columns;
+
+public:
+    explicit iter_invoker(Func func) 
+        : m_func(func) { }
+
+    /* Invoke system */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+        flecs::iter iter_wrapper(iter);
+        func(iter_wrapper, ((typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr)...);
+    }
+
+    /** Add components one by one to parameter pack */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+        call_system(iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
+    /** Callback provided to flecs */
+    static void run(ecs_iter_t *iter) {
+        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
+        iter_invoker *self = (iter_invoker*)ctx->ctx;        
+        Func func = self->m_func; 
+        column_args<Components...> columns(iter);
+        call_system(iter, func, 0, columns.m_columns);
+    }   
+
+private:
+    Func m_func;
+};
+
 } // namespace _
 
 
@@ -3747,6 +3789,20 @@ public:
 
         return *this;
     }
+
+    /* Iter is similar to action, and will ultimately replace it */
+    template <typename Func>
+    system& iter(Func func) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        auto ctx = new _::iter_invoker<Func, Components...>(func);
+
+        create_system(func, _::iter_invoker<Func, Components...>::run, false);
+
+        EcsContext ctx_value = {ctx};
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+
+        return *this;
+    }    
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
