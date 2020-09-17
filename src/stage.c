@@ -405,7 +405,11 @@ void ecs_stage_init(
     stage->defer_queue = NULL;
     stage->post_frame_actions = NULL;
     stage->range_check_enabled = true;
+
+#ifndef NDEBUG
+    stage->system = 0;
     stage->system_columns = NULL;
+#endif
 }
 
 void ecs_stage_deinit(

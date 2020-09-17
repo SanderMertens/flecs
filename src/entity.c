@@ -1219,7 +1219,7 @@ void check_write_permissions_for_entities(
             }
         }
 
-        if (i == count) {
+        if (c == count) {
             permission_warning(world, stage->system, comp);
         }
     }    
