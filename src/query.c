@@ -421,6 +421,7 @@ int32_t get_component_index(
             if (!ECS_HAS_ROLE(component, CASE) && 
                 !ECS_HAS_ROLE(component, SWITCH)) 
             {
+                component = ecs_component_id_from_id(world, component);
                 const EcsComponent *data = ecs_get(
                     world, component, EcsComponent);
 
@@ -429,7 +430,7 @@ int32_t get_component_index(
                 }
             }
         }
-        
+
         /* ecs_table_column_offset may return -1 if the component comes
          * from a prefab. If so, the component will be resolved as a
          * reference (see below) */           

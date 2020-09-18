@@ -579,6 +579,7 @@ void Traits_query_2_traits(void);
 void Traits_query_2_traits_2_instances_per_type(void);
 void Traits_override_trait(void);
 void Traits_override_tag_trait(void);
+void Traits_trait_w_component_query(void);
 void Traits_trait_wildcard_system(void);
 void Traits_trait_only_wildcard_system(void);
 void Traits_trait_wildcard_on_set(void);
@@ -3402,6 +3403,10 @@ bake_test_case Traits_testcases[] = {
         Traits_override_tag_trait
     },
     {
+        "trait_w_component_query",
+        Traits_trait_w_component_query
+    },
+    {
         "trait_wildcard_system",
         Traits_trait_wildcard_system
     },
@@ -6198,7 +6203,7 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        21,
+        22,
         Traits_testcases
     },
     {

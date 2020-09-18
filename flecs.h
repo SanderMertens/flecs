@@ -7364,7 +7364,7 @@ private:
              * entities. */
             count = m_iter->count;
         }
-
+        
         return flecs::column<T>(static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), column_id)), count, is_shared);
     } 
 

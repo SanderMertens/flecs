@@ -1055,3 +1055,32 @@ void Traits_simple_trait_syntax() {
 
     ecs_fini(world);
 }
+
+void Traits_trait_w_component_query() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Trait);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_trait(world, e, ecs_entity(Position), ecs_entity(Trait));
+
+    ecs_query_t *q = ecs_query_new(world, "TRAIT | Trait > Position");
+    
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        Trait *t = ecs_column(&it, Trait, 1);
+        test_assert(t != NULL);
+
+        int i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e);
+        }
+        count += it.count;
+    }
+
+    test_assert(count == 1);
+
+    ecs_fini(world);
+}
