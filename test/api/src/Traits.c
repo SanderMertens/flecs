@@ -1015,6 +1015,9 @@ void Traits_trait_from_shared() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
+        Trait *t = ecs_column(&it, Trait, 1);
+        test_assert(t != NULL);
+
         int i;
         for (i = 0; i < it.count; i ++) {
             test_assert(it.entities[i] == e);
