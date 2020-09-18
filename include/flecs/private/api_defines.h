@@ -39,8 +39,12 @@ extern "C" {
 //// Language support defines
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef FLECS_LEGACY
+#include <stdbool.h>
+#endif
+
 /* The API uses the native bool type in C++, or a custom one in C */
-#ifndef __cplusplus
+#if !defined(__cplusplus) && !defined(__bool_true_false_are_defined)
 #undef bool
 #undef true
 #undef false

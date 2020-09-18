@@ -351,7 +351,7 @@ void ecs_set_component_actions_w_entity(
          * is not safe as they will potentially access uninitialized memory. For 
          * ease of use, if no constructor is specified, set a default one that 
          * initializes the component to 0. */
-        if (!lifecycle->ctor) {
+        if (!lifecycle->ctor && (lifecycle->dtor || lifecycle->copy || lifecycle->move)) {
             c_info->lifecycle.ctor = ctor_init_zero;   
         }
 

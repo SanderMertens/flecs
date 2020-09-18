@@ -54,6 +54,24 @@ char* ecs_get_path_w_sep(
     return ecs_strbuf_get(&buf);
 }
 
+static
+bool is_number(
+    const char *name)
+{
+    if (!isdigit(name[0])) {
+        return false;
+    }
+
+    ecs_size_t i, s = ecs_os_strlen(name);
+    for (i = 0; i < s; i ++) {
+        if (!isdigit(name[i])) {
+            break;
+        }
+    }
+
+    return i == s;
+}
+
 static 
 ecs_entity_t name_to_id(
     const char *name)
@@ -86,8 +104,7 @@ ecs_entity_t find_child_in_table(
         return 0;
     }
 
-    int is_number = isdigit(name[0]);
-    if (is_number) {
+    if (is_number(name)) {
         return name_to_id(name);
     }
 
@@ -175,7 +192,7 @@ ecs_entity_t ecs_lookup(
         return 0;
     }
 
-    if (isdigit(name[0])) {
+    if (is_number(name)) {
         return name_to_id(name);
     }
     
@@ -190,7 +207,7 @@ ecs_entity_t ecs_lookup_symbol(
         return 0;
     }
 
-    if (isdigit(name[0])) {
+    if (is_number(name)) {
         return name_to_id(name);
     }
     

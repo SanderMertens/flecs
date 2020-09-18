@@ -716,7 +716,7 @@ public:
      *
      * @param level The tracing level.
      */
-    void enable_tracing(int level) {
+    static void enable_tracing(int level) {
         ecs_tracing_enable(level);
     }
 
