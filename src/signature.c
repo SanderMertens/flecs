@@ -337,6 +337,7 @@ parse_source:
 
         /* Is the next token a role? */
         if (ptr[0] == TOK_ROLE && ptr[1] != TOK_ROLE) {
+            ptr++;
             goto parse_role;
         }
 

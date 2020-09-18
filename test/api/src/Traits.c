@@ -997,3 +997,32 @@ void Traits_on_remove_trait_tag_on_delete() {
 
     ecs_fini(world);
 }
+
+void Traits_trait_from_shared() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Trait);
+
+    ecs_entity_t base = ecs_new(world, 0);
+    ecs_add_trait(world, base, ecs_entity(Position), ecs_entity(Trait));
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+
+    ecs_query_t *q = ecs_query_new(world, "SHARED:TRAIT|Trait>Position"); // ew
+    
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        int i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e);
+        }
+        count += it.count;
+    }
+
+    test_assert(count == 1);
+
+    ecs_fini(world);
+}
