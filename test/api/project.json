@@ -644,7 +644,8 @@
                 "on_remove_trait_tag",
                 "on_remove_trait_on_delete",
                 "on_remove_trait_tag_on_delete",
-                "trait_from_shared"
+                "trait_from_shared",
+                "simple_trait_syntax"
             ]
         }, {
             "id": "TriggerOnAdd",

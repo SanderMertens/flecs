@@ -589,6 +589,7 @@ void Traits_on_remove_trait_tag(void);
 void Traits_on_remove_trait_on_delete(void);
 void Traits_on_remove_trait_tag_on_delete(void);
 void Traits_trait_from_shared(void);
+void Traits_simple_trait_syntax(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -3439,6 +3440,10 @@ bake_test_case Traits_testcases[] = {
     {
         "trait_from_shared",
         Traits_trait_from_shared
+    },
+    {
+        "simple_trait_syntax",
+        Traits_simple_trait_syntax
     }
 };
 
@@ -6193,7 +6198,7 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        20,
+        21,
         Traits_testcases
     },
     {

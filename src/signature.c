@@ -9,6 +9,7 @@
 #define TOK_OPTIONAL '?'
 #define TOK_ROLE '|'
 #define TOK_TRAIT '>'
+#define TOK_FOR "FOR"
 #define TOK_NAME_SEP '.'
 #define TOK_ANNOTATE_OPEN '['
 #define TOK_ANNOTATE_CLOSE ']'
@@ -292,6 +293,13 @@ const char* parse_element(
             goto parse_role;
         }
 
+        /* Is token a trait? (using shorthand notation) */
+        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
+            elem.role = ECS_TRAIT;
+            ptr += 3;
+            goto parse_trait;
+        }
+
         /* If it is neither, the next token must be a component */
         goto parse_component;
 
@@ -340,6 +348,13 @@ parse_source:
             ptr++;
             goto parse_role;
         }
+
+        /* Is token a trait? (using shorthand notation) */
+        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
+            elem.role = ECS_TRAIT;
+            ptr += 3;
+            goto parse_trait;
+        }        
 
         /* If not, it's a component */
         goto parse_component;
