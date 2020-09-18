@@ -4912,7 +4912,7 @@ void check_write_permissions_for_entities(
             }
         }
 
-        if (i == count) {
+        if (c == count) {
             permission_warning(world, stage->system, comp);
         }
     }    
@@ -4992,7 +4992,7 @@ void commit(
                 removed);
 
             ecs_eis_set(stage, entity, &(ecs_record_t){
-                NULL, -info->is_watched
+                NULL, (info->is_watched == true) * -1
             });
         }      
     } else {        
@@ -6842,7 +6842,11 @@ void ecs_stage_init(
     stage->defer_queue = NULL;
     stage->post_frame_actions = NULL;
     stage->range_check_enabled = true;
+
+#ifndef NDEBUG
+    stage->system = 0;
     stage->system_columns = NULL;
+#endif
 }
 
 void ecs_stage_deinit(
@@ -16296,7 +16300,20 @@ void find_owned_components(
             find_owned_components(world, node, e & ECS_COMPONENT_MASK, owned);
         } else
         if (ECS_HAS_ROLE(e, OWNED)) {
-            owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;
+            e = e & ECS_COMPONENT_MASK;
+            
+            /* If entity is a type, add each component in the type */
+            const EcsType *t_ptr = ecs_get(world, e, EcsType);
+            if (t_ptr) {
+                ecs_type_t t = t_ptr->normalized;
+                int32_t j, count = ecs_vector_count(t);
+                ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
+                for (j = 0; j < count; j ++) {
+                    owned->array[owned->count ++] = entities[j];
+                }
+            } else {
+                owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;
+            }
         }
     }
 }

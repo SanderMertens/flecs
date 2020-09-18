@@ -465,7 +465,7 @@ void* _ecs_vector_last(
     int16_t offset);
 
 #define ecs_vector_last(vector, T) \
-    _ecs_vector_last(vector, ECS_VECTOR_T(T))
+    (T*)_ecs_vector_last(vector, ECS_VECTOR_T(T))
 
 FLECS_EXPORT
 int32_t _ecs_vector_remove(
@@ -661,27 +661,30 @@ template <typename T>
 class vector_iterator
 {
 public:
-    explicit vector_iterator(T* value)
-        : m_value(value){}
+    explicit vector_iterator(T* value, int index) {
+        m_value = value;
+        m_index = index;
+    }
 
     bool operator!=(vector_iterator const& other) const
     {
-        return m_value != other.m_value;
+        return m_index != other.m_index;
     }
 
     T const& operator*() const
     {
-        return *m_value;
+        return m_value[m_index];
     }
 
     vector_iterator& operator++()
     {
-        ++m_value;
+        ++m_index;
         return *this;
     }
 
 private:
     T* m_value;
+    int m_index;
 };
 
 template <typename T>
@@ -711,11 +714,14 @@ public:
     }
 
     vector_iterator<T> begin() {
-        return vector_iterator<T>(static_cast<T*>(ecs_vector_first(m_vector, T)));
+        return vector_iterator<T>(
+            ecs_vector_first(m_vector, T), 0);
     }
 
     vector_iterator<T> end() {
-        return vector_iterator<T>(static_cast<T*>(ecs_vector_last(m_vector, T)) + 1);
+        return vector_iterator<T>(
+            ecs_vector_last(m_vector, T),
+            ecs_vector_count(m_vector));
     }    
 
     void clear() {
@@ -750,6 +756,14 @@ public:
 
     int32_t size() {
         return ecs_vector_size(m_vector);
+    }
+
+    ecs_vector_t *ptr() {
+        return m_vector;
+    }
+
+    void ptr(ecs_vector_t *ptr) {
+        m_vector = ptr;
     }
 
 private:
@@ -8160,6 +8174,18 @@ public:
 
     /** Add owned flag for component (forces ownership when instantiating)
      *
+     * @param entity The entity for which to add the OWNED flag
+     */    
+    base_type& add_owned(entity_t entity) const {
+        static_cast<base_type*>(this)->invoke(
+        [entity](world_t *world, entity_t id) {
+            ecs_add_entity(world, id, ECS_OWNED | entity);
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
+    /** Add owned flag for component (forces ownership when instantiating)
+     *
      * @tparam T The component for which to add the OWNED flag
      */    
     template <typename T>
@@ -8170,6 +8196,14 @@ public:
         });
         return *static_cast<base_type*>(this);  
     }
+
+    /** Add owned flag for type entity.
+     * This will ensure that all components in the type are owned for instances
+     * of this entity.
+     *
+     * @param type The type for which to add the OWNED flag
+     */    
+    base_type& add_owned(flecs::type type) const;
 
     /** Add a switch to an entity by id.
      * The switch entity must be a type, that is it must have the EcsType
@@ -10168,6 +10202,48 @@ private:
     Func m_func;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+//// Utility class to invoke a system iterate action
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Func, typename ... Components>
+class iter_invoker {
+    using Columns = typename column_args<Components ...>::Columns;
+
+public:
+    explicit iter_invoker(Func func) 
+        : m_func(func) { }
+
+    /* Invoke system */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+        flecs::iter iter_wrapper(iter);
+        func(iter_wrapper, ((typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr)...);
+    }
+
+    /** Add components one by one to parameter pack */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+        call_system(iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
+    /** Callback provided to flecs */
+    static void run(ecs_iter_t *iter) {
+        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
+        iter_invoker *self = (iter_invoker*)ctx->ctx;        
+        Func func = self->m_func; 
+        column_args<Components...> columns(iter);
+        call_system(iter, func, 0, columns.m_columns);
+    }   
+
+private:
+    Func m_func;
+};
+
 } // namespace _
 
 
@@ -10491,6 +10567,20 @@ public:
 
         return *this;
     }
+
+    /* Iter is similar to action, and will ultimately replace it */
+    template <typename Func>
+    system& iter(Func func) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        auto ctx = new _::iter_invoker<Func, Components...>(func);
+
+        create_system(func, _::iter_invoker<Func, Components...>::run, false);
+
+        EcsContext ctx_value = {ctx};
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+
+        return *this;
+    }    
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
@@ -10996,8 +11086,12 @@ inline typename entity_builder<base>::base_type& entity_builder<base>::set_trait
             sizeof(T), &value);
     });
     return *static_cast<base_type*>(this);
-}  
+}
 
+template <typename base>
+inline typename entity_builder<base>::base_type& entity_builder<base>::add_owned(flecs::type type) const {
+    return add_owned(type.id());
+}
 
 template <typename base>
 inline typename entity_builder<base>::base_type& entity_builder<base>::add_switch(const entity& sw) const {

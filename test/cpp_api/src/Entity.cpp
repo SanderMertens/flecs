@@ -617,3 +617,51 @@ void Entity_force_owned_nested() {
     test_assert(e.has<Velocity>());
     test_assert(!e.owns<Velocity>());
 }
+
+void Entity_force_owned_type() {
+    flecs::world world;
+
+    auto type = world.type()
+        .add<Position>()
+        .add<Velocity>();
+
+    auto prefab = world.prefab()
+        .add<Position>()
+        .add<Velocity>()
+        .add<Rotation>()
+        .add_owned(type);
+
+    auto e = world.entity()
+        .add_instanceof(prefab);
+    
+    test_assert(e.has<Position>());
+    test_assert(e.owns<Position>());
+    test_assert(e.has<Velocity>());
+    test_assert(e.owns<Velocity>());
+    test_assert(e.has<Rotation>());
+    test_assert(!e.owns<Rotation>());
+}
+
+void Entity_force_owned_type_w_trait() {
+    flecs::world world;
+
+    auto type = world.type()
+        .add_trait<Position, Velocity>()
+        .add<Velocity>();
+
+    auto prefab = world.prefab()
+        .add_trait<Position, Velocity>()
+        .add<Rotation>()
+        .add_owned(type);
+
+    auto e = world.entity()
+        .add_instanceof(prefab);
+    
+    test_assert((e.has_trait<Position, Velocity>()));
+    test_assert(e.has<Rotation>());
+    test_assert(!e.owns<Rotation>());
+
+    const Position *pp = prefab.get_trait<Position, Velocity>();
+    const Position *p = e.get_trait<Position, Velocity>();
+    test_assert(pp != p);
+}

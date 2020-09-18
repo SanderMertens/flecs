@@ -2736,3 +2736,42 @@ void Prefab_force_owned_nested() {
 
     ecs_fini(world);
 }
+
+void Prefab_force_owned_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Rotation);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Rotation);
+
+    ECS_PREFAB(world, Prefab, Position, Rotation, Velocity, OWNED | Type);
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_owns(world, e, Position, true));
+    test_assert(ecs_has(world, e, Rotation));
+    test_assert(ecs_owns(world, e, Rotation, true));    
+    test_assert(ecs_has(world, e, Velocity));
+    test_assert(!ecs_owns(world, e, Velocity, true));
+
+    ecs_fini(world);
+}
+
+void Prefab_force_owned_type_w_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, TRAIT | Position > Velocity);
+
+    ECS_PREFAB(world, Prefab, TRAIT | Position > Velocity, OWNED | Type);
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+
+    ecs_entity_t trait = ecs_trait(ecs_entity(Velocity), ecs_entity(Position));
+    test_assert(ecs_has_entity(world, e, trait));
+    test_assert(ecs_owns_entity(world, e, trait, true));  
+
+    ecs_fini(world);
+}

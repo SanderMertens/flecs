@@ -936,7 +936,9 @@
                 "single_on_set_on_child_w_override",
                 "force_owned",
                 "force_owned_2",
-                "force_owned_nested"
+                "force_owned_nested",
+                "force_owned_type",
+                "force_owned_type_w_trait"
             ]
         }, {
             "id": "System_w_FromContainer",

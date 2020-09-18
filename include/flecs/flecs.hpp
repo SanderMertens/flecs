@@ -1416,6 +1416,18 @@ public:
 
     /** Add owned flag for component (forces ownership when instantiating)
      *
+     * @param entity The entity for which to add the OWNED flag
+     */    
+    base_type& add_owned(entity_t entity) const {
+        static_cast<base_type*>(this)->invoke(
+        [entity](world_t *world, entity_t id) {
+            ecs_add_entity(world, id, ECS_OWNED | entity);
+        });
+        return *static_cast<base_type*>(this);  
+    }
+
+    /** Add owned flag for component (forces ownership when instantiating)
+     *
      * @tparam T The component for which to add the OWNED flag
      */    
     template <typename T>
@@ -1426,6 +1438,14 @@ public:
         });
         return *static_cast<base_type*>(this);  
     }
+
+    /** Add owned flag for type entity.
+     * This will ensure that all components in the type are owned for instances
+     * of this entity.
+     *
+     * @param type The type for which to add the OWNED flag
+     */    
+    base_type& add_owned(flecs::type type) const;
 
     /** Add a switch to an entity by id.
      * The switch entity must be a type, that is it must have the EcsType
@@ -4308,8 +4328,12 @@ inline typename entity_builder<base>::base_type& entity_builder<base>::set_trait
             sizeof(T), &value);
     });
     return *static_cast<base_type*>(this);
-}  
+}
 
+template <typename base>
+inline typename entity_builder<base>::base_type& entity_builder<base>::add_owned(flecs::type type) const {
+    return add_owned(type.id());
+}
 
 template <typename base>
 inline typename entity_builder<base>::base_type& entity_builder<base>::add_switch(const entity& sw) const {

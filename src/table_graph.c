@@ -658,7 +658,20 @@ void find_owned_components(
             find_owned_components(world, node, e & ECS_COMPONENT_MASK, owned);
         } else
         if (ECS_HAS_ROLE(e, OWNED)) {
-            owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;
+            e = e & ECS_COMPONENT_MASK;
+            
+            /* If entity is a type, add each component in the type */
+            const EcsType *t_ptr = ecs_get(world, e, EcsType);
+            if (t_ptr) {
+                ecs_type_t t = t_ptr->normalized;
+                int32_t j, count = ecs_vector_count(t);
+                ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
+                for (j = 0; j < count; j ++) {
+                    owned->array[owned->count ++] = entities[j];
+                }
+            } else {
+                owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;
+            }
         }
     }
 }

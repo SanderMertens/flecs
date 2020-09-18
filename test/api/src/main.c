@@ -857,6 +857,8 @@ void Prefab_single_on_set_on_child_w_override(void);
 void Prefab_force_owned(void);
 void Prefab_force_owned_2(void);
 void Prefab_force_owned_nested(void);
+void Prefab_force_owned_type(void);
+void Prefab_force_owned_type_w_trait(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_setup(void);
@@ -4432,6 +4434,14 @@ bake_test_case Prefab_testcases[] = {
     {
         "force_owned_nested",
         Prefab_force_owned_nested
+    },
+    {
+        "force_owned_type",
+        Prefab_force_owned_type
+    },
+    {
+        "force_owned_type_w_trait",
+        Prefab_force_owned_type_w_trait
     }
 };
 
@@ -6262,7 +6272,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        64,
+        66,
         Prefab_testcases
     },
     {
