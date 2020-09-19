@@ -90,6 +90,12 @@ void Paths_path_depth_2(void);
 void Paths_entity_lookup_name(void);
 void Paths_entity_lookup_depth_1(void);
 void Paths_entity_lookup_depth_2(void);
+void Paths_alias_component(void);
+void Paths_alias_scoped_component(void);
+void Paths_alias_scoped_component_w_name(void);
+void Paths_alias_entity(void);
+void Paths_alias_entity_by_name(void);
+void Paths_alias_entity_by_scoped_name(void);
 
 // Testsuite 'Type'
 void Type_add_2(void);
@@ -521,6 +527,30 @@ bake_test_case Paths_testcases[] = {
     {
         "entity_lookup_depth_2",
         Paths_entity_lookup_depth_2
+    },
+    {
+        "alias_component",
+        Paths_alias_component
+    },
+    {
+        "alias_scoped_component",
+        Paths_alias_scoped_component
+    },
+    {
+        "alias_scoped_component_w_name",
+        Paths_alias_scoped_component_w_name
+    },
+    {
+        "alias_entity",
+        Paths_alias_entity
+    },
+    {
+        "alias_entity_by_name",
+        Paths_alias_entity_by_name
+    },
+    {
+        "alias_entity_by_scoped_name",
+        Paths_alias_entity_by_scoped_name
     }
 };
 
@@ -979,7 +1009,7 @@ static bake_test_suite suites[] = {
         "Paths",
         NULL,
         NULL,
-        6,
+        12,
         Paths_testcases
     },
     {

@@ -425,6 +425,12 @@ typedef struct ecs_action_elem_t {
     void *ctx;
 } ecs_action_elem_t;
 
+/* Alias */
+typedef struct ecs_alias_t {
+    char *name;
+    ecs_entity_t entity;
+} ecs_alias_t;
+
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
@@ -472,6 +478,10 @@ struct ecs_world_t {
     /* -- Lookup Indices -- */
 
     ecs_map_t *type_handles;          /* Handles to named types */
+
+
+    /* -- Aliasses -- */
+    ecs_vector_t *aliases;
 
 
     /* -- Staging -- */

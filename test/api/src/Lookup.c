@@ -4,6 +4,14 @@ void Lookup_setup() {
     ecs_tracing_enable(-3);
 }
 
+static
+void install_test_abort() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+}
+
 void Lookup_lookup() {
     ecs_world_t *world = ecs_init();
 
@@ -241,4 +249,70 @@ void Lookup_change_name_of_existing() {
     test_str(ecs_get_name(world, e), "Bar");
 
     ecs_fini(world);
+}
+
+void Lookup_lookup_alias() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"MyEntity"});
+    test_assert(e != 0);
+
+    ecs_use(world, e, "MyAlias");
+
+    ecs_entity_t a = ecs_lookup(world, "MyAlias");
+    test_assert(a != 0);
+    test_assert(a == e);
+    
+    ecs_fini(world);
+}
+
+void Lookup_lookup_scoped_alias() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = ecs_set(world, 0, EcsName, {"MyParent"});
+    test_assert(p != 0);
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"MyEntity"});
+    test_assert(e != 0);
+    ecs_add_entity(world, e, ECS_CHILDOF | p);
+
+    ecs_use(world, e, "MyAlias");
+
+    ecs_entity_t a = ecs_lookup(world, "MyAlias");
+    test_assert(a != 0);
+    test_assert(a == e);
+    
+    ecs_fini(world);
+}
+
+void Lookup_define_duplicate_alias() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_set(world, 0, EcsName, {"MyEntityA"});
+    test_assert(e1 != 0);
+    ecs_entity_t e2 = ecs_set(world, 0, EcsName, {"MyEntityB"});
+    test_assert(e2 != 0);
+    
+    test_expect_abort(); /* Not allowed to create duplicate aliases */
+
+    ecs_use(world, e1, "MyAlias");
+    ecs_use(world, e2, "MyAlias");
+
+}
+
+void Lookup_define_alias_in_scope() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t scope = ecs_new(world, 0);
+    ecs_set_scope(world, scope);
+
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"MyEntity"});
+    test_assert(e != 0);
+
+    test_expect_abort(); /* Not allowed to create alias in scope */
+
+    ecs_use(world, e, "MyAlias");
 }

@@ -887,6 +887,28 @@ public:
      */    
     flecs::entity lookup(std::string& name) const;
 
+    /** Create alias for component.
+     *
+     * @tparam Component to create an alias for.
+     * @param alias Alias for the component.
+     */
+    template <typename T>
+    flecs::entity use(const char *alias = nullptr);
+
+    /** Create alias for entity.
+     *
+     * @param name Name of the entity.
+     * @param alias Alias for the entity.
+     */
+    flecs::entity use(const char *name, const char *alias = nullptr);    
+
+    /** Create alias for entity.
+     *
+     * @param entity Entity for which to create the alias.
+     * @param alias Alias for the entity.
+     */
+    void use(flecs::entity entity, const char *alias = nullptr);   
+
     /** Delete all entities matching a filter.
      *
      * @param filter The filter to use for matching.
@@ -4496,6 +4518,36 @@ inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");
     pod_component<Type>("flecs::core::Type");
     pod_component<Name>("flecs::core::Name");
+}
+
+template <typename T>
+inline flecs::entity world::use(const char *alias) {
+    entity_t id = _::component_info<T>::id(m_world);
+    const char *name = alias;
+    if (!name) {
+        // If no name is defined, use the entity name without the scope
+        name = ecs_get_name(m_world, id);
+    }
+    ecs_use(m_world, id, name);
+    return flecs::entity(m_world, id);
+}
+
+inline flecs::entity world::use(const char *name, const char *alias) {
+    entity_t id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_use(m_world, id, alias);
+    return flecs::entity(m_world, id);
+}
+
+inline void world::use(flecs::entity entity, const char *alias) {
+    entity_t id = entity.id();
+    const char *name = alias;
+    if (!name) {
+        // If no name is defined, use the entity name without the scope
+        ecs_get_name(m_world, id);
+    }
+    ecs_use(m_world, id, alias);
 }
 
 inline entity world::lookup(const char *name) const {

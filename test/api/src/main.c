@@ -365,6 +365,10 @@ void Lookup_lookup_symbol_w_digit(void);
 void Lookup_lookup_path_w_digit(void);
 void Lookup_set_name_of_existing(void);
 void Lookup_change_name_of_existing(void);
+void Lookup_lookup_alias(void);
+void Lookup_lookup_scoped_alias(void);
+void Lookup_define_duplicate_alias(void);
+void Lookup_define_alias_in_scope(void);
 
 // Testsuite 'Singleton'
 void Singleton_set(void);
@@ -2597,6 +2601,22 @@ bake_test_case Lookup_testcases[] = {
     {
         "change_name_of_existing",
         Lookup_change_name_of_existing
+    },
+    {
+        "lookup_alias",
+        Lookup_lookup_alias
+    },
+    {
+        "lookup_scoped_alias",
+        Lookup_lookup_scoped_alias
+    },
+    {
+        "define_duplicate_alias",
+        Lookup_define_duplicate_alias
+    },
+    {
+        "define_alias_in_scope",
+        Lookup_define_alias_in_scope
     }
 };
 
@@ -6147,7 +6167,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        17,
+        21,
         Lookup_testcases
     },
     {

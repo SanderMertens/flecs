@@ -404,7 +404,11 @@
                 "lookup_symbol_w_digit",
                 "lookup_path_w_digit",
                 "set_name_of_existing",
-                "change_name_of_existing"
+                "change_name_of_existing",
+                "lookup_alias",
+                "lookup_scoped_alias",
+                "define_duplicate_alias",
+                "define_alias_in_scope"
             ]
         }, {
             "id": "Singleton",

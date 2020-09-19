@@ -1782,6 +1782,12 @@ ecs_entity_t ecs_lookup_symbol(
     ecs_world_t *world,
     const char *name);
 
+/* Add alias for entity to global scope */
+FLECS_EXPORT
+void ecs_use(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name);
 
 /** @} */
 

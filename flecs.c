@@ -613,6 +613,12 @@ typedef struct ecs_action_elem_t {
     void *ctx;
 } ecs_action_elem_t;
 
+/* Alias */
+typedef struct ecs_alias_t {
+    char *name;
+    ecs_entity_t entity;
+} ecs_alias_t;
+
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
@@ -660,6 +666,10 @@ struct ecs_world_t {
     /* -- Lookup Indices -- */
 
     ecs_map_t *type_handles;          /* Handles to named types */
+
+
+    /* -- Aliasses -- */
+    ecs_vector_t *aliases;
 
 
     /* -- Staging -- */
@@ -10117,6 +10127,8 @@ ecs_world_t *ecs_mini(void) {
     world->t_info = ecs_map_new(ecs_c_info_t, 0);  
     world->fini_actions = NULL; 
 
+    world->aliases = NULL;
+
     world->queries = ecs_vector_new(ecs_query_t*, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->child_tables = NULL;
@@ -10449,6 +10461,21 @@ void fini_child_tables(
     ecs_map_free(world->child_tables);
 }
 
+/* Cleanup aliases */
+static
+void fini_aliases(
+    ecs_world_t *world)
+{
+    int32_t i, count = ecs_vector_count(world->aliases);
+    ecs_alias_t *aliases = ecs_vector_first(world->aliases, ecs_alias_t);
+
+    for (i = 0; i < count; i ++) {
+        ecs_os_free(aliases[i].name);
+    }
+
+    ecs_vector_free(world->aliases);
+}
+
 /* Cleanup misc structures */
 static
 void fini_misc(
@@ -10485,6 +10512,8 @@ int ecs_fini(
     fini_queries(world);
 
     fini_child_tables(world);
+
+    fini_aliases(world);
 
     fini_misc(world);
 
@@ -10832,6 +10861,7 @@ void ecs_notify_queries(
         ecs_query_notify(world, queries[i], event);
     }    
 }
+
 
 static
 ecs_switch_header_t *get_header(
@@ -16322,11 +16352,11 @@ void find_owned_components(
             /* If entity is a type, add each component in the type */
             const EcsType *t_ptr = ecs_get(world, e, EcsType);
             if (t_ptr) {
-                ecs_type_t t = t_ptr->normalized;
-                int32_t j, count = ecs_vector_count(t);
-                ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
-                for (j = 0; j < count; j ++) {
-                    owned->array[owned->count ++] = entities[j];
+                ecs_type_t n = t_ptr->normalized;
+                int32_t j, n_count = ecs_vector_count(n);
+                ecs_entity_t *n_entities = ecs_vector_first(n, ecs_entity_t);
+                for (j = 0; j < n_count; j ++) {
+                    owned->array[owned->count ++] = n_entities[j];
                 }
             } else {
                 owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;
@@ -21656,6 +21686,22 @@ bool path_append(
     return cur != 0;
 }
 
+static
+ecs_entity_t find_as_alias(
+    ecs_world_t *world,
+    const char *name)
+{
+    int32_t i, count = ecs_vector_count(world->aliases);
+    ecs_alias_t *aliases = ecs_vector_first(world->aliases, ecs_alias_t);
+    for (i = 0; i < count; i ++) {
+        if (!strcmp(aliases[i].name, name)) {
+            return aliases[i].entity;
+        }
+    }
+
+    return 0;
+}
+
 char* ecs_get_path_w_sep(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -21816,6 +21862,11 @@ ecs_entity_t ecs_lookup(
     if (is_number(name)) {
         return name_to_id(name);
     }
+
+    ecs_entity_t e = find_as_alias(world, name);
+    if (e) {
+        return e;
+    }    
     
     return ecs_lookup_child(world, 0, name);
 }
@@ -21831,6 +21882,11 @@ ecs_entity_t ecs_lookup_symbol(
     if (is_number(name)) {
         return name_to_id(name);
     }
+
+    ecs_entity_t e = find_as_alias(world, name);
+    if (e) {
+        return e;
+    }      
     
     return find_child_in_stage(world, &world->stage, 0, name);
 }
@@ -21919,6 +21975,11 @@ ecs_entity_t ecs_lookup_path_w_sep(
     if (!path) {
         return 0;
     }
+
+    ecs_entity_t e = find_as_alias(world, path);
+    if (e) {
+        return e;
+    }      
     
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr;
@@ -22156,4 +22217,23 @@ ecs_entity_t ecs_new_from_path_w_sep(
     const char *prefix)
 {
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
+}
+
+void ecs_use(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+    
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(stage->scope == 0 , ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(find_as_alias(world, name) == 0, ECS_ALREADY_DEFINED, NULL);
+    (void)stage;
+    
+    ecs_alias_t *al = ecs_vector_add(&world->aliases, ecs_alias_t);
+    al->name = ecs_os_strdup(name);
+    al->entity = entity;
 }

@@ -663,11 +663,11 @@ void find_owned_components(
             /* If entity is a type, add each component in the type */
             const EcsType *t_ptr = ecs_get(world, e, EcsType);
             if (t_ptr) {
-                ecs_type_t t = t_ptr->normalized;
-                int32_t j, count = ecs_vector_count(t);
-                ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
-                for (j = 0; j < count; j ++) {
-                    owned->array[owned->count ++] = entities[j];
+                ecs_type_t n = t_ptr->normalized;
+                int32_t j, n_count = ecs_vector_count(n);
+                ecs_entity_t *n_entities = ecs_vector_first(n, ecs_entity_t);
+                for (j = 0; j < n_count; j ++) {
+                    owned->array[owned->count ++] = n_entities[j];
                 }
             } else {
                 owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;

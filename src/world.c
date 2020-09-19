@@ -154,6 +154,8 @@ ecs_world_t *ecs_mini(void) {
     world->t_info = ecs_map_new(ecs_c_info_t, 0);  
     world->fini_actions = NULL; 
 
+    world->aliases = NULL;
+
     world->queries = ecs_vector_new(ecs_query_t*, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->child_tables = NULL;
@@ -486,6 +488,21 @@ void fini_child_tables(
     ecs_map_free(world->child_tables);
 }
 
+/* Cleanup aliases */
+static
+void fini_aliases(
+    ecs_world_t *world)
+{
+    int32_t i, count = ecs_vector_count(world->aliases);
+    ecs_alias_t *aliases = ecs_vector_first(world->aliases, ecs_alias_t);
+
+    for (i = 0; i < count; i ++) {
+        ecs_os_free(aliases[i].name);
+    }
+
+    ecs_vector_free(world->aliases);
+}
+
 /* Cleanup misc structures */
 static
 void fini_misc(
@@ -522,6 +539,8 @@ int ecs_fini(
     fini_queries(world);
 
     fini_child_tables(world);
+
+    fini_aliases(world);
 
     fini_misc(world);
 
@@ -869,3 +888,4 @@ void ecs_notify_queries(
         ecs_query_notify(world, queries[i], event);
     }    
 }
+
