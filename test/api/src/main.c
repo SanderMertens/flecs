@@ -581,6 +581,9 @@ void Traits_add_tag_trait_for_tag(void);
 void Traits_add_tag_trait_for_component(void);
 void Traits_query_2_traits(void);
 void Traits_query_2_traits_2_instances_per_type(void);
+void Traits_query_trait_or_component(void);
+void Traits_query_trait_or_trait(void);
+void Traits_query_not_trait(void);
 void Traits_override_trait(void);
 void Traits_override_tag_trait(void);
 void Traits_trait_w_component_query(void);
@@ -3415,6 +3418,18 @@ bake_test_case Traits_testcases[] = {
         Traits_query_2_traits_2_instances_per_type
     },
     {
+        "query_trait_or_component",
+        Traits_query_trait_or_component
+    },
+    {
+        "query_trait_or_trait",
+        Traits_query_trait_or_trait
+    },
+    {
+        "query_not_trait",
+        Traits_query_not_trait
+    },
+    {
         "override_trait",
         Traits_override_trait
     },
@@ -6223,7 +6238,7 @@ static bake_test_suite suites[] = {
         "Traits",
         NULL,
         NULL,
-        22,
+        25,
         Traits_testcases
     },
     {

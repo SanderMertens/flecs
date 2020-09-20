@@ -1084,3 +1084,97 @@ void Traits_trait_w_component_query() {
 
     ecs_fini(world);
 }
+
+void Traits_query_trait_or_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_add_trait(world, e1, ecs_entity(Position), Trait);
+    ecs_entity_t e2 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "TRAIT | Trait > Position || Position");
+    
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        Position *t = ecs_column(&it, Position, 1);
+        test_assert(t != NULL);
+
+        int i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e1 || it.entities[i] == e2);
+        }
+        count += it.count;
+    }
+
+    test_assert(count == 2);
+
+    ecs_fini(world);
+}
+
+void Traits_query_trait_or_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TraitA);
+    ECS_TAG(world, TraitB);
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_add_trait(world, e1, ecs_entity(Position), TraitA);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add_trait(world, e2, ecs_entity(Position), TraitB);
+
+    ecs_query_t *q = ecs_query_new(world, "TRAIT | TraitA > Position || TRAIT | TraitB > Position");
+    
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        Position *t = ecs_column(&it, Position, 1);
+        test_assert(t != NULL);
+
+        int i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e1 || it.entities[i] == e2);
+        }
+        count += it.count;
+    }
+
+    test_assert(count == 2);
+
+    ecs_fini(world);
+}
+
+void Traits_query_not_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add_trait(world, e2, ecs_entity(Position), Trait);
+
+    ecs_query_t *q = ecs_query_new(world, "!TRAIT | Trait > Position, Position");
+    
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        Position *t = ecs_column(&it, Position, 1);
+        test_assert(t == NULL);
+        Position *p = ecs_column(&it, Position, 2);
+        test_assert(p != NULL);
+
+        int i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] == e1);
+        }
+        count += it.count;
+    }
+
+    test_assert(count == 1);
+
+    ecs_fini(world);
+}
