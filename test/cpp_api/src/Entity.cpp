@@ -617,3 +617,15 @@ void Entity_force_owned_nested() {
     test_assert(e.has<Velocity>());
     test_assert(!e.owns<Velocity>());
 }
+
+struct MyTag { };
+
+void Entity_tag_has_size_zero() {
+    flecs::world world;
+
+    auto comp = world.component<MyTag>();
+
+    auto ptr = comp.get<flecs::Component>();
+    test_int(ptr->size, 0);
+    test_int(ptr->alignment, 0);
+}

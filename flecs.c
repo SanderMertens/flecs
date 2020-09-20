@@ -4894,7 +4894,7 @@ void commit(
                 removed);
 
             ecs_eis_set(stage, entity, &(ecs_record_t){
-                NULL, -info->is_watched
+                NULL, (info->is_watched == true) * -1
             });
         }      
     } else {        

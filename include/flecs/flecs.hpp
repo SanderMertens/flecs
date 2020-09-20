@@ -2870,7 +2870,7 @@ void register_lifecycle_actions(
 template <typename T>
 class component_info final {
 public:
-    static void init(world_t* world, entity_t entity) {
+    static void init(world_t* world, entity_t entity, bool allow_tag = true) {
         if (s_id) {
             ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
                 _::name_helper<T>::name());
@@ -2887,13 +2887,16 @@ public:
         s_id = entity;
         s_type = ecs_type_from_entity(world, entity);
         s_name = ecs_get_fullpath(world, entity);
+        s_allow_tag = allow_tag;
     }
 
-    static entity_t id_no_lifecycle(world_t *world = nullptr, const char *name = nullptr) {
+    static entity_t id_no_lifecycle(world_t *world = nullptr, const char *name = nullptr, bool allow_tag = true) {
         if (!s_id) {
             if (!name) {
                 name = _::name_helper<T>::name();
             }
+
+            s_allow_tag = allow_tag;
 
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, name);
 
@@ -2905,8 +2908,8 @@ public:
             
             ecs_entity_t entity = ecs_new_component(
                 world, result.id(), nullptr, 
-                sizeof(typename std::remove_pointer<T>::type), 
-                alignof(typename std::remove_pointer<T>::type));
+                size(), 
+                alignment());
 
             ecs_assert(entity == result.id(), ECS_INTERNAL_ERROR, NULL);
 
@@ -2915,14 +2918,17 @@ public:
 
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
 
-        return s_id;        
+        return s_id;
     }
 
-    static entity_t id(world_t *world = nullptr, const char *name = nullptr) {
+    static entity_t id(world_t *world = nullptr, const char *name = nullptr, bool allow_tag = true) {
         if (!s_id) {
-            id_no_lifecycle(world, name);
-            register_lifecycle_actions<T>(world, s_id,
-                true, true, true, true);
+            id_no_lifecycle(world, name, allow_tag);
+
+            if (size()) {
+                register_lifecycle_actions<T>(world, s_id,
+                    true, true, true, true);
+            }
         }
 
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
@@ -2960,6 +2966,22 @@ public:
         return s_id != 0;
     }
 
+    static size_t size() {
+        if (s_allow_tag && std::is_empty<T>::value) {
+            return 0;
+        } else {
+            return sizeof(typename std::remove_pointer<T>::type);
+        }
+    }
+
+    static size_t alignment() {
+        if (size() == 0) {
+            return 0;
+        } else {
+            return alignof(typename std::remove_pointer<T>::type);
+        }
+    }
+
     // This function is only used to test cross-translation unit features. No
     // code other than test cases should invoke this function.
     static void reset() {
@@ -2972,11 +2994,13 @@ private:
     static entity_t s_id;
     static type_t s_type;
     static const char *s_name;
+    static bool s_allow_tag;
 };
 
 template <typename T> entity_t component_info<T>::s_id( 0 );
 template <typename T> type_t component_info<T>::s_type( nullptr );
 template <typename T> const char* component_info<T>::s_name( nullptr );
+template <typename T> bool component_info<T>::s_allow_tag( true );
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2987,7 +3011,7 @@ template <typename T> const char* component_info<T>::s_name( nullptr );
 
 /** Plain old datatype, no lifecycle actions are registered */
 template <typename T>
-flecs::entity pod_component(const flecs::world& world, const char *name = nullptr) {
+flecs::entity pod_component(const flecs::world& world, const char *name = nullptr, bool allow_tag = true) {
     if (!name) {
         name = _::name_helper<T>::name();
     }
@@ -2998,7 +3022,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     if (_::component_info<T>::registered()) {
         /* To support components across multiple worlds, ensure that the
          * component ids are the same. */
-        id = _::component_info<T>::id_no_lifecycle(world_ptr, name);
+        id = _::component_info<T>::id_no_lifecycle(world_ptr, name, allow_tag);
 
         /* If entity is not empty check if the name matches */
         if (ecs_get_type(world_ptr, id) != nullptr) {
@@ -3024,8 +3048,8 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
          * If the component was registered already, nothing will change. */
         ecs_entity_t entity = ecs_new_component(
             world.c_ptr(), id, nullptr, 
-            sizeof(typename std::remove_pointer<T>::type), 
-            alignof(typename std::remove_pointer<T>::type)); 
+            _::component_info<T>::size(), 
+            _::component_info<T>::alignment());
         
         ecs_assert(entity == id, ECS_INTERNAL_ERROR, NULL);
 
@@ -3040,13 +3064,13 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         ecs_entity_t e = ecs_lookup_fullpath(world_ptr, name);
         ecs_assert(e == 0, ECS_COMPONENT_NAME_IN_USE, name);
 
-        id = _::component_info<T>::id_no_lifecycle(world_ptr, name);
+        id = _::component_info<T>::id_no_lifecycle(world_ptr, name, allow_tag);
     }
 
-    _::component_info<T>::init(world_ptr, id);
-    _::component_info<const T>::init(world_ptr, id);
-    _::component_info<T*>::init(world_ptr, id);
-    _::component_info<T&>::init(world_ptr, id);
+    _::component_info<T>::init(world_ptr, id, allow_tag);
+    _::component_info<const T>::init(world_ptr, id, allow_tag);
+    _::component_info<T*>::init(world_ptr, id, allow_tag);
+    _::component_info<T&>::init(world_ptr, id, allow_tag);
     
     return world.entity(id);
 }
@@ -3056,8 +3080,10 @@ template <typename T>
 flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
-    _::register_lifecycle_actions<T>(world.c_ptr(), result.id(),
-        true, true, true, true);
+    if (_::component_info<T>::size()) {
+        _::register_lifecycle_actions<T>(world.c_ptr(), result.id(),
+            true, true, true, true);
+    }
 
     return result;
 }
@@ -3086,7 +3112,7 @@ flecs::entity_t type_id() {
 template <typename T>
 flecs::entity module(const flecs::world& world, const char *name = nullptr) {
     ecs_set_scope(world.c_ptr(), 0);
-    flecs::entity result = pod_component<T>(world, name);
+    flecs::entity result = pod_component<T>(world, name, false);
     ecs_set_scope(world.c_ptr(), result.id());
     return result;
 }
@@ -3113,10 +3139,10 @@ flecs::entity import(world& world) {
 
         ecs_set_ptr_w_entity(
             world.c_ptr(),
-             m.id(),
-             _::component_info<T>::id_no_lifecycle(world.c_ptr()), 
-             sizeof(T),
-             module_data);
+            m.id(),
+            _::component_info<T>::id_no_lifecycle(world.c_ptr()), 
+            _::component_info<T>::size(),
+            module_data);
 
         ecs_log_pop();
 

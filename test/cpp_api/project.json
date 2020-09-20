@@ -53,7 +53,8 @@
                 "clear",
                 "foce_owned",
                 "force_owned_2",
-                "force_owned_nested"
+                "force_owned_nested",
+                "tag_has_size_zero"
             ]
         }, {
             "id": "Traits",
