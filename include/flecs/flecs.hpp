@@ -389,13 +389,21 @@ public:
         return m_iter->delta_system_time;
     }
 
-    /** Returns whether column shared.
+    /** Returns whether column is shared.
      * 
      * @param col The column id.
      */
     bool is_shared(int32_t col) const {
         return !ecs_is_owned(m_iter, col);
     }
+
+    /** Returns whether column is owned.
+     * 
+     * @param col The column id.
+     */
+    bool is_owned(int32_t col) const {
+        return ecs_is_owned(m_iter, col);
+    }    
 
     /** Returns whether column is set.
      * 
