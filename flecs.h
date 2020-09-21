@@ -7153,13 +7153,21 @@ public:
         return m_iter->delta_system_time;
     }
 
-    /** Returns whether column shared.
+    /** Returns whether column is shared.
      * 
      * @param col The column id.
      */
     bool is_shared(int32_t col) const {
         return !ecs_is_owned(m_iter, col);
     }
+
+    /** Returns whether column is owned.
+     * 
+     * @param col The column id.
+     */
+    bool is_owned(int32_t col) const {
+        return ecs_is_owned(m_iter, col);
+    }    
 
     /** Returns whether column is set.
      * 
@@ -9944,6 +9952,8 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
             _::component_info<T>::size(), 
             _::component_info<T>::alignment());
         
+        (void)entity;
+        
         ecs_assert(entity == id, ECS_INTERNAL_ERROR, NULL);
 
         /* This functionality could have been put in id_no_lifecycle, but since
@@ -9954,8 +9964,11 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     } else {
         /* If the component is not yet registered, ensure no other component
          * or entity has been registered with this name */
-        ecs_entity_t e = ecs_lookup_fullpath(world_ptr, name);
-        ecs_assert(e == 0, ECS_COMPONENT_NAME_IN_USE, name);
+        ecs_entity_t entity = ecs_lookup_fullpath(world_ptr, name);
+
+        (void)entity;
+
+        ecs_assert(entity == 0, ECS_COMPONENT_NAME_IN_USE, name);
 
         id = _::component_info<T>::id_no_lifecycle(world_ptr, name, allow_tag);
     }

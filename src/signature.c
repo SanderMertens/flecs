@@ -250,7 +250,7 @@ const char* parse_element(
     sig_element_t *elem_out)
 {
     const char *ptr = sig;
-    char token[ECS_MAX_TOKEN_SIZE];
+    char token[ECS_MAX_TOKEN_SIZE] = {0};
     sig_element_t elem = {
         .inout_kind = EcsInOut,
         .from_kind = EcsFromOwned,
