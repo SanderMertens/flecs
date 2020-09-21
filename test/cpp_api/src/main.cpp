@@ -123,10 +123,16 @@ void System_signature_optional(void);
 void System_copy_name_on_create(void);
 void System_nested_system(void);
 void System_empty_signature(void);
+void System_action_tag(void);
+void System_iter_tag(void);
+void System_each_tag(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
 void Trigger_on_remove(void);
+void Trigger_on_add_tag_action(void);
+void Trigger_on_add_tag_iter(void);
+void Trigger_on_add_tag_each(void);
 
 // Testsuite 'Query'
 void Query_action(void);
@@ -650,6 +656,18 @@ bake_test_case System_testcases[] = {
     {
         "empty_signature",
         System_empty_signature
+    },
+    {
+        "action_tag",
+        System_action_tag
+    },
+    {
+        "iter_tag",
+        System_iter_tag
+    },
+    {
+        "each_tag",
+        System_each_tag
     }
 };
 
@@ -661,6 +679,18 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_remove",
         Trigger_on_remove
+    },
+    {
+        "on_add_tag_action",
+        Trigger_on_add_tag_action
+    },
+    {
+        "on_add_tag_iter",
+        Trigger_on_add_tag_iter
+    },
+    {
+        "on_add_tag_each",
+        Trigger_on_add_tag_each
     }
 };
 
@@ -1028,14 +1058,14 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        15,
+        18,
         System_testcases
     },
     {
         "Trigger",
         NULL,
         NULL,
-        2,
+        5,
         Trigger_testcases
     },
     {

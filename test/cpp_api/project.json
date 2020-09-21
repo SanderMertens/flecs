@@ -138,13 +138,19 @@
                 "signature_optional",
                 "copy_name_on_create",
                 "nested_system",
-                "empty_signature"
+                "empty_signature",
+                "action_tag",
+                "iter_tag",
+                "each_tag"
             ]
         }, {
             "id": "Trigger",
             "testcases": [
                 "on_add",
-                "on_remove"
+                "on_remove",
+                "on_add_tag_action",
+                "on_add_tag_iter",
+                "on_add_tag_each"
             ]
         }, {
             "id": "Query",

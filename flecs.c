@@ -4001,6 +4001,16 @@ void run_component_trigger_for_entities(
         ecs_entity_t components[1] = { component };
         int32_t columns[1] = { index };
 
+        /* If this is a tag, don't try to retrieve data */
+        if (table->column_count < index) {
+            columns[0] = 0;
+        } else {
+            ecs_column_t *column = &data->columns[index - 1];
+            if (!column->size) {
+                columns[0] = 0;
+            }            
+        }
+
         ecs_iter_t it = {
             .world = stage->world,
             .columns = columns,

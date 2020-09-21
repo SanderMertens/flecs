@@ -513,3 +513,59 @@ void System_empty_signature() {
 
     test_int(count, 1); 
 }
+
+struct MyTag { };
+
+void System_action_tag() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.system<MyTag>()
+        .action([&](flecs::iter it, flecs::column<MyTag>) {
+            invoked ++;
+        });
+
+    world.entity()
+        .add<MyTag>();
+
+    world.progress();
+
+    test_int(invoked, 1);
+}
+
+void System_iter_tag() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.system<MyTag>()
+        .iter([&](flecs::iter it, MyTag*) {
+            invoked ++;
+        });
+
+    world.entity()
+        .add<MyTag>();
+
+    world.progress();
+
+    test_int(invoked, 1);
+}
+
+void System_each_tag() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.system<MyTag>()
+        .each([&](flecs::entity e, MyTag&) {
+            invoked ++;
+        });
+
+    world.entity()
+        .add<MyTag>();
+
+    world.progress();
+
+    test_int(invoked, 1);
+}
