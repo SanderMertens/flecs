@@ -665,3 +665,15 @@ void Entity_force_owned_type_w_trait() {
     const Position *p = e.get_trait<Position, Velocity>();
     test_assert(pp != p);
 }
+
+struct MyTag { };
+
+void Entity_tag_has_size_zero() {
+    flecs::world world;
+
+    auto comp = world.component<MyTag>();
+
+    auto ptr = comp.get<flecs::Component>();
+    test_int(ptr->size, 0);
+    test_int(ptr->alignment, 0);
+}

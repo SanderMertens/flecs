@@ -74,8 +74,8 @@ void GlobalComponentIds_declare_2_world() {
     ECS_COMPONENT_DEFINE(world_2, Velocity);
     ECS_COMPONENT_DEFINE(world_2, Position);
 
-    test_assert(e_pos = ecs_entity(Position));
-    test_assert(e_vel = ecs_entity(Velocity));
+    test_assert(e_pos == ecs_entity(Position));
+    test_assert(e_vel == ecs_entity(Velocity));
 
     ecs_fini(world_1);
     ecs_fini(world_2);

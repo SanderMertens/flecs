@@ -50,6 +50,7 @@ void Entity_force_owned_2(void);
 void Entity_force_owned_nested(void);
 void Entity_force_owned_type(void);
 void Entity_force_owned_type_w_trait(void);
+void Entity_tag_has_size_zero(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -382,6 +383,10 @@ bake_test_case Entity_testcases[] = {
     {
         "force_owned_type_w_trait",
         Entity_force_owned_type_w_trait
+    },
+    {
+        "tag_has_size_zero",
+        Entity_tag_has_size_zero
     }
 };
 
@@ -988,7 +993,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        41,
+        42,
         Entity_testcases
     },
     {

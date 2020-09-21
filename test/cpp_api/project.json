@@ -55,7 +55,8 @@
                 "force_owned_2",
                 "force_owned_nested",
                 "force_owned_type",
-                "force_owned_type_w_trait"
+                "force_owned_type_w_trait",
+                "tag_has_size_zero"
             ]
         }, {
             "id": "Traits",
