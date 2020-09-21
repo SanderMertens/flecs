@@ -208,6 +208,8 @@ void Lookup_lookup_path_w_digit() {
 
     ecs_entity_t e2 = ecs_lookup_fullpath(world, "parent.10_id");
     test_assert(e2 == e);
+
+    ecs_fini(world);
 }
 
 void Lookup_set_name_of_existing() {
