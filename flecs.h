@@ -1862,10 +1862,10 @@ typedef struct ecs_world_info_t {
     ecs_entity_t min_id;              /**< First allowed entity id */
     ecs_entity_t max_id;              /**< Last allowed entity id */
 
-    float delta_time_raw;       /**< Raw delta time (no time scaling) */
-    float delta_time;           /**< Time passed to or computed by ecs_progress */
-    float time_scale;           /**< Time scale applied to delta_time */
-    float target_fps;           /**< Target fps */
+    float delta_time_raw;      /**< Raw delta time (no time scaling) */
+    float delta_time;          /**< Time passed to or computed by ecs_progress */
+    float time_scale;          /**< Time scale applied to delta_time */
+    float target_fps;          /**< Target fps */
     float frame_time_total;    /**< Total time spent processing a frame */
     float system_time_total;   /**< Total time spent in systems */
     float merge_time_total;    /**< Total time spent in merges */
@@ -7153,6 +7153,12 @@ public:
         return m_iter->delta_system_time;
     }
 
+    /** Return total time passed in simulation.
+     */
+    float world_time() const {
+        return m_iter->world_time;
+    }
+
     /** Returns whether column is shared.
      * 
      * @param col The column id.
@@ -8366,6 +8372,8 @@ public:
     const base_type& set(T&& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
+            ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
             ecs_set_ptr_w_entity(
                 world, id, _::component_info<T>::id(world), sizeof(T), &value);
         });
@@ -8383,6 +8391,8 @@ public:
     const base_type& set(const T& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
+            ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
             ecs_set_ptr_w_entity(
                 world, id, _::component_info<T>::id(world), sizeof(T), &value);
         });
@@ -8401,6 +8411,8 @@ public:
     const base_type& set_trait(const T& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
+            ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
             ecs_set_ptr_w_entity(world, id, 
                 ecs_trait(_::component_info<C>::id(world), 
                     _::component_info<T>::id(world)),
@@ -8446,6 +8458,9 @@ public:
     const base_type& patch(std::function<void(T&, bool)> func) const {
         static_cast<base_type*>(this)->invoke(
         [&func](world_t *world, entity_t id) {
+            ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
+
             bool is_added;
             T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
                 world, id, _::component_info<T>::id(world), &is_added));
@@ -8469,6 +8484,9 @@ public:
     const base_type& patch(std::function<void(T&)> func) const {
         static_cast<base_type*>(this)->invoke(
         [&func](world_t *world, entity_t id) {
+            ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
+
             bool is_added;
             T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
                 world, id, _::component_info<T>::id(world), &is_added));
@@ -8491,12 +8509,18 @@ public:
     ref()
         : m_world( nullptr )
         , m_entity( 0 )
-        , m_ref() { }
+        , m_ref() 
+    {       
+    }
 
     ref(world_t *world, entity_t entity) 
         : m_world( world )
         , m_entity( entity )
-        , m_ref() {
+        , m_ref() 
+    {
+        ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
+
         ecs_get_ref_w_entity(
             m_world, &m_ref, m_entity, _::component_info<T>::id(world));
     }
@@ -8802,6 +8826,8 @@ public:
     const T* get() const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
         return static_cast<const T*>(
             ecs_get_w_entity(m_world, m_id, _::component_info<T>::id(m_world)));
     }
@@ -8844,6 +8870,8 @@ public:
     T* get_mut(bool *is_added = nullptr) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
         return static_cast<T*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, _::component_info<T>::id(m_world), is_added));
@@ -8892,6 +8920,8 @@ public:
     const T* get_trait() const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
         return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
             _::component_info<C>::id(m_world), _::component_info<T>::id(m_world))));
     }   
@@ -8907,6 +8937,8 @@ public:
     const T* get_trait(flecs::entity component) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
         return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
             component.id(), _::component_info<T>::id(m_world))));
     }
@@ -8925,6 +8957,8 @@ public:
     const C* get_trait_tag(flecs::entity trait) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::component_info<C>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
         return static_cast<const C*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
             _::component_info<C>::id(m_world), trait.id())));
     }
@@ -8960,6 +8994,8 @@ public:
     T* get_trait_mut(bool *is_added = nullptr) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
         return static_cast<T*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
@@ -8983,6 +9019,8 @@ public:
     T* get_trait_mut(flecs::entity component, bool *is_added = nullptr) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
         return static_cast<T*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
@@ -9008,6 +9046,8 @@ public:
     C* get_trait_tag_mut(flecs::entity trait, bool *is_added = nullptr) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::component_info<C>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
         return static_cast<C*>(
             ecs_get_mut_w_entity(
                 m_world, m_id, ecs_trait(
@@ -9024,6 +9064,8 @@ public:
     void modified() const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
         ecs_modified_w_entity(m_world, m_id, _::component_info<T>::id(m_world));
     }
 
@@ -9057,6 +9099,8 @@ public:
     ref<T> get_ref() const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::component_info<T>::size() != 0, 
+                ECS_INVALID_PARAMETER, NULL);
         return ref<T>(m_world, m_id);
     }
 
@@ -9863,16 +9907,16 @@ public:
         return s_type;
     }
 
-    static bool registered() {
-        return s_id != 0;
-    }
-
     static size_t size() {
         if (s_allow_tag && std::is_empty<T>::value) {
             return 0;
         } else {
             return sizeof(typename std::remove_pointer<T>::type);
         }
+    }    
+
+    static bool registered() {
+        return s_id != 0;
     }
 
     static size_t alignment() {
@@ -10681,7 +10725,7 @@ private:
 
         if (!signature.length()) {
             signature = "0";
-        }        
+        }
 
         if (is_trigger) {
             e = ecs_new_trigger(

@@ -624,7 +624,10 @@
                 "query_single_trait",
                 "query_single_instanceof",
                 "query_single_childof",
-                "query_w_filter"
+                "query_w_filter",
+                "query_optional_owned",
+                "query_optional_shared",
+                "query_optional_any"
             ]
         }, {
             "id": "Traits",

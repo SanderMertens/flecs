@@ -571,6 +571,9 @@ void Queries_query_single_trait(void);
 void Queries_query_single_instanceof(void);
 void Queries_query_single_childof(void);
 void Queries_query_w_filter(void);
+void Queries_query_optional_owned(void);
+void Queries_query_optional_shared(void);
+void Queries_query_optional_any(void);
 
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
@@ -3381,6 +3384,18 @@ bake_test_case Queries_testcases[] = {
     {
         "query_w_filter",
         Queries_query_w_filter
+    },
+    {
+        "query_optional_owned",
+        Queries_query_optional_owned
+    },
+    {
+        "query_optional_shared",
+        Queries_query_optional_shared
+    },
+    {
+        "query_optional_any",
+        Queries_query_optional_any
     }
 };
 
@@ -6231,7 +6246,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        15,
+        18,
         Queries_testcases
     },
     {

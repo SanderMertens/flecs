@@ -89,10 +89,10 @@ typedef struct ecs_world_info_t {
     ecs_entity_t min_id;              /**< First allowed entity id */
     ecs_entity_t max_id;              /**< Last allowed entity id */
 
-    float delta_time_raw;       /**< Raw delta time (no time scaling) */
-    float delta_time;           /**< Time passed to or computed by ecs_progress */
-    float time_scale;           /**< Time scale applied to delta_time */
-    float target_fps;           /**< Target fps */
+    float delta_time_raw;      /**< Raw delta time (no time scaling) */
+    float delta_time;          /**< Time passed to or computed by ecs_progress */
+    float time_scale;          /**< Time scale applied to delta_time */
+    float target_fps;          /**< Target fps */
     float frame_time_total;    /**< Total time spent processing a frame */
     float system_time_total;   /**< Total time spent in systems */
     float merge_time_total;    /**< Total time spent in merges */

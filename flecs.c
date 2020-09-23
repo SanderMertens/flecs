@@ -13969,6 +13969,16 @@ add_trait:
         if (!entity && from != EcsFromEmpty) {
             int32_t index = get_component_index(world, table, table_type, 
                 &component, c, op, trait_offsets, trait_cur + 1);
+
+            if (index == -1) {
+                if (from == EcsFromOwned && op == EcsOperOptional) {
+                    index = 0;
+                }
+            } else {
+                if (from == EcsFromShared && op == EcsOperOptional) {
+                    index = 0;
+                }
+            }
             
             table_data->columns[c] = index;
 
