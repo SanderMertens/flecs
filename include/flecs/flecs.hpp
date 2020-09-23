@@ -201,7 +201,7 @@ public:
      */
     T& operator[](size_t index) {
         ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(!index || !m_is_shared, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return m_array[index];
     }
