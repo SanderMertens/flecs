@@ -172,7 +172,7 @@ bool ecs_worker_sync(
 
     int32_t thread_count = ecs_vector_count(world->workers);
     if (!thread_count) {
-        ecs_staging_end(world, false);
+        ecs_staging_end(world);
 
         ecs_pipeline_update(world, world->pipeline);
 
@@ -189,7 +189,7 @@ void ecs_worker_end(
 {
     int32_t thread_count = ecs_vector_count(world->workers);
     if (!thread_count) {
-        ecs_staging_end(world, false);
+        ecs_staging_end(world);
     } else {
         sync_worker(world);
     }
@@ -232,7 +232,7 @@ void ecs_workers_progress(
             wait_for_sync(world);
 
             /* Merge */
-            ecs_staging_end(world, false);
+            ecs_staging_end(world);
 
             int32_t update_count;
             if ((update_count = ecs_pipeline_update(world, pipeline))) {

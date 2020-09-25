@@ -1260,7 +1260,12 @@
                 "get_mutable",
                 "get_mutable_from_main",
                 "get_mutable_w_add",
-                "on_add_after_new_type_in_progress"
+                "on_add_after_new_type_in_progress",
+                "defer_new",
+                "defer_add",
+                "defer_remove",
+                "defer_set",
+                "defer_delete"
             ]
         }, {
             "id": "MultiThreadStaging",

@@ -138,7 +138,7 @@ void Reference_get_ref_staged() {
     test_int(p->x, 30);
     test_int(p->y, 40);
 
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
 
     p = ecs_get_ref(world, &ref, e, Position);
     test_assert(p != NULL);
@@ -172,7 +172,7 @@ void Reference_get_ref_after_new_in_stage() {
     test_int(p->x, 30);
     test_int(p->y, 40);
 
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
 
     p = ecs_get_ref(world, &ref, e, Position);
     test_assert(p != NULL);

@@ -357,6 +357,7 @@ void ecs_stage_merge(
 {
     ecs_assert(stage != &world->stage, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage->tables != world->stage.tables, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
 
     /* First merge tables created by stage. This only happens if a new table was
      * created while iterating that did not yet exist in the main stage. Tables
@@ -372,6 +373,30 @@ void ecs_stage_merge(
     /* Clear temporary tables used by stage */
     clean_tables(world, stage);
     ecs_eis_clear(stage);
+}
+
+void ecs_stage_merge_post_frame(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{    
+    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
+
+    /* Execute post frame actions */
+    ecs_vector_each(stage->post_frame_actions, ecs_action_elem_t, action, {
+        action->action(world, action->ctx);
+    });
+
+    ecs_vector_free(stage->post_frame_actions);
+    stage->post_frame_actions = NULL;
+
+    if (ecs_vector_count(stage->defer_merge_queue)) {
+        stage->defer ++;
+        stage->defer_queue = stage->defer_merge_queue;
+        ecs_defer_flush(world, stage);
+        ecs_vector_clear(stage->defer_merge_queue);
+        ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(stage->defer_queue == NULL, ECS_INVALID_PARAMETER, NULL);
+    }
 }
 
 void ecs_stage_init(
@@ -400,16 +425,7 @@ void ecs_stage_init(
     ecs_init_root_table(world, stage);
 
     stage->scope_table = &world->stage.root;
-    stage->scope = 0;
-    stage->defer = 0;
-    stage->defer_queue = NULL;
-    stage->post_frame_actions = NULL;
     stage->range_check_enabled = true;
-
-#ifndef NDEBUG
-    stage->system = 0;
-    stage->system_columns = NULL;
-#endif
 }
 
 void ecs_stage_deinit(

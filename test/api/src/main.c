@@ -1163,6 +1163,11 @@ void SingleThreadStaging_get_mutable(void);
 void SingleThreadStaging_get_mutable_from_main(void);
 void SingleThreadStaging_get_mutable_w_add(void);
 void SingleThreadStaging_on_add_after_new_type_in_progress(void);
+void SingleThreadStaging_defer_new(void);
+void SingleThreadStaging_defer_add(void);
+void SingleThreadStaging_defer_remove(void);
+void SingleThreadStaging_defer_set(void);
+void SingleThreadStaging_defer_delete(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -5602,6 +5607,26 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "on_add_after_new_type_in_progress",
         SingleThreadStaging_on_add_after_new_type_in_progress
+    },
+    {
+        "defer_new",
+        SingleThreadStaging_defer_new
+    },
+    {
+        "defer_add",
+        SingleThreadStaging_defer_add
+    },
+    {
+        "defer_remove",
+        SingleThreadStaging_defer_remove
+    },
+    {
+        "defer_set",
+        SingleThreadStaging_defer_set
+    },
+    {
+        "defer_delete",
+        SingleThreadStaging_defer_delete
     }
 };
 
@@ -6400,7 +6425,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        60,
+        65,
         SingleThreadStaging_testcases
     },
     {

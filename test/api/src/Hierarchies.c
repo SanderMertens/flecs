@@ -585,7 +585,7 @@ void Hierarchies_scope_set_w_new_staged() {
     test_assert(e != 0);
     test_assert(ecs_get_type(world, e) == NULL);
 
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
 
     ecs_fini(world);
 }
@@ -1123,7 +1123,7 @@ void Hierarchies_delete_tree_staged() {
 
     ecs_staging_begin(world);
     ecs_delete(world, parent);
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
     
     test_assert(ecs_get_type(world, parent) == NULL);
     test_assert(ecs_get_type(world, child) == NULL);

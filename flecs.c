@@ -504,6 +504,7 @@ typedef enum ecs_op_kind_t {
     EcsOpAdd,
     EcsOpRemove,   
     EcsOpSet,
+    EcsOpDelete
 } ecs_op_kind_t;
 
 typedef struct ecs_op_t {
@@ -552,6 +553,7 @@ struct ecs_stage_t {
     /* Are operations deferred? */
     int32_t defer;
     ecs_vector_t *defer_queue;
+    ecs_vector_t *defer_merge_queue;
 
     /* One-shot actions to be executed after the merge */
     ecs_vector_t *post_frame_actions;
@@ -834,7 +836,7 @@ void ecs_component_monitor_register(
     ecs_entity_t component,
     ecs_query_t *query);
 
-bool ecs_defer_begin(
+bool ecs_defer_op_begin(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_op_kind_t op_kind,
@@ -843,7 +845,7 @@ bool ecs_defer_begin(
     const void *value,
     ecs_size_t size);
 
-void ecs_defer_end(
+void ecs_defer_flush(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
@@ -880,6 +882,11 @@ void ecs_stage_deinit(
 
 /* Merge stage with main stage */
 void ecs_stage_merge(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
+
+/* Post-frame merge actions */
+void ecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
@@ -1654,6 +1661,8 @@ const char* ecs_strerror(
         return "entity redefined with different name";
     case ECS_INCONSISTENT_COMPONENT_ACTION:
         return "registered mismatching component action";
+    case ECS_INVALID_OPERATION:
+        return "invalid operation";
     }
 
     return "unknown error code";
@@ -5141,7 +5150,7 @@ const ecs_entity_t* new_w_data(
         }
     }
     
-    ecs_defer_begin(world, stage, EcsOpNone, 0, 0, NULL, 0);
+    ecs_defer_op_begin(world, stage, EcsOpNone, 0, 0, NULL, 0);
 
     ecs_comp_set_t set_mask = { 0 };
     ecs_run_add_actions(world, stage, table, data, row, count, &added, &set_mask, 
@@ -5191,7 +5200,7 @@ const ecs_entity_t* new_w_data(
 
     ecs_run_monitors(world, stage, table, table->monitors, row, count, NULL);
 
-    ecs_defer_end(world, stage);
+    ecs_defer_flush(world, stage);
 
     if (row_out) {
         *row_out = row;
@@ -5306,7 +5315,7 @@ void add_entities(
     ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
 
-    if (ecs_defer_begin(world, stage, EcsOpAdd, entity, components, NULL, 0)) {
+    if (ecs_defer_op_begin(world, stage, EcsOpAdd, entity, components, NULL, 0)) {
         return;
     }
 
@@ -5322,7 +5331,7 @@ void add_entities(
 
     commit(world, stage, entity, &info, dst_table, &added, NULL);
 
-    ecs_defer_end(world, stage);
+    ecs_defer_flush(world, stage);
 }
 
 static
@@ -5335,7 +5344,7 @@ void remove_entities(
     ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);    
     ecs_stage_t *stage = ecs_get_stage(&world);
 
-    if (ecs_defer_begin(world, stage, EcsOpRemove, entity, components, NULL, 0)) {
+    if (ecs_defer_op_begin(world, stage, EcsOpRemove, entity, components, NULL, 0)) {
         return;
     }
 
@@ -5351,7 +5360,7 @@ void remove_entities(
 
     commit(world, stage, entity, &info, dst_table, NULL, &removed);
 
-    ecs_defer_end(world, stage);
+    ecs_defer_flush(world, stage);
 }
 
 static
@@ -5548,11 +5557,15 @@ ecs_entity_t ecs_new_w_type(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);    
-    ecs_entity_t entity = ecs_new_id(world);
+    ecs_entity_t entity = ecs_new_id(world);  
 
     if (type || stage->scope) {
         ecs_entities_t to_add = ecs_type_to_entities(type);
+        if (ecs_defer_op_begin(world, stage, EcsOpAdd, entity, &to_add, NULL, 0)) {
+            return entity;
+        }
         new(world, stage, entity, &to_add);
+        ecs_defer_flush(world, stage);       
     } else {
         ecs_eis_set(&world->stage, entity, &(ecs_record_t){ 0 });
     }
@@ -5574,6 +5587,10 @@ ecs_entity_t ecs_new_w_entity(
             .count = 1
         };
 
+        if (ecs_defer_op_begin(world, stage, EcsOpAdd, entity, &to_add, NULL, 0)) {
+            return entity;
+        }  
+
         ecs_entity_t old_scope = 0;
         if (ECS_HAS_ROLE(component, CHILDOF)) {
             old_scope = ecs_set_scope(world, 0);
@@ -5584,6 +5601,8 @@ ecs_entity_t ecs_new_w_entity(
         if (ECS_HAS_ROLE(component, CHILDOF)) {
             ecs_set_scope(world, old_scope);
         }
+
+        ecs_defer_flush(world, stage);
     } else {
         ecs_eis_set(&world->stage, entity, &(ecs_record_t){ 0 });
     }
@@ -5697,6 +5716,11 @@ void ecs_delete(
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = ecs_get_stage(&world);
+
+    if (ecs_defer_op_begin(world, stage, EcsOpDelete, entity, 0, NULL, 0)) {
+        return;
+    }
+
     ecs_entity_info_t info;
     info.table = NULL;
 
@@ -5740,6 +5764,8 @@ void ecs_delete(
     } else {
         ecs_eis_delete(stage, entity);
     }
+
+    ecs_defer_flush(world, stage);
 }
 
 void ecs_add_type(
@@ -5997,7 +6023,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
         }
     }
 
-    if (ecs_defer_begin(world, stage, EcsOpSet, entity, &added, ptr, 
+    if (ecs_defer_op_begin(world, stage, EcsOpSet, entity, &added, ptr, 
         ecs_from_size_t(size))) 
     {
         return entity;
@@ -6029,7 +6055,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
     ecs_run_set_systems(world, stage, &added, 
         info.table, info.data, info.row, 1, false);
 
-    ecs_defer_end(world, stage);
+    ecs_defer_flush(world, stage);
 
     return entity;
 }
@@ -6253,7 +6279,7 @@ int32_t ecs_count_w_filter(
 
 /* Enter safe section. Record all operations so they can be executed after
  * leaving the safe section. */
-bool ecs_defer_begin(
+bool ecs_defer_op_begin(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_op_kind_t op_kind,
@@ -6265,24 +6291,32 @@ bool ecs_defer_begin(
     (void)world;
     
     if (stage->defer && op_kind != EcsOpNone) {
-        if (!components->count) {
-            return true;
+        int32_t components_count = 0;
+        if (components) {
+            components_count = components->count;
+            if (!components_count) {
+                return true;
+            }
         }
 
         ecs_op_t *op = ecs_vector_add(&stage->defer_queue, ecs_op_t);
         op->kind = op_kind;
         op->entity = entity;
-        if (components->count == 1) {
+
+        if (components_count == 1) {
             op->component = components->array[0];
             op->components = (ecs_entities_t) {
                 .array = NULL,
                 .count = 1
             };
-        } else {
+        } else if (components_count) {
             ecs_size_t array_size = components->count * ECS_SIZEOF(ecs_entity_t);
             op->components.array = ecs_os_malloc(array_size);
             ecs_os_memcpy(op->components.array, components->array, array_size);
             op->components.count = components->count;
+        } else {
+            op->component = 0;
+            op->components = (ecs_entities_t){ 0 };
         }
 
         if (size) {
@@ -6302,7 +6336,7 @@ bool ecs_defer_begin(
 }
 
 /* Leave safe section. Run all deferred commands. */
-void ecs_defer_end(
+void ecs_defer_flush(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
@@ -6329,6 +6363,9 @@ void ecs_defer_end(
                         op->components.array[0], ecs_to_size_t(op->size), 
                         op->value);
                     break;
+                case EcsOpDelete:
+                    ecs_delete(world, op->entity);
+                    break;
                 }
 
                 if (op->components.count > 1) {
@@ -6340,9 +6377,36 @@ void ecs_defer_end(
                 }
             });
 
-            ecs_vector_free(defer_queue);
+            if (defer_queue != stage->defer_merge_queue) {
+                ecs_vector_free(defer_queue);
+            }
         }
     }
+}
+
+void ecs_defer_begin(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(world->in_progress == true, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
+
+    stage->defer_queue = stage->defer_merge_queue;
+
+    ecs_defer_op_begin(world, stage, EcsOpNone, 0, 0, NULL, 0);
+}
+
+void ecs_defer_end(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(world->in_progress == true, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage->defer != 0, ECS_INVALID_PARAMETER, NULL);
+
+    stage->defer_merge_queue = stage->defer_queue;
+    stage->defer_queue = NULL;
+    stage->defer --;
+    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
 }
 
 static
@@ -6814,6 +6878,7 @@ void ecs_stage_merge(
 {
     ecs_assert(stage != &world->stage, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage->tables != world->stage.tables, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
 
     /* First merge tables created by stage. This only happens if a new table was
      * created while iterating that did not yet exist in the main stage. Tables
@@ -6829,6 +6894,30 @@ void ecs_stage_merge(
     /* Clear temporary tables used by stage */
     clean_tables(world, stage);
     ecs_eis_clear(stage);
+}
+
+void ecs_stage_merge_post_frame(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{    
+    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
+
+    /* Execute post frame actions */
+    ecs_vector_each(stage->post_frame_actions, ecs_action_elem_t, action, {
+        action->action(world, action->ctx);
+    });
+
+    ecs_vector_free(stage->post_frame_actions);
+    stage->post_frame_actions = NULL;
+
+    if (ecs_vector_count(stage->defer_merge_queue)) {
+        stage->defer ++;
+        stage->defer_queue = stage->defer_merge_queue;
+        ecs_defer_flush(world, stage);
+        ecs_vector_clear(stage->defer_merge_queue);
+        ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(stage->defer_queue == NULL, ECS_INVALID_PARAMETER, NULL);
+    }
 }
 
 void ecs_stage_init(
@@ -6857,16 +6946,7 @@ void ecs_stage_init(
     ecs_init_root_table(world, stage);
 
     stage->scope_table = &world->stage.root;
-    stage->scope = 0;
-    stage->defer = 0;
-    stage->defer_queue = NULL;
-    stage->post_frame_actions = NULL;
     stage->range_check_enabled = true;
-
-#ifndef NDEBUG
-    stage->system = 0;
-    stage->system_columns = NULL;
-#endif
 }
 
 void ecs_stage_deinit(
@@ -10602,28 +10682,6 @@ void ecs_merge(
     }
 
     world->stats.merge_count_total ++;
-
-    /* Execute post frame actions */
-    ecs_vector_each(world->stage.post_frame_actions, ecs_action_elem_t, action, {
-        action->action(world, action->ctx);
-    });
-
-    ecs_vector_free(world->stage.post_frame_actions);
-    world->stage.post_frame_actions = NULL;
-
-    ecs_vector_each(world->temp_stage.post_frame_actions, ecs_action_elem_t, action, {
-        action->action(world, action->ctx);
-    });
-    ecs_vector_free(world->temp_stage.post_frame_actions);
-    world->temp_stage.post_frame_actions = NULL;
-
-    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
-        ecs_vector_each(stage->post_frame_actions, ecs_action_elem_t, action, {
-            action->action(world, action->ctx);
-        });
-        ecs_vector_free(stage->post_frame_actions);
-        stage->post_frame_actions = NULL;
-    });    
 }
 
 void ecs_set_automerge(
@@ -10838,20 +10896,194 @@ bool ecs_staging_begin(
     return in_progress;
 }
 
-bool ecs_staging_end(
-    ecs_world_t *world,
-    bool is_staged)
+void ecs_staging_end(
+    ecs_world_t *world)
 {
-    bool result = world->in_progress;
+    ecs_assert(world->in_progress == true, ECS_INVALID_OPERATION, NULL);
 
-    if (!is_staged) {
-        world->in_progress = false;
-        if (world->auto_merge) {
-            ecs_merge(world);
-        }
+    world->in_progress = false;
+    if (world->auto_merge) {
+        ecs_merge(world);
+    }
+}
+
+static
+double insert_sleep(
+    ecs_world_t *world,
+    ecs_time_t *stop)
+{
+    ecs_time_t start = *stop;
+    double delta_time = ecs_time_measure(stop);
+
+    if (world->stats.target_fps == 0) {
+        return delta_time;
     }
 
-    return result;
+    double target_delta_time = (1.0 / world->stats.target_fps);
+    double world_sleep_err = 
+        world->stats.sleep_err / (double)world->stats.frame_count_total;
+
+    /* Calculate the time we need to sleep by taking the measured delta from the
+     * previous frame, and subtracting it from target_delta_time. */
+    double sleep = target_delta_time - delta_time;
+
+    /* Pick a sleep interval that is 20 times lower than the time one frame
+     * should take. This means that this function at most iterates 20 times in
+     * a busy loop */
+    double sleep_time = target_delta_time / 20;
+
+    /* Measure at least two frames before interpreting sleep error */
+    if (world->stats.frame_count_total > 1) {
+        /* If the ratio between the sleep error and the sleep time is too high,
+         * just do a busy loop */
+        if (world_sleep_err / sleep_time > 0.1) {
+            sleep_time = 0;
+        } 
+    }
+
+    /* If the time we need to sleep is large enough to warrant a sleep, sleep */
+    if (sleep > (sleep_time - world_sleep_err)) {
+        if (sleep_time > sleep) {
+            /* Make sure we don't sleep longer than we should */
+            sleep_time = sleep;
+        }
+
+        double sleep_err = 0;
+        int32_t iterations = 0;
+
+        do {
+            /* Only call sleep when sleep_time is not 0. On some platforms, even
+             * a sleep with a timeout of 0 can cause stutter. */
+            if (sleep_time != 0) {
+                ecs_sleepf(sleep_time);
+            }
+
+            ecs_time_t now = start;
+            double prev_delta_time = delta_time;
+            delta_time = ecs_time_measure(&now);
+
+            /* Measure the error of the sleep by taking the difference between 
+             * the time we expected to sleep, and the measured time. This 
+             * assumes that a sleep is less accurate than a high resolution 
+             * timer which should be true in most cases. */
+            sleep_err = delta_time - prev_delta_time - sleep_time;
+            iterations ++;
+        } while ((target_delta_time - delta_time) > (sleep_time - world_sleep_err));
+
+        /* Add sleep error measurement to sleep error, with a bias towards the
+         * latest measured values. */
+        world->stats.sleep_err = (float)
+            (world_sleep_err * 0.9 + sleep_err * 0.1) * 
+                (float)world->stats.frame_count_total;
+    }
+
+    /*  Make last minute corrections if due to a larger clock error delta_time
+     * is still more than 5% away from the target. The 5% buffer is to account
+     * for the fact that measuring the time also takes time. */
+    while (delta_time < target_delta_time * 0.95) {
+        ecs_time_t now = start;
+        delta_time = ecs_time_measure(&now);
+    }
+
+    return delta_time;
+}
+
+static
+float start_measure_frame(
+    ecs_world_t *world,
+    float user_delta_time)
+{
+    double delta_time = 0;
+
+    if (world->measure_frame_time || (user_delta_time == 0)) {
+        ecs_time_t t = world->frame_start_time;
+        do {
+            if (world->frame_start_time.sec) {
+                delta_time = insert_sleep(world, &t);
+
+                ecs_time_measure(&t);
+            } else {
+                ecs_time_measure(&t);
+                if (world->stats.target_fps != 0) {
+                    delta_time = 1.0 / world->stats.target_fps;
+                } else {
+                    delta_time = 1.0 / 60.0; /* Best guess */
+                }
+            }
+        
+        /* Keep trying while delta_time is zero */
+        } while (delta_time == 0);
+
+        world->frame_start_time = t;  
+
+        /* Keep track of total time passed in world */
+        world->stats.world_time_total_raw += (float)delta_time;
+    }
+
+    return (float)delta_time;
+}
+
+static
+void stop_measure_frame(
+    ecs_world_t* world)
+{
+    if (world->measure_frame_time) {
+        ecs_time_t t = world->frame_start_time;
+        world->stats.frame_time_total += (float)ecs_time_measure(&t);
+    }
+}
+
+float ecs_frame_begin(
+    ecs_world_t *world,
+    float user_delta_time)
+{
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
+
+    ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
+
+    if (world->locking_enabled) {
+        ecs_lock(world);
+    }
+
+    /* Start measuring total frame time */
+    float delta_time = start_measure_frame(world, user_delta_time);
+    if (user_delta_time == 0) {
+        user_delta_time = delta_time;
+    }
+
+    world->stats.delta_time_raw = user_delta_time;
+    world->stats.delta_time = user_delta_time * world->stats.time_scale;
+
+    /* Keep track of total scaled time passed in world */
+    world->stats.world_time_total += world->stats.delta_time;
+    
+    return user_delta_time;
+}
+
+void ecs_frame_end(
+    ecs_world_t *world)
+{
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
+
+    world->stats.frame_count_total ++;
+
+    ecs_stage_merge_post_frame(world, &world->temp_stage);
+
+    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
+        ecs_stage_merge_post_frame(world, stage);
+    });        
+
+    if (world->locking_enabled) {
+        ecs_unlock(world);
+
+        ecs_os_mutex_lock(world->thr_sync);
+        ecs_os_cond_broadcast(world->thr_cond);
+        ecs_os_mutex_unlock(world->thr_sync);
+    }
+
+    stop_measure_frame(world);
 }
 
 const ecs_world_info_t* ecs_get_world_info(
@@ -18106,7 +18338,7 @@ bool ecs_worker_sync(
 
     int32_t thread_count = ecs_vector_count(world->workers);
     if (!thread_count) {
-        ecs_staging_end(world, false);
+        ecs_staging_end(world);
 
         ecs_pipeline_update(world, world->pipeline);
 
@@ -18123,7 +18355,7 @@ void ecs_worker_end(
 {
     int32_t thread_count = ecs_vector_count(world->workers);
     if (!thread_count) {
-        ecs_staging_end(world, false);
+        ecs_staging_end(world);
     } else {
         sync_worker(world);
     }
@@ -18166,7 +18398,7 @@ void ecs_workers_progress(
             wait_for_sync(world);
 
             /* Merge */
-            ecs_staging_end(world, false);
+            ecs_staging_end(world);
 
             int32_t update_count;
             if ((update_count = ecs_pipeline_update(world, pipeline))) {
@@ -18705,175 +18937,7 @@ void EcsOnAddPipeline(
     }
 }
 
-static
-double insert_sleep(
-    ecs_world_t *world,
-    ecs_time_t *stop)
-{
-    ecs_time_t start = *stop;
-    double delta_time = ecs_time_measure(stop);
-
-    if (world->stats.target_fps == 0) {
-        return delta_time;
-    }
-
-    double target_delta_time = (1.0 / world->stats.target_fps);
-    double world_sleep_err = 
-        world->stats.sleep_err / (double)world->stats.frame_count_total;
-
-    /* Calculate the time we need to sleep by taking the measured delta from the
-     * previous frame, and subtracting it from target_delta_time. */
-    double sleep = target_delta_time - delta_time;
-
-    /* Pick a sleep interval that is 20 times lower than the time one frame
-     * should take. This means that this function at most iterates 20 times in
-     * a busy loop */
-    double sleep_time = target_delta_time / 20;
-
-    /* Measure at least two frames before interpreting sleep error */
-    if (world->stats.frame_count_total > 1) {
-        /* If the ratio between the sleep error and the sleep time is too high,
-         * just do a busy loop */
-        if (world_sleep_err / sleep_time > 0.1) {
-            sleep_time = 0;
-        } 
-    }
-
-    /* If the time we need to sleep is large enough to warrant a sleep, sleep */
-    if (sleep > (sleep_time - world_sleep_err)) {
-        if (sleep_time > sleep) {
-            /* Make sure we don't sleep longer than we should */
-            sleep_time = sleep;
-        }
-
-        double sleep_err = 0;
-        int32_t iterations = 0;
-
-        do {
-            /* Only call sleep when sleep_time is not 0. On some platforms, even
-             * a sleep with a timeout of 0 can cause stutter. */
-            if (sleep_time != 0) {
-                ecs_sleepf(sleep_time);
-            }
-
-            ecs_time_t now = start;
-            double prev_delta_time = delta_time;
-            delta_time = ecs_time_measure(&now);
-
-            /* Measure the error of the sleep by taking the difference between 
-             * the time we expected to sleep, and the measured time. This 
-             * assumes that a sleep is less accurate than a high resolution 
-             * timer which should be true in most cases. */
-            sleep_err = delta_time - prev_delta_time - sleep_time;
-            iterations ++;
-        } while ((target_delta_time - delta_time) > (sleep_time - world_sleep_err));
-
-        /* Add sleep error measurement to sleep error, with a bias towards the
-         * latest measured values. */
-        world->stats.sleep_err = (float)
-            (world_sleep_err * 0.9 + sleep_err * 0.1) * 
-                (float)world->stats.frame_count_total;
-    }
-
-    /*  Make last minute corrections if due to a larger clock error delta_time
-     * is still more than 5% away from the target. The 5% buffer is to account
-     * for the fact that measuring the time also takes time. */
-    while (delta_time < target_delta_time * 0.95) {
-        ecs_time_t now = start;
-        delta_time = ecs_time_measure(&now);
-    }
-
-    return delta_time;
-}
-
-static
-float start_measure_frame(
-    ecs_world_t *world,
-    float user_delta_time)
-{
-    double delta_time = 0;
-
-    if (world->measure_frame_time || (user_delta_time == 0)) {
-        ecs_time_t t = world->frame_start_time;
-        do {
-            if (world->frame_start_time.sec) {
-                delta_time = insert_sleep(world, &t);
-
-                ecs_time_measure(&t);
-            } else {
-                ecs_time_measure(&t);
-                if (world->stats.target_fps != 0) {
-                    delta_time = 1.0 / world->stats.target_fps;
-                } else {
-                    delta_time = 1.0 / 60.0; /* Best guess */
-                }
-            }
-        
-        /* Keep trying while delta_time is zero */
-        } while (delta_time == 0);
-
-        world->frame_start_time = t;  
-
-        /* Keep track of total time passed in world */
-        world->stats.world_time_total_raw += (float)delta_time;
-    }
-
-    return (float)delta_time;
-}
-
-static
-void stop_measure_frame(
-    ecs_world_t* world)
-{
-    if (world->measure_frame_time) {
-        ecs_time_t t = world->frame_start_time;
-        world->stats.frame_time_total += (float)ecs_time_measure(&t);
-    }
-}
-
 /* -- Public API -- */
-
-float ecs_frame_begin(
-    ecs_world_t *world,
-    float user_delta_time)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
-
-    if (world->locking_enabled) {
-        ecs_lock(world);
-    }
-
-    /* Start measuring total frame time */
-    float delta_time = start_measure_frame(world, user_delta_time);
-    if (user_delta_time == 0) {
-        user_delta_time = delta_time;
-    }
-
-    world->stats.delta_time_raw = user_delta_time;
-    world->stats.delta_time = user_delta_time * world->stats.time_scale;
-
-    /* Keep track of total scaled time passed in world */
-    world->stats.world_time_total += world->stats.delta_time;
-    
-    return user_delta_time;
-}
-
-void ecs_frame_end(
-    ecs_world_t *world)
-{
-    world->stats.frame_count_total ++;
-
-    if (world->locking_enabled) {
-        ecs_unlock(world);
-
-        ecs_os_mutex_lock(world->thr_sync);
-        ecs_os_cond_broadcast(world->thr_cond);
-        ecs_os_mutex_unlock(world->thr_sync);
-    }
-
-    stop_measure_frame(world);
-}
 
 bool ecs_progress(
     ecs_world_t *world,
@@ -18924,7 +18988,7 @@ void ecs_deactivate_systems(
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
-    ecs_defer_begin(world, &world->stage, EcsOpNone, 0, NULL, NULL, 0);
+    ecs_defer_op_begin(world, &world->stage, EcsOpNone, 0, NULL, NULL, 0);
 
     while( ecs_query_next(&it)) {
         EcsSystem *sys = ecs_column(&it, EcsSystem, 1);
@@ -18940,7 +19004,7 @@ void ecs_deactivate_systems(
         }
     }
 
-    ecs_defer_end(world, &world->stage);
+    ecs_defer_flush(world, &world->stage);
 }
 
 void ecs_set_pipeline(
@@ -20483,7 +20547,9 @@ ecs_entity_t ecs_run_w_filter(
 
     /* If world wasn't in progress when we entered this function, we need to
      * merge and reset the in_progress value */
-    ecs_staging_end(world, in_progress);
+    if (!in_progress) {
+        ecs_staging_end(world);
+    }
 
     return interrupted_by;
 }

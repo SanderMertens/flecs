@@ -1050,7 +1050,7 @@ void SystemMisc_add_to_system_in_progress() {
 
     ecs_add(world, Dummy, Tag);
 
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
 
     ecs_progress(world, 0);
     test_assert(dummy_invoked == true);
@@ -1075,7 +1075,7 @@ void SystemMisc_add_to_lazy_system_in_progress() {
 
     ecs_add(world, Dummy, Tag);
 
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
 
     ECS_SYSTEM(world, Foo, EcsOnUpdate, [in] Position);
 

@@ -316,13 +316,14 @@ typedef enum ecs_op_kind_t {
     EcsOpAdd,
     EcsOpRemove,   
     EcsOpSet,
+    EcsOpDelete
 } ecs_op_kind_t;
 
 typedef struct ecs_op_t {
     ecs_op_kind_t kind;
     ecs_entity_t entity;
-    ecs_entities_t components;
     ecs_entity_t component;
+    ecs_entities_t components;
     void *value;
     ecs_size_t size;
 } ecs_op_t;
@@ -364,6 +365,7 @@ struct ecs_stage_t {
     /* Are operations deferred? */
     int32_t defer;
     ecs_vector_t *defer_queue;
+    ecs_vector_t *defer_merge_queue;
 
     /* One-shot actions to be executed after the merge */
     ecs_vector_t *post_frame_actions;

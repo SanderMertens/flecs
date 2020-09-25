@@ -2374,6 +2374,7 @@ ecs_query_t* ecs_query_new_w_sig(
 #define ECS_COMPONENT_NAME_IN_USE (47)
 #define ECS_INCONSISTENT_NAME (48)
 #define ECS_INCONSISTENT_COMPONENT_ACTION (49)
+#define ECS_INVALID_OPERATION (50)
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
@@ -5058,6 +5059,17 @@ int32_t ecs_table_component_index(
  * @{
  */
 
+/** Begin frame. */
+FLECS_EXPORT
+float ecs_frame_begin(
+    ecs_world_t *world,
+    float delta_time);
+
+/** End frame. */
+FLECS_EXPORT
+void ecs_frame_end(
+    ecs_world_t *world);
+
 /** Begin staging.
  * When staging is enabled, modifications to entities are stored to a stage.
  * This ensures that arrays are not modified while iterating. Modifications are
@@ -5075,12 +5087,10 @@ bool ecs_staging_begin(
  * stage.
  *
  * @param world The world
- * @return Whether world was staged.
  */
 FLECS_EXPORT
-bool ecs_staging_end(
-    ecs_world_t *world,
-    bool is_staged);
+void ecs_staging_end(
+    ecs_world_t *world);
 
 /** Manually merge.
  * When automerging is set to false, an application can invoke this operation to
@@ -5090,6 +5100,25 @@ bool ecs_staging_end(
  */
 FLECS_EXPORT
 void ecs_merge(
+    ecs_world_t *world);
+
+/** Defer operations until end of frame. 
+ * When this operation is invoked while iterating, operations inbetween the
+ * defer_begin and defer_end operations are executed at the end of the frame.
+ *
+ * This operation is thread safe.
+ */
+FLECS_EXPORT
+void ecs_defer_begin(
+    ecs_world_t *world);
+
+/** End block of operations to defer. 
+ * See defer_begin.
+ *
+ * This operation is thread safe.
+ */
+FLECS_EXPORT
+void ecs_defer_end(
     ecs_world_t *world);
 
 /** Enable / disable automerging.
@@ -6965,7 +6994,7 @@ public:
      */
     T& operator[](size_t index) {
         ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(!index || !m_is_shared, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return m_array[index];
     }
@@ -7504,6 +7533,25 @@ public:
      */
     bool progress(float delta_time = 0.0) const {
         return ecs_progress(m_world, delta_time);
+    }
+
+    /** Defer operations until end of frame. 
+     * When this operation is invoked while iterating, operations inbetween the
+     * defer_begin and defer_end operations are executed at the end of the frame.
+     *
+     * This operation is thread safe.
+     */
+    void defer_begin() {
+        ecs_defer_begin(m_world);
+    }
+
+    /** End block of operations to defer. 
+     * See defer_begin.
+     *
+     * This operation is thread safe.
+     */
+    void defer_end() {
+        ecs_defer_begin(m_world);
     }
 
     /** Set number of threads.

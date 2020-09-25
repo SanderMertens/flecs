@@ -2099,13 +2099,40 @@ void SingleThreadStaging_delete_after_set() {
     ecs_fini(world);
 }
 
+static
+void Add_to_current_trigger(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        if (ctx->component) {
+            ecs_add_entity(it->world, it->entities[i], ctx->component);
+
+            /* Actions are defered */
+            test_assert( !!ecs_get_type(it->world, it->entities[i]));
+            test_assert( !ecs_has_entity(it->world,  it->entities[i], ctx->component));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component) == NULL);
+        }
+
+        if (ctx->component_2) {
+            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
+
+            /* Actions are defered */
+            test_assert( !!ecs_get_type(it->world, it->entities[i]));
+            test_assert( !ecs_has_entity(it->world, it->entities[i], ctx->component_2)); 
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_2) == NULL);           
+        }
+
+        ctx->entity_count ++;
+    }
+}
 
 void SingleThreadStaging_add_to_current_in_on_add() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TRIGGER(world, Add_to_current, EcsOnAdd, Position);
+    ECS_TRIGGER(world, Add_to_current_trigger, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_entity(Velocity)};
     ecs_set_context(world, &ctx);
@@ -2126,13 +2153,41 @@ void SingleThreadStaging_add_to_current_in_on_add() {
     ecs_fini(world);
 }
 
+static
+void Remove_from_current_trigger(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
+
+    int i;
+    for (i = it->count - 1; i >= 0; i --) {
+        ecs_entity_t e = it->entities[i];
+
+        if (ctx->component) {
+            ecs_remove_entity(it->world, e, ctx->component);
+
+            /* Actions are defered */
+            test_assert( ecs_has_entity(it->world,  e, ctx->component));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component) != NULL);
+        }
+
+        if (ctx->component_2) {
+            ecs_remove_entity(it->world, e, ctx->component_2);
+
+            /* Actions are defered */
+            test_assert( ecs_has_entity(it->world, e, ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component_2) != NULL);
+        }
+
+        ctx->entity_count ++;
+    }
+}
+
 void SingleThreadStaging_remove_from_current_in_on_add() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position);
+    ECS_TRIGGER(world, Remove_from_current_trigger, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2159,7 +2214,7 @@ void SingleThreadStaging_remove_added_component_in_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position);
+    ECS_TRIGGER(world, Remove_from_current_trigger, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2664,7 +2719,7 @@ void SingleThreadStaging_clear_stage_after_merge() {
 
     ecs_staging_begin(world);
     ecs_set(world, e, Position, {10, 20});
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
     
     test_int(move_position, 1);
     const Position *p = ecs_get(world, e, Position);
@@ -2673,7 +2728,7 @@ void SingleThreadStaging_clear_stage_after_merge() {
 
     ecs_staging_begin(world);
     ecs_set(world, e, Position, {30, 40});
-    ecs_staging_end(world, false);  
+    ecs_staging_end(world);  
 
     test_int(move_position, 3);
     p = ecs_get(world, e, Position);
@@ -2898,6 +2953,192 @@ void SingleThreadStaging_on_add_after_new_type_in_progress() {
     test_assert(v != NULL);
     test_int(v->x, 1);
     test_int(v->y, 2);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_defer_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_frame_begin(world, 1);
+
+    bool is_staged = ecs_staging_begin(world);
+    test_assert(is_staged == false);
+
+    ecs_defer_begin(world);
+    
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));    
+
+    ecs_staging_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_frame_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_defer_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_frame_begin(world, 1);
+
+    bool is_staged = ecs_staging_begin(world);
+    test_assert(is_staged == false);
+
+    ecs_defer_begin(world);
+    
+    ecs_add(world, e, Position);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));    
+
+    ecs_staging_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_frame_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_defer_remove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_frame_begin(world, 1);
+
+    bool is_staged = ecs_staging_begin(world);
+    test_assert(is_staged == false);
+
+    ecs_defer_begin(world);
+    
+    ecs_remove(world, e, Position);
+
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));    
+
+    ecs_staging_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_frame_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_defer_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_set(world, e, Position, {1, 2});
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_frame_begin(world, 1);
+
+    bool is_staged = ecs_staging_begin(world);
+    test_assert(is_staged == false);
+
+    ecs_defer_begin(world);
+    
+    ecs_set(world, e, Position, {3, 4});
+
+    test_assert(ecs_has(world, e, Position));
+    p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));  
+    p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);  
+
+    ecs_staging_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_frame_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_defer_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_frame_begin(world, 1);
+
+    bool is_staged = ecs_staging_begin(world);
+    test_assert(is_staged == false);
+
+    ecs_defer_begin(world);
+    
+    ecs_delete(world, e);
+
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_defer_end(world);
+
+    test_assert(ecs_is_alive(world, e));  
+
+    ecs_staging_end(world);
+
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_frame_end(world);
+
+    test_assert(!ecs_is_alive(world, e));
 
     ecs_fini(world);
 }

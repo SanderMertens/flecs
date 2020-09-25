@@ -100,7 +100,7 @@ void ecs_component_monitor_register(
     ecs_entity_t component,
     ecs_query_t *query);
 
-bool ecs_defer_begin(
+bool ecs_defer_op_begin(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_op_kind_t op_kind,
@@ -109,7 +109,7 @@ bool ecs_defer_begin(
     const void *value,
     ecs_size_t size);
 
-void ecs_defer_end(
+void ecs_defer_flush(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
@@ -149,12 +149,54 @@ void ecs_stage_merge(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
+/* Post-frame merge actions */
+void ecs_stage_merge_post_frame(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
+
 /* Delete table from stage */
 void ecs_stage_delete_table(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table);
 
+////////////////////////////////////////////////////////////////////////////////
+//// Defer API
+////////////////////////////////////////////////////////////////////////////////
+
+bool ecs_defer_none(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
+
+bool ecs_defer_delete(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity);
+
+bool ecs_defer_add(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entities_t *components);
+
+bool ecs_defer_remove(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entities_t *components);
+
+bool ecs_defer_set(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    ecs_size_t size,
+    const void *value,
+    void **value_out);
+
+void ecs_defer_flush(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Type API

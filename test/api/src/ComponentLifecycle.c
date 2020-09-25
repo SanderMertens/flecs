@@ -402,7 +402,7 @@ void ComponentLifecycle_copy_on_stage() {
     test_int(ctx.copy.size, sizeof(Position));
     test_int(ctx.copy.count, 1);
 
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
 
     ecs_fini(world);
 }
@@ -1102,7 +1102,7 @@ void ComponentLifecycle_merge_to_different_table() {
     test_int(copy_velocity, 1);
     test_int(move_velocity, 2);
 
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -1155,7 +1155,7 @@ void ComponentLifecycle_merge_to_new_table() {
 
     ecs_add(world, e, Position);
 
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
 
     test_int(ctor_position, 2);
     test_int(move_position, 1);
@@ -1202,7 +1202,7 @@ void ComponentLifecycle_delete_in_stage() {
     test_int(dtor_velocity, 0);
     test_int(dtor_mass, 0);
 
-    ecs_staging_end(world, false);
+    ecs_staging_end(world);
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));

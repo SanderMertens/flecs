@@ -479,7 +479,9 @@ ecs_entity_t ecs_run_w_filter(
 
     /* If world wasn't in progress when we entered this function, we need to
      * merge and reset the in_progress value */
-    ecs_staging_end(world, in_progress);
+    if (!in_progress) {
+        ecs_staging_end(world);
+    }
 
     return interrupted_by;
 }
