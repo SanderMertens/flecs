@@ -83,56 +83,6 @@ void Lookup_lookup_child() {
     ecs_fini(world);
 }
 
-void LookupSystem(ecs_iter_t *it) {
-    ecs_entity_t e = ecs_new(it->world, 0);
-    test_assert(e != 0);
-
-    ecs_set(it->world, e, EcsName, {"Foo"});
-    test_assert( ecs_has(it->world, e, EcsName));
-
-    ecs_entity_t found = ecs_lookup(it->world, "Foo");
-    test_assert(found != 0);
-    test_assert(found == e);
-}
-
-void LookupChildSystem(ecs_iter_t *it) {
-    ecs_entity_t parent = ecs_new(it->world, 0);
-    test_assert(parent != 0);
-
-    ecs_entity_t e = ecs_new(it->world, 0);
-    test_assert(e != 0);
-
-    ecs_add_entity(it->world, e, ECS_CHILDOF | parent);
-    test_assert( ecs_has_entity(it->world, e, ECS_CHILDOF | parent));
-
-    ecs_set(it->world, e, EcsName, {"Foo"});
-    test_assert( ecs_has(it->world, e, EcsName));
-
-    ecs_entity_t found = ecs_lookup_child(it->world, parent, "Foo");
-    test_assert(found != 0);
-    test_assert(found == e);
-}
-
-void Lookup_lookup_in_progress() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_SYSTEM(world, LookupSystem, EcsOnUpdate, 0);
-
-    ecs_progress(world, 1);
-
-    ecs_fini(world);
-}
-
-void Lookup_lookup_child_in_progress() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_SYSTEM(world, LookupChildSystem, EcsOnUpdate, 0);
-
-    ecs_progress(world, 1);
-
-    ecs_fini(world);
-}
-
 void Lookup_get_name() {
     ecs_world_t *world = ecs_init();
 

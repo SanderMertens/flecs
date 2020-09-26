@@ -2312,49 +2312,6 @@ void Prefab_rematch_twice() {
 }
 
 static
-void Inherit(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Position, 1);
-
-    ecs_entity_t *param = ecs_get_context(it->world);
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        ecs_entity_t e_backup = ecs_new(it->world, Position);
-        test_assert(e_backup != 0);
-        test_assert( ecs_has(it->world, e_backup, Position));
-
-        ecs_add_entity(it->world, e, ECS_INSTANCEOF | e_backup);
-        test_assert( ecs_has_entity(it->world, e, e_backup | ECS_INSTANCEOF));
-
-        *param = e_backup;
-    }
-}
-
-void Prefab_inherit_in_system() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-
-    ECS_ENTITY(world, e1, Position);
-
-    ECS_SYSTEM(world, Inherit, EcsOnUpdate, Position);
-
-    ecs_entity_t e_backup;
-    ecs_set_context(world, &e_backup);
-
-    ecs_progress(world, 1);
-
-    test_assert(e_backup != 0);
-    test_assert( ecs_has(world, e_backup, Position));
-    test_assert( ecs_has_entity(world, e1, e_backup | ECS_INSTANCEOF));
-
-    ecs_fini(world);
-}
-
-static
 void AddPosition(ecs_iter_t *it) {
     ECS_COLUMN_COMPONENT(it, Position, 1);
     

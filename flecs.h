@@ -7551,7 +7551,7 @@ public:
      * This operation is thread safe.
      */
     void defer_end() {
-        ecs_defer_begin(m_world);
+        ecs_defer_end(m_world);
     }
 
     /** Set number of threads.

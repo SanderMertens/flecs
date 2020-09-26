@@ -352,8 +352,6 @@ void Lookup_lookup(void);
 void Lookup_lookup_component(void);
 void Lookup_lookup_not_found(void);
 void Lookup_lookup_child(void);
-void Lookup_lookup_in_progress(void);
-void Lookup_lookup_child_in_progress(void);
 void Lookup_lookup_w_null_name(void);
 void Lookup_get_name(void);
 void Lookup_get_name_no_name(void);
@@ -859,7 +857,6 @@ void Prefab_match_base(void);
 void Prefab_match_base_after_add_in_prev_phase(void);
 void Prefab_override_watched_prefab(void);
 void Prefab_rematch_twice(void);
-void Prefab_inherit_in_system(void);
 void Prefab_add_to_empty_base_in_system(void);
 void Prefab_dont_inherit_disabled(void);
 void Prefab_clone_after_inherit_in_on_add(void);
@@ -2560,14 +2557,6 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_child",
         Lookup_lookup_child
-    },
-    {
-        "lookup_in_progress",
-        Lookup_lookup_in_progress
-    },
-    {
-        "lookup_child_in_progress",
-        Lookup_lookup_child_in_progress
     },
     {
         "lookup_w_null_name",
@@ -4462,10 +4451,6 @@ bake_test_case Prefab_testcases[] = {
         Prefab_rematch_twice
     },
     {
-        "inherit_in_system",
-        Prefab_inherit_in_system
-    },
-    {
         "add_to_empty_base_in_system",
         Prefab_add_to_empty_base_in_system
     },
@@ -6222,7 +6207,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        21,
+        19,
         Lookup_testcases
     },
     {
@@ -6362,7 +6347,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        66,
+        65,
         Prefab_testcases
     },
     {

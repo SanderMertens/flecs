@@ -290,9 +290,9 @@ void Delete_alive_after_staged_delete() {
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     ecs_delete(world, e);
-    ecs_staging_end(world);
+    ecs_defer_end(world);
     
     test_assert(!ecs_get_type(world, e));
     test_assert(!ecs_is_alive(world, e));
@@ -309,9 +309,9 @@ void Delete_alive_while_staged() {
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     test_assert(ecs_is_alive(world, e));
-    ecs_staging_end(world);
+    ecs_defer_end(world);
     
     ecs_fini(world);
 }
@@ -325,11 +325,11 @@ void Delete_alive_while_staged_w_delete() {
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     test_assert(ecs_is_alive(world, e));
     ecs_delete(world, e);
-    test_assert(!ecs_is_alive(world, e));
-    ecs_staging_end(world);
+    test_assert(ecs_is_alive(world, e));
+    ecs_defer_end(world);
 
     test_assert(!ecs_is_alive(world, e));
     
@@ -349,11 +349,11 @@ void Delete_alive_while_staged_w_delete_recycled_id() {
     e = ecs_new(world, 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     test_assert(ecs_is_alive(world, e));
     ecs_delete(world, e);
-    test_assert(!ecs_is_alive(world, e));
-    ecs_staging_end(world);
+    test_assert(ecs_is_alive(world, e));
+    ecs_defer_end(world);
 
     test_assert(!ecs_is_alive(world, e));
     

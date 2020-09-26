@@ -357,37 +357,21 @@ void ecs_stage_merge(
 {
     ecs_assert(stage != &world->stage, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage->tables != world->stage.tables, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
 
     /* First merge tables created by stage. This only happens if a new table was
      * created while iterating that did not yet exist in the main stage. Tables
      * are not modified in the main stage while iterating as this could cause
      * corruption of the administration while iterating, and in the case of
      * multithreaded applications wouldn't be safe. */
-    merge_tables(world, stage, 0);
+    // merge_tables(world, stage, 0);
 
     /* Merge entities. This can create tables if a new combination of components
      * is found after merging the staged type with the non-staged type. */
-    merge_commits(world, stage);
+    // merge_commits(world, stage);
 
     /* Clear temporary tables used by stage */
-    clean_tables(world, stage);
-    ecs_eis_clear(stage);
-}
-
-void ecs_stage_merge_post_frame(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{    
-    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
-
-    /* Execute post frame actions */
-    ecs_vector_each(stage->post_frame_actions, ecs_action_elem_t, action, {
-        action->action(world, action->ctx);
-    });
-
-    ecs_vector_free(stage->post_frame_actions);
-    stage->post_frame_actions = NULL;
+    // clean_tables(world, stage);
+    // ecs_eis_clear(stage);
 
     if (ecs_vector_count(stage->defer_merge_queue)) {
         stage->defer ++;
@@ -396,7 +380,40 @@ void ecs_stage_merge_post_frame(
         ecs_vector_clear(stage->defer_merge_queue);
         ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(stage->defer_queue == NULL, ECS_INVALID_PARAMETER, NULL);
-    }
+    }    
+}
+
+void ecs_stage_defer_begin(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{    
+    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
+    stage->defer_queue = stage->defer_merge_queue;
+    ecs_defer_none(world, stage);
+}
+
+void ecs_stage_defer_end(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{    
+    ecs_assert(stage->defer != 0, ECS_INVALID_PARAMETER, NULL);
+    stage->defer_merge_queue = stage->defer_queue;
+    stage->defer_queue = NULL;
+    stage->defer --;
+    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
+}
+
+void ecs_stage_merge_post_frame(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    /* Execute post frame actions */
+    ecs_vector_each(stage->post_frame_actions, ecs_action_elem_t, action, {
+        action->action(world, action->ctx);
+    });
+
+    ecs_vector_free(stage->post_frame_actions);
+    stage->post_frame_actions = NULL;
 }
 
 void ecs_stage_init(

@@ -987,14 +987,14 @@ float ecs_frame_begin(
     float delta_time = start_measure_frame(world, user_delta_time);
     if (user_delta_time == 0) {
         user_delta_time = delta_time;
-    }
+    }  
 
     world->stats.delta_time_raw = user_delta_time;
     world->stats.delta_time = user_delta_time * world->stats.time_scale;
 
     /* Keep track of total scaled time passed in world */
     world->stats.world_time_total += world->stats.delta_time;
-    
+
     return user_delta_time;
 }
 
@@ -1004,7 +1004,7 @@ void ecs_frame_end(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
 
-    world->stats.frame_count_total ++;
+    world->stats.frame_count_total ++;   
 
     ecs_stage_merge_post_frame(world, &world->temp_stage);
 

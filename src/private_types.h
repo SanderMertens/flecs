@@ -313,6 +313,8 @@ typedef struct ecs_on_demand_in_t {
 /** Types for deferred operations */
 typedef enum ecs_op_kind_t {
     EcsOpNone,
+    EcsOpNew,
+    EcsOpBulkNew,
     EcsOpAdd,
     EcsOpRemove,   
     EcsOpSet,
@@ -321,11 +323,15 @@ typedef enum ecs_op_kind_t {
 
 typedef struct ecs_op_t {
     ecs_op_kind_t kind;
+    ecs_entity_t scope;
     ecs_entity_t entity;
+    ecs_entity_t *entities;
     ecs_entity_t component;
     ecs_entities_t components;
     void *value;
+    void **bulk_data;
     ecs_size_t size;
+    int32_t count;
 } ecs_op_t;
 
 /** A stage is a data structure in which delta's are stored until it is safe to

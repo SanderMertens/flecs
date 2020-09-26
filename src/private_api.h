@@ -154,6 +154,15 @@ void ecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
+/* Begin defer for stage */
+void ecs_stage_defer_begin(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
+
+void ecs_stage_defer_end(
+    ecs_world_t *world,
+    ecs_stage_t *stage);    
+
 /* Delete table from stage */
 void ecs_stage_delete_table(
     ecs_world_t *world,
@@ -167,6 +176,20 @@ void ecs_stage_delete_table(
 bool ecs_defer_none(
     ecs_world_t *world,
     ecs_stage_t *stage);
+
+bool ecs_defer_new(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entities_t *components);
+
+bool ecs_defer_bulk_new(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    int32_t count,
+    ecs_entities_t *components,
+    void **component_data,
+    const ecs_entity_t **ids_out);
 
 bool ecs_defer_delete(
     ecs_world_t *world,
@@ -192,7 +215,8 @@ bool ecs_defer_set(
     ecs_entity_t component,
     ecs_size_t size,
     const void *value,
-    void **value_out);
+    void **value_out,
+    bool *is_added);
 
 void ecs_defer_flush(
     ecs_world_t *world,

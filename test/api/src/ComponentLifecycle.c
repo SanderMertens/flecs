@@ -391,7 +391,7 @@ void ComponentLifecycle_copy_on_stage() {
     test_int(ctx.copy.invoked, 1);
     memset(&ctx, 0, sizeof(ctx));
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
 
     ecs_add(world, e, Velocity);
     test_int(ctx.copy.invoked, 1);
@@ -402,7 +402,7 @@ void ComponentLifecycle_copy_on_stage() {
     test_int(ctx.copy.size, sizeof(Position));
     test_int(ctx.copy.count, 1);
 
-    ecs_staging_end(world);
+    ecs_defer_end(world);
 
     ecs_fini(world);
 }
@@ -1058,7 +1058,7 @@ void ComponentLifecycle_merge_to_different_table() {
         .move = ecs_move(Rotation)
     });    
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
 
     /* Position is not destroyed here. It was never copied to the stage, and it
      * still exists in the main stage, so it will only be destroyed after the
@@ -1102,7 +1102,7 @@ void ComponentLifecycle_merge_to_different_table() {
     test_int(copy_velocity, 1);
     test_int(move_velocity, 2);
 
-    ecs_staging_end(world);
+    ecs_defer_end(world);
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -1151,11 +1151,11 @@ void ComponentLifecycle_merge_to_new_table() {
         .move = ecs_move(Position)
     });
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
 
     ecs_add(world, e, Position);
 
-    ecs_staging_end(world);
+    ecs_defer_end(world);
 
     test_int(ctor_position, 2);
     test_int(move_position, 1);
@@ -1193,7 +1193,7 @@ void ComponentLifecycle_delete_in_stage() {
         .move = ecs_move(Mass)
     });
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
 
     /* None of the components should be destructed while in the stage as they
      * were never copied to the stage */
@@ -1202,7 +1202,7 @@ void ComponentLifecycle_delete_in_stage() {
     test_int(dtor_velocity, 0);
     test_int(dtor_mass, 0);
 
-    ecs_staging_end(world);
+    ecs_defer_end(world);
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
