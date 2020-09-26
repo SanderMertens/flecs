@@ -1554,10 +1554,7 @@ void SingleThreadStaging_delete_new_w_component() {
 static
 void Set_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
-    
-    ecs_entity_t ecs_entity(Rotation) = ctx->component;
-    ecs_type_t ecs_type(Rotation) = ecs_type_from_entity(
-            it->world, ecs_entity(Rotation));
+        ecs_entity_t ecs_entity(Rotation) = ctx->component;
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1615,10 +1612,8 @@ void SingleThreadStaging_set_current() {
 static
 void Set_new_empty(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
-    
     ecs_entity_t ecs_entity(Rotation) = ctx->component;
-    ecs_type_t ecs_type(Rotation) = ecs_type_from_entity(
-            it->world, ecs_entity(Rotation));
+
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = ecs_new(it->world, 0);
@@ -1676,8 +1671,6 @@ void Set_new_w_component(ecs_iter_t *it) {
             it->world, ecs_entity(Position));
 
     ecs_entity_t ecs_entity(Rotation) = ctx->component_2;
-    ecs_type_t ecs_type(Rotation) = ecs_type_from_entity(
-            it->world, ecs_entity(Rotation));
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1905,8 +1898,6 @@ void Delete_after_set(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Position) = ctx->component;
-    ecs_type_t ecs_type(Position) = 
-        ecs_type_from_entity(it->world, ecs_entity(Position));
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2903,4 +2894,223 @@ void SingleThreadStaging_defer_delete() {
     test_assert(!ecs_is_alive(world, e));
 
     ecs_fini(world);
+}
+
+void SingleThreadStaging_defer_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_defer_begin(world);
+    ecs_defer_begin(world);
+
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_defer_end(world);
+    test_assert(!ecs_has(world, e, Velocity));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Velocity));
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_defer_twice_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_frame_begin(world, 0);
+    ecs_staging_begin(world);
+
+    ecs_defer_begin(world);
+    ecs_defer_begin(world);
+
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_defer_end(world);
+    test_assert(!ecs_has(world, e, Velocity));
+    ecs_defer_end(world);
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_staging_end(world);
+    test_assert(ecs_has(world, e, Velocity));
+    ecs_frame_end(world);
+    test_assert(ecs_has(world, e, Velocity));
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}
+
+static
+void AddVelocity(ecs_iter_t *it) {
+    ecs_type_t ecs_type(Velocity) = ecs_column_type(it, 2);
+
+    ecs_defer_begin(it->world);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
+    }
+
+    ecs_defer_end(it->world);
+}
+
+void SingleThreadStaging_run_w_defer() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, AddVelocity, 0, Position, [in] :Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_run(world, AddVelocity, 0, NULL);
+
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_system_in_progress_w_defer() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, [in] :Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+static bool on_set_invoked = 0;
+
+static
+void OnSetVelocity(ecs_iter_t *it) {
+    on_set_invoked = 1;
+}
+
+void SingleThreadStaging_defer_get_mut_no_modify() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_defer_begin(world);
+
+    Velocity *v = ecs_get_mut(world, e, Velocity, NULL);
+    v->x = 1;
+    v->y = 2;
+
+    test_assert(!on_set_invoked);
+
+    ecs_defer_end(world);
+
+    test_assert(!on_set_invoked);
+
+    test_assert(ecs_has(world, e, Velocity));
+    const Velocity *vptr = ecs_get(world, e, Velocity);
+    test_int(vptr->x, 1);
+    test_int(vptr->y, 2);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_defer_get_mut_w_modify() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_defer_begin(world);
+
+    Velocity *v = ecs_get_mut(world, e, Velocity, NULL);
+    v->x = 1;
+    v->y = 2;
+    test_assert(!on_set_invoked);
+
+    ecs_modified(world, e, Velocity);
+
+    test_assert(!on_set_invoked);
+
+    ecs_defer_end(world);
+
+    test_assert(on_set_invoked);
+
+    test_assert(ecs_has(world, e, Velocity));
+    const Velocity *vptr = ecs_get(world, e, Velocity);
+    test_int(vptr->x, 1);
+    test_int(vptr->y, 2);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_defer_modify() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Velocity);
+
+    ecs_defer_begin(world);
+
+    ecs_modified(world, e, Velocity);
+
+    test_assert(!on_set_invoked);
+
+    ecs_defer_end(world);
+
+    test_assert(on_set_invoked);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_defer_set_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_defer_begin(world);
+
+    ecs_set_trait(world, e, Position, Velocity, {1, 2});
+
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_trait(world, e, ecs_entity(Position), ecs_entity(Velocity)));
+
+    ecs_fini(world);    
 }

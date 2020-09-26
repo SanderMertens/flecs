@@ -2384,12 +2384,6 @@ void CloneInOnAdd(ecs_iter_t *it)
         if (!has_cloned_test) {
             ecs_entity_t e = it->entities[i];
             ecs_entity_t clone = ecs_clone(it->world, 0, e, true);
-            test_assert( ecs_has(it->world, clone, Position));
-
-            const Position *p_clone = ecs_get(it->world, clone, Position);
-            test_int(p_clone->x, 10);
-            test_int(p_clone->y, 20);
-
             ecs_add_entity(it->world, e, ECS_INSTANCEOF | clone);
         }
     }

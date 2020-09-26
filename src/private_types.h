@@ -314,10 +314,13 @@ typedef struct ecs_on_demand_in_t {
 typedef enum ecs_op_kind_t {
     EcsOpNone,
     EcsOpNew,
+    EcsOpClone,
     EcsOpBulkNew,
     EcsOpAdd,
     EcsOpRemove,   
     EcsOpSet,
+    EcsOpMut,
+    EcsOpModified,
     EcsOpDelete
 } ecs_op_kind_t;
 
@@ -332,6 +335,7 @@ typedef struct ecs_op_t {
     void **bulk_data;
     ecs_size_t size;
     int32_t count;
+    bool clone_value;
 } ecs_op_t;
 
 /** A stage is a data structure in which delta's are stored until it is safe to

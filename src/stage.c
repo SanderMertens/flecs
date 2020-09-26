@@ -373,12 +373,13 @@ void ecs_stage_merge(
     // clean_tables(world, stage);
     // ecs_eis_clear(stage);
 
+    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
+
     if (ecs_vector_count(stage->defer_merge_queue)) {
         stage->defer ++;
         stage->defer_queue = stage->defer_merge_queue;
         ecs_defer_flush(world, stage);
         ecs_vector_clear(stage->defer_merge_queue);
-        ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(stage->defer_queue == NULL, ECS_INVALID_PARAMETER, NULL);
     }    
 }
@@ -387,20 +388,21 @@ void ecs_stage_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {    
-    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
-    stage->defer_queue = stage->defer_merge_queue;
     ecs_defer_none(world, stage);
+    if (stage->defer == 1) {
+        stage->defer_queue = stage->defer_merge_queue;
+    }
 }
 
 void ecs_stage_defer_end(
     ecs_world_t *world,
     ecs_stage_t *stage)
-{    
-    ecs_assert(stage->defer != 0, ECS_INVALID_PARAMETER, NULL);
-    stage->defer_merge_queue = stage->defer_queue;
-    stage->defer_queue = NULL;
+{ 
     stage->defer --;
-    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
+    if (!stage->defer) {
+        stage->defer_merge_queue = stage->defer_queue;
+        stage->defer_queue = NULL;
+    }
 }
 
 void ecs_stage_merge_post_frame(

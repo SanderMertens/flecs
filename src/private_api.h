@@ -177,11 +177,24 @@ bool ecs_defer_none(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
+bool ecs_defer_modified(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_t component);
+
 bool ecs_defer_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entities_t *components);
+
+bool ecs_defer_clone(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_t src,
+    bool clone_value);
 
 bool ecs_defer_bulk_new(
     ecs_world_t *world,
@@ -211,6 +224,7 @@ bool ecs_defer_remove(
 bool ecs_defer_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
+    ecs_op_kind_t op_kind,
     ecs_entity_t entity,
     ecs_entity_t component,
     ecs_size_t size,

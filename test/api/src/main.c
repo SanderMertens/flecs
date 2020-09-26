@@ -1164,6 +1164,14 @@ void SingleThreadStaging_defer_add(void);
 void SingleThreadStaging_defer_remove(void);
 void SingleThreadStaging_defer_set(void);
 void SingleThreadStaging_defer_delete(void);
+void SingleThreadStaging_defer_twice(void);
+void SingleThreadStaging_defer_twice_in_progress(void);
+void SingleThreadStaging_run_w_defer(void);
+void SingleThreadStaging_system_in_progress_w_defer(void);
+void SingleThreadStaging_defer_get_mut_no_modify(void);
+void SingleThreadStaging_defer_get_mut_w_modify(void);
+void SingleThreadStaging_defer_modify(void);
+void SingleThreadStaging_defer_set_trait(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -5607,6 +5615,38 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "defer_delete",
         SingleThreadStaging_defer_delete
+    },
+    {
+        "defer_twice",
+        SingleThreadStaging_defer_twice
+    },
+    {
+        "defer_twice_in_progress",
+        SingleThreadStaging_defer_twice_in_progress
+    },
+    {
+        "run_w_defer",
+        SingleThreadStaging_run_w_defer
+    },
+    {
+        "system_in_progress_w_defer",
+        SingleThreadStaging_system_in_progress_w_defer
+    },
+    {
+        "defer_get_mut_no_modify",
+        SingleThreadStaging_defer_get_mut_no_modify
+    },
+    {
+        "defer_get_mut_w_modify",
+        SingleThreadStaging_defer_get_mut_w_modify
+    },
+    {
+        "defer_modify",
+        SingleThreadStaging_defer_modify
+    },
+    {
+        "defer_set_trait",
+        SingleThreadStaging_defer_set_trait
     }
 };
 
@@ -6405,7 +6445,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        65,
+        73,
         SingleThreadStaging_testcases
     },
     {

@@ -1261,7 +1261,15 @@
                 "defer_add",
                 "defer_remove",
                 "defer_set",
-                "defer_delete"
+                "defer_delete",
+                "defer_twice",
+                "defer_twice_in_progress",
+                "run_w_defer",
+                "system_in_progress_w_defer",
+                "defer_get_mut_no_modify",
+                "defer_get_mut_w_modify",
+                "defer_modify",
+                "defer_set_trait"
             ]
         }, {
             "id": "MultiThreadStaging",
