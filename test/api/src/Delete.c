@@ -168,11 +168,6 @@ void CreateEntity(ecs_iter_t *it) {
 
     const ecs_entity_t *ids = ecs_bulk_new(it->world, Position, 10);
     test_assert(ids != NULL);
-
-    int i;
-    for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(it->world, ids[i], Position));
-    }
 }
 
 static

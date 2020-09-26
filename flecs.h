@@ -3919,6 +3919,28 @@ ecs_entity_t ecs_set_ptr_w_entity(
     size_t size,
     const void *ptr);
 
+/** Same as set, but moves the component value.
+ * This operation is the same as the set operation, but moves the provided value
+ * instead of copying it. If the component does not specify a move action the
+ * operation is the same as a set.
+ *
+ * After the operation, the provided value should be considered invalid.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The entity id of the component to set.
+ * @param size The size of the pointer to the value.
+ * @param ptr The pointer to the value.
+ * @return The entity. A new entity if no entity was provided.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_move_ptr_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    size_t size,
+    void *ptr);
+
 /** Set the value of a component.
  * Same as ecs_set_ptr_w_entity, but accepts a component typename and 
  * automatically determines the type size.
@@ -3931,7 +3953,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
  */
 #define ecs_set_ptr(world, entity, component, ptr)\
     ecs_set_ptr_w_entity(world, entity, ecs_entity(component), sizeof(component), ptr)
-
+    
 /* Conditionally skip macro's as compound literals and variadic arguments are 
  * not supported in C89 */
 #ifndef FLECS_LEGACY
@@ -3947,6 +3969,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
  */
 #define ecs_set(world, entity, component, ...)\
     ecs_set_ptr_w_entity(world, entity, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
+
 #endif
 
 

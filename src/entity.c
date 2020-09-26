@@ -2318,12 +2318,14 @@ void ecs_modified_w_entity(
     }
 }
 
-ecs_entity_t ecs_set_ptr_w_entity(
+static
+ecs_entity_t assign_ptr_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,
     size_t size,
-    const void *ptr)
+    void *ptr,
+    bool is_move)
 {    
     ecs_stage_t *stage = ecs_get_stage(&world);
 
@@ -2355,11 +2357,24 @@ ecs_entity_t ecs_set_ptr_w_entity(
     if (ptr) {
         ecs_entity_t real_id = ecs_component_id_from_id(world, component);
         ecs_c_info_t *cdata = get_c_info(world, real_id);
-        ecs_copy_t copy;
-
-        if (cdata && (copy = cdata->lifecycle.copy)) {
-            copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
-                cdata->lifecycle.ctx);
+        if (cdata) {
+            if (is_move) {
+                ecs_move_t move = cdata->lifecycle.move;
+                if (move) {
+                    move(world, real_id, &entity, &entity, dst, ptr, size, 1, 
+                        cdata->lifecycle.ctx);
+                } else {
+                    ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
+                }
+            } else {
+                ecs_copy_t copy = cdata->lifecycle.copy;
+                if (copy) {
+                    copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
+                        cdata->lifecycle.ctx);
+                } else {
+                    ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
+                }
+            }
         } else {
             ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
         }
@@ -2375,6 +2390,27 @@ ecs_entity_t ecs_set_ptr_w_entity(
     ecs_defer_flush(world, stage);
 
     return entity;
+}
+
+ecs_entity_t ecs_set_ptr_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    size_t size,
+    const void *ptr)
+{
+    /* Safe to cast away const: function won't modify if move arg is false */
+    return assign_ptr_w_entity(world, entity, component, size, (void*)ptr, false);
+}
+
+ecs_entity_t ecs_move_ptr_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    size_t size,
+    void *ptr)
+{
+    return assign_ptr_w_entity(world, entity, component, size, ptr, true);
 }
 
 ecs_entity_t ecs_get_case(
@@ -2857,9 +2893,9 @@ bool ecs_defer_bulk_new(
                 if (cinfo && (ctor = cinfo->lifecycle.ctor)) {
                     void *ctx = cinfo->lifecycle.ctx;
                     ctor(world, component, ids, data, size, count, ctx);
-                    ecs_copy_t copy;
-                    if ((copy = cinfo->lifecycle.copy)) {
-                        copy(world, component, ids, ids, data, component_data[c], 
+                    ecs_move_t move;
+                    if ((move = cinfo->lifecycle.move)) {
+                        move(world, component, ids, ids, data, component_data[c], 
                             size, count, ctx);
                     } else {
                         memcpy(data, component_data[c], size * count);
@@ -3053,7 +3089,7 @@ void ecs_defer_flush(
                     remove_entities(world, op->entity, &op->components);
                     break;
                 case EcsOpSet:
-                    ecs_set_ptr_w_entity(world, op->entity, 
+                    ecs_move_ptr_w_entity(world, op->entity, 
                         op->components.array[0], ecs_to_size_t(op->size), 
                         op->value);
                     break;

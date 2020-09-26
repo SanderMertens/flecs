@@ -449,7 +449,6 @@
                 "copy_on_override",
                 "copy_on_new_w_data",
                 "copy_on_clone",
-                "copy_on_stage",
                 "no_copy_on_move",
                 "ctor_on_bulk_add",
                 "dtor_on_bulk_remove",

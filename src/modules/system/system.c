@@ -47,7 +47,6 @@ void activate_in_columns(
         if (columns[i].inout_kind == EcsIn) {
             ecs_on_demand_in_t *in = get_in_component(
                 component_map, columns[i].is.component);
-
             ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
 
             in->count += activate ? 1 : -1;
@@ -60,7 +59,8 @@ void activate_in_columns(
                ((activate && in->count == 1) || 
                 (!activate && !in->count))) 
             {
-                ecs_on_demand_out_t **out = ecs_vector_first(in->systems, ecs_on_demand_out_t*);
+                ecs_on_demand_out_t **out = ecs_vector_first(
+                    in->systems, ecs_on_demand_out_t*);
                 int32_t s, in_count = ecs_vector_count(in->systems);
 
                 for (s = 0; s < in_count; s ++) {
@@ -158,7 +158,8 @@ void invoke_status_action(
 void ecs_system_activate(
     ecs_world_t *world,
     ecs_entity_t system,
-    bool activate)
+    bool activate,
+    const EcsSystem *system_data)
 {
     ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
 
@@ -166,7 +167,9 @@ void ecs_system_activate(
         ecs_remove_entity(world, system, EcsInactive);
     }
 
-    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
+    if (!system_data) {
+        system_data = ecs_get(world, system, EcsSystem);
+    }
     if (!system_data || !system_data->query) {
         return;
     }
@@ -200,7 +203,7 @@ void ecs_enable_system(
 
     if (ecs_vector_count(query->tables)) {
         /* Only (de)activate system if it has non-empty tables. */
-        ecs_system_activate(world, system, enabled);
+        ecs_system_activate(world, system, enabled, system_data);
         system_data = ecs_get_mut(world, system, EcsSystem, NULL);
     }
 
@@ -252,7 +255,7 @@ void ecs_init_system(
          * should activate the in-columns, if any. This will ensure that any
          * OnDemand systems get enabled. */
         if (ecs_vector_count(query->tables)) {
-            ecs_system_activate(world, system, true);
+            ecs_system_activate(world, system, true, sptr);
         } else {
             /* If system isn't matched with any tables, mark it as inactive. This
              * causes it to be ignored by the main loop. When the system matches
@@ -408,7 +411,7 @@ ecs_entity_t ecs_run_intern(
     
     bool defer = false;
     if (!stage->defer) {
-        ecs_stage_defer_begin(world, stage);
+        ecs_defer_begin(stage->world);
         defer = true;
     }
 
@@ -445,9 +448,8 @@ ecs_entity_t ecs_run_intern(
         }
     }
 
-
     if (defer) {
-        ecs_stage_defer_end(world, stage);
+        ecs_defer_end(stage->world);
     }
 
     if (measure_time) {

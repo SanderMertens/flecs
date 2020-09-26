@@ -1609,10 +1609,10 @@ void activate_table(
         int32_t dst_count = ecs_vector_count(dst_array);
         if (active) {
             if (dst_count == 1) {
-                ecs_system_activate(world, query->system, true);
+                ecs_system_activate(world, query->system, true, NULL);
             }
         } else if (src_count == 0) {
-            ecs_system_activate(world, query->system, false);
+            ecs_system_activate(world, query->system, false, NULL);
         }
     }
 #else

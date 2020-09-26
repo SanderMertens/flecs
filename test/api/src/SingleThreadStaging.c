@@ -150,12 +150,6 @@ void New_w_component_w_count(ecs_iter_t *it) {
     ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
     const ecs_entity_t *ids = ecs_bulk_new_w_type(it->world, type, 1000);
     ctx->new_entities[ctx->entity_count] = ids[0];
-
-    int i;
-    for (i = 0; i < 1000; i ++) {
-        test_assert( ecs_has_type(it->world, ids[i], type));
-    }
-
     ctx->entity_count ++;
 }
 
@@ -2484,8 +2478,6 @@ void SingleThreadStaging_clear_stage_after_merge() {
 
     ECS_COMPONENT(world, Position);
 
-    /* If component was moved multiple times, the merge contains multiple 
-     * instances of the entity */
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .move = ecs_move(Position)
     });
@@ -2505,7 +2497,7 @@ void SingleThreadStaging_clear_stage_after_merge() {
     ecs_set(world, e, Position, {30, 40});
     ecs_defer_end(world);  
 
-    test_int(move_position, 3);
+    test_int(move_position, 2);
     p = ecs_get(world, e, Position);
     test_int(p->x, 30);
     test_int(p->y, 40);      

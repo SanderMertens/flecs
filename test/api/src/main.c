@@ -403,7 +403,6 @@ void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
 void ComponentLifecycle_copy_on_new_w_data(void);
 void ComponentLifecycle_copy_on_clone(void);
-void ComponentLifecycle_copy_on_stage(void);
 void ComponentLifecycle_no_copy_on_move(void);
 void ComponentLifecycle_ctor_on_bulk_add(void);
 void ComponentLifecycle_dtor_on_bulk_remove(void);
@@ -2742,10 +2741,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "copy_on_clone",
         ComponentLifecycle_copy_on_clone
-    },
-    {
-        "copy_on_stage",
-        ComponentLifecycle_copy_on_stage
     },
     {
         "no_copy_on_move",
@@ -6228,7 +6223,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        42,
+        41,
         ComponentLifecycle_testcases
     },
     {

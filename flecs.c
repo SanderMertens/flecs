@@ -6097,12 +6097,14 @@ void ecs_modified_w_entity(
     }
 }
 
-ecs_entity_t ecs_set_ptr_w_entity(
+static
+ecs_entity_t assign_ptr_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,
     size_t size,
-    const void *ptr)
+    void *ptr,
+    bool is_move)
 {    
     ecs_stage_t *stage = ecs_get_stage(&world);
 
@@ -6134,11 +6136,24 @@ ecs_entity_t ecs_set_ptr_w_entity(
     if (ptr) {
         ecs_entity_t real_id = ecs_component_id_from_id(world, component);
         ecs_c_info_t *cdata = get_c_info(world, real_id);
-        ecs_copy_t copy;
-
-        if (cdata && (copy = cdata->lifecycle.copy)) {
-            copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
-                cdata->lifecycle.ctx);
+        if (cdata) {
+            if (is_move) {
+                ecs_move_t move = cdata->lifecycle.move;
+                if (move) {
+                    move(world, real_id, &entity, &entity, dst, ptr, size, 1, 
+                        cdata->lifecycle.ctx);
+                } else {
+                    ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
+                }
+            } else {
+                ecs_copy_t copy = cdata->lifecycle.copy;
+                if (copy) {
+                    copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
+                        cdata->lifecycle.ctx);
+                } else {
+                    ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
+                }
+            }
         } else {
             ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
         }
@@ -6154,6 +6169,27 @@ ecs_entity_t ecs_set_ptr_w_entity(
     ecs_defer_flush(world, stage);
 
     return entity;
+}
+
+ecs_entity_t ecs_set_ptr_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    size_t size,
+    const void *ptr)
+{
+    /* Safe to cast away const: function won't modify if move arg is false */
+    return assign_ptr_w_entity(world, entity, component, size, (void*)ptr, false);
+}
+
+ecs_entity_t ecs_move_ptr_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    size_t size,
+    void *ptr)
+{
+    return assign_ptr_w_entity(world, entity, component, size, ptr, true);
 }
 
 ecs_entity_t ecs_get_case(
@@ -6636,9 +6672,9 @@ bool ecs_defer_bulk_new(
                 if (cinfo && (ctor = cinfo->lifecycle.ctor)) {
                     void *ctx = cinfo->lifecycle.ctx;
                     ctor(world, component, ids, data, size, count, ctx);
-                    ecs_copy_t copy;
-                    if ((copy = cinfo->lifecycle.copy)) {
-                        copy(world, component, ids, ids, data, component_data[c], 
+                    ecs_move_t move;
+                    if ((move = cinfo->lifecycle.move)) {
+                        move(world, component, ids, ids, data, component_data[c], 
                             size, count, ctx);
                     } else {
                         memcpy(data, component_data[c], size * count);
@@ -6832,7 +6868,7 @@ void ecs_defer_flush(
                     remove_entities(world, op->entity, &op->components);
                     break;
                 case EcsOpSet:
-                    ecs_set_ptr_w_entity(world, op->entity, 
+                    ecs_move_ptr_w_entity(world, op->entity, 
                         op->components.array[0], ecs_to_size_t(op->size), 
                         op->value);
                     break;
@@ -13860,7 +13896,8 @@ typedef struct EcsSystem {
 void ecs_system_activate(
     ecs_world_t *world,
     ecs_entity_t system,
-    bool activate);
+    bool activate,
+    const EcsSystem *system_data);
 
 /* Internal function to run a system */
 ecs_entity_t ecs_run_intern(
@@ -15483,10 +15520,10 @@ void activate_table(
         int32_t dst_count = ecs_vector_count(dst_array);
         if (active) {
             if (dst_count == 1) {
-                ecs_system_activate(world, query->system, true);
+                ecs_system_activate(world, query->system, true, NULL);
             }
         } else if (src_count == 0) {
-            ecs_system_activate(world, query->system, false);
+            ecs_system_activate(world, query->system, false, NULL);
         }
     }
 #else
@@ -20471,7 +20508,6 @@ void activate_in_columns(
         if (columns[i].inout_kind == EcsIn) {
             ecs_on_demand_in_t *in = get_in_component(
                 component_map, columns[i].is.component);
-
             ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
 
             in->count += activate ? 1 : -1;
@@ -20484,7 +20520,8 @@ void activate_in_columns(
                ((activate && in->count == 1) || 
                 (!activate && !in->count))) 
             {
-                ecs_on_demand_out_t **out = ecs_vector_first(in->systems, ecs_on_demand_out_t*);
+                ecs_on_demand_out_t **out = ecs_vector_first(
+                    in->systems, ecs_on_demand_out_t*);
                 int32_t s, in_count = ecs_vector_count(in->systems);
 
                 for (s = 0; s < in_count; s ++) {
@@ -20582,7 +20619,8 @@ void invoke_status_action(
 void ecs_system_activate(
     ecs_world_t *world,
     ecs_entity_t system,
-    bool activate)
+    bool activate,
+    const EcsSystem *system_data)
 {
     ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
 
@@ -20590,7 +20628,9 @@ void ecs_system_activate(
         ecs_remove_entity(world, system, EcsInactive);
     }
 
-    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
+    if (!system_data) {
+        system_data = ecs_get(world, system, EcsSystem);
+    }
     if (!system_data || !system_data->query) {
         return;
     }
@@ -20624,7 +20664,7 @@ void ecs_enable_system(
 
     if (ecs_vector_count(query->tables)) {
         /* Only (de)activate system if it has non-empty tables. */
-        ecs_system_activate(world, system, enabled);
+        ecs_system_activate(world, system, enabled, system_data);
         system_data = ecs_get_mut(world, system, EcsSystem, NULL);
     }
 
@@ -20676,7 +20716,7 @@ void ecs_init_system(
          * should activate the in-columns, if any. This will ensure that any
          * OnDemand systems get enabled. */
         if (ecs_vector_count(query->tables)) {
-            ecs_system_activate(world, system, true);
+            ecs_system_activate(world, system, true, sptr);
         } else {
             /* If system isn't matched with any tables, mark it as inactive. This
              * causes it to be ignored by the main loop. When the system matches
@@ -20832,7 +20872,7 @@ ecs_entity_t ecs_run_intern(
     
     bool defer = false;
     if (!stage->defer) {
-        ecs_stage_defer_begin(world, stage);
+        ecs_defer_begin(stage->world);
         defer = true;
     }
 
@@ -20869,9 +20909,8 @@ ecs_entity_t ecs_run_intern(
         }
     }
 
-
     if (defer) {
-        ecs_stage_defer_end(world, stage);
+        ecs_defer_end(stage->world);
     }
 
     if (measure_time) {
