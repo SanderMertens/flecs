@@ -416,7 +416,7 @@ void register_query(
         ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
         if (q) *q = query;
 
-        ecs_data_t *data = ecs_table_get_data(world, table);
+        ecs_data_t *data = ecs_table_get_data(table);
         if (data && ecs_vector_count(data->entities)) {
             ecs_table_activate(world, table, query, true);
         }
@@ -441,7 +441,6 @@ void register_query(
 
 static
 ecs_data_t* get_data_intern(
-    ecs_world_t *world,
     ecs_table_t *table,
     bool create)
 {
@@ -460,17 +459,15 @@ ecs_data_t* get_data_intern(
 }
 
 ecs_data_t* ecs_table_get_data(
-    ecs_world_t *world,
     ecs_table_t *table)
 {
-    return get_data_intern(world, table, false);
+    return get_data_intern(table, false);
 }
 
 ecs_data_t* ecs_table_get_or_create_data(
-    ecs_world_t *world,
     ecs_table_t *table)
 {
-    return get_data_intern(world, table, true);;   
+    return get_data_intern(table, true);;   
 }
 
 static
@@ -610,7 +607,7 @@ void ecs_table_clear_silent(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_data_t *data = ecs_table_get_data(world, table);
+    ecs_data_t *data = ecs_table_get_data(table);
     if (!data) {
         return;
     }
@@ -631,7 +628,7 @@ void ecs_table_clear(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_data_t *data = ecs_table_get_data(world, table);
+    ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
         run_remove_actions(
             world, table, data, 0, ecs_table_data_count(data), false);
@@ -653,7 +650,7 @@ void ecs_table_unset(
     ecs_table_t *table)
 {
     (void)world;
-    ecs_data_t *data = ecs_table_get_data(world, table);
+    ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
         run_un_set_handlers(world, table, data);
     }   
@@ -666,7 +663,7 @@ void ecs_table_free(
     ecs_table_t *table)
 {
     (void)world;
-    ecs_data_t *data = ecs_table_get_data(world, table);
+    ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
         run_remove_actions(
             world, table, data, 0, ecs_table_data_count(data), false);
@@ -1755,9 +1752,7 @@ ecs_data_t* ecs_table_merge(
     }
 
     if (!new_data) {
-        new_data = ecs_table_get_or_create_data(
-            world, new_table);
-        
+        new_data = ecs_table_get_or_create_data(new_table);
         if (new_table == old_table) {
             move_data = true;
         }
@@ -1823,7 +1818,7 @@ void ecs_table_replace_data(
     }
 
     if (data) {
-        table_data = ecs_table_get_or_create_data(world, table);
+        table_data = ecs_table_get_or_create_data(table);
         *table_data = *data;
     } else {
         return;

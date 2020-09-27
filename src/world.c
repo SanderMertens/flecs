@@ -621,7 +621,7 @@ void ecs_dim_type(
         ecs_table_t *table = ecs_table_from_type(world, type);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        ecs_data_t *data = ecs_table_get_or_create_data(world, table);
+        ecs_data_t *data = ecs_table_get_or_create_data(table);
         ecs_table_set_size(world, table, data, entity_count);
     }
 }

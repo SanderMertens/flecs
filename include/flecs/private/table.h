@@ -20,12 +20,10 @@ ecs_table_t* ecs_table_from_type(
 
 /* Get table data */
 ecs_data_t *ecs_table_get_data(
-    ecs_world_t *world,
     ecs_table_t *table);
 
 /* Get or create data */
 ecs_data_t *ecs_table_get_or_create_data(
-    ecs_world_t *world,
     ecs_table_t *table); 
 
 /* Activates / deactivates table for systems. A deactivated table will not be

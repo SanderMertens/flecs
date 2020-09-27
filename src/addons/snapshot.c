@@ -117,7 +117,7 @@ ecs_snapshot_t* snapshot_create(
             continue;
         }
 
-        ecs_data_t *data = ecs_table_get_data(world, t);
+        ecs_data_t *data = ecs_table_get_data(t);
         if (!data || !data->entities || !ecs_vector_count(data->entities)) {
             continue;
         }
@@ -207,7 +207,7 @@ void ecs_snapshot_restore(
                 ecs_vector_each(leaf->data->entities, ecs_entity_t, e_ptr, {
                     ecs_record_t *r = ecs_eis_get(world, *e_ptr);
                     if (r && r->table) {
-                        ecs_data_t *data = ecs_table_get_data(world, r->table);
+                        ecs_data_t *data = ecs_table_get_data(r->table);
                         
                         /* Data must be not NULL, otherwise entity index could
                          * not point to it */
@@ -225,7 +225,7 @@ void ecs_snapshot_restore(
                 int32_t old_count = ecs_table_count(table);
                 int32_t new_count = ecs_table_data_count(leaf->data);
 
-                ecs_data_t *data = ecs_table_get_data(world, table);
+                ecs_data_t *data = ecs_table_get_data(table);
                 data = ecs_table_merge(world, table, table, data, leaf->data);
 
                 /* Run OnSet systems for merged entities */
@@ -268,7 +268,7 @@ void ecs_snapshot_restore(
             }
 
             ecs_entities_t components = ecs_type_to_entities(table->type);
-            ecs_data_t *table_data = ecs_table_get_data(world, table);
+            ecs_data_t *table_data = ecs_table_get_data(table);
             int32_t entity_count = ecs_table_data_count(table_data);
 
             ecs_run_set_systems(world, &components, table, 

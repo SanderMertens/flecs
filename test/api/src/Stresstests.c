@@ -140,7 +140,7 @@ void set_entity_random_components(
     IterData ctx = {.component = ecs_entity(Position), .component_2 = ecs_entity(Velocity), .component_3 = ecs_entity(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t *ids = ecs_bulk_new(world, Position, 5);
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 5);
     test_assert(ids != NULL);
 
     ids = ecs_bulk_new(world, Type, 5);

@@ -99,7 +99,6 @@ ecs_entity_t name_to_id(
 
 static
 ecs_entity_t find_child_in_table(
-    ecs_world_t *world,
     ecs_table_t *table,
     const char *name)
 {
@@ -109,7 +108,7 @@ ecs_entity_t find_child_in_table(
         return 0;
     }
 
-    ecs_data_t *data = ecs_table_get_data(world, table);
+    ecs_data_t *data = ecs_table_get_data(table);
     if (!data || !data->columns) {
         return 0;
     }
@@ -146,7 +145,7 @@ ecs_entity_t find_child(
     (void)parent;
     
     ecs_sparse_each(world->store.tables, ecs_table_t, table, {
-        ecs_entity_t result = find_child_in_table(world, table, name);
+        ecs_entity_t result = find_child_in_table(table, name);
         if (result) {
             return result;
         }
@@ -168,7 +167,7 @@ ecs_entity_t ecs_lookup_child(
     if (child_tables) {
         ecs_vector_each(child_tables, ecs_table_t*, table_ptr, {
             ecs_table_t *table = *table_ptr;
-            result = find_child_in_table(world, table, name);
+            result = find_child_in_table(table, name);
             if (result) {
                 return result;
             }
@@ -444,7 +443,7 @@ bool ecs_scope_next(
         ecs_table_t *table = *ecs_vector_get(tables, ecs_table_t*, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        ecs_data_t *data = ecs_table_get_data(it->world, table);
+        ecs_data_t *data = ecs_table_get_data(table);
         if (!data) {
             continue;
         }

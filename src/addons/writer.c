@@ -64,7 +64,7 @@ void ecs_table_writer_register_table(
     ecs_os_free(writer->type_array);
     writer->type_array = NULL;
 
-    ecs_data_t *data = ecs_table_get_or_create_data(world, writer->table);
+    ecs_data_t *data = ecs_table_get_or_create_data(writer->table);
     if (data->entities) {
         /* Remove any existing entities from entity index */
         ecs_vector_each(data->entities, ecs_entity_t, e_ptr, {
@@ -88,7 +88,7 @@ void ecs_table_writer_finalize_table(
     ecs_table_writer_t *writer = &stream->table;
 
     /* Register entities in table in entity index */
-    ecs_data_t *data = ecs_table_get_data(world, writer->table);
+    ecs_data_t *data = ecs_table_get_data(writer->table);
     ecs_vector_t *entity_vector = data->entities;
     ecs_entity_t *entities = ecs_vector_first(entity_vector, ecs_entity_t);
     int32_t i, count = ecs_vector_count(entity_vector);
@@ -99,7 +99,7 @@ void ecs_table_writer_finalize_table(
         if (record_ptr) {
             if (record_ptr->table != writer->table) {
                 ecs_table_t *table = record_ptr->table;      
-                ecs_data_t *table_data = ecs_table_get_data(world, table);
+                ecs_data_t *table_data = ecs_table_get_data(table);
 
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_table_delete(world, 
@@ -124,8 +124,7 @@ void ecs_table_writer_prepare_column(
     int32_t size)
 {
     ecs_table_writer_t *writer = &stream->table;
-    ecs_world_t *world = stream->world;
-    ecs_data_t *data = ecs_table_get_or_create_data(world, writer->table);
+    ecs_data_t *data = ecs_table_get_or_create_data(writer->table);
         
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 

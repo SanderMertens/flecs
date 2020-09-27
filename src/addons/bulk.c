@@ -30,7 +30,7 @@ void bulk_delete(
         }
 
         /* Remove entities from index */
-        ecs_data_t *data = ecs_table_get_data(world, table);
+        ecs_data_t *data = ecs_table_get_data(table);
         if (!data) {
             /* If table has no data, there's nothing to delete */
             continue;
@@ -68,7 +68,7 @@ void merge_table(
     } else {
         /* Merge table into dst_table */
         if (dst_table != src_table) {
-            ecs_data_t *src_data = ecs_table_get_data(world, src_table);
+            ecs_data_t *src_data = ecs_table_get_data(src_table);
             int32_t dst_count = ecs_table_count(dst_table);
             int32_t src_count = ecs_table_count(src_table);
 
@@ -77,7 +77,7 @@ void merge_table(
                     src_data, 0, src_count, to_remove, false);
             }
 
-            ecs_data_t *dst_data = ecs_table_get_data(world, dst_table);
+            ecs_data_t *dst_data = ecs_table_get_data(dst_table);
             dst_data = ecs_table_merge(
                 world, dst_table, src_table, dst_data, src_data);
 
