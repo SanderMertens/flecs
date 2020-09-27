@@ -440,9 +440,7 @@ int32_t get_component_index(
         result = 0;
     } else if (op == EcsOperOptional) {
         /* If table doesn't have the field, mark it as no data */
-        if (!ecs_type_has_entity(
-            world, table_type, component))
-        {
+        if (!ecs_type_has_entity(world, table_type, component)) {
             result = 0;
         }
     }
@@ -1496,6 +1494,10 @@ void process_signature(
             query->flags |= EcsQueryHasOutColumns;
         }
 
+        if (op == EcsOperOptional) {
+            query->flags |= EcsQueryHasOptional;
+        }        
+
         if (!(query->flags & EcsQueryMatchDisabled)) {
             if (op == EcsOperOr) {
                 /* If the signature explicitly indicates interest in EcsDisabled,
@@ -1751,6 +1753,13 @@ void rematch_table(
         } else if (query->cascade_by) {
             resolve_cascade_container(
                 world, query, match, table->type);
+
+        /* If query has optional columns, it is possible that a column that
+         * previously had data no longer has data, or vice versa. Do a full
+         * rematch to make sure data is consistent. */
+        } else if (query->flags & EcsQueryHasOptional) {
+            unmatch_table(world, query, table);
+            add_table(world, query, table);
         }
     } else {
         /* Table no longer matches, remove */

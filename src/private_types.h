@@ -244,6 +244,7 @@ typedef struct ecs_table_slice_t {
 #define EcsQueryHasTraits (128)      /* Does query have traits */
 #define EcsQueryIsSubquery (256)     /* Is query a subquery */
 #define EcsQueryHasOutColumns (512)  /* Does query have out columns */
+#define EcsQueryHasOptional (1024)   /* Does query have optional columns */
 
 #define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
