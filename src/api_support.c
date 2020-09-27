@@ -94,8 +94,7 @@ EcsType type_from_vec(
         .count = count
     };
 
-    ecs_table_t *table = ecs_table_find_or_create(
-        world, &world->stage, &entities);
+    ecs_table_t *table = ecs_table_find_or_create(world, &entities);
     if (!table) {
         return (EcsType){ 0 };
     }    
@@ -126,7 +125,7 @@ EcsType type_from_vec(
     if (normalized) {
         ecs_entities_t normalized_array = ecs_type_to_entities(normalized);
         ecs_table_t *norm_table = ecs_table_traverse_add(
-            world, &world->stage, table, &normalized_array, NULL);
+            world, table, &normalized_array, NULL);
 
         result.normalized = norm_table->type;
 

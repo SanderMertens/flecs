@@ -11,30 +11,19 @@ extern "C" {
 /** Find or create table for a set of components */
 ecs_table_t* ecs_table_find_or_create(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entities_t *type);
 
 /** Find or create table for a type */
 ecs_table_t* ecs_table_from_type(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_type_t type);    
 
-/* Get table data from main stage */
+/* Get table data */
 ecs_data_t *ecs_table_get_data(
-    ecs_world_t *world,
     ecs_table_t *table);
 
-/* Get table data for specific stage */
-ecs_data_t *ecs_table_get_staged_data(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table);
-
-/* Get or create data for specific stage */
+/* Get or create data */
 ecs_data_t *ecs_table_get_or_create_data(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table); 
 
 /* Activates / deactivates table for systems. A deactivated table will not be
@@ -69,11 +58,11 @@ void ecs_table_clear_data(
     ecs_table_t *table,
     ecs_data_t *data);    
 
-/* Return number of entities in table in main stage. */
+/* Return number of entities in table. */
 int32_t ecs_table_count(
     ecs_table_t *table);
 
-/* Return number of entities in stage-specific data */
+/* Return number of entities in data */
 int32_t ecs_table_data_count(
     ecs_data_t *data);
 
@@ -89,7 +78,6 @@ int32_t ecs_table_append(
 /* Delete an entity from the table. */
 void ecs_table_delete(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t index,
@@ -98,7 +86,6 @@ void ecs_table_delete(
 /* Move a row from one table to another */
 void ecs_table_move(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t dst_entity,
     ecs_entity_t src_entity,
     ecs_table_t *new_table,
@@ -106,8 +93,7 @@ void ecs_table_move(
     int32_t new_index,
     ecs_table_t *old_table,
     ecs_data_t *old_data,
-    int32_t old_index,
-    bool same_stage);
+    int32_t old_index);
 
 /* Grow table with specified number of records. Populate table with entities,
  * starting from specified entity id. */

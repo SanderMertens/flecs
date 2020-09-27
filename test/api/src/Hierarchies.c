@@ -568,24 +568,24 @@ void Hierarchies_scope_set_w_new_staged() {
 
     ECS_ENTITY(world, Scope, 0);
 
-    bool is_staged = ecs_staging_begin(world);
-    test_assert(is_staged == false);
+    ecs_defer_begin(world);
 
     ecs_entity_t old_scope = ecs_set_scope(world, Scope);
     test_assert(old_scope == 0);
 
-    ecs_entity_t e = ecs_new(world, 0);
-    test_assert(e != 0);
-    test_assert(ecs_has_entity(world, e, ECS_CHILDOF | Scope));
+    ecs_entity_t e1 = ecs_new(world, 0);
+    test_assert(e1 != 0);
 
     old_scope = ecs_set_scope(world, 0);
     test_assert(old_scope == Scope);
 
-    e = ecs_new(world, 0);
-    test_assert(e != 0);
-    test_assert(ecs_get_type(world, e) == NULL);
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 != 0);
 
-    ecs_staging_end(world, false);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_entity(world, e1, ECS_CHILDOF | Scope));
+    test_assert(ecs_get_type(world, e2) == NULL);
 
     ecs_fini(world);
 }
@@ -1121,9 +1121,9 @@ void Hierarchies_delete_tree_staged() {
     test_int(it.table_count, 3);
     test_int(it.inactive_table_count, 0);
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     ecs_delete(world, parent);
-    ecs_staging_end(world, false);
+    ecs_defer_end(world);
     
     test_assert(ecs_get_type(world, parent) == NULL);
     test_assert(ecs_get_type(world, child) == NULL);

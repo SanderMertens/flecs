@@ -23,7 +23,8 @@ typedef struct EcsSystem {
 void ecs_system_activate(
     ecs_world_t *world,
     ecs_entity_t system,
-    bool activate);
+    bool activate,
+    const EcsSystem *system_data);
 
 /* Internal function to run a system */
 ecs_entity_t ecs_run_intern(

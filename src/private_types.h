@@ -186,7 +186,7 @@ struct ecs_table_t {
     ecs_edge_t *lo_edges;            /**< Edges to low entity ids */
     ecs_map_t *hi_edges;             /**< Edges to high entity ids */
 
-    ecs_vector_t *data;              /**< Data per stage */
+    ecs_data_t *data;                /**< Data storage */
 
     ecs_vector_t *queries;           /**< Queries matched with table */
     ecs_vector_t *monitors;          /**< Monitor systems matched with table */
@@ -313,18 +313,30 @@ typedef struct ecs_on_demand_in_t {
 /** Types for deferred operations */
 typedef enum ecs_op_kind_t {
     EcsOpNone,
+    EcsOpNew,
+    EcsOpClone,
+    EcsOpBulkNew,
     EcsOpAdd,
     EcsOpRemove,   
     EcsOpSet,
+    EcsOpMut,
+    EcsOpModified,
+    EcsOpDelete,
+    EcsOpClear
 } ecs_op_kind_t;
 
 typedef struct ecs_op_t {
     ecs_op_kind_t kind;
+    ecs_entity_t scope;
     ecs_entity_t entity;
-    ecs_entities_t components;
+    ecs_entity_t *entities;
     ecs_entity_t component;
+    ecs_entities_t components;
     void *value;
+    void **bulk_data;
     ecs_size_t size;
+    int32_t count;
+    bool clone_value;
 } ecs_op_t;
 
 /** A stage is a data structure in which delta's are stored until it is safe to
@@ -343,33 +355,19 @@ struct ecs_stage_t {
      * world pointers (or constantly obtaining the real world when needed). */
     ecs_world_t *world;
 
-    /* If this is not main stage, 
-     * changes to the entity index 
-     * are buffered here */
-    ecs_sparse_t *entity_index; /* Entity lookup table for (table, row) */
-
-    /* If this is not a thread
-     * stage, these are the same
-     * as the main stage */
-    ecs_sparse_t *tables;          /* Tables created while >1 threads running */
-    ecs_table_t root;              /* Root table */
-    ecs_vector_t *dirty_tables;    /* Tables that need merging */
-
-    /* Namespacing */
-    ecs_table_t *scope_table;      /* Table for current scope */
-    ecs_entity_t scope;            /* Entity of current scope */
-
     int32_t id;                    /* Unique id that identifies the stage */
 
     /* Are operations deferred? */
     int32_t defer;
     ecs_vector_t *defer_queue;
+    ecs_vector_t *defer_merge_queue;
 
     /* One-shot actions to be executed after the merge */
     ecs_vector_t *post_frame_actions;
 
-    /* Is entity range checking enabled? */
-    bool range_check_enabled;
+    /* Namespacing */
+    ecs_table_t *scope_table;      /* Table for current scope */
+    ecs_entity_t scope;            /* Entity of current scope */    
 
     /* If a system is progressing it will set this field to its columns. This
      * will be used in debug mode to verify that a system is not doing 
@@ -380,6 +378,15 @@ struct ecs_stage_t {
     ecs_vector_t *system_columns;
 #endif
 };
+
+typedef struct ecs_store_t {
+    /* Entity lookup table for (table, row) */
+    ecs_sparse_t *entity_index; 
+
+    /* Table graph */
+    ecs_sparse_t *tables;
+    ecs_table_t root;
+} ecs_store_t;
 
 /** Supporting type to store looked up or derived entity data */
 typedef struct ecs_entity_info_t {
@@ -441,6 +448,13 @@ struct ecs_world_t {
     ecs_c_info_t c_info[ECS_HI_COMPONENT_ID]; /* Component callbacks & triggers */
     ecs_map_t *t_info;                        /* Tag triggers */
 
+    /* Is entity range checking enabled? */
+    bool range_check_enabled;
+
+    /* --  Data storage -- */
+
+    ecs_store_t store;
+
 
     /* --  Queries -- */
 
@@ -481,6 +495,7 @@ struct ecs_world_t {
 
 
     /* -- Aliasses -- */
+
     ecs_vector_t *aliases;
 
 

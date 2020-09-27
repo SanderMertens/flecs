@@ -1448,6 +1448,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
  */
 #define ecs_set(world, entity, component, ...)\
     ecs_set_ptr_w_entity(world, entity, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
+
 #endif
 
 
@@ -2560,6 +2561,17 @@ int32_t ecs_table_component_index(
  * @{
  */
 
+/** Begin frame. */
+FLECS_EXPORT
+float ecs_frame_begin(
+    ecs_world_t *world,
+    float delta_time);
+
+/** End frame. */
+FLECS_EXPORT
+void ecs_frame_end(
+    ecs_world_t *world);
+
 /** Begin staging.
  * When staging is enabled, modifications to entities are stored to a stage.
  * This ensures that arrays are not modified while iterating. Modifications are
@@ -2577,12 +2589,10 @@ bool ecs_staging_begin(
  * stage.
  *
  * @param world The world
- * @return Whether world was staged.
  */
 FLECS_EXPORT
-bool ecs_staging_end(
-    ecs_world_t *world,
-    bool is_staged);
+void ecs_staging_end(
+    ecs_world_t *world);
 
 /** Manually merge.
  * When automerging is set to false, an application can invoke this operation to
@@ -2592,6 +2602,25 @@ bool ecs_staging_end(
  */
 FLECS_EXPORT
 void ecs_merge(
+    ecs_world_t *world);
+
+/** Defer operations until end of frame. 
+ * When this operation is invoked while iterating, operations inbetween the
+ * defer_begin and defer_end operations are executed at the end of the frame.
+ *
+ * This operation is thread safe.
+ */
+FLECS_EXPORT
+void ecs_defer_begin(
+    ecs_world_t *world);
+
+/** End block of operations to defer. 
+ * See defer_begin.
+ *
+ * This operation is thread safe.
+ */
+FLECS_EXPORT
+void ecs_defer_end(
     ecs_world_t *world);
 
 /** Enable / disable automerging.

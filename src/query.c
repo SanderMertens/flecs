@@ -18,7 +18,7 @@ ecs_entity_t components_contains(
         if (ECS_HAS_ROLE(entity, CHILDOF)) {
             entity &= ECS_COMPONENT_MASK;
 
-            ecs_record_t *record = ecs_eis_get(&world->stage, entity);
+            ecs_record_t *record = ecs_eis_get(world, entity);
             ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
 
             if (record->table) {
@@ -45,7 +45,7 @@ ecs_entity_t get_entity_for_component(
     ecs_entity_t component)
 {
     if (entity) {
-        ecs_record_t *record = ecs_eis_get(&world->stage, entity);
+        ecs_record_t *record = ecs_eis_get(world, entity);
         ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
         if (record->table) {
             type = record->table->type;
@@ -494,7 +494,7 @@ void add_ref(
             if (e) {
                 ecs_get_ref_w_entity(
                     world, ref, e, component);
-                ecs_set_watch(world, &world->stage, e);                     
+                ecs_set_watch(world, e);                     
             }
 
             query->flags |= EcsQueryHasRefs;
@@ -921,11 +921,11 @@ void match_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    int32_t i, count = ecs_sparse_count(world->stage.tables);
+    int32_t i, count = ecs_sparse_count(world->store.tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(
-            world->stage.tables, ecs_table_t, i);
+            world->store.tables, ecs_table_t, i);
 
         if (ecs_query_match(world, table, query, NULL)) {
             add_table(world, query, table);
@@ -1048,7 +1048,7 @@ repeat:
             return j;
         }
 
-        ecs_table_swap(world, &world->stage, table, data, i, j);
+        ecs_table_swap(world, table, data, i, j);
 
         if (p == i) {
             pivot = ELEM(ptr, elem_size, j);
@@ -1093,7 +1093,7 @@ void sort_table(
     int32_t column_index,
     ecs_compare_action_t compare)
 {
-    ecs_data_t *data = ecs_table_get_data(world, table);
+    ecs_data_t *data = ecs_table_get_data(table);
     if (!data || !data->entities) {
         /* Nothing to sort */
         return;
@@ -1150,7 +1150,6 @@ ecs_entity_t e_from_helper(
 
 static
 void build_sorted_table_range(
-    ecs_world_t *world,
     ecs_query_t *query,
     int32_t start,
     int32_t end)
@@ -1165,7 +1164,7 @@ void build_sorted_table_range(
     int i, to_sort = 0;
     for (i = start; i < end; i ++) {
         ecs_matched_table_t *table = &tables[i];
-        ecs_data_t *data = ecs_table_get_data(world, table->table);
+        ecs_data_t *data = ecs_table_get_data(table->table);
         if (!data || !data->entities || !ecs_table_count(table->table)) {
             continue;
         }
@@ -1243,7 +1242,6 @@ void build_sorted_table_range(
 
 static
 void build_sorted_tables(
-    ecs_world_t *world,
     ecs_query_t *query)
 {
     /* Clean previous sorted tables */
@@ -1259,7 +1257,7 @@ void build_sorted_tables(
         table = &tables[i];
         if (rank != table->rank) {
             if (start != i) {
-                build_sorted_table_range(world, query, start, i);
+                build_sorted_table_range(query, start, i);
                 start = i;
             }
             rank = table->rank;
@@ -1267,7 +1265,7 @@ void build_sorted_tables(
     }
 
     if (start != i) {
-        build_sorted_table_range(world, query, start, i);
+        build_sorted_table_range(query, start, i);
     }
 }
 
@@ -1382,7 +1380,7 @@ void sort_tables(
     }
 
     if (tables_sorted || query->match_count != query->prev_match_count) {
-        build_sorted_tables(world, query);
+        build_sorted_tables(query);
         query->match_count ++; /* Increase version if tables changed */
     }
 }
@@ -1547,7 +1545,7 @@ void process_signature(
 
         if (from == EcsFromEntity) {
             ecs_assert(column->source != 0, ECS_INTERNAL_ERROR, NULL);
-            ecs_set_watch(world, &world->stage, column->source);
+            ecs_set_watch(world, column->source);
         }
     }
 
@@ -1609,10 +1607,10 @@ void activate_table(
         int32_t dst_count = ecs_vector_count(dst_array);
         if (active) {
             if (dst_count == 1) {
-                ecs_system_activate(world, query->system, true);
+                ecs_system_activate(world, query->system, true, NULL);
             }
         } else if (src_count == 0) {
-            ecs_system_activate(world, query->system, false);
+            ecs_system_activate(world, query->system, false, NULL);
         }
     }
 #else
@@ -1784,7 +1782,7 @@ void rematch_tables(
             rematch_table(world, query, table);
         }        
     } else {
-        ecs_sparse_t *tables = world->stage.tables;
+        ecs_sparse_t *tables = world->store.tables;
         int32_t i, count = ecs_sparse_count(tables);
 
         for (i = 0; i < count; i ++) {
@@ -2010,7 +2008,6 @@ ecs_iter_t ecs_query_iter(
 
 void ecs_query_set_iter(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_query_t *query,
     ecs_iter_t *it,
     int32_t table_index,
@@ -2022,7 +2019,7 @@ void ecs_query_set_iter(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_t *world_table = table->table;
-    ecs_data_t *table_data = ecs_table_get_staged_data(world, stage, world_table);
+    ecs_data_t *table_data = ecs_table_get_data(world_table);
     ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
     
     ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t);  
@@ -2085,7 +2082,6 @@ int ecs_page_iter_next(
 
 static
 int find_smallest_column(
-    ecs_world_t *world,
     ecs_table_t *table,
     ecs_matched_table_t *matched_table,
     ecs_vector_t *sparse_columns)
@@ -2113,7 +2109,7 @@ int find_smallest_column(
             ecs_assert(table_column_index >= 1, ECS_INTERNAL_ERROR, NULL);
 
             /* Get the sparse column */
-            ecs_data_t *data = ecs_table_get_data(world, table);
+            ecs_data_t *data = ecs_table_get_data(table);
             sc = sparse_column->sw_column = 
                 &data->sw_columns[table_column_index - 1];
         }
@@ -2132,7 +2128,6 @@ int find_smallest_column(
 
 static
 int sparse_column_next(
-    ecs_world_t *world,
     ecs_table_t *table,
     ecs_matched_table_t *matched_table,
     ecs_vector_t *sparse_columns,
@@ -2144,7 +2139,7 @@ int sparse_column_next(
 
     if (!(sparse_smallest = iter->sparse_smallest)) {
         sparse_smallest = iter->sparse_smallest = find_smallest_column(
-            world, table, matched_table, sparse_columns);
+            table, matched_table, sparse_columns);
         first_iteration = true;
     }
 
@@ -2257,7 +2252,7 @@ bool ecs_query_next(
         
         if (world_table) {
             ecs_vector_t *sparse_columns = table->sparse_columns;
-            table_data = ecs_table_get_data(world, world_table);
+            table_data = ecs_table_get_data(world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
             it->table_columns = table_data->columns;
             
@@ -2271,7 +2266,7 @@ bool ecs_query_next(
 
             if (cur.count) {
                 if (sparse_columns) {
-                    if (sparse_column_next(world, world_table, table, 
+                    if (sparse_column_next(world_table, table, 
                         sparse_columns, iter, &cur) == -1)
                     {
                         /* No more elements in sparse column */
@@ -2395,7 +2390,7 @@ void ecs_query_order_by(
     sort_tables(world, query);    
 
     if (!query->table_slices) {
-        build_sorted_tables(world, query);
+        build_sorted_tables(query);
     }
 }
 
@@ -2414,7 +2409,7 @@ void ecs_query_group_by(
 
     order_ranked_tables(world, query);
 
-    build_sorted_tables(world, query);
+    build_sorted_tables(query);
 }
 
 bool ecs_query_changed(

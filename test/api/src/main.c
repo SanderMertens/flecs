@@ -352,8 +352,6 @@ void Lookup_lookup(void);
 void Lookup_lookup_component(void);
 void Lookup_lookup_not_found(void);
 void Lookup_lookup_child(void);
-void Lookup_lookup_in_progress(void);
-void Lookup_lookup_child_in_progress(void);
 void Lookup_lookup_w_null_name(void);
 void Lookup_get_name(void);
 void Lookup_get_name_no_name(void);
@@ -405,7 +403,6 @@ void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
 void ComponentLifecycle_copy_on_new_w_data(void);
 void ComponentLifecycle_copy_on_clone(void);
-void ComponentLifecycle_copy_on_stage(void);
 void ComponentLifecycle_no_copy_on_move(void);
 void ComponentLifecycle_ctor_on_bulk_add(void);
 void ComponentLifecycle_dtor_on_bulk_remove(void);
@@ -859,7 +856,6 @@ void Prefab_match_base(void);
 void Prefab_match_base_after_add_in_prev_phase(void);
 void Prefab_override_watched_prefab(void);
 void Prefab_rematch_twice(void);
-void Prefab_inherit_in_system(void);
 void Prefab_add_to_empty_base_in_system(void);
 void Prefab_dont_inherit_disabled(void);
 void Prefab_clone_after_inherit_in_on_add(void);
@@ -1163,6 +1159,20 @@ void SingleThreadStaging_get_mutable(void);
 void SingleThreadStaging_get_mutable_from_main(void);
 void SingleThreadStaging_get_mutable_w_add(void);
 void SingleThreadStaging_on_add_after_new_type_in_progress(void);
+void SingleThreadStaging_defer_new(void);
+void SingleThreadStaging_defer_add(void);
+void SingleThreadStaging_defer_remove(void);
+void SingleThreadStaging_defer_set(void);
+void SingleThreadStaging_defer_delete(void);
+void SingleThreadStaging_defer_twice(void);
+void SingleThreadStaging_defer_twice_in_progress(void);
+void SingleThreadStaging_run_w_defer(void);
+void SingleThreadStaging_system_in_progress_w_defer(void);
+void SingleThreadStaging_defer_get_mut_no_modify(void);
+void SingleThreadStaging_defer_get_mut_w_modify(void);
+void SingleThreadStaging_defer_modify(void);
+void SingleThreadStaging_defer_set_trait(void);
+void SingleThreadStaging_defer_clear(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -2557,14 +2567,6 @@ bake_test_case Lookup_testcases[] = {
         Lookup_lookup_child
     },
     {
-        "lookup_in_progress",
-        Lookup_lookup_in_progress
-    },
-    {
-        "lookup_child_in_progress",
-        Lookup_lookup_child_in_progress
-    },
-    {
         "lookup_w_null_name",
         Lookup_lookup_w_null_name
     },
@@ -2748,10 +2750,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "copy_on_clone",
         ComponentLifecycle_copy_on_clone
-    },
-    {
-        "copy_on_stage",
-        ComponentLifecycle_copy_on_stage
     },
     {
         "no_copy_on_move",
@@ -4457,10 +4455,6 @@ bake_test_case Prefab_testcases[] = {
         Prefab_rematch_twice
     },
     {
-        "inherit_in_system",
-        Prefab_inherit_in_system
-    },
-    {
         "add_to_empty_base_in_system",
         Prefab_add_to_empty_base_in_system
     },
@@ -5602,6 +5596,62 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "on_add_after_new_type_in_progress",
         SingleThreadStaging_on_add_after_new_type_in_progress
+    },
+    {
+        "defer_new",
+        SingleThreadStaging_defer_new
+    },
+    {
+        "defer_add",
+        SingleThreadStaging_defer_add
+    },
+    {
+        "defer_remove",
+        SingleThreadStaging_defer_remove
+    },
+    {
+        "defer_set",
+        SingleThreadStaging_defer_set
+    },
+    {
+        "defer_delete",
+        SingleThreadStaging_defer_delete
+    },
+    {
+        "defer_twice",
+        SingleThreadStaging_defer_twice
+    },
+    {
+        "defer_twice_in_progress",
+        SingleThreadStaging_defer_twice_in_progress
+    },
+    {
+        "run_w_defer",
+        SingleThreadStaging_run_w_defer
+    },
+    {
+        "system_in_progress_w_defer",
+        SingleThreadStaging_system_in_progress_w_defer
+    },
+    {
+        "defer_get_mut_no_modify",
+        SingleThreadStaging_defer_get_mut_no_modify
+    },
+    {
+        "defer_get_mut_w_modify",
+        SingleThreadStaging_defer_get_mut_w_modify
+    },
+    {
+        "defer_modify",
+        SingleThreadStaging_defer_modify
+    },
+    {
+        "defer_set_trait",
+        SingleThreadStaging_defer_set_trait
+    },
+    {
+        "defer_clear",
+        SingleThreadStaging_defer_clear
     }
 };
 
@@ -6197,7 +6247,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        21,
+        19,
         Lookup_testcases
     },
     {
@@ -6218,7 +6268,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        42,
+        41,
         ComponentLifecycle_testcases
     },
     {
@@ -6337,7 +6387,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        66,
+        65,
         Prefab_testcases
     },
     {
@@ -6400,7 +6450,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        60,
+        74,
         SingleThreadStaging_testcases
     },
     {

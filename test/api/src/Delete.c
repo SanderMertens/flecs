@@ -165,14 +165,8 @@ void Delete_delete_3_of_3() {
 static
 void CreateEntity(ecs_iter_t *it) {
     ECS_COLUMN_COMPONENT(it, Position, 1);
-
     const ecs_entity_t *ids = ecs_bulk_new(it->world, Position, 10);
     test_assert(ids != NULL);
-
-    int i;
-    for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(it->world, ids[i], Position));
-    }
 }
 
 static
@@ -204,9 +198,8 @@ void Delete_delete_w_on_remove() {
 
     ecs_progress(world, 0);
 
-    test_int(on_remove_system_invoked, 10);
-    
     test_int( ecs_count(world, Position), 0);
+    test_int(on_remove_system_invoked, 10);
     
     ecs_fini(world);
 }
@@ -290,9 +283,9 @@ void Delete_alive_after_staged_delete() {
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     ecs_delete(world, e);
-    ecs_staging_end(world, false);
+    ecs_defer_end(world);
     
     test_assert(!ecs_get_type(world, e));
     test_assert(!ecs_is_alive(world, e));
@@ -309,9 +302,9 @@ void Delete_alive_while_staged() {
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     test_assert(ecs_is_alive(world, e));
-    ecs_staging_end(world, false);
+    ecs_defer_end(world);
     
     ecs_fini(world);
 }
@@ -325,11 +318,11 @@ void Delete_alive_while_staged_w_delete() {
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     test_assert(ecs_is_alive(world, e));
     ecs_delete(world, e);
-    test_assert(!ecs_is_alive(world, e));
-    ecs_staging_end(world, false);
+    test_assert(ecs_is_alive(world, e));
+    ecs_defer_end(world);
 
     test_assert(!ecs_is_alive(world, e));
     
@@ -349,11 +342,11 @@ void Delete_alive_while_staged_w_delete_recycled_id() {
     e = ecs_new(world, 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     test_assert(ecs_is_alive(world, e));
     ecs_delete(world, e);
-    test_assert(!ecs_is_alive(world, e));
-    ecs_staging_end(world, false);
+    test_assert(ecs_is_alive(world, e));
+    ecs_defer_end(world);
 
     test_assert(!ecs_is_alive(world, e));
     

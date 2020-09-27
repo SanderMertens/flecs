@@ -854,7 +854,6 @@ void PeriodicDummySystem(ecs_iter_t * it) {
     int i;
     for (i = 0; i < it->count; i++ ) {
         ecs_set(it->world, it->entities[i], Position, {0});
-        test_assert(has_ran == true);
     }
 }
 

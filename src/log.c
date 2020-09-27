@@ -424,6 +424,8 @@ const char* ecs_strerror(
         return "entity redefined with different name";
     case ECS_INCONSISTENT_COMPONENT_ACTION:
         return "registered mismatching component action";
+    case ECS_INVALID_OPERATION:
+        return "invalid operation";
     }
 
     return "unknown error code";

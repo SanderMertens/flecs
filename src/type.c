@@ -48,67 +48,6 @@ ecs_entity_t ecs_find_entity_in_prefabs(
 
 /* -- Private functions -- */
 
-ecs_type_t ecs_type_find_intern(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t *array,
-    int32_t count)
-{
-    ecs_entities_t entities = {
-        .array = array,
-        .count = count
-    };
-
-    ecs_table_t *table = ecs_table_find_or_create(world, stage, &entities);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return table->type;
-}
-
-/** Extend existing type with additional entity */
-ecs_type_t ecs_type_add_intern(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type,
-    ecs_entity_t e)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    ecs_table_t *table = ecs_table_from_type(world, stage, type);
-
-    ecs_entities_t entities = {
-        .array = &e,
-        .count = 1
-    };
-
-    table = ecs_table_traverse_add(world, stage, table, &entities, NULL);
-
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return table->type;
-}
-
-/** Remove entity from type */
-ecs_type_t ecs_type_remove_intern(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type,
-    ecs_entity_t e)
-{
-    ecs_table_t *table = ecs_table_from_type(world, stage, type);
-
-    ecs_entities_t entities = {
-        .array = &e,
-        .count = 1
-    };
-
-    table = ecs_table_traverse_remove(world, stage, table, &entities, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return table->type;
-}
-
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
 ecs_entity_t ecs_type_contains(
     ecs_world_t *world,
@@ -117,6 +56,9 @@ ecs_entity_t ecs_type_contains(
     bool match_all,
     bool match_prefab)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_get_stage(&world);
+    
     if (!type_1) {
         return 0;
     }
@@ -204,22 +146,24 @@ int32_t ecs_type_index_of(
     return -1;
 }
 
-ecs_type_t ecs_type_merge_intern(
+ecs_type_t ecs_type_merge(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_type_t type,
     ecs_type_t to_add,
     ecs_type_t to_remove)
 {
-    ecs_table_t *table = ecs_table_from_type(world, stage, type);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_get_stage(&world);
+    
+    ecs_table_t *table = ecs_table_from_type(world, type);
     ecs_entities_t add_array = ecs_type_to_entities(to_add);
     ecs_entities_t remove_array = ecs_type_to_entities(to_remove);
     
     table = ecs_table_traverse_remove(
-        world, stage, table, &remove_array, NULL); 
+        world, table, &remove_array, NULL); 
 
     table = ecs_table_traverse_add(
-        world, stage, table, &add_array, NULL); 
+        world, table, &add_array, NULL); 
 
     if (!table) {
         return NULL;
@@ -228,23 +172,23 @@ ecs_type_t ecs_type_merge_intern(
     }
 }
 
-ecs_type_t ecs_type_merge(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t to_add,
-    ecs_type_t to_remove)
-{
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    return ecs_type_merge_intern(world, stage, type, to_add, to_remove);
-}
-
 ecs_type_t ecs_type_find(
     ecs_world_t *world,
     ecs_entity_t *array,
     int32_t count)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    return ecs_type_find_intern(world, stage, array, count);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_get_stage(&world);
+
+    ecs_entities_t entities = {
+        .array = array,
+        .count = count
+    };
+
+    ecs_table_t *table = ecs_table_find_or_create(world, &entities);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return table->type;
 }
 
 static
@@ -405,8 +349,20 @@ ecs_type_t ecs_type_add(
     ecs_type_t type,
     ecs_entity_t e)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    return ecs_type_add_intern(world, stage, type, e);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_get_stage(&world);
+    ecs_table_t *table = ecs_table_from_type(world, type);
+
+    ecs_entities_t entities = {
+        .array = &e,
+        .count = 1
+    };
+
+    table = ecs_table_traverse_add(world, table, &entities, NULL);
+
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return table->type;
 }
 
 ecs_type_t ecs_type_remove(
@@ -414,8 +370,19 @@ ecs_type_t ecs_type_remove(
     ecs_type_t type,
     ecs_entity_t e)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    return ecs_type_remove_intern(world, stage, type, e);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_get_stage(&world);
+    ecs_table_t *table = ecs_table_from_type(world, type);
+
+    ecs_entities_t entities = {
+        .array = &e,
+        .count = 1
+    };
+
+    table = ecs_table_traverse_remove(world, table, &entities, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return table->type;    
 }
 
 char* ecs_type_str(

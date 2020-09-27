@@ -6,7 +6,6 @@
 
 static
 bool iter_table(
-    ecs_world_t *world,
     ecs_table_reader_t *reader,
     ecs_iter_t *it,
     ecs_iter_next_action_t next,
@@ -20,7 +19,7 @@ bool iter_table(
         reader->table = table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_data_t *data = ecs_table_get_data(world, table);
+        ecs_data_t *data = ecs_table_get_data(table);
         reader->data = data;
         reader->table_index ++;
 
@@ -41,7 +40,6 @@ bool iter_table(
 
 static
 void next_table(
-    ecs_world_t *world,
     ecs_reader_t *stream,
     ecs_table_reader_t *reader)
 {    
@@ -50,15 +48,14 @@ void next_table(
     /* First iterate all component tables, as component data must always be
      * stored in a blob before anything else */
     bool table_found = iter_table(
-        world, reader, &stream->component_iter, stream->component_next, 
-        false);
+        reader, &stream->component_iter, stream->component_next, false);
 
     /* If all components have been added, add the regular data tables. Make sure
      * to not add component tables again, in case the provided iterator also
      * matches component tables. */
     if (!table_found) {
         table_found = iter_table(
-            world, reader, &stream->data_iter, stream->data_next, true);
+            reader, &stream->data_iter, stream->data_next, true);
         count = stream->data_iter.count;
     } else {
         count = stream->component_iter.count;
@@ -79,7 +76,6 @@ void ecs_table_reader_next(
     ecs_reader_t *stream)
 {
     ecs_table_reader_t *reader = &stream->table;
-    ecs_world_t *world = stream->world;
 
     switch(reader->state) {
     case EcsTableHeader:
@@ -146,7 +142,7 @@ void ecs_table_reader_next(
         reader->column_index ++;
         if (reader->column_index == reader->total_columns) {
             reader->state = EcsTableHeader;
-            next_table(world, stream, reader);
+            next_table(stream, reader);
         } else {
             ecs_entity_t *type_buffer = ecs_vector_first(reader->type, ecs_entity_t);
             if (reader->column_index >= 1) {
@@ -188,7 +184,7 @@ ecs_size_t ecs_table_reader(
     ecs_size_t read = 0;
 
     if (!reader->state) {
-        next_table(stream->world, stream, reader);
+        next_table(stream, reader);
         reader->state = EcsTableHeader;
     }
 

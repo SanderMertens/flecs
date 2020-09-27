@@ -48,7 +48,6 @@ struct ecs_ref_t {
     void *table;            /**< Last known table */
     int32_t row;            /**< Last known location in table */
     int32_t alloc_count;    /**< Last known alloc count of table */
-    ecs_stage_t *stage;     /**< Last known stage */
     ecs_record_t *record;   /**< Pointer to record, if in main stage */
     const void *ptr;        /**< Cached ptr */
 };

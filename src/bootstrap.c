@@ -63,14 +63,14 @@ void _bootstrap_component(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, table);
+    ecs_data_t *data = ecs_table_get_or_create_data(table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *columns = data->columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Create record in entity index */
-    ecs_record_t *record = ecs_eis_get_or_create(&world->stage, entity);
+    ecs_record_t *record = ecs_eis_get_or_create(world, entity);
     record->table = table;
 
     /* Insert row into table to store EcsComponent itself */
@@ -93,12 +93,10 @@ ecs_type_t ecs_bootstrap_type(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_table_t *table = ecs_table_find_or_create(world, &world->stage, 
-        &(ecs_entities_t){
-            .array = (ecs_entity_t[]){entity},
-            .count = 1
-        }
-    );
+    ecs_table_t *table = ecs_table_find_or_create(world, &(ecs_entities_t){
+        .array = (ecs_entity_t[]){entity},
+        .count = 1
+    });
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table->type != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -132,10 +130,8 @@ ecs_table_t* bootstrap_component_table(
         .count = 3
     };
 
-    ecs_table_t *result = ecs_table_find_or_create(
-        world, &world->stage, &array);
-
-    ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, result);
+    ecs_table_t *result = ecs_table_find_or_create(world, &array);
+    ecs_data_t *data = ecs_table_get_or_create_data(result);
 
     /* Preallocate enough memory for initial components */
     data->entities = ecs_vector_new(ecs_entity_t, EcsFirstUserComponentId);

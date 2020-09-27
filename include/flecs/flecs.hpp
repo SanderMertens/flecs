@@ -742,6 +742,25 @@ public:
         return ecs_progress(m_world, delta_time);
     }
 
+    /** Defer operations until end of frame. 
+     * When this operation is invoked while iterating, operations inbetween the
+     * defer_begin and defer_end operations are executed at the end of the frame.
+     *
+     * This operation is thread safe.
+     */
+    void defer_begin() {
+        ecs_defer_begin(m_world);
+    }
+
+    /** End block of operations to defer. 
+     * See defer_begin.
+     *
+     * This operation is thread safe.
+     */
+    void defer_end() {
+        ecs_defer_end(m_world);
+    }
+
     /** Set number of threads.
      * This will distribute the load evenly across the configured number of 
      * threads for each system.
