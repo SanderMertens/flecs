@@ -580,7 +580,8 @@ bool override_from_base(
     void *base_ptr = get_component(&base_info, component);
     if (base_ptr) {
         int16_t data_size = column->size;
-        void *data_array = ecs_vector_first_t(column->data, column->size, column->alignment);
+        void *data_array = ecs_vector_first_t(
+            column->data, column->size, column->alignment);
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
         component = ecs_component_id_from_id(world, component);
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
@@ -920,12 +921,15 @@ int32_t move_entity(
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_vector_count(src_data->entities) > src_row, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vector_count(src_data->entities) > src_row, 
+        ECS_INTERNAL_ERROR, NULL);
 
     ecs_record_t *record = info->record;
-    ecs_assert(!record || record == ecs_eis_get(world, entity), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!record || record == ecs_eis_get(world, entity), 
+        ECS_INTERNAL_ERROR, NULL);
 
-    int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record, false);
+    int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, 
+        record, false);
 
     record->table = dst_table;
     record->row = ecs_row_to_record(dst_row, info->is_watched);

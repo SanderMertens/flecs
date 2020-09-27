@@ -12,9 +12,8 @@ void bulk_delete(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
-
-    ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, 
-        "delete_w_filter currently only supported on main stage");
+    ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     int32_t i, count = ecs_sparse_count(world->store.tables);
 
@@ -107,8 +106,8 @@ void ecs_bulk_add_remove_type(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
-
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
     ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
@@ -166,6 +165,7 @@ void ecs_bulk_add_type(
     
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
     ecs_entities_t added = {
@@ -210,6 +210,7 @@ void ecs_bulk_add_entity(
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_add_array = { .array = &to_add, .count = 1 };
 
@@ -256,6 +257,7 @@ void ecs_bulk_remove_type(
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
     ecs_entities_t removed = {
@@ -300,6 +302,7 @@ void ecs_bulk_remove_entity(
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_remove_array = { .array = &to_remove, .count = 1 };
 

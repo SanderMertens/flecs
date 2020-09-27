@@ -4230,7 +4230,8 @@ bool override_from_base(
     void *base_ptr = get_component(&base_info, component);
     if (base_ptr) {
         int16_t data_size = column->size;
-        void *data_array = ecs_vector_first_t(column->data, column->size, column->alignment);
+        void *data_array = ecs_vector_first_t(
+            column->data, column->size, column->alignment);
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
         component = ecs_component_id_from_id(world, component);
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
@@ -4570,12 +4571,15 @@ int32_t move_entity(
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_vector_count(src_data->entities) > src_row, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vector_count(src_data->entities) > src_row, 
+        ECS_INTERNAL_ERROR, NULL);
 
     ecs_record_t *record = info->record;
-    ecs_assert(!record || record == ecs_eis_get(world, entity), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!record || record == ecs_eis_get(world, entity), 
+        ECS_INTERNAL_ERROR, NULL);
 
-    int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record, false);
+    int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, 
+        record, false);
 
     record->table = dst_table;
     record->row = ecs_row_to_record(dst_row, info->is_watched);
@@ -6127,9 +6131,8 @@ void flush_bulk_new(
             void *ptr, *data = bulk_data[c];
 
             int i, count = op->count;
-            for (i = 0; i < count; i ++) {
+            for (i = 0, ptr = data; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
                 ecs_set_ptr_w_entity(world, ids[i], component, size, ptr);
-                ptr = ECS_OFFSET(ptr, size);
             }
 
             ecs_os_free(data);
@@ -9357,9 +9360,8 @@ void bulk_delete(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
-
-    ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, 
-        "delete_w_filter currently only supported on main stage");
+    ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     int32_t i, count = ecs_sparse_count(world->store.tables);
 
@@ -9452,8 +9454,8 @@ void ecs_bulk_add_remove_type(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
-
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
     ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
@@ -9511,6 +9513,7 @@ void ecs_bulk_add_type(
     
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
     ecs_entities_t added = {
@@ -9555,6 +9558,7 @@ void ecs_bulk_add_entity(
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_add_array = { .array = &to_add, .count = 1 };
 
@@ -9601,6 +9605,7 @@ void ecs_bulk_remove_type(
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
     ecs_entities_t removed = {
@@ -9645,6 +9650,7 @@ void ecs_bulk_remove_entity(
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_remove_array = { .array = &to_remove, .count = 1 };
 
