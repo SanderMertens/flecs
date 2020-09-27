@@ -100,6 +100,46 @@ void ecs_component_monitor_free(
     }
 }
 
+static
+void init_store(ecs_world_t *world) {
+    ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
+    
+    /* Initialize entity index */
+    world->store.entity_index = ecs_sparse_new(ecs_record_t);
+    ecs_sparse_set_id_source(world->store.entity_index, &world->stats.last_id);
+
+    /* Initialize root table */
+    world->store.tables = ecs_sparse_new(ecs_table_t);
+
+    /* Initialize one root table per stage */
+    ecs_init_root_table(world);
+}
+
+static
+void clean_tables(
+    ecs_world_t *world)
+{
+    int32_t i, count = ecs_sparse_count(world->store.tables);
+
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *t = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_free(world, t);
+    }
+
+    /* Clear the root table */
+    if (count) {
+        ecs_table_reset(world, &world->store.root);
+    }
+}
+
+static
+void fini_store(ecs_world_t *world) {
+    clean_tables(world);
+    ecs_sparse_free(world->store.tables);
+    ecs_table_free(world, &world->store.root);
+    ecs_sparse_free(world->store.entity_index);
+}
+
 /* -- Public functions -- */
 
 
@@ -204,6 +244,8 @@ ecs_world_t *ecs_mini(void) {
     world->stats.merge_count_total = 0;
     world->stats.systems_ran_frame = 0;
     world->stats.pipeline_build_count_total = 0;
+    
+    world->range_check_enabled = true;
 
     world->fps_sleep = 0;
 
@@ -214,6 +256,7 @@ ecs_world_t *ecs_mini(void) {
 
     ecs_stage_init(world, &world->stage);
     ecs_stage_init(world, &world->temp_stage);
+    init_store(world);
 
     world->stage.world = world;
     world->temp_stage.world = world;
@@ -307,7 +350,7 @@ void ecs_notify_tables(
     ecs_world_t *world,
     ecs_table_event_t *event)
 {
-    ecs_sparse_t *tables = world->stage.tables;
+    ecs_sparse_t *tables = world->store.tables;
     int32_t i, count = ecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
@@ -408,7 +451,7 @@ static
 void fini_unset_tables(
     ecs_world_t *world)
 {
-    ecs_sparse_each(world->stage.tables, ecs_table_t, table, {
+    ecs_sparse_each(world->store.tables, ecs_table_t, table, {
         ecs_table_unset(world, table);
     });
 }
@@ -534,6 +577,8 @@ int ecs_fini(
 
     fini_stages(world);
 
+    fini_store(world);
+
     fini_component_lifecycle(world);
 
     fini_queries(world);
@@ -563,7 +608,7 @@ void ecs_dim(
     int32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    ecs_eis_set_size(&world->stage, entity_count + ECS_HI_COMPONENT_ID);
+    ecs_eis_set_size(world, entity_count + ECS_HI_COMPONENT_ID);
 }
 
 void ecs_dim_type(
@@ -573,11 +618,10 @@ void ecs_dim_type(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     if (type) {
-        ecs_table_t *table = ecs_table_from_type(
-            world, &world->stage, type);
+        ecs_table_t *table = ecs_table_from_type(world, type);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, table);
+        ecs_data_t *data = ecs_table_get_or_create_data(world, table);
         ecs_table_set_size(world, table, data, entity_count);
     }
 }
@@ -707,9 +751,8 @@ bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    bool old_value = stage->range_check_enabled;
-    stage->range_check_enabled = enable;
+    bool old_value = world->range_check_enabled;
+    world->range_check_enabled = enable;
     return old_value;
 }
 
@@ -1041,3 +1084,20 @@ void ecs_notify_queries(
     }    
 }
 
+void ecs_delete_table(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    /* Notify queries that table is to be removed */
+    ecs_notify_queries(
+        world, &(ecs_query_event_t){
+            .kind = EcsQueryTableUnmatch,
+            .table = table
+        });
+
+    /* Free resources associated with table */
+    ecs_table_free(world, table);
+
+    /* Remove table from sparse set */
+    ecs_sparse_remove(world->store.tables, table->id);
+}

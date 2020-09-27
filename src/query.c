@@ -18,7 +18,7 @@ ecs_entity_t components_contains(
         if (ECS_HAS_ROLE(entity, CHILDOF)) {
             entity &= ECS_COMPONENT_MASK;
 
-            ecs_record_t *record = ecs_eis_get(&world->stage, entity);
+            ecs_record_t *record = ecs_eis_get(world, entity);
             ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
 
             if (record->table) {
@@ -45,7 +45,7 @@ ecs_entity_t get_entity_for_component(
     ecs_entity_t component)
 {
     if (entity) {
-        ecs_record_t *record = ecs_eis_get(&world->stage, entity);
+        ecs_record_t *record = ecs_eis_get(world, entity);
         ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
         if (record->table) {
             type = record->table->type;
@@ -494,7 +494,7 @@ void add_ref(
             if (e) {
                 ecs_get_ref_w_entity(
                     world, ref, e, component);
-                ecs_set_watch(world, &world->stage, e);                     
+                ecs_set_watch(world, e);                     
             }
 
             query->flags |= EcsQueryHasRefs;
@@ -921,11 +921,11 @@ void match_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    int32_t i, count = ecs_sparse_count(world->stage.tables);
+    int32_t i, count = ecs_sparse_count(world->store.tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(
-            world->stage.tables, ecs_table_t, i);
+            world->store.tables, ecs_table_t, i);
 
         if (ecs_query_match(world, table, query, NULL)) {
             add_table(world, query, table);
@@ -1048,7 +1048,7 @@ repeat:
             return j;
         }
 
-        ecs_table_swap(world, &world->stage, table, data, i, j);
+        ecs_table_swap(world, table, data, i, j);
 
         if (p == i) {
             pivot = ELEM(ptr, elem_size, j);
@@ -1547,7 +1547,7 @@ void process_signature(
 
         if (from == EcsFromEntity) {
             ecs_assert(column->source != 0, ECS_INTERNAL_ERROR, NULL);
-            ecs_set_watch(world, &world->stage, column->source);
+            ecs_set_watch(world, column->source);
         }
     }
 
@@ -1784,7 +1784,7 @@ void rematch_tables(
             rematch_table(world, query, table);
         }        
     } else {
-        ecs_sparse_t *tables = world->stage.tables;
+        ecs_sparse_t *tables = world->store.tables;
         int32_t i, count = ecs_sparse_count(tables);
 
         for (i = 0; i < count; i ++) {
@@ -2010,7 +2010,6 @@ ecs_iter_t ecs_query_iter(
 
 void ecs_query_set_iter(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_query_t *query,
     ecs_iter_t *it,
     int32_t table_index,
@@ -2022,7 +2021,7 @@ void ecs_query_set_iter(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_t *world_table = table->table;
-    ecs_data_t *table_data = ecs_table_get_staged_data(world, stage, world_table);
+    ecs_data_t *table_data = ecs_table_get_data(world, world_table);
     ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
     
     ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t);  

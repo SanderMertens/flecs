@@ -12,22 +12,22 @@ struct ecs_record_t {
     int32_t row;         /* Table row of the entity */
 };
 
-#define ecs_eis_get(stage, entity) ecs_sparse_get_sparse((stage)->entity_index, ecs_record_t, entity)
-#define ecs_eis_get_any(stage, entity) ecs_sparse_get_sparse_any((stage)->entity_index, ecs_record_t, entity)
-#define ecs_eis_set(stage, entity, ...) (ecs_sparse_set((stage)->entity_index, ecs_record_t, entity, (__VA_ARGS__)))
-#define ecs_eis_get_or_create(stage, entity) ecs_sparse_get_or_create((stage)->entity_index, ecs_record_t, entity)
-#define ecs_eis_delete(stage, entity) ecs_sparse_remove((stage)->entity_index, entity)
-#define ecs_eis_set_generation(stage, entity) ecs_sparse_set_generation((stage)->entity_index, entity)
-#define ecs_eis_is_alive(stage, entity) ecs_sparse_is_alive((stage)->entity_index, entity)
-#define ecs_eis_recycle(stage) ecs_sparse_new_id((stage)->entity_index)
-#define ecs_eis_clear_entity(stage, entity, is_watched) ecs_eis_set(stage, entity, &(ecs_record_t){NULL, is_watched})
-#define ecs_eis_grow(stage, count) ecs_sparse_grow((stage)->entity_index, count)
-#define ecs_eis_set_size(stage, size) ecs_sparse_set_size((stage)->entity_index, size)
-#define ecs_eis_count(stage) ecs_sparse_count((stage)->entity_index)
-#define ecs_eis_clear(stage) ecs_sparse_clear((stage)->entity_index)
-#define ecs_eis_copy(stage) ecs_sparse_copy((stage)->entity_index)
-#define ecs_eis_free(stage) ecs_sparse_free((stage)->entity_index)
-#define ecs_eis_memory(stage, allocd, used) ecs_sparse_memory((stage)->entity_index, allocd, used)
+#define ecs_eis_get(world, entity) ecs_sparse_get_sparse((world->store).entity_index, ecs_record_t, entity)
+#define ecs_eis_get_any(world, entity) ecs_sparse_get_sparse_any((world->store).entity_index, ecs_record_t, entity)
+#define ecs_eis_set(world, entity, ...) (ecs_sparse_set((world->store).entity_index, ecs_record_t, entity, (__VA_ARGS__)))
+#define ecs_eis_get_or_create(world, entity) ecs_sparse_get_or_create((world->store).entity_index, ecs_record_t, entity)
+#define ecs_eis_delete(world, entity) ecs_sparse_remove((world->store).entity_index, entity)
+#define ecs_eis_set_generation(world, entity) ecs_sparse_set_generation((world->store).entity_index, entity)
+#define ecs_eis_is_alive(world, entity) ecs_sparse_is_alive((world->store).entity_index, entity)
+#define ecs_eis_recycle(world) ecs_sparse_new_id((world->store).entity_index)
+#define ecs_eis_clear_entity(world, entity, is_watched) ecs_eis_set((world->store).entity_index, entity, &(ecs_record_t){NULL, is_watched})
+#define ecs_eis_grow(world, count) ecs_sparse_grow((world->store).entity_index, count)
+#define ecs_eis_set_size(world, size) ecs_sparse_set_size((world->store).entity_index, size)
+#define ecs_eis_count(world) ecs_sparse_count((world->store).entity_index)
+#define ecs_eis_clear(world) ecs_sparse_clear((world->store).entity_index)
+#define ecs_eis_copy(world) ecs_sparse_copy((world->store).entity_index)
+#define ecs_eis_free(world) ecs_sparse_free((world->store).entity_index)
+#define ecs_eis_memory(world, allocd, used) ecs_sparse_memory((world->store).entity_index, allocd, used)
 
 #ifdef __cplusplus
 }

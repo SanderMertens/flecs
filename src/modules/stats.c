@@ -107,10 +107,10 @@ void StatsCollectWorldStats(ecs_iter_t *it) {
 
     ecs_world_t *world = it->world;
 
-    stats->entities_count = ecs_eis_count(&world->stage);
+    stats->entities_count = ecs_eis_count(world);
     stats->components_count = ecs_count(world, EcsComponent);
     stats->col_systems_count = ecs_count(world, EcsSystem);
-    stats->tables_count = ecs_sparse_count(world->stage.tables);
+    stats->tables_count = ecs_sparse_count(world->store.tables);
     stats->threads_count = ecs_vector_count(world->workers);
     
     stats->frame_seconds_total = world->stats.frame_time_total;
@@ -177,19 +177,6 @@ void StatsCollectTableMemoryTotals(ecs_iter_t *it) {
 }
 
 static
-void compute_stage_memory(
-    ecs_stage_t *stage, 
-    EcsMemoryStats *stats)
-{
-    ecs_eis_memory(stage, 
-        &stats->entities_memory.allocd_bytes, 
-        &stats->entities_memory.used_bytes);
-
-    ecs_sparse_memory(stage->tables,
-        &stats->stages_memory.allocd_bytes, &stats->stages_memory.used_bytes);    
-}
-
-static
 void compute_world_memory(
     ecs_world_t *world,
     EcsMemoryStats *stats)
@@ -211,7 +198,7 @@ void compute_world_memory(
         &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
 
     /* Add table array to table memory */
-    ecs_sparse_memory(world->stage.tables,
+    ecs_sparse_memory(world->store.tables,
         &stats->tables_memory.allocd_bytes, &stats->tables_memory.used_bytes);
 
     /* Add misc lookup indices to world memory */
@@ -221,17 +208,8 @@ void compute_world_memory(
     stats->stages_memory = (ecs_memory_stat_t){0};
     
     /* Compute memory used in temporary stage */
-    compute_stage_memory(&world->temp_stage, stats);
     stats->stages_memory.used_bytes += ECS_SIZEOF(ecs_stage_t);
     stats->stages_memory.allocd_bytes += ECS_SIZEOF(ecs_stage_t);    
-
-    /* Compute memory used in thread stages */
-    int32_t i, count = ecs_vector_count(world->worker_stages);
-    ecs_stage_t *stages = ecs_vector_first(world->worker_stages, ecs_stage_t);
-
-    for (i = 0; i < count; i ++) {
-        compute_stage_memory(&stages[i], stats);
-    }
 
     /* Add memory used / allocated by worker_stages array */
     ecs_vector_memory(world->worker_stages, ecs_stage_t,
@@ -249,7 +227,7 @@ void StatsCollectMemoryStats(ecs_iter_t *it) {
     /* Compute entity memory (entity index) */
     stats->entities_memory = (ecs_memory_stat_t){0};
     
-    ecs_eis_memory(&world->stage, 
+    ecs_eis_memory(world, 
         &stats->entities_memory.allocd_bytes, 
         &stats->entities_memory.used_bytes);
     
@@ -423,8 +401,8 @@ void StatsCollectComponentStats(ecs_iter_t *it) {
         stats[i].memory = (ecs_memory_stat_t){0};
 
         /* Walk tables to collect memory and entity stats per component */
-        ecs_sparse_t *tables = it->world->stage.tables;
-        int32_t t, count = ecs_sparse_count(it->world->stage.tables);
+        ecs_sparse_t *tables = it->world->store.tables;
+        int32_t t, count = ecs_sparse_count(it->world->store.tables);
 
         for (t = 0; t < count; t ++) {
             ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
@@ -466,7 +444,7 @@ void StatsCollectTableStats_StatusAction(
 
     if (status == EcsSystemEnabled) {
         /* Create an entity for every table */
-        ecs_sparse_t *tables = world->stage.tables;
+        ecs_sparse_t *tables = world->store.tables;
         int32_t i, count = ecs_sparse_count(tables);
 
         for (i = 0; i < count; i ++) {

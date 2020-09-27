@@ -1269,7 +1269,8 @@
                 "defer_get_mut_no_modify",
                 "defer_get_mut_w_modify",
                 "defer_modify",
-                "defer_set_trait"
+                "defer_set_trait",
+                "defer_clear"
             ]
         }, {
             "id": "MultiThreadStaging",

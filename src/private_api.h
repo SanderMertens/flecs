@@ -38,7 +38,6 @@ ecs_type_t ecs_bootstrap_type(
  * when entities used in system expressions change their components. */
 void ecs_set_watch(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t entity);
 
 /* Does one of the entity containers has specified component */
@@ -51,13 +50,11 @@ ecs_entity_t ecs_find_in_type(
 /* Obtain entity info */
 bool ecs_get_info(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_info_t *info);
 
 void ecs_run_monitors(
     ecs_world_t *world, 
-    ecs_stage_t *stage, 
     ecs_table_t *dst_table,
     ecs_vector_t *v_dst_monitors, 
     int32_t dst_row, 
@@ -164,9 +161,8 @@ void ecs_stage_defer_end(
     ecs_stage_t *stage);    
 
 /* Delete table from stage */
-void ecs_stage_delete_table(
+void ecs_delete_table(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,6 +201,11 @@ bool ecs_defer_bulk_new(
     const ecs_entity_t **ids_out);
 
 bool ecs_defer_delete(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity);
+
+bool ecs_defer_clear(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity);
@@ -280,7 +281,6 @@ void ecs_get_column_info(
 
 void ecs_run_add_actions(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
@@ -292,7 +292,6 @@ void ecs_run_add_actions(
 
 void ecs_run_remove_actions(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
@@ -302,7 +301,6 @@ void ecs_run_remove_actions(
 
 void ecs_run_set_systems(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entities_t *components,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -317,8 +315,7 @@ void ecs_run_set_systems(
 
 /* Initialize root table */
 void ecs_init_root_table(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
+    ecs_world_t *world);
 
 /* Unset components in table */
 void ecs_table_unset(
@@ -360,7 +357,6 @@ ecs_data_t* ecs_table_merge(
 
 void ecs_table_swap(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t row_1,
@@ -368,14 +364,12 @@ void ecs_table_swap(
 
 ecs_table_t *ecs_table_traverse_add(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_entities_t *to_add,
     ecs_entities_t *added);
 
 ecs_table_t *ecs_table_traverse_remove(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_entities_t *to_remove,
     ecs_entities_t *removed);    
@@ -417,7 +411,6 @@ ecs_query_t* ecs_query_new_w_sig(
 
 void ecs_query_set_iter(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_query_t *query,
     ecs_iter_t *it,
     int32_t table_index,
@@ -430,7 +423,6 @@ void ecs_query_rematch(
 
 void ecs_run_monitor(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_matched_query_t *monitor,
     ecs_entities_t *components,
     int32_t row,

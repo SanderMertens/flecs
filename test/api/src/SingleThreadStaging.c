@@ -3114,3 +3114,35 @@ void SingleThreadStaging_defer_set_trait() {
 
     ecs_fini(world);    
 }
+
+void SingleThreadStaging_defer_clear() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_defer_begin(world);
+    
+    ecs_clear(world, e);
+
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_frame_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_fini(world);    
+}

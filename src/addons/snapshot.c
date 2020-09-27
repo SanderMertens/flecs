@@ -138,7 +138,7 @@ ecs_snapshot_t* ecs_snapshot_take(
 {
     ecs_snapshot_t *result = snapshot_create(
         world,
-        world->stage.entity_index,
+        world->store.entity_index,
         NULL,
         NULL);
 
@@ -157,7 +157,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
 
     ecs_snapshot_t *result = snapshot_create(
         world,
-        world->stage.entity_index,
+        world->store.entity_index,
         iter,
         next);
 
@@ -174,7 +174,7 @@ void ecs_snapshot_restore(
     bool is_filtered = true;
 
     if (snapshot->entity_index) {
-        ecs_sparse_restore(world->stage.entity_index, snapshot->entity_index);
+        ecs_sparse_restore(world->store.entity_index, snapshot->entity_index);
         ecs_sparse_free(snapshot->entity_index);
         is_filtered = false;
     }
@@ -185,10 +185,10 @@ void ecs_snapshot_restore(
 
     ecs_table_leaf_t *leafs = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
     int32_t l = 0, count = ecs_vector_count(snapshot->tables);
-    int32_t t, table_count = ecs_sparse_count(world->stage.tables);
+    int32_t t, table_count = ecs_sparse_count(world->store.tables);
 
     for (t = 0; t < table_count; t ++) {
-        ecs_table_t *table = ecs_sparse_get(world->stage.tables, ecs_table_t, t);
+        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, t);
         if (table->flags & EcsTableHasBuiltins) {
             continue;
         }
@@ -205,7 +205,7 @@ void ecs_snapshot_restore(
              * is not necessary. */
             if (is_filtered) {
                 ecs_vector_each(leaf->data->entities, ecs_entity_t, e_ptr, {
-                    ecs_record_t *r = ecs_eis_get(&world->stage, *e_ptr);
+                    ecs_record_t *r = ecs_eis_get(world, *e_ptr);
                     if (r && r->table) {
                         ecs_data_t *data = ecs_table_get_data(world, r->table);
                         
@@ -218,8 +218,7 @@ void ecs_snapshot_restore(
                         
                         /* Always delete entity, so that even if the entity is
                         * in the current table, there won't be duplicates */
-                        ecs_table_delete(world, &world->stage, r->table, 
-                            data, row, false);
+                        ecs_table_delete(world, r->table, data, row, false);
                     }
                 });
 
@@ -231,7 +230,7 @@ void ecs_snapshot_restore(
 
                 /* Run OnSet systems for merged entities */
                 ecs_entities_t components = ecs_type_to_entities(table->type);
-                ecs_run_set_systems(world, &world->stage, &components, table, data,
+                ecs_run_set_systems(world, &components, table, data,
                     old_count, new_count, true);
 
                 ecs_os_free(leaf->data->columns);
@@ -263,7 +262,7 @@ void ecs_snapshot_restore(
      * restoring safe */
     if (!is_filtered) {
         for (t = 0; t < table_count; t ++) {
-            ecs_table_t *table = ecs_sparse_get(world->stage.tables, ecs_table_t, t);
+            ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, t);
             if (table->flags & EcsTableHasBuiltins) {
                 continue;
             }
@@ -272,7 +271,7 @@ void ecs_snapshot_restore(
             ecs_data_t *table_data = ecs_table_get_data(world, table);
             int32_t entity_count = ecs_table_data_count(table_data);
 
-            ecs_run_set_systems(world, &world->stage, &components, table, 
+            ecs_run_set_systems(world, &components, table, 
                 table_data, 0, entity_count, true);            
         }
     }

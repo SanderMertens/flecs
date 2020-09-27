@@ -100,7 +100,6 @@ ecs_entity_t name_to_id(
 static
 ecs_entity_t find_child_in_table(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table,
     const char *name)
 {
@@ -110,7 +109,7 @@ ecs_entity_t find_child_in_table(
         return 0;
     }
 
-    ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
+    ecs_data_t *data = ecs_table_get_data(world, table);
     if (!data || !data->columns) {
         return 0;
     }
@@ -139,16 +138,15 @@ ecs_entity_t find_child_in_table(
 }
 
 static
-ecs_entity_t find_child_in_stage(
+ecs_entity_t find_child(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t parent,
     const char *name)
 {
     (void)parent;
     
-    ecs_sparse_each(stage->tables, ecs_table_t, table, {
-        ecs_entity_t result = find_child_in_table(world, stage, table, name);
+    ecs_sparse_each(world->store.tables, ecs_table_t, table, {
+        ecs_entity_t result = find_child_in_table(world, table, name);
         if (result) {
             return result;
         }
@@ -163,7 +161,6 @@ ecs_entity_t ecs_lookup_child(
     const char *name)
 {
     ecs_entity_t result = 0;
-    ecs_stage_t *stage = ecs_get_stage(&world);
 
     ecs_vector_t *child_tables = ecs_map_get_ptr(
         world->child_tables, ecs_vector_t*, parent);
@@ -171,30 +168,11 @@ ecs_entity_t ecs_lookup_child(
     if (child_tables) {
         ecs_vector_each(child_tables, ecs_table_t*, table_ptr, {
             ecs_table_t *table = *table_ptr;
-
-            result = find_child_in_table(world, stage, table, name);
-            if (!result) {
-                if (stage != &world->stage) {
-                    result = find_child_in_table(world, &world->stage, table, 
-                        name);
-                }
-            }
-
+            result = find_child_in_table(world, table, name);
             if (result) {
                 return result;
             }
         });
-    }
-
-    /* If child hasn't been found it is possible that it was
-     * created in a new table while staged, and the table hasn't
-     * been registered with the child_table map yet. In that case we
-     * have to look for the entity in the staged tables.
-     * This edge case should rarely result in a lot of overhead,
-     * since the number of tables should stabilize over time, which
-     * means table creation while staged should be infrequent. */    
-    if (!result && stage != &world->stage) {
-        result = find_child_in_stage(world, stage, parent, name);
     }
 
     return result;
@@ -237,7 +215,7 @@ ecs_entity_t ecs_lookup_symbol(
         return e;
     }      
     
-    return find_child_in_stage(world, &world->stage, 0, name);
+    return find_child(world, 0, name);
 }
 
 static
@@ -385,9 +363,9 @@ ecs_entity_t ecs_set_scope(
 
     if (scope) {
         stage->scope_table = ecs_table_traverse_add(
-            world, stage, &world->stage.root, &to_add, NULL);
+            world, &world->store.root, &to_add, NULL);
     } else {
-        stage->scope_table = &world->stage.root;
+        stage->scope_table = &world->store.root;
     }
 
     return cur;
@@ -466,7 +444,7 @@ bool ecs_scope_next(
         ecs_table_t *table = *ecs_vector_get(tables, ecs_table_t*, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
+        ecs_data_t *data = ecs_table_get_data(it->world, table);
         if (!data) {
             continue;
         }

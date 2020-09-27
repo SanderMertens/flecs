@@ -186,7 +186,7 @@ struct ecs_table_t {
     ecs_edge_t *lo_edges;            /**< Edges to low entity ids */
     ecs_map_t *hi_edges;             /**< Edges to high entity ids */
 
-    ecs_vector_t *data;              /**< Data per stage */
+    ecs_data_t *data;                /**< Data storage */
 
     ecs_vector_t *queries;           /**< Queries matched with table */
     ecs_vector_t *monitors;          /**< Monitor systems matched with table */
@@ -321,7 +321,8 @@ typedef enum ecs_op_kind_t {
     EcsOpSet,
     EcsOpMut,
     EcsOpModified,
-    EcsOpDelete
+    EcsOpDelete,
+    EcsOpClear
 } ecs_op_kind_t;
 
 typedef struct ecs_op_t {
@@ -354,22 +355,6 @@ struct ecs_stage_t {
      * world pointers (or constantly obtaining the real world when needed). */
     ecs_world_t *world;
 
-    /* If this is not main stage, 
-     * changes to the entity index 
-     * are buffered here */
-    ecs_sparse_t *entity_index; /* Entity lookup table for (table, row) */
-
-    /* If this is not a thread
-     * stage, these are the same
-     * as the main stage */
-    ecs_sparse_t *tables;          /* Tables created while >1 threads running */
-    ecs_table_t root;              /* Root table */
-    ecs_vector_t *dirty_tables;    /* Tables that need merging */
-
-    /* Namespacing */
-    ecs_table_t *scope_table;      /* Table for current scope */
-    ecs_entity_t scope;            /* Entity of current scope */
-
     int32_t id;                    /* Unique id that identifies the stage */
 
     /* Are operations deferred? */
@@ -380,8 +365,9 @@ struct ecs_stage_t {
     /* One-shot actions to be executed after the merge */
     ecs_vector_t *post_frame_actions;
 
-    /* Is entity range checking enabled? */
-    bool range_check_enabled;
+    /* Namespacing */
+    ecs_table_t *scope_table;      /* Table for current scope */
+    ecs_entity_t scope;            /* Entity of current scope */    
 
     /* If a system is progressing it will set this field to its columns. This
      * will be used in debug mode to verify that a system is not doing 
@@ -392,6 +378,15 @@ struct ecs_stage_t {
     ecs_vector_t *system_columns;
 #endif
 };
+
+typedef struct ecs_store_t {
+    /* Entity lookup table for (table, row) */
+    ecs_sparse_t *entity_index; 
+
+    /* Table graph */
+    ecs_sparse_t *tables;
+    ecs_table_t root;
+} ecs_store_t;
 
 /** Supporting type to store looked up or derived entity data */
 typedef struct ecs_entity_info_t {
@@ -453,6 +448,13 @@ struct ecs_world_t {
     ecs_c_info_t c_info[ECS_HI_COMPONENT_ID]; /* Component callbacks & triggers */
     ecs_map_t *t_info;                        /* Tag triggers */
 
+    /* Is entity range checking enabled? */
+    bool range_check_enabled;
+
+    /* --  Data storage -- */
+
+    ecs_store_t store;
+
 
     /* --  Queries -- */
 
@@ -493,6 +495,7 @@ struct ecs_world_t {
 
 
     /* -- Aliasses -- */
+
     ecs_vector_t *aliases;
 
 

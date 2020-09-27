@@ -8,11 +8,8 @@ ecs_table_t *ecs_dbg_find_table(
     ecs_world_t *world,
     ecs_type_t type)
 {
-    ecs_table_t *table = ecs_table_from_type(
-        world, &world->stage, type);
-        
+    ecs_table_t *table = ecs_table_from_type(world, type);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
     return table;
 }
 
@@ -98,12 +95,12 @@ ecs_table_t* ecs_dbg_get_table(
     ecs_world_t *world,
     int32_t index)
 {
-    if (ecs_sparse_count(world->stage.tables) <= index) {
+    if (ecs_sparse_count(world->store.tables) <= index) {
         return NULL;
     }
 
     return ecs_sparse_get(
-        world->stage.tables, ecs_table_t, index);
+        world->store.tables, ecs_table_t, index);
 }
 
 bool ecs_dbg_filter_table(
@@ -128,7 +125,7 @@ void ecs_dbg_entity(
     *dbg_out = (ecs_dbg_entity_t){.entity = entity};
     
     ecs_entity_info_t info = { 0 };
-    if (ecs_get_info(world, &world->stage, entity, &info)) {
+    if (ecs_get_info(world, entity, &info)) {
         dbg_out->table = info.table;
         dbg_out->row = info.row;
         dbg_out->is_watched = info.is_watched;

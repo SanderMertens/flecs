@@ -1172,6 +1172,7 @@ void SingleThreadStaging_defer_get_mut_no_modify(void);
 void SingleThreadStaging_defer_get_mut_w_modify(void);
 void SingleThreadStaging_defer_modify(void);
 void SingleThreadStaging_defer_set_trait(void);
+void SingleThreadStaging_defer_clear(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -5647,6 +5648,10 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "defer_set_trait",
         SingleThreadStaging_defer_set_trait
+    },
+    {
+        "defer_clear",
+        SingleThreadStaging_defer_clear
     }
 };
 
@@ -6445,7 +6450,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        73,
+        74,
         SingleThreadStaging_testcases
     },
     {

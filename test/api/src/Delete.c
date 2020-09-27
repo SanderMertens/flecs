@@ -165,7 +165,6 @@ void Delete_delete_3_of_3() {
 static
 void CreateEntity(ecs_iter_t *it) {
     ECS_COLUMN_COMPONENT(it, Position, 1);
-
     const ecs_entity_t *ids = ecs_bulk_new(it->world, Position, 10);
     test_assert(ids != NULL);
 }
@@ -199,9 +198,8 @@ void Delete_delete_w_on_remove() {
 
     ecs_progress(world, 0);
 
-    test_int(on_remove_system_invoked, 10);
-    
     test_int( ecs_count(world, Position), 0);
+    test_int(on_remove_system_invoked, 10);
     
     ecs_fini(world);
 }

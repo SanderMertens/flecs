@@ -280,7 +280,7 @@ void ecs_set_threads(
         }
 
         /* Iterate tables, make sure the ecs_data_t arrays are large enough */
-        ecs_sparse_each(world->stage.tables, ecs_table_t, table, {
+        ecs_sparse_each(world->store.tables, ecs_table_t, table, {
             ecs_table_get_data(world, table);
         });
     }

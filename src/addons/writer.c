@@ -58,17 +58,17 @@ void ecs_table_writer_register_table(
     ecs_type_t type = ecs_type_find(world, writer->type_array, writer->type_count);
     ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    writer->table = ecs_table_from_type(world, &world->stage, type);
+    writer->table = ecs_table_from_type(world, type);
     ecs_assert(writer->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_os_free(writer->type_array);
     writer->type_array = NULL;
 
-    ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, writer->table);
+    ecs_data_t *data = ecs_table_get_or_create_data(world, writer->table);
     if (data->entities) {
         /* Remove any existing entities from entity index */
         ecs_vector_each(data->entities, ecs_entity_t, e_ptr, {
-            ecs_eis_delete(&world->stage, *e_ptr);
+            ecs_eis_delete(world, *e_ptr);
         });
       
         return;
@@ -94,7 +94,7 @@ void ecs_table_writer_finalize_table(
     int32_t i, count = ecs_vector_count(entity_vector);
 
     for (i = 0; i < count; i ++) {
-        ecs_record_t *record_ptr = ecs_eis_get_any(&world->stage, entities[i]);
+        ecs_record_t *record_ptr = ecs_eis_get_any(world, entities[i]);
 
         if (record_ptr) {
             if (record_ptr->table != writer->table) {
@@ -102,12 +102,11 @@ void ecs_table_writer_finalize_table(
                 ecs_data_t *table_data = ecs_table_get_data(world, table);
 
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                ecs_table_delete(world, &world->stage, 
+                ecs_table_delete(world, 
                     table, table_data, record_ptr->row - 1, false);
             }
         } else {
-            record_ptr = ecs_eis_get_or_create(&world->stage, entities[i]);
+            record_ptr = ecs_eis_get_or_create(world, entities[i]);
         }
 
         record_ptr->row = i + 1;
@@ -126,8 +125,7 @@ void ecs_table_writer_prepare_column(
 {
     ecs_table_writer_t *writer = &stream->table;
     ecs_world_t *world = stream->world;
-    ecs_data_t *data = ecs_table_get_or_create_data(
-        world, &world->stage, writer->table);
+    ecs_data_t *data = ecs_table_get_or_create_data(world, writer->table);
         
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 

@@ -508,7 +508,6 @@ ecs_entity_t ecs_run(
 
 void ecs_run_monitor(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_matched_query_t *monitor,
     ecs_entities_t *components,
     int32_t row,
@@ -527,10 +526,10 @@ void ecs_run_monitor(
     }
 
     ecs_iter_t it = {0};
-    ecs_query_set_iter( world, stage, query, &it, 
+    ecs_query_set_iter( world, query, &it, 
         monitor->matched_table_index, row, count);
 
-    it.world = stage->world;
+    it.world = world;
     it.triggered_by = components;
     it.param = system_data->ctx;
 
