@@ -8842,7 +8842,11 @@ public:
      */
     void disable() const {
         ecs_enable(m_world, m_id, false);
-    }     
+    }
+
+    bool enabled() {
+        return !ecs_has_entity(m_world, m_id, flecs::Disabled);
+    }
 
     /** Return the world.
      *
