@@ -1384,6 +1384,8 @@ bool ecs_strbuf_list_appendstr(
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
+#elif defined(__FreeBSD__)
+#include <stdlib>
 #else
 #include <alloca.h>
 #endif
