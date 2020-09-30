@@ -2425,7 +2425,6 @@ size_t ecs_entity_str(
 {
     char *ptr = buffer;
     size_t bytes_left = buffer_len, required = 0;
-
     if (entity & ECS_ROLE_MASK) {
         const char *role = ecs_role_str(entity);
         bytes_left = append_to_str(&ptr, role, bytes_left, &required);
@@ -2433,7 +2432,6 @@ size_t ecs_entity_str(
     }
 
     ecs_entity_t e = entity & ECS_COMPONENT_MASK;
-
     if (ECS_HAS_ROLE(entity, TRAIT)) {
         ecs_entity_t lo = ecs_entity_t_lo(e);
         ecs_entity_t hi = ecs_entity_t_hi(e);
@@ -2442,10 +2440,8 @@ size_t ecs_entity_str(
             char *hi_path = ecs_get_fullpath(world, hi);
             bytes_left = append_to_str(&ptr, hi_path, bytes_left, &required);
             ecs_os_free(hi_path);
-
             bytes_left = append_to_str(&ptr, ">", bytes_left, &required);
         }            
-
         char *lo_path = ecs_get_fullpath(world, lo);
         bytes_left = append_to_str(&ptr, lo_path, bytes_left, &required);
         ecs_os_free(lo_path);
@@ -2454,9 +2450,7 @@ size_t ecs_entity_str(
         bytes_left = append_to_str(&ptr, path, bytes_left, &required);
         ecs_os_free(path);
     }
-
     ptr[0] = '\0';
-
     return required;
 }
 
@@ -2476,15 +2470,13 @@ void flush_bulk_new(
             ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
             size_t size = ecs_to_size_t(cptr->size);
             void *ptr, *data = bulk_data[c];
-
             int i, count = op->count;
             for (i = 0, ptr = data; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
-                ecs_set_ptr_w_entity(world, ids[i], component, size, ptr);
+                assign_ptr_w_entity(world, ids[i], component, size, ptr, 
+                    true, true);
             }
-
             ecs_os_free(data);
         }
-
         ecs_os_free(bulk_data);
     } else {
         int i, count = op->count;
@@ -2492,7 +2484,6 @@ void flush_bulk_new(
             add_entities(world, ids[i], &op->components);
         }
     }
-
     ecs_os_free(ids);
 }
 
@@ -2552,9 +2543,7 @@ void ecs_defer_flush(
                 /* If entity is no longer alive, this could be because the queue
                  * contained both a delete and a subsequent add/remove/set which
                  * should be ignored. */
-                if (e && !ecs_is_alive(world, e) && 
-                    ecs_sparse_exists(world->store.entity_index, e)) 
-                {
+                if (e && !ecs_is_alive(world, e) && ecs_eis_exists(world, e)) {
                     switch(op->kind) {
                     case EcsOpNew:
                     case EcsOpBulkNew:

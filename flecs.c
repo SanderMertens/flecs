@@ -49,6 +49,7 @@ struct ecs_record_t {
 #define ecs_eis_delete(world, entity) ecs_sparse_remove((world->store).entity_index, entity)
 #define ecs_eis_set_generation(world, entity) ecs_sparse_set_generation((world->store).entity_index, entity)
 #define ecs_eis_is_alive(world, entity) ecs_sparse_is_alive((world->store).entity_index, entity)
+#define ecs_eis_exists(world, entity) ecs_sparse_exists((world->store).entity_index, entity)
 #define ecs_eis_recycle(world) ecs_sparse_new_id((world->store).entity_index)
 #define ecs_eis_clear_entity(world, entity, is_watched) ecs_eis_set((world->store).entity_index, entity, &(ecs_record_t){NULL, is_watched})
 #define ecs_eis_grow(world, count) ecs_sparse_grow((world->store).entity_index, count)
@@ -6076,7 +6077,6 @@ size_t ecs_entity_str(
 {
     char *ptr = buffer;
     size_t bytes_left = buffer_len, required = 0;
-
     if (entity & ECS_ROLE_MASK) {
         const char *role = ecs_role_str(entity);
         bytes_left = append_to_str(&ptr, role, bytes_left, &required);
@@ -6084,7 +6084,6 @@ size_t ecs_entity_str(
     }
 
     ecs_entity_t e = entity & ECS_COMPONENT_MASK;
-
     if (ECS_HAS_ROLE(entity, TRAIT)) {
         ecs_entity_t lo = ecs_entity_t_lo(e);
         ecs_entity_t hi = ecs_entity_t_hi(e);
@@ -6093,10 +6092,8 @@ size_t ecs_entity_str(
             char *hi_path = ecs_get_fullpath(world, hi);
             bytes_left = append_to_str(&ptr, hi_path, bytes_left, &required);
             ecs_os_free(hi_path);
-
             bytes_left = append_to_str(&ptr, ">", bytes_left, &required);
         }            
-
         char *lo_path = ecs_get_fullpath(world, lo);
         bytes_left = append_to_str(&ptr, lo_path, bytes_left, &required);
         ecs_os_free(lo_path);
@@ -6105,9 +6102,7 @@ size_t ecs_entity_str(
         bytes_left = append_to_str(&ptr, path, bytes_left, &required);
         ecs_os_free(path);
     }
-
     ptr[0] = '\0';
-
     return required;
 }
 
@@ -6127,15 +6122,13 @@ void flush_bulk_new(
             ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
             size_t size = ecs_to_size_t(cptr->size);
             void *ptr, *data = bulk_data[c];
-
             int i, count = op->count;
             for (i = 0, ptr = data; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
-                ecs_set_ptr_w_entity(world, ids[i], component, size, ptr);
+                assign_ptr_w_entity(world, ids[i], component, size, ptr, 
+                    true, true);
             }
-
             ecs_os_free(data);
         }
-
         ecs_os_free(bulk_data);
     } else {
         int i, count = op->count;
@@ -6143,7 +6136,6 @@ void flush_bulk_new(
             add_entities(world, ids[i], &op->components);
         }
     }
-
     ecs_os_free(ids);
 }
 
@@ -6203,9 +6195,7 @@ void ecs_defer_flush(
                 /* If entity is no longer alive, this could be because the queue
                  * contained both a delete and a subsequent add/remove/set which
                  * should be ignored. */
-                if (e && !ecs_is_alive(world, e) && 
-                    ecs_sparse_exists(world->store.entity_index, e)) 
-                {
+                if (e && !ecs_is_alive(world, e) && ecs_eis_exists(world, e)) {
                     switch(op->kind) {
                     case EcsOpNew:
                     case EcsOpBulkNew:
@@ -7897,7 +7887,9 @@ void ecs_table_writer_register_table(
         /* Remove any existing entities from entity index */
         ecs_vector_each(data->entities, ecs_entity_t, e_ptr, {
             ecs_eis_delete(world, *e_ptr);
-            ecs_sparse_set_generation(world->store.entity_index, *e_ptr);
+            /* Don't increase generation to ensure the restored data exactly
+             * matches the data in the blob */
+            ecs_eis_set_generation(world, *e_ptr);
         });
       
         return;
@@ -8771,8 +8763,7 @@ void ecs_snapshot_restore(
                         * in the current table, there won't be duplicates */
                         ecs_table_delete(world, r->table, data, row, false);
                     } else {
-                        ecs_sparse_set_generation(
-                            world->store.entity_index, *e_ptr);
+                        ecs_eis_set_generation(world, *e_ptr);
                     }
                 });
 

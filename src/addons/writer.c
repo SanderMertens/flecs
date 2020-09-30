@@ -69,7 +69,9 @@ void ecs_table_writer_register_table(
         /* Remove any existing entities from entity index */
         ecs_vector_each(data->entities, ecs_entity_t, e_ptr, {
             ecs_eis_delete(world, *e_ptr);
-            ecs_sparse_set_generation(world->store.entity_index, *e_ptr);
+            /* Don't increase generation to ensure the restored data exactly
+             * matches the data in the blob */
+            ecs_eis_set_generation(world, *e_ptr);
         });
       
         return;

@@ -544,7 +544,10 @@ void Entity_delete() {
     test_assert(!e.has<Velocity>());
 
     auto e2 = world.entity();
-    test_assert(e2.id() == e.id());
+
+    // Entity ids should be equal without the generation
+    test_assert((int32_t)e2.id() == (int32_t)e.id());
+    test_assert(e2.id() != e.id());
 }
 
 void Entity_clear() {

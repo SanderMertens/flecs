@@ -220,8 +220,7 @@ void ecs_snapshot_restore(
                         * in the current table, there won't be duplicates */
                         ecs_table_delete(world, r->table, data, row, false);
                     } else {
-                        ecs_sparse_set_generation(
-                            world->store.entity_index, *e_ptr);
+                        ecs_eis_set_generation(world, *e_ptr);
                     }
                 });
 

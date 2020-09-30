@@ -19,6 +19,7 @@ struct ecs_record_t {
 #define ecs_eis_delete(world, entity) ecs_sparse_remove((world->store).entity_index, entity)
 #define ecs_eis_set_generation(world, entity) ecs_sparse_set_generation((world->store).entity_index, entity)
 #define ecs_eis_is_alive(world, entity) ecs_sparse_is_alive((world->store).entity_index, entity)
+#define ecs_eis_exists(world, entity) ecs_sparse_exists((world->store).entity_index, entity)
 #define ecs_eis_recycle(world) ecs_sparse_new_id((world->store).entity_index)
 #define ecs_eis_clear_entity(world, entity, is_watched) ecs_eis_set((world->store).entity_index, entity, &(ecs_record_t){NULL, is_watched})
 #define ecs_eis_grow(world, count) ecs_sparse_grow((world->store).entity_index, count)
