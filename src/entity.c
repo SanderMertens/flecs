@@ -2459,8 +2459,8 @@ void flush_bulk_new(
     ecs_world_t *world,
     ecs_op_t *op)
 {
-    ecs_entity_t *ids = op->entities;
-    void **bulk_data = op->bulk_data;
+    ecs_entity_t *ids = op->is._n.entities;
+    void **bulk_data = op->is._n.bulk_data;
     if (bulk_data) {
         ecs_entity_t *components = op->components.array;
         int c, c_count = op->components.count;
@@ -2470,7 +2470,7 @@ void flush_bulk_new(
             ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
             size_t size = ecs_to_size_t(cptr->size);
             void *ptr, *data = bulk_data[c];
-            int i, count = op->count;
+            int i, count = op->is._n.count;
             for (i = 0, ptr = data; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
                 assign_ptr_w_entity(world, ids[i], component, size, ptr, 
                     true, true);
@@ -2479,7 +2479,7 @@ void flush_bulk_new(
         }
         ecs_os_free(bulk_data);
     } else {
-        int i, count = op->count;
+        int i, count = op->is._n.count;
         for (i = 0; i < count; i ++) {
             add_entities(world, ids[i], &op->components);
         }
@@ -2492,30 +2492,33 @@ void discard_op(
     ecs_world_t *world,
     ecs_op_t *op)
 {
-    void *value = op->value;
-    if (value) {
-        ecs_os_free(value);
-    }
-
-    void **bulk_data = op->bulk_data;
-    if (bulk_data) {
-        int32_t i, c_count = op->components.count;
-        for (i = 0; i < c_count; i ++) {
-            ecs_entity_t component = op->components.array[i];
-            const EcsComponent *cptr = ecs_get(world, component, EcsComponent);
-            ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
-            size_t size = ecs_to_size_t(cptr->size);
-
-            ecs_c_info_t *c_info = get_c_info(world, component);
-            ecs_xtor_t dtor;
-            if ((dtor = c_info->lifecycle.dtor)) {
-                dtor(world, component, &op->entity, bulk_data[i], size, 
-                    op->count, c_info->lifecycle.ctx);
-            } else {
-                ecs_os_free(bulk_data[i]);
-            }
+    if (op->kind != EcsOpBulkNew) {
+        void *value = op->is._1.value;
+        if (value) {
+            ecs_os_free(value);
         }
-        ecs_os_free(bulk_data);
+    } else {
+        void **bulk_data = op->is._n.bulk_data;
+        if (bulk_data) {
+            int32_t i, c_count = op->components.count;
+            for (i = 0; i < c_count; i ++) {
+                ecs_entity_t component = op->components.array[i];
+                const EcsComponent *cptr = ecs_get(world, component, 
+                    EcsComponent);
+                ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                size_t size = ecs_to_size_t(cptr->size);
+
+                ecs_c_info_t *c_info = get_c_info(world, component);
+                ecs_xtor_t dtor;
+                if ((dtor = c_info->lifecycle.dtor)) {
+                    dtor(world, component, op->is._n.entities, bulk_data[i], 
+                        size, op->is._n.count, c_info->lifecycle.ctx);
+                } else {
+                    ecs_os_free(bulk_data[i]);
+                }
+            }
+            ecs_os_free(bulk_data);
+        }
     }
 
     ecs_entity_t *components = op->components.array;
@@ -2538,7 +2541,10 @@ void ecs_defer_flush(
             
             for (i = 0; i < count; i ++) {
                 ecs_op_t *op = &ops[i];
-                ecs_entity_t e = op->entity;
+                ecs_entity_t e = op->is._1.entity;
+                if (op->kind == EcsOpBulkNew) {
+                    e = 0;
+                }
 
                 /* If entity is no longer alive, this could be because the queue
                  * contained both a delete and a subsequent add/remove/set which
@@ -2576,17 +2582,17 @@ void ecs_defer_flush(
                     remove_entities(world, e, &op->components);
                     break;
                 case EcsOpClone:
-                    ecs_clone(world, e, op->component, op->clone_value);
+                    ecs_clone(world, e, op->component, op->is._1.clone_value);
                     break;
                 case EcsOpSet:
                     assign_ptr_w_entity(world, e, 
-                        op->component, ecs_to_size_t(op->size), 
-                        op->value, true, true);
+                        op->component, ecs_to_size_t(op->is._1.size), 
+                        op->is._1.value, true, true);
                     break;
                 case EcsOpMut:
                     assign_ptr_w_entity(world, e, 
-                        op->component, ecs_to_size_t(op->size), 
-                        op->value, true, false);
+                        op->component, ecs_to_size_t(op->is._1.size), 
+                        op->is._1.value, true, false);
                     break;
                 case EcsOpModified:
                     ecs_modified_w_entity(world, e, op->component);
@@ -2606,8 +2612,8 @@ void ecs_defer_flush(
                     ecs_os_free(op->components.array);
                 }
 
-                if (op->value) {
-                    ecs_os_free(op->value);
+                if (op->is._1.value) {
+                    ecs_os_free(op->is._1.value);
                 }
             };
 

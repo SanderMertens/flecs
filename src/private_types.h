@@ -326,18 +326,28 @@ typedef enum ecs_op_kind_t {
     EcsOpClear
 } ecs_op_kind_t;
 
-typedef struct ecs_op_t {
-    ecs_op_kind_t kind;
-    ecs_entity_t scope;
-    ecs_entity_t entity;
-    ecs_entity_t *entities;
-    ecs_entity_t component;
-    ecs_entities_t components;
-    void *value;
+typedef struct ecs_op_1_t {
+    ecs_entity_t entity;        /* Entity id */
+    void *value;                /* Value (used for set / get_mut) */
+    ecs_size_t size;            /* Size of value */
+    bool clone_value;           /* Clone entity with value (used for clone) */ 
+} ecs_op_1_t;
+
+typedef struct ecs_op_n_t {
+    ecs_entity_t *entities;  
     void **bulk_data;
-    ecs_size_t size;
     int32_t count;
-    bool clone_value;
+} ecs_op_n_t;
+
+typedef struct ecs_op_t {
+    ecs_op_kind_t kind;         /* Operation kind */
+    ecs_entity_t scope;         /* Scope of operation (for new) */       
+    ecs_entity_t component;     /* Single component (components.count = 1) */
+    ecs_entities_t components;  /* Multiple components */
+    union {
+        ecs_op_1_t _1;
+        ecs_op_n_t _n;
+    } is;
 } ecs_op_t;
 
 /** A stage is a data structure in which delta's are stored until it is safe to

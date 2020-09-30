@@ -48,8 +48,8 @@ bool defer_add_remove(
 
         ecs_op_t *op = new_defer_op(stage);
         op->kind = op_kind;
-        op->entity = entity;
         op->scope = scope;
+        op->is._1.entity = entity;
 
         new_defer_component_ids(op, components);
 
@@ -80,8 +80,8 @@ bool ecs_defer_modified(
     if (stage->defer) {
         ecs_op_t *op = new_defer_op(stage);
         op->kind = EcsOpModified;
-        op->entity = entity;
         op->component = component;
+        op->is._1.entity = entity;
         return true;
     } else {
         stage->defer ++;
@@ -101,9 +101,9 @@ bool ecs_defer_clone(
     if (stage->defer) {
         ecs_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClone;
-        op->entity = entity;
         op->component = src;
-        op->clone_value = clone_value;
+        op->is._1.entity = entity;
+        op->is._1.clone_value = clone_value;
         return true;
     } else {
         stage->defer ++;
@@ -121,7 +121,7 @@ bool ecs_defer_delete(
     if (stage->defer) {
         ecs_op_t *op = new_defer_op(stage);
         op->kind = EcsOpDelete;
-        op->entity = entity;
+        op->is._1.entity = entity;
         return true;
     } else {
         stage->defer ++;
@@ -138,7 +138,7 @@ bool ecs_defer_clear(
     if (stage->defer) {
         ecs_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClear;
-        op->entity = entity;
+        op->is._1.entity = entity;
         return true;
     } else {
         stage->defer ++;
@@ -170,8 +170,8 @@ bool ecs_defer_bulk_new(
             ecs_entity_t *components = components_ids->array;
             defer_data = ecs_os_malloc(ECS_SIZEOF(void*) * c_count);
             for (c = 0; c < c_count; c ++) {
-                ecs_entity_t component = components[c];
-                const EcsComponent *cptr = ecs_get(world, component, EcsComponent);
+                ecs_entity_t comp = components[c];
+                const EcsComponent *cptr = ecs_get(world, comp, EcsComponent);
                 ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
                 ecs_size_t size = cptr->size;
@@ -179,17 +179,17 @@ bool ecs_defer_bulk_new(
                 defer_data[c] = data;
 
                 ecs_c_info_t *cinfo = NULL;
-                ecs_entity_t real_id = ecs_component_id_from_id(world, component);
+                ecs_entity_t real_id = ecs_component_id_from_id(world, comp);
                 if (real_id) {
                     cinfo = ecs_get_c_info(world, real_id);
                 }
                 ecs_xtor_t ctor;
                 if (cinfo && (ctor = cinfo->lifecycle.ctor)) {
                     void *ctx = cinfo->lifecycle.ctx;
-                    ctor(world, component, ids, data, ecs_to_size_t(size), count, ctx);
+                    ctor(world, comp, ids, data, ecs_to_size_t(size), count, ctx);
                     ecs_move_t move;
                     if ((move = cinfo->lifecycle.move)) {
-                        move(world, component, ids, ids, data, component_data[c], 
+                        move(world, comp, ids, ids, data, component_data[c], 
                             ecs_to_size_t(size), count, ctx);
                     } else {
                         ecs_os_memcpy(data, component_data[c], size * count);
@@ -203,9 +203,9 @@ bool ecs_defer_bulk_new(
         /* Store data in op */
         ecs_op_t *op = new_defer_op(stage);
         op->kind = EcsOpBulkNew;
-        op->entities = ids;
-        op->bulk_data = defer_data;
-        op->count = count;
+        op->is._n.entities = ids;
+        op->is._n.bulk_data = defer_data;
+        op->is._n.count = count;
         new_defer_component_ids(op, components_ids);
         *ids_out = ids;
 
@@ -267,10 +267,10 @@ bool ecs_defer_set(
 
         ecs_op_t *op = new_defer_op(stage);
         op->kind = op_kind;
-        op->entity = entity;
         op->component = component;
-        op->size = size;
-        op->value = ecs_os_malloc(size);
+        op->is._1.entity = entity;
+        op->is._1.size = size;
+        op->is._1.value = ecs_os_malloc(size);
 
         if (!value) {
             value = ecs_get_w_entity(world, entity, component);
@@ -286,24 +286,24 @@ bool ecs_defer_set(
         }
         ecs_xtor_t ctor;
         if (c_info && (ctor = c_info->lifecycle.ctor)) {
-            ctor(world, component, &entity, op->value, ecs_to_size_t(size), 1, 
-                c_info->lifecycle.ctx);
+            ctor(world, component, &entity, op->is._1.value, 
+                ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
 
             ecs_copy_t copy;
             if (value) {
                 if ((copy = c_info->lifecycle.copy)) {
-                    copy(world, component, &entity, &entity, op->value, value, 
+                    copy(world, component, &entity, &entity, op->is._1.value, value, 
                         ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
                 } else {
-                    ecs_os_memcpy(op->value, value, size);
+                    ecs_os_memcpy(op->is._1.value, value, size);
                 }
             }
         } else if (value) {
-            ecs_os_memcpy(op->value, value, size);
+            ecs_os_memcpy(op->is._1.value, value, size);
         }
         
         if (value_out) {
-            *value_out = op->value;
+            *value_out = op->is._1.value;
         }
 
         return true;
