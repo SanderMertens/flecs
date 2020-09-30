@@ -870,6 +870,7 @@ void Prefab_force_owned_2(void);
 void Prefab_force_owned_nested(void);
 void Prefab_force_owned_type(void);
 void Prefab_force_owned_type_w_trait(void);
+void Prefab_prefab_instanceof_hierarchy(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_setup(void);
@@ -4515,6 +4516,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "force_owned_type_w_trait",
         Prefab_force_owned_type_w_trait
+    },
+    {
+        "prefab_instanceof_hierarchy",
+        Prefab_prefab_instanceof_hierarchy
     }
 };
 
@@ -6417,7 +6422,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        65,
+        66,
         Prefab_testcases
     },
     {

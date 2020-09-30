@@ -2727,3 +2727,35 @@ void Prefab_force_owned_type_w_trait() {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_instanceof_hierarchy() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_PREFAB(world, Base, Position);
+        ECS_PREFAB(world, BaseChild, Position, CHILDOF | Base);
+
+    ECS_PREFAB(world, Prefab, INSTANCEOF | Base);
+
+    /* Ensure that child has been instantiated for Prefab as a prefab by making
+     * sure there are no matching entities for Position up to this point */
+    ecs_query_t *q = ecs_query_new(world, "ANY:Position");
+    
+    ecs_iter_t qit = ecs_query_iter(q);
+    test_assert(!ecs_query_next(&qit));
+
+    /* Instantiate the prefab */
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    test_assert(e != 0);
+
+    qit = ecs_query_iter(q);
+    test_assert(ecs_query_next(&qit) == true);
+    test_int(qit.count, 1);
+    test_assert(ecs_query_next(&qit) == true);
+    test_int(qit.count, 1);
+    test_assert(ecs_query_next(&qit) == false);
+
+    ecs_fini(world);
+}

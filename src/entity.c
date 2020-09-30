@@ -428,6 +428,7 @@ static
 void instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
+    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count);
@@ -436,6 +437,7 @@ static
 void instantiate_children(
     ecs_world_t *world,
     ecs_entity_t base,
+    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -451,7 +453,7 @@ void instantiate_children(
 
     /* Create component array for creating the table */
     ecs_entities_t components = {
-        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * type_count)
+        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * type_count + 1)
     };
 
     void **c_info = NULL;
@@ -494,6 +496,12 @@ void instantiate_children(
 
     ecs_assert(base_index != -1, ECS_INTERNAL_ERROR, NULL);
 
+    /* If children are added to a prefab, make sure they are prefabs too */
+    if (table->flags & EcsTableIsPrefab) {
+        components.array[pos] = EcsPrefab;
+        pos ++;
+    }
+
     components.count = pos;
 
     /* Instantiate the prefab child table for each new instance */
@@ -507,21 +515,21 @@ void instantiate_children(
         components.array[base_index] = ECS_CHILDOF | e;
 
         /* Find or create table */
-        ecs_table_t *table = ecs_table_find_or_create(world, &components);
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_table_t *i_table = ecs_table_find_or_create(world, &components);
+        ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Create children */
         int32_t child_row; 
-        new_w_data(world, table, NULL, child_count, c_info, &child_row);
+        new_w_data(world, i_table, NULL, child_count, c_info, &child_row);
 
         /* If prefab child table has children itself, recursively instantiate */
-        ecs_data_t *i_data = ecs_table_get_data(table);
+        ecs_data_t *i_data = ecs_table_get_data(i_table);
         ecs_entity_t *children = ecs_vector_first(child_data->entities, ecs_entity_t);
 
         int j;
         for (j = 0; j < child_count; j ++) {
             ecs_entity_t child = children[j];
-            instantiate(world, child, i_data, child_row + j, 1);
+            instantiate(world, child, i_table, i_data, child_row + j, 1);
         }
     }    
 }
@@ -530,6 +538,7 @@ static
 void instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
+    ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
     int32_t count)
@@ -546,7 +555,7 @@ void instantiate(
             }
 
             instantiate_children(
-                world, base, data, row, count, child_table);
+                world, base, table, data, row, count, child_table);
         });
     }
 }
@@ -674,7 +683,7 @@ void ecs_components_override(
         if (component >= ECS_HI_COMPONENT_ID) {
             if (ECS_HAS_ROLE(component, INSTANCEOF)) {
                 ecs_entity_t base = component & ECS_COMPONENT_MASK;
-                instantiate(world, base, data, row, count);
+                instantiate(world, base, table, data, row, count);
 
                 /* If table has on_set systems, get table without the base
                  * entity that was just added. This is needed to determine the
