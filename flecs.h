@@ -845,6 +845,11 @@ void ecs_sparse_set_generation(
     uint64_t index);    
 
 FLECS_EXPORT
+bool ecs_sparse_exists(
+    ecs_sparse_t *sparse,
+    uint64_t index);
+
+FLECS_EXPORT
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -10668,6 +10673,10 @@ public:
         return *this;
     }
 
+    float interval() {
+        return ecs_get_interval(m_world, m_id);
+    }
+
     // DEPRECATED: use interval instead
     system& period(float period) {
         return this->interval(period);
@@ -10684,6 +10693,8 @@ public:
         m_hidden = true;
         return *this;
     }
+
+
 
     void enable() {
         ecs_enable(m_world, m_id, true);

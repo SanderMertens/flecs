@@ -1175,6 +1175,10 @@ void SingleThreadStaging_defer_get_mut_w_modify(void);
 void SingleThreadStaging_defer_modify(void);
 void SingleThreadStaging_defer_set_trait(void);
 void SingleThreadStaging_defer_clear(void);
+void SingleThreadStaging_defer_add_after_delete(void);
+void SingleThreadStaging_defer_set_after_delete(void);
+void SingleThreadStaging_defer_get_mut_after_delete(void);
+void SingleThreadStaging_defer_get_mut_after_delete_2nd_to_last(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -5662,6 +5666,22 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "defer_clear",
         SingleThreadStaging_defer_clear
+    },
+    {
+        "defer_add_after_delete",
+        SingleThreadStaging_defer_add_after_delete
+    },
+    {
+        "defer_set_after_delete",
+        SingleThreadStaging_defer_set_after_delete
+    },
+    {
+        "defer_get_mut_after_delete",
+        SingleThreadStaging_defer_get_mut_after_delete
+    },
+    {
+        "defer_get_mut_after_delete_2nd_to_last",
+        SingleThreadStaging_defer_get_mut_after_delete_2nd_to_last
     }
 };
 
@@ -6460,7 +6480,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        74,
+        78,
         SingleThreadStaging_testcases
     },
     {

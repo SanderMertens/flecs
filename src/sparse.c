@@ -233,6 +233,7 @@ void* try_sparse(
     uint64_t gen = strip_generation(&index);
     uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
     uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
+
     if (cur_gen != gen) {
         return NULL;
     }
@@ -262,11 +263,11 @@ void swap_dense(
     ecs_sparse_t *sparse,
     chunk_t *chunk_a,
     int32_t a,
-    int32_t b,
-    uint64_t index_a)
+    int32_t b)
 {
     ecs_assert(a != b, ECS_INTERNAL_ERROR, NULL);
     uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t index_a = dense_array[a];
     uint64_t index_b = dense_array[b];
 
     chunk_t *chunk_b = get_or_create_chunk(sparse, CHUNK(index_b));
@@ -402,7 +403,7 @@ void* _ecs_sparse_get_or_create(
             sparse->count ++;
         } else if (dense > count) {
             /* If dense is not alive, swap it with the first unused element. */
-            swap_dense(sparse, chunk, dense, count, index);
+            swap_dense(sparse, chunk, dense, count);
 
             /* First unused element is now last used element */
             sparse->count ++;
@@ -477,7 +478,7 @@ void _ecs_sparse_remove(
             sparse->count --;
         } else if (dense < count) {
             /* If element is alive, move it to unused elements */
-            swap_dense(sparse, chunk, dense, count - 1, index);
+            swap_dense(sparse, chunk, dense, count - 1);
             sparse->count --;
         } else {
             /* Element is not alive, nothing to be done */
@@ -511,6 +512,20 @@ void ecs_sparse_set_generation(
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
     }
+}
+
+bool ecs_sparse_exists(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    
+    strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    return dense != 0;
 }
 
 void* _ecs_sparse_get(

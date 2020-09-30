@@ -64,6 +64,11 @@ void ecs_sparse_set_generation(
     uint64_t index);    
 
 FLECS_EXPORT
+bool ecs_sparse_exists(
+    ecs_sparse_t *sparse,
+    uint64_t index);
+
+FLECS_EXPORT
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,

@@ -87,7 +87,6 @@ ecs_world_t* deserialize_from_vector_to_existing_expect(
                 test_assert(expect == writer.error);
                 goto error;
             } else {
-                printf("deserialize_from_vector: %s\n", ecs_strerror(writer.error));
                 test_assert(false);
             }
         }

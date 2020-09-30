@@ -4759,7 +4759,7 @@ void commit(
             info->row = new_entity(world, entity, info, dst_table, added);
             info->table = dst_table;
         }        
-    }
+    } 
 
     /* If the entity is being watched, it is being monitored for changes and
     * requires rematching systems when components are added or removed. This
@@ -4773,7 +4773,7 @@ void commit(
     if ((!src_table || !src_table->type) && world->range_check_enabled) {
         ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, ECS_OUT_OF_RANGE, 0);
         ecs_assert(entity >= world->stats.min_id, ECS_OUT_OF_RANGE, 0);
-    }
+    } 
 }
 
 static
@@ -5211,19 +5211,15 @@ ecs_entity_t ecs_new_id(
 {
     ecs_entity_t entity;
 
-    if (!world->in_progress) {
-        entity = ecs_eis_recycle(world);
-    } else {
-        int32_t thread_count = ecs_vector_count(world->workers);
-        if (thread_count >= 1) { 
-            /* Can't atomically increase number above max int */
-            ecs_assert(
-                world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
+    int32_t thread_count = ecs_vector_count(world->workers);
+    if (thread_count >= 1) {
+        /* Can't atomically increase number above max int */
+        ecs_assert(
+            world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
 
-            entity = (ecs_entity_t)ecs_os_ainc((int32_t*)&world->stats.last_id);
-        } else {
-            entity = ++ world->stats.last_id;
-        } 
+        entity = (ecs_entity_t)ecs_os_ainc((int32_t*)&world->stats.last_id);
+    } else {
+        entity = ecs_eis_recycle(world);
     }
 
     ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, 
@@ -5721,6 +5717,7 @@ ecs_entity_t assign_ptr_w_entity(
     }
 
     ecs_entity_info_t info;
+
     void *dst = get_mutable(world, entity, component, &info, NULL);
 
     /* This can no longer happen since we defer operations */
@@ -6150,6 +6147,43 @@ void flush_bulk_new(
     ecs_os_free(ids);
 }
 
+static
+void discard_op(
+    ecs_world_t *world,
+    ecs_op_t *op)
+{
+    void *value = op->value;
+    if (value) {
+        ecs_os_free(value);
+    }
+
+    void **bulk_data = op->bulk_data;
+    if (bulk_data) {
+        int32_t i, c_count = op->components.count;
+        for (i = 0; i < c_count; i ++) {
+            ecs_entity_t component = op->components.array[i];
+            const EcsComponent *cptr = ecs_get(world, component, EcsComponent);
+            ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            size_t size = ecs_to_size_t(cptr->size);
+
+            ecs_c_info_t *c_info = get_c_info(world, component);
+            ecs_xtor_t dtor;
+            if ((dtor = c_info->lifecycle.dtor)) {
+                dtor(world, component, &op->entity, bulk_data[i], size, 
+                    op->count, c_info->lifecycle.ctx);
+            } else {
+                ecs_os_free(bulk_data[i]);
+            }
+        }
+        ecs_os_free(bulk_data);
+    }
+
+    ecs_entity_t *components = op->components.array;
+    if (components) {
+        ecs_os_free(components);
+    }
+}
+
 /* Leave safe section. Run all deferred commands. */
 void ecs_defer_flush(
     ecs_world_t *world,
@@ -6164,6 +6198,27 @@ void ecs_defer_flush(
             
             for (i = 0; i < count; i ++) {
                 ecs_op_t *op = &ops[i];
+                ecs_entity_t e = op->entity;
+
+                /* If entity is no longer alive, this could be because the queue
+                 * contained both a delete and a subsequent add/remove/set which
+                 * should be ignored. */
+                if (e && !ecs_is_alive(world, e) && 
+                    ecs_sparse_exists(world->store.entity_index, e)) 
+                {
+                    switch(op->kind) {
+                    case EcsOpNew:
+                    case EcsOpBulkNew:
+                    case EcsOpClone:
+                        /* If the operation is creating a new entity, the id
+                         * can still be not alive. */
+                        break;
+                    default:
+                        discard_op(world, op);
+                        continue;
+                    }
+                }
+
                 if (op->components.count == 1) {
                     op->components.array = &op->component;
                 }
@@ -6173,37 +6228,36 @@ void ecs_defer_flush(
                     break;
                 case EcsOpNew:
                     if (op->scope) {
-                        ecs_add_entity(
-                            world, op->entity, ECS_CHILDOF | op->scope);
+                        ecs_add_entity(world, e, ECS_CHILDOF | op->scope);
                     }
                     /* Fallthrough */
                 case EcsOpAdd:
-                    add_entities(world, op->entity, &op->components);
+                    add_entities(world, e, &op->components);
                     break;
                 case EcsOpRemove:
-                    remove_entities(world, op->entity, &op->components);
+                    remove_entities(world, e, &op->components);
                     break;
                 case EcsOpClone:
-                    ecs_clone(world, op->entity, op->component, op->clone_value);
+                    ecs_clone(world, e, op->component, op->clone_value);
                     break;
                 case EcsOpSet:
-                    assign_ptr_w_entity(world, op->entity, 
+                    assign_ptr_w_entity(world, e, 
                         op->component, ecs_to_size_t(op->size), 
                         op->value, true, true);
                     break;
                 case EcsOpMut:
-                    assign_ptr_w_entity(world, op->entity, 
+                    assign_ptr_w_entity(world, e, 
                         op->component, ecs_to_size_t(op->size), 
                         op->value, true, false);
                     break;
                 case EcsOpModified:
-                    ecs_modified_w_entity(world, op->entity, op->component);
+                    ecs_modified_w_entity(world, e, op->component);
                     break;
                 case EcsOpDelete:
-                    ecs_delete(world, op->entity);
+                    ecs_delete(world, e);
                     break;
                 case EcsOpClear:
-                    ecs_clear(world, op->entity);
+                    ecs_clear(world, e);
                     break;
                 case EcsOpBulkNew:
                     flush_bulk_new(world, op);
@@ -7335,6 +7389,7 @@ void* try_sparse(
     uint64_t gen = strip_generation(&index);
     uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
     uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
+
     if (cur_gen != gen) {
         return NULL;
     }
@@ -7364,11 +7419,11 @@ void swap_dense(
     ecs_sparse_t *sparse,
     chunk_t *chunk_a,
     int32_t a,
-    int32_t b,
-    uint64_t index_a)
+    int32_t b)
 {
     ecs_assert(a != b, ECS_INTERNAL_ERROR, NULL);
     uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t index_a = dense_array[a];
     uint64_t index_b = dense_array[b];
 
     chunk_t *chunk_b = get_or_create_chunk(sparse, CHUNK(index_b));
@@ -7504,7 +7559,7 @@ void* _ecs_sparse_get_or_create(
             sparse->count ++;
         } else if (dense > count) {
             /* If dense is not alive, swap it with the first unused element. */
-            swap_dense(sparse, chunk, dense, count, index);
+            swap_dense(sparse, chunk, dense, count);
 
             /* First unused element is now last used element */
             sparse->count ++;
@@ -7579,7 +7634,7 @@ void _ecs_sparse_remove(
             sparse->count --;
         } else if (dense < count) {
             /* If element is alive, move it to unused elements */
-            swap_dense(sparse, chunk, dense, count - 1, index);
+            swap_dense(sparse, chunk, dense, count - 1);
             sparse->count --;
         } else {
             /* Element is not alive, nothing to be done */
@@ -7613,6 +7668,20 @@ void ecs_sparse_set_generation(
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
     }
+}
+
+bool ecs_sparse_exists(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    
+    strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    return dense != 0;
 }
 
 void* _ecs_sparse_get(
@@ -7828,6 +7897,7 @@ void ecs_table_writer_register_table(
         /* Remove any existing entities from entity index */
         ecs_vector_each(data->entities, ecs_entity_t, e_ptr, {
             ecs_eis_delete(world, *e_ptr);
+            ecs_sparse_set_generation(world->store.entity_index, *e_ptr);
         });
       
         return;
@@ -8700,6 +8770,9 @@ void ecs_snapshot_restore(
                         /* Always delete entity, so that even if the entity is
                         * in the current table, there won't be duplicates */
                         ecs_table_delete(world, r->table, data, row, false);
+                    } else {
+                        ecs_sparse_set_generation(
+                            world->store.entity_index, *e_ptr);
                     }
                 });
 

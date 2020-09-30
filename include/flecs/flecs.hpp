@@ -3875,6 +3875,10 @@ public:
         return *this;
     }
 
+    float interval() {
+        return ecs_get_interval(m_world, m_id);
+    }
+
     // DEPRECATED: use interval instead
     system& period(float period) {
         return this->interval(period);
@@ -3891,6 +3895,8 @@ public:
         m_hidden = true;
         return *this;
     }
+
+
 
     void enable() {
         ecs_enable(m_world, m_id, true);

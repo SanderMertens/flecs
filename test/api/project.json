@@ -1272,7 +1272,11 @@
                 "defer_get_mut_w_modify",
                 "defer_modify",
                 "defer_set_trait",
-                "defer_clear"
+                "defer_clear",
+                "defer_add_after_delete",
+                "defer_set_after_delete",
+                "defer_get_mut_after_delete",
+                "defer_get_mut_after_delete_2nd_to_last"
             ]
         }, {
             "id": "MultiThreadStaging",

@@ -1108,7 +1108,7 @@ void commit(
             info->row = new_entity(world, entity, info, dst_table, added);
             info->table = dst_table;
         }        
-    }
+    } 
 
     /* If the entity is being watched, it is being monitored for changes and
     * requires rematching systems when components are added or removed. This
@@ -1122,7 +1122,7 @@ void commit(
     if ((!src_table || !src_table->type) && world->range_check_enabled) {
         ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, ECS_OUT_OF_RANGE, 0);
         ecs_assert(entity >= world->stats.min_id, ECS_OUT_OF_RANGE, 0);
-    }
+    } 
 }
 
 static
@@ -1560,19 +1560,15 @@ ecs_entity_t ecs_new_id(
 {
     ecs_entity_t entity;
 
-    if (!world->in_progress) {
-        entity = ecs_eis_recycle(world);
-    } else {
-        int32_t thread_count = ecs_vector_count(world->workers);
-        if (thread_count >= 1) { 
-            /* Can't atomically increase number above max int */
-            ecs_assert(
-                world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
+    int32_t thread_count = ecs_vector_count(world->workers);
+    if (thread_count >= 1) {
+        /* Can't atomically increase number above max int */
+        ecs_assert(
+            world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
 
-            entity = (ecs_entity_t)ecs_os_ainc((int32_t*)&world->stats.last_id);
-        } else {
-            entity = ++ world->stats.last_id;
-        } 
+        entity = (ecs_entity_t)ecs_os_ainc((int32_t*)&world->stats.last_id);
+    } else {
+        entity = ecs_eis_recycle(world);
     }
 
     ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, 
@@ -2070,6 +2066,7 @@ ecs_entity_t assign_ptr_w_entity(
     }
 
     ecs_entity_info_t info;
+
     void *dst = get_mutable(world, entity, component, &info, NULL);
 
     /* This can no longer happen since we defer operations */
@@ -2499,6 +2496,43 @@ void flush_bulk_new(
     ecs_os_free(ids);
 }
 
+static
+void discard_op(
+    ecs_world_t *world,
+    ecs_op_t *op)
+{
+    void *value = op->value;
+    if (value) {
+        ecs_os_free(value);
+    }
+
+    void **bulk_data = op->bulk_data;
+    if (bulk_data) {
+        int32_t i, c_count = op->components.count;
+        for (i = 0; i < c_count; i ++) {
+            ecs_entity_t component = op->components.array[i];
+            const EcsComponent *cptr = ecs_get(world, component, EcsComponent);
+            ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            size_t size = ecs_to_size_t(cptr->size);
+
+            ecs_c_info_t *c_info = get_c_info(world, component);
+            ecs_xtor_t dtor;
+            if ((dtor = c_info->lifecycle.dtor)) {
+                dtor(world, component, &op->entity, bulk_data[i], size, 
+                    op->count, c_info->lifecycle.ctx);
+            } else {
+                ecs_os_free(bulk_data[i]);
+            }
+        }
+        ecs_os_free(bulk_data);
+    }
+
+    ecs_entity_t *components = op->components.array;
+    if (components) {
+        ecs_os_free(components);
+    }
+}
+
 /* Leave safe section. Run all deferred commands. */
 void ecs_defer_flush(
     ecs_world_t *world,
@@ -2513,6 +2547,27 @@ void ecs_defer_flush(
             
             for (i = 0; i < count; i ++) {
                 ecs_op_t *op = &ops[i];
+                ecs_entity_t e = op->entity;
+
+                /* If entity is no longer alive, this could be because the queue
+                 * contained both a delete and a subsequent add/remove/set which
+                 * should be ignored. */
+                if (e && !ecs_is_alive(world, e) && 
+                    ecs_sparse_exists(world->store.entity_index, e)) 
+                {
+                    switch(op->kind) {
+                    case EcsOpNew:
+                    case EcsOpBulkNew:
+                    case EcsOpClone:
+                        /* If the operation is creating a new entity, the id
+                         * can still be not alive. */
+                        break;
+                    default:
+                        discard_op(world, op);
+                        continue;
+                    }
+                }
+
                 if (op->components.count == 1) {
                     op->components.array = &op->component;
                 }
@@ -2522,37 +2577,36 @@ void ecs_defer_flush(
                     break;
                 case EcsOpNew:
                     if (op->scope) {
-                        ecs_add_entity(
-                            world, op->entity, ECS_CHILDOF | op->scope);
+                        ecs_add_entity(world, e, ECS_CHILDOF | op->scope);
                     }
                     /* Fallthrough */
                 case EcsOpAdd:
-                    add_entities(world, op->entity, &op->components);
+                    add_entities(world, e, &op->components);
                     break;
                 case EcsOpRemove:
-                    remove_entities(world, op->entity, &op->components);
+                    remove_entities(world, e, &op->components);
                     break;
                 case EcsOpClone:
-                    ecs_clone(world, op->entity, op->component, op->clone_value);
+                    ecs_clone(world, e, op->component, op->clone_value);
                     break;
                 case EcsOpSet:
-                    assign_ptr_w_entity(world, op->entity, 
+                    assign_ptr_w_entity(world, e, 
                         op->component, ecs_to_size_t(op->size), 
                         op->value, true, true);
                     break;
                 case EcsOpMut:
-                    assign_ptr_w_entity(world, op->entity, 
+                    assign_ptr_w_entity(world, e, 
                         op->component, ecs_to_size_t(op->size), 
                         op->value, true, false);
                     break;
                 case EcsOpModified:
-                    ecs_modified_w_entity(world, op->entity, op->component);
+                    ecs_modified_w_entity(world, e, op->component);
                     break;
                 case EcsOpDelete:
-                    ecs_delete(world, op->entity);
+                    ecs_delete(world, e);
                     break;
                 case EcsOpClear:
-                    ecs_clear(world, op->entity);
+                    ecs_clear(world, e);
                     break;
                 case EcsOpBulkNew:
                     flush_bulk_new(world, op);

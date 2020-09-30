@@ -3146,3 +3146,159 @@ void SingleThreadStaging_defer_clear() {
 
     ecs_fini(world);    
 }
+
+void SingleThreadStaging_defer_add_after_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_delete(world, e);
+    ecs_add(world, e, Velocity);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_frame_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_is_alive(world, e));
+
+    test_int(ecs_count(world, Position), 0);
+    test_int(ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);  
+}
+
+void SingleThreadStaging_defer_set_after_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_delete(world, e);
+    ecs_set(world, e, Velocity, {1, 2});
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_frame_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_is_alive(world, e));
+
+    test_int(ecs_count(world, Position), 0);
+    test_int(ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);  
+}
+
+void SingleThreadStaging_defer_get_mut_after_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_delete(world, e);
+    Velocity *v = ecs_get_mut(world, e, Velocity, NULL);
+    v->x = 1;
+    v->y = 2;
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_frame_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_is_alive(world, e));
+
+    test_int(ecs_count(world, Position), 0);
+    test_int(ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);  
+}
+
+void SingleThreadStaging_defer_get_mut_after_delete_2nd_to_last() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    /* Create 2nd position. This will cause deletion of the entity in the sparse
+     * set to take a different path since it's not the last. */
+    ecs_new(world, Position);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_delete(world, e);
+    Velocity *v = ecs_get_mut(world, e, Velocity, NULL);
+    v->x = 1;
+    v->y = 2;
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_frame_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_is_alive(world, e));
+
+    test_int(ecs_count(world, Position), 1);
+    test_int(ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);  
+}
