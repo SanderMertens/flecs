@@ -1217,3 +1217,40 @@ void Hierarchies_get_child_count_2_tables() {
 
     ecs_fini(world);
 }
+
+void Hierarchies_scope_iter_after_delete_tree() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(ecs_has_entity(world, child, ECS_CHILDOF | parent));
+
+    ecs_delete_children(world, parent);
+
+    ecs_iter_t it = ecs_scope_iter(world, parent);
+    test_assert(!ecs_scope_next(&it));
+
+    ecs_fini(world);
+}
+
+void Hierarchies_add_child_after_delete_tree() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(ecs_has_entity(world, child, ECS_CHILDOF | parent));
+
+    ecs_delete_children(world, parent);
+
+    child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+
+    ecs_fini(world);
+}

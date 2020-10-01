@@ -182,6 +182,7 @@ void rehash(
         for (b = filled_bucket_count - 1; b >= 0; b --) {
             uint64_t bucket_id = indices[b];
             ecs_bucket_t *bucket = _ecs_sparse_get_sparse(buckets, 0, bucket_id);
+            ecs_assert(bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
             int i, count = bucket->count;
             ecs_map_key_t *array = PAYLOAD_ARRAY(bucket, offset);
@@ -194,8 +195,10 @@ void rehash(
                 if (new_bucket_id != bucket_id) {
                     ecs_bucket_t *new_bucket = _ecs_sparse_get_or_create(
                         buckets, 0, new_bucket_id);
+                    ecs_assert(new_bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
                     indices = ecs_sparse_ids(buckets);
+                    ecs_assert(indices != NULL, ECS_INTERNAL_ERROR, NULL);
 
                     if (add_to_bucket(new_bucket, elem_size, offset, 
                         key, PAYLOAD(elem)) == BUCKET_COUNT) 

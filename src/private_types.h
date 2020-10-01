@@ -197,7 +197,7 @@ struct ecs_table_t {
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
     int32_t alloc_count;             /**< Increases when columns are reallocd */
-    uint32_t id;                      /**< Table id in sparse set */
+    uint32_t id;                     /**< Table id in sparse set */
 
     ecs_flags32_t flags;             /**< Flags for testing table properties */
     int32_t column_count;            /**< Number of data columns in table */

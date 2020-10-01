@@ -223,7 +223,9 @@
                 "delete_tree_recreate",
                 "get_child_count",
                 "get_child_count_2_tables",
-                "get_child_count_no_children"
+                "get_child_count_no_children",
+                "scope_iter_after_delete_tree",
+                "add_child_after_delete_tree"
             ]
         }, {
             "id": "Add_bulk",

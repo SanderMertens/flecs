@@ -458,7 +458,7 @@ void unregister_query(
     ecs_query_t *query)
 {
     (void)world;
-    
+
     if (!(query->flags & EcsQueryNoActivation)) {
         int32_t i, count = ecs_vector_count(table->queries);
         for (i = 0; i < count; i ++) {
@@ -730,6 +730,8 @@ void ecs_table_free(
         }
         ecs_os_free(table->on_set);
     }
+
+    table->id = 0;
 
     ecs_os_free(table->data);
 }

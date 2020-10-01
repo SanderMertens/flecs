@@ -451,9 +451,11 @@ static
 void fini_unset_tables(
     ecs_world_t *world)
 {
-    ecs_sparse_each(world->store.tables, ecs_table_t, table, {
+    int32_t i, count = ecs_sparse_count(world->store.tables);
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
         ecs_table_unset(world, table);
-    });
+    }
 }
 
 /* Invoke fini actions */
@@ -1095,12 +1097,14 @@ void ecs_delete_table(
             .table = table
         });
 
+    uint32_t id = table->id;
+
     /* Free resources associated with table */
     ecs_table_free(world, table);
 
     /* Remove table from sparse set */
-    uint32_t id = table->id;
-    ecs_sparse_remove(world->store.tables, table->id);
+    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_sparse_remove(world->store.tables, id);
 
     /* Don't do generations as we want table ids to remain 32 bit */
     ecs_sparse_set_generation(world->store.tables, id);

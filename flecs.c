@@ -372,7 +372,7 @@ struct ecs_table_t {
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
     int32_t alloc_count;             /**< Increases when columns are reallocd */
-    uint32_t id;                      /**< Table id in sparse set */
+    uint32_t id;                     /**< Table id in sparse set */
 
     ecs_flags32_t flags;             /**< Flags for testing table properties */
     int32_t column_count;            /**< Number of data columns in table */
@@ -2207,7 +2207,7 @@ void unregister_query(
     ecs_query_t *query)
 {
     (void)world;
-    
+
     if (!(query->flags & EcsQueryNoActivation)) {
         int32_t i, count = ecs_vector_count(table->queries);
         for (i = 0; i < count; i ++) {
@@ -2479,6 +2479,8 @@ void ecs_table_free(
         }
         ecs_os_free(table->on_set);
     }
+
+    table->id = 0;
 
     ecs_os_free(table->data);
 }
@@ -5479,6 +5481,9 @@ void ecs_delete_children(
             /* Delete table */
             ecs_delete_table(world, table);
         };
+
+        ecs_map_remove(world->child_tables, parent);
+        ecs_vector_free(child_tables);
     }
 }
 
@@ -10275,9 +10280,11 @@ static
 void fini_unset_tables(
     ecs_world_t *world)
 {
-    ecs_sparse_each(world->store.tables, ecs_table_t, table, {
+    int32_t i, count = ecs_sparse_count(world->store.tables);
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
         ecs_table_unset(world, table);
-    });
+    }
 }
 
 /* Invoke fini actions */
@@ -10919,12 +10926,14 @@ void ecs_delete_table(
             .table = table
         });
 
+    uint32_t id = table->id;
+
     /* Free resources associated with table */
     ecs_table_free(world, table);
 
     /* Remove table from sparse set */
-    uint32_t id = table->id;
-    ecs_sparse_remove(world->store.tables, table->id);
+    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_sparse_remove(world->store.tables, id);
 
     /* Don't do generations as we want table ids to remain 32 bit */
     ecs_sparse_set_generation(world->store.tables, id);
@@ -16945,6 +16954,7 @@ void rehash(
         for (b = filled_bucket_count - 1; b >= 0; b --) {
             uint64_t bucket_id = indices[b];
             ecs_bucket_t *bucket = _ecs_sparse_get_sparse(buckets, 0, bucket_id);
+            ecs_assert(bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
             int i, count = bucket->count;
             ecs_map_key_t *array = PAYLOAD_ARRAY(bucket, offset);
@@ -16957,8 +16967,10 @@ void rehash(
                 if (new_bucket_id != bucket_id) {
                     ecs_bucket_t *new_bucket = _ecs_sparse_get_or_create(
                         buckets, 0, new_bucket_id);
+                    ecs_assert(new_bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
                     indices = ecs_sparse_ids(buckets);
+                    ecs_assert(indices != NULL, ECS_INTERNAL_ERROR, NULL);
 
                     if (add_to_bucket(new_bucket, elem_size, offset, 
                         key, PAYLOAD(elem)) == BUCKET_COUNT) 
@@ -21955,7 +21967,8 @@ bool ecs_scope_next(
     for (i = iter->index; i < count; i ++) {
         ecs_table_t *table = *ecs_vector_get(tables, ecs_table_t*, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        
+        ecs_assert(table->id != 0, ECS_INTERNAL_ERROR, NULL);
+
         ecs_data_t *data = ecs_table_get_data(table);
         if (!data) {
             continue;

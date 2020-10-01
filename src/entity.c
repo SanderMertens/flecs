@@ -1774,6 +1774,9 @@ void ecs_delete_children(
             /* Delete table */
             ecs_delete_table(world, table);
         };
+
+        ecs_map_remove(world->child_tables, parent);
+        ecs_vector_free(child_tables);
     }
 }
 

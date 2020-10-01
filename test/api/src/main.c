@@ -206,6 +206,8 @@ void Hierarchies_delete_tree_recreate(void);
 void Hierarchies_get_child_count(void);
 void Hierarchies_get_child_count_2_tables(void);
 void Hierarchies_get_child_count_no_children(void);
+void Hierarchies_scope_iter_after_delete_tree(void);
+void Hierarchies_add_child_after_delete_tree(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -2064,6 +2066,14 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "get_child_count_no_children",
         Hierarchies_get_child_count_no_children
+    },
+    {
+        "scope_iter_after_delete_tree",
+        Hierarchies_scope_iter_after_delete_tree
+    },
+    {
+        "add_child_after_delete_tree",
+        Hierarchies_add_child_after_delete_tree
     }
 };
 
@@ -6225,7 +6235,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        71,
+        73,
         Hierarchies_testcases
     },
     {
