@@ -201,6 +201,8 @@ void Hierarchies_delete_tree_2_levels(void);
 void Hierarchies_delete_tree_3_levels(void);
 void Hierarchies_delete_tree_count_tables(void);
 void Hierarchies_delete_tree_staged(void);
+void Hierarchies_delete_tree_empty_table(void);
+void Hierarchies_delete_tree_recreate(void);
 void Hierarchies_get_child_count(void);
 void Hierarchies_get_child_count_2_tables(void);
 void Hierarchies_get_child_count_no_children(void);
@@ -1100,6 +1102,26 @@ void MultiThread_multithread_quit(void);
 void MultiThread_schedule_w_tasks(void);
 void MultiThread_reactive_system(void);
 
+// Testsuite 'DeferredActions'
+void DeferredActions_defer_new(void);
+void DeferredActions_defer_add(void);
+void DeferredActions_defer_remove(void);
+void DeferredActions_defer_set(void);
+void DeferredActions_defer_delete(void);
+void DeferredActions_defer_twice(void);
+void DeferredActions_defer_twice_in_progress(void);
+void DeferredActions_run_w_defer(void);
+void DeferredActions_system_in_progress_w_defer(void);
+void DeferredActions_defer_get_mut_no_modify(void);
+void DeferredActions_defer_get_mut_w_modify(void);
+void DeferredActions_defer_modify(void);
+void DeferredActions_defer_set_trait(void);
+void DeferredActions_defer_clear(void);
+void DeferredActions_defer_add_after_delete(void);
+void DeferredActions_defer_set_after_delete(void);
+void DeferredActions_defer_get_mut_after_delete(void);
+void DeferredActions_defer_get_mut_after_delete_2nd_to_last(void);
+
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
 void SingleThreadStaging_new_empty(void);
@@ -1162,24 +1184,6 @@ void SingleThreadStaging_get_mutable(void);
 void SingleThreadStaging_get_mutable_from_main(void);
 void SingleThreadStaging_get_mutable_w_add(void);
 void SingleThreadStaging_on_add_after_new_type_in_progress(void);
-void SingleThreadStaging_defer_new(void);
-void SingleThreadStaging_defer_add(void);
-void SingleThreadStaging_defer_remove(void);
-void SingleThreadStaging_defer_set(void);
-void SingleThreadStaging_defer_delete(void);
-void SingleThreadStaging_defer_twice(void);
-void SingleThreadStaging_defer_twice_in_progress(void);
-void SingleThreadStaging_run_w_defer(void);
-void SingleThreadStaging_system_in_progress_w_defer(void);
-void SingleThreadStaging_defer_get_mut_no_modify(void);
-void SingleThreadStaging_defer_get_mut_w_modify(void);
-void SingleThreadStaging_defer_modify(void);
-void SingleThreadStaging_defer_set_trait(void);
-void SingleThreadStaging_defer_clear(void);
-void SingleThreadStaging_defer_add_after_delete(void);
-void SingleThreadStaging_defer_set_after_delete(void);
-void SingleThreadStaging_defer_get_mut_after_delete(void);
-void SingleThreadStaging_defer_get_mut_after_delete_2nd_to_last(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -1298,6 +1302,7 @@ void Internals_activate_deactivate_table(void);
 void Internals_activate_deactivate_reactive(void);
 void Internals_activate_deactivate_activate_other(void);
 void Internals_no_double_system_table_after_merge(void);
+void Internals_recreate_deleted_table(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
@@ -2039,6 +2044,14 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "delete_tree_staged",
         Hierarchies_delete_tree_staged
+    },
+    {
+        "delete_tree_empty_table",
+        Hierarchies_delete_tree_empty_table
+    },
+    {
+        "delete_tree_recreate",
+        Hierarchies_delete_tree_recreate
     },
     {
         "get_child_count",
@@ -5375,6 +5388,81 @@ bake_test_case MultiThread_testcases[] = {
     }
 };
 
+bake_test_case DeferredActions_testcases[] = {
+    {
+        "defer_new",
+        DeferredActions_defer_new
+    },
+    {
+        "defer_add",
+        DeferredActions_defer_add
+    },
+    {
+        "defer_remove",
+        DeferredActions_defer_remove
+    },
+    {
+        "defer_set",
+        DeferredActions_defer_set
+    },
+    {
+        "defer_delete",
+        DeferredActions_defer_delete
+    },
+    {
+        "defer_twice",
+        DeferredActions_defer_twice
+    },
+    {
+        "defer_twice_in_progress",
+        DeferredActions_defer_twice_in_progress
+    },
+    {
+        "run_w_defer",
+        DeferredActions_run_w_defer
+    },
+    {
+        "system_in_progress_w_defer",
+        DeferredActions_system_in_progress_w_defer
+    },
+    {
+        "defer_get_mut_no_modify",
+        DeferredActions_defer_get_mut_no_modify
+    },
+    {
+        "defer_get_mut_w_modify",
+        DeferredActions_defer_get_mut_w_modify
+    },
+    {
+        "defer_modify",
+        DeferredActions_defer_modify
+    },
+    {
+        "defer_set_trait",
+        DeferredActions_defer_set_trait
+    },
+    {
+        "defer_clear",
+        DeferredActions_defer_clear
+    },
+    {
+        "defer_add_after_delete",
+        DeferredActions_defer_add_after_delete
+    },
+    {
+        "defer_set_after_delete",
+        DeferredActions_defer_set_after_delete
+    },
+    {
+        "defer_get_mut_after_delete",
+        DeferredActions_defer_get_mut_after_delete
+    },
+    {
+        "defer_get_mut_after_delete_2nd_to_last",
+        DeferredActions_defer_get_mut_after_delete_2nd_to_last
+    }
+};
+
 bake_test_case SingleThreadStaging_testcases[] = {
     {
         "new_empty",
@@ -5615,78 +5703,6 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "on_add_after_new_type_in_progress",
         SingleThreadStaging_on_add_after_new_type_in_progress
-    },
-    {
-        "defer_new",
-        SingleThreadStaging_defer_new
-    },
-    {
-        "defer_add",
-        SingleThreadStaging_defer_add
-    },
-    {
-        "defer_remove",
-        SingleThreadStaging_defer_remove
-    },
-    {
-        "defer_set",
-        SingleThreadStaging_defer_set
-    },
-    {
-        "defer_delete",
-        SingleThreadStaging_defer_delete
-    },
-    {
-        "defer_twice",
-        SingleThreadStaging_defer_twice
-    },
-    {
-        "defer_twice_in_progress",
-        SingleThreadStaging_defer_twice_in_progress
-    },
-    {
-        "run_w_defer",
-        SingleThreadStaging_run_w_defer
-    },
-    {
-        "system_in_progress_w_defer",
-        SingleThreadStaging_system_in_progress_w_defer
-    },
-    {
-        "defer_get_mut_no_modify",
-        SingleThreadStaging_defer_get_mut_no_modify
-    },
-    {
-        "defer_get_mut_w_modify",
-        SingleThreadStaging_defer_get_mut_w_modify
-    },
-    {
-        "defer_modify",
-        SingleThreadStaging_defer_modify
-    },
-    {
-        "defer_set_trait",
-        SingleThreadStaging_defer_set_trait
-    },
-    {
-        "defer_clear",
-        SingleThreadStaging_defer_clear
-    },
-    {
-        "defer_add_after_delete",
-        SingleThreadStaging_defer_add_after_delete
-    },
-    {
-        "defer_set_after_delete",
-        SingleThreadStaging_defer_set_after_delete
-    },
-    {
-        "defer_get_mut_after_delete",
-        SingleThreadStaging_defer_get_mut_after_delete
-    },
-    {
-        "defer_get_mut_after_delete_2nd_to_last",
-        SingleThreadStaging_defer_get_mut_after_delete_2nd_to_last
     }
 };
 
@@ -6108,6 +6124,10 @@ bake_test_case Internals_testcases[] = {
     {
         "no_double_system_table_after_merge",
         Internals_no_double_system_table_after_merge
+    },
+    {
+        "recreate_deleted_table",
+        Internals_recreate_deleted_table
     }
 };
 
@@ -6205,7 +6225,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        69,
+        71,
         Hierarchies_testcases
     },
     {
@@ -6482,10 +6502,17 @@ static bake_test_suite suites[] = {
         MultiThread_testcases
     },
     {
+        "DeferredActions",
+        NULL,
+        NULL,
+        18,
+        DeferredActions_testcases
+    },
+    {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        78,
+        60,
         SingleThreadStaging_testcases
     },
     {
@@ -6534,7 +6561,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        6,
+        7,
         Internals_testcases
     },
     {
@@ -6548,5 +6575,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 55);
+    return bake_test_run("api", argc, argv, suites, 56);
 }

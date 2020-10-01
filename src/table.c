@@ -413,6 +413,15 @@ void register_query(
 {
     /* Register system with the table */
     if (!(query->flags & EcsQueryNoActivation)) {
+#ifndef NDEBUG
+        /* Sanity check if query has already been added */
+        int32_t i, count = ecs_vector_count(table->queries);
+        for (i = 0; i < count; i ++) {
+            ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
+            ecs_assert(*q != query, ECS_INTERNAL_ERROR, NULL);
+        }
+#endif
+
         ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
         if (q) *q = query;
 
@@ -436,6 +445,34 @@ void register_query(
     /* Register the query as an un_set system */
     if (query->flags & EcsQueryUnSet) {
         register_un_set(world, table, query, matched_table_index);
+    }
+}
+
+/* This function is called when a query is unmatched with a table. This can
+ * happen for queries that have shared components expressions in their signature
+ * and those shared components changed (for example, a base removed a comp). */
+static
+void unregister_query(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_query_t *query)
+{
+    (void)world;
+    
+    if (!(query->flags & EcsQueryNoActivation)) {
+        int32_t i, count = ecs_vector_count(table->queries);
+        for (i = 0; i < count; i ++) {
+            ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
+            if (*q == query) {
+                break;
+            }
+        }
+
+        /* Query must have been registered with table */
+        ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
+
+        /* Remove query */
+        ecs_vector_remove_index(table->queries, ecs_query_t*, i);        
     }
 }
 
@@ -670,6 +707,8 @@ void ecs_table_free(
     }
 
     ecs_table_clear_data(table, table->data);
+    ecs_table_clear_edges(table);
+    
     ecs_os_free(table->lo_edges);
     ecs_map_free(table->hi_edges);
     ecs_vector_free(table->queries);
@@ -1908,7 +1947,8 @@ void ecs_table_notify(
             world, table, event->query, event->matched_table_index);
         break;
     case EcsTableQueryUnmatch:
-        /* TODO */
+        unregister_query(
+            world, table, event->query);
         break;
     case EcsTableComponentInfo:
         notify_component_info(world, table, event->component);

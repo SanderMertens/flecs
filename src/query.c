@@ -729,6 +729,12 @@ add_trait:
         table_data->components[c] = component;
     }
 
+    /* Use tail recursion when adding table for multiple traits */
+    trait_cur ++;
+    if (trait_cur < trait_count) {
+        goto add_trait;
+    }
+
     if (table && !(query->flags & EcsQueryIsSubquery)) {
         int32_t matched_table_index = 0;
         if (!has_auto_activation(query)) {
@@ -744,13 +750,7 @@ add_trait:
             .query = query,
             .matched_table_index = matched_table_index
         });
-    }
-
-    /* Use tail recursion when adding table for multiple traits */
-    trait_cur ++;
-    if (trait_cur < trait_count) {
-        goto add_trait;
-    }
+    }    
 
     if (trait_offsets) {
         ecs_os_free(trait_offsets);
@@ -937,12 +937,13 @@ void match_tables(
 static
 int32_t get_table_param_index(
     ecs_table_t *table,
-    ecs_vector_t *tables)
+    ecs_vector_t *tables,
+    int32_t start_index)
 {
     int32_t i, count = ecs_vector_count(tables);
     ecs_matched_table_t *table_data = ecs_vector_first(tables, ecs_matched_table_t);
 
-    for (i = 0; i < count; i ++) {
+    for (i = start_index; i < count; i ++) {
         if (table_data[i].table == table) {
             break;
         }
@@ -1585,39 +1586,43 @@ void activate_table(
         dst_array = query->empty_tables;
     }
 
-    int32_t i = get_table_param_index(table, src_array);
-    if (i == -1) {
+    int32_t i = 0, activated = 0;
+    while ((i = get_table_param_index(table, src_array, i)) != -1) {
+        activated ++;
+
+        int32_t src_count = ecs_vector_move_index(
+            &dst_array, src_array, ecs_matched_table_t, i);
+
+        if (active) {
+            query->tables = dst_array;
+        } else {
+            query->empty_tables = dst_array;
+        }
+
+        /* Activate system if registered with query */
+#ifdef FLECS_SYSTEMS_H
+        if (query->system) {
+            int32_t dst_count = ecs_vector_count(dst_array);
+            if (active) {
+                if (dst_count == 1) {
+                    ecs_system_activate(world, query->system, true, NULL);
+                }
+            } else if (src_count == 0) {
+                ecs_system_activate(world, query->system, false, NULL);
+            }
+        }
+#else
+        (void)src_count;
+#endif        
+    }
+
+    if (!activated) {
         /* Received an activate event for a table we're not matched with. This
-         * can only happen if this is a subquery */
+        * can only happen if this is a subquery */
         ecs_assert((query->flags & EcsQueryIsSubquery) != 0, 
             ECS_INTERNAL_ERROR, NULL);
         return;
     }
-
-    int32_t src_count = ecs_vector_move_index(
-        &dst_array, src_array, ecs_matched_table_t, i);
-
-    if (active) {
-        query->tables = dst_array;
-    } else {
-        query->empty_tables = dst_array;
-    }
-
-    /* Activate system if registered with query */
-#ifdef FLECS_SYSTEMS_H
-    if (query->system) {
-        int32_t dst_count = ecs_vector_count(dst_array);
-        if (active) {
-            if (dst_count == 1) {
-                ecs_system_activate(world, query->system, true, NULL);
-            }
-        } else if (src_count == 0) {
-            ecs_system_activate(world, query->system, false, NULL);
-        }
-    }
-#else
-    (void)src_count;
-#endif
 
     order_ranked_tables(world, query);
 }
@@ -1729,7 +1734,7 @@ void unmatch_table(
     ecs_table_t *table)
 {
     unmatch_table_w_index(
-        world, query, table, table_matched(query->tables, table));
+        world, query, table, table_matched(query->tables, table));       
 }
 
 static
@@ -1759,11 +1764,21 @@ void rematch_table(
          * rematch to make sure data is consistent. */
         } else if (query->flags & EcsQueryHasOptional) {
             unmatch_table(world, query, table);
+            ecs_table_notify(world, table, &(ecs_table_event_t){
+                .kind = EcsTableQueryUnmatch,
+                .query = query
+            }); 
             add_table(world, query, table);
         }
     } else {
         /* Table no longer matches, remove */
-        unmatch_table(world, query, table);
+        if (match != -1) {
+            unmatch_table(world, query, table);
+            ecs_table_notify(world, table, &(ecs_table_event_t){
+                .kind = EcsTableQueryUnmatch,
+                .query = query
+            }); 
+        }
     }
 }
 
@@ -1824,18 +1839,23 @@ void ecs_query_notify(
 {
     switch(event->kind) {
     case EcsQueryTableMatch:
+        /* Creation of new table */
         match_table(world, query, event->table);
         break;
     case EcsQueryTableUnmatch:
+        /* Deletion of table */
         unmatch_table(world, query, event->table);
         break;
     case EcsQueryTableRematch:
+        /* Rematch tables of query */
         rematch_tables(world, query, event->parent_query);
         break;        
     case EcsQueryTableEmpty:
+        /* Table is empty, deactivate */
         activate_table(world, query, event->table, false);
         break;
     case EcsQueryTableNonEmpty:
+        /* Table is non-empty, activate */
         activate_table(world, query, event->table, true);
         break;
     }

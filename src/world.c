@@ -1099,5 +1099,9 @@ void ecs_delete_table(
     ecs_table_free(world, table);
 
     /* Remove table from sparse set */
+    uint32_t id = table->id;
     ecs_sparse_remove(world->store.tables, table->id);
+
+    /* Don't do generations as we want table ids to remain 32 bit */
+    ecs_sparse_set_generation(world->store.tables, id);
 }

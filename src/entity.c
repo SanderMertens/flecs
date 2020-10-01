@@ -1758,12 +1758,14 @@ void ecs_delete_children(
 
             /* Recursively delete entities of children */
             ecs_data_t *data = ecs_table_get_data(table);
-            ecs_entity_t *entities = ecs_vector_first(
-                data->entities, ecs_entity_t);
+            if (data) {
+                ecs_entity_t *entities = ecs_vector_first(
+                    data->entities, ecs_entity_t);
 
-            int32_t child, child_count = ecs_vector_count(data->entities);
-            for (child = 0; child < child_count; child ++) {
-                ecs_delete_children(world, entities[child]);
+                int32_t child, child_count = ecs_vector_count(data->entities);
+                for (child = 0; child < child_count; child ++) {
+                    ecs_delete_children(world, entities[child]);
+                }
             }
 
             /* Clear components from table (invokes destructors, OnRemove) */

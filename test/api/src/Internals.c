@@ -185,3 +185,23 @@ void Internals_no_double_system_table_after_merge() {
 
     ecs_fini(world);
 }
+
+void Internals_recreate_deleted_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent_A = ecs_new(world, 0);
+    ecs_entity_t child_A = ecs_new_w_entity(world, ECS_CHILDOF | parent_A);
+    test_assert(parent_A != 0);
+    test_assert(child_A != 0);
+
+    ecs_delete(world, parent_A); // Deletes table
+
+    ecs_entity_t parent_B = ecs_new(world, 0);
+    ecs_entity_t child_B = ecs_new_w_entity(world, ECS_CHILDOF | parent_B);
+    test_assert(parent_B != 0);
+    test_assert(child_B != 0);
+    
+    ecs_fini(world);
+}

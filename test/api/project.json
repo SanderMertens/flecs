@@ -219,6 +219,8 @@
                 "delete_tree_3_levels",
                 "delete_tree_count_tables",
                 "delete_tree_staged",
+                "delete_tree_empty_table",
+                "delete_tree_recreate",
                 "get_child_count",
                 "get_child_count_2_tables",
                 "get_child_count_no_children"
@@ -1197,6 +1199,28 @@
                 "reactive_system"
             ]
         }, {
+            "id": "DeferredActions",
+            "testcases": [
+                "defer_new",
+                "defer_add",
+                "defer_remove",
+                "defer_set",
+                "defer_delete",
+                "defer_twice",
+                "defer_twice_in_progress",
+                "run_w_defer",
+                "system_in_progress_w_defer",
+                "defer_get_mut_no_modify",
+                "defer_get_mut_w_modify",
+                "defer_modify",
+                "defer_set_trait",
+                "defer_clear",
+                "defer_add_after_delete",
+                "defer_set_after_delete",
+                "defer_get_mut_after_delete",
+                "defer_get_mut_after_delete_2nd_to_last"
+            ]
+        }, {
             "id": "SingleThreadStaging",
             "setup": true,
             "testcases": [
@@ -1259,25 +1283,7 @@
                 "get_mutable",
                 "get_mutable_from_main",
                 "get_mutable_w_add",
-                "on_add_after_new_type_in_progress",
-                "defer_new",
-                "defer_add",
-                "defer_remove",
-                "defer_set",
-                "defer_delete",
-                "defer_twice",
-                "defer_twice_in_progress",
-                "run_w_defer",
-                "system_in_progress_w_defer",
-                "defer_get_mut_no_modify",
-                "defer_get_mut_w_modify",
-                "defer_modify",
-                "defer_set_trait",
-                "defer_clear",
-                "defer_add_after_delete",
-                "defer_set_after_delete",
-                "defer_get_mut_after_delete",
-                "defer_get_mut_after_delete_2nd_to_last"
+                "on_add_after_new_type_in_progress"
             ]
         }, {
             "id": "MultiThreadStaging",
@@ -1409,7 +1415,8 @@
                 "activate_deactivate_table",
                 "activate_deactivate_reactive",
                 "activate_deactivate_activate_other",
-                "no_double_system_table_after_merge"
+                "no_double_system_table_after_merge",
+                "recreate_deleted_table"
             ]
         }, {
             "id": "Error",

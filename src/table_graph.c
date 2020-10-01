@@ -674,7 +674,6 @@ ecs_table_t* traverse_add_hi_edges(
         ecs_edge_t *edge;
 
         edge = get_edge(node, e);
-
         next = edge->add;
 
         if (!next) {
@@ -967,4 +966,41 @@ void ecs_init_root_table(
     };
 
     init_table(world, &world->store.root, &entities);
+}
+
+void ecs_table_clear_edges(
+    ecs_table_t *table)
+{
+    uint32_t i;
+    for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+        ecs_edge_t *e = &table->lo_edges[i];
+        ecs_table_t *add = e->add, *remove = e->remove;
+        if (add) {
+            add->lo_edges[i].remove = NULL;
+        }
+        if (remove) {
+            remove->lo_edges[i].add = NULL;
+        }
+    }
+
+    ecs_map_iter_t it = ecs_map_iter(table->hi_edges);
+    ecs_edge_t *edge;
+    ecs_map_key_t component;
+    while ((edge = ecs_map_next(&it, ecs_edge_t, &component))) {
+        ecs_table_t *add = edge->add, *remove = edge->remove;
+        if (add) {
+            ecs_edge_t *e = get_edge(add, component);
+            e->remove = NULL;
+            if (!e->add) {
+                ecs_map_remove(add->hi_edges, component);
+            }
+        }
+        if (remove) {
+            ecs_edge_t *e = get_edge(remove, component);
+            e->add = NULL;
+            if (!e->remove) {
+                ecs_map_remove(remove->hi_edges, component);
+            }
+        }
+    }
 }

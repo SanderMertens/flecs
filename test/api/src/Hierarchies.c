@@ -1136,6 +1136,46 @@ void Hierarchies_delete_tree_staged() {
     ecs_fini(world);
 }
 
+void Hierarchies_delete_tree_empty_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Parent, 0);
+
+    /* Create multiple tables, of which some are empty */
+    ECS_ENTITY(world, Child, Position, CHILDOF | Parent);
+
+    ecs_delete(world, Parent);
+    
+    test_assert(!ecs_is_alive(world, Parent));
+    test_assert(!ecs_is_alive(world, Child));
+
+    ecs_fini(world);
+}
+
+void Hierarchies_delete_tree_recreate() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(ecs_has_entity(world, child, ECS_CHILDOF | parent));
+
+    ecs_delete_children(world, parent);
+
+    ecs_new(world, Position);
+
+    ecs_entity_t child2  = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(child2 != 0);
+    test_assert(ecs_has_entity(world, child2, ECS_CHILDOF | parent));
+
+    ecs_fini(world);
+}
+
 void Hierarchies_get_child_count() {
     ecs_world_t *world = ecs_init();
 

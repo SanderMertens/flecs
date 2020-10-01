@@ -107,6 +107,7 @@ void remove_bucket(
     int32_t bucket_count = map->bucket_count;
     uint64_t bucket_id = get_bucket_id(bucket_count, key);
     ecs_sparse_remove(map->buckets, bucket_id);
+    ecs_sparse_set_generation(map->buckets, bucket_id);
 }
 
 static

@@ -130,7 +130,7 @@ void Traits_type_w_two_traits() {
 
     tr = ecs_get_trait(world, e1, Velocity, Trait);
     test_assert(tr != NULL);
-    test_int(tr->value, 21);    
+    test_int(tr->value, 21);
 
     tr = ecs_get_trait(world, e2, Position, Trait);
     test_assert(tr != NULL);

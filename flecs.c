@@ -1147,6 +1147,9 @@ void ecs_table_notify(
     ecs_table_t *table,
     ecs_table_event_t *event);
 
+void ecs_table_clear_edges(
+    ecs_table_t *table);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
@@ -2159,6 +2162,15 @@ void register_query(
 {
     /* Register system with the table */
     if (!(query->flags & EcsQueryNoActivation)) {
+#ifndef NDEBUG
+        /* Sanity check if query has already been added */
+        int32_t i, count = ecs_vector_count(table->queries);
+        for (i = 0; i < count; i ++) {
+            ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
+            ecs_assert(*q != query, ECS_INTERNAL_ERROR, NULL);
+        }
+#endif
+
         ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
         if (q) *q = query;
 
@@ -2182,6 +2194,34 @@ void register_query(
     /* Register the query as an un_set system */
     if (query->flags & EcsQueryUnSet) {
         register_un_set(world, table, query, matched_table_index);
+    }
+}
+
+/* This function is called when a query is unmatched with a table. This can
+ * happen for queries that have shared components expressions in their signature
+ * and those shared components changed (for example, a base removed a comp). */
+static
+void unregister_query(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_query_t *query)
+{
+    (void)world;
+    
+    if (!(query->flags & EcsQueryNoActivation)) {
+        int32_t i, count = ecs_vector_count(table->queries);
+        for (i = 0; i < count; i ++) {
+            ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
+            if (*q == query) {
+                break;
+            }
+        }
+
+        /* Query must have been registered with table */
+        ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
+
+        /* Remove query */
+        ecs_vector_remove_index(table->queries, ecs_query_t*, i);        
     }
 }
 
@@ -2416,6 +2456,8 @@ void ecs_table_free(
     }
 
     ecs_table_clear_data(table, table->data);
+    ecs_table_clear_edges(table);
+    
     ecs_os_free(table->lo_edges);
     ecs_map_free(table->hi_edges);
     ecs_vector_free(table->queries);
@@ -3654,7 +3696,8 @@ void ecs_table_notify(
             world, table, event->query, event->matched_table_index);
         break;
     case EcsTableQueryUnmatch:
-        /* TODO */
+        unregister_query(
+            world, table, event->query);
         break;
     case EcsTableComponentInfo:
         notify_component_info(world, table, event->component);
@@ -5420,12 +5463,14 @@ void ecs_delete_children(
 
             /* Recursively delete entities of children */
             ecs_data_t *data = ecs_table_get_data(table);
-            ecs_entity_t *entities = ecs_vector_first(
-                data->entities, ecs_entity_t);
+            if (data) {
+                ecs_entity_t *entities = ecs_vector_first(
+                    data->entities, ecs_entity_t);
 
-            int32_t child, child_count = ecs_vector_count(data->entities);
-            for (child = 0; child < child_count; child ++) {
-                ecs_delete_children(world, entities[child]);
+                int32_t child, child_count = ecs_vector_count(data->entities);
+                for (child = 0; child < child_count; child ++) {
+                    ecs_delete_children(world, entities[child]);
+                }
             }
 
             /* Clear components from table (invokes destructors, OnRemove) */
@@ -10878,7 +10923,11 @@ void ecs_delete_table(
     ecs_table_free(world, table);
 
     /* Remove table from sparse set */
+    uint32_t id = table->id;
     ecs_sparse_remove(world->store.tables, table->id);
+
+    /* Don't do generations as we want table ids to remain 32 bit */
+    ecs_sparse_set_generation(world->store.tables, id);
 }
 
 static
@@ -13991,6 +14040,12 @@ add_trait:
         table_data->components[c] = component;
     }
 
+    /* Use tail recursion when adding table for multiple traits */
+    trait_cur ++;
+    if (trait_cur < trait_count) {
+        goto add_trait;
+    }
+
     if (table && !(query->flags & EcsQueryIsSubquery)) {
         int32_t matched_table_index = 0;
         if (!has_auto_activation(query)) {
@@ -14006,13 +14061,7 @@ add_trait:
             .query = query,
             .matched_table_index = matched_table_index
         });
-    }
-
-    /* Use tail recursion when adding table for multiple traits */
-    trait_cur ++;
-    if (trait_cur < trait_count) {
-        goto add_trait;
-    }
+    }    
 
     if (trait_offsets) {
         ecs_os_free(trait_offsets);
@@ -14199,12 +14248,13 @@ void match_tables(
 static
 int32_t get_table_param_index(
     ecs_table_t *table,
-    ecs_vector_t *tables)
+    ecs_vector_t *tables,
+    int32_t start_index)
 {
     int32_t i, count = ecs_vector_count(tables);
     ecs_matched_table_t *table_data = ecs_vector_first(tables, ecs_matched_table_t);
 
-    for (i = 0; i < count; i ++) {
+    for (i = start_index; i < count; i ++) {
         if (table_data[i].table == table) {
             break;
         }
@@ -14847,39 +14897,43 @@ void activate_table(
         dst_array = query->empty_tables;
     }
 
-    int32_t i = get_table_param_index(table, src_array);
-    if (i == -1) {
+    int32_t i = 0, activated = 0;
+    while ((i = get_table_param_index(table, src_array, i)) != -1) {
+        activated ++;
+
+        int32_t src_count = ecs_vector_move_index(
+            &dst_array, src_array, ecs_matched_table_t, i);
+
+        if (active) {
+            query->tables = dst_array;
+        } else {
+            query->empty_tables = dst_array;
+        }
+
+        /* Activate system if registered with query */
+#ifdef FLECS_SYSTEMS_H
+        if (query->system) {
+            int32_t dst_count = ecs_vector_count(dst_array);
+            if (active) {
+                if (dst_count == 1) {
+                    ecs_system_activate(world, query->system, true, NULL);
+                }
+            } else if (src_count == 0) {
+                ecs_system_activate(world, query->system, false, NULL);
+            }
+        }
+#else
+        (void)src_count;
+#endif        
+    }
+
+    if (!activated) {
         /* Received an activate event for a table we're not matched with. This
-         * can only happen if this is a subquery */
+        * can only happen if this is a subquery */
         ecs_assert((query->flags & EcsQueryIsSubquery) != 0, 
             ECS_INTERNAL_ERROR, NULL);
         return;
     }
-
-    int32_t src_count = ecs_vector_move_index(
-        &dst_array, src_array, ecs_matched_table_t, i);
-
-    if (active) {
-        query->tables = dst_array;
-    } else {
-        query->empty_tables = dst_array;
-    }
-
-    /* Activate system if registered with query */
-#ifdef FLECS_SYSTEMS_H
-    if (query->system) {
-        int32_t dst_count = ecs_vector_count(dst_array);
-        if (active) {
-            if (dst_count == 1) {
-                ecs_system_activate(world, query->system, true, NULL);
-            }
-        } else if (src_count == 0) {
-            ecs_system_activate(world, query->system, false, NULL);
-        }
-    }
-#else
-    (void)src_count;
-#endif
 
     order_ranked_tables(world, query);
 }
@@ -14991,7 +15045,7 @@ void unmatch_table(
     ecs_table_t *table)
 {
     unmatch_table_w_index(
-        world, query, table, table_matched(query->tables, table));
+        world, query, table, table_matched(query->tables, table));       
 }
 
 static
@@ -15021,11 +15075,21 @@ void rematch_table(
          * rematch to make sure data is consistent. */
         } else if (query->flags & EcsQueryHasOptional) {
             unmatch_table(world, query, table);
+            ecs_table_notify(world, table, &(ecs_table_event_t){
+                .kind = EcsTableQueryUnmatch,
+                .query = query
+            }); 
             add_table(world, query, table);
         }
     } else {
         /* Table no longer matches, remove */
-        unmatch_table(world, query, table);
+        if (match != -1) {
+            unmatch_table(world, query, table);
+            ecs_table_notify(world, table, &(ecs_table_event_t){
+                .kind = EcsTableQueryUnmatch,
+                .query = query
+            }); 
+        }
     }
 }
 
@@ -15086,18 +15150,23 @@ void ecs_query_notify(
 {
     switch(event->kind) {
     case EcsQueryTableMatch:
+        /* Creation of new table */
         match_table(world, query, event->table);
         break;
     case EcsQueryTableUnmatch:
+        /* Deletion of table */
         unmatch_table(world, query, event->table);
         break;
     case EcsQueryTableRematch:
+        /* Rematch tables of query */
         rematch_tables(world, query, event->parent_query);
         break;        
     case EcsQueryTableEmpty:
+        /* Table is empty, deactivate */
         activate_table(world, query, event->table, false);
         break;
     case EcsQueryTableNonEmpty:
+        /* Table is non-empty, activate */
         activate_table(world, query, event->table, true);
         break;
     }
@@ -16363,7 +16432,6 @@ ecs_table_t* traverse_add_hi_edges(
         ecs_edge_t *edge;
 
         edge = get_edge(node, e);
-
         next = edge->add;
 
         if (!next) {
@@ -16658,6 +16726,43 @@ void ecs_init_root_table(
     init_table(world, &world->store.root, &entities);
 }
 
+void ecs_table_clear_edges(
+    ecs_table_t *table)
+{
+    uint32_t i;
+    for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+        ecs_edge_t *e = &table->lo_edges[i];
+        ecs_table_t *add = e->add, *remove = e->remove;
+        if (add) {
+            add->lo_edges[i].remove = NULL;
+        }
+        if (remove) {
+            remove->lo_edges[i].add = NULL;
+        }
+    }
+
+    ecs_map_iter_t it = ecs_map_iter(table->hi_edges);
+    ecs_edge_t *edge;
+    ecs_map_key_t component;
+    while ((edge = ecs_map_next(&it, ecs_edge_t, &component))) {
+        ecs_table_t *add = edge->add, *remove = edge->remove;
+        if (add) {
+            ecs_edge_t *e = get_edge(add, component);
+            e->remove = NULL;
+            if (!e->add) {
+                ecs_map_remove(add->hi_edges, component);
+            }
+        }
+        if (remove) {
+            ecs_edge_t *e = get_edge(remove, component);
+            e->add = NULL;
+            if (!e->remove) {
+                ecs_map_remove(remove->hi_edges, component);
+            }
+        }
+    }
+}
+
 #define LOAD_FACTOR (1.5)
 #define KEY_SIZE (ECS_SIZEOF(ecs_map_key_t))
 #define BUCKET_COUNT (8)
@@ -16765,6 +16870,7 @@ void remove_bucket(
     int32_t bucket_count = map->bucket_count;
     uint64_t bucket_id = get_bucket_id(bucket_count, key);
     ecs_sparse_remove(map->buckets, bucket_id);
+    ecs_sparse_set_generation(map->buckets, bucket_id);
 }
 
 static
