@@ -1206,7 +1206,11 @@ void ecs_table_delete(
     /* Update record of moved entity in entity index */
     if (index != count) {
         if (record_to_move) {
-            record_to_move->row = index + 1;
+            if (record_to_move->row >= 0) {
+                record_to_move->row = index + 1;
+            } else {
+                record_to_move->row = -(index + 1);
+            }
             ecs_assert(record_to_move->table != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(record_to_move->table == table, ECS_INTERNAL_ERROR, NULL);
         }
@@ -1551,10 +1555,21 @@ void ecs_table_swap(
     /* Swap entities */
     entities[row_1] = e2;
     entities[row_2] = e1;
-    record_ptr_1->row = row_2 + 1;
-    record_ptr_2->row = row_1 + 1;
+    record_ptr_1->row = row_2;
+    record_ptr_2->row = row_1;
     record_ptrs[row_1] = record_ptr_2;
     record_ptrs[row_2] = record_ptr_1;
+
+    if (row_2 < 0) {
+        record_ptr_1->row --;
+    } else {
+        record_ptr_1->row ++;
+    }
+    if (row_1 < 0) {
+        record_ptr_2->row --;
+    } else {
+        record_ptr_2->row ++;
+    }    
 
     /* Swap columns */
     int32_t i, column_count = table->column_count;

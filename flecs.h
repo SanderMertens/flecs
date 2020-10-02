@@ -4050,6 +4050,11 @@ bool ecs_is_alive(
     ecs_world_t *world,
     ecs_entity_t e);
 
+FLECS_EXPORT
+bool ecs_exists(
+    ecs_world_t *world,
+    ecs_entity_t e);
+
 /** Get the type of an entity.
  *
  * @param world The world.

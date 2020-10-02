@@ -1546,6 +1546,18 @@ bool ecs_is_alive(
     ecs_world_t *world,
     ecs_entity_t e);
 
+/** Test whether an entity exists.
+ * Similar as ecs_is_alive, but ignores entity generation count.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @return True if the entity exists, false if the entity does not exist.
+ */
+FLECS_EXPORT
+bool ecs_exists(
+    ecs_world_t *world,
+    ecs_entity_t e);
+
 /** Get the type of an entity.
  *
  * @param world The world.

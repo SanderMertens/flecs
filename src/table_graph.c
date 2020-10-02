@@ -111,8 +111,6 @@ void register_child_table(
     ecs_table_t *table,
     ecs_entity_t parent)
 {
-    parent = parent & ECS_ENTITY_MASK;
-    
     /* Register child table with parent */
     ecs_vector_t *child_tables = ecs_map_get_ptr(
             world->child_tables, ecs_vector_t*, parent);
@@ -200,9 +198,9 @@ void init_edges(
         }
 
         if (ECS_HAS_ROLE(e, CHILDOF)) {
-            table->flags |= EcsTableHasParent;
-
             ecs_entity_t parent = e & ECS_COMPONENT_MASK;
+            ecs_assert(!ecs_exists(world, parent) || ecs_is_alive(world, parent), ECS_INTERNAL_ERROR, NULL);
+            table->flags |= EcsTableHasParent;
             register_child_table(world, table, parent);
         }
 

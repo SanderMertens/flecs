@@ -1747,8 +1747,6 @@ void ecs_delete_children(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
-    parent &= ECS_ENTITY_MASK;
-
     ecs_vector_t *child_tables = ecs_map_get_ptr(
         world->child_tables, ecs_vector_t*, parent);
 
@@ -2276,6 +2274,13 @@ bool ecs_is_alive(
     return ecs_eis_is_alive(world, e);
 }
 
+bool ecs_exists(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    return ecs_eis_exists(world, e);
+}
+
 ecs_type_t ecs_get_type(
     ecs_world_t *world,
     ecs_entity_t entity)
@@ -2544,6 +2549,25 @@ void discard_op(
     }
 }
 
+static
+bool valid_components(
+    ecs_world_t *world,
+    ecs_entities_t *entities)
+{
+    ecs_entity_t *array = entities->array;
+    int32_t i, count = entities->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = array[i];
+        if (ECS_HAS_ROLE(e, CHILDOF)) {
+            e &= ECS_COMPONENT_MASK;
+            if (ecs_exists(world, e) && !ecs_is_alive(world, e)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 /* Leave safe section. Run all deferred commands. */
 void ecs_defer_flush(
     ecs_world_t *world,
@@ -2593,7 +2617,9 @@ void ecs_defer_flush(
                     }
                     /* Fallthrough */
                 case EcsOpAdd:
-                    add_entities(world, e, &op->components);
+                    if (valid_components(world, &op->components)) {
+                        add_entities(world, e, &op->components);
+                    }
                     break;
                 case EcsOpRemove:
                     remove_entities(world, e, &op->components);
@@ -2614,9 +2640,10 @@ void ecs_defer_flush(
                 case EcsOpModified:
                     ecs_modified_w_entity(world, e, op->component);
                     break;
-                case EcsOpDelete:
+                case EcsOpDelete: {
                     ecs_delete(world, e);
                     break;
+                }
                 case EcsOpClear:
                     ecs_clear(world, e);
                     break;
