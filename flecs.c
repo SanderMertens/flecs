@@ -5454,6 +5454,8 @@ void ecs_delete_children(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
+    parent &= ECS_ENTITY_MASK;
+
     ecs_vector_t *child_tables = ecs_map_get_ptr(
         world->child_tables, ecs_vector_t*, parent);
 
@@ -5482,9 +5484,10 @@ void ecs_delete_children(
             ecs_delete_table(world, table);
         };
 
-        ecs_map_remove(world->child_tables, parent);
         ecs_vector_free(child_tables);
     }
+
+    ecs_map_remove(world->child_tables, parent);
 }
 
 void ecs_delete(
@@ -7222,8 +7225,8 @@ ecs_vector_t* _ecs_vector_copy(
 }
 
 #define CHUNK_COUNT (4096)
-#define CHUNK(index) (int32_t)(index >> 12)
-#define OFFSET(index) (int32_t)(index & 0xFFF)
+#define CHUNK(index) ((int32_t)index >> 12)
+#define OFFSET(index) ((int32_t)index & 0xFFF)
 #define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
 
 typedef struct chunk_t {
@@ -15878,6 +15881,8 @@ void register_child_table(
     ecs_table_t *table,
     ecs_entity_t parent)
 {
+    parent = parent & ECS_ENTITY_MASK;
+    
     /* Register child table with parent */
     ecs_vector_t *child_tables = ecs_map_get_ptr(
             world->child_tables, ecs_vector_t*, parent);
@@ -17166,7 +17171,9 @@ void ecs_map_remove(
     ecs_map_key_t *elem = array;
     int32_t bucket_count = bucket->count;
 
-    ecs_assert(bucket_count > 0, ECS_INTERNAL_ERROR, NULL);
+    if (!bucket_count) {
+        return;
+    }
 
     uint8_t i = 0;
     do {

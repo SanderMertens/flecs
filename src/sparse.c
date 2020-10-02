@@ -1,8 +1,8 @@
 #include "flecs.h"
 
 #define CHUNK_COUNT (4096)
-#define CHUNK(index) (int32_t)(index >> 12)
-#define OFFSET(index) (int32_t)(index & 0xFFF)
+#define CHUNK(index) ((int32_t)index >> 12)
+#define OFFSET(index) ((int32_t)index & 0xFFF)
 #define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
 
 typedef struct chunk_t {

@@ -1747,6 +1747,8 @@ void ecs_delete_children(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
+    parent &= ECS_ENTITY_MASK;
+
     ecs_vector_t *child_tables = ecs_map_get_ptr(
         world->child_tables, ecs_vector_t*, parent);
 
@@ -1775,9 +1777,10 @@ void ecs_delete_children(
             ecs_delete_table(world, table);
         };
 
-        ecs_map_remove(world->child_tables, parent);
         ecs_vector_free(child_tables);
     }
+
+    ecs_map_remove(world->child_tables, parent);
 }
 
 void ecs_delete(

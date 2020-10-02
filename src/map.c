@@ -394,7 +394,9 @@ void ecs_map_remove(
     ecs_map_key_t *elem = array;
     int32_t bucket_count = bucket->count;
 
-    ecs_assert(bucket_count > 0, ECS_INTERNAL_ERROR, NULL);
+    if (!bucket_count) {
+        return;
+    }
 
     uint8_t i = 0;
     do {
