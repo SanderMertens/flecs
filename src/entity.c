@@ -1593,14 +1593,17 @@ ecs_entity_t ecs_new_id(
 ecs_entity_t ecs_new_component_id(
     ecs_world_t *world)
 {
-    /* Cannot issue new component ids while world is in progress */
-    ecs_assert(!world->in_progress, ECS_INVALID_PARAMETER, NULL);
-
-    if (world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
-        return world->stats.last_component_id ++;
-    } else {
+    if (world->in_progress) {
+        /* Can't issue new id while iterating when in multithreaded mode */
+        ecs_assert(ecs_vector_count(world->workers) <= 1, 
+            ECS_INVALID_WHILE_ITERATING, NULL);
+    }
+    
+    if (world->stats.last_component_id >= ECS_HI_COMPONENT_ID) {
         /* If the low component ids are depleted, return a regular entity id */
         return ecs_new_id(world);
+    } else {
+        return world->stats.last_component_id ++;
     }
 }
 

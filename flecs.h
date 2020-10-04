@@ -9901,7 +9901,6 @@ public:
         }
 
         s_id = entity;
-        s_type = ecs_type_from_entity(world, entity);
         s_name = ecs_get_fullpath(world, entity);
         s_allow_tag = allow_tag;
     }
@@ -9926,7 +9925,7 @@ public:
                 world, result.id(), nullptr, 
                 size(), 
                 alignment());
-
+                
             ecs_assert(entity == result.id(), ECS_INTERNAL_ERROR, NULL);
 
             init(world, entity);
@@ -9971,6 +9970,10 @@ public:
                 _::name_helper<T>::name());
 
             id_no_lifecycle(world);
+        }
+
+        if (!s_type) {
+            s_type = ecs_type_from_entity(world, s_id);
         }
 
         ecs_assert(s_type != nullptr, ECS_INTERNAL_ERROR, NULL);

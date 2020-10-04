@@ -222,7 +222,8 @@
                 "implicit_name",
                 "reinit",
                 "reinit_scoped",
-                "reinit_w_lifecycle"
+                "reinit_w_lifecycle",
+                "first_use_in_system"
             ]
         }, {
             "id": "Snapshot",
