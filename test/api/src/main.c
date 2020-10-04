@@ -995,7 +995,6 @@ void Type_invalid_singleton_type_expression(void);
 void Type_invalid_container_type_expression(void);
 void Type_invalid_system_type_expression(void);
 void Type_type_from_empty_entity(void);
-void Type_type_from_empty_entity_in_progress(void);
 void Type_get_type(void);
 void Type_get_type_from_empty(void);
 void Type_get_type_from_0(void);
@@ -4983,10 +4982,6 @@ bake_test_case Type_testcases[] = {
         Type_type_from_empty_entity
     },
     {
-        "type_from_empty_entity_in_progress",
-        Type_type_from_empty_entity_in_progress
-    },
-    {
         "get_type",
         Type_get_type
     },
@@ -6494,7 +6489,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        88,
+        87,
         Type_testcases
     },
     {

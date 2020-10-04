@@ -580,6 +580,21 @@ int32_t count_traits(
     return first_count;
 }
 
+static
+ecs_type_t get_column_type(
+    ecs_world_t *world,
+    ecs_sig_oper_kind_t oper_kind,
+    ecs_entity_t component)
+{
+    if (oper_kind == EcsOperAll) {
+        const EcsType *type = ecs_get(world, component, EcsType);
+        ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
+        return type->normalized;
+    } else {
+        return ecs_type_from_entity(world, component);
+    }    
+}
+
 /** Add table to system, compute offsets for system components in table it */
 static
 void add_table(
@@ -587,7 +602,6 @@ void add_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    ecs_matched_table_t *table_data;
     ecs_type_t table_type = NULL;
     int32_t c, column_count = ecs_vector_count(query->sig.columns);
 
@@ -610,50 +624,31 @@ void add_table(
     }
 
     /* From here we recurse */
+    int32_t matched_table_index = 0;
+    ecs_matched_table_t table_data;
+
 add_trait:
-
-    /* Initially always add table to inactive group. If the system is registered
-     * with the table and the table is not empty, the table will send an
-     * activate signal to the system. */
-    if (table && has_auto_activation(query)) {
+    table_data = (ecs_matched_table_t){ .table = table };
+    if (table) {
         table_type = table->type;
-        table_data = ecs_vector_add(&query->empty_tables, ecs_matched_table_t);
-
-        #ifndef NDEBUG
-        char *type_expr = ecs_type_str(world, table->type);
-        ecs_trace_2("query #[green]%s#[reset] matched with table #[green][%s]",
-            query_name(world, query), type_expr);
-        ecs_os_free(type_expr);
-        #endif
-    } else {
-        /* If no table is provided to function, this is a system that contains
-         * no columns that require table matching. In this case, the system will
-         * only have one "dummy" table that caches data from the system columns.
-         * Always add this dummy table to the list of active tables, since it
-         * would never get activated otherwise. */
-        table_data = ecs_vector_add(
-            &query->tables, ecs_matched_table_t);
     }
 
-    table_data->table = table;
-    table_data->references = NULL;
-    table_data->columns = NULL;
-    table_data->sparse_columns = NULL;
-    table_data->components = NULL;
-    table_data->monitor = NULL;
-
     /* If grouping is enabled for query, assign the group rank to the table */
-    group_table(world, query, table_data);
+    group_table(world, query, &table_data);
 
     if (column_count) {
         /* Array that contains the system column to table column mapping */
-        table_data->columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * column_count);
-        ecs_assert(table_data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
+        table_data.columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * column_count);
+        ecs_assert(table_data.columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Store the components of the matched table. In the case of OR expressions,
         * components may differ per matched table. */
-        table_data->components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * column_count);
-        ecs_assert(table_data->components != NULL, ECS_OUT_OF_MEMORY, NULL);
+        table_data.components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * column_count);
+        ecs_assert(table_data.components != NULL, ECS_OUT_OF_MEMORY, NULL);
+
+        /* Also cache types, so no lookup is needed while iterating */
+        table_data.types = ecs_os_malloc(ECS_SIZEOF(ecs_type_t) * column_count);
+        ecs_assert(table_data.types != NULL, ECS_OUT_OF_MEMORY, NULL);        
     }
 
     /* Walk columns parsed from the system signature */
@@ -670,7 +665,7 @@ add_trait:
             from = EcsFromEmpty;
         }
 
-        table_data->columns[c] = 0;
+        table_data.columns[c] = 0;
 
         /* Get actual component and component source for current column */
         get_comp_and_src(world, query, table_type, column, op, from, &component, 
@@ -692,14 +687,14 @@ add_trait:
                 }
             }
             
-            table_data->columns[c] = index;
+            table_data.columns[c] = index;
 
             /* If the column is a case, we should only iterate the entities in
              * the column for this specific case. Add a sparse column with the
              * case id so we can find the correct entities when iterating */
             if (ECS_HAS_ROLE(component, CASE)) {
                 ecs_sparse_column_t *sc = ecs_vector_add(
-                    &table_data->sparse_columns, ecs_sparse_column_t);
+                    &table_data.sparse_columns, ecs_sparse_column_t);
                 sc->signature_column_index = c;
                 sc->sw_case = component & ECS_COMPONENT_MASK;
                 sc->sw_column = NULL;
@@ -721,13 +716,45 @@ add_trait:
          * reference. Having the reference already linked to the system table
          * makes changing this administation easier when the change happens.
          */
-        if ((entity || table_data->columns[c] == -1 || from == EcsCascade)) {
-            add_ref(world, query, table_type, c, table_data, component, entity, 
+        if ((entity || table_data.columns[c] == -1 || from == EcsCascade)) {
+            add_ref(world, query, table_type, c, &table_data, component, entity, 
                 from);
         }
 
-        table_data->components[c] = component;
+        table_data.components[c] = component;
+        table_data.types[c] = get_column_type(world, op, component);
     }
+
+    /* Initially always add table to inactive group. If the system is registered
+     * with the table and the table is not empty, the table will send an
+     * activate signal to the system. */
+
+    ecs_matched_table_t *table_elem;
+    if (table && has_auto_activation(query)) {
+        table_elem = ecs_vector_add(&query->empty_tables, 
+            ecs_matched_table_t);
+
+        #ifndef NDEBUG
+        char *type_expr = ecs_type_str(world, table->type);
+        ecs_trace_2("query #[green]%s#[reset] matched with table #[green][%s]",
+            query_name(world, query), type_expr);
+        ecs_os_free(type_expr);
+        #endif
+    } else {
+        /* If no table is provided to function, this is a system that contains
+         * no columns that require table matching. In this case, the system will
+         * only have one "dummy" table that caches data from the system columns.
+         * Always add this dummy table to the list of active tables, since it
+         * would never get activated otherwise. */
+        table_elem = ecs_vector_add(&query->tables, ecs_matched_table_t);
+
+        /* If query doesn't automatically activates/inactivates tables, we can 
+         * get the count to determine the current table index. */
+        matched_table_index = ecs_vector_count(query->tables) - 1;
+        ecs_assert(matched_table_index >= 0, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    *table_elem = table_data;
 
     /* Use tail recursion when adding table for multiple traits */
     trait_cur ++;
@@ -736,15 +763,6 @@ add_trait:
     }
 
     if (table && !(query->flags & EcsQueryIsSubquery)) {
-        int32_t matched_table_index = 0;
-        if (!has_auto_activation(query)) {
-            /* If query doesn't automatically activates/inactivates tables, the
-             * table has been added to query->tables, and we can get the count
-             * to determine the current table index. */
-            matched_table_index = ecs_vector_count(query->tables) - 1;
-            ecs_assert(matched_table_index >= 0, ECS_INTERNAL_ERROR, NULL);
-        }
-
         ecs_table_notify(world, table, &(ecs_table_event_t){
             .kind = EcsTableQueryMatch,
             .query = query,
@@ -1683,6 +1701,7 @@ void free_matched_table(
     ecs_os_free(table->columns);
     ecs_os_free(table->sparse_columns);
     ecs_os_free(table->components);
+    ecs_os_free(table->types);
     ecs_vector_free(table->references);
     ecs_os_free(table->monitor);
 }
@@ -1887,6 +1906,10 @@ ecs_query_t* ecs_query_new_w_sig_intern(
     ecs_log_push();
 
     if (!is_subquery) {
+        /* Register query with world */
+        ecs_query_t **elem = ecs_vector_add(&world->queries, ecs_query_t*);
+        *elem = result;
+
         if (result->flags & EcsQueryNeedsTables) {
             if (ecs_has_entity(world, system, EcsMonitor)) {
                 result->flags |= EcsQueryMonitor;
@@ -1906,10 +1929,6 @@ ecs_query_t* ecs_query_new_w_sig_intern(
             * preprocessed when the query is evaluated. */
             add_table(world, result, NULL);
         }
-
-        /* Register query with world */
-        ecs_query_t **elem = ecs_vector_add(&world->queries, ecs_query_t*);
-        *elem = result;
     } else {
         result->flags |= EcsQueryIsSubquery;
     }
@@ -2063,6 +2082,7 @@ void ecs_query_set_iter(
     it->table_columns = table_data->columns;
     it->columns = table->columns;
     it->components = table->components;
+    it->types = table->types;
     it->references = ecs_vector_first(table->references, ecs_ref_t);
     it->offset = row;
     it->count = count;
@@ -2326,6 +2346,7 @@ bool ecs_query_next(
         it->table = world_table;
         it->columns = table->columns;
         it->components = table->components;
+        it->types = table->types;
         it->references = ecs_vector_first(table->references, ecs_ref_t);
         it->frame_offset += prev_count;
 

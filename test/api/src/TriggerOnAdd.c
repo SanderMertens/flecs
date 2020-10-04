@@ -470,8 +470,7 @@ void AddVelocity(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
     ecs_type_t v = it->param;
     if (!v) {
-        ecs_entity_t e = ecs_column_entity(it, 2);
-        v = ecs_type_from_entity(it->world, e);
+        v = ecs_column_type(it, 2);
     }
 
     probe_system(it);

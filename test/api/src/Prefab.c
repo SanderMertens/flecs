@@ -2051,8 +2051,6 @@ void Prefab_nested_prefab_in_progress_w_count() {
 
     ecs_progress(world, 1);
 
-    test_assert(ids != 0);
-
     int i;
     for (i = 0; i < 3; i ++) {
         ecs_has_entity(world, ids[i], ECS_INSTANCEOF | Prefab);

@@ -28,6 +28,9 @@ typedef struct IterData {
     ecs_entity_t component;
     ecs_entity_t component_2;
     ecs_entity_t component_3;
+    ecs_type_t type;
+    ecs_type_t type_2;
+    ecs_type_t type_3;
     ecs_entity_t new_entities[MAX_ENTITIES];
     int32_t entity_count;
 } IterData;

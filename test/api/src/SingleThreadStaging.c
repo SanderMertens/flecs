@@ -47,8 +47,12 @@ void New_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
-        ecs_entity_t e = ecs_new_w_type(it->world, type);
+        ecs_entity_t e;
+        if (ctx->component) {
+            e = ecs_new_w_entity(it->world, ctx->component);
+        } else {
+            e = ecs_new_w_type(it->world, ctx->type);
+        }
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
     }
@@ -89,12 +93,13 @@ void SingleThreadStaging_new_w_type_of_2() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity);
+
     ECS_ENTITY(world, e_1, Position);
     ECS_ENTITY(world, e_2, Position, Velocity);
     ECS_ENTITY(world, e_3, Position, Mass);
     ECS_SYSTEM(world, New_w_component, EcsOnUpdate, Position);
 
-    IterData ctx = {.component = Type};
+    IterData ctx = {.type = ecs_type(Type)};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -146,9 +151,12 @@ void SingleThreadStaging_new_empty_w_count() {
 static
 void New_w_component_w_count(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
-    
-    ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
-    const ecs_entity_t *ids = ecs_bulk_new_w_type(it->world, type, 1000);
+    const ecs_entity_t *ids;
+    if (ctx->component) {
+        ids = ecs_bulk_new_w_entity(it->world, ctx->component, 1000);
+    } else {
+        ids = ecs_bulk_new_w_type(it->world, ctx->type, 1000);
+    }
     ctx->new_entities[ctx->entity_count] = ids[0];
     ctx->entity_count ++;
 }
@@ -186,7 +194,7 @@ void SingleThreadStaging_new_type_w_count() {
     ECS_ENTITY(world, e_1, Position);
     ECS_SYSTEM(world, New_w_component_w_count, EcsOnUpdate, Position);
 
-    IterData ctx = {.component = Type};
+    IterData ctx = {.type = ecs_type(Type)};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -361,8 +369,7 @@ void Add_remove_same_from_new_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
-        ecs_entity_t e = ecs_new_w_type(it->world, type);
+        ecs_entity_t e = ecs_new_w_entity(it->world, ctx->component);
 
         if (ctx->component_2) {
             ecs_add_entity(it->world, e, ctx->component_2);
@@ -1516,8 +1523,7 @@ void Delete_new_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
-        ecs_entity_t e = ecs_new_w_type(it->world, type);
+        ecs_entity_t e = ecs_new_w_entity(it->world, ctx->component);
         ecs_delete(it->world, e);
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1665,16 +1671,12 @@ void SingleThreadStaging_set_new_empty() {
 static
 void Set_new_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
-    
-    ecs_entity_t ecs_entity(Position) = ctx->component;
-    ecs_type_t ecs_type(Position) = ecs_type_from_entity(
-            it->world, ecs_entity(Position));
 
     ecs_entity_t ecs_entity(Rotation) = ctx->component_2;
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new(it->world, Position);
+        ecs_entity_t e = ecs_new_w_entity(it->world, ctx->component);
         ecs_set(it->world, e, Rotation, {10 + e});
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1726,12 +1728,10 @@ void Set_existing_new_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Position) = ctx->component;
-    ecs_type_t ecs_type(Position) = 
-        ecs_type_from_entity(it->world, ecs_entity(Position));
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new(it->world, Position);
+        ecs_entity_t e = ecs_new_w_entity(it->world, ctx->component);
         ecs_set(it->world, e, Position, {10 + e, 20 + e});
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1783,13 +1783,11 @@ void Set_new_after_add(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Position) = ctx->component;
-    ecs_type_t ecs_type(Position) = 
-        ecs_type_from_entity(it->world, ecs_entity(Position));
 
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = ecs_new(it->world, 0);
-        ecs_add(it->world, e, Position);
+        ecs_add_entity(it->world, e, ctx->component);
         ecs_set(it->world, e, Position, {10 + e, 20 + e});
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1841,14 +1839,12 @@ void Remove_after_set(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Position) = ctx->component;
-    ecs_type_t ecs_type(Position) = 
-        ecs_type_from_entity(it->world, ecs_entity(Position));
 
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = ecs_new(it->world, 0);
         ecs_set(it->world, e, Position, {10 + e, 20 + e});
-        ecs_remove(it->world, e, Position);
+        ecs_remove_entity(it->world, e, ctx->component);
 
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;

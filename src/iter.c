@@ -175,24 +175,9 @@ ecs_type_t ecs_column_type(
 {
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->components != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->types != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t component = it->components[index - 1];
-
-    ecs_sig_column_t *column_data = NULL;
-    if (it->query) {
-        column_data = ecs_vector_get(
-                it->query->sig.columns, ecs_sig_column_t, index - 1);
-        ecs_assert(column_data != NULL, ECS_INVALID_PARAMETER, NULL);
-    }
-
-    if (column_data && column_data->oper_kind == EcsOperAll) {
-        const EcsType *type = ecs_get(it->world, component, EcsType);
-        ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
-        return type->normalized;
-    } else {
-        return ecs_type_from_entity(it->world, component);
-    }
+    return it->types[index - 1];
 }
 
 ecs_entity_t ecs_column_entity(

@@ -177,7 +177,7 @@ ecs_type_t ecs_type_find(
     ecs_entity_t *array,
     int32_t count)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_get_stage(&world);
 
     ecs_entities_t entities = {

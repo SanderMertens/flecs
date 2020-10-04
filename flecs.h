@@ -2040,6 +2040,7 @@ struct ecs_iter_t {
     ecs_query_t *query;          /**< Current query being evaluated */
     ecs_ref_t *references;       /**< References to entities (from query) */
     ecs_entity_t *components;    /**< Components in current table */
+    ecs_type_t *types;           /**< Components in current table */
     ecs_entity_t *entities;      /**< Entity identifiers */
 
     void *param;                 /**< User data passed system (EcsContext) */
@@ -4050,6 +4051,13 @@ bool ecs_is_alive(
     ecs_world_t *world,
     ecs_entity_t e);
 
+/** Test whether an entity exists.
+ * Similar as ecs_is_alive, but ignores entity generation count.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @return True if the entity exists, false if the entity does not exist.
+ */
 FLECS_EXPORT
 bool ecs_exists(
     ecs_world_t *world,

@@ -103,17 +103,14 @@ static
 void Add_in_progress(ecs_iter_t *it) {
     ECS_COLUMN_COMPONENT(it, Position, 1);
 
-    ecs_entity_t ecs_entity(Velocity) = 0;
     ecs_type_t ecs_type(Velocity) = NULL;
 
     if (it->column_count >= 2) {
-        ecs_entity(Velocity) = ecs_column_entity(it, 2);
         ecs_type(Velocity) = ecs_column_type(it, 2);
     }
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-
         ecs_add(it->world, e, Velocity);
     }
 }

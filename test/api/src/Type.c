@@ -751,30 +751,6 @@ void Type_type_from_empty_entity() {
     ecs_fini(world);
 }
 
-static
-void TypeFromEntity(ecs_iter_t *it) {
-    ecs_entity_t e = ecs_new(it->world, 0);
-    test_assert(e != 0);
-
-    ecs_type_t t = ecs_type_from_entity(it->world, e);
-    test_assert(t != NULL);
-
-    test_int(ecs_vector_count(t), 1);
-
-    ecs_entity_t *array = ecs_vector_first(t, ecs_entity_t);
-    test_int(array[0], e);
-}
-
-void Type_type_from_empty_entity_in_progress() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_SYSTEM(world, TypeFromEntity, EcsOnUpdate, 0);
-
-    ecs_progress(world, 1);
-
-    ecs_fini(world);
-}
-
 void Type_get_type() {
     ecs_world_t *world = ecs_init();
 

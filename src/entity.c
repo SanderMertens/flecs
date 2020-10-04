@@ -233,6 +233,7 @@ void run_component_trigger_for_entities(
         index ++;
 
         ecs_entity_t components[1] = { component };
+        ecs_type_t types[1] = { ecs_type_from_entity(world, component) };
         int32_t columns[1] = { index };
 
         /* If this is a tag, don't try to retrieve data */
@@ -254,6 +255,7 @@ void run_component_trigger_for_entities(
             .table = table,
             .table_columns = data->columns,
             .components = components,
+            .types = types,
             .entities = entities,
             .offset = row,
             .count = count,
@@ -276,6 +278,8 @@ void ecs_run_component_trigger(
     int32_t row,
     int32_t count)
 {
+    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+
     if (table->flags & EcsTableIsPrefab) {
         return;
     }

@@ -1087,7 +1087,6 @@
                 "invalid_container_type_expression",
                 "invalid_system_type_expression",
                 "type_from_empty_entity",
-                "type_from_empty_entity_in_progress",
                 "get_type",
                 "get_type_from_empty",
                 "get_type_from_0",

@@ -118,6 +118,7 @@ struct ecs_iter_t {
     ecs_query_t *query;          /**< Current query being evaluated */
     ecs_ref_t *references;       /**< References to entities (from query) */
     ecs_entity_t *components;    /**< Components in current table */
+    ecs_type_t *types;           /**< Components in current table */
     ecs_entity_t *entities;      /**< Entity identifiers */
 
     void *param;                 /**< User data passed system (EcsContext) */

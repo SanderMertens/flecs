@@ -218,6 +218,7 @@ typedef struct ecs_matched_table_t {
     int32_t *columns;              /**< Mapping of system columns to table */
     ecs_vector_t *sparse_columns;  /**< Column ids of sparse columns */
     ecs_entity_t *components;      /**< Actual components of system columns */
+    ecs_type_t *types;             /**< Actual types of system columns */
     ecs_vector_t *references;      /**< Reference columns and cached pointers */
     int32_t *monitor;              /**< Used to monitor table for changes */
     int32_t rank;                  /**< Rank used to sort tables */
