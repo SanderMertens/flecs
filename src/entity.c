@@ -245,17 +245,21 @@ void run_component_trigger_for_entities(
                 columns[0] = 0;
             }            
         }
+        
+        ecs_iter_table_t table_data = {
+            .table = table,
+            .columns = columns,
+            .components = components,
+            .types = types
+        };
 
         ecs_iter_t it = {
             .world = world,
-            .columns = columns,
+            .table = &table_data,
             .table_count = 1,
             .inactive_table_count = 1,
             .column_count = 1,
-            .table = table,
             .table_columns = data->columns,
-            .components = components,
-            .types = types,
             .entities = entities,
             .offset = row,
             .count = count,

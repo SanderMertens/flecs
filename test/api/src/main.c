@@ -317,6 +317,7 @@ void Delete_alive_while_staged(void);
 void Delete_alive_while_staged_w_delete(void);
 void Delete_alive_while_staged_w_delete_recycled_id(void);
 void Delete_alive_after_recycle(void);
+void Delete_delete_recycled(void);
 
 // Testsuite 'Delete_w_filter'
 void Delete_w_filter_delete_1(void);
@@ -2458,6 +2459,10 @@ bake_test_case Delete_testcases[] = {
     {
         "alive_after_recycle",
         Delete_alive_after_recycle
+    },
+    {
+        "delete_recycled",
+        Delete_delete_recycled
     }
 };
 
@@ -6291,7 +6296,7 @@ static bake_test_suite suites[] = {
         "Delete",
         Delete_setup,
         NULL,
-        18,
+        19,
         Delete_testcases
     },
     {

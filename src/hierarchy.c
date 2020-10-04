@@ -460,7 +460,8 @@ bool ecs_scope_next(
             }
         }
 
-        it->table = table;
+        iter->table.table = table;
+        it->table = &iter->table;
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);

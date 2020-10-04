@@ -290,8 +290,8 @@ int32_t system_entities_matched(EcsSystem *system) {
     int32_t i, total = 0, count = ecs_vector_count(system->query->tables);
 
     for (i = 0; i < count; i ++) {
-        if (tables[i].table) {
-            total += ecs_table_count(tables[i].table);
+        if (tables[i].data.table) {
+            total += ecs_table_count(tables[i].data.table);
         }
     }
 
@@ -333,8 +333,7 @@ void collect_system_table_metrics(
     ecs_vector_memory(tables, ecs_matched_table_t, 
         &stat->allocd_bytes, &stat->used_bytes);
 
-    ecs_matched_table_t *tables_buffer = ecs_vector_first(tables, ecs_matched_table_t);
-    int32_t i, count = ecs_vector_count(tables);
+    int32_t count = ecs_vector_count(tables);
 
     /* The 'column' member in ecs_matched_table_t */
     stat->allocd_bytes += (ECS_SIZEOF(int32_t) * column_count) * count;
@@ -343,13 +342,6 @@ void collect_system_table_metrics(
     /* The 'components' member of ecs_matched_table_t */
     stat->allocd_bytes += (ECS_SIZEOF(ecs_entity_t) * column_count) * count;
     stat->used_bytes += (ECS_SIZEOF(ecs_entity_t) * column_count) * count;
-
-    /* Refs are different for each table, so we'll have to loop to get accurate 
-     * numbers */
-    for (i = 0; i < count; i ++) {
-        ecs_vector_memory(tables_buffer[i].references, ecs_ref_t, 
-            &stat->allocd_bytes, &stat->used_bytes);
-    }
 }
 
 static

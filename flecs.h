@@ -1991,11 +1991,22 @@ typedef struct ecs_page_iter_t {
     int32_t remaining;
 } ecs_page_iter_t;
 
+/** Table specific data for iterators */
+typedef struct ecs_iter_table_t {
+    int32_t *columns;        /**< Mapping from query columns to table columns */
+    ecs_table_t *table;       /**< The current table. */
+    ecs_data_t *data;         /**< Table component data */
+    ecs_entity_t *components; /**< Components in current table */
+    ecs_type_t *types;        /**< Components in current table */
+    ecs_ref_t *references;    /**< References to entities (from query) */
+} ecs_iter_table_t;
+
 /** Scope-iterator specific data */
 typedef struct ecs_scope_iter_t {
     ecs_filter_t filter;
     ecs_vector_t *tables;
     int32_t index;
+    ecs_iter_table_t table;
 } ecs_scope_iter_t;
 
 /** Filter-iterator specific data */
@@ -2003,6 +2014,7 @@ typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
     ecs_sparse_t *tables;
     int32_t index;
+    ecs_iter_table_t table;
 } ecs_filter_iter_t;
 
 /** Query-iterator specific data */
@@ -2019,6 +2031,7 @@ typedef struct ecs_snapshot_iter_t {
     ecs_filter_t filter;
     ecs_vector_t *tables; /* ecs_table_leaf_t */
     int32_t index;
+    ecs_iter_table_t table;
 } ecs_snapshot_iter_t;  
 
 /** The ecs_iter_t struct allows applications to iterate tables.
@@ -2028,33 +2041,31 @@ typedef struct ecs_snapshot_iter_t {
  * consecutive arrays, stored across multiple tables. The ecs_iter_t type 
  * enables iteration across tables. */
 struct ecs_iter_t {
-    ecs_world_t *world;          /**< The world */
-    ecs_entity_t system;         /**< The current system (if applicable) */
+    ecs_world_t *world;           /**< The world */
+    ecs_entity_t system;          /**< The current system (if applicable) */
 
-    int32_t *columns;        /**< Mapping from query columns to table columns */
-    int32_t table_count;         /**< Active table count for query */
+    ecs_iter_table_t *table;      /**< Table related data */
+    ecs_query_t *query;           /**< Current query being evaluated */
+    int32_t table_count;          /**< Active table count for query */
     int32_t inactive_table_count; /**< Inactive table count for query */
-    int32_t column_count;        /**< Number of columns for system */
-    ecs_table_t *table;          /**< The current table. */
-    void *table_columns;         /**< Table component data */
-    ecs_query_t *query;          /**< Current query being evaluated */
-    ecs_ref_t *references;       /**< References to entities (from query) */
-    ecs_entity_t *components;    /**< Components in current table */
-    ecs_type_t *types;           /**< Components in current table */
-    ecs_entity_t *entities;      /**< Entity identifiers */
+    int32_t column_count;         /**< Number of columns for system */
+    
+    void *table_columns;          /**< Table component data */
+    ecs_entity_t *entities;       /**< Entity identifiers */
 
-    void *param;                 /**< User data passed system (EcsContext) */
-    float delta_time;            /**< Time elapsed since last frame */
-    float delta_system_time;     /**< Time elapsed since last system invocation */
-    float world_time;            /**< Time elapsed since start of simulation */
-    int32_t frame_offset;       /**< Offset relative to frame */
-    int32_t table_offset;       /**< Current active table being processed */
-    int32_t offset;             /**< Offset relative to current table */
-    int32_t count;              /**< Number of entities to process by system */
-    int32_t total_count;        /**< Total number of entities in table */
+    void *param;                  /**< User data (EcsContext or param argument) */
+    float delta_time;             /**< Time elapsed since last frame */
+    float delta_system_time;      /**< Time elapsed since last system invocation */
+    float world_time;             /**< Time elapsed since start of simulation */
+
+    int32_t frame_offset;         /**< Offset relative to frame */
+    int32_t table_offset;         /**< Current active table being processed */
+    int32_t offset;               /**< Offset relative to current table */
+    int32_t count;                /**< Number of entities to process by system */
+    int32_t total_count;          /**< Total number of entities in table */
 
     ecs_entities_t *triggered_by; /**< Component(s) that triggered the system */
-    ecs_entity_t interrupted_by; /**< When set, system execution is interrupted */
+    ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
 
     union {
         ecs_scope_iter_t parent;

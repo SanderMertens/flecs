@@ -373,3 +373,23 @@ void Delete_alive_after_recycle() {
     
     ecs_fini(world);
 }
+
+void Delete_delete_recycled() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e != e2);
+    test_assert((e2 & ECS_ENTITY_MASK) == (e & ECS_ENTITY_MASK));
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_is_alive(world, e2));
+
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_is_alive(world, e2));
+
+    ecs_fini(world);
+}

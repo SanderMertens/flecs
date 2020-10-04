@@ -22,7 +22,7 @@ int ecs_dbg_system(
     dbg_out->enabled = !ecs_has_entity(world, system, EcsDisabled);
 
     ecs_vector_each(system_data->query->tables, ecs_matched_table_t, mt, {
-        ecs_table_t *table = mt->table;
+        ecs_table_t *table = mt->data.table;
         if (table) {
             dbg_out->entities_matched_count += ecs_table_count(table);
         }        
@@ -69,7 +69,7 @@ ecs_table_t* ecs_dbg_active_table(
         return NULL;
     }
     
-    return table->table;
+    return table->data.table;
 }
 
 ecs_table_t* ecs_dbg_inactive_table(
@@ -86,7 +86,7 @@ ecs_table_t* ecs_dbg_inactive_table(
         return NULL;
     }
     
-    return table->table;    
+    return table->data.table;
 }
 
 ecs_type_t ecs_dbg_get_column_type(
