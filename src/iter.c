@@ -238,6 +238,7 @@ int32_t ecs_table_component_index(
     ecs_entity_t component)
 {
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_type_index_of(it->table->table->type, component);
 }
 
