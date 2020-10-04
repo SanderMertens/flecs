@@ -587,3 +587,31 @@ void DeferredActions_defer_get_mut_after_delete_2nd_to_last() {
 
     ecs_fini(world);  
 }
+
+void DeferredActions_defer_add_child_to_deleted_parent() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    ecs_add(world, child, Velocity);
+    ecs_delete(world, parent);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(ecs_get_type(world, parent) == NULL);
+    test_assert(ecs_get_type(world, child) == NULL);
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world);    
+}

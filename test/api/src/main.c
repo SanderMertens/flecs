@@ -1122,6 +1122,7 @@ void DeferredActions_defer_add_after_delete(void);
 void DeferredActions_defer_set_after_delete(void);
 void DeferredActions_defer_get_mut_after_delete(void);
 void DeferredActions_defer_get_mut_after_delete_2nd_to_last(void);
+void DeferredActions_defer_add_child_to_deleted_parent(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -5465,6 +5466,10 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_get_mut_after_delete_2nd_to_last",
         DeferredActions_defer_get_mut_after_delete_2nd_to_last
+    },
+    {
+        "defer_add_child_to_deleted_parent",
+        DeferredActions_defer_add_child_to_deleted_parent
     }
 };
 
@@ -6510,7 +6515,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        18,
+        19,
         DeferredActions_testcases
     },
     {

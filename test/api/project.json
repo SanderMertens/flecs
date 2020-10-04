@@ -1219,7 +1219,8 @@
                 "defer_add_after_delete",
                 "defer_set_after_delete",
                 "defer_get_mut_after_delete",
-                "defer_get_mut_after_delete_2nd_to_last"
+                "defer_get_mut_after_delete_2nd_to_last",
+                "defer_add_child_to_deleted_parent"
             ]
         }, {
             "id": "SingleThreadStaging",
