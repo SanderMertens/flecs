@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     // Create a few dummy entities
     ecs.entity().set<Position>({0, 1});
     ecs.entity().set<Position>({1, 2});
-    ecs.entity().set<Position>({3, 4});
+    ecs.entity().set<Position>({2, 3});
 
     // Run system
     ecs.progress();
