@@ -226,6 +226,12 @@ void World_multi_world_component_namespace(void);
 void World_type_id(void);
 void World_different_comp_same_name(void);
 
+// Testsuite 'Singleton'
+void Singleton_set_get_singleton(void);
+void Singleton_get_mut_singleton(void);
+void Singleton_patch_singleton(void);
+void Singleton_singleton_system(void);
+
 bake_test_case Entity_testcases[] = {
     {
         "new",
@@ -1023,6 +1029,25 @@ bake_test_case World_testcases[] = {
     }
 };
 
+bake_test_case Singleton_testcases[] = {
+    {
+        "set_get_singleton",
+        Singleton_set_get_singleton
+    },
+    {
+        "get_mut_singleton",
+        Singleton_get_mut_singleton
+    },
+    {
+        "patch_singleton",
+        Singleton_patch_singleton
+    },
+    {
+        "singleton_system",
+        Singleton_singleton_system
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -1128,10 +1153,17 @@ static bake_test_suite suites[] = {
         NULL,
         5,
         World_testcases
+    },
+    {
+        "Singleton",
+        NULL,
+        NULL,
+        4,
+        Singleton_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 15);
+    return bake_test_run("cpp_api", argc, argv, suites, 16);
 }

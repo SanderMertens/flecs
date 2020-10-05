@@ -3967,8 +3967,26 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
 #endif
 
-
 /** @} */
+
+/**
+ * @defgroup singleton Singleton components
+ * @{
+ */
+
+#define ecs_singleton_get(world, comp)\
+    ecs_get(world, ecs_entity(comp), comp)
+
+#ifndef FLECS_LEGACY
+#define ecs_singleton_set(world, comp, ...)\
+    ecs_set(world, ecs_entity(comp), comp, __VA_ARGS__)
+#endif
+
+#define ecs_singleton_get_mut(world, comp)\
+    ecs_get_mut(world, ecs_entity(comp), comp, NULL)
+
+#define ecs_singleton_modified(world, comp)\
+    ecs_modified(world, ecs_entity(comp), comp)
 
 /**
  * @defgroup testing Testing Components
@@ -7743,6 +7761,26 @@ public:
      */    
     flecs::entity lookup(std::string& name) const;
 
+    /** Set singleton component.
+     */
+    template <typename T>
+    void set(T value) const;
+
+    /** Get mut singleton component.
+     */
+    template <typename T>
+    T* get_mut() const;
+
+    /** Patch singleton component.
+     */
+    template <typename T>
+    void patch(std::function<void(T&)> func) const;
+
+    /** Get singleton component.
+     */
+    template <typename T>
+    const T* get() const;
+
     /** Create alias for component.
      *
      * @tparam Component to create an alias for.
@@ -9904,16 +9942,17 @@ public:
 
             if (s_id >= EcsFirstUserComponentId) {
                 char *path = ecs_get_fullpath(world, entity);
-                ecs_assert(!strcmp(path, s_name), 
-                    ECS_INCONSISTENT_COMPONENT_NAME, 
+                ecs_assert(!strcmp(path, s_name.c_str()), ECS_INCONSISTENT_COMPONENT_NAME, 
                     _::name_helper<T>::name());
                 ecs_os_free(path);
             }
         }
 
+        char *path = ecs_get_fullpath(world, entity);
         s_id = entity;
-        s_name = ecs_get_fullpath(world, entity);
+        s_name = path;
         s_allow_tag = allow_tag;
+        ecs_os_free(path);
     }
 
     static entity_t id_no_lifecycle(world_t *world = nullptr, const char *name = nullptr, bool allow_tag = true) {
@@ -9970,9 +10009,7 @@ public:
             id_no_lifecycle(world);
         }
 
-        ecs_assert(s_name != nullptr, ECS_INTERNAL_ERROR, NULL);
-
-        return s_name;
+        return s_name.c_str();
     }
 
     static type_t type(world_t *world = nullptr) {
@@ -10017,19 +10054,19 @@ public:
     static void reset() {
         s_id = 0;
         s_type = NULL;
-        s_name = NULL;
+        s_name.clear();
     }
 
 private:
     static entity_t s_id;
     static type_t s_type;
-    static const char *s_name;
+    static std::string s_name;
     static bool s_allow_tag;
 };
 
 template <typename T> entity_t component_info<T>::s_id( 0 );
 template <typename T> type_t component_info<T>::s_type( nullptr );
-template <typename T> const char* component_info<T>::s_name( nullptr );
+template <typename T> std::string component_info<T>::s_name("");
 template <typename T> bool component_info<T>::s_allow_tag( true );
 
 
@@ -11497,6 +11534,30 @@ inline entity world::lookup(std::string& name) const {
     auto id = ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::");
     return flecs::entity(*this, id);
 }
+
+template <typename T>
+void world::set(T value) const {
+    flecs::entity e(m_world, _::component_info<T>::id(m_world));
+    e.set<T>(value);
+}
+
+template <typename T>
+T* world::get_mut() const {
+    flecs::entity e(m_world, _::component_info<T>::id(m_world));
+    return e.get_mut<T>();
+}
+
+template <typename T>
+void world::patch(std::function<void(T&)> func) const {
+    flecs::entity e(m_world, _::component_info<T>::id(m_world));
+    e.patch<T>(func);
+} 
+
+template <typename T>
+const T* world::get() const {
+    flecs::entity e(m_world, _::component_info<T>::id(m_world));
+    return e.get<T>();
+}    
 
 template <typename... Args>
 inline flecs::entity world::entity(Args &&... args) const {

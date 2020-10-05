@@ -381,6 +381,9 @@ void Singleton_system_w_singleton_no_match(void);
 void Singleton_system_w_not_singleton(void);
 void Singleton_lookup_singleton(void);
 void Singleton_get_singleton_id(void);
+void Singleton_set_get_singleton(void);
+void Singleton_get_mut_singleton(void);
+void Singleton_singleton_system(void);
 
 // Testsuite 'Clone'
 void Clone_empty(void);
@@ -2691,6 +2694,18 @@ bake_test_case Singleton_testcases[] = {
     {
         "get_singleton_id",
         Singleton_get_singleton_id
+    },
+    {
+        "set_get_singleton",
+        Singleton_set_get_singleton
+    },
+    {
+        "get_mut_singleton",
+        Singleton_get_mut_singleton
+    },
+    {
+        "singleton_system",
+        Singleton_singleton_system
     }
 };
 
@@ -6324,7 +6339,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        7,
+        10,
         Singleton_testcases
     },
     {

@@ -12354,11 +12354,23 @@ int ecs_parse_signature_action(
     void *data)
 {
     ecs_sig_t *sig = data;
+    bool is_singleton = false;
 
     ecs_assert(sig != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (entity_id[0] == '$') {
+        if (from_kind ==  EcsFromEntity) {
+            ecs_parser_error(name, expr, column, 
+                "singleton component '%s' cannot have a source", entity_id);
+        }
+
+        from_kind = EcsFromEntity;
+        is_singleton = true;
+        entity_id ++;
+    }
+
     /* Lookup component handle by string identifier */
-    ecs_entity_t component = ecs_lookup_fullpath(world, entity_id);
+    ecs_entity_t source = 0, component = ecs_lookup_fullpath(world, entity_id);
     if (!component) {
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
@@ -12369,6 +12381,10 @@ int ecs_parse_signature_action(
             ecs_parser_error(name, expr, column, 
                 "unresolved component identifier '%s'", entity_id);
         }
+    }
+
+    if (is_singleton) {
+        source = component;
     }
 
     /* Lookup trait handle by string identifier */
@@ -12384,14 +12400,11 @@ int ecs_parse_signature_action(
 
     component |= role;
 
-    ecs_entity_t source = 0;
-    if (from_kind == EcsFromEntity) {
-        if (from_kind == EcsFromEntity) {
-            source = ecs_lookup_fullpath(world, source_id);
-            if (!source) {
-                ecs_parser_error(name, expr, column, 
-                    "unresolved source identifier '%s'", source_id);
-            }
+    if (!source && from_kind == EcsFromEntity) {
+        source = ecs_lookup_fullpath(world, source_id);
+        if (!source) {
+            ecs_parser_error(name, expr, column, 
+                "unresolved source identifier '%s'", source_id);
         }
     }
 

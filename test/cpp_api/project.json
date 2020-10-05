@@ -260,6 +260,14 @@
                 "type_id",
                 "different_comp_same_name"
             ]
+        }, {
+            "id": "Singleton",
+            "testcases": [
+                "set_get_singleton",
+                "get_mut_singleton",
+                "patch_singleton",
+                "singleton_system"
+            ]
         }]
     }
 }

@@ -422,7 +422,10 @@
                 "system_w_singleton_no_match",
                 "system_w_not_singleton",
                 "lookup_singleton",
-                "get_singleton_id"
+                "get_singleton_id",
+                "set_get_singleton",
+                "get_mut_singleton",
+                "singleton_system"
             ]
         }, {
             "id": "Clone",

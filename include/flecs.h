@@ -1451,8 +1451,26 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
 #endif
 
-
 /** @} */
+
+/**
+ * @defgroup singleton Singleton components
+ * @{
+ */
+
+#define ecs_singleton_get(world, comp)\
+    ecs_get(world, ecs_entity(comp), comp)
+
+#ifndef FLECS_LEGACY
+#define ecs_singleton_set(world, comp, ...)\
+    ecs_set(world, ecs_entity(comp), comp, __VA_ARGS__)
+#endif
+
+#define ecs_singleton_get_mut(world, comp)\
+    ecs_get_mut(world, ecs_entity(comp), comp, NULL)
+
+#define ecs_singleton_modified(world, comp)\
+    ecs_modified(world, ecs_entity(comp), comp)
 
 /**
  * @defgroup testing Testing Components
