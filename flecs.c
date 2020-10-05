@@ -12054,6 +12054,7 @@ const char* parse_element(
     const char *sig,
     sig_element_t *elem_out)
 {
+    bool explicit_inout = false;
     const char *ptr = sig;
     char token[ECS_MAX_TOKEN_SIZE] = {0};
     sig_element_t elem = {
@@ -12066,6 +12067,7 @@ const char* parse_element(
 
     /* Inout specifiers always come first */
     if (ptr[0] == TOK_ANNOTATE_OPEN) {
+        explicit_inout = true;
         ptr = parse_annotation(name, sig, (ptr - sig), ptr + 1, &elem.inout_kind);
         if (!ptr) {
             return NULL;
@@ -12255,6 +12257,12 @@ parse_done:
             ecs_parser_error(name, sig, (ptr - sig), 
                 "invalid source modifier for 0"); 
             return NULL;
+        }
+    }
+
+    if (!explicit_inout) {
+        if (elem.from_kind != EcsFromOwned) {
+            elem.inout_kind = EcsIn;
         }
     }
 
@@ -17571,12 +17579,6 @@ bool ecs_is_readonly(
     if (query) {
         ecs_sig_column_t *column_data = ecs_vector_get(
             it->query->sig.columns, ecs_sig_column_t, column - 1);
-                    
-        if (!ecs_is_owned(it, column) && 
-            column_data->from_kind != EcsFromEntity) 
-        {
-            return true;
-        }
 
         return column_data->inout_kind == EcsIn;
     } else {

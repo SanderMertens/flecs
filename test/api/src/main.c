@@ -538,6 +538,14 @@ void SystemMisc_redeclare_system_explicit_id_null_expr(void);
 void SystemMisc_redeclare_system_explicit_id_no_name(void);
 void SystemMisc_declare_different_id_same_name(void);
 void SystemMisc_declare_different_id_same_name_w_scope(void);
+void SystemMisc_rw_in_implicit_any(void);
+void SystemMisc_rw_in_implicit_shared(void);
+void SystemMisc_rw_in_implicit_from_empty(void);
+void SystemMisc_rw_in_implicit_from_entity(void);
+void SystemMisc_rw_out_explicit_any(void);
+void SystemMisc_rw_out_explicit_shared(void);
+void SystemMisc_rw_out_explicit_from_empty(void);
+void SystemMisc_rw_out_explicit_from_entity(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -3290,6 +3298,38 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "declare_different_id_same_name_w_scope",
         SystemMisc_declare_different_id_same_name_w_scope
+    },
+    {
+        "rw_in_implicit_any",
+        SystemMisc_rw_in_implicit_any
+    },
+    {
+        "rw_in_implicit_shared",
+        SystemMisc_rw_in_implicit_shared
+    },
+    {
+        "rw_in_implicit_from_empty",
+        SystemMisc_rw_in_implicit_from_empty
+    },
+    {
+        "rw_in_implicit_from_entity",
+        SystemMisc_rw_in_implicit_from_entity
+    },
+    {
+        "rw_out_explicit_any",
+        SystemMisc_rw_out_explicit_any
+    },
+    {
+        "rw_out_explicit_shared",
+        SystemMisc_rw_out_explicit_shared
+    },
+    {
+        "rw_out_explicit_from_empty",
+        SystemMisc_rw_out_explicit_from_empty
+    },
+    {
+        "rw_out_explicit_from_entity",
+        SystemMisc_rw_out_explicit_from_entity
     }
 };
 
@@ -6367,7 +6407,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         SystemMisc_setup,
         NULL,
-        73,
+        81,
         SystemMisc_testcases
     },
     {

@@ -192,7 +192,7 @@ void Delete_delete_w_on_remove() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, CreateEntity, EcsOnUpdate, :Position);
+    ECS_SYSTEM(world, CreateEntity, EcsOnUpdate, [out] :Position);
     ECS_SYSTEM(world, DeleteEntity, EcsOnStore, Position);
     ECS_TRIGGER(world, OnRemoveSystem, EcsOnRemove, Position);
 

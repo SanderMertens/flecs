@@ -1494,3 +1494,159 @@ void SystemMisc_declare_different_id_same_name_w_scope() {
 
     ecs_fini(world);
 }
+
+void SystemMisc_rw_in_implicit_any() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, ANY:Velocity");
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_is_readonly(&it, 1) == false);
+    test_assert(ecs_is_readonly(&it, 2) == true);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_rw_in_implicit_shared() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, SHARED:Velocity");
+
+    ecs_entity_t base = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_is_readonly(&it, 1) == false);
+    test_assert(ecs_is_readonly(&it, 2) == true);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_rw_in_implicit_from_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, :Velocity");
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_is_readonly(&it, 1) == false);
+    test_assert(ecs_is_readonly(&it, 2) == true);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_rw_in_implicit_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_ENTITY(world, E, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, E:Velocity");
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_is_readonly(&it, 1) == false);
+    test_assert(ecs_is_readonly(&it, 2) == true);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_rw_out_explicit_any() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] ANY:Velocity");
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_is_readonly(&it, 1) == false);
+    test_assert(ecs_is_readonly(&it, 2) == false);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_rw_out_explicit_shared() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] SHARED:Velocity");
+
+    ecs_entity_t base = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_is_readonly(&it, 1) == false);
+    test_assert(ecs_is_readonly(&it, 2) == false);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_rw_out_explicit_from_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] :Velocity");
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_is_readonly(&it, 1) == false);
+    test_assert(ecs_is_readonly(&it, 2) == false);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_rw_out_explicit_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_ENTITY(world, E, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] E:Velocity");
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_is_readonly(&it, 1) == false);
+    test_assert(ecs_is_readonly(&it, 2) == false);
+
+    ecs_fini(world);
+}

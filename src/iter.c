@@ -137,12 +137,6 @@ bool ecs_is_readonly(
     if (query) {
         ecs_sig_column_t *column_data = ecs_vector_get(
             it->query->sig.columns, ecs_sig_column_t, column - 1);
-                    
-        if (!ecs_is_owned(it, column) && 
-            column_data->from_kind != EcsFromEntity) 
-        {
-            return true;
-        }
 
         return column_data->inout_kind == EcsIn;
     } else {
