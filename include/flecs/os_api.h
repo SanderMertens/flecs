@@ -5,6 +5,8 @@
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
+#elif defined(__FreeBSD__)
+#include <stdlib.h>
 #else
 #include <alloca.h>
 #endif
