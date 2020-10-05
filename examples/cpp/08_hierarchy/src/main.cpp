@@ -31,7 +31,7 @@ void Move(flecs::entity e, Position& p, const Velocity& v) {
  * will be used to then transform Position to WorldPosition of the child.
  * If the CASCADE column is not set, the system matched a root. In that case,
  * just assign the Position to the WorldPosition. */
-void Transform(flecs::iter& it, flecs::column<WorldPosition> wp, flecs::column<Position> p) {
+void Transform(flecs::iter& it, WorldPosition* wp, Position *p) {
     flecs::column<const WorldPosition> parent_wp(it, 3);
 
     if (!parent_wp.is_set()) {
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
      * the WorldPosition component from the parent.
      */
     ecs.system<WorldPosition, Position>(nullptr, "CASCADE:WorldPosition")
-        .action(Transform);
+        .iter(Transform);
 
     /* Create root of the hierachy which moves around */
     auto Root = ecs.entity("Root")

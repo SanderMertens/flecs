@@ -1,6 +1,9 @@
 #include <api.h>
-
 #include "flecs/modules/stats.h"
+
+void World_setup() {
+    ecs_tracing_enable(-3);
+}
 
 static
 void install_test_abort() {
@@ -173,7 +176,6 @@ void AddToExisting(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_add(it->world, it->entities[i], Velocity);
-        test_assert( ecs_has(it->world, it->entities[i], Velocity));
     }
 }
 

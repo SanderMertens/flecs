@@ -448,6 +448,38 @@ Entity identifiers can only be recycled if they have been deleted with `ecs_dele
 
 When using multiple threads, the `ecs_new` operation guarantees that the returned identifiers are unique, by using atomic increments instead of a simple increment operation. Ids will not be recycled when using multiple threads, since this would require locking global administration.
 
+### Generations
+When an entity is deleted, the generation count for that entity id is increased. The entity generation count enables an application to test whether an entity is still alive or whether it has been deleted, even after the id has been recycled. Consider:
+
+```c
+ecs_entity_t e = ecs_new(world, 0);
+ecs_delete(world, e); // Increases generation
+
+e = ecs_new(world, 0); // Recycles id, but with new generation
+```
+
+The generation is encoded in the entity id, which means that even though the base id is the same in the above example, the value returned by the second `ecs_new` is different than the first.
+
+To test whether an entity is alive, an application can use the `ecs_is_alive` call:
+
+```c
+ecs_entity_t e_1 = ecs_new(world, 0);
+ecs_delete(world, e_1);
+
+ecs_entity_t e_2 = ecs_new(world, 0);
+ecs_is_alive(world, e_1); // false
+ecs_is_alive(world, e_2); // true
+```
+
+It is not allowed to invoke operations on an entity that is not alive, and doing so may result in an assert. The only operation that is allowed on an entity that is not alive is `ecs_delete`. Calling delete multiple times on an entity that is not alive will not increase the generation. Additionally, it is also not allowed to add child entities to an entity that is not alive. This will also result in an assert.
+
+There are 16 bits reserved for generation in the entity id, which means that an application can delete the same id 65536 times before the generation resets to 0. To get the current generation of an entity, applications can use the `ECS_GENERATION` macro. To extract the entity id without the generation, an application can apply the `ECS_ENTITY_MASK` with a bitwise and:
+
+```c
+ecs_entity_t generation = ECS_GENERATION(e);
+ecs_entity_t id = e | ECS_ENTITY_MASK;
+```
+
 ### Manual id generation
 Applications do not have to rely on `ecs_new` and `ecs_delete` to create and delete entity identifiers. Entity ids may be used directly, like in this example:
 
@@ -2058,11 +2090,11 @@ To extract the component id from a trait, an application must get the lower 32 b
 ecs_entity_t comp = ecs_entity_t_lo(trait);
 ```
 
-To obtain the trait, the application first has to remove the `ECS_TRAIT` role, after which the upper 32 bits should be used. To remove the `ECS_TRAIT` role the application can apply the `ECS_ENTITY_MASK` mask with a bitwise AND, after which the trait component id can be obtained with `ecs_entity_t_hi`:
+To obtain the trait, the application first has to remove the `ECS_TRAIT` role, after which the upper 32 bits should be used. To remove the `ECS_TRAIT` role the application can apply the `ECS_COMPONENT_MASK` mask with a bitwise AND, after which the trait component id can be obtained with `ecs_entity_t_hi`:
 
 ```c
 // This extracts the id of Trait
-ecs_entity_t trait_comp = ecs_entity_t_hi(trait & ECS_ENTITY_MASK);
+ecs_entity_t trait_comp = ecs_entity_t_hi(trait & ECS_COMPONENT_MASK);
 ```
 
 ### Traits as entity relationships
@@ -2099,6 +2131,68 @@ if (Jane.has_trait(IsSibling, Jeff)) {
 }
 ```
 
+## Deferred operations
+Applications can defer entity with the `ecs_defer_begin` and `ecs_defer_end` functions. This records all operations that happen inside the begin - end block, and executes them when `ecs_defer_end` is called. Deferred operations are useful when an application wants to make modifications to an entity while iterating, as doing this without deferring an operation could modify the underlying data structure. An example:
+
+```c
+ecs_defer_begin(world);
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add(world, e, Position);
+    ecs_set(world, e, Velocity, {1, 1});
+ecs_defer_end(world);
+```
+
+The effects of these operations will not be visible until the `ecs_defer_end` operation. 
+
+There are a few things to keep in mind when deferring:
+- creating a new entity will always return a new id which increases the last used id counter of the world
+- `ecs_get_mut` returns a pointer initialized with the current component value, and does not take into account deferred set or get_mut operations
+- if an operation is called on an entity which was deleted while deferred, the operation will ignored by `ecs_defer_end`
+- if a child entity is created for a deleted parent while deferred, the child entity will be deleted by `ecs_defer_end`
+
+## Staging
+When an application is processing the world (using `ecs_progress`) the world enters a state in which all operations are automatically deferred. This ensures that systems can call regular operations while iterating entities without modifying the underlying storage. The queued operations are merged by default at the end of the frame. When using multiple threads, each thread has its own queue. Queues of different threads are processed sequentially.
+
+By default this means that an application will not see the effects of an operation until the end of a frame. When this is undesirable, an application can add `[in]` and `[out]` anotations to a system signature to force a merging the queues mid-frame. When using multiple threads this will represent a synchronization point. Take this (somewhat contrived) example with two systems, without annotations:
+
+```c
+// Sets velocity using ecs_set
+ECS_SYSTEM(world, SetVelocity, EcsOnUpdate, Position, :Velocity);
+
+// Adds Velocity to Posiiton
+ECS_SYSTEM(world, Move, EcsOnUpdate, Position, [in] Velocity);
+```
+
+With the following implementation for `SetVelocity`:
+
+```c
+void SetVelocity(ecs_iter_t *it) {
+    ecs_entity_t ecs_entity(Velocity) = ecs_column_entity(it, 2);
+
+    for (int i = 0; i < it->count; i ++) {
+        ecs_set(world, it->entities[i], Velocity, {1, 2});
+    }
+}
+```
+
+As `SetVelocity` is using `ecs_set` to set the `Velocity`, the effect of this operation will not be visible until the end of the frame, which means that the `Move` operation will use the `Velocity` value of the previous frame. An application can enforce that the queue is flushed before the `Move` system by annotating the system like this:
+
+```
+ECS_SYSTEM(world, SetVelocity, EcsOnUpdate, Position, [out] :Velocity);
+```
+
+Notice the `[out]` annotation that has been added to the `:Velocity` argument. This indicates to flecs that the system will be deferring operations that write the `Velocity` component, and as a result of that the queue will be flushed before `Velocity` is read. Since the `Move` system is reading the `Velocity` component, the queue will be flushed before the `Move` system is executed.
+
+Note that merging is expensive, especially in multithreaded applications, and should be minimized whenever possible.
+
+In some cases it can be difficult to predict which components a system will write. This typically happens when a system deletes an entity (all components of the entity will be "written") or when a new entity is created from a prefab and components are overridden automatically. When these operations cannot be deferred, a system can force a sync point without having to specify all possible components that can be written by using a wildcard:
+
+```c
+ECS_SYSTEM(world, DeleteEntity, EcsOnUpdate, Position, [out] :*);
+```
+
+This is interpreted as the system may write any component, and forces a sync point.
+
 ## Pipelines
 
 ## Time management
@@ -2112,8 +2206,6 @@ if (Jane.has_trait(IsSibling, Jeff)) {
 ## Bulk operations
 
 ## Statistics
-
-## Staging
 
 ## Threading
 

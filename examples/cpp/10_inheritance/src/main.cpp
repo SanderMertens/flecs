@@ -17,14 +17,14 @@ struct Mass {
 };
 
 /* Implement a move system with support for shared columns */
-void Move(flecs::iter& it, flecs::column<Position> p, flecs::column<Force> f, flecs::column<Mass> m) {
+void Move(flecs::iter& it, Position *p, Force *f, Mass *m) {
 
     for (auto row : it) {
         /* Explicitly check if the Mass column is shared or not. If the column
          * is shared, each entity that is currently iterated over shared the
          * same base, and thus the same Mass value. This means that rather than
          * accessing m as an array, we should access it as a single value. */
-        if (m.is_shared()) {
+        if (!it.is_owned(3)) {
             /* Mass is shared, use as single value */
             p[row].x += f[row].x / m->value;
             p[row].y += f[row].y / m->value;
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
     /* Define a system called Move that is executed every frame, and subscribes
      * for the 'Position', 'Force' and 'Mass' components. The Mass component
      * will be either shared or owned. */
-    ecs.system<Position, Force, Mass>().action(Move);
+    ecs.system<Position, Force, Mass>().iter(Move);
 
     /* Demonstrate that a system can also use 'each' to abstract away from the
      * difference between shared and owned components */

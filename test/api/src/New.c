@@ -1,5 +1,9 @@
 #include <api.h>
 
+void New_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void New_empty() {
     ecs_world_t *world = ecs_init();
 
@@ -184,7 +188,8 @@ void New_recycle_id_empty() {
 
     ecs_entity_t e2 = ecs_new(world, 0);
     test_assert(e2 != 0);
-    test_assert(e1 == e2);
+    test_assert(e1 != e2);
+    test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
 
     ecs_fini(world);
 }
@@ -200,7 +205,8 @@ void New_recycle_id_w_entity() {
 
     ecs_entity_t e2 = ecs_new_w_entity(world, tag);
     test_assert(e2 != 0);
-    test_assert(e1 == e2);
+    test_assert(e1 != e2);
+    test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
 
     ecs_fini(world);
 }
@@ -216,7 +222,8 @@ void New_recycle_id_w_type() {
 
     ecs_entity_t e2 = ecs_new_w_type(world, ecs_type(Position));
     test_assert(e2 != 0);
-    test_assert(e1 == e2);
+    test_assert(e1 != e2);
+    test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
 
     ecs_fini(world);
 }
@@ -227,13 +234,14 @@ void New_recycle_empty_staged_delete() {
     ecs_entity_t e1 = ecs_new(world, 0);
     test_assert(e1 != 0);
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     ecs_delete(world, e1);
-    ecs_staging_end(world, false);
+    ecs_defer_end(world);
 
     ecs_entity_t e2 = ecs_new(world, 0);
     test_assert(e2 != 0);
-    test_assert(e1 == e2);
+    test_assert(e1 != e2);
+    test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
 
     ecs_fini(world);
 }
@@ -246,13 +254,14 @@ void New_recycle_staged_delete() {
     ecs_entity_t e1 = ecs_new(world, Position);
     test_assert(e1 != 0);
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
     ecs_delete(world, e1);
-    ecs_staging_end(world, false);
+    ecs_defer_end(world);
 
     ecs_entity_t e2 = ecs_new(world, 0);
     test_assert(e2 != 0);
-    test_assert(e1 == e2);
+    test_assert(e1 != e2);
+    test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
 
     ecs_fini(world);
 }

@@ -136,7 +136,7 @@ void* _ecs_vector_last(
     int16_t offset);
 
 #define ecs_vector_last(vector, T) \
-    _ecs_vector_last(vector, ECS_VECTOR_T(T))
+    (T*)_ecs_vector_last(vector, ECS_VECTOR_T(T))
 
 FLECS_EXPORT
 int32_t _ecs_vector_remove(
@@ -332,27 +332,30 @@ template <typename T>
 class vector_iterator
 {
 public:
-    explicit vector_iterator(T* value)
-        : m_value(value){}
+    explicit vector_iterator(T* value, int index) {
+        m_value = value;
+        m_index = index;
+    }
 
     bool operator!=(vector_iterator const& other) const
     {
-        return m_value != other.m_value;
+        return m_index != other.m_index;
     }
 
     T const& operator*() const
     {
-        return *m_value;
+        return m_value[m_index];
     }
 
     vector_iterator& operator++()
     {
-        ++m_value;
+        ++m_index;
         return *this;
     }
 
 private:
     T* m_value;
+    int m_index;
 };
 
 template <typename T>
@@ -382,11 +385,14 @@ public:
     }
 
     vector_iterator<T> begin() {
-        return vector_iterator<T>(static_cast<T*>(ecs_vector_first(m_vector, T)));
+        return vector_iterator<T>(
+            ecs_vector_first(m_vector, T), 0);
     }
 
     vector_iterator<T> end() {
-        return vector_iterator<T>(static_cast<T*>(ecs_vector_last(m_vector, T)) + 1);
+        return vector_iterator<T>(
+            ecs_vector_last(m_vector, T),
+            ecs_vector_count(m_vector));
     }    
 
     void clear() {
@@ -421,6 +427,14 @@ public:
 
     int32_t size() {
         return ecs_vector_size(m_vector);
+    }
+
+    ecs_vector_t *ptr() {
+        return m_vector;
+    }
+
+    void ptr(ecs_vector_t *ptr) {
+        m_vector = ptr;
     }
 
 private:

@@ -23,14 +23,17 @@ const void* get_shared_column(
     ecs_size_t size,
     int32_t table_column)
 {
-    ecs_assert(it->references != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_ref_t *refs = it->table->references;
+    ecs_assert(refs != NULL, ECS_INTERNAL_ERROR, NULL);
     (void)size;
 
 #ifndef NDEBUG
     if (size) {
+        ecs_entity_t component_id = ecs_component_id_from_id(
+            it->world, refs[-table_column - 1].component);
+
         const EcsComponent *cdata = ecs_get(
-            it->world, it->references[-table_column - 1].component, 
-            EcsComponent);
+            it->world, component_id, EcsComponent);
 
         ecs_assert(cdata != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(cdata->size == size, ECS_COLUMN_TYPE_MISMATCH, 
@@ -38,7 +41,7 @@ const void* get_shared_column(
     }
 #endif
 
-    ecs_ref_t *ref = &it->references[-table_column - 1];
+    ecs_ref_t *ref = &refs[-table_column - 1];
 
     return (void*)ecs_get_ref_w_entity(
         it->world, ref, ref->entity, ref->component);
@@ -55,9 +58,9 @@ bool get_table_column(
     int32_t table_column = 0;
 
     if (column != 0) {
-        ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->table->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        table_column = it->columns[column - 1];
+        table_column = it->table->columns[column - 1];
         if (!table_column) {
             /* column is not set */
             return false;
@@ -134,12 +137,6 @@ bool ecs_is_readonly(
     if (query) {
         ecs_sig_column_t *column_data = ecs_vector_get(
             it->query->sig.columns, ecs_sig_column_t, column - 1);
-                    
-        if (!ecs_is_owned(it, column) && 
-            column_data->from_kind != EcsFromEntity) 
-        {
-            return true;
-        }
 
         return column_data->inout_kind == EcsIn;
     } else {
@@ -153,17 +150,17 @@ ecs_entity_t ecs_column_source(
 {
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->table->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t table_column = it->columns[index - 1];
+    ecs_iter_table_t *table = it->table;
+    int32_t table_column = table->columns[index - 1];
     if (table_column >= 0) {
         return 0;
     }
 
-    ecs_assert(it->references != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_ref_t *ref = &it->references[-table_column - 1];
-
+    ecs_assert(table->references != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_ref_t *ref = &table->references[-table_column - 1];
     return ref->entity;
 }
 
@@ -173,24 +170,9 @@ ecs_type_t ecs_column_type(
 {
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->components != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_entity_t component = it->components[index - 1];
-
-    ecs_sig_column_t *column_data = NULL;
-    if (it->query) {
-        column_data = ecs_vector_get(
-                it->query->sig.columns, ecs_sig_column_t, index - 1);
-        ecs_assert(column_data != NULL, ECS_INVALID_PARAMETER, NULL);
-    }
-
-    if (column_data && column_data->oper_kind == EcsOperAll) {
-        const EcsType *type = ecs_get(it->world, component, EcsType);
-        ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
-        return type->normalized;
-    } else {
-        return ecs_type_from_entity(it->world, component);
-    }
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->table->types != NULL, ECS_INTERNAL_ERROR, NULL);
+    return it->table->types[index - 1];
 }
 
 ecs_entity_t ecs_column_entity(
@@ -199,9 +181,9 @@ ecs_entity_t ecs_column_entity(
 {
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->components != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return it->components[index - 1];
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->table->components != NULL, ECS_INTERNAL_ERROR, NULL);
+    return it->table->components[index - 1];
 }
 
 ecs_entity_t ecs_column_size(
@@ -210,10 +192,9 @@ ecs_entity_t ecs_column_size(
 {
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t table_column = it->columns[index - 1];
-
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->table->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    int32_t table_column = it->table->columns[index - 1];
     return ecs_table_column_size(it, table_column - 1);
 }
 
@@ -241,7 +222,8 @@ int32_t ecs_column_index_from_name(
 ecs_type_t ecs_iter_type(
     const ecs_iter_t *it)
 {
-    ecs_table_t *table = it->table;
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *table = it->table->table;
     return table->type;
 }
 
@@ -249,18 +231,20 @@ int32_t ecs_table_component_index(
     const ecs_iter_t *it,
     ecs_entity_t component)
 {
-    return ecs_type_index_of(it->table->type, component);
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_type_index_of(it->table->table->type, component);
 }
 
 void* ecs_table_column(
     const ecs_iter_t *it,
     int32_t column_index)
 {
-    ecs_table_t *table = it->table;
-
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *table = it->table->table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column_index < ecs_vector_count(table->type), 
         ECS_INVALID_PARAMETER, NULL);
-
     if (table->column_count < column_index) {
         return NULL;
     }
@@ -274,11 +258,11 @@ size_t ecs_table_column_size(
     const ecs_iter_t *it,
     int32_t column_index)
 {
-    ecs_table_t *table = it->table;
-
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *table = it->table->table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column_index < ecs_vector_count(table->type), 
         ECS_INVALID_PARAMETER, NULL);
-
     if (table->column_count < column_index) {
         return 0;
     }

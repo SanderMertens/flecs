@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Modules_setup() {
+    ecs_tracing_enable(-3);
+}
+
 /* -- Begin module code -- */
 
 typedef struct SimpleFooComponent {

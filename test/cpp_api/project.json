@@ -54,6 +54,8 @@
                 "foce_owned",
                 "force_owned_2",
                 "force_owned_nested",
+                "force_owned_type",
+                "force_owned_type_w_trait",
                 "tag_has_size_zero"
             ]
         }, {
@@ -100,7 +102,13 @@
                 "path_depth_2",
                 "entity_lookup_name",
                 "entity_lookup_depth_1",
-                "entity_lookup_depth_2"
+                "entity_lookup_depth_2",
+                "alias_component",
+                "alias_scoped_component",
+                "alias_scoped_component_w_name",
+                "alias_entity",
+                "alias_entity_by_name",
+                "alias_entity_by_scoped_name"
             ]
         }, {
             "id": "Type",
@@ -130,13 +138,19 @@
                 "signature_optional",
                 "copy_name_on_create",
                 "nested_system",
-                "empty_signature"
+                "empty_signature",
+                "action_tag",
+                "iter_tag",
+                "each_tag"
             ]
         }, {
             "id": "Trigger",
             "testcases": [
                 "on_add",
-                "on_remove"
+                "on_remove",
+                "on_add_tag_action",
+                "on_add_tag_iter",
+                "on_add_tag_each"
             ]
         }, {
             "id": "Query",
@@ -208,7 +222,8 @@
                 "implicit_name",
                 "reinit",
                 "reinit_scoped",
-                "reinit_w_lifecycle"
+                "reinit_w_lifecycle",
+                "first_use_in_system"
             ]
         }, {
             "id": "Snapshot",
@@ -244,6 +259,14 @@
                 "multi_world_component_namespace",
                 "type_id",
                 "different_comp_same_name"
+            ]
+        }, {
+            "id": "Singleton",
+            "testcases": [
+                "set_get_singleton",
+                "get_mut_singleton",
+                "patch_singleton",
+                "singleton_system"
             ]
         }]
     }

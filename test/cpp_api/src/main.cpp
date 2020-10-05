@@ -48,6 +48,8 @@ void Entity_clear(void);
 void Entity_foce_owned(void);
 void Entity_force_owned_2(void);
 void Entity_force_owned_nested(void);
+void Entity_force_owned_type(void);
+void Entity_force_owned_type_w_trait(void);
 void Entity_tag_has_size_zero(void);
 
 // Testsuite 'Traits'
@@ -89,6 +91,12 @@ void Paths_path_depth_2(void);
 void Paths_entity_lookup_name(void);
 void Paths_entity_lookup_depth_1(void);
 void Paths_entity_lookup_depth_2(void);
+void Paths_alias_component(void);
+void Paths_alias_scoped_component(void);
+void Paths_alias_scoped_component_w_name(void);
+void Paths_alias_entity(void);
+void Paths_alias_entity_by_name(void);
+void Paths_alias_entity_by_scoped_name(void);
 
 // Testsuite 'Type'
 void Type_add_2(void);
@@ -115,10 +123,16 @@ void System_signature_optional(void);
 void System_copy_name_on_create(void);
 void System_nested_system(void);
 void System_empty_signature(void);
+void System_action_tag(void);
+void System_iter_tag(void);
+void System_each_tag(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
 void Trigger_on_remove(void);
+void Trigger_on_add_tag_action(void);
+void Trigger_on_add_tag_iter(void);
+void Trigger_on_add_tag_each(void);
 
 // Testsuite 'Query'
 void Query_action(void);
@@ -181,6 +195,7 @@ void ImplicitComponents_implicit_name(void);
 void ImplicitComponents_reinit(void);
 void ImplicitComponents_reinit_scoped(void);
 void ImplicitComponents_reinit_w_lifecycle(void);
+void ImplicitComponents_first_use_in_system(void);
 
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
@@ -210,6 +225,12 @@ void World_multi_world_component(void);
 void World_multi_world_component_namespace(void);
 void World_type_id(void);
 void World_different_comp_same_name(void);
+
+// Testsuite 'Singleton'
+void Singleton_set_get_singleton(void);
+void Singleton_get_mut_singleton(void);
+void Singleton_patch_singleton(void);
+void Singleton_singleton_system(void);
 
 bake_test_case Entity_testcases[] = {
     {
@@ -369,6 +390,14 @@ bake_test_case Entity_testcases[] = {
         Entity_force_owned_nested
     },
     {
+        "force_owned_type",
+        Entity_force_owned_type
+    },
+    {
+        "force_owned_type_w_trait",
+        Entity_force_owned_type_w_trait
+    },
+    {
         "tag_has_size_zero",
         Entity_tag_has_size_zero
     }
@@ -516,6 +545,30 @@ bake_test_case Paths_testcases[] = {
     {
         "entity_lookup_depth_2",
         Paths_entity_lookup_depth_2
+    },
+    {
+        "alias_component",
+        Paths_alias_component
+    },
+    {
+        "alias_scoped_component",
+        Paths_alias_scoped_component
+    },
+    {
+        "alias_scoped_component_w_name",
+        Paths_alias_scoped_component_w_name
+    },
+    {
+        "alias_entity",
+        Paths_alias_entity
+    },
+    {
+        "alias_entity_by_name",
+        Paths_alias_entity_by_name
+    },
+    {
+        "alias_entity_by_scoped_name",
+        Paths_alias_entity_by_scoped_name
     }
 };
 
@@ -610,6 +663,18 @@ bake_test_case System_testcases[] = {
     {
         "empty_signature",
         System_empty_signature
+    },
+    {
+        "action_tag",
+        System_action_tag
+    },
+    {
+        "iter_tag",
+        System_iter_tag
+    },
+    {
+        "each_tag",
+        System_each_tag
     }
 };
 
@@ -621,6 +686,18 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_remove",
         Trigger_on_remove
+    },
+    {
+        "on_add_tag_action",
+        Trigger_on_add_tag_action
+    },
+    {
+        "on_add_tag_iter",
+        Trigger_on_add_tag_iter
+    },
+    {
+        "on_add_tag_each",
+        Trigger_on_add_tag_each
     }
 };
 
@@ -844,6 +921,10 @@ bake_test_case ImplicitComponents_testcases[] = {
     {
         "reinit_w_lifecycle",
         ImplicitComponents_reinit_w_lifecycle
+    },
+    {
+        "first_use_in_system",
+        ImplicitComponents_first_use_in_system
     }
 };
 
@@ -948,12 +1029,31 @@ bake_test_case World_testcases[] = {
     }
 };
 
+bake_test_case Singleton_testcases[] = {
+    {
+        "set_get_singleton",
+        Singleton_set_get_singleton
+    },
+    {
+        "get_mut_singleton",
+        Singleton_get_mut_singleton
+    },
+    {
+        "patch_singleton",
+        Singleton_patch_singleton
+    },
+    {
+        "singleton_system",
+        Singleton_singleton_system
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
         NULL,
         NULL,
-        40,
+        42,
         Entity_testcases
     },
     {
@@ -974,7 +1074,7 @@ static bake_test_suite suites[] = {
         "Paths",
         NULL,
         NULL,
-        6,
+        12,
         Paths_testcases
     },
     {
@@ -988,14 +1088,14 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        15,
+        18,
         System_testcases
     },
     {
         "Trigger",
         NULL,
         NULL,
-        2,
+        5,
         Trigger_testcases
     },
     {
@@ -1030,7 +1130,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        16,
+        17,
         ImplicitComponents_testcases
     },
     {
@@ -1053,10 +1153,17 @@ static bake_test_suite suites[] = {
         NULL,
         5,
         World_testcases
+    },
+    {
+        "Singleton",
+        NULL,
+        NULL,
+        4,
+        Singleton_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 15);
+    return bake_test_run("cpp_api", argc, argv, suites, 16);
 }

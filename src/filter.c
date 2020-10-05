@@ -7,7 +7,7 @@ ecs_iter_t ecs_filter_iter(
 {
     ecs_filter_iter_t iter = {
         .filter = filter ? *filter : (ecs_filter_t){0},
-        .tables = world->stage.tables,
+        .tables = world->store.tables,
         .index = 0
     };
 
@@ -29,7 +29,7 @@ bool ecs_filter_next(
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
+        ecs_data_t *data = ecs_table_get_data(table);
 
         if (!data) {
             continue;
@@ -39,7 +39,8 @@ bool ecs_filter_next(
             continue;
         }
 
-        it->table = table;
+        iter->table.table = table;
+        it->table = &iter->table;
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);

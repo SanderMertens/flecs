@@ -14,20 +14,20 @@ int main(int argc, char *argv[]) {
 
     // Basic task
     ecs.system<>()
-        .action([](flecs::iter& it) {
+        .iter([](flecs::iter& it) {
             std::cout << "Task executed every second" << std::endl;
         });
 
     // Task that is executed every 2 seconds
     ecs.system<>()
         .period(2.0)
-        .action([](flecs::iter& it) {
+        .iter([](flecs::iter& it) {
             std::cout << "Task executed every 2 seconds" << std::endl;
         });
 
     // It is possible to add components to a task, just like regular systems
     auto system = ecs.system<>(nullptr, "SYSTEM:TaskContext")
-        .action([](flecs::iter& it) {
+        .iter([](flecs::iter& it) {
             flecs::column<const TaskContext> ctx(it, 1);
             std::cout << "Task with context: " << ctx->value << std::endl;
         });

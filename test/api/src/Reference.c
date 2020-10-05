@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Reference_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void Reference_get_ref() {
     ecs_world_t *world = ecs_init();
 
@@ -125,16 +129,16 @@ void Reference_get_ref_staged() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
 
     ecs_set(world, e, Position, {30, 40});
 
     p = ecs_get_ref(world, &ref, e, Position);
     test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 40);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
-    ecs_staging_end(world, false);
+    ecs_defer_end(world);
 
     p = ecs_get_ref(world, &ref, e, Position);
     test_assert(p != NULL);
@@ -157,7 +161,7 @@ void Reference_get_ref_after_new_in_stage() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    ecs_staging_begin(world);
+    ecs_defer_begin(world);
 
     ecs_new(world, Position);
 
@@ -165,10 +169,10 @@ void Reference_get_ref_after_new_in_stage() {
 
     p = ecs_get_ref(world, &ref, e, Position);
     test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 40);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
-    ecs_staging_end(world, false);
+    ecs_defer_end(world);
 
     p = ecs_get_ref(world, &ref, e, Position);
     test_assert(p != NULL);

@@ -1,0 +1,44 @@
+#include <deferred_operations.h>
+#include <iostream>
+
+struct Position {
+    float x;
+    float y;
+};
+
+struct Velocity {
+    float x;
+    float y;
+};
+
+int main(int argc, char *argv[]) {
+    flecs::world ecs;
+
+    /* Create OnSet system so we can see when Velocity is actually set */
+    ecs.system<Velocity>()
+        .kind(flecs::OnSet)
+        .each([](flecs::entity e, Velocity& v) {
+            std::cout << "Velocity set to {" << v.x << ", " << v.y << "}" 
+                      << std::endl;
+        });
+
+    // Create 3 entities with position
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>();
+
+    // Create a query for Position to set Velocity for each entity with Position.
+    // Because adding a component changes the underlying data structures, we
+    // need to defer the operations until we have finished iterating.
+    auto q = ecs.query<Position>();
+
+    std::cout << "Defer begin" << std::endl;
+    ecs.defer_begin();
+
+    q.each([](flecs::entity e, Position& p) {
+        e.set<Velocity>({1, 2});
+    });
+
+    std::cout << "Defer end" << std::endl;
+    ecs.defer_end();
+}

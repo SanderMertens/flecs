@@ -9,9 +9,12 @@
 #define TOK_OPTIONAL '?'
 #define TOK_ROLE '|'
 #define TOK_TRAIT '>'
+#define TOK_FOR "FOR"
 #define TOK_NAME_SEP '.'
 #define TOK_ANNOTATE_OPEN '['
 #define TOK_ANNOTATE_CLOSE ']'
+#define TOK_WILDCARD '*'
+#define TOK_SINGLETON '$'
 
 #define TOK_ANY "ANY"
 #define TOK_OWNED "OWNED"
@@ -78,7 +81,7 @@ bool valid_identifier_char(
     char ch)
 {
     if (ch && (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.' || 
-        ch == '$' || ch == '*')) 
+        ch == TOK_SINGLETON || ch == TOK_WILDCARD)) 
     {
         return true;
     }
@@ -246,8 +249,9 @@ const char* parse_element(
     const char *sig,
     sig_element_t *elem_out)
 {
+    bool explicit_inout = false;
     const char *ptr = sig;
-    char token[ECS_MAX_TOKEN_SIZE];
+    char token[ECS_MAX_TOKEN_SIZE] = {0};
     sig_element_t elem = {
         .inout_kind = EcsInOut,
         .from_kind = EcsFromOwned,
@@ -258,6 +262,7 @@ const char* parse_element(
 
     /* Inout specifiers always come first */
     if (ptr[0] == TOK_ANNOTATE_OPEN) {
+        explicit_inout = true;
         ptr = parse_annotation(name, sig, (ptr - sig), ptr + 1, &elem.inout_kind);
         if (!ptr) {
             return NULL;
@@ -288,6 +293,13 @@ const char* parse_element(
         if (ptr[0] == TOK_ROLE && ptr[1] != TOK_ROLE) {
             ptr ++;
             goto parse_role;
+        }
+
+        /* Is token a trait? (using shorthand notation) */
+        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
+            elem.role = ECS_TRAIT;
+            ptr += 3;
+            goto parse_trait;
         }
 
         /* If it is neither, the next token must be a component */
@@ -335,8 +347,16 @@ parse_source:
 
         /* Is the next token a role? */
         if (ptr[0] == TOK_ROLE && ptr[1] != TOK_ROLE) {
+            ptr++;
             goto parse_role;
         }
+
+        /* Is token a trait? (using shorthand notation) */
+        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
+            elem.role = ECS_TRAIT;
+            ptr += 3;
+            goto parse_trait;
+        }        
 
         /* If not, it's a component */
         goto parse_component;
@@ -432,6 +452,12 @@ parse_done:
             ecs_parser_error(name, sig, (ptr - sig), 
                 "invalid source modifier for 0"); 
             return NULL;
+        }
+    }
+
+    if (!explicit_inout) {
+        if (elem.from_kind != EcsFromOwned) {
+            elem.inout_kind = EcsIn;
         }
     }
 
@@ -531,11 +557,23 @@ int ecs_parse_signature_action(
     void *data)
 {
     ecs_sig_t *sig = data;
+    bool is_singleton = false;
 
     ecs_assert(sig != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (entity_id[0] == '$') {
+        if (from_kind ==  EcsFromEntity) {
+            ecs_parser_error(name, expr, column, 
+                "singleton component '%s' cannot have a source", entity_id);
+        }
+
+        from_kind = EcsFromEntity;
+        is_singleton = true;
+        entity_id ++;
+    }
+
     /* Lookup component handle by string identifier */
-    ecs_entity_t component = ecs_lookup_fullpath(world, entity_id);
+    ecs_entity_t source = 0, component = ecs_lookup_fullpath(world, entity_id);
     if (!component) {
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
@@ -546,6 +584,10 @@ int ecs_parse_signature_action(
             ecs_parser_error(name, expr, column, 
                 "unresolved component identifier '%s'", entity_id);
         }
+    }
+
+    if (is_singleton) {
+        source = component;
     }
 
     /* Lookup trait handle by string identifier */
@@ -561,14 +603,11 @@ int ecs_parse_signature_action(
 
     component |= role;
 
-    ecs_entity_t source = 0;
-    if (from_kind == EcsFromEntity) {
-        if (from_kind == EcsFromEntity) {
-            source = ecs_lookup_fullpath(world, source_id);
-            if (!source) {
-                ecs_parser_error(name, expr, column, 
-                    "unresolved source identifier '%s'", source_id);
-            }
+    if (!source && from_kind == EcsFromEntity) {
+        source = ecs_lookup_fullpath(world, source_id);
+        if (!source) {
+            ecs_parser_error(name, expr, column, 
+                "unresolved source identifier '%s'", source_id);
         }
     }
 
@@ -621,6 +660,7 @@ int ecs_sig_add(
     /* If component has AND role, all components of specified type must match */
     if (ECS_HAS_ROLE(component, AND)) {
         elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
+        component &= ECS_ENTITY_MASK;
         const EcsType *type = ecs_get(world, component, EcsType);
         if (!type) {
             ecs_parser_error(sig->name, sig->expr, 0, 
@@ -638,6 +678,7 @@ int ecs_sig_add(
     /* If component has OR role, add type as OR column */
     if (ECS_HAS_ROLE(component, OR)) {
         elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
+        component &= ECS_ENTITY_MASK;
         const EcsType *type = ecs_get(world, component, EcsType);
         if (!type) {
             ecs_parser_error(sig->name, sig->expr, 0, 

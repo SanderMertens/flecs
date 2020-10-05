@@ -12,14 +12,13 @@ void bulk_delete(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
-    ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, 
-        "delete_w_filter currently only supported on main stage");
-
-    int32_t i, count = ecs_sparse_count(stage->tables);
+    int32_t i, count = ecs_sparse_count(world->store.tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -30,7 +29,7 @@ void bulk_delete(
         }
 
         /* Remove entities from index */
-        ecs_data_t *data = ecs_table_get_data(world, table);
+        ecs_data_t *data = ecs_table_get_data(table);
         if (!data) {
             /* If table has no data, there's nothing to delete */
             continue;
@@ -42,7 +41,7 @@ void bulk_delete(
         }
 
         ecs_vector_each(entities, ecs_entity_t, e_ptr, {
-            ecs_eis_delete(&world->stage, *e_ptr);
+            ecs_eis_delete(world, *e_ptr);
         })
 
         /* Both filters passed, clear table */
@@ -68,22 +67,22 @@ void merge_table(
     } else {
         /* Merge table into dst_table */
         if (dst_table != src_table) {
-            ecs_data_t *src_data = ecs_table_get_data(world, src_table);
+            ecs_data_t *src_data = ecs_table_get_data(src_table);
             int32_t dst_count = ecs_table_count(dst_table);
             int32_t src_count = ecs_table_count(src_table);
 
             if (to_remove && to_remove->count && src_data) {
-                ecs_run_remove_actions(world, &world->stage, src_table, 
+                ecs_run_remove_actions(world, src_table, 
                     src_data, 0, src_count, to_remove, false);
             }
 
-            ecs_data_t *dst_data = ecs_table_get_data(world, dst_table);
+            ecs_data_t *dst_data = ecs_table_get_data(dst_table);
             dst_data = ecs_table_merge(
                 world, dst_table, src_table, dst_data, src_data);
 
             if (to_add && to_add->count && dst_data) {
                 ecs_comp_set_t set_mask = {0};
-                ecs_run_add_actions(world, &world->stage, dst_table, dst_data, 
+                ecs_run_add_actions(world, dst_table, dst_data, 
                     dst_count, src_count, to_add, &set_mask, false, true);
             }
         }
@@ -107,8 +106,8 @@ void ecs_bulk_add_remove_type(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
-
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
     ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
@@ -123,9 +122,9 @@ void ecs_bulk_add_remove_type(
         .count = 0
     };
 
-    int32_t i, count = ecs_sparse_count(stage->tables);
+    int32_t i, count = ecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -136,10 +135,10 @@ void ecs_bulk_add_remove_type(
         }
 
         ecs_table_t *dst_table = ecs_table_traverse_remove(
-            world, stage, table, &to_remove_array, &removed);
+            world, table, &to_remove_array, &removed);
         
         dst_table = ecs_table_traverse_add(
-            world, stage, dst_table, &to_add_array, &added);
+            world, dst_table, &to_add_array, &added);
 
         ecs_assert(removed.count <= to_remove_array.count, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(added.count <= to_add_array.count, ECS_INTERNAL_ERROR, NULL);
@@ -166,6 +165,7 @@ void ecs_bulk_add_type(
     
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
     ecs_entities_t added = {
@@ -173,9 +173,9 @@ void ecs_bulk_add_type(
         .count = 0
     };
 
-    int32_t i, count = ecs_sparse_count(stage->tables);
+    int32_t i, count = ecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -186,7 +186,7 @@ void ecs_bulk_add_type(
         }
         
         ecs_table_t *dst_table = ecs_table_traverse_add(
-            world, stage, table, &to_add_array, &added);
+            world, table, &to_add_array, &added);
         
         ecs_assert(added.count <= to_add_array.count, ECS_INTERNAL_ERROR, NULL);
 
@@ -210,6 +210,7 @@ void ecs_bulk_add_entity(
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_add_array = { .array = &to_add, .count = 1 };
 
@@ -219,9 +220,9 @@ void ecs_bulk_add_entity(
         .count = 0
     };
 
-    int32_t i, count = ecs_sparse_count(stage->tables);
+    int32_t i, count = ecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -232,7 +233,7 @@ void ecs_bulk_add_entity(
         }
         
         ecs_table_t *dst_table = ecs_table_traverse_add(
-            world, stage, table, &to_add_array, &added);
+            world, table, &to_add_array, &added);
 
         ecs_assert(added.count <= to_add_array.count, ECS_INTERNAL_ERROR, NULL);
         
@@ -256,6 +257,7 @@ void ecs_bulk_remove_type(
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
     ecs_entities_t removed = {
@@ -263,9 +265,9 @@ void ecs_bulk_remove_type(
         .count = 0
     };
 
-    int32_t i, count = ecs_sparse_count(stage->tables);
+    int32_t i, count = ecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -276,7 +278,7 @@ void ecs_bulk_remove_type(
         }
         
         ecs_table_t *dst_table = ecs_table_traverse_remove(
-            world, stage, table, &to_remove_array, &removed);
+            world, table, &to_remove_array, &removed);
 
         ecs_assert(removed.count <= to_remove_array.count, ECS_INTERNAL_ERROR, NULL);
 
@@ -300,6 +302,7 @@ void ecs_bulk_remove_entity(
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
+    (void)stage;
 
     ecs_entities_t to_remove_array = { .array = &to_remove, .count = 1 };
 
@@ -309,9 +312,9 @@ void ecs_bulk_remove_entity(
         .count = 0
     };
 
-    int32_t i, count = ecs_sparse_count(stage->tables);
+    int32_t i, count = ecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -322,7 +325,7 @@ void ecs_bulk_remove_entity(
         }            
 
         ecs_table_t *dst_table = ecs_table_traverse_remove(
-            world, stage, table, &to_remove_array, &removed);
+            world, table, &to_remove_array, &removed);
 
         ecs_assert(removed.count <= to_remove_array.count, ECS_INTERNAL_ERROR, NULL);
 

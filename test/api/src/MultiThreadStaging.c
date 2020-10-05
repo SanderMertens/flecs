@@ -2,6 +2,7 @@
 
 void MultiThreadStaging_setup() {
     bake_set_os_api();
+    ecs_tracing_enable(-3);
 }
 
 static
@@ -12,18 +13,10 @@ void Add_to_current(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
             ecs_add_entity(it->world, it->entities[i], ctx->component);
-            
-            test_assert( !!ecs_get_type(it->world, it->entities[i]));
-            test_assert( ecs_has_entity(it->world,  it->entities[i], ctx->component));
-            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component) != NULL);
         }
 
         if (ctx->component_2) {
             ecs_add_entity(it->world, it->entities[i], ctx->component_2);
-
-            test_assert( !!ecs_get_type(it->world, it->entities[i]));
-            test_assert( ecs_has_entity(it->world,  it->entities[i], ctx->component_2)); 
-            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_2) != NULL);
         }
 
         ctx->entity_count ++;

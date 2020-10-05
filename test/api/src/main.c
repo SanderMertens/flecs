@@ -9,6 +9,7 @@
 #include <api.h>
 
 // Testsuite 'New'
+void New_setup(void);
 void New_empty(void);
 void New_component(void);
 void New_type(void);
@@ -82,6 +83,7 @@ void Add_add_same_w_xor(void);
 void Add_add_after_remove_xor(void);
 
 // Testsuite 'Switch'
+void Switch_setup(void);
 void Switch_get_case_empty(void);
 void Switch_get_case_no_switch(void);
 void Switch_get_case_unset(void);
@@ -132,6 +134,7 @@ void GlobalComponentIds_declare_entity(void);
 void GlobalComponentIds_declare_type(void);
 
 // Testsuite 'Hierarchies'
+void Hierarchies_setup(void);
 void Hierarchies_empty_scope(void);
 void Hierarchies_get_parent(void);
 void Hierarchies_get_parent_from_nested(void);
@@ -198,9 +201,13 @@ void Hierarchies_delete_tree_2_levels(void);
 void Hierarchies_delete_tree_3_levels(void);
 void Hierarchies_delete_tree_count_tables(void);
 void Hierarchies_delete_tree_staged(void);
+void Hierarchies_delete_tree_empty_table(void);
+void Hierarchies_delete_tree_recreate(void);
 void Hierarchies_get_child_count(void);
 void Hierarchies_get_child_count_2_tables(void);
 void Hierarchies_get_child_count_no_children(void);
+void Hierarchies_scope_iter_after_delete_tree(void);
+void Hierarchies_add_child_after_delete_tree(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -266,6 +273,7 @@ void Count_count_3_components(void);
 void Count_count_2_types_2_comps(void);
 
 // Testsuite 'Get_component'
+void Get_component_setup(void);
 void Get_component_get_empty(void);
 void Get_component_get_1_from_1(void);
 void Get_component_get_1_from_2(void);
@@ -277,6 +285,7 @@ void Get_component_get_both_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_remove_in_progress(void);
 
 // Testsuite 'Reference'
+void Reference_setup(void);
 void Reference_get_ref(void);
 void Reference_get_ref_after_add(void);
 void Reference_get_ref_after_remove(void);
@@ -289,6 +298,7 @@ void Reference_get_ref_monitored(void);
 void Reference_get_nonexisting(void);
 
 // Testsuite 'Delete'
+void Delete_setup(void);
 void Delete_delete_1(void);
 void Delete_delete_1_again(void);
 void Delete_delete_empty(void);
@@ -300,6 +310,14 @@ void Delete_delete_3_of_3(void);
 void Delete_delete_w_on_remove(void);
 void Delete_clear_1_component(void);
 void Delete_clear_2_components(void);
+void Delete_alive_after_delete(void);
+void Delete_alive_after_clear(void);
+void Delete_alive_after_staged_delete(void);
+void Delete_alive_while_staged(void);
+void Delete_alive_while_staged_w_delete(void);
+void Delete_alive_while_staged_w_delete_recycled_id(void);
+void Delete_alive_after_recycle(void);
+void Delete_delete_recycled(void);
 
 // Testsuite 'Delete_w_filter'
 void Delete_w_filter_delete_1(void);
@@ -334,12 +352,11 @@ void Set_get_mutable_existing(void);
 void Set_modified_w_on_set(void);
 
 // Testsuite 'Lookup'
+void Lookup_setup(void);
 void Lookup_lookup(void);
 void Lookup_lookup_component(void);
 void Lookup_lookup_not_found(void);
 void Lookup_lookup_child(void);
-void Lookup_lookup_in_progress(void);
-void Lookup_lookup_child_in_progress(void);
 void Lookup_lookup_w_null_name(void);
 void Lookup_get_name(void);
 void Lookup_get_name_no_name(void);
@@ -351,6 +368,10 @@ void Lookup_lookup_symbol_w_digit(void);
 void Lookup_lookup_path_w_digit(void);
 void Lookup_set_name_of_existing(void);
 void Lookup_change_name_of_existing(void);
+void Lookup_lookup_alias(void);
+void Lookup_lookup_scoped_alias(void);
+void Lookup_define_duplicate_alias(void);
+void Lookup_define_alias_in_scope(void);
 
 // Testsuite 'Singleton'
 void Singleton_set(void);
@@ -360,6 +381,9 @@ void Singleton_system_w_singleton_no_match(void);
 void Singleton_system_w_not_singleton(void);
 void Singleton_lookup_singleton(void);
 void Singleton_get_singleton_id(void);
+void Singleton_set_get_singleton(void);
+void Singleton_get_mut_singleton(void);
+void Singleton_singleton_system(void);
 
 // Testsuite 'Clone'
 void Clone_empty(void);
@@ -378,6 +402,7 @@ void Clone_1_tag_1_component(void);
 void Clone_1_tag_1_component_w_value(void);
 
 // Testsuite 'ComponentLifecycle'
+void ComponentLifecycle_setup(void);
 void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_ctor_on_new(void);
 void ComponentLifecycle_dtor_on_remove(void);
@@ -386,7 +411,6 @@ void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
 void ComponentLifecycle_copy_on_new_w_data(void);
 void ComponentLifecycle_copy_on_clone(void);
-void ComponentLifecycle_copy_on_stage(void);
 void ComponentLifecycle_no_copy_on_move(void);
 void ComponentLifecycle_ctor_on_bulk_add(void);
 void ComponentLifecycle_dtor_on_bulk_remove(void);
@@ -422,6 +446,7 @@ void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks(void);
 void ComponentLifecycle_set_lifecycle_after_trigger(void);
 
 // Testsuite 'Pipeline'
+void Pipeline_setup(void);
 void Pipeline_system_order_same_phase(void);
 void Pipeline_system_order_same_phase_after_disable(void);
 void Pipeline_system_order_same_phase_after_activate(void);
@@ -439,6 +464,7 @@ void Pipeline_merge_after_staged_out_before_owned(void);
 void Pipeline_switch_pipeline(void);
 
 // Testsuite 'SystemMisc'
+void SystemMisc_setup(void);
 void SystemMisc_invalid_not_without_id(void);
 void SystemMisc_invalid_optional_without_id(void);
 void SystemMisc_invalid_system_without_id(void);
@@ -512,6 +538,14 @@ void SystemMisc_redeclare_system_explicit_id_null_expr(void);
 void SystemMisc_redeclare_system_explicit_id_no_name(void);
 void SystemMisc_declare_different_id_same_name(void);
 void SystemMisc_declare_different_id_same_name_w_scope(void);
+void SystemMisc_rw_in_implicit_any(void);
+void SystemMisc_rw_in_implicit_shared(void);
+void SystemMisc_rw_in_implicit_from_empty(void);
+void SystemMisc_rw_in_implicit_from_entity(void);
+void SystemMisc_rw_out_explicit_any(void);
+void SystemMisc_rw_out_explicit_shared(void);
+void SystemMisc_rw_out_explicit_from_empty(void);
+void SystemMisc_rw_out_explicit_from_entity(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -550,6 +584,11 @@ void Queries_query_single_trait(void);
 void Queries_query_single_instanceof(void);
 void Queries_query_single_childof(void);
 void Queries_query_w_filter(void);
+void Queries_query_optional_owned(void);
+void Queries_query_optional_shared(void);
+void Queries_query_optional_shared_nested(void);
+void Queries_query_optional_any(void);
+void Queries_query_rematch_optional_after_add(void);
 
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
@@ -560,8 +599,12 @@ void Traits_add_tag_trait_for_tag(void);
 void Traits_add_tag_trait_for_component(void);
 void Traits_query_2_traits(void);
 void Traits_query_2_traits_2_instances_per_type(void);
+void Traits_query_trait_or_component(void);
+void Traits_query_trait_or_trait(void);
+void Traits_query_not_trait(void);
 void Traits_override_trait(void);
 void Traits_override_tag_trait(void);
+void Traits_trait_w_component_query(void);
 void Traits_trait_wildcard_system(void);
 void Traits_trait_only_wildcard_system(void);
 void Traits_trait_wildcard_on_set(void);
@@ -571,8 +614,11 @@ void Traits_on_remove_trait(void);
 void Traits_on_remove_trait_tag(void);
 void Traits_on_remove_trait_on_delete(void);
 void Traits_on_remove_trait_tag_on_delete(void);
+void Traits_trait_from_shared(void);
+void Traits_simple_trait_syntax(void);
 
 // Testsuite 'TriggerOnAdd'
+void TriggerOnAdd_setup(void);
 void TriggerOnAdd_new_match_1_of_1(void);
 void TriggerOnAdd_new_match_1_of_2(void);
 void TriggerOnAdd_new_no_match_1(void);
@@ -755,12 +801,14 @@ void SystemOnDemand_on_demand_task_w_not_from_entity(void);
 void SystemOnDemand_enable_after_user_disable(void);
 
 // Testsuite 'SystemCascade'
+void SystemCascade_setup(void);
 void SystemCascade_cascade_depth_1(void);
 void SystemCascade_cascade_depth_2(void);
 void SystemCascade_add_after_match(void);
 void SystemCascade_adopt_after_match(void);
 
 // Testsuite 'SystemManual'
+void SystemManual_setup(void);
 void SystemManual_1_type_1_component(void);
 void SystemManual_activate_status(void);
 void SystemManual_no_automerge(void);
@@ -772,6 +820,7 @@ void Tasks_from_system(void);
 void Tasks_tasks_in_phases(void);
 
 // Testsuite 'Prefab'
+void Prefab_setup(void);
 void Prefab_new_w_prefab(void);
 void Prefab_new_w_count_prefab(void);
 void Prefab_new_w_type_w_prefab(void);
@@ -825,7 +874,6 @@ void Prefab_match_base(void);
 void Prefab_match_base_after_add_in_prev_phase(void);
 void Prefab_override_watched_prefab(void);
 void Prefab_rematch_twice(void);
-void Prefab_inherit_in_system(void);
 void Prefab_add_to_empty_base_in_system(void);
 void Prefab_dont_inherit_disabled(void);
 void Prefab_clone_after_inherit_in_on_add(void);
@@ -836,8 +884,12 @@ void Prefab_single_on_set_on_child_w_override(void);
 void Prefab_force_owned(void);
 void Prefab_force_owned_2(void);
 void Prefab_force_owned_nested(void);
+void Prefab_force_owned_type(void);
+void Prefab_force_owned_type_w_trait(void);
+void Prefab_prefab_instanceof_hierarchy(void);
 
 // Testsuite 'System_w_FromContainer'
+void System_w_FromContainer_setup(void);
 void System_w_FromContainer_1_column_from_container(void);
 void System_w_FromContainer_2_column_1_from_container(void);
 void System_w_FromContainer_3_column_2_from_container(void);
@@ -875,6 +927,7 @@ void System_w_FromEntity_task_from_entity(void);
 void System_w_FromEntity_task_not_from_entity(void);
 
 // Testsuite 'World'
+void World_setup(void);
 void World_progress_w_0(void);
 void World_progress_w_t(void);
 void World_get_tick(void);
@@ -909,6 +962,7 @@ void World_no_time(void);
 void World_is_entity_enabled(void);
 
 // Testsuite 'Type'
+void Type_setup(void);
 void Type_type_of_1_tostr(void);
 void Type_type_of_2_tostr(void);
 void Type_type_of_2_tostr_no_id(void);
@@ -953,7 +1007,6 @@ void Type_invalid_singleton_type_expression(void);
 void Type_invalid_container_type_expression(void);
 void Type_invalid_system_type_expression(void);
 void Type_type_from_empty_entity(void);
-void Type_type_from_empty_entity_in_progress(void);
 void Type_get_type(void);
 void Type_get_type_from_empty(void);
 void Type_get_type_from_0(void);
@@ -999,6 +1052,7 @@ void Type_role_xor_str(void);
 void Type_role_not_str(void);
 
 // Testsuite 'Run'
+void Run_setup(void);
 void Run_run(void);
 void Run_run_w_param(void);
 void Run_run_no_match(void);
@@ -1061,7 +1115,29 @@ void MultiThread_multithread_quit(void);
 void MultiThread_schedule_w_tasks(void);
 void MultiThread_reactive_system(void);
 
+// Testsuite 'DeferredActions'
+void DeferredActions_defer_new(void);
+void DeferredActions_defer_add(void);
+void DeferredActions_defer_remove(void);
+void DeferredActions_defer_set(void);
+void DeferredActions_defer_delete(void);
+void DeferredActions_defer_twice(void);
+void DeferredActions_defer_twice_in_progress(void);
+void DeferredActions_run_w_defer(void);
+void DeferredActions_system_in_progress_w_defer(void);
+void DeferredActions_defer_get_mut_no_modify(void);
+void DeferredActions_defer_get_mut_w_modify(void);
+void DeferredActions_defer_modify(void);
+void DeferredActions_defer_set_trait(void);
+void DeferredActions_defer_clear(void);
+void DeferredActions_defer_add_after_delete(void);
+void DeferredActions_defer_set_after_delete(void);
+void DeferredActions_defer_get_mut_after_delete(void);
+void DeferredActions_defer_get_mut_after_delete_2nd_to_last(void);
+void DeferredActions_defer_add_child_to_deleted_parent(void);
+
 // Testsuite 'SingleThreadStaging'
+void SingleThreadStaging_setup(void);
 void SingleThreadStaging_new_empty(void);
 void SingleThreadStaging_new_w_component(void);
 void SingleThreadStaging_new_w_type_of_2(void);
@@ -1211,6 +1287,7 @@ void FilterIter_iter_snapshot_two_comps(void);
 void FilterIter_iter_snapshot_filtered_table(void);
 
 // Testsuite 'Modules'
+void Modules_setup(void);
 void Modules_simple_module(void);
 void Modules_import_module_from_system(void);
 void Modules_import_again(void);
@@ -1232,12 +1309,14 @@ void Modules_import_type(void);
 void Modules_nested_module(void);
 
 // Testsuite 'Internals'
+void Internals_setup(void);
 void Internals_deactivate_table(void);
 void Internals_activate_table(void);
 void Internals_activate_deactivate_table(void);
 void Internals_activate_deactivate_reactive(void);
 void Internals_activate_deactivate_activate_other(void);
 void Internals_no_double_system_table_after_merge(void);
+void Internals_recreate_deleted_table(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
@@ -1981,6 +2060,14 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_delete_tree_staged
     },
     {
+        "delete_tree_empty_table",
+        Hierarchies_delete_tree_empty_table
+    },
+    {
+        "delete_tree_recreate",
+        Hierarchies_delete_tree_recreate
+    },
+    {
         "get_child_count",
         Hierarchies_get_child_count
     },
@@ -1991,6 +2078,14 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "get_child_count_no_children",
         Hierarchies_get_child_count_no_children
+    },
+    {
+        "scope_iter_after_delete_tree",
+        Hierarchies_scope_iter_after_delete_tree
+    },
+    {
+        "add_child_after_delete_tree",
+        Hierarchies_add_child_after_delete_tree
     }
 };
 
@@ -2347,6 +2442,38 @@ bake_test_case Delete_testcases[] = {
     {
         "clear_2_components",
         Delete_clear_2_components
+    },
+    {
+        "alive_after_delete",
+        Delete_alive_after_delete
+    },
+    {
+        "alive_after_clear",
+        Delete_alive_after_clear
+    },
+    {
+        "alive_after_staged_delete",
+        Delete_alive_after_staged_delete
+    },
+    {
+        "alive_while_staged",
+        Delete_alive_while_staged
+    },
+    {
+        "alive_while_staged_w_delete",
+        Delete_alive_while_staged_w_delete
+    },
+    {
+        "alive_while_staged_w_delete_recycled_id",
+        Delete_alive_while_staged_w_delete_recycled_id
+    },
+    {
+        "alive_after_recycle",
+        Delete_alive_after_recycle
+    },
+    {
+        "delete_recycled",
+        Delete_delete_recycled
     }
 };
 
@@ -2486,14 +2613,6 @@ bake_test_case Lookup_testcases[] = {
         Lookup_lookup_child
     },
     {
-        "lookup_in_progress",
-        Lookup_lookup_in_progress
-    },
-    {
-        "lookup_child_in_progress",
-        Lookup_lookup_child_in_progress
-    },
-    {
         "lookup_w_null_name",
         Lookup_lookup_w_null_name
     },
@@ -2536,6 +2655,22 @@ bake_test_case Lookup_testcases[] = {
     {
         "change_name_of_existing",
         Lookup_change_name_of_existing
+    },
+    {
+        "lookup_alias",
+        Lookup_lookup_alias
+    },
+    {
+        "lookup_scoped_alias",
+        Lookup_lookup_scoped_alias
+    },
+    {
+        "define_duplicate_alias",
+        Lookup_define_duplicate_alias
+    },
+    {
+        "define_alias_in_scope",
+        Lookup_define_alias_in_scope
     }
 };
 
@@ -2567,6 +2702,18 @@ bake_test_case Singleton_testcases[] = {
     {
         "get_singleton_id",
         Singleton_get_singleton_id
+    },
+    {
+        "set_get_singleton",
+        Singleton_set_get_singleton
+    },
+    {
+        "get_mut_singleton",
+        Singleton_get_mut_singleton
+    },
+    {
+        "singleton_system",
+        Singleton_singleton_system
     }
 };
 
@@ -2661,10 +2808,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "copy_on_clone",
         ComponentLifecycle_copy_on_clone
-    },
-    {
-        "copy_on_stage",
-        ComponentLifecycle_copy_on_stage
     },
     {
         "no_copy_on_move",
@@ -3155,6 +3298,38 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "declare_different_id_same_name_w_scope",
         SystemMisc_declare_different_id_same_name_w_scope
+    },
+    {
+        "rw_in_implicit_any",
+        SystemMisc_rw_in_implicit_any
+    },
+    {
+        "rw_in_implicit_shared",
+        SystemMisc_rw_in_implicit_shared
+    },
+    {
+        "rw_in_implicit_from_empty",
+        SystemMisc_rw_in_implicit_from_empty
+    },
+    {
+        "rw_in_implicit_from_entity",
+        SystemMisc_rw_in_implicit_from_entity
+    },
+    {
+        "rw_out_explicit_any",
+        SystemMisc_rw_out_explicit_any
+    },
+    {
+        "rw_out_explicit_shared",
+        SystemMisc_rw_out_explicit_shared
+    },
+    {
+        "rw_out_explicit_from_empty",
+        SystemMisc_rw_out_explicit_from_empty
+    },
+    {
+        "rw_out_explicit_from_entity",
+        SystemMisc_rw_out_explicit_from_entity
     }
 };
 
@@ -3297,6 +3472,26 @@ bake_test_case Queries_testcases[] = {
     {
         "query_w_filter",
         Queries_query_w_filter
+    },
+    {
+        "query_optional_owned",
+        Queries_query_optional_owned
+    },
+    {
+        "query_optional_shared",
+        Queries_query_optional_shared
+    },
+    {
+        "query_optional_shared_nested",
+        Queries_query_optional_shared_nested
+    },
+    {
+        "query_optional_any",
+        Queries_query_optional_any
+    },
+    {
+        "query_rematch_optional_after_add",
+        Queries_query_rematch_optional_after_add
     }
 };
 
@@ -3334,12 +3529,28 @@ bake_test_case Traits_testcases[] = {
         Traits_query_2_traits_2_instances_per_type
     },
     {
+        "query_trait_or_component",
+        Traits_query_trait_or_component
+    },
+    {
+        "query_trait_or_trait",
+        Traits_query_trait_or_trait
+    },
+    {
+        "query_not_trait",
+        Traits_query_not_trait
+    },
+    {
         "override_trait",
         Traits_override_trait
     },
     {
         "override_tag_trait",
         Traits_override_tag_trait
+    },
+    {
+        "trait_w_component_query",
+        Traits_trait_w_component_query
     },
     {
         "trait_wildcard_system",
@@ -3376,6 +3587,14 @@ bake_test_case Traits_testcases[] = {
     {
         "on_remove_trait_tag_on_delete",
         Traits_on_remove_trait_tag_on_delete
+    },
+    {
+        "trait_from_shared",
+        Traits_trait_from_shared
+    },
+    {
+        "simple_trait_syntax",
+        Traits_simple_trait_syntax
     }
 };
 
@@ -4334,10 +4553,6 @@ bake_test_case Prefab_testcases[] = {
         Prefab_rematch_twice
     },
     {
-        "inherit_in_system",
-        Prefab_inherit_in_system
-    },
-    {
         "add_to_empty_base_in_system",
         Prefab_add_to_empty_base_in_system
     },
@@ -4376,6 +4591,18 @@ bake_test_case Prefab_testcases[] = {
     {
         "force_owned_nested",
         Prefab_force_owned_nested
+    },
+    {
+        "force_owned_type",
+        Prefab_force_owned_type
+    },
+    {
+        "force_owned_type_w_trait",
+        Prefab_force_owned_type_w_trait
+    },
+    {
+        "prefab_instanceof_hierarchy",
+        Prefab_prefab_instanceof_hierarchy
     }
 };
 
@@ -4816,10 +5043,6 @@ bake_test_case Type_testcases[] = {
         Type_type_from_empty_entity
     },
     {
-        "type_from_empty_entity_in_progress",
-        Type_type_from_empty_entity_in_progress
-    },
-    {
         "get_type",
         Type_get_type
     },
@@ -5228,6 +5451,85 @@ bake_test_case MultiThread_testcases[] = {
     {
         "reactive_system",
         MultiThread_reactive_system
+    }
+};
+
+bake_test_case DeferredActions_testcases[] = {
+    {
+        "defer_new",
+        DeferredActions_defer_new
+    },
+    {
+        "defer_add",
+        DeferredActions_defer_add
+    },
+    {
+        "defer_remove",
+        DeferredActions_defer_remove
+    },
+    {
+        "defer_set",
+        DeferredActions_defer_set
+    },
+    {
+        "defer_delete",
+        DeferredActions_defer_delete
+    },
+    {
+        "defer_twice",
+        DeferredActions_defer_twice
+    },
+    {
+        "defer_twice_in_progress",
+        DeferredActions_defer_twice_in_progress
+    },
+    {
+        "run_w_defer",
+        DeferredActions_run_w_defer
+    },
+    {
+        "system_in_progress_w_defer",
+        DeferredActions_system_in_progress_w_defer
+    },
+    {
+        "defer_get_mut_no_modify",
+        DeferredActions_defer_get_mut_no_modify
+    },
+    {
+        "defer_get_mut_w_modify",
+        DeferredActions_defer_get_mut_w_modify
+    },
+    {
+        "defer_modify",
+        DeferredActions_defer_modify
+    },
+    {
+        "defer_set_trait",
+        DeferredActions_defer_set_trait
+    },
+    {
+        "defer_clear",
+        DeferredActions_defer_clear
+    },
+    {
+        "defer_add_after_delete",
+        DeferredActions_defer_add_after_delete
+    },
+    {
+        "defer_set_after_delete",
+        DeferredActions_defer_set_after_delete
+    },
+    {
+        "defer_get_mut_after_delete",
+        DeferredActions_defer_get_mut_after_delete
+    },
+    {
+        "defer_get_mut_after_delete_2nd_to_last",
+        DeferredActions_defer_get_mut_after_delete_2nd_to_last
+    },
+    {
+        "defer_add_child_to_deleted_parent",
+        DeferredActions_defer_add_child_to_deleted_parent
     }
 };
 
@@ -5892,6 +6194,10 @@ bake_test_case Internals_testcases[] = {
     {
         "no_double_system_table_after_merge",
         Internals_no_double_system_table_after_merge
+    },
+    {
+        "recreate_deleted_table",
+        Internals_recreate_deleted_table
     }
 };
 
@@ -5945,7 +6251,7 @@ bake_test_case Error_testcases[] = {
 static bake_test_suite suites[] = {
     {
         "New",
-        NULL,
+        New_setup,
         NULL,
         20,
         New_testcases
@@ -5966,7 +6272,7 @@ static bake_test_suite suites[] = {
     },
     {
         "Switch",
-        NULL,
+        Switch_setup,
         NULL,
         22,
         Switch_testcases
@@ -5987,9 +6293,9 @@ static bake_test_suite suites[] = {
     },
     {
         "Hierarchies",
+        Hierarchies_setup,
         NULL,
-        NULL,
-        69,
+        73,
         Hierarchies_testcases
     },
     {
@@ -6029,23 +6335,23 @@ static bake_test_suite suites[] = {
     },
     {
         "Get_component",
-        NULL,
+        Get_component_setup,
         NULL,
         9,
         Get_component_testcases
     },
     {
         "Reference",
-        NULL,
+        Reference_setup,
         NULL,
         10,
         Reference_testcases
     },
     {
         "Delete",
+        Delete_setup,
         NULL,
-        NULL,
-        11,
+        19,
         Delete_testcases
     },
     {
@@ -6064,16 +6370,16 @@ static bake_test_suite suites[] = {
     },
     {
         "Lookup",
+        Lookup_setup,
         NULL,
-        NULL,
-        17,
+        19,
         Lookup_testcases
     },
     {
         "Singleton",
         NULL,
         NULL,
-        7,
+        10,
         Singleton_testcases
     },
     {
@@ -6085,23 +6391,23 @@ static bake_test_suite suites[] = {
     },
     {
         "ComponentLifecycle",
+        ComponentLifecycle_setup,
         NULL,
-        NULL,
-        42,
+        41,
         ComponentLifecycle_testcases
     },
     {
         "Pipeline",
-        NULL,
+        Pipeline_setup,
         NULL,
         15,
         Pipeline_testcases
     },
     {
         "SystemMisc",
+        SystemMisc_setup,
         NULL,
-        NULL,
-        73,
+        81,
         SystemMisc_testcases
     },
     {
@@ -6115,19 +6421,19 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        15,
+        20,
         Queries_testcases
     },
     {
         "Traits",
         NULL,
         NULL,
-        19,
+        25,
         Traits_testcases
     },
     {
         "TriggerOnAdd",
-        NULL,
+        TriggerOnAdd_setup,
         NULL,
         26,
         TriggerOnAdd_testcases
@@ -6183,14 +6489,14 @@ static bake_test_suite suites[] = {
     },
     {
         "SystemCascade",
-        NULL,
+        SystemCascade_setup,
         NULL,
         4,
         SystemCascade_testcases
     },
     {
         "SystemManual",
-        NULL,
+        SystemManual_setup,
         NULL,
         3,
         SystemManual_testcases
@@ -6204,14 +6510,14 @@ static bake_test_suite suites[] = {
     },
     {
         "Prefab",
+        Prefab_setup,
         NULL,
-        NULL,
-        64,
+        66,
         Prefab_testcases
     },
     {
         "System_w_FromContainer",
-        NULL,
+        System_w_FromContainer_setup,
         NULL,
         20,
         System_w_FromContainer_testcases
@@ -6239,21 +6545,21 @@ static bake_test_suite suites[] = {
     },
     {
         "World",
-        NULL,
+        World_setup,
         NULL,
         32,
         World_testcases
     },
     {
         "Type",
+        Type_setup,
         NULL,
-        NULL,
-        88,
+        87,
         Type_testcases
     },
     {
         "Run",
-        NULL,
+        Run_setup,
         NULL,
         24,
         Run_testcases
@@ -6266,8 +6572,15 @@ static bake_test_suite suites[] = {
         MultiThread_testcases
     },
     {
-        "SingleThreadStaging",
+        "DeferredActions",
         NULL,
+        NULL,
+        19,
+        DeferredActions_testcases
+    },
+    {
+        "SingleThreadStaging",
+        SingleThreadStaging_setup,
         NULL,
         60,
         SingleThreadStaging_testcases
@@ -6309,16 +6622,16 @@ static bake_test_suite suites[] = {
     },
     {
         "Modules",
-        NULL,
+        Modules_setup,
         NULL,
         19,
         Modules_testcases
     },
     {
         "Internals",
+        Internals_setup,
         NULL,
-        NULL,
-        6,
+        7,
         Internals_testcases
     },
     {
@@ -6332,5 +6645,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 55);
+    return bake_test_run("api", argc, argv, suites, 56);
 }

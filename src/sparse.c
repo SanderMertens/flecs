@@ -1,8 +1,8 @@
 #include "flecs.h"
 
 #define CHUNK_COUNT (4096)
-#define CHUNK(index) (int32_t)(index >> 12)
-#define OFFSET(index) (int32_t)(index & 0xFFF)
+#define CHUNK(index) ((int32_t)index >> 12)
+#define OFFSET(index) ((int32_t)index & 0xFFF)
 #define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
 
 typedef struct chunk_t {
@@ -105,6 +105,16 @@ void grow_dense(
 }
 
 static
+uint64_t strip_generation(
+    uint64_t *index_out)
+{
+    uint64_t index = *index_out;
+    uint64_t gen = index & ECS_GENERATION_MASK;
+    *index_out -= gen;
+    return gen;
+}
+
+static
 void assign_index(
     chunk_t *chunk, 
     uint64_t *dense_array, 
@@ -113,6 +123,13 @@ void assign_index(
 {
     chunk->sparse[OFFSET(index)] = dense;
     dense_array[dense] = index;
+}
+
+static
+uint64_t inc_gen(
+    uint64_t index)
+{
+    return ECS_GENERATION_INC(index);
 }
 
 static
@@ -170,14 +187,16 @@ uint64_t new_index(
         return dense_array[count];
     } else {
         return create_id(sparse, count);
-    }    
+    }
 }
 
 static
-void* try_sparse(
+void* try_sparse_any(
     const ecs_sparse_t *sparse,
     uint64_t index)
 {    
+    strip_generation(&index);
+
     chunk_t *chunk = get_chunk(sparse, CHUNK(index));
     if (!chunk) {
         return NULL;
@@ -185,7 +204,6 @@ void* try_sparse(
 
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
-
     bool in_use = dense && (dense < sparse->count);
     if (!in_use) {
         return NULL;
@@ -196,11 +214,41 @@ void* try_sparse(
 }
 
 static
+void* try_sparse(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return NULL;
+    }
+
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+    bool in_use = dense && (dense < sparse->count);
+    if (!in_use) {
+        return NULL;
+    }
+
+    uint64_t gen = strip_generation(&index);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
+
+    if (cur_gen != gen) {
+        return NULL;
+    }
+
+    ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
+    return try_sparse_any(sparse, index);
+}
+
+static
 void* get_sparse(
     const ecs_sparse_t *sparse,
     int32_t dense,
     uint64_t index)
 {
+    strip_generation(&index);
     chunk_t *chunk = get_chunk(sparse, CHUNK(index));
     int32_t offset = OFFSET(index);
     
@@ -215,11 +263,11 @@ void swap_dense(
     ecs_sparse_t *sparse,
     chunk_t *chunk_a,
     int32_t a,
-    int32_t b,
-    uint64_t index_a)
+    int32_t b)
 {
     ecs_assert(a != b, ECS_INTERNAL_ERROR, NULL);
     uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t index_a = dense_array[a];
     uint64_t index_b = dense_array[b];
 
     chunk_t *chunk_b = get_or_create_chunk(sparse, CHUNK(index_b));
@@ -340,15 +388,12 @@ void* _ecs_sparse_get_or_create(
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
 
+    uint64_t gen = strip_generation(&index);
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
 
     if (dense) {
-        /* Element is already paired, check consistency */
-        ecs_assert(index == *ecs_vector_get(sparse->dense, uint64_t, dense), 
-            ECS_INTERNAL_ERROR, NULL);
-
         /* Check if element is alive. If element is not alive, update indices so
          * that the first unused dense element points to the sparse element. */
         int32_t count = sparse->count;
@@ -358,7 +403,7 @@ void* _ecs_sparse_get_or_create(
             sparse->count ++;
         } else if (dense > count) {
             /* If dense is not alive, swap it with the first unused element. */
-            swap_dense(sparse, chunk, dense, count, index);
+            swap_dense(sparse, chunk, dense, count);
 
             /* First unused element is now last used element */
             sparse->count ++;
@@ -388,6 +433,7 @@ void* _ecs_sparse_get_or_create(
         }
 
         assign_index(chunk, dense_array, index, count);
+        dense_array[count] |= gen;
     }
 
     return DATA(chunk->data, sparse->size, offset);
@@ -410,29 +456,76 @@ void _ecs_sparse_remove(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    uint64_t gen = strip_generation(&index);
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
 
     if (dense) {
+        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+        uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
+        if (gen != cur_gen) {
+            /* Generation doesn't match which means that the provided entity is
+             * already not alive. */
+            return;
+        }
+
+        /* Increase generation */
+        dense_array[dense] = index | inc_gen(cur_gen);
+        
         int32_t count = sparse->count;
         if (dense == (count - 1)) {
             /* If dense is the last used element, simply decrease count */
             sparse->count --;
         } else if (dense < count) {
             /* If element is alive, move it to unused elements */
-            swap_dense(sparse, chunk, dense, count - 1, index);
+            swap_dense(sparse, chunk, dense, count - 1);
             sparse->count --;
         } else {
             /* Element is not alive, nothing to be done */
         }
+
+        /* Reset memory to zero on remove */
+        ecs_size_t size = sparse->size;
+        void *ptr = DATA(chunk->data, size, offset);
+        ecs_os_memset(ptr, 0, size);
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
     }
+}
+
+void ecs_sparse_set_generation(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     
-    /* Reset memory to zero on remove */
-    ecs_size_t size = sparse->size;
-    void *ptr = DATA(chunk->data, size, offset);
-    ecs_os_memset(ptr, 0, size);
+    uint64_t index_w_gen = index;
+    strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (dense) {
+        /* Increase generation */
+        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+        dense_array[dense] = index_w_gen;
+    } else {
+        /* Element is not paired and thus not alive, nothing to be done */
+    }
+}
+
+bool ecs_sparse_exists(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    
+    strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    return dense != 0;
 }
 
 void* _ecs_sparse_get(
@@ -450,6 +543,13 @@ void* _ecs_sparse_get(
     return get_sparse(sparse, dense_index, dense_array[dense_index]);
 }
 
+bool ecs_sparse_is_alive(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    return try_sparse(sparse, index) != NULL;
+}
+
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -459,6 +559,17 @@ void* _ecs_sparse_get_sparse(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     return try_sparse(sparse, index);
+}
+
+void* _ecs_sparse_get_sparse_any(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    return try_sparse_any(sparse, index);
 }
 
 int32_t ecs_sparse_count(
@@ -519,6 +630,7 @@ void sparse_copy(
         uint64_t index = indices[i];
         void *src_ptr = _ecs_sparse_get_sparse(src, size, index);
         void *dst_ptr = _ecs_sparse_get_or_create(dst, size, index);
+        ecs_sparse_set_generation(dst, index);
         ecs_os_memcpy(dst_ptr, src_ptr, size);
     }
 

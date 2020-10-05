@@ -317,3 +317,7 @@ void SystemCascade_adopt_after_match() {
 
     ecs_fini(world);
 }
+
+void SystemCascade_setup() {
+    // Implement testcase
+}

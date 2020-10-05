@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
      * but with the role the system will be matched against every component to
      * which the trait has been applied. */
     ecs.system<>(nullptr, "TRAIT | ExpiryTimer")
-        .action([](flecs::iter it) {
+        .iter([](flecs::iter it) {
             /* First, get the trait component */
             flecs::column<ExpiryTimer> et(it, 1);
 

@@ -76,6 +76,11 @@ typedef enum ComponentWriteState {
     WriteToStage
 } ComponentWriteState;
 
+typedef struct write_state_t {
+    ecs_map_t *components;
+    bool wildcard;
+} write_state_t;
+
 static
 int32_t get_write_state(
     ecs_map_t *write_state,
@@ -91,18 +96,24 @@ int32_t get_write_state(
 
 static
 void set_write_state(
-    ecs_map_t *write_state,
+    write_state_t *write_state,
     ecs_entity_t component,
     int32_t value)
 {
-    ecs_map_set(write_state, component, &value);
+    if (component == EcsWildcard) {
+        ecs_assert(value == WriteToStage, ECS_INTERNAL_ERROR, NULL);
+        write_state->wildcard = true;
+    } else {
+        ecs_map_set(write_state->components, component, &value);
+    }
 }
 
 static
 void reset_write_state(
-    ecs_map_t *write_state)
+    write_state_t *write_state)
 {
-    ecs_map_clear(write_state);
+    ecs_map_clear(write_state->components);
+    write_state->wildcard = false;
 }
 
 static
@@ -110,15 +121,19 @@ bool check_column_component(
     ecs_sig_column_t *column,
     bool is_active,
     ecs_entity_t component,
-    ecs_map_t *write_state)    
+    write_state_t *write_state)    
 {
-    int32_t state = get_write_state(write_state, component);
+    int32_t state = get_write_state(write_state->components, component);
 
-    if ((column->from_kind == EcsFromAny || column->from_kind == EcsFromOwned) && column->oper_kind != EcsOperNot) {
+    if ((column->from_kind == EcsFromAny || column->from_kind == EcsFromOwned) 
+      && column->oper_kind != EcsOperNot) 
+    {
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsIn:
             if (state == WriteToStage) {
+                return true;
+            } else if (write_state->wildcard) {
                 return true;
             }
             // fall through
@@ -127,7 +142,9 @@ bool check_column_component(
                 set_write_state(write_state, component, WriteToMain);
             }
         };
-    } else if (column->from_kind == EcsFromEmpty || column->oper_kind == EcsOperNot) {
+    } else if (column->from_kind == EcsFromEmpty || 
+               column->oper_kind == EcsOperNot) 
+    {
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsOut:
@@ -147,11 +164,11 @@ static
 bool check_column(
     ecs_sig_column_t *column,
     bool is_active,
-    ecs_map_t *write_state)
+    write_state_t *write_state)
 {
     if (column->oper_kind != EcsOperOr) {
         return check_column_component(
-            column, is_active,column->is.component, write_state);
+            column, is_active, column->is.component, write_state);
     }  
 
     return false;
@@ -172,12 +189,16 @@ bool build_pipeline(
         return false;
     }
 
-    ecs_trace_1("rebuilding pipeline #[green]%s", 
+    ecs_trace_2("rebuilding pipeline #[green]%s", 
         ecs_get_name(world, pipeline));
 
     world->stats.pipeline_build_count_total ++;
 
-    ecs_map_t *write_state = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID);
+    write_state_t ws = {
+        .components = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID),
+        .wildcard = false
+    };
+
     ecs_pipeline_op_t *op = NULL;
     ecs_vector_t *ops = NULL;
     ecs_query_t *query = pq->build_query;
@@ -203,12 +224,12 @@ bool build_pipeline(
                 world, it.entities[i], EcsInactive);
 
             ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
-                needs_merge |= check_column(column, is_active, write_state);
+                needs_merge |= check_column(column, is_active, &ws);
             });
 
             if (needs_merge) {
                 /* After merge all components will be merged, so reset state */
-                reset_write_state(write_state);
+                reset_write_state(&ws);
                 op = NULL;
 
                 /* Re-evaluate columns to set write flags if system is active.
@@ -217,7 +238,7 @@ bool build_pipeline(
                 needs_merge = false;
                 if (is_active) {
                     ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
-                        needs_merge |= check_column(column, true, write_state);
+                        needs_merge |= check_column(column, true, &ws);
                     });
                 }
 
@@ -239,7 +260,7 @@ bool build_pipeline(
         }
     }
 
-    ecs_map_free(write_state);
+    ecs_map_free(ws.components);
 
     /* Force sort of query as this could increase the match_count */
     pq->match_count = pq->query->match_count;
@@ -331,13 +352,13 @@ void ecs_pipeline_progress(
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
     ecs_worker_begin(world);
+    ecs_stage_t *stage = ecs_get_stage(&world);
     
     ecs_iter_t it = ecs_query_iter(pq->query);
     while (ecs_query_next(&it)) {
@@ -463,175 +484,7 @@ void EcsOnAddPipeline(
     }
 }
 
-static
-double insert_sleep(
-    ecs_world_t *world,
-    ecs_time_t *stop)
-{
-    ecs_time_t start = *stop;
-    double delta_time = ecs_time_measure(stop);
-
-    if (world->stats.target_fps == 0) {
-        return delta_time;
-    }
-
-    double target_delta_time = (1.0 / world->stats.target_fps);
-    double world_sleep_err = 
-        world->stats.sleep_err / (double)world->stats.frame_count_total;
-
-    /* Calculate the time we need to sleep by taking the measured delta from the
-     * previous frame, and subtracting it from target_delta_time. */
-    double sleep = target_delta_time - delta_time;
-
-    /* Pick a sleep interval that is 20 times lower than the time one frame
-     * should take. This means that this function at most iterates 20 times in
-     * a busy loop */
-    double sleep_time = target_delta_time / 20;
-
-    /* Measure at least two frames before interpreting sleep error */
-    if (world->stats.frame_count_total > 1) {
-        /* If the ratio between the sleep error and the sleep time is too high,
-         * just do a busy loop */
-        if (world_sleep_err / sleep_time > 0.1) {
-            sleep_time = 0;
-        } 
-    }
-
-    /* If the time we need to sleep is large enough to warrant a sleep, sleep */
-    if (sleep > (sleep_time - world_sleep_err)) {
-        if (sleep_time > sleep) {
-            /* Make sure we don't sleep longer than we should */
-            sleep_time = sleep;
-        }
-
-        double sleep_err = 0;
-        int32_t iterations = 0;
-
-        do {
-            /* Only call sleep when sleep_time is not 0. On some platforms, even
-             * a sleep with a timeout of 0 can cause stutter. */
-            if (sleep_time != 0) {
-                ecs_sleepf(sleep_time);
-            }
-
-            ecs_time_t now = start;
-            double prev_delta_time = delta_time;
-            delta_time = ecs_time_measure(&now);
-
-            /* Measure the error of the sleep by taking the difference between 
-             * the time we expected to sleep, and the measured time. This 
-             * assumes that a sleep is less accurate than a high resolution 
-             * timer which should be true in most cases. */
-            sleep_err = delta_time - prev_delta_time - sleep_time;
-            iterations ++;
-        } while ((target_delta_time - delta_time) > (sleep_time - world_sleep_err));
-
-        /* Add sleep error measurement to sleep error, with a bias towards the
-         * latest measured values. */
-        world->stats.sleep_err = (float)
-            (world_sleep_err * 0.9 + sleep_err * 0.1) * 
-                (float)world->stats.frame_count_total;
-    }
-
-    /*  Make last minute corrections if due to a larger clock error delta_time
-     * is still more than 5% away from the target. The 5% buffer is to account
-     * for the fact that measuring the time also takes time. */
-    while (delta_time < target_delta_time * 0.95) {
-        ecs_time_t now = start;
-        delta_time = ecs_time_measure(&now);
-    }
-
-    return delta_time;
-}
-
-static
-float start_measure_frame(
-    ecs_world_t *world,
-    float user_delta_time)
-{
-    double delta_time = 0;
-
-    if (world->measure_frame_time || (user_delta_time == 0)) {
-        ecs_time_t t = world->frame_start_time;
-        do {
-            if (world->frame_start_time.sec) {
-                delta_time = insert_sleep(world, &t);
-
-                ecs_time_measure(&t);
-            } else {
-                ecs_time_measure(&t);
-                if (world->stats.target_fps != 0) {
-                    delta_time = 1.0 / world->stats.target_fps;
-                } else {
-                    delta_time = 1.0 / 60.0; /* Best guess */
-                }
-            }
-        
-        /* Keep trying while delta_time is zero */
-        } while (delta_time == 0);
-
-        world->frame_start_time = t;  
-
-        /* Keep track of total time passed in world */
-        world->stats.world_time_total_raw += (float)delta_time;
-    }
-
-    return (float)delta_time;
-}
-
-static
-void stop_measure_frame(
-    ecs_world_t* world)
-{
-    if (world->measure_frame_time) {
-        ecs_time_t t = world->frame_start_time;
-        world->stats.frame_time_total += (float)ecs_time_measure(&t);
-    }
-}
-
 /* -- Public API -- */
-
-float ecs_frame_begin(
-    ecs_world_t *world,
-    float user_delta_time)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
-
-    if (world->locking_enabled) {
-        ecs_lock(world);
-    }
-
-    /* Start measuring total frame time */
-    float delta_time = start_measure_frame(world, user_delta_time);
-    if (user_delta_time == 0) {
-        user_delta_time = delta_time;
-    }
-
-    world->stats.delta_time_raw = user_delta_time;
-    world->stats.delta_time = user_delta_time * world->stats.time_scale;
-
-    /* Keep track of total scaled time passed in world */
-    world->stats.world_time_total += world->stats.delta_time;
-    
-    return user_delta_time;
-}
-
-void ecs_frame_end(
-    ecs_world_t *world)
-{
-    world->stats.frame_count_total ++;
-
-    if (world->locking_enabled) {
-        ecs_unlock(world);
-
-        ecs_os_mutex_lock(world->thr_sync);
-        ecs_os_cond_broadcast(world->thr_cond);
-        ecs_os_mutex_unlock(world->thr_sync);
-    }
-
-    stop_measure_frame(world);
-}
 
 bool ecs_progress(
     ecs_world_t *world,
@@ -682,7 +535,7 @@ void ecs_deactivate_systems(
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
-    ecs_defer_begin(world, &world->stage, EcsOpNone, 0, NULL, NULL, 0);
+    ecs_defer_none(world, &world->stage);
 
     while( ecs_query_next(&it)) {
         EcsSystem *sys = ecs_column(&it, EcsSystem, 1);
@@ -698,7 +551,7 @@ void ecs_deactivate_systems(
         }
     }
 
-    ecs_defer_end(world, &world->stage);
+    ecs_defer_flush(world, &world->stage);
 }
 
 void ecs_set_pipeline(

@@ -8,11 +8,8 @@ ecs_table_t *ecs_dbg_find_table(
     ecs_world_t *world,
     ecs_type_t type)
 {
-    ecs_table_t *table = ecs_table_from_type(
-        world, &world->stage, type);
-        
+    ecs_table_t *table = ecs_table_from_type(world, type);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
     return table;
 }
 
@@ -38,7 +35,7 @@ void ecs_dbg_table(
 
         if (ECS_HAS_ROLE(e, CHILDOF)) {
             ecs_dbg_entity_t parent_dbg;
-            ecs_dbg_entity(world, e & ECS_ENTITY_MASK, &parent_dbg);
+            ecs_dbg_entity(world, e & ECS_COMPONENT_MASK, &parent_dbg);
 
             ecs_dbg_table_t parent_table_dbg;
             ecs_dbg_table(world, parent_dbg.table, &parent_table_dbg);
@@ -51,12 +48,12 @@ void ecs_dbg_table(
 
             /* Add entity to list of parent entities */
             dbg_out->parent_entities = ecs_type_add(
-                world, dbg_out->parent_entities, e & ECS_ENTITY_MASK);
+                world, dbg_out->parent_entities, e & ECS_COMPONENT_MASK);
         }
 
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
             ecs_dbg_entity_t base_dbg;
-            ecs_dbg_entity(world, e & ECS_ENTITY_MASK, &base_dbg);
+            ecs_dbg_entity(world, e & ECS_COMPONENT_MASK, &base_dbg);
 
             ecs_dbg_table_t base_table_dbg;
             ecs_dbg_table(world, base_dbg.table, &base_table_dbg);            
@@ -79,15 +76,15 @@ void ecs_dbg_table(
 
             /* Add entity to list of base entities */
             dbg_out->base_entities = ecs_type_add(
-                world, dbg_out->base_entities, e & ECS_ENTITY_MASK);
+                world, dbg_out->base_entities, e & ECS_COMPONENT_MASK);
 
             /* Add base entities of entity to list of base entities */
             dbg_out->base_entities = ecs_type_add(
-                world, base_table_dbg.base_entities, e & ECS_ENTITY_MASK);                                                       
+                world, base_table_dbg.base_entities, e & ECS_COMPONENT_MASK);                                                       
         }
     }
 
-    ecs_data_t *data = ecs_table_get_data(world, table);
+    ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
         dbg_out->entities = ecs_vector_first(data->entities, ecs_entity_t);
         dbg_out->entities_count = ecs_vector_count(data->entities);
@@ -98,12 +95,12 @@ ecs_table_t* ecs_dbg_get_table(
     ecs_world_t *world,
     int32_t index)
 {
-    if (ecs_sparse_count(world->stage.tables) <= index) {
+    if (ecs_sparse_count(world->store.tables) <= index) {
         return NULL;
     }
 
     return ecs_sparse_get(
-        world->stage.tables, ecs_table_t, index);
+        world->store.tables, ecs_table_t, index);
 }
 
 bool ecs_dbg_filter_table(
@@ -128,7 +125,7 @@ void ecs_dbg_entity(
     *dbg_out = (ecs_dbg_entity_t){.entity = entity};
     
     ecs_entity_info_t info = { 0 };
-    if (ecs_get_info(world, &world->stage, entity, &info)) {
+    if (ecs_get_info(world, entity, &info)) {
         dbg_out->table = info.table;
         dbg_out->row = info.row;
         dbg_out->is_watched = info.is_watched;

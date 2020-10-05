@@ -523,3 +523,262 @@ void Queries_query_w_filter() {
 
     ecs_fini(world);
 }
+
+void Queries_query_optional_owned() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_new(world, Velocity);
+    
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    int32_t count = 0;
+    
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_column(&it, Position, 1);
+        Velocity *v = ecs_column(&it, Velocity, 2);
+        
+        test_int(it.count, 1);
+        test_assert(p != NULL);
+
+        if (it.entities[0] == e1) {
+            test_assert(v == NULL);
+        } else if (it.entities[0] == e2) {
+            test_assert(v != NULL);
+        } else if (it.entities[0] == e3) {
+            test_assert(v == NULL);
+        }
+
+        count ++;
+    }
+
+    test_int(count, 3);
+
+    ecs_fini(world);
+}
+
+void Queries_query_optional_shared() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_new(world, Velocity);
+    
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, ?SHARED:Velocity");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    int32_t count = 0;
+    
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_column(&it, Position, 1);
+        Velocity *v = ecs_column(&it, Velocity, 2);
+        
+        test_int(it.count, 1);
+        test_assert(p != NULL);
+        
+        if (it.entities[0] == e1) {
+            test_assert(v != NULL);
+        } else if (it.entities[0] == e2) {
+            test_assert(v == NULL);
+        } else if (it.entities[0] == e3) {
+            test_assert(v == NULL);
+        }
+
+        count ++;
+    }
+
+    test_int(count, 3);
+
+    ecs_fini(world);
+}
+
+void Queries_query_optional_shared_nested() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base_base = ecs_new(world, Velocity);
+    ecs_entity_t base = ecs_new(world, 0);
+    ecs_add_entity(world, base, ECS_INSTANCEOF | base_base);
+    
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, ?SHARED:Velocity");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    int32_t count = 0;
+    
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_column(&it, Position, 1);
+        Velocity *v = ecs_column(&it, Velocity, 2);
+        
+        test_int(it.count, 1);
+        test_assert(p != NULL);
+        
+        if (it.entities[0] == e1) {
+            test_assert(v != NULL);
+        } else if (it.entities[0] == e2) {
+            test_assert(v == NULL);
+        } else if (it.entities[0] == e3) {
+            test_assert(v == NULL);
+        }
+
+        count ++;
+    }
+
+    test_int(count, 3);
+
+    ecs_fini(world);
+}
+
+void Queries_query_optional_any() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_new(world, Velocity);
+    
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, ?ANY:Velocity");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    int32_t count = 0;
+    
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_column(&it, Position, 1);
+        Velocity *v = ecs_column(&it, Velocity, 2);
+        
+        test_int(it.count, 1);
+        test_assert(p != NULL);
+        
+        if (it.entities[0] == e1) {
+            test_assert(v != NULL);
+            test_assert(!ecs_is_owned(&it, 2));
+        } else if (it.entities[0] == e2) {
+            test_assert(v != NULL);
+            test_assert(ecs_is_owned(&it, 2));
+        } else if (it.entities[0] == e3) {
+            test_assert(v == NULL);
+        }
+
+        count ++;
+    }
+
+    test_int(count, 3);
+
+    ecs_fini(world);
+}
+
+void Queries_query_rematch_optional_after_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_new(world, 0);
+    
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, ?SHARED:Velocity");
+    test_assert(q != NULL);
+
+    /* First iteration, base doesn't have Velocity but query should match with
+     * entity anyway since the component is optional */
+    ecs_iter_t it = ecs_query_iter(q);
+    int32_t count = 0;
+    
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_column(&it, Position, 1);
+        Velocity *v = ecs_column(&it, Velocity, 2);
+        
+        test_int(it.count, 1);
+        test_assert(p != NULL);
+        
+        if (it.entities[0] == e1) {
+            test_assert(v == NULL);
+        } else if (it.entities[0] == e2) {
+            test_assert(v == NULL);
+        } else if (it.entities[0] == e3) {
+            test_assert(v == NULL);
+        }
+
+        count ++;
+    }
+    test_int(count, 3);
+
+    /* Add Velocity to base, should trigger rematch */
+    ecs_add(world, base, Velocity);
+
+    /* Trigger a merge, which triggers the rematch */
+    ecs_staging_begin(world);
+    ecs_staging_end(world);
+
+    /* Second iteration, base has Velocity and entity should be able to access
+     * the shared component. */
+    it = ecs_query_iter(q);
+    count = 0;
+    
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_column(&it, Position, 1);
+        Velocity *v = ecs_column(&it, Velocity, 2);
+        
+        test_int(it.count, 1);
+        test_assert(p != NULL);
+        
+        if (it.entities[0] == e1) {
+            test_assert(v != NULL);
+        } else if (it.entities[0] == e2) {
+            test_assert(v == NULL);
+        } else if (it.entities[0] == e3) {
+            test_assert(v == NULL);
+        }
+
+        count ++;
+    }
+    test_int(count, 3);    
+
+    ecs_fini(world);    
+}

@@ -107,6 +107,7 @@ void remove_bucket(
     int32_t bucket_count = map->bucket_count;
     uint64_t bucket_id = get_bucket_id(bucket_count, key);
     ecs_sparse_remove(map->buckets, bucket_id);
+    ecs_sparse_set_generation(map->buckets, bucket_id);
 }
 
 static
@@ -181,6 +182,7 @@ void rehash(
         for (b = filled_bucket_count - 1; b >= 0; b --) {
             uint64_t bucket_id = indices[b];
             ecs_bucket_t *bucket = _ecs_sparse_get_sparse(buckets, 0, bucket_id);
+            ecs_assert(bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
             int i, count = bucket->count;
             ecs_map_key_t *array = PAYLOAD_ARRAY(bucket, offset);
@@ -193,8 +195,10 @@ void rehash(
                 if (new_bucket_id != bucket_id) {
                     ecs_bucket_t *new_bucket = _ecs_sparse_get_or_create(
                         buckets, 0, new_bucket_id);
+                    ecs_assert(new_bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
                     indices = ecs_sparse_ids(buckets);
+                    ecs_assert(indices != NULL, ECS_INTERNAL_ERROR, NULL);
 
                     if (add_to_bucket(new_bucket, elem_size, offset, 
                         key, PAYLOAD(elem)) == BUCKET_COUNT) 
@@ -390,7 +394,9 @@ void ecs_map_remove(
     ecs_map_key_t *elem = array;
     int32_t bucket_count = bucket->count;
 
-    ecs_assert(bucket_count > 0, ECS_INTERNAL_ERROR, NULL);
+    if (!bucket_count) {
+        return;
+    }
 
     uint8_t i = 0;
     do {

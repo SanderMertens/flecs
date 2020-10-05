@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Delete_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void Delete_delete_1() {
     ecs_world_t *world = ecs_init();
 
@@ -161,14 +165,8 @@ void Delete_delete_3_of_3() {
 static
 void CreateEntity(ecs_iter_t *it) {
     ECS_COLUMN_COMPONENT(it, Position, 1);
-
     const ecs_entity_t *ids = ecs_bulk_new(it->world, Position, 10);
     test_assert(ids != NULL);
-
-    int i;
-    for (i = 0; i < 10; i ++) {
-        test_assert( ecs_has(it->world, ids[i], Position));
-    }
 }
 
 static
@@ -194,15 +192,14 @@ void Delete_delete_w_on_remove() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, CreateEntity, EcsOnUpdate, :Position);
+    ECS_SYSTEM(world, CreateEntity, EcsOnUpdate, [out] :Position);
     ECS_SYSTEM(world, DeleteEntity, EcsOnStore, Position);
     ECS_TRIGGER(world, OnRemoveSystem, EcsOnRemove, Position);
 
     ecs_progress(world, 0);
 
-    test_int(on_remove_system_invoked, 10);
-    
     test_int( ecs_count(world, Position), 0);
+    test_int(on_remove_system_invoked, 10);
     
     ecs_fini(world);
 }
@@ -240,5 +237,159 @@ void Delete_clear_2_components() {
     ecs_entity_t e2 = ecs_new(world, 0);
     test_assert(e2 > e);
     
+    ecs_fini(world);
+}
+
+void Delete_alive_after_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_delete(world, e);
+    
+    test_assert(!ecs_get_type(world, e));
+    test_assert(!ecs_is_alive(world, e));
+    
+    ecs_fini(world);
+}
+
+void Delete_alive_after_clear() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_clear(world, e);
+
+    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_is_alive(world, e));
+    
+    ecs_fini(world);
+}
+
+void Delete_alive_after_staged_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_defer_begin(world);
+    ecs_delete(world, e);
+    ecs_defer_end(world);
+    
+    test_assert(!ecs_get_type(world, e));
+    test_assert(!ecs_is_alive(world, e));
+    
+    ecs_fini(world);
+}
+
+void Delete_alive_while_staged() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_defer_begin(world);
+    test_assert(ecs_is_alive(world, e));
+    ecs_defer_end(world);
+    
+    ecs_fini(world);
+}
+
+void Delete_alive_while_staged_w_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_defer_begin(world);
+    test_assert(ecs_is_alive(world, e));
+    ecs_delete(world, e);
+    test_assert(ecs_is_alive(world, e));
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, e));
+    
+    ecs_fini(world);
+}
+
+void Delete_alive_while_staged_w_delete_recycled_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_delete(world, e);
+    e = ecs_new(world, 0);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_defer_begin(world);
+    test_assert(ecs_is_alive(world, e));
+    ecs_delete(world, e);
+    test_assert(ecs_is_alive(world, e));
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, e));
+    
+    ecs_fini(world);
+}
+
+void Delete_alive_after_recycle() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 != 0);
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(e != e2);
+    test_assert((ECS_ENTITY_MASK & e) == (ECS_ENTITY_MASK & e2));
+    
+    ecs_fini(world);
+}
+
+void Delete_delete_recycled() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e != e2);
+    test_assert((e2 & ECS_ENTITY_MASK) == (e & ECS_ENTITY_MASK));
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_is_alive(world, e2));
+
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_is_alive(world, e2));
+
     ecs_fini(world);
 }

@@ -35,6 +35,22 @@ bool path_append(
     return cur != 0;
 }
 
+static
+ecs_entity_t find_as_alias(
+    ecs_world_t *world,
+    const char *name)
+{
+    int32_t i, count = ecs_vector_count(world->aliases);
+    ecs_alias_t *aliases = ecs_vector_first(world->aliases, ecs_alias_t);
+    for (i = 0; i < count; i ++) {
+        if (!strcmp(aliases[i].name, name)) {
+            return aliases[i].entity;
+        }
+    }
+
+    return 0;
+}
+
 char* ecs_get_path_w_sep(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -83,8 +99,6 @@ ecs_entity_t name_to_id(
 
 static
 ecs_entity_t find_child_in_table(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table,
     const char *name)
 {
@@ -94,7 +108,7 @@ ecs_entity_t find_child_in_table(
         return 0;
     }
 
-    ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
+    ecs_data_t *data = ecs_table_get_data(table);
     if (!data || !data->columns) {
         return 0;
     }
@@ -123,16 +137,15 @@ ecs_entity_t find_child_in_table(
 }
 
 static
-ecs_entity_t find_child_in_stage(
+ecs_entity_t find_child(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t parent,
     const char *name)
 {
     (void)parent;
     
-    ecs_sparse_each(stage->tables, ecs_table_t, table, {
-        ecs_entity_t result = find_child_in_table(world, stage, table, name);
+    ecs_sparse_each(world->store.tables, ecs_table_t, table, {
+        ecs_entity_t result = find_child_in_table(table, name);
         if (result) {
             return result;
         }
@@ -147,7 +160,6 @@ ecs_entity_t ecs_lookup_child(
     const char *name)
 {
     ecs_entity_t result = 0;
-    ecs_stage_t *stage = ecs_get_stage(&world);
 
     ecs_vector_t *child_tables = ecs_map_get_ptr(
         world->child_tables, ecs_vector_t*, parent);
@@ -155,30 +167,11 @@ ecs_entity_t ecs_lookup_child(
     if (child_tables) {
         ecs_vector_each(child_tables, ecs_table_t*, table_ptr, {
             ecs_table_t *table = *table_ptr;
-
-            result = find_child_in_table(world, stage, table, name);
-            if (!result) {
-                if (stage != &world->stage) {
-                    result = find_child_in_table(world, &world->stage, table, 
-                        name);
-                }
-            }
-
+            result = find_child_in_table(table, name);
             if (result) {
                 return result;
             }
         });
-    }
-
-    /* If child hasn't been found it is possible that it was
-     * created in a new table while staged, and the table hasn't
-     * been registered with the child_table map yet. In that case we
-     * have to look for the entity in the staged tables.
-     * This edge case should rarely result in a lot of overhead,
-     * since the number of tables should stabilize over time, which
-     * means table creation while staged should be infrequent. */    
-    if (!result && stage != &world->stage) {
-        result = find_child_in_stage(world, stage, parent, name);
     }
 
     return result;
@@ -195,6 +188,11 @@ ecs_entity_t ecs_lookup(
     if (is_number(name)) {
         return name_to_id(name);
     }
+
+    ecs_entity_t e = find_as_alias(world, name);
+    if (e) {
+        return e;
+    }    
     
     return ecs_lookup_child(world, 0, name);
 }
@@ -210,8 +208,13 @@ ecs_entity_t ecs_lookup_symbol(
     if (is_number(name)) {
         return name_to_id(name);
     }
+
+    ecs_entity_t e = find_as_alias(world, name);
+    if (e) {
+        return e;
+    }      
     
-    return find_child_in_stage(world, &world->stage, 0, name);
+    return find_child(world, 0, name);
 }
 
 static
@@ -298,6 +301,11 @@ ecs_entity_t ecs_lookup_path_w_sep(
     if (!path) {
         return 0;
     }
+
+    ecs_entity_t e = find_as_alias(world, path);
+    if (e) {
+        return e;
+    }      
     
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr;
@@ -354,9 +362,9 @@ ecs_entity_t ecs_set_scope(
 
     if (scope) {
         stage->scope_table = ecs_table_traverse_add(
-            world, stage, &world->stage.root, &to_add, NULL);
+            world, &world->store.root, &to_add, NULL);
     } else {
-        stage->scope_table = &world->stage.root;
+        stage->scope_table = &world->store.root;
     }
 
     return cur;
@@ -434,8 +442,9 @@ bool ecs_scope_next(
     for (i = iter->index; i < count; i ++) {
         ecs_table_t *table = *ecs_vector_get(tables, ecs_table_t*, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        
-        ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
+        ecs_assert(table->id != 0, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_data_t *data = ecs_table_get_data(table);
         if (!data) {
             continue;
         }
@@ -451,7 +460,8 @@ bool ecs_scope_next(
             }
         }
 
-        it->table = table;
+        iter->table.table = table;
+        it->table = &iter->table;
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
@@ -535,4 +545,23 @@ ecs_entity_t ecs_new_from_path_w_sep(
     const char *prefix)
 {
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
+}
+
+void ecs_use(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+    
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(stage->scope == 0 , ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(find_as_alias(world, name) == 0, ECS_ALREADY_DEFINED, NULL);
+    (void)stage;
+    
+    ecs_alias_t *al = ecs_vector_add(&world->aliases, ecs_alias_t);
+    al->name = ecs_os_strdup(name);
+    al->entity = entity;
 }

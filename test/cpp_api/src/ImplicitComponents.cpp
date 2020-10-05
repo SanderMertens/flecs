@@ -293,3 +293,18 @@ void ImplicitComponents_reinit_w_lifecycle() {
 
     test_assert(flecs::type_id<Position>() == comp_1.id());
 }
+
+void ImplicitComponents_first_use_in_system() {
+    flecs::world world;
+
+    world.system<Position>()
+        .each([](flecs::entity e, Position& p) {
+            e.add<Velocity>();
+        });
+
+    auto e = world.entity().add<Position>();
+
+    world.progress();
+
+    test_assert(e.has<Velocity>());
+}

@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Switch_setup() {
+    ecs_tracing_enable(-3);
+}
+
 void Switch_get_case_empty() {
     ecs_world_t *world = ecs_init();
 
@@ -492,7 +496,6 @@ void AddSwitch(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_add_entity(world, it->entities[i], ECS_SWITCH | movement);
-        test_assert(ecs_has_entity(world, it->entities[i], ECS_SWITCH | movement));
     }
 }
 
@@ -529,7 +532,6 @@ void SetCase(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_add_entity(world, it->entities[i], ECS_CASE | sw_case);
-        test_assert(ecs_has_entity(world, it->entities[i], ECS_CASE | sw_case));
     }
 }
 
@@ -626,7 +628,6 @@ void RemoveSwitch(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_remove_entity(world, it->entities[i], ECS_SWITCH | movement);
-        test_assert(!ecs_has_entity(world, it->entities[i], ECS_SWITCH | movement));
     }
 }
 

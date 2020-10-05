@@ -112,11 +112,15 @@ typedef int32_t ecs_size_t;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Type role macro's
+//// Entity id macro's
 ////////////////////////////////////////////////////////////////////////////////
 
 #define ECS_ROLE_MASK ((ecs_entity_t)0xFF << 56)
-#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ROLE_MASK)
+#define ECS_ENTITY_MASK       ((uint64_t)0xFFFFFFFF)
+#define ECS_GENERATION_MASK   ((uint64_t)0xFFFF << 32)
+#define ECS_GENERATION(e)     ((e & ECS_GENERATION_MASK) >> 32)
+#define ECS_GENERATION_INC(e) ((e & ~ECS_GENERATION_MASK) | ((ECS_GENERATION(e) + 1) << 32))
+#define ECS_COMPONENT_MASK ((ecs_entity_t)~ECS_ROLE_MASK)
 #define ECS_TYPE_ROLE_START ECS_CHILDOF
 #define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
 

@@ -94,8 +94,7 @@ EcsType type_from_vec(
         .count = count
     };
 
-    ecs_table_t *table = ecs_table_find_or_create(
-        world, &world->stage, &entities);
+    ecs_table_t *table = ecs_table_find_or_create(world, &entities);
     if (!table) {
         return (EcsType){ 0 };
     }    
@@ -110,7 +109,7 @@ EcsType type_from_vec(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
         if (ECS_HAS_ROLE(e, AND)) {
-            ecs_entity_t entity = e & ECS_ENTITY_MASK;
+            ecs_entity_t entity = e & ECS_COMPONENT_MASK;
             const EcsType *type_ptr = ecs_get(world, entity, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
                 "flag must be applied to type");
@@ -126,7 +125,7 @@ EcsType type_from_vec(
     if (normalized) {
         ecs_entities_t normalized_array = ecs_type_to_entities(normalized);
         ecs_table_t *norm_table = ecs_table_traverse_add(
-            world, &world->stage, table, &normalized_array, NULL);
+            world, table, &normalized_array, NULL);
 
         result.normalized = norm_table->type;
 
@@ -281,6 +280,18 @@ ecs_entity_t ecs_new_component(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
+    bool in_progress = world->in_progress;
+
+    /* If world is in progress component may be registered, but only when not
+     * in multithreading mode. */
+    if (in_progress) {
+        ecs_assert(ecs_vector_count(world->workers) < 1, 
+            ECS_INVALID_WHILE_ITERATING, NULL);
+
+        /* Component creation should not be deferred */
+        ecs_defer_end(world);
+        world->in_progress = false;
+    }
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
@@ -296,6 +307,7 @@ ecs_entity_t ecs_new_component(
 
     bool added = false;
     EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent, &added);
+
     if (added) {
         ptr->size = ecs_from_size_t(size);
         ptr->alignment = ecs_from_size_t(alignment);
@@ -312,6 +324,11 @@ ecs_entity_t ecs_new_component(
 
     if (e > world->stats.last_component_id && e < ECS_HI_COMPONENT_ID) {
         world->stats.last_component_id = e + 1;
+    }
+
+    if (in_progress) {
+        world->in_progress = true;
+        ecs_defer_begin(world);
     }
 
     return result;

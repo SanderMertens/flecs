@@ -1,5 +1,9 @@
 #include <api.h>
 
+void Run_setup() {
+    ecs_tracing_enable(-3);
+}
+
 static
 void Iter(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
@@ -1267,8 +1271,8 @@ void AddVelocity(ecs_iter_t *it) {
         
         ecs_set(world, e, Position, {x + 1, y + 2});
         const Position *p_stage = ecs_get(world, e, Position);
-        test_int(p_stage->x, x + 1);
-        test_int(p_stage->y, y + 2);
+        test_int(p_stage->x, x);
+        test_int(p_stage->y, y);
 
         /* Main stage isn't updated until after merge */
         test_int(p[i].x, x);
@@ -1276,8 +1280,7 @@ void AddVelocity(ecs_iter_t *it) {
 
         ecs_set(world, e, Velocity, {1, 2});
         const Velocity *v = ecs_get(world, e, Velocity);
-        test_int(v->x, 1);
-        test_int(v->y, 2);
+        test_assert(v == NULL);
     }
 }
 
