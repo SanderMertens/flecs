@@ -3081,16 +3081,17 @@ public:
 
             if (s_id >= EcsFirstUserComponentId) {
                 char *path = ecs_get_fullpath(world, entity);
-                ecs_assert(!strcmp(path, s_name), 
-                    ECS_INCONSISTENT_COMPONENT_NAME, 
+                ecs_assert(!strcmp(path, s_name.c_str()), ECS_INCONSISTENT_COMPONENT_NAME, 
                     _::name_helper<T>::name());
                 ecs_os_free(path);
             }
         }
 
+        char *path = ecs_get_fullpath(world, entity);
         s_id = entity;
-        s_name = ecs_get_fullpath(world, entity);
+        s_name = path;
         s_allow_tag = allow_tag;
+        ecs_os_free(path);
     }
 
     static entity_t id_no_lifecycle(world_t *world = nullptr, const char *name = nullptr, bool allow_tag = true) {
@@ -3147,9 +3148,7 @@ public:
             id_no_lifecycle(world);
         }
 
-        ecs_assert(s_name != nullptr, ECS_INTERNAL_ERROR, NULL);
-
-        return s_name;
+        return s_name.c_str();
     }
 
     static type_t type(world_t *world = nullptr) {
@@ -3194,19 +3193,19 @@ public:
     static void reset() {
         s_id = 0;
         s_type = NULL;
-        s_name = NULL;
+        s_name.clear();
     }
 
 private:
     static entity_t s_id;
     static type_t s_type;
-    static const char *s_name;
+    static std::string s_name;
     static bool s_allow_tag;
 };
 
 template <typename T> entity_t component_info<T>::s_id( 0 );
 template <typename T> type_t component_info<T>::s_type( nullptr );
-template <typename T> const char* component_info<T>::s_name( nullptr );
+template <typename T> std::string component_info<T>::s_name("");
 template <typename T> bool component_info<T>::s_allow_tag( true );
 
 
