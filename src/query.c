@@ -760,8 +760,8 @@ add_trait:
     if (references) {
         ecs_size_t ref_size = ECS_SIZEOF(ecs_ref_t) * ecs_vector_count(references);
         table_data.data.references = ecs_os_malloc(ref_size);
-        memcpy(table_data.data.references, ecs_vector_first(references, ecs_ref_t), 
-            ref_size);
+        ecs_os_memcpy(table_data.data.references, 
+            ecs_vector_first(references, ecs_ref_t), ref_size);
         ecs_vector_free(references);
         references = NULL;
     }

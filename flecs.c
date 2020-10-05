@@ -4653,7 +4653,8 @@ int32_t move_entity(
     if (src_data == dst_data) {
         return src_row;
     }
-
+    
+    ecs_assert(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -14135,8 +14136,8 @@ add_trait:
     if (references) {
         ecs_size_t ref_size = ECS_SIZEOF(ecs_ref_t) * ecs_vector_count(references);
         table_data.data.references = ecs_os_malloc(ref_size);
-        memcpy(table_data.data.references, ecs_vector_first(references, ecs_ref_t), 
-            ref_size);
+        ecs_os_memcpy(table_data.data.references, 
+            ecs_vector_first(references, ecs_ref_t), ref_size);
         ecs_vector_free(references);
         references = NULL;
     }
