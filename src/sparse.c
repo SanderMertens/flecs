@@ -116,8 +116,8 @@ uint64_t strip_generation(
 
 static
 void assign_index(
-    chunk_t *chunk, 
-    uint64_t *dense_array, 
+    chunk_t *restrict chunk, 
+    uint64_t *restrict dense_array, 
     uint64_t index, 
     int32_t dense)
 {
@@ -239,7 +239,7 @@ void* try_sparse(
     }
 
     ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
-    return try_sparse_any(sparse, index);
+    return DATA(chunk->data, sparse->size, offset);
 }
 
 static
@@ -260,8 +260,8 @@ void* get_sparse(
 
 static
 void swap_dense(
-    ecs_sparse_t *sparse,
-    chunk_t *chunk_a,
+    ecs_sparse_t *restrict sparse,
+    chunk_t *restrict chunk_a,
     int32_t a,
     int32_t b)
 {
@@ -293,8 +293,8 @@ ecs_sparse_t* _ecs_sparse_new(
 }
 
 void ecs_sparse_set_id_source(
-    ecs_sparse_t *sparse,
-    uint64_t *id_source)
+    ecs_sparse_t *restrict sparse,
+    uint64_t *restrict id_source)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     sparse->max_id = id_source;
@@ -440,10 +440,10 @@ void* _ecs_sparse_get_or_create(
 }
 
 void* _ecs_sparse_set(
-    ecs_sparse_t *sparse,
+    ecs_sparse_t *restrict sparse,
     ecs_size_t elem_size,
     uint64_t index,
-    void *value)
+    void *restrict value)
 {
     void *ptr = _ecs_sparse_get_or_create(sparse, elem_size, index);
     ecs_os_memcpy(ptr, value, elem_size);
@@ -617,8 +617,8 @@ void ecs_sparse_grow(
 
 static
 void sparse_copy(
-    ecs_sparse_t *dst,
-    const ecs_sparse_t *src)
+    ecs_sparse_t *restrict dst,
+    const ecs_sparse_t *restrict src)
 {
     ecs_sparse_set_size(dst, ecs_sparse_size(src));
     const uint64_t *indices = ecs_sparse_ids(src);
@@ -653,8 +653,8 @@ ecs_sparse_t* ecs_sparse_copy(
 }
 
 void ecs_sparse_restore(
-    ecs_sparse_t *dst,
-    const ecs_sparse_t *src)
+    ecs_sparse_t *restrict dst,
+    const ecs_sparse_t *restrict src)
 {
     ecs_assert(dst != NULL, ECS_INVALID_PARAMETER, NULL);
     dst->count = 1;

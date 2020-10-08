@@ -88,7 +88,10 @@
                 "add_after_clear",
                 "memory_null",
                 "copy",
-                "restore"
+                "restore",
+                "create_delete",
+                "create_delete_2",
+                "create_delete_ids"
             ]
         }]
     }

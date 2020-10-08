@@ -78,6 +78,9 @@ void Sparse_add_after_clear(void);
 void Sparse_memory_null(void);
 void Sparse_copy(void);
 void Sparse_restore(void);
+void Sparse_create_delete(void);
+void Sparse_create_delete_2(void);
+void Sparse_create_delete_n(void);
 
 bake_test_case Vector_testcases[] = {
     {
@@ -324,6 +327,18 @@ bake_test_case Sparse_testcases[] = {
     {
         "restore",
         Sparse_restore
+    },
+    {
+        "create_delete",
+        Sparse_create_delete
+    },
+    {
+        "create_delete_2",
+        Sparse_create_delete_2
+    },
+    {
+        "create_delete_n",
+        Sparse_create_delete_n
     }
 };
 
@@ -353,7 +368,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        18,
+        21,
         Sparse_testcases
     }
 };
