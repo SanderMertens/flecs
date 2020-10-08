@@ -96,5 +96,5 @@ Module      | Description
 [flecs.components.http](https://github.com/flecs-hub/flecs-components-http) | Components describing an HTTP server
 [flecs.systems.transform](https://github.com/flecs-hub/flecs-systems-transform) | Hierarchical transforms for scene graphs
 [flecs.systems.sdl2](https://github.com/flecs-hub/flecs-systems-sdl2) | SDL window creation & input management
-[flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sdl2) | Sokol-based renderer
+[flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sokol) | Sokol-based renderer
 [flecs.systems.civetweb](https://github.com/flecs-hub/flecs-systems-civetweb) | A civetweb-based implementation of flecs.components.http
