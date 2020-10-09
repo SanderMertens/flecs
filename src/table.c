@@ -509,10 +509,10 @@ ecs_data_t* ecs_table_get_or_create_data(
 
 static
 void ctor_component(
-    ecs_world_t *restrict world,
-    ecs_c_info_t *restrict cdata,
-    ecs_column_t *restrict column,
-    ecs_entity_t *restrict entities,
+    ecs_world_t * world,
+    ecs_c_info_t * cdata,
+    ecs_column_t * column,
+    ecs_entity_t * entities,
     int32_t row,
     int32_t count)
 {
@@ -532,10 +532,10 @@ void ctor_component(
 
 static
 void dtor_component(
-    ecs_world_t *restrict world,
-    ecs_c_info_t *restrict cdata,
-    ecs_column_t *restrict column,
-    ecs_entity_t *restrict entities,
+    ecs_world_t * world,
+    ecs_c_info_t * cdata,
+    ecs_column_t * column,
+    ecs_entity_t * entities,
     int32_t row,
     int32_t count)
 {
@@ -555,9 +555,9 @@ void dtor_component(
 
 static
 void dtor_all_components(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data,
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
     int32_t row,
     int32_t count)
 {
@@ -574,9 +574,9 @@ void dtor_all_components(
 
 static
 void run_remove_actions(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data,
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
     int32_t row,
     int32_t count,
     bool dtor_only)
@@ -591,9 +591,9 @@ void run_remove_actions(
 }
 
 void ecs_table_destruct(
-    ecs_world_t *restrict world, 
-    ecs_table_t *restrict table, 
-    ecs_data_t *restrict data, 
+    ecs_world_t * world, 
+    ecs_table_t * table, 
+    ecs_data_t * data, 
     int32_t row, 
     int32_t count)
 {
@@ -603,8 +603,8 @@ void ecs_table_destruct(
 }
 
 void ecs_table_clear_data(
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data)
+    ecs_table_t * table,
+    ecs_data_t * data)
 {
     if (!data) {
         return;
@@ -641,8 +641,8 @@ void ecs_table_clear_data(
  * OnRemove handlers. This is typically used when restoring a table to a
  * previous state. */
 void ecs_table_clear_silent(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table)
+    ecs_world_t * world,
+    ecs_table_t * table)
 {
     ecs_data_t *data = ecs_table_get_data(table);
     if (!data) {
@@ -662,8 +662,8 @@ void ecs_table_clear_silent(
  * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as 
  * the table may have to be deactivated with systems. */
 void ecs_table_clear(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table)
+    ecs_world_t * world,
+    ecs_table_t * table)
 {
     ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
@@ -683,8 +683,8 @@ void ecs_table_clear(
 /* Unset all components in table. This function is called before a table is 
  * deleted, and invokes all UnSet handlers, if any */
 void ecs_table_unset(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table)
+    ecs_world_t * world,
+    ecs_table_t * table)
 {
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
@@ -696,8 +696,8 @@ void ecs_table_unset(
 /* Free table resources. Do not invoke handlers and do not activate/deactivate
  * table with systems. This function is used when the world is freed. */
 void ecs_table_free(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table)
+    ecs_world_t * world,
+    ecs_table_t * table)
 {
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
@@ -738,8 +738,8 @@ void ecs_table_free(
 
 /* Reset a table to its initial state. */
 void ecs_table_reset(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table)
+    ecs_world_t * world,
+    ecs_table_t * table)
 {
     (void)world;
 
@@ -780,11 +780,11 @@ void ecs_table_mark_dirty(
 
 static
 void move_switch_columns(
-    ecs_table_t *restrict new_table, 
-    ecs_data_t *restrict new_data, 
+    ecs_table_t * new_table, 
+    ecs_data_t * new_data, 
     int32_t new_index,
-    ecs_table_t *restrict old_table, 
-    ecs_data_t *restrict old_data, 
+    ecs_table_t * old_table, 
+    ecs_data_t * old_data, 
     int32_t old_index,
     int32_t count)
 {
@@ -831,13 +831,13 @@ void move_switch_columns(
 
 static
 void ensure_data(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data,
-    int32_t *restrict column_count_out,
-    int32_t *restrict sw_column_count_out,
-    ecs_column_t **restrict columns_out,
-    ecs_sw_column_t **restrict sw_columns_out)
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
+    int32_t * column_count_out,
+    int32_t * sw_column_count_out,
+    ecs_column_t ** columns_out,
+    ecs_sw_column_t ** sw_columns_out)
 {
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
@@ -865,10 +865,10 @@ void ensure_data(
 
 static
 void grow_column(
-    ecs_world_t *restrict world,
-    ecs_entity_t *restrict entities,
-    ecs_column_t *restrict column,
-    ecs_c_info_t *restrict c_info,
+    ecs_world_t * world,
+    ecs_entity_t * entities,
+    ecs_column_t * column,
+    ecs_c_info_t * c_info,
     int32_t to_add,
     int32_t new_size,
     bool construct)
@@ -939,9 +939,9 @@ void grow_column(
 
 static
 int32_t grow_data(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data,
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
     int32_t to_add,
     int32_t size,
     const ecs_entity_t *ids)
@@ -1038,11 +1038,11 @@ void fast_append(
 }
 
 int32_t ecs_table_append(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data,
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
     ecs_entity_t entity,
-    ecs_record_t *restrict record,
+    ecs_record_t * record,
     bool construct)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1164,9 +1164,9 @@ void fast_delete(
 }
 
 void ecs_table_delete(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data,
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
     int32_t index,
     bool destruct)
 {
@@ -1290,11 +1290,11 @@ void ecs_table_delete(
 
 static
 void fast_move(
-    ecs_table_t *restrict new_table,
-    ecs_data_t *restrict new_data,
+    ecs_table_t * new_table,
+    ecs_data_t * new_data,
     int32_t new_index,
-    ecs_table_t *restrict old_table,
-    ecs_data_t *restrict old_data,
+    ecs_table_t * old_table,
+    ecs_data_t * old_data,
     int32_t old_index)
 {
     ecs_type_t new_type = new_table->type;
@@ -1334,7 +1334,7 @@ void fast_move(
 }
 
 void ecs_table_move(
-    ecs_world_t *restrict world,
+    ecs_world_t * world,
     ecs_entity_t dst_entity,
     ecs_entity_t src_entity,
     ecs_table_t *new_table,
@@ -1453,9 +1453,9 @@ void ecs_table_move(
 }
 
 int32_t ecs_table_appendn(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data,
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
     int32_t to_add,
     const ecs_entity_t *ids)
 {
@@ -1464,9 +1464,9 @@ int32_t ecs_table_appendn(
 }
 
 void ecs_table_set_size(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data,
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
     int32_t size)
 {
     int32_t cur_count = ecs_table_data_count(data);
@@ -1486,9 +1486,9 @@ void ecs_table_set_size(
 }
 
 void ecs_table_set_count(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data,
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
     int32_t count)
 {
     int32_t cur_count = ecs_table_data_count(data);
@@ -1516,9 +1516,9 @@ int32_t ecs_table_count(
 }
 
 void ecs_table_swap(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data,
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
     int32_t row_1,
     int32_t row_2)
 {    
@@ -1597,8 +1597,8 @@ void ecs_table_swap(
 
 static
 void merge_vector(
-    ecs_vector_t **restrict dst_out,
-    ecs_vector_t *restrict src,
+    ecs_vector_t ** dst_out,
+    ecs_vector_t * src,
     int16_t size,
     int16_t alignment)
 {
@@ -1632,13 +1632,13 @@ void merge_vector(
 
 static
 void merge_table_data(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict new_table,
-    ecs_table_t *restrict old_table,
+    ecs_world_t * world,
+    ecs_table_t * new_table,
+    ecs_table_t * old_table,
     int32_t old_count,
     int32_t new_count,
-    ecs_data_t *restrict old_data,
-    ecs_data_t *restrict new_data)
+    ecs_data_t * old_data,
+    ecs_data_t * new_data)
 {
     int32_t i_new, new_component_count = new_table->column_count;
     int32_t i_old = 0, old_component_count = old_table->column_count;
@@ -1787,7 +1787,7 @@ void merge_table_data(
 }
 
 ecs_data_t* ecs_table_merge(
-    ecs_world_t *restrict world,
+    ecs_world_t * world,
     ecs_table_t *new_table,
     ecs_table_t *old_table,
     ecs_data_t *new_data,
@@ -1858,9 +1858,9 @@ ecs_data_t* ecs_table_merge(
 }
 
 void ecs_table_replace_data(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_data_t *restrict data)
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data)
 {
     int32_t prev_count = 0;
     ecs_data_t *table_data = table->data;
@@ -1890,9 +1890,9 @@ void ecs_table_replace_data(
 }
 
 bool ecs_table_match_filter(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    const ecs_filter_t *restrict filter)
+    ecs_world_t * world,
+    ecs_table_t * table,
+    const ecs_filter_t * filter)
 {
     if (!filter) {
         return true;
@@ -1954,9 +1954,9 @@ int32_t* ecs_table_get_monitor(
 }
 
 void ecs_table_notify(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_table_event_t *restrict event)
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_table_event_t * event)
 {
     switch(event->kind) {
     case EcsTableQueryMatch:

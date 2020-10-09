@@ -47,8 +47,8 @@ const EcsComponent* ecs_component_from_id(
 /* Count number of columns with data (excluding tags) */
 static
 int32_t data_column_count(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table)
+    ecs_world_t * world,
+    ecs_table_t * table)
 {
     int32_t count = 0;
     ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
@@ -107,8 +107,8 @@ ecs_type_t entities_to_type(
 
 static
 void register_child_table(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
+    ecs_world_t * world,
+    ecs_table_t * table,
     ecs_entity_t parent)
 {
     /* Register child table with parent */
@@ -130,8 +130,8 @@ void register_child_table(
 
 static
 void init_edges(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table)
+    ecs_world_t * world,
+    ecs_table_t * table)
 {
     ecs_entity_t *entities = ecs_vector_first(table->type, ecs_entity_t);
     int32_t count = ecs_vector_count(table->type);
@@ -222,9 +222,9 @@ void init_edges(
 
 static
 void init_table(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
-    ecs_entities_t *restrict entities)
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_entities_t * entities)
 {
     table->type = entities_to_type(entities);
     table->c_info = NULL;
@@ -247,8 +247,8 @@ void init_table(
 
 static
 ecs_table_t *create_table(
-    ecs_world_t *restrict world,
-    ecs_entities_t *restrict entities)
+    ecs_world_t * world,
+    ecs_entities_t * entities)
 {
     ecs_table_t *result = ecs_sparse_add(world->store.tables, ecs_table_t);
     result->id = ecs_to_u32(ecs_sparse_last_id(world->store.tables));
@@ -355,8 +355,8 @@ ecs_edge_t* get_edge(
 
 static
 void create_backlink_after_add(
-    ecs_table_t *restrict next,
-    ecs_table_t *restrict prev,
+    ecs_table_t * next,
+    ecs_table_t * prev,
     ecs_entity_t add)
 {
     ecs_edge_t *edge = get_edge(next, add);
@@ -367,8 +367,8 @@ void create_backlink_after_add(
 
 static
 void create_backlink_after_remove(
-    ecs_table_t *restrict next,
-    ecs_table_t *restrict prev,
+    ecs_table_t * next,
+    ecs_table_t * prev,
     ecs_entity_t add)
 {
     ecs_edge_t *edge = get_edge(next, add);
@@ -379,8 +379,8 @@ void create_backlink_after_remove(
 
 static
 ecs_entity_t find_xor_replace(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
+    ecs_world_t * world,
+    ecs_table_t * table,
     ecs_type_t type,
     ecs_entity_t add)
 {
@@ -413,8 +413,8 @@ ecs_entity_t find_xor_replace(
 }
 
 int32_t ecs_table_switch_from_case(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict table,
+    ecs_world_t * world,
+    ecs_table_t * table,
     ecs_entity_t add)
 {
     ecs_type_t type = table->type;
@@ -463,8 +463,8 @@ int32_t ecs_table_switch_from_case(
 
 static
 ecs_table_t *find_or_create_table_include(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict node,
+    ecs_world_t * world,
+    ecs_table_t * node,
     ecs_entity_t add)
 {
     /* If table has one or more switches and this is a case, return self */
@@ -502,8 +502,8 @@ ecs_table_t *find_or_create_table_include(
 
 static
 ecs_table_t *find_or_create_table_exclude(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict node,
+    ecs_world_t * world,
+    ecs_table_t * node,
     ecs_entity_t remove)
 {
     ecs_type_t type = node->type;
@@ -530,11 +530,11 @@ ecs_table_t *find_or_create_table_exclude(
 
 static
 ecs_table_t* traverse_remove_hi_edges(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict node,
+    ecs_world_t * world,
+    ecs_table_t * node,
     int32_t i,
-    ecs_entities_t *restrict to_remove,
-    ecs_entities_t *restrict removed)
+    ecs_entities_t * to_remove,
+    ecs_entities_t * removed)
 {
     int32_t count = to_remove->count;
     ecs_entity_t *entities = to_remove->array;
@@ -567,10 +567,10 @@ ecs_table_t* traverse_remove_hi_edges(
 }
 
 ecs_table_t* ecs_table_traverse_remove(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict node,
-    ecs_entities_t *restrict to_remove,
-    ecs_entities_t *restrict removed)
+    ecs_world_t * world,
+    ecs_table_t * node,
+    ecs_entities_t * to_remove,
+    ecs_entities_t * removed)
 {
     int32_t i, count = to_remove->count;
     ecs_entity_t *entities = to_remove->array;
@@ -615,10 +615,10 @@ ecs_table_t* ecs_table_traverse_remove(
 
 static
 void find_owned_components(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict node,
+    ecs_world_t * world,
+    ecs_table_t * node,
     ecs_entity_t base,
-    ecs_entities_t *restrict owned)
+    ecs_entities_t * owned)
 {
     /* If we're adding an INSTANCEOF relationship, check if the base
      * has OWNED components that need to be added to the instance */
@@ -652,11 +652,11 @@ void find_owned_components(
 
 static
 ecs_table_t* traverse_add_hi_edges(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict node,
+    ecs_world_t * world,
+    ecs_table_t * node,
     int32_t i,
-    ecs_entities_t *restrict to_add,
-    ecs_entities_t *restrict added)
+    ecs_entities_t * to_add,
+    ecs_entities_t * added)
 {
     int32_t count = to_add->count;
     ecs_entity_t *entities = to_add->array;
@@ -710,10 +710,10 @@ ecs_table_t* traverse_add_hi_edges(
 }
 
 ecs_table_t* ecs_table_traverse_add(
-    ecs_world_t *restrict world,
-    ecs_table_t *restrict node,
-    ecs_entities_t *restrict to_add,
-    ecs_entities_t *restrict added)    
+    ecs_world_t * world,
+    ecs_table_t * node,
+    ecs_entities_t * to_add,
+    ecs_entities_t * added)    
 {
     int32_t i, count = to_add->count;
     ecs_entity_t *entities = to_add->array;
@@ -811,8 +811,8 @@ int32_t ecs_entity_array_dedup(
 
 static
 int32_t count_occurrences(
-    ecs_world_t *restrict world,
-    ecs_entities_t *restrict entities,
+    ecs_world_t * world,
+    ecs_entities_t * entities,
     ecs_entity_t entity,
     int32_t constraint_index)    
 {
@@ -840,8 +840,8 @@ int32_t count_occurrences(
 
 static
 void verify_constraints(
-    ecs_world_t *restrict world,
-    ecs_entities_t *restrict entities)
+    ecs_world_t * world,
+    ecs_entities_t * entities)
 {
     int i, count = entities->count;
     for (i = count - 1; i >= 0; i --) {
@@ -875,8 +875,8 @@ void verify_constraints(
 
 static
 ecs_table_t *find_or_create(
-    ecs_world_t *restrict world,
-    ecs_entities_t *restrict entities)
+    ecs_world_t * world,
+    ecs_entities_t * entities)
 {    
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -940,8 +940,8 @@ ecs_table_t *find_or_create(
 }
 
 ecs_table_t* ecs_table_find_or_create(
-    ecs_world_t *restrict world,
-    ecs_entities_t *restrict components)
+    ecs_world_t * world,
+    ecs_entities_t * components)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
