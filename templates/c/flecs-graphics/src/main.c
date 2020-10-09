@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     ECS_IMPORT(world, FlecsSystemsSdl2);
 
     /* Define entity for square */
-    ECS_ENTITY(world, Square, EcsPosition2D, EcsSquare, EcsColor);
+    ECS_ENTITY(world, Square, EcsPosition2D, EcsSquare, EcsRgb);
 
     /* Define system that moves the square on keyboard input */
     ECS_SYSTEM(world, MoveSquare, EcsOnUpdate, EcsInput, Square.EcsPosition2D);
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     /* Initialize square */
     ecs_set(world, Square, EcsPosition2D, {0, 0});
     ecs_set(world, Square, EcsSquare, { .size = 50 });
-    ecs_set(world, Square, EcsColor, { .r = 0, .g = 0, .b = 255, .a = 255 });
+    ecs_set(world, Square, EcsRgb, { .r = 0, .g = 0, .b = 255, .a = 255 });
 
     /* Enter main loop */
     ecs_set_target_fps(world, 60);

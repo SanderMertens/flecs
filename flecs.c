@@ -5520,30 +5520,29 @@ void ecs_delete(
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = ecs_get_stage(&world);
-
     if (ecs_defer_delete(world, stage, entity)) {
         return;
     }
 
-    ecs_entity_info_t info;
-    info.table = NULL;
+    ecs_record_t *r = ecs_sparse_remove_get(
+        world->store.entity_index, ecs_record_t, entity);
+    if (r) {
+        ecs_entity_info_t info;
+        set_info_from_record(entity, &info, r);
+        if (info.is_watched) {
+            ecs_delete_children(world, entity);
+        }
 
-    ecs_get_info(world, entity, &info);
-    if (info.is_watched) {
-        ecs_delete_children(world, entity);
+        /* If entity has components, remove them */
+        ecs_table_t *table = info.table;
+        if (table) {
+            ecs_type_t type = table->type;
+            ecs_entities_t to_remove = ecs_type_to_entities(type);
+            delete_entity(world, table, info.data, info.row, &to_remove);
+            r->table = NULL;
+        }
+        r->row = 0;
     }
-
-    /* If entity has components, remove them */
-    ecs_table_t *table = info.table;
-    if (table) {
-        ecs_type_t type = table->type;
-
-        /* Remove all components */
-        ecs_entities_t to_remove = ecs_type_to_entities(type);
-        remove_entities_w_info(world, entity, &info, &to_remove);
-    }
-
-    ecs_eis_delete(world, entity);
 
     ecs_defer_flush(world, stage);
 }
@@ -7725,11 +7724,13 @@ void* _ecs_sparse_set(
     return ptr;
 }
 
-void _ecs_sparse_remove(
+void* _ecs_sparse_remove_get(
     ecs_sparse_t *sparse,
+    ecs_size_t size,
     uint64_t index)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     uint64_t gen = strip_generation(&index);
     int32_t offset = OFFSET(index);
@@ -7741,7 +7742,7 @@ void _ecs_sparse_remove(
         if (gen != cur_gen) {
             /* Generation doesn't match which means that the provided entity is
              * already not alive. */
-            return;
+            return NULL;
         }
 
         /* Increase generation */
@@ -7757,14 +7758,24 @@ void _ecs_sparse_remove(
             sparse->count --;
         } else {
             /* Element is not alive, nothing to be done */
+            return NULL;
         }
 
         /* Reset memory to zero on remove */
-        ecs_size_t size = sparse->size;
-        void *ptr = DATA(chunk->data, size, offset);
-        ecs_os_memset(ptr, 0, size);
+        return DATA(chunk->data, sparse->size, offset);
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
+        return NULL;
+    }
+}
+
+void ecs_sparse_remove(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    void *ptr = _ecs_sparse_remove_get(sparse, 0, index);
+    if (ptr) {
+        ecs_os_memset(ptr, 0, sparse->size);
     }
 }
 

@@ -450,11 +450,13 @@ void* _ecs_sparse_set(
     return ptr;
 }
 
-void _ecs_sparse_remove(
+void* _ecs_sparse_remove_get(
     ecs_sparse_t *sparse,
+    ecs_size_t size,
     uint64_t index)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     uint64_t gen = strip_generation(&index);
     int32_t offset = OFFSET(index);
@@ -466,7 +468,7 @@ void _ecs_sparse_remove(
         if (gen != cur_gen) {
             /* Generation doesn't match which means that the provided entity is
              * already not alive. */
-            return;
+            return NULL;
         }
 
         /* Increase generation */
@@ -482,14 +484,24 @@ void _ecs_sparse_remove(
             sparse->count --;
         } else {
             /* Element is not alive, nothing to be done */
+            return NULL;
         }
 
         /* Reset memory to zero on remove */
-        ecs_size_t size = sparse->size;
-        void *ptr = DATA(chunk->data, size, offset);
-        ecs_os_memset(ptr, 0, size);
+        return DATA(chunk->data, sparse->size, offset);
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
+        return NULL;
+    }
+}
+
+void ecs_sparse_remove(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    void *ptr = _ecs_sparse_remove_get(sparse, 0, index);
+    if (ptr) {
+        ecs_os_memset(ptr, 0, sparse->size);
     }
 }
 

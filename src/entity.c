@@ -1801,30 +1801,29 @@ void ecs_delete(
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = ecs_get_stage(&world);
-
     if (ecs_defer_delete(world, stage, entity)) {
         return;
     }
 
-    ecs_entity_info_t info;
-    info.table = NULL;
+    ecs_record_t *r = ecs_sparse_remove_get(
+        world->store.entity_index, ecs_record_t, entity);
+    if (r) {
+        ecs_entity_info_t info;
+        set_info_from_record(entity, &info, r);
+        if (info.is_watched) {
+            ecs_delete_children(world, entity);
+        }
 
-    ecs_get_info(world, entity, &info);
-    if (info.is_watched) {
-        ecs_delete_children(world, entity);
+        /* If entity has components, remove them */
+        ecs_table_t *table = info.table;
+        if (table) {
+            ecs_type_t type = table->type;
+            ecs_entities_t to_remove = ecs_type_to_entities(type);
+            delete_entity(world, table, info.data, info.row, &to_remove);
+            r->table = NULL;
+        }
+        r->row = 0;
     }
-
-    /* If entity has components, remove them */
-    ecs_table_t *table = info.table;
-    if (table) {
-        ecs_type_t type = table->type;
-
-        /* Remove all components */
-        ecs_entities_t to_remove = ecs_type_to_entities(type);
-        remove_entities_w_info(world, entity, &info, &to_remove);
-    }
-
-    ecs_eis_delete(world, entity);
 
     ecs_defer_flush(world, stage);
 }
