@@ -2486,7 +2486,7 @@ ecs_type_t ecs_column_type(
  * @param column The column for which to obtain the size.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_column_size(
+size_t ecs_column_size(
     const ecs_iter_t *it,
     int32_t column);
 

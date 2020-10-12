@@ -15152,7 +15152,6 @@ void remove_table(
 
 static
 void unmatch_table_w_index(
-    ecs_world_t *world,
     ecs_query_t *query,
     ecs_table_t *table,
     int32_t match)
@@ -15172,12 +15171,11 @@ void unmatch_table_w_index(
 
 static
 void unmatch_table(
-    ecs_world_t *world,
     ecs_query_t *query,
     ecs_table_t *table)
 {
     unmatch_table_w_index(
-        world, query, table, table_matched(query->tables, table));       
+        query, table, table_matched(query->tables, table));       
 }
 
 static
@@ -15206,7 +15204,7 @@ void rematch_table(
          * previously had data no longer has data, or vice versa. Do a full
          * rematch to make sure data is consistent. */
         } else if (query->flags & EcsQueryHasOptional) {
-            unmatch_table(world, query, table);
+            unmatch_table(query, table);
             if (!(query->flags & EcsQueryIsSubquery)) {
                 ecs_table_notify(world, table, &(ecs_table_event_t){
                     .kind = EcsTableQueryUnmatch,
@@ -15218,7 +15216,7 @@ void rematch_table(
     } else {
         /* Table no longer matches, remove */
         if (match != -1) {
-            unmatch_table(world, query, table);
+            unmatch_table(query, table);
             if (!(query->flags & EcsQueryIsSubquery)) {
                 ecs_table_notify(world, table, &(ecs_table_event_t){
                     .kind = EcsTableQueryUnmatch,
@@ -15300,7 +15298,7 @@ void ecs_query_notify(
         break;
     case EcsQueryTableUnmatch:
         /* Deletion of table */
-        unmatch_table(world, query, event->table);
+        unmatch_table(query, event->table);
         break;
     case EcsQueryTableRematch:
         /* Rematch tables of query */
@@ -17656,7 +17654,7 @@ ecs_entity_t ecs_column_entity(
     return it->table->components[index - 1];
 }
 
-ecs_entity_t ecs_column_size(
+size_t ecs_column_size(
     const ecs_iter_t *it,
     int32_t index)
 {
