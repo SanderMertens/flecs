@@ -326,7 +326,7 @@ void Queries_subquery_inactive() {
     ecs_fini(world);
 }
 
-void Queries_subquery_rematch() {
+void Queries_subquery_unmatch() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -393,6 +393,185 @@ void Queries_subquery_rematch() {
 
     it = ecs_query_iter(sq);
     test_int(it.table_count, 0);
+
+    ecs_query_free(sq);
+
+    ecs_fini(world);
+}
+
+void Queries_subquery_rematch() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_add(world, parent, Position);
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_add(world, e2, Position);
+    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, PARENT:Position");
+    test_assert(q != NULL);
+
+    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    test_assert(sq != NULL);
+
+    int32_t table_count = 0, entity_count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(ecs_has(world, it.entities[i], Position));
+        }
+    }
+
+    test_int(table_count, 2);  
+    test_int(entity_count, 2);
+
+    table_count = 0, entity_count = 0;
+    it = ecs_query_iter(sq);
+    while (ecs_query_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(ecs_has(world, it.entities[i], Position));
+            test_assert(ecs_has(world, it.entities[i], Velocity));
+        }
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 1);
+
+    /* Queries now no longer match */
+    ecs_remove(world, parent, Position);
+
+    /* Force unmatching */
+    ecs_progress(world, 0);
+
+    /* Test if tables have been unmatched */
+    it = ecs_query_iter(q);
+    test_int(it.table_count, 0);
+
+    it = ecs_query_iter(sq);
+    test_int(it.table_count, 0);
+
+    /* Rematch queries */
+    ecs_add(world, parent, Position);    
+
+    /* Force rematching */
+    ecs_progress(world, 0);
+
+    /* Test if tables have been rematched */
+    it = ecs_query_iter(q);
+    test_int(it.table_count, 2);
+
+    it = ecs_query_iter(sq);
+    test_int(it.table_count, 1);    
+
+    ecs_query_free(sq);
+
+    ecs_fini(world);
+}
+
+void Queries_subquery_rematch_w_parent_optional() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_add(world, e2, Position);
+    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, ?PARENT:Position");
+    test_assert(q != NULL);
+
+    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    test_assert(sq != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_int(it.table_count, 2);
+
+    it = ecs_query_iter(sq);
+    test_int(it.table_count, 1);
+
+    /* Trigger rematch */
+    ecs_add(world, parent, Position);
+    ecs_progress(world, 0);
+
+    /* Tables should be matched */
+    it = ecs_query_iter(q);
+    test_int(it.table_count, 3);
+
+    it = ecs_query_iter(sq);
+    test_int(it.table_count, 1);
+
+    ecs_query_free(sq);
+
+    ecs_fini(world);
+}
+
+void Queries_subquery_rematch_w_sub_optional() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    // ecs_add(world, parent, Position);
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_add(world, e2, Position);
+    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, ?PARENT:Position");
+    test_assert(q != NULL);
+
+    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity, ?Mass");
+    test_assert(sq != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_int(it.table_count, 2);
+
+    it = ecs_query_iter(sq);
+    test_int(it.table_count, 1);
+
+    /* Trigger rematch */
+    ecs_add(world, parent, Position);
+    ecs_progress(world, 0);
+
+    /* Tables should be matched */
+    it = ecs_query_iter(q);
+    test_int(it.table_count, 3);
+
+    it = ecs_query_iter(sq);
+    test_int(it.table_count, 1);
 
     ecs_query_free(sq);
 

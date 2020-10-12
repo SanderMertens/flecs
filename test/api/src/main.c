@@ -579,7 +579,10 @@ void Queries_query_change_after_in_system(void);
 void Queries_subquery_match_existing(void);
 void Queries_subquery_match_new(void);
 void Queries_subquery_inactive(void);
+void Queries_subquery_unmatch(void);
 void Queries_subquery_rematch(void);
+void Queries_subquery_rematch_w_parent_optional(void);
+void Queries_subquery_rematch_w_sub_optional(void);
 void Queries_query_single_trait(void);
 void Queries_query_single_instanceof(void);
 void Queries_query_single_childof(void);
@@ -3454,8 +3457,20 @@ bake_test_case Queries_testcases[] = {
         Queries_subquery_inactive
     },
     {
+        "subquery_unmatch",
+        Queries_subquery_unmatch
+    },
+    {
         "subquery_rematch",
         Queries_subquery_rematch
+    },
+    {
+        "subquery_rematch_w_parent_optional",
+        Queries_subquery_rematch_w_parent_optional
+    },
+    {
+        "subquery_rematch_w_sub_optional",
+        Queries_subquery_rematch_w_sub_optional
     },
     {
         "query_single_trait",
@@ -6421,7 +6436,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        20,
+        23,
         Queries_testcases
     },
     {

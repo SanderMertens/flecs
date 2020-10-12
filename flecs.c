@@ -13408,6 +13408,12 @@ ecs_entity_t ecs_run_intern(
 #endif
 #endif
 
+void activate_table(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_table_t *table,
+    bool active);
+
 static
 ecs_entity_t components_contains(
     ecs_world_t *world,
@@ -14184,7 +14190,9 @@ add_trait:
             .query = query,
             .matched_table_index = matched_table_index
         });
-    }    
+    } else if (table && ecs_table_count(table)) {
+        activate_table(world, query, table, true);
+    }
 
     if (trait_offsets) {
         ecs_os_free(trait_offsets);
@@ -14993,17 +15001,21 @@ void process_signature(
     query->flags |= (ecs_flags32_t)(has_refs(&query->sig) * EcsQueryHasRefs);
     query->flags |= (ecs_flags32_t)(has_traits(&query->sig) * EcsQueryHasTraits);
 
-    register_monitors(world, query);
+    if (!(query->flags & EcsQueryIsSubquery)) {
+        register_monitors(world, query);
+    }
 }
 
-void match_table(
+bool match_table(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_table_t *table)
 {
     if (ecs_query_match(world, table, query, NULL)) {
         add_table(world, query, table);
+        return true;
     }
+    return false;
 }
 
 /** Table activation happens when a table was or becomes empty. Deactivated
@@ -15148,20 +15160,12 @@ void unmatch_table_w_index(
     /* If table no longer matches, remove it */
     if (match != -1) {
         remove_table(query->tables, match);
-        notify_subqueries(world, query, &(ecs_query_event_t){
-            .kind = EcsQueryTableUnmatch,
-            .table = table
-        });
     } else {
         /* Make sure the table is removed if it was inactive */
         match = table_matched(
             query->empty_tables, table);
         if (match != -1) {
             remove_table(query->empty_tables, match);
-            notify_subqueries(world, query, &(ecs_query_event_t){
-                .kind = EcsQueryTableUnmatch,
-                .table = table
-            });
         }
     }  
 }
@@ -15203,20 +15207,28 @@ void rematch_table(
          * rematch to make sure data is consistent. */
         } else if (query->flags & EcsQueryHasOptional) {
             unmatch_table(world, query, table);
-            ecs_table_notify(world, table, &(ecs_table_event_t){
-                .kind = EcsTableQueryUnmatch,
-                .query = query
-            }); 
+            if (!(query->flags & EcsQueryIsSubquery)) {
+                ecs_table_notify(world, table, &(ecs_table_event_t){
+                    .kind = EcsTableQueryUnmatch,
+                    .query = query
+                }); 
+            }
             add_table(world, query, table);
         }
     } else {
         /* Table no longer matches, remove */
         if (match != -1) {
             unmatch_table(world, query, table);
-            ecs_table_notify(world, table, &(ecs_table_event_t){
-                .kind = EcsTableQueryUnmatch,
-                .query = query
-            }); 
+            if (!(query->flags & EcsQueryIsSubquery)) {
+                ecs_table_notify(world, table, &(ecs_table_event_t){
+                    .kind = EcsTableQueryUnmatch,
+                    .query = query
+                });
+            }
+            notify_subqueries(world, query, &(ecs_query_event_t){
+                .kind = EcsQueryTableUnmatch,
+                .table = table
+            });
         }
     }
 }
@@ -15228,18 +15240,16 @@ void rematch_tables(
     ecs_query_t *query,
     ecs_query_t *parent_query)
 {
-    ecs_trace_1("rematch query %s", query_name(world, query));
-
     if (parent_query) {
-        ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
-        int32_t i, count = ecs_vector_count(query->tables);
+        ecs_matched_table_t *tables = ecs_vector_first(parent_query->tables, ecs_matched_table_t);
+        int32_t i, count = ecs_vector_count(parent_query->tables);
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = tables[i].data.table;
             rematch_table(world, query, table);
         }
 
-        tables = ecs_vector_first(query->empty_tables, ecs_matched_table_t);
-        count = ecs_vector_count(query->empty_tables);
+        tables = ecs_vector_first(parent_query->empty_tables, ecs_matched_table_t);
+        count = ecs_vector_count(parent_query->empty_tables);
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = tables[i].data.table;
             rematch_table(world, query, table);
@@ -15276,10 +15286,17 @@ void ecs_query_notify(
     ecs_query_t *query,
     ecs_query_event_t *event)
 {
+    bool notify = true;
+
     switch(event->kind) {
     case EcsQueryTableMatch:
         /* Creation of new table */
-        match_table(world, query, event->table);
+        if (match_table(world, query, event->table)) {
+            if (query->subqueries) {
+                notify_subqueries(world, query, event);
+            }
+        }
+        notify = false;
         break;
     case EcsQueryTableUnmatch:
         /* Deletion of table */
@@ -15299,7 +15316,9 @@ void ecs_query_notify(
         break;
     }
 
-    notify_subqueries(world, query, event);
+    if (notify) {
+        notify_subqueries(world, query, event);
+    }
 }
 
 /* -- Public API -- */
@@ -15317,6 +15336,10 @@ ecs_query_t* ecs_query_new_w_sig_intern(
     result->empty_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = system;
     result->prev_match_count = -1;
+
+    if (is_subquery) {
+        result->flags |= EcsQueryIsSubquery;
+    }
 
     process_signature(world, result);
 
@@ -15349,8 +15372,6 @@ ecs_query_t* ecs_query_new_w_sig_intern(
             * preprocessed when the query is evaluated. */
             add_table(world, result, NULL);
         }
-    } else {
-        result->flags |= EcsQueryIsSubquery;
     }
 
     if (result->cascade_by) {
@@ -17856,7 +17877,7 @@ void* ecs_os_memdup(
     use of this software.
     Permission is granted to anyone to use this software for any purpose,
     including commercial applications, and to alter it and redistribute it
-    freely, subject to the following ions:
+    freely, subject to the following restrictions:
         1. The origin of this software must not be misrepresented; you must not
         claim that you wrote the original software. If you use this software in a
         product, an acknowledgment in the product documentation would be
