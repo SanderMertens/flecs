@@ -37,6 +37,8 @@ void Vector_pop_elements(void);
 void Queue_setup(void);
 void Queue_free_empty(void);
 void Queue_push(void);
+void Queue_from_array(void);
+void Queue_last(void);
 
 // Testsuite 'Map'
 void Map_setup(void);
@@ -80,7 +82,23 @@ void Sparse_copy(void);
 void Sparse_restore(void);
 void Sparse_create_delete(void);
 void Sparse_create_delete_2(void);
-void Sparse_create_delete_n(void);
+
+// Testsuite 'Strbuf'
+void Strbuf_setup(void);
+void Strbuf_append(void);
+void Strbuf_appendstr(void);
+void Strbuf_appendstrn(void);
+void Strbuf_appendstr_null(void);
+void Strbuf_append_list(void);
+void Strbuf_append_nested_list(void);
+void Strbuf_large_str(void);
+void Strbuf_empty_str(void);
+void Strbuf_append_zerocopy(void);
+void Strbuf_append_zerocopy_only(void);
+void Strbuf_append_zerocopy_const(void);
+void Strbuf_reset(void);
+void Strbuf_merge(void);
+void Strbuf_app_buffer(void);
 
 bake_test_case Vector_testcases[] = {
     {
@@ -181,6 +199,14 @@ bake_test_case Queue_testcases[] = {
     {
         "push",
         Queue_push
+    },
+    {
+        "from_array",
+        Queue_from_array
+    },
+    {
+        "last",
+        Queue_last
     }
 };
 
@@ -335,10 +361,65 @@ bake_test_case Sparse_testcases[] = {
     {
         "create_delete_2",
         Sparse_create_delete_2
+    }
+};
+
+bake_test_case Strbuf_testcases[] = {
+    {
+        "append",
+        Strbuf_append
     },
     {
-        "create_delete_n",
-        Sparse_create_delete_n
+        "appendstr",
+        Strbuf_appendstr
+    },
+    {
+        "appendstrn",
+        Strbuf_appendstrn
+    },
+    {
+        "appendstr_null",
+        Strbuf_appendstr_null
+    },
+    {
+        "append_list",
+        Strbuf_append_list
+    },
+    {
+        "append_nested_list",
+        Strbuf_append_nested_list
+    },
+    {
+        "large_str",
+        Strbuf_large_str
+    },
+    {
+        "empty_str",
+        Strbuf_empty_str
+    },
+    {
+        "append_zerocopy",
+        Strbuf_append_zerocopy
+    },
+    {
+        "append_zerocopy_only",
+        Strbuf_append_zerocopy_only
+    },
+    {
+        "append_zerocopy_const",
+        Strbuf_append_zerocopy_const
+    },
+    {
+        "reset",
+        Strbuf_reset
+    },
+    {
+        "merge",
+        Strbuf_merge
+    },
+    {
+        "app_buffer",
+        Strbuf_app_buffer
     }
 };
 
@@ -354,7 +435,7 @@ static bake_test_suite suites[] = {
         "Queue",
         Queue_setup,
         NULL,
-        2,
+        4,
         Queue_testcases
     },
     {
@@ -368,12 +449,19 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        21,
+        20,
         Sparse_testcases
+    },
+    {
+        "Strbuf",
+        Strbuf_setup,
+        NULL,
+        14,
+        Strbuf_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("collections", argc, argv, suites, 4);
+    return bake_test_run("collections", argc, argv, suites, 5);
 }

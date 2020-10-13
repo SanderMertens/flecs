@@ -43,7 +43,9 @@
             "setup": true,
             "testcases": [
                 "free_empty",
-                "push"
+                "push",
+                "from_array",
+                "last"
             ]
         }, {
             "id": "Map",
@@ -90,8 +92,26 @@
                 "copy",
                 "restore",
                 "create_delete",
-                "create_delete_2",
-                "create_delete_ids"
+                "create_delete_2"
+            ]
+        }, {
+            "id": "Strbuf",
+            "setup": true,
+            "testcases": [
+                "append",
+                "appendstr",
+                "appendstrn",
+                "appendstr_null",
+                "append_list",
+                "append_nested_list",
+                "large_str",
+                "empty_str",
+                "append_zerocopy",
+                "append_zerocopy_only",
+                "append_zerocopy_const",
+                "reset",
+                "merge",
+                "app_buffer"
             ]
         }]
     }

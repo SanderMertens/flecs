@@ -1242,17 +1242,6 @@ size_t ecs_to_size_t(
 ecs_size_t ecs_from_size_t(
     size_t size);    
 
-/* Convert int64_t to entity */
-ecs_entity_t ecs_to_entity(
-    int64_t v);
-
-/* Convert int64_t from entity */
-int64_t ecs_from_entity(
-    ecs_entity_t v);   
-
-int32_t ecs_from_entity_to_i32(
-    ecs_entity_t v);        
-
 /* Convert 64bit value to ecs_record_t type. ecs_record_t is stored as 64bit int in the
  * entity index */
 ecs_record_t ecs_to_row(
@@ -1643,8 +1632,8 @@ const char* ecs_strerror(
     int32_t error_code)
 {
     switch (error_code) {
-    case ECS_INVALID_HANDLE:
-        return "invalid handle";
+    case ECS_INVALID_ENTITY:
+        return "invalid entity";
     case ECS_INVALID_PARAMETER:
         return "invalid parameters";
     case ECS_INVALID_COMPONENT_ID:
@@ -7350,6 +7339,7 @@ chunk_t* get_chunk(
     const ecs_sparse_t *sparse,
     int32_t chunk_index)
 {
+    ecs_assert(chunk_index >= 0, ECS_INVALID_PARAMETER, NULL);
     chunk_t *result = ecs_vector_get(sparse->chunks, chunk_t, chunk_index);
     if (result && !result->sparse) {
         return NULL;
@@ -11560,7 +11550,7 @@ bool ecs_strbuf_append_intern(
     int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
     int32_t memLeft = ecs_strbuf_memLeft(b);
 
-    if (!memLeft) {
+    if (memLeft <= 0) {
         return false;
     }
 
@@ -17781,27 +17771,6 @@ ecs_size_t ecs_from_size_t(
 {
    ecs_assert(size < INT32_MAX, ECS_INTERNAL_ERROR, NULL); 
    return (ecs_size_t)size;
-}
-
-ecs_entity_t ecs_to_entity(
-    int64_t v)
-{
-    ecs_assert(v >= 0, ECS_INTERNAL_ERROR, NULL);
-    return (ecs_entity_t)v;
-}
-
-int64_t ecs_from_entity(
-    ecs_entity_t v)
-{
-    ecs_assert(v < INT64_MAX, ECS_INTERNAL_ERROR, NULL);
-    return (int64_t)v;
-}
-
-int32_t ecs_from_entity_to_i32(
-    ecs_entity_t v)
-{
-    ecs_assert(v < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
-    return (int32_t)v;
 }
 
 /** Convert time to double */

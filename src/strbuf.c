@@ -207,7 +207,7 @@ bool ecs_strbuf_append_intern(
     int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
     int32_t memLeft = ecs_strbuf_memLeft(b);
 
-    if (!memLeft) {
+    if (memLeft <= 0) {
         return false;
     }
 

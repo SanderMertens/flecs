@@ -50,3 +50,25 @@ void Queue_push() {
 
     ecs_queue_free(queue);
 }
+
+void Queue_from_array() {
+    int ints[] = {10, 20, 30};
+    ecs_queue_t *queue = ecs_queue_from_array(int, 3, ints);
+    test_int(ecs_queue_count(queue), 3);
+
+    test_int(*ecs_queue_get(queue, int, 0), 10);
+    test_int(*ecs_queue_get(queue, int, 1), 20);
+    test_int(*ecs_queue_get(queue, int, 2), 30);
+    
+    ecs_queue_free(queue);
+}
+
+void Queue_last() {
+    int ints[] = {10, 20, 30};
+    ecs_queue_t *queue = ecs_queue_from_array(int, 3, ints);
+    test_int(ecs_queue_count(queue), 3);
+
+    test_int(*ecs_queue_last(queue, int), 30);
+    
+    ecs_queue_free(queue);
+}

@@ -386,4 +386,3 @@ void Sparse_create_delete_2() {
 
     ecs_sparse_free(sp);
 }
-
