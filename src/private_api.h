@@ -498,17 +498,6 @@ size_t ecs_to_size_t(
 ecs_size_t ecs_from_size_t(
     size_t size);    
 
-/* Convert int64_t to entity */
-ecs_entity_t ecs_to_entity(
-    int64_t v);
-
-/* Convert int64_t from entity */
-int64_t ecs_from_entity(
-    ecs_entity_t v);   
-
-int32_t ecs_from_entity_to_i32(
-    ecs_entity_t v);        
-
 /* Convert 64bit value to ecs_record_t type. ecs_record_t is stored as 64bit int in the
  * entity index */
 ecs_record_t ecs_to_row(
