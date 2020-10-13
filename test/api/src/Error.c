@@ -58,7 +58,7 @@ void Error_assert_false_w_param() {
 }
 
 void Error_error_codes() {
-    test_assert(ecs_strerror(ECS_INVALID_HANDLE) != NULL);
+    test_assert(ecs_strerror(ECS_INVALID_ENTITY) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_PARAMETER) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_COMPONENT_ID) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_EXPRESSION) != NULL);

@@ -328,8 +328,8 @@ const char* ecs_strerror(
     int32_t error_code)
 {
     switch (error_code) {
-    case ECS_INVALID_HANDLE:
-        return "invalid handle";
+    case ECS_INVALID_ENTITY:
+        return "invalid entity";
     case ECS_INVALID_PARAMETER:
         return "invalid parameters";
     case ECS_INVALID_COMPONENT_ID:

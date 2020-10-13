@@ -196,7 +196,7 @@ ecs_query_t* ecs_query_new_w_sig(
     ecs_sig_t *sig);
 
 
-#define ECS_INVALID_HANDLE (1)
+#define ECS_INVALID_ENTITY (1)
 #define ECS_INVALID_PARAMETER (2)
 #define ECS_INVALID_COMPONENT_ID (3)
 #define ECS_INVALID_EXPRESSION (4)
