@@ -1,7 +1,7 @@
 #ifdef FLECS_SYSTEM
 #define FLECS_MODULE
 
-#include "flecs/addons/module.h"
+#include "../addons/module.h"
 
 #ifndef FLECS_SYSTEMS_H
 #define FLECS_SYSTEMS_H

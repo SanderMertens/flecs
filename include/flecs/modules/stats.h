@@ -4,10 +4,10 @@
 #define FLECS_PIPELINE
 #define FLECS_TIMER
 
-#include "flecs/addons/bulk.h"
-#include "flecs/addons/module.h"
-#include "flecs/modules/pipeline.h"
-#include "flecs/modules/timer.h"
+#include "../addons/bulk.h"
+#include "../addons/module.h"
+#include "pipeline.h"
+#include "timer.h"
 
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H

@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 /* Contains macro's for importing / exporting symbols */
-#include "flecs/bake_config.h"
+#include "../bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

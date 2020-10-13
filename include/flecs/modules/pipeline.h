@@ -1,7 +1,7 @@
 #ifdef FLECS_PIPELINE
 #define FLECS_SYSTEM
 
-#include "flecs/modules/system.h"
+#include "system.h"
 
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H

@@ -5,8 +5,7 @@
 #ifndef FLECS_TIMER_H
 #define FLECS_TIMER_H
 
-#include "flecs.h"
-#include "flecs/modules/pipeline.h"
+#include "pipeline.h"
 
 #ifdef __cplusplus
 extern "C" {
