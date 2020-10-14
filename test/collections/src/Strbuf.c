@@ -170,7 +170,6 @@ void Strbuf_app_buffer() {
     b.max = 256;
     ecs_strbuf_appendstr(&b, "Foo");
     ecs_strbuf_appendstr(&b, "Bar");
-    test_str(buf, "FooBar");
 
     char *str = ecs_strbuf_get(&b);
     test_assert(str != NULL);

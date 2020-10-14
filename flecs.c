@@ -7339,6 +7339,7 @@ chunk_t* get_chunk(
     const ecs_sparse_t *sparse,
     int32_t chunk_index)
 {
+    /* If chunk_index is below zero, application used an invalid entity id */
     ecs_assert(chunk_index >= 0, ECS_INVALID_PARAMETER, NULL);
     chunk_t *result = ecs_vector_get(sparse->chunks, chunk_t, chunk_index);
     if (result && !result->sparse) {
@@ -11698,6 +11699,7 @@ char* ecs_strbuf_get(ecs_strbuf_t *b) {
 
     if (b->elementCount) {
         if (b->buf) {
+            b->buf[b->current->pos] = '\0';
             result = ecs_os_strdup(b->buf);
         } else {
             void *next = NULL;

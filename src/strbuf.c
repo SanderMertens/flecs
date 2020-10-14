@@ -355,6 +355,7 @@ char* ecs_strbuf_get(ecs_strbuf_t *b) {
 
     if (b->elementCount) {
         if (b->buf) {
+            b->buf[b->current->pos] = '\0';
             result = ecs_os_strdup(b->buf);
         } else {
             void *next = NULL;
