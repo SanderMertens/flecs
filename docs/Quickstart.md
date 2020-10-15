@@ -728,7 +728,7 @@ void MyModuleImport(
 }
 ```
 
-Modules are namespaced, which emans that the components and system identifiers within a module will be prefixed with the module name. The module name is translated from PascalCase into lowercase separated by dots, such that `MyModule` becomes `my.module`.
+Modules are namespaced, which means that the components and system identifiers within a module will be prefixed with the module name. The module name is translated from PascalCase into lowercase separated by dots, such that `MyModule` becomes `my.module`.
 
 If an application wants to create a system that uses components from the module, it has to include the namespace in the signature, for example:
 
