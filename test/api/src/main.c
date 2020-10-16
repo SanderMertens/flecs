@@ -592,6 +592,8 @@ void Queries_query_optional_shared(void);
 void Queries_query_optional_shared_nested(void);
 void Queries_query_optional_any(void);
 void Queries_query_rematch_optional_after_add(void);
+void Queries_get_owned_tag(void);
+void Queries_get_shared_tag(void);
 
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
@@ -3510,6 +3512,14 @@ bake_test_case Queries_testcases[] = {
     {
         "query_rematch_optional_after_add",
         Queries_query_rematch_optional_after_add
+    },
+    {
+        "get_owned_tag",
+        Queries_get_owned_tag
+    },
+    {
+        "get_shared_tag",
+        Queries_get_shared_tag
     }
 };
 
@@ -6451,7 +6461,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        23,
+        25,
         Queries_testcases
     },
     {

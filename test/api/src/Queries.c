@@ -961,3 +961,50 @@ void Queries_query_rematch_optional_after_add() {
 
     ecs_fini(world);    
 }
+
+void Queries_get_owned_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+
+    int count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        test_assert(ecs_column_w_size(&it, 0, 1) == NULL);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e);
+        count += it.count;
+    }
+
+    test_int(count, 1);
+
+    ecs_fini(world);
+}
+
+void Queries_get_shared_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+
+    ecs_query_t *q = ecs_query_new(world, "SHARED:Tag");
+
+    int count = 0;
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        test_assert(ecs_column_w_size(&it, 0, 1) == NULL);
+        test_int(it.count, 1);
+        test_int(it.entities[0], instance);
+        count += it.count;
+    }
+
+    test_int(count, 1);
+
+    ecs_fini(world);
+}

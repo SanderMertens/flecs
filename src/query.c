@@ -424,21 +424,21 @@ int32_t get_component_index(
         * a table is reserved for entity id's */
         if (result != -1) {
             result ++;
-
-            /* Check if component is a tag. If it is, set table_data to
-            * zero, so that a system won't try to access the data */
-            if (!ECS_HAS_ROLE(component, CASE) && 
-                !ECS_HAS_ROLE(component, SWITCH)) 
-            {
-                component = ecs_component_id_from_id(world, component);
-                const EcsComponent *data = ecs_get(
-                    world, component, EcsComponent);
-
-                if (!data || !data->size) {
-                    result = 0;
-                }
-            }
         }
+
+        /* Check if component is a tag. If it is, set table_data to
+        * zero, so that a system won't try to access the data */
+        if (!ECS_HAS_ROLE(component, CASE) && 
+            !ECS_HAS_ROLE(component, SWITCH)) 
+        {
+            component = ecs_component_id_from_id(world, component);
+            const EcsComponent *data = ecs_get(
+                world, component, EcsComponent);
+
+            if (!data || !data->size) {
+                result = 0;
+            }
+        }        
 
         /* ecs_table_column_offset may return -1 if the component comes
          * from a prefab. If so, the component will be resolved as a

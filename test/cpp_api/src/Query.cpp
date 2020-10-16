@@ -521,3 +521,32 @@ void Query_query_single_trait() {
     test_int(table_count, 1);
     test_int(entity_count, 1);
 }
+
+void Query_tag_w_each() {
+    flecs::world world;
+
+    auto q = world.query<Tag>();
+
+    auto e = world.entity()
+        .add<Tag>();
+
+    q.each([&](flecs::entity qe, Tag) {
+        test_assert(qe == e);
+    });
+}
+
+void Query_shared_tag_w_each() {
+    flecs::world world;
+
+    auto q = world.query<Tag>();
+
+    auto base = world.prefab()
+        .add<Tag>();
+
+    auto e = world.entity()
+        .add_instanceof(base);
+
+    q.each([&](flecs::entity qe, Tag) {
+        test_assert(qe == e);
+    });
+}

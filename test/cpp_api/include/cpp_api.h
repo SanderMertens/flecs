@@ -22,5 +22,7 @@ struct Rotation {
     float value;
 };
 
+struct Tag { };
+
 #endif
 

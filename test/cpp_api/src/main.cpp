@@ -150,6 +150,8 @@ void Query_signature_optional(void);
 void Query_subquery(void);
 void Query_subquery_w_expr(void);
 void Query_query_single_trait(void);
+void Query_tag_w_each(void);
+void Query_shared_tag_w_each(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -761,6 +763,14 @@ bake_test_case Query_testcases[] = {
     {
         "query_single_trait",
         Query_query_single_trait
+    },
+    {
+        "tag_w_each",
+        Query_tag_w_each
+    },
+    {
+        "shared_tag_w_each",
+        Query_shared_tag_w_each
     }
 };
 
@@ -1102,7 +1112,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        15,
+        17,
         Query_testcases
     },
     {

@@ -645,7 +645,9 @@
                 "query_optional_shared",
                 "query_optional_shared_nested",
                 "query_optional_any",
-                "query_rematch_optional_after_add"
+                "query_rematch_optional_after_add",
+                "get_owned_tag",
+                "get_shared_tag"
             ]
         }, {
             "id": "Traits",

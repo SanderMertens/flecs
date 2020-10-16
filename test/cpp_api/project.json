@@ -169,7 +169,9 @@
                 "signature_optional",
                 "subquery",
                 "subquery_w_expr",
-                "query_single_trait"
+                "query_single_trait",
+                "tag_w_each",
+                "shared_tag_w_each"
             ]
         }, {
             "id": "ComponentLifecycle",
