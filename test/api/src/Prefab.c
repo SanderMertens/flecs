@@ -2757,3 +2757,35 @@ void Prefab_prefab_instanceof_hierarchy() {
 
     ecs_fini(world);
 }
+
+void Prefab_override_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_set(world, base, Position, {10, 20});
+    
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void Prefab_empty_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world, 0);
+    
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_add(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has_entity(world, e, ECS_INSTANCEOF | base));
+
+    ecs_fini(world);
+}

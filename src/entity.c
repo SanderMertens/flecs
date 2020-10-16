@@ -590,7 +590,7 @@ bool override_from_base(
 {
     ecs_entity_info_t base_info;
 
-    if (!ecs_get_info(world, base, &base_info)) {
+    if (!ecs_get_info(world, base, &base_info) || !base_info.table) {
         return false;
     }
 
@@ -626,8 +626,8 @@ bool override_from_base(
     } else {
         /* If component not found on base, check if base itself inherits */
         ecs_type_t base_type = base_info.table->type;
-        return override_component(world, component, base_type, data, column, row, 
-            count);
+        return override_component(world, component, base_type, data, column, 
+            row, count);
     }
 }
 

@@ -969,7 +969,9 @@
                 "force_owned_nested",
                 "force_owned_type",
                 "force_owned_type_w_trait",
-                "prefab_instanceof_hierarchy"
+                "prefab_instanceof_hierarchy",
+                "override_tag",
+                "empty_prefab"
             ]
         }, {
             "id": "System_w_FromContainer",
