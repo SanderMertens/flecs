@@ -493,6 +493,7 @@ void SystemMisc_invalid_or_from_system(void);
 void SystemMisc_invalid_null_string(void);
 void SystemMisc_invalid_empty_string(void);
 void SystemMisc_invalid_empty_string_w_space(void);
+void SystemMisc_invalid_mixed_src_modifier(void);
 void SystemMisc_redefine_row_system(void);
 void SystemMisc_system_w_or_prefab(void);
 void SystemMisc_system_w_or_disabled(void);
@@ -3126,6 +3127,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "invalid_empty_string_w_space",
         SystemMisc_invalid_empty_string_w_space
+    },
+    {
+        "invalid_mixed_src_modifier",
+        SystemMisc_invalid_mixed_src_modifier
     },
     {
         "redefine_row_system",
@@ -6447,7 +6452,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         SystemMisc_setup,
         NULL,
-        81,
+        82,
         SystemMisc_testcases
     },
     {

@@ -4,7 +4,6 @@ void SystemMisc_setup() {
     ecs_tracing_enable(-3);
 }
 
-
 static
 void install_test_abort() {
     ecs_os_set_api_defaults();
@@ -382,6 +381,21 @@ void SystemMisc_invalid_empty_string_w_space() {
     test_expect_abort();
 
     ecs_new_system(world, 0, "Dummy", EcsOnUpdate, "  ", Dummy);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_invalid_mixed_src_modifier() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    test_expect_abort();
+
+    ecs_new_system(world, 0, "SHARED:Position || Velocity", EcsOnUpdate, "  ", Dummy);
 
     ecs_fini(world);
 }

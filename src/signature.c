@@ -706,26 +706,27 @@ int ecs_sig_add(
         ecs_assert(inout_kind != EcsOut, ECS_INVALID_SIGNATURE, NULL);
         elem = ecs_vector_last(sig->columns, ecs_sig_column_t);
 
+        if (elem->from_kind != from_kind) {
+            /* Cannot mix FromEntity and FromComponent in OR */
+            ecs_parser_error(sig->name, sig->expr, 0, 
+                "cannot mix source kinds in || expression");
+            goto error;
+        }
+
+        if (elem->oper_kind != EcsOperAnd && elem->oper_kind != EcsOperOr) {
+            ecs_parser_error(sig->name, sig->expr, 0, 
+                "cannot mix operators in || expression");
+            goto error;         
+        }
+
         if (elem->oper_kind == EcsOperAnd) {
             ecs_entity_t prev = elem->is.component;
             elem->is.type = NULL;
             vec_add_entity(&elem->is.type, prev);
             vec_add_entity(&elem->is.type, component);
         } else {
-            if (elem->from_kind != from_kind) {
-                /* Cannot mix FromEntity and FromComponent in OR */
-                ecs_parser_error(sig->name, sig->expr, 0, 
-                    "cannot mix source kinds in || expression");
-                goto error;
-            }
-
-            if (elem->oper_kind != EcsOperAnd && elem->oper_kind != EcsOperOr) {
-                ecs_parser_error(sig->name, sig->expr, 0, 
-                    "cannot mix operators in || expression");                
-            }
-
             vec_add_entity(&elem->is.type, component);
-        }
+        }      
 
         elem->from_kind = from_kind;
         elem->oper_kind = oper_kind;
