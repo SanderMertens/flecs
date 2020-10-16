@@ -691,6 +691,9 @@ void ecs_components_override(
         if (component >= ECS_HI_COMPONENT_ID) {
             if (ECS_HAS_ROLE(component, INSTANCEOF)) {
                 ecs_entity_t base = component & ECS_COMPONENT_MASK;
+
+                /* Illegal to create an instance of 0 */
+                ecs_assert(base != 0, ECS_INVALID_PARAMETER, NULL);
                 instantiate(world, base, table, data, row, count);
 
                 /* If table has on_set systems, get table without the base

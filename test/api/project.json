@@ -971,7 +971,8 @@
                 "force_owned_type_w_trait",
                 "prefab_instanceof_hierarchy",
                 "override_tag",
-                "empty_prefab"
+                "empty_prefab",
+                "instanceof_0"
             ]
         }, {
             "id": "System_w_FromContainer",

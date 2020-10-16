@@ -892,6 +892,7 @@ void Prefab_force_owned_type_w_trait(void);
 void Prefab_prefab_instanceof_hierarchy(void);
 void Prefab_override_tag(void);
 void Prefab_empty_prefab(void);
+void Prefab_instanceof_0(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_setup(void);
@@ -4628,6 +4629,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "empty_prefab",
         Prefab_empty_prefab
+    },
+    {
+        "instanceof_0",
+        Prefab_instanceof_0
     }
 };
 
@@ -6537,7 +6542,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        68,
+        69,
         Prefab_testcases
     },
     {

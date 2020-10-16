@@ -5,6 +5,14 @@ void Prefab_setup() {
 }
 
 static
+void install_test_abort() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+}
+
+static
 void Iter(ecs_iter_t *it) {
     ECS_COLUMN(it, Mass, m_ptr, 1);
     bool shared = !ecs_is_owned(it, 1);
@@ -2778,7 +2786,6 @@ void Prefab_empty_prefab() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Tag);
 
     ecs_entity_t base = ecs_new(world, 0);
     
@@ -2786,6 +2793,21 @@ void Prefab_empty_prefab() {
     ecs_add(world, e, Position);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has_entity(world, e, ECS_INSTANCEOF | base));
+
+    ecs_fini(world);
+}
+
+void Prefab_instanceof_0() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    install_test_abort();
+
+    test_expect_abort();
+
+    /* Not allowed */
+    ecs_new_w_entity(world, ECS_INSTANCEOF | 0);
 
     ecs_fini(world);
 }
