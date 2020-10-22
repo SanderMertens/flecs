@@ -2067,10 +2067,10 @@ void ecs_table_delete_column(
     ecs_xtor_t dtor;
     if (c_info && (dtor = c_info->lifecycle.dtor)) {
         ecs_entity_t dummy = 0;
-        ecs_size_t alignment = c->alignment;
+        int16_t alignment = c->alignment;
         int32_t count = ecs_vector_count(vector);
         void *ptr = ecs_vector_first_t(vector, c->size, alignment);
-        dtor(world, c_info->component, &dummy, ptr, c->size, count,
+        dtor(world, c_info->component, &dummy, ptr, ecs_to_size_t(c->size), count,
             c_info->lifecycle.ctx);
     }
 
@@ -2082,43 +2082,46 @@ void ecs_record_copy_to(
     ecs_record_t *r,
     int32_t column,
     size_t c_size,
-    const void *value)
+    const void *value,
+    int32_t count)
 {
     ecs_table_t *table = r->table;
     ecs_column_t *c = get_or_create_column(table, column);
-    ecs_size_t size = ecs_from_size_t(c_size);
-    ecs_assert(!size || size == c->size, ECS_INVALID_PARAMETER, NULL);
+    int16_t size = c->size;
+    ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
+        ECS_INVALID_PARAMETER, NULL);
 
-    ecs_size_t alignment = c->alignment;
+    int16_t alignment = c->alignment;
     void *ptr = ecs_vector_get_t(c->data, size, alignment, r->row);
 
     ecs_c_info_t *c_info = table->c_info[column];
     ecs_copy_t copy;
     if (c_info && (copy = c_info->lifecycle.copy)) {
         ecs_entity_t dummy = 0;
-        copy(world, c_info->component, &dummy, &dummy, ptr, value, size, 1,
+        copy(world, c_info->component, &dummy, &dummy, ptr, value, c_size, count,
             c_info->lifecycle.ctx);
     } else {
-        memcpy(ptr, value, size);
+        memcpy(ptr, value, size * count);
     }
 }
 
 void ecs_record_copy_pod_to(
-    ecs_world_t *world,
     ecs_record_t *r,
     int32_t column,
     size_t c_size,
-    const void *value)
+    const void *value,
+    int32_t count)
 {
     ecs_table_t *table = r->table;
     ecs_column_t *c = get_or_create_column(table, column);
-    ecs_size_t size = ecs_from_size_t(c_size);
-    ecs_assert(!size || size == c->size, ECS_INVALID_PARAMETER, NULL);
+    int16_t size = c->size;
+    ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
+        ECS_INVALID_PARAMETER, NULL);
 
-    ecs_size_t alignment = c->alignment;
+    int16_t alignment = c->alignment;
     void *ptr = ecs_vector_get_t(c->data, size, alignment, r->row);
 
-    memcpy(ptr, value, size);
+    memcpy(ptr, value, size * count);
 }
 
 void ecs_record_move_to(
@@ -2126,23 +2129,25 @@ void ecs_record_move_to(
     ecs_record_t *r,
     int32_t column,
     size_t c_size,
-    void *value)
+    void *value,
+    int32_t count)
 {
     ecs_table_t *table = r->table;
     ecs_column_t *c = get_or_create_column(table, column);
-    ecs_size_t size = ecs_from_size_t(c_size);
-    ecs_assert(!size || size == c->size, ECS_INVALID_PARAMETER, NULL);
+    int16_t size = c->size;
+    ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
+        ECS_INVALID_PARAMETER, NULL);
 
-    ecs_size_t alignment = c->alignment;
+    int16_t alignment = c->alignment;
     void *ptr = ecs_vector_get_t(c->data, size, alignment, r->row);
 
     ecs_c_info_t *c_info = table->c_info[column];
     ecs_move_t move;
     if (c_info && (move = c_info->lifecycle.move)) {
         ecs_entity_t dummy = 0;
-        move(world, c_info->component, &dummy, &dummy, ptr, value, size, 1,
+        move(world, c_info->component, &dummy, &dummy, ptr, value, c_size, count,
             c_info->lifecycle.ctx);
     } else {
-        memcpy(ptr, value, size);
+        memcpy(ptr, value, size * count);
     }
 }

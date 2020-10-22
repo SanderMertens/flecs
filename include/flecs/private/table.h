@@ -214,7 +214,8 @@ void ecs_record_copy_to(
     ecs_record_t *r,
     int32_t column,
     size_t size,
-    const void *value);
+    const void *value,
+    int32_t count);
 
 /** Memcpy value to a component for a record.
  * Same as ecs_record_copy_to, except that this operation will always use
@@ -230,11 +231,11 @@ void ecs_record_copy_to(
  */
 FLECS_EXPORT
 void ecs_record_copy_pod_to(
-    ecs_world_t *world,
     ecs_record_t *r,
     int32_t column,
     size_t size,
-    const void *value);
+    const void *value,
+    int32_t count);
 
 /** Move value to a component for a record.
  * Same as ecs_record_copy_to, except that it uses the move action. If the 
@@ -254,7 +255,8 @@ void ecs_record_move_to(
     ecs_record_t *r,
     int32_t column,
     size_t size,
-    void *value);
+    void *value,
+    int32_t count);
 
 #ifdef __cplusplus
 }

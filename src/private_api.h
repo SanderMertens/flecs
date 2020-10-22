@@ -608,7 +608,7 @@ int16_t ecs_to_i16(
 
 /* Convert 64 bit signed integer to 32 bit */
 int32_t ecs_to_i32(
-    int64_t v);  
+    int64_t v);
 
 /* Convert 64 bit unsigned integer to 32 bit */
 uint32_t ecs_to_u32(
