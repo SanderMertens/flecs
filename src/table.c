@@ -2101,7 +2101,7 @@ void ecs_record_copy_to(
         copy(world, c_info->component, &dummy, &dummy, ptr, value, c_size, count,
             c_info->lifecycle.ctx);
     } else {
-        memcpy(ptr, value, size * count);
+        ecs_os_memcpy(ptr, value, size * count);
     }
 }
 
@@ -2121,7 +2121,7 @@ void ecs_record_copy_pod_to(
     int16_t alignment = c->alignment;
     void *ptr = ecs_vector_get_t(c->data, size, alignment, r->row);
 
-    memcpy(ptr, value, size * count);
+    ecs_os_memcpy(ptr, value, size * count);
 }
 
 void ecs_record_move_to(
@@ -2148,6 +2148,6 @@ void ecs_record_move_to(
         move(world, c_info->component, &dummy, &dummy, ptr, value, c_size, count,
             c_info->lifecycle.ctx);
     } else {
-        memcpy(ptr, value, size * count);
+        ecs_os_memcpy(ptr, value, size * count);
     }
 }
