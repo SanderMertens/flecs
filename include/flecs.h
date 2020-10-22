@@ -25,6 +25,7 @@
 #define FLECS_QUEUE
 #define FLECS_READER_WRITER
 #define FLECS_SNAPSHOT
+#define FLECS_DIRECT_ACCESS
 #endif
 
 #include "flecs/private/api_defines.h"
@@ -144,7 +145,6 @@ typedef void (*ecs_fini_action_t)(
 
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
-#include "flecs/private/table.h"             /* Direct table access */
 #include "flecs/private/log.h"              /* Logging API */
 #include "flecs/type.h"                     /* Type API */
 
@@ -2700,6 +2700,9 @@ void ecs_set_automerge(
 #endif
 #ifdef FLECS_SNAPSHOT
 #include "flecs/addons/snapshot.h"
+#endif
+#ifdef FLECS_DIRECT_ACCESS
+#include "flecs/addons/direct_access.h"
 #endif
 
 #ifdef __cplusplus

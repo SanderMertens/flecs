@@ -97,8 +97,9 @@ Addons are located in the `src/addons` and `include/addons` folders. The followi
 
 Addon         | Description                                      | Constant            |
 --------------|--------------------------------------------------|---------------------|
-Bulk          | Efficient operations that run on many entities   | FLECS_BULK          | 
+Bulk          | Efficient operations that run on many entities   | FLECS_BULK          |
 Dbg           | Debug API for inspection of internals            | FLECS_DBG           |
+Direct Access | Low-level API for direct access to component data| FLECS_DIRECT_ACCESS |
 Module        | Organize components and systems in modules       | FLECS_MODULE        | 
 Queue         | A queue data structure                           | FLECS_QUEUE         |
 Reader_writer | Serialize components to series of bytes          | FLECS_READER_WRITER | 

@@ -1,0 +1,198 @@
+#include "flecs.h"
+
+#ifdef FLECS_DIRECT_ACCESS
+
+#include "../private_api.h"
+
+static
+ecs_column_t *get_column(
+    ecs_table_t *table,
+    int32_t column)
+{
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(column <= table->column_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_data_t *data = table->data;
+    if (data) {
+        return &table->data->columns[column];    
+    } else {
+        return NULL;
+    }    
+}
+
+static
+ecs_column_t *get_or_create_column(
+    ecs_table_t *table,
+    int32_t column)
+{
+    ecs_column_t *c = get_column(table, column);
+    if (!c && !table->data) {
+        ecs_table_get_or_create_data(table);
+        c = get_column(table, column);
+    }
+    ecs_assert(c != NULL, ECS_INTERNAL_ERROR, NULL);
+    return c;
+}
+
+/* -- Public API -- */
+
+ecs_record_t* ecs_record_find(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_record_t *r = ecs_eis_get(world, entity);
+    if (r) {
+        return r;
+    } else {
+        return NULL;
+    }
+}
+
+ecs_record_t ecs_table_insert(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t entity,
+    ecs_record_t *record)
+{
+    ecs_data_t *data = ecs_table_get_or_create_data(table);
+    int32_t index = ecs_table_append(world, table, data, entity, record, true);
+    return (ecs_record_t){table, index};
+}
+
+int32_t ecs_table_count(
+    ecs_table_t *table)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_data_t *data = table->data;
+    if (!data) {
+        return 0;
+    }
+
+    return ecs_table_data_count(data);
+}
+
+int32_t ecs_table_find_column(
+    ecs_table_t *table,
+    ecs_entity_t component)
+{
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
+    return ecs_type_index_of(table->type, component);
+}
+
+ecs_vector_t* ecs_table_get_column(
+    ecs_table_t *table,
+    int32_t column)
+{
+    ecs_column_t *c = get_column(table, column);
+    return c ? c->data : NULL;
+}
+
+void ecs_table_set_column(
+    ecs_table_t *table,
+    int32_t column,
+    ecs_vector_t* vector)
+{
+    ecs_column_t *c = get_or_create_column(table, column);
+    ecs_vector_assert_size(vector, c->size);
+    c->data = vector;
+}
+
+void ecs_table_delete_column(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t column,
+    ecs_vector_t *vector)
+{
+    ecs_column_t *c = get_or_create_column(table, column);
+    ecs_vector_assert_size(vector, c->size);
+
+    ecs_c_info_t *c_info = table->c_info[column];
+    ecs_xtor_t dtor;
+    if (c_info && (dtor = c_info->lifecycle.dtor)) {
+        ecs_entity_t dummy = 0;
+        int16_t alignment = c->alignment;
+        int32_t count = ecs_vector_count(vector);
+        void *ptr = ecs_vector_first_t(vector, c->size, alignment);
+        dtor(world, c_info->component, &dummy, ptr, ecs_to_size_t(c->size), count,
+            c_info->lifecycle.ctx);
+    }
+
+    ecs_vector_free(vector);
+}
+
+void ecs_record_copy_to(
+    ecs_world_t *world,
+    ecs_record_t *r,
+    int32_t column,
+    size_t c_size,
+    const void *value,
+    int32_t count)
+{
+    ecs_table_t *table = r->table;
+    ecs_column_t *c = get_or_create_column(table, column);
+    int16_t size = c->size;
+    ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    int16_t alignment = c->alignment;
+    void *ptr = ecs_vector_get_t(c->data, size, alignment, r->row);
+
+    ecs_c_info_t *c_info = table->c_info[column];
+    ecs_copy_t copy;
+    if (c_info && (copy = c_info->lifecycle.copy)) {
+        ecs_entity_t dummy = 0;
+        copy(world, c_info->component, &dummy, &dummy, ptr, value, c_size, count,
+            c_info->lifecycle.ctx);
+    } else {
+        ecs_os_memcpy(ptr, value, size * count);
+    }
+}
+
+void ecs_record_copy_pod_to(
+    ecs_record_t *r,
+    int32_t column,
+    size_t c_size,
+    const void *value,
+    int32_t count)
+{
+    ecs_table_t *table = r->table;
+    ecs_column_t *c = get_or_create_column(table, column);
+    int16_t size = c->size;
+    ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    int16_t alignment = c->alignment;
+    void *ptr = ecs_vector_get_t(c->data, size, alignment, r->row);
+
+    ecs_os_memcpy(ptr, value, size * count);
+}
+
+void ecs_record_move_to(
+    ecs_world_t *world,
+    ecs_record_t *r,
+    int32_t column,
+    size_t c_size,
+    void *value,
+    int32_t count)
+{
+    ecs_table_t *table = r->table;
+    ecs_column_t *c = get_or_create_column(table, column);
+    int16_t size = c->size;
+    ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    int16_t alignment = c->alignment;
+    void *ptr = ecs_vector_get_t(c->data, size, alignment, r->row);
+
+    ecs_c_info_t *c_info = table->c_info[column];
+    ecs_move_t move;
+    if (c_info && (move = c_info->lifecycle.move)) {
+        ecs_entity_t dummy = 0;
+        move(world, c_info->component, &dummy, &dummy, ptr, value, c_size, count,
+            c_info->lifecycle.ctx);
+    } else {
+        ecs_os_memcpy(ptr, value, size * count);
+    }
+}
+
+#endif

@@ -1,16 +1,16 @@
 
-/* Direct access API.
+/** Direct access API.
+ *
  * This API allows for low-level direct access to tables and their columns. The
  * APIs primary intent is to provide fast primitives for new operations. It is
  * not recommended to use the API directly in application code, as invoking the
  * API in an incorrect way can lead to a corrupted datastore.
  */
 
+#ifdef FLECS_DIRECT_ACCESS
+
 #ifndef FLECS_TABLE_H_
 #define FLECS_TABLE_H_
-
-#include "api_defines.h"
-#include "entity_index.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +30,18 @@ FLECS_EXPORT
 ecs_table_t* ecs_table_from_str(
     ecs_world_t *world,
     const char *type);
+
+/** Find or create table from type.
+ * Same as ecs_table_from_str, but provides the type directly.
+ *
+ * @param world The world.
+ * @param type The type.
+ * @return The new or existing table.
+ */
+FLECS_EXPORT
+ecs_table_t* ecs_table_from_type(
+    ecs_world_t *world,
+    ecs_type_t type);
 
 /** Insert record into table.
  * This will create a new record for the table, which inserts a value for each
@@ -260,6 +272,8 @@ void ecs_record_move_to(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif
