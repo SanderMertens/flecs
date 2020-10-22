@@ -144,6 +144,7 @@ typedef void (*ecs_fini_action_t)(
 
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
+#include "flecs/private/table.h"             /* Direct table access */
 #include "flecs/private/log.h"              /* Logging API */
 #include "flecs/type.h"                     /* Type API */
 

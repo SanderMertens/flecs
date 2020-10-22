@@ -92,6 +92,16 @@ void ecs_vector_clear(
     ecs_vector_t *vector);
 
 FLECS_EXPORT
+void ecs_vector_assert_size(
+    ecs_vector_t* vector_inout,
+    ecs_size_t elem_size);
+
+FLECS_EXPORT
+void ecs_vector_assert_alignment(
+    ecs_vector_t* vector,
+    ecs_size_t elem_alignment);    
+
+FLECS_EXPORT
 void* _ecs_vector_add(
     ecs_vector_t **array_inout,
     ecs_size_t elem_size,
