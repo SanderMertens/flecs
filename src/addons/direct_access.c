@@ -97,6 +97,32 @@ void ecs_table_set_column(
     c->data = vector;
 }
 
+ecs_vector_t* ecs_table_get_entities(
+    ecs_table_t *table)
+{
+    ecs_data_t *data = table->data;
+    if (!data) {
+        return NULL;
+    }
+
+    return data->entities;
+}
+
+void ecs_table_set_entities(
+    ecs_table_t *table,
+    ecs_vector_t *entities,
+    ecs_vector_t *records)
+{
+    ecs_data_t *data = table->data;
+    if (!data) {
+        data = ecs_table_get_or_create_data(table);
+        ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    data->entities = entities;
+    data->record_ptrs = records;
+}
+
 void ecs_table_delete_column(
     ecs_world_t *world,
     ecs_table_t *table,

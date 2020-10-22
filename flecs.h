@@ -7004,6 +7004,38 @@ void ecs_table_set_column(
     int32_t column,
     ecs_vector_t *vector);
 
+/** Get the vector containing entity ids for the table.
+ * This operation obtains the vector with entity ids for the current table. Each
+ * entity id is associated with one record, and ids are stored in the same order
+ * as the table records.
+ *
+ * @param table The table.
+ * @return The vector containing the table's entities.
+ */
+FLECS_EXPORT
+ecs_vector_t* ecs_table_get_entities(
+    ecs_table_t *table);
+
+/** Set the vector containing entity ids for the table.
+ * This operation sets the vector with entity ids for a table. In addition the
+ * operation also requires setting a vector with pointers to records. The
+ * record pointers in the vector need to be managed by the entity index. If they
+ * are not, this can cause undefined behavior.
+ *
+ * The provided vectors must have the same number of elements as the number of
+ * records in the table. If the element count is not the same, this causes
+ * undefined behavior.
+ *
+ * @param table The table.
+ * @param entities The entity vector.
+ * @param records The record vector.
+ */
+FLECS_EXPORT
+void ecs_table_set_entities(
+    ecs_table_t *table,
+    ecs_vector_t *entities,
+    ecs_vector_t *records);
+
 /** Delete a column.
  * This operation frees the memory of a table column and will invoke the
  * component destructor if registered.
