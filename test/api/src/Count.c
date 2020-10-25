@@ -8,6 +8,14 @@ void Count_count_empty() {
     ecs_fini(world);
 }
 
+void Count_count_w_entity_0() {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ecs_count_entity(world, 0), 0);
+
+    ecs_fini(world);
+}
+
 void Count_count_1_component() {
     ecs_world_t *world = ecs_init();
 

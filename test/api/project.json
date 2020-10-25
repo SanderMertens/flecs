@@ -83,6 +83,8 @@
                 "type_w_tag_mixed",
                 "add_remove",
                 "add_remove_same",
+                "add_remove_entity",
+                "add_remove_entity_same",
                 "add_2_remove",
                 "add_entity",
                 "remove_entity",
@@ -117,7 +119,9 @@
                 "change_case_in_stage",
                 "change_one_case_in_stage",
                 "remove_switch_in_stage",
-                "switch_no_match_for_case"
+                "switch_no_match_for_case",
+                "empty_entity_has_case",
+                "zero_entity_has_case"
             ]
         }, {
             "id": "Remove",
@@ -295,6 +299,7 @@
             "id": "Count",
             "testcases": [
                 "count_empty",
+                "count_w_entity_0",
                 "count_1_component",
                 "count_2_components",
                 "count_3_components",
@@ -1224,8 +1229,14 @@
             "id": "DeferredActions",
             "testcases": [
                 "defer_new",
+                "defer_bulk_new",
+                "defer_bulk_new_w_data",
+                "defer_bulk_new_two",
+                "defer_bulk_new_w_data_two",
                 "defer_add",
+                "defer_add_two",
                 "defer_remove",
+                "defer_remove_two",
                 "defer_set",
                 "defer_delete",
                 "defer_twice",
@@ -1241,7 +1252,14 @@
                 "defer_set_after_delete",
                 "defer_get_mut_after_delete",
                 "defer_get_mut_after_delete_2nd_to_last",
-                "defer_add_child_to_deleted_parent"
+                "defer_add_child_to_deleted_parent",
+                "recreate_deleted_entity_while_deferred",
+                "discard_add",
+                "discard_remove",
+                "discard_add_two",
+                "discard_remove_two",
+                "discard_child",
+                "discard_child_w_add"
             ]
         }, {
             "id": "SingleThreadStaging",

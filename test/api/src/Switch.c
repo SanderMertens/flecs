@@ -682,3 +682,24 @@ void Switch_switch_no_match_for_case() {
 
     ecs_fini(world);
 }
+
+void Switch_empty_entity_has_case() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(!ecs_has_entity(world, e, ECS_CASE | Walking));
+
+    ecs_fini(world);
+}
+
+void Switch_zero_entity_has_case() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+
+    test_assert(!ecs_has_entity(world, 0, ECS_CASE | Walking));
+
+    ecs_fini(world);
+}

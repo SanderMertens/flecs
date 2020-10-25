@@ -497,6 +497,41 @@ void Add_add_remove_same() {
     ecs_fini(world);
 }
 
+void Add_add_remove_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Tag_1, 0);
+    ECS_ENTITY(world, Tag_2, 0);
+
+    ecs_entity_t e = ecs_new_w_entity(world, Tag_2);
+    test_assert(e != 0);
+    test_assert(ecs_has_entity(world, e, Tag_2));
+
+    ecs_add_remove_entity(world, e, Tag_1, Tag_2);
+    test_assert(ecs_has_entity(world, e, Tag_1));
+    test_assert(!ecs_has_entity(world, e, Tag_2));
+
+    ecs_add_remove_entity(world, e, Tag_2, Tag_1);
+    test_assert(!ecs_has_entity(world, e, Tag_1));
+    test_assert(ecs_has_entity(world, e, Tag_2));
+
+    ecs_fini(world);
+}
+
+void Add_add_remove_entity_same() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Tag_1, 0);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    ecs_add_remove_entity(world, e, Tag_1, Tag_1);
+    test_assert(ecs_has_entity(world, e, Tag_1));
+
+    ecs_fini(world);
+}
+
 void Add_add_2_remove() {
     ecs_world_t *world = ecs_init();
 
@@ -652,3 +687,4 @@ void Add_add_after_remove_xor() {
     
     ecs_fini(world);
 }
+

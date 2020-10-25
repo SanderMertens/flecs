@@ -30,11 +30,6 @@
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
-/** Entity id's higher than this number will be stored in a map instead of a
- * sparse set. Increasing this value can improve performance at the cost of
- * (significantly) higher memory usage. */
-#define ECS_HI_ENTITY_ID (1000000)
-
 /** These values are used to verify validity of the pointers passed into the API
  * and to allow for passing a thread as a world to some API calls (this allows
  * for transparently passing thread context to API functions) */
@@ -309,7 +304,6 @@ typedef struct ecs_on_demand_in_t {
 
 /** Types for deferred operations */
 typedef enum ecs_op_kind_t {
-    EcsOpNone,
     EcsOpNew,
     EcsOpClone,
     EcsOpBulkNew,

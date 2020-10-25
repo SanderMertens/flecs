@@ -63,11 +63,6 @@ extern "C" {
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
-/** Entity id's higher than this number will be stored in a map instead of a
- * sparse set. Increasing this value can improve performance at the cost of
- * (significantly) higher memory usage. */
-#define ECS_HI_ENTITY_ID (1000000)
-
 /** These values are used to verify validity of the pointers passed into the API
  * and to allow for passing a thread as a world to some API calls (this allows
  * for transparently passing thread context to API functions) */
@@ -342,7 +337,6 @@ typedef struct ecs_on_demand_in_t {
 
 /** Types for deferred operations */
 typedef enum ecs_op_kind_t {
-    EcsOpNone,
     EcsOpNew,
     EcsOpClone,
     EcsOpBulkNew,
@@ -5764,7 +5758,7 @@ ecs_entity_t assign_ptr_w_entity(
     void * ptr,
     bool is_move,
     bool notify)
-{    
+{
     ecs_stage_t *stage = ecs_get_stage(&world);
 
     ecs_entities_t added = {
@@ -5851,17 +5845,12 @@ ecs_entity_t ecs_get_case(
     ecs_entity_t sw_id)
 {
     ecs_entity_info_t info;
-    if (!ecs_get_info(world, entity, &info) || !info.table) {
+    ecs_table_t *table;
+    if (!ecs_get_info(world, entity, &info) || !(table = info.table)) {
         return 0;
     }
 
     sw_id = sw_id | ECS_SWITCH;
-
-    ecs_table_t *table = info.table;
-    ecs_data_t *data = info.data;
-    if (!data) {
-        return 0;
-    }
 
     ecs_type_t type = table->type;
     int32_t index = ecs_type_index_of(type, sw_id);
@@ -5872,7 +5861,9 @@ ecs_entity_t ecs_get_case(
     index -= table->sw_column_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_switch_t *sw = data->sw_columns[index].data;  
+    /* Data cannot be NULl, since entity is stored in the table */
+    ecs_assert(info.data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_switch_t *sw = info.data->sw_columns[index].data;  
     return ecs_switch_get(sw, info.row);  
 }
 
@@ -5883,11 +5874,11 @@ bool ecs_has_entity(
 {
     if (ECS_HAS_ROLE(component, CASE)) {
         ecs_entity_info_t info;
-        if (!ecs_get_info(world, entity, &info)) {
+        ecs_table_t *table;
+        if (!ecs_get_info(world, entity, &info) || !(table = info.table)) {
             return false;
         }
 
-        ecs_table_t *table = info.table;
         int32_t index = ecs_table_switch_from_case(world, table, component);
         ecs_assert(index < table->sw_column_count, ECS_INTERNAL_ERROR, NULL);
         
@@ -6212,41 +6203,23 @@ void flush_bulk_new(
             add_entities(world, ids[i], &op->components);
         }
     }
+
+    if (op->components.count > 1) {
+        ecs_os_free(op->components.array);
+    }
+
     ecs_os_free(ids);
 }
 
 static
 void discard_op(
-    ecs_world_t * world,
     ecs_op_t * op)
 {
-    if (op->kind != EcsOpBulkNew) {
-        void *value = op->is._1.value;
-        if (value) {
-            ecs_os_free(value);
-        }
-    } else {
-        void **bulk_data = op->is._n.bulk_data;
-        if (bulk_data) {
-            int32_t i, c_count = op->components.count;
-            for (i = 0; i < c_count; i ++) {
-                ecs_entity_t component = op->components.array[i];
-                const EcsComponent *cptr = ecs_get(world, component, 
-                    EcsComponent);
-                ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
-                size_t size = ecs_to_size_t(cptr->size);
+    ecs_assert(op->kind != EcsOpBulkNew, ECS_INTERNAL_ERROR, NULL);
 
-                ecs_c_info_t *c_info = get_c_info(world, component);
-                ecs_xtor_t dtor;
-                if ((dtor = c_info->lifecycle.dtor)) {
-                    dtor(world, component, op->is._n.entities, bulk_data[i], 
-                        size, op->is._n.count, c_info->lifecycle.ctx);
-                } else {
-                    ecs_os_free(bulk_data[i]);
-                }
-            }
-            ecs_os_free(bulk_data);
-        }
+    void *value = op->is._1.value;
+    if (value) {
+        ecs_os_free(value);
     }
 
     ecs_entity_t *components = op->components.array;
@@ -6297,17 +6270,10 @@ void ecs_defer_flush(
                  * contained both a delete and a subsequent add/remove/set which
                  * should be ignored. */
                 if (e && !ecs_is_alive(world, e) && ecs_eis_exists(world, e)) {
-                    switch(op->kind) {
-                    case EcsOpNew:
-                    case EcsOpBulkNew:
-                    case EcsOpClone:
-                        /* If the operation is creating a new entity, the id
-                         * can still be not alive. */
-                        break;
-                    default:
-                        discard_op(world, op);
-                        continue;
-                    }
+                    ecs_assert(op->kind != EcsOpNew && op->kind != EcsOpClone, 
+                        ECS_INTERNAL_ERROR, NULL);
+                    discard_op(op);
+                    continue;
                 }
 
                 if (op->components.count == 1) {
@@ -6315,8 +6281,6 @@ void ecs_defer_flush(
                 }
 
                 switch(op->kind) {
-                case EcsOpNone:
-                    break;
                 case EcsOpNew:
                     if (op->scope) {
                         ecs_add_entity(world, e, ECS_CHILDOF | op->scope);
@@ -6325,6 +6289,8 @@ void ecs_defer_flush(
                 case EcsOpAdd:
                     if (valid_components(world, &op->components)) {
                         add_entities(world, e, &op->components);
+                    } else {
+                        ecs_delete(world, e);
                     }
                     break;
                 case EcsOpRemove:
@@ -6355,7 +6321,10 @@ void ecs_defer_flush(
                     break;
                 case EcsOpBulkNew:
                     flush_bulk_new(world, op);
-                    break;
+
+                    /* Continue since flush_bulk_new is repsonsible for cleaning
+                     * up resources. */
+                    continue;
                 }
 
                 if (op->components.count > 1) {

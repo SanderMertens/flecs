@@ -73,6 +73,8 @@ void Add_type_w_2_tags(void);
 void Add_type_w_tag_mixed(void);
 void Add_add_remove(void);
 void Add_add_remove_same(void);
+void Add_add_remove_entity(void);
+void Add_add_remove_entity_same(void);
 void Add_add_2_remove(void);
 void Add_add_entity(void);
 void Add_remove_entity(void);
@@ -106,6 +108,8 @@ void Switch_change_case_in_stage(void);
 void Switch_change_one_case_in_stage(void);
 void Switch_remove_switch_in_stage(void);
 void Switch_switch_no_match_for_case(void);
+void Switch_empty_entity_has_case(void);
+void Switch_zero_entity_has_case(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -267,6 +271,7 @@ void Has_has_entity_owned_0_component(void);
 
 // Testsuite 'Count'
 void Count_count_empty(void);
+void Count_count_w_entity_0(void);
 void Count_count_1_component(void);
 void Count_count_2_components(void);
 void Count_count_3_components(void);
@@ -1126,8 +1131,14 @@ void MultiThread_reactive_system(void);
 
 // Testsuite 'DeferredActions'
 void DeferredActions_defer_new(void);
+void DeferredActions_defer_bulk_new(void);
+void DeferredActions_defer_bulk_new_w_data(void);
+void DeferredActions_defer_bulk_new_two(void);
+void DeferredActions_defer_bulk_new_w_data_two(void);
 void DeferredActions_defer_add(void);
+void DeferredActions_defer_add_two(void);
 void DeferredActions_defer_remove(void);
+void DeferredActions_defer_remove_two(void);
 void DeferredActions_defer_set(void);
 void DeferredActions_defer_delete(void);
 void DeferredActions_defer_twice(void);
@@ -1144,6 +1155,13 @@ void DeferredActions_defer_set_after_delete(void);
 void DeferredActions_defer_get_mut_after_delete(void);
 void DeferredActions_defer_get_mut_after_delete_2nd_to_last(void);
 void DeferredActions_defer_add_child_to_deleted_parent(void);
+void DeferredActions_recreate_deleted_entity_while_deferred(void);
+void DeferredActions_discard_add(void);
+void DeferredActions_discard_remove(void);
+void DeferredActions_discard_add_two(void);
+void DeferredActions_discard_remove_two(void);
+void DeferredActions_discard_child(void);
+void DeferredActions_discard_child_w_add(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -1602,6 +1620,14 @@ bake_test_case Add_testcases[] = {
         Add_add_remove_same
     },
     {
+        "add_remove_entity",
+        Add_add_remove_entity
+    },
+    {
+        "add_remove_entity_same",
+        Add_add_remove_entity_same
+    },
+    {
         "add_2_remove",
         Add_add_2_remove
     },
@@ -1723,6 +1749,14 @@ bake_test_case Switch_testcases[] = {
     {
         "switch_no_match_for_case",
         Switch_switch_no_match_for_case
+    },
+    {
+        "empty_entity_has_case",
+        Switch_empty_entity_has_case
+    },
+    {
+        "zero_entity_has_case",
+        Switch_zero_entity_has_case
     }
 };
 
@@ -2323,6 +2357,10 @@ bake_test_case Count_testcases[] = {
     {
         "count_empty",
         Count_count_empty
+    },
+    {
+        "count_w_entity_0",
+        Count_count_w_entity_0
     },
     {
         "count_1_component",
@@ -5522,12 +5560,36 @@ bake_test_case DeferredActions_testcases[] = {
         DeferredActions_defer_new
     },
     {
+        "defer_bulk_new",
+        DeferredActions_defer_bulk_new
+    },
+    {
+        "defer_bulk_new_w_data",
+        DeferredActions_defer_bulk_new_w_data
+    },
+    {
+        "defer_bulk_new_two",
+        DeferredActions_defer_bulk_new_two
+    },
+    {
+        "defer_bulk_new_w_data_two",
+        DeferredActions_defer_bulk_new_w_data_two
+    },
+    {
         "defer_add",
         DeferredActions_defer_add
     },
     {
+        "defer_add_two",
+        DeferredActions_defer_add_two
+    },
+    {
         "defer_remove",
         DeferredActions_defer_remove
+    },
+    {
+        "defer_remove_two",
+        DeferredActions_defer_remove_two
     },
     {
         "defer_set",
@@ -5592,6 +5654,34 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_add_child_to_deleted_parent",
         DeferredActions_defer_add_child_to_deleted_parent
+    },
+    {
+        "recreate_deleted_entity_while_deferred",
+        DeferredActions_recreate_deleted_entity_while_deferred
+    },
+    {
+        "discard_add",
+        DeferredActions_discard_add
+    },
+    {
+        "discard_remove",
+        DeferredActions_discard_remove
+    },
+    {
+        "discard_add_two",
+        DeferredActions_discard_add_two
+    },
+    {
+        "discard_remove_two",
+        DeferredActions_discard_remove_two
+    },
+    {
+        "discard_child",
+        DeferredActions_discard_child
+    },
+    {
+        "discard_child_w_add",
+        DeferredActions_discard_child_w_add
     }
 };
 
@@ -6392,14 +6482,14 @@ static bake_test_suite suites[] = {
         "Add",
         NULL,
         NULL,
-        35,
+        37,
         Add_testcases
     },
     {
         "Switch",
         Switch_setup,
         NULL,
-        22,
+        24,
         Switch_testcases
     },
     {
@@ -6455,7 +6545,7 @@ static bake_test_suite suites[] = {
         "Count",
         NULL,
         NULL,
-        5,
+        6,
         Count_testcases
     },
     {
@@ -6700,7 +6790,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        19,
+        32,
         DeferredActions_testcases
     },
     {
