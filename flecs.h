@@ -1996,6 +1996,11 @@ typedef struct ecs_data_t ecs_data_t;
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
 
+struct ecs_record_t {
+    ecs_table_t *table;  /* Identifies a type (and table) in world */
+    int32_t row;         /* Table row of the entity */
+};
+
 /** Cached reference. */
 struct ecs_ref_t {
     ecs_entity_t entity;    /**< Entity of the reference */
@@ -6902,11 +6907,6 @@ void ecs_snapshot_free(
 
 #ifndef FLECS_DIRECT_ACCESS_H_
 #define FLECS_DIRECT_ACCESS_H_
-
-struct ecs_record_t {
-    ecs_table_t *table;  /* Identifies a type (and table) in world */
-    int32_t row;         /* Table row of the entity */
-};
 
 #ifdef __cplusplus
 extern "C" {
