@@ -12,11 +12,6 @@
 #ifndef FLECS_DIRECT_ACCESS_H_
 #define FLECS_DIRECT_ACCESS_H_
 
-struct ecs_record_t {
-    ecs_table_t *table;  /* Identifies a type (and table) in world */
-    int32_t row;         /* Table row of the entity */
-};
-
 #ifdef __cplusplus
 extern "C" {
 #endif

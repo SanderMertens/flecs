@@ -41,6 +41,11 @@ typedef struct ecs_data_t ecs_data_t;
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
 
+struct ecs_record_t {
+    ecs_table_t *table;  /* Identifies a type (and table) in world */
+    int32_t row;         /* Table row of the entity */
+};
+
 /** Cached reference. */
 struct ecs_ref_t {
     ecs_entity_t entity;    /**< Entity of the reference */

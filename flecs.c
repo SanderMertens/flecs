@@ -10129,9 +10129,9 @@ void ecs_record_copy_to(
     ecs_c_info_t *c_info = table->c_info[column];
     ecs_copy_t copy;
     if (c_info && (copy = c_info->lifecycle.copy)) {
-        ecs_entity_t dummy = 0;
-        copy(world, c_info->component, &dummy, &dummy, ptr, value, c_size, count,
-            c_info->lifecycle.ctx);
+        ecs_entity_t *entities = get_entity_array(table, row);
+        copy(world, c_info->component, entities, entities, ptr, value, c_size, 
+            count, c_info->lifecycle.ctx);
     } else {
         ecs_os_memcpy(ptr, value, size * count);
     }
@@ -10195,9 +10195,9 @@ void ecs_record_move_to(
     ecs_c_info_t *c_info = table->c_info[column];
     ecs_move_t move;
     if (c_info && (move = c_info->lifecycle.move)) {
-        ecs_entity_t dummy = 0;
-        move(world, c_info->component, &dummy, &dummy, ptr, value, c_size, count,
-            c_info->lifecycle.ctx);
+        ecs_entity_t *entities = get_entity_array(table, row);
+        move(world, c_info->component, entities, entities, ptr, value, c_size, 
+            count, c_info->lifecycle.ctx);
     } else {
         ecs_os_memcpy(ptr, value, size * count);
     }

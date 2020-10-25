@@ -548,6 +548,8 @@ typedef struct EcsTrigger {
  * A world manages all the ECS data and supporting infrastructure. Applications 
  * must have at least one world. Entities, component and system handles are 
  * local to a world and should not be shared between worlds.
+ * 
+ * This operation creates a world with all builtin modules loaded. 
  *
  * @return A new world object
  */
@@ -563,16 +565,8 @@ ecs_world_t* ecs_mini(void);
 
 /** Create a new world with arguments.
  * Same as ecs_init, but allows passing in command line arguments. These can be
- * used to dynamically enable flecs features to an application, like performance
- * monitoring or the web dashboard (if it is installed) without having to modify
- * the code of an application.
- * 
- * The following options are available:
- * --threads [n]   Use n worker threads
- * --fps [hz]      Run at hz FPS
- * --admin [port]  Enable admin dashboard (requires flecs-systems-admin & flecs-systems-civetweb)
- * --console       Enables console (requires flecs-systems-console)
- * --debug         Enables debug tracing
+ * used to dynamically enable flecs features to an application. Currently these
+ * arguments are not used.
  *
  * @return A new world object
  */
@@ -2114,23 +2108,33 @@ bool ecs_filter_next(
 
 /** Create a query.
  * This operation creates a query. Queries are used to iterate over entities
- * that match a signature expression.
+ * that match a signature expression and are the fastest way to find and iterate
+ * over entities and their components.
  * 
- * Queries are 'persistent' meaning they are registered with
- * the world and continuously matched with new entities (tables). Queries
- * are the fastest way to iterate over entities, as a lot of processing is
- * done when entities are matched, outside of the main loop.
+ * Queries should be created once, and reused multiple times. While iterating a
+ * query is a cheap operation, creating and deleting a query is expensive. The
+ * reason for this is that queries are "prematched", which means that a query
+ * stores state about which entities (or rather, tables) match with the query.
+ * Building up this state happens during query creation.
  *
- * Queries are the mechanism used by systems, and as such both accept the
- * same signature expressions, and have similar performance. 
+ * Once a query is created, matching only happens when new tables are created.
+ * In most applications this is an infrequent process, since it only occurs when
+ * a new combination of components is introduced. While matching is expensive,
+ * it is importent to note that matching does not happen on a per-entity basis,
+ * but on a per-table basis. This means that the average time spent on matching
+ * per frame should rapidly approach zero over the lifetime of an application.
  *
- * Queries, like systems, iterate over component data from the main stage.
- * This means that when an application is iterating a query outside of a system,
- * care must be taken when adding/removing components or creating/deleting
- * entities, as this may corrupt the iteration.
+ * A query provides direct access to the component arrays. When an application
+ * creates/deletes entities or adds/removes components, these arrays can shift
+ * component values around, or may grow in size. This can cause unexpected or
+ * undefined behavior to occur if these operations are performed while 
+ * iterating. To prevent this from happening an application should either not
+ * perform these operations while iterating, or use deferred operations (see
+ * ecs_defer_begin and ecs_defer_end).
  *
- * When a query is iterated over inside a system normal staging applies, and an
- * application can safely update entities.
+ * Queries can be created and deleted dynamically. If a query was not deleted
+ * (using ecs_query_free) before the world is deleted, it will be deleted 
+ * automatically.
  *
  * @param world The world.
  * @param sig The query signature expression.
@@ -2183,6 +2187,24 @@ void ecs_query_free(
  * A query iterator lets an application iterate over entities that match the
  * specified query. If a sorting function is specified, the query will check
  * whether a resort is required upon creating the iterator.
+ *
+ * Creating a query iterator is a cheap operation that does not allocate any
+ * resources. An application does not need to deinitialize or free a query 
+ * iterator before it goes out of scope.
+ *
+ * To iterate the iterator, an application should use ecs_query_next to progress
+ * the iterator and test if it has data.
+ *
+ * Query iteration requires an outer and an inner loop. The outer loop uses
+ * ecs_query_next to test if new tables are available. The inner loop iterates
+ * the entities in the table, and is usually a for loop that uses iter.count to
+ * loop through the entities and component arrays.
+ *
+ * The two loops are necessary because of how data is stored internally. 
+ * Entities are grouped by the components they have, in tables. A single query 
+ * can (and often does) match with multiple tables. Because each table has its
+ * own set of arrays, an application has to reobtain pointers to those arrays
+ * for each matching table.
  *
  * @param query The query to iterate.
  * @return The query iterator.
