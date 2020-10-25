@@ -168,12 +168,12 @@ void New_redefine_component() {
 
     {
         ECS_COMPONENT(world, Position);
-        c = ecs_entity(Position);
+        c = ecs_typeid(Position);
     }
 
     {
         ECS_COMPONENT(world, Position);
-        test_assert(c == ecs_entity(Position));
+        test_assert(c == ecs_typeid(Position));
     }
     
     ecs_fini(world);

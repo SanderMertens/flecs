@@ -13,7 +13,7 @@ ecs_entity_t create_entity(ecs_world_t *world) {
 
 static
 ecs_entity_t create_entity_w_entity(ecs_world_t *world) {
-    return ecs_new_w_entity(world, ecs_entity(Position));
+    return ecs_new_w_entity(world, ecs_typeid(Position));
 }
 
 static
@@ -65,8 +65,8 @@ void GlobalComponentIds_declare_2_world() {
     ECS_COMPONENT_DEFINE(world_1, Position);
     ECS_COMPONENT_DEFINE(world_1, Velocity);
 
-    ecs_entity_t e_pos = ecs_entity(Position);
-    ecs_entity_t e_vel = ecs_entity(Velocity);
+    ecs_entity_t e_pos = ecs_typeid(Position);
+    ecs_entity_t e_vel = ecs_typeid(Velocity);
 
     ecs_world_t *world_2 = ecs_init();
 
@@ -74,8 +74,8 @@ void GlobalComponentIds_declare_2_world() {
     ECS_COMPONENT_DEFINE(world_2, Velocity);
     ECS_COMPONENT_DEFINE(world_2, Position);
 
-    test_assert(e_pos == ecs_entity(Position));
-    test_assert(e_vel == ecs_entity(Velocity));
+    test_assert(e_pos == ecs_typeid(Position));
+    test_assert(e_vel == ecs_typeid(Velocity));
 
     ecs_fini(world_1);
     ecs_fini(world_2);

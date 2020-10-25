@@ -50,7 +50,7 @@ ECS_MOVE(EcsName, dst, src, {
 /* -- Bootstrapping -- */
 
 #define bootstrap_component(world, table, name)\
-    _bootstrap_component(world, table, ecs_entity(name), #name, sizeof(name),\
+    _bootstrap_component(world, table, ecs_typeid(name), #name, sizeof(name),\
         ECS_ALIGNOF(name))
 
 void _bootstrap_component(
@@ -109,9 +109,9 @@ static
 void bootstrap_types(
     ecs_world_t *world)
 {
-    ecs_type(EcsComponent) = ecs_bootstrap_type(world, ecs_entity(EcsComponent));
-    ecs_type(EcsType) = ecs_bootstrap_type(world, ecs_entity(EcsType));
-    ecs_type(EcsName) = ecs_bootstrap_type(world, ecs_entity(EcsName));
+    ecs_type(EcsComponent) = ecs_bootstrap_type(world, ecs_typeid(EcsComponent));
+    ecs_type(EcsType) = ecs_bootstrap_type(world, ecs_typeid(EcsType));
+    ecs_type(EcsName) = ecs_bootstrap_type(world, ecs_typeid(EcsName));
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -124,7 +124,7 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t entities[] = {ecs_entity(EcsComponent), ecs_entity(EcsName), ECS_CHILDOF | EcsFlecsCore};
+    ecs_entity_t entities[] = {ecs_typeid(EcsComponent), ecs_typeid(EcsName), ECS_CHILDOF | EcsFlecsCore};
     ecs_entities_t array = {
         .array = entities,
         .count = 3

@@ -235,7 +235,7 @@ void Reference_get_ref_after_realloc_w_lifecycle() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_typeid(Position), EcsComponentLifecycle, {
         .move = comp_move
     });
 

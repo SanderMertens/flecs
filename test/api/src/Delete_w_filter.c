@@ -514,7 +514,7 @@ void Delete_w_filter_skip_builtin_tables() {
     test_int( ecs_count(world, Position), 0);
     test_assert( !ecs_get_type(world, e1));
 
-    test_assert(!!ecs_get_type(world, ecs_entity(Position)));
+    test_assert(!!ecs_get_type(world, ecs_typeid(Position)));
     test_assert(!!ecs_get_type(world, Dummy));
 
     /* Test if table is left in a state that can be repopulated */

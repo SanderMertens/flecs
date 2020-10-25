@@ -97,8 +97,9 @@ Addons are located in the `src/addons` and `include/addons` folders. The followi
 
 Addon         | Description                                      | Constant            |
 --------------|--------------------------------------------------|---------------------|
-Bulk          | Efficient operations that run on many entities   | FLECS_BULK          | 
+Bulk          | Efficient operations that run on many entities   | FLECS_BULK          |
 Dbg           | Debug API for inspection of internals            | FLECS_DBG           |
+Direct Access | Low-level API for direct access to component data| FLECS_DIRECT_ACCESS |
 Module        | Organize components and systems in modules       | FLECS_MODULE        | 
 Queue         | A queue data structure                           | FLECS_QUEUE         |
 Reader_writer | Serialize components to series of bytes          | FLECS_READER_WRITER | 
@@ -281,11 +282,11 @@ From a readability perspective this code looks fine as we can easily tell what i
 Let's first remove the `ECS_COMPONENT` macro and replace it with equivalent code (details are omitted for brevity):
 
 ```c
-ecs_entity_t ecs_entity(Position) = ecs_new_component(world, "Position", sizeof(Position));
-ecs_type_t ecs_type(Position) = ecs_type_from_entity(world, ecs_entity(Position));
+ecs_entity_t ecs_typeid(Position) = ecs_new_component(world, "Position", sizeof(Position));
+ecs_type_t ecs_type(Position) = ecs_type_from_entity(world, ecs_typeid(Position));
 ```
 
-The first line actually registers the component with Flecs, and captures its name and size. The result is stored in a variable with name `ecs_entity(Position)`. Here, `ecs_entity` is a macro that translates the typename of the component to a variable name. The actual name of the variable is:
+The first line actually registers the component with Flecs, and captures its name and size. The result is stored in a variable with name `ecs_typeid(Position)`. Here, `ecs_entity` is a macro that translates the typename of the component to a variable name. The actual name of the variable is:
 
 ```c
 FLECS__EPosition
@@ -308,7 +309,7 @@ Position *p = ecs_get(world, e, Position);
 Translates into:
 
 ```c
-Position *p = (Position*)ecs_get_w_entity(world, e, ecs_entity(Position));
+Position *p = (Position*)ecs_get_w_entity(world, e, ecs_typeid(Position));
 ```
 
 As you can see, the `ecs_get` macro casts the result of the function to the correct type, so a compiler will throw a warning when an application tries to assign the result of the operation to a variable of the wrong type.
@@ -323,7 +324,7 @@ Translates into:
 
 ```c
 ecs_set_ptr_w_entity
-    (world, e, ecs_entity(Position), sizeof(Position), 
+    (world, e, ecs_typeid(Position), sizeof(Position), 
     &(Position){10, 20});
 ```
 
@@ -797,14 +798,14 @@ int main() {
 }
 ```
 
-There are also operations which operate on a single component at a time, like `ecs_get` and `ecs_set`. These operations require a component handle of type `ecs_entity_t`. The `ECS_COMPONENT` macro defines a variable of type `ecs_entity_t`that contains the id of the component. The variable defined by `ECS_COMPONENT` can be accessed by the application with `ecs_entity(ComponentName)`. The following example shows how to pass an entity handle to another function:
+There are also operations which operate on a single component at a time, like `ecs_get` and `ecs_set`. These operations require a component handle of type `ecs_entity_t`. The `ECS_COMPONENT` macro defines a variable of type `ecs_entity_t`that contains the id of the component. The variable defined by `ECS_COMPONENT` can be accessed by the application with `ecs_typeid(ComponentName)`. The following example shows how to pass an entity handle to another function:
 
 ```c
 typedef struct Position {
     float x, y;
 } Position;
 
-void set_position(ecs_world_t *t, ecs_entity_t ecs_entity(Position)) {
+void set_position(ecs_world_t *t, ecs_entity_t ecs_typeid(Position)) {
     ecs_entity_t e = ecs_new(world, 0);
     ecs_set(world, e, Position, {10, 20});
 }
@@ -814,7 +815,7 @@ int main() {
 
     ECS_COMPONENT(world, Position);
 
-    set_position(world, ecs_entity(Position));
+    set_position(world, ecs_typeid(Position));
 
     ecs_fini(world);
 }
@@ -838,7 +839,7 @@ int main() {
 
     ecs_entity_t e = ecs_new(world, Position);
 
-    Position *p = get_position(world, e, ecs_entity(Position));
+    Position *p = get_position(world, e, ecs_typeid(Position));
 
     ecs_fini(world);
 }
@@ -1244,7 +1245,7 @@ Applications are able to access entities in order, by using sorted queries. Sort
 
 ```c
 ecs_query_t q = ecs_query_new(world, "Position");
-ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
 ```
 
 This will sort the query by the `Position` component. The function also accepts a compare function, which looks like this:
@@ -1348,7 +1349,7 @@ while (ecs_filter_next(&it)) {
     ecs_type_t table_type = ecs_iter_type(&it);
 
     /* First Retrieve the column index for Position */
-    int32_t p_index = ecs_type_index_of(table_type, ecs_entity(Position));
+    int32_t p_index = ecs_type_index_of(table_type, ecs_typeid(Position));
 
     /* Now use the column index to get the Position array from the table */
     Position *p = ecs_table_column(&it, p_index);
@@ -1844,7 +1845,7 @@ In some scenarios it is desirable that an entity is initialized with a specific 
 ecs_entity_t Base = ecs_set(world, 0, Position, {10, 20});
 
 // Mark as OWNED. This ensures that when base is instantiated, Position is overridden
-ecs_add_entity(world, world, Base, ECS_OWNED | ecs_entity(Position));
+ecs_add_entity(world, world, Base, ECS_OWNED | ecs_typeid(Position));
 
 // Create entity from BaseType. This adds the INSTANCEOF relationship in addition 
 // to overriding Position, effectively initializing the Position component for the instance.
@@ -2071,8 +2072,8 @@ To create a trait from a trait identifier and a component identifier, an applica
 ECS_COMPONENT(world, Trait);
 ECS_COMPONENT(world, Component);
 
-ecs_entity_t lo = ecs_entity(Component);
-ecs_entity_t hi = ecs_entity(Trait);
+ecs_entity_t lo = ecs_typeid(Component);
+ecs_entity_t hi = ecs_typeid(Trait);
 
 ecs_entity_t trait = (lo + hi << 32) | ECS_TRAIT;
 ```
@@ -2080,7 +2081,7 @@ ecs_entity_t trait = (lo + hi << 32) | ECS_TRAIT;
 The API provides a convenience macro to make this easier:
 
 ```c
-ecs_entity_t trait = ecs_trait(ecs_entity(Component), ecs_entity(Trait));
+ecs_entity_t trait = ecs_trait(ecs_typeid(Component), ecs_typeid(Trait));
 ```
 
 To extract the component id from a trait, an application must get the lower 32 bits of an entity identifier. The API provides the convenience `ecs_entity_t_lo` macro to do this:
@@ -2167,7 +2168,7 @@ With the following implementation for `SetVelocity`:
 
 ```c
 void SetVelocity(ecs_iter_t *it) {
-    ecs_entity_t ecs_entity(Velocity) = ecs_column_entity(it, 2);
+    ecs_entity_t ecs_typeid(Velocity) = ecs_column_entity(it, 2);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_set(world, it->entities[i], Velocity, {1, 2});

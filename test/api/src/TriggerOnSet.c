@@ -44,7 +44,7 @@ void TriggerOnSet_set() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e, Position);
@@ -74,7 +74,7 @@ void TriggerOnSet_set_new() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e, Position);
@@ -107,7 +107,7 @@ void TriggerOnSet_set_again() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e, Position);
@@ -144,7 +144,7 @@ void TriggerOnSet_clone() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e_1, Position);
@@ -182,7 +182,7 @@ void TriggerOnSet_clone_w_value() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e_1, Position);
@@ -201,7 +201,7 @@ void TriggerOnSet_clone_w_value() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_2);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     p = ecs_get(world, e_2, Position);
@@ -274,9 +274,9 @@ void TriggerOnSet_set_and_add_system() {
 
     test_int(ctx.e[0], e);
     test_int(ctx.e[1], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[1][0], ecs_entity(Position));
+    test_int(ctx.c[1][0], ecs_typeid(Position));
     test_int(ctx.s[1][0], 0);
 
     const Position *p = ecs_get(world, e, Position);
@@ -333,7 +333,7 @@ void TriggerOnSet_on_set_after_override() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], Prefab);
 
     const Position *p = ecs_get(world, e, Position);
@@ -369,7 +369,7 @@ void TriggerOnSet_on_set_after_override() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);    
 
     p_after = ecs_get(world, e, Position);
@@ -405,7 +405,7 @@ void TriggerOnSet_on_set_after_override_w_new() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e, Position);
@@ -441,7 +441,7 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], ids[0]);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0); 
 
     int i;
@@ -479,7 +479,7 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e, Position);
@@ -532,7 +532,7 @@ void TriggerOnSet_on_set_after_snapshot_restore() {
     test_int(ctx.invoked, 1);
     test_int(ctx.system, SetPosition);
     test_int(ctx.column_count, 1);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_null(ctx.param);
     
     for (i = 0; i < 10; i ++) {

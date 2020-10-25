@@ -59,8 +59,8 @@ int32_t data_column_count(
          * vectors are sorted. 
          * Explicitly check for EcsComponent and EcsName since the ecs_has check
          * doesn't work during bootstrap. */
-        if ((component == ecs_entity(EcsComponent)) || 
-            (component == ecs_entity(EcsName)) || 
+        if ((component == ecs_typeid(EcsComponent)) || 
+            (component == ecs_typeid(EcsName)) || 
             ecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;
@@ -181,7 +181,7 @@ void init_edges(
             table->flags |= EcsTableIsDisabled;
         }
 
-        if (e == ecs_entity(EcsComponent)) {
+        if (e == ecs_typeid(EcsComponent)) {
             table->flags |= EcsTableHasComponentData;
         }
 

@@ -81,22 +81,30 @@ int parse_type_action(
 }
 
 static
-EcsType type_from_vec(
+ecs_table_t* table_from_vec(
     ecs_world_t *world,
     ecs_vector_t *vec)
 {
-    EcsType result = {0, 0};
     ecs_entity_t *array = ecs_vector_first(vec, ecs_entity_t);
-    int32_t i, count = ecs_vector_count(vec);
+    int32_t count = ecs_vector_count(vec);
 
     ecs_entities_t entities = {
         .array = array,
         .count = count
     };
 
-    ecs_table_t *table = ecs_table_find_or_create(world, &entities);
+    return ecs_table_find_or_create(world, &entities);
+}
+
+static
+EcsType type_from_vec(
+    ecs_world_t *world,
+    ecs_vector_t *vec)
+{
+    EcsType result = {0, 0};
+    ecs_table_t *table = table_from_vec(world, vec);
     if (!table) {
-        return (EcsType){ 0 };
+        return result;
     }    
 
     result.type = table->type;
@@ -106,6 +114,8 @@ EcsType type_from_vec(
      * maintains the original type hierarchy. */
     ecs_vector_t *normalized = NULL;
 
+    ecs_entity_t *array = ecs_vector_first(vec, ecs_entity_t);
+    int32_t i, count = ecs_vector_count(vec);
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
         if (ECS_HAS_ROLE(e, AND)) {
@@ -231,6 +241,21 @@ ecs_type_t ecs_type_from_str(
 {
     EcsType type = type_from_expr(world, NULL, expr);
     return type.normalized;
+}
+
+ecs_table_t* ecs_table_from_str(
+    ecs_world_t *world,
+    const char *expr)
+{
+    if (expr) {
+        ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
+        ecs_parse_expr(world, NULL, expr, parse_type_action, &vec);
+        ecs_table_t *result = table_from_vec(world, vec);
+        ecs_vector_free(vec);
+        return result;
+    } else {
+        return NULL;
+    }
 }
 
 ecs_entity_t ecs_new_entity(

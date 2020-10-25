@@ -23,6 +23,7 @@ flecs_src = files(
     'src/addons/bulk.c',
     'src/addons/dbg.c',
     'src/hierarchy.c',
+    'src/addons/direct_access.c',
     'src/addons/module.c',
     'src/addons/queue.c',
     'src/addons/reader.c',

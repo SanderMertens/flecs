@@ -69,6 +69,24 @@ void ecs_vector_clear(
     }
 }
 
+void _ecs_vector_zero(
+    ecs_vector_t *vector,
+    ecs_size_t elem_size,
+    int16_t offset)
+{
+    void *array = ECS_OFFSET(vector, offset);
+    ecs_os_memset(array, 0, elem_size * vector->count);
+}
+
+void ecs_vector_assert_size(
+    ecs_vector_t *vector,
+    ecs_size_t elem_size)
+{
+    if (vector) {
+        ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    }
+}
+
 void* _ecs_vector_addn(
     ecs_vector_t **array_inout,
     ecs_size_t elem_size,

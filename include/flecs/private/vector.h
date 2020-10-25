@@ -84,12 +84,31 @@ ecs_vector_t* _ecs_vector_from_array(
     _ecs_vector_from_array(ECS_VECTOR_T(T), elem_count, array)
 
 FLECS_EXPORT
+void _ecs_vector_zero(
+    ecs_vector_t *vector,
+    ecs_size_t elem_size,
+    int16_t offset);
+
+#define ecs_vector_zero(vector, T) \
+    _ecs_vector_zero(vector, ECS_VECTOR_T(T))
+
+FLECS_EXPORT
 void ecs_vector_free(
     ecs_vector_t *vector);
 
 FLECS_EXPORT
 void ecs_vector_clear(
     ecs_vector_t *vector);
+
+FLECS_EXPORT
+void ecs_vector_assert_size(
+    ecs_vector_t* vector_inout,
+    ecs_size_t elem_size);
+
+FLECS_EXPORT
+void ecs_vector_assert_alignment(
+    ecs_vector_t* vector,
+    ecs_size_t elem_alignment);    
 
 FLECS_EXPORT
 void* _ecs_vector_add(

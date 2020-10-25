@@ -61,9 +61,9 @@ void System_w_FromEntity_2_column_1_from_entity() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_2);
-    test_int(ctx.c[0][0], ecs_entity(Mass));
+    test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], e_1);
-    test_int(ctx.c[0][1], ecs_entity(Position));
+    test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e_2, Position);
@@ -104,7 +104,7 @@ void System_w_FromEntity_task_from_entity() {
     ecs_progress(world, 1);
 
     test_bool(dummy_invoked, true);
-    test_assert(dummy_component == ecs_entity(Position));
+    test_assert(dummy_component == ecs_typeid(Position));
     test_assert(dummy_source == e_1);
 
     dummy_reset();
@@ -134,7 +134,7 @@ void System_w_FromEntity_task_not_from_entity() {
     ecs_progress(world, 1);
 
     test_bool(dummy_invoked, true);
-    test_assert(dummy_component == ecs_entity(Position));
+    test_assert(dummy_component == ecs_typeid(Position));
     test_assert(dummy_source == e_1);
 
     ecs_fini(world);

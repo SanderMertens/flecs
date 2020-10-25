@@ -205,5 +205,5 @@ ECS_PREFAB(world, Parent);
 - Module components are no longer stored on the singleton entity but on their own entity, which also acts as the component handle:
 
 ```c
-MyModule *m_ptr = ecs_get(world, ecs_entity(MyModule), MyModule);
+MyModule *m_ptr = ecs_get(world, ecs_typeid(MyModule), MyModule);
 ```

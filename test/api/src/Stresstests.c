@@ -102,7 +102,7 @@ void create_delete_entity_random_components_staged(
     ECS_SYSTEM(world, Add_random, EcsOnUpdate, Position);
     ECS_SYSTEM(world, Delete_above_1000, EcsPostUpdate, Position);
 
-    IterData ctx = {.component = ecs_entity(Position), .component_2 = ecs_entity(Velocity), .component_3 = ecs_entity(Rotation)};
+    IterData ctx = {.component = ecs_typeid(Position), .component_2 = ecs_typeid(Velocity), .component_3 = ecs_typeid(Rotation)};
     ecs_set_context(world, &ctx);
 
     ecs_bulk_new(world, Position, 500);
@@ -137,7 +137,7 @@ void set_entity_random_components(
     ECS_SYSTEM(world, Set_velocity_callback, EcsOnSet, Velocity);
     ECS_SYSTEM(world, Delete_above_1000, EcsPostUpdate, Position);
 
-    IterData ctx = {.component = ecs_entity(Position), .component_2 = ecs_entity(Velocity), .component_3 = ecs_entity(Rotation)};
+    IterData ctx = {.component = ecs_typeid(Position), .component_2 = ecs_typeid(Velocity), .component_3 = ecs_typeid(Rotation)};
     ecs_set_context(world, &ctx);
 
     const ecs_entity_t *ids = ecs_bulk_new(world, Position, 5);
@@ -170,9 +170,9 @@ void Stresstests_create_delete_entity_random_components() {
 
     int i;
     for (i = 0; i < 1000; i ++) {
-        add_random(world, ids[i], ecs_entity(Position));
-        add_random(world, ids[i], ecs_entity(Velocity));
-        add_random(world, ids[i], ecs_entity(Rotation));
+        add_random(world, ids[i], ecs_typeid(Position));
+        add_random(world, ids[i], ecs_typeid(Velocity));
+        add_random(world, ids[i], ecs_typeid(Rotation));
     }
 
     ecs_fini(world);
@@ -193,14 +193,14 @@ void Stresstests_set_entity_random_components() {
     int i;
     for (i = 0; i < 1000; i ++) {
         Position pos = {10, 20};
-        set_random(world, ids[i], ecs_entity(Position), &pos, &pos, sizeof(Position));
+        set_random(world, ids[i], ecs_typeid(Position), &pos, &pos, sizeof(Position));
 
         Velocity vel = {30, 40};
         Velocity vel_expect = {31, 41};
-        set_random(world, ids[i], ecs_entity(Velocity), &vel, &vel_expect, sizeof(Velocity));
+        set_random(world, ids[i], ecs_typeid(Velocity), &vel, &vel_expect, sizeof(Velocity));
 
         Rotation rot = {50};
-        set_random(world, ids[i], ecs_entity(Rotation), &rot, &rot, sizeof(Rotation));
+        set_random(world, ids[i], ecs_typeid(Rotation), &rot, &rot, sizeof(Rotation));
     }
 
     ecs_fini(world);
