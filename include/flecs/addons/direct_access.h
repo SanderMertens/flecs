@@ -228,6 +228,12 @@ void ecs_table_set_entities(
  * responsibility of the application to ensure that a table no longer points to
  * a deleted column, by using ecs_table_set_column.
  *
+ * Simultaneously, if this operation is used to delete a table column, the
+ * application should make sure that if the table contains other columns, they
+ * are either also deleted, or that the deleted column is replaced by a column
+ * of the same size. Note that this also goes for the entity and record vectors,
+ * they should have the same number of elements as the other columns.
+ *
  * The vector must be of the same component as the specified column. If the
  * vector is not of the same component, behavior will be undefined. In debug
  * mode the API may assert, though it may not always be able to detect a

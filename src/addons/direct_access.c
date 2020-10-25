@@ -35,6 +35,18 @@ ecs_column_t *get_or_create_column(
     return c;
 }
 
+static
+ecs_entity_t* get_entity_array(
+    ecs_table_t *table,
+    int32_t row)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->data->entities != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_entity_t *array = ecs_vector_first(table->data->entities, ecs_entity_t);
+    return &array[row];
+}
+
 /* -- Public API -- */
 
 ecs_type_t ecs_table_get_type(
@@ -166,12 +178,12 @@ void ecs_table_delete_column(
     ecs_c_info_t *c_info = table->c_info[column];
     ecs_xtor_t dtor;
     if (c_info && (dtor = c_info->lifecycle.dtor)) {
-        ecs_entity_t dummy = 0;
+        ecs_entity_t *entities = get_entity_array(table, 0);
         int16_t alignment = c->alignment;
         int32_t count = ecs_vector_count(vector);
         void *ptr = ecs_vector_first_t(vector, c->size, alignment);
-        dtor(world, c_info->component, &dummy, ptr, ecs_to_size_t(c->size), count,
-            c_info->lifecycle.ctx);
+        dtor(world, c_info->component, entities, ptr, ecs_to_size_t(c->size), 
+            count, c_info->lifecycle.ctx);
     }
 
     ecs_vector_free(vector);
@@ -227,9 +239,9 @@ void ecs_record_copy_to(
     ecs_c_info_t *c_info = table->c_info[column];
     ecs_copy_t copy;
     if (c_info && (copy = c_info->lifecycle.copy)) {
-        ecs_entity_t dummy = 0;
-        copy(world, c_info->component, &dummy, &dummy, ptr, value, c_size, count,
-            c_info->lifecycle.ctx);
+        ecs_entity_t *entities = get_entity_array(table, row);
+        copy(world, c_info->component, entities, entities, ptr, value, c_size, 
+            count, c_info->lifecycle.ctx);
     } else {
         ecs_os_memcpy(ptr, value, size * count);
     }
@@ -293,9 +305,9 @@ void ecs_record_move_to(
     ecs_c_info_t *c_info = table->c_info[column];
     ecs_move_t move;
     if (c_info && (move = c_info->lifecycle.move)) {
-        ecs_entity_t dummy = 0;
-        move(world, c_info->component, &dummy, &dummy, ptr, value, c_size, count,
-            c_info->lifecycle.ctx);
+        ecs_entity_t *entities = get_entity_array(table, row);
+        move(world, c_info->component, entities, entities, ptr, value, c_size, 
+            count, c_info->lifecycle.ctx);
     } else {
         ecs_os_memcpy(ptr, value, size * count);
     }

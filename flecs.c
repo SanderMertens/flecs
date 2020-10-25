@@ -2265,6 +2265,7 @@ void dtor_component(
         int16_t alignment = column->alignment;    
 
         void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
+        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         dtor(world, cdata->component, entities, ptr,
             ecs_to_size_t(size), count, ctx);
@@ -6843,7 +6844,9 @@ void ecs_vector_assert_size(
     ecs_vector_t *vector,
     ecs_size_t elem_size)
 {
-    ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    if (vector) {
+        ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    }
 }
 
 void* _ecs_vector_addn(
@@ -9922,6 +9925,18 @@ ecs_column_t *get_or_create_column(
     return c;
 }
 
+static
+ecs_entity_t* get_entity_array(
+    ecs_table_t *table,
+    int32_t row)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->data->entities != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_entity_t *array = ecs_vector_first(table->data->entities, ecs_entity_t);
+    return &array[row];
+}
+
 /* -- Public API -- */
 
 ecs_type_t ecs_table_get_type(
@@ -10053,12 +10068,12 @@ void ecs_table_delete_column(
     ecs_c_info_t *c_info = table->c_info[column];
     ecs_xtor_t dtor;
     if (c_info && (dtor = c_info->lifecycle.dtor)) {
-        ecs_entity_t dummy = 0;
+        ecs_entity_t *entities = get_entity_array(table, 0);
         int16_t alignment = c->alignment;
         int32_t count = ecs_vector_count(vector);
         void *ptr = ecs_vector_first_t(vector, c->size, alignment);
-        dtor(world, c_info->component, &dummy, ptr, ecs_to_size_t(c->size), count,
-            c_info->lifecycle.ctx);
+        dtor(world, c_info->component, entities, ptr, ecs_to_size_t(c->size), 
+            count, c_info->lifecycle.ctx);
     }
 
     ecs_vector_free(vector);

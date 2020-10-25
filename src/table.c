@@ -543,6 +543,7 @@ void dtor_component(
         int16_t alignment = column->alignment;    
 
         void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
+        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         dtor(world, cdata->component, entities, ptr,
             ecs_to_size_t(size), count, ctx);

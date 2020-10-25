@@ -329,10 +329,12 @@ static int move_position = 0;
 
 ECS_CTOR(Position, ptr, {
     ctor_position ++;
+    *ptr = (Position){0, 0};
 });
 
 ECS_DTOR(Position, ptr, {
     dtor_position ++;
+    *ptr = (Position){0, 0};
 });
 
 ECS_COPY(Position, dst, src, {
@@ -385,6 +387,11 @@ void DirectAccess_delete_column_w_dtor() {
     test_int(dtor_position, 3);
     test_int(copy_position, 0);
     test_int(move_position, 0);
+
+    /* Column was deleted, also reset entities & records */
+    ecs_vector_free(ecs_table_get_entities(t));
+    ecs_vector_free(ecs_table_get_records(t));
+    ecs_table_set_entities(t, NULL, NULL);
 
     test_assert(ecs_table_get_column(t, 0) == NULL);
     test_assert(ecs_table_get_column(t, 1) != NULL);
