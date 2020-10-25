@@ -488,8 +488,8 @@ void TableColumns(ecs_iter_t *it) {
     test_int(2, ecs_vector_count(type));
 
     ecs_entity_t *components = ecs_vector_first(type, ecs_entity_t);
-    test_int(components[0], ecs_entity(Position));
-    test_int(components[1], ecs_entity(Velocity));
+    test_int(components[0], ecs_typeid(Position));
+    test_int(components[1], ecs_typeid(Velocity));
 
     void *column_0 = ecs_table_column(it, 0);
     test_assert(column_0 == p);
@@ -1147,14 +1147,14 @@ void SystemMisc_one_named_column_of_two() {
     test_assert(column->oper_kind == EcsOperAnd);
     test_assert(column->from_kind == EcsFromOwned);
     test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_entity(Position));
+    test_assert(column->is.component == ecs_typeid(Position));
     test_str(column->name, "pos");
 
     column = ecs_vector_get(columns, ecs_sig_column_t, 1);
     test_assert(column->oper_kind == EcsOperAnd);
     test_assert(column->from_kind == EcsFromOwned);
     test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_entity(Velocity));
+    test_assert(column->is.component == ecs_typeid(Velocity));
     test_str(column->name, NULL);
 
     ecs_sig_deinit(&sig);
@@ -1179,14 +1179,14 @@ void SystemMisc_two_named_columns_of_two() {
     test_assert(column->oper_kind == EcsOperAnd);
     test_assert(column->from_kind == EcsFromOwned);
     test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_entity(Position));
+    test_assert(column->is.component == ecs_typeid(Position));
     test_str(column->name, "pos");
 
     column = ecs_vector_get(columns, ecs_sig_column_t, 1);
     test_assert(column->oper_kind == EcsOperAnd);
     test_assert(column->from_kind == EcsFromOwned);
     test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_entity(Velocity));
+    test_assert(column->is.component == ecs_typeid(Velocity));
     test_str(column->name, "vel");
 
     ecs_sig_deinit(&sig);

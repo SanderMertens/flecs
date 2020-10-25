@@ -275,13 +275,13 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
     ECS_SYSTEM(world, SetPosition, EcsOnSet, Position);
     ECS_SYSTEM(world, OnMovable, EcsMonitor, Position, Velocity);
 
-    ecs_set(world, AddPosition, EcsContext, {&ecs_entity(Velocity)});
-    ecs_set(world, SetPosition, EcsContext, {&ecs_entity(Rotation)});
+    ecs_set(world, AddPosition, EcsContext, {&ecs_typeid(Velocity)});
+    ecs_set(world, SetPosition, EcsContext, {&ecs_typeid(Rotation)});
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){
-                ecs_entity(Position)
+                ecs_typeid(Position)
             }, 
             .count = 1
         },    

@@ -1317,6 +1317,23 @@ void Modules_lookup_by_symbol(void);
 void Modules_import_type(void);
 void Modules_nested_module(void);
 
+// Testsuite 'DirectAccess'
+void DirectAccess_get_table_from_str(void);
+void DirectAccess_get_table_from_type(void);
+void DirectAccess_insert_record(void);
+void DirectAccess_insert_record_w_entity(void);
+void DirectAccess_table_count(void);
+void DirectAccess_find_column(void);
+void DirectAccess_get_column(void);
+void DirectAccess_get_empty_column(void);
+void DirectAccess_set_column(void);
+void DirectAccess_delete_column(void);
+void DirectAccess_delete_column_explicit(void);
+void DirectAccess_delete_column_w_dtor(void);
+void DirectAccess_copy_to(void);
+void DirectAccess_copy_pod_to(void);
+void DirectAccess_move_to(void);
+
 // Testsuite 'Internals'
 void Internals_setup(void);
 void Internals_deactivate_table(void);
@@ -6215,6 +6232,69 @@ bake_test_case Modules_testcases[] = {
     }
 };
 
+bake_test_case DirectAccess_testcases[] = {
+    {
+        "get_table_from_str",
+        DirectAccess_get_table_from_str
+    },
+    {
+        "get_table_from_type",
+        DirectAccess_get_table_from_type
+    },
+    {
+        "insert_record",
+        DirectAccess_insert_record
+    },
+    {
+        "insert_record_w_entity",
+        DirectAccess_insert_record_w_entity
+    },
+    {
+        "table_count",
+        DirectAccess_table_count
+    },
+    {
+        "find_column",
+        DirectAccess_find_column
+    },
+    {
+        "get_column",
+        DirectAccess_get_column
+    },
+    {
+        "get_empty_column",
+        DirectAccess_get_empty_column
+    },
+    {
+        "set_column",
+        DirectAccess_set_column
+    },
+    {
+        "delete_column",
+        DirectAccess_delete_column
+    },
+    {
+        "delete_column_explicit",
+        DirectAccess_delete_column_explicit
+    },
+    {
+        "delete_column_w_dtor",
+        DirectAccess_delete_column_w_dtor
+    },
+    {
+        "copy_to",
+        DirectAccess_copy_to
+    },
+    {
+        "copy_pod_to",
+        DirectAccess_copy_pod_to
+    },
+    {
+        "move_to",
+        DirectAccess_move_to
+    }
+};
+
 bake_test_case Internals_testcases[] = {
     {
         "deactivate_table",
@@ -6673,6 +6753,13 @@ static bake_test_suite suites[] = {
         Modules_testcases
     },
     {
+        "DirectAccess",
+        NULL,
+        NULL,
+        15,
+        DirectAccess_testcases
+    },
+    {
         "Internals",
         Internals_setup,
         NULL,
@@ -6690,5 +6777,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 56);
+    return bake_test_run("api", argc, argv, suites, 57);
 }

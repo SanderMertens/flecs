@@ -101,7 +101,7 @@ ecs_entity_t ecs_type_contains(
 
         if (e1 != e2) {
             if (match_prefab && e2 != 
-                ecs_entity(EcsName) && e2 != 
+                ecs_typeid(EcsName) && e2 != 
                 EcsPrefab && e2 != 
                 EcsDisabled) 
             {

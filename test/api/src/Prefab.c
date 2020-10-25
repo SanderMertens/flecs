@@ -740,9 +740,9 @@ void Prefab_iterate_w_prefab_field() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], Prefab);
 
     const Position *p = ecs_get(world, e_1, Position);
@@ -809,9 +809,9 @@ void Prefab_iterate_w_prefab_shared() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], Prefab);
 
     const Position *p = ecs_get(world, e_1, Position);
@@ -852,11 +852,11 @@ void Prefab_match_entity_prefab_w_system_optional() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], Prefab);
-    test_int(ctx.c[0][2], ecs_entity(Mass));
+    test_int(ctx.c[0][2], ecs_typeid(Mass));
     test_int(ctx.s[0][2], Prefab);
 
     const Position *p = ecs_get(world, e_1, Position);
@@ -910,11 +910,11 @@ void Prefab_prefab_in_system_expr() {
 
     test_int(ctx.e[0], e_1);
     test_int(ctx.e[1], e_2);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], Prefab1);
-    test_int(ctx.c[0][2], ecs_entity(Mass));
+    test_int(ctx.c[0][2], ecs_typeid(Mass));
     test_int(ctx.s[0][2], 0);    
     test_int(ctx.c[0][3], ECS_INSTANCEOF | Prefab1);
     test_int(ctx.s[0][3], 0);
@@ -2727,7 +2727,7 @@ void Prefab_force_owned_type_w_trait() {
 
     ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
 
-    ecs_entity_t trait = ecs_trait(ecs_entity(Velocity), ecs_entity(Position));
+    ecs_entity_t trait = ecs_trait(ecs_typeid(Velocity), ecs_typeid(Position));
     test_assert(ecs_has_entity(world, e, trait));
     test_assert(ecs_owns_entity(world, e, trait, true));  
 

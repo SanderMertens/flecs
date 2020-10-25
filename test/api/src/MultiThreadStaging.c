@@ -33,7 +33,7 @@ void MultiThreadStaging_2_threads_add_to_current() {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
-    IterData ctx = {.component = ecs_entity(Rotation)};
+    IterData ctx = {.component = ecs_typeid(Rotation)};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t ids_1[100];
@@ -72,7 +72,7 @@ void MultiThreadStaging_3_threads_add_to_current() {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
-    IterData ctx = {.component = ecs_entity(Rotation)};
+    IterData ctx = {.component = ecs_typeid(Rotation)};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t ids_1[100];
@@ -111,7 +111,7 @@ void MultiThreadStaging_4_threads_add_to_current() {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
-    IterData ctx = {.component = ecs_entity(Rotation)};
+    IterData ctx = {.component = ecs_typeid(Rotation)};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t ids_1[100];
@@ -150,7 +150,7 @@ void MultiThreadStaging_5_threads_add_to_current() {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
-    IterData ctx = {.component = ecs_entity(Rotation)};
+    IterData ctx = {.component = ecs_typeid(Rotation)};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t ids_1[100];
@@ -189,7 +189,7 @@ void MultiThreadStaging_6_threads_add_to_current() {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
-    IterData ctx = {.component = ecs_entity(Rotation)};
+    IterData ctx = {.component = ecs_typeid(Rotation)};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t ids_1[100];

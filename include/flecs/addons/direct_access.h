@@ -9,8 +9,13 @@
 
 #ifdef FLECS_DIRECT_ACCESS
 
-#ifndef FLECS_TABLE_H_
-#define FLECS_TABLE_H_
+#ifndef FLECS_DIRECT_ACCESS_H_
+#define FLECS_DIRECT_ACCESS_H_
+
+struct ecs_record_t {
+    ecs_table_t *table;  /* Identifies a type (and table) in world */
+    int32_t row;         /* Table row of the entity */
+};
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +48,15 @@ ecs_table_t* ecs_table_from_type(
     ecs_world_t *world,
     ecs_type_t type);
 
+/** Get type for table.
+ *
+ * @param table The table.
+ * @return The type of the table.
+ */
+FLECS_EXPORT
+ecs_type_t ecs_table_get_type(
+    ecs_table_t *table);
+
 /** Insert record into table.
  * This will create a new record for the table, which inserts a value for each
  * component. An optional entity and record can be provided.
@@ -64,7 +78,6 @@ ecs_table_t* ecs_table_from_type(
  * @param entity The entity.
  * @param record The entity-index record for the specified entity.
  * @return A record containing the table and table row.
- * 
  */
 FLECS_EXPORT
 ecs_record_t ecs_table_insert(
@@ -140,11 +153,13 @@ ecs_vector_t* ecs_table_get_column(
  * be undefined. In debug mode the operation may assert.
  *
  * @param world The world.
+ * @param table The table.
  * @param column The column index.
  * @param vector The column data to assing.
  */
 FLECS_EXPORT
 void ecs_table_set_column(
+    ecs_world_t *world,
     ecs_table_t *table,
     int32_t column,
     ecs_vector_t *vector);
@@ -152,13 +167,25 @@ void ecs_table_set_column(
 /** Get the vector containing entity ids for the table.
  * This operation obtains the vector with entity ids for the current table. Each
  * entity id is associated with one record, and ids are stored in the same order
- * as the table records.
+ * as the table records. The element type of the vector is ecs_entity_t.
  *
  * @param table The table.
  * @return The vector containing the table's entities.
  */
 FLECS_EXPORT
 ecs_vector_t* ecs_table_get_entities(
+    ecs_table_t *table);
+
+/** Get the vector containing pointers to entity records.
+ * A table stores cached pointers to entity records for fast access. This 
+ * operation provides direct access to the vector. The element type of the
+ * vector is ecs_record_t*.
+ *
+ * @param table The table.
+ * @return The vector containing the entity records.
+ */ 
+FLECS_EXPORT
+ecs_vector_t* ecs_table_get_records(
     ecs_table_t *table);
 
 /** Set the vector containing entity ids for the table.
@@ -170,6 +197,10 @@ ecs_vector_t* ecs_table_get_entities(
  * The provided vectors must have the same number of elements as the number of
  * records in the table. If the element count is not the same, this causes
  * undefined behavior.
+ *
+ * A table must have an entity and record vector, even if the table does not
+ * contain entities. For each record that is not an entity, the entity vector
+ * should contain 0, and the record vector should contain NULL.
  *
  * @param table The table.
  * @param entities The entity vector.
@@ -190,9 +221,12 @@ void ecs_table_set_entities(
  * the correct destructor for the component. If the component does not have a
  * destructor, an application can alternatively delete the vector directly.
  *
- * This operation does not modify the table. If the application deletes a column
- * vector that is still used in this or other tables, the behavior will be
- * undefined.
+ * If the specified vector is NULL, the column of the table will be removed and
+ * the table will be updated to no longer point at the column. If an explicit
+ * column is provided, the table is not modified. If a column is deleted that is
+ * still being pointed to by a table, behavior is undefined. It is the
+ * responsibility of the application to ensure that a table no longer points to
+ * a deleted column, by using ecs_table_set_column.
  *
  * The vector must be of the same component as the specified column. If the
  * vector is not of the same component, behavior will be undefined. In debug
@@ -236,6 +270,19 @@ ecs_record_t* ecs_record_find(
     ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Get value from record.
+ * This operation gets a component value from a record. The provided column
+ * index must match the table of the record.
+ *
+ * @param r The record.
+ * @param column The column index of the component to get.
+ */ 
+FLECS_EXPORT
+void* ecs_record_get_column(
+    ecs_record_t *r,
+    int32_t column,
+    size_t size);
+
 /** Copy value to a component for a record.
  * This operation sets the component value of a single component for a record.
  * If the component type has a copy action it will be used, otherwise the value
@@ -275,6 +322,7 @@ void ecs_record_copy_to(
  */
 FLECS_EXPORT
 void ecs_record_copy_pod_to(
+    ecs_world_t *world,
     ecs_record_t *r,
     int32_t column,
     size_t size,

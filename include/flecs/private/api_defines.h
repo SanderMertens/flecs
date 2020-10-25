@@ -129,11 +129,14 @@ typedef int32_t ecs_size_t;
 //// Convert between C typenames and variables
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Translate C type to type variable. */
+/** Translate C type to ecs_type_t variable. */
 #define ecs_type(T) FLECS__T##T
 
-/** Translate C type to entity variable. */
-#define ecs_entity(T) FLECS__E##T
+/** Translate C type to entity id. */
+#define ecs_typeid(T) FLECS__E##T
+
+/* DEPRECATED: old way to get entity id from type */
+#define ecs_entity(T) ecs_typeid(T)
 
 /** Translate C type to module struct. */
 #define ecs_module(T) FLECS__M##T
@@ -145,6 +148,8 @@ typedef int32_t ecs_size_t;
 #define ecs_iter_action(T) FLECS__F##T
 
 #ifndef FLECS_LEGACY
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities for working with trait identifiers
 ////////////////////////////////////////////////////////////////////////////////

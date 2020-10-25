@@ -23,7 +23,7 @@ void Monitor_1_comp() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     ctx = (Probe){ 0 };
@@ -58,9 +58,9 @@ void Monitor_2_comps() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], 0);    
 
     ctx = (Probe){ 0 };
@@ -76,9 +76,9 @@ void Monitor_2_comps() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], 0); 
 
     ecs_fini(world);
@@ -102,9 +102,9 @@ void Monitor_1_comp_1_not() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], 0);    
 
     ctx = (Probe){ 0 };
@@ -120,9 +120,9 @@ void Monitor_1_comp_1_not() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], 0); 
 
     ecs_fini(world);
@@ -152,7 +152,7 @@ void Monitor_1_parent() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], parent); 
 
     ecs_fini(world);
@@ -182,9 +182,9 @@ void Monitor_1_comp_1_parent() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Position));
+    test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], parent);    
 
     ctx = (Probe){ 0 };
@@ -206,9 +206,9 @@ void Monitor_1_comp_1_parent() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Position));
+    test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], parent);
 
     ecs_fini(world);

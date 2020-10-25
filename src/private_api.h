@@ -8,7 +8,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #define ECS_TYPE_DECL(component)\
-static const ecs_entity_t __##component = ecs_entity(component);\
+static const ecs_entity_t __##component = ecs_typeid(component);\
 ECS_VECTOR_DECL(FLECS__T##component, ecs_entity_t, 1)
 
 #define ECS_TYPE_IMPL(component)\
@@ -23,7 +23,7 @@ ecs_type_t ecs_bootstrap_type(
     ecs_entity_t entity);
 
 #define ecs_bootstrap_component(world, name)\
-    ecs_new_component(world, ecs_entity(name), #name, sizeof(name), ECS_ALIGNOF(name))
+    ecs_new_component(world, ecs_typeid(name), #name, sizeof(name), ECS_ALIGNOF(name))
 
 #define ecs_bootstrap_tag(world, name)\
     ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = #name});\
@@ -329,7 +329,13 @@ ecs_data_t *ecs_table_get_data(
 
 /* Get or create data */
 ecs_data_t *ecs_table_get_or_create_data(
-    ecs_table_t *table); 
+    ecs_table_t *table);
+
+/* Initialize columns for data */
+ecs_data_t* ecs_init_data(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *result); 
 
 /* Activates / deactivates table for systems. A deactivated table will not be
  * evaluated when the system is invoked. Tables automatically get activated /

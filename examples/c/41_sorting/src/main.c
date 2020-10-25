@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     ecs_query_t *q = ecs_query_new(world, "Position");
 
     /* Order by Position component */
-    ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
 
     /* Iterate query, print values of Position */
     printf("-- First iteration\n");

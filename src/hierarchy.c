@@ -103,7 +103,7 @@ ecs_entity_t find_child_in_table(
     const char *name)
 {
     /* If table doesn't have EcsName, then don't bother */
-    int32_t name_index = ecs_type_index_of(table->type, ecs_entity(EcsName));
+    int32_t name_index = ecs_type_index_of(table->type, ecs_typeid(EcsName));
     if (name_index == -1) {
         return 0;
     }

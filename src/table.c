@@ -1,16 +1,12 @@
 #include "private_api.h"
 
-static
-ecs_data_t* init_data(
+ecs_data_t* ecs_init_data(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *result)
 {
     ecs_type_t type = table->type; 
     int32_t i, count = table->column_count, sw_count = table->sw_column_count;
-    
-    result->entities = NULL;
-    result->record_ptrs = NULL;
 
     /* Root tables don't have columns */
     if (!count && !sw_count) {
@@ -851,7 +847,7 @@ void ensure_data(
         sw_columns = data->sw_columns;
 
         if (!columns && !sw_columns) {
-            init_data(world, table, data);
+            ecs_init_data(world, table, data);
             columns = data->columns;
             sw_columns = data->sw_columns;
         }
@@ -1637,7 +1633,7 @@ void merge_table_data(
     ecs_column_t *new_columns = new_data->columns;
 
     if (!new_columns && !new_data->entities) {
-        init_data(world, new_table, new_data);
+        ecs_init_data(world, new_table, new_data);
         new_columns = new_data->columns;
     }
 
@@ -1772,6 +1768,18 @@ void merge_table_data(
 
     /* Mark entity column as dirty */
     mark_table_dirty(new_table, 0); 
+}
+
+int32_t ecs_table_count(
+    ecs_table_t *table)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_data_t *data = table->data;
+    if (!data) {
+        return 0;
+    }
+
+    return ecs_table_data_count(data);
 }
 
 ecs_data_t* ecs_table_merge(

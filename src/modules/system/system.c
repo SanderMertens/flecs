@@ -949,7 +949,7 @@ void FlecsSystemImport(
     ECS_TYPE_IMPL(EcsContext);
 
     /* Bootstrap ctor and dtor for EcsSystem */
-    ecs_set_component_actions_w_entity(world, ecs_entity(EcsSystem), 
+    ecs_set_component_actions_w_entity(world, ecs_typeid(EcsSystem), 
         &(EcsComponentLifecycle) {
             .ctor = sys_ctor_init_zero,
             .dtor = ecs_colsystem_dtor

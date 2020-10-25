@@ -307,7 +307,7 @@ typedef struct EcsTrigger {
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
-#define EcsLastInternalComponentId (ecs_entity(EcsSystem))
+#define EcsLastInternalComponentId (ecs_typeid(EcsSystem))
 
 /* The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */
@@ -380,7 +380,7 @@ typedef struct EcsTrigger {
 #define ECS_COMPONENT(world, id) \
     ECS_ENTITY_VAR(id) = ecs_new_component(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
-    (void)ecs_entity(id);\
+    (void)ecs_typeid(id);\
     (void)ecs_type(id)
 
 /** Declare an extern component variable.
@@ -413,8 +413,8 @@ typedef struct EcsTrigger {
  *   ECS_COMPONENT_DEFINE(world, Position);
  */
 #define ECS_COMPONENT_DEFINE(world, id)\
-    ecs_entity(id) = ecs_new_component(world, ecs_entity(id), #id, sizeof(id), ECS_ALIGNOF(id));\
-    ecs_type(id) = ecs_type_from_entity(world, ecs_entity(id))
+    ecs_typeid(id) = ecs_new_component(world, ecs_typeid(id), #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_type(id) = ecs_type_from_entity(world, ecs_typeid(id))
 
 /** Declare a tag.
  * Example:
@@ -631,7 +631,7 @@ void ecs_set_component_actions_w_entity(
 
 #ifndef FLECS_LEGACY
 #define ecs_set_component_actions(world, component, ...)\
-    ecs_set_component_actions_w_entity(world, ecs_entity(component), &(EcsComponentLifecycle)__VA_ARGS__)
+    ecs_set_component_actions_w_entity(world, ecs_typeid(component), &(EcsComponentLifecycle)__VA_ARGS__)
 
 #endif
 /** Set a world context.
@@ -1162,7 +1162,7 @@ void ecs_add_remove_type(
  * @param trait The trait to add.
  */
 #define ecs_set_trait(world, entity, component, trait, ...)\
-    ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)), sizeof(trait), &(trait)__VA_ARGS__)
+    ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_typeid(component), ecs_typeid(trait)), sizeof(trait), &(trait)__VA_ARGS__)
 
 
 /** Set tag trait for component. 
@@ -1178,7 +1178,7 @@ void ecs_add_remove_type(
  * @param trait The trait to add.
  */
 #define ecs_set_trait_tag(world, entity, trait, component, ...)\
-    ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_entity(component), trait), sizeof(component), &(component)__VA_ARGS__)
+    ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_typeid(component), trait), sizeof(component), &(component)__VA_ARGS__)
 
 #endif
 
@@ -1192,7 +1192,7 @@ void ecs_add_remove_type(
  * @param trait The trait that was added.
  */
 #define ecs_get_trait(world, entity, component, trait)\
-    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait))))
+    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_typeid(component), ecs_typeid(trait))))
 
 /** Get trait tag for component. 
  * This operation obtains the value of a trait for a componetn that has been 
@@ -1204,7 +1204,7 @@ void ecs_add_remove_type(
  * @param component The component to which the trait was added.
  */
 #define ecs_get_trait_tag(world, entity, trait, component)\
-    ((component*)ecs_get_w_entity(world, entity, ecs_trait(ecs_entity(component), trait)))
+    ((component*)ecs_get_w_entity(world, entity, ecs_trait(ecs_typeid(component), trait)))
 
 /** Get case for switch.
  * This operation gets the current case for the specified switch. If the current
@@ -1299,7 +1299,7 @@ const void* ecs_get_w_entity(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 #define ecs_get(world, entity, component)\
-    ((const component*)ecs_get_w_entity(world, entity, ecs_entity(component)))
+    ((const component*)ecs_get_w_entity(world, entity, ecs_typeid(component)))
 
 /* -- Get cached pointer -- */
 
@@ -1331,7 +1331,7 @@ const void* ecs_get_ref_w_entity(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 #define ecs_get_ref(world, ref, entity, component)\
-    ((const component*)ecs_get_ref_w_entity(world, ref, entity, ecs_entity(component)))
+    ((const component*)ecs_get_ref_w_entity(world, ref, entity, ecs_typeid(component)))
 
 /** Get a mutable pointer to a component.
  * This operation is similar to ecs_get_w_entity but it returns a mutable 
@@ -1364,7 +1364,7 @@ void* ecs_get_mut_w_entity(
  * @return The component pointer.
  */
 #define ecs_get_mut(world, entity, component, is_added)\
-    ((component*)ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added))
+    ((component*)ecs_get_mut_w_entity(world, entity, ecs_typeid(component), is_added))
 
 /** Signal that a component has been modified.
  * This operation allows an application to signal to Flecs that a component has
@@ -1390,7 +1390,7 @@ void ecs_modified_w_entity(
  * @param component The component that was modified.
  */
 #define ecs_modified(world, entity, component)\
-    ecs_modified_w_entity(world, entity, ecs_entity(component))
+    ecs_modified_w_entity(world, entity, ecs_typeid(component))
 
 
 /** @} */
@@ -1432,7 +1432,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
  * @return The entity. A new entity if no entity was provided.
  */
 #define ecs_set_ptr(world, entity, component, ptr)\
-    ecs_set_ptr_w_entity(world, entity, ecs_entity(component), sizeof(component), ptr)
+    ecs_set_ptr_w_entity(world, entity, ecs_typeid(component), sizeof(component), ptr)
 
 /* Conditionally skip macro's as compound literals and variadic arguments are 
  * not supported in C89 */
@@ -1448,7 +1448,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
  * @return The entity. A new entity if no entity was provided.
  */
 #define ecs_set(world, entity, component, ...)\
-    ecs_set_ptr_w_entity(world, entity, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
+    ecs_set_ptr_w_entity(world, entity, ecs_typeid(component), sizeof(component), &(component)__VA_ARGS__)
 
 #endif
 
@@ -1460,18 +1460,18 @@ ecs_entity_t ecs_set_ptr_w_entity(
  */
 
 #define ecs_singleton_get(world, comp)\
-    ecs_get(world, ecs_entity(comp), comp)
+    ecs_get(world, ecs_typeid(comp), comp)
 
 #ifndef FLECS_LEGACY
 #define ecs_singleton_set(world, comp, ...)\
-    ecs_set(world, ecs_entity(comp), comp, __VA_ARGS__)
+    ecs_set(world, ecs_typeid(comp), comp, __VA_ARGS__)
 #endif
 
 #define ecs_singleton_get_mut(world, comp)\
-    ecs_get_mut(world, ecs_entity(comp), comp, NULL)
+    ecs_get_mut(world, ecs_typeid(comp), comp, NULL)
 
 #define ecs_singleton_modified(world, comp)\
-    ecs_modified(world, ecs_entity(comp), comp)
+    ecs_modified(world, ecs_typeid(comp), comp)
 
 /**
  * @defgroup testing Testing Components
@@ -1652,7 +1652,7 @@ ecs_entity_t ecs_get_parent_w_entity(
  * @return The parent of the entity, 0 if no parent was found.
  */
 #define ecs_get_parent(world, entity, component)\
-    ecs_get_parent_w_entity(world, entity, ecs_entity(component))
+    ecs_get_parent_w_entity(world, entity, ecs_typeid(component))
 
 
 /** Enable or disable an entity.
@@ -2554,7 +2554,7 @@ int32_t ecs_table_component_index(
     ECS_ENTITY_VAR(type) = ecs_column_entity(it, column);\
     ECS_TYPE_VAR(type) = ecs_column_type(it, column);\
     type *id = ecs_column(it, type, column);\
-    (void)ecs_entity(type);\
+    (void)ecs_typeid(type);\
     (void)ecs_type(type);\
     (void)id
 
@@ -2566,7 +2566,7 @@ int32_t ecs_table_component_index(
 #define ECS_COLUMN_COMPONENT(it, id, column)\
     ECS_ENTITY_VAR(id) = ecs_column_entity(it, column);\
     ECS_TYPE_VAR(id) = ecs_column_type(it, column);\
-    (void)ecs_entity(id);\
+    (void)ecs_typeid(id);\
     (void)ecs_type(id)
 
 /** Obtain a handle to the entity of a column */

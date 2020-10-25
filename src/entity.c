@@ -1956,7 +1956,7 @@ const void* ecs_get_w_entity(
 
         ptr = get_component(&info, component);
         if (!ptr) {
-            if (component != ecs_entity(EcsName) && component != EcsPrefab) {
+            if (component != ecs_typeid(EcsName) && component != EcsPrefab) {
                 ptr = get_base_component(
                     world, stage, entity, &info, 0, component);
             }

@@ -64,7 +64,7 @@ void TriggerOnRemove_remove_match_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -93,7 +93,7 @@ void TriggerOnRemove_remove_match_1_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -142,7 +142,7 @@ void TriggerOnRemove_delete_match_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -171,7 +171,7 @@ void TriggerOnRemove_delete_match_1_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -270,7 +270,7 @@ void TriggerOnRemove_on_remove_in_on_update() {
     ECS_SYSTEM(world, Remove_from_current, EcsOnUpdate, Position);
     ECS_TRIGGER(world, Dummy, EcsOnRemove, Velocity);
 
-    IterData ctx = {.component = ecs_entity(Velocity)};
+    IterData ctx = {.component = ecs_typeid(Velocity)};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e_1 = ecs_new(world, Type);

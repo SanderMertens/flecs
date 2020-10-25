@@ -395,7 +395,7 @@ void DeferredActions_defer_set_trait() {
 
     ecs_defer_end(world);
 
-    test_assert(ecs_has_trait(world, e, ecs_entity(Position), ecs_entity(Velocity)));
+    test_assert(ecs_has_trait(world, e, ecs_typeid(Position), ecs_typeid(Velocity)));
 
     ecs_fini(world);    
 }

@@ -57,7 +57,7 @@ void SystemCascade_cascade_depth_1() {
     probe_has_entity(&ctx, e_3);
     probe_has_entity(&ctx, e_4);
 
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e_1, Position);
@@ -124,7 +124,7 @@ void SystemCascade_cascade_depth_2() {
     test_assert((ctx.e[2] == e_3 && ctx.e[3] == e_4) || (ctx.e[2] == e_4 && ctx.e[3] == e_3));
     test_assert((ctx.e[4] == e_5 && ctx.e[5] == e_6) || (ctx.e[4] == e_6 && ctx.e[5] == e_5));
 
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e_1, Position);
@@ -225,7 +225,7 @@ void SystemCascade_add_after_match() {
     test_assert(ctx.e[3] == e_3 || ctx.e[4] == e_3);
     test_assert(ctx.e[3] == e_4 || ctx.e[4] == e_4);
 
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e_1, Position);
@@ -292,7 +292,7 @@ void SystemCascade_adopt_after_match() {
     test_int(ctx.e[2], parent);
     test_int(ctx.e[3], e_3);
     test_int(ctx.e[4], e_4);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e_1, Position);

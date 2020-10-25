@@ -1430,6 +1430,25 @@
                 "nested_module"
             ]
         }, {
+            "id": "DirectAccess",
+            "testcases": [
+                "get_table_from_str",
+                "get_table_from_type",
+                "insert_record",
+                "insert_record_w_entity",
+                "table_count",
+                "find_column",
+                "get_column",
+                "get_empty_column",
+                "set_column",
+                "delete_column",
+                "delete_column_explicit",
+                "delete_column_w_dtor",
+                "copy_to",
+                "copy_pod_to",
+                "move_to"
+            ]
+        }, {
             "id": "Internals",
             "setup": true,
             "testcases": [

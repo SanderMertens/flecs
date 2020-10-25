@@ -278,7 +278,7 @@ void Hierarchies_path_for_component_0() {
 
     ECS_ENTITY(world, Parent, 0);
 
-    char *path = ecs_get_path_w_sep(world, 0, Parent, ecs_entity(Position), ".", NULL);
+    char *path = ecs_get_path_w_sep(world, 0, Parent, ecs_typeid(Position), ".", NULL);
     test_str(path, "Parent");
     free(path);
 
@@ -294,7 +294,7 @@ void Hierarchies_path_for_component_1() {
     ECS_ENTITY(world, Parent2, Position);
     ECS_ENTITY(world, Child, CHILDOF | Parent, CHILDOF | Parent2);
 
-    char *path = ecs_get_path_w_sep(world, 0, Child, ecs_entity(Position), ".", NULL);
+    char *path = ecs_get_path_w_sep(world, 0, Child, ecs_typeid(Position), ".", NULL);
     test_str(path, "Parent2.Child");
     free(path);
 
@@ -312,7 +312,7 @@ void Hierarchies_path_for_component_2() {
     ECS_ENTITY(world, Child2, Position, CHILDOF | Parent2);
     ECS_ENTITY(world, GrandChild, CHILDOF | Parent.Child1, CHILDOF | Parent2.Child2);
 
-    char *path = ecs_get_path_w_sep(world, 0, GrandChild, ecs_entity(Position), ".", NULL);
+    char *path = ecs_get_path_w_sep(world, 0, GrandChild, ecs_typeid(Position), ".", NULL);
     test_str(path, "Parent2.Child2.GrandChild");
     free(path);
 
@@ -685,7 +685,7 @@ void Hierarchies_scope_component() {
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "Position");
     test_assert(e != 0);
-    test_assert(e == ecs_entity(Position));
+    test_assert(e == ecs_typeid(Position));
 
     old_scope = ecs_set_scope(world, 0);
     test_assert(old_scope == Scope);
@@ -702,7 +702,7 @@ void Hierarchies_fullpath_for_core() {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, CHILDOF | Parent);
 
-    char *path = ecs_get_fullpath(world, ecs_entity(EcsComponent));
+    char *path = ecs_get_fullpath(world, ecs_typeid(EcsComponent));
     test_str(path, "Component");
     free(path);
 

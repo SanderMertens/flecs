@@ -665,7 +665,7 @@ The component lifecycle callbacks can be registered like this:
 ```c
 ECS_COMPONENT(world, String);
 
-ecs_set_component_actions(world, ecs_entity(String), 
+ecs_set_component_actions(world, ecs_typeid(String), 
     &(EcsComponentLifecycle){
         .ctor = ecs_ctor(String),
         .dtor = ecs_dtor(String),

@@ -475,7 +475,7 @@ void Add_bulk_on_add() {
         test_int(ctx.e[i], ids[i]);
     }
     
-    test_int(ctx.c[0][0], ecs_entity(Velocity));
+    test_int(ctx.c[0][0], ecs_typeid(Velocity));
 
     ecs_fini(world);
 }
@@ -497,7 +497,7 @@ void Add_bulk_add_entity_comp() {
         ecs_set(world, e, Position, {i, i * 2});
     }
 
-    ecs_bulk_add_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
+    ecs_bulk_add_entity(world, ecs_typeid(Velocity), &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
@@ -574,7 +574,7 @@ void Add_bulk_add_entity_on_add() {
     const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);
 
-    ecs_bulk_add_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
+    ecs_bulk_add_entity(world, ecs_typeid(Velocity), &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
@@ -589,7 +589,7 @@ void Add_bulk_add_entity_on_add() {
         test_int(ctx.e[i], ids[i]);
     }
     
-    test_int(ctx.c[0][0], ecs_entity(Velocity));
+    test_int(ctx.c[0][0], ecs_typeid(Velocity));
 
     ecs_fini(world);
 }
@@ -610,7 +610,7 @@ void Add_bulk_add_entity_existing() {
         ecs_set(world, e, Position, {i, i * 2});
     }
 
-    ecs_bulk_add_entity(world, ecs_entity(Position), &(ecs_filter_t){
+    ecs_bulk_add_entity(world, ecs_typeid(Position), &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 

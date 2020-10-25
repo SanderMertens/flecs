@@ -54,7 +54,7 @@ void Tasks_from_system() {
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 1);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
 
     ecs_fini(world);
 }

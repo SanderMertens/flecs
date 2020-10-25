@@ -51,8 +51,8 @@ void World_progress_w_0() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
@@ -89,8 +89,8 @@ void World_progress_w_t() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
@@ -1049,7 +1049,7 @@ void World_recreate_world_w_component() {
 
     {
         ECS_COMPONENT(world, Position);
-        test_assert(ecs_entity(Position) != 0);
+        test_assert(ecs_typeid(Position) != 0);
     }
 
     test_assert(ecs_fini(world) == 0);
@@ -1059,7 +1059,7 @@ void World_recreate_world_w_component() {
         test_assert(world != NULL);
 
         ECS_COMPONENT(world, Position);
-        test_assert(ecs_entity(Position) != 0);
+        test_assert(ecs_typeid(Position) != 0);
 
         test_assert(ecs_fini(world) == 0);
     }

@@ -430,7 +430,7 @@ void StatsCollectTableStats_StatusAction(
     void *ctx)
 {
     ecs_type_t ecs_type(EcsTablePtr) = ctx;
-    ecs_entity_t ecs_entity(EcsTablePtr) = ecs_type_to_entity(world, ecs_type(EcsTablePtr));
+    ecs_entity_t ecs_typeid(EcsTablePtr) = ecs_type_to_entity(world, ecs_type(EcsTablePtr));
 
     (void)system;
 

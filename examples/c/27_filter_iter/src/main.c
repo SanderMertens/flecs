@@ -53,8 +53,8 @@ int main(int argc, char *argv[]) {
 
         /* Retrieve the column indices for both the Position and Velocity
          * columns by finding their position in the table type */
-        int32_t p_index = ecs_type_index_of(table_type, ecs_entity(Position));
-        int32_t v_index = ecs_type_index_of(table_type, ecs_entity(Velocity));
+        int32_t p_index = ecs_type_index_of(table_type, ecs_typeid(Position));
+        int32_t v_index = ecs_type_index_of(table_type, ecs_typeid(Velocity));
 
         /* Get pointers to the Position and Velocity columns with the obtained
          * column indices */

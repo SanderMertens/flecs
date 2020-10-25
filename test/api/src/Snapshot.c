@@ -805,7 +805,7 @@ static ecs_entity_t v_entity = 0;
 
 static
 void CreateV(ecs_iter_t *it) {
-    ecs_entity_t ecs_entity(Velocity) = ecs_column_entity(it, 2);
+    ecs_entity_t ecs_typeid(Velocity) = ecs_column_entity(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {

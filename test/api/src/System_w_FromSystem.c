@@ -77,9 +77,9 @@ void System_w_FromSystem_2_column_1_from_system() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], Iter);
 
     const Position *p = ecs_get(world, e, Position);
@@ -131,11 +131,11 @@ void System_w_FromSystem_3_column_2_from_system() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], Iter);
-    test_int(ctx.c[0][2], ecs_entity(Mass));
+    test_int(ctx.c[0][2], ecs_typeid(Mass));
     test_int(ctx.s[0][2], Iter);
 
     const Position *p = ecs_get(world, e, Position);
