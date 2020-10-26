@@ -2779,6 +2779,10 @@ void Prefab_override_tag() {
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Tag));
 
+    ecs_add(world, e, Tag);
+    test_assert(ecs_has(world, e, Tag));
+    test_assert(ecs_owns(world, e, Tag, true));
+
     ecs_fini(world);
 }
 
@@ -2808,6 +2812,85 @@ void Prefab_instanceof_0() {
 
     /* Not allowed */
     ecs_new_w_entity(world, ECS_INSTANCEOF | 0);
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_empty_child_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_PREFAB(world, Prefab, 0);
+
+    /* Forces creation of child table without children */
+    ecs_table_t *table = ecs_table_from_str(world, "CHILDOF | Prefab");
+    test_assert(table != NULL);
+
+    /* Main goal of this test is to ensure this doesn't crash */
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    test_assert(e != 0);
+    test_assert(ecs_has_entity(world, e, ECS_INSTANCEOF | Prefab));
+
+    /* This shouldn't crash either */
+    ecs_delete(world, Prefab);
+    test_assert(!ecs_is_alive(world, Prefab));
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_emptied_child_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_PREFAB(world, Prefab, 0);
+
+    /* Create & remove prefab child */
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | Prefab);
+    test_assert(child != 0);
+
+    /* Deleting the child will leave an initialized but empty table */
+    ecs_delete(world, child);
+    test_assert(!ecs_is_alive(world, child));
+
+    /* Main goal of this test is to ensure this doesn't crash */
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    test_assert(e != 0);
+    test_assert(ecs_has_entity(world, e, ECS_INSTANCEOF | Prefab));
+
+    /* This shouldn't crash either */
+    ecs_delete(world, Prefab);
+    test_assert(!ecs_is_alive(world, Prefab));
+
+    ecs_fini(world);
+}
+
+void Prefab_override_2_prefabs() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_PREFAB(world, PrefabA, Position);
+    ECS_PREFAB(world, PrefabB, Velocity);
+
+    ecs_set(world, PrefabA, Position, {10, 20});
+    ecs_set(world, PrefabB, Velocity, {1, 2});
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_entity(world, e, ECS_INSTANCEOF | PrefabA);
+    ecs_add_entity(world, e, ECS_INSTANCEOF | PrefabB);
+
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    test_assert(ecs_owns(world, e, Position, true));
+    test_assert(ecs_owns(world, e, Velocity, true));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
 
     ecs_fini(world);
 }

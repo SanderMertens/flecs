@@ -1136,3 +1136,23 @@ void SystemOnSet_add_0_entity_in_on_set() {
     ecs_fini(world);
 }
 
+static int dummy_invoked = 0;
+
+static
+void Dummy(ecs_iter_t *it) {
+    dummy_invoked ++;
+}
+
+void SystemOnSet_on_set_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnSet, Position);
+
+    ECS_PREFAB(world, Prefab, 0);
+    ecs_set(world, Prefab, Position, {10, 20});
+
+    test_int(dummy_invoked, 0);
+
+    ecs_fini(world);
+}

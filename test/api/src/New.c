@@ -303,3 +303,13 @@ void New_new_hi_component_id() {
 
     ecs_fini(world);
 }
+
+void New_new_w_entity_0() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_w_entity(world, 0);
+    test_assert(e != 0);
+    test_assert(ecs_get_type(world, e) == NULL);
+
+    ecs_fini(world);
+}

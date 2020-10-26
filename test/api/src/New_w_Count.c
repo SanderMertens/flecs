@@ -257,6 +257,303 @@ void SetPosition(ecs_iter_t *it) {
     }
 }
 
+void New_w_Count_new_w_data_1_comp() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){ecs_typeid(Position)},
+            .count = 1
+        },
+        (void*[]){
+            (Position[]){
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            }
+        });
+
+    test_assert(ecs_has(world, ids[0], Position));
+    test_assert(ecs_has(world, ids[1], Position));
+    test_assert(ecs_has(world, ids[2], Position));
+
+    const Position *
+    p = ecs_get(world, ids[0], Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, ids[1], Position);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    p = ecs_get(world, ids[2], Position);
+    test_int(p->x, 50);
+    test_int(p->y, 60);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_new_w_data_2_comp() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_typeid(Velocity)},
+            .count = 2
+        },
+        (void*[]){
+            (Position[]){
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            (Velocity[]){
+                {1, 2},
+                {3, 4},
+                {5, 6}
+            }
+        });
+
+    test_assert(ecs_has(world, ids[0], Position));
+    test_assert(ecs_has(world, ids[1], Position));
+    test_assert(ecs_has(world, ids[2], Position));
+    
+    test_assert(ecs_has(world, ids[0], Velocity));
+    test_assert(ecs_has(world, ids[1], Velocity));
+    test_assert(ecs_has(world, ids[2], Velocity));
+
+    const Position *
+    p = ecs_get(world, ids[0], Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, ids[1], Position);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    p = ecs_get(world, ids[2], Position);
+    test_int(p->x, 50);
+    test_int(p->y, 60);
+
+    const Velocity *
+    v = ecs_get(world, ids[0], Velocity);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    v = ecs_get(world, ids[1], Velocity);
+    test_int(v->x, 3);
+    test_int(v->y, 4);
+
+    v = ecs_get(world, ids[2], Velocity);
+    test_int(v->x, 5);
+    test_int(v->y, 6);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_new_w_data_w_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){Tag},
+            .count = 1
+        },
+        (void*[]){
+            NULL
+        });
+
+    test_assert(ecs_has(world, ids[0], Tag));
+    test_assert(ecs_has(world, ids[1], Tag));
+    test_assert(ecs_has(world, ids[2], Tag));
+
+    ecs_fini(world);
+}
+
+void New_w_Count_new_w_data_w_comp_and_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){ecs_typeid(Position), Tag},
+            .count = 2
+        },
+        (void*[]){
+            (Position[]){
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            NULL
+        });
+
+    test_assert(ecs_has(world, ids[0], Position));
+    test_assert(ecs_has(world, ids[1], Position));
+    test_assert(ecs_has(world, ids[2], Position));
+
+    test_assert(ecs_has(world, ids[0], Tag));
+    test_assert(ecs_has(world, ids[1], Tag));
+    test_assert(ecs_has(world, ids[2], Tag));
+
+    const Position *
+    p = ecs_get(world, ids[0], Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, ids[1], Position);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    p = ecs_get(world, ids[2], Position);
+    test_int(p->x, 50);
+    test_int(p->y, 60);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_new_w_data_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Trait);
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t trait_id = ecs_trait(ecs_typeid(Position), Trait);
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){trait_id},
+            .count = 1
+        },
+        (void*[]){
+            (Position[]){
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            NULL
+        });
+
+    test_assert(ecs_has_entity(world, ids[0], trait_id));
+    test_assert(ecs_has_entity(world, ids[1], trait_id));
+    test_assert(ecs_has_entity(world, ids[2], trait_id));
+
+    const Position *
+    p = ecs_get_w_entity(world, ids[0], trait_id);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_w_entity(world, ids[1], trait_id);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    p = ecs_get_w_entity(world, ids[2], trait_id);
+    test_int(p->x, 50);
+    test_int(p->y, 60);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_new_w_data_trait_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Trait);
+    ECS_TAG(world, Tag);
+    
+    ecs_entity_t trait_id = ecs_trait(Tag, Trait);
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){trait_id},
+            .count = 1
+        },
+        (void*[]){
+            NULL
+        });
+
+    test_assert(ecs_has_entity(world, ids[0], trait_id));
+    test_assert(ecs_has_entity(world, ids[1], trait_id));
+    test_assert(ecs_has_entity(world, ids[2], trait_id));
+
+    ecs_fini(world);
+}
+
+ECS_CTOR(Velocity, ptr, {
+    ptr->x = 0;
+    ptr->y = 0;
+});
+
+void New_w_Count_new_w_data_2_comp_1_not_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_component_actions(world, Velocity, {
+        .ctor = ecs_ctor(Velocity)
+    });
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_typeid(Velocity)},
+            .count = 2
+        },
+        (void*[]){
+            (Position[]){
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            NULL
+        });
+
+    test_assert(ecs_has(world, ids[0], Position));
+    test_assert(ecs_has(world, ids[1], Position));
+    test_assert(ecs_has(world, ids[2], Position));
+    
+    test_assert(ecs_has(world, ids[0], Velocity));
+    test_assert(ecs_has(world, ids[1], Velocity));
+    test_assert(ecs_has(world, ids[2], Velocity));
+
+    const Position *
+    p = ecs_get(world, ids[0], Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, ids[1], Position);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    p = ecs_get(world, ids[2], Position);
+    test_int(p->x, 50);
+    test_int(p->y, 60);
+
+    const Velocity *
+    v = ecs_get(world, ids[0], Velocity);
+    test_int(v->x, 0);
+    test_int(v->y, 0);
+
+    v = ecs_get(world, ids[1], Velocity);
+    test_int(v->x, 0);
+    test_int(v->y, 0);
+
+    v = ecs_get(world, ids[2], Velocity);
+    test_int(v->x, 0);
+    test_int(v->y, 0);
+
+    ecs_fini(world);
+}
+
 static int32_t on_movable_count = 0;
 
 static
@@ -315,6 +612,103 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
         test_int(v->x, 2);
         test_int(v->y, 3);        
     }
+
+    ecs_fini(world);
+}
+
+void New_w_Count_new_w_data_override_set_comp() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {100, 200});
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){ecs_typeid(Position), ECS_INSTANCEOF | base},
+            .count = 2
+        },
+        (void*[]){
+            (Position[]){
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            NULL
+        });
+
+    test_assert(ecs_has(world, ids[0], Position));
+    test_assert(ecs_has(world, ids[1], Position));
+    test_assert(ecs_has(world, ids[2], Position));
+
+    test_assert(ecs_has_entity(world, ids[0], ECS_INSTANCEOF | base));
+    test_assert(ecs_has_entity(world, ids[1], ECS_INSTANCEOF | base));
+    test_assert(ecs_has_entity(world, ids[2], ECS_INSTANCEOF | base));
+
+    const Position *
+    p = ecs_get(world, ids[0], Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, ids[1], Position);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    p = ecs_get(world, ids[2], Position);
+    test_int(p->x, 50);
+    test_int(p->y, 60);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_new_w_data_override_set_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Trait);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t trait_id = ecs_trait(ecs_entity(Position), Trait);
+
+    ecs_entity_t base = ecs_new(world, 0);
+    Position *ptr = ecs_get_mut_w_entity(world, base, trait_id, NULL);
+    test_assert(ptr != NULL);
+    ptr->x = 100;
+    ptr->y = 200;
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){ecs_typeid(Position), ECS_INSTANCEOF | base},
+            .count = 2
+        },
+        (void*[]){
+            (Position[]){
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            NULL
+        });
+
+    test_assert(ecs_has(world, ids[0], Position));
+    test_assert(ecs_has(world, ids[1], Position));
+    test_assert(ecs_has(world, ids[2], Position));
+
+    test_assert(ecs_has_entity(world, ids[0], ECS_INSTANCEOF | base));
+    test_assert(ecs_has_entity(world, ids[1], ECS_INSTANCEOF | base));
+    test_assert(ecs_has_entity(world, ids[2], ECS_INSTANCEOF | base));
+
+    const Position *
+    p = ecs_get(world, ids[0], Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, ids[1], Position);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    p = ecs_get(world, ids[2], Position);
+    test_int(p->x, 50);
+    test_int(p->y, 60);
 
     ecs_fini(world);
 }

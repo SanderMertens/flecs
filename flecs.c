@@ -76,14 +76,6 @@ extern "C" {
 /* Maximum length of an entity name, including 0 terminator */
 #define ECS_MAX_NAME_LENGTH (64)
 
-/* Simple bitmask structure to store a set of components. This is used amongst
- * others to keep track of which components have been overridden from a base. */
-typedef struct ecs_comp_set_t {
-    int32_t hi_count;
-    ecs_entity_t hi_array[ECS_MAX_ADD_REMOVE];
-    ecs_entity_t lo_mask[ECS_HI_COMPONENT_ID / 64];
-} ecs_comp_set_t;
-
 /** Callback used by the system signature expression parser. */
 typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,                 
@@ -881,7 +873,6 @@ void ecs_run_add_actions(
     int32_t row,
     int32_t count,
     ecs_entities_t *added,
-    ecs_comp_set_t *set_mask,
     bool get_all,
     bool run_on_set);   
 
@@ -3696,73 +3687,38 @@ const ecs_entity_t* new_w_data(
     void **c_info,
     int32_t *row_out);
 
-static
-int32_t comp_mask_index(
-    int32_t value)
-{
-    return value >> 6;
-}
-
-static
-void comp_mask_set(
-    ecs_comp_set_t *set,
-    ecs_entity_t value)
-{
-    if (value < ECS_HI_COMPONENT_ID) {
-        int32_t index = comp_mask_index((int32_t)value);
-        set->lo_mask[index] |= (ecs_entity_t)1 << (value & 0x3F);
-    } else {
-        int32_t count = set->hi_count++;
-        set->hi_array[count] = value;
-    }
-}
-
-static
-bool comp_mask_is_set(
-    ecs_comp_set_t *set,
-    ecs_entity_t value)
-{
-    if (value < ECS_HI_COMPONENT_ID) {
-        int32_t index = comp_mask_index((int32_t)value);
-        return (set->lo_mask[index] & (ecs_entity_t)1 << (value & 0x3F)) != 0;
-    } else {
-        int32_t i, count = set->hi_count;
-        for (i = 0; i < count; i ++) {
-            if (set->hi_array[i] == value) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 static 
 void* get_component_w_index(
     ecs_entity_info_t *info,
     int32_t index)
 {
     ecs_data_t *data = info->data;
-    ecs_column_t *columns;
-    if (!data || !(columns = data->columns)) {
-        return NULL;
-    }
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_column_t *columns = data->columns;
+    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(index < info->table->column_count, ECS_INVALID_COMPONENT_ID, NULL);
 
     ecs_column_t *column = &columns[index];
     ecs_vector_t *data_vec = column->data;
     int16_t size = column->size; 
+    
+    /* If size is 0, component does not have a value. This is likely caused by
+     * an application trying to call ecs_get with a tag. */
+    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_assert(!size || data_vec != NULL, ECS_INTERNAL_ERROR, NULL);
+    /* This function should not be called if an entity does not exist in the
+     * provided table. Therefore if the component is found in the table, and an
+     * entity exists for it, the vector cannot be NULL */
+    ecs_assert(data_vec != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (size) {
-        void *ptr = ecs_vector_first_t(data_vec, size, column->alignment);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        return ECS_OFFSET(ptr, info->row * size);
-    }
+    void *ptr = ecs_vector_first_t(data_vec, size, column->alignment);
 
-    return NULL;
+    /* This could only happen when the vector is empty, which should not be
+     * possible since the vector should at least have one element */
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return ECS_OFFSET(ptr, info->row * size);
 }
 
 /* Get pointer to single component value */
@@ -3771,21 +3727,37 @@ void* get_component(
     ecs_entity_info_t *info,
     ecs_entity_t component)
 {
-    ecs_table_t *table = info->table;
-    if (!table) {
-        return NULL;
-    }
-
+    ecs_assert(info->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(info->row >= 0, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_table_t *table = info->table;
     ecs_type_t type = table->type;
 
-    ecs_vector_each(type, ecs_entity_t, c_ptr, {
-        if (*c_ptr == component) {
-            return get_component_w_index(info, c_ptr_i);
+    ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
+
+    /* The table column_count contains the maximum column index that actually
+     * contains data. This excludes component ids that do not have data, such
+     * as tags. Therefore it is faster to iterate column_count vs. all the
+     * elements in the type.
+     *
+     * The downside of this is that the code can't always detect when an 
+     * application attempts to get the value of a tag (which is not allowed). To
+     * ensure consistent behavior in debug mode, the entire type is iterated as
+     * this guarantees that the code will assert when attempting to obtain the
+     * value of a tag. */
+#ifndef NDEBUG
+    int i, count = ecs_vector_count(type);
+#else
+    int i, count = table->column_count;
+#endif
+
+    for (i = 0; i < count; i ++) {
+        if (ids[i] == component) {
+            return get_component_w_index(info, i);
         }
-    });
-    
+    }
+
     return NULL;
 }
 
@@ -4139,9 +4111,13 @@ void instantiate_children(
 {
     ecs_type_t type = child_table->type;
     ecs_data_t *child_data = ecs_table_get_data(child_table);
+    if (!child_data || !ecs_table_data_count(child_data)) {
+        return;
+    }
+
     int32_t column_count = child_table->column_count;
     ecs_entity_t *type_array = ecs_vector_first(type, ecs_entity_t);
-    int32_t type_count = ecs_vector_count(type);
+    int32_t type_count = ecs_vector_count(type);   
 
     /* Instantiate child table for each instance */
 
@@ -4150,13 +4126,7 @@ void instantiate_children(
         .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * type_count + 1)
     };
 
-    void **c_info = NULL;
-
-    if (child_data) {
-        c_info = ecs_os_alloca(ECS_SIZEOF(void*) * column_count);
-    } else {
-        return;
-    }
+    void **c_info = ecs_os_alloca(ECS_SIZEOF(void*) * column_count);
 
     /* Copy in component identifiers. Find the base index in the component
      * array, since we'll need this to replace the base with the instance id */
@@ -4181,7 +4151,8 @@ void instantiate_children(
         * create our new entities in bulk with new_w_data */
         if (i < column_count) {
             ecs_column_t *column = &child_data->columns[i];
-            c_info[pos] = ecs_vector_first_t(column->data, column->size, column->alignment);
+            c_info[pos] = ecs_vector_first_t(
+                column->data, column->size, column->alignment);
         }
 
         components.array[pos] = c;
@@ -4243,13 +4214,8 @@ void instantiate(
 
     if (child_tables) {
         ecs_vector_each(child_tables, ecs_table_t*, child_table_ptr, {
-            ecs_table_t *child_table = *child_table_ptr;
-            if (!ecs_table_count(child_table)) {
-                continue;
-            }
-
             instantiate_children(
-                world, base, table, data, row, count, child_table);
+                world, base, table, data, row, count, *child_table_ptr);
         });
     }
 }
@@ -4340,8 +4306,11 @@ bool override_component(
         }
 
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            return override_from_base(world, e & ECS_COMPONENT_MASK, component, 
-                data, column, row, count);
+            if (override_from_base(world, e & ECS_COMPONENT_MASK, component, 
+                data, column, row, count))
+            {
+                return true;
+            }
         }
     } while (--i >= 0);
 
@@ -4356,14 +4325,10 @@ void ecs_components_override(
     int32_t count,
     ecs_column_info_t * component_info,
     int32_t component_count,
-    ecs_comp_set_t * set_mask,
     bool run_on_set)
 {
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(component_count != 0, ECS_INTERNAL_ERROR, NULL);
-    if (!component_count) {
-        return;
-    }
 
     ecs_table_t *table_without_base = table;
     ecs_column_t *columns = data->columns;
@@ -4401,18 +4366,16 @@ void ecs_components_override(
             continue;
         }
 
-        if (!comp_mask_is_set(set_mask, component)) {
-            ecs_column_t *column = &columns[column_index];
-            if (override_component(world, component, type, data, column, 
-                row, count)) 
-            {
-                ecs_entities_t to_remove = {
-                    .array = &component,
-                    .count = 1
-                };
-                table_without_base = ecs_table_traverse_remove(world, 
-                    table_without_base, &to_remove, NULL);
-            }
+        ecs_column_t *column = &columns[column_index];
+        if (override_component(world, component, type, data, column, 
+            row, count)) 
+        {
+            ecs_entities_t to_remove = {
+                .array = &component,
+                .count = 1
+            };
+            table_without_base = ecs_table_traverse_remove(world, 
+                table_without_base, &to_remove, NULL);
         }
     }
 
@@ -4511,7 +4474,6 @@ void ecs_run_add_actions(
     int32_t row,
     int32_t count,
     ecs_entities_t * added,
-    ecs_comp_set_t * set_mask,
     bool get_all,
     bool run_on_set)
 {
@@ -4525,7 +4487,7 @@ void ecs_run_add_actions(
     if (table->flags & EcsTableHasBase) {
         ecs_components_override(
             world, table, data, row, count, cinfo, 
-            added_count, set_mask, run_on_set);
+            added_count, run_on_set);
     }
 
     if (table->flags & EcsTableHasSwitch) {
@@ -4590,11 +4552,8 @@ int32_t new_entity(
         ECS_INTERNAL_ERROR, NULL);    
 
     if (new_table->flags & EcsTableHasAddActions) {
-        ecs_comp_set_t set_mask = {0};
-        
         ecs_run_add_actions(
-            world, new_table, new_data, new_row, 1, added, &set_mask, 
-            true, true);
+            world, new_table, new_data, new_row, 1, added, true, true);
 
         if (new_table->flags & EcsTableHasMonitors) {
             ecs_run_monitors(
@@ -4620,10 +4579,7 @@ int32_t move_entity(
     ecs_entities_t * removed)
 {    
     ecs_data_t *dst_data = ecs_table_get_or_create_data(dst_table);
-    if (src_data == dst_data) {
-        return src_row;
-    }
-    
+    ecs_assert(src_data != dst_data, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -4666,10 +4622,8 @@ int32_t move_entity(
     /* If components were added, invoke add actions */
     if (src_table != dst_table || (added && added->count)) {
         if (added && (dst_table->flags & EcsTableHasAddActions)) {
-            ecs_comp_set_t set_mask = {0};
             ecs_run_add_actions(
-                world, dst_table, dst_data, dst_row, 1, added, &set_mask, 
-                false, true);
+                world, dst_table, dst_data, dst_row, 1, added, false, true);
         }
 
         /* Run monitors */
@@ -4782,8 +4736,8 @@ void commit(
     
     ecs_table_t *src_table = info->table;
     if (src_table == dst_table) {
-        /* If source and destination table are the same no action is needed */
-        /* However, if a component was added in the process of traversing a
+        /* If source and destination table are the same no action is needed *
+         * However, if a component was added in the process of traversing a
          * table, this suggests that a case switch could have occured. */
         if (added && added->count && src_table && 
             src_table->flags & EcsTableHasSwitch) 
@@ -4836,9 +4790,7 @@ static
 void* get_base_component(
     ecs_world_t * world,
     ecs_stage_t * stage,
-    ecs_entity_t entity,
     ecs_entity_info_t * info,
-    ecs_entity_t previous,
     ecs_entity_t component)
 {
     ecs_type_t type = info->table->type;
@@ -4848,18 +4800,12 @@ void* get_base_component(
 
     while (!ptr && (p = find_prefab(type, p)) != -1) {
         ecs_entity_t prefab = type_buffer[p] & ECS_COMPONENT_MASK;
-
-        /* Detect cycles with two entities */
-        if (prefab == previous) {
-            continue;
-        }
-
         ecs_entity_info_t prefab_info;
         if (ecs_get_info(world, prefab, &prefab_info) && prefab_info.table) {
             ptr = get_component(&prefab_info, component);
             if (!ptr) {
                 ptr = get_base_component(
-                    world, stage, prefab, &prefab_info, entity, component);
+                    world, stage, &prefab_info, component);
             }
         }
     }
@@ -4925,8 +4871,7 @@ const ecs_entity_t* new_w_data(
 
     ecs_defer_none(world, &world->stage);
 
-    ecs_comp_set_t set_mask = { 0 };
-    ecs_run_add_actions(world, table, data, row, count, &added, &set_mask, 
+    ecs_run_add_actions(world, table, data, row, count, &added, 
         true, component_data == NULL);
 
     if (component_data) {
@@ -4936,11 +4881,19 @@ const ecs_entity_t* new_w_data(
         int32_t c_i;
         for (c_i = 0; c_i < component_ids->count; c_i ++) {
             ecs_entity_t c = component_ids->array[c_i];
-            if (c >= ECS_HI_COMPONENT_ID) {
-                break;
-            }
             
-            comp_mask_set(&set_mask, c);
+            /* Bulk copy column data into new table */
+            int32_t table_index = ecs_type_index_of(type, c);
+            ecs_assert(table_index >= 0, ECS_INTERNAL_ERROR, NULL);
+            if (table_index >= table->column_count) {
+                continue;
+            }
+
+            ecs_column_t *column = &data->columns[table_index];
+            int16_t size = column->size;
+            int16_t alignment = column->alignment;
+            void *ptr = ecs_vector_first_t(column->data, size, alignment);
+            ptr = ECS_OFFSET(ptr, size * row);
 
             /* Copy component data */
             void *src_ptr = component_data[c_i];
@@ -4948,15 +4901,7 @@ const ecs_entity_t* new_w_data(
                 continue;
             }
 
-            /* Bulk copy column data into new table */
-            int32_t table_index = ecs_type_index_of(type, c);
-            ecs_column_t *column = &data->columns[table_index];
-            int16_t size = column->size;
-            int16_t alignment = column->alignment;
-            void *ptr = ecs_vector_first_t(column->data, size, alignment);
-            ptr = ECS_OFFSET(ptr, size * row);
-
-            ecs_c_info_t *cdata = ecs_get_c_info(world, c);
+            ecs_c_info_t *cdata = get_c_info(world, c);
             ecs_copy_t copy;
             if (cdata && (copy = cdata->lifecycle.copy)) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
@@ -5145,7 +5090,7 @@ void *get_mutable(
     ecs_assert((component & ECS_COMPONENT_MASK) == component || ECS_HAS_ROLE(component, TRAIT), ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
-    if (ecs_get_info(world, entity, info)) {
+    if (ecs_get_info(world, entity, info) && info->table) {
         dst = get_component(info, component);
     }
 
@@ -5159,8 +5104,8 @@ void *get_mutable(
 
         add_entities_w_info(world, entity, info, &to_add);
 
-        /* Reobtain info, as triggers could have changed the entity */
         ecs_get_info(world, entity, info);
+        ecs_assert(info->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         dst = get_component(info, component);
 
@@ -5644,7 +5589,7 @@ const void* ecs_get_w_entity(
         if (!ptr) {
             if (component != ecs_typeid(EcsName) && component != EcsPrefab) {
                 ptr = get_base_component(
-                    world, stage, entity, &info, 0, component);
+                    world, stage, &info, component);
             }
         }        
     }
@@ -6108,9 +6053,6 @@ const char* ecs_role_str(
     if (ECS_HAS_ROLE(entity, TRAIT)) {
         return "TRAIT";
     } else
-    if (ECS_HAS_ROLE(entity, SWITCH)) {
-        return "SWITCH";
-    } else
     if (ECS_HAS_ROLE(entity, XOR)) {
         return "XOR";
     } else
@@ -6143,7 +6085,7 @@ size_t ecs_entity_str(
     size_t buffer_len)
 {
     char *ptr = buffer;
-    size_t bytes_left = buffer_len, required = 0;
+    size_t bytes_left = buffer_len - 1, required = 0;
     if (entity & ECS_ROLE_MASK) {
         const char *role = ecs_role_str(entity);
         bytes_left = append_to_str(&ptr, role, bytes_left, &required);
@@ -6169,6 +6111,7 @@ size_t ecs_entity_str(
         bytes_left = append_to_str(&ptr, path, bytes_left, &required);
         ecs_os_free(path);
     }
+
     ptr[0] = '\0';
     return required;
 }
@@ -9600,9 +9543,8 @@ void merge_table(
                 world, dst_table, src_table, dst_data, src_data);
 
             if (to_add && to_add->count && dst_data) {
-                ecs_comp_set_t set_mask = {0};
                 ecs_run_add_actions(world, dst_table, dst_data, 
-                    dst_count, src_count, to_add, &set_mask, false, true);
+                    dst_count, src_count, to_add, false, true);
             }
         }
     }

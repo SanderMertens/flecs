@@ -1272,6 +1272,22 @@ void Type_entity_not_str() {
     ecs_fini(world);
 }
 
+void Type_entity_str_small_buffer() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Foo, 0);
+
+    ecs_entity_t e = ECS_INSTANCEOF | Foo;
+
+    char buffer[10];
+    size_t result = ecs_entity_str(world, e, buffer, 10);
+    test_str(buffer, "INSTANCEO");
+    test_int(strlen(buffer), 9);
+    test_int(strlen("INSTANCEOF|Foo"), result);
+
+    ecs_fini(world);
+}
+
 void Type_role_childof_str() {
     ecs_entity_t e = ECS_CHILDOF;
     test_str(ecs_role_str(e), "CHILDOF");

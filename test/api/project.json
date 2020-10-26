@@ -35,7 +35,8 @@
                 "recycle_staged_delete",
                 "new_id",
                 "new_component_id",
-                "new_hi_component_id"
+                "new_hi_component_id",
+                "new_w_entity_0"
             ]
         }, {
             "id": "New_w_Count",
@@ -51,7 +52,16 @@
                 "type_w_tag",
                 "type_w_2_tags",
                 "type_w_tag_mixed",
-                "new_w_on_add_on_set_monitor"
+                "new_w_data_1_comp",
+                "new_w_data_2_comp",
+                "new_w_data_w_tag",
+                "new_w_data_w_comp_and_tag",
+                "new_w_data_trait",
+                "new_w_data_trait_tag",
+                "new_w_data_2_comp_1_not_set",
+                "new_w_on_add_on_set_monitor",
+                "new_w_data_override_set_comp",
+                "new_w_data_override_set_trait"
             ]
         }, {
             "id": "Add",
@@ -390,8 +400,14 @@
                 "set_remove_twice",
                 "set_and_new",
                 "set_null",
-                "get_mutable_new",
-                "get_mutable_existing",
+                "get_mut_new",
+                "get_mut_existing",
+                "get_mut_tag_new",
+                "get_mut_tag_existing",
+                "get_mut_tag_new_w_comp",
+                "get_mut_tag_existing_w_comp",
+                "get_mut_tag_new_w_trait",
+                "get_mut_tag_existing_w_trait",
                 "modified_w_on_set"
             ]
         }, {
@@ -780,7 +796,8 @@
                 "set_optional",
                 "set_from_nothing",
                 "add_null_type_in_on_set",
-                "add_0_entity_in_on_set"
+                "add_0_entity_in_on_set",
+                "on_set_prefab"
             ]
         }, {
             "id": "SystemPeriodic",
@@ -980,7 +997,10 @@
                 "prefab_instanceof_hierarchy",
                 "override_tag",
                 "empty_prefab",
-                "instanceof_0"
+                "instanceof_0",
+                "instantiate_empty_child_table",
+                "instantiate_emptied_child_table",
+                "override_2_prefabs"
             ]
         }, {
             "id": "System_w_FromContainer",
@@ -1147,6 +1167,7 @@
                 "entity_or_str",
                 "entity_xor_str",
                 "entity_not_str",
+                "entity_str_small_buffer",
                 "role_childof_str",
                 "role_instanceof_str",
                 "role_trait_str",

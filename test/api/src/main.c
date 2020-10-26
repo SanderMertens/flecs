@@ -30,6 +30,7 @@ void New_recycle_staged_delete(void);
 void New_new_id(void);
 void New_new_component_id(void);
 void New_new_hi_component_id(void);
+void New_new_w_entity_0(void);
 
 // Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
@@ -43,7 +44,16 @@ void New_w_Count_tag(void);
 void New_w_Count_type_w_tag(void);
 void New_w_Count_type_w_2_tags(void);
 void New_w_Count_type_w_tag_mixed(void);
+void New_w_Count_new_w_data_1_comp(void);
+void New_w_Count_new_w_data_2_comp(void);
+void New_w_Count_new_w_data_w_tag(void);
+void New_w_Count_new_w_data_w_comp_and_tag(void);
+void New_w_Count_new_w_data_trait(void);
+void New_w_Count_new_w_data_trait_tag(void);
+void New_w_Count_new_w_data_2_comp_1_not_set(void);
 void New_w_Count_new_w_on_add_on_set_monitor(void);
+void New_w_Count_new_w_data_override_set_comp(void);
+void New_w_Count_new_w_data_override_set_trait(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -352,8 +362,14 @@ void Set_set_remove_other(void);
 void Set_set_remove_twice(void);
 void Set_set_and_new(void);
 void Set_set_null(void);
-void Set_get_mutable_new(void);
-void Set_get_mutable_existing(void);
+void Set_get_mut_new(void);
+void Set_get_mut_existing(void);
+void Set_get_mut_tag_new(void);
+void Set_get_mut_tag_existing(void);
+void Set_get_mut_tag_new_w_comp(void);
+void Set_get_mut_tag_existing_w_comp(void);
+void Set_get_mut_tag_new_w_trait(void);
+void Set_get_mut_tag_existing_w_trait(void);
 void Set_modified_w_on_set(void);
 
 // Testsuite 'Lookup'
@@ -715,6 +731,7 @@ void SystemOnSet_set_optional(void);
 void SystemOnSet_set_from_nothing(void);
 void SystemOnSet_add_null_type_in_on_set(void);
 void SystemOnSet_add_0_entity_in_on_set(void);
+void SystemOnSet_on_set_prefab(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -901,6 +918,9 @@ void Prefab_prefab_instanceof_hierarchy(void);
 void Prefab_override_tag(void);
 void Prefab_empty_prefab(void);
 void Prefab_instanceof_0(void);
+void Prefab_instantiate_empty_child_table(void);
+void Prefab_instantiate_emptied_child_table(void);
+void Prefab_override_2_prefabs(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_setup(void);
@@ -1055,6 +1075,7 @@ void Type_entity_and_str(void);
 void Type_entity_or_str(void);
 void Type_entity_xor_str(void);
 void Type_entity_not_str(void);
+void Type_entity_str_small_buffer(void);
 void Type_role_childof_str(void);
 void Type_role_instanceof_str(void);
 void Type_role_trait_str(void);
@@ -1456,6 +1477,10 @@ bake_test_case New_testcases[] = {
     {
         "new_hi_component_id",
         New_new_hi_component_id
+    },
+    {
+        "new_w_entity_0",
+        New_new_w_entity_0
     }
 };
 
@@ -1505,8 +1530,44 @@ bake_test_case New_w_Count_testcases[] = {
         New_w_Count_type_w_tag_mixed
     },
     {
+        "new_w_data_1_comp",
+        New_w_Count_new_w_data_1_comp
+    },
+    {
+        "new_w_data_2_comp",
+        New_w_Count_new_w_data_2_comp
+    },
+    {
+        "new_w_data_w_tag",
+        New_w_Count_new_w_data_w_tag
+    },
+    {
+        "new_w_data_w_comp_and_tag",
+        New_w_Count_new_w_data_w_comp_and_tag
+    },
+    {
+        "new_w_data_trait",
+        New_w_Count_new_w_data_trait
+    },
+    {
+        "new_w_data_trait_tag",
+        New_w_Count_new_w_data_trait_tag
+    },
+    {
+        "new_w_data_2_comp_1_not_set",
+        New_w_Count_new_w_data_2_comp_1_not_set
+    },
+    {
         "new_w_on_add_on_set_monitor",
         New_w_Count_new_w_on_add_on_set_monitor
+    },
+    {
+        "new_w_data_override_set_comp",
+        New_w_Count_new_w_data_override_set_comp
+    },
+    {
+        "new_w_data_override_set_trait",
+        New_w_Count_new_w_data_override_set_trait
     }
 };
 
@@ -2646,12 +2707,36 @@ bake_test_case Set_testcases[] = {
         Set_set_null
     },
     {
-        "get_mutable_new",
-        Set_get_mutable_new
+        "get_mut_new",
+        Set_get_mut_new
     },
     {
-        "get_mutable_existing",
-        Set_get_mutable_existing
+        "get_mut_existing",
+        Set_get_mut_existing
+    },
+    {
+        "get_mut_tag_new",
+        Set_get_mut_tag_new
+    },
+    {
+        "get_mut_tag_existing",
+        Set_get_mut_tag_existing
+    },
+    {
+        "get_mut_tag_new_w_comp",
+        Set_get_mut_tag_new_w_comp
+    },
+    {
+        "get_mut_tag_existing_w_comp",
+        Set_get_mut_tag_existing_w_comp
+    },
+    {
+        "get_mut_tag_new_w_trait",
+        Set_get_mut_tag_new_w_trait
+    },
+    {
+        "get_mut_tag_existing_w_trait",
+        Set_get_mut_tag_existing_w_trait
     },
     {
         "modified_w_on_set",
@@ -4006,6 +4091,10 @@ bake_test_case SystemOnSet_testcases[] = {
     {
         "add_0_entity_in_on_set",
         SystemOnSet_add_0_entity_in_on_set
+    },
+    {
+        "on_set_prefab",
+        SystemOnSet_on_set_prefab
     }
 };
 
@@ -4703,6 +4792,18 @@ bake_test_case Prefab_testcases[] = {
     {
         "instanceof_0",
         Prefab_instanceof_0
+    },
+    {
+        "instantiate_empty_child_table",
+        Prefab_instantiate_empty_child_table
+    },
+    {
+        "instantiate_emptied_child_table",
+        Prefab_instantiate_emptied_child_table
+    },
+    {
+        "override_2_prefabs",
+        Prefab_override_2_prefabs
     }
 };
 
@@ -5277,6 +5378,10 @@ bake_test_case Type_testcases[] = {
     {
         "entity_not_str",
         Type_entity_not_str
+    },
+    {
+        "entity_str_small_buffer",
+        Type_entity_str_small_buffer
     },
     {
         "role_childof_str",
@@ -6468,14 +6573,14 @@ static bake_test_suite suites[] = {
         "New",
         New_setup,
         NULL,
-        20,
+        21,
         New_testcases
     },
     {
         "New_w_Count",
         NULL,
         NULL,
-        12,
+        21,
         New_w_Count_testcases
     },
     {
@@ -6580,7 +6685,7 @@ static bake_test_suite suites[] = {
         "Set",
         NULL,
         NULL,
-        16,
+        22,
         Set_testcases
     },
     {
@@ -6678,7 +6783,7 @@ static bake_test_suite suites[] = {
         "SystemOnSet",
         NULL,
         NULL,
-        27,
+        28,
         SystemOnSet_testcases
     },
     {
@@ -6727,7 +6832,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        69,
+        72,
         Prefab_testcases
     },
     {
@@ -6769,7 +6874,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        87,
+        88,
         Type_testcases
     },
     {
