@@ -9701,8 +9701,10 @@ void ecs_bulk_remove_entity(
 #ifdef FLECS_DIRECT_ACCESS
 
 
+/* Prefix with "da" so that they don't conflict with other get_column's */
+
 static
-ecs_column_t *get_column(
+ecs_column_t *da_get_column(
     ecs_table_t *table,
     int32_t column)
 {
@@ -9717,16 +9719,16 @@ ecs_column_t *get_column(
 }
 
 static
-ecs_column_t *get_or_create_column(
+ecs_column_t *da_get_or_create_column(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column)
 {
-    ecs_column_t *c = get_column(table, column);
+    ecs_column_t *c = da_get_column(table, column);
     if (!c && (!table->data || !table->data->columns)) {
         ecs_data_t *data = ecs_table_get_or_create_data(table);
         ecs_init_data(world, table, data);
-        c = get_column(table, column);
+        c = da_get_column(table, column);
     }
     ecs_assert(c != NULL, ECS_INTERNAL_ERROR, NULL);
     return c;
@@ -9788,11 +9790,11 @@ int32_t ecs_table_find_column(
     return ecs_type_index_of(table->type, component);
 }
 
-ecs_vector_t* ecs_table_get_column(
+ecs_vector_t* ecs_table_da_get_column(
     ecs_table_t *table,
     int32_t column)
 {
-    ecs_column_t *c = get_column(table, column);
+    ecs_column_t *c = da_get_column(table, column);
     return c ? c->data : NULL;
 }
 
@@ -9802,7 +9804,7 @@ void ecs_table_set_column(
     int32_t column,
     ecs_vector_t* vector)
 {
-    ecs_column_t *c = get_or_create_column(world, table, column);
+    ecs_column_t *c = da_get_or_create_column(world, table, column);
     if (vector) {
         ecs_vector_assert_size(vector, c->size);
     }
@@ -9858,7 +9860,7 @@ void ecs_table_delete_column(
     ecs_vector_t *vector)
 {
     if (!vector) {
-        vector = ecs_table_get_column(table, column);
+        vector = ecs_table_da_get_column(table, column);
         if (!vector) {
             return;
         }
@@ -9869,7 +9871,7 @@ void ecs_table_delete_column(
         table->data->columns[column].data = NULL;
     }
 
-    ecs_column_t *c = get_or_create_column(world, table, column);
+    ecs_column_t *c = da_get_or_create_column(world, table, column);
     ecs_vector_assert_size(vector, c->size);
 
     ecs_c_info_t *c_info = table->c_info[column];
@@ -9886,13 +9888,13 @@ void ecs_table_delete_column(
     ecs_vector_free(vector);
 }
 
-void* ecs_record_get_column(
+void* ecs_record_da_get_column(
     ecs_record_t *r,
     int32_t column,
     size_t c_size)
 {
     ecs_table_t *table = r->table;
-    ecs_column_t *c = get_column(table, column);
+    ecs_column_t *c = da_get_column(table, column);
     if (!c) {
         return NULL;
     }
@@ -9922,7 +9924,7 @@ void ecs_record_copy_to(
     ecs_assert(count != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_t *table = r->table;
-    ecs_column_t *c = get_or_create_column(world, table, column);
+    ecs_column_t *c = da_get_or_create_column(world, table, column);
     int16_t size = c->size;
     ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
         ECS_INVALID_PARAMETER, NULL);
@@ -9959,7 +9961,7 @@ void ecs_record_copy_pod_to(
     ecs_assert(count != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_t *table = r->table;
-    ecs_column_t *c = get_or_create_column(world, table, column);
+    ecs_column_t *c = da_get_or_create_column(world, table, column);
     int16_t size = c->size;
     ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
         ECS_INVALID_PARAMETER, NULL);
@@ -9988,7 +9990,7 @@ void ecs_record_move_to(
     ecs_assert(count != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_t *table = r->table;
-    ecs_column_t *c = get_or_create_column(world, table, column);
+    ecs_column_t *c = da_get_or_create_column(world, table, column);
     int16_t size = c->size;
     ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
         ECS_INVALID_PARAMETER, NULL);
