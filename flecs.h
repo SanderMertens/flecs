@@ -2757,16 +2757,22 @@ typedef struct EcsTrigger {
  * the entity that instantiates the type. */
 #define ECS_CHILDOF (ECS_ROLE | ((ecs_entity_t)0x7D << 56))
 
+/** Cases are used to switch between mutually exclusive components */
+#define ECS_CASE (ECS_ROLE | ((ecs_entity_t)0x7C << 56))
+
+/** Switches allow for fast switching between mutually exclusive components */
+#define ECS_SWITCH (ECS_ROLE | ((ecs_entity_t)0x7B << 56))
+
 /** The TRAIT role indicates that the entity is a trait identifier. */
-#define ECS_TRAIT (ECS_ROLE | ((ecs_entity_t)0x7C << 56))
+#define ECS_TRAIT (ECS_ROLE | ((ecs_entity_t)0x7A << 56))
 
 /** Enforce that all entities of a type are present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_AND (ECS_ROLE | ((ecs_entity_t)0x7B << 56))
+#define ECS_AND (ECS_ROLE | ((ecs_entity_t)0x79 << 56))
 
 /** Enforce that at least one entity of a type must be present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_OR (ECS_ROLE | ((ecs_entity_t)0x7A << 56))
+#define ECS_OR (ECS_ROLE | ((ecs_entity_t)0x78 << 56))
 
 /** Enforce that exactly one entity of a type must be present in the type.
  * This flag can only be used in combination with an entity that has EcsType. 
@@ -2774,17 +2780,11 @@ typedef struct EcsTrigger {
  * previous entity is removed from the entity. This makes XOR useful for
  * implementing state machines, as it allows for traversing states while 
  * ensuring that only one state is ever active at the same time. */
-#define ECS_XOR (ECS_ROLE | ((ecs_entity_t)0x79 << 56))
+#define ECS_XOR (ECS_ROLE | ((ecs_entity_t)0x77 << 56))
 
 /** None of the entities in a type may be added to the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_NOT (ECS_ROLE | ((ecs_entity_t)0x78 << 56))
-
-/** Cases are used to switch between mutually exclusive components */
-#define ECS_CASE (ECS_ROLE | ((ecs_entity_t)0x77 << 56))
-
-/** Switches allow for fast switching between mutually exclusive components */
-#define ECS_SWITCH (ECS_ROLE | ((ecs_entity_t)0x76 << 56))
+#define ECS_NOT (ECS_ROLE | ((ecs_entity_t)0x76 << 56))
 
 /** Enforce ownership of a component */
 #define ECS_OWNED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))

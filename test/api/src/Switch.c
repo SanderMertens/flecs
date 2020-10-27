@@ -728,3 +728,31 @@ void Switch_add_to_entity_w_switch() {
 
     ecs_fini(world);
 }
+
+void Switch_add_trait_to_entity_w_switch() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ECS_TYPE(world, Type, Walking, Running, Jumping);
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_SWITCH | Type);
+    test_assert(e != 0);
+
+    ecs_add_entity(world, e, ECS_CASE | Walking);
+    test_assert( ecs_has_entity(world, e, ECS_CASE | Walking));
+    test_int(ecs_get_case(world, e, Type), Walking);
+
+    ecs_entity_t trait_id = ecs_trait(Trait, ecs_typeid(Position));
+    ecs_add_entity(world, e, trait_id);
+    test_assert(ecs_has_entity(world, e, trait_id));
+    test_assert( ecs_has_entity(world, e, ECS_CASE | Walking));
+    test_int(ecs_get_case(world, e, Type), Walking);
+
+    ecs_fini(world);
+}

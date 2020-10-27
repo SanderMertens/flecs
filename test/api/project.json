@@ -132,7 +132,8 @@
                 "switch_no_match_for_case",
                 "empty_entity_has_case",
                 "zero_entity_has_case",
-                "add_to_entity_w_switch"
+                "add_to_entity_w_switch",
+                "add_trait_to_entity_w_switch"
             ]
         }, {
             "id": "Remove",

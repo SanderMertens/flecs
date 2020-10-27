@@ -121,6 +121,7 @@ void Switch_switch_no_match_for_case(void);
 void Switch_empty_entity_has_case(void);
 void Switch_zero_entity_has_case(void);
 void Switch_add_to_entity_w_switch(void);
+void Switch_add_trait_to_entity_w_switch(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -1842,6 +1843,10 @@ bake_test_case Switch_testcases[] = {
     {
         "add_to_entity_w_switch",
         Switch_add_to_entity_w_switch
+    },
+    {
+        "add_trait_to_entity_w_switch",
+        Switch_add_trait_to_entity_w_switch
     }
 };
 
@@ -6694,7 +6699,7 @@ static bake_test_suite suites[] = {
         "Switch",
         Switch_setup,
         NULL,
-        25,
+        26,
         Switch_testcases
     },
     {
