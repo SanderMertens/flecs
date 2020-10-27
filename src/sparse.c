@@ -621,14 +621,6 @@ void ecs_sparse_set_size(
     ecs_vector_set_size(&sparse->dense, uint64_t, elem_count);
 }
 
-void ecs_sparse_grow(
-    ecs_sparse_t *sparse,
-    int32_t elem_count)
-{
-    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_vector_grow(&sparse->dense, uint64_t, elem_count);
-}
-
 static
 void sparse_copy(
     ecs_sparse_t * dst,

@@ -393,3 +393,133 @@ void FilterIter_iter_snapshot_filtered_table() {
     
     ecs_fini(world);
 }
+
+void FilterIter_iter_get_component_index() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_bulk_new(world, Position, 3);
+
+    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
+        .include = ecs_type(Position),
+    });
+
+    int table_count = 0;
+    int entity_count = 0;
+
+    while (ecs_filter_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+        test_int(ecs_table_component_index(&it, ecs_typeid(Position)), 0);
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 3);
+    
+    ecs_fini(world);
+}
+
+void FilterIter_iter_get_component_size() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_bulk_new(world, Position, 3);
+
+    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
+        .include = ecs_type(Position),
+    });
+
+    int table_count = 0;
+    int entity_count = 0;
+
+    while (ecs_filter_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+        test_int(ecs_table_column_size(&it, 0), sizeof(Position));
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 3);
+    
+    ecs_fini(world);
+}
+
+void FilterIter_iter_get_tag_index() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_bulk_new(world, Tag, 3);
+
+    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
+        .include = ecs_type(Tag),
+    });
+
+    int table_count = 0;
+    int entity_count = 0;
+
+    while (ecs_filter_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+        test_int(ecs_table_component_index(&it, Tag), 0);
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 3);
+    
+    ecs_fini(world);
+}
+
+void FilterIter_iter_get_tag_size() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_bulk_new(world, Tag, 3);
+
+    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
+        .include = ecs_type(Tag),
+    });
+
+    int table_count = 0;
+    int entity_count = 0;
+
+    while (ecs_filter_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+        test_int(ecs_table_column_size(&it, 0), 0);
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 3);
+    
+    ecs_fini(world);
+}
+
+void FilterIter_iter_get_tag_column() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_bulk_new(world, Tag, 3);
+
+    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
+        .include = ecs_type(Tag),
+    });
+
+    int table_count = 0;
+    int entity_count = 0;
+
+    while (ecs_filter_next(&it)) {
+        table_count ++;
+        entity_count += it.count;
+        test_assert(ecs_table_column(&it, 0) == NULL);
+    }
+
+    test_int(table_count, 1);
+    test_int(entity_count, 3);
+    
+    ecs_fini(world);
+}

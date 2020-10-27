@@ -79,7 +79,20 @@ void Vector_get_last() {
     int *elem = ecs_vector_get(array, int, 3);
     test_assert(elem != NULL);
     test_int(*elem, 3);
+    test_assert(elem == ecs_vector_last(array, int));
     ecs_vector_free(array);
+}
+
+void Vector_get_last_from_empty() {
+    ecs_vector_t *array = ecs_vector_new(int, 4);
+    int *elem = ecs_vector_last(array, int);
+    test_assert(elem == NULL);
+    ecs_vector_free(array);
+}
+
+void Vector_get_last_from_null() {
+    int *elem = ecs_vector_last(NULL, int);
+    test_assert(elem == NULL);
 }
 
 void Vector_get_empty() {
@@ -122,70 +135,6 @@ void Vector_add_resize() {
     test_int(*(int*)ecs_vector_get(array, int, 4), 4);
     test_assert(ecs_vector_get(array, int, 5) == NULL);
     ecs_vector_free(array);
-}
-
-void Vector_remove() {
-    ecs_vector_t *array = ecs_vector_new(int, 4);
-    array = fill_array(array);
-    ecs_vector_remove(array, int, ecs_vector_get(array, int, 1));
-    test_int(ecs_vector_size(array), 4);
-    test_int(ecs_vector_count(array), 3);
-    test_int(*(int*)ecs_vector_get(array, int, 0), 0);
-    test_int(*(int*)ecs_vector_get(array, int, 1), 3);
-    test_int(*(int*)ecs_vector_get(array, int, 2), 2);
-    test_assert(ecs_vector_get(array, int, 3) == NULL);
-    ecs_vector_free(array);
-}
-
-void Vector_remove_first() {
-    ecs_vector_t *array = ecs_vector_new(int, 4);
-    array = fill_array(array);
-    ecs_vector_remove(array, int, ecs_vector_get(array, int, 0));
-    test_int(ecs_vector_count(array), 3);
-    test_int(*(int*)ecs_vector_get(array, int, 0), 3);
-    ecs_vector_free(array);
-}
-
-void Vector_remove_last() {
-    ecs_vector_t *array = ecs_vector_new(int, 4);
-    array = fill_array(array);
-    ecs_vector_remove(array, int, ecs_vector_get(array, int, 3));
-    test_int(ecs_vector_count(array), 3);
-    ecs_vector_free(array);
-}
-
-void Vector_remove_empty() {
-    ecs_vector_t *array = ecs_vector_new(int, 4);
-    ecs_vector_remove(array, int, ecs_vector_get(array, int, 0));
-    ecs_vector_free(array);
-    test_assert(true);
-}
-
-void Vector_remove_all() {
-    ecs_vector_t *array = ecs_vector_new(int, 4);
-    array = fill_array(array);
-    ecs_vector_remove(array, int, ecs_vector_get(array, int, 0));
-    test_int(ecs_vector_size(array), 4);
-    test_int(ecs_vector_count(array), 3);
-    ecs_vector_remove(array, int, ecs_vector_get(array, int, 0));
-    test_int(ecs_vector_size(array), 4);
-    test_int(ecs_vector_count(array), 2);
-    ecs_vector_remove(array, int, ecs_vector_get(array, int, 0));
-    test_int(ecs_vector_size(array), 4);
-    test_int(ecs_vector_count(array), 1);
-    ecs_vector_remove(array, int, ecs_vector_get(array, int, 0));
-    test_assert(array != NULL);
-    test_int(ecs_vector_size(array), 4);
-    test_int(ecs_vector_count(array), 0);
-    ecs_vector_free(array);
-}
-
-void Vector_remove_out_of_bound() {
-    ecs_vector_t *array = ecs_vector_new(int, 4);
-    array = fill_array(array);
-    ecs_vector_remove(array, int, ecs_vector_get(array, int, 4));
-    ecs_vector_free(array);
-    test_assert(true);
 }
 
 void Vector_sort_rnd() {
@@ -239,8 +188,13 @@ void Vector_sort_sorted() {
 void Vector_sort_empty() {
     ecs_vector_t *array = ecs_vector_new(int, 0);
     ecs_vector_sort(array, int, compare_int);
-    test_assert(true);
+    test_assert(true); // No observable side effects
     ecs_vector_free(array);
+}
+
+void Vector_sort_null() {
+    ecs_vector_sort(NULL, int, compare_int);
+    test_assert(true); // No observable side effects
 }
 
 void Vector_size_of_null() {
@@ -283,6 +237,10 @@ void Vector_pop_elements() {
     ecs_vector_free(array);
 }
 
+void Vector_pop_null() {
+    test_assert( !ecs_vector_pop(NULL, int, NULL));
+}
+
 void Vector_reclaim() {
     ecs_vector_t *array = ecs_vector_new(int, 0);
     array = fill_array(array);
@@ -311,6 +269,93 @@ void Vector_grow() {
 
     test_int(ecs_vector_count(array), 4);
     test_int(ecs_vector_size(array), 12);
+
+    ecs_vector_free(array);
+}
+
+void Vector_copy() {
+    ecs_vector_t *array = ecs_vector_new(int, 4);
+    array = fill_array(array);
+
+    ecs_vector_t *copy = ecs_vector_copy(array, int);
+    test_int(ecs_vector_count(copy), 4);
+    test_int(*(int*)ecs_vector_get(copy, int, 0), 0);
+    test_int(*(int*)ecs_vector_get(copy, int, 1), 1);
+    test_int(*(int*)ecs_vector_get(copy, int, 2), 2);
+    test_int(*(int*)ecs_vector_get(copy, int, 3), 3);
+
+    ecs_vector_free(array);
+    ecs_vector_free(copy);
+}
+
+void Vector_copy_null() {
+    test_assert( ecs_vector_copy(NULL, int) == NULL);
+}
+
+void Vector_memory() {
+    ecs_size_t allocd = 0, used = 0;
+    ecs_vector_t *array = ecs_vector_new(int, 0);
+    array = fill_array(array);
+
+    ecs_vector_memory(array, int, &allocd, &used);
+    test_int(allocd, 8 * sizeof(int));
+    test_int(used, 4 * sizeof(int));
+
+    ecs_vector_free(array);
+}
+
+void Vector_memory_from_null() {
+    ecs_size_t allocd = 0, used = 0;
+    ecs_vector_memory(NULL, int, &allocd, &used);
+    test_int(allocd, 0);
+    test_int(used, 0);
+}
+
+void Vector_addn_to_null() {
+    ecs_vector_t *array = NULL;
+    void *ptr = ecs_vector_addn(&array, int, 4);
+    test_assert(array != NULL);
+    test_assert(ptr != NULL);
+    test_int(ecs_vector_count(array), 4);
+    ecs_vector_free(array);
+}
+
+void Vector_addn_to_0_size() {
+    ecs_vector_t *array = ecs_vector_new(int, 0);
+    test_assert(array != NULL);
+    void *ptr = ecs_vector_addn(&array, int, 4);
+    test_assert(array != NULL);
+    test_assert(ptr != NULL);
+    test_int(ecs_vector_count(array), 4);
+    ecs_vector_free(array);
+}
+
+void Vector_set_min_count() {
+    ecs_vector_t *array = ecs_vector_new(int, 0);
+
+    ecs_vector_set_min_count(&array, int, 4);
+    test_int(ecs_vector_count(array), 4);
+    test_int(ecs_vector_size(array), 4);
+
+    ecs_vector_free(array);
+}
+
+void Vector_set_min_size() {
+    ecs_vector_t *array = ecs_vector_new(int, 0);
+
+    ecs_vector_set_min_size(&array, int, 4);
+    test_int(ecs_vector_count(array), 0);
+    test_int(ecs_vector_size(array), 4);
+
+    ecs_vector_free(array);
+}
+
+void Vector_set_min_size_to_smaller() {
+    ecs_vector_t *array = ecs_vector_new(int, 4);
+
+    ecs_vector_set_min_size(&array, int, 2);
+    test_int(ecs_vector_count(array), 0);
+    test_int(ecs_vector_size(array), 4);
 
     ecs_vector_free(array);
 }

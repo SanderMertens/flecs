@@ -21,22 +21,31 @@
                 "get",
                 "get_first",
                 "get_last",
+                "get_last_from_empty",
+                "get_last_from_null",
                 "get_empty",
                 "get_out_of_bound",
                 "add_empty",
                 "add_resize",
-                "remove",
-                "remove_first",
-                "remove_last",
-                "remove_empty",
-                "remove_all",
-                "remove_out_of_bound",
                 "sort_rnd",
                 "sort_sorted",
                 "sort_empty",
+                "sort_null",
                 "size_of_null",
                 "set_size_smaller_than_count",
-                "pop_elements"
+                "pop_elements",
+                "pop_null",
+                "reclaim",
+                "grow",
+                "copy",
+                "copy_null",
+                "memory",
+                "memory_from_null",
+                "addn_to_null",
+                "addn_to_0_size",
+                "set_min_count",
+                "set_min_size",
+                "set_min_size_to_smaller"
             ]
         }, {
             "id": "Queue",
@@ -92,7 +101,10 @@
                 "copy",
                 "restore",
                 "create_delete",
-                "create_delete_2"
+                "create_delete_2",
+                "count_of_null",
+                "size_of_null",
+                "copy_null"
             ]
         }, {
             "id": "Strbuf",

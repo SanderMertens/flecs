@@ -38,16 +38,6 @@ void * _ecs_map_get(
     (T*)_ecs_map_get(map, sizeof(T), (ecs_map_key_t)key)
 
 FLECS_EXPORT
-bool _ecs_map_has(
-    const ecs_map_t *map,
-    ecs_size_t elem_size,
-    ecs_map_key_t key,
-    void *payload);
-
-#define ecs_map_has(map, key, payload)\
-    _ecs_map_has(map, sizeof(*payload), (ecs_map_key_t)key, payload)
-
-FLECS_EXPORT
 void * _ecs_map_get_ptr(
     const ecs_map_t *map,
     ecs_map_key_t key);

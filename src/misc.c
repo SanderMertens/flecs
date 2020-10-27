@@ -14,13 +14,6 @@ int16_t ecs_to_i16(
     return (int16_t)v;
 }
 
-int32_t ecs_to_i32(
-    int64_t v)
-{
-    ecs_assert(v < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
-    return (int32_t)v;
-}
-
 uint32_t ecs_to_u32(
     uint64_t v)
 {

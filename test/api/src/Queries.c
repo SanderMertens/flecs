@@ -1008,3 +1008,34 @@ void Queries_get_shared_tag() {
 
     ecs_fini(world);
 }
+
+void Queries_explicit_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    /* Ensure query isn't deleted twice when deleting world */
+    ecs_query_free(q);
+
+    ecs_fini(world);
+}
+
+void Queries_get_column_size() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(ecs_column_size(&it, 1), sizeof(Position));
+
+    ecs_fini(world);    
+}

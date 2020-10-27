@@ -17,7 +17,6 @@ extern "C" {
 #define ecs_eis_exists(world, entity) ecs_sparse_exists((world->store).entity_index, entity)
 #define ecs_eis_recycle(world) ecs_sparse_new_id((world->store).entity_index)
 #define ecs_eis_clear_entity(world, entity, is_watched) ecs_eis_set((world->store).entity_index, entity, &(ecs_record_t){NULL, is_watched})
-#define ecs_eis_grow(world, count) ecs_sparse_grow((world->store).entity_index, count)
 #define ecs_eis_set_size(world, size) ecs_sparse_set_size((world->store).entity_index, size)
 #define ecs_eis_count(world) ecs_sparse_count((world->store).entity_index)
 #define ecs_eis_clear(world) ecs_sparse_clear((world->store).entity_index)

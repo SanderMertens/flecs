@@ -144,11 +144,6 @@ void ecs_sparse_set_size(
     int32_t elem_count);
 
 FLECS_EXPORT
-void ecs_sparse_grow(
-    ecs_sparse_t *sparse,
-    int32_t count);
-
-FLECS_EXPORT
 ecs_sparse_t* ecs_sparse_copy(
     const ecs_sparse_t *src);    
 

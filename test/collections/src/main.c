@@ -16,22 +16,31 @@ void Vector_count_empty(void);
 void Vector_get(void);
 void Vector_get_first(void);
 void Vector_get_last(void);
+void Vector_get_last_from_empty(void);
+void Vector_get_last_from_null(void);
 void Vector_get_empty(void);
 void Vector_get_out_of_bound(void);
 void Vector_add_empty(void);
 void Vector_add_resize(void);
-void Vector_remove(void);
-void Vector_remove_first(void);
-void Vector_remove_last(void);
-void Vector_remove_empty(void);
-void Vector_remove_all(void);
-void Vector_remove_out_of_bound(void);
 void Vector_sort_rnd(void);
 void Vector_sort_sorted(void);
 void Vector_sort_empty(void);
+void Vector_sort_null(void);
 void Vector_size_of_null(void);
 void Vector_set_size_smaller_than_count(void);
 void Vector_pop_elements(void);
+void Vector_pop_null(void);
+void Vector_reclaim(void);
+void Vector_grow(void);
+void Vector_copy(void);
+void Vector_copy_null(void);
+void Vector_memory(void);
+void Vector_memory_from_null(void);
+void Vector_addn_to_null(void);
+void Vector_addn_to_0_size(void);
+void Vector_set_min_count(void);
+void Vector_set_min_size(void);
+void Vector_set_min_size_to_smaller(void);
 
 // Testsuite 'Queue'
 void Queue_setup(void);
@@ -82,6 +91,9 @@ void Sparse_copy(void);
 void Sparse_restore(void);
 void Sparse_create_delete(void);
 void Sparse_create_delete_2(void);
+void Sparse_count_of_null(void);
+void Sparse_size_of_null(void);
+void Sparse_copy_null(void);
 
 // Testsuite 'Strbuf'
 void Strbuf_setup(void);
@@ -126,6 +138,14 @@ bake_test_case Vector_testcases[] = {
         Vector_get_last
     },
     {
+        "get_last_from_empty",
+        Vector_get_last_from_empty
+    },
+    {
+        "get_last_from_null",
+        Vector_get_last_from_null
+    },
+    {
         "get_empty",
         Vector_get_empty
     },
@@ -142,30 +162,6 @@ bake_test_case Vector_testcases[] = {
         Vector_add_resize
     },
     {
-        "remove",
-        Vector_remove
-    },
-    {
-        "remove_first",
-        Vector_remove_first
-    },
-    {
-        "remove_last",
-        Vector_remove_last
-    },
-    {
-        "remove_empty",
-        Vector_remove_empty
-    },
-    {
-        "remove_all",
-        Vector_remove_all
-    },
-    {
-        "remove_out_of_bound",
-        Vector_remove_out_of_bound
-    },
-    {
         "sort_rnd",
         Vector_sort_rnd
     },
@@ -178,6 +174,10 @@ bake_test_case Vector_testcases[] = {
         Vector_sort_empty
     },
     {
+        "sort_null",
+        Vector_sort_null
+    },
+    {
         "size_of_null",
         Vector_size_of_null
     },
@@ -188,6 +188,54 @@ bake_test_case Vector_testcases[] = {
     {
         "pop_elements",
         Vector_pop_elements
+    },
+    {
+        "pop_null",
+        Vector_pop_null
+    },
+    {
+        "reclaim",
+        Vector_reclaim
+    },
+    {
+        "grow",
+        Vector_grow
+    },
+    {
+        "copy",
+        Vector_copy
+    },
+    {
+        "copy_null",
+        Vector_copy_null
+    },
+    {
+        "memory",
+        Vector_memory
+    },
+    {
+        "memory_from_null",
+        Vector_memory_from_null
+    },
+    {
+        "addn_to_null",
+        Vector_addn_to_null
+    },
+    {
+        "addn_to_0_size",
+        Vector_addn_to_0_size
+    },
+    {
+        "set_min_count",
+        Vector_set_min_count
+    },
+    {
+        "set_min_size",
+        Vector_set_min_size
+    },
+    {
+        "set_min_size_to_smaller",
+        Vector_set_min_size_to_smaller
     }
 };
 
@@ -361,6 +409,18 @@ bake_test_case Sparse_testcases[] = {
     {
         "create_delete_2",
         Sparse_create_delete_2
+    },
+    {
+        "count_of_null",
+        Sparse_count_of_null
+    },
+    {
+        "size_of_null",
+        Sparse_size_of_null
+    },
+    {
+        "copy_null",
+        Sparse_copy_null
     }
 };
 
@@ -428,7 +488,7 @@ static bake_test_suite suites[] = {
         "Vector",
         Vector_setup,
         NULL,
-        22,
+        31,
         Vector_testcases
     },
     {
@@ -449,7 +509,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        20,
+        23,
         Sparse_testcases
     },
     {

@@ -313,9 +313,9 @@ bool ecs_snapshot_next(
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_data_t *data = tables[i].data;
-        if (!data) {
-            continue;
-        }
+
+        /* Table must have data or it wouldn't have been added */
+        ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (!ecs_table_match_filter(it->world, table, &iter->filter)) {
             continue;

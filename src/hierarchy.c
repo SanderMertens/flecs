@@ -207,12 +207,7 @@ ecs_entity_t ecs_lookup_symbol(
 
     if (is_number(name)) {
         return name_to_id(name);
-    }
-
-    ecs_entity_t e = find_as_alias(world, name);
-    if (e) {
-        return e;
-    }      
+    }   
     
     return find_child(world, 0, name);
 }

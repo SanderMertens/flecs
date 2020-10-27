@@ -386,3 +386,15 @@ void Sparse_create_delete_2() {
 
     ecs_sparse_free(sp);
 }
+
+void Sparse_count_of_null() {
+    test_int(ecs_sparse_count(NULL), 0);
+}
+
+void Sparse_size_of_null() {
+    test_int(ecs_sparse_size(NULL), 0);
+}
+
+void Sparse_copy_null() {
+    test_assert(ecs_sparse_copy(NULL) == NULL);
+}

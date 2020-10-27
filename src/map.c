@@ -291,21 +291,6 @@ void* _ecs_map_get(
     return NULL;
 }
 
-bool _ecs_map_has(
-    const ecs_map_t *map,
-    ecs_size_t elem_size,
-    ecs_map_key_t key,
-    void *payload)
-{
-    const void *result = _ecs_map_get(map, elem_size, key);
-    if (result) {
-        ecs_os_memcpy(payload, result, elem_size);
-        return true;
-    } else {
-        return false;
-    }
-}
-
 void* _ecs_map_get_ptr(
     const ecs_map_t *map,
     ecs_map_key_t key)

@@ -268,3 +268,19 @@ void Lookup_define_alias_in_scope() {
 
     ecs_use(world, e, "MyAlias");
 }
+
+void Lookup_lookup_null() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_lookup(world, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_symbol_null() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_lookup_symbol(world, NULL) == 0);
+
+    ecs_fini(world);
+}

@@ -120,6 +120,7 @@ void Switch_remove_switch_in_stage(void);
 void Switch_switch_no_match_for_case(void);
 void Switch_empty_entity_has_case(void);
 void Switch_zero_entity_has_case(void);
+void Switch_add_to_entity_w_switch(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -393,6 +394,8 @@ void Lookup_lookup_alias(void);
 void Lookup_lookup_scoped_alias(void);
 void Lookup_define_duplicate_alias(void);
 void Lookup_define_alias_in_scope(void);
+void Lookup_lookup_null(void);
+void Lookup_lookup_symbol_null(void);
 
 // Testsuite 'Singleton'
 void Singleton_set(void);
@@ -616,6 +619,8 @@ void Queries_query_optional_any(void);
 void Queries_query_rematch_optional_after_add(void);
 void Queries_get_owned_tag(void);
 void Queries_get_shared_tag(void);
+void Queries_explicit_delete(void);
+void Queries_get_column_size(void);
 
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
@@ -702,6 +707,8 @@ void Monitor_2_comps(void);
 void Monitor_1_comp_1_not(void);
 void Monitor_1_parent(void);
 void Monitor_1_comp_1_parent(void);
+void Monitor_1_comp_prefab_new(void);
+void Monitor_1_comp_prefab_add(void);
 
 // Testsuite 'SystemOnSet'
 void SystemOnSet_set_1_of_1(void);
@@ -1333,6 +1340,11 @@ void FilterIter_iter_snapshot_one_table(void);
 void FilterIter_iter_snapshot_two_tables(void);
 void FilterIter_iter_snapshot_two_comps(void);
 void FilterIter_iter_snapshot_filtered_table(void);
+void FilterIter_iter_get_component_index(void);
+void FilterIter_iter_get_component_size(void);
+void FilterIter_iter_get_tag_index(void);
+void FilterIter_iter_get_tag_size(void);
+void FilterIter_iter_get_tag_column(void);
 
 // Testsuite 'Modules'
 void Modules_setup(void);
@@ -1372,6 +1384,14 @@ void DirectAccess_delete_column_w_dtor(void);
 void DirectAccess_copy_to(void);
 void DirectAccess_copy_pod_to(void);
 void DirectAccess_move_to(void);
+void DirectAccess_copy_to_no_copy(void);
+void DirectAccess_move_to_no_move(void);
+void DirectAccess_find_record_not_exists(void);
+void DirectAccess_get_entities_empty_table(void);
+void DirectAccess_get_records_empty_table(void);
+void DirectAccess_get_column_empty_table(void);
+void DirectAccess_delete_column_empty_table(void);
+void DirectAccess_get_record_column_empty_table(void);
 
 // Testsuite 'Internals'
 void Internals_setup(void);
@@ -1818,6 +1838,10 @@ bake_test_case Switch_testcases[] = {
     {
         "zero_entity_has_case",
         Switch_zero_entity_has_case
+    },
+    {
+        "add_to_entity_w_switch",
+        Switch_add_to_entity_w_switch
     }
 };
 
@@ -2820,6 +2844,14 @@ bake_test_case Lookup_testcases[] = {
     {
         "define_alias_in_scope",
         Lookup_define_alias_in_scope
+    },
+    {
+        "lookup_null",
+        Lookup_lookup_null
+    },
+    {
+        "lookup_symbol_null",
+        Lookup_lookup_symbol_null
     }
 };
 
@@ -3665,6 +3697,14 @@ bake_test_case Queries_testcases[] = {
     {
         "get_shared_tag",
         Queries_get_shared_tag
+    },
+    {
+        "explicit_delete",
+        Queries_explicit_delete
+    },
+    {
+        "get_column_size",
+        Queries_get_column_size
     }
 };
 
@@ -3980,6 +4020,14 @@ bake_test_case Monitor_testcases[] = {
     {
         "1_comp_1_parent",
         Monitor_1_comp_1_parent
+    },
+    {
+        "1_comp_prefab_new",
+        Monitor_1_comp_prefab_new
+    },
+    {
+        "1_comp_prefab_add",
+        Monitor_1_comp_prefab_add
     }
 };
 
@@ -6345,6 +6393,26 @@ bake_test_case FilterIter_testcases[] = {
     {
         "iter_snapshot_filtered_table",
         FilterIter_iter_snapshot_filtered_table
+    },
+    {
+        "iter_get_component_index",
+        FilterIter_iter_get_component_index
+    },
+    {
+        "iter_get_component_size",
+        FilterIter_iter_get_component_size
+    },
+    {
+        "iter_get_tag_index",
+        FilterIter_iter_get_tag_index
+    },
+    {
+        "iter_get_tag_size",
+        FilterIter_iter_get_tag_size
+    },
+    {
+        "iter_get_tag_column",
+        FilterIter_iter_get_tag_column
     }
 };
 
@@ -6487,6 +6555,38 @@ bake_test_case DirectAccess_testcases[] = {
     {
         "move_to",
         DirectAccess_move_to
+    },
+    {
+        "copy_to_no_copy",
+        DirectAccess_copy_to_no_copy
+    },
+    {
+        "move_to_no_move",
+        DirectAccess_move_to_no_move
+    },
+    {
+        "find_record_not_exists",
+        DirectAccess_find_record_not_exists
+    },
+    {
+        "get_entities_empty_table",
+        DirectAccess_get_entities_empty_table
+    },
+    {
+        "get_records_empty_table",
+        DirectAccess_get_records_empty_table
+    },
+    {
+        "get_column_empty_table",
+        DirectAccess_get_column_empty_table
+    },
+    {
+        "delete_column_empty_table",
+        DirectAccess_delete_column_empty_table
+    },
+    {
+        "get_record_column_empty_table",
+        DirectAccess_get_record_column_empty_table
     }
 };
 
@@ -6594,7 +6694,7 @@ static bake_test_suite suites[] = {
         "Switch",
         Switch_setup,
         NULL,
-        24,
+        25,
         Switch_testcases
     },
     {
@@ -6692,7 +6792,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        19,
+        21,
         Lookup_testcases
     },
     {
@@ -6741,7 +6841,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        25,
+        27,
         Queries_testcases
     },
     {
@@ -6776,7 +6876,7 @@ static bake_test_suite suites[] = {
         "Monitor",
         NULL,
         NULL,
-        5,
+        7,
         Monitor_testcases
     },
     {
@@ -6937,7 +7037,7 @@ static bake_test_suite suites[] = {
         "FilterIter",
         NULL,
         NULL,
-        7,
+        12,
         FilterIter_testcases
     },
     {
@@ -6951,7 +7051,7 @@ static bake_test_suite suites[] = {
         "DirectAccess",
         NULL,
         NULL,
-        15,
+        23,
         DirectAccess_testcases
     },
     {

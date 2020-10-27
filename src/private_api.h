@@ -419,14 +419,7 @@ void ecs_table_set_size(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
-    int32_t count); 
-
-/* Set table to a fixed count. Useful for copying data in bulk. */
-void ecs_table_set_count(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t count); 
+    int32_t count);
 
 /* Match table with filter */
 bool ecs_table_match_filter(
@@ -450,14 +443,6 @@ void ecs_init_root_table(
 void ecs_table_unset(
     ecs_world_t *world,
     ecs_table_t *table);
-
-/* Destruct columns */
-void ecs_table_destruct(
-    ecs_world_t *world, 
-    ecs_table_t *table, 
-    ecs_data_t *data, 
-    int32_t row, 
-    int32_t count);
 
 /* Free table */
 void ecs_table_free(
@@ -501,11 +486,7 @@ ecs_table_t *ecs_table_traverse_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entities_t *to_remove,
-    ecs_entities_t *removed);    
-
-void ecs_table_mark_dirty_w_index(
-    ecs_table_t *table,
-    int32_t index);
+    ecs_entities_t *removed);
 
 void ecs_table_mark_dirty(
     ecs_table_t *table,
@@ -609,10 +590,6 @@ int8_t ecs_to_i8(
 
 /* Convert 64 bit signed integer to 16 bit */
 int16_t ecs_to_i16(
-    int64_t v);
-
-/* Convert 64 bit signed integer to 32 bit */
-int32_t ecs_to_i32(
     int64_t v);
 
 /* Convert 64 bit unsigned integer to 32 bit */

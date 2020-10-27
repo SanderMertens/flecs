@@ -158,14 +158,24 @@ void* _ecs_vector_last(
     (T*)_ecs_vector_last(vector, ECS_VECTOR_T(T))
 
 FLECS_EXPORT
-int32_t _ecs_vector_remove(
-    ecs_vector_t *vector,
+int32_t _ecs_vector_set_min_size(
+    ecs_vector_t **array_inout,
     ecs_size_t elem_size,
     int16_t offset,
-    void *elem);
+    int32_t elem_count);
 
-#define ecs_vector_remove(vector, T, index) \
-    _ecs_vector_remove(vector, ECS_VECTOR_T(T), index)
+#define ecs_vector_set_min_size(vector, T, size) \
+    _ecs_vector_set_min_size(vector, ECS_VECTOR_T(T), size)
+
+FLECS_EXPORT
+int32_t _ecs_vector_set_min_count(
+    ecs_vector_t **vector_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count);
+
+#define ecs_vector_set_min_count(vector, T, size) \
+    _ecs_vector_set_min_count(vector, ECS_VECTOR_T(T), size)
 
 FLECS_EXPORT
 void ecs_vector_remove_last(
@@ -251,26 +261,6 @@ int32_t _ecs_vector_set_count(
     _ecs_vector_set_count(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
 FLECS_EXPORT
-int32_t _ecs_vector_set_min_size(
-    ecs_vector_t **array_inout,
-    ecs_size_t elem_size,
-    int16_t offset,
-    int32_t elem_count);
-
-#define ecs_vector_set_min_size(vector, T, size) \
-    _ecs_vector_set_min_size(vector, ECS_VECTOR_T(T), size)
-
-FLECS_EXPORT
-int32_t _ecs_vector_set_min_count(
-    ecs_vector_t **vector_inout,
-    ecs_size_t elem_size,
-    int16_t offset,
-    int32_t elem_count);
-
-#define ecs_vector_set_min_count(vector, T, size) \
-    _ecs_vector_set_min_count(vector, ECS_VECTOR_T(T), size)
-
-FLECS_EXPORT
 int32_t ecs_vector_count(
     const ecs_vector_t *vector);
 
@@ -314,6 +304,7 @@ void _ecs_vector_memory(
 #define ecs_vector_memory_t(vector, size, alignment, allocd, used) \
     _ecs_vector_memory(vector, ECS_VECTOR_U(size, alignment), allocd, used)
 
+FLECS_EXPORT
 ecs_vector_t* _ecs_vector_copy(
     const ecs_vector_t *src,
     ecs_size_t elem_size,

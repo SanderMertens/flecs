@@ -587,18 +587,6 @@ void run_remove_actions(
     }
 }
 
-void ecs_table_destruct(
-    ecs_world_t * world, 
-    ecs_table_t * table, 
-    ecs_data_t * data, 
-    int32_t row, 
-    int32_t count)
-{
-    if (table->flags & EcsTableHasDtors) {
-        run_remove_actions(world, table, data, row, count, true);
-    }
-}
-
 void ecs_table_clear_data(
     ecs_table_t * table,
     ecs_data_t * data)
@@ -754,13 +742,6 @@ void mark_table_dirty(
     if (table->dirty_state) {
         table->dirty_state[index] ++;
     }
-}
-
-void ecs_table_mark_dirty_w_index(
-    ecs_table_t *table,
-    int32_t index)
-{
-    mark_table_dirty(table, index);
 }
 
 void ecs_table_mark_dirty(
@@ -1482,18 +1463,6 @@ void ecs_table_set_size(
     }
 }
 
-void ecs_table_set_count(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t count)
-{
-    int32_t cur_count = ecs_table_data_count(data);
-    if (cur_count < count) {
-        grow_data(world, table, data, count - cur_count, count, NULL);
-    }
-}
-
 int32_t ecs_table_data_count(
     ecs_data_t *data)
 {
@@ -1527,15 +1496,9 @@ void ecs_table_swap(
     ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
     ecs_record_t *record_ptr_1 = record_ptrs[row_1];
     ecs_record_t *record_ptr_2 = record_ptrs[row_2];
-    
-    /* Get pointers to records in entity index */
-    if (!record_ptr_1) {
-        record_ptr_1 = ecs_eis_get(world, e1);
-    }
 
-    if (!record_ptr_2) {
-        record_ptr_2 = ecs_eis_get(world, e2);
-    }
+    ecs_assert(record_ptr_1 != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(record_ptr_2 != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Swap entities */
     entities[row_1] = e2;
@@ -1825,9 +1788,7 @@ ecs_data_t* ecs_table_merge(
         ecs_record_t *record;
         if (new_table != old_table) {
             record = old_records[i];
-            if (!record) {
-                record = ecs_eis_get(world, old_entities[i]);
-            }
+            ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
         } else {
             record = ecs_eis_get_or_create(world, old_entities[i]);
         }

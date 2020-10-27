@@ -353,10 +353,8 @@ void ecs_run_monitors(
         return;
     }
 
-    if (dst_table->flags & EcsTableIsPrefab) {
-        return;
-    }
-
+    ecs_assert(!(dst_table->flags & EcsTableIsPrefab), ECS_INTERNAL_ERROR, NULL);
+    
     if (!v_src_monitors) {
         ecs_vector_each(v_dst_monitors, ecs_matched_query_t, monitor, {
             ecs_run_monitor(world, monitor, NULL, dst_row, count, NULL);

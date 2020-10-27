@@ -134,14 +134,14 @@ bool ecs_is_readonly(
     int32_t column)
 {
     ecs_query_t *query = it->query;
-    if (query) {
-        ecs_sig_column_t *column_data = ecs_vector_get(
-            it->query->sig.columns, ecs_sig_column_t, column - 1);
 
-        return column_data->inout_kind == EcsIn;
-    } else {
-        return true;
-    }
+    /* If this is not a query iterator, readonly is meaningless */
+    ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
+
+    ecs_sig_column_t *column_data = ecs_vector_get(
+        it->query->sig.columns, ecs_sig_column_t, column - 1);
+
+    return column_data->inout_kind == EcsIn;
 }
 
 ecs_entity_t ecs_column_source(
@@ -245,7 +245,8 @@ void* ecs_table_column(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column_index < ecs_vector_count(table->type), 
         ECS_INVALID_PARAMETER, NULL);
-    if (table->column_count < column_index) {
+    
+    if (table->column_count <= column_index) {
         return NULL;
     }
 
@@ -263,7 +264,8 @@ size_t ecs_table_column_size(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column_index < ecs_vector_count(table->type), 
         ECS_INVALID_PARAMETER, NULL);
-    if (table->column_count < column_index) {
+
+    if (table->column_count <= column_index) {
         return 0;
     }
 

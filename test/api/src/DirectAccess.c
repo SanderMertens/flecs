@@ -519,3 +519,135 @@ void DirectAccess_move_to() {
 
     ecs_fini(world);
 }
+
+void DirectAccess_copy_to_no_copy() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
+    test_assert(t != NULL);
+
+    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+
+    ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
+    test_assert(r.table == t);
+    test_int(r.row, 1);
+
+    test_int(ecs_table_count(t), 1);   
+
+    ecs_record_copy_to(world, &r, 0, sizeof(Position), &(Position){10, 20}, 1);
+
+    Position *p = ecs_record_get_column(&r, 0, sizeof(Position));
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void DirectAccess_move_to_no_move() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
+    test_assert(t != NULL);
+
+    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+
+    ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
+    test_assert(r.table == t);
+    test_int(r.row, 1);
+
+    test_int(ecs_table_count(t), 1);
+
+    ecs_record_move_to(world, &r, 0, sizeof(Position), &(Position){10, 20}, 1);
+
+    Position *p = ecs_record_get_column(&r, 0, sizeof(Position));
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void DirectAccess_find_record_not_exists() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_record_t *r_ptr = ecs_record_find(world, 1000);
+    test_assert(r_ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void DirectAccess_get_entities_empty_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_table_t *t = ecs_table_from_str(world, "Position");
+    test_assert(t != NULL);
+
+    test_assert(ecs_table_get_entities(t) == NULL);
+
+    ecs_fini(world);
+}
+
+void DirectAccess_get_records_empty_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_table_t *t = ecs_table_from_str(world, "Position");
+    test_assert(t != NULL);
+
+    test_assert(ecs_table_get_records(t) == NULL);
+
+    ecs_fini(world);
+}
+
+void DirectAccess_get_column_empty_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_table_t *t = ecs_table_from_str(world, "Position");
+    test_assert(t != NULL);
+
+    test_assert(ecs_table_get_column(t, 0) == NULL);
+
+    ecs_fini(world);
+}
+
+void DirectAccess_delete_column_empty_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_table_t *t = ecs_table_from_str(world, "Position");
+    test_assert(t != NULL);
+
+    ecs_table_delete_column(world, t, 0, NULL);
+
+    ecs_fini(world);
+}
+
+void DirectAccess_get_record_column_empty_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_table_t *t = ecs_table_from_str(world, "Position");
+    test_assert(t != NULL);
+
+    ecs_record_t r = {.table = t, .row = 0};
+
+    test_assert(ecs_record_get_column(&r, 0, sizeof(Position)) == NULL);
+
+    ecs_fini(world);
+}

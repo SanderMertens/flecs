@@ -93,6 +93,8 @@ void* _ecs_vector_addn(
     int16_t offset,
     int32_t elem_count)
 {
+    ecs_assert(array_inout != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     if (elem_count == 1) {
         return _ecs_vector_add(array_inout, elem_size, offset);
     }
@@ -177,39 +179,6 @@ int32_t _ecs_vector_move_index(
 
     ecs_os_memcpy(dst_elem, src_elem, elem_size);
     return _ecs_vector_remove_index(src, elem_size, offset, index);
-}
-
-int32_t _ecs_vector_remove(
-    ecs_vector_t *vector,
-    ecs_size_t elem_size,
-    int16_t offset,
-    void *elem)
-{
-    ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
-    
-    if (!elem) {
-        return 0;
-    }
-
-    int32_t count = vector->count;
-    void *buffer = ECS_OFFSET(vector, offset);
-    int32_t index = (ecs_size_t)((char*)elem - (char*)buffer) / elem_size;
-
-    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
-
-    if (index >= count) {
-        return count;
-    }
-
-    if (index != (count - 1)) {
-        void *last_elem = ECS_OFFSET(buffer, elem_size * (count - 1));
-        ecs_os_memcpy(elem, last_elem, elem_size);
-    }
-
-    count --;
-    vector->count = count;
-
-    return count;
 }
 
 void ecs_vector_remove_last(
@@ -367,35 +336,6 @@ int32_t _ecs_vector_set_count(
     return size;
 }
 
-int32_t _ecs_vector_set_min_size(
-    ecs_vector_t **vector_inout,
-    ecs_size_t elem_size,
-    int16_t offset,
-    int32_t elem_count)
-{
-    if (!*vector_inout || (*vector_inout)->size < elem_count) {
-        return _ecs_vector_set_size(vector_inout, elem_size, offset, elem_count);
-    } else {
-        return (*vector_inout)->size;
-    }
-}
-
-int32_t _ecs_vector_set_min_count(
-    ecs_vector_t **vector_inout,
-    ecs_size_t elem_size,
-    int16_t offset,
-    int32_t elem_count)
-{
-    _ecs_vector_set_min_size(vector_inout, elem_size, offset, elem_count);
-
-    ecs_vector_t *v = *vector_inout;
-    if (v && v->count < elem_count) {
-        v->count = elem_count;
-    }
-
-    return v->count;
-}
-
 void* _ecs_vector_first(
     const ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -449,6 +389,35 @@ void* _ecs_vector_last(
     } else {
         return NULL;
     }
+}
+
+int32_t _ecs_vector_set_min_size(
+    ecs_vector_t **vector_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    if (!*vector_inout || (*vector_inout)->size < elem_count) {
+        return _ecs_vector_set_size(vector_inout, elem_size, offset, elem_count);
+    } else {
+        return (*vector_inout)->size;
+    }
+}
+
+int32_t _ecs_vector_set_min_count(
+    ecs_vector_t **vector_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    _ecs_vector_set_min_size(vector_inout, elem_size, offset, elem_count);
+
+    ecs_vector_t *v = *vector_inout;
+    if (v && v->count < elem_count) {
+        v->count = elem_count;
+    }
+
+    return v->count;
 }
 
 void _ecs_vector_sort(

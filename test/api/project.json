@@ -131,7 +131,8 @@
                 "remove_switch_in_stage",
                 "switch_no_match_for_case",
                 "empty_entity_has_case",
-                "zero_entity_has_case"
+                "zero_entity_has_case",
+                "add_to_entity_w_switch"
             ]
         }, {
             "id": "Remove",
@@ -432,7 +433,9 @@
                 "lookup_alias",
                 "lookup_scoped_alias",
                 "define_duplicate_alias",
-                "define_alias_in_scope"
+                "define_alias_in_scope",
+                "lookup_null",
+                "lookup_symbol_null"
             ]
         }, {
             "id": "Singleton",
@@ -669,7 +672,9 @@
                 "query_optional_any",
                 "query_rematch_optional_after_add",
                 "get_owned_tag",
-                "get_shared_tag"
+                "get_shared_tag",
+                "explicit_delete",
+                "get_column_size"
             ]
         }, {
             "id": "Traits",
@@ -765,7 +770,9 @@
                 "2_comps",
                 "1_comp_1_not",
                 "1_parent",
-                "1_comp_1_parent"
+                "1_comp_1_parent",
+                "1_comp_prefab_new",
+                "1_comp_prefab_add"
             ]
         }, {
             "id": "SystemOnSet",
@@ -1442,7 +1449,12 @@
                 "iter_snapshot_one_table",
                 "iter_snapshot_two_tables",
                 "iter_snapshot_two_comps",
-                "iter_snapshot_filtered_table"
+                "iter_snapshot_filtered_table",
+                "iter_get_component_index",
+                "iter_get_component_size",
+                "iter_get_tag_index",
+                "iter_get_tag_size",
+                "iter_get_tag_column"
             ]
         }, {
             "id": "Modules",
@@ -1485,7 +1497,15 @@
                 "delete_column_w_dtor",
                 "copy_to",
                 "copy_pod_to",
-                "move_to"
+                "move_to",
+                "copy_to_no_copy",
+                "move_to_no_move",
+                "find_record_not_exists",
+                "get_entities_empty_table",
+                "get_records_empty_table",
+                "get_column_empty_table",
+                "delete_column_empty_table",
+                "get_record_column_empty_table"
             ]
         }, {
             "id": "Internals",
