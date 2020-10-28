@@ -7,19 +7,31 @@
 [![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
 [![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/MRSAZqb) 
 
-Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-component-system) for C89 / C99 / C++11 that packs a lot of punch in a small footprint:
+Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-component-system) with a focus on high performance game development:
 
-- Blazing fast iteration speeds with direct access to raw C arrays across multiple components
-- Support for hierarchies, prefabs, traits, state machines, snapshots and more
-- An efficient lock-free architecture allows for modifying entities across multiple threads
-- Queries with builtin support for sorting, change tracking, read-write permissions and more
-- Systems that are time triggered, rate triggered, run every frame or run only when needed
-- A customizable core that lets you include only the features you need
+- Easy to integrate, fast to compile with core that is entirely written in C99
+- Includes C++11 API that enforces type safety & tightly integrates with modern C++ idioms
+- Provides (SoA) access to raw component arrays for optimal cache efficiency and vectorization
+- Archetype-storage with unique graph-based design enables entity mutations with overhead measured in nanoseconds
+- Flexible API primitives allow for efficient implementation of prefabs, runtime tags and entity graphs
+- Supports advanced queries that are evaluated offline so no searching is performed in the main loop
+- Lockless threading design allows for efficient execution of systems on multiple threads
 
-This is Flecs v2, which is a breaking change from v1. For the last v1 release, see:
-https://github.com/SanderMertens/flecs/releases/tag/v1.3
+**In flecs you only pay for what you use:**
+- A customizable core makes it easy to strip unnecessary features from the library
+- An adaptive scheduler removes systems that aren't matched with entities from the main loop
+- Code paths are designed to minimize branching and bypass unused features
 
-If you have questions, suggestions or a Flecs project you'd like to show off, [join the Flecs Discord](https://discord.gg/MRSAZqb)!
+Flecs comes with the following optional utilities:
+- Snapshots enable saving & restoring the state of a game
+- A reflection-free serializer allows for fast serializing/deserializing of component data to a file/buffer
+- A module system for organizing components and systems into reusable units
+- A statistics API for monitoring runtime performance of an application
+- [A minimal reflection system](https://github.com/flecs-hub/flecs-meta) for introspecting component values
+- [A REST API](https://github.com/flecs-hub/flecs-rest) for remotely accessing component data
+- [A Lua binding](https://github.com/flecs-hub/flecs-lua) (work in progress)
+
+[Join the Flecs Discord](https://discord.gg/MRSAZqb)!
 
 ## What is an Entity Component System?
 ECS (Entity Component System) is a design pattern often found in gaming and simulation which produces code that is fast and reusable. Dynamic composition is a first-class citizen in ECS, and there is a strict separation between data and behavior. A framework is an Entity Component System if it:
