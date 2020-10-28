@@ -93,7 +93,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install bake
     - name: Build Flecs
       run: gcc flecs.c -O0 -std=c99 -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -pedantic -Wno-missing-field-initializers --shared
 
