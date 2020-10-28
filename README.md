@@ -34,7 +34,7 @@ Flecs comes with the following optional utilities:
 [Join the Flecs Discord](https://discord.gg/MRSAZqb)!
 
 ## What is an Entity Component System?
-ECS (Entity Component System) is a design pattern often found in gaming and simulation which produces code that is fast and reusable. Dynamic omposition is a first-class citizen in ECS, and there is a strict separation between data and behavior. A framework is an Entity Component System if it:
+ECS (Entity Component System) is a design pattern often found in gaming and simulation which produces code that is fast and reusable. Dynamic composition is a first-class citizen in ECS, and there is a strict separation between data and behavior. A framework is an Entity Component System if it:
 
 - Has _entities_ that are unique identifiers
 - Has _components_ that are plain data types
