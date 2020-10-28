@@ -86,11 +86,7 @@ jobs:
   amalgamated-source:
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler: [gcc, clang]
-
+    
     steps:
     - uses: actions/checkout@v2
     - name: Build Flecs
