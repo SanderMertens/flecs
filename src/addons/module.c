@@ -37,7 +37,10 @@ ecs_entity_t ecs_import(
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
     const char *old_name_prefix = world->name_prefix;
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, module_name);
+    char *path = ecs_module_path_from_c(module_name);
+    ecs_entity_t e = ecs_lookup_fullpath(world, path);
+    ecs_os_free(path);
+    
     if (!e) {
         ecs_trace_1("import %s", module_name);
         ecs_log_push();
