@@ -83,11 +83,15 @@ jobs:
         bake/bake run test\api
         bake/bake run test\collections
 
-  amalgamated-source:
+  amalgamated-linux:
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]    
     
     steps:
     - uses: actions/checkout@v2
     - name: Build Flecs
-      run: gcc flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
+      run: ${{ compiler }} flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
