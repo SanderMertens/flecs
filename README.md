@@ -20,9 +20,11 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 **In flecs you only pay for what you use:**
 - A customizable core makes it easy to strip unnecessary features from the library
 - An adaptive scheduler removes systems that aren't matched with entities from the main loop
+- Zero-memory overhead for components that have no data (tags)
 - Code paths are designed to minimize branching and bypass unused features
 
-Flecs comes with the following optional utilities:
+Flecs comes with the following optional features:
+- Systems that are invoked when adding/removing/setting components
 - Snapshots enable saving & restoring the state of a game
 - A reflection-free serializer allows for fast serializing/deserializing of component data to a file/buffer
 - A module system for organizing components and systems into reusable units
