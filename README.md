@@ -22,6 +22,7 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 - An adaptive scheduler removes systems that aren't matched with entities from the main loop
 - Zero-memory overhead for components that have no data (tags)
 - Code paths are designed to minimize branching and bypass unused features
+- Optional ctor/dtor/copy/move callbacks, with no overhead for plain data components
 
 Flecs comes with the following optional features:
 - Systems that are invoked when adding/removing/setting components
