@@ -83,12 +83,13 @@ jobs:
         bake/bake run test\api
         bake/bake run test\collections
 
-  amalgamated-linux:
+  amalgamated:
     timeout-minutes: 10
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macOS-latest]
         compiler: [gcc, clang]    
     
     steps:
