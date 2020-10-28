@@ -12,7 +12,7 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 - Easy to integrate, fast to compile with core that is entirely written in C99
 - Includes C++11 API that enforces type safety & tightly integrates with modern C++ idioms
 - Provides (SoA) access to raw component arrays for optimal cache efficiency and vectorization
-- Archetype-storage with unique graph-based design enables entity mutations with overhead measured in nanoseconds
+- Archetype-storage with unique graph-based design enables high performance entity mutations 
 - Flexible API primitives allow for efficient implementation of prefabs, runtime tags and entity graphs
 - Supports advanced queries that are evaluated offline so no searching is performed in the main loop
 - Lockless threading design allows for efficient execution of systems on multiple threads
