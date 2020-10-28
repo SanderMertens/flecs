@@ -82,3 +82,20 @@ jobs:
         bake/bake run test\cpp_api
         bake/bake run test\api
         bake/bake run test\collections
+
+  amalgamated-source:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install bake
+    - name: Build Flecs
+      run: gcc flecs.c -O0 -std=c99 -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -pedantic -Wno-missing-field-initializers --shared
+
+    - name: Build Flecs (release)
+      run: gcc flecs.c -O0 -std=c99 -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -pedantic -Wno-missing-field-initializers -flto -O3 -DNDEBUG --shared
