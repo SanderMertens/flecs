@@ -9790,7 +9790,7 @@ int32_t ecs_table_find_column(
     return ecs_type_index_of(table->type, component);
 }
 
-ecs_vector_t* ecs_table_da_get_column(
+ecs_vector_t* ecs_table_get_column(
     ecs_table_t *table,
     int32_t column)
 {
@@ -9860,7 +9860,7 @@ void ecs_table_delete_column(
     ecs_vector_t *vector)
 {
     if (!vector) {
-        vector = ecs_table_da_get_column(table, column);
+        vector = ecs_table_get_column(table, column);
         if (!vector) {
             return;
         }
@@ -9888,7 +9888,7 @@ void ecs_table_delete_column(
     ecs_vector_free(vector);
 }
 
-void* ecs_record_da_get_column(
+void* ecs_record_get_column(
     ecs_record_t *r,
     int32_t column,
     size_t c_size)
