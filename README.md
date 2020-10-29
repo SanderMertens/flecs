@@ -17,23 +17,6 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 - Supports advanced queries that are evaluated offline so no searching is performed in the main loop
 - Lockless threading design allows for efficient execution of systems on multiple threads
 
-**In flecs you only pay for what you use:**
-- A customizable core makes it easy to strip unnecessary features from the library
-- An adaptive scheduler removes systems that aren't matched with entities from the main loop
-- Zero-memory overhead for components that have no data (tags)
-- Code paths are designed to minimize branching and bypass unused features
-- Support for ctor/dtor/copy/move callbacks with no overhead for plain data components
-
-Flecs comes with the following optional features:
-- Systems that are invoked when adding/removing/setting components
-- Snapshots enable saving & restoring the state of a game
-- A reflection-free serializer allows for fast serializing/deserializing of component data to a file/buffer
-- A module system for organizing components and systems into reusable units
-- A statistics API for monitoring runtime performance of an application
-- [A minimal reflection system](https://github.com/flecs-hub/flecs-meta) for introspecting component values
-- [A REST API](https://github.com/flecs-hub/flecs-rest) for remotely accessing component data
-- [A Lua binding](https://github.com/flecs-hub/flecs-lua) (work in progress)
-
 [Join the Flecs Discord](https://discord.gg/MRSAZqb)!
 
 ## What is an Entity Component System?
