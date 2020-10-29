@@ -83,6 +83,33 @@ jobs:
         bake/bake run test\api
         bake/bake run test\collections
 
+  sanitizer:
+    timeout-minutes: 10
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macOS-latest]
+        compiler: [clang]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install bake
+      run: |
+        git clone https://github.com/SanderMertens/bake
+        make -C bake/build-$(uname)
+        bake/bake setup
+        
+    - name: Build Flecs
+      run: bake --strict
+
+    - name: Run tests
+      run: |
+        bake examples/os_api/flecs-os_api-bake
+        bake run test/api --cfg sanitize
+        bake run test/cpp_api --cfg sanitize
+        bake run test/collections --cfg sanitize
+
   amalgamated:
     timeout-minutes: 10
     runs-on: ${{ matrix.os }}
