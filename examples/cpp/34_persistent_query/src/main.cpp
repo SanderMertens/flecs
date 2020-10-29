@@ -48,17 +48,14 @@ int main(int argc, char *argv[]) {
             p.x << ", " << p.y << "}" << std::endl;
     });
 
-    /* Iterate over entities matching the query in a nested for loop */
-    for (auto it : q) {
-        flecs::column<Position> p(it, 1); 
-        flecs::column<const Velocity> v(it, 2);
-   
-        for (auto row : it) {
-            p[row].x += v[row].x;
-            p[row].y += v[row].y;
+    /* Iterate over entities matching the query using iter */
+    q.iter([](flecs::iter it, Position* p, const Velocity* v) {
+        for (auto i : it) {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
 
-            std::cout << "Moved " << it.entity(row).name() << " to {" <<
-                p[row].x << ", " << p[row].y << "}" << std::endl;
+            std::cout << "Moved " << it.entity(i).name() << " to {" <<
+                p[i].x << ", " << p[i].y << "}" << std::endl;
         }
-    }
+    });    
 }

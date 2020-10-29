@@ -1118,5 +1118,5 @@ void Queries_invalid_access_orphaned_query() {
 
     test_expect_abort();
 
-    ecs_iter_t it = ecs_query_iter(sq);  
+    ecs_query_iter(sq);  
 }

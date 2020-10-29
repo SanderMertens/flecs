@@ -3678,7 +3678,7 @@ public:
         }
 
         m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
-    }    
+    }
 
     explicit query(const world& world, const char *expr) {
         std::stringstream str;
@@ -3698,7 +3698,7 @@ public:
             str << "," << expr;
             m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
         }
-    }    
+    }
 
     query_iterator<Components...> begin() const;
 
@@ -3715,6 +3715,7 @@ public:
         }
     }
 
+    /* DEPRECATED */
     template <typename Func>
     void action(Func func) const {
         ecs_iter_t iter = ecs_query_iter(m_query);
@@ -3724,7 +3725,18 @@ public:
             _::action_invoker<Func, Components...> ctx(func);
             ctx.call_system(&iter, func, 0, columns.m_columns);
         }
-    }    
+    }  
+
+    template <typename Func>
+    void iter(Func func) const {
+        ecs_iter_t iter = ecs_query_iter(m_query);
+
+        while (ecs_query_next(&iter)) {
+            _::column_args<Components...> columns(&iter);
+            _::iter_invoker<Func, Components...> ctx(func);
+            ctx.call_system(&iter, func, 0, columns.m_columns);
+        }
+    }        
 };
 
 
@@ -3950,9 +3962,7 @@ public:
         return system_runner_fluent(m_world, m_id, delta_time, param);
     }
 
-    /* Action (or each) is mandatory and always the last thing that is added in 
-     * the fluent method chain. Create system signature from both template 
-     * parameters and anything provided by the signature method. */
+    /* DEPRECATED. Use iter instead. */
     template <typename Func>
     system& action(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
@@ -3966,7 +3976,9 @@ public:
         return *this;
     }
 
-    /* Iter is similar to action, and will ultimately replace it */
+     /* Iter (or each) is mandatory and always the last thing that 
+      * is added in the fluent method chain. Create system signature from both 
+      * template parameters and anything provided by the signature method. */
     template <typename Func>
     system& iter(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
