@@ -2341,6 +2341,17 @@ FLECS_EXPORT
 bool ecs_query_changed(
     ecs_query_t *query);
 
+/** Returns whether query is orphaned.
+ * When the parent query of a subquery is deleted, it is left in an orphaned
+ * state. The only valid operation on an orphaned query is deleting it. Only
+ * subqueries can be orphaned.
+ *
+ * @param query The query.
+ * @return true if query is orphaned, otherwise false.
+ */
+FLECS_EXPORT
+bool ecs_query_orphaned(
+    ecs_query_t *query);
 
 /** @} */
 

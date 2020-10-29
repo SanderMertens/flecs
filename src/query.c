@@ -1908,6 +1908,10 @@ void ecs_query_notify(
         /* Table is non-empty, activate */
         activate_table(world, query, event->table, true);
         break;
+    case EcsQueryOrphan:
+        ecs_assert(query->flags & EcsQueryIsSubquery, ECS_INTERNAL_ERROR, NULL);
+        query->flags |= EcsQueryIsOrphaned;
+        break;
     }
 
     if (notify) {
@@ -2014,6 +2018,10 @@ void ecs_query_free(
 {
     ecs_world_t *world = query->world;
 
+    notify_subqueries(world, query, &(ecs_query_event_t){
+        .kind = EcsQueryOrphan
+    });
+
     ecs_vector_each(query->empty_tables, ecs_matched_table_t, table, {
         free_matched_table(table);
     });
@@ -2051,6 +2059,7 @@ ecs_iter_t ecs_query_iter_page(
     int32_t limit)
 {
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
 
     sort_tables(query->world, query);
 
@@ -2097,6 +2106,9 @@ void ecs_query_set_iter(
     int32_t row,
     int32_t count)
 {
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
+    
     ecs_matched_table_t *table_data = ecs_vector_get(
         query->tables, ecs_matched_table_t, table_index);
     ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2456,6 +2468,8 @@ void ecs_query_order_by(
     ecs_entity_t sort_component,
     ecs_compare_action_t compare)
 {
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
     ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
     query->sort_on_component = sort_component;
@@ -2477,6 +2491,8 @@ void ecs_query_group_by(
     ecs_entity_t sort_component,
     ecs_rank_type_action_t group_table_action)
 {
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
     ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
     query->rank_on_component = sort_component;
@@ -2492,5 +2508,13 @@ void ecs_query_group_by(
 bool ecs_query_changed(
     ecs_query_t *query)
 {
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
     return tables_dirty(query);
+}
+
+bool ecs_query_orphaned(
+    ecs_query_t *query)
+{
+    return query->flags & EcsQueryIsOrphaned;
 }

@@ -64,6 +64,8 @@ void probe_system(ecs_iter_t *it);
 
 void probe_has_entity(Probe *probe, ecs_entity_t e);
 
+void install_test_abort();
+
 #ifdef __cplusplus
 }
 #endif

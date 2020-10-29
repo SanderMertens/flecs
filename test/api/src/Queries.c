@@ -1039,3 +1039,84 @@ void Queries_get_column_size() {
 
     ecs_fini(world);    
 }
+
+void Queries_orphaned_query() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    /* Nonsense subquery, doesn't matter, this is just for orphan testing */
+    ecs_query_t *sq = ecs_subquery_new(world, q, "Position");
+    test_assert(sq != NULL);
+
+    test_assert(!ecs_query_orphaned(sq));
+
+    ecs_query_free(q);
+
+    test_assert(ecs_query_orphaned(sq));
+    
+    ecs_query_free(sq);
+
+    ecs_fini(world);
+}
+
+void Queries_nested_orphaned_query() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    /* Nonsense subquery, doesn't matter, this is just for orphan testing */
+    ecs_query_t *sq = ecs_subquery_new(world, q, "Position");
+    test_assert(sq != NULL);
+
+    ecs_query_t *nsq = ecs_subquery_new(world, sq, "Position");
+    test_assert(nsq != NULL);    
+
+    test_assert(!ecs_query_orphaned(sq));
+    test_assert(!ecs_query_orphaned(nsq));
+
+    ecs_query_free(q);
+
+    test_assert(ecs_query_orphaned(sq));
+    test_assert(ecs_query_orphaned(nsq));
+    
+    ecs_query_free(sq);
+    ecs_query_free(nsq);
+
+    ecs_fini(world);
+}
+
+void Queries_invalid_access_orphaned_query() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    /* Nonsense subquery, doesn't matter, this is just for orphan testing */
+    ecs_query_t *sq = ecs_subquery_new(world, q, "Position");
+    test_assert(sq != NULL);
+
+    test_assert(!ecs_query_orphaned(sq));
+
+    ecs_query_free(q);
+
+    test_expect_abort();
+
+    ecs_iter_t it = ecs_query_iter(sq);  
+}

@@ -184,13 +184,13 @@ typedef int32_t ecs_size_t;
 //// Entity id macro's
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_ROLE_MASK ((ecs_entity_t)0xFF << 56)
+#define ECS_ROLE_MASK         ((ecs_entity_t)0xFF << 56)
 #define ECS_ENTITY_MASK       ((uint64_t)0xFFFFFFFF)
 #define ECS_GENERATION_MASK   ((uint64_t)0xFFFF << 32)
 #define ECS_GENERATION(e)     ((e & ECS_GENERATION_MASK) >> 32)
 #define ECS_GENERATION_INC(e) ((e & ~ECS_GENERATION_MASK) | ((ECS_GENERATION(e) + 1) << 32))
-#define ECS_COMPONENT_MASK ((ecs_entity_t)~ECS_ROLE_MASK)
-#define ECS_TYPE_ROLE_START ECS_CHILDOF
+#define ECS_COMPONENT_MASK    ((ecs_entity_t)~ECS_ROLE_MASK)
+#define ECS_TYPE_ROLE_START   ECS_CHILDOF
 #define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
 
 
@@ -4870,6 +4870,17 @@ FLECS_EXPORT
 bool ecs_query_changed(
     ecs_query_t *query);
 
+/** Returns whether query is orphaned.
+ * When the parent query of a subquery is deleted, it is left in an orphaned
+ * state. The only valid operation on an orphaned query is deleting it. Only
+ * subqueries can be orphaned.
+ *
+ * @param query The query.
+ * @return true if query is orphaned, otherwise false.
+ */
+FLECS_EXPORT
+bool ecs_query_orphaned(
+    ecs_query_t *query);
 
 /** @} */
 

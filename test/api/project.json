@@ -675,7 +675,10 @@
                 "get_owned_tag",
                 "get_shared_tag",
                 "explicit_delete",
-                "get_column_size"
+                "get_column_size",
+                "orphaned_query",
+                "nested_orphaned_query",
+                "invalid_access_orphaned_query"
             ]
         }, {
             "id": "Traits",

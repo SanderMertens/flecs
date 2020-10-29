@@ -226,8 +226,9 @@ typedef struct ecs_table_slice_t {
 #define EcsQueryHasRefs (64)         /* Does query have references */
 #define EcsQueryHasTraits (128)      /* Does query have traits */
 #define EcsQueryIsSubquery (256)     /* Is query a subquery */
-#define EcsQueryHasOutColumns (512)  /* Does query have out columns */
-#define EcsQueryHasOptional (1024)   /* Does query have optional columns */
+#define EcsQueryIsOrphaned (512)     /* Is subquery orphaned */
+#define EcsQueryHasOutColumns (1024) /* Does query have out columns */
+#define EcsQueryHasOptional (2048)   /* Does query have optional columns */
 
 #define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
@@ -237,7 +238,8 @@ typedef enum ecs_query_eventkind_t {
     EcsQueryTableEmpty,
     EcsQueryTableNonEmpty,
     EcsQueryTableRematch,
-    EcsQueryTableUnmatch
+    EcsQueryTableUnmatch,
+    EcsQueryOrphan
 } ecs_query_eventkind_t;
 
 typedef struct ecs_query_event_t {

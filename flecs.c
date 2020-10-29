@@ -258,8 +258,9 @@ typedef struct ecs_table_slice_t {
 #define EcsQueryHasRefs (64)         /* Does query have references */
 #define EcsQueryHasTraits (128)      /* Does query have traits */
 #define EcsQueryIsSubquery (256)     /* Is query a subquery */
-#define EcsQueryHasOutColumns (512)  /* Does query have out columns */
-#define EcsQueryHasOptional (1024)   /* Does query have optional columns */
+#define EcsQueryIsOrphaned (512)     /* Is subquery orphaned */
+#define EcsQueryHasOutColumns (1024) /* Does query have out columns */
+#define EcsQueryHasOptional (2048)   /* Does query have optional columns */
 
 #define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
@@ -269,7 +270,8 @@ typedef enum ecs_query_eventkind_t {
     EcsQueryTableEmpty,
     EcsQueryTableNonEmpty,
     EcsQueryTableRematch,
-    EcsQueryTableUnmatch
+    EcsQueryTableUnmatch,
+    EcsQueryOrphan
 } ecs_query_eventkind_t;
 
 typedef struct ecs_query_event_t {
@@ -8215,7 +8217,10 @@ ecs_entity_t ecs_import(
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
     const char *old_name_prefix = world->name_prefix;
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, module_name);
+    char *path = ecs_module_path_from_c(module_name);
+    ecs_entity_t e = ecs_lookup_fullpath(world, path);
+    ecs_os_free(path);
+    
     if (!e) {
         ecs_trace_1("import %s", module_name);
         ecs_log_push();
@@ -15433,6 +15438,10 @@ void ecs_query_notify(
         /* Table is non-empty, activate */
         activate_table(world, query, event->table, true);
         break;
+    case EcsQueryOrphan:
+        ecs_assert(query->flags & EcsQueryIsSubquery, ECS_INTERNAL_ERROR, NULL);
+        query->flags |= EcsQueryIsOrphaned;
+        break;
     }
 
     if (notify) {
@@ -15539,6 +15548,10 @@ void ecs_query_free(
 {
     ecs_world_t *world = query->world;
 
+    notify_subqueries(world, query, &(ecs_query_event_t){
+        .kind = EcsQueryOrphan
+    });
+
     ecs_vector_each(query->empty_tables, ecs_matched_table_t, table, {
         free_matched_table(table);
     });
@@ -15576,6 +15589,7 @@ ecs_iter_t ecs_query_iter_page(
     int32_t limit)
 {
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
 
     sort_tables(query->world, query);
 
@@ -15622,6 +15636,9 @@ void ecs_query_set_iter(
     int32_t row,
     int32_t count)
 {
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
+    
     ecs_matched_table_t *table_data = ecs_vector_get(
         query->tables, ecs_matched_table_t, table_index);
     ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -15981,6 +15998,8 @@ void ecs_query_order_by(
     ecs_entity_t sort_component,
     ecs_compare_action_t compare)
 {
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
     ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
     query->sort_on_component = sort_component;
@@ -16002,6 +16021,8 @@ void ecs_query_group_by(
     ecs_entity_t sort_component,
     ecs_rank_type_action_t group_table_action)
 {
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
     ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
     query->rank_on_component = sort_component;
@@ -16017,7 +16038,15 @@ void ecs_query_group_by(
 bool ecs_query_changed(
     ecs_query_t *query)
 {
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
     return tables_dirty(query);
+}
+
+bool ecs_query_orphaned(
+    ecs_query_t *query)
+{
+    return query->flags & EcsQueryIsOrphaned;
 }
 
 ecs_entity_t ecs_component_id_from_id(

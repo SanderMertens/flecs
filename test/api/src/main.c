@@ -622,6 +622,9 @@ void Queries_get_owned_tag(void);
 void Queries_get_shared_tag(void);
 void Queries_explicit_delete(void);
 void Queries_get_column_size(void);
+void Queries_orphaned_query(void);
+void Queries_nested_orphaned_query(void);
+void Queries_invalid_access_orphaned_query(void);
 
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
@@ -3710,6 +3713,18 @@ bake_test_case Queries_testcases[] = {
     {
         "get_column_size",
         Queries_get_column_size
+    },
+    {
+        "orphaned_query",
+        Queries_orphaned_query
+    },
+    {
+        "nested_orphaned_query",
+        Queries_nested_orphaned_query
+    },
+    {
+        "invalid_access_orphaned_query",
+        Queries_invalid_access_orphaned_query
     }
 };
 
@@ -6846,7 +6861,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        27,
+        30,
         Queries_testcases
     },
     {
