@@ -273,6 +273,7 @@ struct ecs_query_t {
     ecs_rank_type_action_t group_table;
 
     /* Subqueries */
+    ecs_query_t *parent;
     ecs_vector_t *subqueries;
 
     /* The query kind determines how it is registered with tables */

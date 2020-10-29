@@ -2353,7 +2353,7 @@ size_t append_to_str(
     }
     
     if (to_write) {
-        ecs_os_strcpy(ptr, str);
+        ecs_os_strncpy(ptr, str, to_write);
     }
 
     (*required) += len;

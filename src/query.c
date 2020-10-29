@@ -1873,6 +1873,27 @@ void rematch_tables(
     }
 }
 
+static
+void remove_subquery(
+    ecs_query_t *parent, 
+    ecs_query_t *sub)
+{
+    ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(sub != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(parent->subqueries != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t i, count = ecs_vector_count(parent->subqueries);
+    ecs_query_t **sq = ecs_vector_first(parent->subqueries, ecs_query_t*);
+
+    for (i = 0; i < count; i ++) {
+        if (sq[i] == sub) {
+            break;
+        }
+    }
+
+    ecs_vector_remove_index(parent->subqueries, ecs_query_t*, i);
+}
+
 /* -- Private API -- */
 
 void ecs_query_notify(
@@ -1911,6 +1932,7 @@ void ecs_query_notify(
     case EcsQueryOrphan:
         ecs_assert(query->flags & EcsQueryIsSubquery, ECS_INTERNAL_ERROR, NULL);
         query->flags |= EcsQueryIsOrphaned;
+        query->parent = NULL;
         break;
     }
 
@@ -2009,6 +2031,7 @@ ecs_query_t* ecs_subquery_new(
     ecs_sig_t sig = { 0 };
     ecs_sig_init(world, NULL, expr, &sig);
     ecs_query_t *result = ecs_query_new_w_sig_intern(world, 0, &sig, true);
+    result->parent = parent;
     add_subquery(world, parent, result);
     return result;
 }
@@ -2017,6 +2040,12 @@ void ecs_query_free(
     ecs_query_t *query)
 {
     ecs_world_t *world = query->world;
+
+    if ((query->flags & EcsQueryIsSubquery) &&
+        !(query->flags & EcsQueryIsOrphaned))
+    {
+        remove_subquery(query->parent, query);
+    }
 
     notify_subqueries(world, query, &(ecs_query_event_t){
         .kind = EcsQueryOrphan
