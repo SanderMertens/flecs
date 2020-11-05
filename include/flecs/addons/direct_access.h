@@ -26,7 +26,7 @@ extern "C" {
  * @param type The components.
  * @return The new or existing table, or NULL if the string contains an error.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_table_t* ecs_table_from_str(
     ecs_world_t *world,
     const char *type);
@@ -38,7 +38,7 @@ ecs_table_t* ecs_table_from_str(
  * @param type The type.
  * @return The new or existing table.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_table_t* ecs_table_from_type(
     ecs_world_t *world,
     ecs_type_t type);
@@ -48,7 +48,7 @@ ecs_table_t* ecs_table_from_type(
  * @param table The table.
  * @return The type of the table.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_table_get_type(
     ecs_table_t *table);
 
@@ -74,7 +74,7 @@ ecs_type_t ecs_table_get_type(
  * @param record The entity-index record for the specified entity.
  * @return A record containing the table and table row.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_record_t ecs_table_insert(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -90,7 +90,7 @@ ecs_record_t ecs_table_insert(
  * @param table The table.
  * @return The number of records in a table.
  */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_table_count(
     ecs_table_t *table);
 
@@ -107,7 +107,7 @@ int32_t ecs_table_count(
  * @param component The component for which to retrieve the column index.
  * @return The column index, or -1 if the table does not have the component.
  */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_table_find_column(
     ecs_table_t *table,
     ecs_entity_t component);
@@ -123,7 +123,7 @@ int32_t ecs_table_find_column(
  * @param column The column index.
  * @return Vector that contains the column array.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* ecs_table_get_column(
     ecs_table_t *table,
     int32_t column);
@@ -152,7 +152,7 @@ ecs_vector_t* ecs_table_get_column(
  * @param column The column index.
  * @param vector The column data to assing.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_table_set_column(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -167,7 +167,7 @@ void ecs_table_set_column(
  * @param table The table.
  * @return The vector containing the table's entities.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* ecs_table_get_entities(
     ecs_table_t *table);
 
@@ -179,7 +179,7 @@ ecs_vector_t* ecs_table_get_entities(
  * @param table The table.
  * @return The vector containing the entity records.
  */ 
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* ecs_table_get_records(
     ecs_table_t *table);
 
@@ -201,7 +201,7 @@ ecs_vector_t* ecs_table_get_records(
  * @param entities The entity vector.
  * @param records The record vector.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_table_set_entities(
     ecs_table_t *table,
     ecs_vector_t *entities,
@@ -240,7 +240,7 @@ void ecs_table_set_entities(
  * @param column The column index.
  * @param vector The column vector to delete.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_table_delete_column(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -266,7 +266,7 @@ void ecs_table_delete_column(
  * @param entity The entity.
  * @return The record that belongs to the entity, or NULL if not found.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_record_t* ecs_record_find(
     ecs_world_t *world,
     ecs_entity_t entity);
@@ -278,7 +278,7 @@ ecs_record_t* ecs_record_find(
  * @param r The record.
  * @param column The column index of the component to get.
  */ 
-FLECS_EXPORT
+FLECS_API
 void* ecs_record_get_column(
     ecs_record_t *r,
     int32_t column,
@@ -300,7 +300,7 @@ void* ecs_record_get_column(
  * @param size The size of the component.
  * @param value Pointer to the value to copy.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_record_copy_to(
     ecs_world_t *world,
     ecs_record_t *r,
@@ -321,7 +321,7 @@ void ecs_record_copy_to(
  * @param size The size of the component.
  * @param value Pointer to the value to move. 
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_record_copy_pod_to(
     ecs_world_t *world,
     ecs_record_t *r,
@@ -342,7 +342,7 @@ void ecs_record_copy_pod_to(
  * @param size The size of the component.
  * @param value Pointer to the value to move.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_record_move_to(
     ecs_world_t *world,
     ecs_record_t *r,

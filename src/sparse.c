@@ -256,6 +256,7 @@ void* get_sparse(
     
     ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
+    (void)dense;
 
     return DATA(chunk->data, sparse->size, offset);
 }
@@ -389,6 +390,7 @@ void* _ecs_sparse_get_or_create(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
 
     uint64_t gen = strip_generation(&index);
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
@@ -459,6 +461,8 @@ void* _ecs_sparse_remove_get(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
+
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     uint64_t gen = strip_generation(&index);
     int32_t offset = OFFSET(index);
@@ -550,6 +554,7 @@ void* _ecs_sparse_get(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(dense_index < sparse->count, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
 
     dense_index ++;
 
@@ -572,6 +577,7 @@ void* _ecs_sparse_get_sparse(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
     return try_sparse(sparse, index);
 }
 
@@ -583,6 +589,7 @@ void* _ecs_sparse_get_sparse_any(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
     return try_sparse_any(sparse, index);
 }
 

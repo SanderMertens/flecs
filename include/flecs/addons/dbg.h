@@ -29,29 +29,29 @@ typedef struct ecs_dbg_table_t {
     int32_t entities_count;
 } ecs_dbg_table_t;
 
-FLECS_EXPORT
+FLECS_API
 void ecs_dbg_entity(
     ecs_world_t *world, 
     ecs_entity_t entity, 
     ecs_dbg_entity_t *dbg_out);
 
-FLECS_EXPORT
+FLECS_API
 ecs_table_t *ecs_dbg_find_table(
     ecs_world_t *world,
     ecs_type_t type);
 
-FLECS_EXPORT
+FLECS_API
 ecs_table_t *ecs_dbg_get_table(
     ecs_world_t *world,
     int32_t index);
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_dbg_filter_table(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_filter_t *filter);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_dbg_table(
     ecs_world_t *world, 
     ecs_table_t *table, 

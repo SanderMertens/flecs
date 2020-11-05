@@ -72,7 +72,7 @@ typedef struct ecs_strbuf_t {
 
 /* Append format string to a buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_append(
     ecs_strbuf_t *buffer,
     const char *fmt,
@@ -80,7 +80,7 @@ bool ecs_strbuf_append(
 
 /* Append format string with argument list to a buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_vappend(
     ecs_strbuf_t *buffer,
     const char *fmt,
@@ -88,77 +88,77 @@ bool ecs_strbuf_vappend(
 
 /* Append string to buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_appendstr(
     ecs_strbuf_t *buffer,
     const char *str);
 
 /* Append source buffer to destination buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_mergebuff(
     ecs_strbuf_t *dst_buffer,
     ecs_strbuf_t *src_buffer);
 
 /* Append string to buffer, transfer ownership to buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_appendstr_zerocpy(
     ecs_strbuf_t *buffer,
     char *str);
 
 /* Append string to buffer, do not free/modify string.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_appendstr_zerocpy_const(
     ecs_strbuf_t *buffer,
     const char *str);
 
 /* Append n characters to buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_appendstrn(
     ecs_strbuf_t *buffer,
     const char *str,
     int32_t n);
 
 /* Return result string (also resets buffer) */
-FLECS_EXPORT
+FLECS_API
 char *ecs_strbuf_get(
     ecs_strbuf_t *buffer);
 
 /* Reset buffer without returning a string */
-FLECS_EXPORT
+FLECS_API
 void ecs_strbuf_reset(
     ecs_strbuf_t *buffer);
 
 /* Push a list */
-FLECS_EXPORT
+FLECS_API
 void ecs_strbuf_list_push(
     ecs_strbuf_t *buffer,
     const char *list_open,
     const char *separator);
 
 /* Pop a new list */
-FLECS_EXPORT
+FLECS_API
 void ecs_strbuf_list_pop(
     ecs_strbuf_t *buffer,
     const char *list_close);
 
 /* Insert a new element in list */
-FLECS_EXPORT
+FLECS_API
 void ecs_strbuf_list_next(
     ecs_strbuf_t *buffer);
 
 /* Append formatted string as a new element in list */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_list_append(
     ecs_strbuf_t *buffer,
     const char *fmt,
     ...);
 
 /* Append string as a new element in list */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_list_appendstr(
     ecs_strbuf_t *buffer,
     const char *str);

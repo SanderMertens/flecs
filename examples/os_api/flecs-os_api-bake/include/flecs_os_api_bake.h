@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-FLECS_OS_API_BAKE_EXPORT
+FLECS_OS_API_BAKE_API
 void bake_set_os_api(void);
 
 #ifdef __cplusplus
