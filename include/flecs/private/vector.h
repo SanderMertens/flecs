@@ -61,7 +61,7 @@ typedef int (*ecs_comparator_t)(
     const void* p1,
     const void *p2);
 
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* _ecs_vector_new(
     ecs_size_t elem_size,
     int16_t offset,
@@ -73,7 +73,7 @@ ecs_vector_t* _ecs_vector_new(
 #define ecs_vector_new_t(size, alignment, elem_count) \
     _ecs_vector_new(ECS_VECTOR_U(size, alignment), elem_count)    
 
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* _ecs_vector_from_array(
     ecs_size_t elem_size,
     int16_t offset,
@@ -83,7 +83,7 @@ ecs_vector_t* _ecs_vector_from_array(
 #define ecs_vector_from_array(T, elem_count, array)\
     _ecs_vector_from_array(ECS_VECTOR_T(T), elem_count, array)
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_vector_zero(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -92,25 +92,25 @@ void _ecs_vector_zero(
 #define ecs_vector_zero(vector, T) \
     _ecs_vector_zero(vector, ECS_VECTOR_T(T))
 
-FLECS_EXPORT
+FLECS_API
 void ecs_vector_free(
     ecs_vector_t *vector);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_vector_clear(
     ecs_vector_t *vector);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_vector_assert_size(
     ecs_vector_t* vector_inout,
     ecs_size_t elem_size);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_vector_assert_alignment(
     ecs_vector_t* vector,
     ecs_size_t elem_alignment);    
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_vector_add(
     ecs_vector_t **array_inout,
     ecs_size_t elem_size,
@@ -122,7 +122,7 @@ void* _ecs_vector_add(
 #define ecs_vector_add_t(vector, size, alignment) \
     _ecs_vector_add(vector, ECS_VECTOR_U(size, alignment))
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_vector_addn(
     ecs_vector_t **array_inout,
     ecs_size_t elem_size,
@@ -135,7 +135,7 @@ void* _ecs_vector_addn(
 #define ecs_vector_addn_t(vector, size, alignment, elem_count) \
     _ecs_vector_addn(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_vector_get(
     const ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -148,7 +148,7 @@ void* _ecs_vector_get(
 #define ecs_vector_get_t(vector, size, alignment, index) \
     _ecs_vector_get(vector, ECS_VECTOR_U(size, alignment), index)
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_vector_last(
     const ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -157,7 +157,7 @@ void* _ecs_vector_last(
 #define ecs_vector_last(vector, T) \
     (T*)_ecs_vector_last(vector, ECS_VECTOR_T(T))
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_set_min_size(
     ecs_vector_t **array_inout,
     ecs_size_t elem_size,
@@ -167,7 +167,7 @@ int32_t _ecs_vector_set_min_size(
 #define ecs_vector_set_min_size(vector, T, size) \
     _ecs_vector_set_min_size(vector, ECS_VECTOR_T(T), size)
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_set_min_count(
     ecs_vector_t **vector_inout,
     ecs_size_t elem_size,
@@ -177,11 +177,11 @@ int32_t _ecs_vector_set_min_count(
 #define ecs_vector_set_min_count(vector, T, size) \
     _ecs_vector_set_min_count(vector, ECS_VECTOR_T(T), size)
 
-FLECS_EXPORT
+FLECS_API
 void ecs_vector_remove_last(
     ecs_vector_t *vector);
 
-FLECS_EXPORT
+FLECS_API
 bool _ecs_vector_pop(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -191,7 +191,7 @@ bool _ecs_vector_pop(
 #define ecs_vector_pop(vector, T, value) \
     _ecs_vector_pop(vector, ECS_VECTOR_T(T), value)
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_move_index(
     ecs_vector_t **dst,
     ecs_vector_t *src,
@@ -202,7 +202,7 @@ int32_t _ecs_vector_move_index(
 #define ecs_vector_move_index(dst, src, T, index) \
     _ecs_vector_move_index(dst, src, ECS_VECTOR_T(T), index)
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_remove_index(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -215,7 +215,7 @@ int32_t _ecs_vector_remove_index(
 #define ecs_vector_remove_index_t(vector, size, alignment, index) \
     _ecs_vector_remove_index(vector, ECS_VECTOR_U(size, alignment), index)
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_vector_reclaim(
     ecs_vector_t **vector,
     ecs_size_t elem_size,
@@ -224,7 +224,7 @@ void _ecs_vector_reclaim(
 #define ecs_vector_reclaim(vector, T)\
     _ecs_vector_reclaim(vector, ECS_VECTOR_T(T))
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_grow(
     ecs_vector_t **vector,
     ecs_size_t elem_size,
@@ -234,7 +234,7 @@ int32_t _ecs_vector_grow(
 #define ecs_vector_grow(vector, T, size) \
     _ecs_vector_grow(vector, ECS_VECTOR_T(T), size)
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_set_size(
     ecs_vector_t **vector,
     ecs_size_t elem_size,
@@ -247,7 +247,7 @@ int32_t _ecs_vector_set_size(
 #define ecs_vector_set_size_t(vector, size, alignment, elem_count) \
     _ecs_vector_set_size(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_set_count(
     ecs_vector_t **vector,
     ecs_size_t elem_size,
@@ -260,15 +260,15 @@ int32_t _ecs_vector_set_count(
 #define ecs_vector_set_count_t(vector, size, alignment, elem_count) \
     _ecs_vector_set_count(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_vector_count(
     const ecs_vector_t *vector);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_vector_size(
     const ecs_vector_t *vector);
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_vector_first(
     const ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -280,7 +280,7 @@ void* _ecs_vector_first(
 #define ecs_vector_first_t(vector, size, alignment) \
     _ecs_vector_first(vector, ECS_VECTOR_U(size, alignment))
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_vector_sort(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -290,7 +290,7 @@ void _ecs_vector_sort(
 #define ecs_vector_sort(vector, T, compare_action) \
     _ecs_vector_sort(vector, ECS_VECTOR_T(T), compare_action)
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_vector_memory(
     const ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -304,7 +304,7 @@ void _ecs_vector_memory(
 #define ecs_vector_memory_t(vector, size, alignment, allocd, used) \
     _ecs_vector_memory(vector, ECS_VECTOR_U(size, alignment), allocd, used)
 
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* _ecs_vector_copy(
     const ecs_vector_t *src,
     ecs_size_t elem_size,

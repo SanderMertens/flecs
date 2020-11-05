@@ -19,7 +19,7 @@ extern "C" {
  * @param world The world to snapshot.
  * @param return The snapshot.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_snapshot_t* ecs_snapshot_take(
     ecs_world_t *world);
 
@@ -31,7 +31,7 @@ ecs_snapshot_t* ecs_snapshot_take(
  * @param next A function pointer to the next operation for the iterator.
  * @param return The snapshot.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_snapshot_t* ecs_snapshot_take_w_iter(
     ecs_iter_t *iter,
     ecs_iter_next_action_t action);
@@ -50,7 +50,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
  * @param world The world to restore the snapshot to.
  * @param snapshot The snapshot to restore. 
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_snapshot_restore(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot);
@@ -59,7 +59,7 @@ void ecs_snapshot_restore(
  *
  * @param snapshot The snapshot to iterate over.
  * @return Iterator to snapshot data. */
-FLECS_EXPORT
+FLECS_API
 ecs_iter_t ecs_snapshot_iter(
     ecs_snapshot_t *snapshot,
     const ecs_filter_t *filter);
@@ -69,7 +69,7 @@ ecs_iter_t ecs_snapshot_iter(
  * @param iter The snapshot iterator.
  * @return True if more data is available, otherwise false.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_snapshot_next(
     ecs_iter_t *iter);
 
@@ -80,7 +80,7 @@ bool ecs_snapshot_next(
  * @param world The world.
  * @param snapshot The snapshot to free. 
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_snapshot_free(
     ecs_snapshot_t *snapshot);
     

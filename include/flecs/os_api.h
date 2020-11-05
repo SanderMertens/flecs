@@ -238,20 +238,20 @@ typedef struct ecs_os_api_t {
     ecs_os_api_module_to_path_t module_to_etc_;    
 } ecs_os_api_t;
 
-FLECS_EXPORT
+FLECS_API
 extern ecs_os_api_t ecs_os_api;
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_init(void);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_fini(void);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_set_api(
     ecs_os_api_t *os_api);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_set_api_defaults(void);
 
 /* Memory management */
@@ -315,16 +315,16 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_get_time(time_out) ecs_os_api.get_time_(time_out)
 
 /* Logging (use functions to avoid using variadic macro arguments) */
-FLECS_EXPORT
+FLECS_API
 void ecs_os_log(const char *fmt, ...);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_warn(const char *fmt, ...);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_err(const char *fmt, ...);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_dbg(const char *fmt, ...);
 
 /* Application termination */
@@ -340,53 +340,53 @@ void ecs_os_dbg(const char *fmt, ...);
 #define ecs_os_module_to_etc(lib) ecs_os_api.module_to_etc_(lib)
 
 /* Sleep with floating point time */
-FLECS_EXPORT
+FLECS_API
 void ecs_sleepf(
     double t);
 
 /* Measure time since provided timestamp */
-FLECS_EXPORT
+FLECS_API
 double ecs_time_measure(
     ecs_time_t *start);
 
 /* Calculate difference between two timestamps */
-FLECS_EXPORT
+FLECS_API
 ecs_time_t ecs_time_sub(
     ecs_time_t t1,
     ecs_time_t t2);
 
 /* Convert time value to a double */
-FLECS_EXPORT
+FLECS_API
 double ecs_time_to_double(
     ecs_time_t t);
 
-FLECS_EXPORT
+FLECS_API
 void* ecs_os_memdup(
     const void *src, 
     ecs_size_t size);
 
 /** Are heap functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_heap(void);
 
 /** Are threading functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_threading(void);
 
 /** Are time functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_time(void);
 
 /** Are logging functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_logging(void);
 
 /** Are dynamic library functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_dl(void);
 
 /** Are module path functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_modules(void);
 
 #ifdef __cplusplus

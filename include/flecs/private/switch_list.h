@@ -21,66 +21,66 @@ typedef struct ecs_switch_t {
     ecs_vector_t *values;
 } ecs_switch_t;
 
-FLECS_EXPORT
+FLECS_API
 ecs_switch_t* ecs_switch_new(
     uint64_t min, 
     uint64_t max,
     int32_t elements);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_free(
     ecs_switch_t *sw);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_add(
     ecs_switch_t *sw);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_set_count(
     ecs_switch_t *sw,
     int32_t count);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_set_min_count(
     ecs_switch_t *sw,
     int32_t count);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_addn(
     ecs_switch_t *sw,
     int32_t count);    
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
     uint64_t value);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_remove(
     ecs_switch_t *sw,
     int32_t element);
 
-FLECS_EXPORT
+FLECS_API
 uint64_t ecs_switch_get(
     const ecs_switch_t *sw,
     int32_t element);
 
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* ecs_switch_values(
     const ecs_switch_t *sw);    
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_switch_case_count(
     const ecs_switch_t *sw,
     uint64_t value);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_switch_next(
     const ecs_switch_t *sw,
     int32_t elem);

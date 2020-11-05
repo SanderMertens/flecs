@@ -16,7 +16,7 @@ extern "C" {
 //// Components
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_EXPORT
+FLECS_API
 extern ecs_type_t 
     ecs_type(EcsTimer),
     ecs_type(EcsRateFilter);
@@ -58,7 +58,7 @@ typedef struct EcsRateFilter {
  * @param timeout The timeout value.
  * @return The timer entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_set_timeout(
     ecs_world_t *world,
     ecs_entity_t timer,
@@ -76,7 +76,7 @@ ecs_entity_t ecs_set_timeout(
  * @param timer The timer.
  * @return The current timeout value, or 0 if no timer is active.
  */
-FLECS_EXPORT
+FLECS_API
 float ecs_get_timeout(
     ecs_world_t *world,
     ecs_entity_t timer);
@@ -96,7 +96,7 @@ float ecs_get_timeout(
  * @param interval The interval value.
  * @return The timer entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t timer,
@@ -110,7 +110,7 @@ ecs_entity_t ecs_set_interval(
  * @param timer The timer for which to set the interval. If 0, an entity will be created.
  * @return The current interval value, or 0 if no timer is active.
  */
-FLECS_EXPORT
+FLECS_API
 float ecs_get_interval(
     ecs_world_t *world,
     ecs_entity_t timer);
@@ -124,7 +124,7 @@ float ecs_get_interval(
  * @param world The world.
  * @param timer The timer to start.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_start_timer(
     ecs_world_t *world,
     ecs_entity_t timer);
@@ -136,7 +136,7 @@ void ecs_start_timer(
  * @param world The world.
  * @param timer The timer to stop.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_stop_timer(
     ecs_world_t *world,
     ecs_entity_t timer);
@@ -152,7 +152,7 @@ void ecs_stop_timer(
  * @param source The tick source (0 to use frames)
  * @return The filter entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_set_rate_filter(
     ecs_world_t *world,
     ecs_entity_t filter,
@@ -179,7 +179,7 @@ ecs_entity_t ecs_set_rate_filter(
  * @param system The system to associate with the timer.
  * @param timer The timer to associate with the system.
  */ 
-FLECS_EXPORT
+FLECS_API
 void ecs_set_tick_source(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -195,7 +195,7 @@ typedef struct FlecsTimer {
     int32_t dummy;
 } FlecsTimer;
 
-FLECS_EXPORT
+FLECS_API
 void FlecsTimerImport(
     ecs_world_t *world);
 

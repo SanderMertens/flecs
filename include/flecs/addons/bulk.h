@@ -20,7 +20,7 @@ extern "C" {
  * @param entity_add The entity to add.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_add_entity(
     ecs_world_t *world,
     ecs_entity_t entity_add,
@@ -34,7 +34,7 @@ void ecs_bulk_add_entity(
  * @param type The type to add.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_add_type(
     ecs_world_t *world,
     ecs_type_t type,
@@ -59,7 +59,7 @@ void ecs_bulk_add_type(
  * @param entity_remove The entity to remove.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_remove_entity(
     ecs_world_t *world,
     ecs_entity_t entity_remove,
@@ -73,7 +73,7 @@ void ecs_bulk_remove_entity(
  * @param type The type to remove.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_remove_type(
     ecs_world_t *world,
     ecs_type_t type,
@@ -98,7 +98,7 @@ void ecs_bulk_remove_type(
  * @param to_remove The type to remove.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_add_remove_type(
     ecs_world_t *world,
     ecs_type_t to_add,
@@ -123,7 +123,7 @@ void ecs_bulk_add_remove_type(
  * @param world The world.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_delete(
     ecs_world_t *world,
     const ecs_filter_t *filter);

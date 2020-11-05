@@ -143,27 +143,27 @@ void fini_store(ecs_world_t *world) {
 /* -- Public functions -- */
 
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_heap(void);
 
 /** Are threading functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_threading(void);
 
 /** Are time functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_time(void);
 
 /** Are logging functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_logging(void);
 
 /** Are dynamic library functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_dl(void);
 
 /** Are module path functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_modules(void);
 
 

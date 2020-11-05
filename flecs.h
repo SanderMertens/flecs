@@ -79,17 +79,17 @@
 
 /* Convenience macro for exporting symbols */
 #ifndef flecs_STATIC
-#if flecs_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define FLECS_EXPORT __declspec(dllexport)
-#elif flecs_EXPORTS
-  #define FLECS_EXPORT __attribute__((__visibility__("default")))
+#if flecs_APIS && (defined(_MSC_VER) || defined(__MINGW32__))
+  #define FLECS_API __declspec(dllexport)
+#elif flecs_APIS
+  #define FLECS_API __attribute__((__visibility__("default")))
 #elif defined _MSC_VER
-  #define FLECS_EXPORT __declspec(dllimport)
+  #define FLECS_API __declspec(dllimport)
 #else
-  #define FLECS_EXPORT
+  #define FLECS_API
 #endif
 #else
-  #define FLECS_EXPORT
+  #define FLECS_API
 #endif
 
 #endif
@@ -397,7 +397,7 @@ typedef int (*ecs_comparator_t)(
     const void* p1,
     const void *p2);
 
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* _ecs_vector_new(
     ecs_size_t elem_size,
     int16_t offset,
@@ -409,7 +409,7 @@ ecs_vector_t* _ecs_vector_new(
 #define ecs_vector_new_t(size, alignment, elem_count) \
     _ecs_vector_new(ECS_VECTOR_U(size, alignment), elem_count)    
 
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* _ecs_vector_from_array(
     ecs_size_t elem_size,
     int16_t offset,
@@ -419,7 +419,7 @@ ecs_vector_t* _ecs_vector_from_array(
 #define ecs_vector_from_array(T, elem_count, array)\
     _ecs_vector_from_array(ECS_VECTOR_T(T), elem_count, array)
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_vector_zero(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -428,25 +428,25 @@ void _ecs_vector_zero(
 #define ecs_vector_zero(vector, T) \
     _ecs_vector_zero(vector, ECS_VECTOR_T(T))
 
-FLECS_EXPORT
+FLECS_API
 void ecs_vector_free(
     ecs_vector_t *vector);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_vector_clear(
     ecs_vector_t *vector);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_vector_assert_size(
     ecs_vector_t* vector_inout,
     ecs_size_t elem_size);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_vector_assert_alignment(
     ecs_vector_t* vector,
     ecs_size_t elem_alignment);    
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_vector_add(
     ecs_vector_t **array_inout,
     ecs_size_t elem_size,
@@ -458,7 +458,7 @@ void* _ecs_vector_add(
 #define ecs_vector_add_t(vector, size, alignment) \
     _ecs_vector_add(vector, ECS_VECTOR_U(size, alignment))
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_vector_addn(
     ecs_vector_t **array_inout,
     ecs_size_t elem_size,
@@ -471,7 +471,7 @@ void* _ecs_vector_addn(
 #define ecs_vector_addn_t(vector, size, alignment, elem_count) \
     _ecs_vector_addn(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_vector_get(
     const ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -484,7 +484,7 @@ void* _ecs_vector_get(
 #define ecs_vector_get_t(vector, size, alignment, index) \
     _ecs_vector_get(vector, ECS_VECTOR_U(size, alignment), index)
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_vector_last(
     const ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -493,7 +493,7 @@ void* _ecs_vector_last(
 #define ecs_vector_last(vector, T) \
     (T*)_ecs_vector_last(vector, ECS_VECTOR_T(T))
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_set_min_size(
     ecs_vector_t **array_inout,
     ecs_size_t elem_size,
@@ -503,7 +503,7 @@ int32_t _ecs_vector_set_min_size(
 #define ecs_vector_set_min_size(vector, T, size) \
     _ecs_vector_set_min_size(vector, ECS_VECTOR_T(T), size)
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_set_min_count(
     ecs_vector_t **vector_inout,
     ecs_size_t elem_size,
@@ -513,11 +513,11 @@ int32_t _ecs_vector_set_min_count(
 #define ecs_vector_set_min_count(vector, T, size) \
     _ecs_vector_set_min_count(vector, ECS_VECTOR_T(T), size)
 
-FLECS_EXPORT
+FLECS_API
 void ecs_vector_remove_last(
     ecs_vector_t *vector);
 
-FLECS_EXPORT
+FLECS_API
 bool _ecs_vector_pop(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -527,7 +527,7 @@ bool _ecs_vector_pop(
 #define ecs_vector_pop(vector, T, value) \
     _ecs_vector_pop(vector, ECS_VECTOR_T(T), value)
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_move_index(
     ecs_vector_t **dst,
     ecs_vector_t *src,
@@ -538,7 +538,7 @@ int32_t _ecs_vector_move_index(
 #define ecs_vector_move_index(dst, src, T, index) \
     _ecs_vector_move_index(dst, src, ECS_VECTOR_T(T), index)
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_remove_index(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -551,7 +551,7 @@ int32_t _ecs_vector_remove_index(
 #define ecs_vector_remove_index_t(vector, size, alignment, index) \
     _ecs_vector_remove_index(vector, ECS_VECTOR_U(size, alignment), index)
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_vector_reclaim(
     ecs_vector_t **vector,
     ecs_size_t elem_size,
@@ -560,7 +560,7 @@ void _ecs_vector_reclaim(
 #define ecs_vector_reclaim(vector, T)\
     _ecs_vector_reclaim(vector, ECS_VECTOR_T(T))
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_grow(
     ecs_vector_t **vector,
     ecs_size_t elem_size,
@@ -570,7 +570,7 @@ int32_t _ecs_vector_grow(
 #define ecs_vector_grow(vector, T, size) \
     _ecs_vector_grow(vector, ECS_VECTOR_T(T), size)
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_set_size(
     ecs_vector_t **vector,
     ecs_size_t elem_size,
@@ -583,7 +583,7 @@ int32_t _ecs_vector_set_size(
 #define ecs_vector_set_size_t(vector, size, alignment, elem_count) \
     _ecs_vector_set_size(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
-FLECS_EXPORT
+FLECS_API
 int32_t _ecs_vector_set_count(
     ecs_vector_t **vector,
     ecs_size_t elem_size,
@@ -596,15 +596,15 @@ int32_t _ecs_vector_set_count(
 #define ecs_vector_set_count_t(vector, size, alignment, elem_count) \
     _ecs_vector_set_count(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_vector_count(
     const ecs_vector_t *vector);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_vector_size(
     const ecs_vector_t *vector);
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_vector_first(
     const ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -616,7 +616,7 @@ void* _ecs_vector_first(
 #define ecs_vector_first_t(vector, size, alignment) \
     _ecs_vector_first(vector, ECS_VECTOR_U(size, alignment))
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_vector_sort(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -626,7 +626,7 @@ void _ecs_vector_sort(
 #define ecs_vector_sort(vector, T, compare_action) \
     _ecs_vector_sort(vector, ECS_VECTOR_T(T), compare_action)
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_vector_memory(
     const ecs_vector_t *vector,
     ecs_size_t elem_size,
@@ -640,7 +640,7 @@ void _ecs_vector_memory(
 #define ecs_vector_memory_t(vector, size, alignment, allocd, used) \
     _ecs_vector_memory(vector, ECS_VECTOR_U(size, alignment), allocd, used)
 
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* _ecs_vector_copy(
     const ecs_vector_t *src,
     ecs_size_t elem_size,
@@ -807,11 +807,11 @@ extern "C" {
 
 typedef struct ecs_sparse_t ecs_sparse_t;
 
-FLECS_EXPORT
+FLECS_API
 ecs_sparse_t* _ecs_sparse_new(
     ecs_size_t elem_size);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_sparse_set_id_source(
     ecs_sparse_t *sparse,
     uint64_t *id_source);
@@ -819,15 +819,15 @@ void ecs_sparse_set_id_source(
 #define ecs_sparse_new(type)\
     _ecs_sparse_new(sizeof(type))
 
-FLECS_EXPORT
+FLECS_API
 void ecs_sparse_free(
     ecs_sparse_t *sparse);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_sparse_clear(
     ecs_sparse_t *sparse);
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size);
@@ -835,25 +835,25 @@ void* _ecs_sparse_add(
 #define ecs_sparse_add(sparse, type)\
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
 
-FLECS_EXPORT
+FLECS_API
 uint64_t ecs_sparse_last_id(
     ecs_sparse_t *sparse);
 
-FLECS_EXPORT
+FLECS_API
 uint64_t ecs_sparse_new_id(
     ecs_sparse_t *sparse);
 
-FLECS_EXPORT
+FLECS_API
 const uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
     int32_t count);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_sparse_remove(
     ecs_sparse_t *sparse,
     uint64_t index);
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_sparse_remove_get(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -862,17 +862,17 @@ void* _ecs_sparse_remove_get(
 #define ecs_sparse_remove_get(sparse, type, index)\
     ((type*)_ecs_sparse_remove_get(sparse, sizeof(type), index))
 
-FLECS_EXPORT
+FLECS_API
 void ecs_sparse_set_generation(
     ecs_sparse_t *sparse,
     uint64_t index);    
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_sparse_exists(
     ecs_sparse_t *sparse,
     uint64_t index);
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -881,20 +881,20 @@ void* _ecs_sparse_get(
 #define ecs_sparse_get(sparse, type, index)\
     ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
     uint64_t index);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_sparse_size(
     const ecs_sparse_t *sparse);
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -903,7 +903,7 @@ void* _ecs_sparse_get_sparse(
 #define ecs_sparse_get_sparse(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_sparse_get_sparse_any(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -912,7 +912,7 @@ void* _ecs_sparse_get_sparse_any(
 #define ecs_sparse_get_sparse_any(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse_any(sparse, sizeof(type), index))
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_sparse_get_or_create(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -921,7 +921,7 @@ void* _ecs_sparse_get_or_create(
 #define ecs_sparse_get_or_create(sparse, type, index)\
     ((type*)_ecs_sparse_get_or_create(sparse, sizeof(type), index))
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_sparse_set(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -932,25 +932,25 @@ void* _ecs_sparse_set(
     ((type*)_ecs_sparse_set(sparse, sizeof(type), index, value))
 
 
-FLECS_EXPORT
+FLECS_API
 const uint64_t* ecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_sparse_set_size(
     ecs_sparse_t *sparse,
     int32_t elem_count);
 
-FLECS_EXPORT
+FLECS_API
 ecs_sparse_t* ecs_sparse_copy(
     const ecs_sparse_t *src);    
 
-FLECS_EXPORT
+FLECS_API
 void ecs_sparse_restore(
     ecs_sparse_t *dst,
     const ecs_sparse_t *src);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_sparse_memory(
     ecs_sparse_t *sparse,
     int32_t *allocd,
@@ -992,7 +992,7 @@ typedef struct ecs_map_iter_t {
     void *payload;
 } ecs_map_iter_t;
 
-FLECS_EXPORT
+FLECS_API
 ecs_map_t * _ecs_map_new(
     ecs_size_t elem_size,
     ecs_size_t alignment, 
@@ -1001,7 +1001,7 @@ ecs_map_t * _ecs_map_new(
 #define ecs_map_new(T, elem_count)\
     _ecs_map_new(sizeof(T), ECS_ALIGNOF(T), elem_count)
 
-FLECS_EXPORT
+FLECS_API
 void * _ecs_map_get(
     const ecs_map_t *map,
     ecs_size_t elem_size,
@@ -1010,7 +1010,7 @@ void * _ecs_map_get(
 #define ecs_map_get(map, T, key)\
     (T*)_ecs_map_get(map, sizeof(T), (ecs_map_key_t)key)
 
-FLECS_EXPORT
+FLECS_API
 void * _ecs_map_get_ptr(
     const ecs_map_t *map,
     ecs_map_key_t key);
@@ -1018,7 +1018,7 @@ void * _ecs_map_get_ptr(
 #define ecs_map_get_ptr(map, T, key)\
     (T)_ecs_map_get_ptr(map, key)
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_map_set(
     ecs_map_t *map,
     ecs_size_t elem_size,
@@ -1028,32 +1028,32 @@ void _ecs_map_set(
 #define ecs_map_set(map, key, payload)\
     _ecs_map_set(map, sizeof(*payload), (ecs_map_key_t)key, payload);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_map_free(
     ecs_map_t *map);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_map_remove(
     ecs_map_t *map,
     ecs_map_key_t key);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_map_clear(
     ecs_map_t *map);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_map_count(
     const ecs_map_t *map);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_map_bucket_count(
     const ecs_map_t *map);
 
-FLECS_EXPORT
+FLECS_API
 ecs_map_iter_t ecs_map_iter(
     const ecs_map_t *map);
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_map_next(
     ecs_map_iter_t* iter,
     ecs_size_t elem_size,
@@ -1062,7 +1062,7 @@ void* _ecs_map_next(
 #define ecs_map_next(iter, T, key) \
     (T*)_ecs_map_next(iter, sizeof(T), key)
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_map_next_ptr(
     ecs_map_iter_t* iter,
     ecs_map_key_t *key);
@@ -1070,23 +1070,23 @@ void* _ecs_map_next_ptr(
 #define ecs_map_next_ptr(iter, T, key) \
     (T)_ecs_map_next_ptr(iter, key)
 
-FLECS_EXPORT
+FLECS_API
 void ecs_map_grow(
     ecs_map_t *map, 
     int32_t elem_count);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_map_set_size(
     ecs_map_t *map, 
     int32_t elem_count);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_map_memory(
     ecs_map_t *map, 
     int32_t *allocd,
     int32_t *used);
 
-FLECS_EXPORT
+FLECS_API
 ecs_map_t* ecs_map_copy(
     const ecs_map_t *map);
 
@@ -1184,66 +1184,66 @@ typedef struct ecs_switch_t {
     ecs_vector_t *values;
 } ecs_switch_t;
 
-FLECS_EXPORT
+FLECS_API
 ecs_switch_t* ecs_switch_new(
     uint64_t min, 
     uint64_t max,
     int32_t elements);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_free(
     ecs_switch_t *sw);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_add(
     ecs_switch_t *sw);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_set_count(
     ecs_switch_t *sw,
     int32_t count);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_set_min_count(
     ecs_switch_t *sw,
     int32_t count);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_addn(
     ecs_switch_t *sw,
     int32_t count);    
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
     uint64_t value);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_switch_remove(
     ecs_switch_t *sw,
     int32_t element);
 
-FLECS_EXPORT
+FLECS_API
 uint64_t ecs_switch_get(
     const ecs_switch_t *sw,
     int32_t element);
 
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* ecs_switch_values(
     const ecs_switch_t *sw);    
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_switch_case_count(
     const ecs_switch_t *sw,
     uint64_t value);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_switch_next(
     const ecs_switch_t *sw,
     int32_t elem);
@@ -1330,7 +1330,7 @@ typedef struct ecs_strbuf_t {
 
 /* Append format string to a buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_append(
     ecs_strbuf_t *buffer,
     const char *fmt,
@@ -1338,7 +1338,7 @@ bool ecs_strbuf_append(
 
 /* Append format string with argument list to a buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_vappend(
     ecs_strbuf_t *buffer,
     const char *fmt,
@@ -1346,77 +1346,77 @@ bool ecs_strbuf_vappend(
 
 /* Append string to buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_appendstr(
     ecs_strbuf_t *buffer,
     const char *str);
 
 /* Append source buffer to destination buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_mergebuff(
     ecs_strbuf_t *dst_buffer,
     ecs_strbuf_t *src_buffer);
 
 /* Append string to buffer, transfer ownership to buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_appendstr_zerocpy(
     ecs_strbuf_t *buffer,
     char *str);
 
 /* Append string to buffer, do not free/modify string.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_appendstr_zerocpy_const(
     ecs_strbuf_t *buffer,
     const char *str);
 
 /* Append n characters to buffer.
  * Returns false when max is reached, true when there is still space */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_appendstrn(
     ecs_strbuf_t *buffer,
     const char *str,
     int32_t n);
 
 /* Return result string (also resets buffer) */
-FLECS_EXPORT
+FLECS_API
 char *ecs_strbuf_get(
     ecs_strbuf_t *buffer);
 
 /* Reset buffer without returning a string */
-FLECS_EXPORT
+FLECS_API
 void ecs_strbuf_reset(
     ecs_strbuf_t *buffer);
 
 /* Push a list */
-FLECS_EXPORT
+FLECS_API
 void ecs_strbuf_list_push(
     ecs_strbuf_t *buffer,
     const char *list_open,
     const char *separator);
 
 /* Pop a new list */
-FLECS_EXPORT
+FLECS_API
 void ecs_strbuf_list_pop(
     ecs_strbuf_t *buffer,
     const char *list_close);
 
 /* Insert a new element in list */
-FLECS_EXPORT
+FLECS_API
 void ecs_strbuf_list_next(
     ecs_strbuf_t *buffer);
 
 /* Append formatted string as a new element in list */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_list_append(
     ecs_strbuf_t *buffer,
     const char *fmt,
     ...);
 
 /* Append string as a new element in list */
-FLECS_EXPORT
+FLECS_API
 bool ecs_strbuf_list_appendstr(
     ecs_strbuf_t *buffer,
     const char *str);
@@ -1666,20 +1666,20 @@ typedef struct ecs_os_api_t {
     ecs_os_api_module_to_path_t module_to_etc_;    
 } ecs_os_api_t;
 
-FLECS_EXPORT
+FLECS_API
 extern ecs_os_api_t ecs_os_api;
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_init(void);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_fini(void);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_set_api(
     ecs_os_api_t *os_api);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_set_api_defaults(void);
 
 /* Memory management */
@@ -1743,16 +1743,16 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_get_time(time_out) ecs_os_api.get_time_(time_out)
 
 /* Logging (use functions to avoid using variadic macro arguments) */
-FLECS_EXPORT
+FLECS_API
 void ecs_os_log(const char *fmt, ...);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_warn(const char *fmt, ...);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_err(const char *fmt, ...);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_os_dbg(const char *fmt, ...);
 
 /* Application termination */
@@ -1768,53 +1768,53 @@ void ecs_os_dbg(const char *fmt, ...);
 #define ecs_os_module_to_etc(lib) ecs_os_api.module_to_etc_(lib)
 
 /* Sleep with floating point time */
-FLECS_EXPORT
+FLECS_API
 void ecs_sleepf(
     double t);
 
 /* Measure time since provided timestamp */
-FLECS_EXPORT
+FLECS_API
 double ecs_time_measure(
     ecs_time_t *start);
 
 /* Calculate difference between two timestamps */
-FLECS_EXPORT
+FLECS_API
 ecs_time_t ecs_time_sub(
     ecs_time_t t1,
     ecs_time_t t2);
 
 /* Convert time value to a double */
-FLECS_EXPORT
+FLECS_API
 double ecs_time_to_double(
     ecs_time_t t);
 
-FLECS_EXPORT
+FLECS_API
 void* ecs_os_memdup(
     const void *src, 
     ecs_size_t size);
 
 /** Are heap functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_heap(void);
 
 /** Are threading functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_threading(void);
 
 /** Are time functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_time(void);
 
 /** Are logging functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_logging(void);
 
 /** Are dynamic library functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_dl(void);
 
 /** Are module path functions available? */
-FLECS_EXPORT
+FLECS_API
 bool ecs_os_has_modules(void);
 
 #ifdef __cplusplus
@@ -2184,7 +2184,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Type handles to builtin components */
-FLECS_EXPORT
+FLECS_API
 extern ecs_type_t 
     ecs_type(EcsComponent),
     ecs_type(EcsComponentLifecycle),
@@ -2200,14 +2200,14 @@ extern ecs_type_t
 //// Functions used in declarative (macro) API
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_entity(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *id,
     const char *components);
 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_component(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -2215,7 +2215,7 @@ ecs_entity_t ecs_new_component(
     size_t size,
     size_t alignment);
 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_module(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -2223,21 +2223,21 @@ ecs_entity_t ecs_new_module(
     size_t size,
     size_t alignment);
 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_type(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *id,
     const char *components);
 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_prefab(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *id,
     const char *sig);
 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -2246,7 +2246,7 @@ ecs_entity_t ecs_new_system(
     const char *signature,
     ecs_iter_action_t action);
 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_trigger(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -2255,18 +2255,18 @@ ecs_entity_t ecs_new_trigger(
     const char *component,
     ecs_iter_action_t action);
 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_pipeline(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *name,
     const char *expr);
 
-FLECS_EXPORT
+FLECS_API
 char* ecs_module_path_from_c(
     const char *c_name);
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_component_has_actions(
     ecs_world_t *world,
     ecs_entity_t component);
@@ -2324,7 +2324,7 @@ typedef struct ecs_sig_t {
 } ecs_sig_t;
 
 /** Parse signature. */
-FLECS_EXPORT
+FLECS_API
 void ecs_sig_init(
     ecs_world_t *world,
     const char *name,
@@ -2332,12 +2332,12 @@ void ecs_sig_init(
     ecs_sig_t *sig);
 
 /** Release signature resources */
-FLECS_EXPORT
+FLECS_API
 void ecs_sig_deinit(
     ecs_sig_t *sig);
 
 /** Add column to signature. */
-FLECS_EXPORT
+FLECS_API
 int ecs_sig_add(
     ecs_world_t *world,
     ecs_sig_t *sig,
@@ -2349,7 +2349,7 @@ int ecs_sig_add(
     const char *arg_name);
 
 /** Create query based on signature object. */
-FLECS_EXPORT
+FLECS_API
 ecs_query_t* ecs_query_new_w_sig(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -2445,7 +2445,7 @@ extern "C" {
 //// Tracing
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_trace(
     int level,
     const char *file,
@@ -2453,23 +2453,23 @@ void _ecs_trace(
     const char *fmt,
     ...);
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_warn(
     const char *file,
     int32_t line,
     const char *fmt,
     ...);
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_err(
     const char *file,
     int32_t line,
     const char *fmt,
     ...);
-FLECS_EXPORT
+FLECS_API
 void ecs_log_push(void);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_log_pop(void);
 
 #ifndef FLECS_LEGACY
@@ -2517,12 +2517,12 @@ void ecs_log_pop(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Get description for error code */
-FLECS_EXPORT
+FLECS_API
 const char* ecs_strerror(
     int32_t error_code);
 
 /** Abort */
-FLECS_EXPORT
+FLECS_API
 void _ecs_abort(
     int32_t error_code,
     const char *param,
@@ -2533,7 +2533,7 @@ void _ecs_abort(
     _ecs_abort(error_code, param, __FILE__, __LINE__); abort()
 
 /** Assert */
-FLECS_EXPORT
+FLECS_API
 void _ecs_assert(
     bool condition,
     int32_t error_code,
@@ -2550,7 +2550,7 @@ void _ecs_assert(
     assert(condition)
 #endif
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_parser_error(
     const char *name,
     const char *expr, 
@@ -2583,89 +2583,89 @@ void _ecs_parser_error(
 extern "C" {
 #endif
 
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_type_from_entity(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_type_to_entity(
     ecs_world_t *world,
     ecs_type_t type);
 
-FLECS_EXPORT
+FLECS_API
 char* ecs_type_str(
     ecs_world_t *world,
     ecs_type_t type);  
 
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_type_from_str(
     ecs_world_t *world,
     const char *expr);    
 
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_type_find(
     ecs_world_t *world,
     ecs_entity_t *array,
     int32_t count);
 
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_type_merge(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t type_add,
     ecs_type_t type_remove);
 
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_type_add(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity);
 
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_type_remove(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity);
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_type_has_entity(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity);
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_type_has_type(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has);
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_type_owns_entity(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
     bool owned);
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_type_owns_type(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has,
     bool owned);
 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t xor_tag);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_type_index_of(
     ecs_type_t type,
     ecs_entity_t component);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_type_trait_index_of(
     ecs_type_t type, 
     int32_t start_index, 
@@ -3082,14 +3082,14 @@ typedef struct EcsTrigger {
  *
  * @return A new world object
  */
-FLECS_EXPORT
+FLECS_API
 ecs_world_t* ecs_init(void);
 
 /** Same as ecs_init, but with minimal set of modules loaded.
  *
  * @return A new world object
  */
-FLECS_EXPORT
+FLECS_API
 ecs_world_t* ecs_mini(void);
 
 /** Create a new world with arguments.
@@ -3099,7 +3099,7 @@ ecs_world_t* ecs_mini(void);
  *
  * @return A new world object
  */
-FLECS_EXPORT
+FLECS_API
 ecs_world_t* ecs_init_w_args(
     int argc,
     char *argv[]);
@@ -3110,7 +3110,7 @@ ecs_world_t* ecs_init_w_args(
  * @param world The world to delete.
  * @return Zero if successful, non-zero if failed.
  */
-FLECS_EXPORT
+FLECS_API
 int ecs_fini(
     ecs_world_t *world);
 
@@ -3121,7 +3121,7 @@ int ecs_fini(
  * @param world The world.
  * @param action The function to execute.
  * @param ctx Userdata to pass to the function */
-FLECS_EXPORT
+FLECS_API
 void ecs_atfini(
     ecs_world_t *world,
     ecs_fini_action_t action,
@@ -3134,7 +3134,7 @@ void ecs_atfini(
  * @param world The world.
  * @param action The function to execute.
  * @param ctx Userdata to pass to the function */
-FLECS_EXPORT
+FLECS_API
 void ecs_run_post_frame(
     ecs_world_t *world,
     ecs_fini_action_t action,
@@ -3146,7 +3146,7 @@ void ecs_run_post_frame(
  * @param component The component id for which to register the actions
  * @param actions Type that contains the component actions.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_set_component_actions_w_entity(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -3164,7 +3164,7 @@ void ecs_set_component_actions_w_entity(
  * @param world The world.
  * @param ctx A pointer to a user defined structure.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_set_context(
     ecs_world_t *world,
     void *ctx);
@@ -3176,7 +3176,7 @@ void ecs_set_context(
  * @return The context set with ecs_set_context. If no context was set, the
  *         function returns NULL.
  */
-FLECS_EXPORT
+FLECS_API
 void* ecs_get_context(
     ecs_world_t *world);
 
@@ -3186,7 +3186,7 @@ void* ecs_get_context(
  * @return Pointer to the world info. This pointer will remain valid for as long
  *         as the world is valid.
  */
-FLECS_EXPORT
+FLECS_API
 const ecs_world_info_t* ecs_get_world_info(
     ecs_world_t *world);
 
@@ -3199,7 +3199,7 @@ const ecs_world_info_t* ecs_get_world_info(
  * @param world The world.
  * @param entity_count The number of entities to preallocate.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_dim(
     ecs_world_t *world,
     int32_t entity_count);
@@ -3213,7 +3213,7 @@ void ecs_dim(
  * @param type Handle to the type, as obtained by ecs_type_get.
  * @param entity_count The number of entities to preallocate.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_dim_type(
     ecs_world_t *world,
     ecs_type_t type,
@@ -3234,7 +3234,7 @@ void ecs_dim_type(
  * @param id_start The start of the range.
  * @param id_end The end of the range.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_set_entity_range(
     ecs_world_t *world,
     ecs_entity_t id_start,
@@ -3250,7 +3250,7 @@ void ecs_set_entity_range(
  * @param enable True if range checking should be enabled, false to disable.
  * @return The previous value.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable);
@@ -3271,7 +3271,7 @@ bool ecs_enable_range_check(
  * @param enable True if locking is to be enabled.
  * @result The previous value of the setting.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_enable_locking(
     ecs_world_t *world,
     bool enable);
@@ -3281,7 +3281,7 @@ bool ecs_enable_locking(
  *
  * @param world The world.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_lock(
     ecs_world_t *world);
 
@@ -3290,7 +3290,7 @@ void ecs_lock(
  * 
  * @param world The world.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_unlock(
     ecs_world_t *world);
 
@@ -3333,7 +3333,7 @@ void ecs_end_wait(
  *
  * @param level Desired tracing level.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_tracing_enable(
     int level);
 
@@ -3350,7 +3350,7 @@ void ecs_tracing_enable(
  * @param world The world.
  * @return The new entity id.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_id(
     ecs_world_t *world);
 
@@ -3363,7 +3363,7 @@ ecs_entity_t ecs_new_id(
  * @param world The world.
  * @return The new component id.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_component_id(
     ecs_world_t *world);
 
@@ -3375,7 +3375,7 @@ ecs_entity_t ecs_new_component_id(
  * @param entity The entity to initialize the new entity with.
  * @return The new entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity);
@@ -3388,7 +3388,7 @@ ecs_entity_t ecs_new_w_entity(
  * @param type The type to initialize the new entity with.
  * @return The new entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_w_type(
     ecs_world_t *world,
     ecs_type_t type);
@@ -3414,7 +3414,7 @@ ecs_entity_t ecs_new_w_type(
  * @param count The number of entities to create.
  * @return The first entity id of the newly created entities.
  */
-FLECS_EXPORT
+FLECS_API
 const ecs_entity_t* ecs_bulk_new_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3429,7 +3429,7 @@ const ecs_entity_t* ecs_bulk_new_w_entity(
  * @param count The number of entities to create.
  * @return The first entity id of the newly created entities.
  */
-FLECS_EXPORT
+FLECS_API
 const ecs_entity_t* ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
@@ -3447,7 +3447,7 @@ const ecs_entity_t* ecs_bulk_new_w_type(
  * @param data The data arrays to initialize the components with.
  * @return The first entity id of the newly created entities.
  */
-FLECS_EXPORT
+FLECS_API
 const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
@@ -3477,7 +3477,7 @@ const ecs_entity_t* ecs_bulk_new_w_data(
  * @param copy_value If true, the value of components will be copied to dst.
  * @return The destination entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_clone(
     ecs_world_t *world,
     ecs_entity_t dst,
@@ -3500,7 +3500,7 @@ ecs_entity_t ecs_clone(
  * @param entity The entity.
  * @param entity_add The entity to add.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_add_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3515,7 +3515,7 @@ void ecs_add_entity(
  * @param entity The entity.
  * @param type The type to add.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_add_type(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3546,7 +3546,7 @@ void ecs_add_type(
  * @param entity The entity.
  * @param entity_remove The entity to remove.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_remove_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3561,7 +3561,7 @@ void ecs_remove_entity(
  * @param entity The entity.
  * @param type The type to remove.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_remove_type(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3591,7 +3591,7 @@ void ecs_remove_type(
  * @param to_add The entity to add.
  * @param to_remove The entity to remove.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_add_remove_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3606,7 +3606,7 @@ void ecs_add_remove_entity(
  * @param to_add The type to add.
  * @param to_remove The type to remove.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_add_remove_type(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3738,7 +3738,7 @@ void ecs_add_remove_type(
  * @param sw The switch for which to obtain the case.
  * @return The current case for the specified switch. 
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_get_case(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -3759,7 +3759,7 @@ ecs_entity_t ecs_get_case(
  * @param world The world.
  * @param entity The entity.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_clear(
     ecs_world_t *world,
     ecs_entity_t entity);
@@ -3773,7 +3773,7 @@ void ecs_clear(
  * @param world The world.
  * @param entity The entity.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity);
@@ -3786,7 +3786,7 @@ void ecs_delete(
  * @param world The world.
  * @param parent The parent entity.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_delete_children(
     ecs_world_t *world,
     ecs_entity_t parent);
@@ -3807,7 +3807,7 @@ void ecs_delete_children(
  * @param component The entity id of the component to obtain.
  * @return The component pointer, NULL if the entity does not have the component.
  */
-FLECS_EXPORT
+FLECS_API
 const void* ecs_get_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3837,7 +3837,7 @@ const void* ecs_get_w_entity(
  * @param component The entity id of the component to obtain.
  * @return The component pointer, NULL if the entity does not have the component.
  */
-FLECS_EXPORT
+FLECS_API
 const void* ecs_get_ref_w_entity(
     ecs_world_t *world,
     ecs_ref_t *ref,
@@ -3870,7 +3870,7 @@ const void* ecs_get_ref_w_entity(
  * @param is_added Out parameter that returns true if the component was added.
  * @return The component pointer.
  */
-FLECS_EXPORT
+FLECS_API
 void* ecs_get_mut_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3899,7 +3899,7 @@ void* ecs_get_mut_w_entity(
  * @param entity The entity.
  * @param component The entity id of the component that was modified.
  */
-FLECS_EXPORT 
+FLECS_API 
 void ecs_modified_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3936,7 +3936,7 @@ void ecs_modified_w_entity(
  * @param ptr The pointer to the value.
  * @return The entity. A new entity if no entity was provided.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_set_ptr_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -4010,7 +4010,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
  * @param to_check The entity to test for.
  * @return True if the entity has the entity, false if not.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_has_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -4025,7 +4025,7 @@ bool ecs_has_entity(
  * @param type The type to test for.
  * @return True if the entity has the type, false if not.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_has_type(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -4083,7 +4083,7 @@ bool ecs_has_type(
  * @param e The entity.
  * @return True if the entity is alive, false if the entity is not alive.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_is_alive(
     ecs_world_t *world,
     ecs_entity_t e);
@@ -4095,7 +4095,7 @@ bool ecs_is_alive(
  * @param e The entity.
  * @return True if the entity exists, false if the entity does not exist.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_exists(
     ecs_world_t *world,
     ecs_entity_t e);
@@ -4106,7 +4106,7 @@ bool ecs_exists(
  * @param entity The entity.
  * @return The type of the entity, NULL if the entity has no components.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_get_type(
     ecs_world_t *world,
     ecs_entity_t entity);
@@ -4118,7 +4118,7 @@ ecs_type_t ecs_get_type(
  * @param entity The entity.
  * @return The type of the entity, NULL if the entity has no name.
  */
-FLECS_EXPORT
+FLECS_API
 const char* ecs_get_name(
     ecs_world_t *world,
     ecs_entity_t entity);
@@ -4130,7 +4130,7 @@ const char* ecs_get_name(
  * @param entity The entity containing the type role.
  * @return The type role string, or NULL if no type role is provided.
  */
-FLECS_EXPORT
+FLECS_API
 const char* ecs_role_str(
     ecs_entity_t entity);
 
@@ -4143,7 +4143,7 @@ const char* ecs_role_str(
  * @param buffer_len The length of the provided buffer.
  * @return The number of characters required to write the string.
  */
-FLECS_EXPORT
+FLECS_API
 size_t ecs_entity_str(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -4160,7 +4160,7 @@ size_t ecs_entity_str(
  * @param component The entity id of a component that the parent must have.
  * @return The parent of the entity, 0 if no parent was found.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_get_parent_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -4187,7 +4187,7 @@ ecs_entity_t ecs_get_parent_w_entity(
  * @param entity The entity to enable or disable.
  * @param enabled true to enable the entity, false to disable.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_enable(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -4200,7 +4200,7 @@ void ecs_enable(
  * @param entity The entity.
  * @return The number of entities that have the entity.
  */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_count_entity(
     ecs_world_t *world,
     ecs_entity_t entity);
@@ -4212,7 +4212,7 @@ int32_t ecs_count_entity(
  * @param type The type.
  * @return The number of entities that have the type.
  */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_count_type(
     ecs_world_t *world,
     ecs_type_t type);
@@ -4234,7 +4234,7 @@ int32_t ecs_count_type(
  * @param type The type.
  * @return The number of entities that match the specified filter.
  */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_count_w_filter(
     ecs_world_t *world,
     const ecs_filter_t *filter);
@@ -4255,7 +4255,7 @@ int32_t ecs_count_w_filter(
  * @param name The entity name.
  * @return The entity with the specified name, or 0 if no entity was found.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_lookup(
     ecs_world_t *world,
     const char *name);
@@ -4269,7 +4269,7 @@ ecs_entity_t ecs_lookup(
  * @param name The entity name.
  * @return The entity with the specified name, or 0 if no entity was found.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_lookup_child(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -4292,7 +4292,7 @@ ecs_entity_t ecs_lookup_child(
  * @param prefix The path prefix.
  * @return The entity if found, else 0.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_lookup_path_w_sep(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -4332,13 +4332,13 @@ ecs_entity_t ecs_lookup_path_w_sep(
  * This operation can be useful to resolve, for example, a type by its C 
  * identifier, which does not include the Flecs namespacing.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_lookup_symbol(
     ecs_world_t *world,
     const char *name);
 
 /* Add alias for entity to global scope */
-FLECS_EXPORT
+FLECS_API
 void ecs_use(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -4369,7 +4369,7 @@ void ecs_use(
  * @param component The component of the parent.
  * @return The relative entity path.
  */
-FLECS_EXPORT
+FLECS_API
 char* ecs_get_path_w_sep(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -4418,7 +4418,7 @@ char* ecs_get_path_w_sep(
  * @param prefix The prefix used in the path.
  * @return The entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_new_from_path_w_sep(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -4462,7 +4462,7 @@ ecs_entity_t ecs_new_from_path_w_sep(
  * @param prefix The prefix used in the path.
  * @return The entity.
  */ 
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_add_path_w_sep(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -4509,7 +4509,7 @@ ecs_entity_t ecs_add_path_w_sep(
  * @param entity The entity
  * @return True if the entity has children, false if not.
  */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_get_child_count(
     ecs_world_t *world,
     ecs_entity_t entity);
@@ -4522,7 +4522,7 @@ int32_t ecs_get_child_count(
  * @param parent The parent entity for which to iterate the children.
  * @return The iterator.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent);
@@ -4534,7 +4534,7 @@ ecs_iter_t ecs_scope_iter(
  * @param parent The parent entity for which to iterate the children.
  * @return The iterator.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_iter_t ecs_scope_iter_w_filter(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -4548,7 +4548,7 @@ ecs_iter_t ecs_scope_iter_w_filter(
  * @param it The iterator
  * @return True if more data is available, false if not.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_scope_next(
     ecs_iter_t *it);
 
@@ -4563,7 +4563,7 @@ bool ecs_scope_next(
  * @param scope The entity to use as scope.
  * @return The previous scope.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_set_scope(
     ecs_world_t *world,
     ecs_entity_t scope);
@@ -4575,7 +4575,7 @@ ecs_entity_t ecs_set_scope(
  * @param world The world.
  * @return The current scope.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_get_scope(
     ecs_world_t *world);
 
@@ -4588,7 +4588,7 @@ ecs_entity_t ecs_get_scope(
  * @param prefix The name prefix to use.
  * @return The previous prefix.
  */
-FLECS_EXPORT
+FLECS_API
 const char* ecs_set_name_prefix(
     ecs_world_t *world,
     const char *prefix);    
@@ -4609,7 +4609,7 @@ const char* ecs_set_name_prefix(
  * @param filter The filter.
  * @return An iterator that can be used with ecs_filter_next.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_iter_t ecs_filter_iter(
     ecs_world_t *world,
     const ecs_filter_t *filter);  
@@ -4623,7 +4623,7 @@ ecs_iter_t ecs_filter_iter(
  * @param it The iterator
  * @return True if more data is available, false if not.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_filter_next(
     ecs_iter_t *iter);
 
@@ -4669,7 +4669,7 @@ bool ecs_filter_next(
  * @param sig The query signature expression.
  * @return The new query.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_query_t* ecs_query_new(
     ecs_world_t *world,
     const char *sig);
@@ -4697,7 +4697,7 @@ ecs_query_t* ecs_query_new(
  * @param sig The query signature expression.
  * @return The new subquery.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_query_t* ecs_subquery_new(
     ecs_world_t *world,
     ecs_query_t *parent,
@@ -4708,7 +4708,7 @@ ecs_query_t* ecs_subquery_new(
  *
  * @param query The query.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_query_free(
     ecs_query_t *query);
 
@@ -4738,7 +4738,7 @@ void ecs_query_free(
  * @param query The query to iterate.
  * @return The query iterator.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_iter_t ecs_query_iter(
     ecs_query_t *query);  
 
@@ -4751,7 +4751,7 @@ ecs_iter_t ecs_query_iter(
  * @param limit The maximum number of entities to iterate.
  * @return The query iterator.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_iter_t ecs_query_iter_page(
     ecs_query_t *query,
     int32_t offset,
@@ -4766,7 +4766,7 @@ ecs_iter_t ecs_query_iter_page(
  * @param iter The iterator.
  * @returns True if more data is available, false if not.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_query_next(
     ecs_iter_t *iter);      
 
@@ -4778,7 +4778,7 @@ bool ecs_query_next(
  * @param filter The filter to apply to the iterator.
  * @returns True if more data is available, false if not.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_query_next_w_filter(
     ecs_iter_t *iter,
     const ecs_filter_t *filter); 
@@ -4823,7 +4823,7 @@ bool ecs_query_next_worker(
  * @param component The component used to sort.
  * @param compare The compare function used to sort the components.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -4849,7 +4849,7 @@ void ecs_query_order_by(
  * @param component The component used to determine the group rank.
  * @param rank_action The rank action.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_query_group_by(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -4866,7 +4866,7 @@ void ecs_query_group_by(
  * @param query The query.
  * @return true if entities changed, otherwise false.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_query_changed(
     ecs_query_t *query);
 
@@ -4878,7 +4878,7 @@ bool ecs_query_changed(
  * @param query The query.
  * @return true if query is orphaned, otherwise false.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_query_orphaned(
     ecs_query_t *query);
 
@@ -4911,7 +4911,7 @@ bool ecs_query_orphaned(
  * @param column The index identifying the column in a signature.
  * @return A pointer to the column data.
  */
-FLECS_EXPORT
+FLECS_API
 void* ecs_column_w_size(
     const ecs_iter_t *it,
     size_t size,
@@ -4937,7 +4937,7 @@ void* ecs_column_w_size(
  * @param name The column name.
  * @return Index of the column (to be used with ecs_column_* functions).
  */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_column_index_from_name(
     const ecs_iter_t *it,
     const char *name);
@@ -4957,7 +4957,7 @@ int32_t ecs_column_index_from_name(
  * @param index The index identifying the column in a system signature.
  * @return True if column is owned, false if column is not.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_is_owned(
     const ecs_iter_t *it,
     int32_t column);
@@ -4974,7 +4974,7 @@ bool ecs_is_owned(
  * @param row The current row in the table.
  * @return A pointer to the current element.
  */
-FLECS_EXPORT
+FLECS_API
 void *ecs_element_w_size(
     const ecs_iter_t *it,
     size_t size,
@@ -5004,7 +5004,7 @@ void *ecs_element_w_size(
  * @param column The index identifying the column in a signature.
  * @return The source entity for the column. 
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_column_source(
     const ecs_iter_t *it,
     int32_t column);
@@ -5022,7 +5022,7 @@ ecs_entity_t ecs_column_source(
  * @param column The index identifying the column in a signature.
  * @return The entity id of the signature column.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_column_entity(
     const ecs_iter_t *it,
     int32_t column);
@@ -5038,7 +5038,7 @@ ecs_entity_t ecs_column_entity(
  * @param column The index identifying the column in a signature.
  * @return The type for the specified column, or NULL if failed.
  */ 
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_column_type(
     const ecs_iter_t *it,
     int32_t column);
@@ -5048,7 +5048,7 @@ ecs_type_t ecs_column_type(
  * @param it The iterator.
  * @param column The column for which to obtain the size.
  */
-FLECS_EXPORT
+FLECS_API
 size_t ecs_column_size(
     const ecs_iter_t *it,
     int32_t column);
@@ -5060,7 +5060,7 @@ size_t ecs_column_size(
  * @param it Pointer to the it object passed into the system callback.
  * @param column An index identifying the column.
  * @return True if the column is readonly, false otherwise. */
-FLECS_EXPORT
+FLECS_API
 bool ecs_is_readonly(
     const ecs_iter_t *it,
     int32_t column);
@@ -5072,7 +5072,7 @@ bool ecs_is_readonly(
  * @param it The iterator.
  * @return The type of the current table.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_iter_type(
     const ecs_iter_t *it);
 
@@ -5086,7 +5086,7 @@ ecs_type_t ecs_iter_type(
  * @param column The index identifying the column in a table.
  * @return The component array corresponding to the column index.
  */
-FLECS_EXPORT
+FLECS_API
 void* ecs_table_column(
     const ecs_iter_t *it,
     int32_t column);
@@ -5096,7 +5096,7 @@ void* ecs_table_column(
  * @param it The iterator.
  * @param column The column for which to obtain the size.
  */
-FLECS_EXPORT
+FLECS_API
 size_t ecs_table_column_size(
     const ecs_iter_t *it,
     int32_t column);
@@ -5106,7 +5106,7 @@ size_t ecs_table_column_size(
  * @param it The iterator.
  * @param component The component for which to obtain the index.
  */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_table_component_index(
     const ecs_iter_t *it,
     ecs_entity_t component);
@@ -5155,13 +5155,13 @@ int32_t ecs_table_component_index(
  */
 
 /** Begin frame. */
-FLECS_EXPORT
+FLECS_API
 float ecs_frame_begin(
     ecs_world_t *world,
     float delta_time);
 
 /** End frame. */
-FLECS_EXPORT
+FLECS_API
 void ecs_frame_end(
     ecs_world_t *world);
 
@@ -5173,7 +5173,7 @@ void ecs_frame_end(
  * @param world The world
  * @return Whether world is currently staged.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_staging_begin(
     ecs_world_t *world);
 
@@ -5183,7 +5183,7 @@ bool ecs_staging_begin(
  *
  * @param world The world
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_staging_end(
     ecs_world_t *world);
 
@@ -5193,7 +5193,7 @@ void ecs_staging_end(
  *
  * @param world The world.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_merge(
     ecs_world_t *world);
 
@@ -5203,7 +5203,7 @@ void ecs_merge(
  *
  * This operation is thread safe.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_defer_begin(
     ecs_world_t *world);
 
@@ -5212,7 +5212,7 @@ void ecs_defer_begin(
  *
  * This operation is thread safe.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_defer_end(
     ecs_world_t *world);
 
@@ -5223,7 +5223,7 @@ void ecs_defer_end(
  *
  * @param world The world.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_set_automerge(
     ecs_world_t *world,
     bool auto_merge);
@@ -5275,7 +5275,7 @@ extern "C" {
  * @param handles_size Size of the handles_out parameter.
  * @return The module entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_import(
     ecs_world_t *world,
     ecs_module_action_t module,
@@ -5302,7 +5302,7 @@ ecs_entity_t ecs_import(
  * @param module_name The name of the module to load.
  * @param flags The flags to pass to the module.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_import_from_library(
     ecs_world_t *world,
     const char *library_name,
@@ -5429,7 +5429,7 @@ extern "C" {
 //// Components
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_EXPORT
+FLECS_API
 extern ecs_type_t
     ecs_type(EcsTrigger),
     ecs_type(EcsSystem),
@@ -5554,7 +5554,7 @@ typedef struct EcsContext {
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_run(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -5582,7 +5582,7 @@ ecs_entity_t ecs_run(
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -5630,7 +5630,7 @@ typedef void (*ecs_system_status_action_t)(
  * @param action The action.
  * @param ctx Context that will be passed to the action when invoked.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_set_system_status_action(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -5651,31 +5651,31 @@ typedef struct ecs_dbg_system_t {
     void *system_data;
 } ecs_dbg_system_t;
 
-FLECS_EXPORT
+FLECS_API
 int ecs_dbg_system(
     ecs_world_t *world,
     ecs_entity_t system,
     ecs_dbg_system_t *dbg_out);
 
-FLECS_EXPORT
+FLECS_API
 ecs_table_t* ecs_dbg_get_active_table(
     ecs_world_t *world,
     ecs_dbg_system_t *dbg,
     int32_t index);
 
-FLECS_EXPORT
+FLECS_API
 ecs_table_t* ecs_dbg_get_inactive_table(
     ecs_world_t *world,
     ecs_dbg_system_t *dbg,
     int32_t index);
 
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_dbg_get_column_type(
     ecs_world_t *world,
     ecs_entity_t system,
     int32_t column_index);
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_dbg_match_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -5692,7 +5692,7 @@ typedef struct FlecsSystem {
     int32_t dummy; 
 } FlecsSystem;
 
-FLECS_EXPORT
+FLECS_API
 void FlecsSystemImport(
     ecs_world_t *world);
 
@@ -5733,7 +5733,7 @@ extern "C" {
  * @param world The world.
  * @param pipeline The pipeline to set.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_set_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline);       
@@ -5744,7 +5744,7 @@ void ecs_set_pipeline(
  * @param world The world.
  * @param pipeline The pipeline to set.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_get_pipeline(
     ecs_world_t *world);  
 
@@ -5766,7 +5766,7 @@ ecs_entity_t ecs_get_pipeline(
  * @param delta_time The time passed since the last frame.
  * @return false if ecs_quit has been called, true otherwise.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_progress(
     ecs_world_t *world,
     float delta_time);   
@@ -5786,7 +5786,7 @@ bool ecs_progress(
  * @param world The world.
  * @param fps The target FPS.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_set_target_fps(
     ecs_world_t *world,
     float fps);
@@ -5797,7 +5797,7 @@ void ecs_set_target_fps(
  * @param world The world.
  * @param scale The scale to apply (default = 1).
  */
-FLECS_EXPORT 
+FLECS_API 
 void ecs_set_time_scale(
     ecs_world_t *world,
     float scale);
@@ -5807,7 +5807,7 @@ void ecs_set_time_scale(
  *
  * @param world The world.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_reset_clock(
     ecs_world_t *world);
 
@@ -5817,7 +5817,7 @@ void ecs_reset_clock(
  *
  * @param world The world to quit.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_quit(
     ecs_world_t *world);
 
@@ -5831,7 +5831,7 @@ void ecs_quit(
  *
  * @param world The world.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_deactivate_systems(
     ecs_world_t *world);
 
@@ -5845,18 +5845,18 @@ void ecs_deactivate_systems(
  * will cause systems to evenly distribute matched entities across threads. The
  * operation may be called multiple times to reconfigure the number of threads
  * used, but never while running a system / pipeline. */
-FLECS_EXPORT
+FLECS_API
 void ecs_set_threads(
     ecs_world_t *world,
     int32_t threads);
 
 /** Get current number of threads. */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_get_threads(
     ecs_world_t *world);
 
 /** Get current thread index */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_get_thread_index(
     ecs_world_t *world);
 
@@ -5870,7 +5870,7 @@ typedef struct FlecsPipeline {
     int32_t dummy; 
 } FlecsPipeline;
 
-FLECS_EXPORT
+FLECS_API
 void FlecsPipelineImport(
     ecs_world_t *world);
 
@@ -5902,7 +5902,7 @@ extern "C" {
 //// Components
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_EXPORT
+FLECS_API
 extern ecs_type_t 
     ecs_type(EcsTimer),
     ecs_type(EcsRateFilter);
@@ -5944,7 +5944,7 @@ typedef struct EcsRateFilter {
  * @param timeout The timeout value.
  * @return The timer entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_set_timeout(
     ecs_world_t *world,
     ecs_entity_t timer,
@@ -5962,7 +5962,7 @@ ecs_entity_t ecs_set_timeout(
  * @param timer The timer.
  * @return The current timeout value, or 0 if no timer is active.
  */
-FLECS_EXPORT
+FLECS_API
 float ecs_get_timeout(
     ecs_world_t *world,
     ecs_entity_t timer);
@@ -5982,7 +5982,7 @@ float ecs_get_timeout(
  * @param interval The interval value.
  * @return The timer entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t timer,
@@ -5996,7 +5996,7 @@ ecs_entity_t ecs_set_interval(
  * @param timer The timer for which to set the interval. If 0, an entity will be created.
  * @return The current interval value, or 0 if no timer is active.
  */
-FLECS_EXPORT
+FLECS_API
 float ecs_get_interval(
     ecs_world_t *world,
     ecs_entity_t timer);
@@ -6010,7 +6010,7 @@ float ecs_get_interval(
  * @param world The world.
  * @param timer The timer to start.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_start_timer(
     ecs_world_t *world,
     ecs_entity_t timer);
@@ -6022,7 +6022,7 @@ void ecs_start_timer(
  * @param world The world.
  * @param timer The timer to stop.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_stop_timer(
     ecs_world_t *world,
     ecs_entity_t timer);
@@ -6038,7 +6038,7 @@ void ecs_stop_timer(
  * @param source The tick source (0 to use frames)
  * @return The filter entity.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_set_rate_filter(
     ecs_world_t *world,
     ecs_entity_t filter,
@@ -6065,7 +6065,7 @@ ecs_entity_t ecs_set_rate_filter(
  * @param system The system to associate with the timer.
  * @param timer The timer to associate with the system.
  */ 
-FLECS_EXPORT
+FLECS_API
 void ecs_set_tick_source(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -6081,7 +6081,7 @@ typedef struct FlecsTimer {
     int32_t dummy;
 } FlecsTimer;
 
-FLECS_EXPORT
+FLECS_API
 void FlecsTimerImport(
     ecs_world_t *world);
 
@@ -6124,7 +6124,7 @@ extern "C" {
  * @param entity_add The entity to add.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_add_entity(
     ecs_world_t *world,
     ecs_entity_t entity_add,
@@ -6138,7 +6138,7 @@ void ecs_bulk_add_entity(
  * @param type The type to add.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_add_type(
     ecs_world_t *world,
     ecs_type_t type,
@@ -6163,7 +6163,7 @@ void ecs_bulk_add_type(
  * @param entity_remove The entity to remove.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_remove_entity(
     ecs_world_t *world,
     ecs_entity_t entity_remove,
@@ -6177,7 +6177,7 @@ void ecs_bulk_remove_entity(
  * @param type The type to remove.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_remove_type(
     ecs_world_t *world,
     ecs_type_t type,
@@ -6202,7 +6202,7 @@ void ecs_bulk_remove_type(
  * @param to_remove The type to remove.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_add_remove_type(
     ecs_world_t *world,
     ecs_type_t to_add,
@@ -6227,7 +6227,7 @@ void ecs_bulk_add_remove_type(
  * @param world The world.
  * @param filter The filter.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_bulk_delete(
     ecs_world_t *world,
     const ecs_filter_t *filter);
@@ -6388,7 +6388,7 @@ typedef struct FlecsStats {
     ECS_DECLARE_COMPONENT(EcsTypeStats);
 } FlecsStats;
 
-FLECS_EXPORT
+FLECS_API
 void FlecsStatsImport(
     ecs_world_t *world);
 
@@ -6448,29 +6448,29 @@ typedef struct ecs_dbg_table_t {
     int32_t entities_count;
 } ecs_dbg_table_t;
 
-FLECS_EXPORT
+FLECS_API
 void ecs_dbg_entity(
     ecs_world_t *world, 
     ecs_entity_t entity, 
     ecs_dbg_entity_t *dbg_out);
 
-FLECS_EXPORT
+FLECS_API
 ecs_table_t *ecs_dbg_find_table(
     ecs_world_t *world,
     ecs_type_t type);
 
-FLECS_EXPORT
+FLECS_API
 ecs_table_t *ecs_dbg_get_table(
     ecs_world_t *world,
     int32_t index);
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_dbg_filter_table(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_filter_t *filter);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_dbg_table(
     ecs_world_t *world, 
     ecs_table_t *table, 
@@ -6498,7 +6498,7 @@ extern "C" {
 
 typedef struct ecs_queue_t ecs_queue_t;
 
-FLECS_EXPORT
+FLECS_API
 ecs_queue_t* _ecs_queue_new(
     ecs_size_t elem_size,
     int16_t offset,
@@ -6507,7 +6507,7 @@ ecs_queue_t* _ecs_queue_new(
 #define ecs_queue_new(T, elem_count)\
     _ecs_queue_new(ECS_VECTOR_T(T), elem_count)
 
-FLECS_EXPORT
+FLECS_API
 ecs_queue_t* _ecs_queue_from_array(
     ecs_size_t elem_size,
     int16_t offset,
@@ -6517,7 +6517,7 @@ ecs_queue_t* _ecs_queue_from_array(
 #define ecs_queue_from_array(T, elem_count, array)\
     _ecs_queue_from_array(ECS_VECTOR_T(T), elem_count, array)
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_queue_push(
     ecs_queue_t *queue,
     ecs_size_t elem_size,
@@ -6526,7 +6526,7 @@ void* _ecs_queue_push(
 #define ecs_queue_push(queue, T)\
     (T*)_ecs_queue_push(queue, ECS_VECTOR_T(T))
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_queue_get(
     ecs_queue_t *queue,
     ecs_size_t elem_size,
@@ -6539,7 +6539,7 @@ void* _ecs_queue_get(
 #define ecs_queue_get_t(vector, size, alignment, index) \
     _ecs_queue_get(vector, ECS_VECTOR_U(size, alignment), index)
 
-FLECS_EXPORT
+FLECS_API
 void* _ecs_queue_last(
     ecs_queue_t *queue,
     ecs_size_t elem_size,
@@ -6548,15 +6548,15 @@ void* _ecs_queue_last(
 #define ecs_queue_last(queue, T)\
     (T*)_ecs_queue_last(queue, ECS_VECTOR_T(T))
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_queue_index(
     ecs_queue_t *queue);
 
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_queue_count(
     ecs_queue_t *queue);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_queue_free(
     ecs_queue_t *queue);
 
@@ -6696,7 +6696,7 @@ typedef struct ecs_writer_t {
  * @param world The world to serialize.
  * @return The reader.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_reader_t ecs_reader_init(
     ecs_world_t *world);
 
@@ -6710,7 +6710,7 @@ ecs_reader_t ecs_reader_init(
  * @param iter Iterator to the data to be serialized.
  * @return The reader.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_reader_t ecs_reader_init_w_iter(
     ecs_iter_t *iter,
     ecs_iter_next_action_t next);
@@ -6729,7 +6729,7 @@ ecs_reader_t ecs_reader_init_w_iter(
  * @param reader The reader from which to read the bytes.
  * @return The number of bytes read.
  */ 
-FLECS_EXPORT
+FLECS_API
 ecs_size_t ecs_reader_read(
     char *buffer,
     ecs_size_t size,
@@ -6748,7 +6748,7 @@ ecs_size_t ecs_reader_read(
  * @param world The world in which to deserialize the data.
  * @return The writer. 
  */
-FLECS_EXPORT
+FLECS_API
 ecs_writer_t ecs_writer_init(
     ecs_world_t *world);
 
@@ -6771,7 +6771,7 @@ ecs_writer_t ecs_writer_init(
  * @param writer The writer to write to.
  * @return Zero if success, non-zero if failed to deserialize.
  */
-FLECS_EXPORT
+FLECS_API
 int ecs_writer_write(
     const char *buffer,
     ecs_size_t size,
@@ -6807,7 +6807,7 @@ extern "C" {
  * @param world The world to snapshot.
  * @param return The snapshot.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_snapshot_t* ecs_snapshot_take(
     ecs_world_t *world);
 
@@ -6819,7 +6819,7 @@ ecs_snapshot_t* ecs_snapshot_take(
  * @param next A function pointer to the next operation for the iterator.
  * @param return The snapshot.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_snapshot_t* ecs_snapshot_take_w_iter(
     ecs_iter_t *iter,
     ecs_iter_next_action_t action);
@@ -6838,7 +6838,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
  * @param world The world to restore the snapshot to.
  * @param snapshot The snapshot to restore. 
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_snapshot_restore(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot);
@@ -6847,7 +6847,7 @@ void ecs_snapshot_restore(
  *
  * @param snapshot The snapshot to iterate over.
  * @return Iterator to snapshot data. */
-FLECS_EXPORT
+FLECS_API
 ecs_iter_t ecs_snapshot_iter(
     ecs_snapshot_t *snapshot,
     const ecs_filter_t *filter);
@@ -6857,7 +6857,7 @@ ecs_iter_t ecs_snapshot_iter(
  * @param iter The snapshot iterator.
  * @return True if more data is available, otherwise false.
  */
-FLECS_EXPORT
+FLECS_API
 bool ecs_snapshot_next(
     ecs_iter_t *iter);
 
@@ -6868,7 +6868,7 @@ bool ecs_snapshot_next(
  * @param world The world.
  * @param snapshot The snapshot to free. 
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_snapshot_free(
     ecs_snapshot_t *snapshot);
     
@@ -6909,7 +6909,7 @@ extern "C" {
  * @param type The components.
  * @return The new or existing table, or NULL if the string contains an error.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_table_t* ecs_table_from_str(
     ecs_world_t *world,
     const char *type);
@@ -6921,7 +6921,7 @@ ecs_table_t* ecs_table_from_str(
  * @param type The type.
  * @return The new or existing table.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_table_t* ecs_table_from_type(
     ecs_world_t *world,
     ecs_type_t type);
@@ -6931,7 +6931,7 @@ ecs_table_t* ecs_table_from_type(
  * @param table The table.
  * @return The type of the table.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_table_get_type(
     ecs_table_t *table);
 
@@ -6957,7 +6957,7 @@ ecs_type_t ecs_table_get_type(
  * @param record The entity-index record for the specified entity.
  * @return A record containing the table and table row.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_record_t ecs_table_insert(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -6973,7 +6973,7 @@ ecs_record_t ecs_table_insert(
  * @param table The table.
  * @return The number of records in a table.
  */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_table_count(
     ecs_table_t *table);
 
@@ -6990,7 +6990,7 @@ int32_t ecs_table_count(
  * @param component The component for which to retrieve the column index.
  * @return The column index, or -1 if the table does not have the component.
  */
-FLECS_EXPORT
+FLECS_API
 int32_t ecs_table_find_column(
     ecs_table_t *table,
     ecs_entity_t component);
@@ -7006,7 +7006,7 @@ int32_t ecs_table_find_column(
  * @param column The column index.
  * @return Vector that contains the column array.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* ecs_table_get_column(
     ecs_table_t *table,
     int32_t column);
@@ -7035,7 +7035,7 @@ ecs_vector_t* ecs_table_get_column(
  * @param column The column index.
  * @param vector The column data to assing.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_table_set_column(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -7050,7 +7050,7 @@ void ecs_table_set_column(
  * @param table The table.
  * @return The vector containing the table's entities.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* ecs_table_get_entities(
     ecs_table_t *table);
 
@@ -7062,7 +7062,7 @@ ecs_vector_t* ecs_table_get_entities(
  * @param table The table.
  * @return The vector containing the entity records.
  */ 
-FLECS_EXPORT
+FLECS_API
 ecs_vector_t* ecs_table_get_records(
     ecs_table_t *table);
 
@@ -7084,7 +7084,7 @@ ecs_vector_t* ecs_table_get_records(
  * @param entities The entity vector.
  * @param records The record vector.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_table_set_entities(
     ecs_table_t *table,
     ecs_vector_t *entities,
@@ -7123,7 +7123,7 @@ void ecs_table_set_entities(
  * @param column The column index.
  * @param vector The column vector to delete.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_table_delete_column(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -7149,7 +7149,7 @@ void ecs_table_delete_column(
  * @param entity The entity.
  * @return The record that belongs to the entity, or NULL if not found.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_record_t* ecs_record_find(
     ecs_world_t *world,
     ecs_entity_t entity);
@@ -7161,7 +7161,7 @@ ecs_record_t* ecs_record_find(
  * @param r The record.
  * @param column The column index of the component to get.
  */ 
-FLECS_EXPORT
+FLECS_API
 void* ecs_record_get_column(
     ecs_record_t *r,
     int32_t column,
@@ -7183,7 +7183,7 @@ void* ecs_record_get_column(
  * @param size The size of the component.
  * @param value Pointer to the value to copy.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_record_copy_to(
     ecs_world_t *world,
     ecs_record_t *r,
@@ -7204,7 +7204,7 @@ void ecs_record_copy_to(
  * @param size The size of the component.
  * @param value Pointer to the value to move. 
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_record_copy_pod_to(
     ecs_world_t *world,
     ecs_record_t *r,
@@ -7225,7 +7225,7 @@ void ecs_record_copy_pod_to(
  * @param size The size of the component.
  * @param value Pointer to the value to move.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_record_move_to(
     ecs_world_t *world,
     ecs_record_t *r,
@@ -10928,7 +10928,7 @@ public:
         }
 
         m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
-    }    
+    }
 
     explicit query(const world& world, const char *expr) {
         std::stringstream str;
@@ -10948,7 +10948,7 @@ public:
             str << "," << expr;
             m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
         }
-    }    
+    }
 
     query_iterator<Components...> begin() const;
 
@@ -10965,6 +10965,7 @@ public:
         }
     }
 
+    /* DEPRECATED */
     template <typename Func>
     void action(Func func) const {
         ecs_iter_t iter = ecs_query_iter(m_query);
@@ -10974,7 +10975,18 @@ public:
             _::action_invoker<Func, Components...> ctx(func);
             ctx.call_system(&iter, func, 0, columns.m_columns);
         }
-    }    
+    }  
+
+    template <typename Func>
+    void iter(Func func) const {
+        ecs_iter_t iter = ecs_query_iter(m_query);
+
+        while (ecs_query_next(&iter)) {
+            _::column_args<Components...> columns(&iter);
+            _::iter_invoker<Func, Components...> ctx(func);
+            ctx.call_system(&iter, func, 0, columns.m_columns);
+        }
+    }        
 };
 
 
@@ -11200,9 +11212,7 @@ public:
         return system_runner_fluent(m_world, m_id, delta_time, param);
     }
 
-    /* Action (or each) is mandatory and always the last thing that is added in 
-     * the fluent method chain. Create system signature from both template 
-     * parameters and anything provided by the signature method. */
+    /* DEPRECATED. Use iter instead. */
     template <typename Func>
     system& action(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
@@ -11216,7 +11226,9 @@ public:
         return *this;
     }
 
-    /* Iter is similar to action, and will ultimately replace it */
+     /* Iter (or each) is mandatory and always the last thing that 
+      * is added in the fluent method chain. Create system signature from both 
+      * template parameters and anything provided by the signature method. */
     template <typename Func>
     system& iter(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);

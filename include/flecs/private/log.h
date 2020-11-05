@@ -29,7 +29,7 @@ extern "C" {
 //// Tracing
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_trace(
     int level,
     const char *file,
@@ -37,23 +37,23 @@ void _ecs_trace(
     const char *fmt,
     ...);
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_warn(
     const char *file,
     int32_t line,
     const char *fmt,
     ...);
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_err(
     const char *file,
     int32_t line,
     const char *fmt,
     ...);
-FLECS_EXPORT
+FLECS_API
 void ecs_log_push(void);
 
-FLECS_EXPORT
+FLECS_API
 void ecs_log_pop(void);
 
 #ifndef FLECS_LEGACY
@@ -101,12 +101,12 @@ void ecs_log_pop(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Get description for error code */
-FLECS_EXPORT
+FLECS_API
 const char* ecs_strerror(
     int32_t error_code);
 
 /** Abort */
-FLECS_EXPORT
+FLECS_API
 void _ecs_abort(
     int32_t error_code,
     const char *param,
@@ -117,7 +117,7 @@ void _ecs_abort(
     _ecs_abort(error_code, param, __FILE__, __LINE__); abort()
 
 /** Assert */
-FLECS_EXPORT
+FLECS_API
 void _ecs_assert(
     bool condition,
     int32_t error_code,
@@ -134,7 +134,7 @@ void _ecs_assert(
     assert(condition)
 #endif
 
-FLECS_EXPORT
+FLECS_API
 void _ecs_parser_error(
     const char *name,
     const char *expr, 

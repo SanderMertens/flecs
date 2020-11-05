@@ -15,7 +15,7 @@ extern "C" {
 //// Components
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_EXPORT
+FLECS_API
 extern ecs_type_t
     ecs_type(EcsTrigger),
     ecs_type(EcsSystem),
@@ -140,7 +140,7 @@ typedef struct EcsContext {
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_run(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -168,7 +168,7 @@ ecs_entity_t ecs_run(
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_entity_t ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -216,7 +216,7 @@ typedef void (*ecs_system_status_action_t)(
  * @param action The action.
  * @param ctx Context that will be passed to the action when invoked.
  */
-FLECS_EXPORT
+FLECS_API
 void ecs_set_system_status_action(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -237,31 +237,31 @@ typedef struct ecs_dbg_system_t {
     void *system_data;
 } ecs_dbg_system_t;
 
-FLECS_EXPORT
+FLECS_API
 int ecs_dbg_system(
     ecs_world_t *world,
     ecs_entity_t system,
     ecs_dbg_system_t *dbg_out);
 
-FLECS_EXPORT
+FLECS_API
 ecs_table_t* ecs_dbg_get_active_table(
     ecs_world_t *world,
     ecs_dbg_system_t *dbg,
     int32_t index);
 
-FLECS_EXPORT
+FLECS_API
 ecs_table_t* ecs_dbg_get_inactive_table(
     ecs_world_t *world,
     ecs_dbg_system_t *dbg,
     int32_t index);
 
-FLECS_EXPORT
+FLECS_API
 ecs_type_t ecs_dbg_get_column_type(
     ecs_world_t *world,
     ecs_entity_t system,
     int32_t column_index);
 
-FLECS_EXPORT
+FLECS_API
 bool ecs_dbg_match_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -278,7 +278,7 @@ typedef struct FlecsSystem {
     int32_t dummy; 
 } FlecsSystem;
 
-FLECS_EXPORT
+FLECS_API
 void FlecsSystemImport(
     ecs_world_t *world);
 

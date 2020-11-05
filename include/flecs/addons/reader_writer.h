@@ -125,7 +125,7 @@ typedef struct ecs_writer_t {
  * @param world The world to serialize.
  * @return The reader.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_reader_t ecs_reader_init(
     ecs_world_t *world);
 
@@ -139,7 +139,7 @@ ecs_reader_t ecs_reader_init(
  * @param iter Iterator to the data to be serialized.
  * @return The reader.
  */
-FLECS_EXPORT
+FLECS_API
 ecs_reader_t ecs_reader_init_w_iter(
     ecs_iter_t *iter,
     ecs_iter_next_action_t next);
@@ -158,7 +158,7 @@ ecs_reader_t ecs_reader_init_w_iter(
  * @param reader The reader from which to read the bytes.
  * @return The number of bytes read.
  */ 
-FLECS_EXPORT
+FLECS_API
 ecs_size_t ecs_reader_read(
     char *buffer,
     ecs_size_t size,
@@ -177,7 +177,7 @@ ecs_size_t ecs_reader_read(
  * @param world The world in which to deserialize the data.
  * @return The writer. 
  */
-FLECS_EXPORT
+FLECS_API
 ecs_writer_t ecs_writer_init(
     ecs_world_t *world);
 
@@ -200,7 +200,7 @@ ecs_writer_t ecs_writer_init(
  * @param writer The writer to write to.
  * @return Zero if success, non-zero if failed to deserialize.
  */
-FLECS_EXPORT
+FLECS_API
 int ecs_writer_write(
     const char *buffer,
     ecs_size_t size,
