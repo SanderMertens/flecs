@@ -30,7 +30,7 @@ void ecs_pipeline_end(
 void ecs_pipeline_progress(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    float delta_time);
+    double delta_time);
 
 
 ////////////////////////////////////////////////////////////////////////////////

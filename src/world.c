@@ -661,7 +661,7 @@ void ecs_merge(
     ecs_eval_component_monitors(world);
 
     if (measure_frame_time) {
-        world->stats.merge_time_total += (float)ecs_time_measure(&t_start);
+        world->stats.merge_time_total += (double)ecs_time_measure(&t_start);
     }
 
     world->stats.merge_count_total ++;
@@ -697,7 +697,7 @@ void ecs_measure_system_time(
 }
 
 /* Increase timer resolution based on target fps */
-static void set_timer_resolution(float fps)
+static void set_timer_resolution(double fps)
 {
     if(fps >= 60.0f) ecs_increase_timer_resolution(1);
     else ecs_increase_timer_resolution(0);
@@ -705,7 +705,7 @@ static void set_timer_resolution(float fps)
 
 void ecs_set_target_fps(
     ecs_world_t *world,
-    float fps)
+    double fps)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
@@ -954,9 +954,9 @@ double insert_sleep(
 
         /* Add sleep error measurement to sleep error, with a bias towards the
          * latest measured values. */
-        world->stats.sleep_err = (float)
+        world->stats.sleep_err = (double)
             (world_sleep_err * 0.9 + sleep_err * 0.1) * 
-                (float)world->stats.frame_count_total;
+                (double)world->stats.frame_count_total;
     }
 
     /*  Make last minute corrections if due to a larger clock error delta_time
@@ -971,9 +971,9 @@ double insert_sleep(
 }
 
 static
-float start_measure_frame(
+double start_measure_frame(
     ecs_world_t *world,
-    float user_delta_time)
+    double user_delta_time)
 {
     double delta_time = 0;
 
@@ -999,10 +999,10 @@ float start_measure_frame(
         world->frame_start_time = t;  
 
         /* Keep track of total time passed in world */
-        world->stats.world_time_total_raw += (float)delta_time;
+        world->stats.world_time_total_raw += (double)delta_time;
     }
 
-    return (float)delta_time;
+    return (double)delta_time;
 }
 
 static
@@ -1011,13 +1011,13 @@ void stop_measure_frame(
 {
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
-        world->stats.frame_time_total += (float)ecs_time_measure(&t);
+        world->stats.frame_time_total += (double)ecs_time_measure(&t);
     }
 }
 
-float ecs_frame_begin(
+double ecs_frame_begin(
     ecs_world_t *world,
-    float user_delta_time)
+    double user_delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
@@ -1029,7 +1029,7 @@ float ecs_frame_begin(
     }
 
     /* Start measuring total frame time */
-    float delta_time = start_measure_frame(world, user_delta_time);
+    double delta_time = start_measure_frame(world, user_delta_time);
     if (user_delta_time == 0) {
         user_delta_time = delta_time;
     }  

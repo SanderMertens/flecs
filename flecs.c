@@ -556,7 +556,7 @@ struct ecs_world_t {
 
     ecs_time_t world_start_time;  /* Timestamp of simulation start */
     ecs_time_t frame_start_time;  /* Timestamp of frame start */
-    float fps_sleep;              /* Sleep time to prevent fps overshoot */
+    double fps_sleep;              /* Sleep time to prevent fps overshoot */
 
 
     /* -- Metrics -- */
@@ -10681,7 +10681,7 @@ void ecs_merge(
     ecs_eval_component_monitors(world);
 
     if (measure_frame_time) {
-        world->stats.merge_time_total += (float)ecs_time_measure(&t_start);
+        world->stats.merge_time_total += (double)ecs_time_measure(&t_start);
     }
 
     world->stats.merge_count_total ++;
@@ -10717,7 +10717,7 @@ void ecs_measure_system_time(
 }
 
 /* Increase timer resolution based on target fps */
-static void set_timer_resolution(float fps)
+static void set_timer_resolution(double fps)
 {
     if(fps >= 60.0f) ecs_increase_timer_resolution(1);
     else ecs_increase_timer_resolution(0);
@@ -10725,7 +10725,7 @@ static void set_timer_resolution(float fps)
 
 void ecs_set_target_fps(
     ecs_world_t *world,
-    float fps)
+    double fps)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
@@ -10974,9 +10974,9 @@ double insert_sleep(
 
         /* Add sleep error measurement to sleep error, with a bias towards the
          * latest measured values. */
-        world->stats.sleep_err = (float)
+        world->stats.sleep_err = (double)
             (world_sleep_err * 0.9 + sleep_err * 0.1) * 
-                (float)world->stats.frame_count_total;
+                (double)world->stats.frame_count_total;
     }
 
     /*  Make last minute corrections if due to a larger clock error delta_time
@@ -10991,9 +10991,9 @@ double insert_sleep(
 }
 
 static
-float start_measure_frame(
+double start_measure_frame(
     ecs_world_t *world,
-    float user_delta_time)
+    double user_delta_time)
 {
     double delta_time = 0;
 
@@ -11019,10 +11019,10 @@ float start_measure_frame(
         world->frame_start_time = t;  
 
         /* Keep track of total time passed in world */
-        world->stats.world_time_total_raw += (float)delta_time;
+        world->stats.world_time_total_raw += (double)delta_time;
     }
 
-    return (float)delta_time;
+    return (double)delta_time;
 }
 
 static
@@ -11031,13 +11031,13 @@ void stop_measure_frame(
 {
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
-        world->stats.frame_time_total += (float)ecs_time_measure(&t);
+        world->stats.frame_time_total += (double)ecs_time_measure(&t);
     }
 }
 
-float ecs_frame_begin(
+double ecs_frame_begin(
     ecs_world_t *world,
-    float user_delta_time)
+    double user_delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
@@ -11049,7 +11049,7 @@ float ecs_frame_begin(
     }
 
     /* Start measuring total frame time */
-    float delta_time = start_measure_frame(world, user_delta_time);
+    double delta_time = start_measure_frame(world, user_delta_time);
     if (user_delta_time == 0) {
         user_delta_time = delta_time;
     }  
@@ -13508,8 +13508,8 @@ typedef struct EcsSystem {
     ecs_entity_t tick_source;             /* Tick source associated with system */
     
     int32_t invoke_count;                 /* Number of times system is invoked */
-    float time_spent;                     /* Time spent on running system */
-    float time_passed;                    /* Time passed since last invocation */
+    double time_spent;                     /* Time spent on running system */
+    double time_passed;                    /* Time passed since last invocation */
 } EcsSystem;
 
 /* Invoked when system becomes active / inactive */
@@ -13525,7 +13525,7 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
-    float delta_time,
+    double delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
@@ -17137,7 +17137,7 @@ static
 int32_t get_bucket_count(
     int32_t element_count)
 {
-    return next_pow_of_2((int32_t)((float)element_count * LOAD_FACTOR));
+    return next_pow_of_2((int32_t)((double)element_count * LOAD_FACTOR));
 }
 
 static
@@ -18211,7 +18211,7 @@ void ecs_pipeline_end(
 void ecs_pipeline_progress(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    float delta_time);
+    double delta_time);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -18474,7 +18474,7 @@ void ecs_workers_progress(
     }
 
     if (world->measure_frame_time) {
-        world->stats.system_time_total += (float)ecs_time_measure(&start);
+        world->stats.system_time_total += (double)ecs_time_measure(&start);
     }    
 }
 
@@ -18861,7 +18861,7 @@ void ecs_pipeline_end(
 void ecs_pipeline_progress(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    float delta_time)
+    double delta_time)
 {
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -19003,7 +19003,7 @@ void EcsOnAddPipeline(
 
 bool ecs_progress(
     ecs_world_t *world,
-    float user_delta_time)
+    double user_delta_time)
 {
     ecs_frame_begin(world, user_delta_time);
 
@@ -19016,7 +19016,7 @@ bool ecs_progress(
 
 void ecs_set_time_scale(
     ecs_world_t *world,
-    float scale)
+    double scale)
 {
     world->stats.time_scale = scale;
 }
@@ -19191,11 +19191,11 @@ void ProgressTimers(ecs_iter_t *it) {
             continue;
         }
 
-        float time_elapsed = timer[i].time + it->world->stats.delta_time_raw;
-        float timeout = timer[i].timeout;
+        double time_elapsed = timer[i].time + it->world->stats.delta_time_raw;
+        double timeout = timer[i].timeout;
         
         if (time_elapsed >= timeout) {
-            float t = time_elapsed - timeout;
+            double t = time_elapsed - timeout;
             if (t > timeout) {
                 t = 0;
             }
@@ -19252,7 +19252,7 @@ void ProgressRateFilters(ecs_iter_t *it) {
 ecs_entity_t ecs_set_timeout(
     ecs_world_t *world,
     ecs_entity_t timer,
-    float timeout)
+    double timeout)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -19270,7 +19270,7 @@ ecs_entity_t ecs_set_timeout(
     return timer;
 }
 
-float ecs_get_timeout(
+double ecs_get_timeout(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
@@ -19288,7 +19288,7 @@ float ecs_get_timeout(
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t timer,
-    float interval)
+    double interval)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -19305,7 +19305,7 @@ ecs_entity_t ecs_set_interval(
     return timer;  
 }
 
-float ecs_get_interval(
+double ecs_get_interval(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
@@ -20462,7 +20462,7 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
-    float delta_time,
+    double delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
@@ -20473,7 +20473,7 @@ ecs_entity_t ecs_run_intern(
         param = system_data->ctx;
     }
 
-    float time_elapsed = delta_time;
+    double time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
     if (tick_source) {
@@ -20552,7 +20552,7 @@ ecs_entity_t ecs_run_intern(
     }
 
     if (measure_time) {
-        system_data->time_spent += (float)ecs_time_measure(&time_start);
+        system_data->time_spent += (double)ecs_time_measure(&time_start);
     }
 
 #ifndef NDEBUG
@@ -20570,7 +20570,7 @@ ecs_entity_t ecs_run_intern(
 ecs_entity_t ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
-    float delta_time,
+    double delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
@@ -20599,7 +20599,7 @@ ecs_entity_t ecs_run_w_filter(
 ecs_entity_t ecs_run(
     ecs_world_t *world,
     ecs_entity_t system,
-    float delta_time,
+    double delta_time,
     void *param)
 {
     return ecs_run_w_filter(world, system, delta_time, 0, 0, NULL, param);

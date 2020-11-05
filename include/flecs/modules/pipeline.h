@@ -61,7 +61,7 @@ ecs_entity_t ecs_get_pipeline(
 FLECS_EXPORT
 bool ecs_progress(
     ecs_world_t *world,
-    float delta_time);   
+    double delta_time);   
 
 /** Set target frames per second (FPS) for application.
  * Setting the target FPS ensures that ecs_progress is not invoked faster than
@@ -81,7 +81,7 @@ bool ecs_progress(
 FLECS_EXPORT
 void ecs_set_target_fps(
     ecs_world_t *world,
-    float fps);
+    double fps);
 
 /** Set time scale.
  * Increase or decrease simulation speed by the provided multiplier.
@@ -92,7 +92,7 @@ void ecs_set_target_fps(
 FLECS_EXPORT 
 void ecs_set_time_scale(
     ecs_world_t *world,
-    float scale);
+    double scale);
 
 /** Reset world clock.
  * Reset the clock that keeps track of the total time passed in the simulation.

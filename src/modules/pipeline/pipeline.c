@@ -346,7 +346,7 @@ void ecs_pipeline_end(
 void ecs_pipeline_progress(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    float delta_time)
+    double delta_time)
 {
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -488,7 +488,7 @@ void EcsOnAddPipeline(
 
 bool ecs_progress(
     ecs_world_t *world,
-    float user_delta_time)
+    double user_delta_time)
 {
     ecs_frame_begin(world, user_delta_time);
 
@@ -501,7 +501,7 @@ bool ecs_progress(
 
 void ecs_set_time_scale(
     ecs_world_t *world,
-    float scale)
+    double scale)
 {
     world->stats.time_scale = scale;
 }

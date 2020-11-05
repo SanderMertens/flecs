@@ -86,11 +86,11 @@ typedef struct EcsSystemStats {
     const char *name;                       /* Entity name */
     const char *signature;                  /* System signature */
     ecs_entity_t phase;                     /* System kind */
-    float period_seconds;                   /* Period at which system runs */                       
+    double period_seconds;                   /* Period at which system runs */                       
     int32_t tables_matched_count;           /* Number of tables matched */
     int32_t entities_matched_count;         /* Number of entities matched */
     int64_t invoke_count_total;            /* Number of times system got invoked */
-    float seconds_total;                    /* Total time spent in system */
+    double seconds_total;                    /* Total time spent in system */
     bool is_enabled;                        /* Is system enabled */
     bool is_active;                         /* Is system active */
     bool is_hidden;                         /* Is system hidden */

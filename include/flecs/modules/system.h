@@ -29,7 +29,7 @@ extern ecs_type_t
 /* Component used to provide a tick source to systems */
 typedef struct EcsTickSource {
     bool tick;           /* True if providing tick */
-    float time_elapsed;  /* Time elapsed since last tick */
+    double time_elapsed;  /* Time elapsed since last tick */
 } EcsTickSource;
 
 /* Signature expression */
@@ -144,7 +144,7 @@ FLECS_EXPORT
 ecs_entity_t ecs_run(
     ecs_world_t *world,
     ecs_entity_t system,
-    float delta_time,
+    double delta_time,
     void *param);
 
 /** Run system with offset/limit and type filter.
@@ -172,7 +172,7 @@ FLECS_EXPORT
 ecs_entity_t ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
-    float delta_time,
+    double delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
