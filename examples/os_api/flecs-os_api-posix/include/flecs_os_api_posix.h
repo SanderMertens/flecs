@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-FLECS_OS_API_POSIX_EXPORT
+FLECS_OS_API_POSIX_API
 void posix_set_os_api(void);
 
 #ifdef __cplusplus
