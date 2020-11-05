@@ -137,6 +137,7 @@ bool ecs_is_readonly(
 
     /* If this is not a query iterator, readonly is meaningless */
     ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
+    (void)query;
 
     ecs_sig_column_t *column_data = ecs_vector_get(
         it->query->sig.columns, ecs_sig_column_t, column - 1);

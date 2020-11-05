@@ -3971,6 +3971,7 @@ void ecs_run_monitors(
     }
 
     ecs_assert(!(dst_table->flags & EcsTableIsPrefab), ECS_INTERNAL_ERROR, NULL);
+    (void)dst_table;
     
     if (!v_src_monitors) {
         ecs_vector_each(v_dst_monitors, ecs_matched_query_t, monitor, {
@@ -5970,7 +5971,7 @@ size_t append_to_str(
     }
     
     if (to_write) {
-        ecs_os_strncpy(ptr, str, to_write);
+        ecs_os_memcpy(ptr, str, to_write);
     }
 
     (*required) += len;
@@ -6694,6 +6695,8 @@ void ecs_vector_assert_size(
     ecs_vector_t *vector,
     ecs_size_t elem_size)
 {
+    (void)elem_size;
+    
     if (vector) {
         ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
     }
@@ -7343,6 +7346,7 @@ void* get_sparse(
     
     ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
+    (void)dense;
 
     return DATA(chunk->data, sparse->size, offset);
 }
@@ -7476,6 +7480,7 @@ void* _ecs_sparse_get_or_create(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
 
     uint64_t gen = strip_generation(&index);
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
@@ -7546,6 +7551,8 @@ void* _ecs_sparse_remove_get(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
+
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     uint64_t gen = strip_generation(&index);
     int32_t offset = OFFSET(index);
@@ -7637,6 +7644,7 @@ void* _ecs_sparse_get(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(dense_index < sparse->count, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
 
     dense_index ++;
 
@@ -7659,6 +7667,7 @@ void* _ecs_sparse_get_sparse(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
     return try_sparse(sparse, index);
 }
 
@@ -7670,6 +7679,7 @@ void* _ecs_sparse_get_sparse_any(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
     return try_sparse_any(sparse, index);
 }
 
@@ -9899,6 +9909,7 @@ void* ecs_record_get_column(
     int32_t column,
     size_t c_size)
 {
+    (void)c_size;
     ecs_table_t *table = r->table;
     ecs_column_t *c = da_get_column(table, column);
     if (!c) {
@@ -9965,6 +9976,7 @@ void ecs_record_copy_pod_to(
     ecs_assert(c_size != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(value != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(count != 0, ECS_INVALID_PARAMETER, NULL);
+    (void)c_size;
 
     ecs_table_t *table = r->table;
     ecs_column_t *c = da_get_or_create_column(world, table, column);
@@ -17770,6 +17782,7 @@ bool ecs_is_readonly(
 
     /* If this is not a query iterator, readonly is meaningless */
     ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
+    (void)query;
 
     ecs_sig_column_t *column_data = ecs_vector_get(
         it->query->sig.columns, ecs_sig_column_t, column - 1);

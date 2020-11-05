@@ -82,6 +82,8 @@ void ecs_vector_assert_size(
     ecs_vector_t *vector,
     ecs_size_t elem_size)
 {
+    (void)elem_size;
+    
     if (vector) {
         ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
     }

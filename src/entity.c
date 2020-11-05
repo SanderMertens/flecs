@@ -354,6 +354,7 @@ void ecs_run_monitors(
     }
 
     ecs_assert(!(dst_table->flags & EcsTableIsPrefab), ECS_INTERNAL_ERROR, NULL);
+    (void)dst_table;
     
     if (!v_src_monitors) {
         ecs_vector_each(v_dst_monitors, ecs_matched_query_t, monitor, {
@@ -2353,7 +2354,7 @@ size_t append_to_str(
     }
     
     if (to_write) {
-        ecs_os_strncpy(ptr, str, to_write);
+        ecs_os_memcpy(ptr, str, to_write);
     }
 
     (*required) += len;

@@ -196,6 +196,7 @@ void* ecs_record_get_column(
     int32_t column,
     size_t c_size)
 {
+    (void)c_size;
     ecs_table_t *table = r->table;
     ecs_column_t *c = da_get_column(table, column);
     if (!c) {
@@ -262,6 +263,7 @@ void ecs_record_copy_pod_to(
     ecs_assert(c_size != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(value != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(count != 0, ECS_INVALID_PARAMETER, NULL);
+    (void)c_size;
 
     ecs_table_t *table = r->table;
     ecs_column_t *c = da_get_or_create_column(world, table, column);
