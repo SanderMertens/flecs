@@ -36,10 +36,13 @@ const EcsComponent* ecs_component_from_id(
     const EcsComponent *component = ecs_get(world, e, EcsComponent);
     if (!component && trait) {
         /* If this is a trait column and the trait is not a component, use
-            * the component type of the component the trait is applied to. */
+         * the component type of the component the trait is applied to. */
         e = ecs_entity_t_lo(trait);
         component = ecs_get(world, e, EcsComponent);
-    }    
+    }
+
+    ecs_assert(!component || !ECS_HAS_ROLE(e, CHILDOF), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!component || !ECS_HAS_ROLE(e, INSTANCEOF), ECS_INTERNAL_ERROR, NULL);
 
     return component;
 }

@@ -329,7 +329,8 @@
                 "get_1_from_2_in_progress_from_main_stage",
                 "get_1_from_2_add_in_progress",
                 "get_both_from_2_add_in_progress",
-                "get_both_from_2_add_remove_in_progress"
+                "get_both_from_2_add_remove_in_progress",
+                "get_childof_component"
             ]
         }, {
             "id": "Reference",
