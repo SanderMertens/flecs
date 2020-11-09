@@ -52,7 +52,7 @@ static
 int32_t get_bucket_count(
     int32_t element_count)
 {
-    return next_pow_of_2((int32_t)((double)element_count * LOAD_FACTOR));
+    return next_pow_of_2((int32_t)((float)element_count * LOAD_FACTOR));
 }
 
 static
