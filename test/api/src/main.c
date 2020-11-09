@@ -300,6 +300,7 @@ void Get_component_get_1_from_2_in_progress_from_main_stage(void);
 void Get_component_get_1_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_remove_in_progress(void);
+void Get_component_get_childof_component(void);
 
 // Testsuite 'Reference'
 void Reference_setup(void);
@@ -2509,6 +2510,10 @@ bake_test_case Get_component_testcases[] = {
     {
         "get_both_from_2_add_remove_in_progress",
         Get_component_get_both_from_2_add_remove_in_progress
+    },
+    {
+        "get_childof_component",
+        Get_component_get_childof_component
     }
 };
 
@@ -6777,7 +6782,7 @@ static bake_test_suite suites[] = {
         "Get_component",
         Get_component_setup,
         NULL,
-        9,
+        10,
         Get_component_testcases
     },
     {

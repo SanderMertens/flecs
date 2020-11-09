@@ -79,9 +79,9 @@
 
 /* Convenience macro for exporting symbols */
 #ifndef flecs_STATIC
-#if flecs_APIS && (defined(_MSC_VER) || defined(__MINGW32__))
+#if flecs_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
   #define FLECS_API __declspec(dllexport)
-#elif flecs_APIS
+#elif flecs_EXPORTS
   #define FLECS_API __attribute__((__visibility__("default")))
 #elif defined _MSC_VER
   #define FLECS_API __declspec(dllimport)

@@ -199,3 +199,17 @@ void Get_component_get_both_from_2_add_remove_in_progress() {
 
     ecs_fini(world);
 }
+
+void Get_component_get_childof_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const EcsComponent *ptr = ecs_get(world, ecs_typeid(Position), EcsComponent);
+    test_assert(ptr != NULL);
+
+    ptr = ecs_get(world, ECS_CHILDOF | ecs_typeid(Position), EcsComponent);
+    test_assert(ptr == NULL);
+    
+    ecs_fini(world);
+}
