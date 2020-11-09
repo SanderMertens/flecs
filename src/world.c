@@ -661,7 +661,7 @@ void ecs_merge(
     ecs_eval_component_monitors(world);
 
     if (measure_frame_time) {
-        world->stats.merge_time_total += (double)ecs_time_measure(&t_start);
+        world->stats.merge_time_total += ecs_time_measure(&t_start);
     }
 
     world->stats.merge_count_total ++;
@@ -1011,7 +1011,7 @@ void stop_measure_frame(
 {
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
-        world->stats.frame_time_total += (double)ecs_time_measure(&t);
+        world->stats.frame_time_total += ecs_time_measure(&t);
     }
 }
 
