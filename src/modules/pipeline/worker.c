@@ -269,7 +269,7 @@ void ecs_set_threads(
             ecs_os_cond_free(world->sync_cond);
             ecs_os_mutex_free(world->sync_mutex);
         }
-
+        
         /* Start threads if number of threads > 1 */
         if (threads > 1) {
             world->worker_cond = ecs_os_cond_new();
