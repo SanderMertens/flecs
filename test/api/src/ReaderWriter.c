@@ -1440,3 +1440,46 @@ void ReaderWriter_invalid_header() {
 
     ecs_fini(world);
 }
+
+void ReaderWriter_recycled_id() {
+    ecs_entity_t e0, e1, e2, e3;
+    ecs_vector_t *v;
+
+    {
+        ecs_world_t *world = ecs_init();
+        ECS_TAG(world, Tag);
+
+        e0 = ecs_new(world, Tag);
+        ecs_delete(world, e0);
+        e1 = ecs_new(world, Tag);
+        e2 = ecs_new(world, Tag);
+        e3 = ecs_new(world, Tag);
+
+        v = serialize_to_vector(world, 36);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = deserialize_from_vector(v, 36);
+        ECS_TAG(world, Tag);
+
+        ecs_entity_t e = ecs_new(world, 0);
+        test_assert((int32_t)e > (int32_t)e1);
+        test_assert((int32_t)e > (int32_t)e2);
+        test_assert((int32_t)e > (int32_t)e3);
+
+        test_assert(!ecs_is_alive(world, e0));
+        test_assert(ecs_is_alive(world, e1));
+        test_assert(ecs_is_alive(world, e2));
+        test_assert(ecs_is_alive(world, e3));
+
+        test_assert(ecs_has(world, e1, Tag));
+        test_assert(ecs_has(world, e2, Tag));
+        test_assert(ecs_has(world, e3, Tag));
+
+        ecs_fini(world);
+    }
+
+    ecs_vector_free(v);
+}

@@ -1443,7 +1443,8 @@
                 "snapshot_reader_id",
                 "read_zero_size",
                 "write_zero_size",
-                "invalid_header"
+                "invalid_header",
+                "recycled_id"
             ]
         }, {
             "id": "FilterIter",

@@ -7896,8 +7896,10 @@ void ecs_table_writer_finalize_table(
         record_ptr->row = i + 1;
         record_ptr->table = writer->table;
 
-        if (entities[i] >= world->stats.last_id) {
-            world->stats.last_id = entities[i] + 1;
+        /* Strip entity from generation */
+        ecs_entity_t id = entities[i] & ECS_ENTITY_MASK;
+        if (id >= world->stats.last_id) {
+            world->stats.last_id = id + 1;
         }
     }
 }

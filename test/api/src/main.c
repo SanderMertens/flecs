@@ -1336,6 +1336,7 @@ void ReaderWriter_snapshot_reader_id(void);
 void ReaderWriter_read_zero_size(void);
 void ReaderWriter_write_zero_size(void);
 void ReaderWriter_invalid_header(void);
+void ReaderWriter_recycled_id(void);
 
 // Testsuite 'FilterIter'
 void FilterIter_iter_one_table(void);
@@ -6387,6 +6388,10 @@ bake_test_case ReaderWriter_testcases[] = {
     {
         "invalid_header",
         ReaderWriter_invalid_header
+    },
+    {
+        "recycled_id",
+        ReaderWriter_recycled_id
     }
 };
 
@@ -7055,7 +7060,7 @@ static bake_test_suite suites[] = {
         "ReaderWriter",
         NULL,
         NULL,
-        20,
+        21,
         ReaderWriter_testcases
     },
     {
