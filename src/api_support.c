@@ -194,6 +194,10 @@ void ecs_set_symbol(
     ecs_entity_t e,
     const char *name)
 {
+    if (!name) {
+        return;
+    }
+    
     const char *e_name = ecs_name_from_symbol(world, name);
 
     ecs_set(world, e, EcsName, { 

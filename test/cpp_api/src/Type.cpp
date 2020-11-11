@@ -105,3 +105,14 @@ void Type_2_component_signature() {
     test_assert(entity.has<Position>());
     test_assert(entity.has<Velocity>());
 }
+
+void Type_type_no_name() {
+    flecs::world world;
+
+    flecs::component<Position>(world, "Position");
+
+    auto type = flecs::type(world, nullptr, "Position");
+    auto id = type.id();
+    auto e = world.entity(id);
+    test_assert(!e.has<flecs::Name>());
+}

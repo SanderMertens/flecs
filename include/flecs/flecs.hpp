@@ -2032,7 +2032,7 @@ public:
     std::string name() const {
         const EcsName *name = static_cast<const EcsName*>(
             ecs_get_w_entity(m_world, m_id, ecs_entity(EcsName)));
-        if (name) {
+        if (name && name->value) {
             return std::string(name->value);
         } else {
             return std::string();

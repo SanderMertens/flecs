@@ -51,6 +51,7 @@ void Entity_force_owned_nested(void);
 void Entity_force_owned_type(void);
 void Entity_force_owned_type_w_trait(void);
 void Entity_tag_has_size_zero(void);
+void Entity_get_null_name(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -106,6 +107,7 @@ void Type_1_component(void);
 void Type_2_component(void);
 void Type_1_component_signature(void);
 void Type_2_component_signature(void);
+void Type_type_no_name(void);
 
 // Testsuite 'System'
 void System_action(void);
@@ -402,6 +404,10 @@ bake_test_case Entity_testcases[] = {
     {
         "tag_has_size_zero",
         Entity_tag_has_size_zero
+    },
+    {
+        "get_null_name",
+        Entity_get_null_name
     }
 };
 
@@ -602,6 +608,10 @@ bake_test_case Type_testcases[] = {
     {
         "2_component_signature",
         Type_2_component_signature
+    },
+    {
+        "type_no_name",
+        Type_type_no_name
     }
 };
 
@@ -1063,7 +1073,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        42,
+        43,
         Entity_testcases
     },
     {
@@ -1091,7 +1101,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        7,
+        8,
         Type_testcases
     },
     {

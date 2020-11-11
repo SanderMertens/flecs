@@ -56,7 +56,8 @@
                 "force_owned_nested",
                 "force_owned_type",
                 "force_owned_type_w_trait",
-                "tag_has_size_zero"
+                "tag_has_size_zero",
+                "get_null_name"
             ]
         }, {
             "id": "Traits",
@@ -119,7 +120,8 @@
                 "1_component",
                 "2_component",
                 "1_component_signature",
-                "2_component_signature"
+                "2_component_signature",
+                "type_no_name"
             ]
         }, {
             "id": "System",

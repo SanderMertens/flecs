@@ -680,3 +680,13 @@ void Entity_tag_has_size_zero() {
     test_int(ptr->size, 0);
     test_int(ptr->alignment, 0);
 }
+
+void Entity_get_null_name() {
+    flecs::world world;
+
+    auto e = world.entity()
+        .set<flecs::Name>({nullptr});
+
+    auto n = e.name();
+    test_assert(n.size() == 0);
+}
