@@ -25,9 +25,9 @@
 
 /* Convenience macro for exporting symbols */
 #ifndef flecs_os_api_bake_STATIC
-#if flecs_os_api_bake_APIS && (defined(_MSC_VER) || defined(__MINGW32__))
+#if flecs_os_api_bake_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
   #define FLECS_OS_API_BAKE_API __declspec(dllexport)
-#elif flecs_os_api_bake_APIS
+#elif flecs_os_api_bake_EXPORTS
   #define FLECS_OS_API_BAKE_API __attribute__((__visibility__("default")))
 #elif defined _MSC_VER
   #define FLECS_OS_API_BAKE_API __declspec(dllimport)
