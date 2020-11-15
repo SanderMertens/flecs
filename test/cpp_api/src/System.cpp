@@ -569,3 +569,19 @@ void System_each_tag() {
 
     test_int(invoked, 1);
 }
+
+void System_system_from_id() {
+    flecs::world world;
+
+    uint32_t invoked = 0;
+    flecs::entity sys = world.system<>()
+        .kind(0)
+        .iter([&](flecs::iter& it) {
+            invoked ++;
+        });
+
+    auto sys_from_id = world.system<>(sys);
+
+    sys_from_id.run();
+    test_int(invoked, 1);
+}

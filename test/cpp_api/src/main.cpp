@@ -128,6 +128,7 @@ void System_empty_signature(void);
 void System_action_tag(void);
 void System_iter_tag(void);
 void System_each_tag(void);
+void System_system_from_id(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -687,6 +688,10 @@ bake_test_case System_testcases[] = {
     {
         "each_tag",
         System_each_tag
+    },
+    {
+        "system_from_id",
+        System_system_from_id
     }
 };
 
@@ -1108,7 +1113,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        18,
+        19,
         System_testcases
     },
     {
