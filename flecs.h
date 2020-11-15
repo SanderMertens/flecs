@@ -11137,6 +11137,10 @@ public:
             ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
         }
 
+    explicit system(const flecs::world& world, flecs::entity id) 
+        : entity(world, id.id())
+        , m_finalized(true) { }
+
     system& signature(const char *signature) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(!m_signature, ECS_INVALID_PARAMETER, NULL);
