@@ -24,6 +24,26 @@ void Singleton_get_mut_singleton() {
     test_int(p->y, 20);
 }
 
+void Singleton_modified_singleton() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.system<Position>()
+        .kind(flecs::OnSet)
+        .iter([&](flecs::iter it, Position *p) {
+            invoked ++;
+        });
+
+    auto e = world.entity();
+    Position *p = e.get_mut<Position>();
+    test_assert(p != NULL);
+    test_int(invoked, 0);
+
+    e.modified<Position>();
+    test_int(invoked, 1);
+}
+
 void Singleton_patch_singleton() {
     flecs::world world;
 
@@ -36,6 +56,25 @@ void Singleton_patch_singleton() {
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
+}
+
+void Singleton_remove_singleton() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.system<Position>()
+        .kind(flecs::OnRemove)
+        .iter([&](flecs::iter it, Position *p) {
+            invoked ++;
+        });
+
+    Position *p_mut = world.get_mut<Position>();
+    test_assert(p_mut != NULL);
+
+    world.remove<Position>();
+
+    test_int(invoked, 1);
 }
 
 void Singleton_singleton_system() {

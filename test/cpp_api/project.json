@@ -270,7 +270,9 @@
             "testcases": [
                 "set_get_singleton",
                 "get_mut_singleton",
+                "modified_singleton",
                 "patch_singleton",
+                "remove_singleton",
                 "singleton_system"
             ]
         }]

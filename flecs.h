@@ -8180,6 +8180,11 @@ public:
     template <typename T>
     T* get_mut() const;
 
+    /** Mark singleton component as modified.
+     */
+    template <typename T>
+    void modified() const;
+
     /** Patch singleton component.
      */
     template <typename T>
@@ -8189,6 +8194,11 @@ public:
      */
     template <typename T>
     const T* get() const;
+
+    /** Remove singleton component.
+     */
+    template <typename T>
+    void remove() const;
 
     /** Create alias for component.
      *
@@ -8217,13 +8227,6 @@ public:
      * @param filter The filter to use for matching.
      */
     void delete_entities(flecs::filter filter) const;
-
-    /** Add component to all entities.
-     *
-     * @tparam T The component to add.
-     */
-    template <typename T>
-    void add() const;
 
     /** Add component to all entities matching a filter.
      *
@@ -8258,13 +8261,6 @@ public:
      * @param filter The filter to use for matching.
      */    
     void add(flecs::entity entity, flecs::filter filter) const;
-
-    /** Remove component from all entities.
-     *
-     * @tparam T The component to remove.
-     */
-    template <typename T>
-    void remove() const;
 
     /** Remove component from all entities matching a filter.
      *
@@ -11843,12 +11839,6 @@ inline void world::delete_entities(flecs::filter filter) const {
 }
 
 template <typename T>
-inline void world::add() const {
-    ecs_bulk_add_remove_type(
-        m_world, _::component_info<T>::type(m_world), nullptr, nullptr);
-}
-
-template <typename T>
 inline void world::add(flecs::filter filter) const {
     ecs_bulk_add_remove_type(
         m_world, _::component_info<T>::type(m_world), nullptr, filter.c_ptr());
@@ -11868,12 +11858,6 @@ inline void world::add(class flecs::entity entity) const {
 
 inline void world::add(class flecs::entity entity, flecs::filter filter) const {
     ecs_bulk_add_remove_type(m_world, entity.to_type().c_ptr(), nullptr, filter.c_ptr());
-}
-
-template <typename T>
-inline void world::remove() const {
-    ecs_bulk_add_remove_type(
-        m_world, nullptr, _::component_info<T>::type(m_world), nullptr);
 }
 
 template <typename T>
@@ -11973,6 +11957,12 @@ T* world::get_mut() const {
 }
 
 template <typename T>
+void world::modified() const {
+    flecs::entity e(m_world, _::component_info<T>::id(m_world));
+    return e.modified<T>();
+}
+
+template <typename T>
 void world::patch(std::function<void(T&)> func) const {
     flecs::entity e(m_world, _::component_info<T>::id(m_world));
     e.patch<T>(func);
@@ -11982,7 +11972,13 @@ template <typename T>
 const T* world::get() const {
     flecs::entity e(m_world, _::component_info<T>::id(m_world));
     return e.get<T>();
-}    
+}
+
+template <typename T>
+void world::remove() const {
+    flecs::entity e(m_world, _::component_info<T>::id(m_world));
+    return e.remove<T>();
+}
 
 template <typename... Args>
 inline flecs::entity world::entity(Args &&... args) const {

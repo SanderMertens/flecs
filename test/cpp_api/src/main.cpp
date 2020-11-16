@@ -234,7 +234,9 @@ void World_different_comp_same_name(void);
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
 void Singleton_get_mut_singleton(void);
+void Singleton_modified_singleton(void);
 void Singleton_patch_singleton(void);
+void Singleton_remove_singleton(void);
 void Singleton_singleton_system(void);
 
 bake_test_case Entity_testcases[] = {
@@ -1064,8 +1066,16 @@ bake_test_case Singleton_testcases[] = {
         Singleton_get_mut_singleton
     },
     {
+        "modified_singleton",
+        Singleton_modified_singleton
+    },
+    {
         "patch_singleton",
         Singleton_patch_singleton
+    },
+    {
+        "remove_singleton",
+        Singleton_remove_singleton
     },
     {
         "singleton_system",
@@ -1183,7 +1193,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        4,
+        6,
         Singleton_testcases
     }
 };
