@@ -153,7 +153,7 @@ ecs_c_info_t *get_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
-    ecs_entity_t real_id = ecs_component_id_from_id(world, component);
+    ecs_entity_t real_id = ecs_get_typeid(world, component);
     if (real_id) {
         return ecs_get_c_info(world, real_id);
     } else {
@@ -580,7 +580,7 @@ bool override_from_base(
             column->data, column->size, column->alignment);
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
-        component = ecs_component_id_from_id(world, component);
+        component = ecs_get_typeid(world, component);
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         int32_t index;
 
@@ -2061,7 +2061,7 @@ ecs_entity_t assign_ptr_w_entity(
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ptr) {
-        ecs_entity_t real_id = ecs_component_id_from_id(world, component);
+        ecs_entity_t real_id = ecs_get_typeid(world, component);
         ecs_c_info_t *cdata = get_c_info(world, real_id);
         if (cdata) {
             if (is_move) {

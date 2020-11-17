@@ -29,7 +29,7 @@ const void* get_shared_column(
 
 #ifndef NDEBUG
     if (size) {
-        ecs_entity_t component_id = ecs_component_id_from_id(
+        ecs_entity_t component_id = ecs_get_typeid(
             it->world, refs[-table_column - 1].component);
 
         const EcsComponent *cdata = ecs_get(

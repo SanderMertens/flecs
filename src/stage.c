@@ -179,7 +179,7 @@ bool ecs_defer_bulk_new(
                 defer_data[c] = data;
 
                 ecs_c_info_t *cinfo = NULL;
-                ecs_entity_t real_id = ecs_component_id_from_id(world, comp);
+                ecs_entity_t real_id = ecs_get_typeid(world, comp);
                 if (real_id) {
                     cinfo = ecs_get_c_info(world, real_id);
                 }
@@ -280,7 +280,7 @@ bool ecs_defer_set(
         }
 
         ecs_c_info_t *c_info = NULL;
-        ecs_entity_t real_id = ecs_component_id_from_id(world, component);
+        ecs_entity_t real_id = ecs_get_typeid(world, component);
         if (real_id) {
             c_info = ecs_get_c_info(world, real_id);
         }
