@@ -11977,7 +11977,7 @@ const T* world::get() const {
 template <typename T>
 void world::remove() const {
     flecs::entity e(m_world, _::component_info<T>::id(m_world));
-    return e.remove<T>();
+    e.remove<T>();
 }
 
 template <typename... Args>
