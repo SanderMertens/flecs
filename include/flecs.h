@@ -1582,6 +1582,17 @@ ecs_type_t ecs_get_type(
     ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Get the typeid of an entity.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return The typeid of the entity.
+ */
+FLECS_API
+ecs_entity_t ecs_get_typeid(
+    ecs_world_t *world,
+    ecs_entity_t e);
+
 /** Get the name of an entity.
  * This will return the name as specified in the EcsName component.
  *

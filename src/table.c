@@ -118,7 +118,7 @@ bool has_component(
     int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
-        if (component == ecs_component_id_from_id(world, entities[i])) {
+        if (component == ecs_get_typeid(world, entities[i])) {
             return true;
         }
     }
@@ -153,7 +153,7 @@ void notify_component_info(
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         int32_t i;
         for (i = 0; i < column_count; i ++) {
-            ecs_entity_t c = ecs_component_id_from_id(world, array[i]);
+            ecs_entity_t c = ecs_get_typeid(world, array[i]);
             if (!c) {
                 continue;
             }

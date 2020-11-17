@@ -1,6 +1,6 @@
 #include "private_api.h"
 
-ecs_entity_t ecs_component_id_from_id(
+ecs_entity_t ecs_get_typeid(
     ecs_world_t *world,
     ecs_entity_t e)
 {

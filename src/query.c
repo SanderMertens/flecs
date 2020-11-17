@@ -431,7 +431,7 @@ int32_t get_component_index(
         if (!ECS_HAS_ROLE(component, CASE) && 
             !ECS_HAS_ROLE(component, SWITCH)) 
         {
-            component = ecs_component_id_from_id(world, component);
+            component = ecs_get_typeid(world, component);
             const EcsComponent *data = ecs_get(
                 world, component, EcsComponent);
 
