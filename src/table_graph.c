@@ -1,25 +1,5 @@
 #include "private_api.h"
 
-ecs_entity_t ecs_get_typeid(
-    ecs_world_t *world,
-    ecs_entity_t e)
-{
-    if (ECS_HAS_ROLE(e, TRAIT)) {
-        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
-        if (ecs_has(world, trait, EcsComponent)) {
-            /* This is not a trait tag, trait is the value */
-            return trait;
-        } else {
-            /* This is a trait tag, component is the value */
-            return ecs_entity_t_lo(e);
-        }
-    } else if (e & ECS_ROLE_MASK) {
-        return 0;
-    }
-
-    return e;
-}
-
 const EcsComponent* ecs_component_from_id(
     ecs_world_t *world,
     ecs_entity_t e)
