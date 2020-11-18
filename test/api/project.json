@@ -1444,7 +1444,8 @@
                 "read_zero_size",
                 "write_zero_size",
                 "invalid_header",
-                "recycled_id"
+                "recycled_id",
+                "new_component_after_restore"
             ]
         }, {
             "id": "FilterIter",

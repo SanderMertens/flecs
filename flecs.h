@@ -11353,7 +11353,7 @@ private:
         } 
 
         return str.str();       
-    }       
+    }
 
     ecs_entity_t m_kind;
     const char *m_signature = nullptr;

@@ -120,6 +120,11 @@ void ecs_table_writer_finalize_table(
         if (id >= world->stats.last_id) {
             world->stats.last_id = id + 1;
         }
+        if (id < ECS_HI_COMPONENT_ID) {
+            if (id >= world->stats.last_component_id) {
+                world->stats.last_component_id = id + 1;
+            }
+        }
     }
 }
 

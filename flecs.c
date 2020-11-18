@@ -7917,6 +7917,11 @@ void ecs_table_writer_finalize_table(
         if (id >= world->stats.last_id) {
             world->stats.last_id = id + 1;
         }
+        if (id < ECS_HI_COMPONENT_ID) {
+            if (id >= world->stats.last_component_id) {
+                world->stats.last_component_id = id + 1;
+            }
+        }
     }
 }
 
@@ -19213,8 +19218,6 @@ void ProgressTimers(ecs_iter_t *it) {
 
         FLECS_FLOAT time_elapsed = timer[i].time + it->world->stats.delta_time_raw;
         FLECS_FLOAT timeout = timer[i].timeout;
-
-        printf("time_elapsed = %d, timeout = %d, eq = %d\n", time_elapsed, timeout, time_elapsed >= timeout);
         
         if (time_elapsed >= timeout) {
             FLECS_FLOAT t = time_elapsed - timeout;
