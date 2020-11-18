@@ -31,8 +31,10 @@
 /* Set to double or int to increase accuracy of time keeping. Note that when
  * using an integer type, an application has to provide the delta_time values
  * to the progress() function, as the code that measures time requires a
- * floating point type.  */
+ * floating point type. */
+#ifndef FLECS_FLOAT
 #define FLECS_FLOAT float
+#endif
 
 #include "flecs/private/api_defines.h"
 #include "flecs/private/vector.h"        /* Vector datatype */

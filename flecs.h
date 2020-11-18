@@ -32,8 +32,10 @@
 /* Set to double or int to increase accuracy of time keeping. Note that when
  * using an integer type, an application has to provide the delta_time values
  * to the progress() function, as the code that measures time requires a
- * floating point type.  */
+ * floating point type. */
+#ifndef FLECS_FLOAT
 #define FLECS_FLOAT float
+#endif
 
 /**
  * @file api_defines.h
@@ -8212,6 +8214,11 @@ public:
     template <typename T>
     const T* get() const;
 
+    /** Test if world has singleton component.
+     */
+    template <typename T>
+    bool has() const;
+
     /** Remove singleton component.
      */
     template <typename T>
@@ -11989,6 +11996,12 @@ template <typename T>
 const T* world::get() const {
     flecs::entity e(m_world, _::component_info<T>::id(m_world));
     return e.get<T>();
+}
+
+template <typename T>
+bool world::has() const {
+    flecs::entity e(m_world, _::component_info<T>::id(m_world));
+    return e.has<T>();
 }
 
 template <typename T>
