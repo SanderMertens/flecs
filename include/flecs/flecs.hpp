@@ -945,6 +945,11 @@ public:
     template <typename T>
     const T* get() const;
 
+    /** Test if world has singleton component.
+     */
+    template <typename T>
+    bool has() const;
+
     /** Remove singleton component.
      */
     template <typename T>
@@ -4722,6 +4727,12 @@ template <typename T>
 const T* world::get() const {
     flecs::entity e(m_world, _::component_info<T>::id(m_world));
     return e.get<T>();
+}
+
+template <typename T>
+bool world::has() const {
+    flecs::entity e(m_world, _::component_info<T>::id(m_world));
+    return e.has<T>();
 }
 
 template <typename T>

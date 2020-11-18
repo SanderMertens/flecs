@@ -77,6 +77,16 @@ void Singleton_remove_singleton() {
     test_int(invoked, 1);
 }
 
+void Singleton_has_singleton() {
+    flecs::world world;
+
+    test_assert(!world.has<Position>());
+
+    world.set<Position>({10, 20});
+
+    test_assert(world.has<Position>());
+}
+
 void Singleton_singleton_system() {
     flecs::world world;
 

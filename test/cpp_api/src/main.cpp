@@ -237,6 +237,7 @@ void Singleton_get_mut_singleton(void);
 void Singleton_modified_singleton(void);
 void Singleton_patch_singleton(void);
 void Singleton_remove_singleton(void);
+void Singleton_has_singleton(void);
 void Singleton_singleton_system(void);
 
 bake_test_case Entity_testcases[] = {
@@ -1078,6 +1079,10 @@ bake_test_case Singleton_testcases[] = {
         Singleton_remove_singleton
     },
     {
+        "has_singleton",
+        Singleton_has_singleton
+    },
+    {
         "singleton_system",
         Singleton_singleton_system
     }
@@ -1193,7 +1198,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        6,
+        7,
         Singleton_testcases
     }
 };
