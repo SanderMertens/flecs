@@ -31,11 +31,11 @@ void ProgressTimers(ecs_iter_t *it) {
             continue;
         }
 
-        float time_elapsed = timer[i].time + it->world->stats.delta_time_raw;
-        float timeout = timer[i].timeout;
+        FLECS_FLOAT time_elapsed = timer[i].time + it->world->stats.delta_time_raw;
+        FLECS_FLOAT timeout = timer[i].timeout;
         
         if (time_elapsed >= timeout) {
-            float t = time_elapsed - timeout;
+            FLECS_FLOAT t = time_elapsed - timeout;
             if (t > timeout) {
                 t = 0;
             }
@@ -92,7 +92,7 @@ void ProgressRateFilters(ecs_iter_t *it) {
 ecs_entity_t ecs_set_timeout(
     ecs_world_t *world,
     ecs_entity_t timer,
-    float timeout)
+    FLECS_FLOAT timeout)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -110,7 +110,7 @@ ecs_entity_t ecs_set_timeout(
     return timer;
 }
 
-float ecs_get_timeout(
+FLECS_FLOAT ecs_get_timeout(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
@@ -128,7 +128,7 @@ float ecs_get_timeout(
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t timer,
-    float interval)
+    FLECS_FLOAT interval)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -145,7 +145,7 @@ ecs_entity_t ecs_set_interval(
     return timer;  
 }
 
-float ecs_get_interval(
+FLECS_FLOAT ecs_get_interval(
     ecs_world_t *world,
     ecs_entity_t timer)
 {

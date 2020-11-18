@@ -15,8 +15,8 @@ typedef struct EcsSystem {
     ecs_entity_t tick_source;             /* Tick source associated with system */
     
     int32_t invoke_count;                 /* Number of times system is invoked */
-    float time_spent;                     /* Time spent on running system */
-    float time_passed;                    /* Time passed since last invocation */
+    FLECS_FLOAT time_spent;               /* Time spent on running system */
+    FLECS_FLOAT time_passed;              /* Time passed since last invocation */
 } EcsSystem;
 
 /* Invoked when system becomes active / inactive */
@@ -32,7 +32,7 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
-    float delta_time,
+    FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,

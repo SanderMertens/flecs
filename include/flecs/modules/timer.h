@@ -23,8 +23,8 @@ extern ecs_type_t
 
 /** Component used for timer functionality */
 typedef struct EcsTimer {
-    float timeout;         /* Timer timeout period */
-    float time;            /* Incrementing time value */
+    FLECS_FLOAT timeout;         /* Timer timeout period */
+    FLECS_FLOAT time;            /* Incrementing time value */
     int32_t fired_count;   /* Number of times ticked */
     bool active;           /* Is the timer active or not */
     bool single_shot;      /* Is this a single shot timer */
@@ -35,7 +35,7 @@ typedef struct EcsRateFilter {
     ecs_entity_t src;
     int32_t rate;
     int32_t tick_count;
-    float time_elapsed;   /* Time elapsed since last tick */
+    FLECS_FLOAT time_elapsed;   /* Time elapsed since last tick */
 } EcsRateFilter;
 
 
@@ -62,7 +62,7 @@ FLECS_API
 ecs_entity_t ecs_set_timeout(
     ecs_world_t *world,
     ecs_entity_t timer,
-    float timeout);
+    FLECS_FLOAT timeout);
 
 /** Get current timeout value for the specified timer.
  * This operation returns the value set by ecs_set_timeout. If no timer is
@@ -77,7 +77,7 @@ ecs_entity_t ecs_set_timeout(
  * @return The current timeout value, or 0 if no timer is active.
  */
 FLECS_API
-float ecs_get_timeout(
+FLECS_FLOAT ecs_get_timeout(
     ecs_world_t *world,
     ecs_entity_t timer);
 
@@ -100,7 +100,7 @@ FLECS_API
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t timer,
-    float interval);   
+    FLECS_FLOAT interval);   
 
 /** Get current interval value for the specified timer.
  * This operation returns the value set by ecs_set_interval. If no timer is
@@ -111,7 +111,7 @@ ecs_entity_t ecs_set_interval(
  * @return The current interval value, or 0 if no timer is active.
  */
 FLECS_API
-float ecs_get_interval(
+FLECS_FLOAT ecs_get_interval(
     ecs_world_t *world,
     ecs_entity_t timer);
 

@@ -524,7 +524,7 @@ struct ecs_world_t {
 
     ecs_time_t world_start_time;  /* Timestamp of simulation start */
     ecs_time_t frame_start_time;  /* Timestamp of frame start */
-    float fps_sleep;              /* Sleep time to prevent fps overshoot */
+    FLECS_FLOAT fps_sleep;        /* Sleep time to prevent fps overshoot */
 
 
     /* -- Metrics -- */

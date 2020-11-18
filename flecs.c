@@ -556,7 +556,7 @@ struct ecs_world_t {
 
     ecs_time_t world_start_time;  /* Timestamp of simulation start */
     ecs_time_t frame_start_time;  /* Timestamp of frame start */
-    float fps_sleep;              /* Sleep time to prevent fps overshoot */
+    FLECS_FLOAT fps_sleep;        /* Sleep time to prevent fps overshoot */
 
 
     /* -- Metrics -- */
@@ -1080,10 +1080,6 @@ ecs_table_t *ecs_table_traverse_remove(
 void ecs_table_mark_dirty(
     ecs_table_t *table,
     ecs_entity_t component);
-
-ecs_entity_t ecs_component_id_from_id(
-    ecs_world_t *world,
-    ecs_entity_t e);
 
 const EcsComponent* ecs_component_from_id(
     ecs_world_t *world,
@@ -1804,7 +1800,7 @@ bool has_component(
     int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
-        if (component == ecs_component_id_from_id(world, entities[i])) {
+        if (component == ecs_get_typeid(world, entities[i])) {
             return true;
         }
     }
@@ -1839,7 +1835,7 @@ void notify_component_info(
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         int32_t i;
         for (i = 0; i < column_count; i ++) {
-            ecs_entity_t c = ecs_component_id_from_id(world, array[i]);
+            ecs_entity_t c = ecs_get_typeid(world, array[i]);
             if (!c) {
                 continue;
             }
@@ -3770,7 +3766,7 @@ ecs_c_info_t *get_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
-    ecs_entity_t real_id = ecs_component_id_from_id(world, component);
+    ecs_entity_t real_id = ecs_get_typeid(world, component);
     if (real_id) {
         return ecs_get_c_info(world, real_id);
     } else {
@@ -4197,7 +4193,7 @@ bool override_from_base(
             column->data, column->size, column->alignment);
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
-        component = ecs_component_id_from_id(world, component);
+        component = ecs_get_typeid(world, component);
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         int32_t index;
 
@@ -5678,7 +5674,7 @@ ecs_entity_t assign_ptr_w_entity(
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ptr) {
-        ecs_entity_t real_id = ecs_component_id_from_id(world, component);
+        ecs_entity_t real_id = ecs_get_typeid(world, component);
         ecs_c_info_t *cdata = get_c_info(world, real_id);
         if (cdata) {
             if (is_move) {
@@ -5883,6 +5879,26 @@ ecs_type_t ecs_get_type(
     }
     
     return NULL;
+}
+
+ecs_entity_t ecs_get_typeid(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    if (ECS_HAS_ROLE(e, TRAIT)) {
+        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
+        if (ecs_has(world, trait, EcsComponent)) {
+            /* This is not a trait tag, trait is the value */
+            return trait;
+        } else {
+            /* This is a trait tag, component is the value */
+            return ecs_entity_t_lo(e);
+        }
+    } else if (e & ECS_ROLE_MASK) {
+        return 0;
+    }
+
+    return e;
 }
 
 int32_t ecs_count_type(
@@ -6410,7 +6426,7 @@ bool ecs_defer_bulk_new(
                 defer_data[c] = data;
 
                 ecs_c_info_t *cinfo = NULL;
-                ecs_entity_t real_id = ecs_component_id_from_id(world, comp);
+                ecs_entity_t real_id = ecs_get_typeid(world, comp);
                 if (real_id) {
                     cinfo = ecs_get_c_info(world, real_id);
                 }
@@ -6511,7 +6527,7 @@ bool ecs_defer_set(
         }
 
         ecs_c_info_t *c_info = NULL;
-        ecs_entity_t real_id = ecs_component_id_from_id(world, component);
+        ecs_entity_t real_id = ecs_get_typeid(world, component);
         if (real_id) {
             c_info = ecs_get_c_info(world, real_id);
         }
@@ -10701,7 +10717,7 @@ void ecs_merge(
     ecs_eval_component_monitors(world);
 
     if (measure_frame_time) {
-        world->stats.merge_time_total += (float)ecs_time_measure(&t_start);
+        world->stats.merge_time_total += (FLECS_FLOAT)ecs_time_measure(&t_start);
     }
 
     world->stats.merge_count_total ++;
@@ -10737,7 +10753,7 @@ void ecs_measure_system_time(
 }
 
 /* Increase timer resolution based on target fps */
-static void set_timer_resolution(float fps)
+static void set_timer_resolution(FLECS_FLOAT fps)
 {
     if(fps >= 60.0f) ecs_increase_timer_resolution(1);
     else ecs_increase_timer_resolution(0);
@@ -10745,7 +10761,7 @@ static void set_timer_resolution(float fps)
 
 void ecs_set_target_fps(
     ecs_world_t *world,
-    float fps)
+    FLECS_FLOAT fps)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
@@ -10994,9 +11010,9 @@ double insert_sleep(
 
         /* Add sleep error measurement to sleep error, with a bias towards the
          * latest measured values. */
-        world->stats.sleep_err = (float)
+        world->stats.sleep_err = (FLECS_FLOAT)
             (world_sleep_err * 0.9 + sleep_err * 0.1) * 
-                (float)world->stats.frame_count_total;
+                (FLECS_FLOAT)world->stats.frame_count_total;
     }
 
     /*  Make last minute corrections if due to a larger clock error delta_time
@@ -11011,9 +11027,9 @@ double insert_sleep(
 }
 
 static
-float start_measure_frame(
+FLECS_FLOAT start_measure_frame(
     ecs_world_t *world,
-    float user_delta_time)
+    FLECS_FLOAT user_delta_time)
 {
     double delta_time = 0;
 
@@ -11039,10 +11055,10 @@ float start_measure_frame(
         world->frame_start_time = t;  
 
         /* Keep track of total time passed in world */
-        world->stats.world_time_total_raw += (float)delta_time;
+        world->stats.world_time_total_raw += (FLECS_FLOAT)delta_time;
     }
 
-    return (float)delta_time;
+    return (FLECS_FLOAT)delta_time;
 }
 
 static
@@ -11051,13 +11067,13 @@ void stop_measure_frame(
 {
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
-        world->stats.frame_time_total += (float)ecs_time_measure(&t);
+        world->stats.frame_time_total += (FLECS_FLOAT)ecs_time_measure(&t);
     }
 }
 
-float ecs_frame_begin(
+FLECS_FLOAT ecs_frame_begin(
     ecs_world_t *world,
-    float user_delta_time)
+    FLECS_FLOAT user_delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
@@ -11069,7 +11085,7 @@ float ecs_frame_begin(
     }
 
     /* Start measuring total frame time */
-    float delta_time = start_measure_frame(world, user_delta_time);
+    FLECS_FLOAT delta_time = start_measure_frame(world, user_delta_time);
     if (user_delta_time == 0) {
         user_delta_time = delta_time;
     }  
@@ -13528,8 +13544,8 @@ typedef struct EcsSystem {
     ecs_entity_t tick_source;             /* Tick source associated with system */
     
     int32_t invoke_count;                 /* Number of times system is invoked */
-    float time_spent;                     /* Time spent on running system */
-    float time_passed;                    /* Time passed since last invocation */
+    FLECS_FLOAT time_spent;               /* Time spent on running system */
+    FLECS_FLOAT time_passed;              /* Time passed since last invocation */
 } EcsSystem;
 
 /* Invoked when system becomes active / inactive */
@@ -13545,7 +13561,7 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
-    float delta_time,
+    FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
@@ -13982,7 +13998,7 @@ int32_t get_component_index(
         if (!ECS_HAS_ROLE(component, CASE) && 
             !ECS_HAS_ROLE(component, SWITCH)) 
         {
-            component = ecs_component_id_from_id(world, component);
+            component = ecs_get_typeid(world, component);
             const EcsComponent *data = ecs_get(
                 world, component, EcsComponent);
 
@@ -16099,26 +16115,6 @@ bool ecs_query_orphaned(
     return query->flags & EcsQueryIsOrphaned;
 }
 
-ecs_entity_t ecs_component_id_from_id(
-    ecs_world_t *world,
-    ecs_entity_t e)
-{
-    if (ECS_HAS_ROLE(e, TRAIT)) {
-        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
-        if (ecs_has(world, trait, EcsComponent)) {
-            /* This is not a trait tag, trait is the value */
-            return trait;
-        } else {
-            /* This is a trait tag, component is the value */
-            return ecs_entity_t_lo(e);
-        }
-    } else if (e & ECS_ROLE_MASK) {
-        return 0;
-    }
-
-    return e;
-}
-
 const EcsComponent* ecs_component_from_id(
     ecs_world_t *world,
     ecs_entity_t e)
@@ -17685,7 +17681,7 @@ const void* get_shared_column(
 
 #ifndef NDEBUG
     if (size) {
-        ecs_entity_t component_id = ecs_component_id_from_id(
+        ecs_entity_t component_id = ecs_get_typeid(
             it->world, refs[-table_column - 1].component);
 
         const EcsComponent *cdata = ecs_get(
@@ -18235,7 +18231,7 @@ void ecs_pipeline_end(
 void ecs_pipeline_progress(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    float delta_time);
+    FLECS_FLOAT delta_time);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -18498,7 +18494,7 @@ void ecs_workers_progress(
     }
 
     if (world->measure_frame_time) {
-        world->stats.system_time_total += (float)ecs_time_measure(&start);
+        world->stats.system_time_total += (FLECS_FLOAT)ecs_time_measure(&start);
     }    
 }
 
@@ -18885,7 +18881,7 @@ void ecs_pipeline_end(
 void ecs_pipeline_progress(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    float delta_time)
+    FLECS_FLOAT delta_time)
 {
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -19027,7 +19023,7 @@ void EcsOnAddPipeline(
 
 bool ecs_progress(
     ecs_world_t *world,
-    float user_delta_time)
+    FLECS_FLOAT user_delta_time)
 {
     ecs_frame_begin(world, user_delta_time);
 
@@ -19040,7 +19036,7 @@ bool ecs_progress(
 
 void ecs_set_time_scale(
     ecs_world_t *world,
-    float scale)
+    FLECS_FLOAT scale)
 {
     world->stats.time_scale = scale;
 }
@@ -19215,11 +19211,13 @@ void ProgressTimers(ecs_iter_t *it) {
             continue;
         }
 
-        float time_elapsed = timer[i].time + it->world->stats.delta_time_raw;
-        float timeout = timer[i].timeout;
+        FLECS_FLOAT time_elapsed = timer[i].time + it->world->stats.delta_time_raw;
+        FLECS_FLOAT timeout = timer[i].timeout;
+
+        printf("time_elapsed = %d, timeout = %d, eq = %d\n", time_elapsed, timeout, time_elapsed >= timeout);
         
         if (time_elapsed >= timeout) {
-            float t = time_elapsed - timeout;
+            FLECS_FLOAT t = time_elapsed - timeout;
             if (t > timeout) {
                 t = 0;
             }
@@ -19276,7 +19274,7 @@ void ProgressRateFilters(ecs_iter_t *it) {
 ecs_entity_t ecs_set_timeout(
     ecs_world_t *world,
     ecs_entity_t timer,
-    float timeout)
+    FLECS_FLOAT timeout)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -19294,7 +19292,7 @@ ecs_entity_t ecs_set_timeout(
     return timer;
 }
 
-float ecs_get_timeout(
+FLECS_FLOAT ecs_get_timeout(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
@@ -19312,7 +19310,7 @@ float ecs_get_timeout(
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t timer,
-    float interval)
+    FLECS_FLOAT interval)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -19329,7 +19327,7 @@ ecs_entity_t ecs_set_interval(
     return timer;  
 }
 
-float ecs_get_interval(
+FLECS_FLOAT ecs_get_interval(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
@@ -20486,7 +20484,7 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
-    float delta_time,
+    FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
@@ -20497,7 +20495,7 @@ ecs_entity_t ecs_run_intern(
         param = system_data->ctx;
     }
 
-    float time_elapsed = delta_time;
+    FLECS_FLOAT time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
     if (tick_source) {
@@ -20576,7 +20574,7 @@ ecs_entity_t ecs_run_intern(
     }
 
     if (measure_time) {
-        system_data->time_spent += (float)ecs_time_measure(&time_start);
+        system_data->time_spent += (FLECS_FLOAT)ecs_time_measure(&time_start);
     }
 
 #ifndef NDEBUG
@@ -20594,7 +20592,7 @@ ecs_entity_t ecs_run_intern(
 ecs_entity_t ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
-    float delta_time,
+    FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
@@ -20623,7 +20621,7 @@ ecs_entity_t ecs_run_w_filter(
 ecs_entity_t ecs_run(
     ecs_world_t *world,
     ecs_entity_t system,
-    float delta_time,
+    FLECS_FLOAT delta_time,
     void *param)
 {
     return ecs_run_w_filter(world, system, delta_time, 0, 0, NULL, param);

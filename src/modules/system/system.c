@@ -363,7 +363,7 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
-    float delta_time,
+    FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
@@ -374,7 +374,7 @@ ecs_entity_t ecs_run_intern(
         param = system_data->ctx;
     }
 
-    float time_elapsed = delta_time;
+    FLECS_FLOAT time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
     if (tick_source) {
@@ -453,7 +453,7 @@ ecs_entity_t ecs_run_intern(
     }
 
     if (measure_time) {
-        system_data->time_spent += (float)ecs_time_measure(&time_start);
+        system_data->time_spent += (FLECS_FLOAT)ecs_time_measure(&time_start);
     }
 
 #ifndef NDEBUG
@@ -471,7 +471,7 @@ ecs_entity_t ecs_run_intern(
 ecs_entity_t ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
-    float delta_time,
+    FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
@@ -500,7 +500,7 @@ ecs_entity_t ecs_run_w_filter(
 ecs_entity_t ecs_run(
     ecs_world_t *world,
     ecs_entity_t system,
-    float delta_time,
+    FLECS_FLOAT delta_time,
     void *param)
 {
     return ecs_run_w_filter(world, system, delta_time, 0, 0, NULL, param);

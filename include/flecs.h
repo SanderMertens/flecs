@@ -28,6 +28,12 @@
 #define FLECS_DIRECT_ACCESS
 #endif
 
+/* Set to double or int to increase accuracy of time keeping. Note that when
+ * using an integer type, an application has to provide the delta_time values
+ * to the progress() function, as the code that measures time requires a
+ * floating point type.  */
+#define FLECS_FLOAT float
+
 #include "flecs/private/api_defines.h"
 #include "flecs/private/vector.h"        /* Vector datatype */
 #include "flecs/private/sparse.h"        /* Sparse set */
@@ -90,16 +96,16 @@ typedef struct ecs_world_info_t {
     ecs_entity_t min_id;              /**< First allowed entity id */
     ecs_entity_t max_id;              /**< Last allowed entity id */
 
-    float delta_time_raw;      /**< Raw delta time (no time scaling) */
-    float delta_time;          /**< Time passed to or computed by ecs_progress */
-    float time_scale;          /**< Time scale applied to delta_time */
-    float target_fps;          /**< Target fps */
-    float frame_time_total;    /**< Total time spent processing a frame */
-    float system_time_total;   /**< Total time spent in systems */
-    float merge_time_total;    /**< Total time spent in merges */
-    float world_time_total;    /**< Time elapsed in simulation */
-    float world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
-    float sleep_err;           /**< Measured sleep error */
+    FLECS_FLOAT delta_time_raw;      /**< Raw delta time (no time scaling) */
+    FLECS_FLOAT delta_time;          /**< Time passed to or computed by ecs_progress */
+    FLECS_FLOAT time_scale;          /**< Time scale applied to delta_time */
+    FLECS_FLOAT target_fps;          /**< Target fps */
+    FLECS_FLOAT frame_time_total;    /**< Total time spent processing a frame */
+    FLECS_FLOAT system_time_total;   /**< Total time spent in systems */
+    FLECS_FLOAT merge_time_total;    /**< Total time spent in merges */
+    FLECS_FLOAT world_time_total;    /**< Time elapsed in simulation */
+    FLECS_FLOAT world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
+    FLECS_FLOAT sleep_err;           /**< Measured sleep error */
     
     int32_t frame_count_total;  /**< Total number of frames */
     int32_t merge_count_total;  /**< Total number of merges */
@@ -2638,9 +2644,9 @@ int32_t ecs_table_component_index(
 
 /** Begin frame. */
 FLECS_API
-float ecs_frame_begin(
+FLECS_FLOAT ecs_frame_begin(
     ecs_world_t *world,
-    float delta_time);
+    FLECS_FLOAT delta_time);
 
 /** End frame. */
 FLECS_API
