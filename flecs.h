@@ -3312,6 +3312,7 @@ void ecs_unlock(
  * 
  * @param world The world.
  */
+FLECS_API 
 void ecs_begin_wait(
     ecs_world_t *world);
 
@@ -3321,6 +3322,7 @@ void ecs_begin_wait(
  *
  * @param world The world.
  */
+FLECS_API 
 void ecs_end_wait(
     ecs_world_t *world);
 
