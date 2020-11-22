@@ -1521,3 +1521,45 @@ void ReaderWriter_new_component_after_restore() {
 
     ecs_vector_free(v);
 }
+
+void ReaderWriter_delete_all_after_restore() {
+    ecs_entity_t e1, e2, e3, pos;
+    ecs_vector_t *v;
+
+    {
+        ecs_world_t *world = ecs_init();
+        ECS_COMPONENT(world, Position);
+
+        e1 = ecs_new(world, Position);
+        e2 = ecs_new(world, Position);
+        e3 = ecs_new(world, Position);
+
+        v = serialize_to_vector(world, 36);
+
+        ecs_fini(world);
+
+        pos = ecs_typeid(Position);
+    }
+
+    {
+        ecs_world_t *world = deserialize_from_vector(v, 36);
+        
+        ECS_COMPONENT(world, Position);
+        ECS_COMPONENT(world, Velocity);
+
+        test_assert(pos == ecs_typeid(Position));
+        test_assert(pos != ecs_typeid(Velocity));
+
+        test_assert(ecs_has(world, e1, Position));
+        test_assert(ecs_has(world, e2, Position));
+        test_assert(ecs_has(world, e3, Position));
+
+        ecs_delete(world, e1);
+        ecs_delete(world, e2);
+        ecs_delete(world, e3);
+
+        ecs_fini(world);
+    }
+
+    ecs_vector_free(v);
+}

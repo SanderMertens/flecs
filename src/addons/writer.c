@@ -94,6 +94,7 @@ void ecs_table_writer_finalize_table(
     ecs_data_t *data = ecs_table_get_data(writer->table);
     ecs_vector_t *entity_vector = data->entities;
     ecs_entity_t *entities = ecs_vector_first(entity_vector, ecs_entity_t);
+    ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
     int32_t i, count = ecs_vector_count(entity_vector);
 
     for (i = 0; i < count; i ++) {
@@ -114,6 +115,8 @@ void ecs_table_writer_finalize_table(
 
         record_ptr->row = i + 1;
         record_ptr->table = writer->table;
+
+        record_ptrs[i] = record_ptr;
 
         /* Strip entity from generation */
         ecs_entity_t id = entities[i] & ECS_ENTITY_MASK;

@@ -1338,6 +1338,7 @@ void ReaderWriter_write_zero_size(void);
 void ReaderWriter_invalid_header(void);
 void ReaderWriter_recycled_id(void);
 void ReaderWriter_new_component_after_restore(void);
+void ReaderWriter_delete_all_after_restore(void);
 
 // Testsuite 'FilterIter'
 void FilterIter_iter_one_table(void);
@@ -6397,6 +6398,10 @@ bake_test_case ReaderWriter_testcases[] = {
     {
         "new_component_after_restore",
         ReaderWriter_new_component_after_restore
+    },
+    {
+        "delete_all_after_restore",
+        ReaderWriter_delete_all_after_restore
     }
 };
 
@@ -7065,7 +7070,7 @@ static bake_test_suite suites[] = {
         "ReaderWriter",
         NULL,
         NULL,
-        22,
+        23,
         ReaderWriter_testcases
     },
     {
