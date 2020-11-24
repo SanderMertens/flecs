@@ -480,9 +480,9 @@ public:
      * @param table_column Id of table column (corresponds with location in table type).
      * @return Pointer to table column.
      */
-void* table_column(int32_t col) const {
-    return ecs_table_column(m_iter, col);
-}
+    void* table_column(int32_t col) const {
+        return ecs_table_column(m_iter, col);
+    }
 
     /** Obtain typed pointer to table column.
      * If the table does not contain a column with the specified type, the

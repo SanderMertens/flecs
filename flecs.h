@@ -7752,8 +7752,8 @@ public:
      * @param table_column Id of table column (corresponds with location in table type).
      * @return Pointer to table column.
      */
-    void* table_column(int32_t table_column) const {
-        return ecs_table_column(m_iter, table_column);
+    void* table_column(int32_t col) const {
+        return ecs_table_column(m_iter, col);
     }
 
     /** Obtain typed pointer to table column.
@@ -8141,8 +8141,8 @@ public:
      * @param type Type to preallocate memory for.
      * @param entity_count Number of entities to preallocate memory for.
      */
-    void dim_type(type_t type, std::int32_t entity_count) const {
-        ecs_dim_type(m_world, type, entity_count);
+    void dim_type(type_t t, std::int32_t entity_count) const {
+        ecs_dim_type(m_world, t, entity_count);
     }
 
     /** Set entity range.
@@ -11006,35 +11006,35 @@ public:
 
     template <typename Func>
     void each(Func func) const {
-        ecs_iter_t iter = ecs_query_iter(m_query);
+        ecs_iter_t it = ecs_query_iter(m_query);
 
-        while (ecs_query_next(&iter)) {
-            _::column_args<Components...> columns(&iter);
+        while (ecs_query_next(&it)) {
+            _::column_args<Components...> columns(&it);
             _::each_invoker<Func, Components...> ctx(func);
-            ctx.call_system(&iter, func, 0, columns.m_columns);
+            ctx.call_system(&it, func, 0, columns.m_columns);
         }
     }
 
     /* DEPRECATED */
     template <typename Func>
     void action(Func func) const {
-        ecs_iter_t iter = ecs_query_iter(m_query);
+        ecs_iter_t it = ecs_query_iter(m_query);
 
-        while (ecs_query_next(&iter)) {
-            _::column_args<Components...> columns(&iter);
+        while (ecs_query_next(&it)) {
+            _::column_args<Components...> columns(&it);
             _::action_invoker<Func, Components...> ctx(func);
-            ctx.call_system(&iter, func, 0, columns.m_columns);
+            ctx.call_system(&it, func, 0, columns.m_columns);
         }
     }  
 
     template <typename Func>
     void iter(Func func) const {
-        ecs_iter_t iter = ecs_query_iter(m_query);
+        ecs_iter_t it = ecs_query_iter(m_query);
 
-        while (ecs_query_next(&iter)) {
-            _::column_args<Components...> columns(&iter);
+        while (ecs_query_next(&it)) {
+            _::column_args<Components...> columns(&it);
             _::iter_invoker<Func, Components...> ctx(func);
-            ctx.call_system(&iter, func, 0, columns.m_columns);
+            ctx.call_system(&it, func, 0, columns.m_columns);
         }
     }        
 };
@@ -11898,20 +11898,20 @@ inline void world::add(flecs::filter filter) const {
         m_world, _::component_info<T>::type(m_world), nullptr, filter.c_ptr());
 }
 
-inline void world::add(flecs::type type) const {
-    ecs_bulk_add_remove_type(m_world, type.c_ptr(), nullptr, nullptr);
+inline void world::add(flecs::type t) const {
+    ecs_bulk_add_remove_type(m_world, t.c_ptr(), nullptr, nullptr);
 }
 
-inline void world::add(flecs::type type, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, type.c_ptr(), nullptr, filter.c_ptr());
+inline void world::add(flecs::type t, flecs::filter filter) const {
+    ecs_bulk_add_remove_type(m_world, t.c_ptr(), nullptr, filter.c_ptr());
 }
 
-inline void world::add(class flecs::entity entity) const {
-    ecs_bulk_add_remove_type(m_world, entity.to_type().c_ptr(), nullptr, nullptr);
+inline void world::add(class flecs::entity e) const {
+    ecs_bulk_add_remove_type(m_world, e.to_type().c_ptr(), nullptr, nullptr);
 }
 
-inline void world::add(class flecs::entity entity, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, entity.to_type().c_ptr(), nullptr, filter.c_ptr());
+inline void world::add(class flecs::entity e, flecs::filter filter) const {
+    ecs_bulk_add_remove_type(m_world, e.to_type().c_ptr(), nullptr, filter.c_ptr());
 }
 
 template <typename T>
@@ -11920,20 +11920,20 @@ inline void world::remove(flecs::filter filter) const {
         m_world, nullptr, _::component_info<T>::type(m_world), filter.c_ptr());
 }
 
-inline void world::remove(flecs::type type) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, type.c_ptr(), nullptr);
+inline void world::remove(flecs::type t) const {
+    ecs_bulk_add_remove_type(m_world, nullptr, t.c_ptr(), nullptr);
 }
 
-inline void world::remove(flecs::type type, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, type.c_ptr(), filter.c_ptr());
+inline void world::remove(flecs::type t, flecs::filter filter) const {
+    ecs_bulk_add_remove_type(m_world, nullptr, t.c_ptr(), filter.c_ptr());
 }
 
-inline void world::remove(class entity entity) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, entity.to_type().c_ptr(), nullptr);
+inline void world::remove(class entity e) const {
+    ecs_bulk_add_remove_type(m_world, nullptr, e.to_type().c_ptr(), nullptr);
 }
 
-inline void world::remove(class entity entity, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, entity.to_type().c_ptr(), filter.c_ptr());
+inline void world::remove(class entity e, flecs::filter filter) const {
+    ecs_bulk_add_remove_type(m_world, nullptr, e.to_type().c_ptr(), filter.c_ptr());
 }
 
 inline flecs::world_filter world::filter(const flecs::filter& filter) const {
@@ -11978,8 +11978,8 @@ inline flecs::entity world::use(const char *name, const char *alias) {
     return flecs::entity(m_world, id);
 }
 
-inline void world::use(flecs::entity entity, const char *alias) {
-    entity_t id = entity.id();
+inline void world::use(flecs::entity e, const char *alias) {
+    entity_t id = e.id();
     const char *name = alias;
     if (!name) {
         // If no name is defined, use the entity name without the scope
