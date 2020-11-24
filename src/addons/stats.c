@@ -98,14 +98,14 @@ void ecs_dump_world_stats(
     printf("max matched queries per table: %d\n", 
         stats->max_matched_queries_per_table);
     printf("\n");
-    printf("deferred new operations:      %d\n", world->new_count);
-    printf("deferred bulk_new operations: %d\n", world->bulk_new_count);
-    printf("deferred delete operations:   %d\n", world->delete_count);
-    printf("deferred clear operations:    %d\n", world->clear_count);
-    printf("deferred add operations:      %d\n", world->add_count);
-    printf("deferred remove operations:   %d\n", world->remove_count);
-    printf("deferred set operations:      %d\n", world->set_count);
-    printf("discarded operations:         %d\n", world->discard_count);
+    printf("deferred new operations:       %d\n", world->new_count);
+    printf("deferred bulk_new operations:  %d\n", world->bulk_new_count);
+    printf("deferred delete operations:    %d\n", world->delete_count);
+    printf("deferred clear operations:     %d\n", world->clear_count);
+    printf("deferred add operations:       %d\n", world->add_count);
+    printf("deferred remove operations:    %d\n", world->remove_count);
+    printf("deferred set operations:       %d\n", world->set_count);
+    printf("discarded operations:          %d\n", world->discard_count);
     printf("\n");
 }
 

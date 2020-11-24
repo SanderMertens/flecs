@@ -1087,7 +1087,6 @@
                 "control_fps_random_app",
                 "measure_fps_vs_actual",
                 "measure_delta_time_vs_actual",
-                "world_stats",
                 "quit",
                 "get_delta_time",
                 "get_delta_time_auto",
