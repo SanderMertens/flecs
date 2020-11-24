@@ -17,7 +17,6 @@
 #define FLECS_SYSTEM
 #define FLECS_PIPELINE
 #define FLECS_TIMER
-#define FLECS_STATS
 
 /* Addons */
 #define FLECS_BULK
@@ -27,6 +26,7 @@
 #define FLECS_READER_WRITER
 #define FLECS_SNAPSHOT
 #define FLECS_DIRECT_ACCESS
+#define FLECS_STATS
 #endif
 
 /* Set to double or int to increase accuracy of time keeping. Note that when

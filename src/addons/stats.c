@@ -1,7 +1,7 @@
 
-#ifdef FLECS_STATS
-
 #include "../private_api.h"
+
+#ifdef FLECS_STATS
 
 void ecs_get_world_stats(
     ecs_world_t *world,

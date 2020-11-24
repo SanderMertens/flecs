@@ -1,4 +1,6 @@
+#ifndef FLECS_IMPL
 #include "flecs.h"
+#endif
 #ifndef FLECS_PRIVATE_H
 #define FLECS_PRIVATE_H
 
@@ -8560,8 +8562,8 @@ int32_t ecs_queue_count(
 
 #endif
 
-#ifdef FLECS_STATS
 
+#ifdef FLECS_STATS
 
 void ecs_get_world_stats(
     ecs_world_t *world,
