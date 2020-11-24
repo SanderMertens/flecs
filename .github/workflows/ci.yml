@@ -62,7 +62,7 @@ jobs:
         bake/bake run test\collections
 
   sanitizer:
-    timeout-minutes: 10
+    timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -89,7 +89,7 @@ jobs:
         bake run test/collections --cfg sanitize
 
   amalgamated:
-    timeout-minutes: 10
+    timeout-minutes: 5
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
