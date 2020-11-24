@@ -904,6 +904,42 @@ int main() {
 
 Anyone who paid careful attention to this example will notice that the `ecs_add_entity` operation accepts two regular entities. 
 
+### Switchable tags
+Switchable tags are sets of regular tags that can be added to an entity, except that only one of the set can be active at the same time. This is particularly useful when storing state machines. Consider the following example:
+
+```c
+/* Create a Movement switch machine with 3 cases */
+ECS_TAG(world, Standing);
+ECS_TAG(world, Walking);
+ECS_TAG(world, Running);
+ECS_TYPE(world, Movement, Standing, Walking, Running); 
+
+/* Create a few entities with various state combinations */
+ecs_entity_t e = ecs_new(world, 0);
+
+/* Add the switch to the entity. This lets Flecs know that only one of the tags
+ * in the Movement type may be active at the same time. */
+ecs_add_entity(world, e, ECS_SWITCH | Movement);
+
+/* Add the Standing case to the entity */
+ecs_add_entity(world, e, ECS_CASE | Standing);
+
+/* Add the Walking case to the entity. This removes Standing */
+ecs_add_entity(world, e, ECS_CASE | Walking);
+
+/* Add the Running case to the entity. This removes Walking */
+ecs_add_entity(world, e, ECS_CASE | Running);
+```
+
+Switchable tags aren't just convenient, they are also very fast, as changing a case does not move the entity between archetypes like regular tags do. This makes switchable components particularly useful for fast-changing data, like states in a state machine. Systems can query for switchable tags by using the `SWITCH` and `CASE` roles:
+
+```c
+/* Subscribe for all entities that are Walking, and have the switch Direction */
+ECS_SYSTEM(world, Walk, EcsOnUpdate, CASE | Walking, SWITCH | Direction);
+```
+
+See the [switch example](https://github.com/SanderMertens/flecs/blob/master/examples/c/44_switch/src/main.c) for more details.
+
 ## Queries
 Queries allow an application to iterate entities that match a component expression, called a signature (see "Signatures"). Queries are stateful, in that they are registered with the world, and keep track of a list of entities (archetypes) that they match with. Whenever a new combination of entities is introduced (usually through an `ecs_add` or `ecs_remove` operation) it will be matched with the system, and if it matches, stored in a list with matched tables. This continuous matching process means that when an application starts iterating the query, it does not need to evaluate the query signature, which makes queries the most performant way to iterate entities.
 
@@ -1431,6 +1467,106 @@ void Move(ecs_iter_t *it) {
     // ...
 }
 ```
+
+### Monitors
+A monitor is a special kind of system that is executed once when a condition becomes true. A monitor is created just like a regular system, but with the `EcsMonitor` tag:
+
+```c
+ECS_SYSTEM(world, OnPV, EcsMonitor, Position, Velocity);
+```
+
+This example illustrates when the monitor is invoked:
+
+```c
+// Condition is not true: monitor is not invoked
+ecs_entity_t e = ecs_new(world, Position);
+
+// Condition is true for the first time: monitor is invoked!
+ecs_add(world, e, Velocity);
+
+// Condition is still true: monitor is not invoked
+ecs_add(world, e, Mass);
+
+// Condition is no longer true: monitor is not invoked
+ecs_remove(world, e, Position);
+
+// Condition is true again: monitor is invoked!
+ecs_add(world, e, Position);
+```
+
+Note that monitors are never invoked by `ecs_progress`.
+
+An monitor is implemented the same way as a regular system:
+
+```c
+void OnPV(ecs_iter_t *it) {
+    Position *p = ecs_column(it, Position, 1);
+    Velocity *v = ecs_column(it, Velocity, 2);
+
+    for (int i = 0; i < it->count; i ++) {
+        /* Monitor code. Note that components may not have
+         * been initialized when the monitor is invoked */
+    }
+}
+```
+
+### OnSet Systems
+OnSet systems are ran whenever the value of one of the components the system subscribes for changes. An OnSet system is created just like a regular system, but with the `EcsOnSet` tag:
+
+```c
+ECS_SYSTEM(world, OnSetPV, EcsOnSet, Position, Velocity);
+```
+
+This example illustrates when the monitor is invoked:
+
+```c
+ecs_entity_t e = ecs_new(world, 0);
+
+// The entity does not have Velocity, so system is not invoked
+ecs_set(world, e, Position, {10, 20});
+
+// The entity has both components, but Velocity is not set
+ecs_add(world, e, Velocity);
+
+// The entity has both components, so system is invoked!
+ecs_set(world, e, Velocity, {1, 2});
+
+// The entity has both components, so system is invoked!
+ecs_set(world, e, Position, {11, 22});
+```
+
+An OnSet system is implemented the same way as a regular system:
+
+```c
+void OnSetPV(ecs_iter_t *it) {
+    Position *p = ecs_column(it, Position, 1);
+    Velocity *v = ecs_column(it, Velocity, 2);
+
+    for (int i = 0; i < it->count; i ++) {
+        /* Trigger code */
+    }
+}
+```
+
+The opposite of an `EcsOnSet` system is an `EcsUnSet` system:
+
+```c
+ECS_SYSTEM(world, UnSetP, EcsUnSet, Position);
+```
+
+An UnSet system is invoked when an entity no longer has a value for the specified component:
+
+```c
+ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+
+// The UnSet system is invoked
+ecs_remove(world, e, Position);
+```
+
+OnSet and UnSet systems are typically invoked when components are set and removed, but there are two edge cases:
+
+- A component is removed but the entity inherits a value for the component from a base entity. In this case OnSet is invoked, because the value for the component changed.
+- The entity does not have the component, but the base that has the component is removed. In this case UnSet is invoked, since the entity no longer has the component.
 
 ## Triggers
 Triggers are callbacks that are executed when a component is added or removed from an entity. Triggers are similar to systems, but unlike systems they can only match a single component. This is an example of a trigger that is executed when the Position component is added:
@@ -2195,6 +2331,55 @@ ECS_SYSTEM(world, DeleteEntity, EcsOnUpdate, Position, [out] :*);
 This is interpreted as the system may write any component, and forces a sync point.
 
 ## Pipelines
+A pipeline defines the different phases that are executed for each frame. By default an application uses the builtin pipeline which has the following phases:
+
+- EcsOnLoad
+- EcsPostLoad
+- EcsPreUpdate
+- EcsOnUpdate
+- EcsOnValidate
+- EcsPostUpdate
+- EcsPreStore
+- EcsOnStore
+
+These phases can be provided as an argument to the `ECS_SYSTEM` macro:
+
+```c
+// System ran in the EcsOnUpdate phase
+ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+
+// System ran in the EcsOnValidate phase
+ECS_SYSTEM(world, DetectCollisions, EcsOnValidate, Position);
+```
+
+An application can create a custom pipeline, like is shown here:
+
+```c
+// Create a tag for each phase in the custom pipeline.
+// The tags must be created in the phase execution order.
+ECS_TAG(world, BeforeFrame);
+ECS_TAG(world, OnFrame);
+ECS_TAG(world, AfterFrame);
+
+// Create the pipeline
+ECS_PIPELINE(world, MyPipeline, BeforeFrame, OnFrame, AfterFrame);
+
+// Make sure the world uses the correct pipeline
+ecs_set_pipeline(world, MyPipeline);
+```
+
+Now the application can create systems for the custom pipeline:
+
+```c
+// System ran in the OnFrame phase
+ECS_SYSTEM(world, Move, OnFrame, Position, Velocity);
+
+// System ran in the AfterFrame phase
+ECS_SYSTEM(world, DetectCollisions, AfterFrame, Position);
+
+// This will now run systems in the custom pipeline
+ecs_progress(world, 0);
+```
 
 ## Time management
 
