@@ -2426,10 +2426,10 @@ public:
      * @param entity The entity id to check.
      * @return True if the entity has the provided entity id, false otherwise.
      */
-    bool has(entity_t entity) const {
+    bool has(entity_t e) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_has_entity(m_world, m_id, entity);
+        return ecs_has_entity(m_world, m_id, e);
     }
 
     /** Check if entity has the provided parent.
@@ -2470,8 +2470,8 @@ public:
      * @param entity The entity to check.
      * @return True if the entity has the provided entity, false otherwise.
      */
-    bool has(const entity& entity) const {
-        return has(entity.id());
+    bool has(const entity& e) const {
+        return has(e.id());
     }
 
     /** Check if entity has the provided parent.
@@ -2508,10 +2508,10 @@ public:
      * @param entity The entity id to check.
      * @return True if the entity owns the provided entity id, false otherwise.
      */
-    bool owns(entity_t entity) const {
+    bool owns(entity_t e) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_owns_entity(m_world, m_id, entity, true);
+        return ecs_owns_entity(m_world, m_id, e, true);
     }
 
     /** Check if entity owns the provided type.
@@ -2532,8 +2532,8 @@ public:
      * @param entity The entity to check.
      * @return True if the entity owns the provided entity, false otherwise.
      */
-    bool owns(const entity& entity) const {
-        return owns(entity.id());
+    bool owns(const entity& e) const {
+        return owns(e.id());
     }
 
     /** Check if entity owns the provided component.
@@ -2598,11 +2598,11 @@ public:
      * @param component The component for which to check the trait.
      * @return True if the entity has the provided trait, false otherwise.
      */
-    bool has_trait(flecs::entity trait, flecs::entity entity) const {
+    bool has_trait(flecs::entity trait, flecs::entity e) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, ecs_trait(
-            entity.id(), trait.id()));
+            e.id(), trait.id()));
     }
 
     /** Check if entity has the provided switch.
