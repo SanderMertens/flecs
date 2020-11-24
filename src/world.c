@@ -185,7 +185,7 @@ ecs_world_t *ecs_mini(void) {
         ecs_trace_1("time management not available");
     }
 
-    ecs_world_t *world = ecs_os_malloc(sizeof(ecs_world_t));
+    ecs_world_t *world = ecs_os_calloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     world->magic = ECS_WORLD_MAGIC;
@@ -213,7 +213,6 @@ ecs_world_t *ecs_mini(void) {
     world->workers = NULL;
     world->workers_waiting = 0;
     world->workers_running = 0;
-    world->valid_schedule = false;
     world->quit_workers = false;
     world->in_progress = false;
     world->is_merging = false;

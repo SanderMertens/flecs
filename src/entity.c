@@ -2563,6 +2563,7 @@ void ecs_defer_flush(
                 if (e && !ecs_is_alive(world, e) && ecs_eis_exists(world, e)) {
                     ecs_assert(op->kind != EcsOpNew && op->kind != EcsOpClone, 
                         ECS_INTERNAL_ERROR, NULL);
+                    world->discard_count ++;
                     discard_op(op);
                     continue;
                 }
@@ -2579,6 +2580,7 @@ void ecs_defer_flush(
                     /* Fallthrough */
                 case EcsOpAdd:
                     if (valid_components(world, &op->components)) {
+                        world->add_count ++;
                         add_entities(world, e, &op->components);
                     } else {
                         ecs_delete(world, e);

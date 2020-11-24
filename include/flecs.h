@@ -91,7 +91,7 @@ typedef struct ecs_filter_t {
     ecs_match_kind_t exclude_kind;  /**< Match kind for exclude components */
 } ecs_filter_t;
 
-/** Type that contains various statistics of a world. */
+/** Type that contains information about the world. */
 typedef struct ecs_world_info_t {
     ecs_entity_t last_component_id;   /**< Last issued component entity id */
     ecs_entity_t last_id;             /**< Last issued entity id */
@@ -2732,9 +2732,6 @@ void ecs_set_automerge(
 #ifdef FLECS_TIMER
 #include "flecs/modules/timer.h"
 #endif
-#ifdef FLECS_STATS
-#include "flecs/modules/stats.h"
-#endif
 
 /* Optional addons */
 #ifdef FLECS_BULK
@@ -2757,6 +2754,9 @@ void ecs_set_automerge(
 #endif
 #ifdef FLECS_DIRECT_ACCESS
 #include "flecs/addons/direct_access.h"
+#endif
+#ifdef FLECS_STATS
+#include "flecs/addons/stats.h"
 #endif
 
 #ifdef __cplusplus

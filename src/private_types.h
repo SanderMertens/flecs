@@ -545,9 +545,20 @@ struct ecs_world_t {
     ecs_os_cond_t thr_cond;       /* Used to signal threads at end of frame */
 
 
+    /* -- Defered operation count -- */
+    
+    int32_t new_count;
+    int32_t bulk_new_count;
+    int32_t delete_count;
+    int32_t clear_count;
+    int32_t add_count;
+    int32_t remove_count;
+    int32_t set_count;
+    int32_t discard_count;
+
+
     /* -- World state -- */
 
-    bool valid_schedule;          /* Is job schedule still valid */
     bool quit_workers;            /* Signals worker threads to quit */
     bool in_progress;             /* Is world being progressed */
     bool is_merging;              /* Is world currently being merged */
