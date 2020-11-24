@@ -22,12 +22,12 @@ int main(int argc, char *argv[]) {
     ECS_TYPE(world, Movable, Position, Velocity);
 
     ecs_entity_t e1 = 
-    ecs_set(world, 0, EcsName, {"e1"});
+    ecs_set(world, 0, EcsName, {.value = "e1"});
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Velocity, {1, 1});
 
     ecs_entity_t e2 = 
-    ecs_set(world, 0, EcsName, {"e2"});
+    ecs_set(world, 0, EcsName, {.value = "e2"});
     ecs_set(world, e2, Position, {10, 20});
     ecs_set(world, e2, Velocity, {1, 1});
 

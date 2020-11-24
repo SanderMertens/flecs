@@ -38,12 +38,12 @@ void DoLerp(ecs_iter_t *it) {
      * the Lerp trait, or by introducing a Lerp4 and Lerp8 trait. */
     for (int32_t i = 0; i < it->count; i ++) {
         float lerp = l[i].value + it->delta_time / l[i].lerp_time;
-        bool lerp_done = lerp >= 1.0;
-        lerp = (lerp * !lerp_done) + (1.0 * lerp_done);
+        bool lerp_done = lerp >= 1.0f;
+        lerp = (lerp * !lerp_done) + (1.0f * lerp_done);
 
         /* Do the actual lerp */
         for (size_t s = 0; s < size; s += sizeof(float)) {
-            *cur = *start * (1.0 - lerp) + *stop * lerp;
+            *cur = *start * (1.0f - lerp) + *stop * lerp;
 
             cur ++;
             start ++;
@@ -75,7 +75,7 @@ void PrintPosition(ecs_iter_t *it) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int main() {
     ecs_world_t *world = ecs_init();
 
     /* Register components and trait as a regular components and tags */

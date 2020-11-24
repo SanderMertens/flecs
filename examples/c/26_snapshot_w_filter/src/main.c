@@ -36,12 +36,12 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     ecs_entity_t e1 = 
-    ecs_set(world, 0, EcsName, {"E1"});
+    ecs_set(world, 0, EcsName, {.value = "E1"});
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Velocity, {1, 2});
 
     ecs_entity_t e2 =
-    ecs_set(world, 0, EcsName, {"E2"});
+    ecs_set(world, 0, EcsName, {.value = "E2"});
     ecs_set(world, e2, Position, {0, 0});
     ecs_set(world, e2, Velocity, {1, 2});
     ecs_set(world, e2, Mass, {10});

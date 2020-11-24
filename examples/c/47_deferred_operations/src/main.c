@@ -18,7 +18,7 @@ void SetVelocity(ecs_iter_t *it) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int main() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

@@ -1,22 +1,27 @@
 #include <system_features.h>
 
 void SystemA(ecs_iter_t *it) {
+    (void)it; // Unused
     printf("System A called!\n");
 }
 
 void SystemB(ecs_iter_t *it) {
+    (void)it; // Unused
     printf("System B called!\n");
 }
 
 void SystemC(ecs_iter_t *it) {
+    (void)it; // Unused
     printf("System C called!\n");
 }
 
 void SystemD(ecs_iter_t *it) {
+    (void)it; // Unused
     printf("System D called!\n");
 }
 
 void SystemE(ecs_iter_t *it) {
+    (void)it; // Unused
     printf("System E called!\n");
 }
 

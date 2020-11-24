@@ -12,6 +12,8 @@ int compare_position(
     ecs_entity_t e2,
     void *ptr2)
 {
+    (void)e1;
+    (void)e2;
     Position *p1 = ptr1;
     Position *p2 = ptr2;
     return (p1->x > p2->x) - (p1->x < p2->x);
@@ -30,7 +32,7 @@ void print_query(ecs_query_t *q) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int main() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

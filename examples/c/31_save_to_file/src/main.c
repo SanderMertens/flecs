@@ -34,9 +34,9 @@ void save_to_file(
 
     /* Read data from flecs in BUFFER_SIZE chunks */
     char buffer[BUFFER_SIZE];
-    size_t read;
+    int32_t read;
     while ((read = ecs_reader_read(buffer, BUFFER_SIZE, &reader))) {
-        fwrite(buffer, 1, read, file);
+        fwrite(buffer, 1, (size_t)read, file);
     }
 
     fclose(file);
@@ -51,8 +51,8 @@ void load_from_file(
 
     /* Write data to flecs in BUFFER_SIZE chunks */
     char buffer[BUFFER_SIZE];
-    size_t read;    
-    while ((read = fread(buffer, 1, BUFFER_SIZE, file))) {
+    int32_t read;    
+    while ((read = (int32_t)fread(buffer, 1, BUFFER_SIZE, file))) {
         if (ecs_writer_write(buffer, read, &writer)) {
             printf("error: %s\n", ecs_strerror(writer.error));
             break;

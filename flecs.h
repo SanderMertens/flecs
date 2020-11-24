@@ -10909,7 +10909,7 @@ public:
     /* Invoke system */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
         (void)index;
         (void)columns;
         flecs::iter iter_wrapper(iter);
@@ -10919,7 +10919,7 @@ public:
     /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
         call_system(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
@@ -11611,8 +11611,8 @@ public:
         m_reader = ecs_reader_init_w_iter(&it, ecs_snapshot_next);
     }
 
-    int32_t read(char *buffer, std::size_t size) {
-        return ecs_reader_read(buffer, size, &m_reader);
+    int32_t read(char *buffer, std::int64_t size) {
+        return ecs_reader_read(buffer, static_cast<int32_t>(size), &m_reader);
     }
 
 private:
@@ -11630,8 +11630,8 @@ public:
         m_writer = ecs_writer_init(world.c_ptr());
     }
 
-    int32_t write(const char *buffer, std::size_t size) {
-        return ecs_writer_write(buffer, size, &m_writer);
+    int32_t write(const char *buffer, std::int64_t size) {
+        return ecs_writer_write(buffer, static_cast<int32_t>(size), &m_writer);
     }
 
 private:

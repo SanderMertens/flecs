@@ -5,10 +5,12 @@ typedef struct TaskContext {
 } TaskContext;
 
 void MyTask(ecs_iter_t *it) {
+    (void)it; // Unused
     printf("Task executed every second\n");
 }
 
 void My2ndTask(ecs_iter_t *it) {
+    (void)it; // Unused
     printf("Task executed every 2 seconds\n");
 }
 

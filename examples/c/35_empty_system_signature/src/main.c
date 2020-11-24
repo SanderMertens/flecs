@@ -1,6 +1,7 @@
 #include <empty_system_signature.h>
 
 void MyTask(ecs_iter_t *it) {
+    (void)it; // Unused
     printf("MyTask invoked!\n");
 }
 

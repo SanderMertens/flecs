@@ -1,3 +1,9 @@
+// Some compilers will flag $Game as an identifier with a $ symbol. This is not
+// correct, as $Game is stringified by the ECS_SYSTEM macro.
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wdollar-in-identifier-extension"
+#endif
+
 #include <singleton.h>
 
 typedef struct Game {
@@ -23,7 +29,7 @@ void KeepScore(ecs_iter_t *it) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int main() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

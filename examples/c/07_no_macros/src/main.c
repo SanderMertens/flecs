@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     ecs_entity_t MyEntity = ecs_new_w_type(world, 0);
 
     /* Set entity identifier using builtin component */
-    ecs_set_ptr_w_entity(world, MyEntity, FLECS__EEcsName, sizeof(EcsName), &(EcsName){"MyEntity"});
+    ecs_set_ptr_w_entity(world, MyEntity, FLECS__EEcsName, sizeof(EcsName), &(EcsName){.value = "MyEntity"});
 
     /* Components are automatically added when doing an ecs_set, but this is for
      * demonstration purposes. The ecs_add_entity operation accepts the
