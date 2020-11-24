@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
      * provide a value for it. If there are any OnDemand systems that provide
      * 'Position' as an output, they will be enabled. */
     auto PrintPosition = ecs.system<const Position, Printable>()
-        .each([](flecs::entity e, const Position& p, Printable& printable) {
+        .each([](flecs::entity e, const Position& p, Printable&) {
             std::cout << "Position of " << e.name() 
                 << " is {" << p.x << ", " << p.y << "}" 
                 << std::endl; 

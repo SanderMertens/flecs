@@ -7,14 +7,14 @@ struct Position {
 };
 
 /* This system will be called when Position is added */
-void AddPosition(flecs::entity e,  Position& p) {
+void AddPosition(flecs::entity,  Position& p) {
     p.x = 10;
     p.y = 20;
     std::cout << "Position added" << std::endl;
 }
 
 /* This system will be called when Position is removed */
-void RemovePosition(flecs::entity e, Position& p) {
+void RemovePosition(flecs::entity, Position& p) {
     std::cout << "Position removed -> {" 
             << p.x << ", " << p.y << "}" << std::endl;
 }

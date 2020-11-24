@@ -8165,10 +8165,10 @@ error:
 
 int ecs_writer_write(
     const char *buffer,
-    ecs_size_t size,
+    int32_t size,
     ecs_writer_t *writer)
 {
-    ecs_size_t written = 0, total_written = 0, remaining = size;
+    int32_t written = 0, total_written = 0, remaining = size;
 
     if (!size) {
         return 0;
@@ -9338,12 +9338,12 @@ ecs_size_t ecs_table_reader(
     return read;
 }
 
-ecs_size_t ecs_reader_read(
+int32_t ecs_reader_read(
     char *buffer,
-    ecs_size_t size,
+    int32_t size,
     ecs_reader_t *reader)
 {
-    ecs_size_t read, total_read = 0, remaining = size;
+    int32_t read, total_read = 0, remaining = size;
 
     if (!size) {
         return 0;

@@ -159,9 +159,9 @@ ecs_reader_t ecs_reader_init_w_iter(
  * @return The number of bytes read.
  */ 
 FLECS_API
-ecs_size_t ecs_reader_read(
+int32_t ecs_reader_read(
     char *buffer,
-    ecs_size_t size,
+    int32_t size,
     ecs_reader_t *reader);
 
 /** Initialize a writer.
@@ -201,9 +201,9 @@ ecs_writer_t ecs_writer_init(
  * @return Zero if success, non-zero if failed to deserialize.
  */
 FLECS_API
-int ecs_writer_write(
+int32_t ecs_writer_write(
     const char *buffer,
-    ecs_size_t size,
+    int32_t size,
     ecs_writer_t *writer);
 
 #ifdef __cplusplus

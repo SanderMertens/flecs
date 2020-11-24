@@ -21,7 +21,7 @@ void save_to_file(flecs::world& ecs, const char *filename) {
     std::fstream file(filename, std::fstream::out | std::fstream::binary);
 
     char buffer[BUFFER_SIZE];
-    std::size_t read;
+    std::int64_t read;
 
     // Read from world until there is no more data, write buffer(s) to file
     while ((read = reader.read(buffer, BUFFER_SIZE))) {
@@ -36,7 +36,7 @@ void load_from_file(flecs::world& ecs, const char *filename) {
     std::fstream file(filename, std::fstream::in | std::fstream::binary);
 
     char buffer[BUFFER_SIZE];
-    std::size_t read;
+    std::int64_t read;
 
     // Read from file until there is no more data, write buffer(s) to world
     while ((read = file.read(buffer, BUFFER_SIZE).gcount())) {

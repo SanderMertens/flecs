@@ -3,7 +3,7 @@
 
 void print_tree(flecs::entity entity) 
 {
-    static int indent = 0;
+    static size_t indent = 0;
 
     std::cout << std::string(indent * 2, ' ') << entity.name() << std::endl;
 

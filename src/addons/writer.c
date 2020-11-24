@@ -368,10 +368,10 @@ error:
 
 int ecs_writer_write(
     const char *buffer,
-    ecs_size_t size,
+    int32_t size,
     ecs_writer_t *writer)
 {
-    ecs_size_t written = 0, total_written = 0, remaining = size;
+    int32_t written = 0, total_written = 0, remaining = size;
 
     if (!size) {
         return 0;

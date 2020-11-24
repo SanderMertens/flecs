@@ -11,13 +11,13 @@ struct Velocity {
     float y;
 };
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
     flecs::world ecs;
 
     /* Create OnSet system so we can see when Velocity is actually set */
     ecs.system<Velocity>()
         .kind(flecs::OnSet)
-        .each([](flecs::entity e, Velocity& v) {
+        .each([](flecs::entity, Velocity& v) {
             std::cout << "Velocity set to {" << v.x << ", " << v.y << "}" 
                       << std::endl;
         });
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Defer begin" << std::endl;
     ecs.defer_begin();
 
-    q.each([](flecs::entity e, Position& p) {
+    q.each([](flecs::entity e, Position&) {
         e.set<Velocity>({1, 2});
     });
 

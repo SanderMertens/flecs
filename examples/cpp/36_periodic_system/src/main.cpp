@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
     ecs.system<Position, Velocity>()
-        .each([](flecs::entity e, Position& p, Velocity& v) {    
+        .each([](flecs::entity, Position& p, Velocity& v) {    
             p.x += v.x;
             p.y += v.y;
         });

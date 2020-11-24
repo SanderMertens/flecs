@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
     /* Iterate the subquery. Note that only e2 is matched, since it has both
      * Position and Velocity */
-    q_sub.each([](flecs::entity e, Velocity &v) {
+    q_sub.each([](flecs::entity e, Velocity&) {
         std::cout << e.name() << " matched" << std::endl;
     });
 

@@ -125,7 +125,7 @@ static const ecs_entity_t Owned = ECS_OWNED;
  */
 class unsafe_column {
 public:
-    unsafe_column(void* array, std::size_t size, std::size_t count, bool is_shared = false)
+    unsafe_column(void* array, size_t size, size_t count, bool is_shared = false)
         : m_array(array)
         , m_size(size)
         , m_count(count) 
@@ -181,7 +181,7 @@ public:
      * @param count Number of elements in component array.
      * @param is_shared Is the component shared or not.
      */
-    column(T* array, std::size_t count, bool is_shared = false)
+    column(T* array, size_t count, bool is_shared = false)
         : m_array(array)
         , m_count(count) 
         , m_is_shared(is_shared) {}
@@ -329,7 +329,7 @@ private:
 /** Class that enables iterating over table columns.
  */
 class iter final {
-    using row_iterator = _::range_iterator<int>;
+    using row_iterator = _::range_iterator<size_t>;
 public:
     /** Construct iterator from C iterator object.
      * This operation is typically not invoked directly by the user.
@@ -338,7 +338,7 @@ public:
      */
     iter(const ecs_iter_t *it) : m_iter(it) { 
         m_begin = 0;
-        m_end = it->count;
+        m_end = static_cast<std::size_t>(it->count);
     }
 
     row_iterator begin() const {
@@ -359,8 +359,8 @@ public:
 
     /** Number of entities to iterate over. 
      */
-    int32_t count() const {
-        return m_iter->count;
+    size_t count() const {
+        return static_cast<size_t>(m_iter->count);
     }
 
     /** Number of columns in iteator.
@@ -373,7 +373,7 @@ public:
      *
      * @param col The column id.
      */
-    int32_t column_size(int32_t col) const {
+    size_t column_size(int32_t col) const {
         return ecs_column_size(m_iter, col);
     }    
 
@@ -457,7 +457,7 @@ public:
      *
      * @param row Row being iterated over.
      */
-    flecs::entity entity(int32_t row) const;
+    flecs::entity entity(size_t row) const;
 
     /** Obtain type of table being iterated over.
      */
@@ -495,7 +495,8 @@ public:
         auto type = ecs_iter_type(m_iter);
         auto col = ecs_type_index_of(type, _::component_info<T>::id());
         ecs_assert(col != -1, ECS_INVALID_PARAMETER, NULL);
-        return flecs::column<T>(static_cast<T*>(ecs_table_column(m_iter, col)), m_iter->count, false);
+        return flecs::column<T>(static_cast<T*>(ecs_table_column(m_iter, col)), 
+            static_cast<std::size_t>(m_iter->count), false);
     }
 
     /** Obtain column with const type.
@@ -508,7 +509,7 @@ public:
      */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
-    flecs::column<T> column(unsigned int col) const {
+    flecs::column<T> column(int32_t col) const {
         return get_column<T>(col);
     }
 
@@ -607,7 +608,7 @@ private:
             ECS_COLUMN_TYPE_MISMATCH, NULL);
 #endif
 
-        int32_t count;
+        size_t count;
         bool is_shared = !ecs_is_owned(m_iter, column_id);
 
         /* If a shared column is retrieved with 'column', there will only be a
@@ -618,10 +619,12 @@ private:
         } else {
             /* If column is owned, there will be as many values as there are
              * entities. */
-            count = m_iter->count;
+            count = static_cast<size_t>(m_iter->count);
         }
         
-        return flecs::column<T>(static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), column_id)), count, is_shared);
+        return flecs::column<T>(
+            static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), column_id)), 
+            count, is_shared);
     } 
 
     flecs::unsafe_column get_unsafe_column(int32_t column_id) const {
@@ -637,7 +640,7 @@ private:
         } else {
             /* If column is owned, there will be as many values as there are
              * entities. */
-            count = m_iter->count;
+            count = static_cast<size_t>(m_iter->count);
         }
 
         return flecs::unsafe_column(ecs_column_w_size(m_iter, 0, column_id), size, count, is_shared);
@@ -651,12 +654,12 @@ private:
     }       
 
     const ecs_iter_t *m_iter;
-    int32_t m_begin;
-    int32_t m_end;
+    std::size_t m_begin;
+    std::size_t m_end;
 };
 
 template <typename T>
-inline column<T>::column(iter &iter, int col) {
+inline column<T>::column(iter &iter, int32_t col) {
     *this = iter.column<T>(col);
 }
 
@@ -2900,7 +2903,7 @@ namespace _
             /* Remove 'const' */
             ecs_size_t const_len = ecs_os_strlen("const ");
             if (!ecs_os_strncmp(typeName, "const ", const_len)) {
-                memmove(typeName, typeName + const_len, len - const_len);
+                ecs_os_memmove(typeName, typeName + const_len, len - const_len);
                 typeName[len - const_len] = '\0';
                 len -= const_len;
             }
@@ -2908,7 +2911,7 @@ namespace _
             /* Remove 'struct' */
             ecs_size_t struct_len = ecs_os_strlen("struct ");
             if (!ecs_os_strncmp(typeName, "struct ", struct_len)) {
-                memmove(typeName, typeName + struct_len, len - struct_len);
+                ecs_os_memmove(typeName, typeName + struct_len, len - struct_len);
                 typeName[len - struct_len] = '\0';
                 len -= struct_len;
             }
@@ -2916,7 +2919,7 @@ namespace _
             /* Remove 'class' */
             ecs_size_t class_len = ecs_os_strlen("class ");
             if (!ecs_os_strncmp(typeName, "class ", class_len)) {
-                memmove(typeName, typeName + class_len, len - class_len);
+                ecs_os_memmove(typeName, typeName + class_len, len - class_len);
                 typeName[len - class_len] = '\0';
                 len -= class_len;
             }            
@@ -2997,6 +3000,11 @@ void component_ctor(
     int32_t count,
     void *ctx)
 {
+    (void)world;
+    (void)component;
+    (void)entity_ptr;
+    (void)ctx;
+
     ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
     T *t_ptr = static_cast<T*>(ptr);
     
@@ -3015,6 +3023,11 @@ void component_dtor(
     int32_t count,
     void *ctx)
 {
+    (void)world;
+    (void)component;
+    (void)entity_ptr;
+    (void)ctx;
+
     ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
     T *t_ptr = static_cast<T*>(ptr);
     
@@ -3035,6 +3048,12 @@ void component_copy(
     int32_t count,
     void *ctx)
 {
+    (void)world;
+    (void)component;
+    (void)dst_entity;
+    (void)src_entity;
+    (void)ctx;
+
     ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
     T *t_dst_ptr = static_cast<T*>(dst_ptr);
     const T *t_src_ptr = static_cast<const T*>(src_ptr);
@@ -3056,6 +3075,12 @@ void component_move(
     int32_t count,
     void *ctx)
 {
+    (void)world;
+    (void)component;
+    (void)dst_entity;
+    (void)src_entity;
+    (void)ctx;
+
     ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
     T *t_dst_ptr = static_cast<T*>(dst_ptr);
     T *t_src_ptr = static_cast<T*>(src_ptr);
@@ -3488,17 +3513,18 @@ public:
 
 private:
     /* Dummy function when last component has been added */
-    void populate_columns(ecs_iter_t *iter, int index) { 
+    void populate_columns(ecs_iter_t *iter, size_t index) { 
         (void)iter;
         (void)index;
     }
 
     /* Populate columns array recursively */
     template <typename T, typename... Targs>
-    void populate_columns(ecs_iter_t *iter, int index, T comp, Targs... comps) {
-        void *ptr = ecs_column_w_size(iter, sizeof(*comp), index + 1);
+    void populate_columns(ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
+        int32_t column = static_cast<int32_t>(index + 1);
+        void *ptr = ecs_column_w_size(iter, sizeof(*comp), column);
         m_columns[index].ptr = ptr;
-        m_columns[index].is_shared = !ecs_is_owned(iter, index + 1) && ptr != nullptr;
+        m_columns[index].is_shared = !ecs_is_owned(iter, column) && ptr != nullptr;
         populate_columns(iter, index + 1, comps ...);
     }
 };
@@ -3517,7 +3543,7 @@ public:
     // Invoke system
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
         flecs::iter iter_wrapper(iter);
         (void)index;
         (void)columns;
@@ -3525,14 +3551,15 @@ public:
         // Use any_column so we can transparently use shared components
         for (auto row : iter_wrapper) {
             func(iter_wrapper.entity(row), (_::any_column<typename std::remove_reference<Components>::type>(
-                 (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, iter->count, comps.is_shared))[row]...);
+                 (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, 
+                    static_cast<size_t>(iter->count), comps.is_shared))[row]...);
         }
     }
 
     // Add components one by one to parameter pack
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
         call_system(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
@@ -3610,7 +3637,7 @@ public:
     /* Invoke system */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
         (void)index;
         (void)columns;
         flecs::iter iter_wrapper(iter);
@@ -3620,7 +3647,7 @@ public:
     /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
         call_system(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
@@ -3973,7 +4000,7 @@ public:
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         auto ctx = new _::action_invoker<Func, Components...>(func);
 
-        create_system(func, _::action_invoker<Func, Components...>::run, false);
+        create_system(_::action_invoker<Func, Components...>::run, false);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
@@ -3989,7 +4016,7 @@ public:
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         auto ctx = new _::iter_invoker<Func, Components...>(func);
 
-        create_system(func, _::iter_invoker<Func, Components...>::run, false);
+        create_system(_::iter_invoker<Func, Components...>::run, false);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
@@ -4003,7 +4030,7 @@ public:
     system& each(Func func) {
         auto ctx = new _::each_invoker<Func, Components...>(func);
 
-        create_system(func, _::each_invoker<Func, Components...>::run, true);
+        create_system(_::each_invoker<Func, Components...>::run, true);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
@@ -4013,8 +4040,8 @@ public:
 
     ~system() = default;
 private:
-    template <typename Func, typename Invoker>
-    entity_t create_system(Func func, Invoker invoker, bool is_each) {
+    template <typename Invoker>
+    entity_t create_system(Invoker invoker, bool is_each) {
         ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
 
         entity_t e;
@@ -4051,7 +4078,7 @@ private:
 
         ecs_assert(e == m_id, ECS_INTERNAL_ERROR, NULL);
 
-        if (m_interval) {
+        if (m_interval != 0) {
             ecs_set_interval(m_world, e, m_interval);
         }
 
@@ -4312,8 +4339,8 @@ public:
         m_reader = ecs_reader_init_w_iter(&it, ecs_snapshot_next);
     }
 
-    std::size_t read(char *buffer, std::size_t size) {
-        return ecs_reader_read(buffer, size, &m_reader);
+    int32_t read(char *buffer, std::int64_t size) {
+        return ecs_reader_read(buffer, static_cast<int32_t>(size), &m_reader);
     }
 
 private:
@@ -4331,8 +4358,8 @@ public:
         m_writer = ecs_writer_init(world.c_ptr());
     }
 
-    int write(const char *buffer, std::size_t size) {
-        return ecs_writer_write(buffer, size, &m_writer);
+    int32_t write(const char *buffer, std::int64_t size) {
+        return ecs_writer_write(buffer, static_cast<int32_t>(size), &m_writer);
     }
 
 private:
@@ -4559,8 +4586,8 @@ inline flecs::world iter::world() const {
     return flecs::world(m_iter->world);
 }
 
-inline flecs::entity iter::entity(int32_t row) const {
-    ecs_assert(row < m_iter->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+inline flecs::entity iter::entity(size_t row) const {
+    ecs_assert(row < (size_t)m_iter->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
     return flecs::entity(m_iter->world, m_iter->entities[row]);
 }
 
@@ -4848,7 +4875,7 @@ bool pack_args_to_string(world_t *world, std::stringstream& str, bool is_each) {
         (optional_modifier<Components>())...
     };        
 
-    int i = 0;
+    size_t i = 0;
     for (auto id : ids) {
         if (i) {
             str << ",";

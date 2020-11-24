@@ -14,14 +14,14 @@ int main(int argc, char *argv[]) {
 
     // Basic task
     ecs.system<>()
-        .iter([](flecs::iter& it) {
+        .iter([](flecs::iter&) {
             std::cout << "Task executed every second" << std::endl;
         });
 
     // Task that is executed every 2 seconds
     ecs.system<>()
         .period(2.0)
-        .iter([](flecs::iter& it) {
+        .iter([](flecs::iter&) {
             std::cout << "Task executed every 2 seconds" << std::endl;
         });
 

@@ -10,7 +10,7 @@ struct Position {
     float y;
 };
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
     flecs::world ecs;
 
     // Singleton components can simply be set on the world

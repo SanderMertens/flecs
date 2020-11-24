@@ -1,7 +1,7 @@
 #include <is_alive.h>
 #include <iostream>
 
-int main(int argc, char *argv[]) {
+int main() {
     flecs::world ecs;
 
     // Create new entity, will be alive
