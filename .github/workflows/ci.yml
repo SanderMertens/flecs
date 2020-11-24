@@ -27,8 +27,8 @@ jobs:
 
     - name: Build examples
       run: |
-        bake examples/c
-        bake examples/cpp
+        bake examples/c --strict
+        bake examples/cpp --strict
          
     - name: Run tests
       run: |
