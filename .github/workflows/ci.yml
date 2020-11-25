@@ -3,7 +3,7 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  unix:
+  test-unix:
     timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     strategy:
@@ -22,21 +22,13 @@ jobs:
 
     - name: Build Flecs
       run: bake --strict
-
-    - name: Build Flecs (release)
-      run: bake --strict --cfg release
-
-    - name: Build examples
-      run: |
-        bake examples/c --strict
-        bake examples/cpp --strict
          
     - name: Run tests
       run: |
         bake examples/os_api/flecs-os_api-bake
         bake test
 
-  windows:
+  test-windows:
     timeout-minutes: 10
     runs-on: windows-latest
     
@@ -60,8 +52,8 @@ jobs:
         bake/bake run test\cpp_api
         bake/bake run test\api
         bake/bake run test\collections
-
-  strict:
+        
+  test-warnings:
     timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     strategy:
@@ -89,7 +81,12 @@ jobs:
         bake examples/c --strict
         bake examples/cpp --strict
 
-  sanitizer:
+    - name: Build examples (release)
+      run: |
+        bake examples/c --strict --cfg release
+        bake examples/cpp --strict --cfg release
+
+  test-sanitized:
     timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     strategy:
@@ -116,7 +113,7 @@ jobs:
         bake run test/cpp_api --cfg sanitize
         bake run test/collections --cfg sanitize
 
-  amalgamated:
+  test-amalgamated:
     timeout-minutes: 5
     runs-on: ${{ matrix.os }}
     strategy:
