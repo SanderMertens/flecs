@@ -2950,7 +2950,7 @@ namespace _
   {
     static const char* name(void) {
       static const size_t size = (sizeof(__PRETTY_FUNCTION__) - FRONT_SIZE - BACK_SIZE) / 2 + 1u;
-      static char typeName[size] = {};
+      static char typeName[size + 6] = {};
       memcpy(typeName, __PRETTY_FUNCTION__ + FRONT_SIZE, size - 1u);
       name_util::trim_name(typeName);
       return typeName;
@@ -2965,7 +2965,7 @@ namespace _
   {
     static const char* name(void) {
       static const size_t size = sizeof(__PRETTY_FUNCTION__) - FRONT_SIZE - BACK_SIZE;
-      static char typeName[size] = {};
+      static char typeName[size + 6] = {};
       memcpy(typeName, __PRETTY_FUNCTION__ + FRONT_SIZE, size - 1u);
       name_util::trim_name(typeName);
       return typeName;
@@ -2980,7 +2980,7 @@ namespace _
   {
     static const char* name(void) {
       static const size_t size = sizeof(__FUNCTION__) - FRONT_SIZE - BACK_SIZE;
-      static char typeName[size] = {};
+      static char typeName[size + 6] = {};
       memcpy(typeName, __FUNCTION__ + FRONT_SIZE, size - 1u);
       name_util::trim_name(typeName);
       return typeName;
