@@ -53,7 +53,7 @@ jobs:
         bake/bake run test\api
         bake/bake run test\collections
         
-  warnings:
+  gcc-warnings:
     timeout-minutes: 20
     runs-on: ${{ matrix.os }}
 
@@ -65,42 +65,54 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install bake        
+    - name: Install bake  
+      env:
+        CC: gcc-${{ matrix.compiler-version }}
+        CXX: g++-${{ matrix.compiler-version }}               
       run: |
         git clone https://github.com/SanderMertens/bake
         make -C bake/build-$(uname)
         bake/bake setup
 
-    - name: Build Flecs (gcc)
-      env:
-        CC: gcc-${{ matrix.compiler-version }}
-        CXX: g++-${{ matrix.compiler-version }}
+    - name: Build Flecs
       run: |
         bake --strict
         bake --strict --cfg release
 
-    - name: Build examples (gcc)
-      env:
-        CC: gcc-${{ matrix.compiler-version }}
-        CXX: g++-${{ matrix.compiler-version }}      
+    - name: Build examples
       run: |
         bake examples/c --strict
         bake examples/cpp --strict
         bake examples/c --strict --cfg release
         bake examples/cpp --strict --cfg release
 
-    - name: Build Flecs (clang)
+  clang-warnings:
+    timeout-minutes: 20
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        compiler-version: [7, 8, 9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install bake  
       env:
         CC: clang-${{ matrix.compiler-version }}
-        CXX: clang++-${{ matrix.compiler-version }}
+        CXX: clang++-${{ matrix.compiler-version }}               
+      run: |
+        git clone https://github.com/SanderMertens/bake
+        make -C bake/build-$(uname)
+        bake/bake setup
+
+    - name: Build Flecs
       run: |
         bake --strict
         bake --strict --cfg release
 
-    - name: Build examples (clang)
-      env:
-        CC: clang-${{ matrix.compiler-version }}
-        CXX: clang++-${{ matrix.compiler-version }}      
+    - name: Build examples
       run: |
         bake examples/c --strict
         bake examples/cpp --strict
