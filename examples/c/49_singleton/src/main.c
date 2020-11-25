@@ -29,7 +29,7 @@ void KeepScore(ecs_iter_t *it) {
     }
 }
 
-int main() {
+int main(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

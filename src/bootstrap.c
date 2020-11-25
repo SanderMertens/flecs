@@ -7,20 +7,20 @@ ecs_type_t ecs_type(EcsName);
 ecs_type_t ecs_type(EcsPrefab);
 
 /* Component lifecycle actions for EcsName */
-ECS_CTOR(EcsName, ptr, {
+static ECS_CTOR(EcsName, ptr, {
     ptr->value = NULL;
     ptr->alloc_value = NULL;
     ptr->symbol = NULL;
 })
 
-ECS_DTOR(EcsName, ptr, {
+static ECS_DTOR(EcsName, ptr, {
     ecs_os_free(ptr->alloc_value);
     ptr->value = NULL;
     ptr->alloc_value = NULL;
     ptr->symbol = NULL;
 })
 
-ECS_COPY(EcsName, dst, src, {
+static ECS_COPY(EcsName, dst, src, {
     if (dst->alloc_value) {
         ecs_os_free(dst->alloc_value);
         dst->alloc_value = NULL;
@@ -36,7 +36,7 @@ ECS_COPY(EcsName, dst, src, {
     dst->symbol = src->symbol;
 })
 
-ECS_MOVE(EcsName, dst, src, {
+static ECS_MOVE(EcsName, dst, src, {
     dst->value = src->value;
     dst->alloc_value = src->alloc_value;
     dst->symbol = src->symbol;
@@ -53,6 +53,7 @@ ECS_MOVE(EcsName, dst, src, {
     _bootstrap_component(world, table, ecs_typeid(name), #name, sizeof(name),\
         ECS_ALIGNOF(name))
 
+static
 void _bootstrap_component(
     ecs_world_t *world,
     ecs_table_t *table,

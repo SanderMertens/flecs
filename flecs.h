@@ -10058,7 +10058,7 @@ namespace _
             
             /* Remove 'const' */
             ecs_size_t const_len = ecs_os_strlen("const ");
-            if (!ecs_os_strncmp(typeName, "const ", const_len)) {
+            if ((len > const_len) && !ecs_os_strncmp(typeName, "const ", const_len)) {
                 ecs_os_memmove(typeName, typeName + const_len, len - const_len);
                 typeName[len - const_len] = '\0';
                 len -= const_len;
@@ -10066,7 +10066,7 @@ namespace _
 
             /* Remove 'struct' */
             ecs_size_t struct_len = ecs_os_strlen("struct ");
-            if (!ecs_os_strncmp(typeName, "struct ", struct_len)) {
+            if ((len > struct_len) && !ecs_os_strncmp(typeName, "struct ", struct_len)) {
                 ecs_os_memmove(typeName, typeName + struct_len, len - struct_len);
                 typeName[len - struct_len] = '\0';
                 len -= struct_len;
@@ -10074,7 +10074,7 @@ namespace _
 
             /* Remove 'class' */
             ecs_size_t class_len = ecs_os_strlen("class ");
-            if (!ecs_os_strncmp(typeName, "class ", class_len)) {
+            if ((len > class_len) && !ecs_os_strncmp(typeName, "class ", class_len)) {
                 ecs_os_memmove(typeName, typeName + class_len, len - class_len);
                 typeName[len - class_len] = '\0';
                 len -= class_len;
@@ -10159,6 +10159,7 @@ void component_ctor(
     (void)world;
     (void)component;
     (void)entity_ptr;
+    (void)size;
     (void)ctx;
 
     ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
@@ -10182,6 +10183,7 @@ void component_dtor(
     (void)world;
     (void)component;
     (void)entity_ptr;
+    (void)size;
     (void)ctx;
 
     ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
@@ -10208,6 +10210,7 @@ void component_copy(
     (void)component;
     (void)dst_entity;
     (void)src_entity;
+    (void)size;
     (void)ctx;
 
     ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
@@ -10235,6 +10238,7 @@ void component_move(
     (void)component;
     (void)dst_entity;
     (void)src_entity;
+    (void)size;
     (void)ctx;
 
     ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);

@@ -1,5 +1,5 @@
 {
-    "id": "replace",
+    "id": "patch",
     "type": "application",
     "value": {
         "author": "Jane Doe",

@@ -13,11 +13,11 @@ typedef struct EcsPipelineQuery {
     ecs_vector_t *ops;
 } EcsPipelineQuery;
 
-ECS_CTOR(EcsPipelineQuery, ptr, {
+static ECS_CTOR(EcsPipelineQuery, ptr, {
     memset(ptr, 0, _size);
 })
 
-ECS_DTOR(EcsPipelineQuery, ptr, {
+static ECS_DTOR(EcsPipelineQuery, ptr, {
     ecs_vector_free(ptr->ops);
 })
 

@@ -188,6 +188,7 @@ void ecs_system_activate(
 }
 
 /* Actually enable or disable system */
+static
 void ecs_enable_system(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -220,6 +221,7 @@ void ecs_enable_system(
         enabled ? EcsSystemEnabled : EcsSystemDisabled);
 }
 
+static
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -298,13 +300,6 @@ void ecs_init_system(
 
     ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
         ecs_get_name(world, system), query->sig.expr);
-}
-
-
-void ecs_col_system_free(
-    EcsSystem *system_data)
-{
-    ecs_query_free(system_data->query);
 }
 
 /* -- Public API -- */

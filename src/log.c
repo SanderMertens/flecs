@@ -159,6 +159,7 @@ char* ecs_colorize(
 static int trace_indent = 0;
 static int trace_level = 0;
 
+static
 void ecs_log_print(
     int level,
     const char *file,

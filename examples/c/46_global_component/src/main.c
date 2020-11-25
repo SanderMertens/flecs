@@ -15,7 +15,7 @@ ecs_entity_t create_entity(ecs_world_t *world) {
     return ecs_new(world, Position);
 }
 
-int main() {
+int main(void) {
     ecs_world_t *world = ecs_init();
 
     /* Assign component id to previously declared variables */
