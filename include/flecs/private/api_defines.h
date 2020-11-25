@@ -166,7 +166,7 @@ typedef int32_t ecs_size_t;
 
 /* Constructor / destructor convenience macro */
 #define ECS_XTOR_IMPL(type, postfix, var, ...)\
-    void type##_##postfix(\
+    static void type##_##postfix(\
         ecs_world_t *world,\
         ecs_entity_t component,\
         const ecs_entity_t *entity_ptr,\
@@ -193,7 +193,7 @@ typedef int32_t ecs_size_t;
 
 /* Copy convenience macro */
 #define ECS_COPY_IMPL(type, dst_var, src_var, ...)\
-    void type##_##copy(\
+    static void type##_##copy(\
         ecs_world_t *world,\
         ecs_entity_t component,\
         const ecs_entity_t *dst_entities,\
@@ -228,7 +228,7 @@ typedef int32_t ecs_size_t;
 
 /* Move convenience macro */
 #define ECS_MOVE_IMPL(type, dst_var, src_var, ...)\
-    void type##_##move(\
+    static void type##_##move(\
         ecs_world_t *world,\
         ecs_entity_t component,\
         const ecs_entity_t *dst_entities,\

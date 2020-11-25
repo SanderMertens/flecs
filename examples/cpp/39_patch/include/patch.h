@@ -1,8 +1,8 @@
-#ifndef REPLACE_H
-#define REPLACE_H
+#ifndef PATCH_H
+#define PATCH_H
 
 /* This generated file contains includes for project dependencies */
-#include "replace/bake_config.h"
+#include "patch/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

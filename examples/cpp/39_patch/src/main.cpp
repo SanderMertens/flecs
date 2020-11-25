@@ -1,4 +1,4 @@
-#include <replace.h>
+#include <patch.h>
 #include <iostream>
 
 // Implement a simple counter with the patch API. Other than a regular set, 

@@ -52,6 +52,7 @@ const char *skip_space(
     return ptr;
 }
 
+static
 int entity_compare(
     const void *ptr1,
     const void *ptr2)
@@ -244,6 +245,7 @@ typedef struct sig_element_t {
     char *name;
 } sig_element_t;
 
+static
 const char* parse_element(
     const char *name,
     const char *sig,
@@ -541,6 +543,7 @@ int ecs_parse_expr(
 }
 
 /** Parse callback that adds component to the components array for a system */
+static
 int ecs_parse_signature_action(
     ecs_world_t *world,
     const char *name,
