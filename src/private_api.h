@@ -97,6 +97,19 @@ void ecs_component_monitor_register(
     ecs_entity_t component,
     ecs_query_t *query);
 
+bool ecs_defer_op_begin(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_op_kind_t op_kind,
+    ecs_entity_t entity,
+    ecs_entities_t *components,
+    const void *value,
+    ecs_size_t size);
+
+void ecs_defer_flush(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
+
 void ecs_measure_frame_time(
     ecs_world_t *world,
     bool enable);
@@ -302,7 +315,12 @@ void ecs_run_set_systems(
 /** Find or create table for a set of components */
 ecs_table_t* ecs_table_find_or_create(
     ecs_world_t *world,
-    ecs_entities_t *type);   
+    ecs_entities_t *type);
+
+/** Find or create table for a type */
+ecs_table_t* ecs_table_from_type(
+    ecs_world_t *world,
+    ecs_type_t type);    
 
 /* Get table data */
 ecs_data_t *ecs_table_get_data(
@@ -349,6 +367,10 @@ void ecs_table_clear_silent(
 void ecs_table_clear_data(
     ecs_table_t *table,
     ecs_data_t *data);    
+
+/* Return number of entities in table. */
+int32_t ecs_table_count(
+    ecs_table_t *table);
 
 /* Return number of entities in data */
 int32_t ecs_table_data_count(
@@ -490,6 +512,11 @@ void ecs_table_clear_edges(
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
+
+ecs_query_t* ecs_query_new_w_sig(
+    ecs_world_t *world,
+    ecs_entity_t system, 
+    ecs_sig_t *sig);
 
 void ecs_query_set_iter(
     ecs_world_t *world,

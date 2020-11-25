@@ -30,7 +30,7 @@ bool ecs_name_writer_write(
     ecs_assert(buffer != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (written >= ECS_SIZEOF(int32_t)) {
-        ecs_os_memcpy(name_ptr, buffer, ECS_SIZEOF(int32_t));
+        *(int32_t*)name_ptr = *(int32_t*)buffer;
         writer->written += ECS_SIZEOF(int32_t);
         return writer->written != writer->len;
     } else {
@@ -256,7 +256,7 @@ ecs_size_t ecs_table_writer(
 
     switch(writer->state) {
     case EcsTableTypeSize:
-        ecs_os_memcpy(&writer->type_count, buffer, ECS_SIZEOF(int32_t));
+        writer->type_count = *(int32_t*)buffer;
         writer->type_array = ecs_os_malloc(writer->type_count * ECS_SIZEOF(ecs_entity_t));
         writer->type_max_count = writer->type_count;
         writer->type_written = 0;
@@ -265,7 +265,7 @@ ecs_size_t ecs_table_writer(
         break;
 
     case EcsTableType:
-        ecs_os_memcpy(ECS_OFFSET(writer->type_array, writer->type_written), buffer, ECS_SIZEOF(int32_t));
+        *(int32_t*)ECS_OFFSET(writer->type_array, writer->type_written) = *(int32_t*)buffer;
         written = ECS_SIZEOF(int32_t);
         writer->type_written += written;
 
@@ -276,13 +276,13 @@ ecs_size_t ecs_table_writer(
         break;
 
     case EcsTableSize:
-        ecs_os_memcpy(&writer->row_count, buffer, ECS_SIZEOF(int32_t));
+        writer->row_count = *(int32_t*)buffer;
         written += ECS_SIZEOF(int32_t);
         ecs_table_writer_next(stream);
         break;
 
     case EcsTableColumn:
-        ecs_os_memcpy(&writer->state, buffer, ECS_SIZEOF(ecs_blob_header_kind_t));
+        writer->state = *(ecs_blob_header_kind_t*)buffer;
         if (writer->state != EcsTableColumnHeader &&
             writer->state != EcsTableColumnNameHeader)
         {
@@ -293,10 +293,8 @@ ecs_size_t ecs_table_writer(
         break;
 
     case EcsTableColumnHeader:
-    case EcsTableColumnSize: {
-        int32_t column_size;
-        memcpy(&column_size, buffer, ECS_SIZEOF(int32_t));
-        ecs_table_writer_prepare_column(stream, column_size);
+    case EcsTableColumnSize:
+        ecs_table_writer_prepare_column(stream, *(int32_t*)buffer);
         ecs_table_writer_next(stream);
 
         written += ECS_SIZEOF(int32_t);
@@ -308,7 +306,6 @@ ecs_size_t ecs_table_writer(
             ecs_table_writer_next(stream);
         }
         break;
-    }
 
     case EcsTableColumnData: {
         written = writer->row_count * writer->column_size - writer->column_written;
@@ -331,14 +328,11 @@ ecs_size_t ecs_table_writer(
         ecs_table_writer_next(stream);
         // fall through
 
-    case EcsTableColumnNameLength: {
-        int32_t name_size;
-        memcpy(&name_size, buffer, ECS_SIZEOF(int32_t));
-        ecs_name_writer_alloc(&writer->name, name_size);
+    case EcsTableColumnNameLength:
+        ecs_name_writer_alloc(&writer->name, *(int32_t*)buffer);
         written = ECS_SIZEOF(int32_t);
         ecs_table_writer_next(stream);
         break;
-    }
 
     case EcsTableColumnName: {
         written = ECS_SIZEOF(int32_t);

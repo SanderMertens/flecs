@@ -106,7 +106,6 @@ void ecs_os_err(const char *fmt, ...) {
     va_end(args);
 }
 
-static
 void ecs_os_gettime(ecs_time_t *time)
 {
     uint64_t now = ecs_os_time_now();

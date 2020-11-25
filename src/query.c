@@ -4,7 +4,6 @@
 #include "modules/system/system.h"
 #endif
 
-static
 void activate_table(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -1603,7 +1602,6 @@ void process_signature(
     }
 }
 
-static
 bool match_table(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -1618,7 +1616,6 @@ bool match_table(
 
 /** Table activation happens when a table was or becomes empty. Deactivated
  * tables are not considered by the system in the main loop. */
-static
 void activate_table(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -1946,7 +1943,6 @@ void ecs_query_notify(
 
 /* -- Public API -- */
 
-static
 ecs_query_t* ecs_query_new_w_sig_intern(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -2165,7 +2161,6 @@ void ecs_query_set_iter(
     it->total_count = count;
 }
 
-static
 int ecs_page_iter_next(
     ecs_page_iter_t *it,
     ecs_page_cursor_t *cur)

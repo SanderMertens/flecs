@@ -54,7 +54,7 @@ void ExpireComponents(ecs_iter_t *it) {
     }
 }
 
-int main(void) {
+int main() {
     ecs_world_t *world = ecs_init();
 
     /* Register components and trait as a regular component */

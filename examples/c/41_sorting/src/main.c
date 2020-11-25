@@ -32,7 +32,7 @@ void print_query(ecs_query_t *q) {
     }
 }
 
-int main(void) {
+int main() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

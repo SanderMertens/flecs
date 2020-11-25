@@ -53,7 +53,6 @@ ECS_MOVE(EcsName, dst, src, {
     _bootstrap_component(world, table, ecs_typeid(name), #name, sizeof(name),\
         ECS_ALIGNOF(name))
 
-static
 void _bootstrap_component(
     ecs_world_t *world,
     ecs_table_t *table,

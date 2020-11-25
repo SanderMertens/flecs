@@ -699,6 +699,19 @@ void ecs_component_monitor_register(
     ecs_entity_t component,
     ecs_query_t *query);
 
+bool ecs_defer_op_begin(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_op_kind_t op_kind,
+    ecs_entity_t entity,
+    ecs_entities_t *components,
+    const void *value,
+    ecs_size_t size);
+
+void ecs_defer_flush(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
+
 void ecs_measure_frame_time(
     ecs_world_t *world,
     bool enable);
@@ -904,7 +917,12 @@ void ecs_run_set_systems(
 /** Find or create table for a set of components */
 ecs_table_t* ecs_table_find_or_create(
     ecs_world_t *world,
-    ecs_entities_t *type);   
+    ecs_entities_t *type);
+
+/** Find or create table for a type */
+ecs_table_t* ecs_table_from_type(
+    ecs_world_t *world,
+    ecs_type_t type);    
 
 /* Get table data */
 ecs_data_t *ecs_table_get_data(
@@ -951,6 +969,10 @@ void ecs_table_clear_silent(
 void ecs_table_clear_data(
     ecs_table_t *table,
     ecs_data_t *data);    
+
+/* Return number of entities in table. */
+int32_t ecs_table_count(
+    ecs_table_t *table);
 
 /* Return number of entities in data */
 int32_t ecs_table_data_count(
@@ -1092,6 +1114,11 @@ void ecs_table_clear_edges(
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
+
+ecs_query_t* ecs_query_new_w_sig(
+    ecs_world_t *world,
+    ecs_entity_t system, 
+    ecs_sig_t *sig);
 
 void ecs_query_set_iter(
     ecs_world_t *world,
@@ -1396,7 +1423,6 @@ char* ecs_colorize(
 static int trace_indent = 0;
 static int trace_level = 0;
 
-static
 void ecs_log_print(
     int level,
     const char *file,
@@ -2599,8 +2625,8 @@ int32_t grow_data(
     int32_t cur_count = ecs_table_data_count(data);
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
-    ecs_column_t *columns = NULL;
-    ecs_sw_column_t *sw_columns = NULL;
+    ecs_column_t *columns;
+    ecs_sw_column_t *sw_columns;
     ensure_data(world, table, data, &column_count, &sw_column_count, 
         &columns, &sw_columns);    
 
@@ -2702,8 +2728,8 @@ int32_t ecs_table_append(
 
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
-    ecs_column_t *columns = NULL;
-    ecs_sw_column_t *sw_columns = NULL;
+    ecs_column_t *columns;
+    ecs_sw_column_t *sw_columns;
     ensure_data(world, table, data, &column_count, &sw_column_count, 
         &columns, &sw_columns);
 
@@ -3730,8 +3756,6 @@ bool ecs_get_info(
     ecs_entity_t entity,
     ecs_entity_info_t * info)
 {
-    info->table = NULL;
-
     if (entity & ECS_ROLE) {
         return false;
     }
@@ -3739,6 +3763,7 @@ bool ecs_get_info(
     ecs_record_t *record = ecs_eis_get(world, entity);
 
     if (!record) {
+        info->table = NULL;
         info->is_watched = false;
         info->record = NULL;
         return false;
@@ -3859,7 +3884,6 @@ void run_component_trigger_for_entities(
     }
 }
 
-static
 void ecs_run_component_trigger(
     ecs_world_t * world,
     ecs_vector_t * trigger_vec,
@@ -4247,7 +4271,6 @@ bool override_component(
     return false;
 }
 
-static
 void ecs_components_override(
     ecs_world_t * world,
     ecs_table_t * table,
@@ -4318,7 +4341,6 @@ void ecs_components_override(
     }
 }
 
-static
 void ecs_components_switch(
     ecs_world_t * world,
     ecs_data_t * data,
@@ -4349,7 +4371,6 @@ void ecs_components_switch(
     }
 }
 
-static
 void ecs_components_on_add(
     ecs_world_t * world,
     ecs_table_t * table,
@@ -4375,7 +4396,6 @@ void ecs_components_on_add(
     }
 }
 
-static
 void ecs_components_on_remove(
     ecs_world_t * world,
     ecs_table_t * table,
@@ -7833,7 +7853,7 @@ bool ecs_name_writer_write(
     ecs_assert(buffer != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (written >= ECS_SIZEOF(int32_t)) {
-        ecs_os_memcpy(name_ptr, buffer, ECS_SIZEOF(int32_t));
+        *(int32_t*)name_ptr = *(int32_t*)buffer;
         writer->written += ECS_SIZEOF(int32_t);
         return writer->written != writer->len;
     } else {
@@ -8059,7 +8079,7 @@ ecs_size_t ecs_table_writer(
 
     switch(writer->state) {
     case EcsTableTypeSize:
-        ecs_os_memcpy(&writer->type_count, buffer, ECS_SIZEOF(int32_t));
+        writer->type_count = *(int32_t*)buffer;
         writer->type_array = ecs_os_malloc(writer->type_count * ECS_SIZEOF(ecs_entity_t));
         writer->type_max_count = writer->type_count;
         writer->type_written = 0;
@@ -8068,7 +8088,7 @@ ecs_size_t ecs_table_writer(
         break;
 
     case EcsTableType:
-        ecs_os_memcpy(ECS_OFFSET(writer->type_array, writer->type_written), buffer, ECS_SIZEOF(int32_t));
+        *(int32_t*)ECS_OFFSET(writer->type_array, writer->type_written) = *(int32_t*)buffer;
         written = ECS_SIZEOF(int32_t);
         writer->type_written += written;
 
@@ -8079,13 +8099,13 @@ ecs_size_t ecs_table_writer(
         break;
 
     case EcsTableSize:
-        ecs_os_memcpy(&writer->row_count, buffer, ECS_SIZEOF(int32_t));
+        writer->row_count = *(int32_t*)buffer;
         written += ECS_SIZEOF(int32_t);
         ecs_table_writer_next(stream);
         break;
 
     case EcsTableColumn:
-        ecs_os_memcpy(&writer->state, buffer, ECS_SIZEOF(ecs_blob_header_kind_t));
+        writer->state = *(ecs_blob_header_kind_t*)buffer;
         if (writer->state != EcsTableColumnHeader &&
             writer->state != EcsTableColumnNameHeader)
         {
@@ -8096,10 +8116,8 @@ ecs_size_t ecs_table_writer(
         break;
 
     case EcsTableColumnHeader:
-    case EcsTableColumnSize: {
-        int32_t column_size;
-        memcpy(&column_size, buffer, ECS_SIZEOF(int32_t));
-        ecs_table_writer_prepare_column(stream, column_size);
+    case EcsTableColumnSize:
+        ecs_table_writer_prepare_column(stream, *(int32_t*)buffer);
         ecs_table_writer_next(stream);
 
         written += ECS_SIZEOF(int32_t);
@@ -8111,7 +8129,6 @@ ecs_size_t ecs_table_writer(
             ecs_table_writer_next(stream);
         }
         break;
-    }
 
     case EcsTableColumnData: {
         written = writer->row_count * writer->column_size - writer->column_written;
@@ -8134,14 +8151,11 @@ ecs_size_t ecs_table_writer(
         ecs_table_writer_next(stream);
         // fall through
 
-    case EcsTableColumnNameLength: {
-        int32_t name_size;
-        memcpy(&name_size, buffer, ECS_SIZEOF(int32_t));
-        ecs_name_writer_alloc(&writer->name, name_size);
+    case EcsTableColumnNameLength:
+        ecs_name_writer_alloc(&writer->name, *(int32_t*)buffer);
         written = ECS_SIZEOF(int32_t);
         ecs_table_writer_next(stream);
         break;
-    }
 
     case EcsTableColumnName: {
         written = ECS_SIZEOF(int32_t);
@@ -9122,6 +9136,12 @@ bool ecs_dbg_filter_table(
     return ecs_table_match_filter(world, table, filter);
 }
 
+ecs_type_t ecs_dbg_table_get_type(
+    ecs_table_t *table)
+{
+    return table->type;
+}
+
 void ecs_dbg_entity(
     ecs_world_t *world, 
     ecs_entity_t entity, 
@@ -9328,21 +9348,21 @@ ecs_size_t ecs_table_reader(
     }
 
     switch(reader->state) {
-    case EcsTableHeader:
-        memcpy(buffer, &(ecs_blob_header_kind_t){EcsTableHeader}, ECS_SIZEOF(ecs_blob_header_kind_t));
+    case EcsTableHeader:  
+        *(ecs_blob_header_kind_t*)buffer = EcsTableHeader;
         read = ECS_SIZEOF(ecs_blob_header_kind_t);
         ecs_table_reader_next(stream);
         break;
 
     case EcsTableTypeSize:
-        memcpy(buffer, &(int32_t){ecs_vector_count(reader->type)}, ECS_SIZEOF(int32_t));
+        *(int32_t*)buffer = ecs_vector_count(reader->type);
         read = ECS_SIZEOF(int32_t);
         ecs_table_reader_next(stream);
         break;  
 
     case EcsTableType: {
         ecs_entity_t *type_array = ecs_vector_first(reader->type, ecs_entity_t);
-        memcpy(buffer, ECS_OFFSET(type_array, reader->type_written), ECS_SIZEOF(int32_t));
+        *(int32_t*)buffer = *(int32_t*)ECS_OFFSET(type_array, reader->type_written);
         reader->type_written += ECS_SIZEOF(int32_t);
         read = ECS_SIZEOF(int32_t);
 
@@ -9353,21 +9373,19 @@ ecs_size_t ecs_table_reader(
     }
 
     case EcsTableSize:
-        ecs_os_memcpy(buffer, &(int32_t){ecs_table_count(reader->table)}, 
-            ECS_SIZEOF(int32_t));
+        *(int32_t*)buffer = ecs_table_count(reader->table);
         read = ECS_SIZEOF(int32_t);
         ecs_table_reader_next(stream);
         break;
 
     case EcsTableColumnHeader:
-        ecs_os_memcpy(buffer, &(ecs_blob_header_kind_t){EcsTableColumnHeader}, 
-            ECS_SIZEOF(ecs_blob_header_kind_t));
+        *(ecs_blob_header_kind_t*)buffer = EcsTableColumnHeader;
         read = ECS_SIZEOF(ecs_blob_header_kind_t);
         ecs_table_reader_next(stream);
         break; 
 
     case EcsTableColumnSize:
-        ecs_os_memcpy(buffer, &reader->column_size, ECS_SIZEOF(int32_t));
+        *(int32_t*)buffer = reader->column_size;
         read = ECS_SIZEOF(ecs_blob_header_kind_t);
         ecs_table_reader_next(stream);
 
@@ -9408,8 +9426,7 @@ ecs_size_t ecs_table_reader(
     }
 
     case EcsTableColumnNameHeader:
-        ecs_os_memcpy(buffer, &(ecs_blob_header_kind_t){EcsTableColumnNameHeader}, 
-            ECS_SIZEOF(ecs_blob_header_kind_t));
+        *(ecs_blob_header_kind_t*)buffer = EcsTableColumnNameHeader;
         read = ECS_SIZEOF(ecs_blob_header_kind_t);
         ecs_table_reader_next(stream);
         break;
@@ -9418,7 +9435,7 @@ ecs_size_t ecs_table_reader(
         reader->name = ((EcsName*)reader->column_data)[reader->row_index].value;
         reader->name_len = ecs_os_strlen(reader->name) + 1;
         reader->name_written = 0;
-        ecs_os_memcpy(buffer, &reader->name_len, ECS_SIZEOF(int32_t));
+        *(int32_t*)buffer = reader->name_len;
         read = ECS_SIZEOF(int32_t);
         ecs_table_reader_next(stream);    
         break;
@@ -10275,7 +10292,6 @@ void ecs_component_monitor_register(
     *q = query;
 }
 
-static
 void ecs_component_monitor_free(
     ecs_component_monitor_t *mon)
 {
@@ -10326,6 +10342,31 @@ void fini_store(ecs_world_t *world) {
 }
 
 /* -- Public functions -- */
+
+
+FLECS_API
+bool ecs_os_has_heap(void);
+
+/** Are threading functions available? */
+FLECS_API
+bool ecs_os_has_threading(void);
+
+/** Are time functions available? */
+FLECS_API
+bool ecs_os_has_time(void);
+
+/** Are logging functions available? */
+FLECS_API
+bool ecs_os_has_logging(void);
+
+/** Are dynamic library functions available? */
+FLECS_API
+bool ecs_os_has_dl(void);
+
+/** Are module path functions available? */
+FLECS_API
+bool ecs_os_has_modules(void);
+
 
 ecs_world_t *ecs_mini(void) {
     ecs_os_init();
@@ -12133,7 +12174,6 @@ const char *skip_space(
     return ptr;
 }
 
-static
 int entity_compare(
     const void *ptr1,
     const void *ptr2)
@@ -12326,7 +12366,6 @@ typedef struct sig_element_t {
     char *name;
 } sig_element_t;
 
-static
 const char* parse_element(
     const char *name,
     const char *sig,
@@ -12624,7 +12663,6 @@ int ecs_parse_expr(
 }
 
 /** Parse callback that adds component to the components array for a system */
-static
 int ecs_parse_signature_action(
     ecs_world_t *world,
     const char *name,
@@ -13432,7 +13470,6 @@ void ecs_os_err(const char *fmt, ...) {
     va_end(args);
 }
 
-static
 void ecs_os_gettime(ecs_time_t *time)
 {
     uint64_t now = ecs_os_time_now();
@@ -13678,7 +13715,6 @@ ecs_entity_t ecs_run_intern(
 #endif
 #endif
 
-static
 void activate_table(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -15277,7 +15313,6 @@ void process_signature(
     }
 }
 
-static
 bool match_table(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -15292,7 +15327,6 @@ bool match_table(
 
 /** Table activation happens when a table was or becomes empty. Deactivated
  * tables are not considered by the system in the main loop. */
-static
 void activate_table(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -15620,7 +15654,6 @@ void ecs_query_notify(
 
 /* -- Public API -- */
 
-static
 ecs_query_t* ecs_query_new_w_sig_intern(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -15839,7 +15872,6 @@ void ecs_query_set_iter(
     it->total_count = count;
 }
 
-static
 int ecs_page_iter_next(
     ecs_page_iter_t *it,
     ecs_page_cursor_t *cur)
@@ -19722,7 +19754,6 @@ void ecs_system_activate(
 }
 
 /* Actually enable or disable system */
-static
 void ecs_enable_system(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -19755,7 +19786,6 @@ void ecs_enable_system(
         enabled ? EcsSystemEnabled : EcsSystemDisabled);
 }
 
-static
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -19834,6 +19864,13 @@ void ecs_init_system(
 
     ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
         ecs_get_name(world, system), query->sig.expr);
+}
+
+
+void ecs_col_system_free(
+    EcsSystem *system_data)
+{
+    ecs_query_free(system_data->query);
 }
 
 /* -- Public API -- */
@@ -20560,6 +20597,41 @@ bool ecs_dbg_match_entity(
         world, dbg.table, system_data->query, failure_info_out);
 }
 
+
+ecs_table_t* ecs_dbg_active_table(
+    ecs_world_t *world,
+    ecs_dbg_system_t *dbg,
+    int32_t index)
+{
+    (void)world;
+
+    EcsSystem *system_data = dbg->system_data;
+    ecs_matched_table_t *table = ecs_vector_get(
+        system_data->query->tables, ecs_matched_table_t, index);
+    if (!table) {
+        return NULL;
+    }
+    
+    return table->data.table;
+}
+
+ecs_table_t* ecs_dbg_inactive_table(
+    ecs_world_t *world,
+    ecs_dbg_system_t *dbg,
+    int32_t index)
+{
+    (void)world;
+
+    EcsSystem *system_data = dbg->system_data;
+    ecs_matched_table_t *table = ecs_vector_get(
+        system_data->query->empty_tables, ecs_matched_table_t, index);
+    if (!table) {
+        return NULL;
+    }
+    
+    return table->data.table;
+}
+
 ecs_type_t ecs_dbg_get_column_type(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -21049,7 +21121,6 @@ ECS_MOVE(EcsName, dst, src, {
     _bootstrap_component(world, table, ecs_typeid(name), #name, sizeof(name),\
         ECS_ALIGNOF(name))
 
-static
 void _bootstrap_component(
     ecs_world_t *world,
     ecs_table_t *table,

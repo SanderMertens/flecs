@@ -930,8 +930,8 @@ int32_t grow_data(
     int32_t cur_count = ecs_table_data_count(data);
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
-    ecs_column_t *columns = NULL;
-    ecs_sw_column_t *sw_columns = NULL;
+    ecs_column_t *columns;
+    ecs_sw_column_t *sw_columns;
     ensure_data(world, table, data, &column_count, &sw_column_count, 
         &columns, &sw_columns);    
 
@@ -1033,8 +1033,8 @@ int32_t ecs_table_append(
 
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
-    ecs_column_t *columns = NULL;
-    ecs_sw_column_t *sw_columns = NULL;
+    ecs_column_t *columns;
+    ecs_sw_column_t *sw_columns;
     ensure_data(world, table, data, &column_count, &sw_column_count, 
         &columns, &sw_columns);
 

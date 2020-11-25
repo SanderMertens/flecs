@@ -189,21 +189,21 @@ ecs_size_t ecs_table_reader(
     }
 
     switch(reader->state) {
-    case EcsTableHeader:
-        memcpy(buffer, &(ecs_blob_header_kind_t){EcsTableHeader}, ECS_SIZEOF(ecs_blob_header_kind_t));
+    case EcsTableHeader:  
+        *(ecs_blob_header_kind_t*)buffer = EcsTableHeader;
         read = ECS_SIZEOF(ecs_blob_header_kind_t);
         ecs_table_reader_next(stream);
         break;
 
     case EcsTableTypeSize:
-        memcpy(buffer, &(int32_t){ecs_vector_count(reader->type)}, ECS_SIZEOF(int32_t));
+        *(int32_t*)buffer = ecs_vector_count(reader->type);
         read = ECS_SIZEOF(int32_t);
         ecs_table_reader_next(stream);
         break;  
 
     case EcsTableType: {
         ecs_entity_t *type_array = ecs_vector_first(reader->type, ecs_entity_t);
-        memcpy(buffer, ECS_OFFSET(type_array, reader->type_written), ECS_SIZEOF(int32_t));
+        *(int32_t*)buffer = *(int32_t*)ECS_OFFSET(type_array, reader->type_written);
         reader->type_written += ECS_SIZEOF(int32_t);
         read = ECS_SIZEOF(int32_t);
 
@@ -214,21 +214,19 @@ ecs_size_t ecs_table_reader(
     }
 
     case EcsTableSize:
-        ecs_os_memcpy(buffer, &(int32_t){ecs_table_count(reader->table)}, 
-            ECS_SIZEOF(int32_t));
+        *(int32_t*)buffer = ecs_table_count(reader->table);
         read = ECS_SIZEOF(int32_t);
         ecs_table_reader_next(stream);
         break;
 
     case EcsTableColumnHeader:
-        ecs_os_memcpy(buffer, &(ecs_blob_header_kind_t){EcsTableColumnHeader}, 
-            ECS_SIZEOF(ecs_blob_header_kind_t));
+        *(ecs_blob_header_kind_t*)buffer = EcsTableColumnHeader;
         read = ECS_SIZEOF(ecs_blob_header_kind_t);
         ecs_table_reader_next(stream);
         break; 
 
     case EcsTableColumnSize:
-        ecs_os_memcpy(buffer, &reader->column_size, ECS_SIZEOF(int32_t));
+        *(int32_t*)buffer = reader->column_size;
         read = ECS_SIZEOF(ecs_blob_header_kind_t);
         ecs_table_reader_next(stream);
 
@@ -269,8 +267,7 @@ ecs_size_t ecs_table_reader(
     }
 
     case EcsTableColumnNameHeader:
-        ecs_os_memcpy(buffer, &(ecs_blob_header_kind_t){EcsTableColumnNameHeader}, 
-            ECS_SIZEOF(ecs_blob_header_kind_t));
+        *(ecs_blob_header_kind_t*)buffer = EcsTableColumnNameHeader;
         read = ECS_SIZEOF(ecs_blob_header_kind_t);
         ecs_table_reader_next(stream);
         break;
@@ -279,7 +276,7 @@ ecs_size_t ecs_table_reader(
         reader->name = ((EcsName*)reader->column_data)[reader->row_index].value;
         reader->name_len = ecs_os_strlen(reader->name) + 1;
         reader->name_written = 0;
-        ecs_os_memcpy(buffer, &reader->name_len, ECS_SIZEOF(int32_t));
+        *(int32_t*)buffer = reader->name_len;
         read = ECS_SIZEOF(int32_t);
         ecs_table_reader_next(stream);    
         break;

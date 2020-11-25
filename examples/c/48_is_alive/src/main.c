@@ -1,6 +1,6 @@
 #include <is_alive.h>
 
-int main(void) {
+int main() {
     ecs_world_t *world = ecs_init();
 
     /* Create new entity, will be alive */

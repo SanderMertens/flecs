@@ -130,8 +130,6 @@ bool ecs_get_info(
     ecs_entity_t entity,
     ecs_entity_info_t * info)
 {
-    info->table = NULL;
-
     if (entity & ECS_ROLE) {
         return false;
     }
@@ -139,6 +137,7 @@ bool ecs_get_info(
     ecs_record_t *record = ecs_eis_get(world, entity);
 
     if (!record) {
+        info->table = NULL;
         info->is_watched = false;
         info->record = NULL;
         return false;
@@ -259,7 +258,6 @@ void run_component_trigger_for_entities(
     }
 }
 
-static
 void ecs_run_component_trigger(
     ecs_world_t * world,
     ecs_vector_t * trigger_vec,
@@ -647,7 +645,6 @@ bool override_component(
     return false;
 }
 
-static
 void ecs_components_override(
     ecs_world_t * world,
     ecs_table_t * table,
@@ -718,7 +715,6 @@ void ecs_components_override(
     }
 }
 
-static
 void ecs_components_switch(
     ecs_world_t * world,
     ecs_data_t * data,
@@ -749,7 +745,6 @@ void ecs_components_switch(
     }
 }
 
-static
 void ecs_components_on_add(
     ecs_world_t * world,
     ecs_table_t * table,
@@ -775,7 +770,6 @@ void ecs_components_on_add(
     }
 }
 
-static
 void ecs_components_on_remove(
     ecs_world_t * world,
     ecs_table_t * table,

@@ -91,7 +91,6 @@ void ecs_component_monitor_register(
     *q = query;
 }
 
-static
 void ecs_component_monitor_free(
     ecs_component_monitor_t *mon)
 {
@@ -142,6 +141,31 @@ void fini_store(ecs_world_t *world) {
 }
 
 /* -- Public functions -- */
+
+
+FLECS_API
+bool ecs_os_has_heap(void);
+
+/** Are threading functions available? */
+FLECS_API
+bool ecs_os_has_threading(void);
+
+/** Are time functions available? */
+FLECS_API
+bool ecs_os_has_time(void);
+
+/** Are logging functions available? */
+FLECS_API
+bool ecs_os_has_logging(void);
+
+/** Are dynamic library functions available? */
+FLECS_API
+bool ecs_os_has_dl(void);
+
+/** Are module path functions available? */
+FLECS_API
+bool ecs_os_has_modules(void);
+
 
 ecs_world_t *ecs_mini(void) {
     ecs_os_init();

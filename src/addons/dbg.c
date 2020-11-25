@@ -111,6 +111,12 @@ bool ecs_dbg_filter_table(
     return ecs_table_match_filter(world, table, filter);
 }
 
+ecs_type_t ecs_dbg_table_get_type(
+    ecs_table_t *table)
+{
+    return table->type;
+}
+
 void ecs_dbg_entity(
     ecs_world_t *world, 
     ecs_entity_t entity, 
