@@ -28,6 +28,7 @@ flecs_src = files(
     'src/addons/queue.c',
     'src/addons/reader.c',
     'src/addons/snapshot.c',
+    'src/addons/stats.c',
     'src/addons/writer.c',
     'src/table.c',
     'src/signature.c',
