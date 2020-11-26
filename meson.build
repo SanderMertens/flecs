@@ -39,7 +39,6 @@ flecs_src = files(
     'src/filter.c',
     'src/query.c',
     'src/api_support.c',
-    'src/modules/stats.c',
     'src/modules/pipeline/pipeline.c',
     'src/modules/pipeline/worker.c',
     'src/modules/system/system.c',
