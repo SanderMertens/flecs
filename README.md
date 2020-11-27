@@ -16,6 +16,9 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 - Flexible API primitives allow for efficient implementation of prefabs, runtime tags and entity graphs
 - Supports advanced queries that are evaluated offline so no searching is performed in the main loop
 - Lockless threading design allows for efficient execution of systems on multiple threads
+- A dashboard for tracking application metrics ([click here for build instructions](https://github.com/flecs-hub/flecs-dash)):
+
+<img width="1117" alt="Screen Shot 2020-11-26 at 8 14 43 PM" src="https://user-images.githubusercontent.com/9919222/100412011-39b63680-3028-11eb-87ca-406f905ca037.png">
 
 [Join the Flecs Discord](https://discord.gg/MRSAZqb)!
 
