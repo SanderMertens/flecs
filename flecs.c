@@ -5607,8 +5607,6 @@ void ecs_modified_w_entity(
     ecs_entity_t entity,
     ecs_entity_t component)
 {
-    ecs_assert((component & ECS_COMPONENT_MASK) == component, ECS_INVALID_PARAMETER, NULL);
-
     ecs_stage_t *stage = ecs_get_stage(&world);
 
     if (ecs_defer_modified(world, stage, entity, component)) {
@@ -8651,7 +8649,7 @@ void ecs_get_world_stats(
     /* Compute frames per second from the delta for world time and frame */
     float delta_world_time = world->stats.world_time_total_raw - prev_world_time_total_raw;
     int32_t delta_frame = world->stats.frame_count_total - prev_frame_count_total;
-    record_stat_float(&s->fps, t, 1.0f / (delta_world_time / delta_frame));    
+    record_stat_float(&s->fps, t, 1.0f / (delta_world_time / (float)delta_frame));
 
     /* Compute world statistics */
     record_stat_int32(&s->entity_count, t, ecs_sparse_count(world->store.entity_index));
