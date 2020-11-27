@@ -76,7 +76,7 @@ The easiest way to add Flecs to a project is to add [flecs.c](https://raw.github
 The Flecs source has a modular design which makes it easy to strip out code you don't need. At its core, Flecs is a minimalistic ECS library with a lot of optional features that you can choose to include or not. [This section of the manual](https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#custom-builds) describes how to customize which features to include. 
 
 ## Modules
-The following modules are available in [flecs-hub](https://github.com/flecs-hub) and are compatible with v2:
+The following modules are available in [flecs-hub](https://github.com/flecs-hub). Note that modules are mostly intended as example code, and their APIs may change at any point in time.
 
 Module      | Description      
 ------------|------------------
@@ -84,6 +84,7 @@ Module      | Description
 [flecs.json](https://github.com/flecs-hub/flecs-json) | JSON serializer for Flecs components
 [flecs.rest](https://github.com/flecs-hub/flecs-rest) | A REST interface for introspecting & editing entities
 [flecs.player](https://github.com/flecs-hub/flecs-player) | Play, stop and pause simulations
+[flecs.monitor](https://github.com/flecs-hub/flecs-monitor) | Web-based monitoring of statistics
 [flecs.dash](https://github.com/flecs-hub/flecs-dash) | Web-frontend for remote monitoring and debugging of Flecs apps
 [flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input
 [flecs.components.transform](https://github.com/flecs-hub/flecs-components-transform) | Components that describe position, rotation and scale
