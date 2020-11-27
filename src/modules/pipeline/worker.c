@@ -206,8 +206,6 @@ void ecs_workers_progress(
         ecs_time_measure(&start);
     }
 
-    world->stats.systems_ran_frame = 0;
-
     if (thread_count <= 1) {
         ecs_pipeline_begin(world, pipeline);
         ecs_entity_t old_scope = ecs_set_scope(world, 0);

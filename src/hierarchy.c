@@ -437,7 +437,6 @@ bool ecs_scope_next(
     for (i = iter->index; i < count; i ++) {
         ecs_table_t *table = *ecs_vector_get(tables, ecs_table_t*, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(table->id != 0, ECS_INTERNAL_ERROR, NULL);
 
         ecs_data_t *data = ecs_table_get_data(table);
         if (!data) {

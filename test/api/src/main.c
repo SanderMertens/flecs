@@ -1005,6 +1005,7 @@ void World_recreate_world_w_component(void);
 void World_no_threading(void);
 void World_no_time(void);
 void World_is_entity_enabled(void);
+void World_get_stats(void);
 
 // Testsuite 'Type'
 void Type_setup(void);
@@ -5134,6 +5135,10 @@ bake_test_case World_testcases[] = {
     {
         "is_entity_enabled",
         World_is_entity_enabled
+    },
+    {
+        "get_stats",
+        World_get_stats
     }
 };
 
@@ -7002,7 +7007,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        31,
+        32,
         World_testcases
     },
     {

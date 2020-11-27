@@ -1094,7 +1094,8 @@
                 "recreate_world_w_component",
                 "no_threading",
                 "no_time",
-                "is_entity_enabled"
+                "is_entity_enabled",
+                "get_stats"
             ]
         }, {
             "id": "Type",

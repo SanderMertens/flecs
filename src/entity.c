@@ -2313,7 +2313,8 @@ int32_t ecs_count_entity(
         return 0;
     }
 
-    ecs_type_t type = ecs_type_from_entity(world, entity);
+    /* Get temporary type that just contains entity */
+    ECS_VECTOR_STACK(type, ecs_entity_t, &entity, 1);
 
     return ecs_count_w_filter(world, &(ecs_filter_t){
         .include = type

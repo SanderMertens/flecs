@@ -979,3 +979,14 @@ void World_is_entity_enabled() {
 
     ecs_fini(world);
 }
+
+void World_get_stats() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_stats_t stats = {0};
+    ecs_get_world_stats(world, &stats);
+
+    test_int(stats.t, 1);
+
+    ecs_fini(world);
+}
