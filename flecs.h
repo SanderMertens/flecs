@@ -3215,7 +3215,7 @@ void ecs_dim(
 
 /** Dimension a type for a specified number of entities.
  * This operation will preallocate memory for a type (table) for the
- * specified number of entites. Specifying a number lower than the current
+ * specified number of entities. Specifying a number lower than the current
  * number of entities in the table will have no effect.
  *
  * @param world The world.
