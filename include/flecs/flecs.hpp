@@ -4100,6 +4100,8 @@ private:
             ecs_set_interval(m_world, e, m_interval);
         }
 
+        m_finalized = true;
+
         return e;
     }
 

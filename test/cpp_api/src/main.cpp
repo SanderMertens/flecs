@@ -130,6 +130,7 @@ void System_action_tag(void);
 void System_iter_tag(void);
 void System_each_tag(void);
 void System_system_from_id(void);
+void System_set_interval(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -700,6 +701,10 @@ bake_test_case System_testcases[] = {
     {
         "system_from_id",
         System_system_from_id
+    },
+    {
+        "set_interval",
+        System_set_interval
     }
 };
 
@@ -1133,7 +1138,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        19,
+        20,
         System_testcases
     },
     {

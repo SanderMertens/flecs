@@ -145,7 +145,8 @@
                 "action_tag",
                 "iter_tag",
                 "each_tag",
-                "system_from_id"
+                "system_from_id",
+                "set_interval"
             ]
         }, {
             "id": "Trigger",

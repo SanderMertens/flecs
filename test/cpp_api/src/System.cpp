@@ -585,3 +585,20 @@ void System_system_from_id() {
     sys_from_id.run();
     test_int(invoked, 1);
 }
+
+void System_set_interval() {
+    flecs::world world;
+
+    auto sys = world.system<>()
+        .kind(0)
+        .interval(1.0f)
+        .iter([&](flecs::iter& it) { });
+
+    float i = sys.interval();
+    test_int(i, 1.0f);
+
+    sys.interval(2.0f);
+
+    i = sys.interval();
+    test_int(i, 2.0f);
+}
