@@ -57,7 +57,8 @@
                 "force_owned_type",
                 "force_owned_type_w_trait",
                 "tag_has_size_zero",
-                "get_null_name"
+                "get_null_name",
+                "get_parent"
             ]
         }, {
             "id": "Traits",

@@ -6,13 +6,6 @@
 
 ECS_TYPE_DECL(EcsPipelineQuery);
 
-typedef struct EcsPipelineQuery {
-    ecs_query_t *query;
-    ecs_query_t *build_query;
-    int32_t match_count;
-    ecs_vector_t *ops;
-} EcsPipelineQuery;
-
 static ECS_CTOR(EcsPipelineQuery, ptr, {
     memset(ptr, 0, _size);
 })

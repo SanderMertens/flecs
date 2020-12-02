@@ -97,14 +97,6 @@ void ecs_component_monitor_register(
     ecs_entity_t component,
     ecs_query_t *query);
 
-void ecs_measure_frame_time(
-    ecs_world_t *world,
-    bool enable);
-
-void ecs_measure_system_time(
-    ecs_world_t *world,
-    bool enable);
-
 void ecs_notify_tables(
     ecs_world_t *world,
     ecs_table_event_t *event);

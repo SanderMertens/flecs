@@ -2377,6 +2377,7 @@ public:
      * a faster alternative to repeatedly calling 'get' for the same component.
      *
      * @tparam T component for which to get a reference.
+     * @return The reference.
      */
     template <typename T>
     ref<T> get_ref() const {
@@ -2385,6 +2386,21 @@ public:
         ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
         return ref<T>(m_world, m_id);
+    }
+
+    /** Get parent from an entity.
+     * This operation retrieves the parent entity that has the specified 
+     * component. If no parent with the specified component is found, an entity
+     * with id 0 is returned. If multiple parents have the specified component,
+     * the operation returns the first encountered one.
+     *
+     * @tparam T The component for which to find the parent.
+     * @return The parent entity.
+     */
+    template <typename T>
+    flecs::entity get_parent() {
+        return flecs::entity(m_world, ecs_get_parent_w_entity(m_world, m_id, 
+            _::component_info<T>::id(m_world)));
     }
 
     /** Clear an entity.
@@ -3965,8 +3981,6 @@ public:
         m_hidden = true;
         return *this;
     }
-
-
 
     void enable() {
         ecs_enable(m_world, m_id, true);

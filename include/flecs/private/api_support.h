@@ -195,6 +195,11 @@ ecs_query_t* ecs_query_new_w_sig(
     ecs_entity_t system,
     ecs_sig_t *sig);
 
+/** Get signature object from query */
+FLECS_API
+ecs_sig_t* ecs_query_get_sig(
+    ecs_query_t *query);
+
 
 #define ECS_INVALID_ENTITY (1)
 #define ECS_INVALID_PARAMETER (2)

@@ -52,6 +52,7 @@ void Entity_force_owned_type(void);
 void Entity_force_owned_type_w_trait(void);
 void Entity_tag_has_size_zero(void);
 void Entity_get_null_name(void);
+void Entity_get_parent(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -412,6 +413,10 @@ bake_test_case Entity_testcases[] = {
     {
         "get_null_name",
         Entity_get_null_name
+    },
+    {
+        "get_parent",
+        Entity_get_parent
     }
 };
 
@@ -1093,7 +1098,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        43,
+        44,
         Entity_testcases
     },
     {

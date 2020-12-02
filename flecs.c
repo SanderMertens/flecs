@@ -699,14 +699,6 @@ void ecs_component_monitor_register(
     ecs_entity_t component,
     ecs_query_t *query);
 
-void ecs_measure_frame_time(
-    ecs_world_t *world,
-    bool enable);
-
-void ecs_measure_system_time(
-    ecs_world_t *world,
-    bool enable);
-
 void ecs_notify_tables(
     ecs_world_t *world,
     ecs_table_event_t *event);
@@ -8550,40 +8542,151 @@ int32_t ecs_queue_count(
 
 #ifdef FLECS_STATS
 
+#ifndef FLECS_SYSTEM_PRIVATE_H
+#define FLECS_SYSTEM_PRIVATE_H
+
+
+typedef struct EcsSystem {
+    ecs_iter_action_t action;       /* Callback to be invoked for matching it */
+    void *ctx;                      /* Userdata for system */
+
+    ecs_entity_t entity;                  /* Entity id of system, used for ordering */
+    ecs_query_t *query;                   /* System query */
+    ecs_on_demand_out_t *on_demand;       /* Keep track of [out] column refs */
+    ecs_system_status_action_t status_action; /* Status action */
+    void *status_ctx;                     /* User data for status action */    
+    ecs_entity_t tick_source;             /* Tick source associated with system */
+    
+    int32_t invoke_count;                 /* Number of times system is invoked */
+    FLECS_FLOAT time_spent;               /* Time spent on running system */
+    FLECS_FLOAT time_passed;              /* Time passed since last invocation */
+} EcsSystem;
+
+/* Invoked when system becomes active / inactive */
+void ecs_system_activate(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    bool activate,
+    const EcsSystem *system_data);
+
+/* Internal function to run a system */
+ecs_entity_t ecs_run_intern(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t system,
+    EcsSystem *system_data,
+    FLECS_FLOAT delta_time,
+    int32_t offset,
+    int32_t limit,
+    const ecs_filter_t *filter,
+    void *param,
+    bool ran_by_app);
+
+#endif
+#ifndef FLECS_PIPELINE_PRIVATE_H
+#define FLECS_PIPELINE_PRIVATE_H
+
+
+/** Instruction data for pipeline.
+ * This type is the element type in the "ops" vector of a pipeline and contains
+ * information about the set of systems that need to be ran before a merge. */
+typedef struct ecs_pipeline_op_t {
+    int32_t count;              /**< Number of systems to run before merge */
+} ecs_pipeline_op_t;
+
+typedef struct EcsPipelineQuery {
+    ecs_query_t *query;
+    ecs_query_t *build_query;
+    int32_t match_count;
+    ecs_vector_t *ops;
+} EcsPipelineQuery;
+
+////////////////////////////////////////////////////////////////////////////////
+//// Pipeline API
+////////////////////////////////////////////////////////////////////////////////
+
+int32_t ecs_pipeline_update(
+    ecs_world_t *world,
+    ecs_entity_t pipeline);
+
+int32_t ecs_pipeline_begin(
+    ecs_world_t *world,
+    ecs_entity_t pipeline);
+
+void ecs_pipeline_end(
+    ecs_world_t *world);
+
+void ecs_pipeline_progress(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Worker API
+////////////////////////////////////////////////////////////////////////////////
+
+void ecs_worker_begin(
+    ecs_world_t *world);
+
+bool ecs_worker_sync(
+    ecs_world_t *world);
+
+void ecs_worker_end(
+    ecs_world_t *world);
+
+void ecs_workers_progress(
+    ecs_world_t *world);
+
+#endif
+
 static
-void record_stat_int32(
-    ecs_stat_int32_t *stat,
-    int32_t t,
-    int32_t value)
+int32_t t_next(
+    int32_t t)
 {
-    stat->avg[t] = value;
-    stat->min[t] = value;
-    stat->max[t] = value;
+    return (t + 1) % ECS_STAT_WINDOW;
 }
 
 static
-void record_stat_float(
-    ecs_stat_float_t *stat,
+int32_t t_prev(
+    int32_t t)
+{
+    return (t - 1 + ECS_STAT_WINDOW) % ECS_STAT_WINDOW;
+}
+
+static
+void _record_gauge(
+    ecs_gauge_t *m,
     int32_t t,
     float value)
 {
-    stat->avg[t] = value;
-    stat->min[t] = value;
-    stat->max[t] = value;    
+    m->avg[t] = value;
+    m->min[t] = value;
+    m->max[t] = value;
 }
 
 static
-void print_stat_int32(
-    const char *name,
+float _record_counter(
+    ecs_counter_t *m,
     int32_t t,
-    const ecs_stat_int32_t *stat)
+    float value)
 {
-    ecs_size_t len = ecs_os_strlen(name);
-    printf("%s: %*s %d\n", name, 32 - len, "", stat->avg[t]);
+    int32_t tp = t_prev(t);
+    float prev = m->value[tp];
+    m->value[t] = value;
+    _record_gauge((ecs_gauge_t*)m, t, value - prev);
+    return value - prev;
 }
 
+/* Macro's to silence conversion warnings without adding casts everywhere */
+#define record_gauge(m, t, value)\
+    _record_gauge(m, t, (float)value)
+
+#define record_counter(m, t, value)\
+    _record_counter(m, t, (float)value)
+
 static
-void print_val_float(
+void print_value(
     const char *name,
     float value)
 {
@@ -8592,12 +8695,21 @@ void print_val_float(
 }
 
 static
-void print_stat_float(
+void print_gauge(
     const char *name,
     int32_t t,
-    const ecs_stat_float_t *stat)
+    const ecs_gauge_t *m)
 {
-    print_val_float(name, stat->avg[t]);
+    print_value(name, m->avg[t]);
+}
+
+static
+void print_counter(
+    const char *name,
+    int32_t t,
+    const ecs_counter_t *m)
+{
+    print_value(name, m->rate.avg[t]);
 }
 
 void ecs_get_world_stats(
@@ -8607,92 +8719,38 @@ void ecs_get_world_stats(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t t = s->t = (s->t + 1) % ECS_STAT_WINDOW;
+    int32_t t = s->t = t_next(s->t);
 
-    /* Store time values from world info. These values monotonically increase.
-     * To store the delta between samples, store the previous values as well */
-    float prev_world_time_total_raw = s->prev_world_time_total_raw;
-    float prev_world_time_total = s->prev_world_time_total;
-    float prev_frame_time_total = s->prev_frame_time_total;
-    float prev_system_time_total = s->prev_system_time_total;
-    float prev_merge_time_total = s->prev_merge_time_total;
+    float delta_world_time = record_counter(&s->world_time_total_raw, t, world->stats.world_time_total_raw);
+    record_counter(&s->world_time_total, t, world->stats.world_time_total);
+    record_counter(&s->frame_time_total, t, world->stats.frame_time_total);
+    record_counter(&s->system_time_total, t, world->stats.system_time_total);
+    record_counter(&s->merge_time_total, t, world->stats.merge_time_total);
 
-    record_stat_float(&s->world_time_total_raw, t, world->stats.world_time_total_raw - prev_world_time_total_raw);
-    record_stat_float(&s->world_time_total, t, world->stats.world_time_total - prev_world_time_total);
-    record_stat_float(&s->frame_time_total, t, world->stats.frame_time_total - prev_frame_time_total);
-    record_stat_float(&s->system_time_total, t, world->stats.system_time_total - prev_system_time_total);
-    record_stat_float(&s->merge_time_total, t, world->stats.merge_time_total - prev_merge_time_total);
+    float delta_frame_count = record_counter(&s->frame_count_total, t, world->stats.frame_count_total);
+    record_counter(&s->merge_count_total, t, world->stats.merge_count_total);
+    record_counter(&s->pipeline_build_count_total, t, world->stats.pipeline_build_count_total);
+    record_counter(&s->systems_ran_frame, t, world->stats.systems_ran_frame);
 
-    s->prev_world_time_total_raw = world->stats.world_time_total_raw;
-    s->prev_world_time_total = world->stats.world_time_total;
-    s->prev_frame_time_total = world->stats.frame_time_total;
-    s->prev_system_time_total = world->stats.system_time_total;
-    s->prev_merge_time_total = world->stats.merge_time_total;
+    record_gauge(&s->fps, t, 1.0f / (delta_world_time / (float)delta_frame_count));
 
-    /* Store counters from world info. These values monotonically increase.
-     * To store the delta between samples, store the previous values as well */
-    int32_t prev_frame_count_total = s->prev_frame_count_total;
-    int32_t prev_merge_count_total = s->prev_merge_count_total;
-    int32_t prev_pipeline_build_count_total = s->prev_pipeline_build_count_total;
-    int32_t prev_systems_ran_frame = s->prev_systems_ran_frame;
+    record_gauge(&s->entity_count, t, ecs_sparse_count(world->store.entity_index));
+    record_gauge(&s->component_count, t, ecs_count_entity(world, ecs_typeid(EcsComponent)));
+    record_gauge(&s->query_count, t, ecs_vector_count(world->queries));
+    record_gauge(&s->system_count, t, ecs_count_entity(world, ecs_typeid(EcsSystem)));
 
-    record_stat_int32(&s->frame_count_total, t, world->stats.frame_count_total - prev_frame_count_total);
-    record_stat_int32(&s->merge_count_total, t, world->stats.merge_count_total - prev_merge_count_total);
-    record_stat_int32(&s->pipeline_build_count_total, t, world->stats.pipeline_build_count_total - prev_pipeline_build_count_total); 
-    record_stat_int32(&s->systems_ran_frame, t, world->stats.systems_ran_frame - prev_systems_ran_frame);
-
-    s->prev_frame_count_total = world->stats.frame_count_total;
-    s->prev_merge_count_total = world->stats.merge_count_total;
-    s->prev_pipeline_build_count_total = world->stats.pipeline_build_count_total;
-    s->prev_systems_ran_frame = world->stats.systems_ran_frame;
-
-    /* Compute frames per second from the delta for world time and frame */
-    float delta_world_time = world->stats.world_time_total_raw - prev_world_time_total_raw;
-    int32_t delta_frame = world->stats.frame_count_total - prev_frame_count_total;
-    record_stat_float(&s->fps, t, 1.0f / (delta_world_time / (float)delta_frame));
-
-    /* Compute world statistics */
-    record_stat_int32(&s->entity_count, t, ecs_sparse_count(world->store.entity_index));
-    record_stat_int32(&s->component_count, t, ecs_count_entity(world, ecs_typeid(EcsComponent)));
-    record_stat_int32(&s->query_count, t, ecs_vector_count(world->queries));
-    record_stat_int32(&s->system_count, t, ecs_count_entity(world, ecs_typeid(EcsSystem)));
-
-    /* Compute deferred operation statistics. These values monotonically increase.
-     * To store the delta between samples, store the previous values as well */
-    int32_t prev_new_count = s->prev_new_count;
-    int32_t prev_bulk_new_count = s->prev_bulk_new_count;
-    int32_t prev_delete_count = s->prev_delete_count;
-    int32_t prev_clear_count = s->prev_clear_count;
-    int32_t prev_add_count = s->prev_add_count;
-    int32_t prev_remove_count = s->prev_remove_count;
-    int32_t prev_set_count = s->prev_set_count;
-    int32_t prev_discard_count = s->prev_discard_count;
-
-    s->prev_new_count = world->new_count;
-    s->prev_bulk_new_count = world->bulk_new_count;
-    s->prev_delete_count = world->delete_count;
-    s->prev_clear_count = world->clear_count;
-    s->prev_add_count = world->add_count;
-    s->prev_remove_count = world->remove_count;
-    s->prev_set_count = world->set_count;
-    s->prev_discard_count = world->discard_count;
-
-    record_stat_int32(&s->new_count, t, world->new_count - prev_new_count);
-    record_stat_int32(&s->bulk_new_count, t, world->bulk_new_count - prev_bulk_new_count);
-    record_stat_int32(&s->delete_count, t, world->delete_count - prev_delete_count);
-    record_stat_int32(&s->clear_count, t, world->clear_count - prev_clear_count);
-    record_stat_int32(&s->add_count, t, world->add_count - prev_add_count);
-    record_stat_int32(&s->remove_count, t, world->remove_count - prev_remove_count);
-    record_stat_int32(&s->set_count, t, world->set_count - prev_set_count);
-    record_stat_int32(&s->discard_count, t, world->discard_count - prev_discard_count);
+    record_counter(&s->new_count, t, world->new_count);
+    record_counter(&s->bulk_new_count, t, world->bulk_new_count);
+    record_counter(&s->delete_count, t, world->delete_count);
+    record_counter(&s->clear_count, t, world->clear_count);
+    record_counter(&s->add_count, t, world->add_count);
+    record_counter(&s->remove_count, t, world->remove_count);
+    record_counter(&s->set_count, t, world->set_count);
+    record_counter(&s->discard_count, t, world->discard_count);
 
     /* Compute table statistics */
     int32_t empty_table_count = 0;
     int32_t singleton_table_count = 0;
-    int32_t max_entities_per_table = 0;
-    int32_t max_components_per_table = 0;
-    int32_t max_columns_per_table = 0;
-    int32_t max_matched_queries_per_table = 0;
     int32_t matched_table_count = 0, matched_entity_count = 0;
 
     int32_t i, count = ecs_sparse_count(world->store.tables);
@@ -8704,19 +8762,6 @@ void ecs_get_world_stats(
             empty_table_count ++;
         }
 
-        if (entity_count > max_entities_per_table) {
-            max_entities_per_table = entity_count;
-        }
-
-        int32_t component_count = ecs_vector_count(table->type);
-        if (component_count > max_components_per_table) {
-            max_components_per_table = component_count;
-        }
-
-        if (table->column_count > max_columns_per_table) {
-            max_columns_per_table = table->column_count;
-        }        
-
         /* Singleton tables are tables that have just one entity that also has
          * itself in the table type. */
         if (entity_count == 1) {
@@ -8727,30 +8772,140 @@ void ecs_get_world_stats(
             }
         }
 
-        int32_t queries_matched = ecs_vector_count(table->queries);
-        if (queries_matched > max_matched_queries_per_table) {
-            max_matched_queries_per_table = queries_matched;
-        }
-
         /* If this table matches with queries and is not empty, increase the
          * matched table & matched entity count. These statistics can be used to
          * compute actual fragmentation ratio for queries. */
+        int32_t queries_matched = ecs_vector_count(table->queries);
         if (queries_matched && entity_count) {
             matched_table_count ++;
             matched_entity_count += entity_count;
         }
     }
 
-    record_stat_int32(&s->matched_table_count, t, matched_table_count);
-    record_stat_int32(&s->matched_entity_count, t, matched_entity_count);
-    record_stat_int32(&s->table_count, t, i);
+    record_gauge(&s->matched_table_count, t, matched_table_count);
+    record_gauge(&s->matched_entity_count, t, matched_entity_count);
+    
+    record_gauge(&s->table_count, t, count);
+    record_gauge(&s->empty_table_count, t, empty_table_count);
+    record_gauge(&s->singleton_table_count, t, singleton_table_count);
+}
 
-    record_stat_int32(&s->empty_table_count, t, empty_table_count);
-    record_stat_int32(&s->singleton_table_count, t, singleton_table_count);
-    record_stat_int32(&s->max_entities_per_table, t, max_entities_per_table);
-    record_stat_int32(&s->max_components_per_table, t, max_components_per_table);
-    record_stat_int32(&s->max_columns_per_table, t, max_columns_per_table);
-    record_stat_int32(&s->max_matched_queries_per_table, t, max_matched_queries_per_table);
+void ecs_get_query_stats(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_query_stats_t *s)
+{
+    (void)world;
+
+    int32_t t = s->t = t_next(s->t);
+
+    int32_t i, entity_count = 0, count = ecs_vector_count(query->tables);
+    ecs_matched_table_t *matched_tables = ecs_vector_first(
+        query->tables, ecs_matched_table_t);
+    for (i = 0; i < count; i ++) {
+        ecs_matched_table_t *matched = &matched_tables[i];
+        if (matched->data.table) {
+            entity_count += ecs_table_count(matched->data.table);
+        }
+    }
+
+    record_gauge(&s->matched_table_count, t, count);
+    record_gauge(&s->matched_empty_table_count, t, 
+        ecs_vector_count(query->empty_tables));
+    record_gauge(&s->matched_entity_count, t, entity_count);
+}
+
+bool ecs_get_system_stats(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_system_stats_t *s)
+{
+    const EcsSystem *ptr = ecs_get(world, system, EcsSystem);
+    if (!ptr) {
+        return false;
+    }
+
+    ecs_get_query_stats(world, ptr->query, &s->query_stats);
+    int32_t t = s->query_stats.t;
+
+    record_counter(&s->time_spent, t, ptr->time_spent);
+    record_counter(&s->invoke_count, t, ptr->invoke_count);
+    record_gauge(&s->active, t, !ecs_has_entity(world, system, EcsInactive));
+    record_gauge(&s->enabled, t, !ecs_has_entity(world, system, EcsDisabled));
+
+    return true;
+}
+
+static ecs_system_stats_t* get_system_stats(
+    ecs_map_t *systems,
+    ecs_entity_t system)
+{
+    ecs_system_stats_t *s = ecs_map_get(systems, ecs_system_stats_t, system);
+    if (!s) {
+        ecs_system_stats_t stats;
+        memset(&stats, 0, sizeof(ecs_system_stats_t));
+        ecs_map_set(systems, system, &stats);
+        s = ecs_map_get(systems, ecs_system_stats_t, system);
+        ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    return s;
+}
+
+bool ecs_get_pipeline_stats(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    ecs_pipeline_stats_t *s)
+{
+    const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
+    if (!pq) {
+        return false;
+    }
+
+    /* First find out how many systems are matched by the pipeline */
+    ecs_iter_t it = ecs_query_iter(pq->query);
+    int32_t count = 0;
+    while (ecs_query_next(&it)) {
+        count += it.count;
+    }
+
+    if (!s->system_stats) {
+        s->system_stats = ecs_map_new(ecs_system_stats_t, count);
+    }    
+
+    /* Also count synchronization points */
+    ecs_vector_t *ops = pq->ops;
+    ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
+    ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
+    count += ecs_vector_count(ops);
+
+    /* Make sure vector is large enough to store all systems & sync points */
+    ecs_vector_set_count(&s->systems, ecs_entity_t, count - 1);
+    ecs_entity_t *systems = ecs_vector_first(s->systems, ecs_entity_t);
+
+    /* Populate systems vector, keep track of sync points */
+    it = ecs_query_iter(pq->query);
+    int32_t i_system = 0, ran_since_merge = 0;
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            systems[i_system ++] = it.entities[i];
+            ran_since_merge ++;
+            if (op != op_last && ran_since_merge == op->count) {
+                ran_since_merge = 0;
+                op++;
+                systems[i_system ++] = 0; /* 0 indicates a merge point */
+            }
+
+            ecs_system_stats_t *sys_stats = get_system_stats(
+                s->system_stats, it.entities[i]);
+            ecs_get_system_stats(world, it.entities[i], sys_stats);
+        }
+    }
+
+    ecs_assert(i_system == (count - 1), ECS_INTERNAL_ERROR, NULL);
+
+    return true;
 }
 
 void ecs_dump_world_stats(
@@ -8759,40 +8914,36 @@ void ecs_dump_world_stats(
 {
     int32_t t = s->t;
     
-    print_stat_int32("Frame", t, &s->frame_count_total);
+    print_counter("Frame", t, &s->frame_count_total);
     printf("-------------------------------------\n");
-    print_stat_int32("pipeline rebuilds", t, &s->pipeline_build_count_total);
-    print_stat_int32("systems ran last frame", t, &s->systems_ran_frame);
+    print_counter("pipeline rebuilds", t, &s->pipeline_build_count_total);
+    print_counter("systems ran last frame", t, &s->systems_ran_frame);
     printf("\n");
-    print_val_float("target FPS", world->stats.target_fps);
-    print_val_float("time scale", world->stats.time_scale);
+    print_value("target FPS", world->stats.target_fps);
+    print_value("time scale", world->stats.time_scale);
     printf("\n");
-    print_stat_float("actual FPS", t, &s->fps);
-    print_stat_float("frame time", t, &s->frame_time_total);
-    print_stat_float("system time", t, &s->system_time_total);
-    print_stat_float("merge time", t, &s->merge_time_total);
-    print_stat_float("simulation time elapsed", t, &s->world_time_total);
+    print_gauge("actual FPS", t, &s->fps);
+    print_counter("frame time", t, &s->frame_time_total);
+    print_counter("system time", t, &s->system_time_total);
+    print_counter("merge time", t, &s->merge_time_total);
+    print_counter("simulation time elapsed", t, &s->world_time_total);
     printf("\n");
-    print_stat_int32("entity count", t, &s->entity_count);
-    print_stat_int32("component count", t, &s->component_count);
-    print_stat_int32("query count", t, &s->query_count);
-    print_stat_int32("system count", t, &s->system_count);
-    print_stat_int32("table count", t, &s->table_count);
-    print_stat_int32("singleton table count", t, &s->singleton_table_count);
-    print_stat_int32("empty table count", t, &s->empty_table_count);
-    print_stat_int32("max entities per table", t, &s->max_entities_per_table);
-    print_stat_int32("max components per table", t, &s->max_components_per_table);
-    print_stat_int32("max columns per table", t, &s->max_columns_per_table);
-    print_stat_int32("max matched queries per table", t, &s->max_matched_queries_per_table);
+    print_gauge("entity count", t, &s->entity_count);
+    print_gauge("component count", t, &s->component_count);
+    print_gauge("query count", t, &s->query_count);
+    print_gauge("system count", t, &s->system_count);
+    print_gauge("table count", t, &s->table_count);
+    print_gauge("singleton table count", t, &s->singleton_table_count);
+    print_gauge("empty table count", t, &s->empty_table_count);
     printf("\n");
-    print_stat_int32("deferred new operations", t, &s->new_count);
-    print_stat_int32("deferred bulk_new operations", t, &s->bulk_new_count);
-    print_stat_int32("deferred delete operations", t, &s->delete_count);
-    print_stat_int32("deferred clear operations", t, &s->clear_count);
-    print_stat_int32("deferred add operations", t, &s->add_count);
-    print_stat_int32("deferred remove operations", t, &s->remove_count);
-    print_stat_int32("deferred set operations", t, &s->set_count);
-    print_stat_int32("discarded operations", t, &s->discard_count);
+    print_counter("deferred new operations", t, &s->new_count);
+    print_counter("deferred bulk_new operations", t, &s->bulk_new_count);
+    print_counter("deferred delete operations", t, &s->delete_count);
+    print_counter("deferred clear operations", t, &s->clear_count);
+    print_counter("deferred add operations", t, &s->add_count);
+    print_counter("deferred remove operations", t, &s->remove_count);
+    print_counter("deferred set operations", t, &s->set_count);
+    print_counter("discarded operations", t, &s->discard_count);
     printf("\n");
 }
 
@@ -13776,47 +13927,6 @@ bool ecs_os_has_modules(void) {
 }
 
 #ifdef FLECS_SYSTEMS_H
-#ifndef FLECS_SYSTEM_PRIVATE_H
-#define FLECS_SYSTEM_PRIVATE_H
-
-
-typedef struct EcsSystem {
-    ecs_iter_action_t action;       /* Callback to be invoked for matching it */
-    void *ctx;                      /* Userdata for system */
-
-    ecs_entity_t entity;                  /* Entity id of system, used for ordering */
-    ecs_query_t *query;                   /* System query */
-    ecs_on_demand_out_t *on_demand;       /* Keep track of [out] column refs */
-    ecs_system_status_action_t status_action; /* Status action */
-    void *status_ctx;                     /* User data for status action */    
-    ecs_entity_t tick_source;             /* Tick source associated with system */
-    
-    int32_t invoke_count;                 /* Number of times system is invoked */
-    FLECS_FLOAT time_spent;               /* Time spent on running system */
-    FLECS_FLOAT time_passed;              /* Time passed since last invocation */
-} EcsSystem;
-
-/* Invoked when system becomes active / inactive */
-void ecs_system_activate(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    bool activate,
-    const EcsSystem *system_data);
-
-/* Internal function to run a system */
-ecs_entity_t ecs_run_intern(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t system,
-    EcsSystem *system_data,
-    FLECS_FLOAT delta_time,
-    int32_t offset,
-    int32_t limit,
-    const ecs_filter_t *filter,
-    void *param,
-    bool ran_by_app);
-
-#endif
 #endif
 
 static
@@ -15853,6 +15963,12 @@ ecs_query_t* ecs_subquery_new(
     result->parent = parent;
     add_subquery(world, parent, result);
     return result;
+}
+
+ecs_sig_t* ecs_query_get_sig(
+    ecs_query_t *query)
+{
+    return &query->sig;
 }
 
 void ecs_query_free(
@@ -18455,55 +18571,6 @@ void ecs_increase_timer_resolution(bool enable)
 
 #ifdef FLECS_PIPELINE
 
-#ifndef FLECS_PIPELINE_PRIVATE_H
-#define FLECS_PIPELINE_PRIVATE_H
-
-
-/** Instruction data for pipeline.
- * This type is the element type in the "ops" vector of a pipeline and contains
- * information about the set of systems that need to be ran before a merge. */
-typedef struct ecs_pipeline_op_t {
-    int32_t count;              /**< Number of systems to run before merge */
-} ecs_pipeline_op_t;
-
-////////////////////////////////////////////////////////////////////////////////
-//// Pipeline API
-////////////////////////////////////////////////////////////////////////////////
-
-int32_t ecs_pipeline_update(
-    ecs_world_t *world,
-    ecs_entity_t pipeline);
-
-int32_t ecs_pipeline_begin(
-    ecs_world_t *world,
-    ecs_entity_t pipeline);
-
-void ecs_pipeline_end(
-    ecs_world_t *world);
-
-void ecs_pipeline_progress(
-    ecs_world_t *world,
-    ecs_entity_t pipeline,
-    FLECS_FLOAT delta_time);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Worker API
-////////////////////////////////////////////////////////////////////////////////
-
-void ecs_worker_begin(
-    ecs_world_t *world);
-
-bool ecs_worker_sync(
-    ecs_world_t *world);
-
-void ecs_worker_end(
-    ecs_world_t *world);
-
-void ecs_workers_progress(
-    ecs_world_t *world);
-
-#endif
 
 /* Worker thread */
 static
@@ -18791,13 +18858,6 @@ void ecs_set_threads(
 
 
 ECS_TYPE_DECL(EcsPipelineQuery);
-
-typedef struct EcsPipelineQuery {
-    ecs_query_t *query;
-    ecs_query_t *build_query;
-    int32_t match_count;
-    ecs_vector_t *ops;
-} EcsPipelineQuery;
 
 static ECS_CTOR(EcsPipelineQuery, ptr, {
     memset(ptr, 0, _size);

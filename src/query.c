@@ -2040,6 +2040,12 @@ ecs_query_t* ecs_subquery_new(
     return result;
 }
 
+ecs_sig_t* ecs_query_get_sig(
+    ecs_query_t *query)
+{
+    return &query->sig;
+}
+
 void ecs_query_free(
     ecs_query_t *query)
 {
