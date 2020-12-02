@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     /* Define a system with an empty signature. Systems that do not match with
-     * any entites are invoked once per frame */
+     * any entities are invoked once per frame */
     ECS_SYSTEM(world, MyTask, EcsOnUpdate, 0);
 
     /* Set target FPS for main loop to 1 frame per second */
