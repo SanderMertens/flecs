@@ -712,3 +712,29 @@ void Entity_get_parent() {
     test_assert(p.id() != 0);
     test_assert(p == parent2);
 }
+
+void Entity_get_parent_w_tag() {
+    flecs::world world;
+
+    auto TagA = world.entity();
+    auto TagB = world.entity();
+    auto TagC = world.entity();
+
+    auto parent1 = world.entity()
+        .add(TagA);
+
+    auto parent2 = world.entity()
+        .add(TagB);
+
+    auto parent3 = world.entity()
+        .add(TagC);
+
+    auto child = world.entity()
+        .add_childof(parent1)
+        .add_childof(parent2)
+        .add_childof(parent3);
+
+    auto p = child.get_parent(TagB);
+    test_assert(p.id() != 0);
+    test_assert(p == parent2);
+}

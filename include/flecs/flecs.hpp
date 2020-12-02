@@ -2403,6 +2403,10 @@ public:
             _::component_info<T>::id(m_world)));
     }
 
+    flecs::entity get_parent(flecs::entity e) {
+        return flecs::entity(m_world, ecs_get_parent_w_entity(m_world, m_id, e.id()));
+    }    
+
     /** Clear an entity.
      * This operation removes all components from an entity without recycling
      * the entity id.
