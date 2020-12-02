@@ -1026,7 +1026,7 @@ OWNED    | Match only owned components (default)
 SHARED   | Match only shared components
 ANY      | Match owned or shared components
 PARENT   | Match component from parent
-CASCADE  | Match component from parent, iterate depth-first
+CASCADE  | Match component from parent, iterate breadth-first
 Nothing  | Do not get the component from an entity, just pass in handle
 
 This is an example of a query that requests the `Position` component from both the entity and its parent:
@@ -1149,7 +1149,7 @@ while (ecs_query_next(&it)) {
 If an entity does not have a parent with the specified component, the query will not match with the entity.
 
 #### CASCADE
-The `CASCADE` modifier is like the `PARENT` modifier, except that it iterates entities depth-first, calculated by counting the number of parents from an entity to the root. Another difference with `PARENT` is that `CASCADE` matches with the root of a tree, which does not have a parent with the specified component. This requires `CASCADE` queries to check if the parent component is available:
+The `CASCADE` modifier is like the `PARENT` modifier, except that it iterates entities breadth-first, calculated by counting the number of parents from an entity to the root. Another difference with `PARENT` is that `CASCADE` matches with the root of a tree, which does not have a parent with the specified component. This requires `CASCADE` queries to check if the parent component is available:
 
 ```c
 ecs_query_t *query = ecs_query_new(world, "Position, CASCADE:Position");
@@ -1743,7 +1743,7 @@ ECS_ENTITY(world, child, CHILDOF | parent);
 ```
 
 ### Iteration
-Applications can iterate hierarchies depth first with the `ecs_scope_iter` API in C, and the `children()` iterator in C++. This example shows how to iterate all the children of an entity:
+Applications can iterate hierarchies breadth first with the `ecs_scope_iter` API in C, and the `children()` iterator in C++. This example shows how to iterate all the children of an entity:
 
 ```cpp
 ecs_iter_t it = ecs_scope_iter(world, parent);
@@ -1915,7 +1915,7 @@ ecs_set(world, base, Position, {10, 20});
 ecs_entity_t derived = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
 
 // Create instance of 'derived', which is also an instance of base
-ecs_entity_t base = ecs_new_w_entity(world, ECS_INSTANCEOF | derived);
+ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | derived);
 
 // All three entities now share Position
 ecs_get(world, base, Position) == ecs_get(world, instance, Position); // 1
