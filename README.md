@@ -51,8 +51,8 @@ void Move(ecs_iter_t *it) {
   Velocity *v = ecs_column(it, Velocity, 2);
   
   for (int i = 0; i < it.count; i ++) {
-    p[i].x += v[i].x;
-    p[i].y += v[i].y;
+    p[i].x += v[i].x * it->delta_time;
+    p[i].y += v[i].y * it->delta_time;
     printf("Entity %s moved!\n", ecs_get_name(it->world, it->entities[i]);
   }
 }
