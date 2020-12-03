@@ -53,7 +53,7 @@ void Move(ecs_iter_t *it) {
   for (int i = 0; i < it.count; i ++) {
     p[i].x += v[i].x * it->delta_time;
     p[i].y += v[i].y * it->delta_time;
-    printf("Entity %s moved!\n", ecs_get_name(it->world, it->entities[i]);
+    printf("Entity %s moved!\n", ecs_get_name(it->world, it->entities[i]));
   }
 }
 
