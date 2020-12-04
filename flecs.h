@@ -7283,6 +7283,12 @@ FLECS_API void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable);
 
+FLECS_API void ecs_gauge_reduce(
+    ecs_gauge_t *dst,
+    int32_t t_dst,
+    ecs_gauge_t *src,
+    int32_t t_src);
+
 #ifdef __cplusplus
 }
 #endif
@@ -9702,6 +9708,10 @@ public:
             _::component_info<T>::id(m_world)));
     }
 
+    flecs::entity get_parent(flecs::entity e) {
+        return flecs::entity(m_world, ecs_get_parent_w_entity(m_world, m_id, e.id()));
+    }    
+
     /** Clear an entity.
      * This operation removes all components from an entity without recycling
      * the entity id.
@@ -11398,6 +11408,8 @@ private:
         if (m_interval != 0) {
             ecs_set_interval(m_world, e, m_interval);
         }
+
+        m_finalized = true;
 
         return e;
     }

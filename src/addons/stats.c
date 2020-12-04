@@ -78,6 +78,29 @@ void print_counter(
     print_value(name, m->rate.avg[t]);
 }
 
+void ecs_gauge_reduce(
+    ecs_gauge_t *dst,
+    int32_t t_dst,
+    ecs_gauge_t *src,
+    int32_t t_src)
+{
+    dst->min[t_dst] = 0;
+    dst->avg[t_dst] = 0;
+    dst->max[t_dst] = 0;
+
+    int32_t i;
+    for (i = 0; i < ECS_STAT_WINDOW; i ++) {
+        int32_t t = (t_src + i) % ECS_STAT_WINDOW;
+        dst->avg[t_dst] += src->avg[t] / (float)ECS_STAT_WINDOW;
+        if (!dst->min[t_dst] || (src->min[t] < dst->min[t_dst])) {
+            dst->min[t_dst] = src->min[t];
+        }
+        if ((src->max[t] > dst->max[t_dst])) {
+            dst->max[t_dst] = src->max[t];
+        }        
+    }
+}
+
 void ecs_get_world_stats(
     ecs_world_t *world,
     ecs_world_stats_t *s)

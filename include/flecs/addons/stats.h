@@ -192,6 +192,12 @@ FLECS_API void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable);
 
+FLECS_API void ecs_gauge_reduce(
+    ecs_gauge_t *dst,
+    int32_t t_dst,
+    ecs_gauge_t *src,
+    int32_t t_src);
+
 #ifdef __cplusplus
 }
 #endif
