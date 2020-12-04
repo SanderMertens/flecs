@@ -7,23 +7,20 @@
 [![Try online](https://img.shields.io/badge/try-online-brightgreen)](https://godbolt.org/z/bs11T3)
 [![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
 
-Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-component-system) with a focus on high performance game development:
+Flecs is a fast and lightweight Entity Component System with a focus on high performance game development ([join the Discord!](https://discord.gg/MRSAZqb)). Highlights of the framework are:
 
-- Easy to integrate, fast to compile with core that is entirely written in C99
-- Includes C++11 API that enforces type safety & tightly integrates with modern C++ idioms
+- Fast to compile & integrate in any project with zero-dependency core that is written entirely in C99
 - Provides (SoA) access to raw component arrays for optimal cache efficiency and vectorization
 - Archetype-storage with unique graph-based design enables high performance entity mutations 
 - Flexible API primitives allow for efficient implementation of prefabs, runtime tags and entity graphs
-- Supports advanced queries that are evaluated offline so no searching is performed in the main loop
+- Supports advanced queries that are entirely evaluated offline to eliminate searching from the main loop
 - Lockless threading design allows for efficient execution of systems on multiple threads
-- A dashboard for tracking application metrics ([click here for build instructions](https://github.com/flecs-hub/flecs-dash)):
+- A dashboard module for tracking application metrics (see below for repository link):
 
-<img width="1117" alt="Screen Shot 2020-11-26 at 8 14 43 PM" src="https://user-images.githubusercontent.com/9919222/100412011-39b63680-3028-11eb-87ca-406f905ca037.png">
-
-[Join the Flecs Discord](https://discord.gg/MRSAZqb)!
+<img width="942" alt="Screen Shot 2020-12-02 at 1 28 04 AM" src="https://user-images.githubusercontent.com/9919222/100856510-5eebe000-3440-11eb-908e-f4844c335f37.png">
 
 ## What is an Entity Component System?
-ECS (Entity Component System) is a design pattern often found in gaming and simulation which produces code that is fast and reusable. Dynamic composition is a first-class citizen in ECS, and there is a strict separation between data and behavior. A framework is an Entity Component System if it:
+ECS (Entity Component System) is a design pattern used in games and simulations that produces fast and reusable code. Dynamic composition is a first-class citizen in ECS, and there is a strict separation between data and behavior. A framework is an Entity Component System if it:
 
 - Has _entities_ that are unique identifiers
 - Has _components_ that are plain data types
@@ -41,34 +38,69 @@ ECS (Entity Component System) is a design pattern often found in gaming and simu
 See [Docsforge](http://flecs.docsforge.com/) for a more readable version of the documentation.
 
 ## Example
-This is a simple flecs example in the C++11 API:
+This is a simple flecs example in the C99 API:
+
+```c
+typedef struct {
+  float x;
+  float y;
+} Position, Velocity;
+
+void Move(ecs_iter_t *it) {
+  Position *p = ecs_column(it, Position, 1);
+  Velocity *v = ecs_column(it, Velocity, 2);
+  
+  for (int i = 0; i < it.count; i ++) {
+    p[i].x += v[i].x * it->delta_time;
+    p[i].y += v[i].y * it->delta_time;
+    printf("Entity %s moved!\n", ecs_get_name(it->world, it->entities[i]));
+  }
+}
+
+int main(int argc, char *argv[]) {
+  ecs_world_t *ecs = ecs_init();
+    
+  ECS_COMPONENT(ecs, Position);
+  ECS_COMPONENT(ecs, Velocity);
+    
+  ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, [in] Velocity);
+    
+  ecs_entity_t e = ecs_set(ecs, 0, EcsName, {"MyEntity"});
+  ecs_set(ecs, e, Position, {0, 0});
+  ecs_set(ecs, e, Velocity, {1, 1});
+
+  while (ecs_progress(ecs, 0)) { }
+}
+```
+
+Here is the same example but in the C++11 API:
 
 ```c++
 struct Position {
-    float x;
-    float y;
+  float x;
+  float y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+  float x;
+  float y;
 };
 
 int main(int argc, char *argv[]) {
-    flecs::world ecs;
+  flecs::world ecs;
 
-    ecs.system<Position, const Velocity>()
-        .each([](flecs::entity e, Position& p, const Velocity& v) {
-            p.x += v.x * e.delta_time();
-            p.y += v.y * e.delta_time();
-            std::cout << "Entity " << e.name() << " moved!" << std::endl;
-        });
+  ecs.system<Position, const Velocity>()
+    .each([](flecs::entity e, Position& p, const Velocity& v) {
+      p.x += v.x * e.delta_time();
+      p.y += v.y * e.delta_time();
+      std::cout << "Entity " << e.name() << " moved!" << std::endl;
+    });
 
-    ecs.entity("MyEntity")
-        .set<Position>({0, 0})
-        .set<Velocity>({1, 1});
+  ecs.entity("MyEntity")
+    .set<Position>({0, 0})
+    .set<Velocity>({1, 1});
 
-    while (ecs.progress()) { }
+  while (ecs.progress()) { }
 }
 ```
 
@@ -88,7 +120,7 @@ Module      | Description
 [flecs.rest](https://github.com/flecs-hub/flecs-rest) | A REST interface for introspecting & editing entities
 [flecs.player](https://github.com/flecs-hub/flecs-player) | Play, stop and pause simulations
 [flecs.monitor](https://github.com/flecs-hub/flecs-monitor) | Web-based monitoring of statistics
-[flecs.dash](https://github.com/flecs-hub/flecs-dash) | Web-frontend for remote monitoring and debugging of Flecs apps
+[flecs.dash](https://github.com/flecs-hub/flecs-dash) | Web-based dashboard for remote monitoring and debugging of Flecs apps
 [flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input
 [flecs.components.transform](https://github.com/flecs-hub/flecs-components-transform) | Components that describe position, rotation and scale
 [flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe physics and movement
