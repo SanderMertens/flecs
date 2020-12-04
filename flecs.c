@@ -8718,6 +8718,7 @@ void ecs_gauge_reduce(
     ecs_gauge_t *src,
     int32_t t_src)
 {
+    bool min_set = false;
     dst->min[t_dst] = 0;
     dst->avg[t_dst] = 0;
     dst->max[t_dst] = 0;
@@ -8726,8 +8727,9 @@ void ecs_gauge_reduce(
     for (i = 0; i < ECS_STAT_WINDOW; i ++) {
         int32_t t = (t_src + i) % ECS_STAT_WINDOW;
         dst->avg[t_dst] += src->avg[t] / (float)ECS_STAT_WINDOW;
-        if (!dst->min[t_dst] || (src->min[t] < dst->min[t_dst])) {
+        if (!min_set || (src->min[t] < dst->min[t_dst])) {
             dst->min[t_dst] = src->min[t];
+            min_set = true;
         }
         if ((src->max[t] > dst->max[t_dst])) {
             dst->max[t_dst] = src->max[t];
