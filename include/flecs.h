@@ -270,7 +270,7 @@ typedef struct EcsTrigger {
 #define ECS_OWNED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
 
 /** Track whether component is enabled or not */
-#define ECS_DISABLED (ECS_ROLE | ((ecs_entity_t)0x75 << 55))
+#define ECS_DISABLED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
 
 /** @} */
 
@@ -1130,7 +1130,7 @@ void ecs_add_remove_type(
  * @param component The component.
  * @param enable True to enable the component, false to disable.
  */
-void ecs_enable_component_w_entity(
+FLECS_API void ecs_enable_component_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,
@@ -1149,10 +1149,13 @@ void ecs_enable_component_w_entity(
  * @param component The component.
  * @return True if the component is enabled, otherwise false.
  */
-bool ecs_is_component_enabled(
+FLECS_API bool _ecs_is_component_enabled(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
+
+#define ecs_is_component_enabled(world, entity, T)\
+    _ecs_is_component_enabled(world, entity, ecs_typeid(T))
 
 /** @} */
 
