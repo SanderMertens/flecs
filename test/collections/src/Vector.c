@@ -268,7 +268,7 @@ void Vector_grow() {
     ecs_vector_grow(&array, int, 8);
 
     test_int(ecs_vector_count(array), 4);
-    test_int(ecs_vector_size(array), 12);
+    test_int(ecs_vector_size(array), 16);
 
     ecs_vector_free(array);
 }
