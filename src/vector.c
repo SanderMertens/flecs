@@ -1,4 +1,4 @@
-#include "flecs.h"
+#include "private_api.h"
 
 /** Resize the vector buffer */
 static
@@ -297,7 +297,7 @@ int32_t _ecs_vector_set_size(
         int32_t result = vector->size;
 
         if (elem_count < vector->count) {
-            elem_count = vector->count;
+            elem_count = ecs_next_pow_of_2(vector->count);
         }
 
         if (result < elem_count) {

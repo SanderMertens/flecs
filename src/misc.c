@@ -35,6 +35,20 @@ ecs_size_t ecs_from_size_t(
    return (ecs_size_t)size;
 }
 
+int32_t ecs_next_pow_of_2(
+    int32_t n)
+{
+    n --;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n ++;
+
+    return n;
+}
+
 /** Convert time to double */
 double ecs_time_to_double(
     ecs_time_t t)

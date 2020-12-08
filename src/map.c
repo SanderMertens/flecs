@@ -1,4 +1,4 @@
-#include "flecs.h"
+#include "private_api.h"
 
 #define LOAD_FACTOR (1.5)
 #define KEY_SIZE (ECS_SIZEOF(ecs_map_key_t))
@@ -34,25 +34,10 @@ struct ecs_map_t {
 };
 
 static
-int32_t next_pow_of_2(
-    int32_t n)
-{
-    n --;
-    n |= n >> 1;
-    n |= n >> 2;
-    n |= n >> 4;
-    n |= n >> 8;
-    n |= n >> 16;
-    n ++;
-
-    return n;
-}
-
-static
 int32_t get_bucket_count(
     int32_t element_count)
 {
-    return next_pow_of_2((int32_t)((float)element_count * LOAD_FACTOR));
+    return ecs_next_pow_of_2((int32_t)((float)element_count * LOAD_FACTOR));
 }
 
 static
