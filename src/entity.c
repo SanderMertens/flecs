@@ -2158,6 +2158,82 @@ ecs_entity_t ecs_get_case(
     return ecs_switch_get(sw, info.row);  
 }
 
+static
+ecs_bitset_t* ensure_bitset(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_info_t *info,
+    ecs_entity_t component)
+{
+    ecs_entity_t bs_id = (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
+    
+    ecs_table_t *table = info->table;
+    int32_t index = -1;
+    if (table) {
+        index = ecs_type_index_of(table->type, bs_id);
+    }
+
+    if (index == -1) {
+        ecs_add_entity(world, entity, bs_id);
+        ecs_bitset_t *result = ensure_bitset(world, entity, info, component);
+        ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+        return result;
+    }
+
+    index -= table->bs_column_offset;
+    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* Data cannot be NULl, since entity is stored in the table */
+    ecs_assert(info->data != NULL, ECS_INTERNAL_ERROR, NULL);
+    return &info->data->bs_columns[index].data;
+}
+
+void ecs_enable_component_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    bool enable)
+{
+    ecs_entity_info_t info;
+    if (!ecs_get_info(world, entity, &info) || !info.table) {
+        return;
+    }
+
+    ecs_bitset_t *bs = ensure_bitset(world, entity, &info, component);
+    ecs_assert(bs != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_bitset_set(bs, info.row, enable);
+}
+
+bool ecs_is_component_enabled(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component)
+{
+    ecs_entity_info_t info;
+    ecs_table_t *table;
+    if (!ecs_get_info(world, entity, &info) || !(table = info.table)) {
+        return 0;
+    }
+
+    ecs_entity_t bs_id = (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
+
+    ecs_type_t type = table->type;
+    int32_t index = ecs_type_index_of(type, bs_id);
+    if (index == -1) {
+        /* If table does not have DISABLED column for component, component is
+         * always enabled */
+        return true;
+    }
+
+    index -= table->bs_column_offset;
+    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* Data cannot be NULl, since entity is stored in the table */
+    ecs_assert(info.data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_bitset_t *bs = &info.data->bs_columns[index].data;  
+    return ecs_bitset_get(bs, info.row);
+}
+
 bool ecs_has_entity(
     ecs_world_t *world,
     ecs_entity_t entity,

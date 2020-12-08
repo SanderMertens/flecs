@@ -39,6 +39,7 @@
 #include "flecs/private/api_defines.h"
 #include "flecs/private/vector.h"        /* Vector datatype */
 #include "flecs/private/sparse.h"        /* Sparse set */
+#include "flecs/private/bitset.h"        /* Bitset */
 #include "flecs/private/map.h"           /* Hashmap */
 #include "flecs/private/switch_list.h"   /* Switch list */
 #include "flecs/private/strbuf.h"        /* Efficient string builder */
@@ -195,7 +196,7 @@ typedef struct EcsComponentLifecycle {
     void *ctx;              /**< User defined context */
 } EcsComponentLifecycle;
 
-/* Component used for registering component triggers */
+/** Component used for registering component triggers */
 typedef struct EcsTrigger {
     ecs_entity_t kind;
     ecs_iter_action_t action;
@@ -267,6 +268,9 @@ typedef struct EcsTrigger {
 
 /** Enforce ownership of a component */
 #define ECS_OWNED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
+
+/** Track whether component is enabled or not */
+#define ECS_DISABLED (ECS_ROLE | ((ecs_entity_t)0x75 << 55))
 
 /** @} */
 
@@ -1105,8 +1109,53 @@ void ecs_add_remove_type(
 #define ecs_add_remove(world, entity, to_add, to_remove)\
     ecs_add_remove_type(world, entity, ecs_type(to_add), ecs_type(to_remove))
 
+/** @} */
+
+
+/**
+ * @defgroup enabling_disabling Enabling & Disabling components.
+ * @{
+ */
+
+/** Enable or disable component.
+ * Enabling or disabling a component does not add or remove a component from an
+ * entity, but prevents it from being matched with queries. This operation can
+ * be useful when a component must be temporarily disabled without destroying
+ * its value. It is also a more performant operation for when an application
+ * needs to add/remove components at high frequency, as enabling/disabling is
+ * cheaper than a regular add or remove.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The component.
+ * @param enable True to enable the component, false to disable.
+ */
+void ecs_enable_component_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    bool enable);
+
+#define ecs_enable_component(world, entity, T, enable)\
+    ecs_enable_component_w_entity(world, entity, ecs_typeid(T), enable)
+
+/** Test if component is enabled.
+ * Test whether a component is currently enabled or disabled. This operation
+ * will return true when the entity has the component and if it has not been
+ * disabled by ecs_enable_component.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The component.
+ * @return True if the component is enabled, otherwise false.
+ */
+bool ecs_is_component_enabled(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component);
 
 /** @} */
+
 
 /**
  * @defgroup traits Traits

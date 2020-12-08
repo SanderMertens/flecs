@@ -73,6 +73,26 @@ int32_t switch_column_count(
     return count;
 }
 
+/* Count number of bitset columns */
+static
+int32_t bitset_column_count(
+    ecs_table_t *table)
+{
+    int32_t count = 0;
+    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
+        ecs_entity_t component = *c_ptr;
+
+        if (ECS_HAS_ROLE(component, DISABLED)) {
+            if (!count) {
+                table->bs_column_offset = c_ptr_i;
+            }
+            count ++;
+        }
+    });
+
+    return count;
+}
+
 static
 ecs_type_t entities_to_type(
     ecs_entities_t *entities)
@@ -180,6 +200,10 @@ void init_edges(
             table->flags |= EcsTableHasSwitch;
         }
 
+        if (ECS_HAS_ROLE(e, DISABLED)) {
+            table->flags |= EcsTableHasDisabled;
+        }        
+
         if (ECS_HAS_ROLE(e, CHILDOF)) {
             ecs_entity_t parent = e & ECS_COMPONENT_MASK;
             ecs_assert(!ecs_exists(world, parent) || ecs_is_alive(world, parent), ECS_INTERNAL_ERROR, NULL);
@@ -224,6 +248,7 @@ void init_table(
     table->queries = NULL;
     table->column_count = data_column_count(world, table);
     table->sw_column_count = switch_column_count(table);
+    table->bs_column_count = bitset_column_count(table);
 
     init_edges(world, table);
 }

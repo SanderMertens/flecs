@@ -132,7 +132,7 @@ void ecs_switch_set_count(
     }
 }
 
-void ecs_switch_set_min_count(
+void ecs_switch_ensure(
     ecs_switch_t *sw,
     int32_t count)
 {

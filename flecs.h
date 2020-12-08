@@ -168,24 +168,25 @@ typedef int32_t ecs_size_t;
 #define FLECS__EEcsComponent (1)
 #define FLECS__EEcsComponentLifecycle (2)
 #define FLECS__EEcsType (3)
-#define FLECS__EEcsName (6)
+#define FLECS__EEcsName (4)
+#define FLECS__EEcsDisableTrait (5)
 
 /** System module component ids */
-#define FLECS__EEcsTrigger (4)
-#define FLECS__EEcsSystem (5)
-#define FLECS__EEcsTickSource (7)
-#define FLECS__EEcsSignatureExpr (8)
-#define FLECS__EEcsSignature (9)
-#define FLECS__EEcsQuery (10)
-#define FLECS__EEcsIterAction (11)
-#define FLECS__EEcsContext (12)
+#define FLECS__EEcsTrigger (6)
+#define FLECS__EEcsSystem (7)
+#define FLECS__EEcsTickSource (8)
+#define FLECS__EEcsSignatureExpr (9)
+#define FLECS__EEcsSignature (10)
+#define FLECS__EEcsQuery (11)
+#define FLECS__EEcsIterAction (12)
+#define FLECS__EEcsContext (13)
 
 /** Pipeline module component ids */
-#define FLECS__EEcsPipelineQuery (13)
+#define FLECS__EEcsPipelineQuery (14)
 
 /** Timer module component ids */
-#define FLECS__EEcsTimer (14)
-#define FLECS__EEcsRateFilter (15)
+#define FLECS__EEcsTimer (15)
+#define FLECS__EEcsRateFilter (16)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -980,6 +981,57 @@ void ecs_sparse_memory(
 #endif
 
 #endif
+#ifndef FLECS_BITSET_H
+#define FLECS_BITSET_H
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct ecs_bitset_t {
+    uint64_t *data;
+    int32_t count;
+    ecs_size_t size;
+} ecs_bitset_t;
+
+void ecs_bitset_init(
+    ecs_bitset_t *bs);
+
+void ecs_bitset_deinit(
+    ecs_bitset_t *bs);
+
+void ecs_bitset_addn(
+    ecs_bitset_t *bs,
+    int32_t count);
+
+void ecs_bitset_ensure(
+    ecs_bitset_t *bs,
+    int32_t count);
+
+void ecs_bitset_set(
+    ecs_bitset_t *bs,
+    int32_t elem,
+    bool value);
+
+bool ecs_bitset_get(
+    const ecs_bitset_t *bs,
+    int32_t elem);
+
+void ecs_bitset_remove(
+    ecs_bitset_t *bs,
+    int32_t elem);
+
+void ecs_bitset_swap(
+    ecs_bitset_t *bs,
+    int32_t elem_a,
+    int32_t elem_b);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
 #ifndef FLECS_MAP_H
 #define FLECS_MAP_H
 
@@ -1212,7 +1264,7 @@ void ecs_switch_set_count(
     int32_t count);
 
 FLECS_API
-void ecs_switch_set_min_count(
+void ecs_switch_ensure(
     ecs_switch_t *sw,
     int32_t count);
 
@@ -2040,9 +2092,16 @@ typedef struct ecs_filter_iter_t {
     ecs_iter_table_t table;
 } ecs_filter_iter_t;
 
+/** Iterator flags used to quickly select the optimal iterator algorithm */
+typedef enum ecs_query_iter_kind_t {
+    EcsQuerySimpleIter,     /**< No paging, sorting or sparse columns */
+    EcsQueryPagedIter,      /**< Regular iterator with paging */
+    EcsQuerySortedIter,     /**< Sorted iterator */
+    EcsQuerySwitchIter      /**< Switch type iterator */
+} ecs_query_iter_kind_t;
+
 /** Query-iterator specific data */
 typedef struct ecs_query_iter_t {
-    ecs_query_t *query;
     ecs_page_iter_t page_iter;
     int32_t index;
     int32_t sparse_smallest;
@@ -2060,12 +2119,14 @@ typedef struct ecs_snapshot_iter_t {
 /** The ecs_iter_t struct allows applications to iterate tables.
  * Queries and filters, among others, allow an application to iterate entities
  * that match a certain set of components. Because of how data is stored 
- * internally, entiites with a given set of components may be stored in multiple
+ * internally, entities with a given set of components may be stored in multiple
  * consecutive arrays, stored across multiple tables. The ecs_iter_t type 
  * enables iteration across tables. */
 struct ecs_iter_t {
     ecs_world_t *world;           /**< The world */
+    ecs_world_t *real_world;      /**< Actual world. This differs from world when using threads.  */
     ecs_entity_t system;          /**< The current system (if applicable) */
+    ecs_query_iter_kind_t kind;
 
     ecs_iter_table_t *table;      /**< Table related data */
     ecs_query_t *query;           /**< Current query being evaluated */
@@ -2077,9 +2138,9 @@ struct ecs_iter_t {
     ecs_entity_t *entities;       /**< Entity identifiers */
 
     void *param;                  /**< User data (EcsContext or param argument) */
-    FLECS_FLOAT delta_time;             /**< Time elapsed since last frame */
-    FLECS_FLOAT delta_system_time;      /**< Time elapsed since last system invocation */
-    FLECS_FLOAT world_time;             /**< Time elapsed since start of simulation */
+    FLECS_FLOAT delta_time;       /**< Time elapsed since last frame */
+    FLECS_FLOAT delta_system_time;/**< Time elapsed since last system invocation */
+    FLECS_FLOAT world_time;       /**< Time elapsed since start of simulation */
 
     int32_t frame_offset;         /**< Offset relative to frame */
     int32_t table_offset;         /**< Current active table being processed */
@@ -2087,7 +2148,7 @@ struct ecs_iter_t {
     int32_t count;                /**< Number of entities to process by system */
     int32_t total_count;          /**< Total number of entities in table */
 
-    ecs_entities_t *triggered_by; /**< Component(s) that triggered the system */
+    ecs_entities_t *triggered_by;
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
 
     union {
@@ -2198,7 +2259,8 @@ extern ecs_type_t
     ecs_type(EcsComponent),
     ecs_type(EcsComponentLifecycle),
     ecs_type(EcsType),
-    ecs_type(EcsName);
+    ecs_type(EcsName),
+    ecs_type(EcsDisableTrait);
 
 /** This allows passing 0 as type to functions that accept types */
 #define FLECS__TNULL 0
@@ -2730,7 +2792,7 @@ typedef struct EcsComponentLifecycle {
     void *ctx;              /**< User defined context */
 } EcsComponentLifecycle;
 
-/* Component used for registering component triggers */
+/** Component used for registering component triggers */
 typedef struct EcsTrigger {
     ecs_entity_t kind;
     ecs_iter_action_t action;
@@ -2802,6 +2864,9 @@ typedef struct EcsTrigger {
 
 /** Enforce ownership of a component */
 #define ECS_OWNED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
+
+/** Track whether component is enabled or not */
+#define ECS_DISABLED (ECS_ROLE | ((ecs_entity_t)0x75 << 55))
 
 /** @} */
 
@@ -3640,8 +3705,53 @@ void ecs_add_remove_type(
 #define ecs_add_remove(world, entity, to_add, to_remove)\
     ecs_add_remove_type(world, entity, ecs_type(to_add), ecs_type(to_remove))
 
+/** @} */
+
+
+/**
+ * @defgroup enabling_disabling Enabling & Disabling components.
+ * @{
+ */
+
+/** Enable or disable component.
+ * Enabling or disabling a component does not add or remove a component from an
+ * entity, but prevents it from being matched with queries. This operation can
+ * be useful when a component must be temporarily disabled without destroying
+ * its value. It is also a more performant operation for when an application
+ * needs to add/remove components at high frequency, as enabling/disabling is
+ * cheaper than a regular add or remove.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The component.
+ * @param enable True to enable the component, false to disable.
+ */
+void ecs_enable_component_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    bool enable);
+
+#define ecs_enable_component(world, entity, T, enable)\
+    ecs_enable_component_w_entity(world, entity, ecs_typeid(T), enable)
+
+/** Test if component is enabled.
+ * Test whether a component is currently enabled or disabled. This operation
+ * will return true when the entity has the component and if it has not been
+ * disabled by ecs_enable_component.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The component.
+ * @return True if the component is enabled, otherwise false.
+ */
+bool ecs_is_component_enabled(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component);
 
 /** @} */
+
 
 /**
  * @defgroup traits Traits
