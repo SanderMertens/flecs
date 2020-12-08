@@ -6,7 +6,10 @@ ecs_data_t* ecs_init_data(
     ecs_data_t *result)
 {
     ecs_type_t type = table->type; 
-    int32_t i, count = table->column_count, sw_count = table->sw_column_count;
+    int32_t i, 
+    count = table->column_count, 
+    sw_count = table->sw_column_count,
+    bs_count = table->bs_column_count;
 
     /* Root tables don't have columns */
     if (!count && !sw_count) {
@@ -73,6 +76,13 @@ ecs_data_t* ecs_init_data(
             result->columns[column_id].data = ecs_switch_values(sw);
             result->columns[column_id].size = sizeof(ecs_entity_t);
             result->columns[column_id].alignment = ECS_ALIGNOF(ecs_entity_t);
+        }
+    }
+
+    if (bs_count) {
+        result->bs_columns = ecs_os_calloc(ECS_SIZEOF(ecs_bs_column_t) * bs_count);
+        for (i = 0; i < bs_count; i ++) {
+            ecs_bitset_init(&result->bs_columns[i].data);
         }
     }
 
@@ -615,6 +625,16 @@ void ecs_table_clear_data(
         data->sw_columns = NULL;
     }
 
+    ecs_bs_column_t *bs_columns = data->bs_columns;
+    if (bs_columns) {
+        int32_t c, column_count = table->bs_column_count;
+        for (c = 0; c < column_count; c ++) {
+            ecs_bitset_deinit(&bs_columns[c].data);
+        }
+        ecs_os_free(bs_columns);
+        data->bs_columns = NULL;
+    }    
+
     ecs_vector_free(data->entities);
     ecs_vector_free(data->record_ptrs);
 
@@ -793,12 +813,63 @@ void move_switch_columns(
             ecs_switch_t *old_switch = old_columns[i_old].data;
             ecs_switch_t *new_switch = new_columns[i_new].data;
 
-            ecs_switch_set_min_count(new_switch, new_index + count);
+            ecs_switch_ensure(new_switch, new_index + count);
 
             int i;
             for (i = 0; i < count; i ++) {
                 uint64_t value = ecs_switch_get(old_switch, old_index + i);
                 ecs_switch_set(new_switch, new_index + i, value);
+            }
+        }
+
+        i_new += new_component <= old_component;
+        i_old += new_component >= old_component;
+    }
+}
+
+static
+void move_bitset_columns(
+    ecs_table_t * new_table, 
+    ecs_data_t * new_data, 
+    int32_t new_index,
+    ecs_table_t * old_table, 
+    ecs_data_t * old_data, 
+    int32_t old_index,
+    int32_t count)
+{
+    int32_t i_old = 0, old_column_count = old_table->bs_column_count;
+    int32_t i_new = 0, new_column_count = new_table->bs_column_count;
+
+    if (!old_column_count || !new_column_count) {
+        return;
+    }
+
+    ecs_bs_column_t *old_columns = old_data->bs_columns;
+    ecs_bs_column_t *new_columns = new_data->bs_columns;
+
+    ecs_type_t new_type = new_table->type;
+    ecs_type_t old_type = old_table->type;
+
+    int32_t offset_new = new_table->bs_column_offset;
+    int32_t offset_old = old_table->bs_column_offset;
+
+    ecs_entity_t *new_components = ecs_vector_first(new_type, ecs_entity_t);
+    ecs_entity_t *old_components = ecs_vector_first(old_type, ecs_entity_t);
+
+    for (; (i_new < new_column_count) && (i_old < old_column_count);) {
+        ecs_entity_t new_component = new_components[i_new + offset_new];
+        ecs_entity_t old_component = old_components[i_old + offset_old];
+
+        if (new_component == old_component) {
+            ecs_bitset_t *old_bs = &old_columns[i_old].data;
+            ecs_bitset_t *new_bs = &new_columns[i_new].data;
+
+            ecs_bitset_ensure(new_bs, new_index + count);
+
+            int i;
+            for (i = 0; i < count; i ++) {
+                uint64_t value = ecs_bitset_get(old_bs, old_index + i);
+                ecs_bitset_set(new_bs, new_index + i, value);
             }
         }
 
@@ -814,30 +885,38 @@ void ensure_data(
     ecs_data_t * data,
     int32_t * column_count_out,
     int32_t * sw_column_count_out,
+    int32_t * bs_column_count_out,
     ecs_column_t ** columns_out,
-    ecs_sw_column_t ** sw_columns_out)
+    ecs_sw_column_t ** sw_columns_out,
+    ecs_bs_column_t ** bs_columns_out)
 {
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
+    int32_t bs_column_count = table->bs_column_count;
     ecs_column_t *columns = NULL;
     ecs_sw_column_t *sw_columns = NULL;
+    ecs_bs_column_t *bs_columns = NULL;
 
     /* It is possible that the table data was created without content. 
      * Now that data is going to be written to the table, initialize */ 
-    if (column_count | sw_column_count) {
+    if (column_count | sw_column_count | bs_column_count) {
         columns = data->columns;
         sw_columns = data->sw_columns;
+        bs_columns = data->bs_columns;
 
         if (!columns && !sw_columns) {
             ecs_init_data(world, table, data);
             columns = data->columns;
             sw_columns = data->sw_columns;
+            bs_columns = data->bs_columns;
         }
 
         *column_count_out = column_count;
         *sw_column_count_out = sw_column_count;
+        *bs_column_count_out = bs_column_count;
         *columns_out = columns;
         *sw_columns_out = sw_columns;
+        *bs_columns_out = bs_columns;
     }
 }
 
@@ -930,10 +1009,12 @@ int32_t grow_data(
     int32_t cur_count = ecs_table_data_count(data);
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
+    int32_t bs_column_count = table->bs_column_count;
     ecs_column_t *columns = NULL;
     ecs_sw_column_t *sw_columns = NULL;
+    ecs_bs_column_t *bs_columns = NULL;
     ensure_data(world, table, data, &column_count, &sw_column_count, 
-        &columns, &sw_columns);    
+        &bs_column_count, &columns, &sw_columns, &bs_columns);    
 
     /* Add record to record ptr array */
     ecs_vector_set_size(&data->record_ptrs, ecs_record_t*, size);
@@ -985,6 +1066,12 @@ int32_t grow_data(
         ecs_switch_addn(sw, to_add);
     }
 
+    /* Add elements to each bitset column */
+    for (i = 0; i < bs_column_count; i ++) {
+        ecs_bitset_t *bs = &bs_columns[i].data;
+        ecs_bitset_addn(bs, to_add);
+    }
+
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);
 
@@ -1033,10 +1120,12 @@ int32_t ecs_table_append(
 
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
+    int32_t bs_column_count = table->bs_column_count;
     ecs_column_t *columns = NULL;
     ecs_sw_column_t *sw_columns = NULL;
-    ensure_data(world, table, data, &column_count, &sw_column_count, 
-        &columns, &sw_columns);
+    ecs_bs_column_t *bs_columns = NULL;
+    ensure_data(world, table, data, &column_count, &sw_column_count,
+        &bs_column_count, &columns, &sw_columns, &bs_columns);
 
     /* Grow buffer with entity ids, set new element to new entity */
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
@@ -1108,6 +1197,12 @@ int32_t ecs_table_append(
         ecs_switch_add(sw);
         columns[i + table->sw_column_offset].data = ecs_switch_values(sw);
     }
+
+    /* Add element to each bitset column */
+    for (i = 0; i < bs_column_count; i ++) {
+        ecs_bitset_t *bs = &bs_columns[i].data;
+        ecs_bitset_addn(bs, 1);
+    }    
 
     return count;
 }
@@ -1264,6 +1359,13 @@ void ecs_table_delete(
     for (i = 0; i < sw_column_count; i ++) {
         ecs_switch_remove(sw_columns[i].data, index);
     }
+
+    /* Remove elements from bitset columns */
+    ecs_bs_column_t *bs_columns = data->bs_columns;
+    int32_t bs_column_count = table->bs_column_count;
+    for (i = 0; i < bs_column_count; i ++) {
+        ecs_bitset_remove(&bs_columns[i].data, index);
+    }    
 }
 
 static
@@ -1337,6 +1439,9 @@ void ecs_table_move(
     }
 
     move_switch_columns(
+        new_table, new_data, new_index, old_table, old_data, old_index, 1);
+
+    move_bitset_columns(
         new_table, new_data, new_index, old_table, old_data, old_index, 1);
 
     bool same_entity = dst_entity == src_entity;
@@ -1456,10 +1561,12 @@ void ecs_table_set_size(
          * columns when, for example, an API call is inserting bulk data. */
         int32_t column_count = table->column_count;
         int32_t sw_column_count = table->sw_column_count;
+        int32_t bs_column_count = table->bs_column_count;
         ecs_column_t *columns;
         ecs_sw_column_t *sw_columns;
-        ensure_data(world, table, data, &column_count, &sw_column_count, 
-            &columns, &sw_columns);
+        ecs_bs_column_t *bs_columns;
+        ensure_data(world, table, data, &column_count, &sw_column_count,
+            &bs_column_count, &columns, &sw_columns, &bs_columns);
     }
 }
 

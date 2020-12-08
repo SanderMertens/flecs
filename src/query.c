@@ -695,7 +695,7 @@ add_trait:
                     index = 0;
                 }
             }
-            
+
             table_data.data.columns[c] = index;
 
             /* If the column is a case, we should only iterate the entities in
@@ -2118,7 +2118,6 @@ ecs_iter_t ecs_query_iter_page(
     }
 
     ecs_query_iter_t it = {
-        .query = query,
         .page_iter = {
             .offset = offset,
             .limit = limit,
@@ -2366,7 +2365,7 @@ bool ecs_query_next(
     ecs_query_iter_t *iter = &it->iter.query;
     ecs_page_iter_t *piter = &iter->page_iter;
     ecs_world_t *world = it->world;
-    ecs_query_t *query = iter->query;
+    ecs_query_t *query = it->query;
 
     ecs_get_stage(&world);
     ecs_table_slice_t *slice = ecs_vector_first(
@@ -2396,7 +2395,7 @@ bool ecs_query_next(
             
             if (slice) {
                 cur.first = slice[i].start_row;
-                cur.count = slice[i].count;
+                cur.count = slice[i].count;                
             } else {
                 cur.first = 0;
                 cur.count = ecs_table_count(table);

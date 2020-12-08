@@ -46,7 +46,6 @@ static ECS_MOVE(EcsName, dst, src, {
     src->symbol = NULL;
 })
 
-
 /* -- Bootstrapping -- */
 
 #define bootstrap_component(world, table, name)\

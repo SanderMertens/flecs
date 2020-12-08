@@ -100,9 +100,16 @@ typedef struct ecs_filter_iter_t {
     ecs_iter_table_t table;
 } ecs_filter_iter_t;
 
+/** Iterator flags used to quickly select the optimal iterator algorithm */
+typedef enum ecs_query_iter_kind_t {
+    EcsQuerySimpleIter,     /**< No paging, sorting or sparse columns */
+    EcsQueryPagedIter,      /**< Regular iterator with paging */
+    EcsQuerySortedIter,     /**< Sorted iterator */
+    EcsQuerySwitchIter      /**< Switch type iterator */
+} ecs_query_iter_kind_t;
+
 /** Query-iterator specific data */
 typedef struct ecs_query_iter_t {
-    ecs_query_t *query;
     ecs_page_iter_t page_iter;
     int32_t index;
     int32_t sparse_smallest;
@@ -120,12 +127,14 @@ typedef struct ecs_snapshot_iter_t {
 /** The ecs_iter_t struct allows applications to iterate tables.
  * Queries and filters, among others, allow an application to iterate entities
  * that match a certain set of components. Because of how data is stored 
- * internally, entiites with a given set of components may be stored in multiple
+ * internally, entities with a given set of components may be stored in multiple
  * consecutive arrays, stored across multiple tables. The ecs_iter_t type 
  * enables iteration across tables. */
 struct ecs_iter_t {
     ecs_world_t *world;           /**< The world */
+    ecs_world_t *real_world;      /**< Actual world. This differs from world when using threads.  */
     ecs_entity_t system;          /**< The current system (if applicable) */
+    ecs_query_iter_kind_t kind;
 
     ecs_iter_table_t *table;      /**< Table related data */
     ecs_query_t *query;           /**< Current query being evaluated */
@@ -137,9 +146,9 @@ struct ecs_iter_t {
     ecs_entity_t *entities;       /**< Entity identifiers */
 
     void *param;                  /**< User data (EcsContext or param argument) */
-    FLECS_FLOAT delta_time;             /**< Time elapsed since last frame */
-    FLECS_FLOAT delta_system_time;      /**< Time elapsed since last system invocation */
-    FLECS_FLOAT world_time;             /**< Time elapsed since start of simulation */
+    FLECS_FLOAT delta_time;       /**< Time elapsed since last frame */
+    FLECS_FLOAT delta_system_time;/**< Time elapsed since last system invocation */
+    FLECS_FLOAT world_time;       /**< Time elapsed since start of simulation */
 
     int32_t frame_offset;         /**< Offset relative to frame */
     int32_t table_offset;         /**< Current active table being processed */
@@ -147,7 +156,7 @@ struct ecs_iter_t {
     int32_t count;                /**< Number of entities to process by system */
     int32_t total_count;          /**< Total number of entities in table */
 
-    ecs_entities_t *triggered_by; /**< Component(s) that triggered the system */
+    ecs_entities_t *triggered_by;
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
 
     union {
