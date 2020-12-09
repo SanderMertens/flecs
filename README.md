@@ -3,7 +3,7 @@
 [![GitHub version](https://badge.fury.io/gh/sandermertens%2Fflecs.svg)](https://badge.fury.io/gh/sandermertens%2Fflecs)
 [![CI build](https://github.com/SanderMertens/flecs/workflows/CI/badge.svg)](https://github.com/SanderMertens/flecs/actions)
 [![codecov](https://codecov.io/gh/SanderMertens/flecs/branch/master/graph/badge.svg)](https://codecov.io/gh/SanderMertens/flecs)
-[![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/MRSAZqb)
+[![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/BEzP5Rgrrp)
 [![Try online](https://img.shields.io/badge/try-online-brightgreen)](https://godbolt.org/z/bs11T3)
 [![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
 
@@ -31,7 +31,6 @@ ECS (Entity Component System) is a design pattern used in games and simulations 
 - [FAQ](docs/FAQ.md)
 - [Manual](docs/Manual.md)
 - [Migration guide](docs/MigrationGuide.md)
-- [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
 - [C examples](examples/c)
 - [C++ examples](examples/cpp)
 
@@ -132,3 +131,16 @@ Module      | Description
 [flecs.systems.sdl2](https://github.com/flecs-hub/flecs-systems-sdl2) | SDL window creation & input management
 [flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sokol) | Sokol-based renderer
 [flecs.systems.civetweb](https://github.com/flecs-hub/flecs-systems-civetweb) | A civetweb-based implementation of flecs.components.http
+
+## Useful Links
+- [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
+- [Medium](https://ajmmertens.medium.com)
+- [Twitter](https://twitter.com/ajmmertens)
+- [Reddit](https://www.reddit.com/r/flecs)
+
+## Supporting Flecs
+Supporting Flecs goes a long way towards keeping the project going and the community alive! If you like the project, consider:
+- Giving it a star
+- Becoming a sponsor: https://github.com/sponsors/SanderMertens
+
+Thanks in advance!
