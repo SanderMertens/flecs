@@ -64,7 +64,7 @@ int main() {
     flecs::world world;
 
     // Register the component with the world
-    world.component<Position>(world);
+    world.component<Position>();
 }
 ```
 
@@ -83,7 +83,7 @@ You can also create an entity with a component already added:
 ecs_entity_t e = ecs_new(world, Position);
 ```
 ```cpp
-auto e = world.entity(world).add<Position>();
+auto e = world.entity().add<Position>();
 ```
 
 An application can also use `set` to assign a value to the component. If the component was not added yet, `set` will add it implicitly:
