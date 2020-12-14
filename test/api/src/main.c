@@ -123,6 +123,30 @@ void Switch_zero_entity_has_case(void);
 void Switch_add_to_entity_w_switch(void);
 void Switch_add_trait_to_entity_w_switch(void);
 
+// Testsuite 'EnabledComponents'
+void EnabledComponents_is_component_enabled(void);
+void EnabledComponents_is_empty_entity_disabled(void);
+void EnabledComponents_is_0_entity_disabled(void);
+void EnabledComponents_is_0_component_disabled(void);
+void EnabledComponents_is_nonexist_component_disabled(void);
+void EnabledComponents_is_enabled_component_enabled(void);
+void EnabledComponents_is_disabled_component_enabled(void);
+void EnabledComponents_has_enabled_component(void);
+void EnabledComponents_is_enabled_after_add(void);
+void EnabledComponents_is_enabled_after_remove(void);
+void EnabledComponents_is_enabled_after_disable(void);
+void EnabledComponents_is_disabled_after_enable(void);
+void EnabledComponents_is_enabled_randomized(void);
+void EnabledComponents_is_enabled_after_add_randomized(void);
+void EnabledComponents_is_enabled_after_randomized_add_randomized(void);
+void EnabledComponents_query_disabled(void);
+void EnabledComponents_query_disabled_skip_initial(void);
+void EnabledComponents_query_randomized_2(void);
+void EnabledComponents_query_randomized_8(void);
+void EnabledComponents_query_randomized_64(void);
+void EnabledComponents_query_randomized_256(void);
+void EnabledComponents_query_randomized_1024(void);
+
 // Testsuite 'Remove'
 void Remove_zero(void);
 void Remove_zero_from_nonzero(void);
@@ -1855,6 +1879,97 @@ bake_test_case Switch_testcases[] = {
     {
         "add_trait_to_entity_w_switch",
         Switch_add_trait_to_entity_w_switch
+    }
+};
+
+bake_test_case EnabledComponents_testcases[] = {
+    {
+        "is_component_enabled",
+        EnabledComponents_is_component_enabled
+    },
+    {
+        "is_empty_entity_disabled",
+        EnabledComponents_is_empty_entity_disabled
+    },
+    {
+        "is_0_entity_disabled",
+        EnabledComponents_is_0_entity_disabled
+    },
+    {
+        "is_0_component_disabled",
+        EnabledComponents_is_0_component_disabled
+    },
+    {
+        "is_nonexist_component_disabled",
+        EnabledComponents_is_nonexist_component_disabled
+    },
+    {
+        "is_enabled_component_enabled",
+        EnabledComponents_is_enabled_component_enabled
+    },
+    {
+        "is_disabled_component_enabled",
+        EnabledComponents_is_disabled_component_enabled
+    },
+    {
+        "has_enabled_component",
+        EnabledComponents_has_enabled_component
+    },
+    {
+        "is_enabled_after_add",
+        EnabledComponents_is_enabled_after_add
+    },
+    {
+        "is_enabled_after_remove",
+        EnabledComponents_is_enabled_after_remove
+    },
+    {
+        "is_enabled_after_disable",
+        EnabledComponents_is_enabled_after_disable
+    },
+    {
+        "is_disabled_after_enable",
+        EnabledComponents_is_disabled_after_enable
+    },
+    {
+        "is_enabled_randomized",
+        EnabledComponents_is_enabled_randomized
+    },
+    {
+        "is_enabled_after_add_randomized",
+        EnabledComponents_is_enabled_after_add_randomized
+    },
+    {
+        "is_enabled_after_randomized_add_randomized",
+        EnabledComponents_is_enabled_after_randomized_add_randomized
+    },
+    {
+        "query_disabled",
+        EnabledComponents_query_disabled
+    },
+    {
+        "query_disabled_skip_initial",
+        EnabledComponents_query_disabled_skip_initial
+    },
+    {
+        "query_randomized_2",
+        EnabledComponents_query_randomized_2
+    },
+    {
+        "query_randomized_8",
+        EnabledComponents_query_randomized_8
+    },
+    {
+        "query_randomized_64",
+        EnabledComponents_query_randomized_64
+    },
+    {
+        "query_randomized_256",
+        EnabledComponents_query_randomized_256
+    },
+    {
+        "query_randomized_1024",
+        EnabledComponents_query_randomized_1024
     }
 };
 
@@ -6743,6 +6858,13 @@ static bake_test_suite suites[] = {
         Switch_testcases
     },
     {
+        "EnabledComponents",
+        NULL,
+        NULL,
+        22,
+        EnabledComponents_testcases
+    },
+    {
         "Remove",
         NULL,
         NULL,
@@ -7117,5 +7239,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 57);
+    return bake_test_run("api", argc, argv, suites, 58);
 }

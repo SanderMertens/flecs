@@ -12,7 +12,7 @@ ecs_data_t* ecs_init_data(
     bs_count = table->bs_column_count;
 
     /* Root tables don't have columns */
-    if (!count && !sw_count) {
+    if (!count && !sw_count && !bs_count) {
         result->columns = NULL;
         return result;
     }
@@ -78,7 +78,7 @@ ecs_data_t* ecs_init_data(
             result->columns[column_id].alignment = ECS_ALIGNOF(ecs_entity_t);
         }
     }
-
+    
     if (bs_count) {
         result->bs_columns = ecs_os_calloc(ECS_SIZEOF(ecs_bs_column_t) * bs_count);
         for (i = 0; i < bs_count; i ++) {
@@ -844,8 +844,6 @@ void move_bitset_columns(
         return;
     }
 
-    printf("move bitset columns\n");
-
     ecs_bs_column_t *old_columns = old_data->bs_columns;
     ecs_bs_column_t *new_columns = new_data->bs_columns;
 
@@ -906,11 +904,16 @@ void ensure_data(
         sw_columns = data->sw_columns;
         bs_columns = data->bs_columns;
 
-        if (!columns && !sw_columns) {
+        if (!columns && !sw_columns && !bs_columns) {
             ecs_init_data(world, table, data);
             columns = data->columns;
             sw_columns = data->sw_columns;
             bs_columns = data->bs_columns;
+
+            ecs_assert(sw_column_count == 0 || sw_columns != NULL, 
+                ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(bs_column_count == 0 || bs_columns != NULL, 
+                ECS_INTERNAL_ERROR, NULL);
         }
 
         *column_count_out = column_count;
@@ -1195,6 +1198,7 @@ int32_t ecs_table_append(
 
     /* Add element to each switch column */
     for (i = 0; i < sw_column_count; i ++) {
+        ecs_assert(sw_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_switch_t *sw = sw_columns[i].data;
         ecs_switch_add(sw);
         columns[i + table->sw_column_offset].data = ecs_switch_values(sw);
@@ -1202,6 +1206,7 @@ int32_t ecs_table_append(
 
     /* Add element to each bitset column */
     for (i = 0; i < bs_column_count; i ++) {
+        ecs_assert(bs_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_bitset_t *bs = &bs_columns[i].data;
         ecs_bitset_addn(bs, 1);
     }    

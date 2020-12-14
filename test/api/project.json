@@ -136,6 +136,32 @@
                 "add_trait_to_entity_w_switch"
             ]
         }, {
+            "id": "EnabledComponents",
+            "testcases": [
+                "is_component_enabled",
+                "is_empty_entity_disabled",
+                "is_0_entity_disabled",
+                "is_0_component_disabled",
+                "is_nonexist_component_disabled",
+                "is_enabled_component_enabled",
+                "is_disabled_component_enabled",
+                "has_enabled_component",
+                "is_enabled_after_add",
+                "is_enabled_after_remove",
+                "is_enabled_after_disable",
+                "is_disabled_after_enable",
+                "is_enabled_randomized",
+                "is_enabled_after_add_randomized",
+                "is_enabled_after_randomized_add_randomized",
+                "query_disabled",
+                "query_disabled_skip_initial",
+                "query_randomized_2",
+                "query_randomized_8",
+                "query_randomized_64",
+                "query_randomized_256",
+                "query_randomized_1024"
+            ]
+        }, {
             "id": "Remove",
             "testcases": [
                 "zero",

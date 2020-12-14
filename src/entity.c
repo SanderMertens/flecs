@@ -2165,9 +2165,7 @@ void ecs_enable_component_w_entity(
     bool enable)
 {
     ecs_entity_info_t info;
-    if (!ecs_get_info(world, entity, &info) || !info.table) {
-        return;
-    }
+    ecs_get_info(world, entity, &info);
 
     ecs_entity_t bs_id = (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
     
@@ -2194,7 +2192,7 @@ void ecs_enable_component_w_entity(
     ecs_bitset_set(bs, info.row, enable);
 }
 
-bool _ecs_is_component_enabled(
+bool ecs_is_component_enabled_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
@@ -2202,7 +2200,7 @@ bool _ecs_is_component_enabled(
     ecs_entity_info_t info;
     ecs_table_t *table;
     if (!ecs_get_info(world, entity, &info) || !(table = info.table)) {
-        return 0;
+        return false;
     }
 
     ecs_entity_t bs_id = (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
@@ -2211,8 +2209,8 @@ bool _ecs_is_component_enabled(
     int32_t index = ecs_type_index_of(type, bs_id);
     if (index == -1) {
         /* If table does not have DISABLED column for component, component is
-         * always enabled */
-        return true;
+         * always enabled, if the entity has it */
+        return ecs_has_entity(world, entity, component);
     }
 
     index -= table->bs_column_offset;
@@ -2221,6 +2219,7 @@ bool _ecs_is_component_enabled(
     /* Data cannot be NULl, since entity is stored in the table */
     ecs_assert(info.data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_bitset_t *bs = &info.data->bs_columns[index].data;  
+
     return ecs_bitset_get(bs, info.row);
 }
 

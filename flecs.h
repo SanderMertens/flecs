@@ -3747,13 +3747,13 @@ FLECS_API void ecs_enable_component_w_entity(
  * @param component The component.
  * @return True if the component is enabled, otherwise false.
  */
-FLECS_API bool _ecs_is_component_enabled(
+FLECS_API bool ecs_is_component_enabled_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
 #define ecs_is_component_enabled(world, entity, T)\
-    _ecs_is_component_enabled(world, entity, ecs_typeid(T))
+    ecs_is_component_enabled_w_entity(world, entity, ecs_typeid(T))
 
 /** @} */
 
