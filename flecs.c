@@ -1693,7 +1693,7 @@ ecs_data_t* ecs_init_data(
     bs_count = table->bs_column_count;
 
     /* Root tables don't have columns */
-    if (!count && !sw_count) {
+    if (!count && !sw_count && !bs_count) {
         result->columns = NULL;
         return result;
     }
@@ -1759,7 +1759,7 @@ ecs_data_t* ecs_init_data(
             result->columns[column_id].alignment = ECS_ALIGNOF(ecs_entity_t);
         }
     }
-
+    
     if (bs_count) {
         result->bs_columns = ecs_os_calloc(ECS_SIZEOF(ecs_bs_column_t) * bs_count);
         for (i = 0; i < bs_count; i ++) {
@@ -2525,8 +2525,6 @@ void move_bitset_columns(
         return;
     }
 
-    printf("move bitset columns\n");
-
     ecs_bs_column_t *old_columns = old_data->bs_columns;
     ecs_bs_column_t *new_columns = new_data->bs_columns;
 
@@ -2587,11 +2585,16 @@ void ensure_data(
         sw_columns = data->sw_columns;
         bs_columns = data->bs_columns;
 
-        if (!columns && !sw_columns) {
+        if (!columns && !sw_columns && !bs_columns) {
             ecs_init_data(world, table, data);
             columns = data->columns;
             sw_columns = data->sw_columns;
             bs_columns = data->bs_columns;
+
+            ecs_assert(sw_column_count == 0 || sw_columns != NULL, 
+                ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(bs_column_count == 0 || bs_columns != NULL, 
+                ECS_INTERNAL_ERROR, NULL);
         }
 
         *column_count_out = column_count;
@@ -2876,6 +2879,7 @@ int32_t ecs_table_append(
 
     /* Add element to each switch column */
     for (i = 0; i < sw_column_count; i ++) {
+        ecs_assert(sw_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_switch_t *sw = sw_columns[i].data;
         ecs_switch_add(sw);
         columns[i + table->sw_column_offset].data = ecs_switch_values(sw);
@@ -2883,6 +2887,7 @@ int32_t ecs_table_append(
 
     /* Add element to each bitset column */
     for (i = 0; i < bs_column_count; i ++) {
+        ecs_assert(bs_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_bitset_t *bs = &bs_columns[i].data;
         ecs_bitset_addn(bs, 1);
     }    
@@ -5886,9 +5891,7 @@ void ecs_enable_component_w_entity(
     bool enable)
 {
     ecs_entity_info_t info;
-    if (!ecs_get_info(world, entity, &info) || !info.table) {
-        return;
-    }
+    ecs_get_info(world, entity, &info);
 
     ecs_entity_t bs_id = (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
     
@@ -5915,7 +5918,7 @@ void ecs_enable_component_w_entity(
     ecs_bitset_set(bs, info.row, enable);
 }
 
-bool _ecs_is_component_enabled(
+bool ecs_is_component_enabled_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
@@ -5923,7 +5926,7 @@ bool _ecs_is_component_enabled(
     ecs_entity_info_t info;
     ecs_table_t *table;
     if (!ecs_get_info(world, entity, &info) || !(table = info.table)) {
-        return 0;
+        return false;
     }
 
     ecs_entity_t bs_id = (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
@@ -5932,8 +5935,8 @@ bool _ecs_is_component_enabled(
     int32_t index = ecs_type_index_of(type, bs_id);
     if (index == -1) {
         /* If table does not have DISABLED column for component, component is
-         * always enabled */
-        return true;
+         * always enabled, if the entity has it */
+        return ecs_has_entity(world, entity, component);
     }
 
     index -= table->bs_column_offset;
@@ -5942,6 +5945,7 @@ bool _ecs_is_component_enabled(
     /* Data cannot be NULl, since entity is stored in the table */
     ecs_assert(info.data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_bitset_t *bs = &info.data->bs_columns[index].data;  
+
     return ecs_bitset_get(bs, info.row);
 }
 
@@ -16011,6 +16015,7 @@ void free_matched_table(
     ecs_os_free((ecs_vector_t**)table->iter_data.types);
     ecs_os_free(table->iter_data.references);
     ecs_os_free(table->sparse_columns);
+    ecs_os_free(table->bitset_columns);
     ecs_os_free(table->monitor);
 }
 
@@ -16611,6 +16616,8 @@ done:
     return -1;
 }
 
+#define BS_MAX ((uint64_t)0xFFFFFFFFFFFFFFFF)
+
 static
 int bitset_column_next(
     ecs_table_t *table,
@@ -16618,7 +16625,8 @@ int bitset_column_next(
     ecs_query_iter_t *iter,
     ecs_page_cursor_t *cur)
 {
-    static uint64_t bitmask[64] = {
+    /* Precomputed single-bit test */
+    static const uint64_t bitmask[64] = {
     1lu << 0, 1lu << 1, 1lu << 2, 1lu << 3,
     1lu << 4, 1lu << 5, 1lu << 6, 1lu << 7,
     1lu << 8, 1lu << 9, 1lu << 10, 1lu << 11,
@@ -16637,10 +16645,39 @@ int bitset_column_next(
     1lu << 60, 1lu << 61, 1lu << 62, 1lu << 63
     };
 
+    /* Precomputed test to verify if remainder of block is set */
+    static const uint64_t bitmask_remain[64] = {
+    BS_MAX - (BS_MAX >> 63), BS_MAX - (BS_MAX >> 62),
+    BS_MAX - (BS_MAX >> 61), BS_MAX - (BS_MAX >> 60), BS_MAX - (BS_MAX >> 59),
+    BS_MAX - (BS_MAX >> 58), BS_MAX - (BS_MAX >> 56), BS_MAX - (BS_MAX >> 55),
+    BS_MAX - (BS_MAX >> 54), BS_MAX - (BS_MAX >> 53), BS_MAX - (BS_MAX >> 52),
+    BS_MAX - (BS_MAX >> 51), BS_MAX - (BS_MAX >> 50), BS_MAX - (BS_MAX >> 49),
+    BS_MAX - (BS_MAX >> 48), BS_MAX - (BS_MAX >> 47), BS_MAX - (BS_MAX >> 46),
+    BS_MAX - (BS_MAX >> 45), BS_MAX - (BS_MAX >> 44), BS_MAX - (BS_MAX >> 43),
+    BS_MAX - (BS_MAX >> 42), BS_MAX - (BS_MAX >> 41), BS_MAX - (BS_MAX >> 40),
+    BS_MAX - (BS_MAX >> 39), BS_MAX - (BS_MAX >> 38), BS_MAX - (BS_MAX >> 37),
+    BS_MAX - (BS_MAX >> 36), BS_MAX - (BS_MAX >> 35), BS_MAX - (BS_MAX >> 34),
+    BS_MAX - (BS_MAX >> 33), BS_MAX - (BS_MAX >> 32), BS_MAX - (BS_MAX >> 32),
+    BS_MAX - (BS_MAX >> 31), BS_MAX - (BS_MAX >> 30), BS_MAX - (BS_MAX >> 29),
+    BS_MAX - (BS_MAX >> 28), BS_MAX - (BS_MAX >> 27), BS_MAX - (BS_MAX >> 26),
+    BS_MAX - (BS_MAX >> 25), BS_MAX - (BS_MAX >> 24), BS_MAX - (BS_MAX >> 23),
+    BS_MAX - (BS_MAX >> 22), BS_MAX - (BS_MAX >> 21), BS_MAX - (BS_MAX >> 20),
+    BS_MAX - (BS_MAX >> 19), BS_MAX - (BS_MAX >> 18), BS_MAX - (BS_MAX >> 17),
+    BS_MAX - (BS_MAX >> 16), BS_MAX - (BS_MAX >> 15), BS_MAX - (BS_MAX >> 14),
+    BS_MAX - (BS_MAX >> 13), BS_MAX - (BS_MAX >> 12), BS_MAX - (BS_MAX >> 11),
+    BS_MAX - (BS_MAX >> 10), BS_MAX - (BS_MAX >> 9), BS_MAX - (BS_MAX >> 8),
+    BS_MAX - (BS_MAX >> 7), BS_MAX - (BS_MAX >> 6), BS_MAX - (BS_MAX >> 5),
+    BS_MAX - (BS_MAX >> 4), BS_MAX - (BS_MAX >> 3), BS_MAX - (BS_MAX >> 1),
+    BS_MAX - (BS_MAX >> 1), BS_MAX - (BS_MAX >> 0)
+    };
+
     int32_t i, count = ecs_vector_count(bitset_columns);
     ecs_bitset_column_t *columns = ecs_vector_first(
         bitset_columns, ecs_bitset_column_t);
     int32_t bs_offset = table->bs_column_offset;
+
+    int32_t first = iter->bitset_first;
+    int32_t last = 0;
 
     for (i = 0; i < count; i ++) {
         ecs_bitset_column_t *column = &columns[i];
@@ -16656,10 +16693,9 @@ int bitset_column_next(
         
         ecs_bitset_t *bs = &bs_column->data;
         uint64_t *data = bs->data;
-        int32_t first = iter->bitset_first;
         int32_t bs_block = first >> 6;
         int32_t bs_elem_count = bs->count;
-        int32_t bs_block_count = bs_elem_count >> 6;
+        int32_t bs_block_count = ((bs_elem_count - 1) >> 6) + 1;
         int32_t bs_start = first & 0x3F;
 
         /* Step 1: find enabled elements in current block */
@@ -16667,6 +16703,11 @@ int bitset_column_next(
         while ((bs_start < 64) && !(v & bitmask[bs_start])) {
             bs_start ++;
         }
+
+        if (bs_start == 64 && bs_block_count == (bs_block + 1)) {
+            goto done;
+        }
+
         bs_start &= 0x3F;
 
         /* Step 2: if starting a new block or if remainder of current block is
@@ -16677,7 +16718,7 @@ int bitset_column_next(
             } while (!(v = data[bs_block]) && (bs_block < bs_block_count));
 
             /* Find first enabled bit in new block */
-            if (v != 0xEFFFFFFFFFFFFFFF) {
+            if (v != BS_MAX) {
                 while (!(v & bitmask[bs_start]) && (bs_start < 64)) {
                     bs_start ++;
                 }
@@ -16688,8 +16729,13 @@ int bitset_column_next(
         int32_t bit = 0, bs_count = 0;
         if (bs_start < 64) {
             bit = bs_start;
-            while ((bit < 64) && (v & bitmask[bit])) {
-                bit ++;
+            uint64_t remain = bitmask_remain[bit];
+            if ((v & remain) == remain) {
+                bit = 64;
+            } else {
+                while ((bit < 64) && (v & bitmask[bit])) {
+                    bit ++;
+                }
             }
 
             bs_count += (bit - bs_start);
@@ -16698,7 +16744,7 @@ int bitset_column_next(
         /* Step 5: If remainder of block is enabled, find next enabled blocks */
         if (bit == 64) {
             int32_t next_block = bs_block + 1;
-            while ((data[next_block] == 0xFFFFFFFFFFFFFFFF) && 
+            while ((data[next_block] == BS_MAX) && 
                    (next_block < bs_block_count)) 
             {
                 next_block ++;
@@ -16728,15 +16774,17 @@ int bitset_column_next(
             goto done;
         }
 
-        int32_t last = first + bs_count;
+        last = first + bs_count;
         if (last > bs_elem_count) {
             bs_count = bs_elem_count - first;
         }
 
         cur->first = first;
         cur->count = bs_count;
-        iter->bitset_first = last;
+        iter->bitset_first = first;
     }
+    
+    iter->bitset_first = last;
 
     return 0;
 done:
@@ -16813,7 +16861,7 @@ bool ecs_query_next(
 
             if (cur.count) {
                 if (bitset_columns) {
-                    printf("[%s] bitset_next\n", ecs_type_str(world, table->type));
+            
                     if (bitset_column_next(table, bitset_columns, iter, 
                         &cur) == -1) 
                     {
