@@ -9,7 +9,7 @@ void ensure(
     if (size > bs->size) {
         bs->size = ((size - 1) / 64 + 1) * 64;
         bs->data = ecs_os_realloc(bs->data, 
-            ((size - 1) / 64 + 1) * sizeof(uint64_t));
+            ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t));
     }
 }
 
@@ -54,7 +54,7 @@ void ecs_bitset_set(
     int32_t hi = elem >> 6;
     int32_t lo = elem & 0x3F;
     uint64_t v = bs->data[hi];
-    bs->data[hi] = (v & ~(1 << lo)) | (value << lo);
+    bs->data[hi] = (v & ~((uint64_t)1 << lo)) | ((uint64_t)value << lo);
 }
 
 bool ecs_bitset_get(
@@ -62,7 +62,13 @@ bool ecs_bitset_get(
     int32_t elem)
 {
     ecs_assert(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
-    return !!(bs->data[elem >> 6] & (1 << (elem & 0x3F)));
+    return !!(bs->data[elem >> 6] & (1lu << (elem & 0x3F)));
+}
+
+int32_t ecs_bitset_count(
+    const ecs_bitset_t *bs)
+{
+    return bs->count;
 }
 
 void ecs_bitset_remove(

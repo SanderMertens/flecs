@@ -36,6 +36,9 @@ bool ecs_bitset_get(
     const ecs_bitset_t *bs,
     int32_t elem);
 
+int32_t ecs_bitset_count(
+    const ecs_bitset_t *bs);
+
 void ecs_bitset_remove(
     ecs_bitset_t *bs,
     int32_t elem);

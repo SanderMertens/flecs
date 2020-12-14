@@ -168,25 +168,24 @@ typedef int32_t ecs_size_t;
 #define FLECS__EEcsComponent (1)
 #define FLECS__EEcsComponentLifecycle (2)
 #define FLECS__EEcsType (3)
-#define FLECS__EEcsName (4)
-#define FLECS__EEcsDisableTrait (5)
+#define FLECS__EEcsName (6)
 
 /** System module component ids */
-#define FLECS__EEcsTrigger (6)
-#define FLECS__EEcsSystem (7)
-#define FLECS__EEcsTickSource (8)
-#define FLECS__EEcsSignatureExpr (9)
-#define FLECS__EEcsSignature (10)
-#define FLECS__EEcsQuery (11)
-#define FLECS__EEcsIterAction (12)
-#define FLECS__EEcsContext (13)
+#define FLECS__EEcsTrigger (4)
+#define FLECS__EEcsSystem (5)
+#define FLECS__EEcsTickSource (7)
+#define FLECS__EEcsSignatureExpr (8)
+#define FLECS__EEcsSignature (9)
+#define FLECS__EEcsQuery (10)
+#define FLECS__EEcsIterAction (11)
+#define FLECS__EEcsContext (12)
 
 /** Pipeline module component ids */
-#define FLECS__EEcsPipelineQuery (14)
+#define FLECS__EEcsPipelineQuery (13)
 
 /** Timer module component ids */
-#define FLECS__EEcsTimer (15)
-#define FLECS__EEcsRateFilter (16)
+#define FLECS__EEcsTimer (14)
+#define FLECS__EEcsRateFilter (15)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1017,6 +1016,9 @@ void ecs_bitset_set(
 bool ecs_bitset_get(
     const ecs_bitset_t *bs,
     int32_t elem);
+
+int32_t ecs_bitset_count(
+    const ecs_bitset_t *bs);
 
 void ecs_bitset_remove(
     ecs_bitset_t *bs,
@@ -2106,6 +2108,7 @@ typedef struct ecs_query_iter_t {
     int32_t index;
     int32_t sparse_smallest;
     int32_t sparse_first;
+    int32_t bitset_first;
 } ecs_query_iter_t;  
 
 /** Query-iterator specific data */
@@ -2259,8 +2262,7 @@ extern ecs_type_t
     ecs_type(EcsComponent),
     ecs_type(EcsComponentLifecycle),
     ecs_type(EcsType),
-    ecs_type(EcsName),
-    ecs_type(EcsDisableTrait);
+    ecs_type(EcsName);
 
 /** This allows passing 0 as type to functions that accept types */
 #define FLECS__TNULL 0
@@ -2866,7 +2868,7 @@ typedef struct EcsTrigger {
 #define ECS_OWNED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
 
 /** Track whether component is enabled or not */
-#define ECS_DISABLED (ECS_ROLE | ((ecs_entity_t)0x75 << 55))
+#define ECS_DISABLED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
 
 /** @} */
 
@@ -3726,7 +3728,7 @@ void ecs_add_remove_type(
  * @param component The component.
  * @param enable True to enable the component, false to disable.
  */
-void ecs_enable_component_w_entity(
+FLECS_API void ecs_enable_component_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,
@@ -3745,10 +3747,13 @@ void ecs_enable_component_w_entity(
  * @param component The component.
  * @return True if the component is enabled, otherwise false.
  */
-bool ecs_is_component_enabled(
+FLECS_API bool _ecs_is_component_enabled(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
+
+#define ecs_is_component_enabled(world, entity, T)\
+    _ecs_is_component_enabled(world, entity, ecs_typeid(T))
 
 /** @} */
 
