@@ -339,7 +339,7 @@ void register_on_set(
                 continue;
             }
 
-            ecs_entity_t comp = matched_table->data.components[i];
+            ecs_entity_t comp = matched_table->iter_data.components[i];
             int32_t index = ecs_type_index_of(table->type, comp);
             if (index == -1) {
                 continue;
@@ -843,6 +843,8 @@ void move_bitset_columns(
     if (!old_column_count || !new_column_count) {
         return;
     }
+
+    printf("move bitset columns\n");
 
     ecs_bs_column_t *old_columns = old_data->bs_columns;
     ecs_bs_column_t *new_columns = new_data->bs_columns;

@@ -114,6 +114,7 @@ typedef struct ecs_query_iter_t {
     int32_t index;
     int32_t sparse_smallest;
     int32_t sparse_first;
+    int32_t bitset_first;
 } ecs_query_iter_t;  
 
 /** Query-iterator specific data */

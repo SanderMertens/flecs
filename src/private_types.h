@@ -207,11 +207,17 @@ typedef struct ecs_sparse_column_t {
     int32_t signature_column_index;
 } ecs_sparse_column_t;
 
+/* Bitset query column */
+typedef struct ecs_bitset_column_t {
+    ecs_bs_column_t *bs_column;
+    int32_t column_index;
+} ecs_bitset_column_t;
+
 /** Type containing data for a table matched with a query. */
 typedef struct ecs_matched_table_t {
-    ecs_iter_table_t data;         /**< Precomputed data for iterators */
+    ecs_iter_table_t iter_data;    /**< Precomputed data for iterators */
     ecs_vector_t *sparse_columns;  /**< Column ids of sparse columns */
-    ecs_vector_t *disabled_columns;/**< Column ids with disabled flags */
+    ecs_vector_t *bitset_columns;  /**< Column ids with disabled flags */
     int32_t *monitor;              /**< Used to monitor table for changes */
     int32_t rank;                  /**< Rank used to sort tables */
 } ecs_matched_table_t;
