@@ -1012,7 +1012,8 @@
                 "instanceof_0",
                 "instantiate_empty_child_table",
                 "instantiate_emptied_child_table",
-                "override_2_prefabs"
+                "override_2_prefabs",
+                "rematch_after_add_instanceof_to_parent"
             ]
         }, {
             "id": "System_w_FromContainer",

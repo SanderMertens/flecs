@@ -933,6 +933,7 @@ void Prefab_instanceof_0(void);
 void Prefab_instantiate_empty_child_table(void);
 void Prefab_instantiate_emptied_child_table(void);
 void Prefab_override_2_prefabs(void);
+void Prefab_rematch_after_add_instanceof_to_parent(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_setup(void);
@@ -4880,6 +4881,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "override_2_prefabs",
         Prefab_override_2_prefabs
+    },
+    {
+        "rematch_after_add_instanceof_to_parent",
+        Prefab_rematch_after_add_instanceof_to_parent
     }
 };
 
@@ -6972,7 +6977,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        72,
+        73,
         Prefab_testcases
     },
     {

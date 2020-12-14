@@ -4606,6 +4606,7 @@ void delete_entity(
  * of bookkeeping that is more intelligent than simply flipping a flag */
 static
 bool update_component_monitor_w_array(
+    ecs_world_t *world,
     ecs_component_monitor_t * mon,
     ecs_entities_t * entities)
 {
@@ -4622,6 +4623,18 @@ bool update_component_monitor_w_array(
             ecs_component_monitor_mark(mon, component);
         } else if (ECS_HAS_ROLE(component, CHILDOF)) {
             childof_changed = true;
+        } else if (ECS_HAS_ROLE(component, INSTANCEOF)) {
+            /* If an INSTANCEOF relationship is added to a monitored entity (can
+             * be either a parent or a base) component monitors need to be
+             * evaluated for the components of the prefab. */
+            ecs_entity_t base = component & ECS_COMPONENT_MASK;
+            ecs_type_t type = ecs_get_type(world, base);
+            ecs_entities_t base_entities = ecs_type_to_entities(type);
+
+            /* This evaluates the component monitor for all components of the
+             * base entity. If the base entity contains INSTANCEOF relationships
+             * these will be evaluated recursively as well. */
+            update_component_monitor_w_array(world, mon, &base_entities);               
         }
     }
 
@@ -4636,10 +4649,10 @@ void update_component_monitors(
     ecs_entities_t * removed)
 {
     bool childof_changed = update_component_monitor_w_array(
-        &world->component_monitors, added);
+        world, &world->component_monitors, added);
 
     childof_changed |= update_component_monitor_w_array(
-        &world->component_monitors, removed);
+        world, &world->component_monitors, removed);
 
     /* If this entity is a parent, check if anything changed that could impact
      * its place in the hierarchy. If so, we need to mark all of the parent's
@@ -4649,7 +4662,8 @@ void update_component_monitors(
     {
         ecs_type_t type = ecs_get_type(world, entity);
         ecs_entities_t entities = ecs_type_to_entities(type);
-        update_component_monitor_w_array(&world->parent_monitors, &entities);
+        update_component_monitor_w_array(world, 
+            &world->parent_monitors, &entities);
     }
 }
 
@@ -11521,6 +11535,8 @@ FLECS_FLOAT ecs_frame_begin(
     /* Keep track of total scaled time passed in world */
     world->stats.world_time_total += world->stats.delta_time;
 
+    ecs_eval_component_monitors(world);
+
     return user_delta_time;
 }
 
@@ -16055,7 +16071,13 @@ ecs_iter_t ecs_query_iter_page(
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
 
-    sort_tables(query->world, query);
+    ecs_world_t *world = query->world;
+    
+    sort_tables(world, query);
+
+    if (!world->in_progress && query->flags & EcsQueryHasRefs) {
+        ecs_eval_component_monitors(world);
+    }
 
     tables_reset_dirty(query);
 
@@ -16077,7 +16099,7 @@ ecs_iter_t ecs_query_iter_page(
     };
 
     return (ecs_iter_t){
-        .world = query->world,
+        .world = world,
         .query = query,
         .column_count = ecs_vector_count(query->sig.columns),
         .table_count = table_count,
