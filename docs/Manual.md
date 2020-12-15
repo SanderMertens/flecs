@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
     ecs_entity_t e = ecs_new(world, 0);
 
     // Builtin entities use PascalCase
-    ecs_add(world, EcsSingleton, Position);
+    ecs_add(world, EcsWorld, Position);
     
     return ecs_fini(world);
 }
