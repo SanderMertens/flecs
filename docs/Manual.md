@@ -1211,7 +1211,7 @@ Alternatively the regular API can also be used:
 ecs_set(world, ecs_typeid(Game), Game, { .max_speed = 100 });
 ```
 
-Singleton components can be retrieved from systems like this:
+Singleton components can be retrieved from queries like this:
 
 ```c
 ecs_query_t *query = ecs_query_new(world, "Position, $Game");
