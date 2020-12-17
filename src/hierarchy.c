@@ -79,13 +79,13 @@ bool is_number(
     }
 
     ecs_size_t i, s = ecs_os_strlen(name);
-    for (i = 0; i < s; i ++) {
+    for (i = 1; i < s; i ++) {
         if (!isdigit(name[i])) {
             break;
         }
     }
 
-    return i == s;
+    return i >= s;
 }
 
 static 
