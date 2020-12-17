@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
     ecs_entity_t e = ecs_new(world, 0);
 
     // Builtin entities use PascalCase
-    ecs_add(world, EcsSingleton, Position);
+    ecs_add(world, EcsWorld, Position);
     
     return ecs_fini(world);
 }
@@ -1027,6 +1027,8 @@ SHARED   | Match only shared components
 ANY      | Match owned or shared components
 PARENT   | Match component from parent
 CASCADE  | Match component from parent, iterate breadth-first
+Entity   | Get component directly from a named entity
+$        | Match singleton component
 Nothing  | Do not get the component from an entity, just pass in handle
 
 This is an example of a query that requests the `Position` component from both the entity and its parent:
@@ -1170,6 +1172,63 @@ while (ecs_query_next(&it)) {
 ```
 
 The `CASCADE` modifier is useful for systems that need a certain parent component to be written before the child component is written, which is the case when, for example, transforming from local coordinates to world coordinates.
+
+#### Entity
+A query can request a component from a named entity directly as is shown in the following example:
+
+```c
+// Shortcut to creating a new named entity
+ecs_entity_t e = ecs_set(world, 0, EcsName, {.value = "MyEntity"});
+ecs_set(world, e, Velocity, {1, 2});
+
+ecs_query_t *q = ecs_query_new(world, "Position, MyEntity:Velocity");
+
+ecs_iter_t it = ecs_query_iter(query);
+
+while (ecs_query_next(&it)) {
+    Position *p = ecs_column(&it, Position, 1);
+    Velocity *v = ecs_column(&it, Velocity, 2);
+
+    for (int i = 0; i < it.count; i ++) {
+      p[i].x += v->x;
+      p[i].y += v->y;      
+    }
+}
+```
+
+If the named entity does not have the specified component, the query will not match anything.
+
+#### Singleton
+The singleton modifier matches a component from a singleton entity. Singletons are entities that are both a component and an entity with an instance of the component. An application can set a singleton component by using the singleton API:
+
+```c
+ecs_singleton_set(world, Game, { .max_speed = 100 });
+```
+
+Alternatively the regular API can also be used:
+
+```c
+ecs_set(world, ecs_typeid(Game), Game, { .max_speed = 100 });
+```
+
+Singleton components can be retrieved from queries like this:
+
+```c
+ecs_query_t *query = ecs_query_new(world, "Position, $Game");
+
+ecs_iter_t it = ecs_query_iter(query);
+
+while (ecs_query_next(&it)) {
+    Position *p = ecs_column(&it, Position, 1);
+    Game *g = ecs_column(&it, Game, 2);
+
+    for (int i = 0; i < it.count; i ++) {
+      p[i].x += g->max_speed;
+    }
+}
+```
+
+If the singleton does not exist, the query will not match anything.
 
 #### Nothing
 The nothing modifier does not get the component from an entity, but instead just passes its identifier to a query or system. An example:

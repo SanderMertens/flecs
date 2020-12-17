@@ -2886,3 +2886,34 @@ void Prefab_override_2_prefabs() {
 
     ecs_fini(world);
 }
+
+void Prefab_rematch_after_add_instanceof_to_parent() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "PARENT:Position");
+    test_assert(q != NULL);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert(base != 0);
+    test_assert(parent != 0);
+    test_assert(child != 0);
+
+    ecs_add_entity(world, parent, ECS_INSTANCEOF | base);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_bool(ecs_query_next(&it), true);
+
+    test_int(it.count, 1);
+    test_int(it.entities[0], child);
+
+    Position *p = ecs_column(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 
     // There will be 6 entities with Position and 3 with Velocity
     std::cout << "There are " << ecs.count<Position>() << " entities with Position" << std::endl;
-    std::cout << "There are " << ecs.count<Velocity>() << " entities with Position" << std::endl;
+    std::cout << "There are " << ecs.count<Velocity>() << " entities with Velocity" << std::endl;
 
     auto Velocity_filter = flecs::filter(ecs).include<Velocity>();
 

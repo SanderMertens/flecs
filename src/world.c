@@ -1015,6 +1015,8 @@ FLECS_FLOAT ecs_frame_begin(
     /* Keep track of total scaled time passed in world */
     world->stats.world_time_total += world->stats.delta_time;
 
+    ecs_eval_component_monitors(world);
+
     return user_delta_time;
 }
 
