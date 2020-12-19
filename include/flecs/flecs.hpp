@@ -2768,8 +2768,8 @@ public:
      * @param entity The component to test.
      * @return True if the component is enabled, false if it has been disabled.
      */
-    bool is_enabled(const flecs::entity& entity) {
-        return is_enabled(entity.id());
+    bool is_enabled(const flecs::entity& e) {
+        return is_enabled(e.id());
     }
 
     /** Get current delta time.

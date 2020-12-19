@@ -2151,7 +2151,7 @@ struct ecs_iter_t {
     int32_t count;                /**< Number of entities to process by system */
     int32_t total_count;          /**< Total number of entities in table */
 
-    ecs_entities_t *triggered_by;
+    ecs_entities_t *triggered_by; /**< Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
 
     union {
@@ -2868,7 +2868,7 @@ typedef struct EcsTrigger {
 #define ECS_OWNED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
 
 /** Track whether component is enabled or not */
-#define ECS_DISABLED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
+#define ECS_DISABLED (ECS_ROLE | ((ecs_entity_t)0x74 << 56))
 
 /** @} */
 
@@ -10188,8 +10188,8 @@ public:
      * @param entity The component to test.
      * @return True if the component is enabled, false if it has been disabled.
      */
-    bool is_enabled(const flecs::entity& entity) {
-        return is_enabled(entity.id());
+    bool is_enabled(const flecs::entity& e) {
+        return is_enabled(e.id());
     }
 
     /** Get current delta time.
