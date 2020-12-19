@@ -756,3 +756,56 @@ void Switch_add_trait_to_entity_w_switch() {
 
     ecs_fini(world);
 }
+
+static
+int compare_position(ecs_entity_t e1, void *ptr1, ecs_entity_t e2, void *ptr2) {
+    Position *p1 = ptr1;
+    Position *p2 = ptr2;
+    return (p1->x > p2->x) - (p1->x < p2->x);
+}
+
+void Switch_sort() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TAG(world, Sitting);
+    ECS_TYPE(world, Type, Walking, Running, Jumping, Sitting);
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 2});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {2, 2});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {0, 2});
+
+    ecs_add_entity(world, e1, ECS_SWITCH | Type);
+    ecs_add_entity(world, e2, ECS_SWITCH | Type);
+    ecs_add_entity(world, e3, ECS_SWITCH | Type);
+    ecs_add_entity(world, e4, ECS_SWITCH | Type);
+
+    ecs_add_entity(world, e1, ECS_CASE | Walking);
+    ecs_add_entity(world, e2, ECS_CASE | Running);
+    ecs_add_entity(world, e3, ECS_CASE | Jumping);
+    ecs_add_entity(world, e4, ECS_CASE | Sitting);
+    
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 4);
+    test_assert(it.entities[0] == e4);
+    test_assert(it.entities[1] == e3);
+    test_assert(it.entities[2] == e2);
+    test_assert(it.entities[3] == e1);
+
+    /* Entities will have shuffled around, ensure cases got shuffled too */
+    test_int(ecs_get_case(world, e1, Type), Walking);
+    test_int(ecs_get_case(world, e2, Type), Running);
+    test_int(ecs_get_case(world, e3, Type), Jumping);
+    test_int(ecs_get_case(world, e4, Type), Sitting);
+
+    ecs_fini(world);
+}

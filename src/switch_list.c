@@ -268,6 +268,18 @@ int32_t ecs_switch_case_count(
     return hdr->count;
 }
 
+void ecs_switch_swap(
+    ecs_switch_t *sw,
+    int32_t elem_1,
+    int32_t elem_2)
+{
+    uint64_t v1 = ecs_switch_get(sw, elem_1);
+    uint64_t v2 = ecs_switch_get(sw, elem_2);
+
+    ecs_switch_set(sw, elem_2, v1);
+    ecs_switch_set(sw, elem_1, v2);
+}
+
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value)

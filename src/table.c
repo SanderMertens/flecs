@@ -1583,6 +1583,46 @@ int32_t ecs_table_data_count(
     return data ? ecs_vector_count(data->entities) : 0;
 }
 
+static
+void swap_switch_columns(
+    ecs_table_t * table,
+    ecs_data_t * data,
+    int32_t row_1,
+    int32_t row_2)
+{
+    int32_t i = 0, column_count = table->sw_column_count;
+    if (!column_count) {
+        return;
+    }
+
+    ecs_sw_column_t *columns = data->sw_columns;
+
+    for (i = 0; i < column_count; i ++) {
+        ecs_switch_t *sw = columns[i].data;
+        ecs_switch_swap(sw, row_1, row_2);
+    }
+}
+
+static
+void swap_bitset_columns(
+    ecs_table_t * table,
+    ecs_data_t * data,
+    int32_t row_1,
+    int32_t row_2)
+{
+    int32_t i = 0, column_count = table->bs_column_count;
+    if (!column_count) {
+        return;
+    }
+
+    ecs_bs_column_t *columns = data->bs_columns;
+
+    for (i = 0; i < column_count; i ++) {
+        ecs_bitset_t *bs = &columns[i].data;
+        ecs_bitset_swap(bs, row_1, row_2);
+    }
+}
+
 void ecs_table_swap(
     ecs_world_t * world,
     ecs_table_t * table,
@@ -1652,6 +1692,9 @@ void ecs_table_swap(
             ecs_os_memcpy(el_2, tmp, size);
         }
     }
+
+    swap_switch_columns(table, data, row_1, row_2);
+    swap_bitset_columns(table, data, row_1, row_2);
 
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);    
