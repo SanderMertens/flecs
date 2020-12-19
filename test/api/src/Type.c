@@ -1324,3 +1324,13 @@ void Type_role_not_str() {
     ecs_entity_t e = ECS_NOT;
     test_str(ecs_role_str(e), "NOT");
 }
+
+void Type_role_owned_str() {
+    ecs_entity_t e = ECS_OWNED;
+    test_str(ecs_role_str(e), "OWNED");
+}
+
+void Type_role_disabled_str() {
+    ecs_entity_t e = ECS_DISABLED;
+    test_str(ecs_role_str(e), "DISABLED");
+}

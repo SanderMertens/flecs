@@ -122,6 +122,7 @@ void Switch_empty_entity_has_case(void);
 void Switch_zero_entity_has_case(void);
 void Switch_add_to_entity_w_switch(void);
 void Switch_add_trait_to_entity_w_switch(void);
+void Switch_sort(void);
 
 // Testsuite 'EnabledComponents'
 void EnabledComponents_is_component_enabled(void);
@@ -160,6 +161,7 @@ void EnabledComponents_query_randomized_2_bitsets(void);
 void EnabledComponents_query_randomized_3_bitsets(void);
 void EnabledComponents_query_randomized_4_bitsets(void);
 void EnabledComponents_defer_enable(void);
+void EnabledComponents_sort(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -1136,6 +1138,8 @@ void Type_role_and_str(void);
 void Type_role_or_str(void);
 void Type_role_xor_str(void);
 void Type_role_not_str(void);
+void Type_role_owned_str(void);
+void Type_role_disabled_str(void);
 
 // Testsuite 'Run'
 void Run_setup(void);
@@ -1893,6 +1897,10 @@ bake_test_case Switch_testcases[] = {
     {
         "add_trait_to_entity_w_switch",
         Switch_add_trait_to_entity_w_switch
+    },
+    {
+        "sort",
+        Switch_sort
     }
 };
 
@@ -2040,6 +2048,10 @@ bake_test_case EnabledComponents_testcases[] = {
     {
         "defer_enable",
         EnabledComponents_defer_enable
+    },
+    {
+        "sort",
+        EnabledComponents_sort
     }
 };
 
@@ -5684,6 +5696,14 @@ bake_test_case Type_testcases[] = {
     {
         "role_not_str",
         Type_role_not_str
+    },
+    {
+        "role_owned_str",
+        Type_role_owned_str
+    },
+    {
+        "role_disabled_str",
+        Type_role_disabled_str
     }
 };
 
@@ -6924,14 +6944,14 @@ static bake_test_suite suites[] = {
         "Switch",
         Switch_setup,
         NULL,
-        26,
+        27,
         Switch_testcases
     },
     {
         "EnabledComponents",
         NULL,
         NULL,
-        36,
+        37,
         EnabledComponents_testcases
     },
     {
@@ -7211,7 +7231,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        88,
+        90,
         Type_testcases
     },
     {

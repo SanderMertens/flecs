@@ -67,6 +67,12 @@ uint64_t ecs_switch_get(
     int32_t element);
 
 FLECS_API
+void ecs_switch_swap(
+    ecs_switch_t *sw,
+    int32_t elem_1,
+    int32_t elem_2);
+
+FLECS_API
 ecs_vector_t* ecs_switch_values(
     const ecs_switch_t *sw);    
 

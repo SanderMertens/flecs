@@ -133,7 +133,8 @@
                 "empty_entity_has_case",
                 "zero_entity_has_case",
                 "add_to_entity_w_switch",
-                "add_trait_to_entity_w_switch"
+                "add_trait_to_entity_w_switch",
+                "sort"
             ]
         }, {
             "id": "EnabledComponents",
@@ -173,7 +174,8 @@
                 "query_randomized_2_bitsets",
                 "query_randomized_3_bitsets",
                 "query_randomized_4_bitsets",
-                "defer_enable"
+                "defer_enable",
+                "sort"
             ]
         }, {
             "id": "Remove",
@@ -1229,7 +1231,9 @@
                 "role_and_str",
                 "role_or_str",
                 "role_xor_str",
-                "role_not_str"
+                "role_not_str",
+                "role_owned_str",
+                "role_disabled_str"
             ]
         }, {
             "id": "Run",

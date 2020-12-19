@@ -1037,3 +1037,48 @@ void EnabledComponents_defer_enable() {
 
     ecs_fini(world);
 }
+
+static
+int compare_position(ecs_entity_t e1, void *ptr1, ecs_entity_t e2, void *ptr2) {
+    Position *p1 = ptr1;
+    Position *p2 = ptr2;
+    return (p1->x > p2->x) - (p1->x < p2->x);
+}
+
+void EnabledComponents_sort() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 2});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {2, 2});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {0, 2});
+
+    ecs_enable_component(world, e1, Position, true);
+    ecs_enable_component(world, e2, Position, true);
+    ecs_enable_component(world, e3, Position, false);
+    ecs_enable_component(world, e4, Position, false);
+
+    test_bool(ecs_is_component_enabled(world, e1, Position), true);
+    test_bool(ecs_is_component_enabled(world, e2, Position), true);
+    test_bool(ecs_is_component_enabled(world, e3, Position), false);
+    test_bool(ecs_is_component_enabled(world, e4, Position), false);
+    
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_assert(it.entities[0] == e2);
+    test_assert(it.entities[1] == e1);
+
+    /* Entities will have shuffled around, ensure bits got shuffled too */
+    test_bool(ecs_is_component_enabled(world, e1, Position), true);
+    test_bool(ecs_is_component_enabled(world, e2, Position), true);
+    test_bool(ecs_is_component_enabled(world, e3, Position), false);
+    test_bool(ecs_is_component_enabled(world, e4, Position), false);
+
+    ecs_fini(world);
+}
