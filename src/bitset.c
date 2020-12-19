@@ -68,7 +68,7 @@ bool ecs_bitset_get(
     int32_t elem)
 {
     ecs_assert(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
-    return !!(bs->data[elem >> 6] & (1lu << (elem & 0x3F)));
+    return !!(bs->data[elem >> 6] & ((uint64_t)1 << ((uint64_t)elem & 0x3F)));
 }
 
 int32_t ecs_bitset_count(
