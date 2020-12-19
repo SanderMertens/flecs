@@ -12159,10 +12159,16 @@ void ensure(
     ecs_bitset_t *bs,
     ecs_size_t size)
 {
-    if (size > bs->size) {
+    if (!bs->size) {
+        int32_t new_size = ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
         bs->size = ((size - 1) / 64 + 1) * 64;
-        bs->data = ecs_os_realloc(bs->data, 
-            ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t));
+        bs->data = ecs_os_calloc(new_size);
+    } else if (size > bs->size) {
+        int32_t prev_size = ((bs->size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
+        bs->size = ((size - 1) / 64 + 1) * 64;
+        int32_t new_size = ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
+        bs->data = ecs_os_realloc(bs->data, new_size);
+        ecs_os_memset(ECS_OFFSET(bs->data, prev_size), 0, new_size - prev_size);
     }
 }
 
@@ -16637,7 +16643,7 @@ int bitset_column_next(
     1lu << 28, 1lu << 29, 1lu << 30, 1lu << 31,
     1lu << 32, 1lu << 33, 1lu << 34, 1lu << 35,  
     1lu << 36, 1lu << 37, 1lu << 38, 1lu << 39,
-    1lu << 30, 1lu << 41, 1lu << 42, 1lu << 43,
+    1lu << 40, 1lu << 41, 1lu << 42, 1lu << 43,
     1lu << 44, 1lu << 45, 1lu << 46, 1lu << 47,  
     1lu << 48, 1lu << 49, 1lu << 50, 1lu << 51,
     1lu << 52, 1lu << 53, 1lu << 54, 1lu << 55,  
@@ -16645,30 +16651,30 @@ int bitset_column_next(
     1lu << 60, 1lu << 61, 1lu << 62, 1lu << 63
     };
 
-    /* Precomputed test to verify if remainder of block is set */
+    /* Precomputed test to verify if remainder of block is set (or not) */
     static const uint64_t bitmask_remain[64] = {
-    BS_MAX - (BS_MAX >> 63), BS_MAX - (BS_MAX >> 62),
+    BS_MAX, BS_MAX - (BS_MAX >> 63), BS_MAX - (BS_MAX >> 62),
     BS_MAX - (BS_MAX >> 61), BS_MAX - (BS_MAX >> 60), BS_MAX - (BS_MAX >> 59),
-    BS_MAX - (BS_MAX >> 58), BS_MAX - (BS_MAX >> 56), BS_MAX - (BS_MAX >> 55),
-    BS_MAX - (BS_MAX >> 54), BS_MAX - (BS_MAX >> 53), BS_MAX - (BS_MAX >> 52),
-    BS_MAX - (BS_MAX >> 51), BS_MAX - (BS_MAX >> 50), BS_MAX - (BS_MAX >> 49),
-    BS_MAX - (BS_MAX >> 48), BS_MAX - (BS_MAX >> 47), BS_MAX - (BS_MAX >> 46),
-    BS_MAX - (BS_MAX >> 45), BS_MAX - (BS_MAX >> 44), BS_MAX - (BS_MAX >> 43),
-    BS_MAX - (BS_MAX >> 42), BS_MAX - (BS_MAX >> 41), BS_MAX - (BS_MAX >> 40),
-    BS_MAX - (BS_MAX >> 39), BS_MAX - (BS_MAX >> 38), BS_MAX - (BS_MAX >> 37),
-    BS_MAX - (BS_MAX >> 36), BS_MAX - (BS_MAX >> 35), BS_MAX - (BS_MAX >> 34),
-    BS_MAX - (BS_MAX >> 33), BS_MAX - (BS_MAX >> 32), BS_MAX - (BS_MAX >> 32),
-    BS_MAX - (BS_MAX >> 31), BS_MAX - (BS_MAX >> 30), BS_MAX - (BS_MAX >> 29),
-    BS_MAX - (BS_MAX >> 28), BS_MAX - (BS_MAX >> 27), BS_MAX - (BS_MAX >> 26),
-    BS_MAX - (BS_MAX >> 25), BS_MAX - (BS_MAX >> 24), BS_MAX - (BS_MAX >> 23),
-    BS_MAX - (BS_MAX >> 22), BS_MAX - (BS_MAX >> 21), BS_MAX - (BS_MAX >> 20),
-    BS_MAX - (BS_MAX >> 19), BS_MAX - (BS_MAX >> 18), BS_MAX - (BS_MAX >> 17),
-    BS_MAX - (BS_MAX >> 16), BS_MAX - (BS_MAX >> 15), BS_MAX - (BS_MAX >> 14),
-    BS_MAX - (BS_MAX >> 13), BS_MAX - (BS_MAX >> 12), BS_MAX - (BS_MAX >> 11),
-    BS_MAX - (BS_MAX >> 10), BS_MAX - (BS_MAX >> 9), BS_MAX - (BS_MAX >> 8),
-    BS_MAX - (BS_MAX >> 7), BS_MAX - (BS_MAX >> 6), BS_MAX - (BS_MAX >> 5),
-    BS_MAX - (BS_MAX >> 4), BS_MAX - (BS_MAX >> 3), BS_MAX - (BS_MAX >> 1),
-    BS_MAX - (BS_MAX >> 1), BS_MAX - (BS_MAX >> 0)
+    BS_MAX - (BS_MAX >> 58), BS_MAX - (BS_MAX >> 57), BS_MAX - (BS_MAX >> 56), 
+    BS_MAX - (BS_MAX >> 55), BS_MAX - (BS_MAX >> 54), BS_MAX - (BS_MAX >> 53), 
+    BS_MAX - (BS_MAX >> 52), BS_MAX - (BS_MAX >> 51), BS_MAX - (BS_MAX >> 50), 
+    BS_MAX - (BS_MAX >> 49), BS_MAX - (BS_MAX >> 48), BS_MAX - (BS_MAX >> 47), 
+    BS_MAX - (BS_MAX >> 46), BS_MAX - (BS_MAX >> 45), BS_MAX - (BS_MAX >> 44), 
+    BS_MAX - (BS_MAX >> 43), BS_MAX - (BS_MAX >> 42), BS_MAX - (BS_MAX >> 41), 
+    BS_MAX - (BS_MAX >> 40), BS_MAX - (BS_MAX >> 39), BS_MAX - (BS_MAX >> 38), 
+    BS_MAX - (BS_MAX >> 37), BS_MAX - (BS_MAX >> 36), BS_MAX - (BS_MAX >> 35), 
+    BS_MAX - (BS_MAX >> 34), BS_MAX - (BS_MAX >> 33), BS_MAX - (BS_MAX >> 32), 
+    BS_MAX - (BS_MAX >> 31), BS_MAX - (BS_MAX >> 30), BS_MAX - (BS_MAX >> 29), 
+    BS_MAX - (BS_MAX >> 28), BS_MAX - (BS_MAX >> 27), BS_MAX - (BS_MAX >> 26), 
+    BS_MAX - (BS_MAX >> 25), BS_MAX - (BS_MAX >> 24), BS_MAX - (BS_MAX >> 23), 
+    BS_MAX - (BS_MAX >> 22), BS_MAX - (BS_MAX >> 21), BS_MAX - (BS_MAX >> 20), 
+    BS_MAX - (BS_MAX >> 19), BS_MAX - (BS_MAX >> 18), BS_MAX - (BS_MAX >> 17), 
+    BS_MAX - (BS_MAX >> 16), BS_MAX - (BS_MAX >> 15), BS_MAX - (BS_MAX >> 14), 
+    BS_MAX - (BS_MAX >> 13), BS_MAX - (BS_MAX >> 12), BS_MAX - (BS_MAX >> 11), 
+    BS_MAX - (BS_MAX >> 10), BS_MAX - (BS_MAX >> 9), BS_MAX - (BS_MAX >> 8), 
+    BS_MAX - (BS_MAX >> 7), BS_MAX - (BS_MAX >> 6), BS_MAX - (BS_MAX >> 5), 
+    BS_MAX - (BS_MAX >> 4), BS_MAX - (BS_MAX >> 3), BS_MAX - (BS_MAX >> 2),
+    BS_MAX - (BS_MAX >> 1)
     };
 
     int32_t i, count = ecs_vector_count(bitset_columns);
@@ -16692,98 +16698,108 @@ int bitset_column_next(
         }
         
         ecs_bitset_t *bs = &bs_column->data;
-        uint64_t *data = bs->data;
-        int32_t bs_block = first >> 6;
         int32_t bs_elem_count = bs->count;
+        int32_t bs_block = first >> 6;
         int32_t bs_block_count = ((bs_elem_count - 1) >> 6) + 1;
+
+        if (bs_block >= bs_block_count) {
+            goto done;
+        }
+
+        uint64_t *data = bs->data;
         int32_t bs_start = first & 0x3F;
 
-        /* Step 1: find enabled elements in current block */
+        /* Step 1: find the first non-empty block */
         uint64_t v = data[bs_block];
-        while ((bs_start < 64) && !(v & bitmask[bs_start])) {
+        uint64_t remain = bitmask_remain[bs_start];
+        while (!(v & remain)) {
+            /* If no elements are remaining, move to next block */
+            if ((++bs_block) >= bs_block_count) {
+                /* No non-empty blocks left */
+                goto done;
+            }
+
+            bs_start = 0;
+            remain = BS_MAX; /* Test the full block */
+            v = data[bs_block];
+        }
+
+        /* Step 2: find the first non-empty element in the block */
+        while (!(v & bitmask[bs_start])) {
             bs_start ++;
+
+            /* Block was not empty, so bs_start must be smaller than 64 */
+            ecs_assert(bs_start < 64, ECS_INTERNAL_ERROR, NULL);
+        }
+        
+        /* Step 3: Find number of contiguous enabled elements after start */
+        int32_t bs_end = bs_start, bs_block_end = bs_block;
+        
+        remain = bitmask_remain[bs_end];
+        while ((v & remain) == remain) {
+            bs_end = 0;
+            bs_block_end ++;
+
+            if (bs_block_end == bs_block_count) {
+                break;
+            }
+
+            v = data[bs_block_end];
+            remain = BS_MAX; /* Test the full block */
         }
 
-        if (bs_start == 64 && bs_block_count == (bs_block + 1)) {
+        /* Step 4: find remainder of enabled elements in current block */
+        if (bs_block_end != bs_block_count) {
+            while ((v & bitmask[bs_end])) {
+                bs_end ++;
+            }
+        }
+
+        /* Block was not 100% occupied, so bs_start must be smaller than 64 */
+        ecs_assert(bs_end < 64, ECS_INTERNAL_ERROR, NULL);
+
+        /* Step 5: translate to element start/end and make sure that each column
+         * range is a subset of the previous one. */
+        first = bs_block * 64 + bs_start;
+        int32_t cur_last = bs_block_end * 64 + bs_end;
+        
+        /* No enabled elements found in table */
+        if (first == cur_last) {
             goto done;
         }
 
-        bs_start &= 0x3F;
-
-        /* Step 2: if starting a new block or if remainder of current block is
-         * disabled, find next block that is not disabled. */
-        if (!v && !bs_start) {
-            do {
-                bs_block ++;
-            } while (!(v = data[bs_block]) && (bs_block < bs_block_count));
-
-            /* Find first enabled bit in new block */
-            if (v != BS_MAX) {
-                while (!(v & bitmask[bs_start]) && (bs_start < 64)) {
-                    bs_start ++;
-                }
-            }
-        }
-
-        /* Step 4: find remaining enabled elements in current block */
-        int32_t bit = 0, bs_count = 0;
-        if (bs_start < 64) {
-            bit = bs_start;
-            uint64_t remain = bitmask_remain[bit];
-            if ((v & remain) == remain) {
-                bit = 64;
-            } else {
-                while ((bit < 64) && (v & bitmask[bit])) {
-                    bit ++;
-                }
+        /* If multiple bitsets are evaluated, make sure each subsequent range
+         * is equal or a subset of the previous range */
+        if (i) {
+            /* If the first element of a subsequent bitset is larger than the
+             * previous last value, start over. */
+            if (first >= last) {
+                i = -1;
+                continue;
             }
 
-            bs_count += (bit - bs_start);
-        }
-
-        /* Step 5: If remainder of block is enabled, find next enabled blocks */
-        if (bit == 64) {
-            int32_t next_block = bs_block + 1;
-            while ((data[next_block] == BS_MAX) && 
-                   (next_block < bs_block_count)) 
-            {
-                next_block ++;
-                bs_count += 64;
-            }
-
-            v = data[next_block];
-
-            /* Check if next block has enabled elements at the start */
-            if (v && (v & 1)) {
-                bit = 0;
-
-                /* Find remaining enabled bits */
-                while (!(v & bitmask[bit])) {
-                    bit ++;
-
-                    /* Block is not 100% enabled, so bit can never become 64 */
-                    ecs_assert(bit < 64, ECS_INTERNAL_ERROR, NULL);
-                }
-
-                bs_count += bit;
+            /* Make sure the last element of the range doesn't exceed the last
+             * element of the previous range. */
+            if (cur_last > last) {
+                cur_last = last;
             }
         }
+        
+        last = cur_last;
+        int32_t elem_count = last - first;
 
-        first = bs_start + bs_block * 64;
-        if (first > bs_elem_count) {
-            goto done;
+        /* Make sure last element doesn't exceed total number of elements in 
+         * the table */
+        if (elem_count > bs_elem_count) {
+            elem_count = bs_elem_count;
         }
-
-        last = first + bs_count;
-        if (last > bs_elem_count) {
-            bs_count = bs_elem_count - first;
-        }
-
+        
         cur->first = first;
-        cur->count = bs_count;
+        cur->count = elem_count;
         iter->bitset_first = first;
     }
     
+    /* Keep track of last processed element for iteration */ 
     iter->bitset_first = last;
 
     return 0;
