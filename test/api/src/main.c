@@ -103,6 +103,7 @@ void Switch_get_case_set(void);
 void Switch_get_case_change(void);
 void Switch_new_w_type(void);
 void Switch_add_w_type(void);
+void Switch_remove_case(void);
 void Switch_bulk_new_w_type(void);
 void Switch_3_entities_same_case(void);
 void Switch_2_entities_1_change_case(void);
@@ -112,6 +113,7 @@ void Switch_query_1_case_1_type(void);
 void Switch_query_1_case_2_types(void);
 void Switch_query_2_cases_1_type(void);
 void Switch_query_2_cases_2_types(void);
+void Switch_query_after_remove(void);
 void Switch_add_switch_in_stage(void);
 void Switch_add_case_in_stage(void);
 void Switch_change_case_in_stage(void);
@@ -1823,6 +1825,10 @@ bake_test_case Switch_testcases[] = {
         Switch_add_w_type
     },
     {
+        "remove_case",
+        Switch_remove_case
+    },
+    {
         "bulk_new_w_type",
         Switch_bulk_new_w_type
     },
@@ -1857,6 +1863,10 @@ bake_test_case Switch_testcases[] = {
     {
         "query_2_cases_2_types",
         Switch_query_2_cases_2_types
+    },
+    {
+        "query_after_remove",
+        Switch_query_after_remove
     },
     {
         "add_switch_in_stage",
@@ -6944,7 +6954,7 @@ static bake_test_suite suites[] = {
         "Switch",
         Switch_setup,
         NULL,
-        27,
+        29,
         Switch_testcases
     },
     {

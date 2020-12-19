@@ -719,34 +719,57 @@ void ecs_components_override(
 }
 
 static
-void ecs_components_switch(
-    ecs_world_t * world,
+void set_switch(
     ecs_data_t * data,
     int32_t row,
-    int32_t count,
-    ecs_entities_t * added)
+    int32_t count,    
+    ecs_entities_t *entities,
+    bool reset)
 {
-    (void)world;
+    ecs_entity_t *array = entities->array;
+    int32_t i, comp_count = entities->count;
 
-    ecs_entity_t *array = added->array;
-    int32_t i, add_count = added->count;
-
-    for (i = 0; i < add_count; i ++) {
+    for (i = 0; i < comp_count; i ++) {
         ecs_entity_t e = array[i];
 
         if (ECS_HAS_ROLE(e, CASE)) {
             e = e & ECS_COMPONENT_MASK;
 
-            ecs_entity_t sw_case = ecs_entity_t_lo(e);
-            ecs_entity_t sw_index = ecs_entity_t_hi(e);
+            ecs_entity_t sw_case = 0;
+            if (!reset) {
+                sw_case = ecs_entity_t_lo(e);
+                ecs_assert(sw_case != 0, ECS_INTERNAL_ERROR, NULL);
+            }
 
+            ecs_entity_t sw_index = ecs_entity_t_hi(e);
             ecs_switch_t *sw = data->sw_columns[sw_index].data;
+            ecs_assert(sw != NULL, ECS_INTERNAL_ERROR, NULL);
+            
             int32_t r;
             for (r = 0; r < count; r ++) {
                 ecs_switch_set(sw, row + r, sw_case);
             }
         }
     }
+}
+
+static
+void ecs_components_switch(
+    ecs_world_t * world,
+    ecs_data_t * data,
+    int32_t row,
+    int32_t count,
+    ecs_entities_t * added,
+    ecs_entities_t * removed)
+{
+    (void)world;
+
+    if (added) {
+        set_switch(data, row, count, added, false);
+    }
+    if (removed) {
+        set_switch(data, row, count, removed, true);
+    } 
 }
 
 static
@@ -825,8 +848,7 @@ void ecs_run_add_actions(
     }
 
     if (table->flags & EcsTableHasSwitch) {
-        ecs_components_switch(
-            world, data, row, count, added);
+        ecs_components_switch(world, data, row, count, added, NULL);
     }
 
     if (table->flags & EcsTableHasOnAdd) {
@@ -1087,11 +1109,13 @@ void commit(
         /* If source and destination table are the same no action is needed *
          * However, if a component was added in the process of traversing a
          * table, this suggests that a case switch could have occured. */
-        if (added && added->count && src_table && 
-            src_table->flags & EcsTableHasSwitch) 
+        if (((added && added->count) || (removed && removed->count)) && 
+             src_table && src_table->flags & EcsTableHasSwitch) 
         {
-            ecs_components_switch(world, info->data, info->row, 1, added);
+            ecs_components_switch(
+                world, info->data, info->row, 1, added, removed);
         }
+
         return;
     }
 

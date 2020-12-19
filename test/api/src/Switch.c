@@ -140,6 +140,33 @@ void Switch_add_w_type() {
     ecs_fini(world);
 }
 
+void Switch_remove_case() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    test_assert(e != 0);
+
+    ecs_add_entity(world, e, ECS_CASE | Walking);
+
+    test_assert( ecs_has_entity(world, e, ECS_CASE | Walking));
+    ecs_entity_t case_id = ecs_get_case(world, e, Movement);
+    test_int(case_id, Walking);
+
+    ecs_remove_entity(world, e, ECS_CASE | Walking);
+
+    test_assert( !ecs_has_entity(world, e, ECS_CASE | Walking));
+    case_id = ecs_get_case(world, e, Movement);
+    test_int(case_id, 0);
+
+    ecs_fini(world);
+}
+
 void Switch_bulk_new_w_type() {
     ecs_world_t *world = ecs_init();
 
@@ -484,6 +511,109 @@ void Switch_query_2_cases_2_types() {
     test_int(ctx.c[0][0], ECS_CASE | Running);
     test_int(ctx.c[0][1], ECS_CASE | Front);
     test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Switch_query_after_remove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+
+    ECS_ENTITY(world, e1, SWITCH | Movement, CASE | Walking);
+    ECS_ENTITY(world, e2, SWITCH | Movement, CASE | Walking);
+    ECS_ENTITY(world, e3, SWITCH | Movement, CASE | Running);
+    ECS_ENTITY(world, e4, SWITCH | Movement, CASE | Running);
+    ECS_ENTITY(world, e5, SWITCH | Movement, CASE | Running);
+    ECS_ENTITY(world, e6, SWITCH | Movement, CASE | Jumping);
+    ECS_ENTITY(world, e7, SWITCH | Movement, CASE | Jumping);
+
+    ecs_query_t *q_walking = ecs_query_new(world, "CASE | Walking");
+    ecs_query_t *q_running = ecs_query_new(world, "CASE | Running");
+    ecs_query_t *q_jumping = ecs_query_new(world, "CASE | Jumping");
+
+    /* Verify all queries are correctly matched */
+    ecs_iter_t it = ecs_query_iter(q_walking);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e2);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e1);
+    test_assert(!ecs_query_next(&it));
+
+    it = ecs_query_iter(q_running);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e5);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e4);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e3);    
+    test_assert(!ecs_query_next(&it));
+
+    it = ecs_query_iter(q_jumping);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e7);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e6);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_remove_entity(world, e4, ECS_CASE | Running);
+    test_assert(!ecs_has_entity(world, e4, ECS_CASE | Running));
+    ecs_entity_t c = ecs_get_case(world, e4, Movement);
+    test_int(c, 0);
+
+    /* Verify queries are still correctly matched, now excluding e4 */
+    it = ecs_query_iter(q_walking);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e2);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e1);
+    test_assert(!ecs_query_next(&it));
+
+    it = ecs_query_iter(q_running);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e5);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e3);    
+    test_assert(!ecs_query_next(&it));
+
+    it = ecs_query_iter(q_jumping);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e7);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e6);
+    test_assert(!ecs_query_next(&it));    
+
+    ecs_add_entity(world, e4, ECS_CASE | Running);
+    test_assert(ecs_has_entity(world, e4, ECS_CASE | Running));
+    c = ecs_get_case(world, e4, Movement);
+    test_int(c, Running);
+
+    /* Verify e4 is now matched again */
+    it = ecs_query_iter(q_walking);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e2);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e1);
+    test_assert(!ecs_query_next(&it));
+
+    it = ecs_query_iter(q_running);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e4);      
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e5);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e3);      
+    test_assert(!ecs_query_next(&it));
+
+    it = ecs_query_iter(q_jumping);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e7);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1); test_int(it.entities[0], e6);
+    test_assert(!ecs_query_next(&it));
 
     ecs_fini(world);
 }

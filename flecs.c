@@ -4497,34 +4497,57 @@ void ecs_components_override(
 }
 
 static
-void ecs_components_switch(
-    ecs_world_t * world,
+void set_switch(
     ecs_data_t * data,
     int32_t row,
-    int32_t count,
-    ecs_entities_t * added)
+    int32_t count,    
+    ecs_entities_t *entities,
+    bool reset)
 {
-    (void)world;
+    ecs_entity_t *array = entities->array;
+    int32_t i, comp_count = entities->count;
 
-    ecs_entity_t *array = added->array;
-    int32_t i, add_count = added->count;
-
-    for (i = 0; i < add_count; i ++) {
+    for (i = 0; i < comp_count; i ++) {
         ecs_entity_t e = array[i];
 
         if (ECS_HAS_ROLE(e, CASE)) {
             e = e & ECS_COMPONENT_MASK;
 
-            ecs_entity_t sw_case = ecs_entity_t_lo(e);
-            ecs_entity_t sw_index = ecs_entity_t_hi(e);
+            ecs_entity_t sw_case = 0;
+            if (!reset) {
+                sw_case = ecs_entity_t_lo(e);
+                ecs_assert(sw_case != 0, ECS_INTERNAL_ERROR, NULL);
+            }
 
+            ecs_entity_t sw_index = ecs_entity_t_hi(e);
             ecs_switch_t *sw = data->sw_columns[sw_index].data;
+            ecs_assert(sw != NULL, ECS_INTERNAL_ERROR, NULL);
+            
             int32_t r;
             for (r = 0; r < count; r ++) {
                 ecs_switch_set(sw, row + r, sw_case);
             }
         }
     }
+}
+
+static
+void ecs_components_switch(
+    ecs_world_t * world,
+    ecs_data_t * data,
+    int32_t row,
+    int32_t count,
+    ecs_entities_t * added,
+    ecs_entities_t * removed)
+{
+    (void)world;
+
+    if (added) {
+        set_switch(data, row, count, added, false);
+    }
+    if (removed) {
+        set_switch(data, row, count, removed, true);
+    } 
 }
 
 static
@@ -4603,8 +4626,7 @@ void ecs_run_add_actions(
     }
 
     if (table->flags & EcsTableHasSwitch) {
-        ecs_components_switch(
-            world, data, row, count, added);
+        ecs_components_switch(world, data, row, count, added, NULL);
     }
 
     if (table->flags & EcsTableHasOnAdd) {
@@ -4865,11 +4887,13 @@ void commit(
         /* If source and destination table are the same no action is needed *
          * However, if a component was added in the process of traversing a
          * table, this suggests that a case switch could have occured. */
-        if (added && added->count && src_table && 
-            src_table->flags & EcsTableHasSwitch) 
+        if (((added && added->count) || (removed && removed->count)) && 
+             src_table && src_table->flags & EcsTableHasSwitch) 
         {
-            ecs_components_switch(world, info->data, info->row, 1, added);
+            ecs_components_switch(
+                world, info->data, info->row, 1, added, removed);
         }
+
         return;
     }
 
@@ -12072,25 +12096,32 @@ void ecs_switch_set(
     ecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
     ecs_switch_header_t *dst_hdr = get_header(sw, value);
 
+    /* If value is not 0, and dst_hdr is NULL, then this is not a valid value
+     * for this switch */
+    ecs_assert(dst_hdr != NULL || !value, ECS_INVALID_PARAMETER, NULL);
+
     if (cur_hdr) {
         remove_node(cur_hdr, nodes, node, element);
     }
 
     /* Now update the node itself by adding it as the first node of dst */
-    node->next = dst_hdr->element;
     node->prev = -1;
     values[element] = value;
 
-    /* Also update the dst header */
-    int32_t first = dst_hdr->element;
-    if (first != -1) {
-        ecs_assert(first >= 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_switch_node_t *first_node = &nodes[first];
-        first_node->prev = element;
-    }
+    if (dst_hdr) {
+        node->next = dst_hdr->element;
 
-    dst_hdr->element = element;
-    dst_hdr->count ++;
+        /* Also update the dst header */
+        int32_t first = dst_hdr->element;
+        if (first != -1) {
+            ecs_assert(first >= 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_switch_node_t *first_node = &nodes[first];
+            first_node->prev = element;
+        }
+
+        dst_hdr->element = element;
+        dst_hdr->count ++;        
+    }
 }
 
 void ecs_switch_remove(
@@ -17719,7 +17750,18 @@ ecs_table_t* traverse_remove_hi_edges(
             edge->remove = next;
         }
 
-        if (removed && node != next) removed->array[removed->count ++] = e;
+        bool has_case = ECS_HAS_ROLE(e, CASE);
+        if (removed && (node != next || has_case)) {
+            /* If this is a case, find switch and encode it in added id */
+            if (has_case) {
+                int32_t s_case = ecs_table_switch_from_case(world, node, e);
+                ecs_assert(s_case != -1, ECS_INTERNAL_ERROR, NULL);
+                e = ECS_CASE | ecs_entity_t_comb(e, s_case);
+            }
+            removed->array[removed->count ++] = e; 
+        }        
+
+        // if (removed && node != next) removed->array[removed->count ++] = e;
 
         node = next;        
     }
@@ -17761,7 +17803,7 @@ ecs_table_t* ecs_table_traverse_remove(
                 edge->remove = next;
             } else {
                 /* If the add edge does not point to self, the table
-                    * does not have the entity in to_remove. */
+                 * does not have the entity in to_remove. */
                 continue;
             }
         }
@@ -17851,7 +17893,6 @@ ecs_table_t* traverse_add_hi_edges(
                 ecs_assert(s_case != -1, ECS_INTERNAL_ERROR, NULL);
                 e = ECS_CASE | ecs_entity_t_comb(e, s_case);
             }
-
             added->array[added->count ++] = e; 
         }
 

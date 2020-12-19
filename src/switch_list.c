@@ -176,25 +176,32 @@ void ecs_switch_set(
     ecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
     ecs_switch_header_t *dst_hdr = get_header(sw, value);
 
+    /* If value is not 0, and dst_hdr is NULL, then this is not a valid value
+     * for this switch */
+    ecs_assert(dst_hdr != NULL || !value, ECS_INVALID_PARAMETER, NULL);
+
     if (cur_hdr) {
         remove_node(cur_hdr, nodes, node, element);
     }
 
     /* Now update the node itself by adding it as the first node of dst */
-    node->next = dst_hdr->element;
     node->prev = -1;
     values[element] = value;
 
-    /* Also update the dst header */
-    int32_t first = dst_hdr->element;
-    if (first != -1) {
-        ecs_assert(first >= 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_switch_node_t *first_node = &nodes[first];
-        first_node->prev = element;
-    }
+    if (dst_hdr) {
+        node->next = dst_hdr->element;
 
-    dst_hdr->element = element;
-    dst_hdr->count ++;
+        /* Also update the dst header */
+        int32_t first = dst_hdr->element;
+        if (first != -1) {
+            ecs_assert(first >= 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_switch_node_t *first_node = &nodes[first];
+            first_node->prev = element;
+        }
+
+        dst_hdr->element = element;
+        dst_hdr->count ++;        
+    }
 }
 
 void ecs_switch_remove(
