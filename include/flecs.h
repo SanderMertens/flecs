@@ -270,7 +270,7 @@ typedef struct EcsTrigger {
 #define ECS_OWNED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
 
 /** Track whether component is enabled or not */
-#define ECS_DISABLED (ECS_ROLE | ((ecs_entity_t)0x75 << 56))
+#define ECS_DISABLED (ECS_ROLE | ((ecs_entity_t)0x74 << 56))
 
 /** @} */
 
