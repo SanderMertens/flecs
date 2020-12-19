@@ -5,16 +5,16 @@ struct Position {
     float x, y;
 };
 
-int main(int argc, char *argv[]) {
-    flecs::world world;
+int main(int, char *[]) {
+    flecs::world ecs;
 
-    auto e1 = world.entity("e1")
+    auto e1 = ecs.entity("e1")
         .set<Position>({10, 20});
 
-    auto e2 = world.entity("e2")
+    auto e2 = ecs.entity("e2")
         .set<Position>({30, 40});
 
-    auto e3 = world.entity("e3")
+    auto e3 = ecs.entity("e3")
         .set<Position>({50, 60});
 
     // All components will show up as enabled
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     std::cout << "e3 enabled: " << e3.is_enabled<Position>() << std::endl;
 
     // Create system that matches all entities with position
-    auto s = world.system<const Position>()
+    auto s = ecs.system<const Position>()
         .each([](flecs::entity e, const Position& p) {
             std::cout << e.name() << " = {" << p.x << ", " << p.y << "}" << std::endl;
         });

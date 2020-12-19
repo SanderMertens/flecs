@@ -16,7 +16,7 @@ void PrintPosition(ecs_iter_t *it) {
 }
 
 int main(int argc, char *argv[]) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     ECS_COMPONENT(world, Position);
 
