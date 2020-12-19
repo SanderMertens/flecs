@@ -157,6 +157,26 @@ bool ecs_defer_clear(
     return false;
 }
 
+bool ecs_defer_enable(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    bool enable)
+{
+    (void)world;
+    if (stage->defer) {
+        ecs_op_t *op = new_defer_op(stage);
+        op->kind = enable ? EcsOpEnable : EcsOpDisable;
+        op->is._1.entity = entity;
+        op->component = component;
+        return true;
+    } else {
+        stage->defer ++;
+    }
+    return false;
+}
+
 bool ecs_defer_bulk_new(
     ecs_world_t *world,
     ecs_stage_t *stage,

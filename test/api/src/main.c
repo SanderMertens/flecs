@@ -159,6 +159,7 @@ void EnabledComponents_query_mod_1024_2_bitsets(void);
 void EnabledComponents_query_randomized_2_bitsets(void);
 void EnabledComponents_query_randomized_3_bitsets(void);
 void EnabledComponents_query_randomized_4_bitsets(void);
+void EnabledComponents_defer_enable(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -2035,6 +2036,10 @@ bake_test_case EnabledComponents_testcases[] = {
     {
         "query_randomized_4_bitsets",
         EnabledComponents_query_randomized_4_bitsets
+    },
+    {
+        "defer_enable",
+        EnabledComponents_defer_enable
     }
 };
 
@@ -6926,7 +6931,7 @@ static bake_test_suite suites[] = {
         "EnabledComponents",
         NULL,
         NULL,
-        35,
+        36,
         EnabledComponents_testcases
     },
     {

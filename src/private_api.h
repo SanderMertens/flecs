@@ -189,6 +189,13 @@ bool ecs_defer_clear(
     ecs_stage_t *stage,
     ecs_entity_t entity);
 
+bool ecs_defer_enable(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    bool enable);    
+
 bool ecs_defer_add(
     ecs_world_t *world,
     ecs_stage_t *stage,

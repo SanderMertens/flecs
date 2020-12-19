@@ -172,7 +172,8 @@
                 "query_mod_1024_2_bitsets",
                 "query_randomized_2_bitsets",
                 "query_randomized_3_bitsets",
-                "query_randomized_4_bitsets"
+                "query_randomized_4_bitsets",
+                "defer_enable"
             ]
         }, {
             "id": "Remove",
