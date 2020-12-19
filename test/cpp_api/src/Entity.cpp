@@ -738,3 +738,32 @@ void Entity_get_parent_w_tag() {
     test_assert(p.id() != 0);
     test_assert(p == parent2);
 }
+
+void Entity_is_component_enabled() {
+    flecs::world world;
+
+    auto e = world.entity()
+        .add<Position>();
+
+    test_assert(e.is_enabled<Position>());
+}
+
+void Entity_is_enabled_component_enabled() {
+    flecs::world world;
+
+    auto e = world.entity()
+        .add<Position>()
+        .enable<Position>();
+
+    test_assert(e.is_enabled<Position>());
+}
+
+void Entity_is_disabled_component_enabled() {
+    flecs::world world;
+
+    auto e = world.entity()
+        .add<Position>()
+        .disable<Position>();
+
+    test_assert(!e.is_enabled<Position>());
+}

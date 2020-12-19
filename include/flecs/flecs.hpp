@@ -1590,7 +1590,7 @@ public:
         [sw_case](world_t *world, entity_t id) {
             ecs_add_entity(world, id, ECS_CASE | sw_case);
         });
-        return *static_cast<base_type*>(this);  
+        return *static_cast<base_type*>(this);
     }
 
     /** Add a switch to an entity by id.
@@ -1639,6 +1639,100 @@ public:
      * @param sw_case The case entity id to remove.
      */ 
     base_type& remove_case(const entity& sw_case) const;
+
+    /** Enable an entity.
+     * Enabled entities are matched with systems and can be searched with
+     * queries.
+     */
+    base_type& enable() const {
+        static_cast<base_type*>(this)->invoke(
+        [](world_t *world, entity_t id) {
+            ecs_enable(world, id, true);
+        });
+        return *static_cast<base_type*>(this);
+    }
+
+    /** Disable an entity.
+     * Disabled entities are not matched with systems and cannot be searched 
+     * with queries, unless explicitly specified in the query expression.
+     */
+    base_type& disable() const {
+        static_cast<base_type*>(this)->invoke(
+        [](world_t *world, entity_t id) {
+            ecs_enable(world, id, true);
+        });
+        return *static_cast<base_type*>(this);
+    }
+
+    /** Enable a component.
+     * This sets the enabled bit for this component. If this is the first time
+     * the component is enabled or disabled, the bitset is added.
+     *
+     * @tparam T The component to enable.
+     */   
+    template<typename T>
+    base_type& enable() const {
+        static_cast<base_type*>(this)->invoke(
+        [](world_t *world, entity_t id) {
+            ecs_enable_component_w_entity(world, id, _::component_info<T>::id(), true);
+        });
+        return *static_cast<base_type*>(this);
+    }  
+
+    /** Disable a component.
+     * This sets the enabled bit for this component. If this is the first time
+     * the component is enabled or disabled, the bitset is added.
+     *
+     * @tparam T The component to enable.
+     */   
+    template<typename T>
+    base_type& disable() const {
+        static_cast<base_type*>(this)->invoke(
+        [](world_t *world, entity_t id) {
+            ecs_enable_component_w_entity(world, id, _::component_info<T>::id(), false);
+        });
+        return *static_cast<base_type*>(this);
+    }  
+
+    /** Enable a component.
+     * See enable<T>.
+     *
+     * @param id The component to enable.
+     */   
+    base_type& enable(flecs::entity_t id) const {
+        static_cast<base_type*>(this)->invoke(
+        [id](world_t *world, entity_t e) {
+            ecs_enable_component_w_entity(world, e, id, true);
+        }); 
+        return *static_cast<base_type*>(this);       
+    }
+
+    /** Disable a component.
+     * See disable<T>.
+     *
+     * @param id The component to disable.
+     */   
+    base_type& disable(flecs::entity_t id) const {
+        static_cast<base_type*>(this)->invoke(
+        [id](world_t *world, entity_t e) {
+            ecs_enable_component_w_entity(world, e, id, false);
+        }); 
+        return *static_cast<base_type*>(this);       
+    }
+
+    /** Enable a component.
+     * See enable<T>.
+     *
+     * @param entity The component to enable.
+     */   
+    base_type& enable(const flecs::entity& entity) const;
+
+    /** Disable a component.
+     * See disable<T>.
+     *
+     * @param entity The component to disable.
+     */   
+    base_type& disable(const flecs::entity& entity) const;
 
     /** Set a component for an entity.
      * This operation overwrites the component value. If the entity did not yet
@@ -2058,22 +2152,6 @@ public:
             return std::string();
         }
     }   
-
-    /** Enable an entity.
-     * Enabled entities are matched with systems and can be searched with
-     * queries.
-     */
-    void enable() const {
-        ecs_enable(m_world, m_id, true);
-    }
-
-    /** Disable an entity.
-     * Disabled entities are not matched with systems and cannot be searched 
-     * with queries, unless explicitly specified in the query expression.
-     */
-    void disable() const {
-        ecs_enable(m_world, m_id, false);
-    }
 
     bool enabled() {
         return !ecs_has_entity(m_world, m_id, flecs::Disabled);
@@ -2663,6 +2741,36 @@ public:
      * @return True if the entity has the provided case, false otherwise.
      */
     flecs::entity get_case(flecs::type sw) const;
+
+    /** Test if component is enabled.
+     *
+     * @tparam T The component to test.
+     * @return True if the component is enabled, false if it has been disabled.
+     */
+    template<typename T>
+    bool is_enabled() {
+        return ecs_is_component_enabled_w_entity(
+            m_world, m_id, _::component_info<T>::id(m_world));
+    }
+
+    /** Test if component is enabled.
+     *
+     * @param id The component to test.
+     * @return True if the component is enabled, false if it has been disabled.
+     */
+    bool is_enabled(flecs::entity_t id) {
+        return ecs_is_component_enabled_w_entity(
+            m_world, m_id, id);
+    }
+
+    /** Test if component is enabled.
+     *
+     * @param entity The component to test.
+     * @return True if the component is enabled, false if it has been disabled.
+     */
+    bool is_enabled(const flecs::entity& entity) {
+        return is_enabled(entity.id());
+    }
 
     /** Get current delta time.
      * Convenience function so system implementations can get delta_time, even
@@ -4587,6 +4695,16 @@ inline typename entity_builder<base>::base_type& entity_builder<base>::add_case(
 template <typename base>
 inline typename entity_builder<base>::base_type& entity_builder<base>::remove_case(const entity& sw_case) const {
     return remove_case(sw_case.id());
+}
+
+template <typename base>
+inline typename entity_builder<base>::base_type& entity_builder<base>::enable(const entity& e) const {
+    return enable(e.id());
+}
+
+template <typename base>
+inline typename entity_builder<base>::base_type& entity_builder<base>::disable(const entity& e) const {
+    return disable(e.id());
 }
 
 inline bool entity::has_switch(flecs::type type) const {

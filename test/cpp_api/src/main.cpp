@@ -54,6 +54,9 @@ void Entity_tag_has_size_zero(void);
 void Entity_get_null_name(void);
 void Entity_get_parent(void);
 void Entity_get_parent_w_tag(void);
+void Entity_is_component_enabled(void);
+void Entity_is_enabled_component_enabled(void);
+void Entity_is_disabled_component_enabled(void);
 
 // Testsuite 'Traits'
 void Traits_add_component_trait(void);
@@ -423,6 +426,18 @@ bake_test_case Entity_testcases[] = {
     {
         "get_parent_w_tag",
         Entity_get_parent_w_tag
+    },
+    {
+        "is_component_enabled",
+        Entity_is_component_enabled
+    },
+    {
+        "is_enabled_component_enabled",
+        Entity_is_enabled_component_enabled
+    },
+    {
+        "is_disabled_component_enabled",
+        Entity_is_disabled_component_enabled
     }
 };
 
@@ -1108,7 +1123,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        45,
+        48,
         Entity_testcases
     },
     {
