@@ -6,10 +6,16 @@ void ensure(
     ecs_bitset_t *bs,
     ecs_size_t size)
 {
-    if (size > bs->size) {
+    if (!bs->size) {
+        int32_t new_size = ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
         bs->size = ((size - 1) / 64 + 1) * 64;
-        bs->data = ecs_os_realloc(bs->data, 
-            ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t));
+        bs->data = ecs_os_calloc(new_size);
+    } else if (size > bs->size) {
+        int32_t prev_size = ((bs->size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
+        bs->size = ((size - 1) / 64 + 1) * 64;
+        int32_t new_size = ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
+        bs->data = ecs_os_realloc(bs->data, new_size);
+        ecs_os_memset(ECS_OFFSET(bs->data, prev_size), 0, new_size - prev_size);
     }
 }
 

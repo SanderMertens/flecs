@@ -139,13 +139,26 @@ void EnabledComponents_is_disabled_after_enable(void);
 void EnabledComponents_is_enabled_randomized(void);
 void EnabledComponents_is_enabled_after_add_randomized(void);
 void EnabledComponents_is_enabled_after_randomized_add_randomized(void);
+void EnabledComponents_is_enabled_2(void);
+void EnabledComponents_is_enabled_3(void);
+void EnabledComponents_is_enabled_2_after_add(void);
+void EnabledComponents_is_enabled_3_after_add(void);
 void EnabledComponents_query_disabled(void);
 void EnabledComponents_query_disabled_skip_initial(void);
-void EnabledComponents_query_randomized_2(void);
-void EnabledComponents_query_randomized_8(void);
-void EnabledComponents_query_randomized_64(void);
-void EnabledComponents_query_randomized_256(void);
-void EnabledComponents_query_randomized_1024(void);
+void EnabledComponents_query_mod_2(void);
+void EnabledComponents_query_mod_8(void);
+void EnabledComponents_query_mod_64(void);
+void EnabledComponents_query_mod_256(void);
+void EnabledComponents_query_mod_1024(void);
+void EnabledComponents_query_enable_mod_10(void);
+void EnabledComponents_query_mod_2_2_bitsets(void);
+void EnabledComponents_query_mod_8_2_bitsets(void);
+void EnabledComponents_query_mod_64_2_bitsets(void);
+void EnabledComponents_query_mod_256_2_bitsets(void);
+void EnabledComponents_query_mod_1024_2_bitsets(void);
+void EnabledComponents_query_randomized_2_bitsets(void);
+void EnabledComponents_query_randomized_3_bitsets(void);
+void EnabledComponents_query_randomized_4_bitsets(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -1944,6 +1957,22 @@ bake_test_case EnabledComponents_testcases[] = {
         EnabledComponents_is_enabled_after_randomized_add_randomized
     },
     {
+        "is_enabled_2",
+        EnabledComponents_is_enabled_2
+    },
+    {
+        "is_enabled_3",
+        EnabledComponents_is_enabled_3
+    },
+    {
+        "is_enabled_2_after_add",
+        EnabledComponents_is_enabled_2_after_add
+    },
+    {
+        "is_enabled_3_after_add",
+        EnabledComponents_is_enabled_3_after_add
+    },
+    {
         "query_disabled",
         EnabledComponents_query_disabled
     },
@@ -1952,24 +1981,60 @@ bake_test_case EnabledComponents_testcases[] = {
         EnabledComponents_query_disabled_skip_initial
     },
     {
-        "query_randomized_2",
-        EnabledComponents_query_randomized_2
+        "query_mod_2",
+        EnabledComponents_query_mod_2
     },
     {
-        "query_randomized_8",
-        EnabledComponents_query_randomized_8
+        "query_mod_8",
+        EnabledComponents_query_mod_8
     },
     {
-        "query_randomized_64",
-        EnabledComponents_query_randomized_64
+        "query_mod_64",
+        EnabledComponents_query_mod_64
     },
     {
-        "query_randomized_256",
-        EnabledComponents_query_randomized_256
+        "query_mod_256",
+        EnabledComponents_query_mod_256
     },
     {
-        "query_randomized_1024",
-        EnabledComponents_query_randomized_1024
+        "query_mod_1024",
+        EnabledComponents_query_mod_1024
+    },
+    {
+        "query_enable_mod_10",
+        EnabledComponents_query_enable_mod_10
+    },
+    {
+        "query_mod_2_2_bitsets",
+        EnabledComponents_query_mod_2_2_bitsets
+    },
+    {
+        "query_mod_8_2_bitsets",
+        EnabledComponents_query_mod_8_2_bitsets
+    },
+    {
+        "query_mod_64_2_bitsets",
+        EnabledComponents_query_mod_64_2_bitsets
+    },
+    {
+        "query_mod_256_2_bitsets",
+        EnabledComponents_query_mod_256_2_bitsets
+    },
+    {
+        "query_mod_1024_2_bitsets",
+        EnabledComponents_query_mod_1024_2_bitsets
+    },
+    {
+        "query_randomized_2_bitsets",
+        EnabledComponents_query_randomized_2_bitsets
+    },
+    {
+        "query_randomized_3_bitsets",
+        EnabledComponents_query_randomized_3_bitsets
+    },
+    {
+        "query_randomized_4_bitsets",
+        EnabledComponents_query_randomized_4_bitsets
     }
 };
 
@@ -6861,7 +6926,7 @@ static bake_test_suite suites[] = {
         "EnabledComponents",
         NULL,
         NULL,
-        22,
+        35,
         EnabledComponents_testcases
     },
     {
