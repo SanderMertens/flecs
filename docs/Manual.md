@@ -845,6 +845,51 @@ int main() {
 }
 ```
 
+### Component disabling
+Components can be disabled, which prevents them from being matched with queries. Contrary to removing a component, disabling a component does not remove it from an entity. When a component is enabled after disabling it, the original value of the component is restored.
+
+To enable or disable a component, use the `ecs_enable_component` function:
+
+```c
+typedef struct Position {
+    float x, y;
+} Position;
+
+int main() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    /* Component is enabled by default */
+
+    /* Disable the component */
+    ecs_enable_component(world, e, Position, false);
+
+    /* Will return false */
+    printf("%d\n", ecs_is_component_enabled(world, e, Position));
+
+    /* Re-enable the component */
+    ecs_enable_component(world, e, Position, true);
+
+    ecs_fini(world);
+}
+```
+
+Component disabling works by maintaining a bitset alongside the component array. When a component is enabled or disabled, the bit that corresponds with the entity is set to 1 or 0. Bitsets are not created by default. Only after invoking the `ecs_enable_component` operation for an entity will be entity be moved to a table that keeps track of a bitset for that component.
+
+When a query is matched with a table that has a bitset for a component, it will automatically use the bitset to skip disabled values. If an entity contains multiple components tracked by a bitset, the query will evaluate each bitset and only yield entities for which all components are enabled. To ensure optimal performance, the query will always return the largest range of enabled components. Nonetheless, iterating a table with a bitset is slower than a regular table.
+
+If a query is matched with a table that has one or more bitsets, but the query does not match with components tracked by a bitset, there is no performance penalty.
+
+Component disabling can be used to temporarily suspend and resume a component value. It can also be used as a faster alternative to `ecs_add`/`ecs_remove`. Since the operation only needs to set a bit, it is a significantly faster alternative to adding/removing components, at the cost of a slightly slower iteration speed. If a component needs to be added or removed frequently, enabling/disabling is recommended.
+
+#### Limitations
+Component disabling does not work for components not matched with the entity. If a query matches with a component from a base (prefab) or parent entity and the component is disabled for that entity, the query will not take this into account. If entities with disabled components from a base or parent entity need to be skipped. a query should manually check this.
+
+Because component disabling is implemented with a type role, it cannot be used together with other type roles. This means that it is not possible to disable, for example, an `INSTANCEOF` or `CHILDOF` relationship.
+
 ## Tagging
 Tags are much like components, but they are not associated with a data type. Tags are typically used to add a flag to an entity, for example to indicate that an entity is an Enemy:
 
