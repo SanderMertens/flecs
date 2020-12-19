@@ -59,7 +59,10 @@
                 "tag_has_size_zero",
                 "get_null_name",
                 "get_parent",
-                "get_parent_w_tag"
+                "get_parent_w_tag",
+                "is_component_enabled",
+                "is_enabled_component_enabled",
+                "is_disabled_component_enabled"
             ]
         }, {
             "id": "Traits",
