@@ -324,7 +324,9 @@ typedef enum ecs_op_kind_t {
     EcsOpMut,
     EcsOpModified,
     EcsOpDelete,
-    EcsOpClear
+    EcsOpClear,
+    EcsOpEnable,
+    EcsOpDisable
 } ecs_op_kind_t;
 
 typedef struct ecs_op_1_t {

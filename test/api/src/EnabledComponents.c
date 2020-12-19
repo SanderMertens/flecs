@@ -1019,3 +1019,21 @@ void EnabledComponents_query_randomized_4_bitsets() {
 
     ecs_fini(world);
 }
+
+void EnabledComponents_defer_enable() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_bool(ecs_is_component_enabled(world, e, Position), true);
+
+    ecs_defer_begin(world);
+    ecs_enable_component(world, e, Position, false);
+    test_bool(ecs_is_component_enabled(world, e, Position), true);
+    ecs_defer_end(world);
+
+    test_bool(ecs_is_component_enabled(world, e, Position), false);
+
+    ecs_fini(world);
+}

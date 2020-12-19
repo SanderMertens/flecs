@@ -2164,6 +2164,17 @@ void ecs_enable_component_w_entity(
     ecs_entity_t component,
     bool enable)
 {
+    ecs_stage_t *stage = ecs_get_stage(&world);
+
+    if (ecs_defer_enable(
+        world, stage, entity, component, enable))
+    {
+        return;
+    } else {
+        /* Operations invoked by enable/disable should not be deferred */
+        stage->defer --;
+    }
+
     ecs_entity_info_t info;
     ecs_get_info(world, entity, &info);
 
@@ -2696,6 +2707,14 @@ void ecs_defer_flush(
                     ecs_delete(world, e);
                     break;
                 }
+                case EcsOpEnable:
+                    ecs_enable_component_w_entity(
+                        world, e, op->component, true);
+                    break;
+                case EcsOpDisable:
+                    ecs_enable_component_w_entity(
+                        world, e, op->component, false);
+                    break;
                 case EcsOpClear:
                     ecs_clear(world, e);
                     break;
