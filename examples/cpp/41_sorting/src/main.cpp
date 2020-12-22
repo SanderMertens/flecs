@@ -20,7 +20,7 @@ int compare_position(
 
 // Iterate query, printed values will be ordered
 void print_query(flecs::query<Position>& q) {
-    q.each([](flecs::entity e, Position& p) {
+    q.each([](flecs::entity, Position& p) {
         std::cout << "{" << p.x << "," << p.y << "}" << std::endl;
     });
 }
