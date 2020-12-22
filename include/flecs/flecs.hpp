@@ -3809,7 +3809,15 @@ public:
         return m_query;
     }
 
+    template <typename T>
+    void order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
+        ecs_query_order_by(m_world, m_query, 
+            flecs::_::component_info<T>::id(m_world),
+            (ecs_compare_action_t)compare);
+    }
+
 protected:
+    world_t *m_world;
     query_t *m_query;
 };
 
@@ -3819,6 +3827,7 @@ class query : public query_base {
 
 public:
     query() { 
+        m_world = nullptr;
         m_query = nullptr;
     }
 
@@ -3828,6 +3837,7 @@ public:
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
+        m_world = world.c_ptr();
         m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
     }
 
@@ -3837,11 +3847,13 @@ public:
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
+        m_world = world.c_ptr();
         m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
     }
 
     explicit query(const world& world, const char *expr) {
         std::stringstream str;
+        m_world = world.c_ptr();
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_query_new(world.c_ptr(), expr);
         } else {
@@ -3852,6 +3864,7 @@ public:
 
     explicit query(const world& world, query_base& parent, const char *expr) {
         std::stringstream str;
+        m_world = world.c_ptr();
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
         } else {
@@ -3896,7 +3909,7 @@ public:
             _::iter_invoker<Func, Components...> ctx(func);
             ctx.call_system(&it, func, 0, columns.m_columns);
         }
-    }        
+    }    
 };
 
 
