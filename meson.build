@@ -35,6 +35,7 @@ flecs_src = files(
     'src/switch_list.c',
     'src/world.c',
     'src/stage.c',
+    'src/bitset.c',
     'src/bootstrap.c',
     'src/map.c',
     'src/filter.c',
