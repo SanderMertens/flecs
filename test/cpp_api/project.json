@@ -180,7 +180,10 @@
                 "subquery_w_expr",
                 "query_single_trait",
                 "tag_w_each",
-                "shared_tag_w_each"
+                "shared_tag_w_each",
+                "sort_by",
+                "changed",
+                "orphaned"
             ]
         }, {
             "id": "ComponentLifecycle",

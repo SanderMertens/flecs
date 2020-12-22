@@ -161,6 +161,9 @@ void Query_subquery_w_expr(void);
 void Query_query_single_trait(void);
 void Query_tag_w_each(void);
 void Query_shared_tag_w_each(void);
+void Query_sort_by(void);
+void Query_changed(void);
+void Query_orphaned(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -819,6 +822,18 @@ bake_test_case Query_testcases[] = {
     {
         "shared_tag_w_each",
         Query_shared_tag_w_each
+    },
+    {
+        "sort_by",
+        Query_sort_by
+    },
+    {
+        "changed",
+        Query_changed
+    },
+    {
+        "orphaned",
+        Query_orphaned
     }
 };
 
@@ -1172,7 +1187,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        17,
+        20,
         Query_testcases
     },
     {
