@@ -1980,9 +1980,9 @@ typedef bool (*ecs_iter_next_action_t)(
 /** Compare callback used for sorting */
 typedef int (*ecs_compare_action_t)(
     ecs_entity_t e1,
-    void *ptr1,
+    const void *ptr1,
     ecs_entity_t e2,
-    void *ptr2);    
+    const void *ptr2);    
 
 /** Compare callback used for sorting */
 typedef int32_t (*ecs_rank_type_action_t)(

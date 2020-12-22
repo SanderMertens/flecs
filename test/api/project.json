@@ -689,7 +689,8 @@
                 "sort_1000_entities_again",
                 "sort_1000_entities_2_types",
                 "sort_1000_entities_2_types_again",
-                "sort_1000_entities_add_type_after_sort"
+                "sort_1000_entities_add_type_after_sort",
+                "sort_shared_component"
             ]
         }, {
             "id": "Queries",

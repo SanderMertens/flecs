@@ -8,14 +8,14 @@ typedef struct Position {
 /* Order by x member of Position */
 int compare_position(
     ecs_entity_t e1,
-    void *ptr1,
+    const void *ptr1,
     ecs_entity_t e2,
-    void *ptr2)
+    const void *ptr2)
 {
     (void)e1;
     (void)e2;
-    Position *p1 = ptr1;
-    Position *p2 = ptr2;
+    const Position *p1 = ptr1;
+    const Position *p2 = ptr2;
     return (p1->x > p2->x) - (p1->x < p2->x);
 }
 

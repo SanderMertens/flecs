@@ -1129,7 +1129,7 @@ void qsort_array(
 {   
     if ((hi - lo) < 1)  {
         return;
-    }   
+    }
 
     int32_t p = qsort_partition(
         world, table, data, entities, ptr, size, lo, hi, compare);
@@ -1174,20 +1174,25 @@ void sort_table(
 typedef struct sort_helper_t {
     ecs_matched_table_t *table;
     ecs_entity_t *entities;
-    void *ptr;
+    const void *ptr;
     int32_t row;
     int32_t elem_size;
     int32_t count;
+    bool shared;
 } sort_helper_t;
 
 static
-void* ptr_from_helper(
+const void* ptr_from_helper(
     sort_helper_t *helper)
 {
     ecs_assert(helper->row < helper->count, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(helper->elem_size >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(helper->row >= 0, ECS_INTERNAL_ERROR, NULL);
-    return ELEM(helper->ptr, helper->elem_size, helper->row);
+    if (helper->shared) {
+        return helper->ptr;
+    } else {
+        return ELEM(helper->ptr, helper->elem_size, helper->row);
+    }
 }
 
 static
@@ -1207,6 +1212,7 @@ void build_sorted_table_range(
     int32_t start,
     int32_t end)
 {
+    ecs_world_t *world = query->world;
     ecs_entity_t component = query->sort_on_component;
     ecs_compare_action_t compare = query->compare;
 
@@ -1231,9 +1237,26 @@ void build_sorted_table_range(
             int16_t align = column->alignment;
             helper[to_sort].ptr = ecs_vector_first_t(column->data, size, align);
             helper[to_sort].elem_size = size;
+            helper[to_sort].shared = false;
+        } else if (component) {
+            /* Find component in prefab */
+            ecs_entity_t base = ecs_find_entity_in_prefabs(
+                world, 0, table->type, component, 0);
+            
+            /* If a base was not found, the query should not have allowed using
+             * the component for sorting */
+            ecs_assert(base != 0, ECS_INTERNAL_ERROR, NULL);
+
+            const EcsComponent *cptr = ecs_get(world, component, EcsComponent);
+            ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            helper[to_sort].ptr = ecs_get_w_entity(world, base, component);
+            helper[to_sort].elem_size = cptr->size;
+            helper[to_sort].shared = true;
         } else {
             helper[to_sort].ptr = NULL;
             helper[to_sort].elem_size = 0;
+            helper[to_sort].shared = false;
         }
 
         helper[to_sort].table = table_data;
@@ -1269,8 +1292,8 @@ void build_sorted_table_range(
                 continue;
             }
 
-            void *ptr1 = ptr_from_helper(&helper[min]);
-            void *ptr2 = ptr_from_helper(&helper[j]);
+            const void *ptr1 = ptr_from_helper(&helper[min]);
+            const void *ptr2 = ptr_from_helper(&helper[j]);
 
             if (compare(e1, ptr1, e2, ptr2) > 0) {
                 min = j;
@@ -1423,9 +1446,14 @@ void sort_tables(
             /* Get index of sorted component. We only care if the component we're
             * sorting on has changed or if entities have been added / re(moved) */
             index = ecs_type_index_of(table->type, sort_on_component);
-            ecs_assert(index != -1, ECS_INVALID_PARAMETER, NULL);
-            ecs_assert(index < ecs_vector_count(table->type), ECS_INTERNAL_ERROR, NULL); 
-            is_dirty = is_dirty || (dirty_state[index + 1] != table_data->monitor[index + 1]);
+            if (index != -1) {
+                ecs_assert(index < ecs_vector_count(table->type), ECS_INTERNAL_ERROR, NULL); 
+                is_dirty = is_dirty || (dirty_state[index + 1] != table_data->monitor[index + 1]);
+            } else {
+                /* Table does not contain component which means the sorted
+                 * component is shared. Table does not need to be sorted */
+                continue;
+            }
         }      
         
         /* Check both if entities have moved (element 0) or if the component

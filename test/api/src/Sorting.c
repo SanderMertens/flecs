@@ -2,22 +2,22 @@
 
 int compare_position(
     ecs_entity_t e1,
-    void *ptr1,
+    const void *ptr1,
     ecs_entity_t e2,
-    void *ptr2)
+    const void *ptr2)
 {
-    Position *p1 = ptr1;
-    Position *p2 = ptr2;
-    return p1->x - p2->x;
+    const Position *p1 = ptr1;
+    const Position *p2 = ptr2;
+    return (p1->x > p2->x) - (p1->x < p2->x);
 }
 
 int compare_entity(
     ecs_entity_t e1,
-    void *ptr1,
+    const void *ptr1,
     ecs_entity_t e2,
-    void *ptr2)
+    const void *ptr2)
 {
-    return e1 - e2;
+    return (e1 > e2) - (e1 < e2);
 }
 
 void Sorting_sort_by_component() {
@@ -1068,6 +1068,64 @@ void Sorting_sort_1000_entities_add_type_after_sort() {
 
         test_int(count, i + 500 + 1);
     }    
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_shared_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t base_2 = ecs_set(world, 0, Position, {3, 0});
+    ecs_entity_t base_3 = ecs_set(world, 0, Position, {7, 0});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {6, 0});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 0});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
+    ecs_entity_t e6 = ecs_new_w_entity(world, ECS_INSTANCEOF | base_3);
+    ecs_entity_t e7 = ecs_new_w_entity(world, ECS_INSTANCEOF | base_2);
+    ecs_entity_t e8 = ecs_new_w_entity(world, ECS_INSTANCEOF | base_1);
+    ecs_entity_t e9 = ecs_new_w_entity(world, ECS_INSTANCEOF | base_1);
+
+    ecs_query_t *q = ecs_query_new(world, "ANY:Position");
+    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == base_1);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_assert(it.entities[0] == e8);
+    test_assert(it.entities[1] == e9);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 3);
+    test_assert(it.entities[0] == e2);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.entities[2] == base_2);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e7);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 4);
+    test_assert(it.entities[0] == e5);
+    test_assert(it.entities[1] == e3);
+    test_assert(it.entities[2] == e1);
+    test_assert(it.entities[3] == base_3);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e6);
+
+    test_assert(!ecs_query_next(&it));
 
     ecs_fini(world);
 }
