@@ -14022,6 +14022,10 @@ void* _ecs_ptiny_get(
 {
     ecs_assert(elem_size == (ecs_size_t)ptree->elem_size, ECS_INVALID_PARAMETER, NULL);
 
+    if (index < 65536) {
+        return array_get(&ptree->root.data, elem_size, (uint16_t)index);
+    }
+
     int32_t pcount = page_count(index);
     addr_t addr = to_addr(index);
     page_t *p = get_page(&ptree->root, addr.value, pcount);
