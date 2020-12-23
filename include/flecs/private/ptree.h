@@ -18,33 +18,33 @@ typedef struct ecs_ptree_iter_t {
     uint64_t index;
 } ecs_ptree_iter_t;
 
-FLECS_API ecs_ptree_t* _ecs_ptree_new(
+ecs_ptree_t* _ecs_ptree_new(
     ecs_size_t elem_size);
 
-FLECS_API int32_t ecs_ptree_free(
+int32_t ecs_ptree_free(
     ecs_ptree_t *ptree);
 
-FLECS_API void* _ecs_ptree_ensure(
+void* _ecs_ptree_ensure(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
 
-FLECS_API void* _ecs_ptree_get(
+void* _ecs_ptree_get(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
 
-FLECS_API ecs_ptree_iter_t ecs_ptree_iter(
+ecs_ptree_iter_t ecs_ptree_iter(
     ecs_ptree_t *ptree);
 
-FLECS_API ecs_ptree_iter_t ecs_ptiny_iter(
+ecs_ptree_iter_t ecs_ptiny_iter(
     ecs_ptree_t *ptree);
 
-FLECS_API void* _ecs_ptree_next(
+void* _ecs_ptree_next(
     ecs_ptree_iter_t *it,
     ecs_size_t elem_size);    
 
-FLECS_API void* _ecs_ptiny_next(
+void* _ecs_ptiny_next(
     ecs_ptree_iter_t *it,
     ecs_size_t elem_size);
 
@@ -65,15 +65,15 @@ FLECS_API void* _ecs_ptiny_next(
 
 /* -- Low footprint version, do not mix new/get/ensure API calls -- */
 
-FLECS_API ecs_ptree_t* _ecs_ptiny_new(
+ecs_ptree_t* _ecs_ptiny_new(
     ecs_size_t elem_size);
 
-FLECS_API void* _ecs_ptiny_ensure(
+void* _ecs_ptiny_ensure(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
 
-FLECS_API void* _ecs_ptiny_get(
+void* _ecs_ptiny_get(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);

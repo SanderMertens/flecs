@@ -815,11 +815,9 @@ extern "C" {
 
 typedef struct ecs_sparse_t ecs_sparse_t;
 
-FLECS_API
 ecs_sparse_t* _ecs_sparse_new(
     ecs_size_t elem_size);
 
-FLECS_API
 void ecs_sparse_set_id_source(
     ecs_sparse_t *sparse,
     uint64_t *id_source);
@@ -827,15 +825,12 @@ void ecs_sparse_set_id_source(
 #define ecs_sparse_new(type)\
     _ecs_sparse_new(sizeof(type))
 
-FLECS_API
 void ecs_sparse_free(
     ecs_sparse_t *sparse);
 
-FLECS_API
 void ecs_sparse_clear(
     ecs_sparse_t *sparse);
 
-FLECS_API
 void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size);
@@ -843,25 +838,20 @@ void* _ecs_sparse_add(
 #define ecs_sparse_add(sparse, type)\
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
 
-FLECS_API
 uint64_t ecs_sparse_last_id(
     ecs_sparse_t *sparse);
 
-FLECS_API
 uint64_t ecs_sparse_new_id(
     ecs_sparse_t *sparse);
 
-FLECS_API
 const uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
     int32_t count);
 
-FLECS_API
 void ecs_sparse_remove(
     ecs_sparse_t *sparse,
     uint64_t index);
 
-FLECS_API
 void* _ecs_sparse_remove_get(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -870,17 +860,14 @@ void* _ecs_sparse_remove_get(
 #define ecs_sparse_remove_get(sparse, type, index)\
     ((type*)_ecs_sparse_remove_get(sparse, sizeof(type), index))
 
-FLECS_API
 void ecs_sparse_set_generation(
     ecs_sparse_t *sparse,
     uint64_t index);    
 
-FLECS_API
 bool ecs_sparse_exists(
     ecs_sparse_t *sparse,
     uint64_t index);
 
-FLECS_API
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -889,20 +876,16 @@ void* _ecs_sparse_get(
 #define ecs_sparse_get(sparse, type, index)\
     ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
 
-FLECS_API
 bool ecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
     uint64_t index);
 
-FLECS_API
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
 
-FLECS_API
 int32_t ecs_sparse_size(
     const ecs_sparse_t *sparse);
 
-FLECS_API
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -911,7 +894,6 @@ void* _ecs_sparse_get_sparse(
 #define ecs_sparse_get_sparse(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
 
-FLECS_API
 void* _ecs_sparse_get_sparse_any(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -920,7 +902,6 @@ void* _ecs_sparse_get_sparse_any(
 #define ecs_sparse_get_sparse_any(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse_any(sparse, sizeof(type), index))
 
-FLECS_API
 void* _ecs_sparse_get_or_create(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -929,7 +910,6 @@ void* _ecs_sparse_get_or_create(
 #define ecs_sparse_get_or_create(sparse, type, index)\
     ((type*)_ecs_sparse_get_or_create(sparse, sizeof(type), index))
 
-FLECS_API
 void* _ecs_sparse_set(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -940,25 +920,20 @@ void* _ecs_sparse_set(
     ((type*)_ecs_sparse_set(sparse, sizeof(type), index, value))
 
 
-FLECS_API
 const uint64_t* ecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
-FLECS_API
 void ecs_sparse_set_size(
     ecs_sparse_t *sparse,
     int32_t elem_count);
 
-FLECS_API
 ecs_sparse_t* ecs_sparse_copy(
     const ecs_sparse_t *src);    
 
-FLECS_API
 void ecs_sparse_restore(
     ecs_sparse_t *dst,
     const ecs_sparse_t *src);
 
-FLECS_API
 void ecs_sparse_memory(
     ecs_sparse_t *sparse,
     int32_t *allocd,
@@ -1053,33 +1028,33 @@ typedef struct ecs_ptree_iter_t {
     uint64_t index;
 } ecs_ptree_iter_t;
 
-FLECS_API ecs_ptree_t* _ecs_ptree_new(
+ecs_ptree_t* _ecs_ptree_new(
     ecs_size_t elem_size);
 
-FLECS_API int32_t ecs_ptree_free(
+int32_t ecs_ptree_free(
     ecs_ptree_t *ptree);
 
-FLECS_API void* _ecs_ptree_ensure(
+void* _ecs_ptree_ensure(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
 
-FLECS_API void* _ecs_ptree_get(
+void* _ecs_ptree_get(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
 
-FLECS_API ecs_ptree_iter_t ecs_ptree_iter(
+ecs_ptree_iter_t ecs_ptree_iter(
     ecs_ptree_t *ptree);
 
-FLECS_API ecs_ptree_iter_t ecs_ptiny_iter(
+ecs_ptree_iter_t ecs_ptiny_iter(
     ecs_ptree_t *ptree);
 
-FLECS_API void* _ecs_ptree_next(
+void* _ecs_ptree_next(
     ecs_ptree_iter_t *it,
     ecs_size_t elem_size);    
 
-FLECS_API void* _ecs_ptiny_next(
+void* _ecs_ptiny_next(
     ecs_ptree_iter_t *it,
     ecs_size_t elem_size);
 
@@ -1100,15 +1075,15 @@ FLECS_API void* _ecs_ptiny_next(
 
 /* -- Low footprint version, do not mix new/get/ensure API calls -- */
 
-FLECS_API ecs_ptree_t* _ecs_ptiny_new(
+ecs_ptree_t* _ecs_ptiny_new(
     ecs_size_t elem_size);
 
-FLECS_API void* _ecs_ptiny_ensure(
+void* _ecs_ptiny_ensure(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
 
-FLECS_API void* _ecs_ptiny_get(
+void* _ecs_ptiny_get(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
@@ -1342,72 +1317,58 @@ typedef struct ecs_switch_t {
     ecs_vector_t *values;
 } ecs_switch_t;
 
-FLECS_API
 ecs_switch_t* ecs_switch_new(
     uint64_t min, 
     uint64_t max,
     int32_t elements);
 
-FLECS_API
 void ecs_switch_free(
     ecs_switch_t *sw);
 
-FLECS_API
 void ecs_switch_add(
     ecs_switch_t *sw);
 
-FLECS_API
 void ecs_switch_set_count(
     ecs_switch_t *sw,
     int32_t count);
 
-FLECS_API
 void ecs_switch_ensure(
     ecs_switch_t *sw,
     int32_t count);
 
-FLECS_API
 void ecs_switch_addn(
     ecs_switch_t *sw,
     int32_t count);    
 
-FLECS_API
 void ecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
     uint64_t value);
 
-FLECS_API
 void ecs_switch_remove(
     ecs_switch_t *sw,
     int32_t element);
 
-FLECS_API
 uint64_t ecs_switch_get(
     const ecs_switch_t *sw,
     int32_t element);
 
-FLECS_API
 void ecs_switch_swap(
     ecs_switch_t *sw,
     int32_t elem_1,
     int32_t elem_2);
 
-FLECS_API
 ecs_vector_t* ecs_switch_values(
     const ecs_switch_t *sw);    
 
-FLECS_API
 int32_t ecs_switch_case_count(
     const ecs_switch_t *sw,
     uint64_t value);
 
-FLECS_API
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value);
 
-FLECS_API
 int32_t ecs_switch_next(
     const ecs_switch_t *sw,
     int32_t elem);
