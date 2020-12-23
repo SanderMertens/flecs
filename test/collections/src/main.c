@@ -95,6 +95,18 @@ void Sparse_count_of_null(void);
 void Sparse_size_of_null(void);
 void Sparse_copy_null(void);
 
+// Testsuite 'Ptree'
+void Ptree_setup(void);
+void Ptree_get_first_65k(void);
+void Ptree_get_existing(void);
+void Ptree_new_index_below_prev(void);
+void Ptree_new_index_below_prev_page_size_limit(void);
+void Ptree_new_index_above_prev(void);
+void Ptree_new_index_above_prev_page_size_limit(void);
+void Ptree_iter_tiny(void);
+void Ptree_iter_tiny_mixed_get_ensure(void);
+void Ptree_iter(void);
+
 // Testsuite 'Strbuf'
 void Strbuf_setup(void);
 void Strbuf_append(void);
@@ -424,6 +436,45 @@ bake_test_case Sparse_testcases[] = {
     }
 };
 
+bake_test_case Ptree_testcases[] = {
+    {
+        "get_first_65k",
+        Ptree_get_first_65k
+    },
+    {
+        "get_existing",
+        Ptree_get_existing
+    },
+    {
+        "new_index_below_prev",
+        Ptree_new_index_below_prev
+    },
+    {
+        "new_index_below_prev_page_size_limit",
+        Ptree_new_index_below_prev_page_size_limit
+    },
+    {
+        "new_index_above_prev",
+        Ptree_new_index_above_prev
+    },
+    {
+        "new_index_above_prev_page_size_limit",
+        Ptree_new_index_above_prev_page_size_limit
+    },
+    {
+        "iter_tiny",
+        Ptree_iter_tiny
+    },
+    {
+        "iter_tiny_mixed_get_ensure",
+        Ptree_iter_tiny_mixed_get_ensure
+    },
+    {
+        "iter",
+        Ptree_iter
+    }
+};
+
 bake_test_case Strbuf_testcases[] = {
     {
         "append",
@@ -513,6 +564,13 @@ static bake_test_suite suites[] = {
         Sparse_testcases
     },
     {
+        "Ptree",
+        Ptree_setup,
+        NULL,
+        9,
+        Ptree_testcases
+    },
+    {
         "Strbuf",
         Strbuf_setup,
         NULL,
@@ -523,5 +581,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("collections", argc, argv, suites, 5);
+    return bake_test_run("collections", argc, argv, suites, 6);
 }

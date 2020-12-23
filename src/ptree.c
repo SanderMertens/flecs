@@ -176,7 +176,7 @@ static
 int8_t page_count(
     uint64_t index)
 {
-    return (int8_t)(1 +
+    return (int8_t)((index > 65536) +
         (index > 0x00000000FFFF0000) +
         (index > 0x0000FFFF00000000));
 }
@@ -232,6 +232,7 @@ ecs_ptree_t* _ecs_ptiny_new(
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_assert(elem_size < 256, ECS_INVALID_PARAMETER, NULL);
     result->elem_size = (uint8_t)elem_size;
+    result->min_65k = 65535;
     return result;
 }
 
@@ -240,7 +241,6 @@ ecs_ptree_t* _ecs_ptree_new(
 {
     ecs_ptree_t *result = _ecs_ptiny_new(elem_size);
     result->first_65k = ecs_os_calloc(elem_size * 65536);
-    result->min_65k = 65535;
     return result;
 }
 
@@ -265,7 +265,8 @@ ecs_ptree_iter_t ecs_ptiny_iter(
 {
     return (ecs_ptree_iter_t){
         .ptree = ptree,
-        .frames[0] = &ptree->root
+        .frames[0] = &ptree->root,
+        .index = (uint64_t)ptree->root.data.offset - 1
     };
 }
 
@@ -286,7 +287,17 @@ void* _ecs_ptiny_next(
     int8_t sp = it->sp;
     uint16_t cur_page = it->cur_page[sp];
     int32_t cur_elem = it->cur_elem;
-    
+
+    ecs_ptree_t *pt = it->ptree;
+    if ((it->index == (uint64_t)-1) || (it->index < 65536)) {
+        array_t *root_data = &pt->root.data;
+        uint16_t max = root_data->offset + root_data->length;
+        uint64_t index = ++ it->index;
+        if (index < max) {
+            return array_get(&pt->root.data, elem_size, index);
+        }
+    }
+
     do {
         page_t *frame = it->frames[sp];
 
@@ -350,6 +361,7 @@ void* _ecs_ptiny_ensure(
 
     addr_t addr = to_addr(index);
     page_t *p = get_or_create_page(&ptree->root, addr.value, page_count(index));
+
     ecs_assert(p != NULL, ECS_INTERNAL_ERROR, NULL);
     void *data = array_ensure(&p->data, elem_size, addr.value[0]);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -384,8 +396,9 @@ void* _ecs_ptiny_get(
 {
     ecs_assert(elem_size == (ecs_size_t)ptree->elem_size, ECS_INVALID_PARAMETER, NULL);
 
+    int32_t pcount = page_count(index);
     addr_t addr = to_addr(index);
-    page_t *p = get_page(&ptree->root, addr.value, page_count(index));
+    page_t *p = get_page(&ptree->root, addr.value, pcount);
     if (!p) {
         return NULL;
     }
