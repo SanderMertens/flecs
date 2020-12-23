@@ -713,9 +713,8 @@ void ecs_table_free(
 
     ecs_table_clear_data(table, table->data);
     ecs_table_clear_edges(table);
-    
-    ecs_os_free(table->lo_edges);
-    ecs_map_free(table->hi_edges);
+
+    ecs_ptiny_free(table->edges);
     ecs_vector_free(table->queries);
     ecs_vector_free((ecs_vector_t*)table->type);
     ecs_os_free(table->dirty_state);
@@ -748,9 +747,9 @@ void ecs_table_reset(
 {
     (void)world;
 
-    if (table->lo_edges) {
-        memset(table->lo_edges, 0, ECS_SIZEOF(ecs_edge_t) * ECS_HI_COMPONENT_ID);
-        ecs_map_clear(table->hi_edges);
+    if (table->edges) {
+        ecs_ptiny_free(table->edges);
+        table->edges = NULL;
     }
 }
 
