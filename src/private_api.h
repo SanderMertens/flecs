@@ -552,6 +552,11 @@ void ecs_increase_timer_resolution(
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
 
+void ecs_hash(
+    const void *data,
+    ecs_size_t length,
+    uint64_t *result);
+
 /* Convert 64 bit signed integer to 16 bit */
 int8_t ecs_to_i8(
     int64_t v);
