@@ -10952,7 +10952,7 @@ void init_store(ecs_world_t *world) {
     world->store.tables = ecs_sparse_new(ecs_table_t);
 
     /* Initialize table map */
-    world->store.table_map = ecs_map_new(ecs_table_t*, 8);
+    world->store.table_map = ecs_map_new(ecs_vector_t*, 8);
 
     /* Initialize one root table per stage */
     ecs_init_root_table(world);
@@ -18239,8 +18239,12 @@ ecs_table_t *create_table(
     ecs_os_free(expr);
 #endif
     ecs_log_push();
-    
-    ecs_map_set(world->store.table_map, hash, &result);
+
+    /* Store table in lookup map */
+    ecs_vector_t *tables = ecs_map_get_ptr(world->store.table_map, ecs_vector_t*, hash);
+    ecs_table_t **elem = ecs_vector_add(&tables, ecs_table_t*);
+    *elem = result;
+    ecs_map_set(world->store.table_map, hash, &tables);
 
     ecs_notify_queries(world, &(ecs_query_event_t) {
         .kind = EcsQueryTableMatch,
@@ -18780,17 +18784,49 @@ ecs_table_t *find_or_create(
         ecs_size_t size = ECS_SIZEOF(ecs_entity_t) * type_count;
         ordered = ecs_os_alloca(size);
         ecs_os_memcpy(ordered, entities->array, size);
-        qsort(ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare);
+        qsort(
+            ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare);
         type_count = ecs_entity_array_dedup(ordered, type_count);
     } else {
         ordered = entities->array;
     }
 
     uint64_t hash = 0;
-    ecs_hash(entities->array, entities->count * ECS_SIZEOF(ecs_entity_t), &hash);
-    ecs_table_t *table = ecs_map_get_ptr(world->store.table_map, ecs_table_t*, hash);
-    if (table) {
-        return table;
+    ecs_hash(
+        entities->array, entities->count * ECS_SIZEOF(ecs_entity_t), &hash);
+    ecs_vector_t *table_vec = ecs_map_get_ptr(
+        world->store.table_map, ecs_vector_t*, hash);
+    if (table_vec) {
+        /* Usually this will be just one, but in the case of a collision
+         * multiple tables can be stored using the same hash. */
+        int32_t i, count = ecs_vector_count(table_vec);
+        ecs_table_t *table, **tables = ecs_vector_first(
+            table_vec, ecs_table_t*);
+        for (i = 0; i < count; i ++) {
+            table = tables[i];
+            int32_t t, table_type_count = ecs_vector_count(table->type);
+
+            /* If number of components in table doesn't match, it's definitely
+             * a collision. */
+            if (table_type_count != type_count) {
+                table = NULL;
+                continue;
+            }
+
+            /* Check if components of table match */
+            ecs_entity_t *table_type = ecs_vector_first(
+                table->type, ecs_entity_t);
+            for (t = 0; t < type_count; t ++) {
+                if (table_type[t] != ordered[t]) {
+                    table = NULL;
+                    break;
+                }
+            }
+
+            if (table) {
+                return table;
+            }
+        }
     }
 
     ecs_entities_t ordered_entities = {
@@ -18803,8 +18839,7 @@ ecs_table_t *find_or_create(
     verify_constraints(world, &ordered_entities);
 #endif
 
-    /* If we get here, the table has not been found. It has to be created. */
-    
+    /* If we get here, the table has not been found, so create it. */
     ecs_table_t *result = create_table(world, &ordered_entities, hash);
 
     ecs_assert(ordered_entities.count == ecs_vector_count(result->type), 
