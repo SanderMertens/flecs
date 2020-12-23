@@ -113,7 +113,7 @@ void init_store(ecs_world_t *world) {
     world->store.tables = ecs_sparse_new(ecs_table_t);
 
     /* Initialize table map */
-    world->store.table_map = ecs_map_new(ecs_table_t*, 8);
+    world->store.table_map = ecs_map_new(ecs_vector_t*, 8);
 
     /* Initialize one root table per stage */
     ecs_init_root_table(world);
