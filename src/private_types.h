@@ -175,8 +175,7 @@ struct ecs_table_t {
     ecs_type_t type;                 /**< Identifies table type in type_index */
     ecs_c_info_t **c_info;           /**< Cached pointers to component info */
 
-    ecs_edge_t *lo_edges;            /**< Edges to low entity ids */
-    ecs_map_t *hi_edges;             /**< Edges to high entity ids */
+    ecs_ptree_t *edges;              /**< Edges to other tables */
 
     ecs_data_t *data;                /**< Data storage */
 

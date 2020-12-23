@@ -40,6 +40,7 @@
 #include "flecs/private/vector.h"        /* Vector datatype */
 #include "flecs/private/sparse.h"        /* Sparse set */
 #include "flecs/private/bitset.h"        /* Bitset */
+#include "flecs/private/ptree.h"         /* Bitset */
 #include "flecs/private/map.h"           /* Hashmap */
 #include "flecs/private/switch_list.h"   /* Switch list */
 #include "flecs/private/strbuf.h"        /* Efficient string builder */
