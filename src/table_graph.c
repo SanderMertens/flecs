@@ -516,52 +516,6 @@ ecs_table_t *find_or_create_table_exclude(
     return result;    
 }
 
-static
-ecs_table_t* traverse_remove_hi_edges(
-    ecs_world_t * world,
-    ecs_table_t * node,
-    int32_t i,
-    ecs_entities_t * to_remove,
-    ecs_entities_t * removed)
-{
-    int32_t count = to_remove->count;
-    ecs_entity_t *entities = to_remove->array;
-
-    for (; i < count; i ++) {
-        ecs_entity_t e = entities[i];
-        ecs_entity_t next_e = e;
-        ecs_table_t *next;
-        ecs_edge_t *edge;
-
-        edge = get_edge(node, e);
-        next = edge->remove;
-
-        if (!next) {
-            next = find_or_create_table_exclude(world, node, next_e);
-            if (!next) {
-                return NULL;
-            }
-
-            edge->remove = next;
-        }
-
-        bool has_case = ECS_HAS_ROLE(e, CASE);
-        if (removed && (node != next || has_case)) {
-            /* If this is a case, find switch and encode it in added id */
-            if (has_case) {
-                int32_t s_case = ecs_table_switch_from_case(world, node, e);
-                ecs_assert(s_case != -1, ECS_INTERNAL_ERROR, NULL);
-                e = ECS_CASE | ecs_entity_t_comb(e, s_case);
-            }
-            removed->array[removed->count ++] = e; 
-        }        
-
-        node = next;        
-    }
-
-    return node;
-}
-
 ecs_table_t* ecs_table_traverse_remove(
     ecs_world_t * world,
     ecs_table_t * node,
@@ -574,14 +528,6 @@ ecs_table_t* ecs_table_traverse_remove(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
-
-        /* If the array is not a simple component array, use a function that
-         * handles all cases, but is slower */
-        if (e >= ECS_HI_COMPONENT_ID) {
-            return traverse_remove_hi_edges(world, node, i, to_remove, 
-                removed);
-        }
-
         ecs_edge_t *edge = get_edge(node, e);
         ecs_table_t *next = edge->remove;
 
@@ -601,7 +547,16 @@ ecs_table_t* ecs_table_traverse_remove(
             }
         }
 
-        if (removed) removed->array[removed->count ++] = e;
+        bool has_case = ECS_HAS_ROLE(e, CASE);
+        if (removed && (node != next || has_case)) {
+            /* If this is a case, find switch and encode it in added id */
+            if (has_case) {
+                int32_t s_case = ecs_table_switch_from_case(world, node, e);
+                ecs_assert(s_case != -1, ECS_INTERNAL_ERROR, NULL);
+                e = ECS_CASE | ecs_entity_t_comb(e, s_case);
+            }
+            removed->array[removed->count ++] = e; 
+        }
 
         node = next;
     }    
@@ -646,34 +601,30 @@ void find_owned_components(
     }
 }
 
-static
-ecs_table_t* traverse_add_hi_edges(
+ecs_table_t* ecs_table_traverse_add(
     ecs_world_t * world,
     ecs_table_t * node,
-    int32_t i,
     ecs_entities_t * to_add,
-    ecs_entities_t * added)
+    ecs_entities_t * added)    
 {
-    int32_t count = to_add->count;
+    int32_t i, count = to_add->count;
     ecs_entity_t *entities = to_add->array;
+    node = node ? node : &world->store.root;
 
     ecs_entity_t owned_array[ECS_MAX_ADD_REMOVE];
     ecs_entities_t owned = {
         .array = owned_array,
         .count = 0
-    };
+    };    
 
-    for (; i < count; i ++) {
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
-        ecs_entity_t next_e = e;
-        ecs_table_t *next;
-        ecs_edge_t *edge;
 
-        edge = get_edge(node, e);
-        next = edge->add;
+        ecs_edge_t *edge = get_edge(node, e);
+        ecs_table_t *next = edge->add;
 
         if (!next) {
-            next = find_or_create_table_include(world, node, next_e);
+            next = find_or_create_table_include(world, node, e);
             ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
             edge->add = next;
         }
@@ -691,7 +642,7 @@ ecs_table_t* traverse_add_hi_edges(
 
         if ((node != next) && ECS_HAS_ROLE(e, INSTANCEOF)) {
             find_owned_components(world, next, ECS_COMPONENT_MASK & e, &owned);
-        } 
+        }        
 
         node = next;
     }
@@ -699,44 +650,6 @@ ecs_table_t* traverse_add_hi_edges(
     /* In case OWNED components were found, add them as well */
     if (owned.count) {
         node = ecs_table_traverse_add(world, node, &owned, added);
-    }
-
-    return node;
-}
-
-ecs_table_t* ecs_table_traverse_add(
-    ecs_world_t * world,
-    ecs_table_t * node,
-    ecs_entities_t * to_add,
-    ecs_entities_t * added)    
-{
-    int32_t i, count = to_add->count;
-    ecs_entity_t *entities = to_add->array;
-    node = node ? node : &world->store.root;
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];
-
-        /* If the array is not a simple component array, use a function that
-         * handles all cases, but is slower */
-        if (e >= ECS_HI_COMPONENT_ID) {
-            return traverse_add_hi_edges(world, node, i, to_add, added);
-        }
-
-        ecs_edge_t *edge = get_edge(node, e);
-        ecs_table_t *next = edge->add;
-
-        if (!next) {
-            next = find_or_create_table_include(world, node, e);
-            ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
-            edge->add = next;
-        }
-
-        if (added && node != next) {
-            added->array[added->count ++] = e;
-        }
-
-        node = next;
     }
 
     return node;
