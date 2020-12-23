@@ -170,21 +170,21 @@ typedef struct ecs_matched_query_t {
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
  * entity has a set of components not previously observed before. When a new
- * table is created, it is automatically matched with existing column systems */
+ * table is created, it is automatically matched with existing queries */
 struct ecs_table_t {
     ecs_type_t type;                 /**< Identifies table type in type_index */
     ecs_c_info_t **c_info;           /**< Cached pointers to component info */
 
     ecs_ptree_t *edges;              /**< Edges to other tables */
 
-    ecs_data_t *data;                /**< Data storage */
+    ecs_data_t *data;                /**< Component storage */
 
     ecs_vector_t *queries;           /**< Queries matched with table */
     ecs_vector_t *monitors;          /**< Monitor systems matched with table */
     ecs_vector_t **on_set;           /**< OnSet systems, broken up by column */
     ecs_vector_t *on_set_all;        /**< All OnSet systems */
     ecs_vector_t *on_set_override;   /**< All OnSet systems with overrides */
-    ecs_vector_t *un_set_all;        /**< All OnSet systems */
+    ecs_vector_t *un_set_all;        /**< All UnSet systems */
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
     int32_t alloc_count;             /**< Increases when columns are reallocd */
@@ -399,6 +399,9 @@ typedef struct ecs_store_t {
     /* Table graph */
     ecs_sparse_t *tables;
     ecs_table_t root;
+
+    /* Lookup map for tables */
+    ecs_map_t *table_map;
 } ecs_store_t;
 
 /** Supporting type to store looked up or derived entity data */

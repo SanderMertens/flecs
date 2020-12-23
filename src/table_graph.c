@@ -140,16 +140,13 @@ void init_edges(
     int32_t count = ecs_vector_count(table->type);
 
     table->edges = ecs_ptiny_new(ecs_edge_t);
-
-    ecs_edge_t *edge = ecs_ptiny_ensure(table->edges, ecs_edge_t, 0);
-    edge->add = table;
     
     /* Make add edges to own components point to self */
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
-        edge = ecs_ptiny_ensure(table->edges, ecs_edge_t, e);
+        ecs_edge_t *edge = ecs_ptiny_ensure(table->edges, ecs_edge_t, e);
         edge->add = table;
 
         if (count == 1) {
@@ -245,7 +242,8 @@ void init_table(
 static
 ecs_table_t *create_table(
     ecs_world_t * world,
-    ecs_entities_t * entities)
+    ecs_entities_t * entities,
+    uint64_t hash)
 {
     ecs_table_t *result = ecs_sparse_add(world->store.tables, ecs_table_t);
     result->id = ecs_to_u32(ecs_sparse_last_id(world->store.tables));
@@ -259,6 +257,8 @@ ecs_table_t *create_table(
     ecs_os_free(expr);
 #endif
     ecs_log_push();
+    
+    ecs_map_set(world->store.table_map, hash, &result);
 
     ecs_notify_queries(world, &(ecs_query_event_t) {
         .kind = EcsQueryTableMatch,
@@ -802,28 +802,14 @@ ecs_table_t *find_or_create(
         type_count = ecs_entity_array_dedup(ordered, type_count);
     } else {
         ordered = entities->array;
-    }    
+    }
 
-    /* Iterate tables, look if a table matches the type */
-    ecs_sparse_t *tables = world->store.tables;
-    int32_t i, count = ecs_sparse_count(tables);
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
-        ecs_type_t type = table->type;
-        int32_t table_type_count = ecs_vector_count(type);
-
-        /* If types do not contain same number of entities, table won't match */
-        if (table_type_count != type_count) {
-            continue;
-        }
-
-        /* Memcmp the types, as they must match exactly */
-        ecs_entity_t *type_array = ecs_vector_first(type, ecs_entity_t);
-        if (!ecs_os_memcmp(ordered, type_array, type_count * ECS_SIZEOF(ecs_entity_t))) {
-            /* Table found */
-            return table;
-        }
-    }  
+    uint64_t hash = 0;
+    ecs_hash(entities->array, entities->count * ECS_SIZEOF(ecs_entity_t), &hash);
+    ecs_table_t *table = ecs_map_get_ptr(world->store.table_map, ecs_table_t*, hash);
+    if (table) {
+        return table;
+    }
 
     ecs_entities_t ordered_entities = {
         .array = ordered,
@@ -837,7 +823,7 @@ ecs_table_t *find_or_create(
 
     /* If we get here, the table has not been found. It has to be created. */
     
-    ecs_table_t *result = create_table(world, &ordered_entities);
+    ecs_table_t *result = create_table(world, &ordered_entities, hash);
 
     ecs_assert(ordered_entities.count == ecs_vector_count(result->type), 
         ECS_INTERNAL_ERROR, NULL);
