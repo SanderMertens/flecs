@@ -140,14 +140,21 @@ void init_edges(
     int32_t count = ecs_vector_count(table->type);
 
     table->edges = ecs_ptiny_new(ecs_edge_t);
+
+    ecs_edge_t *edge = ecs_ptiny_ensure(table->edges, ecs_edge_t, 0);
+    edge->add = table;
     
     /* Make add edges to own components point to self */
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
-        ecs_edge_t *edge = ecs_ptiny_ensure(table->edges, ecs_edge_t, e);
+        edge = ecs_ptiny_ensure(table->edges, ecs_edge_t, e);
         edge->add = table;
+
+        if (count == 1) {
+            edge->remove = &world->store.root;
+        }
 
         /* As we're iterating over the table components, also set the table
          * flags. These allow us to quickly determine if the table contains

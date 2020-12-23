@@ -13912,12 +13912,15 @@ void* _ecs_ptiny_next(
     int32_t cur_elem = it->cur_elem;
 
     ecs_ptree_t *pt = it->ptree;
-    if ((it->index == (uint64_t)-1) || (it->index < 65536)) {
+    if ((it->index == (uint64_t)-1) || (it->index < UINT16_MAX)) {
         array_t *root_data = &pt->root.data;
-        uint16_t max = root_data->offset + root_data->length;
+        ecs_assert((root_data->offset + root_data->length) < UINT16_MAX, 
+            ECS_INTERNAL_ERROR, NULL);
+        uint16_t max = (uint16_t)(root_data->offset + root_data->length);
         uint64_t index = ++ it->index;
+        ecs_assert(index <= UINT16_MAX, ECS_INTERNAL_ERROR, NULL);
         if (index < max) {
-            return array_get(&pt->root.data, elem_size, index);
+            return array_get(&pt->root.data, elem_size, (uint16_t)index);
         }
     }
 
@@ -17770,14 +17773,21 @@ void init_edges(
     int32_t count = ecs_vector_count(table->type);
 
     table->edges = ecs_ptiny_new(ecs_edge_t);
+
+    ecs_edge_t *edge = ecs_ptiny_ensure(table->edges, ecs_edge_t, 0);
+    edge->add = table;
     
     /* Make add edges to own components point to self */
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
-        ecs_edge_t *edge = ecs_ptiny_ensure(table->edges, ecs_edge_t, e);
+        edge = ecs_ptiny_ensure(table->edges, ecs_edge_t, e);
         edge->add = table;
+
+        if (count == 1) {
+            edge->remove = &world->store.root;
+        }
 
         /* As we're iterating over the table components, also set the table
          * flags. These allow us to quickly determine if the table contains
@@ -17960,7 +17970,7 @@ ecs_edge_t* get_edge(
     if (!edge) {
         edge = ecs_ptiny_ensure(node->edges, ecs_edge_t, e);
     }
-    
+
     return edge;
 }
 
@@ -18592,8 +18602,6 @@ void ecs_table_clear_edges(
         return;
     }
 
-    printf("clear\n");
-
     ecs_ptree_iter_t it = ecs_ptiny_iter(table->edges);
     ecs_edge_t *e;
 
@@ -18603,12 +18611,10 @@ void ecs_table_clear_edges(
         ecs_table_t *add = e->add, *remove = e->remove;
         if (add) {
             ecs_edge_t *edge = get_edge(add, it.index);
-            printf("[%p] add %d [%p]\n", table, it.index, edge->remove);
             edge->remove = NULL;
         }
         if (remove) {
             ecs_edge_t *edge = get_edge(remove, it.index);
-            printf("[%p] remove %d [%p]\n", table, it.index, edge->add);
             edge->add = NULL;
         }
         count ++;

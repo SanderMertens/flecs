@@ -289,12 +289,15 @@ void* _ecs_ptiny_next(
     int32_t cur_elem = it->cur_elem;
 
     ecs_ptree_t *pt = it->ptree;
-    if ((it->index == (uint64_t)-1) || (it->index < 65536)) {
+    if ((it->index == (uint64_t)-1) || (it->index < UINT16_MAX)) {
         array_t *root_data = &pt->root.data;
-        uint16_t max = root_data->offset + root_data->length;
+        ecs_assert((root_data->offset + root_data->length) < UINT16_MAX, 
+            ECS_INTERNAL_ERROR, NULL);
+        uint16_t max = (uint16_t)(root_data->offset + root_data->length);
         uint64_t index = ++ it->index;
+        ecs_assert(index <= UINT16_MAX, ECS_INTERNAL_ERROR, NULL);
         if (index < max) {
-            return array_get(&pt->root.data, elem_size, index);
+            return array_get(&pt->root.data, elem_size, (uint16_t)index);
         }
     }
 
