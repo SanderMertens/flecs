@@ -1106,6 +1106,7 @@ void ecs_table_notify(
     ecs_table_event_t *event);
 
 void ecs_table_clear_edges(
+    ecs_world_t *world,
     ecs_table_t *table);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2409,7 +2410,7 @@ void ecs_table_free(
     }
 
     ecs_table_clear_data(table, table->data);
-    ecs_table_clear_edges(table);
+    ecs_table_clear_edges(world, table);
 
     ecs_ptiny_free(table->edges);
     ecs_vector_free(table->queries);
@@ -10981,6 +10982,13 @@ void fini_store(ecs_world_t *world) {
     ecs_sparse_free(world->store.tables);
     ecs_table_free(world, &world->store.root);
     ecs_sparse_free(world->store.entity_index);
+
+    ecs_map_iter_t it = ecs_map_iter(world->store.table_map);
+    ecs_vector_t *tables;
+    while ((tables = ecs_map_next_ptr(&it, ecs_vector_t*, NULL))) {
+        ecs_vector_free(tables);
+    }
+    
     ecs_map_free(world->store.table_map);
 }
 
@@ -14144,7 +14152,7 @@ static
 int8_t page_count(
     uint64_t index)
 {
-    return (int8_t)((index > 65536) +
+    return (int8_t)((index > 65535) +
         (index > 0x00000000FFFF0000) +
         (index > 0x0000FFFF00000000));
 }
@@ -14257,13 +14265,12 @@ void* _ecs_ptiny_next(
     int32_t cur_elem = it->cur_elem;
 
     ecs_ptree_t *pt = it->ptree;
-    if ((it->index == (uint64_t)-1) || (it->index < UINT16_MAX)) {
+    if ((it->index == (uint64_t)-1) || (it->index <= UINT16_MAX)) {
         array_t *root_data = &pt->root.data;
-        ecs_assert((root_data->offset + root_data->length) < UINT16_MAX, 
+        ecs_assert((root_data->offset + root_data->length) <= 65536, 
             ECS_INTERNAL_ERROR, NULL);
-        uint16_t max = (uint16_t)(root_data->offset + root_data->length);
+        uint32_t max = (uint32_t)(root_data->offset + root_data->length);
         uint64_t index = ++ it->index;
-        ecs_assert(index <= UINT16_MAX, ECS_INTERNAL_ERROR, NULL);
         if (index < max) {
             return array_get(&pt->root.data, elem_size, (uint16_t)index);
         }
@@ -18514,6 +18521,10 @@ ecs_table_t* ecs_table_traverse_remove(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
+
+        /* Removing 0 from an entity is not valid */
+        ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
+
         ecs_edge_t *edge = get_edge(node, e);
         ecs_table_t *next = edge->remove;
 
@@ -18605,6 +18616,9 @@ ecs_table_t* ecs_table_traverse_add(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
+
+        /* Adding 0 to an entity is not valid */
+        ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
 
         ecs_edge_t *edge = get_edge(node, e);
         ecs_table_t *next = edge->add;
@@ -18792,8 +18806,7 @@ ecs_table_t *find_or_create(
     }
 
     uint64_t hash = 0;
-    ecs_hash(
-        entities->array, entities->count * ECS_SIZEOF(ecs_entity_t), &hash);
+    ecs_hash(ordered, entities->count * ECS_SIZEOF(ecs_entity_t), &hash);
     ecs_vector_t *table_vec = ecs_map_get_ptr(
         world->store.table_map, ecs_vector_t*, hash);
     if (table_vec) {
@@ -18879,26 +18892,31 @@ void ecs_init_root_table(
 }
 
 void ecs_table_clear_edges(
+    ecs_world_t *world,
     ecs_table_t *table)
 {
+    (void)world;
+
     if (!table->edges) {
         return;
     }
 
     ecs_ptree_iter_t it = ecs_ptiny_iter(table->edges);
-    ecs_edge_t *e;
+    ecs_edge_t *edge;
 
     int32_t count = 0;
 
-    while ((e = ecs_ptiny_next(&it, ecs_edge_t))) {
-        ecs_table_t *add = e->add, *remove = e->remove;
-        if (add) {
-            ecs_edge_t *edge = get_edge(add, it.index);
-            edge->remove = NULL;
+    while ((edge = ecs_ptiny_next(&it, ecs_edge_t))) {
+        ecs_table_t *add = edge->add, *remove = edge->remove;
+        if (add && add != table) {
+            ecs_edge_t *other_edge = get_edge(add, it.index);
+            ecs_assert(!other_edge->remove || other_edge->remove == table, ECS_INTERNAL_ERROR, NULL);
+            other_edge->remove = NULL;
         }
-        if (remove) {
-            ecs_edge_t *edge = get_edge(remove, it.index);
-            edge->add = NULL;
+        if (remove && remove != table) {
+            ecs_edge_t *other_edge = get_edge(remove, it.index);
+            ecs_assert(!other_edge->add || other_edge->add == table, ECS_INTERNAL_ERROR, NULL);
+            other_edge->add = NULL;
         }
         count ++;
     }

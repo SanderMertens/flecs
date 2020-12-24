@@ -712,7 +712,7 @@ void ecs_table_free(
     }
 
     ecs_table_clear_data(table, table->data);
-    ecs_table_clear_edges(table);
+    ecs_table_clear_edges(world, table);
 
     ecs_ptiny_free(table->edges);
     ecs_vector_free(table->queries);

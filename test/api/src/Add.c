@@ -592,18 +592,21 @@ void Add_remove_entity() {
 }
 
 void Add_add_0_entity() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
+    test_expect_abort();
+
     ecs_add_entity(world, e, 0);
-    test_assert( ecs_get_type(world, e) == NULL);
-    
-    ecs_fini(world);
 }
 
 void Add_remove_0_entity() {
+    install_test_abort();
+    
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -611,13 +614,9 @@ void Add_remove_0_entity() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
+    test_expect_abort();
+
     ecs_remove_entity(world, e, 0);
-    ecs_type_t type = ecs_get_type(world, e);
-    test_assert(type != NULL);
-    test_int(ecs_vector_count(type), 1);
-    test_assert( ecs_has(world, e, Position));
-    
-    ecs_fini(world);
 }
 
 void Add_add_w_xor() {

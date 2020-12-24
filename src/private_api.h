@@ -484,6 +484,7 @@ void ecs_table_notify(
     ecs_table_event_t *event);
 
 void ecs_table_clear_edges(
+    ecs_world_t *world,
     ecs_table_t *table);
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -266,6 +266,30 @@ void Ptree_iter_tiny_mixed_get_ensure() {
     ecs_ptiny_free(pt);
 }
 
+void Ptree_iter_tiny_65k() {
+    ecs_ptree_t *pt = ecs_ptiny_new(uint64_t);
+
+    uint64_t i;
+    uint64_t *ptr;
+    for (i = 0; i <= 65536; i ++) {
+        ptr = ecs_ptiny_ensure(pt, uint64_t, i);
+        *ptr = i;
+    }
+
+    ecs_ptree_iter_t it = ecs_ptiny_iter(pt);
+    int count = 0;
+    while ((ptr = ecs_ptiny_next(&it, uint64_t))) {
+        if (*ptr != 0) {
+            test_int(*ptr, it.index);
+            count ++;
+        }
+    }
+
+    test_int(count, 65536);
+
+    ecs_ptiny_free(pt);
+}
+
 void Ptree_iter() {
     ecs_ptree_t *pt = ecs_ptree_new(uint64_t);
 

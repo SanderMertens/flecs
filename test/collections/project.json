@@ -118,6 +118,7 @@
                 "new_index_above_prev_page_size_limit",
                 "iter_tiny",
                 "iter_tiny_mixed_get_ensure",
+                "iter_tiny_65k",
                 "iter"
             ]
         }, {
