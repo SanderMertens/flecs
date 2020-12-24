@@ -532,6 +532,10 @@ ecs_table_t* ecs_table_traverse_remove(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
+
+        /* Removing 0 from an entity is not valid */
+        ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
+
         ecs_edge_t *edge = get_edge(node, e);
         ecs_table_t *next = edge->remove;
 
@@ -623,6 +627,9 @@ ecs_table_t* ecs_table_traverse_add(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
+
+        /* Adding 0 to an entity is not valid */
+        ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
 
         ecs_edge_t *edge = get_edge(node, e);
         ecs_table_t *next = edge->add;
@@ -810,8 +817,7 @@ ecs_table_t *find_or_create(
     }
 
     uint64_t hash = 0;
-    ecs_hash(
-        entities->array, entities->count * ECS_SIZEOF(ecs_entity_t), &hash);
+    ecs_hash(ordered, entities->count * ECS_SIZEOF(ecs_entity_t), &hash);
     ecs_vector_t *table_vec = ecs_map_get_ptr(
         world->store.table_map, ecs_vector_t*, hash);
     if (table_vec) {
@@ -897,26 +903,31 @@ void ecs_init_root_table(
 }
 
 void ecs_table_clear_edges(
+    ecs_world_t *world,
     ecs_table_t *table)
 {
+    (void)world;
+
     if (!table->edges) {
         return;
     }
 
     ecs_ptree_iter_t it = ecs_ptiny_iter(table->edges);
-    ecs_edge_t *e;
+    ecs_edge_t *edge;
 
     int32_t count = 0;
 
-    while ((e = ecs_ptiny_next(&it, ecs_edge_t))) {
-        ecs_table_t *add = e->add, *remove = e->remove;
-        if (add) {
-            ecs_edge_t *edge = get_edge(add, it.index);
-            edge->remove = NULL;
+    while ((edge = ecs_ptiny_next(&it, ecs_edge_t))) {
+        ecs_table_t *add = edge->add, *remove = edge->remove;
+        if (add && add != table) {
+            ecs_edge_t *other_edge = get_edge(add, it.index);
+            ecs_assert(!other_edge->remove || other_edge->remove == table, ECS_INTERNAL_ERROR, NULL);
+            other_edge->remove = NULL;
         }
-        if (remove) {
-            ecs_edge_t *edge = get_edge(remove, it.index);
-            edge->add = NULL;
+        if (remove && remove != table) {
+            ecs_edge_t *other_edge = get_edge(remove, it.index);
+            ecs_assert(!other_edge->add || other_edge->add == table, ECS_INTERNAL_ERROR, NULL);
+            other_edge->add = NULL;
         }
         count ++;
     }

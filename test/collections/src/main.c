@@ -105,6 +105,7 @@ void Ptree_new_index_above_prev(void);
 void Ptree_new_index_above_prev_page_size_limit(void);
 void Ptree_iter_tiny(void);
 void Ptree_iter_tiny_mixed_get_ensure(void);
+void Ptree_iter_tiny_65k(void);
 void Ptree_iter(void);
 
 // Testsuite 'Strbuf'
@@ -470,6 +471,10 @@ bake_test_case Ptree_testcases[] = {
         Ptree_iter_tiny_mixed_get_ensure
     },
     {
+        "iter_tiny_65k",
+        Ptree_iter_tiny_65k
+    },
+    {
         "iter",
         Ptree_iter
     }
@@ -567,7 +572,7 @@ static bake_test_suite suites[] = {
         "Ptree",
         Ptree_setup,
         NULL,
-        9,
+        10,
         Ptree_testcases
     },
     {

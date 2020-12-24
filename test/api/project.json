@@ -1573,7 +1573,8 @@
                 "activate_deactivate_reactive",
                 "activate_deactivate_activate_other",
                 "no_double_system_table_after_merge",
-                "recreate_deleted_table"
+                "recreate_deleted_table",
+                "create_65k_tables"
             ]
         }, {
             "id": "Error",

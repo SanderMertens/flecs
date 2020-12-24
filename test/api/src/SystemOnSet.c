@@ -1111,6 +1111,8 @@ void Add0(ecs_iter_t *it) {
 }
 
 void SystemOnSet_add_0_entity_in_on_set() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1120,20 +1122,8 @@ void SystemOnSet_add_0_entity_in_on_set() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
-    test_int(ctx.system, Add0);
-    test_int(ctx.column_count, 1);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
-    test_int(ctx.s[0][0], 0);
-
-    test_assert( ecs_has(world, e, Position));
-
-    ecs_fini(world);
+    test_expect_abort();
+    ecs_set(world, 0, Position, {10, 20});
 }
 
 static int dummy_invoked = 0;

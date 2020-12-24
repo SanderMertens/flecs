@@ -185,6 +185,8 @@ void Map_iter() {
     test_str(ecs_map_next_ptr(&it, char*, NULL), "foo");
     test_str(ecs_map_next_ptr(&it, char*, NULL), "bar");
     test_assert(ecs_map_next_ptr(&it, char*, NULL) == NULL);
+
+    ecs_map_free(map);
 }
 
 void Map_iter_empty() {
@@ -273,6 +275,8 @@ void Map_grow() {
     }
 
     test_int(malloc_count, 3);
+
+    ecs_map_free(map);
 }
 
 void Map_set_size_0() {
