@@ -605,14 +605,14 @@ void Query_changed() {
 void Query_orphaned() {
     flecs::world world;
 
-    auto q = new flecs::query<Position>(world);
+    auto q = flecs::query<Position>(world);
 
-    auto sq = world.query<Position>(*q);
+    auto sq = world.query<Position>(q);
     
-    test_assert(!q->orphaned());
+    test_assert(!q.orphaned());
     test_assert(!sq.orphaned());
 
-    delete q;
+    q.destruct();
 
     test_assert(sq.orphaned());
 }

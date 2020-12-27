@@ -3903,8 +3903,12 @@ public:
         return ecs_query_orphaned(m_query);
     }
 
-    ~query_base() {
+    /** Free the query.
+     */
+    void destruct() {
         ecs_query_free(m_query);
+        m_world = nullptr;
+        m_query = nullptr;
     }
 
 protected:
