@@ -55,7 +55,7 @@ void * _ecs_map_ensure(
     (T*)_ecs_map_ensure(map, sizeof(T), (ecs_map_key_t)key)
 
 FLECS_API
-void _ecs_map_set(
+void* _ecs_map_set(
     ecs_map_t *map,
     ecs_size_t elem_size,
     ecs_map_key_t key,

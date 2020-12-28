@@ -223,6 +223,24 @@ typedef struct ecs_matched_table_t {
     int32_t rank;                  /**< Rank used to sort tables */
 } ecs_matched_table_t;
 
+/** Type used to track location of table in queries' table lists.
+ * When a table becomes empty or non-empty a signal is sent to a query, which
+ * moves the table to or from an empty list. While this ensures that when 
+ * iterating no time is spent on iterating over empty tables, doing a linear
+ * search for the table in either list can take a significant amount of time if
+ * a query is matched with many tables.
+ *
+ * To avoid a linear search, the query has a map with table indices that can
+ * return the location of the table in either list in constant time.
+ *
+ * If a table is matched multiple times by a query, such as can happen when a
+ * query matches traits, a table can occupy multiple indices.
+ */
+typedef struct ecs_table_indices_t {
+    int32_t *indices; /* If indices are negative, table is in empty list */
+    int32_t count;
+} ecs_table_indices_t;
+
 /** Type storing an entity range within a table.
  * This type is used for iterating in orer across archetypes. A sorting function
  * constructs a list of the ranges across archetypes that are in order so that
@@ -276,6 +294,7 @@ struct ecs_query_t {
     /* Tables matched with query */
     ecs_vector_t *tables;
     ecs_vector_t *empty_tables;
+    ecs_map_t *table_indices;
 
     /* Handle to system (optional) */
     ecs_entity_t system;   

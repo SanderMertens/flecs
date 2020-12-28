@@ -509,11 +509,11 @@ void instantiate_children(
 
         /* Find or create table */
         ecs_table_t *i_table = ecs_table_find_or_create(world, &components);
-        ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL); 
 
         /* Create children */
         int32_t child_row; 
-        new_w_data(world, i_table, NULL, child_count, c_info, &child_row);
+        new_w_data(world, i_table, NULL, child_count, c_info, &child_row);       
 
         /* If prefab child table has children itself, recursively instantiate */
         ecs_data_t *i_data = ecs_table_get_data(i_table);
@@ -524,7 +524,7 @@ void instantiate_children(
             ecs_entity_t child = children[j];
             instantiate(world, child, i_table, i_data, child_row + j, 1);
         }
-    }    
+    }       
 }
 
 static
@@ -537,6 +537,7 @@ void instantiate(
     int32_t count)
 {    
     /* If base is a parent, instantiate children of base for instances */
+
     ecs_vector_t *child_tables = ecs_map_get_ptr(
         world->child_tables, ecs_vector_t*, base);
 
@@ -1213,7 +1214,7 @@ const ecs_entity_t* new_w_data(
     int32_t sparse_count = ecs_eis_count(world);
     const ecs_entity_t *ids = ecs_sparse_new_ids(world->store.entity_index, count);
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_type_t type = table->type;
+    ecs_type_t type = table->type;   
 
     if (!type) {
         return ids;        

@@ -109,23 +109,25 @@ ecs_bucket_t* find_or_create_bucket(
 }
 
 static
-void add_to_bucket(
+int32_t add_to_bucket(
     ecs_bucket_t *bucket,
     ecs_size_t elem_size,
     ecs_map_key_t key,
     const void *payload)
 {
-    int32_t bucket_count = ++ bucket->count;
+    int32_t index = bucket->count ++;
+    int32_t bucket_count = index + 1;
 
     bucket->keys = ecs_os_realloc(bucket->keys, KEY_SIZE * bucket_count);
     bucket->payload = ecs_os_realloc(bucket->payload, elem_size * bucket_count);
-
-    bucket->keys[bucket_count - 1] = key;
+    bucket->keys[index] = key;
 
     if (payload) {
-        void *elem = GET_ELEM(bucket->payload, elem_size, bucket_count - 1);
+        void *elem = GET_ELEM(bucket->payload, elem_size, index);
         ecs_os_memcpy(elem, payload, elem_size);
     }
+
+    return index;
 }
 
 static
@@ -289,16 +291,15 @@ void * _ecs_map_ensure(
 {
     void *result = _ecs_map_get(map, elem_size, key);
     if (!result) {
-        _ecs_map_set(map, elem_size, key, NULL);
-        result = _ecs_map_get(map, elem_size, key);
+        result = _ecs_map_set(map, elem_size, key, NULL);
+        ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_os_memset(result, 0, elem_size);
     }
 
-    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     return result;
 }
 
-void _ecs_map_set(
+void* _ecs_map_set(
     ecs_map_t *map,
     ecs_size_t elem_size,
     ecs_map_key_t key,
@@ -307,12 +308,12 @@ void _ecs_map_set(
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(elem_size == map->elem_size, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_bucket_t * bucket = find_or_create_bucket(map, key);
+    ecs_bucket_t *bucket = find_or_create_bucket(map, key);
     ecs_assert(bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
     void *elem = get_from_bucket(bucket, key, elem_size);
     if (!elem) {
-        add_to_bucket(bucket, elem_size, key, payload);
+        int32_t index = add_to_bucket(bucket, elem_size, key, payload);
         
         int32_t map_count = ++map->count;
         int32_t target_bucket_count = get_bucket_count(map_count);
@@ -320,14 +321,17 @@ void _ecs_map_set(
 
         if (target_bucket_count > map_bucket_count) {
             rehash(map, target_bucket_count);
-        }
+            bucket = find_or_create_bucket(map, key);
+            return get_from_bucket(bucket, key, elem_size);
+        } else {
+            return GET_ELEM(bucket->payload, elem_size, index);
+        }       
     } else {
         if (payload) {
             ecs_os_memcpy(elem, payload, elem_size);
         }
+        return elem;
     }
-
-    ecs_assert(map->bucket_count != 0, ECS_INTERNAL_ERROR, NULL);
 }
 
 void ecs_map_remove(

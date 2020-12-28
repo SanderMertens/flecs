@@ -128,28 +128,64 @@ int table_compare(
 }
 
 static
+bool has_auto_activation(
+    ecs_query_t *q)
+{
+    /* Only a basic query with no additional features does table activation */
+    return !(q->flags & EcsQueryNoActivation);
+}
+
+static
 void order_ranked_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
     if (query->group_table) {
         ecs_vector_sort(query->tables, ecs_matched_table_t, table_compare);       
-    }
 
-    /* Re-register monitors after tables have been reordered. This will update
-     * the table administration with the new matched_table ids, so that when a
-     * monitor is executed we can quickly find the right matched_table. */
-    if (query->flags & EcsQueryMonitor) {
-        ecs_vector_each(query->tables, ecs_matched_table_t, table, {
-            ecs_table_notify(world, table->iter_data.table, &(ecs_table_event_t){
-                .kind = EcsTableQueryMatch,
-                .query = query,
-                .matched_table_index = table_i
-            });
+        /* Recompute the table indices by first resetting all indices, and then
+         * re-adding them one by one. */
+        if (has_auto_activation(query)) { 
+            ecs_map_iter_t it = ecs_map_iter(query->table_indices);
+            ecs_table_indices_t *ti;
+            while ((ti = ecs_map_next(&it, ecs_table_indices_t, NULL))) {
+                /* If table is registered, it must have at least one index */
+                int32_t count = ti->count;
+                ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
+
+                /* Only active tables are reordered, so don't reset inactive 
+                 * tables */
+                if (ti->indices[0] >= 0) {
+                    ti->count = 0;
+                }
+            }
+        }
+
+        /* Re-register monitors after tables have been reordered. This will update
+         * the table administration with the new matched_table ids, so that when a
+         * monitor is executed we can quickly find the right matched_table. */
+        ecs_vector_each(query->tables, ecs_matched_table_t, table, {        
+            if (query->flags & EcsQueryMonitor) {
+                ecs_table_notify(world, table->iter_data.table, &(ecs_table_event_t){
+                    .kind = EcsTableQueryMatch,
+                    .query = query,
+                    .matched_table_index = table_i
+                });
+            }
+
+            /* Update table index */
+            if (has_auto_activation(query)) {
+                ecs_table_indices_t *ti = ecs_map_get(query->table_indices, 
+                    ecs_table_indices_t, table->iter_data.table->id);
+
+                ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+                ti->indices[ti->count] = table_i;
+                ti->count ++;
+            }
         });
     }
-
-    query->match_count ++; 
+    
+    query->match_count ++;         
 }
 
 static
@@ -185,14 +221,6 @@ void group_tables(
             group_table(world, query, table);
         });              
     }
-}
-
-static
-bool has_auto_activation(
-    ecs_query_t *q)
-{
-    /* Only a basic query with no additional features does table activation */
-    return !(q->flags & EcsQueryNoActivation);
 }
 
 #ifndef NDEBUG
@@ -632,6 +660,8 @@ void add_table(
     }
 
     /* From here we recurse */
+    int32_t *table_indices = NULL;
+    int32_t table_indices_count = 0;
     int32_t matched_table_index = 0;
     ecs_matched_table_t table_data;
     ecs_vector_t *references = NULL;
@@ -760,6 +790,13 @@ add_trait:
         table_elem = ecs_vector_add(&query->empty_tables, 
             ecs_matched_table_t);
 
+        /* Store table index */
+        matched_table_index = ecs_vector_count(query->empty_tables);
+        table_indices_count ++;
+        table_indices = ecs_os_realloc(
+            table_indices, table_indices_count * ECS_SIZEOF(int32_t));
+        table_indices[table_indices_count - 1] = -matched_table_index;
+
         #ifndef NDEBUG
         char *type_expr = ecs_type_str(world, table->type);
         ecs_trace_2("query #[green]%s#[reset] matched with table #[green][%s]",
@@ -795,6 +832,18 @@ add_trait:
     trait_cur ++;
     if (trait_cur < trait_count) {
         goto add_trait;
+    }
+
+    /* Register table indices before sending out the match signal. This signal
+     * can cause table activation, and table indices are needed for that. */
+    if (table_indices) {
+        ecs_table_indices_t *ti = ecs_map_ensure(
+            query->table_indices, ecs_table_indices_t, table->id);
+        if (ti->indices) {
+            ecs_os_free(ti->indices);
+        }
+        ti->indices = table_indices;
+        ti->count = table_indices_count;
     }
 
     if (table && !(query->flags & EcsQueryIsSubquery)) {
@@ -990,7 +1039,7 @@ void match_tables(
 
 /** Get index of table in system's matched tables */
 static
-int32_t get_table_param_index(
+int32_t get_table_index(
     ecs_table_t *table,
     ecs_vector_t *tables,
     int32_t start_index)
@@ -1001,11 +1050,11 @@ int32_t get_table_param_index(
 
     for (i = start_index; i < count; i ++) {
         if (table_data[i].iter_data.table == table) {
-            break;
+            return i;
         }
     }
 
-    return i == count ? -1 : i;
+    return -1;
 }
 
 /** Check if a table was matched with the system */
@@ -1014,17 +1063,7 @@ int32_t table_matched(
     ecs_vector_t *tables,
     ecs_table_t *table)
 {
-    int32_t i, count = ecs_vector_count(tables);
-    ecs_matched_table_t *table_data = ecs_vector_first(
-        tables, ecs_matched_table_t);
-
-    for (i = 0; i < count; i ++) {
-        if (table_data[i].iter_data.table == table) {
-            return i;
-        }
-    }
-
-    return -1;
+    return get_table_index(table, tables, 0);
 }
 
 static
@@ -1660,6 +1699,90 @@ bool match_table(
     return false;
 }
 
+/* Move table from empty to non-empty list, or vice versa */
+static
+int32_t move_table(
+    ecs_query_t *query,
+    ecs_table_t *table,
+    int32_t index,
+    ecs_vector_t **dst_array,
+    ecs_vector_t *src_array,
+    bool activate)
+{
+    (void)table;
+
+    int32_t new_index = ecs_vector_count(*dst_array);
+    int32_t last_src_index = ecs_vector_count(src_array) - 1;
+    ecs_assert(last_src_index >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_matched_table_t *mt = ecs_vector_last(src_array, ecs_matched_table_t);
+    
+    /* The last table of the source array will be moved to the location of the
+     * table to move, do some bookkeeping to keep things consistent. */
+    if (last_src_index) {
+        ecs_table_indices_t *ti = ecs_map_get(query->table_indices, 
+            ecs_table_indices_t, mt->iter_data.table->id);
+
+        int i, count = ti->count;
+        for (i = 0; i < count; i ++) {
+            int32_t old_index = ti->indices[i];
+            if (activate) {
+                if (old_index >= 0) {
+                    /* old_index should be negative if activate is true, since
+                     * we're moving from the empty list to the non-empty list. 
+                     * However, if the last table in the source array is also
+                     * the table being moved, this can happen. */
+                    ecs_assert(table == mt->iter_data.table, 
+                        ECS_INTERNAL_ERROR, NULL);
+                    continue;
+                }
+                /* If activate is true, src = the empty list, and index should
+                 * be negative. */
+                old_index = old_index * -1 - 1; /* Normalize */
+            }
+
+            /* Ensure to update correct index, as there can be more than one */
+            if (old_index == last_src_index) {
+                if (activate) {
+                    ti->indices[i] = index * -1 - 1;
+                } else {
+                    ti->indices[i] = index;
+                }
+                break;
+            }
+        }
+
+        /* If the src array contains tables, there must be a table that will get
+         * moved. */
+        ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        /* If last_src_index is 0, the table to move was the only table in the
+         * src array, so no other administration needs to be updated. */
+    }
+
+    /* Actually move the table */
+    ecs_vector_move_index(dst_array, src_array, ecs_matched_table_t, index);
+
+    /* Make sure table is where we expect it */
+    mt = ecs_vector_last(*dst_array, ecs_matched_table_t);
+    ecs_assert(mt->iter_data.table == table, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vector_count(*dst_array) == (new_index + 1), 
+        ECS_INTERNAL_ERROR, NULL);
+
+    /* Ensure that src array has now one element less */
+    ecs_assert(ecs_vector_count(src_array) == last_src_index, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    /* Return new index for table */
+    if (activate) {
+        /* Table is now active, index is positive */
+        return new_index;
+    } else {
+        /* Table is now inactive, index is negative */
+        return new_index * -1 - 1;
+    }
+}
+
 /** Table activation happens when a table was or becomes empty. Deactivated
  * tables are not considered by the system in the main loop. */
 static
@@ -1670,6 +1793,7 @@ void activate_table(
     bool active)
 {
     ecs_vector_t *src_array, *dst_array;
+    int32_t activated = 0;
 
     if (active) {
         src_array = query->empty_tables;
@@ -1679,39 +1803,65 @@ void activate_table(
         dst_array = query->empty_tables;
     }
 
-    int32_t i = 0, activated = 0;
-    while ((i = get_table_param_index(table, src_array, i)) != -1) {
-        activated ++;
+    ecs_table_indices_t *ti = ecs_map_get(
+        query->table_indices, ecs_table_indices_t, table->id);
 
-        int32_t src_count = ecs_vector_move_index(
-            &dst_array, src_array, ecs_matched_table_t, i);
+    if (ti) {
+        int32_t i, count = ti->count;
+        for (i = 0; i < count; i ++) {
+            int32_t index = ti->indices[i];
 
-        if (active) {
+            if (index < 0) {
+                if (!active) {
+                    /* If table is already inactive, no need to move */
+                    continue;
+                }
+                index = index * -1 - 1;
+            } else {
+                if (active) {
+                    /* If table is already active, no need to move */
+                    continue;
+                }
+            }
+
+            ecs_matched_table_t *mt = ecs_vector_get(
+                src_array, ecs_matched_table_t, index);
+            ecs_assert(mt->iter_data.table == table, ECS_INTERNAL_ERROR, NULL);
+            
+            activated ++;
+
+            ti->indices[i] = move_table(
+                query, table, index, &dst_array, src_array, active);
+        }
+
+        if (activated) {
+            /* Activate system if registered with query */
+#ifdef FLECS_SYSTEMS_H
+            if (query->system) {
+                int32_t dst_count = ecs_vector_count(dst_array);
+                if (active) {
+                    if (dst_count == 1) {
+                        ecs_system_activate(world, query->system, true, NULL);
+                    }
+                } else if (ecs_vector_count(src_array) == 0) {
+                    ecs_system_activate(world, query->system, false, NULL);
+                }
+            }
+#else
+            (void)src_count;
+#endif
+        }
+
+        if (active)  {
             query->tables = dst_array;
         } else {
             query->empty_tables = dst_array;
         }
-
-        /* Activate system if registered with query */
-#ifdef FLECS_SYSTEMS_H
-        if (query->system) {
-            int32_t dst_count = ecs_vector_count(dst_array);
-            if (active) {
-                if (dst_count == 1) {
-                    ecs_system_activate(world, query->system, true, NULL);
-                }
-            } else if (src_count == 0) {
-                ecs_system_activate(world, query->system, false, NULL);
-            }
-        }
-#else
-        (void)src_count;
-#endif        
     }
-
+    
     if (!activated) {
         /* Received an activate event for a table we're not matched with. This
-        * can only happen if this is a subquery */
+         * can only happen if this is a subquery */
         ecs_assert((query->flags & EcsQueryIsSubquery) != 0, 
             ECS_INTERNAL_ERROR, NULL);
         return;
@@ -2001,6 +2151,7 @@ ecs_query_t* ecs_query_new_w_sig_intern(
     ecs_query_t *result = ecs_os_calloc(sizeof(ecs_query_t));
     result->world = world;
     result->sig = *sig;
+    result->table_indices = ecs_map_new(ecs_table_indices_t, 0);
     result->tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->empty_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = system;
@@ -2113,6 +2264,13 @@ void ecs_query_free(
     ecs_vector_each(query->tables, ecs_matched_table_t, table, {
         free_matched_table(table);
     });
+
+    ecs_map_iter_t it = ecs_map_iter(query->table_indices);
+    ecs_table_indices_t *ti;
+    while ((ti = ecs_map_next(&it, ecs_table_indices_t, NULL))) {
+        ecs_os_free(ti->indices);
+    }
+    ecs_map_free(query->table_indices);
 
     ecs_vector_free(query->subqueries);
     ecs_vector_free(query->tables);

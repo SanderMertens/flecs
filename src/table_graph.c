@@ -833,6 +833,7 @@ ecs_table_t *find_or_create(
         int32_t i, count = ecs_vector_count(table_vec);
         ecs_table_t *table, **tables = ecs_vector_first(
             table_vec, ecs_table_t*);
+
         for (i = 0; i < count; i ++) {
             table = tables[i];
             int32_t t, table_type_count = ecs_vector_count(table->type);
@@ -872,7 +873,7 @@ ecs_table_t *find_or_create(
 
     /* If we get here, the table has not been found, so create it. */
     ecs_table_t *result = create_table(world, &ordered_entities, hash);
-
+    
     ecs_assert(ordered_entities.count == ecs_vector_count(result->type), 
         ECS_INTERNAL_ERROR, NULL);
 
