@@ -63,11 +63,13 @@ void Map_get_unknown(void);
 void Map_iter(void);
 void Map_iter_empty(void);
 void Map_iter_zero_buckets(void);
+void Map_iter_null(void);
 void Map_remove(void);
 void Map_remove_empty(void);
 void Map_remove_unknown(void);
 void Map_grow(void);
 void Map_set_size_0(void);
+void Map_ensure(void);
 
 // Testsuite 'Sparse'
 void Sparse_setup(void);
@@ -321,6 +323,10 @@ bake_test_case Map_testcases[] = {
         Map_iter_zero_buckets
     },
     {
+        "iter_null",
+        Map_iter_null
+    },
+    {
         "remove",
         Map_remove
     },
@@ -339,6 +345,10 @@ bake_test_case Map_testcases[] = {
     {
         "set_size_0",
         Map_set_size_0
+    },
+    {
+        "ensure",
+        Map_ensure
     }
 };
 
@@ -558,7 +568,7 @@ static bake_test_suite suites[] = {
         "Map",
         Map_setup,
         NULL,
-        17,
+        19,
         Map_testcases
     },
     {

@@ -64,8 +64,12 @@ void Map_count_empty() {
 void Map_set_overwrite() {
     ecs_map_t *map = ecs_map_new(char*, 16);
     fill_map(map);
-    ecs_map_set(map, 1, &(char*){"foobar"});
     char *value = ecs_map_get_ptr(map, char*, 1);
+    test_assert(value != NULL);
+
+    ecs_map_set(map, 1, &(char*){"foobar"});
+    
+    value = ecs_map_get_ptr(map, char*, 1);
     test_assert(value != NULL);
     test_str(value, "foobar");
     ecs_map_free(map);
@@ -203,6 +207,12 @@ void Map_iter_zero_buckets() {
     ecs_map_free(map);
 }
 
+void Map_iter_null() {
+    ecs_map_iter_t it = ecs_map_iter(NULL);
+    test_assert(!ecs_map_next(&it, char*, NULL));
+}
+
+
 void Map_remove() {
     ecs_map_t *map = ecs_map_new(char*, 16);
     fill_map(map);
@@ -274,7 +284,7 @@ void Map_grow() {
         ecs_map_set(map, i, &v);
     }
 
-    test_int(malloc_count, 3);
+    test_int(malloc_count, 20);
 
     ecs_map_free(map);
 }
@@ -285,6 +295,17 @@ void Map_set_size_0() {
     ecs_map_set_size(map, 0);
 
     test_int( ecs_map_count(map), 0);
+
+    ecs_map_free(map);
+}
+
+void Map_ensure() {
+    ecs_map_t *map = ecs_map_new(char*, 1);
+
+    char **ptr = ecs_map_ensure(map, char*, 2);
+    test_assert(ptr != NULL);
+
+    test_int( ecs_map_count(map), 1);
 
     ecs_map_free(map);
 }

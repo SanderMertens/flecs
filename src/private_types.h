@@ -152,6 +152,7 @@ typedef struct ecs_table_leaf_t {
 
 /** Edge used for traversing the table graph. */
 typedef struct ecs_edge_t {
+    ecs_entity_t id;
     ecs_table_t *add;               /**< Edges traversed when adding */
     ecs_table_t *remove;            /**< Edges traversed when removing */
 } ecs_edge_t;
@@ -175,7 +176,8 @@ struct ecs_table_t {
     ecs_type_t type;                 /**< Identifies table type in type_index */
     ecs_c_info_t **c_info;           /**< Cached pointers to component info */
 
-    ecs_ptree_t *edges;              /**< Edges to other tables */
+    ecs_edge_t *lo_edges;            /**< Edges to other tables */
+    ecs_map_t *hi_edges;
 
     ecs_data_t *data;                /**< Component storage */
 
