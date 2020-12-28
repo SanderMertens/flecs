@@ -109,21 +109,6 @@
                 "copy_null"
             ]
         }, {
-            "id": "Ptree",
-            "setup": true,
-            "testcases": [
-                "get_first_65k",
-                "get_existing",
-                "new_index_below_prev",
-                "new_index_below_prev_page_size_limit",
-                "new_index_above_prev",
-                "new_index_above_prev_page_size_limit",
-                "iter_tiny",
-                "iter_tiny_mixed_get_ensure",
-                "iter_tiny_65k",
-                "iter"
-            ]
-        }, {
             "id": "Strbuf",
             "setup": true,
             "testcases": [
