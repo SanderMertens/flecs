@@ -1118,7 +1118,7 @@ void commit(
         }
 
         return;
-    }
+    }  
 
     if (src_table) {
         ecs_data_t *src_data = info->data;
@@ -1142,7 +1142,7 @@ void commit(
             info->row = new_entity(world, entity, info, dst_table, added);
             info->table = dst_table;
         }        
-    } 
+    }
 
     /* If the entity is being watched, it is being monitored for changes and
     * requires rematching systems when components are added or removed. This
@@ -2757,7 +2757,7 @@ void ecs_defer_flush(
 
                 if (op->is._1.value) {
                     ecs_os_free(op->is._1.value);
-                }
+                }                  
             };
 
             if (defer_queue != stage->defer_merge_queue) {

@@ -1128,6 +1128,7 @@ int32_t ecs_table_append(
     ecs_column_t *columns = NULL;
     ecs_sw_column_t *sw_columns = NULL;
     ecs_bs_column_t *bs_columns = NULL;
+
     ensure_data(world, table, data, &column_count, &sw_column_count,
         &bs_column_count, &columns, &sw_columns, &bs_columns);
 
@@ -1152,7 +1153,7 @@ int32_t ecs_table_append(
      * table moves from an inactive table to an active table. */
     if (!world->in_progress && !count) {
         ecs_table_activate(world, table, 0, true);
-    }
+    } 
 
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
 

@@ -318,6 +318,7 @@ struct ecs_query_t {
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
+    bool needs_reorder;         /* Whether next iteration should reorder */
 };
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand

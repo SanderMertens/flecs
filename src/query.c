@@ -165,28 +165,31 @@ void order_ranked_tables(
         /* Re-register monitors after tables have been reordered. This will update
          * the table administration with the new matched_table ids, so that when a
          * monitor is executed we can quickly find the right matched_table. */
-        ecs_vector_each(query->tables, ecs_matched_table_t, table, {        
-            if (query->flags & EcsQueryMonitor) {
+        if (query->flags & EcsQueryMonitor) { 
+            ecs_vector_each(query->tables, ecs_matched_table_t, table, {        
                 ecs_table_notify(world, table->iter_data.table, &(ecs_table_event_t){
                     .kind = EcsTableQueryMatch,
                     .query = query,
                     .matched_table_index = table_i
                 });
-            }
+            });
+        }
 
-            /* Update table index */
-            if (has_auto_activation(query)) {
+        /* Update table index */
+        if (has_auto_activation(query)) {
+            ecs_vector_each(query->tables, ecs_matched_table_t, table, {  
                 ecs_table_indices_t *ti = ecs_map_get(query->table_indices, 
                     ecs_table_indices_t, table->iter_data.table->id);
 
                 ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
                 ti->indices[ti->count] = table_i;
                 ti->count ++;
-            }
-        });
+            });
+        }
     }
     
-    query->match_count ++;         
+    query->match_count ++;
+    query->needs_reorder = false;
 }
 
 static
@@ -1391,6 +1394,10 @@ static
 bool tables_dirty(
     ecs_query_t *query)
 {
+    if (query->needs_reorder) {
+        order_ranked_tables(query->world, query);
+    }
+
     int32_t i, count = ecs_vector_count(query->tables);
     ecs_matched_table_t *tables = ecs_vector_first(query->tables, 
         ecs_matched_table_t);
@@ -1869,7 +1876,12 @@ void activate_table(
         return;
     }
 
-    order_ranked_tables(world, query);
+    /* Signal query it needs to reorder tables. Doing this in place could slow
+     * down scenario's where a large number of tables is matched with an ordered
+     * query. Since each table would trigger the activate signal, there would be
+     * as many sorts as added tables, vs. only one when ordering happens when an
+     * iterator is obtained. */
+    query->needs_reorder = true;
 }
 
 static
@@ -2306,6 +2318,10 @@ ecs_iter_t ecs_query_iter_page(
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
 
     ecs_world_t *world = query->world;
+
+    if (query->needs_reorder) {
+        order_ranked_tables(world, query);
+    }
     
     sort_tables(world, query);
 

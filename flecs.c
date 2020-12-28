@@ -352,6 +352,7 @@ struct ecs_query_t {
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
+    bool needs_reorder;         /* Whether next iteration should reorder */
 };
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -2847,6 +2848,7 @@ int32_t ecs_table_append(
     ecs_column_t *columns = NULL;
     ecs_sw_column_t *sw_columns = NULL;
     ecs_bs_column_t *bs_columns = NULL;
+
     ensure_data(world, table, data, &column_count, &sw_column_count,
         &bs_column_count, &columns, &sw_columns, &bs_columns);
 
@@ -2871,7 +2873,7 @@ int32_t ecs_table_append(
      * table moves from an inactive table to an active table. */
     if (!world->in_progress && !count) {
         ecs_table_activate(world, table, 0, true);
-    }
+    } 
 
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -4924,7 +4926,7 @@ void commit(
         }
 
         return;
-    }
+    }  
 
     if (src_table) {
         ecs_data_t *src_data = info->data;
@@ -4948,7 +4950,7 @@ void commit(
             info->row = new_entity(world, entity, info, dst_table, added);
             info->table = dst_table;
         }        
-    } 
+    }
 
     /* If the entity is being watched, it is being monitored for changes and
     * requires rematching systems when components are added or removed. This
@@ -6563,7 +6565,7 @@ void ecs_defer_flush(
 
                 if (op->is._1.value) {
                     ecs_os_free(op->is._1.value);
-                }
+                }                  
             };
 
             if (defer_queue != stage->defer_merge_queue) {
@@ -14943,28 +14945,31 @@ void order_ranked_tables(
         /* Re-register monitors after tables have been reordered. This will update
          * the table administration with the new matched_table ids, so that when a
          * monitor is executed we can quickly find the right matched_table. */
-        ecs_vector_each(query->tables, ecs_matched_table_t, table, {        
-            if (query->flags & EcsQueryMonitor) {
+        if (query->flags & EcsQueryMonitor) { 
+            ecs_vector_each(query->tables, ecs_matched_table_t, table, {        
                 ecs_table_notify(world, table->iter_data.table, &(ecs_table_event_t){
                     .kind = EcsTableQueryMatch,
                     .query = query,
                     .matched_table_index = table_i
                 });
-            }
+            });
+        }
 
-            /* Update table index */
-            if (has_auto_activation(query)) {
+        /* Update table index */
+        if (has_auto_activation(query)) {
+            ecs_vector_each(query->tables, ecs_matched_table_t, table, {  
                 ecs_table_indices_t *ti = ecs_map_get(query->table_indices, 
                     ecs_table_indices_t, table->iter_data.table->id);
 
                 ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
                 ti->indices[ti->count] = table_i;
                 ti->count ++;
-            }
-        });
+            });
+        }
     }
     
-    query->match_count ++;         
+    query->match_count ++;
+    query->needs_reorder = false;
 }
 
 static
@@ -16169,6 +16174,10 @@ static
 bool tables_dirty(
     ecs_query_t *query)
 {
+    if (query->needs_reorder) {
+        order_ranked_tables(query->world, query);
+    }
+
     int32_t i, count = ecs_vector_count(query->tables);
     ecs_matched_table_t *tables = ecs_vector_first(query->tables, 
         ecs_matched_table_t);
@@ -16647,7 +16656,12 @@ void activate_table(
         return;
     }
 
-    order_ranked_tables(world, query);
+    /* Signal query it needs to reorder tables. Doing this in place could slow
+     * down scenario's where a large number of tables is matched with an ordered
+     * query. Since each table would trigger the activate signal, there would be
+     * as many sorts as added tables, vs. only one when ordering happens when an
+     * iterator is obtained. */
+    query->needs_reorder = true;
 }
 
 static
@@ -17084,6 +17098,10 @@ ecs_iter_t ecs_query_iter_page(
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
 
     ecs_world_t *world = query->world;
+
+    if (query->needs_reorder) {
+        order_ranked_tables(world, query);
+    }
     
     sort_tables(world, query);
 
@@ -20398,7 +20416,7 @@ void ecs_pipeline_progress(
         int32_t i;
         for(i = 0; i < it.count; i ++) {
             ecs_entity_t e = it.entities[i];
-            
+
             ecs_run_intern(world, stage, e, &sys[i], delta_time, 0, 0, 
                 NULL, NULL, false);
 
