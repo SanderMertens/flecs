@@ -152,6 +152,7 @@ void order_ranked_tables(
                 /* If table is registered, it must have at least one index */
                 int32_t count = ti->count;
                 ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
+                (void)count;
 
                 /* Only active tables are reordered, so don't reset inactive 
                  * tables */
@@ -1827,6 +1828,7 @@ void activate_table(
             ecs_matched_table_t *mt = ecs_vector_get(
                 src_array, ecs_matched_table_t, index);
             ecs_assert(mt->iter_data.table == table, ECS_INTERNAL_ERROR, NULL);
+            (void)mt;
             
             activated ++;
 
