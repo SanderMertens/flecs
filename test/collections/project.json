@@ -72,11 +72,13 @@
                 "iter",
                 "iter_empty",
                 "iter_zero_buckets",
+                "iter_null",
                 "remove",
                 "remove_empty",
                 "remove_unknown",
                 "grow",
-                "set_size_0"
+                "set_size_0",
+                "ensure"
             ]
         }, {
             "id": "Sparse",

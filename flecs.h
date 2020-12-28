@@ -3,14 +3,6 @@
 #ifndef FLECS_H
 #define FLECS_H
 
-/* If in debug mode, export symbols from internal datastructures so they can be
- * tested by the test framework. */
-#ifndef NDEBUG
-#define FLECS_DBG_API FLECS_API
-#else
-#define FLECS_API
-#endif
-
 /* FLECS_LEGACY should be defined when building for C89 */
 // #define FLECS_LEGACY
 
@@ -823,44 +815,44 @@ extern "C" {
 
 typedef struct ecs_sparse_t ecs_sparse_t;
 
-FLECS_DBG_API ecs_sparse_t* _ecs_sparse_new(
+FLECS_API ecs_sparse_t* _ecs_sparse_new(
     ecs_size_t elem_size);
 
-FLECS_DBG_API void ecs_sparse_set_id_source(
+FLECS_API void ecs_sparse_set_id_source(
     ecs_sparse_t *sparse,
     uint64_t *id_source);
 
 #define ecs_sparse_new(type)\
     _ecs_sparse_new(sizeof(type))
 
-FLECS_DBG_API void ecs_sparse_free(
+FLECS_API void ecs_sparse_free(
     ecs_sparse_t *sparse);
 
-FLECS_DBG_API void ecs_sparse_clear(
+FLECS_API void ecs_sparse_clear(
     ecs_sparse_t *sparse);
 
-FLECS_DBG_API void* _ecs_sparse_add(
+FLECS_API void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size);
 
 #define ecs_sparse_add(sparse, type)\
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
 
-FLECS_DBG_API uint64_t ecs_sparse_last_id(
+FLECS_API uint64_t ecs_sparse_last_id(
     ecs_sparse_t *sparse);
 
-FLECS_DBG_API uint64_t ecs_sparse_new_id(
+FLECS_API uint64_t ecs_sparse_new_id(
     ecs_sparse_t *sparse);
 
-FLECS_DBG_API const uint64_t* ecs_sparse_new_ids(
+FLECS_API const uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
     int32_t count);
 
-FLECS_DBG_API void ecs_sparse_remove(
+FLECS_API void ecs_sparse_remove(
     ecs_sparse_t *sparse,
     uint64_t index);
 
-FLECS_DBG_API void* _ecs_sparse_remove_get(
+FLECS_API void* _ecs_sparse_remove_get(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t index);    
@@ -868,15 +860,15 @@ FLECS_DBG_API void* _ecs_sparse_remove_get(
 #define ecs_sparse_remove_get(sparse, type, index)\
     ((type*)_ecs_sparse_remove_get(sparse, sizeof(type), index))
 
-FLECS_DBG_API void ecs_sparse_set_generation(
+FLECS_API void ecs_sparse_set_generation(
     ecs_sparse_t *sparse,
     uint64_t index);    
 
-FLECS_DBG_API bool ecs_sparse_exists(
+FLECS_API bool ecs_sparse_exists(
     ecs_sparse_t *sparse,
     uint64_t index);
 
-FLECS_DBG_API void* _ecs_sparse_get(
+FLECS_API void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     int32_t index);
@@ -884,17 +876,17 @@ FLECS_DBG_API void* _ecs_sparse_get(
 #define ecs_sparse_get(sparse, type, index)\
     ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
 
-FLECS_DBG_API bool ecs_sparse_is_alive(
+FLECS_API bool ecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
     uint64_t index);
 
-FLECS_DBG_API int32_t ecs_sparse_count(
+FLECS_API int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
 
-FLECS_DBG_API int32_t ecs_sparse_size(
+FLECS_API int32_t ecs_sparse_size(
     const ecs_sparse_t *sparse);
 
-FLECS_DBG_API void* _ecs_sparse_get_sparse(
+FLECS_API void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t index);
@@ -902,7 +894,7 @@ FLECS_DBG_API void* _ecs_sparse_get_sparse(
 #define ecs_sparse_get_sparse(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
 
-FLECS_DBG_API void* _ecs_sparse_get_sparse_any(
+FLECS_API void* _ecs_sparse_get_sparse_any(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t index);
@@ -910,7 +902,7 @@ FLECS_DBG_API void* _ecs_sparse_get_sparse_any(
 #define ecs_sparse_get_sparse_any(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse_any(sparse, sizeof(type), index))
 
-FLECS_DBG_API void* _ecs_sparse_get_or_create(
+FLECS_API void* _ecs_sparse_get_or_create(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t index);
@@ -918,7 +910,7 @@ FLECS_DBG_API void* _ecs_sparse_get_or_create(
 #define ecs_sparse_get_or_create(sparse, type, index)\
     ((type*)_ecs_sparse_get_or_create(sparse, sizeof(type), index))
 
-FLECS_DBG_API void* _ecs_sparse_set(
+FLECS_API void* _ecs_sparse_set(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t index,
@@ -928,21 +920,21 @@ FLECS_DBG_API void* _ecs_sparse_set(
     ((type*)_ecs_sparse_set(sparse, sizeof(type), index, value))
 
 
-FLECS_DBG_API const uint64_t* ecs_sparse_ids(
+FLECS_API const uint64_t* ecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
-FLECS_DBG_API void ecs_sparse_set_size(
+FLECS_API void ecs_sparse_set_size(
     ecs_sparse_t *sparse,
     int32_t elem_count);
 
-FLECS_DBG_API ecs_sparse_t* ecs_sparse_copy(
+FLECS_API ecs_sparse_t* ecs_sparse_copy(
     const ecs_sparse_t *src);    
 
-FLECS_DBG_API void ecs_sparse_restore(
+FLECS_API void ecs_sparse_restore(
     ecs_sparse_t *dst,
     const ecs_sparse_t *src);
 
-FLECS_DBG_API void ecs_sparse_memory(
+FLECS_API void ecs_sparse_memory(
     ecs_sparse_t *sparse,
     int32_t *allocd,
     int32_t *used);
@@ -1036,33 +1028,33 @@ typedef struct ecs_ptree_iter_t {
     uint64_t index;
 } ecs_ptree_iter_t;
 
-FLECS_DBG_API ecs_ptree_t* _ecs_ptree_new(
+FLECS_API ecs_ptree_t* _ecs_ptree_new(
     ecs_size_t elem_size);
 
-FLECS_DBG_API int32_t ecs_ptree_free(
+FLECS_API int32_t ecs_ptree_free(
     ecs_ptree_t *ptree);
 
-FLECS_DBG_API void* _ecs_ptree_ensure(
+FLECS_API void* _ecs_ptree_ensure(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
 
-FLECS_DBG_API void* _ecs_ptree_get(
+FLECS_API void* _ecs_ptree_get(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
 
-FLECS_DBG_API ecs_ptree_iter_t ecs_ptree_iter(
+FLECS_API ecs_ptree_iter_t ecs_ptree_iter(
     ecs_ptree_t *ptree);
 
-FLECS_DBG_API ecs_ptree_iter_t ecs_ptiny_iter(
+FLECS_API ecs_ptree_iter_t ecs_ptiny_iter(
     ecs_ptree_t *ptree);
 
-FLECS_DBG_API void* _ecs_ptree_next(
+FLECS_API void* _ecs_ptree_next(
     ecs_ptree_iter_t *it,
     ecs_size_t elem_size);    
 
-FLECS_DBG_API void* _ecs_ptiny_next(
+FLECS_API void* _ecs_ptiny_next(
     ecs_ptree_iter_t *it,
     ecs_size_t elem_size);
 
@@ -1083,15 +1075,15 @@ FLECS_DBG_API void* _ecs_ptiny_next(
 
 /* -- Low footprint version, do not mix new/get/ensure API calls -- */
 
-FLECS_DBG_API ecs_ptree_t* _ecs_ptiny_new(
+FLECS_API ecs_ptree_t* _ecs_ptiny_new(
     ecs_size_t elem_size);
 
-FLECS_DBG_API void* _ecs_ptiny_ensure(
+FLECS_API void* _ecs_ptiny_ensure(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
 
-FLECS_DBG_API void* _ecs_ptiny_get(
+FLECS_API void* _ecs_ptiny_get(
     ecs_ptree_t *ptree,
     ecs_size_t elem_size,
     uint64_t index);
@@ -1160,6 +1152,15 @@ void * _ecs_map_get_ptr(
     (T)_ecs_map_get_ptr(map, key)
 
 FLECS_API
+void * _ecs_map_ensure(
+    ecs_map_t *map,
+    ecs_size_t elem_size,
+    ecs_map_key_t key);
+
+#define ecs_map_ensure(map, T, key)\
+    (T*)_ecs_map_ensure(map, sizeof(T), (ecs_map_key_t)key)
+
+FLECS_API
 void _ecs_map_set(
     ecs_map_t *map,
     ecs_size_t elem_size,
@@ -1226,10 +1227,6 @@ void ecs_map_memory(
     ecs_map_t *map, 
     int32_t *allocd,
     int32_t *used);
-
-FLECS_API
-ecs_map_t* ecs_map_copy(
-    const ecs_map_t *map);
 
 #ifndef FLECS_LEGACY
 #define ecs_map_each(map, T, key, var, ...)\

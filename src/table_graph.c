@@ -132,6 +132,24 @@ void register_child_table(
 }
 
 static
+ecs_edge_t* get_edge(
+    ecs_table_t *node,
+    ecs_entity_t e)
+{
+    if (e < ECS_HI_COMPONENT_ID) {
+        if (!node->lo_edges) {
+            node->lo_edges = ecs_os_calloc(sizeof(ecs_edge_t) * ECS_HI_COMPONENT_ID);
+        }
+        return &node->lo_edges[e];
+    } else {
+        if (!node->hi_edges) {
+            node->hi_edges = ecs_map_new(ecs_edge_t, 1);
+        }
+        return ecs_map_ensure(node->hi_edges, ecs_edge_t, e);
+    }
+}
+
+static
 void init_edges(
     ecs_world_t * world,
     ecs_table_t * table)
@@ -139,14 +157,16 @@ void init_edges(
     ecs_entity_t *entities = ecs_vector_first(table->type, ecs_entity_t);
     int32_t count = ecs_vector_count(table->type);
 
-    table->edges = ecs_ptiny_new(ecs_edge_t);
+    table->lo_edges = NULL;
+    table->hi_edges = NULL;
     
     /* Make add edges to own components point to self */
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
-        ecs_edge_t *edge = ecs_ptiny_ensure(table->edges, ecs_edge_t, e);
+        ecs_edge_t *edge = get_edge(table, e);
+        ecs_assert(edge != NULL, ECS_INTERNAL_ERROR, NULL);
         edge->add = table;
 
         if (count == 1) {
@@ -330,19 +350,6 @@ void remove_entity_from_type(
     }
 
     out->count = el;
-}
-
-static
-ecs_edge_t* get_edge(
-    ecs_table_t *node,
-    ecs_entity_t e)
-{
-    ecs_edge_t *edge = ecs_ptiny_get(node->edges, ecs_edge_t, e);
-    if (!edge) {
-        edge = ecs_ptiny_ensure(node->edges, ecs_edge_t, e);
-    }
-
-    return edge;
 }
 
 static
@@ -908,27 +915,39 @@ void ecs_table_clear_edges(
 {
     (void)world;
 
-    if (!table->edges) {
-        return;
+    uint32_t i;
+
+    if (table->lo_edges) {
+        for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+            ecs_edge_t *e = &table->lo_edges[i];
+            ecs_table_t *add = e->add, *remove = e->remove;
+            if (add) {
+                add->lo_edges[i].remove = NULL;
+            }
+            if (remove) {
+                remove->lo_edges[i].add = NULL;
+            }
+        }
     }
 
-    ecs_ptree_iter_t it = ecs_ptiny_iter(table->edges);
+    ecs_map_iter_t it = ecs_map_iter(table->hi_edges);
     ecs_edge_t *edge;
-
-    int32_t count = 0;
-
-    while ((edge = ecs_ptiny_next(&it, ecs_edge_t))) {
+    ecs_map_key_t component;
+    while ((edge = ecs_map_next(&it, ecs_edge_t, &component))) {
         ecs_table_t *add = edge->add, *remove = edge->remove;
-        if (add && add != table) {
-            ecs_edge_t *other_edge = get_edge(add, it.index);
-            ecs_assert(!other_edge->remove || other_edge->remove == table, ECS_INTERNAL_ERROR, NULL);
-            other_edge->remove = NULL;
+        if (add) {
+            ecs_edge_t *e = get_edge(add, component);
+            e->remove = NULL;
+            if (!e->add) {
+                ecs_map_remove(add->hi_edges, component);
+            }
         }
-        if (remove && remove != table) {
-            ecs_edge_t *other_edge = get_edge(remove, it.index);
-            ecs_assert(!other_edge->add || other_edge->add == table, ECS_INTERNAL_ERROR, NULL);
-            other_edge->add = NULL;
+        if (remove) {
+            ecs_edge_t *e = get_edge(remove, component);
+            e->add = NULL;
+            if (!e->remove) {
+                ecs_map_remove(remove->hi_edges, component);
+            }
         }
-        count ++;
     }
 }
