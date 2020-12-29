@@ -1041,73 +1041,6 @@ void match_tables(
     order_ranked_tables(world, query);
 }
 
-/** Get index of table in system's matched tables */
-static
-int32_t get_table_index(
-    ecs_table_t *table,
-    ecs_vector_t *tables,
-    int32_t start_index)
-{
-    int32_t i, count = ecs_vector_count(tables);
-    ecs_matched_table_t *table_data = ecs_vector_first(
-        tables, ecs_matched_table_t);
-
-    for (i = start_index; i < count; i ++) {
-        if (table_data[i].iter_data.table == table) {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
-/** Check if a table was matched with the system */
-static
-int32_t table_matched(
-    ecs_vector_t *tables,
-    ecs_table_t *table)
-{
-    return get_table_index(table, tables, 0);
-}
-
-static
-void resolve_cascade_container(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    int32_t table_data_index,
-    ecs_type_t table_type)
-{
-    ecs_matched_table_t *table_data = ecs_vector_get(
-        query->tables, ecs_matched_table_t, table_data_index);
-    
-    ecs_assert(table_data->iter_data.references != 0, ECS_INTERNAL_ERROR, NULL);
-
-    /* Obtain reference index */
-    int32_t *column_indices = table_data->iter_data.columns;
-    int32_t column = query->cascade_by - 1;
-    int32_t ref_index = -column_indices[column] - 1;
-
-    /* Obtain pointer to the reference data */
-    ecs_ref_t *references = table_data->iter_data.references;
-    ecs_ref_t *ref = &references[ref_index];
-    ecs_assert(ref->component == get_cascade_component(query), 
-        ECS_INTERNAL_ERROR, NULL);
-
-    /* Resolve container entity */
-    ecs_entity_t container = ecs_find_in_type(
-        world, table_type, ref->component, ECS_CHILDOF);    
-
-    /* If container was found, update the reference */
-    if (container) {
-        references[ref_index].entity = container;
-        ecs_get_ref_w_entity(
-            world, &references[ref_index], container, 
-            ref->component);
-    } else {
-        references[ref_index].entity = 0;
-    }
-}
-
 #define ELEM(ptr, size, index) ECS_OFFSET(ptr, size * index)
 
 static
@@ -1719,7 +1652,7 @@ int32_t move_table(
 {
     (void)table;
 
-    int32_t new_index = ecs_vector_count(*dst_array);
+    int32_t new_index = 0;
     int32_t last_src_index = ecs_vector_count(src_array) - 1;
     ecs_assert(last_src_index >= 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -1768,14 +1701,20 @@ int32_t move_table(
          * src array, so no other administration needs to be updated. */
     }
 
-    /* Actually move the table */
-    ecs_vector_move_index(dst_array, src_array, ecs_matched_table_t, index);
+    /* Actually move the table. Only move from src to dst if we have a
+     * dst_array, otherwise just remove it from src. */
+    if (dst_array) {
+        new_index = ecs_vector_count(*dst_array);
+        ecs_vector_move_index(dst_array, src_array, ecs_matched_table_t, index);
 
-    /* Make sure table is where we expect it */
-    mt = ecs_vector_last(*dst_array, ecs_matched_table_t);
-    ecs_assert(mt->iter_data.table == table, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_vector_count(*dst_array) == (new_index + 1), 
-        ECS_INTERNAL_ERROR, NULL);
+        /* Make sure table is where we expect it */
+        mt = ecs_vector_last(*dst_array, ecs_matched_table_t);
+        ecs_assert(mt->iter_data.table == table, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_vector_count(*dst_array) == (new_index + 1), 
+            ECS_INTERNAL_ERROR, NULL);  
+    } else {
+        ecs_vector_remove_index(src_array, ecs_matched_table_t, index);
+    }
 
     /* Ensure that src array has now one element less */
     ecs_assert(ecs_vector_count(src_array) == last_src_index, 
@@ -1946,44 +1885,117 @@ void free_matched_table(
     ecs_os_free(table->monitor);
 }
 
-/* Remove table */
+/** Check if a table was matched with the system */
 static
-void remove_table(
-    ecs_vector_t *tables,
-    int32_t index)
+ecs_table_indices_t* get_table_indices(
+    ecs_query_t *query,
+    ecs_table_t *table)
 {
-    ecs_matched_table_t *table = ecs_vector_get(
-        tables, ecs_matched_table_t, index);
-    free_matched_table(table);
-    ecs_vector_remove_index(tables, ecs_matched_table_t, index);
+    return ecs_map_get(query->table_indices, ecs_table_indices_t, table->id);
 }
 
 static
-void unmatch_table_w_index(
+void resolve_cascade_container(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_table_indices_t *ti,
+    ecs_type_t table_type)
+{
+    int32_t i, count = ti->count;
+    for (i = 0; i < count; i ++) {
+        int32_t table_data_index = ti->indices[i];
+        ecs_matched_table_t *table_data;
+
+        if (table_data_index >= 0) {
+            table_data = ecs_vector_get(
+                query->tables, ecs_matched_table_t, table_data_index);            
+        } else {
+            table_data = ecs_vector_get(
+                query->empty_tables, ecs_matched_table_t, table_data_index);
+        }
+        
+        ecs_assert(table_data->iter_data.references != 0, ECS_INTERNAL_ERROR, NULL);
+
+        /* Obtain reference index */
+        int32_t *column_indices = table_data->iter_data.columns;
+        int32_t column = query->cascade_by - 1;
+        int32_t ref_index = -column_indices[column] - 1;
+
+        /* Obtain pointer to the reference data */
+        ecs_ref_t *references = table_data->iter_data.references;
+        ecs_ref_t *ref = &references[ref_index];
+        ecs_assert(ref->component == get_cascade_component(query), 
+            ECS_INTERNAL_ERROR, NULL);
+
+        /* Resolve container entity */
+        ecs_entity_t container = ecs_find_in_type(
+            world, table_type, ref->component, ECS_CHILDOF);    
+
+        /* If container was found, update the reference */
+        if (container) {
+            references[ref_index].entity = container;
+            ecs_get_ref_w_entity(
+                world, &references[ref_index], container, 
+                ref->component);
+        } else {
+            references[ref_index].entity = 0;
+        }
+    }
+}
+
+/* Remove table */
+static
+void remove_table(
     ecs_query_t *query,
     ecs_table_t *table,
-    int32_t match)
+    ecs_vector_t *tables,
+    int32_t index,
+    bool empty)
 {
-    /* If table no longer matches, remove it */
-    if (match != -1) {
-        remove_table(query->tables, match);
-    } else {
-        /* Make sure the table is removed if it was inactive */
-        match = table_matched(
-            query->empty_tables, table);
-        if (match != -1) {
-            remove_table(query->empty_tables, match);
-        }
-    }  
+    ecs_matched_table_t *mt = ecs_vector_get(
+        tables, ecs_matched_table_t, index);
+    if (!mt) {
+        /* Query was notified of a table it doesn't match with, this can only
+         * happen if query is a subquery. */
+        ecs_assert(query->flags & EcsQueryIsSubquery, ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
+    
+    ecs_assert(mt->iter_data.table == table, ECS_INTERNAL_ERROR, NULL);
+    (void)table;
+
+    /* Free table before moving, as the move will cause another table to occupy
+     * the memory of mt */
+    free_matched_table(mt);  
+    move_table(query, mt->iter_data.table, index, NULL, tables, empty);
 }
 
 static
 void unmatch_table(
     ecs_query_t *query,
-    ecs_table_t *table)
+    ecs_table_t *table,
+    ecs_table_indices_t *ti)
 {
-    unmatch_table_w_index(
-        query, table, table_matched(query->tables, table));       
+    if (!ti) {
+        ti = get_table_indices(query, table);
+        if (!ti) {
+            return;
+        }
+    }
+
+    int32_t i, count = ti->count;
+    for (i = 0; i < count; i ++) {
+        int32_t index = ti->indices[i];
+        if (index < 0) {
+            index = index * -1 - 1;
+            remove_table(query, table, query->empty_tables, index, true);
+        } else {
+            remove_table(query, table, query->tables, index, false);
+        }
+    }
+
+    ecs_os_free(ti->indices);
+    ecs_map_remove(query->table_indices, table->id);
 }
 
 static
@@ -1992,14 +2004,12 @@ void rematch_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    int32_t match = table_matched(query->tables, table);
+    ecs_table_indices_t *match = get_table_indices(query, table);
 
     if (ecs_query_match(world, table, query, NULL)) {
         /* If the table matches, and it is not currently matched, add */
-        if (match == -1) {
-            if (table_matched(query->empty_tables, table) == -1) {
-                add_table(world, query, table);
-            }
+        if (match == NULL) {
+            add_table(world, query, table);
 
         /* If table still matches and has cascade column, reevaluate the
          * sources of references. This may have changed in case 
@@ -2012,7 +2022,7 @@ void rematch_table(
          * previously had data no longer has data, or vice versa. Do a full
          * rematch to make sure data is consistent. */
         } else if (query->flags & EcsQueryHasOptional) {
-            unmatch_table(query, table);
+            unmatch_table(query, table, match);
             if (!(query->flags & EcsQueryIsSubquery)) {
                 ecs_table_notify(world, table, &(ecs_table_event_t){
                     .kind = EcsTableQueryUnmatch,
@@ -2023,8 +2033,8 @@ void rematch_table(
         }
     } else {
         /* Table no longer matches, remove */
-        if (match != -1) {
-            unmatch_table(query, table);
+        if (match != NULL) {
+            unmatch_table(query, table, match);
             if (!(query->flags & EcsQueryIsSubquery)) {
                 ecs_table_notify(world, table, &(ecs_table_event_t){
                     .kind = EcsTableQueryUnmatch,
@@ -2127,7 +2137,7 @@ void ecs_query_notify(
         break;
     case EcsQueryTableUnmatch:
         /* Deletion of table */
-        unmatch_table(query, event->table);
+        unmatch_table(query, event->table, NULL);
         break;
     case EcsQueryTableRematch:
         /* Rematch tables of query */
