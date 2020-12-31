@@ -303,6 +303,33 @@ void ComponentLifecycle_implicit_component() {
     auto e = flecs::entity(world).add<POD>();
     test_assert(e.id() != 0);
     test_assert(e.has<POD>());
+    test_int(POD::ctor_invoked, 1);
+
+    const POD *pod = e.get<POD>();
+    test_assert(pod != NULL);
+
+    test_int(pod->value, 10);
+
+    test_int(POD::ctor_invoked, 1);
+    test_int(POD::dtor_invoked, 0);
+    test_int(POD::copy_invoked, 0);
+    test_int(POD::move_invoked, 0);
+
+    flecs::entity(world).add<POD>();
+    flecs::entity(world).add<POD>();
+    test_int(POD::ctor_invoked, 5);
+    test_int(POD::move_invoked, 2); 
+}
+
+void ComponentLifecycle_implicit_after_query() {
+    flecs::world world;
+
+    world.query<POD>();
+
+    auto e = flecs::entity(world).add<POD>();
+    test_assert(e.id() != 0);
+    test_assert(e.has<POD>());
+    test_int(POD::ctor_invoked, 1);
 
     const POD *pod = e.get<POD>();
     test_assert(pod != NULL);

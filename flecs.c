@@ -186,7 +186,6 @@ typedef struct ecs_table_leaf_t {
 
 /** Edge used for traversing the table graph. */
 typedef struct ecs_edge_t {
-    ecs_entity_t id;
     ecs_table_t *add;               /**< Edges traversed when adding */
     ecs_table_t *remove;            /**< Edges traversed when removing */
 } ecs_edge_t;

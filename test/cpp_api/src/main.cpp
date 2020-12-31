@@ -179,6 +179,7 @@ void ComponentLifecycle_get_mut_existing(void);
 void ComponentLifecycle_pod_component(void);
 void ComponentLifecycle_relocatable_component(void);
 void ComponentLifecycle_implicit_component(void);
+void ComponentLifecycle_implicit_after_query(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref(void);
@@ -889,6 +890,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "implicit_component",
         ComponentLifecycle_implicit_component
+    },
+    {
+        "implicit_after_query",
+        ComponentLifecycle_implicit_after_query
     }
 };
 
@@ -1194,7 +1199,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        13,
+        14,
         ComponentLifecycle_testcases
     },
     {

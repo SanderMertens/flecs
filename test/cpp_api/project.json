@@ -200,7 +200,8 @@
                 "get_mut_existing",
                 "pod_component",
                 "relocatable_component",
-                "implicit_component"
+                "implicit_component",
+                "implicit_after_query"
             ]
         }, {
             "id": "Refs",
