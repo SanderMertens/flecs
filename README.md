@@ -109,6 +109,28 @@ The easiest way to add Flecs to a project is to add [flecs.c](https://raw.github
 ### Custom builds
 The Flecs source has a modular design which makes it easy to strip out code you don't need. At its core, Flecs is a minimalistic ECS library with a lot of optional features that you can choose to include or not. [This section of the manual](https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#custom-builds) describes how to customize which features to include. 
 
+## Software Quality
+To ensure stability of Flecs, the code is thoroughly tested on every commit:
+
+- 40.000 lines of test code, for 18.000 lines of framework code
+- More than 1600 testcases
+- Over 90% code coverage
+
+The code is validated on the following platforms/compilers:
+
+- **Windows**
+  - msvc
+- **Ubuntu**
+  - gcc 7, 8, 9, 10
+  - clang 8, 9
+- **MacOS**
+  - gcc 10
+  - clang 9
+
+The framework code and example code is compiled warning free on all platforms with the strictest warning settings. A sanitized build is ran on each commit to test for memory corruption and undefined behavior.
+
+Performance is tracked on a per-release basis, with the results for the latest release published here: https://github.com/SanderMertens/ecs_benchmark
+
 ## Modules
 The following modules are available in [flecs-hub](https://github.com/flecs-hub). Note that modules are mostly intended as example code, and their APIs may change at any point in time.
 
