@@ -167,6 +167,35 @@ void Switch_remove_case() {
     ecs_fini(world);
 }
 
+void Switch_remove_last() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TYPE(world, Movement, Walking, Running);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    test_assert(e1 != 0);
+    ecs_add_entity(world, e1, ECS_CASE | Walking);
+    ecs_add(world, e1, Tag);
+
+    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    test_assert(e2 != 0);
+    ecs_add_entity(world, e2, ECS_CASE | Walking);
+    ecs_add(world, e2, Tag);
+
+    ecs_remove(world, e2, Tag);
+
+    test_assert(!ecs_has(world, e2, Tag));
+    test_assert(ecs_has_entity(world, e2, ECS_CASE | Walking));
+
+    test_assert(ecs_has(world, e1, Tag));
+    test_assert(ecs_has_entity(world, e1, ECS_CASE | Walking));
+
+    ecs_fini(world);
+}
+
 void Switch_bulk_new_w_type() {
     ecs_world_t *world = ecs_init();
 
@@ -939,3 +968,4 @@ void Switch_sort() {
 
     ecs_fini(world);
 }
+

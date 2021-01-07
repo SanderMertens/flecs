@@ -116,6 +116,7 @@
                 "new_w_type",
                 "add_w_type",
                 "remove_case",
+                "remove_last",
                 "bulk_new_w_type",
                 "3_entities_same_case",
                 "2_entities_1_change_case",

@@ -104,6 +104,7 @@ void Switch_get_case_change(void);
 void Switch_new_w_type(void);
 void Switch_add_w_type(void);
 void Switch_remove_case(void);
+void Switch_remove_last(void);
 void Switch_bulk_new_w_type(void);
 void Switch_3_entities_same_case(void);
 void Switch_2_entities_1_change_case(void);
@@ -1829,6 +1830,10 @@ bake_test_case Switch_testcases[] = {
     {
         "remove_case",
         Switch_remove_case
+    },
+    {
+        "remove_last",
+        Switch_remove_last
     },
     {
         "bulk_new_w_type",
@@ -6964,7 +6969,7 @@ static bake_test_suite suites[] = {
         "Switch",
         Switch_setup,
         NULL,
-        29,
+        30,
         Switch_testcases
     },
     {
