@@ -1,3 +1,5 @@
+/** Internal utility functions for tracing, warnings and errors. */
+
 #ifndef FLECS_LOG_H
 #define FLECS_LOG_H
 

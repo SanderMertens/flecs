@@ -1,14 +1,16 @@
 #include "private_api.h"
 
+/* The ratio used to determine whether the map should rehash. If
+ * (element_count * LOAD_FACTOR) > bucket_count, bucket count is increased. */
 #define LOAD_FACTOR (1.5)
 #define KEY_SIZE (ECS_SIZEOF(ecs_map_key_t))
 #define GET_ELEM(array, elem_size, index) \
     ECS_OFFSET(array, (elem_size) * (index))
 
 struct ecs_bucket_t {
-    ecs_map_key_t *keys;
-    void *payload;
-    int32_t count;
+    ecs_map_key_t *keys;    /* Array with keys */
+    void *payload;          /* Payload array */
+    int32_t count;          /* Number of elements in bucket */
 };
 
 struct ecs_map_t {
@@ -18,6 +20,7 @@ struct ecs_map_t {
     int32_t count;
 };
 
+/* Get bucket count for number of elements */
 static
 int32_t get_bucket_count(
     int32_t element_count)
@@ -25,6 +28,7 @@ int32_t get_bucket_count(
     return ecs_next_pow_of_2((int32_t)((float)element_count * LOAD_FACTOR));
 }
 
+/* Get bucket index for provided map key */
 static
 int32_t get_bucket_id(
     int32_t bucket_count,
@@ -36,8 +40,9 @@ int32_t get_bucket_id(
     return result;
 }
 
+/* Get bucket for key */
 static
-ecs_bucket_t* find_bucket(
+ecs_bucket_t* get_bucket(
     const ecs_map_t *map,
     ecs_map_key_t key)
 {
@@ -52,6 +57,7 @@ ecs_bucket_t* find_bucket(
     return &map->buckets[bucket_id];
 }
 
+/* Ensure that map has at least new_count buckets */
 static
 void ensure_buckets(
     ecs_map_t *map,
@@ -69,6 +75,7 @@ void ensure_buckets(
     }
 }
 
+/* Free contents of bucket */
 static
 void clear_bucket(
     ecs_bucket_t *bucket)
@@ -80,6 +87,7 @@ void clear_bucket(
     bucket->count = 0;
 }
 
+/* Clear all buckets */
 static
 void clear_buckets(
     ecs_map_t *map)
@@ -94,8 +102,9 @@ void clear_buckets(
     map->bucket_count = 0;
 }
 
+/* Find or create bucket for specified key */
 static
-ecs_bucket_t* find_or_create_bucket(
+ecs_bucket_t* ensure_bucket(
     ecs_map_t *map,
     ecs_map_key_t key)
 {
@@ -108,6 +117,7 @@ ecs_bucket_t* find_or_create_bucket(
     return &map->buckets[bucket_id];
 }
 
+/* Add element to bucket */
 static
 int32_t add_to_bucket(
     ecs_bucket_t *bucket,
@@ -130,6 +140,7 @@ int32_t add_to_bucket(
     return index;
 }
 
+/*  Remove element from bucket */
 static
 void remove_from_bucket(
     ecs_bucket_t *bucket,
@@ -155,6 +166,7 @@ void remove_from_bucket(
     }
 }
 
+/* Get payload pointer for key from bucket */
 static
 void* get_from_bucket(
     ecs_bucket_t *bucket,
@@ -172,6 +184,7 @@ void* get_from_bucket(
     return NULL;
 }
 
+/* Grow number of buckets */
 static
 void rehash(
     ecs_map_t *map,
@@ -263,7 +276,7 @@ void* _ecs_map_get(
 
     ecs_assert(elem_size == map->elem_size, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_bucket_t * bucket = find_bucket(map, key);
+    ecs_bucket_t * bucket = get_bucket(map, key);
     if (!bucket) {
         return NULL;
     }
@@ -308,7 +321,7 @@ void* _ecs_map_set(
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(elem_size == map->elem_size, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_bucket_t *bucket = find_or_create_bucket(map, key);
+    ecs_bucket_t *bucket = ensure_bucket(map, key);
     ecs_assert(bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
     void *elem = get_from_bucket(bucket, key, elem_size);
@@ -321,7 +334,7 @@ void* _ecs_map_set(
 
         if (target_bucket_count > map_bucket_count) {
             rehash(map, target_bucket_count);
-            bucket = find_or_create_bucket(map, key);
+            bucket = ensure_bucket(map, key);
             return get_from_bucket(bucket, key, elem_size);
         } else {
             return GET_ELEM(bucket->payload, elem_size, index);
@@ -340,7 +353,7 @@ void ecs_map_remove(
 {
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_bucket_t * bucket = find_bucket(map, key);
+    ecs_bucket_t * bucket = get_bucket(map, key);
     if (!bucket) {
         return;
     }

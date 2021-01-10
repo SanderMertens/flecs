@@ -1074,6 +1074,10 @@ FLECS_API void ecs_sparse_memory(
 #endif
 
 #endif
+/** Simple bitset implementation. The bitset allows for storage of arbitrary
+ * numbers of bits.
+ */
+
 #ifndef FLECS_BITSET_H
 #define FLECS_BITSET_H
 
@@ -1088,36 +1092,45 @@ typedef struct ecs_bitset_t {
     ecs_size_t size;
 } ecs_bitset_t;
 
+/** Initialize bitset. */
 void ecs_bitset_init(
     ecs_bitset_t *bs);
 
+/** Deinialize bitset. */
 void ecs_bitset_deinit(
     ecs_bitset_t *bs);
 
+/** Add n elements to bitset. */
 void ecs_bitset_addn(
     ecs_bitset_t *bs,
     int32_t count);
 
+/** Ensure element exists. */
 void ecs_bitset_ensure(
     ecs_bitset_t *bs,
     int32_t count);
 
+/** Set element. */
 void ecs_bitset_set(
     ecs_bitset_t *bs,
     int32_t elem,
     bool value);
 
+/** Get element. */
 bool ecs_bitset_get(
     const ecs_bitset_t *bs,
     int32_t elem);
 
+/** Return number of elements. */
 int32_t ecs_bitset_count(
     const ecs_bitset_t *bs);
 
+/** Remove from bitset. */
 void ecs_bitset_remove(
     ecs_bitset_t *bs,
     int32_t elem);
 
+/** Swap values in bitset. */
 void ecs_bitset_swap(
     ecs_bitset_t *bs,
     int32_t elem_a,
@@ -1128,6 +1141,28 @@ void ecs_bitset_swap(
 #endif
 
 #endif
+/** Key-value datastructure. The map allows for fast retrieval of a payload for
+ * a 64-bit key. While it is not as fast as the sparse set, it is better at
+ * handling randomly distributed values.
+ *
+ * Payload is stored in bucket arrays. A bucket is computed from an id by
+ * using the (bucket_count - 1) as an AND-mask. The number of buckets is always
+ * a power of 2. Multiple keys will be stored in the same bucket. As a result
+ * the worst case retrieval performance of the map is O(n), though this is rare.
+ * On average lookup performance should equal O(1).
+ *
+ * The datastructure will automatically grow the number of buckets when the
+ * ratio between elements and buckets exceeds a certain threshold (LOAD_FACTOR).
+ *
+ * Note that while the implementation is a hashmap, it can only compute hashes
+ * for the provided 64 bit keys. This means that the provided keys must always
+ * be unique. If the provided keys are hashes themselves, it is the 
+ * responsibility of the user to ensure that collisions are handled.
+ *
+ * In debug mode the map verifies that the type provided to the map functions
+ * matches the one used at creation time.
+ */
+
 #ifndef FLECS_MAP_H
 #define FLECS_MAP_H
 
@@ -1148,6 +1183,7 @@ typedef struct ecs_map_iter_t {
     void *payload;
 } ecs_map_iter_t;
 
+/** Create new map. */
 FLECS_API
 ecs_map_t * _ecs_map_new(
     ecs_size_t elem_size,
@@ -1157,6 +1193,7 @@ ecs_map_t * _ecs_map_new(
 #define ecs_map_new(T, elem_count)\
     _ecs_map_new(sizeof(T), ECS_ALIGNOF(T), elem_count)
 
+/** Get element for key, returns NULL if they key doesn't exist. */
 FLECS_API
 void * _ecs_map_get(
     const ecs_map_t *map,
@@ -1166,6 +1203,10 @@ void * _ecs_map_get(
 #define ecs_map_get(map, T, key)\
     (T*)_ecs_map_get(map, sizeof(T), (ecs_map_key_t)key)
 
+/** Get pointer element. This dereferences the map element as a pointer. This
+ * operation returns NULL when either the element does not exist or whether the
+ * pointer is NULL, and should therefore only be used when the application knows
+ * for sure that a pointer should never be NULL. */
 FLECS_API
 void * _ecs_map_get_ptr(
     const ecs_map_t *map,
@@ -1174,6 +1215,7 @@ void * _ecs_map_get_ptr(
 #define ecs_map_get_ptr(map, T, key)\
     (T)_ecs_map_get_ptr(map, key)
 
+/** Get or create element for key. */
 FLECS_API
 void * _ecs_map_ensure(
     ecs_map_t *map,
@@ -1183,6 +1225,7 @@ void * _ecs_map_ensure(
 #define ecs_map_ensure(map, T, key)\
     (T*)_ecs_map_ensure(map, sizeof(T), (ecs_map_key_t)key)
 
+/** Set element. */
 FLECS_API
 void* _ecs_map_set(
     ecs_map_t *map,
@@ -1193,31 +1236,38 @@ void* _ecs_map_set(
 #define ecs_map_set(map, key, payload)\
     _ecs_map_set(map, sizeof(*payload), (ecs_map_key_t)key, payload);
 
+/** Free map. */
 FLECS_API
 void ecs_map_free(
     ecs_map_t *map);
 
+/** Remove key from map. */
 FLECS_API
 void ecs_map_remove(
     ecs_map_t *map,
     ecs_map_key_t key);
 
+/** Remove all elements from map. */
 FLECS_API
 void ecs_map_clear(
     ecs_map_t *map);
 
+/** Return number of elements in map. */
 FLECS_API
 int32_t ecs_map_count(
     const ecs_map_t *map);
 
+/** Return number of buckets in map. */
 FLECS_API
 int32_t ecs_map_bucket_count(
     const ecs_map_t *map);
 
+/** Return iterator to map contents. */
 FLECS_API
 ecs_map_iter_t ecs_map_iter(
     const ecs_map_t *map);
 
+/** Obtain next element in map from iterator. */
 FLECS_API
 void* _ecs_map_next(
     ecs_map_iter_t* iter,
@@ -1227,6 +1277,7 @@ void* _ecs_map_next(
 #define ecs_map_next(iter, T, key) \
     (T*)_ecs_map_next(iter, sizeof(T), key)
 
+/** Obtain next pointer element from iterator. See ecs_map_get_ptr. */
 FLECS_API
 void* _ecs_map_next_ptr(
     ecs_map_iter_t* iter,
@@ -1235,16 +1286,19 @@ void* _ecs_map_next_ptr(
 #define ecs_map_next_ptr(iter, T, key) \
     (T)_ecs_map_next_ptr(iter, key)
 
+/** Grow number of buckets in the map for specified number of elements. */
 FLECS_API
 void ecs_map_grow(
     ecs_map_t *map, 
     int32_t elem_count);
 
+/** Set number of buckets in the map for specified number of elements. */
 FLECS_API
 void ecs_map_set_size(
     ecs_map_t *map, 
     int32_t elem_count);
 
+/** Return memory occupied by map. */
 FLECS_API
 void ecs_map_memory(
     ecs_map_t *map, 
@@ -1268,6 +1322,7 @@ void ecs_map_memory(
 }
 #endif
 
+/** C++ wrapper for map. */
 #ifdef __cplusplus
 #ifndef FLECS_NO_CPP
 
@@ -1323,80 +1378,114 @@ private:
 #endif
 
 #endif
+/* Datastructure that stores N interleaved linked lists in an array. 
+ * This allows for efficient storage of elements with mutually exclusive values.
+ * Each linked list has a header element which points to the index in the array
+ * that stores the first node of the list. Each list node points to the next
+ * array element.
+ *
+ * The datastructure needs to be created with min and max values, so that it can
+ * allocate an array of headers that can be directly indexed by the value. The
+ * values are stored in a contiguous array, which allows for the values to be
+ * iterated without having to follow the linked list nodes.
+ *
+ * The datastructure allows for efficient storage and retrieval for values with
+ * mutually exclusive values, such as enumeration values. The linked list allows
+ * an application to obtain all elements for a given (enumeration) value without
+ * having to search.
+ *
+ * While the list accepts 64 bit values, it only uses the lower 32bits of the
+ * value for selecting the correct linked list.
+ */
+
 #ifndef FLECS_SWITCH_LIST_H
 #define FLECS_SWITCH_LIST_H
 
 
 typedef struct ecs_switch_header_t {
-    int32_t element;
-    int32_t count;
+    int32_t element;        /* First element for value */
+    int32_t count;          /* Number of elements for value */
 } ecs_switch_header_t;
 
 typedef struct ecs_switch_node_t {
-    int32_t next;
-    int32_t prev;
+    int32_t next;           /* Next node in list */
+    int32_t prev;           /* Prev node in list */
 } ecs_switch_node_t;
 
 typedef struct ecs_switch_t {
-    uint64_t min;
-    uint64_t max;
-    ecs_switch_header_t *headers;
-    ecs_vector_t *nodes;
-    ecs_vector_t *values;
+    uint64_t min;           /* Minimum value the switch can store */
+    uint64_t max;           /* Maximum value the switch can store */
+    ecs_switch_header_t *headers;   /* Array with headers, indexed by value */
+    ecs_vector_t *nodes;    /* Vector with nodes, of type ecs_switch_node_t */
+    ecs_vector_t *values;   /* Vector with values, of type uint64_t */
 } ecs_switch_t;
 
+/** Create new switch. */
 ecs_switch_t* ecs_switch_new(
     uint64_t min, 
     uint64_t max,
     int32_t elements);
 
+/** Free switch. */
 void ecs_switch_free(
     ecs_switch_t *sw);
 
+/** Add element to switch, initialize value to 0 */
 void ecs_switch_add(
     ecs_switch_t *sw);
 
+/** Set number of elements in switch list */
 void ecs_switch_set_count(
     ecs_switch_t *sw,
     int32_t count);
 
+/** Ensure that element exists. */
 void ecs_switch_ensure(
     ecs_switch_t *sw,
     int32_t count);
 
+/** Add n elements. */
 void ecs_switch_addn(
     ecs_switch_t *sw,
     int32_t count);    
 
+/** Set value of element. */
 void ecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
     uint64_t value);
 
+/** Remove element. */
 void ecs_switch_remove(
     ecs_switch_t *sw,
     int32_t element);
 
+/** Get value for element. */
 uint64_t ecs_switch_get(
     const ecs_switch_t *sw,
     int32_t element);
 
+/** Swap element. */
 void ecs_switch_swap(
     ecs_switch_t *sw,
     int32_t elem_1,
     int32_t elem_2);
 
+/** Get vector with all values. Use together with count(). */
 ecs_vector_t* ecs_switch_values(
     const ecs_switch_t *sw);    
 
+/** Return number of different values. */
 int32_t ecs_switch_case_count(
     const ecs_switch_t *sw,
     uint64_t value);
 
+/** Return first element for value. */
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value);
 
+/** Return next element for value. Use with first(). */
 int32_t ecs_switch_next(
     const ecs_switch_t *sw,
     int32_t elem);
@@ -2584,6 +2673,8 @@ ecs_sig_t* ecs_query_get_sig(
 #endif
 
 #endif
+/** Internal utility functions for tracing, warnings and errors. */
+
 #ifndef FLECS_LOG_H
 #define FLECS_LOG_H
 
