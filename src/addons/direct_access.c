@@ -69,6 +69,15 @@ ecs_record_t* ecs_record_find(
     }
 }
 
+ecs_record_t* ecs_record_ensure(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_record_t *r = ecs_eis_get_or_create(world, entity);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    return r;
+}
+
 ecs_record_t ecs_table_insert(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -101,7 +110,7 @@ ecs_vector_t* ecs_table_get_column(
     return c ? c->data : NULL;
 }
 
-void ecs_table_set_column(
+ecs_vector_t* ecs_table_set_column(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column,
@@ -110,8 +119,21 @@ void ecs_table_set_column(
     ecs_column_t *c = da_get_or_create_column(world, table, column);
     if (vector) {
         ecs_vector_assert_size(vector, c->size);
+    } else {
+        ecs_vector_t *entities = ecs_table_get_entities(table);
+        if (entities) {
+            int32_t count = ecs_vector_count(entities);
+            vector = ecs_table_get_column(table, column);
+            if (!vector) {
+                vector = ecs_vector_new_t(c->size, c->alignment, count);
+            } else {
+                ecs_vector_set_count_t(&vector, c->size, c->alignment, count);
+            }
+        }
     }
     c->data = vector;
+    
+    return vector;
 }
 
 ecs_vector_t* ecs_table_get_entities(
@@ -156,6 +178,41 @@ void ecs_table_set_entities(
     data->record_ptrs = records;
 }
 
+void ecs_records_clear(
+    ecs_vector_t *records)
+{
+    int32_t i, count = ecs_vector_count(records);
+    ecs_record_t **r = ecs_vector_first(records, ecs_record_t*);
+
+    for (i = 0; i < count; i ++) {
+        r[i]->table = NULL;
+        if (r[i]->row < 0) {
+            r[i]->row = -1;
+        } else {
+            r[i]->row = 0;
+        }
+    }
+}
+
+void ecs_records_update(
+    ecs_world_t *world,
+    ecs_vector_t *entities,
+    ecs_vector_t *records,
+    ecs_table_t *table)
+{
+    int32_t i, count = ecs_vector_count(records);
+    ecs_entity_t *e = ecs_vector_first(entities, ecs_entity_t);
+    ecs_record_t **r = ecs_vector_first(records, ecs_record_t*);
+
+    for (i = 0; i < count; i ++) {
+        r[i] = ecs_record_ensure(world, e[i]);
+        ecs_assert(r[i] != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        r[i]->table = table;
+        r[i]->row = i + 1;
+    }    
+}
+
 void ecs_table_delete_column(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -186,6 +243,10 @@ void ecs_table_delete_column(
         void *ptr = ecs_vector_first_t(vector, c->size, alignment);
         dtor(world, c_info->component, entities, ptr, ecs_to_size_t(c->size), 
             count, c_info->lifecycle.ctx);
+    }
+
+    if (c->data == vector) {
+        c->data = NULL;
     }
 
     ecs_vector_free(vector);

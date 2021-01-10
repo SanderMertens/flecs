@@ -312,13 +312,6 @@ void DirectAccess_delete_column_explicit() {
 
     ecs_table_delete_column(world, t, 0, v_p);
 
-    // Column is not set to NULL when deleted explicitly
-    test_assert(ecs_table_get_column(t, 0) == v_p);
-    test_assert(ecs_table_get_column(t, 1) != NULL);
-
-    // Need to set column explicit to NULL to prevent double free
-    ecs_table_set_column(world, t, 0, NULL);
-
     ecs_fini(world);
 }
 

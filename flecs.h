@@ -6964,13 +6964,17 @@ ecs_vector_t* ecs_table_get_column(
  * target column. If the size and/or alignment do not match, the behavior will
  * be undefined. In debug mode the operation may assert.
  *
+ * If the provided vector is NULL, the table will ensure that a vector is
+ * created for the provided column. If a vector exists that is not of the
+ * same size as the entities vector, it will be resized to match.
+ *
  * @param world The world.
  * @param table The table.
  * @param column The column index.
  * @param vector The column data to assing.
  */
 FLECS_API
-void ecs_table_set_column(
+ecs_vector_t* ecs_table_set_column(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column,
@@ -6998,6 +7002,32 @@ ecs_vector_t* ecs_table_get_entities(
  */ 
 FLECS_API
 ecs_vector_t* ecs_table_get_records(
+    ecs_table_t *table);
+
+/** Clear records.
+ * This operation clears records for a world so that they no longer point to a
+ * table. This is useful to ensure that a world is left in a consistent state
+ * after moving data to destination world. 
+ *
+ * @param records The vector with record pointers
+ */
+FLECS_API
+void ecs_records_clear(
+    ecs_vector_t *records);
+
+/** Initialize records.
+ * This operation ensures entity records are updated to the provided table. 
+ *
+ * @param world The world.
+ * @param entities The vector with entity identifiers.
+ * @param records The vector with record pointers.
+ * @param table The table in which the entities are stored.
+ */
+FLECS_API
+void ecs_records_update(
+    ecs_world_t *world,
+    ecs_vector_t *entities,
+    ecs_vector_t *records,
     ecs_table_t *table);
 
 /** Set the vector containing entity ids for the table.
@@ -7085,6 +7115,20 @@ void ecs_table_delete_column(
  */
 FLECS_API
 ecs_record_t* ecs_record_find(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Same as ecs_record_find, but creates record if it doesn't exist.
+ * If an entity id has not been created with ecs_new_*, this function can be
+ * used to ensure that a record exists for an entity id. If the provided id
+ * already exists in the world, the operation will return the existing record.
+ *
+ * @param world The world.
+ * @param entity The entity for which to retrieve the record.
+ * @return The (new or existing) record that belongs to the entity.
+ */
+FLECS_API
+ecs_record_t* ecs_record_ensure(
     ecs_world_t *world,
     ecs_entity_t entity);
 
