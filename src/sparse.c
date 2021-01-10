@@ -1,8 +1,15 @@
 #include "flecs.h"
 
+/** The number of elements in a single chunk */
 #define CHUNK_COUNT (4096)
+
+/** Compute the chunk index from an id by stripping the first 12 bits */
 #define CHUNK(index) ((int32_t)index >> 12)
+
+/** This computes the offset of an index inside a chunk */
 #define OFFSET(index) ((int32_t)index & 0xFFF)
+
+/* Utility to get a pointer to the payload */
 #define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
 
 typedef struct chunk_t {
@@ -123,6 +130,8 @@ void assign_index(
     uint64_t index, 
     int32_t dense)
 {
+    /* Initialize sparse-dense pair. This assigns the dense index to the sparse
+     * array, and the sparse index to the dense array .*/
     chunk->sparse[OFFSET(index)] = dense;
     dense_array[dense] = index;
 }
@@ -131,6 +140,8 @@ static
 uint64_t inc_gen(
     uint64_t index)
 {
+    /* When an index is deleted, its generation is increased so that we can do
+     * liveliness checking while recycling ids */
     return ECS_GENERATION_INC(index);
 }
 
@@ -138,6 +149,9 @@ static
 uint64_t inc_id(
     ecs_sparse_t *sparse)
 {
+    /* Generate a new id. The last issued id could be stored in an external
+     * variable, such as is the case with the last issued entity id, which is
+     * stored on the world. */
     return ++ (sparse->max_id[0]);
 }
 
@@ -153,9 +167,13 @@ void set_id(
     ecs_sparse_t *sparse,
     uint64_t value)
 {
+    /* Sometimes the max id needs to be assigned directly, which typically 
+     * happens when the API calls get_or_create for an id that hasn't been 
+     * issued before. */
     sparse->max_id[0] = value;
 }
 
+/* Pair dense id with new sparse id */
 static
 uint64_t create_id(
     ecs_sparse_t *sparse,
@@ -173,6 +191,7 @@ uint64_t create_id(
     return index;
 }
 
+/* Create new id */
 static
 uint64_t new_index(
     ecs_sparse_t *sparse)
@@ -192,6 +211,8 @@ uint64_t new_index(
     }
 }
 
+/* Try obtaining a value from the sparse set, don't care about whether the
+ * provided index matches the current generation count.  */
 static
 void* try_sparse_any(
     const ecs_sparse_t *sparse,
@@ -215,6 +236,7 @@ void* try_sparse_any(
     return DATA(chunk->data, sparse->size, offset);
 }
 
+/* Try obtaining a value from the sparse set, make sure it's alive. */
 static
 void* try_sparse(
     const ecs_sparse_t *sparse,
@@ -244,6 +266,8 @@ void* try_sparse(
     return DATA(chunk->data, sparse->size, offset);
 }
 
+/* Get value from sparse set when it is guaranteed that the value exists. This
+ * function is used when values are obtained using a dense index */
 static
 void* get_sparse(
     const ecs_sparse_t *sparse,
@@ -261,6 +285,8 @@ void* get_sparse(
     return DATA(chunk->data, sparse->size, offset);
 }
 
+/* Swap dense elements. A swap occurs when an element is removed, or when a
+ * removed element is recycled. */
 static
 void swap_dense(
     ecs_sparse_t * sparse,
