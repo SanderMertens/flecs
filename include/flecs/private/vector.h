@@ -1,3 +1,27 @@
+/* This is an implementation of a simple vector type. The vector is allocated in
+ * a single block of memory, with the element count, and allocated number of
+ * elements encoded in the block. As this vector is used for user-types it has
+ * been designed to support alignments higher than 8 bytes. This makes the size
+ * of the vector header variable in size. To reduce the overhead associated with
+ * retrieving or computing this size, the functions are wrapped in macro calls
+ * that compute the header size at compile time.
+ *
+ * The API provides a number of _t macro's, which accept a size and alignment.
+ * These macro's are used when no compile-time type is available.
+ *
+ * The vector guarantees contiguous access to its elements. When an element is
+ * removed from the vector, the last element is copied to the removed element.
+ *
+ * The API requires passing in the type of the vector. This type is used to test
+ * whether the size of the provided type equals the size of the type with which
+ * the vector was created. In release mode this check is not performed.
+ *
+ * When elements are added to the vector, it will automatically resize to the
+ * next power of two. This can change the pointer of the vector, which is why
+ * operations that can increase the vector size, accept a double pointer to the
+ * vector.
+ */
+
 #ifndef FLECS_VECTOR_H
 #define FLECS_VECTOR_H
 
@@ -7,7 +31,7 @@
 extern "C" {
 #endif
 
-/* Public, so we can do compile-time offset calculation */
+/* Public, so we can do compile-time header size calculation */
 struct ecs_vector_t {
     int32_t count;
     int32_t size;
@@ -17,10 +41,13 @@ struct ecs_vector_t {
 #endif
 };
 
+/* Compute the header size of the vector from size & alignment */
 #define ECS_VECTOR_U(size, alignment) size, ECS_MAX(ECS_SIZEOF(ecs_vector_t), alignment)
+
+/* Compute the header size of the vector from a provided compile-time type */
 #define ECS_VECTOR_T(T) ECS_VECTOR_U(ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
-/* Macro's for creating vector on stack */
+/* Utility macro's for creating vector on stack */
 #ifndef NDEBUG
 #define ECS_VECTOR_VALUE(T, elem_count)\
 {\
@@ -61,6 +88,7 @@ typedef int (*ecs_comparator_t)(
     const void* p1,
     const void *p2);
 
+/** Create new vector. */
 FLECS_API
 ecs_vector_t* _ecs_vector_new(
     ecs_size_t elem_size,
@@ -73,6 +101,7 @@ ecs_vector_t* _ecs_vector_new(
 #define ecs_vector_new_t(size, alignment, elem_count) \
     _ecs_vector_new(ECS_VECTOR_U(size, alignment), elem_count)    
 
+/* Create new vector, initialize it with provided array */
 FLECS_API
 ecs_vector_t* _ecs_vector_from_array(
     ecs_size_t elem_size,
@@ -83,6 +112,7 @@ ecs_vector_t* _ecs_vector_from_array(
 #define ecs_vector_from_array(T, elem_count, array)\
     _ecs_vector_from_array(ECS_VECTOR_T(T), elem_count, array)
 
+/* Initialize vector with zero's */
 FLECS_API
 void _ecs_vector_zero(
     ecs_vector_t *vector,
@@ -92,24 +122,29 @@ void _ecs_vector_zero(
 #define ecs_vector_zero(vector, T) \
     _ecs_vector_zero(vector, ECS_VECTOR_T(T))
 
+/** Free vector */
 FLECS_API
 void ecs_vector_free(
     ecs_vector_t *vector);
 
+/** Clear values in vector */
 FLECS_API
 void ecs_vector_clear(
     ecs_vector_t *vector);
 
+/** Assert when the provided size does not match the vector type. */
 FLECS_API
 void ecs_vector_assert_size(
     ecs_vector_t* vector_inout,
     ecs_size_t elem_size);
 
+/** Assert when the provided alignment does not match the vector type. */
 FLECS_API
 void ecs_vector_assert_alignment(
     ecs_vector_t* vector,
     ecs_size_t elem_alignment);    
 
+/** Add element to vector. */
 FLECS_API
 void* _ecs_vector_add(
     ecs_vector_t **array_inout,
@@ -122,6 +157,7 @@ void* _ecs_vector_add(
 #define ecs_vector_add_t(vector, size, alignment) \
     _ecs_vector_add(vector, ECS_VECTOR_U(size, alignment))
 
+/** Add n elements to the vector. */
 FLECS_API
 void* _ecs_vector_addn(
     ecs_vector_t **array_inout,
@@ -135,6 +171,7 @@ void* _ecs_vector_addn(
 #define ecs_vector_addn_t(vector, size, alignment, elem_count) \
     _ecs_vector_addn(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
+/** Get element from vector. */
 FLECS_API
 void* _ecs_vector_get(
     const ecs_vector_t *vector,
@@ -148,6 +185,7 @@ void* _ecs_vector_get(
 #define ecs_vector_get_t(vector, size, alignment, index) \
     _ecs_vector_get(vector, ECS_VECTOR_U(size, alignment), index)
 
+/** Get last element from vector. */
 FLECS_API
 void* _ecs_vector_last(
     const ecs_vector_t *vector,
@@ -157,6 +195,8 @@ void* _ecs_vector_last(
 #define ecs_vector_last(vector, T) \
     (T*)_ecs_vector_last(vector, ECS_VECTOR_T(T))
 
+/** Set minimum size for vector. If the current size of the vector is larger, 
+ * the function will have no side effects. */
 FLECS_API
 int32_t _ecs_vector_set_min_size(
     ecs_vector_t **array_inout,
@@ -167,6 +207,8 @@ int32_t _ecs_vector_set_min_size(
 #define ecs_vector_set_min_size(vector, T, size) \
     _ecs_vector_set_min_size(vector, ECS_VECTOR_T(T), size)
 
+/** Set minimum count for vector. If the current count of the vector is larger, 
+ * the function will have no side effects. */
 FLECS_API
 int32_t _ecs_vector_set_min_count(
     ecs_vector_t **vector_inout,
@@ -177,10 +219,12 @@ int32_t _ecs_vector_set_min_count(
 #define ecs_vector_set_min_count(vector, T, size) \
     _ecs_vector_set_min_count(vector, ECS_VECTOR_T(T), size)
 
+/** Remove last element. This operation requires no swapping of values. */
 FLECS_API
 void ecs_vector_remove_last(
     ecs_vector_t *vector);
 
+/** Remove last value, store last element in provided value. */
 FLECS_API
 bool _ecs_vector_pop(
     ecs_vector_t *vector,
@@ -191,6 +235,7 @@ bool _ecs_vector_pop(
 #define ecs_vector_pop(vector, T, value) \
     _ecs_vector_pop(vector, ECS_VECTOR_T(T), value)
 
+/** Append element at specified index to another vector. */
 FLECS_API
 int32_t _ecs_vector_move_index(
     ecs_vector_t **dst,
@@ -202,6 +247,7 @@ int32_t _ecs_vector_move_index(
 #define ecs_vector_move_index(dst, src, T, index) \
     _ecs_vector_move_index(dst, src, ECS_VECTOR_T(T), index)
 
+/** Remove element at specified index. Moves the last value to the index. */
 FLECS_API
 int32_t _ecs_vector_remove_index(
     ecs_vector_t *vector,
@@ -215,6 +261,7 @@ int32_t _ecs_vector_remove_index(
 #define ecs_vector_remove_index_t(vector, size, alignment, index) \
     _ecs_vector_remove_index(vector, ECS_VECTOR_U(size, alignment), index)
 
+/** Shrink vector to make the size match the count. */
 FLECS_API
 void _ecs_vector_reclaim(
     ecs_vector_t **vector,
@@ -224,6 +271,7 @@ void _ecs_vector_reclaim(
 #define ecs_vector_reclaim(vector, T)\
     _ecs_vector_reclaim(vector, ECS_VECTOR_T(T))
 
+/** Grow size of vector with provided number of elements. */
 FLECS_API
 int32_t _ecs_vector_grow(
     ecs_vector_t **vector,
@@ -234,6 +282,7 @@ int32_t _ecs_vector_grow(
 #define ecs_vector_grow(vector, T, size) \
     _ecs_vector_grow(vector, ECS_VECTOR_T(T), size)
 
+/** Set allocation size of vector. */
 FLECS_API
 int32_t _ecs_vector_set_size(
     ecs_vector_t **vector,
@@ -247,6 +296,8 @@ int32_t _ecs_vector_set_size(
 #define ecs_vector_set_size_t(vector, size, alignment, elem_count) \
     _ecs_vector_set_size(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
+/** Set count of vector. If the size of the vector is smaller than the provided
+ * count, the vector is resized. */
 FLECS_API
 int32_t _ecs_vector_set_count(
     ecs_vector_t **vector,
@@ -260,14 +311,17 @@ int32_t _ecs_vector_set_count(
 #define ecs_vector_set_count_t(vector, size, alignment, elem_count) \
     _ecs_vector_set_count(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
+/** Return number of elements in vector. */
 FLECS_API
 int32_t ecs_vector_count(
     const ecs_vector_t *vector);
 
+/** Return size of vector. */
 FLECS_API
 int32_t ecs_vector_size(
     const ecs_vector_t *vector);
 
+/** Return first element of vector. */
 FLECS_API
 void* _ecs_vector_first(
     const ecs_vector_t *vector,
@@ -280,6 +334,7 @@ void* _ecs_vector_first(
 #define ecs_vector_first_t(vector, size, alignment) \
     _ecs_vector_first(vector, ECS_VECTOR_U(size, alignment))
 
+/** Sort elements in vector. */
 FLECS_API
 void _ecs_vector_sort(
     ecs_vector_t *vector,
@@ -290,6 +345,7 @@ void _ecs_vector_sort(
 #define ecs_vector_sort(vector, T, compare_action) \
     _ecs_vector_sort(vector, ECS_VECTOR_T(T), compare_action)
 
+/** Return memory occupied by vector. */
 FLECS_API
 void _ecs_vector_memory(
     const ecs_vector_t *vector,
@@ -304,6 +360,7 @@ void _ecs_vector_memory(
 #define ecs_vector_memory_t(vector, size, alignment, allocd, used) \
     _ecs_vector_memory(vector, ECS_VECTOR_U(size, alignment), allocd, used)
 
+/** Copy vectors */
 FLECS_API
 ecs_vector_t* _ecs_vector_copy(
     const ecs_vector_t *src,
@@ -331,6 +388,8 @@ ecs_vector_t* _ecs_vector_copy(
 }
 #endif
 
+
+/** C++ wrapper for vector class. */
 #ifdef __cplusplus
 #ifndef FLECS_NO_CPP
 

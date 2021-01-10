@@ -7647,6 +7647,7 @@ void set_id(
 }
 
 /* Pair dense id with new sparse id */
+static
 uint64_t create_id(
     ecs_sparse_t *sparse,
     int32_t dense)
