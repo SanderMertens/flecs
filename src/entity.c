@@ -721,6 +721,8 @@ void ecs_components_override(
 
 static
 void set_switch(
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t row,
     int32_t count,    
@@ -738,11 +740,12 @@ void set_switch(
 
             ecs_entity_t sw_case = 0;
             if (!reset) {
-                sw_case = ecs_entity_t_lo(e);
+                sw_case = e;
                 ecs_assert(sw_case != 0, ECS_INTERNAL_ERROR, NULL);
             }
 
-            ecs_entity_t sw_index = ecs_entity_t_hi(e);
+            int32_t sw_index = ecs_table_switch_from_case(world, table, e);
+            ecs_assert(sw_index != -1, ECS_INTERNAL_ERROR, NULL);
             ecs_switch_t *sw = data->sw_columns[sw_index].data;
             ecs_assert(sw != NULL, ECS_INTERNAL_ERROR, NULL);
             
@@ -756,20 +759,19 @@ void set_switch(
 
 static
 void ecs_components_switch(
-    ecs_world_t * world,
-    ecs_data_t * data,
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_entities_t * added,
-    ecs_entities_t * removed)
+    ecs_entities_t *added,
+    ecs_entities_t *removed)
 {
-    (void)world;
-
     if (added) {
-        set_switch(data, row, count, added, false);
+        set_switch(world, table, data, row, count, added, false);
     }
     if (removed) {
-        set_switch(data, row, count, removed, true);
+        set_switch(world, table, data, row, count, removed, true);
     } 
 }
 
@@ -849,7 +851,7 @@ void ecs_run_add_actions(
     }
 
     if (table->flags & EcsTableHasSwitch) {
-        ecs_components_switch(world, data, row, count, added, NULL);
+        ecs_components_switch(world, table, data, row, count, added, NULL);
     }
 
     if (table->flags & EcsTableHasOnAdd) {
@@ -1114,7 +1116,7 @@ void commit(
              src_table && src_table->flags & EcsTableHasSwitch) 
         {
             ecs_components_switch(
-                world, info->data, info->row, 1, added, removed);
+                world, src_table, info->data, info->row, 1, added, removed);
         }
 
         return;

@@ -969,3 +969,72 @@ void Switch_sort() {
     ecs_fini(world);
 }
 
+
+void Switch_recycled_tags() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new_id(world);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+    ecs_delete(world, e3);
+
+    ECS_TAG(world, Standing);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TYPE(world, Movement, Standing, Walking, Running);
+
+    test_assert(Standing > UINT32_MAX);
+    test_assert(Walking > UINT32_MAX);
+    test_assert(Running > UINT32_MAX);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_entity(world, e, ECS_SWITCH | Movement);
+    ecs_add_entity(world, e, ECS_CASE | Standing);
+
+    test_assert(ecs_has_entity(world, e, ECS_SWITCH | Movement));
+    test_assert(ecs_has_entity(world, e, ECS_CASE | Standing));
+
+    ecs_fini(world);
+}
+
+void Switch_query_recycled_tags() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new_id(world);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+    ecs_delete(world, e3);
+
+    ECS_TAG(world, Standing);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TYPE(world, Movement, Standing, Walking, Running);
+
+    test_assert(Standing > UINT32_MAX);
+    test_assert(Walking > UINT32_MAX);
+    test_assert(Running > UINT32_MAX);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add_entity(world, e, ECS_SWITCH | Movement);
+    ecs_add_entity(world, e, ECS_CASE | Standing);
+
+    ecs_query_t *q = ecs_query_new(world, "SWITCH | Movement, CASE | Standing");
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+
+    ecs_entity_t *cases = ecs_column(&it, ecs_entity_t, 1);
+    test_assert(cases != NULL);
+    test_assert(cases[0] == Standing);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}

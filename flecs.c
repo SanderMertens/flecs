@@ -4528,6 +4528,8 @@ void ecs_components_override(
 
 static
 void set_switch(
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t row,
     int32_t count,    
@@ -4545,11 +4547,12 @@ void set_switch(
 
             ecs_entity_t sw_case = 0;
             if (!reset) {
-                sw_case = ecs_entity_t_lo(e);
+                sw_case = e;
                 ecs_assert(sw_case != 0, ECS_INTERNAL_ERROR, NULL);
             }
 
-            ecs_entity_t sw_index = ecs_entity_t_hi(e);
+            int32_t sw_index = ecs_table_switch_from_case(world, table, e);
+            ecs_assert(sw_index != -1, ECS_INTERNAL_ERROR, NULL);
             ecs_switch_t *sw = data->sw_columns[sw_index].data;
             ecs_assert(sw != NULL, ECS_INTERNAL_ERROR, NULL);
             
@@ -4563,20 +4566,19 @@ void set_switch(
 
 static
 void ecs_components_switch(
-    ecs_world_t * world,
-    ecs_data_t * data,
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_entities_t * added,
-    ecs_entities_t * removed)
+    ecs_entities_t *added,
+    ecs_entities_t *removed)
 {
-    (void)world;
-
     if (added) {
-        set_switch(data, row, count, added, false);
+        set_switch(world, table, data, row, count, added, false);
     }
     if (removed) {
-        set_switch(data, row, count, removed, true);
+        set_switch(world, table, data, row, count, removed, true);
     } 
 }
 
@@ -4656,7 +4658,7 @@ void ecs_run_add_actions(
     }
 
     if (table->flags & EcsTableHasSwitch) {
-        ecs_components_switch(world, data, row, count, added, NULL);
+        ecs_components_switch(world, table, data, row, count, added, NULL);
     }
 
     if (table->flags & EcsTableHasOnAdd) {
@@ -4921,7 +4923,7 @@ void commit(
              src_table && src_table->flags & EcsTableHasSwitch) 
         {
             ecs_components_switch(
-                world, info->data, info->row, 1, added, removed);
+                world, src_table, info->data, info->row, 1, added, removed);
         }
 
         return;
@@ -12031,6 +12033,8 @@ ecs_switch_header_t *get_header(
         return NULL;
     }
 
+    value = (uint32_t)value;
+
     ecs_assert(value >= sw->min, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(value <= sw->max, ECS_INTERNAL_ERROR, NULL);
 
@@ -12085,8 +12089,8 @@ ecs_switch_t* ecs_switch_new(
     ecs_assert(min > 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_switch_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_switch_t));
-    result->min = min;
-    result->max = max;
+    result->min = (uint32_t)min;
+    result->max = (uint32_t)max;
 
     int32_t count = (int32_t)(max - min) + 1;
     result->headers = ecs_os_calloc(ECS_SIZEOF(ecs_switch_header_t) * count);
@@ -12333,9 +12337,9 @@ int32_t ecs_switch_first(
     uint64_t value)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(value <= sw->max, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(value >= sw->min, ECS_INVALID_PARAMETER, NULL);
-
+    ecs_assert((uint32_t)value <= sw->max, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((uint32_t)value >= sw->min, ECS_INVALID_PARAMETER, NULL);
+    
     ecs_switch_header_t *hdr = get_header(sw, value);
     ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -18416,12 +18420,6 @@ ecs_table_t* ecs_table_traverse_remove(
 
         bool has_case = ECS_HAS_ROLE(e, CASE);
         if (removed && (node != next || has_case)) {
-            /* If this is a case, find switch and encode it in added id */
-            if (has_case) {
-                int32_t s_case = ecs_table_switch_from_case(world, node, e);
-                ecs_assert(s_case != -1, ECS_INTERNAL_ERROR, NULL);
-                e = ECS_CASE | ecs_entity_t_comb(e, s_case);
-            }
             removed->array[removed->count ++] = e; 
         }
 
@@ -18501,12 +18499,6 @@ ecs_table_t* ecs_table_traverse_add(
 
         bool has_case = ECS_HAS_ROLE(e, CASE);
         if (added && (node != next || has_case)) {
-            /* If this is a case, find switch and encode it in added id */
-            if (has_case) {
-                int32_t s_case = ecs_table_switch_from_case(world, node, e);
-                ecs_assert(s_case != -1, ECS_INTERNAL_ERROR, NULL);
-                e = ECS_CASE | ecs_entity_t_comb(e, s_case);
-            }
             added->array[added->count ++] = e; 
         }
 

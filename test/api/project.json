@@ -137,7 +137,9 @@
                 "zero_entity_has_case",
                 "add_to_entity_w_switch",
                 "add_trait_to_entity_w_switch",
-                "sort"
+                "sort",
+                "recycled_tags",
+                "query_recycled_tags"
             ]
         }, {
             "id": "EnabledComponents",

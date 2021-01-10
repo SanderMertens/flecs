@@ -564,12 +564,6 @@ ecs_table_t* ecs_table_traverse_remove(
 
         bool has_case = ECS_HAS_ROLE(e, CASE);
         if (removed && (node != next || has_case)) {
-            /* If this is a case, find switch and encode it in added id */
-            if (has_case) {
-                int32_t s_case = ecs_table_switch_from_case(world, node, e);
-                ecs_assert(s_case != -1, ECS_INTERNAL_ERROR, NULL);
-                e = ECS_CASE | ecs_entity_t_comb(e, s_case);
-            }
             removed->array[removed->count ++] = e; 
         }
 
@@ -649,12 +643,6 @@ ecs_table_t* ecs_table_traverse_add(
 
         bool has_case = ECS_HAS_ROLE(e, CASE);
         if (added && (node != next || has_case)) {
-            /* If this is a case, find switch and encode it in added id */
-            if (has_case) {
-                int32_t s_case = ecs_table_switch_from_case(world, node, e);
-                ecs_assert(s_case != -1, ECS_INTERNAL_ERROR, NULL);
-                e = ECS_CASE | ecs_entity_t_comb(e, s_case);
-            }
             added->array[added->count ++] = e; 
         }
 

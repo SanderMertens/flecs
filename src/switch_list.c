@@ -9,6 +9,8 @@ ecs_switch_header_t *get_header(
         return NULL;
     }
 
+    value = (uint32_t)value;
+
     ecs_assert(value >= sw->min, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(value <= sw->max, ECS_INTERNAL_ERROR, NULL);
 
@@ -63,8 +65,8 @@ ecs_switch_t* ecs_switch_new(
     ecs_assert(min > 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_switch_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_switch_t));
-    result->min = min;
-    result->max = max;
+    result->min = (uint32_t)min;
+    result->max = (uint32_t)max;
 
     int32_t count = (int32_t)(max - min) + 1;
     result->headers = ecs_os_calloc(ECS_SIZEOF(ecs_switch_header_t) * count);
@@ -311,9 +313,9 @@ int32_t ecs_switch_first(
     uint64_t value)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(value <= sw->max, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(value >= sw->min, ECS_INVALID_PARAMETER, NULL);
-
+    ecs_assert((uint32_t)value <= sw->max, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((uint32_t)value >= sw->min, ECS_INVALID_PARAMETER, NULL);
+    
     ecs_switch_header_t *hdr = get_header(sw, value);
     ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
 
