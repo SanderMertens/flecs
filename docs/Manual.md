@@ -1072,6 +1072,7 @@ SHARED   | Match only shared components
 ANY      | Match owned or shared components
 PARENT   | Match component from parent
 CASCADE  | Match component from parent, iterate breadth-first
+SYSTEM   | Match component added to system
 Entity   | Get component directly from a named entity
 $        | Match singleton component
 Nothing  | Do not get the component from an entity, just pass in handle
@@ -1217,6 +1218,38 @@ while (ecs_query_next(&it)) {
 ```
 
 The `CASCADE` modifier is useful for systems that need a certain parent component to be written before the child component is written, which is the case when, for example, transforming from local coordinates to world coordinates.
+
+#### SYSTEM
+The `SYSTEM` modifier automatically adds a component to the system that can be retrieved from the system, and is an easy way to pass data to a system. It can be used like this in a signature:
+
+```
+SYSTEM:MySystemContext
+```
+
+This adds the `MySystemContext` component to the system. An application can get/set this component by using regular ECS operations:
+
+```c
+typedef struct {
+  int value;
+} MySystemContext;
+
+ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, SYSTEM:MySystemContext);
+
+ecs_set(world, MySystem, MySystemContext, { .value = 10 });
+```
+
+When iterating the system, the component can be retrieved just like other components:
+
+```c
+void MySystem(ecs_iter_t *it) {
+   Position *p = ecs_column(it, Position, 1);
+   MySystemContext *ctx = ecs_column(it, MySystemContext, 2);
+   
+   for (int i = 0; i < it.count; i ++) {
+     p[i].x += ctx->value; // Note that this is a pointer, not an array
+   }
+}
+```
 
 #### Entity
 A query can request a component from a named entity directly as is shown in the following example:
