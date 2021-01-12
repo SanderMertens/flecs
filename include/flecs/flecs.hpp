@@ -958,6 +958,18 @@ public:
     template <typename T>
     void remove() const;
 
+    /** Get id for type.
+     */
+    template <typename T>
+    entity_t type_id() {
+        return _::component_info<T>::id(m_world);
+    }
+
+    /** Get singleton entity for type.
+     */
+    template <typename T>
+    flecs::entity singleton();
+
     /** Create alias for component.
      *
      * @tparam Component to create an alias for.
@@ -5178,6 +5190,11 @@ template <typename T>
 void world::remove() const {
     flecs::entity e(m_world, _::component_info<T>::id(m_world));
     e.remove<T>();
+}
+
+template <typename T>
+flecs::entity world::singleton() {
+    return flecs::entity(m_world, _::component_info<T>::id(m_world));
 }
 
 template <typename... Args>

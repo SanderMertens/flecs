@@ -109,3 +109,30 @@ void Singleton_singleton_system() {
     test_int(p->x, 11);
     test_int(p->y, 21);
 }
+
+void Singleton_get_singleton() {
+    flecs::world world;
+
+    world.set<Position>({10, 20});
+
+    auto s = world.singleton<Position>();
+    test_assert(s.has<Position>());
+    test_assert(s.id() == flecs::type_id<Position>());
+
+    const Position* p = s.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_type_id_from_world() {
+    flecs::world world;
+
+    world.set<Position>({10, 20});
+
+    flecs::entity_t id = world.type_id<Position>();
+    test_assert(id == flecs::type_id<Position>());
+
+    auto s = world.singleton<Position>();
+    test_assert(s.id() == flecs::type_id<Position>());
+    test_assert(s.id() == flecs::type_id<Position>());
+}

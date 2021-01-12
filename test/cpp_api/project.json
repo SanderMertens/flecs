@@ -284,7 +284,9 @@
                 "patch_singleton",
                 "remove_singleton",
                 "has_singleton",
-                "singleton_system"
+                "singleton_system",
+                "get_singleton",
+                "type_id_from_world"
             ]
         }]
     }

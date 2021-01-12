@@ -249,6 +249,8 @@ void Singleton_patch_singleton(void);
 void Singleton_remove_singleton(void);
 void Singleton_has_singleton(void);
 void Singleton_singleton_system(void);
+void Singleton_get_singleton(void);
+void Singleton_type_id_from_world(void);
 
 bake_test_case Entity_testcases[] = {
     {
@@ -1135,6 +1137,14 @@ bake_test_case Singleton_testcases[] = {
     {
         "singleton_system",
         Singleton_singleton_system
+    },
+    {
+        "get_singleton",
+        Singleton_get_singleton
+    },
+    {
+        "type_id_from_world",
+        Singleton_type_id_from_world
     }
 };
 
@@ -1248,7 +1258,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        7,
+        9,
         Singleton_testcases
     }
 };
