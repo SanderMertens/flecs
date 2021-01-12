@@ -502,14 +502,26 @@ void instantiate_children(
     int32_t child_count = ecs_vector_count(child_data->entities);
 
     for (i = row; i < count + row; i ++) {
-        ecs_entity_t e = entities[i];
+        ecs_entity_t instance = entities[i];
 
         /* Replace CHILDOF element in the component array with instance id */
-        components.array[base_index] = ECS_CHILDOF | e;
+        components.array[base_index] = ECS_CHILDOF | instance;
 
         /* Find or create table */
         ecs_table_t *i_table = ecs_table_find_or_create(world, &components);
         ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL); 
+
+        /* The instance is trying to instantiate from a base that is also
+         * its parent. This would cause the hierarchy to instantiate itself
+         * which would cause infinite recursion. */
+#ifndef NDEBUG
+        int j;
+        ecs_entity_t *children = ecs_vector_first(child_data->entities, ecs_entity_t);
+        for (j = 0; j < child_count; j ++) {
+            ecs_entity_t child = children[j];        
+            ecs_assert(child != instance, ECS_INVALID_PARAMETER, NULL);
+        }
+#endif
 
         /* Create children */
         int32_t child_row; 
@@ -517,9 +529,6 @@ void instantiate_children(
 
         /* If prefab child table has children itself, recursively instantiate */
         ecs_data_t *i_data = ecs_table_get_data(i_table);
-        ecs_entity_t *children = ecs_vector_first(child_data->entities, ecs_entity_t);
-
-        int j;
         for (j = 0; j < child_count; j ++) {
             ecs_entity_t child = children[j];
             instantiate(world, child, i_table, i_data, child_row + j, 1);

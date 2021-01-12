@@ -2917,3 +2917,21 @@ void Prefab_rematch_after_add_instanceof_to_parent() {
 
     ecs_fini(world);
 }
+
+void Prefab_child_of_instance() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_entity(world, e, ECS_CHILDOF | base);
+
+    test_expect_abort();
+
+    /* Should trigger an assert */
+    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+
+    ecs_fini(world);
+}

@@ -8604,14 +8604,14 @@ public:
     template <typename T>
     void remove() const;
 
-    /** Get id for type
+    /** Get id for type.
      */
     template <typename T>
     entity_t type_id() {
         return _::component_info<T>::id(m_world);
     }
 
-    /** Get singleton for type
+    /** Get singleton entity for type.
      */
     template <typename T>
     flecs::entity singleton();

@@ -1061,7 +1061,8 @@
                 "instantiate_empty_child_table",
                 "instantiate_emptied_child_table",
                 "override_2_prefabs",
-                "rematch_after_add_instanceof_to_parent"
+                "rematch_after_add_instanceof_to_parent",
+                "child_of_instance"
             ]
         }, {
             "id": "System_w_FromContainer",
