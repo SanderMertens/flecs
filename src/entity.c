@@ -514,9 +514,10 @@ void instantiate_children(
         /* The instance is trying to instantiate from a base that is also
          * its parent. This would cause the hierarchy to instantiate itself
          * which would cause infinite recursion. */
-#ifndef NDEBUG
         int j;
-        ecs_entity_t *children = ecs_vector_first(child_data->entities, ecs_entity_t);
+        ecs_entity_t *children = ecs_vector_first(
+            child_data->entities, ecs_entity_t);
+#ifndef NDEBUG
         for (j = 0; j < child_count; j ++) {
             ecs_entity_t child = children[j];        
             ecs_assert(child != instance, ECS_INVALID_PARAMETER, NULL);
