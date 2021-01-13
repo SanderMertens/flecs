@@ -223,7 +223,11 @@ int32_t ecs_column_index_from_name(
 ecs_type_t ecs_iter_type(
     const ecs_iter_t *it)
 {
-    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    /* If no table is set it means that the iterator isn't pointing to anything
+     * yet. The most likely cause for this is that the operation is invoked on
+     * a new iterator for which "next" hasn't been invoked yet, or on an
+     * iterator that is out of elements. */
+    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_table_t *table = it->table->table;
     return table->type;
 }
@@ -232,7 +236,8 @@ int32_t ecs_table_component_index(
     const ecs_iter_t *it,
     ecs_entity_t component)
 {
-    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    /* See ecs_iter_type */    
+    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_type_index_of(it->table->table->type, component);
 }
@@ -241,9 +246,11 @@ void* ecs_table_column(
     const ecs_iter_t *it,
     int32_t column_index)
 {
-    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    /* See ecs_iter_type */ 
+    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     ecs_table_t *table = it->table->table;
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column_index < ecs_vector_count(table->type), 
         ECS_INVALID_PARAMETER, NULL);
     
@@ -260,9 +267,11 @@ size_t ecs_table_column_size(
     const ecs_iter_t *it,
     int32_t column_index)
 {
-    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    /* See ecs_iter_type */
+    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     ecs_table_t *table = it->table->table;
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column_index < ecs_vector_count(table->type), 
         ECS_INVALID_PARAMETER, NULL);
 
