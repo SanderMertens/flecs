@@ -62,7 +62,9 @@
                 "get_parent_w_tag",
                 "is_component_enabled",
                 "is_enabled_component_enabled",
-                "is_disabled_component_enabled"
+                "is_disabled_component_enabled",
+                "get_type",
+                "get_nonempty_type"
             ]
         }, {
             "id": "Traits",

@@ -767,3 +767,34 @@ void Entity_is_disabled_component_enabled() {
 
     test_assert(!e.is_enabled<Position>());
 }
+
+void Entity_get_type() {
+    flecs::world world;
+
+    auto entity = world.entity();
+    test_assert(entity.id() != 0);
+
+    auto type_1 = entity.type();
+    test_assert(type_1.id() == 0);
+    test_int(type_1.vector().size(), 0);
+
+    auto type_2 = entity.type();
+    test_assert(type_2.id() == 0);
+    test_int(type_1.vector().size(), 0);
+}
+
+void Entity_get_nonempty_type() {
+    flecs::world world;
+
+    auto entity = world.entity()
+        .add<Position>();
+    test_assert(entity.id() != 0);
+
+    auto type_1 = entity.type();
+    test_assert(type_1.id() == 0);
+    test_int(type_1.vector().size(), 1);
+
+    auto type_2 = entity.type();
+    test_assert(type_2.id() == 0);
+    test_int(type_1.vector().size(), 1);
+}

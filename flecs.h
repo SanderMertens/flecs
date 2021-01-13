@@ -10484,12 +10484,12 @@ public:
     }
 
     type(const flecs::world& world, type_t t)
-        : entity( world )
+        : entity( world.c_ptr(), 0 )
         , m_type( t )
         , m_normalized( t ) { }
 
     type(world_t *world, type_t t)
-        : entity( world )
+        : entity( world, 0 )
         , m_type( t )
         , m_normalized( t ) { }
 
@@ -10609,10 +10609,12 @@ public:
     }
 
     void enable() const {
+        ecs_assert(m_id != 0, ECS_INVALID_OPERATION, NULL);
         ecs_enable(m_world, m_id, true);
     }
 
     void disable() const {
+        ecs_assert(m_id != 0, ECS_INVALID_OPERATION, NULL);
         ecs_enable(m_world, m_id, false);
     }
 
@@ -10622,6 +10624,7 @@ public:
 
 private:
     void sync_from_me() {
+        ecs_assert(m_id != 0, ECS_INVALID_OPERATION, NULL);
         EcsType *tc = ecs_get_mut(m_world, m_id, EcsType, NULL);
         if (tc) {
             tc->type = m_type;
@@ -10630,6 +10633,7 @@ private:
     }
 
     void sync_from_flecs() {
+        ecs_assert(m_id != 0, ECS_INVALID_OPERATION, NULL);
         EcsType *tc = ecs_get_mut(m_world, m_id, EcsType, NULL);
         if (tc) {
             m_type = tc->type;
