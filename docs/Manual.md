@@ -445,9 +445,9 @@ const char *name = ecs_get_name(world, e);
 ### Id recycling
 Entity identifiers are reused when deleted. The `ecs_new` operation will first attempt to recycle a deleted identifier before producing a new one. If no identifier can be recycled, it will return the last issued identifier + 1. 
 
-Entity identifiers can only be recycled if they have been deleted with `ecs_delete`. Repeatedly calling `ecs_delete` with `ecs_new` will cause unbounded memory growth, as the framework stores a list of entity identifiers that can be recycled. An application should never delete an identifier that has not been returned by `ecs_new`, and never delete the returned identifier more than once.
+Entity identifiers can only be recycled if they have been deleted with `ecs_delete`. When `ecs_delete` is invoked, the generation count of the entity is increased. The generation is encoded in the entity identifier, which means that any existing entity identifiers with the old generation encoded in it will be considered not alive. Calling a delete multiple times on an entity that is not alive has no effect.
 
-When using multiple threads, the `ecs_new` operation guarantees that the returned identifiers are unique, by using atomic increments instead of a simple increment operation. Ids will not be recycled when using multiple threads, since this would require locking global administration.
+When using multiple threads, the `ecs_new` operation guarantees that the returned identifiers are unique, by using atomic increments instead of a simple increment operation. New ids generated from a thread will not be recycled ids, since this would require taking a lock on the administration. While this does not representa memory leak, it could cause ids to rise over time. If this happens and is an issue, an application should precreate the ids.
 
 ### Generations
 When an entity is deleted, the generation count for that entity id is increased. The entity generation count enables an application to test whether an entity is still alive or whether it has been deleted, even after the id has been recycled. Consider:
