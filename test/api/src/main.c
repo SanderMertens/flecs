@@ -419,6 +419,7 @@ void Set_get_mut_tag_existing_w_comp(void);
 void Set_get_mut_tag_new_w_trait(void);
 void Set_get_mut_tag_existing_w_trait(void);
 void Set_modified_w_on_set(void);
+void Set_modified_no_component(void);
 
 // Testsuite 'Lookup'
 void Lookup_setup(void);
@@ -3007,6 +3008,10 @@ bake_test_case Set_testcases[] = {
     {
         "modified_w_on_set",
         Set_modified_w_on_set
+    },
+    {
+        "modified_no_component",
+        Set_modified_no_component
     }
 };
 
@@ -7082,7 +7087,7 @@ static bake_test_suite suites[] = {
         "Set",
         NULL,
         NULL,
-        22,
+        23,
         Set_testcases
     },
     {

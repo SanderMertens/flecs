@@ -494,3 +494,22 @@ void Set_modified_w_on_set() {
     
     ecs_fini(world);
 }
+
+void Set_modified_no_component() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, OnSetPosition, EcsOnSet, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    test_expect_abort();
+
+    /* This should trigger an assert */
+    ecs_modified(world, e, Position);
+
+    ecs_fini(world);
+}

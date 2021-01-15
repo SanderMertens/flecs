@@ -458,7 +458,8 @@
                 "get_mut_tag_existing_w_comp",
                 "get_mut_tag_new_w_trait",
                 "get_mut_tag_existing_w_trait",
-                "modified_w_on_set"
+                "modified_w_on_set",
+                "modified_no_component"
             ]
         }, {
             "id": "Lookup",

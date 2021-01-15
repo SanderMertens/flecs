@@ -4104,16 +4104,35 @@ void run_set_systems_for_entities(
     ecs_entity_t * entities,
     bool set_all)
 {   
-    /* Run OnSet systems */
     if (set_all) {
+        /* Run OnSet systems for all components of the entity. This usually
+         * happens when an entity is created directly in its target table. */
         ecs_vector_t *queries = table->on_set_all;
         ecs_vector_each(queries, ecs_matched_query_t, m, {
             ecs_run_monitor(world, m, components, row, count, entities);
         });
     } else {
+        /* Run OnSet systems for a specific component. This usually happens when
+         * an application calls ecs_set or ecs_modified. The entity's table
+         * stores a vector for each component with the OnSet systems for that
+         * component. This vector maintains the same order as the table's type,
+         * which makes finding the correct set of systems as simple as getting
+         * the index of a component id in the table type. 
+         *
+         * One thing to note is that the system may be invoked for a table that
+         * is not the same as the entity for which the system is invoked. This
+         * can happen in the case of instancing, where adding an INSTANCEOF
+         * relationship conceptually adds components to an entity, but the 
+         * actual components are stored on the base entity. */
         ecs_vector_t **on_set_systems = table->on_set;
         if (on_set_systems) {
             int32_t index = ecs_type_index_of(table->type, components->array[0]);
+            
+            /* This should never happen, as an OnSet system should only ever be
+             * invoked for entities that have the component for which this
+             * function was invoked. */
+            ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
+
             ecs_vector_t *queries = on_set_systems[index];
             ecs_vector_each(queries, ecs_matched_query_t, m, {
                 ecs_run_monitor(world, m, components, row, count, entities);
@@ -5870,6 +5889,13 @@ void ecs_modified_w_entity(
     if (ecs_defer_modified(world, stage, entity, component)) {
         return;
     }
+
+    /* If the entity does not have the component, calling ecs_modified is 
+     * invalid. The assert needs to happen after the defer statement, as the
+     * entity may not have the component when this function is called while
+     * operations are being deferred. */
+    ecs_assert(ecs_has_entity(world, entity, component), 
+        ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_info_t info = {0};
     if (ecs_get_info(world, entity, &info)) {
