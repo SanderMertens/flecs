@@ -1246,3 +1246,17 @@ void DeferredActions_discard_child_w_add() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_defer_return_value() {
+    ecs_world_t *world = ecs_init();
+
+    test_bool(ecs_defer_begin(world), true);
+
+    test_bool(ecs_defer_begin(world), false);
+
+    test_bool(ecs_defer_end(world), false);
+
+    test_bool(ecs_defer_end(world), true);
+
+    ecs_fini(world);
+}

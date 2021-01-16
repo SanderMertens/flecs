@@ -75,8 +75,7 @@ bool ecs_defer_none(
     ecs_stage_t *stage)
 {
     (void)world;
-    stage->defer ++;
-    return false;
+    return (++ stage->defer) == 1;
 }
 
 bool ecs_defer_modified(
@@ -361,18 +360,19 @@ void ecs_stage_merge(
     }    
 }
 
-void ecs_stage_defer_begin(
+bool ecs_stage_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {   
     (void)world; 
-    ecs_defer_none(world, stage);
-    if (stage->defer == 1) {
-        stage->defer_queue = stage->defer_merge_queue;      
+    if (ecs_defer_none(world, stage)) {
+        stage->defer_queue = stage->defer_merge_queue;    
+        return true;  
     }
+    return false;
 }
 
-void ecs_stage_defer_end(
+bool ecs_stage_defer_end(
     ecs_world_t *world,
     ecs_stage_t *stage)
 { 
@@ -381,7 +381,9 @@ void ecs_stage_defer_end(
     if (!stage->defer) {
         stage->defer_merge_queue = stage->defer_queue;
         stage->defer_queue = NULL;
+        return true;
     }
+    return false;
 }
 
 void ecs_stage_merge_post_frame(

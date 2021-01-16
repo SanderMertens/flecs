@@ -751,8 +751,8 @@ public:
      *
      * This operation is thread safe.
      */
-    void defer_begin() {
-        ecs_defer_begin(m_world);
+    bool defer_begin() {
+        return ecs_defer_begin(m_world);
     }
 
     /** End block of operations to defer. 
@@ -760,8 +760,8 @@ public:
      *
      * This operation is thread safe.
      */
-    void defer_end() {
-        ecs_defer_end(m_world);
+    bool defer_end() {
+        return ecs_defer_end(m_world);
     }
 
     /** Set number of threads.

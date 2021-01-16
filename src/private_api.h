@@ -131,11 +131,11 @@ void ecs_stage_merge_post_frame(
     ecs_stage_t *stage);
 
 /* Begin defer for stage */
-void ecs_stage_defer_begin(
+bool ecs_stage_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-void ecs_stage_defer_end(
+bool ecs_stage_defer_end(
     ecs_world_t *world,
     ecs_stage_t *stage);    
 
@@ -219,7 +219,7 @@ bool ecs_defer_set(
     void **value_out,
     bool *is_added);
 
-void ecs_defer_flush(
+bool ecs_defer_flush(
     ecs_world_t *world,
     ecs_stage_t *stage);
 

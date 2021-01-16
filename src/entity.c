@@ -2494,27 +2494,27 @@ int32_t ecs_count_w_filter(
     return result;
 }
 
-void ecs_defer_begin(
+bool ecs_defer_begin(
     ecs_world_t *world)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     
     if (world->in_progress) {
-        ecs_stage_defer_begin(world, stage);
+        return ecs_stage_defer_begin(world, stage);
     } else {
-        ecs_defer_none(world, stage);
+        return ecs_defer_none(world, stage);
     }
 }
 
-void ecs_defer_end(
+bool ecs_defer_end(
     ecs_world_t *world)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     
     if (world->in_progress) {
-        ecs_stage_defer_end(world, stage);
+        return ecs_stage_defer_end(world, stage);
     } else {
-        ecs_defer_flush(world, stage);
+        return ecs_defer_flush(world, stage);
     }
 }
 
@@ -2700,7 +2700,7 @@ bool valid_components(
 }
 
 /* Leave safe section. Run all deferred commands. */
-void ecs_defer_flush(
+bool ecs_defer_flush(
     ecs_world_t * world,
     ecs_stage_t * stage)
 {
@@ -2802,5 +2802,9 @@ void ecs_defer_flush(
                 ecs_vector_free(defer_queue);
             }
         }
+
+        return true;
     }
+
+    return false;
 }

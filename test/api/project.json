@@ -1345,7 +1345,8 @@
                 "discard_add_two",
                 "discard_remove_two",
                 "discard_child",
-                "discard_child_w_add"
+                "discard_child_w_add",
+                "defer_return_value"
             ]
         }, {
             "id": "SingleThreadStaging",

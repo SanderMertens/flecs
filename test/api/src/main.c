@@ -1246,6 +1246,7 @@ void DeferredActions_discard_add_two(void);
 void DeferredActions_discard_remove_two(void);
 void DeferredActions_discard_child(void);
 void DeferredActions_discard_child_w_add(void);
+void DeferredActions_defer_return_value(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -6118,6 +6119,10 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "discard_child_w_add",
         DeferredActions_discard_child_w_add
+    },
+    {
+        "defer_return_value",
+        DeferredActions_defer_return_value
     }
 };
 
@@ -7317,7 +7322,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        32,
+        33,
         DeferredActions_testcases
     },
     {

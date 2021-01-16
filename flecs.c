@@ -774,11 +774,11 @@ void ecs_stage_merge_post_frame(
     ecs_stage_t *stage);
 
 /* Begin defer for stage */
-void ecs_stage_defer_begin(
+bool ecs_stage_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-void ecs_stage_defer_end(
+bool ecs_stage_defer_end(
     ecs_world_t *world,
     ecs_stage_t *stage);    
 
@@ -862,7 +862,7 @@ bool ecs_defer_set(
     void **value_out,
     bool *is_added);
 
-void ecs_defer_flush(
+bool ecs_defer_flush(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
@@ -6301,27 +6301,27 @@ int32_t ecs_count_w_filter(
     return result;
 }
 
-void ecs_defer_begin(
+bool ecs_defer_begin(
     ecs_world_t *world)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     
     if (world->in_progress) {
-        ecs_stage_defer_begin(world, stage);
+        return ecs_stage_defer_begin(world, stage);
     } else {
-        ecs_defer_none(world, stage);
+        return ecs_defer_none(world, stage);
     }
 }
 
-void ecs_defer_end(
+bool ecs_defer_end(
     ecs_world_t *world)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     
     if (world->in_progress) {
-        ecs_stage_defer_end(world, stage);
+        return ecs_stage_defer_end(world, stage);
     } else {
-        ecs_defer_flush(world, stage);
+        return ecs_defer_flush(world, stage);
     }
 }
 
@@ -6507,7 +6507,7 @@ bool valid_components(
 }
 
 /* Leave safe section. Run all deferred commands. */
-void ecs_defer_flush(
+bool ecs_defer_flush(
     ecs_world_t * world,
     ecs_stage_t * stage)
 {
@@ -6609,7 +6609,11 @@ void ecs_defer_flush(
                 ecs_vector_free(defer_queue);
             }
         }
+
+        return true;
     }
+
+    return false;
 }
 
 static
@@ -6687,8 +6691,7 @@ bool ecs_defer_none(
     ecs_stage_t *stage)
 {
     (void)world;
-    stage->defer ++;
-    return false;
+    return (++ stage->defer) == 1;
 }
 
 bool ecs_defer_modified(
@@ -6973,18 +6976,20 @@ void ecs_stage_merge(
     }    
 }
 
-void ecs_stage_defer_begin(
+bool ecs_stage_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {   
     (void)world; 
     ecs_defer_none(world, stage);
     if (stage->defer == 1) {
-        stage->defer_queue = stage->defer_merge_queue;      
+        stage->defer_queue = stage->defer_merge_queue;    
+        return true;  
     }
+    return false;
 }
 
-void ecs_stage_defer_end(
+bool ecs_stage_defer_end(
     ecs_world_t *world,
     ecs_stage_t *stage)
 { 
@@ -6993,7 +6998,9 @@ void ecs_stage_defer_end(
     if (!stage->defer) {
         stage->defer_merge_queue = stage->defer_queue;
         stage->defer_queue = NULL;
+        return true;
     }
+    return false;
 }
 
 void ecs_stage_merge_post_frame(
