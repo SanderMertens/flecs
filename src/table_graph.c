@@ -849,6 +849,10 @@ ecs_table_t *find_or_create(
         }
     }
 
+    /* If we get here, table needs to be created which is only allowed when the
+     * application is not currently in progress */
+    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+
     ecs_entities_t ordered_entities = {
         .array = ordered,
         .count = type_count
@@ -873,8 +877,6 @@ ecs_table_t* ecs_table_find_or_create(
     ecs_entities_t * components)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
-
     return find_or_create(world, components);
 }
 

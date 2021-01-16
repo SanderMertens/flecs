@@ -2710,3 +2710,91 @@ void SingleThreadStaging_on_add_after_new_type_in_progress() {
 
     ecs_fini(world);
 }
+
+void SingleThreadStaging_new_type_from_entity() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_frame_begin(world, 1);
+
+    ecs_staging_begin(world);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    test_expect_abort();
+
+    /* Type is guaranteed not to exist, should trigger assert because table
+     * creation is not allowed while in progress */
+    ecs_type_from_entity(world, e);
+}
+
+void SingleThreadStaging_existing_type_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    
+    /* Precreate type so that it can be looked up while in progress */
+    ecs_type_t t = ecs_type_from_entity(world, e);
+    test_assert(t != NULL);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_staging_begin(world);
+
+    ecs_type_from_entity(world, e);
+
+    ecs_staging_end(world);
+
+    ecs_frame_end(world);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_new_type_add() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_staging_begin(world);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    test_expect_abort();
+
+    /* Type is guaranteed not to exist, should trigger assert because table
+     * creation is not allowed while in progress */
+    ecs_type_add(world, ecs_type(Position), e);
+}
+
+void SingleThreadStaging_existing_type_add() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    ECS_COMPONENT(world, Position);
+    
+    /* Precreate type so that it can be looked up while in progress */
+    ecs_type_t t = ecs_type_add(world, ecs_type(Position), e);
+    test_assert(t != NULL);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_staging_begin(world);
+
+    ecs_type_add(world, ecs_type(Position), e);
+
+    ecs_staging_end(world);
+
+    ecs_frame_end(world);
+
+    ecs_fini(world);
+}
