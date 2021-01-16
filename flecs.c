@@ -6981,8 +6981,7 @@ bool ecs_stage_defer_begin(
     ecs_stage_t *stage)
 {   
     (void)world; 
-    ecs_defer_none(world, stage);
-    if (stage->defer == 1) {
+    if (ecs_defer_none(world, stage)) {
         stage->defer_queue = stage->defer_merge_queue;    
         return true;  
     }

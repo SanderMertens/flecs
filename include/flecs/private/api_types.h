@@ -152,7 +152,6 @@ struct ecs_iter_t {
     FLECS_FLOAT world_time;       /**< Time elapsed since start of simulation */
 
     int32_t frame_offset;         /**< Offset relative to frame */
-    int32_t table_offset;         /**< Current active table being processed */
     int32_t offset;               /**< Offset relative to current table */
     int32_t count;                /**< Number of entities to process by system */
     int32_t total_count;          /**< Total number of entities in table */
