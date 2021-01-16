@@ -1795,8 +1795,6 @@ void activate_table(
                     ecs_system_activate(world, query->system, false, NULL);
                 }
             }
-#else
-            (void)src_count;
 #endif
         }
 

@@ -7029,7 +7029,6 @@ void ecs_snapshot_free(
 
 #endif
 #endif
-#ifdef FLECS_DIRECT_ACCESS
 
 /** Direct access API.
  *
@@ -7039,14 +7038,15 @@ void ecs_snapshot_free(
  * API in an incorrect way can lead to a corrupted datastore.
  */
 
-#ifdef FLECS_DIRECT_ACCESS
-
 #ifndef FLECS_DIRECT_ACCESS_H_
 #define FLECS_DIRECT_ACCESS_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* These functions are part of the core and available even when the direct 
+ * access API is not part of a custom build. */
 
 /** Find or create table with specified component string. 
  * The provided string must be a comma-separated list of fully qualified 
@@ -7125,6 +7125,11 @@ ecs_record_t ecs_table_insert(
 FLECS_API
 int32_t ecs_table_count(
     ecs_table_t *table);
+
+/* From here on functions are only available when the direct access API is part
+ * of a (custom) build. */
+
+#ifdef FLECS_DIRECT_ACCESS
 
 /** Find the index of a column in a table.
  * Table columns are stored in the order of their respective component ids. As
@@ -7427,13 +7432,12 @@ void ecs_record_move_to(
     void *value,
     int32_t count);
 
+#endif
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
-#endif
 #endif
 #ifdef FLECS_STATS
 #ifdef FLECS_STATS
