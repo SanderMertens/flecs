@@ -2748,7 +2748,7 @@ void ecs_merge(
  * This operation is thread safe.
  * 
  * @param world The world.
- * @return true if the world was already in deferred mode, false if not.
+ * @return true if world changed from non-deferred mode to deferred mode.
  */
 FLECS_API
 bool ecs_defer_begin(
