@@ -7,14 +7,14 @@ ecs_os_thread_t posix_thread_new(
     ecs_os_thread_callback_t callback, 
     void *arg)
 {
-    pthread_t thread;
+    pthread_t *thread = ecs_os_malloc(sizeof(pthread_t));
     int r;
 
-    if ((r = pthread_create (&thread, NULL, callback, arg))) {
+    if ((r = pthread_create (thread, NULL, callback, arg))) {
         abort();
     }
 
-    return (ecs_os_thread_t)thread;
+    return (ecs_os_thread_t)(uintptr_t)thread;
 }
 
 static
@@ -22,7 +22,9 @@ void* posix_thread_join(
     ecs_os_thread_t thread)
 {
     void *arg;
-    pthread_join((pthread_t)thread, &arg);
+    pthread_t *thr = (pthread_t*)(uintptr_t)thread;
+    pthread_join(*thr, &arg);
+    ecs_os_free(thr);
     return arg;
 }
 
