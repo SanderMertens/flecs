@@ -1,4 +1,10 @@
 #define flecs_STATIC
+/**
+ * @file flecs.h
+ * @brief Flecs public API.
+ *
+ * This file contains the public API for Flecs.
+ */
 
 #ifndef FLECS_H
 #define FLECS_H
@@ -343,7 +349,12 @@ typedef int32_t ecs_size_t;
 #endif
 
 #endif
-/* This is an implementation of a simple vector type. The vector is allocated in
+
+/**
+ * @file vector.h
+ * @brief Vector datastructure.
+ *
+ * This is an implementation of a simple vector type. The vector is allocated in
  * a single block of memory, with the element count, and allocated number of
  * elements encoded in the block. As this vector is used for user-types it has
  * been designed to support alignments higher than 8 bytes. This makes the size
@@ -864,7 +875,11 @@ private:
 #endif
 
 #endif
-/** This is an implementation of a paged sparse set that stores the payload in
+/**
+ * @file sparse.h
+ * @brief Sparse set datastructure.
+ *
+ * This is an implementation of a paged sparse set that stores the payload in
  * the sparse array.
  *
  * A sparse set has a dense and a sparse array. The sparse array is directly
@@ -1074,7 +1089,11 @@ FLECS_API void ecs_sparse_memory(
 #endif
 
 #endif
-/** Simple bitset implementation. The bitset allows for storage of arbitrary
+/**
+ * @file bitset.h
+ * @brief Bitset datastructure.
+ *
+ * Simple bitset implementation. The bitset allows for storage of arbitrary
  * numbers of bits.
  */
 
@@ -1141,7 +1160,11 @@ void ecs_bitset_swap(
 #endif
 
 #endif
-/** Key-value datastructure. The map allows for fast retrieval of a payload for
+/**
+ * @file map.h
+ * @brief Map datastructure.
+ *
+ * Key-value datastructure. The map allows for fast retrieval of a payload for
  * a 64-bit key. While it is not as fast as the sparse set, it is better at
  * handling randomly distributed values.
  *
@@ -1378,7 +1401,11 @@ private:
 #endif
 
 #endif
-/* Datastructure that stores N interleaved linked lists in an array. 
+/**
+ * @file switch_list.h
+ * @brief Interleaved linked list for storing mutually exclusive values.
+ *
+ * Datastructure that stores N interleaved linked lists in an array. 
  * This allows for efficient storage of elements with mutually exclusive values.
  * Each linked list has a header element which points to the index in the array
  * that stores the first node of the list. Each list node points to the next
@@ -1499,6 +1526,22 @@ extern "C" {
 #endif
 
 #endif
+/**
+ * @file strbuf.h
+ * @brief Utility for constructing strings.
+ *
+ * A buffer builds up a list of elements which individually can be up to N bytes
+ * large. While appending, data is added to these elements. More elements are
+ * added on the fly when needed. When an application calls ecs_strbuf_get, all
+ * elements are combined in one string and the element administration is freed.
+ *
+ * This approach prevents reallocs of large blocks of memory, and therefore
+ * copying large blocks of memory when appending to a large buffer. A buffer
+ * preallocates some memory for the element overhead so that for small strings
+ * there is hardly any overhead, while for large strings the overhead is offset
+ * by the reduced time spent on copying memory.
+ */
+ 
 #ifndef FLECS_STRBUF_H_
 #define FLECS_STRBUF_H_
 
@@ -1510,18 +1553,6 @@ extern "C" {
 #define ECS_STRBUF_INIT (ecs_strbuf_t){0}
 #define ECS_STRBUF_ELEMENT_SIZE (511)
 #define ECS_STRBUF_MAX_LIST_DEPTH (32)
-
-/* A buffer builds up a list of elements which individually can be up to N bytes
- * large. While appending, data is added to these elements. More elements are
- * added on the fly when needed. When an application calls ecs_strbuf_get, all
- * elements are combined in one string and the element administration is freed.
- *
- * This approach prevents reallocs of large blocks of memory, and therefore
- * copying large blocks of memory when appending to a large buffer. A buffer
- * preallocates some memory for the element overhead so that for small strings
- * there is hardly any overhead, while for large strings the overhead is offset
- * by the reduced time spent on copying memory.
- */
 
 typedef struct ecs_strbuf_element {
     bool buffer_embedded;
@@ -1668,6 +1699,18 @@ bool ecs_strbuf_list_appendstr(
 #endif
 
 #endif
+/**
+ * @file os_api.h
+ * @brief Operationg system abstractions.
+ *
+ * This file contains the operating system abstraction API. The flecs core 
+ * library avoids OS/runtime specific API calls as much as possible. Instead it
+ * provides an interface that can be implemented by applications.
+ *
+ * Examples for how to implement this interface can be found in the 
+ * examples/os_api folder.
+ */
+
 #ifndef FLECS_OS_API_H
 #define FLECS_OS_API_H
 
@@ -2174,10 +2217,10 @@ typedef void (*ecs_fini_action_t)(
     void *ctx);
 
 /**
- * @file api_defines.h
+ * @file api_types.h
  * @brief Supporting types for the public API.
  *
- * This file containstypes that are typically not used by an application but 
+ * This file contains types that are typically not used by an application but 
  * support the public API, and therefore must be exposed. This header should not
  * be included by itself.
  */
@@ -2411,13 +2454,18 @@ typedef void (*ecs_move_t)(
 #endif
 
 #endif
+/**
+ * @file api_support.h
+ * @brief Support functions and constants.
+ *
+ * Supporting types and functions that need to be exposed either in support of 
+ * the public API or for unit tests, but that may change between minor / patch 
+ * releases. 
+ */
+
 #ifndef FLECS_API_SUPPORT_H
 #define FLECS_API_SUPPORT_H
 
-
-/** Supporting types and functions that need to be exposed either in support of 
- * the public API or for unit tests, but that may change between minor / patch 
- * releases. */
 
 #ifdef __cplusplus
 extern "C" {
@@ -2672,7 +2720,12 @@ ecs_sig_t* ecs_query_get_sig(
 #endif
 
 #endif
-/** Internal utility functions for tracing, warnings and errors. */
+/**
+ * @file log.h
+ * @brief Internal logging API.
+ *
+ * Internal utility functions for tracing, warnings and errors. 
+ */
 
 #ifndef FLECS_LOG_H
 #define FLECS_LOG_H
@@ -2833,6 +2886,9 @@ void _ecs_parser_error(
 /**
  * @file type.h
  * @brief Type API.
+ *
+ * This API contains utilities for working with types. Types are vectors of
+ * component ids, and are used most prominently in the API to construct filters.
  */
 
 #ifndef FLECS_TYPE_H
@@ -5707,18 +5763,31 @@ int32_t ecs_table_count(
 
 /* Optional modules */
 #ifdef FLECS_SYSTEM
+/**
+ * @file system.h
+ * @brief System module.
+ *
+ * The system module allows for creating and running systems. A system is a
+ * query in combination with a callback function. In addition systems have
+ * support for time management and can be monitored by the stats addon.
+ */
+
 #ifdef FLECS_SYSTEM
 
 #ifndef FLECS_MODULE
 #define FLECS_MODULE
 #endif
 
-#ifdef FLECS_MODULE
-
 /**
  * @file module.h
- * @brief Module API.
+ * @brief Module addon.
+ *
+ * The module addon allows for creating and importing modules. Flecs modules 
+ * enable applications to organize components and systems into reusable units of
+ * code that can easily be across projects.
  */
+
+#ifdef FLECS_MODULE
 
 #ifndef FLECS_MODULE_H
 #define FLECS_MODULE_H
@@ -5726,10 +5795,6 @@ int32_t ecs_table_count(
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
-//// Module API
-////////////////////////////////////////////////////////////////////////////////
 
 /** Import a module.
  * This operation will load a modules and store the public module handles in the
@@ -6185,6 +6250,21 @@ void FlecsSystemImport(
 #endif
 #endif
 #ifdef FLECS_PIPELINE
+/**
+ * @file pipeline.h
+ * @brief Pipeline module.
+ *
+ * The pipeline module provides support for running systems automatically and
+ * on multiple threads. A pipeline is a collection of tags that can be added to
+ * systems. When ran, a pipeline will query for all systems that have the tags
+ * that belong to a pipeline, and run them.
+ *
+ * The module defines a number of builtin tags (EcsPreUpdate, EcsOnUpdate, 
+ * EcsPostUpdate etc.) that are registered with the builtin pipeline. The 
+ * builtin pipeline is ran by default when calling ecs_progress(). An 
+ * application can set a custom pipeline with the ecs_set_pipeline function.
+ */
+
 #ifdef FLECS_PIPELINE
 
 #ifndef FLECS_SYSTEM
@@ -6198,10 +6278,6 @@ void FlecsSystemImport(
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
-//// Pipeline API
-////////////////////////////////////////////////////////////////////////////////
 
 #ifndef FLECS_LEGACY
 #define ECS_PIPELINE(world, name, ...) \
@@ -6335,6 +6411,14 @@ void FlecsPipelineImport(
 #endif
 #endif
 #ifdef FLECS_TIMER
+/**
+ * @file timer.h
+ * @brief Timer module.
+ *
+ * Timers can be used to trigger actions at periodic or one-shot intervals. They
+ * are typically used together with systems and pipelines.
+ */
+
 #ifdef FLECS_TIMER
 
 #ifndef FLECS_MODULE
@@ -6554,12 +6638,12 @@ void FlecsTimerImport(
 
 /* Optional addons */
 #ifdef FLECS_BULK
-#ifdef FLECS_BULK
-
 /**
  * @file bulk.h
- * @brief Bulk API.
+ * @brief Bulk operations operate on all entities that match a provided filter.
  */
+
+#ifdef FLECS_BULK
 
 #ifndef FLECS_BULK_H
 #define FLECS_BULK_H
@@ -6693,6 +6777,11 @@ void ecs_bulk_delete(
 #endif
 #endif
 #ifdef FLECS_DBG
+/**
+ * @file dbg.h
+ * @brief The debug addon enables requesting internals from entities and tables.
+ */
+
 #ifdef FLECS_DBG
 
 #ifndef FLECS_DBG_H
@@ -6763,6 +6852,14 @@ void ecs_dbg_table(
 #ifdef FLECS_MODULE
 #endif
 #ifdef FLECS_QUEUE
+/**
+ * @file queue.h
+ * @brief Queue datastructure.
+ *
+ * The queue data structure implements a fixed-size ringbuffer. It is not used
+ * by the flecs core, but is used by flecs-hub modules.
+ */
+
 #ifdef FLECS_QUEUE
 
 #ifndef FLECS_QUEUE_H_
@@ -6845,12 +6942,21 @@ void ecs_queue_free(
 #endif
 #endif
 #ifdef FLECS_READER_WRITER
-#ifdef FLECS_READER_WRITER
-
 /**
- * @file serializer.h
- * @brief Blob serializer API.
+ * @file reader_writer.h
+ * @brief Blob serializer addon.
+ *
+ * The blos serializer addon allows an application to serialize the state of a 
+ * world to a blob (a flat byte buffer). The addon contains a reader and writer
+ * API. The reader reads from a world and serializes it to N fixed-size buffers.
+ * The writer reads from N fixed-size buffers and writes to the world.
+ *
+ * The current limitations of the serializer are:
+ * - only POD types
+ * - no support for switch types and component enabling/disabling
  */
+
+#ifdef FLECS_READER_WRITER
 
 #ifndef FLECS_READER_WRITER_H
 #define FLECS_READER_WRITER_H
@@ -7062,12 +7168,19 @@ int32_t ecs_writer_write(
 #endif
 #endif
 #ifdef FLECS_SNAPSHOT
-#ifdef FLECS_SNAPSHOT
-
 /**
  * @file snapshot.h
- * @brief Snapshot API.
+ * @brief Snapshot addon.
+ *
+ * A snapshot records the state of a world in a way so that it can be restored
+ * later. Snapshots work with POD components and non-POD components, provided
+ * that the appropriate lifecycle actions are registered for non-POD components.
+ *
+ * A snapshot is tightly coupled to a world. It is not possible to restore a
+ * snapshot from world A into world B.
  */
+
+#ifdef FLECS_SNAPSHOT
 
 #ifndef FLECS_SNAPSHOT_H
 #define FLECS_SNAPSHOT_H
@@ -7156,8 +7269,9 @@ void ecs_snapshot_free(
 
 #endif
 #endif
-
-/** Direct access API.
+/**
+ * @file direct_access.h
+ * @brief Low-level access to underlying data structures for best performance.
  *
  * This API allows for low-level direct access to tables and their columns. The
  * APIs primary intent is to provide fast primitives for new operations. It is
@@ -7483,15 +7597,23 @@ void ecs_record_move_to(
 
 #endif
 #ifdef FLECS_STATS
+/**
+ * @file stats.h
+ * @brief Statistics addon.
+ *
+ * The statistics addon enables an application to obtain detailed metrics about
+ * the storage, systems and operations of a world.
+ */
+
+#ifdef FLECS_STATS
 
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifdef FLECS_STATS
 
 #define ECS_STAT_WINDOW (60)
 
@@ -7655,10 +7777,11 @@ FLECS_API void ecs_gauge_reduce(
     ecs_gauge_t *src,
     int32_t t_src);
 
-#endif
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif
@@ -7669,9 +7792,14 @@ FLECS_API void ecs_gauge_reduce(
 
 #ifndef FLECS_NO_CPP
 #ifndef FLECS_LEGACY
-#pragma once
+/**
+ * @file flecs.hpp
+ * @brief Flecs C++ API.
+ *
+ * This is a C++11 wrapper around the Flecs C API.
+ */
 
-/* Unstable API */
+#pragma once
 
 #include <string>
 #include <sstream>

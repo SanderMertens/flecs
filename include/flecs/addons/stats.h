@@ -1,13 +1,21 @@
-#include "../modules/system.h"
+/**
+ * @file stats.h
+ * @brief Statistics addon.
+ *
+ * The statistics addon enables an application to obtain detailed metrics about
+ * the storage, systems and operations of a world.
+ */
+
+#ifdef FLECS_STATS
 
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
+#include "../modules/system.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifdef FLECS_STATS
 
 #define ECS_STAT_WINDOW (60)
 
@@ -171,10 +179,11 @@ FLECS_API void ecs_gauge_reduce(
     ecs_gauge_t *src,
     int32_t t_src);
 
-#endif
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

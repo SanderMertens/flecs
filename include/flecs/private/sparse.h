@@ -1,4 +1,8 @@
-/** This is an implementation of a paged sparse set that stores the payload in
+/**
+ * @file sparse.h
+ * @brief Sparse set datastructure.
+ *
+ * This is an implementation of a paged sparse set that stores the payload in
  * the sparse array.
  *
  * A sparse set has a dense and a sparse array. The sparse array is directly

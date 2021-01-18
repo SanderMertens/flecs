@@ -1,5 +1,6 @@
-
-/** Direct access API.
+/**
+ * @file direct_access.h
+ * @brief Low-level access to underlying data structures for best performance.
  *
  * This API allows for low-level direct access to tables and their columns. The
  * APIs primary intent is to provide fast primitives for new operations. It is

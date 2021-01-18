@@ -1,3 +1,15 @@
+/**
+ * @file os_api.h
+ * @brief Operationg system abstractions.
+ *
+ * This file contains the operating system abstraction API. The flecs core 
+ * library avoids OS/runtime specific API calls as much as possible. Instead it
+ * provides an interface that can be implemented by applications.
+ *
+ * Examples for how to implement this interface can be found in the 
+ * examples/os_api folder.
+ */
+
 #ifndef FLECS_OS_API_H
 #define FLECS_OS_API_H
 

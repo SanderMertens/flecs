@@ -1,9 +1,18 @@
-#ifdef FLECS_READER_WRITER
-
 /**
- * @file serializer.h
- * @brief Blob serializer API.
+ * @file reader_writer.h
+ * @brief Blob serializer addon.
+ *
+ * The blos serializer addon allows an application to serialize the state of a 
+ * world to a blob (a flat byte buffer). The addon contains a reader and writer
+ * API. The reader reads from a world and serializes it to N fixed-size buffers.
+ * The writer reads from N fixed-size buffers and writes to the world.
+ *
+ * The current limitations of the serializer are:
+ * - only POD types
+ * - no support for switch types and component enabling/disabling
  */
+
+#ifdef FLECS_READER_WRITER
 
 #ifndef FLECS_READER_WRITER_H
 #define FLECS_READER_WRITER_H

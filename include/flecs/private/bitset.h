@@ -1,4 +1,8 @@
-/** Simple bitset implementation. The bitset allows for storage of arbitrary
+/**
+ * @file bitset.h
+ * @brief Bitset datastructure.
+ *
+ * Simple bitset implementation. The bitset allows for storage of arbitrary
  * numbers of bits.
  */
 

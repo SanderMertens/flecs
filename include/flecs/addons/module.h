@@ -1,9 +1,13 @@
-#ifdef FLECS_MODULE
-
 /**
  * @file module.h
- * @brief Module API.
+ * @brief Module addon.
+ *
+ * The module addon allows for creating and importing modules. Flecs modules 
+ * enable applications to organize components and systems into reusable units of
+ * code that can easily be across projects.
  */
+
+#ifdef FLECS_MODULE
 
 #ifndef FLECS_MODULE_H
 #define FLECS_MODULE_H
@@ -11,10 +15,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
-//// Module API
-////////////////////////////////////////////////////////////////////////////////
 
 /** Import a module.
  * This operation will load a modules and store the public module handles in the

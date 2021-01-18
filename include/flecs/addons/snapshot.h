@@ -1,9 +1,16 @@
-#ifdef FLECS_SNAPSHOT
-
 /**
  * @file snapshot.h
- * @brief Snapshot API.
+ * @brief Snapshot addon.
+ *
+ * A snapshot records the state of a world in a way so that it can be restored
+ * later. Snapshots work with POD components and non-POD components, provided
+ * that the appropriate lifecycle actions are registered for non-POD components.
+ *
+ * A snapshot is tightly coupled to a world. It is not possible to restore a
+ * snapshot from world A into world B.
  */
+
+#ifdef FLECS_SNAPSHOT
 
 #ifndef FLECS_SNAPSHOT_H
 #define FLECS_SNAPSHOT_H

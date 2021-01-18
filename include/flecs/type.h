@@ -1,6 +1,9 @@
 /**
  * @file type.h
  * @brief Type API.
+ *
+ * This API contains utilities for working with types. Types are vectors of
+ * component ids, and are used most prominently in the API to construct filters.
  */
 
 #ifndef FLECS_TYPE_H

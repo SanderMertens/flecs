@@ -1,3 +1,8 @@
+/**
+ * @file dbg.h
+ * @brief The debug addon enables requesting internals from entities and tables.
+ */
+
 #ifdef FLECS_DBG
 
 #ifndef FLECS_DBG_H

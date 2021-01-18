@@ -1,3 +1,9 @@
+/**
+ * @file flecs.h
+ * @brief Flecs public API.
+ *
+ * This file contains the public API for Flecs.
+ */
 
 #ifndef FLECS_H
 #define FLECS_H
@@ -11,6 +17,7 @@
 /* FLECS_CUSTOM_BUILD should be defined when manually selecting features */
 // #define FLECS_CUSTOM_BUILD
 
+/* If this is a regular, non-custom build, build all modules and addons. */
 #ifndef FLECS_CUSTOM_BUILD
 /* Modules */
 #define FLECS_SYSTEM

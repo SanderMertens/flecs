@@ -1,4 +1,8 @@
-/** Key-value datastructure. The map allows for fast retrieval of a payload for
+/**
+ * @file map.h
+ * @brief Map datastructure.
+ *
+ * Key-value datastructure. The map allows for fast retrieval of a payload for
  * a 64-bit key. While it is not as fast as the sparse set, it is better at
  * handling randomly distributed values.
  *

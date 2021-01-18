@@ -1,3 +1,11 @@
+/**
+ * @file queue.h
+ * @brief Queue datastructure.
+ *
+ * The queue data structure implements a fixed-size ringbuffer. It is not used
+ * by the flecs core, but is used by flecs-hub modules.
+ */
+
 #ifdef FLECS_QUEUE
 
 #ifndef FLECS_QUEUE_H_

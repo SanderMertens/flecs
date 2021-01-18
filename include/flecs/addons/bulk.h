@@ -1,9 +1,9 @@
-#ifdef FLECS_BULK
-
 /**
  * @file bulk.h
- * @brief Bulk API.
+ * @brief Bulk operations operate on all entities that match a provided filter.
  */
+
+#ifdef FLECS_BULK
 
 #ifndef FLECS_BULK_H
 #define FLECS_BULK_H

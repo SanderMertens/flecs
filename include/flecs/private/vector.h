@@ -1,4 +1,9 @@
-/* This is an implementation of a simple vector type. The vector is allocated in
+
+/**
+ * @file vector.h
+ * @brief Vector datastructure.
+ *
+ * This is an implementation of a simple vector type. The vector is allocated in
  * a single block of memory, with the element count, and allocated number of
  * elements encoded in the block. As this vector is used for user-types it has
  * been designed to support alignments higher than 8 bytes. This makes the size
