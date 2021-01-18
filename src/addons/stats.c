@@ -3,8 +3,13 @@
 
 #ifdef FLECS_STATS
 
+#ifdef FLECS_SYSTEM
 #include "../modules/system/system.h"
+#endif
+
+#ifdef FLECS_PIPELINE
 #include "../modules/pipeline/pipeline.h"
+#endif
 
 static
 int32_t t_next(
@@ -206,6 +211,7 @@ void ecs_get_query_stats(
     record_gauge(&s->matched_entity_count, t, entity_count);
 }
 
+#ifdef FLECS_SYSTEM
 bool ecs_get_system_stats(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -226,6 +232,10 @@ bool ecs_get_system_stats(
 
     return true;
 }
+#endif
+
+
+#ifdef FLECS_PIPELINE
 
 static ecs_system_stats_t* get_system_stats(
     ecs_map_t *systems,
@@ -298,6 +308,7 @@ bool ecs_get_pipeline_stats(
 
     return true;
 }
+#endif
 
 void ecs_dump_world_stats(
     ecs_world_t *world,

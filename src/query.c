@@ -1739,6 +1739,8 @@ void activate_table(
     ecs_table_t *table,
     bool active)
 {
+    (void)world;
+    
     ecs_vector_t *src_array, *dst_array;
     int32_t activated = 0;
 
