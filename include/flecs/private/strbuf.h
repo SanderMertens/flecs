@@ -13,7 +13,7 @@
  * there is hardly any overhead, while for large strings the overhead is offset
  * by the reduced time spent on copying memory.
  */
- 
+
 #ifndef FLECS_STRBUF_H_
 #define FLECS_STRBUF_H_
 

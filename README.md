@@ -130,6 +130,11 @@ The framework code and example code is compiled warning free on all platforms wi
 
 Performance is tracked on a per-release basis, with the results for the latest release published here: https://github.com/SanderMertens/ecs_benchmark
 
+### API stability
+API stability is guaranteed between minor releases, except in the rare case when an API is found to be an obvious source of confusion or bugs. ABI stability is not guaranteed inbetween versions. Types and function signatures may change as long as they do not require changes in the application code, which is why applications should rebuild after upgrading to a new revision. Headers under include/private are not part of the public API, and may introduce breaking changes at any point.
+
+It is generally safe to use the master branch, which contains the latest version of the code. New features that are on master but are not yet part of a release may still see changes in their API. Once a feature is part of a release, its API will not change until at least the next major release.
+
 ## Modules
 The following modules are available in [flecs-hub](https://github.com/flecs-hub). Note that modules are mostly intended as example code, and their APIs may change at any point in time.
 
