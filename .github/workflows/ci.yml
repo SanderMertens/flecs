@@ -164,6 +164,12 @@ jobs:
     timeout-minutes: 5
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        compiler: [gcc, clang]
+
     steps:
     - uses: actions/checkout@v2
     - name: Install bake                
