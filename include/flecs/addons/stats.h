@@ -1,7 +1,3 @@
-#ifdef FLECS_STATS
-
-#define FLECS_SYSTEM
-
 #include "../modules/system.h"
 
 #ifndef FLECS_STATS_H
@@ -10,6 +6,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef FLECS_STATS
 
 #define ECS_STAT_WINDOW (60)
 
@@ -137,6 +135,7 @@ FLECS_API void ecs_get_query_stats(
     ecs_query_t *query,
     ecs_query_stats_t *s);
 
+#ifdef FLECS_SYSTEM
 /** Get system statistics.
  * Obtain statistics for the provided system.
  *
@@ -149,7 +148,9 @@ FLECS_API bool ecs_get_system_stats(
     ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *stats);
+#endif
 
+#ifdef FLECS_PIPELINE
 /** Get pipeline statistics.
  * Obtain statistics for the provided pipeline.
  *
@@ -162,35 +163,7 @@ FLECS_API bool ecs_get_pipeline_stats(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *stats);
-
-/** Measure frame time. 
- * Frame time measurements measure the total time passed in a single frame, and 
- * how much of that time was spent on systems and on merging.
- *
- * Frame time measurements add a small constant-time overhead to an application.
- * When an application sets a target FPS, frame time measurements are enabled by
- * default.
- *
- * @param world The world.
- * @param enable Whether to enable or disable frame time measuring.
- */
-FLECS_API void ecs_measure_frame_time(
-    ecs_world_t *world,
-    bool enable);
-
-/** Measure system time. 
- * System time measurements measure the time spent in each system.
- *
- * System time measurements add overhead to every system invocation and 
- * therefore have a small but measurable impact on application performance.
- * System time measurements must be enabled before obtaining system statistics.
- *
- * @param world The world.
- * @param enable Whether to enable or disable system time measuring.
- */
-FLECS_API void ecs_measure_system_time(
-    ecs_world_t *world,
-    bool enable);
+#endif
 
 FLECS_API void ecs_gauge_reduce(
     ecs_gauge_t *dst,
@@ -198,10 +171,10 @@ FLECS_API void ecs_gauge_reduce(
     ecs_gauge_t *src,
     int32_t t_src);
 
-#ifdef __cplusplus
-}
 #endif
 
+#ifdef __cplusplus
+}
 #endif
 
 #endif

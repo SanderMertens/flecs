@@ -4151,6 +4151,14 @@ void ecs_run_set_systems(
     int32_t count,
     bool set_all)
 {
+    (void)world;
+    (void)components;
+    (void)table;
+    (void)data;
+    (void)row;
+    (void)count;
+    (void)set_all;
+
 #ifdef FLECS_SYSTEM    
     if (!count || !data) {
         return;
@@ -4176,6 +4184,13 @@ void ecs_run_monitors(
     int32_t count, 
     ecs_vector_t *v_src_monitors)
 {
+    (void)world;
+    (void)dst_table;
+    (void)v_dst_monitors;
+    (void)dst_row;
+    (void)count;
+    (void)v_src_monitors;
+
 #ifdef FLECS_SYSTEM    
     if (v_dst_monitors == v_src_monitors) {
         return;
@@ -8974,6 +8989,7 @@ int32_t ecs_queue_count(
 
 #ifdef FLECS_STATS
 
+#ifdef FLECS_SYSTEM
 #ifndef FLECS_SYSTEM_PRIVATE_H
 #define FLECS_SYSTEM_PRIVATE_H
 
@@ -9015,6 +9031,9 @@ ecs_entity_t ecs_run_intern(
     bool ran_by_app);
 
 #endif
+#endif
+
+#ifdef FLECS_PIPELINE
 #ifndef FLECS_PIPELINE_PRIVATE_H
 #define FLECS_PIPELINE_PRIVATE_H
 
@@ -9070,6 +9089,7 @@ void ecs_worker_end(
 void ecs_workers_progress(
     ecs_world_t *world);
 
+#endif
 #endif
 
 static
@@ -9272,6 +9292,7 @@ void ecs_get_query_stats(
     record_gauge(&s->matched_entity_count, t, entity_count);
 }
 
+#ifdef FLECS_SYSTEM
 bool ecs_get_system_stats(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -9292,6 +9313,10 @@ bool ecs_get_system_stats(
 
     return true;
 }
+#endif
+
+
+#ifdef FLECS_PIPELINE
 
 static ecs_system_stats_t* get_system_stats(
     ecs_map_t *systems,
@@ -9364,6 +9389,7 @@ bool ecs_get_pipeline_stats(
 
     return true;
 }
+#endif
 
 void ecs_dump_world_stats(
     ecs_world_t *world,
@@ -16670,6 +16696,8 @@ void activate_table(
     ecs_table_t *table,
     bool active)
 {
+    (void)world;
+    
     ecs_vector_t *src_array, *dst_array;
     int32_t activated = 0;
 

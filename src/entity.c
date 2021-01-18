@@ -344,6 +344,14 @@ void ecs_run_set_systems(
     int32_t count,
     bool set_all)
 {
+    (void)world;
+    (void)components;
+    (void)table;
+    (void)data;
+    (void)row;
+    (void)count;
+    (void)set_all;
+
 #ifdef FLECS_SYSTEM    
     if (!count || !data) {
         return;
@@ -369,6 +377,13 @@ void ecs_run_monitors(
     int32_t count, 
     ecs_vector_t *v_src_monitors)
 {
+    (void)world;
+    (void)dst_table;
+    (void)v_dst_monitors;
+    (void)dst_row;
+    (void)count;
+    (void)v_src_monitors;
+
 #ifdef FLECS_SYSTEM    
     if (v_dst_monitors == v_src_monitors) {
         return;
