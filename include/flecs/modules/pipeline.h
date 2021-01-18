@@ -1,5 +1,8 @@
 #ifdef FLECS_PIPELINE
+
+#ifndef FLECS_SYSTEM
 #define FLECS_SYSTEM
+#endif
 
 #include "system.h"
 

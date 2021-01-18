@@ -5562,7 +5562,10 @@ void ecs_set_automerge(
 /* Optional modules */
 #ifdef FLECS_SYSTEM
 #ifdef FLECS_SYSTEM
+
+#ifndef FLECS_MODULE
 #define FLECS_MODULE
+#endif
 
 #ifdef FLECS_MODULE
 
@@ -6037,7 +6040,10 @@ void FlecsSystemImport(
 #endif
 #ifdef FLECS_PIPELINE
 #ifdef FLECS_PIPELINE
+
+#ifndef FLECS_SYSTEM
 #define FLECS_SYSTEM
+#endif
 
 
 #ifndef FLECS_PIPELINE_H
@@ -6214,9 +6220,15 @@ void FlecsPipelineImport(
 #endif
 #endif
 #ifdef FLECS_TIMER
-#ifdef FLECS_STATS
+#ifdef FLECS_TIMER
+
+#ifndef FLECS_MODULE
 #define FLECS_MODULE
+#endif
+
+#ifndef FLECS_PIPELINE
 #define FLECS_PIPELINE
+#endif
 
 #ifndef FLECS_TIMER_H
 #define FLECS_TIMER_H

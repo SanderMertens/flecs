@@ -1,6 +1,12 @@
-#ifdef FLECS_STATS
+#ifdef FLECS_TIMER
+
+#ifndef FLECS_MODULE
 #define FLECS_MODULE
+#endif
+
+#ifndef FLECS_PIPELINE
 #define FLECS_PIPELINE
+#endif
 
 #ifndef FLECS_TIMER_H
 #define FLECS_TIMER_H

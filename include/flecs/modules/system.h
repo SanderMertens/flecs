@@ -1,5 +1,8 @@
 #ifdef FLECS_SYSTEM
+
+#ifndef FLECS_MODULE
 #define FLECS_MODULE
+#endif
 
 #include "../addons/module.h"
 
