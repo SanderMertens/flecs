@@ -3938,6 +3938,9 @@ bool ecs_get_info(
     ecs_entity_info_t * info)
 {
     info->table = NULL;
+    info->record = NULL;
+    info->data = NULL;
+    info->is_watched = false;
 
     if (entity & ECS_ROLE) {
         return false;
@@ -3946,8 +3949,6 @@ bool ecs_get_info(
     ecs_record_t *record = ecs_eis_get(world, entity);
 
     if (!record) {
-        info->is_watched = false;
-        info->record = NULL;
         return false;
     }
 
