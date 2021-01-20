@@ -13,20 +13,13 @@ typedef struct Lerp {
 void DoLerp(ecs_iter_t *it) {
     /* Get the Lerp trait column */
     Lerp *l = ecs_column(it, Lerp, 1);
-
-    /* Obtain the identifier and colum index for the component to lerp */
-    ecs_entity_t trait = ecs_column_entity(it, 1);
-    ecs_entity_t comp_id = ecs_entity_t_lo(trait);
-    int32_t column_index = ecs_table_component_index(it, comp_id);
-
-    /* Get the component column and component size */
-    float *cur = ecs_table_column(it, column_index);
-    size_t size = ecs_table_column_size(it, column_index);
+    size_t size = ecs_column_size(it, 2);
+    float *cur = ecs_column_w_size(it, size, 2);    
 
     /* These are the trait columns for LerpStart and LerpStop. Because these are
      * trait tags, the system does not know their types at compile time. */
-    float *start = ecs_column_w_size(it, size, 2);
-    float *stop = ecs_column_w_size(it, size, 3);
+    float *start = ecs_column_w_size(it, size, 3);
+    float *stop = ecs_column_w_size(it, size, 4);
 
     /* Apply the lerp. Because we don't know the type of the component we'll
      * assume that the component consists out of only float values. We can then
@@ -57,6 +50,7 @@ void DoLerp(ecs_iter_t *it) {
         if (lerp_done) {
             ecs_world_t *world = it->world;
             ecs_entity_t e = it->entities[i];
+            ecs_entity_t trait = ecs_column_entity(it, 1);
             ecs_entity_t trait_start = ecs_column_entity(it, 2);
             ecs_entity_t trait_stop = ecs_column_entity(it, 3);            
             
@@ -89,7 +83,7 @@ int main(void) {
      * system will only match with entities that have all the traits set with
      * the same cardinality. If for example an entity has two instances of Lerp
      * and LerpStart but three of LerpStop, the system will not match. */
-    ECS_SYSTEM(world, DoLerp, EcsOnUpdate, TRAIT | Lerp, TRAIT | LerpStart, TRAIT | LerpStop);
+    ECS_SYSTEM(world, DoLerp, EcsOnUpdate, TRAIT | Lerp, TRAIT | Lerp > *, TRAIT | LerpStart, TRAIT | LerpStop);
 
     /* System that prints Position, so we can see the lerp in action */
     ECS_SYSTEM(world, PrintPosition, EcsOnUpdate, Position);
