@@ -374,6 +374,7 @@ void register_un_set(
     int32_t matched_table_index)
 {
     (void)world;
+    table->flags |= EcsTableHasUnSet;
     add_monitor(&table->un_set_all, query, matched_table_index);
 }
 

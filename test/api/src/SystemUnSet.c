@@ -1,0 +1,466 @@
+#include <api.h>
+
+static
+void UnSet(ecs_iter_t *it) {
+    probe_system(it);
+}
+
+static
+void UnSetA(ecs_iter_t *it) {
+
+}
+
+static
+void UnSetB(ecs_iter_t *it) {
+
+}
+
+void SystemUnSet_unset_1_of_1() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, UnSet, EcsUnSet, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Velocity);
+    test_int(ctx.invoked, 0);
+    
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, UnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0);
+
+    ctx = (Probe){ 0 };
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 0);
+
+    ctx = (Probe){ 0 };
+
+    ecs_progress(world, 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void SystemUnSet_unset_1_of_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, UnSet, EcsUnSet, Position, Velocity);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+    
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, UnSet);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.s[0][1], 0);    
+
+    ctx = (Probe){ 0 };
+
+    ecs_remove(world, e, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ctx = (Probe){ 0 };
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 0);
+
+    ctx = (Probe){ 0 };
+
+    ecs_progress(world, 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
+}
+
+void SystemUnSet_unset_1_of_3() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_SYSTEM(world, UnSet, EcsUnSet, Position, Velocity, Mass);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Mass, {1});
+    test_int(ctx.invoked, 0);    
+    
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, UnSet);
+    test_int(ctx.column_count, 3);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.s[0][1], 0);  
+    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.s[0][2], 0);        
+
+    ctx = (Probe){ 0 };
+
+    ecs_remove(world, e, Mass);
+    test_int(ctx.invoked, 0);
+
+    ctx = (Probe){ 0 };
+
+    ecs_remove(world, e, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ctx = (Probe){ 0 };
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 0);
+
+    ctx = (Probe){ 0 };
+
+    ecs_progress(world, 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
+}
+
+void SystemUnSet_unset_on_delete_1() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, UnSet, EcsUnSet, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);    
+
+    ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_delete(world, e);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, UnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0); 
+}
+
+void SystemUnSet_unset_on_delete_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, UnSet, EcsUnSet, Position, Velocity);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);    
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add(world, e1, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_add(world, e3, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_delete(world, e3);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, UnSet);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e3);
+
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0); 
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.s[0][1], 0);     
+}
+
+void SystemUnSet_unset_on_delete_3() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_SYSTEM(world, UnSet, EcsUnSet, Position, Velocity, Mass);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);    
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e1, Mass);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e2, Mass);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_add(world, e3, Mass);
+    test_int(ctx.invoked, 0);
+
+    ecs_delete(world, e3);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, UnSet);
+    test_int(ctx.column_count, 3);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e3);
+
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0); 
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.s[0][1], 0); 
+    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.s[0][2], 0);     
+}
+
+void SystemUnSet_unset_on_fini_1() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, UnSet, EcsUnSet, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);    
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e3 = ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, UnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0);          
+}
+
+void SystemUnSet_unset_on_fini_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, UnSet, EcsUnSet, Position, Velocity);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);    
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add(world, e1, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_add(world, e3, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, Velocity);
+    test_int(ctx.invoked, 0);    
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, UnSet);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0); 
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.s[0][1], 0);     
+}
+
+void SystemUnSet_unset_on_fini_3() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_SYSTEM(world, UnSet, EcsUnSet, Position, Velocity, Mass);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);    
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e1, Mass);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e2, Mass);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_add(world, e3, Mass);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, Velocity);
+    test_int(ctx.invoked, 0); 
+
+    ecs_new(world, Mass);
+    test_int(ctx.invoked, 0);        
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, UnSet);
+    test_int(ctx.column_count, 3);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0); 
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.s[0][1], 0); 
+    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.s[0][2], 0);         
+}
+
+void SystemUnSet_overlapping_unset_systems() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_SYSTEM(world, UnSetA, EcsUnSet, Position);
+    ECS_SYSTEM(world, UnSetB, EcsUnSet, Position, Velocity);
+    ECS_SYSTEM(world, UnSet, EcsUnSet, Position, Velocity);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);  
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Velocity);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, UnSet);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0); 
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.s[0][1], 0);   
+
+    ecs_fini(world);
+}

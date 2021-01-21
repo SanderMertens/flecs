@@ -425,7 +425,7 @@ void ecs_run_monitors(
                 }
             }
 
-            if (src->query->system == system) {
+            if (src && src->query->system == system) {
                 continue;
             }
 

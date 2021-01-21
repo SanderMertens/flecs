@@ -13,6 +13,9 @@ typedef struct Lerp {
 void DoLerp(ecs_iter_t *it) {
     /* Get the Lerp trait column */
     Lerp *l = ecs_column(it, Lerp, 1);
+
+    /* This is the actual component value. Because the system can match any
+     * component type, the size is unknown. */
     size_t size = ecs_column_size(it, 2);
     float *cur = ecs_column_w_size(it, size, 2);    
 

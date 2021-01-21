@@ -104,7 +104,7 @@ void ecs_gauge_reduce(
         }
         if ((src->max[t] > dst->max[t_dst])) {
             dst->max[t_dst] = src->max[t];
-        }        
+        }
     }
 }
 
@@ -128,7 +128,12 @@ void ecs_get_world_stats(
     record_counter(&s->pipeline_build_count_total, t, world->stats.pipeline_build_count_total);
     record_counter(&s->systems_ran_frame, t, world->stats.systems_ran_frame);
 
-    record_gauge(&s->fps, t, 1.0f / (delta_world_time / (float)delta_frame_count));
+    if (delta_world_time && delta_frame_count) {
+        record_gauge(
+            &s->fps, t, 1.0f / (delta_world_time / (float)delta_frame_count));
+    } else {
+        record_gauge(&s->fps, t, 0);
+    }
 
     record_gauge(&s->entity_count, t, ecs_sparse_count(world->store.entity_index));
     record_gauge(&s->component_count, t, ecs_count_entity(world, ecs_typeid(EcsComponent)));

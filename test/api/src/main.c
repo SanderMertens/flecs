@@ -792,6 +792,18 @@ void SystemOnSet_add_null_type_in_on_set(void);
 void SystemOnSet_add_0_entity_in_on_set(void);
 void SystemOnSet_on_set_prefab(void);
 
+// Testsuite 'SystemUnSet'
+void SystemUnSet_unset_1_of_1(void);
+void SystemUnSet_unset_1_of_2(void);
+void SystemUnSet_unset_1_of_3(void);
+void SystemUnSet_unset_on_delete_1(void);
+void SystemUnSet_unset_on_delete_2(void);
+void SystemUnSet_unset_on_delete_3(void);
+void SystemUnSet_unset_on_fini_1(void);
+void SystemUnSet_unset_on_fini_2(void);
+void SystemUnSet_unset_on_fini_3(void);
+void SystemUnSet_overlapping_unset_systems(void);
+
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
 void SystemPeriodic_1_type_3_component(void);
@@ -4414,6 +4426,49 @@ bake_test_case SystemOnSet_testcases[] = {
     }
 };
 
+bake_test_case SystemUnSet_testcases[] = {
+    {
+        "unset_1_of_1",
+        SystemUnSet_unset_1_of_1
+    },
+    {
+        "unset_1_of_2",
+        SystemUnSet_unset_1_of_2
+    },
+    {
+        "unset_1_of_3",
+        SystemUnSet_unset_1_of_3
+    },
+    {
+        "unset_on_delete_1",
+        SystemUnSet_unset_on_delete_1
+    },
+    {
+        "unset_on_delete_2",
+        SystemUnSet_unset_on_delete_2
+    },
+    {
+        "unset_on_delete_3",
+        SystemUnSet_unset_on_delete_3
+    },
+    {
+        "unset_on_fini_1",
+        SystemUnSet_unset_on_fini_1
+    },
+    {
+        "unset_on_fini_2",
+        SystemUnSet_unset_on_fini_2
+    },
+    {
+        "unset_on_fini_3",
+        SystemUnSet_unset_on_fini_3
+    },
+    {
+        "overlapping_unset_systems",
+        SystemUnSet_overlapping_unset_systems
+    }
+};
+
 bake_test_case SystemPeriodic_testcases[] = {
     {
         "1_type_1_component",
@@ -7214,6 +7269,13 @@ static bake_test_suite suites[] = {
         SystemOnSet_testcases
     },
     {
+        "SystemUnSet",
+        NULL,
+        NULL,
+        10,
+        SystemUnSet_testcases
+    },
+    {
         "SystemPeriodic",
         NULL,
         NULL,
@@ -7399,5 +7461,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 58);
+    return bake_test_run("api", argc, argv, suites, 59);
 }

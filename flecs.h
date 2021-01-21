@@ -18,6 +18,7 @@
 /* FLECS_CUSTOM_BUILD should be defined when manually selecting features */
 // #define FLECS_CUSTOM_BUILD
 
+/* If this is a regular, non-custom build, build all modules and addons. */
 #ifndef FLECS_CUSTOM_BUILD
 /* Modules */
 #define FLECS_SYSTEM
@@ -1541,7 +1542,7 @@ extern "C" {
  * there is hardly any overhead, while for large strings the overhead is offset
  * by the reduced time spent on copying memory.
  */
- 
+
 #ifndef FLECS_STRBUF_H_
 #define FLECS_STRBUF_H_
 
