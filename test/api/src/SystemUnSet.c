@@ -464,3 +464,65 @@ void SystemUnSet_overlapping_unset_systems() {
 
     ecs_fini(world);
 }
+
+static
+void UnSet_TestComp(ecs_iter_t *it) {
+    if (!ecs_get_context(it->world)) {
+        return;
+    }
+
+    probe_system(it);
+
+    test_int(it->count, 1);
+
+    Position *p = ecs_column(it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void SystemUnSet_unset_move_to_nonempty_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, UnSet_TestComp, EcsUnSet, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);  
+
+    ecs_new(world, Type);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, Type);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new(world, Type);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {20, 10});
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world, Velocity);
+    ecs_set(world, e2, Velocity, {30, 40});
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Position);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, UnSet_TestComp);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0);
+
+    /* Prevent system from getting called by fini */
+    ecs_set_context(world, NULL);
+
+    ecs_fini(world);
+}

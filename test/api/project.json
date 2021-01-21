@@ -872,7 +872,8 @@
                 "unset_on_fini_1",
                 "unset_on_fini_2",
                 "unset_on_fini_3",
-                "overlapping_unset_systems"
+                "overlapping_unset_systems",
+                "unset_move_to_nonempty_table"
             ]
         }, {
             "id": "SystemPeriodic",

@@ -803,6 +803,7 @@ void SystemUnSet_unset_on_fini_1(void);
 void SystemUnSet_unset_on_fini_2(void);
 void SystemUnSet_unset_on_fini_3(void);
 void SystemUnSet_overlapping_unset_systems(void);
+void SystemUnSet_unset_move_to_nonempty_table(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -4466,6 +4467,10 @@ bake_test_case SystemUnSet_testcases[] = {
     {
         "overlapping_unset_systems",
         SystemUnSet_overlapping_unset_systems
+    },
+    {
+        "unset_move_to_nonempty_table",
+        SystemUnSet_unset_move_to_nonempty_table
     }
 };
 
@@ -7272,7 +7277,7 @@ static bake_test_suite suites[] = {
         "SystemUnSet",
         NULL,
         NULL,
-        10,
+        11,
         SystemUnSet_testcases
     },
     {
