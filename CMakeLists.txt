@@ -14,7 +14,7 @@ target_include_directories(flecs PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 target_include_directories(flecs_static PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 
 install(
-	DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION include FILES_MATCHING PATTERN "*.h"
+	DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 )
 install(
 	TARGETS flecs_static DESTINATION lib
