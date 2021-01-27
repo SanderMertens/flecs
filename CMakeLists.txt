@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.5)
 
 project(flecs LANGUAGES C)
 
@@ -35,6 +35,7 @@ set(INC
         include/flecs/private/vector.h
         include/flecs.h
         include/flecs/bake_config.h
+        include/flecs/flecs.hpp
         include/flecs/os_api.h
         include/flecs/type.h)
 
@@ -83,9 +84,7 @@ set(SRC
 
 # build the shared library
 
-add_library(flecs SHARED)
-
-target_sources(flecs PRIVATE ${INC} ${SRC})
+add_library(flecs SHARED ${INC} ${SRC})
 
 target_default_compile_options_c(flecs)
 target_default_compile_warnings_c(flecs)
@@ -94,9 +93,7 @@ target_include_directories(flecs PUBLIC include)
 
 # build the static library
 
-add_library(flecs_static STATIC)
-
-target_sources(flecs_static PRIVATE ${INC} ${SRC})
+add_library(flecs_static STATIC ${INC} ${SRC})
 
 target_default_compile_options_c(flecs_static)
 target_default_compile_warnings_c(flecs_static)
@@ -106,7 +103,7 @@ target_compile_definitions(flecs_static PUBLIC flecs_STATIC)
 
 # define the install steps
 
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
         DESTINATION include
         FILES_MATCHING
         PATTERN "*.h"

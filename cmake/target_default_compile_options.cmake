@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.5)
 
 # do not rely on cmake presets
 # and use target configuration
@@ -15,6 +15,16 @@ set(CMAKE_CXX_FLAGS_RELEASE "")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "")
 set(CMAKE_CXX_FLAGS_MINSIZEREL "")
 
+# this seems redundant as the target
+# property is set. but for apple clang
+# this seems to be needed
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 function(target_default_compile_options_c THIS)
 
     set_target_properties(${THIS} PROPERTIES
@@ -22,9 +32,14 @@ function(target_default_compile_options_c THIS)
             C_STANDARD 99
             C_STANDARD_REQUIRED ON)
 
-    if (CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_C_COMPILER_ID STREQUAL "Clang"
+            OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
+            OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
         target_compile_options(${THIS} PRIVATE
+                -fPIC
+                -fvisibility=hidden
+                -fno-stack-protector
                 $<$<CONFIG:DEBUG>:-g -O0 -DDEBUG>
                 $<$<CONFIG:RELEASE>:-O3 -DNDEBUG>
                 $<$<CONFIG:RELWITHDEBINFO>:-g -O2 -DNDEBUG>
@@ -42,7 +57,7 @@ function(target_default_compile_options_c THIS)
 
         message(WARNING
                 "No Options specified for ${CMAKE_C_COMPILER_ID}. "
-                "Consider using one of the following compilers: Clang, GNU, MSVC.")
+                "Consider using one of the following compilers: Clang, GNU, MSVC, AppleClang.")
 
     endif ()
 
@@ -55,9 +70,14 @@ function(target_default_compile_options_cxx THIS)
             CXX_STANDARD 11
             CXX_STANDARD_REQUIRED ON)
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+            OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
+            OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
         target_compile_options(${THIS} PRIVATE
+                -fPIC
+                -fvisibility=hidden
+                -fno-stack-protector
                 $<$<CONFIG:DEBUG>:-g -O0 -DDEBUG>
                 $<$<CONFIG:RELEASE>:-O3 -DNDEBUG>
                 $<$<CONFIG:RELWITHDEBINFO>:-g -O2 -DNDEBUG>
@@ -75,7 +95,7 @@ function(target_default_compile_options_cxx THIS)
 
         message(WARNING
                 "No Options specified for ${CMAKE_CXX_COMPILER_ID}. "
-                "Consider using one of the following compilers: Clang, GNU, MSVC.")
+                "Consider using one of the following compilers: Clang, GNU, MSVC, AppleClang.")
 
     endif ()
 

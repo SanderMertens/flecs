@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   unix:
@@ -9,115 +9,115 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest]
-        compiler: [gcc, clang]
+        os: [ ubuntu-latest, macOS-latest ]
+        compiler: [ gcc, clang ]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install bake
-      run: |
-        git clone https://github.com/SanderMertens/bake
-        make -C bake/build-$(uname)
-        bake/bake setup
+      - uses: actions/checkout@v2
+      - name: Install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
 
-    - name: Build Flecs
-      run: bake --strict
-         
-    - name: Run tests
-      run: |
-        bake examples/os_api/flecs-os_api-bake
-        bake test
+      - name: Build Flecs
+        run: bake --strict
+
+      - name: Run tests
+        run: |
+          bake examples/os_api/flecs-os_api-bake
+          bake test
 
   windows:
     timeout-minutes: 10
     runs-on: windows-latest
-    
+
     steps:
-    - uses: actions/checkout@v2
-    - uses: ilammy/msvc-dev-cmd@v1
-    - name: Install bake
-      run: |
-        git clone https://github.com/SanderMertens/bake
-        cd bake\build-Windows
-        nmake
-        cd ..
-        ./bake setup --local
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          cd bake\build-Windows
+          nmake
+          cd ..
+          ./bake setup --local
 
-    - name: Build Flecs
-      run: bake/bake --strict
+      - name: Build Flecs
+        run: bake/bake --strict
 
-    - name: Run tests
-      run: |
-        bake/bake examples/os_api/flecs-os_api-bake
-        bake/bake run test\cpp_api
-        bake/bake run test\api
-        bake/bake run test\collections
-        
+      - name: Run tests
+        run: |
+          bake/bake examples/os_api/flecs-os_api-bake
+          bake/bake run test\cpp_api
+          bake/bake run test\api
+          bake/bake run test\collections
+
   gcc-warnings:
     timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     env:
       CC: gcc-${{ matrix.compiler-version }}
-      CXX: g++-${{ matrix.compiler-version }}  
+      CXX: g++-${{ matrix.compiler-version }}
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        compiler-version: [7, 8, 9, 10]
+        os: [ ubuntu-latest ]
+        compiler-version: [ 7, 8, 9, 10 ]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install bake               
-      run: |
-        git clone https://github.com/SanderMertens/bake
-        make -C bake/build-$(uname)
-        bake/bake setup
+      - uses: actions/checkout@v2
+      - name: Install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
 
-    - name: Build Flecs
-      run: |
-        bake --strict
-        bake --strict --cfg release
+      - name: Build Flecs
+        run: |
+          bake --strict
+          bake --strict --cfg release
 
-    - name: Build examples
-      run: |
-        bake examples/c --strict
-        bake examples/cpp --strict
-        bake examples/c --strict --cfg release
-        bake examples/cpp --strict --cfg release
+      - name: Build examples
+        run: |
+          bake examples/c --strict
+          bake examples/cpp --strict
+          bake examples/c --strict --cfg release
+          bake examples/cpp --strict --cfg release
 
   clang-warnings:
     timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     env:
       CC: clang-${{ matrix.compiler-version }}
-      CXX: clang++-${{ matrix.compiler-version }} 
-        
+      CXX: clang++-${{ matrix.compiler-version }}
+
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        compiler-version: [8, 9]
+        os: [ ubuntu-latest ]
+        compiler-version: [ 8, 9 ]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install bake                
-      run: |
-        git clone https://github.com/SanderMertens/bake
-        make -C bake/build-$(uname)
-        bake/bake setup
+      - uses: actions/checkout@v2
+      - name: Install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
 
-    - name: Build Flecs
-      run: |
-        bake --strict
-        bake --strict --cfg release
+      - name: Build Flecs
+        run: |
+          bake --strict
+          bake --strict --cfg release
 
-    - name: Build examples
-      run: |
-        bake examples/c --strict
-        bake examples/cpp --strict
-        bake examples/c --strict --cfg release
-        bake examples/cpp --strict --cfg release
+      - name: Build examples
+        run: |
+          bake examples/c --strict
+          bake examples/cpp --strict
+          bake examples/c --strict --cfg release
+          bake examples/cpp --strict --cfg release
 
   sanitized:
     timeout-minutes: 20
@@ -129,22 +129,22 @@ jobs:
         compiler: [ clang ]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install bake
-      run: |
-        git clone https://github.com/SanderMertens/bake
-        make -C bake/build-$(uname)
-        bake/bake setup
-        
-    - name: Build Flecs
-      run: bake --strict
+      - uses: actions/checkout@v2
+      - name: Install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
 
-    - name: Run tests
-      run: |
-        bake examples/os_api/flecs-os_api-bake
-        bake run test/api --cfg sanitize
-        bake run test/cpp_api --cfg sanitize
-        bake run test/collections --cfg sanitize
+      - name: Build Flecs
+        run: bake --strict
+
+      - name: Run tests
+        run: |
+          bake examples/os_api/flecs-os_api-bake
+          bake run test/api --cfg sanitize
+          bake run test/cpp_api --cfg sanitize
+          bake run test/collections --cfg sanitize
 
   amalgamated:
     timeout-minutes: 5
@@ -152,13 +152,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest]
-        compiler: [gcc, clang]    
-    
+        os: [ ubuntu-latest, macOS-latest ]
+        compiler: [ gcc, clang ]
+
     steps:
-    - uses: actions/checkout@v2
-    - name: Build Flecs
-      run: ${{ matrix.compiler }} flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
+      - uses: actions/checkout@v2
+      - name: Build Flecs
+        run: ${{ matrix.compiler }} flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
 
   custom_build:
     timeout-minutes: 5
@@ -167,68 +167,152 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        compiler: [gcc, clang]
+        os: [ ubuntu-latest ]
+        compiler: [ gcc, clang ]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install bake                
-      run: |
-        git clone https://github.com/SanderMertens/bake
-        make -C bake/build-$(uname)
-        bake/bake setup
+      - uses: actions/checkout@v2
+      - name: Install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
 
-    - name: No extensions
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD 
-        
-    - name: FLECS_SYSTEM
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SYSTEM
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_SYSTEM
-        
-    - name: FLECS_PIPELINE
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_PIPELINE
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_PIPELINE     
-        
-    - name: FLECS_TIMER
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_TIMER
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_TIMER   
-        
-    - name: FLECS_BULK
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_BULK
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_BULK           
+      - name: No extensions
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD
 
-    - name: FLECS_DBG
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_DBG
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_DBG   
+      - name: FLECS_SYSTEM
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SYSTEM
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_SYSTEM
 
-    - name: FLECS_MODULE
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_MODULE
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_MODULE   
+      - name: FLECS_PIPELINE
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_PIPELINE
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_PIPELINE
 
-    - name: FLECS_QUEUE
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_QUEUE
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_QUEUE   
+      - name: FLECS_TIMER
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_TIMER
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_TIMER
 
-    - name: FLECS_READER_WRITER
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_READER_WRITER
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_READER_WRITER   
+      - name: FLECS_BULK
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_BULK
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_BULK
 
-    - name: FLECS_SNAPSHOT
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SNAPSHOT
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_SNAPSHOT   
+      - name: FLECS_DBG
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_DBG
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_DBG
 
-    - name: FLECS_STATS
-      run: |
-        bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_STATS
-        bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_STATS           
+      - name: FLECS_MODULE
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_MODULE
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_MODULE
+
+      - name: FLECS_QUEUE
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_QUEUE
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_QUEUE
+
+      - name: FLECS_READER_WRITER
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_READER_WRITER
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_READER_WRITER
+
+      - name: FLECS_SNAPSHOT
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SNAPSHOT
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_SNAPSHOT
+
+      - name: FLECS_STATS
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_STATS
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_STATS
+
+  cmake-unix:
+    timeout-minutes: 20
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macOS-latest ]
+        compiler: [ gcc, clang ]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: mkdir
+        run: mkdir cmake_build
+
+      - name: cmake configure
+        working-directory: cmake_build
+        run: cmake ..
+
+      - name: cmake build
+        working-directory: cmake_build
+        run: cmake --build .
+
+  cmake-windows:
+    timeout-minutes: 20
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: mkdir
+        run: mkdir cmake_build
+
+      - name: cmake configure
+        working-directory: cmake_build
+        run: cmake ..
+
+      - name: cmake build
+        working-directory: cmake_build
+        run: cmake --build .
+
+  cmake-unix-examples:
+    timeout-minutes: 40
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macOS-latest ]
+        compiler: [ gcc, clang ]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: mkdir
+        working-directory: examples
+        run: mkdir cmake_build
+
+      - name: cmake configure
+        working-directory: examples/cmake_build
+        run: cmake ..
+
+      - name: cmake build
+        working-directory: examples/cmake_build
+        run: cmake --build .
+
+  cmake-windows-examples:
+    timeout-minutes: 40
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: mkdir
+        working-directory: examples
+        run: mkdir cmake_build
+
+      - name: cmake configure
+        working-directory: examples/cmake_build
+        run: cmake ..
+
+      - name: cmake build
+        working-directory: examples/cmake_build
+        run: cmake --build .

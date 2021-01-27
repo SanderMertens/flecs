@@ -1,8 +1,11 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.5)
 
-project(flecs_example)
+project(flecs_example LANGUAGES C CXX)
 
 add_subdirectory(.. ${CMAKE_CURRENT_BINARY_DIR}/flecs)
+
+include(../cmake/target_default_compile_options.cmake)
+include(../cmake/target_default_compile_warnings.cmake)
 
 macro(SUB_DIR_LIST RESULT CURRENT_DIR)
 

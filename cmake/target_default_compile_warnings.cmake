@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.5)
 
 function(target_default_compile_warnings_c THIS)
 
-    if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if (CMAKE_C_COMPILER_ID STREQUAL "Clang"
+            OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
         target_compile_options(${THIS} PRIVATE
                 #$<$<CONFIG:RELEASE>:-Werror>
@@ -61,7 +62,8 @@ endfunction()
 
 function(target_default_compile_warnings_cxx THIS)
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+            OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
         target_compile_options(${THIS} PRIVATE
                 #$<$<CONFIG:RELEASE>:-Werror>
@@ -112,7 +114,7 @@ function(target_default_compile_warnings_cxx THIS)
 
         message(WARNING
                 "No Warnings specified for ${CMAKE_CXX_COMPILER_ID}. "
-                "Consider using one of the following compilers: Clang, GNU, MSVC.")
+                "Consider using one of the following compilers: Clang, GNU, MSVC, AppleClang.")
 
     endif ()
 
