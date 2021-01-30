@@ -1332,6 +1332,7 @@
                 "defer_new",
                 "defer_bulk_new",
                 "defer_bulk_new_w_data",
+                "defer_bulk_new_w_data_trait",
                 "defer_bulk_new_two",
                 "defer_bulk_new_w_data_two",
                 "defer_add",
@@ -1361,7 +1362,8 @@
                 "discard_remove_two",
                 "discard_child",
                 "discard_child_w_add",
-                "defer_return_value"
+                "defer_return_value",
+                "defer_get_mut_trait"
             ]
         }, {
             "id": "SingleThreadStaging",

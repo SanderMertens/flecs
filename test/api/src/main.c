@@ -1230,6 +1230,7 @@ void MultiThread_reactive_system(void);
 void DeferredActions_defer_new(void);
 void DeferredActions_defer_bulk_new(void);
 void DeferredActions_defer_bulk_new_w_data(void);
+void DeferredActions_defer_bulk_new_w_data_trait(void);
 void DeferredActions_defer_bulk_new_two(void);
 void DeferredActions_defer_bulk_new_w_data_two(void);
 void DeferredActions_defer_add(void);
@@ -1260,6 +1261,7 @@ void DeferredActions_discard_remove_two(void);
 void DeferredActions_discard_child(void);
 void DeferredActions_discard_child_w_add(void);
 void DeferredActions_defer_return_value(void);
+void DeferredActions_defer_get_mut_trait(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -6065,6 +6067,10 @@ bake_test_case DeferredActions_testcases[] = {
         DeferredActions_defer_bulk_new_w_data
     },
     {
+        "defer_bulk_new_w_data_trait",
+        DeferredActions_defer_bulk_new_w_data_trait
+    },
+    {
         "defer_bulk_new_two",
         DeferredActions_defer_bulk_new_two
     },
@@ -6183,6 +6189,10 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_return_value",
         DeferredActions_defer_return_value
+    },
+    {
+        "defer_get_mut_trait",
+        DeferredActions_defer_get_mut_trait
     }
 };
 
@@ -7389,7 +7399,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        33,
+        35,
         DeferredActions_testcases
     },
     {
