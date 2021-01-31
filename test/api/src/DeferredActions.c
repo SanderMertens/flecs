@@ -136,6 +136,74 @@ void DeferredActions_defer_bulk_new_w_data() {
     ecs_fini(world);
 }
 
+void DeferredActions_defer_bulk_new_w_data_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t trait_id = ecs_trait(ecs_typeid(Position), Trait);
+    
+    const ecs_entity_t *temp_ids = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){trait_id},
+            .count = 1
+        },
+        (void*[]){
+            (Position[]){
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            }
+        });
+
+    ecs_entity_t ids[3];
+    memcpy(ids, temp_ids, sizeof(ecs_entity_t) * 3);
+
+    test_assert(!ecs_has_entity(world, ids[0], trait_id));
+    test_assert(!ecs_has_entity(world, ids[1], trait_id));
+    test_assert(!ecs_has_entity(world, ids[2], trait_id)); 
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has_entity(world, ids[0], trait_id));
+    test_assert(!ecs_has_entity(world, ids[1], trait_id));
+    test_assert(!ecs_has_entity(world, ids[2], trait_id));
+
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_entity(world, ids[0], trait_id));
+    test_assert(ecs_has_entity(world, ids[1], trait_id));
+    test_assert(ecs_has_entity(world, ids[2], trait_id));
+
+    ecs_frame_end(world);
+
+    test_assert(ecs_has_entity(world, ids[0], trait_id));
+    test_assert(ecs_has_entity(world, ids[1], trait_id));
+    test_assert(ecs_has_entity(world, ids[2], trait_id));
+
+    const Position *
+    p = ecs_get_w_entity(world, ids[0], trait_id);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_w_entity(world, ids[1], trait_id);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    p = ecs_get_w_entity(world, ids[2], trait_id);
+    test_int(p->x, 50);
+    test_int(p->y, 60);
+
+    ecs_fini(world);
+}
+
 void DeferredActions_defer_bulk_new_two() {
     ecs_world_t *world = ecs_init();
 
@@ -1257,6 +1325,32 @@ void DeferredActions_defer_return_value() {
     test_bool(ecs_defer_end(world), false);
 
     test_bool(ecs_defer_end(world), true);
+
+    ecs_fini(world);
+}
+ 
+void DeferredActions_defer_get_mut_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Trait);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+
+    Position *p = ecs_get_mut_w_entity(world, e, 
+        ecs_trait(ecs_typeid(Position), Trait), NULL);
+    test_assert(p != NULL);
+    p->x = 10;
+    p->y = 20;
+
+    ecs_defer_end(world);
+
+    const Position *pc = ecs_get_w_entity(world, e, ecs_trait(ecs_typeid(Position), Trait));
+    test_assert(pc != NULL);
+    test_int(pc->x, 10);
+    test_int(pc->y, 20);
 
     ecs_fini(world);
 }
