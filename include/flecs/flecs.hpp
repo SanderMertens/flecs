@@ -1969,11 +1969,7 @@ public:
      */
     explicit entity(world_t *world) 
         : m_world( world )
-    {
-        if (m_world) {
-            m_id = ecs_new_w_type(m_world, 0);
-        }
-    }
+        , m_id( world ? ecs_new_w_type(world, 0) : 0 ) { }
 
     /** Create a named entity.
      * Named entities can be looked up with the lookup functions. Entity names
