@@ -188,7 +188,7 @@ void ecs_map_memory(
 #ifdef __cplusplus
 #ifndef FLECS_NO_CPP
 
-#include <iostream>
+#include <initializer_list>
 
 namespace flecs {
 
