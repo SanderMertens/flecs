@@ -12,6 +12,28 @@
 #include <array>
 #include <functional>
 
+#define FLECS_PLACEMENT_NEW(_ptr, _type)  ::new(flecs::_::placement_new_tag, _ptr) _type
+#define FLECS_NEW(_type)                  FLECS_PLACEMENT_NEW(ecs_os_malloc(sizeof(_type)), _type)
+#define FLECS_DELETE(_ptr)          \
+  do {                              \
+    if (_ptr) {                     \
+      flecs::_::destruct_obj(_ptr); \
+      ecs_os_free(_ptr);            \
+    }                               \
+  } while (false)
+
+namespace flecs {
+namespace _
+{
+struct placement_new_tag_t{};
+inline constexpr placement_new_tag_t placement_new_tag{};
+template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
+}
+}
+
+inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
+inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
+
 namespace flecs {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3172,7 +3194,7 @@ void component_ctor(
     T *t_ptr = static_cast<T*>(ptr);
     
     for (int i = 0; i < count; i ++) {
-        new(&t_ptr[i]) T;
+        FLECS_PLACEMENT_NEW(&t_ptr[i], T);
     }
 } 
 
@@ -3699,7 +3721,7 @@ flecs::entity import(world& world) {
         ecs_entity_t scope = ecs_get_scope(world.c_ptr());
 
         // Allocate module, so the this ptr will remain stable
-        T *module_data = new T(world);
+        T *module_data = FLECS_NEW(T)(world);
 
         ecs_set_scope(world.c_ptr(), scope);
 
@@ -4415,7 +4437,8 @@ public:
     template <typename Func>
     system& action(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        auto ctx = new _::action_invoker<Func, Components...>(func);
+        using invoker_t = typename _::action_invoker<Func, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(func);
 
         create_system(_::action_invoker<Func, Components...>::run, false);
 
@@ -4431,7 +4454,8 @@ public:
     template <typename Func>
     system& iter(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        auto ctx = new _::iter_invoker<Func, Components...>(func);
+        using invoker_t = typename _::iter_invoker<Func, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(func);
 
         create_system(_::iter_invoker<Func, Components...>::run, false);
 
@@ -4445,7 +4469,8 @@ public:
      * single entity */
     template <typename Func>
     system& each(Func func) {
-        auto ctx = new _::each_invoker<Func, Components...>(func);
+        using invoker_t = typename _::each_invoker<Func, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(func);
 
         create_system(_::each_invoker<Func, Components...>::run, true);
 
