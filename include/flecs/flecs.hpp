@@ -26,7 +26,7 @@ namespace flecs {
 namespace _
 {
 struct placement_new_tag_t{};
-inline constexpr placement_new_tag_t placement_new_tag{};
+constexpr placement_new_tag_t placement_new_tag{};
 template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
 }
 }
