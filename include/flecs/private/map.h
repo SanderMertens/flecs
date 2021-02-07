@@ -17,7 +17,7 @@
  *
  * Note that while the implementation is a hashmap, it can only compute hashes
  * for the provided 64 bit keys. This means that the provided keys must always
- * be unique. If the provided keys are hashes themselves, it is the 
+ * be unique. If the provided keys are hashes themselves, it is the
  * responsibility of the user to ensure that collisions are handled.
  *
  * In debug mode the map verifies that the type provided to the map functions
@@ -49,7 +49,7 @@ typedef struct ecs_map_iter_t {
 FLECS_API
 ecs_map_t * _ecs_map_new(
     ecs_size_t elem_size,
-    ecs_size_t alignment, 
+    ecs_size_t alignment,
     int32_t elem_count);
 
 #define ecs_map_new(T, elem_count)\
@@ -151,19 +151,19 @@ void* _ecs_map_next_ptr(
 /** Grow number of buckets in the map for specified number of elements. */
 FLECS_API
 void ecs_map_grow(
-    ecs_map_t *map, 
+    ecs_map_t *map,
     int32_t elem_count);
 
 /** Set number of buckets in the map for specified number of elements. */
 FLECS_API
 void ecs_map_set_size(
-    ecs_map_t *map, 
+    ecs_map_t *map,
     int32_t elem_count);
 
 /** Return memory occupied by map. */
 FLECS_API
 void ecs_map_memory(
-    ecs_map_t *map, 
+    ecs_map_t *map,
     int32_t *allocd,
     int32_t *used);
 
@@ -188,14 +188,15 @@ void ecs_map_memory(
 #ifdef __cplusplus
 #ifndef FLECS_NO_CPP
 
-#include <iostream>
+#include <initializer_list>
+#include <utility>
 
 namespace flecs {
 
 template <typename K, typename T>
 class map {
 public:
-    map(int32_t count = 0) { 
+    map(int32_t count = 0) {
         init(count);
     }
 

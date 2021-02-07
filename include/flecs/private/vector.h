@@ -398,7 +398,6 @@ ecs_vector_t* _ecs_vector_copy(
 #ifdef __cplusplus
 #ifndef FLECS_NO_CPP
 
-#include <iostream>
 #include <initializer_list>
 
 namespace flecs {

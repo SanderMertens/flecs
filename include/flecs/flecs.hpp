@@ -12,6 +12,37 @@
 #include <array>
 #include <functional>
 
+// Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
+// Rationale:
+//  - Using macros here instead of a templated function bc clients might override ecs_os_malloc
+//    to contain extra debug info like source tracking location. Using a template function
+//    in that scenario would collapse all source location into said function vs. the
+//    actual call site
+//  - FLECS_PLACEMENT_NEW(): exists to remove any naked new calls/make it easy to identify any regressions
+//    by grepping for new/delete
+#define FLECS_PLACEMENT_NEW(_ptr, _type)  ::new(flecs::_::placement_new_tag, _ptr) _type
+#define FLECS_NEW(_type)                  FLECS_PLACEMENT_NEW(ecs_os_malloc(sizeof(_type)), _type)
+#define FLECS_DELETE(_ptr)          \
+  do {                              \
+    if (_ptr) {                     \
+      flecs::_::destruct_obj(_ptr); \
+      ecs_os_free(_ptr);            \
+    }                               \
+  } while (false)
+
+namespace flecs {
+namespace _
+{
+// Dummy Placement new tag to disambiguate from any other operator new overrides
+struct placement_new_tag_t{};
+constexpr placement_new_tag_t placement_new_tag{};
+template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
+}
+}
+
+inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
+inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
+
 namespace flecs {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1969,11 +2000,7 @@ public:
      */
     explicit entity(world_t *world) 
         : m_world( world )
-    {
-        if (m_world) {
-            m_id = ecs_new_w_type(m_world, 0);
-        }
-    }
+        , m_id( world ? ecs_new_w_type(world, 0) : 0 ) { }
 
     /** Create a named entity.
      * Named entities can be looked up with the lookup functions. Entity names
@@ -3176,7 +3203,7 @@ void component_ctor(
     T *t_ptr = static_cast<T*>(ptr);
     
     for (int i = 0; i < count; i ++) {
-        new(&t_ptr[i]) T;
+        FLECS_PLACEMENT_NEW(&t_ptr[i], T);
     }
 } 
 
@@ -3703,7 +3730,7 @@ flecs::entity import(world& world) {
         ecs_entity_t scope = ecs_get_scope(world.c_ptr());
 
         // Allocate module, so the this ptr will remain stable
-        T *module_data = new T(world);
+        T *module_data = FLECS_NEW(T)(world);
 
         ecs_set_scope(world.c_ptr(), scope);
 
@@ -4419,7 +4446,8 @@ public:
     template <typename Func>
     system& action(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        auto ctx = new _::action_invoker<Func, Components...>(func);
+        using invoker_t = typename _::action_invoker<Func, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(func);
 
         create_system(_::action_invoker<Func, Components...>::run, false);
 
@@ -4435,7 +4463,8 @@ public:
     template <typename Func>
     system& iter(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        auto ctx = new _::iter_invoker<Func, Components...>(func);
+        using invoker_t = typename _::iter_invoker<Func, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(func);
 
         create_system(_::iter_invoker<Func, Components...>::run, false);
 
@@ -4449,7 +4478,8 @@ public:
      * single entity */
     template <typename Func>
     system& each(Func func) {
-        auto ctx = new _::each_invoker<Func, Components...>(func);
+        using invoker_t = typename _::each_invoker<Func, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(func);
 
         create_system(_::each_invoker<Func, Components...>::run, true);
 
