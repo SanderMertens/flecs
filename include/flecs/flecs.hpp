@@ -12,6 +12,14 @@
 #include <array>
 #include <functional>
 
+// Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
+// Rationale:
+//  - Using macros here instead of a templated function bc clients might override ecs_os_malloc
+//    to contain extra debug info like source tracking location. Using a template function
+//    in that scenario would collapse all source location into said function vs. the
+//    actual call site
+//  - FLECS_PLACEMENT_NEW(): exists to remove any naked new calls/make it easy to identify any regressions
+//    by grepping for new/delete
 #define FLECS_PLACEMENT_NEW(_ptr, _type)  ::new(flecs::_::placement_new_tag, _ptr) _type
 #define FLECS_NEW(_type)                  FLECS_PLACEMENT_NEW(ecs_os_malloc(sizeof(_type)), _type)
 #define FLECS_DELETE(_ptr)          \
@@ -25,6 +33,7 @@
 namespace flecs {
 namespace _
 {
+// Dummy Placement new tag to disambiguate from any other operator new overrides
 struct placement_new_tag_t{};
 constexpr placement_new_tag_t placement_new_tag{};
 template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
