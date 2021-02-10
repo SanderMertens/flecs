@@ -3880,12 +3880,12 @@ class each_invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
-    explicit each_invoker(Func func) : m_func(func) { }
+    explicit each_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
 
     // Invoke system
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
         flecs::iter iter_wrapper(iter);
         (void)index;
         (void)columns;
@@ -3901,18 +3901,17 @@ public:
     // Add components one by one to parameter pack
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
-        call_system(iter, func, index + 1, columns, comps..., columns[index]);
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
+        each_invoker::call_system(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
     // Callback provided to flecs system
     static void run(ecs_iter_t *iter) {
         const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
         each_invoker *self = (each_invoker*)ctx->ctx;
-        Func func = self->m_func;        
         column_args<Components...> columns(iter);
-        call_system(iter, func, 0, columns.m_columns);
-    }   
+        call_system(iter, self->m_func, 0, columns.m_columns);
+    }
 
 private:
     Func m_func;
@@ -3928,13 +3927,13 @@ class action_invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
-    explicit action_invoker(Func func) 
-        : m_func(func) { }
+    explicit action_invoker(Func&& func) noexcept
+        : m_func(std::move(func)) { }
 
     /* Invoke system */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
         (void)index;
         (void)columns;
 
@@ -3947,18 +3946,17 @@ public:
     /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
         call_system(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
     /** Callback provided to flecs */
     static void run(ecs_iter_t *iter) {
         const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        action_invoker *self = (action_invoker*)ctx->ctx;        
-        Func func = self->m_func; 
+        action_invoker *self = (action_invoker*)ctx->ctx;
         column_args<Components...> columns(iter);
-        call_system(iter, func, 0, columns.m_columns);
-    }   
+        call_system(iter, self->m_func, 0, columns.m_columns);
+    }
 
 private:
     Func m_func;
@@ -3973,13 +3971,13 @@ class iter_invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
-    explicit iter_invoker(Func func) 
-        : m_func(func) { }
+    explicit iter_invoker(Func&& func) noexcept
+        : m_func(std::move(func)) { }
 
     /* Invoke system */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
         (void)index;
         (void)columns;
         flecs::iter iter_wrapper(iter);
@@ -3989,18 +3987,17 @@ public:
     /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
         call_system(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
     /** Callback provided to flecs */
     static void run(ecs_iter_t *iter) {
         const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        iter_invoker *self = (iter_invoker*)ctx->ctx;        
-        Func func = self->m_func; 
+        iter_invoker *self = (iter_invoker*)ctx->ctx;
         column_args<Components...> columns(iter);
-        call_system(iter, func, 0, columns.m_columns);
-    }   
+        call_system(iter, self->m_func, 0, columns.m_columns);
+    }
 
 private:
     Func m_func;
@@ -4183,38 +4180,35 @@ public:
     query_iterator<Components...> end() const;
 
     template <typename Func>
-    void each(Func func) const {
+    void each(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next(&it)) {
             _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...> ctx(func);
-            ctx.call_system(&it, func, 0, columns.m_columns);
+            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
     }
 
     /* DEPRECATED */
     template <typename Func>
-    void action(Func func) const {
+    void action(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next(&it)) {
             _::column_args<Components...> columns(&it);
-            _::action_invoker<Func, Components...> ctx(func);
-            ctx.call_system(&it, func, 0, columns.m_columns);
+            _::action_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
-    }  
+    }
 
     template <typename Func>
-    void iter(Func func) const {
+    void iter(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next(&it)) {
             _::column_args<Components...> columns(&it);
-            _::iter_invoker<Func, Components...> ctx(func);
-            ctx.call_system(&it, func, 0, columns.m_columns);
+            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
-    }    
+    }
 };
 
 
