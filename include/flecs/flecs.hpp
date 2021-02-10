@@ -4441,10 +4441,10 @@ public:
     template <typename Func>
     system& action(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        using invoker_t = typename _::action_invoker<Func, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
+        using invoker_t = typename _::action_invoker<typename std::decay<Func>::type, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));        
 
-        create_system(_::action_invoker<Func, Components...>::run, false);
+        create_system(invoker_t::run, false);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
@@ -4458,10 +4458,10 @@ public:
     template <typename Func>
     system& iter(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        using invoker_t = typename _::iter_invoker<Func, Components...>;
+        using invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
         auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
 
-        create_system(_::iter_invoker<Func, Components...>::run, false);
+        create_system(invoker_t::run, false);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
@@ -4473,10 +4473,10 @@ public:
      * single entity */
     template <typename Func>
     system& each(Func&& func) {
-        using invoker_t = typename _::each_invoker<Func, Components...>;
+        using invoker_t = typename _::each_invoker<typename std::decay<Func>::type, Components...>;
         auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
 
-        create_system(_::each_invoker<Func, Components...>::run, true);
+        create_system(invoker_t::run, true);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
