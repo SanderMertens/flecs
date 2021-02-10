@@ -3881,6 +3881,7 @@ class each_invoker {
 
 public:
     explicit each_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
+    explicit each_invoker(const Func& func) noexcept : m_func(func) { }
 
     // Invoke system
     template <typename... Targs,
@@ -3927,8 +3928,8 @@ class action_invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
-    explicit action_invoker(Func&& func) noexcept
-        : m_func(std::move(func)) { }
+    explicit action_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
+    explicit action_invoker(const Func& func) noexcept : m_func(func) { }
 
     /* Invoke system */
     template <typename... Targs,
@@ -3971,8 +3972,8 @@ class iter_invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
-    explicit iter_invoker(Func&& func) noexcept
-        : m_func(std::move(func)) { }
+    explicit iter_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
+    explicit iter_invoker(const Func& func) noexcept : m_func(func) { }
 
     /* Invoke system */
     template <typename... Targs,
@@ -4438,10 +4439,10 @@ public:
 
     /* DEPRECATED. Use iter instead. */
     template <typename Func>
-    system& action(Func func) {
+    system& action(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         using invoker_t = typename _::action_invoker<Func, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(func);
+        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
 
         create_system(_::action_invoker<Func, Components...>::run, false);
 
@@ -4455,10 +4456,10 @@ public:
       * is added in the fluent method chain. Create system signature from both 
       * template parameters and anything provided by the signature method. */
     template <typename Func>
-    system& iter(Func func) {
+    system& iter(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         using invoker_t = typename _::iter_invoker<Func, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(func);
+        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
 
         create_system(_::iter_invoker<Func, Components...>::run, false);
 
@@ -4471,9 +4472,9 @@ public:
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
-    system& each(Func func) {
+    system& each(Func&& func) {
         using invoker_t = typename _::each_invoker<Func, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(func);
+        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
 
         create_system(_::each_invoker<Func, Components...>::run, true);
 
