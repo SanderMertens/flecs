@@ -749,7 +749,7 @@ ecs_vector_t* _ecs_vector_copy(
 #ifdef __cplusplus
 #ifndef FLECS_NO_CPP
 
-#include <iostream>
+#include <initializer_list>
 
 namespace flecs {
 
@@ -1180,7 +1180,7 @@ void ecs_bitset_swap(
  *
  * Note that while the implementation is a hashmap, it can only compute hashes
  * for the provided 64 bit keys. This means that the provided keys must always
- * be unique. If the provided keys are hashes themselves, it is the 
+ * be unique. If the provided keys are hashes themselves, it is the
  * responsibility of the user to ensure that collisions are handled.
  *
  * In debug mode the map verifies that the type provided to the map functions
@@ -1211,7 +1211,7 @@ typedef struct ecs_map_iter_t {
 FLECS_API
 ecs_map_t * _ecs_map_new(
     ecs_size_t elem_size,
-    ecs_size_t alignment, 
+    ecs_size_t alignment,
     int32_t elem_count);
 
 #define ecs_map_new(T, elem_count)\
@@ -1313,19 +1313,19 @@ void* _ecs_map_next_ptr(
 /** Grow number of buckets in the map for specified number of elements. */
 FLECS_API
 void ecs_map_grow(
-    ecs_map_t *map, 
+    ecs_map_t *map,
     int32_t elem_count);
 
 /** Set number of buckets in the map for specified number of elements. */
 FLECS_API
 void ecs_map_set_size(
-    ecs_map_t *map, 
+    ecs_map_t *map,
     int32_t elem_count);
 
 /** Return memory occupied by map. */
 FLECS_API
 void ecs_map_memory(
-    ecs_map_t *map, 
+    ecs_map_t *map,
     int32_t *allocd,
     int32_t *used);
 
@@ -1350,14 +1350,15 @@ void ecs_map_memory(
 #ifdef __cplusplus
 #ifndef FLECS_NO_CPP
 
-#include <iostream>
+#include <initializer_list>
+#include <utility>
 
 namespace flecs {
 
 template <typename K, typename T>
 class map {
 public:
-    map(int32_t count = 0) { 
+    map(int32_t count = 0) {
         init(count);
     }
 
@@ -1969,10 +1970,18 @@ FLECS_API
 void ecs_os_set_api_defaults(void);
 
 /* Memory management */
-#define ecs_os_malloc(size) ecs_os_api.malloc_(size);
-#define ecs_os_free(ptr) ecs_os_api.free_(ptr);
+#ifndef ecs_os_malloc
+#define ecs_os_malloc(size) ecs_os_api.malloc_(size)
+#endif
+#ifndef ecs_os_free
+#define ecs_os_free(ptr) ecs_os_api.free_(ptr)
+#endif
+#ifndef ecs_os_realloc
 #define ecs_os_realloc(ptr, size) ecs_os_api.realloc_(ptr, size)
+#endif
+#ifndef ecs_os_calloc
 #define ecs_os_calloc(size) ecs_os_api.calloc_(size)
+#endif
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #define ecs_os_alloca(size) _alloca((size_t)(size))
 #else
@@ -1980,7 +1989,9 @@ void ecs_os_set_api_defaults(void);
 #endif
 
 /* Strings */
+#ifndef ecs_os_strdup
 #define ecs_os_strdup(str) ecs_os_api.strdup_(str)
+#endif
 #define ecs_os_strlen(str) (ecs_size_t)strlen(str)
 #define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
 #define ecs_os_strncmp(str1, str2, num) strncmp(str1, str2, (size_t)(num))
@@ -7807,6 +7818,37 @@ FLECS_API void ecs_gauge_reduce(
 #include <array>
 #include <functional>
 
+// Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
+// Rationale:
+//  - Using macros here instead of a templated function bc clients might override ecs_os_malloc
+//    to contain extra debug info like source tracking location. Using a template function
+//    in that scenario would collapse all source location into said function vs. the
+//    actual call site
+//  - FLECS_PLACEMENT_NEW(): exists to remove any naked new calls/make it easy to identify any regressions
+//    by grepping for new/delete
+#define FLECS_PLACEMENT_NEW(_ptr, _type)  ::new(flecs::_::placement_new_tag, _ptr) _type
+#define FLECS_NEW(_type)                  FLECS_PLACEMENT_NEW(ecs_os_malloc(sizeof(_type)), _type)
+#define FLECS_DELETE(_ptr)          \
+  do {                              \
+    if (_ptr) {                     \
+      flecs::_::destruct_obj(_ptr); \
+      ecs_os_free(_ptr);            \
+    }                               \
+  } while (false)
+
+namespace flecs {
+namespace _
+{
+// Dummy Placement new tag to disambiguate from any other operator new overrides
+struct placement_new_tag_t{};
+constexpr placement_new_tag_t placement_new_tag{};
+template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
+}
+}
+
+inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
+inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
+
 namespace flecs {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9764,11 +9806,7 @@ public:
      */
     explicit entity(world_t *world) 
         : m_world( world )
-    {
-        if (m_world) {
-            m_id = ecs_new_w_type(m_world, 0);
-        }
-    }
+        , m_id( world ? ecs_new_w_type(world, 0) : 0 ) { }
 
     /** Create a named entity.
      * Named entities can be looked up with the lookup functions. Entity names
@@ -10971,7 +11009,7 @@ void component_ctor(
     T *t_ptr = static_cast<T*>(ptr);
     
     for (int i = 0; i < count; i ++) {
-        new(&t_ptr[i]) T;
+        FLECS_PLACEMENT_NEW(&t_ptr[i], T);
     }
 } 
 
@@ -11498,7 +11536,7 @@ flecs::entity import(world& world) {
         ecs_entity_t scope = ecs_get_scope(world.c_ptr());
 
         // Allocate module, so the this ptr will remain stable
-        T *module_data = new T(world);
+        T *module_data = FLECS_NEW(T)(world);
 
         ecs_set_scope(world.c_ptr(), scope);
 
@@ -12214,7 +12252,8 @@ public:
     template <typename Func>
     system& action(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        auto ctx = new _::action_invoker<Func, Components...>(func);
+        using invoker_t = typename _::action_invoker<Func, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(func);
 
         create_system(_::action_invoker<Func, Components...>::run, false);
 
@@ -12230,7 +12269,8 @@ public:
     template <typename Func>
     system& iter(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        auto ctx = new _::iter_invoker<Func, Components...>(func);
+        using invoker_t = typename _::iter_invoker<Func, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(func);
 
         create_system(_::iter_invoker<Func, Components...>::run, false);
 
@@ -12244,7 +12284,8 @@ public:
      * single entity */
     template <typename Func>
     system& each(Func func) {
-        auto ctx = new _::each_invoker<Func, Components...>(func);
+        using invoker_t = typename _::each_invoker<Func, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(func);
 
         create_system(_::each_invoker<Func, Components...>::run, true);
 

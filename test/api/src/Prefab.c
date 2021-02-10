@@ -2935,3 +2935,30 @@ void Prefab_child_of_instance() {
 
     ecs_fini(world);
 }
+
+void Prefab_rematch_after_prefab_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+
+    ecs_query_t *q = ecs_query_new(world, "SHARED:Position");
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    Position *p = ecs_column(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_delete(world, base);
+
+    it = ecs_query_iter(q);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
