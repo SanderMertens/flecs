@@ -18,6 +18,13 @@ void World_multi_world_empty() {
     test_assert(true);
 }
 
+class FooModule {
+public:
+    FooModule(flecs::world& world) { 
+        world.module<FooModule>();
+    }
+};
+
 void World_multi_world_component() {
     flecs::world w1;
     flecs::world w2;
@@ -71,4 +78,78 @@ void World_different_comp_same_name() {
 
     w.component<Position>("Position");
     w.component<Velocity>("Position");
+}
+
+void World_reregister_after_reset() {
+    flecs::world w;
+
+    auto p1 = w.component<Position>("Position");
+
+    // Simulate different binary
+    flecs::_::component_info<Position>::reset();
+
+    auto p2 = w.component<Position>("Position");
+
+    test_assert(p1.id() == p2.id());
+}
+
+void World_implicit_reregister_after_reset() {
+    flecs::world w;
+
+    w.entity().add<Position>();
+
+    flecs::entity_t p_id_1 = flecs::type_id<Position>();
+
+    // Simulate different binary
+    flecs::_::component_info<Position>::reset();
+
+    w.entity().add<Position>();
+
+    flecs::entity_t p_id_2 = flecs::type_id<Position>();
+
+    test_assert(p_id_1 == p_id_2);
+}
+
+void World_reregister_after_reset_different_name() {
+    flecs::world w;
+
+    install_test_abort();
+    test_expect_abort();    
+
+    w.component<Position>("Position");
+
+    // Simulate different binary
+    flecs::_::component_info<Position>::reset();
+
+    w.component<Position>("Velocity");
+}
+
+void World_reimport_module_after_reset() {
+    flecs::world w;
+
+    auto m1 = w.import<FooModule>();
+
+    // Simulate different binary
+    flecs::_::component_info<FooModule>::reset();
+
+    auto m2 = w.import<FooModule>();
+    
+    test_assert(m1.id() == m2.id());
+}
+
+void World_reimport_module_new_world() {
+    flecs::entity e1;
+    {
+        flecs::world w;
+
+        e1 = w.import<FooModule>();
+    }
+
+    {
+        flecs::world w;
+
+        auto e2 = w.import<FooModule>();
+        
+        test_assert(e1.id() == e2.id());
+    }
 }

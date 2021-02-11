@@ -11189,8 +11189,7 @@ public:
             if (s_id >= EcsFirstUserComponentId) {
                 char *path = ecs_get_fullpath(world, entity);
                 ecs_assert(!strcmp(path, s_name.c_str()), 
-                    ECS_INCONSISTENT_COMPONENT_NAME, 
-                    _::name_helper<T>::name());
+                    ECS_INCONSISTENT_COMPONENT_NAME, path);
                 ecs_os_free(path);
             }
 
@@ -11216,10 +11215,12 @@ public:
     {
         // If no id has been registered yet, do it now.
         if (!s_id) {
+            const char *symbol = _::name_helper<T>::name();
+            
             if (!name) {
                 // If no name was provided, retrieve the name implicitly from
                 // the name_helper class.
-                name = _::name_helper<T>::name();
+                name = symbol;
             }
 
             s_allow_tag = allow_tag;
@@ -11256,6 +11257,19 @@ public:
                 world, result.id(), nullptr, 
                 size(), 
                 alignment());
+
+            ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
+
+            // Set the symbol in the Name component to the actual C++ name.
+            // Comparing symbols allows for verifying whether a different 
+            // component is being registered under the samea name.
+            EcsName *name_comp = ecs_get_mut(world, entity, EcsName, NULL);
+            if (name_comp->symbol) {
+                ecs_assert( !strcmp(name_comp->symbol, symbol), 
+                    ECS_COMPONENT_NAME_IN_USE, name);
+            } else {
+                name_comp->symbol = ecs_os_strdup(symbol);
+            }
             
             // The identifier returned by the function should be the same as the
             // identifier that was passed in.
@@ -11393,6 +11407,7 @@ private:
     static entity_t s_id;
     static type_t s_type;
     static std::string s_name;
+    static std::string s_symbol;
     static bool s_allow_tag;
 };
 
@@ -11420,8 +11435,8 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     entity_t id = 0;
 
     if (_::component_info<T>::registered()) {
-        /* To support components across multiple worlds, ensure that the
-         * component ids are the same. */
+        /* Obtain component id. Because the component is already registered,
+         * this operation does nothing besides returning the existing id */
         id = _::component_info<T>::id_no_lifecycle(world_ptr, name, allow_tag);
 
         /* If entity is not empty check if the name matches */
@@ -11465,10 +11480,20 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
          * or entity has been registered with this name */
         ecs_entity_t entity = ecs_lookup_fullpath(world_ptr, name);
 
-        (void)entity;
+        /* If entity exists, compare symbol name to ensure that the component
+         * we are trying to register under this name is the same */
+        if (entity) {
+            const EcsName *name_comp = ecs_get_mut(world.c_ptr(), entity, EcsName, NULL);
+            ecs_assert(name_comp != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(name_comp->symbol != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_assert(entity == 0, ECS_COMPONENT_NAME_IN_USE, name);
+            const char *symbol = _::name_helper<T>::name();
 
+            ecs_assert(!strcmp(name_comp->symbol, symbol), 
+                ECS_COMPONENT_NAME_IN_USE, name);
+        }
+
+        /* Register id as usual */
         id = _::component_info<T>::id_no_lifecycle(world_ptr, name, allow_tag);
     }
 
@@ -11527,35 +11552,67 @@ flecs::entity module(const flecs::world& world, const char *name = nullptr) {
 //// Import a module
 ////////////////////////////////////////////////////////////////////////////////
 
+
+template <typename T>
+ecs_entity_t do_import(world& world) {
+    ecs_trace_1("import %s", _::name_helper<T>::name());
+    ecs_log_push();
+
+    ecs_entity_t scope = ecs_get_scope(world.c_ptr());
+
+    // Allocate module, so the this ptr will remain stable
+    // TODO: make sure memory is cleaned up with world
+    T *module_data = FLECS_NEW(T)(world);
+
+    ecs_set_scope(world.c_ptr(), scope);
+
+    // It should now be possible to lookup the module
+    const char *symbol = _::name_helper<T>::name();
+    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
+    ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);  
+
+    _::component_info<T>::init(world.c_ptr(), m, true);    
+
+    printf("set ptr (size = %d)\n", _::component_info<T>::size());
+
+    // Set module singleton component
+    ecs_set_ptr_w_entity(
+        world.c_ptr(), m,
+        _::component_info<T>::id_no_lifecycle(world.c_ptr()), 
+        _::component_info<T>::size(),
+        module_data);
+
+    printf("set ptr done\n");        
+
+    ecs_log_pop();     
+
+    return m;
+}
+
 template <typename T>
 flecs::entity import(world& world) {
+    const char *symbol = _::name_helper<T>::name();
+
+    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
+    
     if (!_::component_info<T>::registered()) {
-        ecs_trace_1("import %s", _::name_helper<T>::name());
-        ecs_log_push();
 
-        ecs_entity_t scope = ecs_get_scope(world.c_ptr());
+        /* Module is registered with world, initialize static data */
+        if (m) {
+            _::component_info<T>::init(world.c_ptr(), m, true);
+        
+        /* Module is not yet registered, register it now */
+        } else {
+            m = do_import<T>(world);
+        }
 
-        // Allocate module, so the this ptr will remain stable
-        T *module_data = FLECS_NEW(T)(world);
-
-        ecs_set_scope(world.c_ptr(), scope);
-
-        flecs::entity m = world.lookup(_::component_info<T>::name_no_lifecycle(world.c_ptr()));
-
-        ecs_set_ptr_w_entity(
-            world.c_ptr(),
-            m.id(),
-            _::component_info<T>::id_no_lifecycle(world.c_ptr()), 
-            _::component_info<T>::size(),
-            module_data);
-
-        ecs_log_pop();
-
-        return m;
-    } else {
-        return flecs::entity(world, 
-            _::component_info<T>::id_no_lifecycle(world.c_ptr()));
+    /* Module has been registered, but could have been for another world. Import
+     * if module hasn't been registered for this world. */
+    } else if (!m) {
+        m = do_import<T>(world);
     }
+
+    return flecs::entity(world, m);
 }
 
 
@@ -11686,12 +11743,13 @@ class each_invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
-    explicit each_invoker(Func func) : m_func(func) { }
+    explicit each_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
+    explicit each_invoker(const Func& func) noexcept : m_func(func) { }
 
     // Invoke system
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
         flecs::iter iter_wrapper(iter);
         (void)index;
         (void)columns;
@@ -11707,18 +11765,17 @@ public:
     // Add components one by one to parameter pack
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
-        call_system(iter, func, index + 1, columns, comps..., columns[index]);
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
+        each_invoker::call_system(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
     // Callback provided to flecs system
     static void run(ecs_iter_t *iter) {
         const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
         each_invoker *self = (each_invoker*)ctx->ctx;
-        Func func = self->m_func;        
         column_args<Components...> columns(iter);
-        call_system(iter, func, 0, columns.m_columns);
-    }   
+        call_system(iter, self->m_func, 0, columns.m_columns);
+    }
 
 private:
     Func m_func;
@@ -11734,13 +11791,13 @@ class action_invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
-    explicit action_invoker(Func func) 
-        : m_func(func) { }
+    explicit action_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
+    explicit action_invoker(const Func& func) noexcept : m_func(func) { }
 
     /* Invoke system */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
         (void)index;
         (void)columns;
 
@@ -11753,18 +11810,17 @@ public:
     /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
         call_system(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
     /** Callback provided to flecs */
     static void run(ecs_iter_t *iter) {
         const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        action_invoker *self = (action_invoker*)ctx->ctx;        
-        Func func = self->m_func; 
+        action_invoker *self = (action_invoker*)ctx->ctx;
         column_args<Components...> columns(iter);
-        call_system(iter, func, 0, columns.m_columns);
-    }   
+        call_system(iter, self->m_func, 0, columns.m_columns);
+    }
 
 private:
     Func m_func;
@@ -11779,13 +11835,13 @@ class iter_invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
-    explicit iter_invoker(Func func) 
-        : m_func(func) { }
+    explicit iter_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
+    explicit iter_invoker(const Func& func) noexcept : m_func(func) { }
 
     /* Invoke system */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
         (void)index;
         (void)columns;
         flecs::iter iter_wrapper(iter);
@@ -11795,18 +11851,17 @@ public:
     /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, Func func, size_t index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
         call_system(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
     /** Callback provided to flecs */
     static void run(ecs_iter_t *iter) {
         const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        iter_invoker *self = (iter_invoker*)ctx->ctx;        
-        Func func = self->m_func; 
+        iter_invoker *self = (iter_invoker*)ctx->ctx;
         column_args<Components...> columns(iter);
-        call_system(iter, func, 0, columns.m_columns);
-    }   
+        call_system(iter, self->m_func, 0, columns.m_columns);
+    }
 
 private:
     Func m_func;
@@ -11989,38 +12044,35 @@ public:
     query_iterator<Components...> end() const;
 
     template <typename Func>
-    void each(Func func) const {
+    void each(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next(&it)) {
             _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...> ctx(func);
-            ctx.call_system(&it, func, 0, columns.m_columns);
+            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
     }
 
     /* DEPRECATED */
     template <typename Func>
-    void action(Func func) const {
+    void action(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next(&it)) {
             _::column_args<Components...> columns(&it);
-            _::action_invoker<Func, Components...> ctx(func);
-            ctx.call_system(&it, func, 0, columns.m_columns);
+            _::action_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
-    }  
+    }
 
     template <typename Func>
-    void iter(Func func) const {
+    void iter(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next(&it)) {
             _::column_args<Components...> columns(&it);
-            _::iter_invoker<Func, Components...> ctx(func);
-            ctx.call_system(&it, func, 0, columns.m_columns);
+            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
-    }    
+    }
 };
 
 
@@ -12250,12 +12302,12 @@ public:
 
     /* DEPRECATED. Use iter instead. */
     template <typename Func>
-    system& action(Func func) {
+    system& action(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        using invoker_t = typename _::action_invoker<Func, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(func);
+        using invoker_t = typename _::action_invoker<typename std::decay<Func>::type, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));        
 
-        create_system(_::action_invoker<Func, Components...>::run, false);
+        create_system(invoker_t::run, false);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
@@ -12267,12 +12319,12 @@ public:
       * is added in the fluent method chain. Create system signature from both 
       * template parameters and anything provided by the signature method. */
     template <typename Func>
-    system& iter(Func func) {
+    system& iter(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        using invoker_t = typename _::iter_invoker<Func, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(func);
+        using invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
 
-        create_system(_::iter_invoker<Func, Components...>::run, false);
+        create_system(invoker_t::run, false);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
@@ -12283,11 +12335,11 @@ public:
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
-    system& each(Func func) {
-        using invoker_t = typename _::each_invoker<Func, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(func);
+    system& each(Func&& func) {
+        using invoker_t = typename _::each_invoker<typename std::decay<Func>::type, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
 
-        create_system(_::each_invoker<Func, Components...>::run, true);
+        create_system(invoker_t::run, true);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
