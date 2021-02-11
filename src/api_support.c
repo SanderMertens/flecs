@@ -202,7 +202,7 @@ void ecs_set_symbol(
 
     ecs_set(world, e, EcsName, { 
         .value = e_name, 
-        .symbol = name 
+        .symbol = ecs_os_strdup(name)
     });
 }
 

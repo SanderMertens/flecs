@@ -190,7 +190,8 @@ ecs_entity_t ecs_new_module(
         e = ecs_new_from_fullpath(world, module_path);
 
         EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
-        name_ptr->symbol = name;
+        ecs_os_free(name_ptr->symbol);
+        name_ptr->symbol = ecs_os_strdup(name);
 
         ecs_os_free(module_path);
     }

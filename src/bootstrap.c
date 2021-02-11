@@ -15,6 +15,7 @@ static ECS_CTOR(EcsName, ptr, {
 
 static ECS_DTOR(EcsName, ptr, {
     ecs_os_free(ptr->alloc_value);
+    ecs_os_free(ptr->symbol);
     ptr->value = NULL;
     ptr->alloc_value = NULL;
     ptr->symbol = NULL;
@@ -25,6 +26,11 @@ static ECS_COPY(EcsName, dst, src, {
         ecs_os_free(dst->alloc_value);
         dst->alloc_value = NULL;
     }
+
+    if (dst->symbol) {
+        ecs_os_free(dst->symbol);
+        dst->symbol = NULL;
+    }
     
     if (src->alloc_value) {
         dst->alloc_value = ecs_os_strdup(src->alloc_value);
@@ -33,7 +39,10 @@ static ECS_COPY(EcsName, dst, src, {
         dst->alloc_value = NULL;
         dst->value = src->value;
     }
-    dst->symbol = src->symbol;
+
+    if (src->symbol) {
+        dst->symbol = ecs_os_strdup(src->symbol);
+    }
 })
 
 static ECS_MOVE(EcsName, dst, src, {
@@ -84,7 +93,7 @@ void _bootstrap_component(
     c_info[index].size = size;
     c_info[index].alignment = alignment;
     id_data[index].value = &id[ecs_os_strlen("Ecs")]; /* Skip prefix */
-    id_data[index].symbol = id;
+    id_data[index].symbol = ecs_os_strdup(id);
     id_data[index].alloc_value = NULL;
 }
 

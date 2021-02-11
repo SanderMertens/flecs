@@ -3015,7 +3015,7 @@ int32_t ecs_type_trait_index_of(
 /** Entity name. */
 typedef struct EcsName {
     const char *value;     /**< Entity name */
-    const char *symbol;    /**< Optional symbol name, if it differs from name */
+    char *symbol;          /**< Optional symbol name, if it differs from name */
     char *alloc_value;     /**< If set, value will be freed on destruction */
 } EcsName;
 
@@ -7817,6 +7817,7 @@ FLECS_API void ecs_gauge_reduce(
 #include <sstream>
 #include <array>
 #include <functional>
+#include <iostream>
 
 // Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
 // Rationale:
@@ -9599,10 +9600,13 @@ public:
     const base_type& set(T&& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
+            auto comp_id = _::component_info<T>::id(world);
+
             ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
             ecs_set_ptr_w_entity(
-                world, id, _::component_info<T>::id(world), sizeof(T), &value);
+                world, id, comp_id, sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
     }
@@ -9618,10 +9622,13 @@ public:
     const base_type& set(const T& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
+            auto comp_id = _::component_info<T>::id(world);
+
             ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
             ecs_set_ptr_w_entity(
-                world, id, _::component_info<T>::id(world), sizeof(T), &value);
+                world, id, comp_id, sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
     }
@@ -9638,11 +9645,13 @@ public:
     const base_type& set_trait(const T& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
+            auto t_id = _::component_info<T>::id(world);
+
             ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
             ecs_set_ptr_w_entity(world, id, 
-                ecs_trait(_::component_info<C>::id(world), 
-                    _::component_info<T>::id(world)),
+                ecs_trait(_::component_info<C>::id(world), t_id),
                         sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
@@ -9685,15 +9694,17 @@ public:
     const base_type& patch(std::function<void(T&, bool)> func) const {
         static_cast<base_type*>(this)->invoke(
         [&func](world_t *world, entity_t id) {
+            auto comp_id = _::component_info<T>::id(world);
+
             ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
             bool is_added;
             T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-                world, id, _::component_info<T>::id(world), &is_added));
+                world, id, comp_id, &is_added));
             if (ptr) {
                 func(*ptr, !is_added);
-                ecs_modified_w_entity(world, id, _::component_info<T>::id(world));
+                ecs_modified_w_entity(world, id, comp_id);
             }
         });
         return *static_cast<base_type*>(this);
@@ -9711,15 +9722,17 @@ public:
     const base_type& patch(std::function<void(T&)> func) const {
         static_cast<base_type*>(this)->invoke(
         [&func](world_t *world, entity_t id) {
+            auto comp_id = _::component_info<T>::id(world);
+
             ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
             bool is_added;
             T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-                world, id, _::component_info<T>::id(world), &is_added));
+                world, id, comp_id, &is_added));
             if (ptr) {
                 func(*ptr);
-                ecs_modified_w_entity(world, id, _::component_info<T>::id(world));
+                ecs_modified_w_entity(world, id, comp_id);
             }
         });
         return *static_cast<base_type*>(this);
@@ -9745,11 +9758,13 @@ public:
         , m_entity( entity )
         , m_ref() 
     {
+        auto comp_id = _::component_info<T>::id(world);
+
         ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
         ecs_get_ref_w_entity(
-            m_world, &m_ref, m_entity, _::component_info<T>::id(world));
+            m_world, &m_ref, m_entity, comp_id);
     }
 
     const T* operator->() {
@@ -10037,10 +10052,14 @@ public:
     const T* get() const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+
+        auto comp_id = _::component_info<T>::id(m_world);
+
         ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
         return static_cast<const T*>(
-            ecs_get_w_entity(m_world, m_id, _::component_info<T>::id(m_world)));
+            ecs_get_w_entity(m_world, m_id, comp_id));
     }
 
     /** Get component value (untyped).
@@ -10081,11 +10100,14 @@ public:
     T* get_mut(bool *is_added = nullptr) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+
+        auto comp_id = _::component_info<T>::id(m_world);
+
         ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
         return static_cast<T*>(
-            ecs_get_mut_w_entity(
-                m_world, m_id, _::component_info<T>::id(m_world), is_added));
+            ecs_get_mut_w_entity(m_world, m_id, comp_id, is_added));
     }
 
     /** Get mutable component value (untyped).
@@ -10131,10 +10153,14 @@ public:
     const T* get_trait() const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+        
+        auto t_id = _::component_info<T>::id(m_world);
+
         ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
         return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            _::component_info<C>::id(m_world), _::component_info<T>::id(m_world))));
+            _::component_info<C>::id(m_world), t_id)));
     }   
 
     /** Get trait value.
@@ -10148,10 +10174,14 @@ public:
     const T* get_trait(flecs::entity component) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+
+        auto comp_id = _::component_info<T>::id(m_world);
+
         ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
         return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            component.id(), _::component_info<T>::id(m_world))));
+            component.id(), comp_id)));
     }
 
     /** Get trait tag value.
@@ -10168,10 +10198,14 @@ public:
     const C* get_trait_tag(flecs::entity trait) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+
+        auto comp_id = _::component_info<C>::id(m_world);
+
         ecs_assert(_::component_info<C>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
         return static_cast<const C*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            _::component_info<C>::id(m_world), trait.id())));
+            comp_id, trait.id())));
     }
 
     /** Get trait tag value (untyped).
@@ -10205,14 +10239,16 @@ public:
     T* get_trait_mut(bool *is_added = nullptr) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+
+        auto t_id = _::component_info<T>::id(m_world);
+
         ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
         return static_cast<T*>(
             ecs_get_mut_w_entity(
-                m_world, m_id, ecs_trait(
-                    _::component_info<C>::id(m_world), 
-                    _::component_info<T>::id(m_world)), 
-                    is_added));
+                m_world, m_id, ecs_trait(_::component_info<C>::id(m_world), 
+                    t_id), is_added));
     }    
 
     /** Get mutable trait value.
@@ -10230,14 +10266,15 @@ public:
     T* get_trait_mut(flecs::entity component, bool *is_added = nullptr) const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+
+        auto comp_id = _::component_info<T>::id(m_world);
+
         ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
         return static_cast<T*>(
             ecs_get_mut_w_entity(
-                m_world, m_id, ecs_trait(
-                    _::component_info<T>::id(m_world),
-                    component.id()), 
-                    is_added));
+                m_world, m_id, ecs_trait( comp_id, component.id()), is_added));
     }
 
     /** Get mutable trait tag value.
@@ -10275,9 +10312,13 @@ public:
     void modified() const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+
+        auto comp_id = _::component_info<T>::id(m_world);
+
         ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
-        ecs_modified_w_entity(m_world, m_id, _::component_info<T>::id(m_world));
+
+        ecs_modified_w_entity(m_world, m_id, comp_id);
     }
 
     /** Signal that component was modified.
@@ -10311,8 +10352,13 @@ public:
     ref<T> get_ref() const {
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+
+        // Ensure component is registered
+        _::component_info<T>::id(m_world);
+
         ecs_assert(_::component_info<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
+
         return ref<T>(m_world, m_id);
     }
 
@@ -11193,6 +11239,8 @@ public:
                 ecs_os_free(path);
             }
 
+            ecs_assert(allow_tag == s_allow_tag, ECS_INTERNAL_ERROR, NULL);
+
             // Component was already registered and data is consistent with new
             // identifier, so nothing else to be done.
             return;
@@ -11250,6 +11298,9 @@ public:
             flecs::world w(world);
             flecs::entity result = entity(w, name, true);
             
+            // Init the component_info instance with the identiifer.
+            init(world, result.id(), allow_tag);
+
             // Now use the resulting identifier to register the component. Note
             // that the name is not passed into this function, as the entity was
             // already created with the correct name.
@@ -11262,7 +11313,11 @@ public:
 
             // Set the symbol in the Name component to the actual C++ name.
             // Comparing symbols allows for verifying whether a different 
-            // component is being registered under the samea name.
+            // component is being registered under the same name. We can't use
+            // the name used for registration, because it is possible that a
+            // user (erroneously) attempts to register the same datatype with
+            // the same name. Without verifying that the actual C++ type name
+            // matches, that scenario would go undetected.
             EcsName *name_comp = ecs_get_mut(world, entity, EcsName, NULL);
             if (name_comp->symbol) {
                 ecs_assert( !strcmp(name_comp->symbol, symbol), 
@@ -11274,9 +11329,6 @@ public:
             // The identifier returned by the function should be the same as the
             // identifier that was passed in.
             ecs_assert(entity == result.id(), ECS_INTERNAL_ERROR, NULL);
-
-            // Init the component_info instance with the identiifer.
-            init(world, entity);
         }
 
         // By now we should have a valid identifier
@@ -11368,6 +11420,8 @@ public:
 
     // Return the size of a component.
     static size_t size() {
+        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
+        
         // C++ types that have no members still have a size. Use std::is_empty
         // to check if the type is empty. If so, use 0 for the component size.
         //
@@ -11383,6 +11437,8 @@ public:
 
     // Return the alignment of a component.
     static size_t alignment() {
+        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
+
         if (size() == 0) {
             return 0;
         } else {
@@ -11552,7 +11608,6 @@ flecs::entity module(const flecs::world& world, const char *name = nullptr) {
 //// Import a module
 ////////////////////////////////////////////////////////////////////////////////
 
-
 template <typename T>
 ecs_entity_t do_import(world& world) {
     ecs_trace_1("import %s", _::name_helper<T>::name());
@@ -11571,18 +11626,17 @@ ecs_entity_t do_import(world& world) {
     ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
     ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);  
 
-    _::component_info<T>::init(world.c_ptr(), m, true);    
+    _::component_info<T>::init(world.c_ptr(), m, false);
 
-    printf("set ptr (size = %d)\n", _::component_info<T>::size());
+    ecs_assert(_::component_info<T>::size() != 0, ECS_INTERNAL_ERROR, NULL);
 
     // Set module singleton component
+
     ecs_set_ptr_w_entity(
         world.c_ptr(), m,
         _::component_info<T>::id_no_lifecycle(world.c_ptr()), 
         _::component_info<T>::size(),
         module_data);
-
-    printf("set ptr done\n");        
 
     ecs_log_pop();     
 
@@ -11599,7 +11653,7 @@ flecs::entity import(world& world) {
 
         /* Module is registered with world, initialize static data */
         if (m) {
-            _::component_info<T>::init(world.c_ptr(), m, true);
+            _::component_info<T>::init(world.c_ptr(), m, false);
         
         /* Module is not yet registered, register it now */
         } else {
