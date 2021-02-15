@@ -3221,6 +3221,33 @@ namespace _
 #error "implicit component registration not supported"
 #endif
 
+// Translate a typename into a langauge-agnostic identifier. This allows for
+// registration of components/modules across language boundaries.
+template <typename T>
+struct symbol_helper
+{
+    static char* symbol(void) {
+        const char *name = name_helper<T>::name();
+
+        // Symbol is same as name, but with '::' replaced with '.'
+        char *ptr, *sym = ecs_os_strdup(name);
+        ecs_size_t i, len = ecs_os_strlen(sym);
+        ptr = sym;
+        for (i = 0, ptr = sym; i < len && *ptr; i ++, ptr ++) {
+            if (*ptr == ':') {
+                sym[i] = '.';
+                ptr ++;
+            } else {
+                sym[i] = *ptr;
+            }
+        }
+
+        sym[i] = '\0';
+
+        return sym;
+    }
+};
+
 // The following functions are lifecycle callbacks that are automatically
 // registered with flecs to ensure component lifecycle is handled correctly. Not
 // all types require this, yet callbacks are registered by default, which
@@ -3449,12 +3476,12 @@ public:
     {
         // If no id has been registered yet, do it now.
         if (!s_id) {
-            const char *symbol = _::name_helper<T>::name();
+            const char *n = _::name_helper<T>::name();
             
             if (!name) {
                 // If no name was provided, retrieve the name implicitly from
                 // the name_helper class.
-                name = symbol;
+                name = n;
             }
 
             s_allow_tag = allow_tag;
@@ -3505,11 +3532,13 @@ public:
             // the same name. Without verifying that the actual C++ type name
             // matches, that scenario would go undetected.
             EcsName *name_comp = ecs_get_mut(world, entity, EcsName, NULL);
+            char *symbol = symbol_helper<T>::symbol();
+
             if (name_comp->symbol) {
                 ecs_assert( !strcmp(name_comp->symbol, symbol), 
                     ECS_COMPONENT_NAME_IN_USE, name);
             } else {
-                name_comp->symbol = ecs_os_strdup(symbol);
+                name_comp->symbol = symbol;
             }
             
             // The identifier returned by the function should be the same as the
@@ -3808,9 +3837,10 @@ ecs_entity_t do_import(world& world) {
     ecs_set_scope(world.c_ptr(), scope);
 
     // It should now be possible to lookup the module
-    const char *symbol = _::name_helper<T>::name();
+    char *symbol = _::symbol_helper<T>::symbol();
     ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
-    ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);  
+    ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
+    ecs_os_free(symbol);
 
     _::component_info<T>::init(world.c_ptr(), m, false);
 

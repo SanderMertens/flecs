@@ -31,9 +31,11 @@ typedef struct TestInteropModule {
 
 static
 void TestInteropModuleImport(ecs_world_t *world) {
-    ECS_MODULE(world, TestInteropModule);
+    ecs_new_module(world, 0, "TestInteropModule", 
+        sizeof(TestInteropModule), alignof(TestInteropModule));
 
-    ECS_COMPONENT(world, Position);
+    ecs_new_component(world, 0, "Position", 
+        sizeof(Position), alignof(Position));
 }
 
 namespace test {
@@ -187,5 +189,6 @@ void World_c_interop_module() {
 
     w.import<test::interop::module>();
 
-
+    auto e_pos = w.lookup("test::interop::module::Position");
+    test_assert(e_pos.id() != 0);
 }
