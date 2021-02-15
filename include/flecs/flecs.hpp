@@ -3762,6 +3762,9 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
 
             ecs_assert(!strcmp(name_comp->symbol, symbol), 
                 ECS_COMPONENT_NAME_IN_USE, name);
+
+            (void)name_comp;
+            (void)symbol;
         }
 
         /* Register id as usual */
