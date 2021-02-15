@@ -55,6 +55,12 @@ public:
 }
 }
 
+namespace ns {
+    struct FooComp {
+        int value;
+    };
+}
+
 void World_multi_world_component() {
     flecs::world w1;
     flecs::world w2;
@@ -140,6 +146,37 @@ void World_implicit_reregister_after_reset() {
     test_assert(p_id_1 == p_id_2);
 }
 
+void World_reregister_after_reset_w_namespace() {
+    flecs::world w;
+
+    w.component<ns::FooComp>();
+
+    flecs::entity_t p_id_1 = flecs::type_id<ns::FooComp>();
+
+    // Simulate different binary
+    flecs::_::component_info<ns::FooComp>::reset();
+
+    w.component<ns::FooComp>();
+
+    flecs::entity_t p_id_2 = flecs::type_id<ns::FooComp>();
+
+    test_assert(p_id_1 == p_id_2);
+}
+
+void World_reregister_namespace() {
+    flecs::world w;
+
+    w.component<ns::FooComp>();
+
+    flecs::entity_t p_id_1 = flecs::type_id<ns::FooComp>();
+
+    w.component<ns::FooComp>();
+
+    flecs::entity_t p_id_2 = flecs::type_id<ns::FooComp>();
+
+    test_assert(p_id_1 == p_id_2);
+}
+
 void World_reregister_after_reset_different_name() {
     flecs::world w;
 
@@ -191,4 +228,17 @@ void World_c_interop_module() {
 
     auto e_pos = w.lookup("test::interop::module::Position");
     test_assert(e_pos.id() != 0);
+}
+
+void World_c_interop_after_reset() {
+    flecs::world w;
+
+    w.import<test::interop::module>();
+
+    auto e_pos = w.lookup("test::interop::module::Position");
+    test_assert(e_pos.id() != 0);
+
+    flecs::_::component_info<test::interop::module>::reset();
+
+    w.import<test::interop::module>();
 }

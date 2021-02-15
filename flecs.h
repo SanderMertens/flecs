@@ -11519,7 +11519,8 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         /* If entity is not empty check if the name matches */
         if (ecs_get_type(world_ptr, id) != nullptr) {
             if (id >= EcsFirstUserComponentId) {
-                char *path = ecs_get_fullpath(world_ptr, id);
+                char *path = ecs_get_path_w_sep(
+                    world_ptr, 0, id, 0, "::", nullptr);
                 ecs_assert(!strcmp(path, name), 
                     ECS_INCONSISTENT_COMPONENT_NAME, name);
                 ecs_os_free(path);
@@ -11568,6 +11569,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
 
             ecs_assert(!strcmp(name_comp->symbol, symbol), 
                 ECS_COMPONENT_NAME_IN_USE, name);
+            (void)name_comp;
         }
 
         /* Register id as usual */

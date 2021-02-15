@@ -243,11 +243,14 @@ void World_multi_world_component_namespace(void);
 void World_type_id(void);
 void World_different_comp_same_name(void);
 void World_reregister_after_reset(void);
+void World_reregister_after_reset_w_namespace(void);
+void World_reregister_namespace(void);
 void World_implicit_reregister_after_reset(void);
 void World_reregister_after_reset_different_name(void);
 void World_reimport_module_after_reset(void);
 void World_reimport_module_new_world(void);
 void World_c_interop_module(void);
+void World_c_interop_after_reset(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -1128,6 +1131,14 @@ bake_test_case World_testcases[] = {
         World_reregister_after_reset
     },
     {
+        "reregister_after_reset_w_namespace",
+        World_reregister_after_reset_w_namespace
+    },
+    {
+        "reregister_namespace",
+        World_reregister_namespace
+    },
+    {
         "implicit_reregister_after_reset",
         World_implicit_reregister_after_reset
     },
@@ -1146,6 +1157,10 @@ bake_test_case World_testcases[] = {
     {
         "c_interop_module",
         World_c_interop_module
+    },
+    {
+        "c_interop_after_reset",
+        World_c_interop_after_reset
     }
 };
 
@@ -1291,7 +1306,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        11,
+        14,
         World_testcases
     },
     {
