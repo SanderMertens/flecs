@@ -247,6 +247,7 @@ void World_reregister_after_reset_w_namespace(void);
 void World_reregister_namespace(void);
 void World_implicit_reregister_after_reset(void);
 void World_reregister_after_reset_different_name(void);
+void World_reimport(void);
 void World_reimport_module_after_reset(void);
 void World_reimport_module_new_world(void);
 void World_c_interop_module(void);
@@ -1147,6 +1148,10 @@ bake_test_case World_testcases[] = {
         World_reregister_after_reset_different_name
     },
     {
+        "reimport",
+        World_reimport
+    },
+    {
         "reimport_module_after_reset",
         World_reimport_module_after_reset
     },
@@ -1306,7 +1311,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        14,
+        15,
         World_testcases
     },
     {

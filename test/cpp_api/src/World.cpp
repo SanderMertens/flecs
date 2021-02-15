@@ -191,6 +191,16 @@ void World_reregister_after_reset_different_name() {
     w.component<Position>("Velocity");
 }
 
+void World_reimport() {
+    flecs::world w;
+
+    auto m1 = w.import<FooModule>();
+
+    auto m2 = w.import<FooModule>();
+    
+    test_assert(m1.id() == m2.id());
+}
+
 void World_reimport_module_after_reset() {
     flecs::world w;
 
