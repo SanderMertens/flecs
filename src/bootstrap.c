@@ -46,6 +46,13 @@ static ECS_COPY(EcsName, dst, src, {
 })
 
 static ECS_MOVE(EcsName, dst, src, {
+    if (dst->alloc_value) {
+        ecs_os_free(dst->alloc_value);
+    }
+    if (dst->symbol) {
+        ecs_os_free(dst->symbol);
+    }
+
     dst->value = src->value;
     dst->alloc_value = src->alloc_value;
     dst->symbol = src->symbol;
@@ -173,9 +180,16 @@ void ecs_bootstrap(
     ecs_table_t *table = bootstrap_component_table(world);
     assert(table != NULL);
 
+    bootstrap_component(world, table, EcsName);
     bootstrap_component(world, table, EcsComponent);
     bootstrap_component(world, table, EcsType);
-    bootstrap_component(world, table, EcsName);
+
+    ecs_set_component_actions(world, EcsName, {
+        .ctor = ecs_ctor(EcsName),
+        .dtor = ecs_dtor(EcsName),
+        .copy = ecs_copy(EcsName),
+        .move = ecs_move(EcsName)
+    });    
 
     world->stats.last_component_id = EcsFirstUserComponentId;
     world->stats.last_id = EcsFirstUserEntityId;
@@ -190,13 +204,6 @@ void ecs_bootstrap(
     ecs_bootstrap_tag(world, EcsPrefab);
     ecs_bootstrap_tag(world, EcsHidden);
     ecs_bootstrap_tag(world, EcsDisabled);
-
-    ecs_set_component_actions(world, EcsName, {
-        .ctor = ecs_ctor(EcsName),
-        .dtor = ecs_dtor(EcsName),
-        .copy = ecs_copy(EcsName),
-        .move = ecs_move(EcsName)
-    });
 
     /* Initialize scopes */
     ecs_set(world, EcsFlecs, EcsName, {.value = "flecs"});

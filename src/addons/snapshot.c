@@ -189,6 +189,7 @@ void ecs_snapshot_restore(
 
     for (t = 0; t < table_count; t ++) {
         ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, t);
+
         if (table->flags & EcsTableHasBuiltins) {
             continue;
         }
@@ -218,7 +219,7 @@ void ecs_snapshot_restore(
                         
                         /* Always delete entity, so that even if the entity is
                         * in the current table, there won't be duplicates */
-                        ecs_table_delete(world, r->table, data, row, false);
+                        ecs_table_delete(world, r->table, data, row, true);
                     } else {
                         ecs_eis_set_generation(world, *e_ptr);
                     }
@@ -344,7 +345,7 @@ void ecs_snapshot_free(
     int32_t i, count = ecs_vector_count(snapshot->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_leaf_t *leaf = &tables[i];
-        ecs_table_clear_data(leaf->table, leaf->data);
+        ecs_table_clear_data(snapshot->world, leaf->table, leaf->data);
         ecs_os_free(leaf->data);
     }    
 

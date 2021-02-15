@@ -25,6 +25,34 @@ public:
     }
 };
 
+typedef struct TestInteropModule {
+    int dummy;
+} TestInteropModule;
+
+static
+void TestInteropModuleImport(ecs_world_t *world) {
+    ECS_MODULE(world, TestInteropModule);
+
+    ECS_COMPONENT(world, Position);
+}
+
+namespace test {
+namespace interop {
+
+class module : TestInteropModule {
+public:
+    module(flecs::world& ecs) {
+        TestInteropModuleImport(ecs.c_ptr());
+
+        ecs.module<test::interop::module>();
+
+        ecs.component<Position>("test::interop::module::Position");
+    }
+};
+
+}
+}
+
 void World_multi_world_component() {
     flecs::world w1;
     flecs::world w2;
@@ -152,4 +180,12 @@ void World_reimport_module_new_world() {
         
         test_assert(e1.id() == e2.id());
     }
+}
+
+void World_c_interop_module() {
+    flecs::world w;
+
+    w.import<test::interop::module>();
+
+
 }

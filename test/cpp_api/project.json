@@ -280,7 +280,8 @@
                 "implicit_reregister_after_reset",
                 "reregister_after_reset_different_name",
                 "reimport_module_after_reset",
-                "reimport_module_new_world"
+                "reimport_module_new_world",
+                "c_interop_module"
             ]
         }, {
             "id": "Singleton",

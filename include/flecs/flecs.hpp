@@ -3425,14 +3425,6 @@ public:
             ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
                 _::name_helper<T>::name());
 
-            // Ensure the entity has the same name as what was registered.
-            if (s_id >= EcsFirstUserComponentId) {
-                char *path = ecs_get_fullpath(world, entity);
-                ecs_assert(!strcmp(path, s_name.c_str()), 
-                    ECS_INCONSISTENT_COMPONENT_NAME, path);
-                ecs_os_free(path);
-            }
-
             ecs_assert(allow_tag == s_allow_tag, ECS_INTERNAL_ERROR, NULL);
 
             // Component was already registered and data is consistent with new
