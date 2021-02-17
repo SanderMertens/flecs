@@ -252,6 +252,7 @@ void World_reimport_module_after_reset(void);
 void World_reimport_module_new_world(void);
 void World_c_interop_module(void);
 void World_c_interop_after_reset(void);
+void World_implicit_register_w_new_world(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -1166,6 +1167,10 @@ bake_test_case World_testcases[] = {
     {
         "c_interop_after_reset",
         World_c_interop_after_reset
+    },
+    {
+        "implicit_register_w_new_world",
+        World_implicit_register_w_new_world
     }
 };
 
@@ -1311,7 +1316,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        15,
+        16,
         World_testcases
     },
     {

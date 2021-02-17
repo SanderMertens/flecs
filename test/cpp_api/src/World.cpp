@@ -74,8 +74,8 @@ void World_multi_world_component() {
     test_assert(p_1.id() != m_2.id());
     test_assert(m_2.id() > v_2.id());
 
-    auto p_2 = w2.component<Position>();
-    test_assert(p_1.id() == p_2.id());
+    auto m_1 = w2.component<Mass>();
+    test_assert(m_1.id() == m_2.id());
 }
 
 namespace A {
@@ -251,4 +251,29 @@ void World_c_interop_after_reset() {
     flecs::_::component_info<test::interop::module>::reset();
 
     w.import<test::interop::module>();
+}
+
+void World_implicit_register_w_new_world() {
+    {
+        flecs::world w;
+
+        auto e = w.entity().set<Position>({10, 20});
+        test_assert(e.has<Position>());
+        auto *p = e.get<Position>();
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    {
+        /* Recreate world, does not reset static state */
+        flecs::world w;
+
+        auto e = w.entity().set<Position>({10, 20});
+        test_assert(e.has<Position>());
+        auto *p = e.get<Position>();
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }    
 }

@@ -3544,6 +3544,24 @@ public:
             // The identifier returned by the function should be the same as the
             // identifier that was passed in.
             ecs_assert(entity == result.id(), ECS_INTERNAL_ERROR, NULL);
+
+        } else if (world && !ecs_exists(world, s_id)) {
+            const char *n = _::name_helper<T>::name();
+            
+            if (!name) {
+                // If no name was provided, retrieve the name implicitly from
+                // the name_helper class.
+                name = n;
+            }
+
+            ecs_entity_t entity = ecs_new_component(
+                world, s_id, name,
+                size(), 
+                alignment());
+
+            ecs_assert(entity == s_id, ECS_INTERNAL_ERROR, NULL);
+
+            init(world, s_id, allow_tag);
         }
 
         // By now we should have a valid identifier
@@ -3558,7 +3576,7 @@ public:
         bool allow_tag = true) 
     {
         // If no id has been registered yet, do it now.
-        if (!s_id) {
+        if (!s_id || (world && !ecs_exists(world, s_id))) {
             // This will register a component id, but will not register 
             // lifecycle callbacks.
             id_no_lifecycle(world, name, allow_tag);

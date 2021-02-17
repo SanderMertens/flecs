@@ -5532,7 +5532,13 @@ ecs_entity_t ecs_new_component_id(
         /* If the low component ids are depleted, return a regular entity id */
         return ecs_new_id(world);
     } else {
-        return world->stats.last_component_id ++;
+        ecs_entity_t id;
+        
+        do {
+            id = world->stats.last_component_id ++;
+        } while (ecs_exists(world, id));
+
+        return id;
     }
 }
 

@@ -11254,6 +11254,8 @@ public:
             // as well.
             ecs_assert(s_name.c_str() != nullptr, ECS_INTERNAL_ERROR, NULL);
 
+            printf("Name = %s, %s\n", ecs_get_name(world, entity), ecs_get_name(world, s_id));
+
             // A component cannot be registered using a different identifier.
             ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
                 _::name_helper<T>::name());
@@ -11281,7 +11283,7 @@ public:
         const char *name = nullptr, bool allow_tag = true) 
     {
         // If no id has been registered yet, do it now.
-        if (!s_id) {
+        if (!s_id || (world && !ecs_exists(world, s_id))) {
             const char *n = _::name_helper<T>::name();
             
             if (!name) {
@@ -11364,7 +11366,7 @@ public:
         bool allow_tag = true) 
     {
         // If no id has been registered yet, do it now.
-        if (!s_id) {
+        if (!s_id || (world && !ecs_exists(world, s_id))) {
             // This will register a component id, but will not register 
             // lifecycle callbacks.
             id_no_lifecycle(world, name, allow_tag);
