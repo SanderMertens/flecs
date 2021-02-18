@@ -200,10 +200,14 @@ void ecs_set_symbol(
     
     const char *e_name = ecs_name_from_symbol(world, name);
 
-    ecs_set(world, e, EcsName, { 
-        .value = e_name, 
-        .symbol = name 
-    });
+    EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
+    name_ptr->value = e_name;
+
+    if (name_ptr->symbol) {
+        ecs_os_free(name_ptr->symbol);
+    }
+
+    name_ptr->symbol = ecs_os_strdup(name);
 }
 
 ecs_entity_t ecs_lookup_w_id(
@@ -310,6 +314,7 @@ ecs_entity_t ecs_new_component(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
     bool in_progress = world->in_progress;
+    bool found = false;
 
     /* If world is in progress component may be registered, but only when not
      * in multithreading mode. */
@@ -325,13 +330,17 @@ ecs_entity_t ecs_new_component(
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
         result = ecs_new_component_id(world);
-        ecs_set_symbol(world, result, name);
+        found = true;
     }
 
     /* ecs_new_component_id does not add the scope, so add it explicitly */
     ecs_entity_t scope = world->stage.scope;
     if (scope) {
         ecs_add_entity(world, result, ECS_CHILDOF | scope);
+    }
+
+    if (found) {
+        ecs_set_symbol(world, result, name);
     }
 
     bool added = false;

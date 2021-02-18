@@ -175,7 +175,7 @@ typedef void (*ecs_fini_action_t)(
 /** Entity name. */
 typedef struct EcsName {
     const char *value;     /**< Entity name */
-    const char *symbol;    /**< Optional symbol name, if it differs from name */
+    char *symbol;          /**< Optional symbol name, if it differs from name */
     char *alloc_value;     /**< If set, value will be freed on destruction */
 } EcsName;
 

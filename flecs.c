@@ -678,7 +678,7 @@ ecs_type_t ecs_bootstrap_type(
     ecs_new_component(world, ecs_typeid(name), #name, sizeof(name), ECS_ALIGNOF(name))
 
 #define ecs_bootstrap_tag(world, name)\
-    ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = #name});\
+    ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = (char*)#name});\
     ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
 
 
@@ -998,6 +998,7 @@ void ecs_table_clear_silent(
 
 /* Clear table data. Don't call OnRemove handlers. */
 void ecs_table_clear_data(
+    ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data);    
 
@@ -2274,6 +2275,10 @@ void dtor_component(
     int32_t row,
     int32_t count)
 {
+    if (!count) {
+        return;
+    }
+    
     /* An old component is destructed */
     ecs_xtor_t dtor;
     if (cdata && (dtor = cdata->lifecycle.dtor)) {
@@ -2312,27 +2317,25 @@ static
 void run_remove_actions(
     ecs_world_t * world,
     ecs_table_t * table,
-    ecs_data_t * data,
     int32_t row,
-    int32_t count,
-    bool dtor_only)
+    int32_t count)
 {
     if (count) {
-        if (!dtor_only) {
-            ecs_run_monitors(world, table, NULL, row, count, table->un_set_all);
-        }
-
-        dtor_all_components(world, table, data, row, count);
+        ecs_run_monitors(world, table, NULL, row, count, table->un_set_all);        
     }
 }
 
 void ecs_table_clear_data(
-    ecs_table_t * table,
-    ecs_data_t * data)
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data)
 {
     if (!data) {
         return;
     }
+
+    int32_t count = ecs_table_data_count(data);
+    dtor_all_components(world, table, data, 0, count);
     
     ecs_column_t *columns = data->columns;
     if (columns) {
@@ -2385,7 +2388,7 @@ void ecs_table_clear_silent(
 
     int32_t count = ecs_vector_count(data->entities);
     
-    ecs_table_clear_data(table, table->data);
+    ecs_table_clear_data(world, table, data);
 
     if (count) {
         ecs_table_activate(world, table, 0, false);
@@ -2400,18 +2403,18 @@ void ecs_table_clear(
     ecs_table_t * table)
 {
     ecs_data_t *data = ecs_table_get_data(table);
+
     if (data) {
-        run_remove_actions(
-            world, table, data, 0, ecs_table_data_count(data), false);
+        run_remove_actions(world, table, 0, ecs_table_data_count(data));
 
         ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
         int32_t i, count = ecs_vector_count(data->entities);
         for(i = 0; i < count; i ++) {
             ecs_eis_delete(world, entities[i]);
         }
-    }
 
-    ecs_table_clear_silent(world, table);
+        ecs_table_clear_silent(world, table);
+    }
 }
 
 /* Unset all components in table. This function is called before a table is 
@@ -2436,11 +2439,10 @@ void ecs_table_free(
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
-        run_remove_actions(
-            world, table, data, 0, ecs_table_data_count(data), false);
+        run_remove_actions(world, table, 0, ecs_table_data_count(data));
+        ecs_table_clear_data(world, table, data);
     }
 
-    ecs_table_clear_data(table, table->data);
     ecs_table_clear_edges(world, table);
 
     ecs_os_free(table->lo_edges);
@@ -3431,8 +3433,8 @@ void ecs_table_swap(
 
 static
 void merge_vector(
-    ecs_vector_t ** dst_out,
-    ecs_vector_t * src,
+    ecs_vector_t **dst_out,
+    ecs_vector_t *src,
     int16_t size,
     int16_t alignment)
 {
@@ -3461,6 +3463,61 @@ void merge_vector(
 
         ecs_vector_free(src);
         *dst_out = dst;
+    }
+}
+
+static
+void merge_column(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t column_id,
+    ecs_vector_t *src)
+{
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
+    ecs_c_info_t *c_info = table->c_info[column_id];
+    ecs_column_t *column = &data->columns[column_id];
+    ecs_vector_t *dst = column->data;
+    int16_t size = column->size;
+    int16_t alignment = column->alignment;
+    int32_t dst_count = ecs_vector_count(dst);
+
+    if (!dst_count) {
+        if (dst) {
+            ecs_vector_free(dst);
+        }
+
+        column->data = src;
+    
+    /* If the new table is not empty, copy the contents from the
+     * src into the dst. */
+    } else {
+        int32_t src_count = ecs_vector_count(src);
+        ecs_vector_set_count_t(&dst, size, alignment, dst_count + src_count);
+        column->data = dst;
+
+        /* Construct new values */
+        if (c_info) {
+            ctor_component(
+                world, c_info, column, entities, dst_count, src_count);
+        }
+        
+        void *dst_ptr = ecs_vector_first_t(dst, size, alignment);
+        void *src_ptr = ecs_vector_first_t(src, size, alignment);
+
+        dst_ptr = ECS_OFFSET(dst_ptr, size * dst_count);
+        
+        /* Move values into column */
+        ecs_move_t move;
+        if (c_info && (move = c_info->lifecycle.move)) {
+            move(world, c_info->component, entities, entities, 
+                dst_ptr, src_ptr, ecs_to_size_t(size), src_count, 
+                c_info->lifecycle.ctx);
+        } else {
+            ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
+        }
+
+        ecs_vector_free(src);
     }
 }
 
@@ -3518,10 +3575,8 @@ void merge_table_data(
         }
 
         if (new_component == old_component) {
-            merge_vector(
-                &new_columns[i_new].data, old_columns[i_old].data, size, 
-                alignment);
-
+            merge_column(world, new_table, new_data, i_new, 
+                old_columns[i_old].data);
             old_columns[i_old].data = NULL;
 
             /* Mark component column as dirty */
@@ -3644,7 +3699,7 @@ ecs_data_t* ecs_table_merge(
     
     /* If there is nothing to merge to, just clear the old table */
     if (!new_table) {
-        ecs_table_clear_data(old_table, old_data);
+        ecs_table_clear_data(world, old_table, old_data);
         return NULL;
     }
 
@@ -3712,9 +3767,8 @@ void ecs_table_replace_data(
 
     if (table_data) {
         prev_count = ecs_vector_count(table_data->entities);
-        run_remove_actions(
-            world, table, table_data, 0, ecs_table_data_count(table_data), false);
-        ecs_table_clear_data(table, table_data);
+        run_remove_actions(world, table, 0, ecs_table_data_count(table_data));
+        ecs_table_clear_data(world, table, table_data);
     }
 
     if (data) {
@@ -5478,7 +5532,13 @@ ecs_entity_t ecs_new_component_id(
         /* If the low component ids are depleted, return a regular entity id */
         return ecs_new_id(world);
     } else {
-        return world->stats.last_component_id ++;
+        ecs_entity_t id;
+        
+        do {
+            id = world->stats.last_component_id ++;
+        } while (ecs_exists(world, id));
+
+        return id;
     }
 }
 
@@ -8878,9 +8938,11 @@ ecs_entity_t ecs_new_module(
         e = ecs_new_from_fullpath(world, module_path);
 
         EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
-        name_ptr->symbol = name;
+        ecs_os_free(name_ptr->symbol);
 
-        ecs_os_free(module_path);
+        /* Assign full path to symbol. This allows for modules to be redefined
+         * in C++ without causing name conflicts */
+        name_ptr->symbol = module_path;
     }
 
     ecs_entity_t result = ecs_new_component(world, e, NULL, size, alignment);
@@ -9640,6 +9702,7 @@ void ecs_snapshot_restore(
 
     for (t = 0; t < table_count; t ++) {
         ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, t);
+
         if (table->flags & EcsTableHasBuiltins) {
             continue;
         }
@@ -9669,7 +9732,7 @@ void ecs_snapshot_restore(
                         
                         /* Always delete entity, so that even if the entity is
                         * in the current table, there won't be duplicates */
-                        ecs_table_delete(world, r->table, data, row, false);
+                        ecs_table_delete(world, r->table, data, row, true);
                     } else {
                         ecs_eis_set_generation(world, *e_ptr);
                     }
@@ -9795,7 +9858,7 @@ void ecs_snapshot_free(
     int32_t i, count = ecs_vector_count(snapshot->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_leaf_t *leaf = &tables[i];
-        ecs_table_clear_data(leaf->table, leaf->data);
+        ecs_table_clear_data(snapshot->world, leaf->table, leaf->data);
         ecs_os_free(leaf->data);
     }    
 
@@ -22418,10 +22481,14 @@ void ecs_set_symbol(
     
     const char *e_name = ecs_name_from_symbol(world, name);
 
-    ecs_set(world, e, EcsName, { 
-        .value = e_name, 
-        .symbol = name 
-    });
+    EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
+    name_ptr->value = e_name;
+
+    if (name_ptr->symbol) {
+        ecs_os_free(name_ptr->symbol);
+    }
+
+    name_ptr->symbol = ecs_os_strdup(name);
 }
 
 ecs_entity_t ecs_lookup_w_id(
@@ -22528,6 +22595,7 @@ ecs_entity_t ecs_new_component(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
     bool in_progress = world->in_progress;
+    bool found = false;
 
     /* If world is in progress component may be registered, but only when not
      * in multithreading mode. */
@@ -22543,13 +22611,17 @@ ecs_entity_t ecs_new_component(
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
         result = ecs_new_component_id(world);
-        ecs_set_symbol(world, result, name);
+        found = true;
     }
 
     /* ecs_new_component_id does not add the scope, so add it explicitly */
     ecs_entity_t scope = world->stage.scope;
     if (scope) {
         ecs_add_entity(world, result, ECS_CHILDOF | scope);
+    }
+
+    if (found) {
+        ecs_set_symbol(world, result, name);
     }
 
     bool added = false;
@@ -22632,6 +22704,7 @@ static ECS_CTOR(EcsName, ptr, {
 
 static ECS_DTOR(EcsName, ptr, {
     ecs_os_free(ptr->alloc_value);
+    ecs_os_free(ptr->symbol);
     ptr->value = NULL;
     ptr->alloc_value = NULL;
     ptr->symbol = NULL;
@@ -22642,6 +22715,11 @@ static ECS_COPY(EcsName, dst, src, {
         ecs_os_free(dst->alloc_value);
         dst->alloc_value = NULL;
     }
+
+    if (dst->symbol) {
+        ecs_os_free(dst->symbol);
+        dst->symbol = NULL;
+    }
     
     if (src->alloc_value) {
         dst->alloc_value = ecs_os_strdup(src->alloc_value);
@@ -22650,10 +22728,20 @@ static ECS_COPY(EcsName, dst, src, {
         dst->alloc_value = NULL;
         dst->value = src->value;
     }
-    dst->symbol = src->symbol;
+
+    if (src->symbol) {
+        dst->symbol = ecs_os_strdup(src->symbol);
+    }
 })
 
 static ECS_MOVE(EcsName, dst, src, {
+    if (dst->alloc_value) {
+        ecs_os_free(dst->alloc_value);
+    }
+    if (dst->symbol) {
+        ecs_os_free(dst->symbol);
+    }
+
     dst->value = src->value;
     dst->alloc_value = src->alloc_value;
     dst->symbol = src->symbol;
@@ -22701,7 +22789,7 @@ void _bootstrap_component(
     c_info[index].size = size;
     c_info[index].alignment = alignment;
     id_data[index].value = &id[ecs_os_strlen("Ecs")]; /* Skip prefix */
-    id_data[index].symbol = id;
+    id_data[index].symbol = ecs_os_strdup(id);
     id_data[index].alloc_value = NULL;
 }
 
@@ -22781,9 +22869,16 @@ void ecs_bootstrap(
     ecs_table_t *table = bootstrap_component_table(world);
     assert(table != NULL);
 
+    bootstrap_component(world, table, EcsName);
     bootstrap_component(world, table, EcsComponent);
     bootstrap_component(world, table, EcsType);
-    bootstrap_component(world, table, EcsName);
+
+    ecs_set_component_actions(world, EcsName, {
+        .ctor = ecs_ctor(EcsName),
+        .dtor = ecs_dtor(EcsName),
+        .copy = ecs_copy(EcsName),
+        .move = ecs_move(EcsName)
+    });    
 
     world->stats.last_component_id = EcsFirstUserComponentId;
     world->stats.last_id = EcsFirstUserEntityId;
@@ -22798,13 +22893,6 @@ void ecs_bootstrap(
     ecs_bootstrap_tag(world, EcsPrefab);
     ecs_bootstrap_tag(world, EcsHidden);
     ecs_bootstrap_tag(world, EcsDisabled);
-
-    ecs_set_component_actions(world, EcsName, {
-        .ctor = ecs_ctor(EcsName),
-        .dtor = ecs_dtor(EcsName),
-        .copy = ecs_copy(EcsName),
-        .move = ecs_move(EcsName)
-    });
 
     /* Initialize scopes */
     ecs_set(world, EcsFlecs, EcsName, {.value = "flecs"});

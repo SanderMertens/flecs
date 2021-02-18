@@ -26,7 +26,7 @@ ecs_type_t ecs_bootstrap_type(
     ecs_new_component(world, ecs_typeid(name), #name, sizeof(name), ECS_ALIGNOF(name))
 
 #define ecs_bootstrap_tag(world, name)\
-    ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = #name});\
+    ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = (char*)#name});\
     ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
 
 
@@ -346,6 +346,7 @@ void ecs_table_clear_silent(
 
 /* Clear table data. Don't call OnRemove handlers. */
 void ecs_table_clear_data(
+    ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data);    
 

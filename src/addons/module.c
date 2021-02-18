@@ -190,9 +190,11 @@ ecs_entity_t ecs_new_module(
         e = ecs_new_from_fullpath(world, module_path);
 
         EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
-        name_ptr->symbol = name;
+        ecs_os_free(name_ptr->symbol);
 
-        ecs_os_free(module_path);
+        /* Assign full path to symbol. This allows for modules to be redefined
+         * in C++ without causing name conflicts */
+        name_ptr->symbol = module_path;
     }
 
     ecs_entity_t result = ecs_new_component(world, e, NULL, size, alignment);
