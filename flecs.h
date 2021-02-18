@@ -11254,8 +11254,6 @@ public:
             // as well.
             ecs_assert(s_name.c_str() != nullptr, ECS_INTERNAL_ERROR, NULL);
 
-            printf("Name = %s, %s\n", ecs_get_name(world, entity), ecs_get_name(world, s_id));
-
             // A component cannot be registered using a different identifier.
             ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
                 _::name_helper<T>::name());
@@ -11283,7 +11281,7 @@ public:
         const char *name = nullptr, bool allow_tag = true) 
     {
         // If no id has been registered yet, do it now.
-        if (!s_id || (world && !ecs_exists(world, s_id))) {
+        if (!s_id) {
             const char *n = _::name_helper<T>::name();
             
             if (!name) {
@@ -11352,6 +11350,26 @@ public:
             // The identifier returned by the function should be the same as the
             // identifier that was passed in.
             ecs_assert(entity == result.id(), ECS_INTERNAL_ERROR, NULL);
+
+        } else if (world && !ecs_exists(world, s_id)) {
+            const char *n = _::name_helper<T>::name();
+            
+            if (!name) {
+                // If no name was provided, retrieve the name implicitly from
+                // the name_helper class.
+                name = n;
+            }
+
+            ecs_entity_t entity = ecs_new_component(
+                world, s_id, name,
+                size(), 
+                alignment());
+                
+            (void)entity;
+
+            ecs_assert(entity == s_id, ECS_INTERNAL_ERROR, NULL);
+
+            init(world, s_id, allow_tag);
         }
 
         // By now we should have a valid identifier
@@ -11571,7 +11589,9 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
 
             ecs_assert(!strcmp(name_comp->symbol, symbol), 
                 ECS_COMPONENT_NAME_IN_USE, name);
+
             (void)name_comp;
+            (void)symbol;
         }
 
         /* Register id as usual */
