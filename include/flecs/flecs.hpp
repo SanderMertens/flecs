@@ -3217,7 +3217,7 @@ namespace _
       return typeName;
     }
   };
-#elif
+#else
 #error "implicit component registration not supported"
 #endif
 
