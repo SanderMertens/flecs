@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 
 project(flecs LANGUAGES C)
 
+option(FLECS_PIC "Compile static flecs lib with position-independent-code (PIC)" ON)
+
 # include utilities for compiler options and warnings
 
 include(cmake/target_default_compile_warnings.cmake)
@@ -97,6 +99,10 @@ add_library(flecs_static STATIC ${INC} ${SRC})
 
 target_default_compile_options_c(flecs_static)
 target_default_compile_warnings_c(flecs_static)
+
+if(FLECS_PIC)
+    set_property(TARGET flecs_static PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif()
 
 target_include_directories(flecs_static PUBLIC include)
 target_compile_definitions(flecs_static PUBLIC flecs_STATIC)

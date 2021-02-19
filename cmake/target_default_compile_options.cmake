@@ -21,7 +21,6 @@ function(target_default_compile_options_c THIS)
             OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
         target_compile_options(${THIS} PRIVATE
-                -fPIC
                 -fno-stack-protector
                 $<$<CONFIG:DEBUG>:-DDEBUG>)
     endif()
