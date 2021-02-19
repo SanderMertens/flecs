@@ -96,13 +96,16 @@ set(FLECS_TARGETS "")
 # build the shared library
 if(FLECS_SHARED_LIBS)
     add_library(flecs SHARED ${INC} ${SRC})
+    add_library(flecs::flecs ALIAS flecs)
 
     target_default_compile_options_c(flecs)
     if(FLECS_DEVELOPER_WARNINGS)
         target_default_compile_warnings_c(flecs)
     endif()
 
-    target_include_directories(flecs PUBLIC include)
+    target_include_directories(flecs PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
 
     list(APPEND FLECS_TARGETS flecs)
 endif()
@@ -110,6 +113,7 @@ endif()
 # build the static library
 if(FLECS_STATIC_LIBS)
     add_library(flecs_static STATIC ${INC} ${SRC})
+    add_library(flecs::flecs_static ALIAS flecs)
 
     target_default_compile_options_c(flecs_static)
     if(FLECS_DEVELOPER_WARNINGS)
@@ -120,7 +124,9 @@ if(FLECS_STATIC_LIBS)
         set_property(TARGET flecs_static PROPERTY POSITION_INDEPENDENT_CODE ON)
     endif()
 
-    target_include_directories(flecs_static PUBLIC include)
+    target_include_directories(flecs_static PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
     target_compile_definitions(flecs_static PUBLIC flecs_STATIC)
 
     list(APPEND FLECS_TARGETS flecs_static)
@@ -135,6 +141,12 @@ install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
         PATTERN "*.hpp")
 
 install(TARGETS ${FLECS_TARGETS}
+        EXPORT flecs-export
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(EXPORT flecs-export
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flecs
+        NAMESPACE flecs::
+        FILE flecs-config.cmake)
