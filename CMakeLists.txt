@@ -5,6 +5,7 @@ project(flecs LANGUAGES C)
 option(FLECS_STATIC_LIBS "Build static flecs lib" ON)
 option(FLECS_PIC "Compile static flecs lib with position-independent-code (PIC)" ON)
 option(FLECS_SHARED_LIBS "Build shared flecs lib" ON)
+option(FLECS_DEVELOPER_WARNINGS "Enable more warnings" OFF)
 
 if(NOT FLECS_STATIC_LIBS AND NOT FLECS_SHARED_LIBS)
     message(FATAL_ERROR "At least one of FLECS_STATIC_LIBS or FLECS_SHARED_LIBS options must be enabled")
@@ -97,7 +98,9 @@ if(FLECS_SHARED_LIBS)
     add_library(flecs SHARED ${INC} ${SRC})
 
     target_default_compile_options_c(flecs)
-    target_default_compile_warnings_c(flecs)
+    if(FLECS_DEVELOPER_WARNINGS)
+        target_default_compile_warnings_c(flecs)
+    endif()
 
     target_include_directories(flecs PUBLIC include)
 
@@ -109,7 +112,9 @@ if(FLECS_STATIC_LIBS)
     add_library(flecs_static STATIC ${INC} ${SRC})
 
     target_default_compile_options_c(flecs_static)
-    target_default_compile_warnings_c(flecs_static)
+    if(FLECS_DEVELOPER_WARNINGS)
+        target_default_compile_warnings_c(flecs_static)
+    endif()
 
     if(FLECS_PIC)
         set_property(TARGET flecs_static PROPERTY POSITION_INDEPENDENT_CODE ON)
