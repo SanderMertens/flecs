@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.5)
-
 function(target_default_compile_warnings_c THIS)
 
     if (CMAKE_C_COMPILER_ID STREQUAL "Clang"
@@ -10,10 +8,7 @@ function(target_default_compile_warnings_c THIS)
                 $<$<CONFIG:Debug>:-Wshadow>
                 $<$<CONFIG:Debug>:-Wunused>
                 -Wall -Wextra
-                -Wnon-virtual-dtor
-                -Wold-style-cast
                 -Wcast-align
-                -Woverloaded-virtual
                 -Wpedantic
                 -Wconversion
                 -Wsign-conversion
@@ -27,10 +22,7 @@ function(target_default_compile_warnings_c THIS)
                 $<$<CONFIG:Debug>:-Wshadow>
                 $<$<CONFIG:Debug>:-Wunused>
                 -Wall -Wextra
-                -Wnon-virtual-dtor
-                -Wold-style-cast
                 -Wcast-align
-                -Woverloaded-virtual
                 -Wpedantic
                 -Wconversion
                 -Wsign-conversion
