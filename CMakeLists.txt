@@ -127,7 +127,7 @@ if(FLECS_STATIC_LIBS)
 endif()
 
 # define the install steps
-include(include(GNUInstallDirs)
+include(GNUInstallDirs)
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING
