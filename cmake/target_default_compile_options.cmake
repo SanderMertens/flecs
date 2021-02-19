@@ -16,14 +16,6 @@ function(target_default_compile_options_c THIS)
             C_STANDARD_REQUIRED ON
             C_VISIBILITY_PRESET hidden)
 
-    if (CMAKE_C_COMPILER_ID STREQUAL "Clang"
-            OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
-            OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
-
-        target_compile_options(${THIS} PRIVATE
-                -fno-stack-protector
-                $<$<CONFIG:DEBUG>:-DDEBUG>)
-    endif()
 endfunction()
 
 function(target_default_compile_options_cxx THIS)
@@ -32,14 +24,5 @@ function(target_default_compile_options_cxx THIS)
             LINKER_LANGUAGE CXX
             CXX_STANDARD 11
             CXX_STANDARD_REQUIRED ON)
-
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-            OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
-            OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-
-        target_compile_options(${THIS} PRIVATE
-                -fno-stack-protector
-                $<$<CONFIG:DEBUG>:-DDEBUG>)
-    endif ()
 
 endfunction()
