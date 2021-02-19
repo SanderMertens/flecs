@@ -193,7 +193,7 @@ uint64_t ecs_os_time_now(void) {
         QueryPerformanceCounter(&qpc_t);
         now = (uint64_t)(qpc_t.QuadPart / _ecs_os_time_win_freq);
     #elif defined(__APPLE__) && defined(__MACH__)
-        now = mach_absolute_time();
+        now = (uint64_t) int64_muldiv((int64_t)mach_absolute_time(), (int64_t)_ecs_os_time_osx_timebase.numer, (int64_t)_ecs_os_time_osx_timebase.denom);
     #else
         struct timespec ts;
         clock_gettime(CLOCK_MONOTONIC, &ts);
