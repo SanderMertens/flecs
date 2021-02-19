@@ -30,7 +30,8 @@ function(target_default_compile_options_c THIS)
     set_target_properties(${THIS} PROPERTIES
             LINKER_LANGUAGE C
             C_STANDARD 99
-            C_STANDARD_REQUIRED ON)
+            C_STANDARD_REQUIRED ON
+            C_VISIBILITY_PRESET hidden)
 
     if (CMAKE_C_COMPILER_ID STREQUAL "Clang"
             OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
@@ -38,7 +39,6 @@ function(target_default_compile_options_c THIS)
 
         target_compile_options(${THIS} PRIVATE
                 -fPIC
-                -fvisibility=hidden
                 -fno-stack-protector
                 $<$<CONFIG:DEBUG>:-g -O0 -DDEBUG>
                 $<$<CONFIG:RELEASE>:-O3 -DNDEBUG>
@@ -76,7 +76,6 @@ function(target_default_compile_options_cxx THIS)
 
         target_compile_options(${THIS} PRIVATE
                 -fPIC
-                -fvisibility=hidden
                 -fno-stack-protector
                 $<$<CONFIG:DEBUG>:-g -O0 -DDEBUG>
                 $<$<CONFIG:RELEASE>:-O3 -DNDEBUG>
