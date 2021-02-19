@@ -113,7 +113,7 @@ endif()
 # build the static library
 if(FLECS_STATIC_LIBS)
     add_library(flecs_static STATIC ${INC} ${SRC})
-    add_library(flecs::flecs_static ALIAS flecs)
+    add_library(flecs::flecs_static ALIAS flecs_static)
 
     target_default_compile_options_c(flecs_static)
     if(FLECS_DEVELOPER_WARNINGS)
