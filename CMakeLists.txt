@@ -122,12 +122,14 @@ if(FLECS_STATIC_LIBS)
 endif()
 
 # define the install steps
-
+include(include(GNUInstallDirs)
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
-        DESTINATION include
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING
         PATTERN "*.h"
         PATTERN "*.hpp")
 
 install(TARGETS ${FLECS_TARGETS}
-        DESTINATION lib)
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
