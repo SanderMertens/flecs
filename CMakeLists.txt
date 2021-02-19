@@ -1,8 +1,14 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.1)
 
 project(flecs LANGUAGES C)
 
+option(FLECS_STATIC_LIBS "Build static flecs lib" ON)
 option(FLECS_PIC "Compile static flecs lib with position-independent-code (PIC)" ON)
+option(FLECS_SHARED_LIBS "Build shared flecs lib" ON)
+
+if(NOT FLECS_STATIC_LIBS AND NOT FLECS_SHARED_LIBS)
+    message(FATAL_ERROR "At least one of FLECS_STATIC_LIBS or FLECS_SHARED_LIBS options must be enabled")
+endif()
 
 # include utilities for compiler options and warnings
 
@@ -84,28 +90,36 @@ set(SRC
         src/vector.c
         src/world.c)
 
+set(FLECS_TARGETS "")
+
 # build the shared library
+if(FLECS_SHARED_LIBS)
+    add_library(flecs SHARED ${INC} ${SRC})
 
-add_library(flecs SHARED ${INC} ${SRC})
+    target_default_compile_options_c(flecs)
+    target_default_compile_warnings_c(flecs)
 
-target_default_compile_options_c(flecs)
-target_default_compile_warnings_c(flecs)
+    target_include_directories(flecs PUBLIC include)
 
-target_include_directories(flecs PUBLIC include)
-
-# build the static library
-
-add_library(flecs_static STATIC ${INC} ${SRC})
-
-target_default_compile_options_c(flecs_static)
-target_default_compile_warnings_c(flecs_static)
-
-if(FLECS_PIC)
-    set_property(TARGET flecs_static PROPERTY POSITION_INDEPENDENT_CODE ON)
+    list(APPEND FLECS_TARGETS flecs)
 endif()
 
-target_include_directories(flecs_static PUBLIC include)
-target_compile_definitions(flecs_static PUBLIC flecs_STATIC)
+# build the static library
+if(FLECS_STATIC_LIBS)
+    add_library(flecs_static STATIC ${INC} ${SRC})
+
+    target_default_compile_options_c(flecs_static)
+    target_default_compile_warnings_c(flecs_static)
+
+    if(FLECS_PIC)
+        set_property(TARGET flecs_static PROPERTY POSITION_INDEPENDENT_CODE ON)
+    endif()
+
+    target_include_directories(flecs_static PUBLIC include)
+    target_compile_definitions(flecs_static PUBLIC flecs_STATIC)
+
+    list(APPEND FLECS_TARGETS flecs_static)
+endif()
 
 # define the install steps
 
@@ -115,8 +129,5 @@ install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
         PATTERN "*.h"
         PATTERN "*.hpp")
 
-install(TARGETS flecs
-        DESTINATION lib)
-
-install(TARGETS flecs_static
+install(TARGETS ${FLECS_TARGETS}
         DESTINATION lib)
