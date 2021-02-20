@@ -1656,19 +1656,21 @@ ecs_entity_t ecs_new_component_id(
         ecs_assert(ecs_vector_count(world->workers) <= 1, 
             ECS_INVALID_WHILE_ITERATING, NULL);
     }
+
+    ecs_entity_t id;
+
+    if (world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
+        do {
+            id = world->stats.last_component_id ++;
+        } while (ecs_exists(world, id) && id < ECS_HI_COMPONENT_ID);        
+    }
     
     if (world->stats.last_component_id >= ECS_HI_COMPONENT_ID) {
         /* If the low component ids are depleted, return a regular entity id */
-        return ecs_new_id(world);
-    } else {
-        ecs_entity_t id;
-        
-        do {
-            id = world->stats.last_component_id ++;
-        } while (ecs_exists(world, id));
-
-        return id;
+        id = ecs_new_id(world);
     }
+
+    return id;
 }
 
 ecs_entity_t ecs_new_w_type(

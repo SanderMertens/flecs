@@ -31,6 +31,7 @@ void New_new_id(void);
 void New_new_component_id(void);
 void New_new_hi_component_id(void);
 void New_new_component_id_skip_used(void);
+void New_new_component_id_skip_to_hi_id(void);
 void New_new_w_entity_0(void);
 
 // Testsuite 'New_w_Count'
@@ -1584,6 +1585,10 @@ bake_test_case New_testcases[] = {
     {
         "new_component_id_skip_used",
         New_new_component_id_skip_used
+    },
+    {
+        "new_component_id_skip_to_hi_id",
+        New_new_component_id_skip_to_hi_id
     },
     {
         "new_w_entity_0",
@@ -7078,7 +7083,7 @@ static bake_test_suite suites[] = {
         "New",
         New_setup,
         NULL,
-        22,
+        23,
         New_testcases
     },
     {

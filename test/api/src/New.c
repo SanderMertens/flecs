@@ -309,6 +309,33 @@ void New_new_component_id_skip_used() {
     ecs_fini(world);
 }
 
+void New_new_component_id_skip_to_hi_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new_component_id(world);
+    test_assert(e != 0);
+
+    /* Use up all low component ids */
+    int i;
+    for (i = (int)e; i < ECS_HI_COMPONENT_ID; i ++) {
+        ecs_add_entity(world, i, Foo);
+    }
+
+    ecs_entity_t e2 = ecs_new_component_id(world);
+    test_assert(e2 != 0);
+    test_assert(e2 > ECS_HI_COMPONENT_ID);
+    test_assert(!ecs_get_type(world, e2));
+
+    ecs_entity_t e3 = ecs_new_id(world);
+    test_assert(e3 != e2);
+    test_assert(e3 > e2);
+    test_assert(!ecs_get_type(world, e3));
+
+    ecs_fini(world);
+}
+
 void New_new_hi_component_id() {
     ecs_world_t *world = ecs_init();
 
