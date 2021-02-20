@@ -36,6 +36,7 @@
                 "new_id",
                 "new_component_id",
                 "new_hi_component_id",
+                "new_component_id_skip_used",
                 "new_w_entity_0"
             ]
         }, {

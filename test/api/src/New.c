@@ -287,6 +287,28 @@ void New_new_component_id() {
     ecs_fini(world);
 }
 
+void New_new_component_id_skip_used() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new_component_id(world);
+    test_assert(e != 0);
+    test_assert(e < ECS_HI_COMPONENT_ID);
+    test_assert(!ecs_get_type(world, e));
+
+    /* Explicitly set an id that is one above the last issued id */
+    ecs_add_entity(world, e + 1, Foo);
+
+    ecs_entity_t e2 = ecs_new_component_id(world);
+    test_assert(e2 != 0);
+    test_assert(e2 < ECS_HI_COMPONENT_ID);
+    test_assert(!ecs_get_type(world, e2));    
+    test_assert(e2 != (e + 1));
+
+    ecs_fini(world);
+}
+
 void New_new_hi_component_id() {
     ecs_world_t *world = ecs_init();
 

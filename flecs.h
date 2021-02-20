@@ -9514,7 +9514,7 @@ public:
     base_type& disable() const {
         static_cast<base_type*>(this)->invoke(
         [](world_t *world, entity_t id) {
-            ecs_enable(world, id, true);
+            ecs_enable(world, id, false);
         });
         return *static_cast<base_type*>(this);
     }
@@ -11023,7 +11023,7 @@ namespace _
       return typeName;
     }
   };
-#elif
+#else
 #error "implicit component registration not supported"
 #endif
 
