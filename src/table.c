@@ -2127,6 +2127,10 @@ void ecs_table_notify(
     ecs_table_t * table,
     ecs_table_event_t * event)
 {
+    if (world->is_fini) {
+        return;
+    }
+
     switch(event->kind) {
     case EcsTableQueryMatch:
         register_query(

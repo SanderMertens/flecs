@@ -673,6 +673,7 @@ void Queries_get_column_size(void);
 void Queries_orphaned_query(void);
 void Queries_nested_orphaned_query(void);
 void Queries_invalid_access_orphaned_query(void);
+void Queries_stresstest_query_free(void);
 
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
@@ -3989,6 +3990,10 @@ bake_test_case Queries_testcases[] = {
     {
         "invalid_access_orphaned_query",
         Queries_invalid_access_orphaned_query
+    },
+    {
+        "stresstest_query_free",
+        Queries_stresstest_query_free
     }
 };
 
@@ -7243,7 +7248,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        30,
+        31,
         Queries_testcases
     },
     {

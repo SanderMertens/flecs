@@ -1120,3 +1120,29 @@ void Queries_invalid_access_orphaned_query() {
 
     ecs_query_iter(sq);  
 }
+
+void Queries_stresstest_query_free() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Foo);
+    ecs_add(world, e, Bar);
+    ecs_add(world, e, Hello);
+
+    /* Create & delete query to test if query is properly unregistered with
+     * the table */
+
+    for (int i = 0; i < 10000; i ++) {
+        ecs_query_t *q = ecs_query_new(world, "Foo, Bar, Hello");
+        ecs_query_free(q);
+    }
+
+    /* If code did not crash, test passes */
+    test_assert(true);
+
+    ecs_fini(world);
+}

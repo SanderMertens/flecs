@@ -2282,10 +2282,22 @@ void ecs_query_free(
     });
 
     ecs_vector_each(query->empty_tables, ecs_matched_table_t, table, {
+        if (!(query->flags & EcsQueryIsSubquery)) {
+            ecs_table_notify(world, table->iter_data.table, &(ecs_table_event_t){
+                .kind = EcsTableQueryUnmatch,
+                .query = query
+            });
+        }    
         free_matched_table(table);
     });
 
     ecs_vector_each(query->tables, ecs_matched_table_t, table, {
+        if (!(query->flags & EcsQueryIsSubquery)) {
+            ecs_table_notify(world, table->iter_data.table, &(ecs_table_event_t){
+                .kind = EcsTableQueryUnmatch,
+                .query = query
+            });
+        }
         free_matched_table(table);
     });
 

@@ -203,6 +203,7 @@ ecs_world_t *ecs_mini(void) {
     world->quit_workers = false;
     world->in_progress = false;
     world->is_merging = false;
+    world->is_fini = false;
     world->auto_merge = true;
     world->measure_frame_time = false;
     world->measure_system_time = false;
@@ -551,9 +552,12 @@ void fini_misc(
 int ecs_fini(
     ecs_world_t *world)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
-    assert(!world->in_progress);
-    assert(!world->is_merging);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!world->in_progress, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!world->is_merging, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+
+    world->is_fini = true;
 
     fini_unset_tables(world);
 

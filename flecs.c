@@ -646,6 +646,7 @@ struct ecs_world_t {
     bool quit_workers;            /* Signals worker threads to quit */
     bool in_progress;             /* Is world being progressed */
     bool is_merging;              /* Is world currently being merged */
+    bool is_fini;                 /* Is the world being cleaned up? */
     bool auto_merge;              /* Are stages auto-merged by ecs_progress */
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */
@@ -3856,6 +3857,10 @@ void ecs_table_notify(
     ecs_table_t * table,
     ecs_table_event_t * event)
 {
+    if (world->is_fini) {
+        return;
+    }
+
     switch(event->kind) {
     case EcsTableQueryMatch:
         register_query(
@@ -11306,6 +11311,7 @@ ecs_world_t *ecs_mini(void) {
     world->quit_workers = false;
     world->in_progress = false;
     world->is_merging = false;
+    world->is_fini = false;
     world->auto_merge = true;
     world->measure_frame_time = false;
     world->measure_system_time = false;
@@ -11654,9 +11660,12 @@ void fini_misc(
 int ecs_fini(
     ecs_world_t *world)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
-    assert(!world->in_progress);
-    assert(!world->is_merging);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!world->in_progress, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!world->is_merging, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+
+    world->is_fini = true;
 
     fini_unset_tables(world);
 
@@ -17322,10 +17331,22 @@ void ecs_query_free(
     });
 
     ecs_vector_each(query->empty_tables, ecs_matched_table_t, table, {
+        if (!(query->flags & EcsQueryIsSubquery)) {
+            ecs_table_notify(world, table->iter_data.table, &(ecs_table_event_t){
+                .kind = EcsTableQueryUnmatch,
+                .query = query
+            });
+        }    
         free_matched_table(table);
     });
 
     ecs_vector_each(query->tables, ecs_matched_table_t, table, {
+        if (!(query->flags & EcsQueryIsSubquery)) {
+            ecs_table_notify(world, table->iter_data.table, &(ecs_table_event_t){
+                .kind = EcsTableQueryUnmatch,
+                .query = query
+            });
+        }
         free_matched_table(table);
     });
 

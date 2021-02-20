@@ -603,6 +603,7 @@ struct ecs_world_t {
     bool quit_workers;            /* Signals worker threads to quit */
     bool in_progress;             /* Is world being progressed */
     bool is_merging;              /* Is world currently being merged */
+    bool is_fini;                 /* Is the world being cleaned up? */
     bool auto_merge;              /* Are stages auto-merged by ecs_progress */
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */

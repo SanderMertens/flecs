@@ -728,7 +728,8 @@
                 "get_column_size",
                 "orphaned_query",
                 "nested_orphaned_query",
-                "invalid_access_orphaned_query"
+                "invalid_access_orphaned_query",
+                "stresstest_query_free"
             ]
         }, {
             "id": "Traits",
