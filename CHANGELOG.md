@@ -11,6 +11,26 @@ QUICKSTART:                     https://github.com/SanderMertens/flecs/blob/mast
 MANUAL:                         https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md
 
 -----------------------------------------------------------------------
+ VERSION 2.3.2 (Released 2021-02-23)
+-----------------------------------------------------------------------
+
+## Improvements
+- replace iostream with initializer_list (C++ API, thanks @ikrima!)
+- ensure entity::m_id is initialized to 0 (C++ API, thanks @ikrima!)
+- use ecs_os_malloc instead of new (C++ API, thanks @ikrima!)
+- remove superfluous copies of lambda functions (C++ API, thanks @ikrima!)
+- add CHANGELOG (thanks @ikrima!)
+
+## Bugfixes
+- fix matching for queries with shared componnents when base entity is deleted
+- fix various issues with component registration in C++
+- fix issue with setting target FPS on Apple M1 (thanks @prime31!)
+- fix issues with CMake file (thanks @Spacelm!)
+- fix crash when creating & deleting queries
+- guarantee that id returned by new_component_id is unused
+
+
+-----------------------------------------------------------------------
  VERSION 2.3.1 (Released 2021-02-02)
 -----------------------------------------------------------------------
 
@@ -28,7 +48,7 @@ MANUAL:                         https://github.com/SanderMertens/flecs/blob/mast
 
 
 -----------------------------------------------------------------------
- VERSION 2.3.1 (Released 2021-01-17)
+ VERSION 2.3.0 (Released 2021-01-17)
 -----------------------------------------------------------------------
 
 ## Highlights
