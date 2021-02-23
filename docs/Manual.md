@@ -890,6 +890,8 @@ Component disabling does not work for components not matched with the entity. If
 
 Because component disabling is implemented with a type role, it cannot be used together with other type roles. This means that it is not possible to disable, for example, an `INSTANCEOF` or `CHILDOF` relationship.
 
+Another limitation is that currently the query NOT (!) operator does not take into account disabled entities. The optional operator (?) technically works, but a query is unable to see whether a component has been set or not as both the enabled and disabled values are returned to the application in a single array.
+
 ## Tagging
 Tags are much like components, but they are not associated with a data type. Tags are typically used to add a flag to an entity, for example to indicate that an entity is an Enemy:
 
