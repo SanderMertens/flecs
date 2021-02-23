@@ -11,7 +11,6 @@
 #include <sstream>
 #include <array>
 #include <functional>
-#include <iostream>
 
 // Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
 // Rationale:
