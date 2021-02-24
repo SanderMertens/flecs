@@ -1634,7 +1634,7 @@ void ComponentLifecycle_prevent_lifecycle_overwrite_null_callbacks() {
     ECS_COMPONENT(world, Position);
 
     ecs_set(world, ecs_typeid(Position), EcsComponentLifecycle, {
-        /* Leave to NULL */
+        NULL
     });
 
     /* Should trigger assert */
