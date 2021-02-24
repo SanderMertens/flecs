@@ -33,6 +33,7 @@ void New_new_hi_component_id(void);
 void New_new_component_id_skip_used(void);
 void New_new_component_id_skip_to_hi_id(void);
 void New_new_w_entity_0(void);
+void New_create_w_explicit_id_2_worlds(void);
 
 // Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
@@ -1593,6 +1594,10 @@ bake_test_case New_testcases[] = {
     {
         "new_w_entity_0",
         New_new_w_entity_0
+    },
+    {
+        "create_w_explicit_id_2_worlds",
+        New_create_w_explicit_id_2_worlds
     }
 };
 
@@ -7083,7 +7088,7 @@ static bake_test_suite suites[] = {
         "New",
         New_setup,
         NULL,
-        23,
+        24,
         New_testcases
     },
     {

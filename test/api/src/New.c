@@ -362,3 +362,30 @@ void New_new_w_entity_0() {
 
     ecs_fini(world);
 }
+
+ECS_ENTITY_DECLARE(Foo);
+
+void New_create_w_explicit_id_2_worlds() {
+    ecs_world_t *world_1 = ecs_init();
+    ecs_world_t *world_2 = ecs_init();
+
+    ecs_entity_t p1 = ecs_set(world_1, 0, EcsName, {"Parent"});
+    ecs_entity_t p2 = ecs_set(world_2, 0, EcsName, {"Parent"});
+
+    ecs_set_scope(world_1, p1);
+    ecs_set_scope(world_2, p2);
+
+    ECS_ENTITY_DEFINE(world_1, Foo, 0);
+    ECS_ENTITY_DEFINE(world_2, Foo, 0);
+
+    char *path = ecs_get_fullpath(world_1, Foo);
+    test_str(path, "Parent.Foo");
+    ecs_os_free(path);
+
+    path = ecs_get_fullpath(world_2, Foo);
+    test_str(path, "Parent.Foo");
+    ecs_os_free(path);
+
+    ecs_fini(world_1);
+    ecs_fini(world_2);
+}

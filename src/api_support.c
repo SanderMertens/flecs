@@ -216,6 +216,16 @@ ecs_entity_t ecs_lookup_w_id(
     const char *name)
 {
     if (e) {
+        /* If explicit id was provided but it does not exist in the world, make
+         * sure it has the proper scope. This can happen when an entity was 
+         * defined in another world. */
+        if (!ecs_exists(world, e)) {
+            ecs_entity_t scope = world->stage.scope;
+            if (scope) {
+                ecs_add_entity(world, e, ECS_CHILDOF | scope);
+            }
+        }
+
         if (name) {
             /* Make sure name is the same */
             const char *existing = ecs_get_name(world, e);

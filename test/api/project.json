@@ -38,7 +38,8 @@
                 "new_hi_component_id",
                 "new_component_id_skip_used",
                 "new_component_id_skip_to_hi_id",
-                "new_w_entity_0"
+                "new_w_entity_0",
+                "create_w_explicit_id_2_worlds"
             ]
         }, {
             "id": "New_w_Count",
