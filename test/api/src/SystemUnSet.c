@@ -532,3 +532,68 @@ void SystemUnSet_unset_move_to_nonempty_table() {
 
     ecs_fini(world);
 }
+
+static
+void UnSet_WriteComp(ecs_iter_t *it) {
+    if (!ecs_get_context(it->world)) {
+        return;
+    }
+
+    probe_system(it);
+
+    test_int(it->count, 1);
+
+    Position *p = ecs_column(it, Position, 1);
+    test_assert(p != NULL);
+
+    Velocity *v = ecs_column(it, Velocity, 2);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    v->x = 2;
+    v->y = 3;
+}
+
+void SystemUnSet_write_in_unset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, UnSet_WriteComp, EcsUnSet, Position, Velocity);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_remove(world, e, Position);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, UnSet_WriteComp);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+
+    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.s[0][0], 0);
+
+    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.s[0][1], 0);    
+
+    /* Prevent system from getting called by fini */
+    ecs_set_context(world, NULL);    
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_int(v->x, 2);
+    test_int(v->y, 3);
+
+    ecs_fini(world);
+}

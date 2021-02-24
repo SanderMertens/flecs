@@ -1005,9 +1005,6 @@ int32_t move_entity(
 
     /* Copy entity & components from src_table to dst_table */
     if (src_table->type) {
-        ecs_table_move(world, entity, entity, dst_table, dst_data, dst_row, 
-            src_table, src_data, src_row);
-
         /* If components were removed, invoke remove actions before deleting */
         if (removed && (src_table->flags & EcsTableHasRemoveActions)) {
             /* If entity was moved, invoke UnSet monitors for each component that
@@ -1017,7 +1014,10 @@ int32_t move_entity(
 
             ecs_run_remove_actions(
                 world, src_table, src_data, src_row, 1, removed, false);
-        }            
+        }
+
+        ecs_table_move(world, entity, entity, dst_table, dst_data, dst_row, 
+            src_table, src_data, src_row);                
     }
     
     ecs_table_delete(world, src_table, src_data, src_row, false);
