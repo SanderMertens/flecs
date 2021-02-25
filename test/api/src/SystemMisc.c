@@ -1,7 +1,7 @@
 #include <api.h>
 
 void SystemMisc_setup() {
-    ecs_tracing_enable(-3);
+    // ecs_tracing_enable(-3);
 }
 
 static
@@ -1653,6 +1653,38 @@ void SystemMisc_rw_out_explicit_from_entity() {
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_is_readonly(&it, 1) == false);
     test_assert(ecs_is_readonly(&it, 2) == false);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_activate_system_for_table_w_n_traits() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Trait);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, TRAIT | Trait);
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TYPE(world, Type, TRAIT | Trait > TagA, TRAIT | Trait > TagB);
+
+    Probe ctx = {0};
+    ecs_set_context(world, &ctx);    
+
+    ecs_entity_t e = ecs_new(world, Type);
+    test_assert(e != 0);
+
+    ecs_progress(world, 0);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.e[1], e);
+
+    test_int(ctx.c[0][0], ecs_trait(TagA, Trait));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[1][0], ecs_trait(TagB, Trait));
+    test_int(ctx.s[1][0], 0);    
 
     ecs_fini(world);
 }

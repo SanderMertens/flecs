@@ -622,6 +622,7 @@ void SystemMisc_rw_out_explicit_any(void);
 void SystemMisc_rw_out_explicit_shared(void);
 void SystemMisc_rw_out_explicit_from_empty(void);
 void SystemMisc_rw_out_explicit_from_entity(void);
+void SystemMisc_activate_system_for_table_w_n_traits(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -3800,6 +3801,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "rw_out_explicit_from_entity",
         SystemMisc_rw_out_explicit_from_entity
+    },
+    {
+        "activate_system_for_table_w_n_traits",
+        SystemMisc_activate_system_for_table_w_n_traits
     }
 };
 
@@ -7254,7 +7259,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         SystemMisc_setup,
         NULL,
-        82,
+        83,
         SystemMisc_testcases
     },
     {

@@ -673,7 +673,8 @@
                 "rw_out_explicit_any",
                 "rw_out_explicit_shared",
                 "rw_out_explicit_from_empty",
-                "rw_out_explicit_from_entity"
+                "rw_out_explicit_from_entity",
+                "activate_system_for_table_w_n_traits"
             ]
         }, {
             "id": "Sorting",
