@@ -1738,12 +1738,12 @@ void activate_table(
     ecs_query_t *query,
     ecs_table_t *table,
     bool active)
-{
-    (void)world;
-    
+{    
     ecs_vector_t *src_array, *dst_array;
     int32_t activated = 0;
     int32_t prev_dst_count = 0;
+    (void)world;
+    (void)prev_dst_count; /* Only used when built with systems module */
 
     if (active) {
         src_array = query->empty_tables;
