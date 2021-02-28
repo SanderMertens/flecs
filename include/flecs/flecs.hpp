@@ -4346,6 +4346,17 @@ public:
         }
     }
 
+    template <typename Func>
+    void each(const flecs::filter& filter, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+        const filter_t* filter_ptr = filter.c_ptr();
+
+        while (ecs_query_next_w_filter(&it, filter_ptr)) {
+            _::column_args<Components...> columns(&it);
+            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }
+
     /* DEPRECATED */
     template <typename Func>
     void action(Func&& func) const {
@@ -4362,6 +4373,16 @@ public:
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next(&it)) {
+            _::column_args<Components...> columns(&it);
+            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }
+    template <typename Func>
+    void iter(const flecs::filter& filter, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);        
+        const filter_t* filter_ptr = filter.c_ptr();
+
+        while (ecs_query_next_w_filter(&it, filter_ptr)) {
             _::column_args<Components...> columns(&it);
             _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
