@@ -24,7 +24,7 @@ An entity (`ecs_entity_t`) is a 64-bit integer that uniquely identifies a thing 
 ecs_entity_t e = ecs_new(world, 0);
 ```
 ```cpp
-auto e = world.entity(world);
+auto e = world.entity();
 ```
 
 You can also use plain numbers:
@@ -33,7 +33,7 @@ You can also use plain numbers:
 ecs_entity_t e = 1000;
 ```
 ```cpp
-auto e = world.entity(world, 1000);
+auto e = world.entity(1000);
 ```
 
 When not using an explicit id, the framework guarantees that the returned id is not in use.
