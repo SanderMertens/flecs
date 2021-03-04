@@ -26,14 +26,22 @@ ECS (Entity Component System) is a design pattern used in games and simulations 
 - Has _systems_ which are behavior matched with entities based on their components
 
 ## Documentation
+If you are just starting out with Flecs, the following presentation and Quickstart are good resources:
 - [Quickstart](docs/Quickstart.md)
+- [Flecs not for dummies (presentation)](https://github.com/SanderMertens/flecs_not_for_dummies)
+
+The FAQ is where some of the most asked questions are listed:
 - [FAQ](docs/FAQ.md)
+
+The manual and examples come in handy if you're looking for information on specific features:
 - [Manual](docs/Manual.md)
-- [Migration guide](docs/MigrationGuide.md)
 - [C examples](examples/c)
 - [C++ examples](examples/cpp)
 
-See [Docsforge](http://flecs.docsforge.com/) for a more readable version of the documentation.
+If you are migrating from Flecs v1 to v2, check the migration guide:
+- [Migration guide](docs/MigrationGuide.md)
+
+**Note:** Check [Docsforge](http://flecs.docsforge.com/) for an easier to navigate version of the documentation!
 
 ## Example
 This is a simple flecs example in the C99 API:
