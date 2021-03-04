@@ -77,8 +77,19 @@ A module groups components, systems and more into reusable units that can be imp
 ### Stage
 A stage is a temporary storage where structural changes to entities (new, add, remove, delete) are stored while an application is iterating. Flecs systems access raw C arrays, and this ensures that these arrays are not modified as the application is iterating over them. Data in a stage is merged at least once per frame, or more when necessary.
 
-## High level architecture
+## Diagrams
+
+### High level architecture
+This diagram provides an overview of how entiies, components, tables, queries, filters and systems are wired together.
 ![Architecture diagram](flecs-architecture-overview.png)
+
+### Component add flow
+This diagram provides an overview of the different steps that occur when adding a component to an entity. The diagram shows when component lifecycle callbacks, OnAdd triggers, OnSet systems, UnSet systems and monitors are invoked. Additionally the diagram shows how the defer mechanism is integrated with the listed Flecs operations.
+![Component add flow](flecs-add-component-flow.png)
+
+### Component remove flow
+This diagram provides an overview of the different steps that occur when removing a component from an entity. The diagram shows when component lifecycle callbacks, OnRemove triggers, OnSet systems, UnSet systems and monitors are invoked. Additionally the diagram shows how the defer mechanism is integrated with the listed Flecs operations.
+![Component remove flow](flecs-remove-component-flow.png)
 
 ## Building
 The easiest way to add Flecs to a project is to add [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) to your source code. These files can be added to both C and C++ projects (the C++ API is embedded in flecs.h). Alternatively you can also build Flecs as a library by using the cmake, meson, bazel or bake buildfiles.
