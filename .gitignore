@@ -7,6 +7,7 @@ gcov
 cmake-build-debug
 bazel-bin
 bazel-flecs
+bazel-bazel
 bazel-genfiles
 bazel-out
 bazel-testlogs
