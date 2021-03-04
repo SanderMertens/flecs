@@ -9,6 +9,8 @@ cc_library(
 )
 
 
+# Below is the testing stuff, which requires some of the bake runtime
+# you can ignore this if you don't need it
 
 cc_library(
     name = "os-api",

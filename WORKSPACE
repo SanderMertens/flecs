@@ -3,8 +3,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 new_git_repository(
     name = "bake",
     remote = "git@github.com:SanderMertens/bake.git",
-    commit = "95aaf38de363be4ca693b867d9334d0967475d5e",
-    shallow_since = "1610936730 -0800",
+    commit = "cfc90745f9daa7b7fba80f229af18cdd5029b066",
 
     build_file_content = """
 cc_library(
