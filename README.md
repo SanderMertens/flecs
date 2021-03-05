@@ -41,6 +41,15 @@ The manual and examples come in handy if you're looking for information on speci
 If you are migrating from Flecs v1 to v2, check the migration guide:
 - [Migration guide](docs/MigrationGuide.md) ([docsforge](https://flecs.docsforge.com/master/migrationguide/))
 
+Here is some awesome content provided by the community (thanks everyone! :heart:):
+- [Bringing Flecs to UE4](https://bebylon.dev/blog/ecs-flecs-ue4/)
+- [Flecs + UE4 is magic](https://jtferson.github.io/blog/flecs_and_unreal/)
+- [Quickstart with Flecs in UE4](https://jtferson.github.io/blog/quickstart_with_flecs_in_unreal_part_1/) 
+- [Automatic component registration in UE4](https://jtferson.github.io/blog/automatic_flecs_component_registration_in_unreal/)
+- [Building a space battle with Flecs in UE4](https://twitter.com/ajmmertens/status/1361070033334456320) 
+- [Flecs + SDL + Web ASM example](https://github.com/HeatXD/flecs_web_demo) ([live demo](https://heatxd.github.io/flecs_web_demo/))
+- [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/18_flecs/source/main.c)
+
 ## Example
 This is a simple flecs example in the C99 API:
 
@@ -165,6 +174,10 @@ Module      | Description
 [flecs.systems.sdl2](https://github.com/flecs-hub/flecs-systems-sdl2) | SDL window creation & input management
 [flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sokol) | Sokol-based renderer
 [flecs.systems.civetweb](https://github.com/flecs-hub/flecs-systems-civetweb) | A civetweb-based implementation of flecs.components.http
+
+## Language bindings
+- [Lua](https://github.com/flecs-hub/flecs-lua)
+- [Zig](https://github.com/prime31/zig-flecs)
 
 ## Useful Links
 - [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
