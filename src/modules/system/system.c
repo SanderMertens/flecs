@@ -536,6 +536,18 @@ void ecs_run_monitor(
     system_data->action(&it);
 }
 
+ecs_query_t* ecs_get_query(
+    ecs_world_t *world,
+    ecs_entity_t system)
+{
+    const EcsQuery *q = ecs_get(world, system, EcsQuery);
+    if (q) {
+        return q->query;
+    } else {
+        return NULL;
+    }
+}
+
 /* Generic constructor to initialize a component to 0 */
 static
 void sys_ctor_init_zero(

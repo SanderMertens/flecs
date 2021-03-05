@@ -6192,6 +6192,19 @@ void ecs_set_system_status_action(
     ecs_system_status_action_t action,
     const void *ctx);
 
+/** Get the query object for a system.
+ * Systems use queries under the hood. This enables an application to get access
+ * to the underlying query object of a system. This can be useful when, for 
+ * example, an application needs to enable sorting for a system.
+ *
+ * @param world The world.
+ * @param system The system from which to obtain the query.
+ * @return The query.
+ */
+FLECS_API
+ecs_query_t* ecs_get_query(
+    ecs_world_t *world,
+    ecs_entity_t system);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// System debug API
@@ -11975,6 +11988,12 @@ private:
 
 class query_base {
 public:
+    query_base()
+        : m_world(nullptr), m_query(nullptr) { }    
+    
+    query_base(world_t *world, query_t *query)
+        : m_world(world), m_query(query) { }
+
     /** Get pointer to C query object.
      */
     query_t* c_ptr() const {
@@ -12081,6 +12100,16 @@ public:
         m_query = nullptr;
     }
 
+    template <typename Func>
+    void iter(Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next(&it)) {
+            _::column_args<> columns(&it);
+            _::iter_invoker<Func>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }  
+
 protected:
     world_t *m_world;
     query_t *m_query;
@@ -12091,10 +12120,7 @@ class query : public query_base {
     using Columns = typename _::column_args<Components...>::Columns;
 
 public:
-    query() { 
-        m_world = nullptr;
-        m_query = nullptr;
-    }
+    query() : query_base(nullptr, nullptr) { }
 
     explicit query(const world& world) {
         std::stringstream str;
@@ -12152,6 +12178,17 @@ public:
         }
     }
 
+    template <typename Func>
+    void each(const flecs::filter& filter, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+        const filter_t* filter_ptr = filter.c_ptr();
+
+        while (ecs_query_next_w_filter(&it, filter_ptr)) {
+            _::column_args<Components...> columns(&it);
+            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }
+
     /* DEPRECATED */
     template <typename Func>
     void action(Func&& func) const {
@@ -12168,6 +12205,17 @@ public:
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next(&it)) {
+            _::column_args<Components...> columns(&it);
+            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }
+
+    template <typename Func>
+    void iter(const flecs::filter& filter, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);        
+        const filter_t* filter_ptr = filter.c_ptr();
+
+        while (ecs_query_next_w_filter(&it, filter_ptr)) {
             _::column_args<Components...> columns(&it);
             _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
@@ -12369,30 +12417,88 @@ public:
         return *this;
     }
 
+    /** Same as query::order_by */
+    template <typename T>
+    system& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
+        ecs_compare_action_t cmp = reinterpret_cast<ecs_compare_action_t>(compare);
+        return this->order_by(
+            flecs::entity(m_world, _::component_info<T>::id(m_world)), cmp);
+    }
+
+    /** Same as query::order_by */
+    system& order_by(flecs::entity component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
+        if (!m_finalized) {
+            m_order_by = reinterpret_cast<ecs_compare_action_t>(compare);
+            m_order_by_component = component;
+        } else {
+            const EcsQuery *q = ecs_get(m_world, m_id, EcsQuery);
+            ecs_assert(q != NULL, ECS_INVALID_OPERATION, NULL);
+            ecs_query_order_by(m_world, q->query, 
+                component.id(), reinterpret_cast<ecs_compare_action_t>(compare));
+        }
+        return *this;
+    }
+
+    /** Same as query::group_by */
+    template <typename T>
+    system& group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+        ecs_rank_type_action_t rnk = reinterpret_cast<ecs_rank_type_action_t>(rank);
+        return this->group_by(
+            flecs::entity(m_world, _::component_info<T>::id(m_world)), rnk);
+    }
+
+    /** Same as query::group_by */
+    system& group_by(flecs::entity component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+        if (!m_finalized) {
+            m_group_by = reinterpret_cast<ecs_rank_type_action_t>(rank);
+            m_group_by_component = component;
+        } else {
+            const EcsQuery *q = ecs_get(m_world, m_id, EcsQuery);
+            ecs_assert(q != NULL, ECS_INVALID_OPERATION, NULL);
+            ecs_query_group_by(m_world, q->query, component.id(),
+                reinterpret_cast<ecs_rank_type_action_t>(rank));
+        }
+        return *this;
+    }    
+
     void enable() {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
         ecs_enable(m_world, m_id, true);
     }
 
     void disable() {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
         ecs_enable(m_world, m_id, false);
     }
 
     void set_period(FLECS_FLOAT period) const {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
         ecs_set_interval(m_world, m_id, period);
     }
 
-    void set_context(void *ctx) const {
-        EcsContext ctx_value = { ctx };
-        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+    void set_context(void *ctx) {
+        if (!m_finalized) {
+            m_ctx = ctx;
+        } else {
+            EcsContext ctx_value = { ctx };
+            ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+        }
     }
 
     void* get_context() const {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+
         const EcsContext *ctx = ecs_get(m_world, m_id, EcsContext);
         if (ctx) {
             return (void*)ctx->ctx;
         } else {
             return NULL;
         }
+    }
+
+    query_base query() const {
+        const EcsQuery *q = ecs_get(m_world, m_id, EcsQuery);
+        return query_base(m_world, q->query);
     }
 
     system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
@@ -12492,6 +12598,18 @@ private:
 
         m_finalized = true;
 
+        if (m_ctx) {
+            this->set_context(m_ctx);
+        }
+
+        if (m_order_by) {
+            this->order_by(m_order_by_component, m_order_by);
+        }
+
+        if (m_group_by) {
+            this->group_by(m_group_by_component, m_group_by);
+        }
+
         return e;
     }
 
@@ -12532,10 +12650,18 @@ private:
 
     ecs_entity_t m_kind;
     const char *m_signature = nullptr;
+    void *m_ctx = nullptr;
+
+    ecs_compare_action_t m_order_by = nullptr;
+    flecs::entity m_order_by_component;
+
+    ecs_rank_type_action_t m_group_by = nullptr;
+    flecs::entity m_group_by_component;
+
     FLECS_FLOAT m_interval;
     bool m_on_demand;
     bool m_hidden;
-    bool m_finalized; // After set to true, call no more fluent functions
+    bool m_finalized; // After set to true, system is created & sig is fixed
 };
 
 

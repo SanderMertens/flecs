@@ -35,6 +35,13 @@ int main(int argc, char *argv[]) {
     ecs.entity().set<Position>({5, 0});
     ecs.entity().set<Position>({4, 0});
 
+    // Create a system with sorting enabled
+    auto sys = ecs.system<Position>()
+        .order_by(compare_position)
+        .each([](flecs::entity e, Position &p) {
+            std::cout << "{" << p.x << "," << p.y << "}" << std::endl;
+        });
+
     // Create a query for component Position
     auto q = ecs.query<Position>();
 
@@ -51,4 +58,11 @@ int main(int argc, char *argv[]) {
     // Iterate query again, printed values are still ordered
     std::cout << "-- Second iteration" << std::endl;
     print_query(q);
-}
+
+    // Create new entity to show that data is also sorted for system
+    ecs.entity().set<Position>({3, 0});
+    
+    // Run system, output will be sorted
+    std::cout << "-- System iteration" << std::endl;
+    sys.run();
+}    

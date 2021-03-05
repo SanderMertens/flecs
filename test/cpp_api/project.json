@@ -152,7 +152,12 @@
                 "iter_tag",
                 "each_tag",
                 "system_from_id",
-                "set_interval"
+                "set_interval",
+                "order_by_type",
+                "order_by_id",
+                "order_by_type_after_create",
+                "order_by_id_after_create",
+                "get_query"
             ]
         }, {
             "id": "Trigger",

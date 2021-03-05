@@ -16789,12 +16789,12 @@ void activate_table(
     ecs_query_t *query,
     ecs_table_t *table,
     bool active)
-{
-    (void)world;
-    
+{    
     ecs_vector_t *src_array, *dst_array;
     int32_t activated = 0;
     int32_t prev_dst_count = 0;
+    (void)world;
+    (void)prev_dst_count; /* Only used when built with systems module */
 
     if (active) {
         src_array = query->empty_tables;
@@ -21777,6 +21777,18 @@ void ecs_run_monitor(
 
     it.system = system;
     system_data->action(&it);
+}
+
+ecs_query_t* ecs_get_query(
+    ecs_world_t *world,
+    ecs_entity_t system)
+{
+    const EcsQuery *q = ecs_get(world, system, EcsQuery);
+    if (q) {
+        return q->query;
+    } else {
+        return NULL;
+    }
 }
 
 /* Generic constructor to initialize a component to 0 */

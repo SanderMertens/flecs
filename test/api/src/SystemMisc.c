@@ -1,7 +1,7 @@
 #include <api.h>
 
 void SystemMisc_setup() {
-    // ecs_tracing_enable(-3);
+    ecs_tracing_enable(-3);
 }
 
 static
@@ -1685,6 +1685,39 @@ void SystemMisc_activate_system_for_table_w_n_traits() {
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[1][0], ecs_trait(TagB, Trait));
     test_int(ctx.s[1][0], 0);    
+
+    ecs_fini(world);
+}
+
+void SystemMisc_get_query() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_set(world, 0, Position, {0, 0});
+    ecs_set(world, 0, Position, {1, 0});
+    ecs_set(world, 0, Position, {2, 0});
+
+    ecs_query_t *q = ecs_get_query(world, Dummy);
+    test_assert(q != NULL);
+
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_column(&it, Position, 1);
+        test_assert(p != NULL);
+
+        int i;
+        for (i = 0; i < it.count; i ++) {
+            test_int(p[i].x, i);
+            count ++;
+        }
+    }
+
+    test_int(count, 3);
 
     ecs_fini(world);
 }

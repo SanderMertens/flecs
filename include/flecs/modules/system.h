@@ -235,6 +235,19 @@ void ecs_set_system_status_action(
     ecs_system_status_action_t action,
     const void *ctx);
 
+/** Get the query object for a system.
+ * Systems use queries under the hood. This enables an application to get access
+ * to the underlying query object of a system. This can be useful when, for 
+ * example, an application needs to enable sorting for a system.
+ *
+ * @param world The world.
+ * @param system The system from which to obtain the query.
+ * @return The query.
+ */
+FLECS_API
+ecs_query_t* ecs_get_query(
+    ecs_world_t *world,
+    ecs_entity_t system);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// System debug API

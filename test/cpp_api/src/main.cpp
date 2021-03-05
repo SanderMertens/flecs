@@ -137,6 +137,11 @@ void System_iter_tag(void);
 void System_each_tag(void);
 void System_system_from_id(void);
 void System_set_interval(void);
+void System_order_by_type(void);
+void System_order_by_id(void);
+void System_order_by_type_after_create(void);
+void System_order_by_id_after_create(void);
+void System_get_query(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -752,6 +757,26 @@ bake_test_case System_testcases[] = {
     {
         "set_interval",
         System_set_interval
+    },
+    {
+        "order_by_type",
+        System_order_by_type
+    },
+    {
+        "order_by_id",
+        System_order_by_id
+    },
+    {
+        "order_by_type_after_create",
+        System_order_by_type_after_create
+    },
+    {
+        "order_by_id_after_create",
+        System_order_by_id_after_create
+    },
+    {
+        "get_query",
+        System_get_query
     }
 };
 
@@ -1253,7 +1278,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        20,
+        25,
         System_testcases
     },
     {

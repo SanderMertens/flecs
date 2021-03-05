@@ -19,17 +19,27 @@ int compare_position(
     return (p1->x > p2->x) - (p1->x < p2->x);
 }
 
-/* Iterate query, printed values will be ordered */
+/* Iterate iterator, printed values will be ordered */
+void print_iter(ecs_iter_t *it) {
+    Position *p = ecs_column(it, Position, 1);
+
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        printf("{%f, %f}\n", p[i].x, p[i].y);
+    }
+}
+
+/* Iterate query */
 void print_query(ecs_query_t *q) {
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        Position *p = ecs_column(&it, Position, 1);
-
-        int32_t i;
-        for (i = 0; i < it.count; i ++) {
-            printf("{%f, %f}\n", p[i].x, p[i].y);
-        }
+        print_iter(&it);
     }
+}
+
+/* Iterate system */
+void PrintSystem(ecs_iter_t *it) {
+    print_iter(it);
 }
 
 int main(void) {
@@ -44,6 +54,14 @@ int main(void) {
     ecs_set(world, 0, Position, {2, 0});
     ecs_set(world, 0, Position, {5, 0});
     ecs_set(world, 0, Position, {4, 0});
+
+    /* Create system. To enable sorting for a system, we need to access its
+     * underlying query object */
+    ECS_SYSTEM(world, PrintSystem, 0, Position);
+    ecs_query_t *q_system = ecs_get_query(world, PrintSystem);
+
+    /* We can now invoke the order_by operation on the query */
+    ecs_query_order_by(world, q_system, ecs_typeid(Position), compare_position);
 
     /* Create a query for component Position */
     ecs_query_t *q = ecs_query_new(world, "Position");
@@ -60,7 +78,14 @@ int main(void) {
 
     /* Iterate query again, printed values are still ordered */
     printf("\n-- Second iteration\n");
-    print_query(q);    
+    print_query(q);
+
+    /* Create new entity to show that data is also sorted for system */
+    ecs_set(world, 0, Position, {3, 0});
+
+    /* Run the system, output will be sorted */
+    printf("\n-- System iteration\n");
+    ecs_run(world, PrintSystem, 0, NULL);
 
     /* Cleanup */
     return ecs_fini(world);
