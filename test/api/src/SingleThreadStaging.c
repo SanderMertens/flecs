@@ -2671,6 +2671,7 @@ void SingleThreadStaging_get_mutable_w_add() {
     ecs_fini(world);
 }
 
+static
 void OnAdd(ecs_iter_t *it) {
     ECS_COLUMN(it, Velocity, v, 1);
 
@@ -2681,6 +2682,7 @@ void OnAdd(ecs_iter_t *it) {
     }
 }
 
+static
 void AddInProgress2(ecs_iter_t *it) {
     ECS_COLUMN(it, Velocity, v, 2);
 

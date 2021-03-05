@@ -513,3 +513,64 @@ void Set_modified_no_component() {
 
     ecs_fini(world);
 }
+
+ECS_COMPONENT_DECLARE(Position);
+ECS_COMPONENT_DECLARE(Velocity);
+
+static
+void OnAdd(ecs_iter_t *it) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
+    }
+}
+
+static
+void OnAddRemove(ecs_iter_t *it) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_remove(it->world, it->entities[i], Position);
+    }
+}
+
+void Set_get_mut_w_add_in_on_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ECS_TRIGGER(world, OnAdd, EcsOnAdd, Position);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    bool added = false;
+    Position *p = ecs_get_mut(world, e, Position, &added);
+    test_assert(p != NULL);
+    test_bool(added, true);
+    p->x = 10;
+    p->y = 20;
+
+    const Position *pc = ecs_get(world, e, Position);
+    test_int(pc->x, 10);
+    test_int(pc->y, 20);
+
+    ecs_fini(world);
+}
+
+void Set_get_mut_w_remove_in_on_add() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TRIGGER(world, OnAddRemove, EcsOnAdd, Position);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    test_expect_abort();
+
+    /* get_mut is guaranteed to always return a valid pointer, so removing the
+     * component from the OnAdd trigger is not allowed */
+    bool added = false;
+    ecs_get_mut(world, e, Position, &added);
+}

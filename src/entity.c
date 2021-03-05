@@ -2095,7 +2095,34 @@ void* ecs_get_mut_w_entity(
     ecs_entity_info_t info;
     result = get_mutable(world, entity, component, &info, is_added);
     
+    /* Store table so we can quickly check if returned pointer is still valid */
+    ecs_table_t *table = info.record->table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Keep track of alloc count of table, since even if the entity has not
+     * moved, other entities could have been added to the table which could
+     * reallocate arrays. Also store the row, as the entity could have 
+     * reallocated. */
+    int32_t alloc_count = table->alloc_count;
+    int32_t row = info.record->row;
+    
     ecs_defer_flush(world, stage);
+
+    /* Ensure that after flushing, the pointer is still valid. Flushing may
+     * trigger callbacks, which could do anything with the entity */
+    if (table != info.record->table || 
+        alloc_count != info.record->table->alloc_count ||
+        row != info.record->row) 
+    {
+        if (ecs_get_info(world, entity, &info) && info.table) {
+            result =  get_component(&info, component);
+        } else {
+            /* A trigger has removed the component we just added. This is not
+             * allowed, an application should always be able to assume that
+             * get_mut returns a valid pointer. */
+            ecs_assert(false, ECS_INVALID_OPERATION, NULL);
+        }
+    }
 
     return result;
 }

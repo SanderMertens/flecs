@@ -423,6 +423,8 @@ void Set_get_mut_tag_new_w_trait(void);
 void Set_get_mut_tag_existing_w_trait(void);
 void Set_modified_w_on_set(void);
 void Set_modified_no_component(void);
+void Set_get_mut_w_add_in_on_add(void);
+void Set_get_mut_w_remove_in_on_add(void);
 
 // Testsuite 'Lookup'
 void Lookup_setup(void);
@@ -3052,6 +3054,14 @@ bake_test_case Set_testcases[] = {
     {
         "modified_no_component",
         Set_modified_no_component
+    },
+    {
+        "get_mut_w_add_in_on_add",
+        Set_get_mut_w_add_in_on_add
+    },
+    {
+        "get_mut_w_remove_in_on_add",
+        Set_get_mut_w_remove_in_on_add
     }
 };
 
@@ -7222,7 +7232,7 @@ static bake_test_suite suites[] = {
         "Set",
         NULL,
         NULL,
-        23,
+        25,
         Set_testcases
     },
     {
