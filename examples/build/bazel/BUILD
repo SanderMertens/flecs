@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 cc_binary(
-    name = "flecs_bazel",
+    name = "example",
     srcs = ["main.cpp"],
-    deps = ["//:flecs"]
+    deps = ["@flecs//:flecs"]
 )

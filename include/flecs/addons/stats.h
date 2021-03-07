@@ -11,7 +11,9 @@
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
+#ifdef FLECS_SYSTEM
 #include "../modules/system.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

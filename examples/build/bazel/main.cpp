@@ -1,4 +1,4 @@
-#include "include/flecs.h"
+#include "flecs.h"
 #include <iostream>
 
 /* Component types */

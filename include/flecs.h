@@ -2963,7 +2963,9 @@ int32_t ecs_table_count(
 #ifdef FLECS_SNAPSHOT
 #include "flecs/addons/snapshot.h"
 #endif
+#ifdef FLECS_DIRECT_ACCESS
 #include "flecs/addons/direct_access.h"
+#endif
 #ifdef FLECS_STATS
 #include "flecs/addons/stats.h"
 #endif

@@ -8,14 +8,14 @@
  * API in an incorrect way can lead to a corrupted datastore.
  */
 
+#ifdef FLECS_DIRECT_ACCESS
+
 #ifndef FLECS_DIRECT_ACCESS_H_
 #define FLECS_DIRECT_ACCESS_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifdef FLECS_DIRECT_ACCESS
 
 /** Find the index of a column in a table.
  * Table columns are stored in the order of their respective component ids. As
@@ -318,10 +318,10 @@ void ecs_record_move_to(
     void *value,
     int32_t count);
 
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif
