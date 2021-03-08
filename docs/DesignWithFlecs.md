@@ -1,7 +1,7 @@
 # Designing with Flecs
-Designing games with ECS can be overwhelming and quite different from object oriented approaches, not to mention learning all the framework specific features! This guide provides a few quick tips for using the features provided by Flecs to build fast, readable and reusable code!
+Designing games with ECS can be overwhelming and quite different from object oriented approaches, not to mention learning all the framework specific features! This guide provides a few quick tips for using the features provided by Flecs to build fast, readable and reusable code.
 
-Note that these are my own guidelines, and as a result this is an opinionated document. There are many other approaches to designing with ECS, and it would be silly to claim that this is "the one true way". Take this with a grain of salt, and feel free to deviate when you feel it is appropriate!
+Note that these are my own guidelines, and as a result this is an opinionated document. There are many other approaches to designing with ECS, and it would be silly to claim that this is "the one true way". Take this with a grain of salt, and feel free to deviate when you feel it is appropriate.
 
 One other note: this document is very light on feature documentation. The point of the document is to provide suggestions for how to design with Flecs features, not document their ins and outs. All of the features listed in this document are described in the manual and have example code.
 
@@ -9,45 +9,45 @@ One other note: this document is very light on feature documentation. The point 
 Entities are probably the easiest thing to get used to. They typically map to in-game objects the same way you would create them in other game engines. 
 
 ### Entity Initialization
-When creating entities, you typically want to iniitalize them with a set of default components, and maybe even default values. Flecs introduced prefabs for this exact use case. Prefabs are easy and quick ways to specify which components you want your entities to have, and even let you specify default values for those components. It is good practice to create entities from prefabs, as this not just makes it easy to see from code what kind of entity it is, it also is much faster than individually adding & assigning component values.
+When creating entities, you typically want to iniitalize them with a set of default components, and maybe even default values. Flecs introduced prefabs for this use case. Prefabs let you create entity templates that contain components with default values. Creating entities from prefabs is not just an easy way to initialize entities, it is also faster, and helps with classifying the different kinds of entities you have.
 
 ### Entity Lifecycle
-Entities can be created and deleted dynamically. When entities are deleted, the existing handles to that entity are no longer valid. When you are working with entity handles, it is often good practice, to make sure they are still alive. You can do this with the `is_alive()` function. Other than that, entity handles are stable, which means that you can safely store them in your components or elsewhere!
+Entities can be created and deleted dynamically. When entities are deleted, the existing handles to that entity are no longer valid. When you are working with entity handles, it is often good practice to make sure they are still alive. You can do this with the `is_alive()` function. Other than that, entity handles are stable, which means that you can safely store them in your components or elsewhere.
 
 ### Entity Names
-Flecs entities can be named. This makes it easy to identify entities in editors, and also allows you to lookup entities by name. While this is very useful, note that naem lookups on the world are quite expensive! Flecs supports relative name lookups, where you search for an entity name relative to a parent entity, which is much faster. Even so, if you do a lookup by name, it often pays off to cache the entity handle.
+Flecs entities can be named. This makes it easy to identify entities in editors or while debugging, and also allows you to lookup entities by name. While this can be useful, name lookups on the world are expensive! Flecs supports relative name lookups, where you search for an entity name relative to a parent entity, which is much faster. Even so, if you do a lookup by name, it is a good idea to cache the entity handle.
 
 ## Components
-Designing your components is probably the most important thing you will do in your application. The reason is that if you change your component definitions, you may have to update lots of code, and that is not fun. Fortunately there are ways to design components that are both performant and minimize the amount of refactoring.
+Designing your components is probably the most important thing you will do in your ECS application. The reason is that if you change a component you have to update all systems that use it. Fortunately there are ways to design components that refactoring and do not negatively impact performance.
 
 ### Component Size
-The most important guideline: keep your components as small as possible, but not smaller. If you are choosing between a Transform component or separate Position, Rotation, Scale, Matrix components pick the latter. If you have a Turret component with a target and a rotation angle, split them up into two components.
+The most important guideline: keep your components as small and atomic. If you are choosing between a Transform component or separate Position, Rotation, Scale, Matrix components pick the latter. If you have a Turret component with a target and a rotation angle, split them up into two components.
 
-The reasoning behind this is simple: it is very cheap (at least in Flecs) to query for multiple components at the same time. There is almost no overhead associated with adding more components to a query, due to how matched results are cached.
+The reasoning behind this is simple: it is very cheap (at least in Flecs) to query for multiple components at the same time. There is almost no overhead associated with adding more components to a query, due to how queries cache results.
 
-The second reason is that it improves caching performance. If your system only needs Position, but also has to load all of the other data in Transform, you end up loading a lot of data in your cache that remains unused. This may or may not be a problem, but all else being equal you might as well get it right.
+The second reason is that it improves caching performance. If your system only needs Position, but also has to load all of the other data in Transform, you end up loading a lot of data in your cache that remains unused. This may or may not be a problem, but all else being equal it definitely won't hurt.
 
-The third reason is that you can only split up your components so far. The number of ways in which you can combine compponents is infinitely larger than the number of ways in which you can split them up, and this translates, in a very practical way, into less refactoring. When you have reduced your components to atomic units of data, there simply isn't anything else to change.
+The third reason is that you can only split up your components so far. The number of ways in which you can combine compponents is infinitely larger than the number of ways in which you can split them up, and this translates, in a very practical way, into less refactoring. When you have reduced your components to atomic units of data, there simply isn't anything left to refactor.
 
-The fourth and last reason why you want to keep your components small is code reusability. If your components are atomic units of data, they are automatically less opinionated than a component that combines more stuff. As a result, it is more likely that you find the component to work well across projects!
+The fourth and last reason why you want to keep your components small is code reusability. If your components are atomic units of data, they are automatically less opinionated than a component that combines more stuff. As a result, it is more likely that you find the component to work well across projects. This trickles down into the rest of your ECS code: systems written for atomic components will also be more reusable across projects.
 
-Note that not everyone does this the same way, but know that there are at least no performance reasons in Flecs not to split up your components!
+A disadvantage of small components is that you get more of them in a project. This can make it harder to find the components a system needs, especially in large projects with hundreds of components.
 
 ### Complex component data
-There is a misconception that ECS components can only contain plain data members, and should not have vectors, or more complex data structures. The reality is much more nuanced. You may find yourself often needing specialized data structures that cannot be easily expressed in ECS. Don't feel like you should not do this because of some arbitrary rule: it is perfectly good practice and fully supported.
+There is a misconception that ECS components can only contain plain data types, and should not have vectors, or more complex data structures. The reality is  more nuanced. You may find yourself often needing specialized data structures, and it is perfectly fine to store these in components.
 
-However, you should ask yourself whether the complexity is _necessary_. For example, if you have a vector with data in a component, would that data be better off as entities? Sometimes the answers to these questions are not black and white. If the elements have individual lifecycles, they might be better as entities. If they live and die with the entity, maybe storing them in a vector is fine. If you always need to access the entities in a very specific order, a vector might be better.
+However, you should ask yourself whether the complexity is _necessary_. For example, if you have a vector with data in a component, would that data be better off as entities? Sometimes the answers to these questions are not black and white. If the elements have individual lifecycles, they might be better stored as entities. If they live and die with the entity, maybe storing them in a vector is fine. If you always need to access the entities in a very specific order, a vector might be better.
 
-Sometimes you might even do both, where you have a component with a vector of entity handles. Which solution works best really depends on the situation, but know that there are no "wrong" approaches here. As long as it works well for your application, there is nothing else that should matter.
+Sometimes you might even do both, where you have a component with a vector of entity handles. Which solution works best really depends on the situation, but know that there are no "wrong" approaches here. If it works well for your application, there should be no dogmatic reasons to not do it.
 
 ## Queries
 Queries are the primary method in Flecs for finding the entities for a set of components (or more specifically: a component expression). Queries are easy to use, but there a few things to keep in mind.
 
 ### Cache Your Queries
-Creating a query object is expensive, iterating a query is incredibly cheap. Because of this it really pays off to keep your query objects around, and not recreate them each time you have a need for them. You can iterate a query as often as you want!
+Creating a query object is expensive, iterating a query is very cheap. Because of this it really pays off to keep your query objects around, and not recreate them each time you have a need for them. Query objects can be iterated as many times as you need. You can even iterate the same query safely across threads.
 
 ### Use in/inout/out Modifiers
-Flecs does some analysis based on how you read and write your components, and the more accurate the information it has is, the more efficient your code will run. If you don't specify these modifiers, Flecs assumes `[inout]`. This impacts change tracking (an `*out` term of a query invalidates a component when its iterated), which in turn impacts sorting (which depends on change tracking). It can also introduce more synchronization points than you need.
+Flecs does some analysis based on how you read and write your components, and the more accurate the information it has is, the more efficient your code will run. If you don't specify these modifiers, Flecs assumes `[inout]`. This impacts change tracking (an `inout/out` term of a query invalidates a component when it is iterated), which in turn impacts sorting (which depends on change tracking). It can also introduce more synchronization points than strictly needed.
 
 Note that if you use C++, and you use templates to create your queries, putting `const` before your component will automatically make it an `[in]` column.
 
@@ -62,7 +62,7 @@ Designing systems is probably the hardest thing to do when you are not coming fr
 ### System Scope
 Try to design your systems with a single responsibility. This can sometimes be difficult, especially if you are building new features and are not exactly sure yet what the end result will look like. That is fine. It is better to start with something that works, and refine it afterwards. If you find yourself with a system that does a lot of things, don't worry. Because systems in ECS are decoupled from everything else, it is generally pretty easy to split them up.
 
-If you manage to write systems that do only one thing, and do it well, you will have achieved ECS Zen, becuase you will be able to use that system across lots of projects!
+If you manage to write systems that do only one thing, and do it well, you will have achieved ECS Zen, as you will be able to use that system across lots of projects!
 
 ### System Size
 This is somewhat related to the system scope, but the question "when is a system too large" is a bit harder to answer. Sometimes a single feature requires a lot of complexity, such as a damage resolution system in a first person shooter. In these cases it can be more complex to split up the logic between different systems than it is to keep it combined. That is ok.
@@ -153,7 +153,7 @@ You might wonder whether a module with lots of systems, of which only a few are 
 Hierarchies are one of the most used features of Flecs, and often useful in game development. Here are a few guidelines for using them.
 
 ### Scene graphs
-The Flecs hierarchy implementation isn't the best solution for any scenario, but it works quite well with scene graphs. Flecs has out of the box features that let you iterate hierarchies top to bottom (see the `CASCADE` modifier), and this comes in handy when you want to do things like hierarchically applying a transform. Storing a scene graph is a totally fine way to use Flecs hierarchies, and there are nice cross-over benefits from, for example, using prefab hierarchies.
+The Flecs hierarchy implementation works quite well with scene graphs. Flecs has out of the box features that let you iterate hierarchies top to bottom (see the `CASCADE` modifier), and this comes in handy when you want to do things like hierarchically applying a transform. Storing a scene graph is a totally fine way to use Flecs hierarchies, and there are nice cross-over benefits from, for example, using prefab hierarchies.
 
 ### Keep 'em clean!
 It can sometimes be tempting to use Flecs hierarchies as a fancy container for a list of entities. Don't. Or rather, you _can_, but keep the hierarchy separate from your scene graph hierarchy. Maybe it will work, but tomorrow someone may implement a feature that iterates all entities in the scene graph for some kind of visualization, and you don't want to see thousands of entities in that tree that are just there because it was convenient to use hierarchies. 
