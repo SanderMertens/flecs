@@ -2805,6 +2805,7 @@ bool ecs_query_next(
     ecs_page_iter_t *piter = &iter->page_iter;
     ecs_query_t *query = it->query;
     ecs_world_t *world = query->world;
+    (void)world;
 
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
