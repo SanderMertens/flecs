@@ -96,17 +96,7 @@ void ecs_set_time_scale(
 FLECS_API
 void ecs_reset_clock(
     ecs_world_t *world);
-
-/** Signal exit
- * This operation signals that the application should quit. It will cause
- * ecs_progress to return false.
- *
- * @param world The world to quit.
- */
-FLECS_API
-void ecs_quit(
-    ecs_world_t *world);
-
+    
 /** Deactivate systems that are not matched with tables.
  * By default Flecs deactivates systems that are not matched with any tables.
  * However, once a system has been matched with a table it remains activated, to

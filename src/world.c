@@ -324,6 +324,20 @@ ecs_world_t* ecs_init_w_args(
     return ecs_init();
 }
 
+void ecs_quit(
+    ecs_world_t *world)
+{
+    ecs_stage_from_world(&world);
+    world->should_quit = true;
+}
+
+bool ecs_should_quit(
+    const ecs_world_t *world)
+{
+    world = ecs_get_world(world);
+    return world->should_quit;
+}
+
 static
 void on_demand_in_map_deinit(
     ecs_map_t *map)
@@ -729,19 +743,25 @@ bool ecs_enable_range_check(
     return old_value;
 }
 
-int32_t ecs_get_thread_index(
-    ecs_world_t *world)
+int32_t ecs_get_stage_index(
+    const ecs_world_t *world)
 {
     if (world->magic == ECS_STAGE_MAGIC) {
         ecs_stage_t *stage = (ecs_stage_t*)world;
 
-        /* Indices 0 and 1 are reserved for main & temp stages */
+        /* Index 0 is reserved for main stage */
         return stage->id - 1;
     } else if (world->magic == ECS_WORLD_MAGIC) {
         return 0;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+}
+
+int32_t ecs_get_thread_index(
+    const ecs_world_t *world)
+{
+    return ecs_get_stage_index(world);
 }
 
 int32_t ecs_get_threads(

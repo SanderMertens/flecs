@@ -358,12 +358,13 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
+    int32_t stage_current,
+    int32_t stage_count,    
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
-    void *param,
-    bool ran_by_app) 
+    void *param) 
 {
     if (!param) {
         param = system_data->ctx;
@@ -420,15 +421,12 @@ ecs_entity_t ecs_run_intern(
     ecs_iter_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
-    if (ran_by_app || ecs_get_stage_count(world) <= 1) {
+    if (stage_count <= 1) {
         while (ecs_query_next_w_filter(&it, filter)) {
             action(&it);
         }
     } else {
-        int32_t total = ecs_get_stage_count(world);
-        int32_t current = ecs_get_thread_index(stage->thread_ctx);
-
-        while (ecs_query_next_worker(&it, current, total)) {
+        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
             action(&it);               
         }
     }
@@ -461,11 +459,28 @@ ecs_entity_t ecs_run_w_filter(
         world, system, EcsSystem);
     assert(system_data != NULL);
 
-    ecs_entity_t interrupted_by = ecs_run_intern(
-        world, stage, system, system_data, delta_time, offset, limit, 
-        filter, param, true);
+    return ecs_run_intern(
+        world, stage, system, system_data, 0, 0, delta_time, offset, limit, 
+        filter, param);
+}
 
-    return interrupted_by;
+ecs_entity_t ecs_run_worker(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    int32_t stage_current,
+    int32_t stage_count,
+    FLECS_FLOAT delta_time,
+    void *param)
+{
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
+
+    EcsSystem *system_data = (EcsSystem*)ecs_get(
+        world, system, EcsSystem);
+    assert(system_data != NULL);
+
+    return ecs_run_intern(
+        world, stage, system, system_data, stage_current, stage_count, 
+        delta_time, 0, 0, NULL, param);
 }
 
 ecs_entity_t ecs_run(

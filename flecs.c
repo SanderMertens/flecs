@@ -9435,12 +9435,13 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
+    int32_t stage_current,
+    int32_t stage_count,
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
-    void *param,
-    bool ran_by_app);
+    void *param);
 
 #endif
 #endif
@@ -11753,6 +11754,20 @@ ecs_world_t* ecs_init_w_args(
     return ecs_init();
 }
 
+void ecs_quit(
+    ecs_world_t *world)
+{
+    ecs_stage_from_world(&world);
+    world->should_quit = true;
+}
+
+bool ecs_should_quit(
+    const ecs_world_t *world)
+{
+    world = ecs_get_world(world);
+    return world->should_quit;
+}
+
 static
 void on_demand_in_map_deinit(
     ecs_map_t *map)
@@ -12158,19 +12173,25 @@ bool ecs_enable_range_check(
     return old_value;
 }
 
-int32_t ecs_get_thread_index(
-    ecs_world_t *world)
+int32_t ecs_get_stage_index(
+    const ecs_world_t *world)
 {
     if (world->magic == ECS_STAGE_MAGIC) {
         ecs_stage_t *stage = (ecs_stage_t*)world;
 
-        /* Indices 0 and 1 are reserved for main & temp stages */
+        /* Index 0 is reserved for main stage */
         return stage->id - 1;
     } else if (world->magic == ECS_WORLD_MAGIC) {
         return 0;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+}
+
+int32_t ecs_get_thread_index(
+    const ecs_world_t *world)
+{
+    return ecs_get_stage_index(world);
 }
 
 int32_t ecs_get_threads(
@@ -21057,6 +21078,9 @@ void ecs_pipeline_progress(
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
+    int32_t stage_index = ecs_get_stage_index(stage->thread_ctx);
+    int32_t stage_count = ecs_get_stage_count(world);
+
     ecs_worker_begin(stage->thread_ctx);
     
     ecs_iter_t it = ecs_query_iter(pq->query);
@@ -21067,8 +21091,8 @@ void ecs_pipeline_progress(
         for(i = 0; i < it.count; i ++) {
             ecs_entity_t e = it.entities[i];
 
-            ecs_run_intern(world, stage, e, &sys[i], delta_time, 0, 0, 
-                NULL, NULL, false);
+            ecs_run_intern(world, stage, e, &sys[i], stage_index, stage_count, 
+                delta_time, 0, 0, NULL, NULL);
 
             ran_since_merge ++;
             world->stats.systems_ran_frame ++;
@@ -21210,13 +21234,6 @@ void ecs_reset_clock(
 {
     world->stats.world_time_total = 0;
     world->stats.world_time_total_raw = 0;
-}
-
-void ecs_quit(
-    ecs_world_t *world)
-{
-    ecs_stage_from_world(&world);
-    world->should_quit = true;
 }
 
 void ecs_deactivate_systems(
@@ -21945,12 +21962,13 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
+    int32_t stage_current,
+    int32_t stage_count,    
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
-    void *param,
-    bool ran_by_app) 
+    void *param) 
 {
     if (!param) {
         param = system_data->ctx;
@@ -22007,15 +22025,12 @@ ecs_entity_t ecs_run_intern(
     ecs_iter_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
-    if (ran_by_app || ecs_get_stage_count(world) <= 1) {
+    if (stage_count <= 1) {
         while (ecs_query_next_w_filter(&it, filter)) {
             action(&it);
         }
     } else {
-        int32_t total = ecs_get_stage_count(world);
-        int32_t current = ecs_get_thread_index(stage->thread_ctx);
-
-        while (ecs_query_next_worker(&it, current, total)) {
+        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
             action(&it);               
         }
     }
@@ -22048,11 +22063,28 @@ ecs_entity_t ecs_run_w_filter(
         world, system, EcsSystem);
     assert(system_data != NULL);
 
-    ecs_entity_t interrupted_by = ecs_run_intern(
-        world, stage, system, system_data, delta_time, offset, limit, 
-        filter, param, true);
+    return ecs_run_intern(
+        world, stage, system, system_data, 0, 0, delta_time, offset, limit, 
+        filter, param);
+}
 
-    return interrupted_by;
+ecs_entity_t ecs_run_worker(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    int32_t stage_current,
+    int32_t stage_count,
+    FLECS_FLOAT delta_time,
+    void *param)
+{
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
+
+    EcsSystem *system_data = (EcsSystem*)ecs_get(
+        world, system, EcsSystem);
+    assert(system_data != NULL);
+
+    return ecs_run_intern(
+        world, stage, system, system_data, stage_current, stage_count, 
+        delta_time, 0, 0, NULL, param);
 }
 
 ecs_entity_t ecs_run(

@@ -352,6 +352,9 @@ void ecs_pipeline_progress(
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
+    int32_t stage_index = ecs_get_stage_index(stage->thread_ctx);
+    int32_t stage_count = ecs_get_stage_count(world);
+
     ecs_worker_begin(stage->thread_ctx);
     
     ecs_iter_t it = ecs_query_iter(pq->query);
@@ -362,8 +365,8 @@ void ecs_pipeline_progress(
         for(i = 0; i < it.count; i ++) {
             ecs_entity_t e = it.entities[i];
 
-            ecs_run_intern(world, stage, e, &sys[i], delta_time, 0, 0, 
-                NULL, NULL, false);
+            ecs_run_intern(world, stage, e, &sys[i], stage_index, stage_count, 
+                delta_time, 0, 0, NULL, NULL);
 
             ran_since_merge ++;
             world->stats.systems_ran_frame ++;
@@ -505,13 +508,6 @@ void ecs_reset_clock(
 {
     world->stats.world_time_total = 0;
     world->stats.world_time_total_raw = 0;
-}
-
-void ecs_quit(
-    ecs_world_t *world)
-{
-    ecs_stage_from_world(&world);
-    world->should_quit = true;
 }
 
 void ecs_deactivate_systems(

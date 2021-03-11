@@ -3470,6 +3470,24 @@ void ecs_run_post_frame(
     ecs_fini_action_t action,
     void *ctx);    
 
+/** Signal exit
+ * This operation signals that the application should quit. It will cause
+ * ecs_progress to return false.
+ *
+ * @param world The world to quit.
+ */
+FLECS_API
+void ecs_quit(
+    ecs_world_t *world);
+
+/** Return whether a quit has been signaled.
+ *
+ * @param world The world.
+ */
+FLECS_API 
+bool ecs_should_quit(
+    const ecs_world_t *world);
+
 /** Register ctor, dtor, copy & move actions for component.
  *
  * @param world The world.
@@ -3723,11 +3741,10 @@ FLECS_API
 int32_t ecs_get_threads(
     ecs_world_t *world);
 
-/** Get current thread index */
+/** Get current thread index (DEPRECATED: use ecs_get_stage_index) */
 FLECS_API
 int32_t ecs_get_thread_index(
-    ecs_world_t *world);
-
+    const ecs_world_t *world);
 
 /** @} */
 
@@ -5259,14 +5276,15 @@ bool ecs_query_next_w_filter(
  * as many threads as there are entities will iterate that table.
  *
  * @param it The iterator.
- * @param current Thread id of current thread.
- * @param total Total number of threads.
+ * @param stage_current Id of current stage.
+ * @param stage_count Total number of stages.
  * @returns True if more data is available, false if not.
  */
+FLECS_API
 bool ecs_query_next_worker(
     ecs_iter_t *it,
-    int32_t current,
-    int32_t total);
+    int32_t stage_current,
+    int32_t stage_count);
 
 /** Sort the output of a query.
  * This enables sorting of entities across matched tables. As a result of this
@@ -5733,6 +5751,11 @@ FLECS_API
 int32_t ecs_get_stage_count(
     const ecs_world_t *world);
 
+/** Get current stage index */
+FLECS_API
+int32_t ecs_get_stage_index(
+    const ecs_world_t *world);
+
 /** Get stage-specific world pointer.
  * Flecs threads can safely invoke the API as long as they have a private 
  * context to write to, also referred to as the stage. This function returns a
@@ -6184,6 +6207,25 @@ ecs_entity_t ecs_run(
     FLECS_FLOAT delta_time,
     void *param);
 
+/** Same as ecs_run, but subdivides entities across number of provided stages.
+ * 
+ * @param world The world.
+ * @param system The system to run.
+ * @param stage_current The id of the current stage.
+ * @param stage_count The total number of stages.
+ * @param delta_time: The time passed since the last system invocation.
+ * @param param A user-defined parameter to pass to the system.
+ * @return handle to last evaluated entity if system was interrupted.
+ */
+FLECS_API
+ecs_entity_t ecs_run_worker(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    int32_t stage_current,
+    int32_t stage_count,
+    FLECS_FLOAT delta_time,
+    void *param);
+
 /** Run system with offset/limit and type filter.
  * This operation is the same as ecs_run, but filters the entities that will be
  * iterated by the system.
@@ -6440,17 +6482,7 @@ void ecs_set_time_scale(
 FLECS_API
 void ecs_reset_clock(
     ecs_world_t *world);
-
-/** Signal exit
- * This operation signals that the application should quit. It will cause
- * ecs_progress to return false.
- *
- * @param world The world to quit.
- */
-FLECS_API
-void ecs_quit(
-    ecs_world_t *world);
-
+    
 /** Deactivate systems that are not matched with tables.
  * By default Flecs deactivates systems that are not matched with any tables.
  * However, once a system has been matched with a table it remains activated, to
