@@ -341,6 +341,8 @@ void ecs_pipeline_progress(
     ecs_entity_t pipeline,
     FLECS_FLOAT delta_time)
 {
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -350,8 +352,7 @@ void ecs_pipeline_progress(
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
-    ecs_worker_begin(world);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_worker_begin(stage->thread_ctx);
     
     ecs_iter_t it = ecs_query_iter(pq->query);
     while (ecs_query_next(&it)) {
@@ -376,7 +377,7 @@ void ecs_pipeline_progress(
                  * current position (system). If there are a lot of systems
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
-                if (ecs_worker_sync(world)) {
+                if (ecs_worker_sync(stage->thread_ctx)) {
                     i = iter_reset(pq, &it, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
                     sys = ecs_column(&it, EcsSystem, 1);
@@ -385,7 +386,7 @@ void ecs_pipeline_progress(
         }
     }
 
-    ecs_worker_end(world);
+    ecs_worker_end(stage->thread_ctx);
 }
 
 static
@@ -509,7 +510,7 @@ void ecs_reset_clock(
 void ecs_quit(
     ecs_world_t *world)
 {
-    ecs_get_stage(&world);
+    ecs_stage_from_world(&world);
     world->should_quit = true;
 }
 
@@ -569,7 +570,7 @@ ecs_entity_t ecs_new_pipeline(
     const char *name,
     const char *expr)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_new_type(world, e, name, expr);
     ecs_assert(ecs_get(world, result, EcsType) != NULL, 
@@ -588,7 +589,7 @@ void FlecsPipelineFini(
     void *ctx)
 {
     (void)ctx;
-    if (world->workers) {
+    if (ecs_get_stage_count(world)) {
         ecs_set_threads(world, 0);
     }
 }

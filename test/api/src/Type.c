@@ -773,12 +773,13 @@ void Type_get_type_from_empty() {
 }
 
 void Type_get_type_from_0() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
-    ecs_type_t t = ecs_get_type(world, 0);
-    test_assert(t == NULL);
+    test_expect_abort();
 
-    ecs_fini(world);
+    ecs_get_type(world, 0);
 }
 
 void Type_entity_from_type() {
@@ -854,12 +855,12 @@ void Type_type_from_empty() {
 }
 
 void Type_type_from_0() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
-    ecs_type_t t = ecs_type_from_entity(world, 0);
-    test_assert(t == NULL);
-
-    ecs_fini(world);
+    test_expect_abort();
+    ecs_type_from_entity(world, 0);
 }
 
 void Type_type_remove() {
@@ -964,17 +965,14 @@ void Type_type_to_expr_childof() {
 }
 
 void Type_type_to_expr_trait() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
+    test_expect_abort();
+
+    /* Cannot create a type that just sets the hi id */
     ECS_TYPE(world, Type, TRAIT | Position);
-
-    char *expr = ecs_type_str(world, ecs_type(Type));
-    test_str(expr, "TRAIT|Position");
-    ecs_os_free(expr);
-
-    ecs_fini(world);
 }
 
 void Type_type_to_expr_trait_w_comp() {
@@ -1077,15 +1075,15 @@ void Type_type_from_expr_childof() {
 }
 
 void Type_type_from_expr_trait() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
     
     ECS_TAG(world, Trait);
 
-    ecs_type_t type = ecs_type_from_str(world, "TRAIT | Trait");
-    test_int(ecs_vector_count(type), 1);
-    test_assert(ecs_type_has_entity(world, type, ECS_TRAIT | Trait));
-
-    ecs_fini(world);
+    /* Cannot create a type that only sets the hi id */
+    test_expect_abort();
+    ecs_type_from_str(world, "TRAIT | Trait");
 }
 
 void Type_type_from_expr_trait_w_comp() {

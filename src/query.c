@@ -463,12 +463,17 @@ int32_t get_component_index(
         * zero, so that a system won't try to access the data */
         if (!ECS_HAS_ROLE(component, CASE) && 
             !ECS_HAS_ROLE(component, SWITCH)) 
-        {
+        {            
             component = ecs_get_typeid(world, component);
-            const EcsComponent *data = ecs_get(
-                world, component, EcsComponent);
 
-            if (!data || !data->size) {
+            if (component) {
+                const EcsComponent *data = ecs_get(
+                    world, component, EcsComponent);
+
+                if (!data || !data->size) {
+                    result = 0;
+                }
+            } else {
                 result = 0;
             }
         }        
@@ -2200,17 +2205,19 @@ ecs_query_t* ecs_query_new_w_sig_intern(
         *elem = result;
 
         if (result->flags & EcsQueryNeedsTables) {
-            if (ecs_has_entity(world, system, EcsMonitor)) {
-                result->flags |= EcsQueryMonitor;
-            }
-            
-            if (ecs_has_entity(world, system, EcsOnSet)) {
-                result->flags |= EcsQueryOnSet;
-            }
+            if (system) {
+                if (ecs_has_entity(world, system, EcsMonitor)) {
+                    result->flags |= EcsQueryMonitor;
+                }
+                
+                if (ecs_has_entity(world, system, EcsOnSet)) {
+                    result->flags |= EcsQueryOnSet;
+                }
 
-            if (ecs_has_entity(world, system, EcsUnSet)) {
-                result->flags |= EcsQueryUnSet;
-            }        
+                if (ecs_has_entity(world, system, EcsUnSet)) {
+                    result->flags |= EcsQueryUnSet;
+                }  
+            }      
 
             match_tables(world, result);
         } else {
@@ -2395,6 +2402,8 @@ void ecs_query_set_iter(
     int32_t row,
     int32_t count)
 {
+    (void)world;
+    
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
     
@@ -2409,7 +2418,7 @@ void ecs_query_set_iter(
     ecs_entity_t *entity_buffer = ecs_vector_first(data->entities, ecs_entity_t);  
     it->entities = &entity_buffer[row];
 
-    it->world = world;
+    it->world = NULL;
     it->query = query;
     it->column_count = ecs_vector_count(query->sig.columns);
     it->table_count = 1;
@@ -2794,10 +2803,11 @@ bool ecs_query_next(
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_query_iter_t *iter = &it->iter.query;
     ecs_page_iter_t *piter = &iter->page_iter;
-    ecs_world_t *world = it->world;
     ecs_query_t *query = it->query;
+    ecs_world_t *world = query->world;
 
-    ecs_get_stage(&world);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     ecs_table_slice_t *slice = ecs_vector_first(
         query->table_slices, ecs_table_slice_t);
     ecs_matched_table_t *tables = ecs_vector_first(

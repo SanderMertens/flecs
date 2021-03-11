@@ -289,6 +289,7 @@ ecs_entity_t ecs_new_entity(
     }
     
     EcsType type = type_from_expr(world, name, expr);
+
     ecs_add_type(world, result, type.normalized);
 
     return result;
@@ -329,7 +330,7 @@ ecs_entity_t ecs_new_component(
     /* If world is in progress component may be registered, but only when not
      * in multithreading mode. */
     if (in_progress) {
-        ecs_assert(ecs_vector_count(world->workers) < 1, 
+        ecs_assert(ecs_get_stage_count(world) == 0, 
             ECS_INVALID_WHILE_ITERATING, NULL);
 
         /* Component creation should not be deferred */

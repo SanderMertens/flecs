@@ -1150,9 +1150,8 @@ void ComponentLifecycle_delete_in_stage() {
 
     ecs_defer_end(world);
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    test_assert(!ecs_has(world, e, Mass));
+    test_assert(ecs_exists(world, e));
+    test_assert(!ecs_is_alive(world, e));
 
     /* Position is destroyed in main stage */
     test_int(ctor_position, 0);

@@ -3220,7 +3220,7 @@ namespace _
 #error "implicit component registration not supported"
 #endif
 
-// Translate a typename into a langauge-agnostic identifier. This allows for
+// Translate a typename into a language-agnostic identifier. This allows for
 // registration of components/modules across language boundaries.
 template <typename T>
 struct symbol_helper

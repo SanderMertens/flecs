@@ -72,8 +72,12 @@ void ecs_notify_queries_of_table(
     ecs_table_t *table);
 
 /* Get current thread-specific stage */
-ecs_stage_t *ecs_get_stage(
+ecs_stage_t *ecs_stage_from_world(
     ecs_world_t **world_ptr);
+
+/* Get actual world from world */
+ecs_world_t* ecs_get_world(
+    ecs_world_t *world);
 
 /* Get component callbacks */
 ecs_c_info_t *ecs_get_c_info(
@@ -120,24 +124,10 @@ void ecs_stage_deinit(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-/* Merge stage with main stage */
-void ecs_stage_merge(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
 /* Post-frame merge actions */
 void ecs_stage_merge_post_frame(
     ecs_world_t *world,
-    ecs_stage_t *stage);
-
-/* Begin defer for stage */
-bool ecs_stage_defer_begin(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
-bool ecs_stage_defer_end(
-    ecs_world_t *world,
-    ecs_stage_t *stage);    
+    ecs_stage_t *stage);  
 
 /* Delete table from stage */
 void ecs_delete_table(
@@ -485,6 +475,10 @@ void ecs_table_notify(
     ecs_table_event_t *event);
 
 void ecs_table_clear_edges(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+void ecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 

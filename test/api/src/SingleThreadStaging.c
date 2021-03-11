@@ -1392,10 +1392,10 @@ void SingleThreadStaging_delete_current() {
     ecs_progress(world, 1);
 
     test_int(ctx.entity_count, 3);
-
-    test_assert( !ecs_get_type(world, e_1));
-    test_assert( !ecs_get_type(world, e_2));
-    test_assert( !ecs_get_type(world, e_3));
+    
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(!ecs_is_alive(world, e_2));
+    test_assert(!ecs_is_alive(world, e_3));
 
     ecs_fini(world);
 }
@@ -1437,44 +1437,44 @@ void SingleThreadStaging_delete_even() {
     test_int(ctx.entity_count, 8);
 
     if (!(e_1 % 2))
-        test_assert( !ecs_get_type(world, e_1));
+        test_assert( !ecs_is_alive(world, e_1));
     else
-        test_assert ( !!ecs_get_type(world, e_1));
+        test_assert ( ecs_is_alive(world, e_1));
 
     if (!(e_2 % 2))
-        test_assert( !ecs_get_type(world, e_2));
+        test_assert( !ecs_is_alive(world, e_2));
     else
-        test_assert ( !!ecs_get_type(world, e_2));
+        test_assert ( ecs_is_alive(world, e_2));
 
     if (!(e_3 % 2))
-        test_assert( !ecs_get_type(world, e_3));
+        test_assert( !ecs_is_alive(world, e_3));
     else
-        test_assert ( !!ecs_get_type(world, e_3));
+        test_assert ( ecs_is_alive(world, e_3));
 
     if (!(e_4 % 2))
-        test_assert( !ecs_get_type(world, e_4));
+        test_assert( !ecs_is_alive(world, e_4));
     else
-        test_assert ( !!ecs_get_type(world, e_4));
+        test_assert ( ecs_is_alive(world, e_4));
 
     if (!(e_5 % 2))
-        test_assert( !ecs_get_type(world, e_5));
+        test_assert( !ecs_is_alive(world, e_5));
     else
-        test_assert ( !!ecs_get_type(world, e_5));
+        test_assert ( ecs_is_alive(world, e_5));
 
     if (!(e_6 % 2))
-        test_assert( !ecs_get_type(world, e_6));
+        test_assert( !ecs_is_alive(world, e_6));
     else
-        test_assert ( !!ecs_get_type(world, e_6));
+        test_assert ( ecs_is_alive(world, e_6));
 
     if (!(e_7 % 2))
-        test_assert( !ecs_get_type(world, e_7));
+        test_assert( !ecs_is_alive(world, e_7));
     else
-        test_assert ( !!ecs_get_type(world, e_7));
+        test_assert ( ecs_is_alive(world, e_7));
 
     if (!(e_8 % 2))
-        test_assert( !ecs_get_type(world, e_8));
+        test_assert( !ecs_is_alive(world, e_8));
     else
-        test_assert ( !!ecs_get_type(world, e_8));
+        test_assert ( ecs_is_alive(world, e_8));
 
     ecs_fini(world);
 }
@@ -1512,7 +1512,7 @@ void SingleThreadStaging_delete_new_empty() {
     int i;
     for (i = 0; i < ctx.entity_count; i ++) {
         test_assert(ctx.new_entities[i] != 0);
-        test_assert( !ecs_get_type(world, ctx.new_entities[i]));
+        test_assert( !ecs_is_alive(world, ctx.new_entities[i]));
     }
 
     ecs_fini(world);
@@ -1551,7 +1551,7 @@ void SingleThreadStaging_delete_new_w_component() {
     int i;
     for (i = 0; i < ctx.entity_count; i ++) {
         test_assert(ctx.new_entities[i] != 0);
-        test_assert( !ecs_get_type(world, ctx.new_entities[i]));
+        test_assert( !ecs_is_alive(world, ctx.new_entities[i]));
     }
 
     ecs_fini(world);
@@ -1939,8 +1939,7 @@ void SingleThreadStaging_delete_after_set() {
     int i;
     for (i = 0; i < ctx.entity_count; i ++) {
         test_assert(ctx.new_entities[i] != 0);
-        test_assert( !ecs_has(world, ctx.new_entities[i], Position));
-        test_assert( !ecs_get_type(world, ctx.new_entities[i]));
+        test_assert( !ecs_is_alive(world, ctx.new_entities[i]));
     }
 
     ecs_fini(world);

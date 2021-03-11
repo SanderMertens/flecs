@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Switch_setup() {
-    ecs_tracing_enable(-3);
+    ecs_tracing_enable(-4);
 }
 
 void Switch_get_case_empty() {
@@ -854,13 +854,15 @@ void Switch_empty_entity_has_case() {
 }
 
 void Switch_zero_entity_has_case() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Walking);
 
-    test_assert(!ecs_has_entity(world, 0, ECS_CASE | Walking));
+    test_expect_abort();
 
-    ecs_fini(world);
+    test_assert(!ecs_has_entity(world, 0, ECS_CASE | Walking));
 }
 
 void Switch_add_to_entity_w_switch() {

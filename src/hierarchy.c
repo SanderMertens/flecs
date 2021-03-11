@@ -277,7 +277,7 @@ ecs_entity_t get_parent_from_path(
     }
 
     if (!start_from_root && !parent) {
-        ecs_stage_t *stage = ecs_get_stage(&world);
+        ecs_stage_t *stage = ecs_stage_from_world(&world);
         parent = stage->scope;
     }
 
@@ -344,7 +344,7 @@ ecs_entity_t ecs_set_scope(
     ecs_world_t *world,
     ecs_entity_t scope)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     ecs_entity_t e = ECS_CHILDOF | scope;
     ecs_entities_t to_add = {
@@ -368,7 +368,7 @@ ecs_entity_t ecs_set_scope(
 ecs_entity_t ecs_get_scope(
     ecs_world_t *world)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     return stage->scope;
 }
 
@@ -550,7 +550,7 @@ void ecs_use(
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage->scope == 0 , ECS_INVALID_PARAMETER, NULL);
     ecs_assert(find_as_alias(world, name) == 0, ECS_ALREADY_DEFINED, NULL);
     (void)stage;

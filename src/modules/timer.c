@@ -31,7 +31,8 @@ void ProgressTimers(ecs_iter_t *it) {
             continue;
         }
 
-        FLECS_FLOAT time_elapsed = timer[i].time + it->world->stats.delta_time_raw;
+        const ecs_world_info_t *info = ecs_get_world_info(it->world);
+        FLECS_FLOAT time_elapsed = timer[i].time + info->delta_time_raw;
         FLECS_FLOAT timeout = timer[i].timeout;
         
         if (time_elapsed >= timeout) {

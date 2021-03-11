@@ -208,13 +208,17 @@ void init_edges(
 
         if (ECS_HAS_ROLE(e, DISABLED)) {
             table->flags |= EcsTableHasDisabled;
-        }        
+        }   
 
         if (ECS_HAS_ROLE(e, CHILDOF)) {
             ecs_entity_t parent = e & ECS_COMPONENT_MASK;
             ecs_assert(!ecs_exists(world, parent) || ecs_is_alive(world, parent), ECS_INTERNAL_ERROR, NULL);
             table->flags |= EcsTableHasParent;
             register_child_table(world, table, parent);
+            
+            if (parent == EcsFlecs || parent == EcsFlecsCore) {
+                table->flags |= EcsTableHasBuiltins;
+            }
         }
 
         if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {

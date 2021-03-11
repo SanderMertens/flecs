@@ -57,7 +57,7 @@ ecs_entity_t ecs_type_contains(
     bool match_prefab)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
+    world = ecs_get_world(world);
     
     if (!type_1) {
         return 0;
@@ -153,7 +153,11 @@ ecs_type_t ecs_type_merge(
     ecs_type_t to_remove)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
+
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, the function will fail. */
+    world = ecs_get_world(world);
     
     ecs_table_t *table = ecs_table_from_type(world, type);
     ecs_entities_t add_array = ecs_type_to_entities(to_add);
@@ -178,7 +182,7 @@ ecs_type_t ecs_type_find(
     int32_t count)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_get_stage(&world);
+    world = ecs_get_world(world);
 
     ecs_entities_t entities = {
         .array = array,
@@ -299,6 +303,13 @@ bool search_type(
             }
 
             ecs_entity_t base = e & ECS_COMPONENT_MASK;
+            if (!ecs_is_valid(world, base)) {
+                /* This indicates that an entity has an INSTANCEOF relationship
+                 * to an invalid base. That's no good, and will be handled with
+                 * future features (e.g. automatically removing the relation) */
+                continue;
+            }
+
             ecs_type_t base_type = ecs_get_type(world, base);
 
             if (search_type(world, base_type, entity, false)) {
@@ -350,7 +361,12 @@ ecs_type_t ecs_type_add(
     ecs_entity_t e)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
+
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, the function will fail. */
+    world = ecs_get_world(world);
+
     ecs_table_t *table = ecs_table_from_type(world, type);
 
     ecs_entities_t entities = {
@@ -371,7 +387,12 @@ ecs_type_t ecs_type_remove(
     ecs_entity_t e)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
+    
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, the function will fail. */
+    world = ecs_get_world(world);
+    
     ecs_table_t *table = ecs_table_from_type(world, type);
 
     ecs_entities_t entities = {

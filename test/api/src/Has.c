@@ -167,11 +167,13 @@ void Has_has_in_progress() {
 }
 
 void Has_has_of_zero() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
-    test_assert(!ecs_has(world, 0, 0));
-    
-    ecs_fini(world);
+    test_expect_abort();
+
+    ecs_has(world, 0, 0);
 }
 
 void Has_owns() {
@@ -213,14 +215,16 @@ void Has_has_entity() {
 }
 
 void Has_has_entity_0() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t base = ecs_new(world, 0);
     test_assert(base != 0);
 
-    test_assert( !ecs_has_entity(world, 0, base));
- 
-    ecs_fini(world);
+    test_expect_abort();
+
+    ecs_has_entity(world, 0, base);
 }
 
 void Has_has_entity_0_component() {
@@ -267,14 +271,15 @@ void Has_has_entity_owned() {
 }
 
 void Has_has_entity_owned_0() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    test_assert( ecs_owns_entity(world, 0, e, true) == false);
-
-    ecs_fini(world);
+    test_expect_abort();
+    ecs_owns_entity(world, 0, e, true);
 }
 
 void Has_has_entity_owned_0_component() {

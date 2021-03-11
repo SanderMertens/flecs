@@ -183,7 +183,7 @@ ecs_entity_t ecs_new_module(
     size_t alignment)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     if (!e) {
         char *module_path = ecs_module_path_from_c(name);

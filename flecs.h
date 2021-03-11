@@ -4517,6 +4517,20 @@ bool ecs_has_type(
  * @{
  */
 
+/** Test whether an entity is valid.
+ * An entity is valid if it is not 0 and if it is alive. If the provided id has
+ * a role or a trait, the contents of the role or the trait will be checked for
+ * validity.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @return True if the entity is valid, false if the entity is not valid.
+ */
+FLECS_API
+bool ecs_is_valid(
+    ecs_world_t *world,
+    ecs_entity_t e);
+
 /** Test whether an entity is alive.
  *
  * @param world The world.
@@ -5638,6 +5652,16 @@ FLECS_API
 void ecs_staging_end(
     ecs_world_t *world);
 
+/** Merge individual stage.
+ * Use this function to merge a stage when automerging for the stage has been
+ * disabled. 
+ *
+ * @param stage The stage.
+ */
+FLECS_API
+void ecs_stage_merge(
+    ecs_world_t *stage);
+
 /** Manually merge.
  * When automerging is set to false, an application can invoke this operation to
  * force merging all stages.
@@ -5684,6 +5708,63 @@ FLECS_API
 void ecs_set_automerge(
     ecs_world_t *world,
     bool auto_merge);
+
+/** Configure world to have N stages.
+ * This will not actually create worker threads, or run them, but will allocate
+ * the required datastructures to store a stage for N threads. This allows
+ * applications to write their own threading implementation on top of Flecs, as
+ * having N stages allows for having a defer queue per thread. 
+ * 
+ * @param world The world.
+ * @param threads The number of threads.
+ */
+FLECS_API
+void ecs_set_stages(
+    ecs_world_t *world,
+    int32_t threads);
+
+/** Get number of configured stages.
+ * Return number of stages set by ecs_set_stages.
+ *
+ * @param world The world.
+ * @return The number of stages used for threading.
+ */
+FLECS_API
+int32_t ecs_get_stage_count(
+    ecs_world_t *world);
+
+/** Get stage-specific world pointer.
+ * Flecs threads can safely invoke the API as long as they have a private 
+ * context to write to, also referred to as the stage. This function returns a
+ * pointer to a stage, disguised as a world pointer.
+ *
+ * Note that this function does not(!) create a new world. It simply wraps the
+ * existing world in a thread-specific context, which the API knows how to
+ * unwrap. The reason the stage is returned as an ecs_world_t is so that it
+ * can be passed transparently to the existing API functions, vs. having to 
+ * create a dediated API for threading.
+ *
+ * @param world The world.
+ * @param stage_id The index of the stage to retrieve.
+ * @return A thread-specific pointer to the world. 
+ */
+FLECS_API
+ecs_world_t* ecs_get_stage(
+    ecs_world_t *world,
+    int32_t stage_id);
+
+/** Flush all deferred commands in stage to the world.
+ * This operation inserts all deferred commands from a stage into the world.
+ * Note that this operation is not thread safe. The regular world object must
+ * be provided to this function.
+ *
+ * @param world The world.
+ * @param stage_id The stage to flush.
+ */
+FLECS_API
+void ecs_stage_flush(
+    ecs_world_t *world,
+    int32_t stage_id);
 
 /** @} */
 
@@ -7294,6 +7375,7 @@ void ecs_snapshot_free(
 
 #endif
 #endif
+#ifdef FLECS_DIRECT_ACCESS
 /**
  * @file direct_access.h
  * @brief Low-level access to underlying data structures for best performance.
@@ -7304,14 +7386,14 @@ void ecs_snapshot_free(
  * API in an incorrect way can lead to a corrupted datastore.
  */
 
+#ifdef FLECS_DIRECT_ACCESS
+
 #ifndef FLECS_DIRECT_ACCESS_H_
 #define FLECS_DIRECT_ACCESS_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifdef FLECS_DIRECT_ACCESS
 
 /** Find the index of a column in a table.
  * Table columns are stored in the order of their respective component ids. As
@@ -7614,12 +7696,13 @@ void ecs_record_move_to(
     void *value,
     int32_t count);
 
-#endif
-
 #ifdef __cplusplus
 }
 #endif
 
+#endif
+
+#endif
 #endif
 #ifdef FLECS_STATS
 /**
@@ -7635,6 +7718,8 @@ void ecs_record_move_to(
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
+#ifdef FLECS_SYSTEM
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -11039,7 +11124,7 @@ namespace _
 #error "implicit component registration not supported"
 #endif
 
-// Translate a typename into a langauge-agnostic identifier. This allows for
+// Translate a typename into a language-agnostic identifier. This allows for
 // registration of components/modules across language boundaries.
 template <typename T>
 struct symbol_helper

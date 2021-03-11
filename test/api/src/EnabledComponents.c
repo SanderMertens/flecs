@@ -25,26 +25,30 @@ void EnabledComponents_is_empty_entity_disabled() {
 }
 
 void EnabledComponents_is_0_entity_disabled() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    test_bool(ecs_is_component_enabled(world, 0, Position), false);
+    test_expect_abort();
 
-    ecs_fini(world);
+    test_bool(ecs_is_component_enabled(world, 0, Position), false);
 }
 
 void EnabledComponents_is_0_component_disabled() {
+    install_test_abort();
+    
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e = ecs_new(world, 0);
 
-    test_bool(ecs_is_component_enabled_w_entity(world, e, 0), false);
+    test_expect_abort();
 
-    ecs_fini(world);
+    test_bool(ecs_is_component_enabled_w_entity(world, e, 0), false);
 }
 
 void EnabledComponents_is_nonexist_component_disabled() {

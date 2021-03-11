@@ -516,7 +516,7 @@ ecs_data_t* ecs_table_get_or_create_data(
 
 static
 void ctor_component(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_c_info_t * cdata,
     ecs_column_t * column,
     ecs_entity_t * entities,
@@ -539,7 +539,7 @@ void ctor_component(
 
 static
 void dtor_component(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_c_info_t * cdata,
     ecs_column_t * column,
     ecs_entity_t * entities,
@@ -567,8 +567,8 @@ void dtor_component(
 
 static
 void dtor_all_components(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t row,
     int32_t count)
@@ -586,8 +586,8 @@ void dtor_all_components(
 
 static
 void run_remove_actions(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     int32_t row,
     int32_t count)
 {
@@ -649,8 +649,8 @@ void ecs_table_clear_data(
  * OnRemove handlers. This is typically used when restoring a table to a
  * previous state. */
 void ecs_table_clear_silent(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     ecs_data_t *data = ecs_table_get_data(table);
     if (!data) {
@@ -666,12 +666,9 @@ void ecs_table_clear_silent(
     }
 }
 
-/* Delete all entities in table, invoke OnRemove handlers. This function is used
- * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as 
- * the table may have to be deactivated with systems. */
-void ecs_table_clear(
-    ecs_world_t * world,
-    ecs_table_t * table)
+void ecs_table_delete_entities(
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     ecs_data_t *data = ecs_table_get_data(table);
 
@@ -682,7 +679,30 @@ void ecs_table_clear(
         int32_t i, count = ecs_vector_count(data->entities);
         for(i = 0; i < count; i ++) {
             ecs_eis_delete(world, entities[i]);
-        }
+        }        
+
+        ecs_table_clear_silent(world, table);
+    }
+}
+
+/* Delete all entities in table, invoke OnRemove handlers. This function is used
+ * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as 
+ * the table may have to be deactivated with systems. */
+void ecs_table_clear(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_data_t *data = ecs_table_get_data(table);
+
+    if (data) {
+        run_remove_actions(world, table, 0, ecs_table_data_count(data));
+
+        ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
+        int32_t i, count = ecs_vector_count(data->entities);
+        for(i = 0; i < count; i ++) {
+            ecs_record_t r = {NULL, 0};
+            ecs_eis_set(world, entities[i], &r);
+        } 
 
         ecs_table_clear_silent(world, table);
     }
@@ -691,8 +711,8 @@ void ecs_table_clear(
 /* Unset all components in table. This function is called before a table is 
  * deleted, and invokes all UnSet handlers, if any */
 void ecs_table_unset(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
@@ -704,8 +724,8 @@ void ecs_table_unset(
 /* Free table resources. Do not invoke handlers and do not activate/deactivate
  * table with systems. This function is used when the world is freed. */
 void ecs_table_free(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
@@ -745,8 +765,8 @@ void ecs_table_free(
 
 /* Reset a table to its initial state. */
 void ecs_table_reset(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     (void)world;
     ecs_os_free(table->lo_edges);
@@ -881,8 +901,8 @@ void move_bitset_columns(
 
 static
 void ensure_data(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t * column_count_out,
     int32_t * sw_column_count_out,
@@ -928,7 +948,7 @@ void ensure_data(
 
 static
 void grow_column(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t * entities,
     ecs_column_t * column,
     ecs_c_info_t * c_info,
@@ -1002,8 +1022,8 @@ void grow_column(
 
 static
 int32_t grow_data(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t to_add,
     int32_t size,
@@ -1109,8 +1129,8 @@ void fast_append(
 }
 
 int32_t ecs_table_append(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     ecs_entity_t entity,
     ecs_record_t * record,
@@ -1246,8 +1266,8 @@ void fast_delete(
 }
 
 void ecs_table_delete(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t index,
     bool destruct)
@@ -1423,7 +1443,7 @@ void fast_move(
 }
 
 void ecs_table_move(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t dst_entity,
     ecs_entity_t src_entity,
     ecs_table_t *new_table,
@@ -1545,8 +1565,8 @@ void ecs_table_move(
 }
 
 int32_t ecs_table_appendn(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t to_add,
     const ecs_entity_t *ids)
@@ -1556,8 +1576,8 @@ int32_t ecs_table_appendn(
 }
 
 void ecs_table_set_size(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t size)
 {
@@ -1587,7 +1607,7 @@ int32_t ecs_table_data_count(
 
 static
 void swap_switch_columns(
-    ecs_table_t * table,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t row_1,
     int32_t row_2)
@@ -1607,7 +1627,7 @@ void swap_switch_columns(
 
 static
 void swap_bitset_columns(
-    ecs_table_t * table,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t row_1,
     int32_t row_2)
@@ -1626,8 +1646,8 @@ void swap_bitset_columns(
 }
 
 void ecs_table_swap(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t row_1,
     int32_t row_2)
@@ -1794,7 +1814,7 @@ void merge_column(
 
 static
 void merge_table_data(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_table_t * new_table,
     ecs_table_t * old_table,
     int32_t old_count,
@@ -1959,7 +1979,7 @@ int32_t ecs_table_count(
 }
 
 ecs_data_t* ecs_table_merge(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_table_t *new_table,
     ecs_table_t *old_table,
     ecs_data_t *new_data,
@@ -2028,8 +2048,8 @@ ecs_data_t* ecs_table_merge(
 }
 
 void ecs_table_replace_data(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data)
 {
     int32_t prev_count = 0;
@@ -2059,8 +2079,8 @@ void ecs_table_replace_data(
 }
 
 bool ecs_table_match_filter(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     const ecs_filter_t * filter)
 {
     if (!filter) {
@@ -2123,8 +2143,8 @@ int32_t* ecs_table_get_monitor(
 }
 
 void ecs_table_notify(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_table_event_t * event)
 {
     if (world->is_fini) {

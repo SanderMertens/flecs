@@ -2,26 +2,36 @@
 
 /* -- Private functions -- */
 
-ecs_stage_t *ecs_get_stage(
+ecs_world_t* ecs_get_world(
+    ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (world->magic == ECS_WORLD_MAGIC) {
+        return world;
+    } else {
+        return ((ecs_stage_t*)world)->world;
+    }
+}
+
+ecs_stage_t *ecs_stage_from_world(
     ecs_world_t **world_ptr)
 {
     ecs_world_t *world = *world_ptr;
 
     ecs_assert(world->magic == ECS_WORLD_MAGIC ||
-               world->magic == ECS_THREAD_MAGIC,
+               world->magic == ECS_STAGE_MAGIC,
                ECS_INTERNAL_ERROR,
                NULL);
 
     if (world->magic == ECS_WORLD_MAGIC) {
-        if (world->in_progress) {
-            return &world->temp_stage;
-        } else {
-            return &world->stage;
-        }
-    } else if (world->magic == ECS_THREAD_MAGIC) {
-        ecs_thread_t *thread = (ecs_thread_t*)world;
-        *world_ptr = thread->world;
-        return thread->stage;
+        ecs_assert(!world->in_progress, ECS_INVALID_OPERATION, NULL);
+        return &world->stage;
+
+    } else if (world->magic == ECS_STAGE_MAGIC) {
+        ecs_stage_t *stage = (ecs_stage_t*)world;
+        *world_ptr = stage->world;
+        return stage;
     }
     
     return NULL;
@@ -195,16 +205,12 @@ ecs_world_t *ecs_mini(void) {
     world->on_activate_components = ecs_map_new(ecs_on_demand_in_t, 0);
     world->on_enable_components = ecs_map_new(ecs_on_demand_in_t, 0);
 
-    world->stage_count = 2;
     world->worker_stages = NULL;
-    world->workers = NULL;
     world->workers_waiting = 0;
     world->workers_running = 0;
     world->quit_workers = false;
     world->in_progress = false;
-    world->is_merging = false;
     world->is_fini = false;
-    world->auto_merge = true;
     world->measure_frame_time = false;
     world->measure_system_time = false;
     world->should_quit = false;
@@ -242,11 +248,9 @@ ecs_world_t *ecs_mini(void) {
     world->arg_threads = 0;
 
     ecs_stage_init(world, &world->stage);
-    ecs_stage_init(world, &world->temp_stage);
-    init_store(world);
+    ecs_set_stages(world, 1);
 
-    world->stage.world = world;
-    world->temp_stage.world = world;
+    init_store(world);
 
     ecs_bootstrap(world);
 
@@ -423,7 +427,7 @@ void ecs_run_post_frame(
     void *ctx)
 {
     ecs_assert(action != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     ecs_action_elem_t *elem = ecs_vector_add(&stage->post_frame_actions, 
         ecs_action_elem_t);
@@ -503,7 +507,7 @@ void fini_stages(
     ecs_world_t *world)
 {
     ecs_stage_deinit(world, &world->stage);
-    ecs_stage_deinit(world, &world->temp_stage);
+    ecs_set_stages(world, 0);
 }
 
 /* Cleanup child table admin */
@@ -554,7 +558,6 @@ int ecs_fini(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!world->in_progress, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!world->is_merging, ECS_INVALID_OPERATION, NULL);
     ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     world->is_fini = true;
@@ -599,7 +602,7 @@ void ecs_dim(
     ecs_world_t *world,
     int32_t entity_count)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
     ecs_eis_set_size(world, entity_count + ECS_HI_COMPONENT_ID);
 }
 
@@ -608,7 +611,7 @@ void ecs_dim_type(
     ecs_type_t type,
     int32_t entity_count)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
     if (type) {
         ecs_table_t *table = ecs_table_from_type(world, type);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -623,46 +626,6 @@ void ecs_eval_component_monitors(
 {
     eval_component_monitor(world, &world->component_monitors);
     eval_component_monitor(world, &world->parent_monitors);
-}
-
-void ecs_merge(
-    ecs_world_t *world)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    assert(world->is_merging == false);
-
-    bool measure_frame_time = world->measure_frame_time;
-
-    world->is_merging = true;
-
-    ecs_time_t t_start;
-    if (measure_frame_time) {
-        ecs_os_get_time(&t_start);
-    }
-
-    ecs_stage_merge(world, &world->temp_stage);
-
-    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
-        ecs_stage_merge(world, stage);
-    });
-
-    world->is_merging = false;
-
-    ecs_eval_component_monitors(world);
-
-    if (measure_frame_time) {
-        world->stats.merge_time_total += (FLECS_FLOAT)ecs_time_measure(&t_start);
-    }
-
-    world->stats.merge_count_total ++;
-}
-
-void ecs_set_automerge(
-    ecs_world_t *world,
-    bool auto_merge)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    world->auto_merge = auto_merge;
 }
 
 void ecs_measure_frame_time(
@@ -710,7 +673,7 @@ void ecs_set_target_fps(
 void* ecs_get_context(
     ecs_world_t *world)
 {
-    ecs_get_stage(&world);
+    ecs_stage_from_world(&world);
     return world->context;
 }
 
@@ -751,9 +714,11 @@ bool ecs_enable_range_check(
 int32_t ecs_get_thread_index(
     ecs_world_t *world)
 {
-    if (world->magic == ECS_THREAD_MAGIC) {
-        ecs_thread_t *thr = (ecs_thread_t*)world;
-        return thr->index;
+    if (world->magic == ECS_STAGE_MAGIC) {
+        ecs_stage_t *stage = (ecs_stage_t*)world;
+
+        /* Indices 0 and 1 are reserved for main & temp stages */
+        return stage->id - 1;
     } else if (world->magic == ECS_WORLD_MAGIC) {
         return 0;
     } else {
@@ -764,7 +729,7 @@ int32_t ecs_get_thread_index(
 int32_t ecs_get_threads(
     ecs_world_t *world)
 {
-    return ecs_vector_count(world->workers);
+    return ecs_vector_count(world->worker_stages);
 }
 
 bool ecs_enable_locking(
@@ -858,25 +823,6 @@ ecs_c_info_t * ecs_get_or_create_c_info(
     }
 
     return c_info;
-}
-
-bool ecs_staging_begin(
-    ecs_world_t *world)
-{
-    bool in_progress = world->in_progress;
-    world->in_progress = true;
-    return in_progress;
-}
-
-void ecs_staging_end(
-    ecs_world_t *world)
-{
-    ecs_assert(world->in_progress == true, ECS_INVALID_OPERATION, NULL);
-
-    world->in_progress = false;
-    if (world->auto_merge) {
-        ecs_merge(world);
-    }
 }
 
 static
@@ -1041,9 +987,7 @@ void ecs_frame_end(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
 
-    world->stats.frame_count_total ++;   
-
-    ecs_stage_merge_post_frame(world, &world->temp_stage);
+    world->stats.frame_count_total ++;
 
     ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
         ecs_stage_merge_post_frame(world, stage);
@@ -1063,6 +1007,7 @@ void ecs_frame_end(
 const ecs_world_info_t* ecs_get_world_info(
     ecs_world_t *world)
 {
+    world = ecs_get_world(world);
     return &world->stats;
 }
 
