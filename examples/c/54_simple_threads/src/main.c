@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 
     /* Create a bunch of entities */
     for (int i = 0; i < 1000; i ++) {
-        ecs_entity_t e = ecs_set(world, 0, Position, {i, i * 2});
+        ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
         ecs_set(world, e, Velocity, {1, 1});
     }
 
