@@ -1309,7 +1309,7 @@ char *ecs_vasprintf(
 
     va_copy(tmpa, args);
 
-    size = vsnprintf(result, ecs_to_size_t(size), fmt, tmpa);
+    size = vsnprintf(result, 0, fmt, tmpa);
 
     va_end(tmpa);
 
