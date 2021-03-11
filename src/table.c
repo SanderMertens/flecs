@@ -483,35 +483,24 @@ void unregister_query(
     }
 }
 
-static
-ecs_data_t* get_data_intern(
-    ecs_table_t *table,
-    bool create)
+ecs_data_t* ecs_table_get_data(
+    const ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *data = table->data;
-    if (data) {
-        return data;
-    }
-
-    if (!data && !create) {
-        return NULL;
-    }
-
-    return table->data = ecs_os_calloc(ECS_SIZEOF(ecs_data_t));
-}
-
-ecs_data_t* ecs_table_get_data(
-    ecs_table_t *table)
-{
-    return get_data_intern(table, false);
+    return table->data;
 }
 
 ecs_data_t* ecs_table_get_or_create_data(
     ecs_table_t *table)
 {
-    return get_data_intern(table, true);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_data_t *data = table->data;
+    if (!data) {
+        data = table->data = ecs_os_calloc(ECS_SIZEOF(ecs_data_t));
+    }
+    return data;
 }
 
 static
@@ -1600,7 +1589,7 @@ void ecs_table_set_size(
 }
 
 int32_t ecs_table_data_count(
-    ecs_data_t *data)
+    const ecs_data_t *data)
 {
     return data ? ecs_vector_count(data->entities) : 0;
 }
@@ -1967,7 +1956,7 @@ void merge_table_data(
 }
 
 int32_t ecs_table_count(
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_data_t *data = table->data;
@@ -2079,8 +2068,8 @@ void ecs_table_replace_data(
 }
 
 bool ecs_table_match_filter(
-    ecs_world_t *world,
-    ecs_table_t *table,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
     const ecs_filter_t * filter)
 {
     if (!filter) {

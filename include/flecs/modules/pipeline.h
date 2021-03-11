@@ -52,7 +52,7 @@ void ecs_set_pipeline(
  */
 FLECS_API
 ecs_entity_t ecs_get_pipeline(
-    ecs_world_t *world);  
+    const ecs_world_t *world);  
 
 /** Progress a world.
  * This operation progresses the world by running all systems that are both

@@ -1,7 +1,7 @@
 #include "private_api.h"
 
 const EcsComponent* ecs_component_from_id(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e)
 {
     ecs_entity_t trait = 0;
@@ -416,8 +416,8 @@ ecs_entity_t find_xor_replace(
 }
 
 int32_t ecs_table_switch_from_case(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    const ecs_world_t * world,
+    const ecs_table_t * table,
     ecs_entity_t add)
 {
     ecs_type_t type = table->type;

@@ -3,7 +3,7 @@
 
 static
 bool path_append(
-    ecs_world_t *world, 
+    const ecs_world_t *world, 
     ecs_entity_t parent, 
     ecs_entity_t child, 
     ecs_entity_t component,
@@ -37,7 +37,7 @@ bool path_append(
 
 static
 ecs_entity_t find_as_alias(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name)
 {
     int32_t i, count = ecs_vector_count(world->aliases);
@@ -52,7 +52,7 @@ ecs_entity_t find_as_alias(
 }
 
 char* ecs_get_path_w_sep(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child,
     ecs_entity_t component,
@@ -99,7 +99,7 @@ ecs_entity_t name_to_id(
 
 static
 ecs_entity_t find_child_in_table(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     const char *name)
 {
     /* If table doesn't have EcsName, then don't bother */
@@ -138,7 +138,7 @@ ecs_entity_t find_child_in_table(
 
 static
 ecs_entity_t find_child(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *name)
 {
@@ -155,7 +155,7 @@ ecs_entity_t find_child(
 }
 
 ecs_entity_t ecs_lookup_child(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *name)
 {
@@ -178,7 +178,7 @@ ecs_entity_t ecs_lookup_child(
 }
 
 ecs_entity_t ecs_lookup(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name)
 {   
     if (!name) {
@@ -198,7 +198,7 @@ ecs_entity_t ecs_lookup(
 }
 
 ecs_entity_t ecs_lookup_symbol(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name)
 {   
     if (!name) {
@@ -259,7 +259,7 @@ const char *path_elem(
 
 static
 ecs_entity_t get_parent_from_path(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char **path_ptr,
     const char *prefix)
@@ -277,8 +277,7 @@ ecs_entity_t get_parent_from_path(
     }
 
     if (!start_from_root && !parent) {
-        ecs_stage_t *stage = ecs_stage_from_world(&world);
-        parent = stage->scope;
+        parent = ecs_get_scope(world);
     }
 
     *path_ptr = path;
@@ -287,7 +286,7 @@ ecs_entity_t get_parent_from_path(
 }
 
 ecs_entity_t ecs_lookup_path_w_sep(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *path,
     const char *sep,
@@ -366,14 +365,14 @@ ecs_entity_t ecs_set_scope(
 }
 
 ecs_entity_t ecs_get_scope(
-    ecs_world_t *world)
+    const ecs_world_t *world)
 {
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    const ecs_stage_t *stage = ecs_stage_from_readonly_world(world);
     return stage->scope;
 }
 
 int32_t ecs_get_child_count(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity)
 {
     ecs_vector_t *tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, entity);

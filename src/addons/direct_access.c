@@ -8,7 +8,7 @@
 
 static
 ecs_column_t *da_get_column(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     int32_t column)
 {
     ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -52,7 +52,7 @@ ecs_entity_t* get_entity_array(
 /* -- Public API -- */
 
 ecs_type_t ecs_table_get_type(
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
     return table->type;
 }
@@ -94,7 +94,7 @@ ecs_record_t ecs_table_insert(
 }
 
 int32_t ecs_table_find_column(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     ecs_entity_t component)
 {
     ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -103,7 +103,7 @@ int32_t ecs_table_find_column(
 }
 
 ecs_vector_t* ecs_table_get_column(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     int32_t column)
 {
     ecs_column_t *c = da_get_column(table, column);
@@ -137,7 +137,7 @@ ecs_vector_t* ecs_table_set_column(
 }
 
 ecs_vector_t* ecs_table_get_entities(
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
     ecs_data_t *data = table->data;
     if (!data) {
@@ -148,7 +148,7 @@ ecs_vector_t* ecs_table_get_entities(
 }
 
 ecs_vector_t* ecs_table_get_records(
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
     ecs_data_t *data = table->data;
     if (!data) {

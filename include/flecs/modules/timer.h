@@ -92,7 +92,7 @@ ecs_entity_t ecs_set_timeout(
  */
 FLECS_API
 FLECS_FLOAT ecs_get_timeout(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t timer);
 
 /** Set timer interval.
@@ -126,7 +126,7 @@ ecs_entity_t ecs_set_interval(
  */
 FLECS_API
 FLECS_FLOAT ecs_get_interval(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t timer);
 
 /** Start timer.

@@ -20,12 +20,12 @@ ecs_type_t ecs_type_from_entity(
 
 FLECS_API
 ecs_entity_t ecs_type_to_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type);
 
 FLECS_API
 char* ecs_type_str(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type);  
 
 FLECS_API
@@ -60,26 +60,26 @@ ecs_type_t ecs_type_remove(
 
 FLECS_API
 bool ecs_type_has_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity);
 
 FLECS_API
 bool ecs_type_has_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has);
 
 FLECS_API
 bool ecs_type_owns_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
     bool owned);
 
 FLECS_API
 bool ecs_type_owns_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has,
     bool owned);

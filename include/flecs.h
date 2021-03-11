@@ -678,7 +678,7 @@ void* ecs_get_context(
  */
 FLECS_API
 const ecs_world_info_t* ecs_get_world_info(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Dimension the world for a specified number of entities.
  * This operation will preallocate memory in the world for the specified number
@@ -1217,7 +1217,7 @@ FLECS_API void ecs_enable_component_w_entity(
  * @return True if the component is enabled, otherwise false.
  */
 FLECS_API bool ecs_is_component_enabled_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
@@ -1340,7 +1340,7 @@ FLECS_API bool ecs_is_component_enabled_w_entity(
  */
 FLECS_API
 ecs_entity_t ecs_get_case(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e,
     ecs_entity_t sw);
 
@@ -1409,7 +1409,7 @@ void ecs_delete_children(
  */
 FLECS_API
 const void* ecs_get_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
@@ -1439,7 +1439,7 @@ const void* ecs_get_w_entity(
  */
 FLECS_API
 const void* ecs_get_ref_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_ref_t *ref,
     ecs_entity_t entity,
     ecs_entity_t component);
@@ -1612,7 +1612,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
  */
 FLECS_API
 bool ecs_has_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t to_check);
 
@@ -1627,7 +1627,7 @@ bool ecs_has_entity(
  */
 FLECS_API
 bool ecs_has_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type);
 
@@ -1688,7 +1688,7 @@ bool ecs_has_type(
  */
 FLECS_API
 bool ecs_is_valid(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 /** Test whether an entity is alive.
@@ -1699,7 +1699,7 @@ bool ecs_is_valid(
  */
 FLECS_API
 bool ecs_is_alive(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 /** Test whether an entity exists.
@@ -1711,7 +1711,7 @@ bool ecs_is_alive(
  */
 FLECS_API
 bool ecs_exists(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 /** Get the type of an entity.
@@ -1722,7 +1722,7 @@ bool ecs_exists(
  */
 FLECS_API
 ecs_type_t ecs_get_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Get the typeid of an entity.
@@ -1733,7 +1733,7 @@ ecs_type_t ecs_get_type(
  */
 FLECS_API
 ecs_entity_t ecs_get_typeid(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 /** Get the name of an entity.
@@ -1745,7 +1745,7 @@ ecs_entity_t ecs_get_typeid(
  */
 FLECS_API
 const char* ecs_get_name(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Convert type role to string.
@@ -1770,7 +1770,7 @@ const char* ecs_role_str(
  */
 FLECS_API
 size_t ecs_entity_str(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     char *buffer,
     size_t buffer_len);
@@ -1787,7 +1787,7 @@ size_t ecs_entity_str(
  */
 FLECS_API
 ecs_entity_t ecs_get_parent_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
@@ -1827,7 +1827,7 @@ void ecs_enable(
  */
 FLECS_API
 int32_t ecs_count_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Count entities that have a type.
@@ -1839,7 +1839,7 @@ int32_t ecs_count_entity(
  */
 FLECS_API
 int32_t ecs_count_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type);
 
 /** Count entities that have a component, type or tag.
@@ -1861,7 +1861,7 @@ int32_t ecs_count_type(
  */
 FLECS_API
 int32_t ecs_count_w_filter(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_filter_t *filter);
 
 
@@ -1882,7 +1882,7 @@ int32_t ecs_count_w_filter(
  */
 FLECS_API
 ecs_entity_t ecs_lookup(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name);
 
 /** Lookup a child entity by name.
@@ -1896,7 +1896,7 @@ ecs_entity_t ecs_lookup(
  */
 FLECS_API
 ecs_entity_t ecs_lookup_child(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *name);
 
@@ -1919,7 +1919,7 @@ ecs_entity_t ecs_lookup_child(
  */
 FLECS_API
 ecs_entity_t ecs_lookup_path_w_sep(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *path,
     const char *sep,
@@ -1959,7 +1959,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
  */
 FLECS_API
 ecs_entity_t ecs_lookup_symbol(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name);
 
 /* Add alias for entity to global scope */
@@ -1996,7 +1996,7 @@ void ecs_use(
  */
 FLECS_API
 char* ecs_get_path_w_sep(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child,
     ecs_entity_t component,
@@ -2136,7 +2136,7 @@ ecs_entity_t ecs_add_path_w_sep(
  */
 FLECS_API
 int32_t ecs_get_child_count(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Return a scope iterator.
@@ -2202,7 +2202,7 @@ ecs_entity_t ecs_set_scope(
  */
 FLECS_API
 ecs_entity_t ecs_get_scope(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Set a name prefix for newly created entities.
  * This is a utility that lets C modules use prefixed names for C types and
@@ -2891,7 +2891,7 @@ void ecs_set_stages(
  */
 FLECS_API
 int32_t ecs_get_stage_count(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Get stage-specific world pointer.
  * Flecs threads can safely invoke the API as long as they have a private 
@@ -2910,20 +2910,7 @@ int32_t ecs_get_stage_count(
  */
 FLECS_API
 ecs_world_t* ecs_get_stage(
-    ecs_world_t *world,
-    int32_t stage_id);
-
-/** Flush all deferred commands in stage to the world.
- * This operation inserts all deferred commands from a stage into the world.
- * Note that this operation is not thread safe. The regular world object must
- * be provided to this function.
- *
- * @param world The world.
- * @param stage_id The stage to flush.
- */
-FLECS_API
-void ecs_stage_flush(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     int32_t stage_id);
 
 /** @} */
@@ -2968,7 +2955,7 @@ ecs_table_t* ecs_table_from_type(
  */
 FLECS_API
 ecs_type_t ecs_table_get_type(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** Insert record into table.
  * This will create a new record for the table, which inserts a value for each
@@ -3010,7 +2997,7 @@ ecs_record_t ecs_table_insert(
  */
 FLECS_API
 int32_t ecs_table_count(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** @} */
 

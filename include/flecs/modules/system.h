@@ -246,7 +246,7 @@ void ecs_set_system_status_action(
  */
 FLECS_API
 ecs_query_t* ecs_get_query(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,19 +264,19 @@ typedef struct ecs_dbg_system_t {
 
 FLECS_API
 int ecs_dbg_system(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system,
     ecs_dbg_system_t *dbg_out);
 
 FLECS_API
 ecs_table_t* ecs_dbg_get_active_table(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_dbg_system_t *dbg,
     int32_t index);
 
 FLECS_API
 ecs_table_t* ecs_dbg_get_inactive_table(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_dbg_system_t *dbg,
     int32_t index);
 
@@ -288,7 +288,7 @@ ecs_type_t ecs_dbg_get_column_type(
 
 FLECS_API
 bool ecs_dbg_match_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t system,
     ecs_match_failure_t *failure_info_out);

@@ -2,8 +2,8 @@
 
 /* -- Private functions -- */
 
-ecs_world_t* ecs_get_world(
-    ecs_world_t *world)
+const ecs_world_t* ecs_get_world(
+    const ecs_world_t *world)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -12,6 +12,24 @@ ecs_world_t* ecs_get_world(
     } else {
         return ((ecs_stage_t*)world)->world;
     }
+}
+
+const ecs_stage_t* ecs_stage_from_readonly_world(
+    const ecs_world_t *world)
+{
+    ecs_assert(world->magic == ECS_WORLD_MAGIC ||
+               world->magic == ECS_STAGE_MAGIC,
+               ECS_INTERNAL_ERROR,
+               NULL);
+
+    if (world->magic == ECS_WORLD_MAGIC) {
+        return &world->stage;
+
+    } else if (world->magic == ECS_STAGE_MAGIC) {
+        return (ecs_stage_t*)world;
+    }
+    
+    return NULL;    
 }
 
 ecs_stage_t *ecs_stage_from_world(
@@ -1005,7 +1023,7 @@ void ecs_frame_end(
 }
 
 const ecs_world_info_t* ecs_get_world_info(
-    ecs_world_t *world)
+    const ecs_world_t *world)
 {
     world = ecs_get_world(world);
     return &world->stats;

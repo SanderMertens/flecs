@@ -559,7 +559,7 @@ void ecs_set_pipeline(
 }
 
 ecs_entity_t ecs_get_pipeline(
-    ecs_world_t *world)
+    const ecs_world_t *world)
 {
     return world->pipeline;
 }

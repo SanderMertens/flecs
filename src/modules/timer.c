@@ -112,13 +112,13 @@ ecs_entity_t ecs_set_timeout(
 }
 
 FLECS_FLOAT ecs_get_timeout(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t timer)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(timer != 0, ECS_INVALID_PARAMETER, NULL);
 
-    EcsTimer *value = ecs_get_mut(world, timer, EcsTimer, NULL);
+    const EcsTimer *value = ecs_get(world, timer, EcsTimer);
     if (value) {
         return value->timeout;
     } else {
@@ -147,7 +147,7 @@ ecs_entity_t ecs_set_interval(
 }
 
 FLECS_FLOAT ecs_get_interval(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t timer)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -156,7 +156,7 @@ FLECS_FLOAT ecs_get_interval(
         return 0;
     }
 
-    EcsTimer *value = ecs_get_mut(world, timer, EcsTimer, NULL);
+    const EcsTimer *value = ecs_get(world, timer, EcsTimer);
     if (value) {
         return value->timeout;
     } else {

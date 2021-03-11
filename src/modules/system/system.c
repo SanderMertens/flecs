@@ -513,7 +513,7 @@ void ecs_run_monitor(
 }
 
 ecs_query_t* ecs_get_query(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system)
 {
     const EcsQuery *q = ecs_get(world, system, EcsQuery);

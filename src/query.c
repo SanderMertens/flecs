@@ -13,7 +13,7 @@ void activate_table(
 
 static
 ecs_entity_t components_contains(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t table_type,
     ecs_type_t type,
     ecs_entity_t *entity_out,
@@ -597,7 +597,7 @@ int32_t type_trait_count(
  * or else the table won't match. */
 static
 int32_t count_traits(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     ecs_type_t type)
 {
     ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
@@ -872,7 +872,7 @@ add_trait:
 
 static
 bool match_column(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_sig_from_kind_t from_kind,
     ecs_entity_t component,
@@ -907,9 +907,9 @@ bool match_column(
 
 /* Match table with system */
 bool ecs_query_match(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_query_t *query,
     ecs_match_failure_t *failure_info)
 {
     /* Prevent having to add if not null checks everywhere */

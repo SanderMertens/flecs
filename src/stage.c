@@ -479,14 +479,14 @@ void ecs_set_stages(
 }
 
 int32_t ecs_get_stage_count(
-    ecs_world_t *world)
+    const ecs_world_t *world)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
     return ecs_vector_count(world->worker_stages);
 }
 
 ecs_world_t* ecs_get_stage(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     int32_t stage_id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);

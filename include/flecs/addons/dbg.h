@@ -36,7 +36,7 @@ typedef struct ecs_dbg_table_t {
 
 FLECS_API
 void ecs_dbg_entity(
-    ecs_world_t *world, 
+    const ecs_world_t *world, 
     ecs_entity_t entity, 
     ecs_dbg_entity_t *dbg_out);
 
@@ -47,14 +47,14 @@ ecs_table_t *ecs_dbg_find_table(
 
 FLECS_API
 ecs_table_t *ecs_dbg_get_table(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     int32_t index);
 
 FLECS_API
 bool ecs_dbg_filter_table(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_filter_t *filter);
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_filter_t *filter);
 
 FLECS_API
 void ecs_dbg_table(
