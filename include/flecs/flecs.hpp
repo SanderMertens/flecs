@@ -3884,7 +3884,7 @@ ecs_entity_t do_import(world& world) {
 
 template <typename T>
 flecs::entity import(world& world) {
-    const char *symbol = _::name_helper<T>::name();
+    const char *symbol = _::symbol_helper<T>::symbol();
 
     ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
     

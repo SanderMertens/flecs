@@ -7294,6 +7294,7 @@ void ecs_snapshot_free(
 
 #endif
 #endif
+#ifdef FLECS_DIRECT_ACCESS
 /**
  * @file direct_access.h
  * @brief Low-level access to underlying data structures for best performance.
@@ -7304,14 +7305,14 @@ void ecs_snapshot_free(
  * API in an incorrect way can lead to a corrupted datastore.
  */
 
+#ifdef FLECS_DIRECT_ACCESS
+
 #ifndef FLECS_DIRECT_ACCESS_H_
 #define FLECS_DIRECT_ACCESS_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifdef FLECS_DIRECT_ACCESS
 
 /** Find the index of a column in a table.
  * Table columns are stored in the order of their respective component ids. As
@@ -7614,12 +7615,13 @@ void ecs_record_move_to(
     void *value,
     int32_t count);
 
-#endif
-
 #ifdef __cplusplus
 }
 #endif
 
+#endif
+
+#endif
 #endif
 #ifdef FLECS_STATS
 /**
@@ -7635,6 +7637,8 @@ void ecs_record_move_to(
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
+#ifdef FLECS_SYSTEM
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -11703,7 +11707,7 @@ ecs_entity_t do_import(world& world) {
 
 template <typename T>
 flecs::entity import(world& world) {
-    const char *symbol = _::name_helper<T>::name();
+    const char *symbol = _::symbol_helper<T>::symbol();
 
     ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
     

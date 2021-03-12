@@ -59,6 +59,20 @@ namespace ns {
     struct FooComp {
         int value;
     };
+
+    struct namespace_module {
+        namespace_module(flecs::world& ecs) {
+            ecs.module<namespace_module>();
+
+            ecs.component<FooComp>();
+
+            import_count ++;
+        }
+
+        static int import_count;
+    };
+
+    int namespace_module::import_count = 0;
 }
 
 void World_multi_world_component() {
@@ -230,6 +244,23 @@ void World_reimport_module_new_world() {
         test_assert(e1.id() == e2.id());
     }
 }
+
+void World_reimport_namespaced_module() {
+    flecs::world ecs;
+
+    test_int(ns::namespace_module::import_count, 0);
+
+    // Import first time, should call module constructor.
+    ecs.import<ns::namespace_module>();
+
+    test_int(ns::namespace_module::import_count, 1);
+
+    // Import second time, should not call constructor. 
+    ecs.import<ns::namespace_module>();
+
+    test_int(ns::namespace_module::import_count, 1);
+}
+
 
 void World_c_interop_module() {
     flecs::world w;
