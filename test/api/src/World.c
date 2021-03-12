@@ -648,6 +648,8 @@ void World_measure_time() {
 }
 
 void World_control_fps() {
+    test_is_flaky();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -705,6 +707,8 @@ void BusySystem(ecs_iter_t *it) {
 }
 
 void World_control_fps_busy_system() {
+    test_is_flaky();
+
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, BusySystem, EcsOnUpdate, 0);
@@ -735,6 +739,8 @@ void World_control_fps_busy_system() {
 }
 
 void World_control_fps_busy_app() {
+    test_is_flaky();
+
     ecs_world_t *world = ecs_init();
 
     double start, now = 0;
@@ -765,6 +771,8 @@ void World_control_fps_busy_app() {
 }
 
 void World_measure_fps_vs_actual() {
+    test_is_flaky();
+
     ecs_world_t *world = ecs_init();
 
     ecs_set_target_fps(world, 60);
@@ -784,6 +792,8 @@ void World_measure_fps_vs_actual() {
 }
 
 void World_measure_delta_time_vs_actual() {
+    test_is_flaky();
+
     ecs_world_t *world = ecs_init();
 
     ecs_set_target_fps(world, 60);
@@ -814,6 +824,8 @@ void RandomSystem(ecs_iter_t *it) {
 }
 
 void World_control_fps_random_system() {
+    test_is_flaky();
+
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, RandomSystem, EcsOnUpdate, 0);
@@ -844,6 +856,8 @@ void World_control_fps_random_system() {
 }
 
 void World_control_fps_random_app() {
+    test_is_flaky();
+    
     ecs_world_t *world = ecs_init();
 
     double start, now = 0;

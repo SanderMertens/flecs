@@ -115,7 +115,6 @@ typedef struct ecs_world_info_t {
     FLECS_FLOAT merge_time_total;    /**< Total time spent in merges */
     FLECS_FLOAT world_time_total;    /**< Time elapsed in simulation */
     FLECS_FLOAT world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
-    FLECS_FLOAT sleep_err;           /**< Measured sleep error */
     
     int32_t frame_count_total;  /**< Total number of frames */
     int32_t merge_count_total;  /**< Total number of merges */
