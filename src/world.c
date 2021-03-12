@@ -743,25 +743,10 @@ bool ecs_enable_range_check(
     return old_value;
 }
 
-int32_t ecs_get_stage_index(
-    const ecs_world_t *world)
-{
-    if (world->magic == ECS_STAGE_MAGIC) {
-        ecs_stage_t *stage = (ecs_stage_t*)world;
-
-        /* Index 0 is reserved for main stage */
-        return stage->id - 1;
-    } else if (world->magic == ECS_WORLD_MAGIC) {
-        return 0;
-    } else {
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-    }
-}
-
 int32_t ecs_get_thread_index(
     const ecs_world_t *world)
 {
-    return ecs_get_stage_index(world);
+    return ecs_get_stage_id(world);
 }
 
 int32_t ecs_get_threads(

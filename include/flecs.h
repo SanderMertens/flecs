@@ -901,7 +901,7 @@ FLECS_API
 int32_t ecs_get_threads(
     ecs_world_t *world);
 
-/** Get current thread index (DEPRECATED: use ecs_get_stage_index) */
+/** Get current thread index (DEPRECATED: use ecs_get_stage_id) */
 FLECS_API
 int32_t ecs_get_thread_index(
     const ecs_world_t *world);
@@ -2797,21 +2797,54 @@ int32_t ecs_table_component_index(
  * @{
  */
 
-/** Begin frame. */
+/** Begin frame. 
+ * When an application does not use ecs_progress to control the main loop, it
+ * can still use Flecs features such as FPS limiting and time measurements. This
+ * operation needs to be invoked whenever a new frame is about to get processed.
+ *
+ * Calls to ecs_frame_begin must always be followed by ecs_frame_end.
+ *
+ * The function accepts a delta_time parameter, which will get passed to 
+ * systems. This value is also used to compute the amount of time the function
+ * needs to sleep to ensure it does not exceed the target_fps, when it is set.
+ * When 0 is provided for delta_time, the time will be measured.
+ *
+ * This function should only be ran from the main thread.
+ *
+ * @param world The world.
+ * @param delta_time Time elapsed since the last frame.
+ * @return The provided delta_time, or measured time if 0 was provided.
+ */
 FLECS_API
 FLECS_FLOAT ecs_frame_begin(
     ecs_world_t *world,
     FLECS_FLOAT delta_time);
 
-/** End frame. */
+/** End frame. 
+ * This operation must be called at the end of the frame, and always after
+ * ecs_frame_begin.
+ *
+ * @param world The world.
+ */
 FLECS_API
 void ecs_frame_end(
     ecs_world_t *world);
 
 /** Begin staging.
+ * When an application does not use ecs_progress to control the main loop, it
+ * can still use Flecs features such as the defer queue. When an application
+ * needs to stage changes, it needs to call this function after ecs_frame_begin.
+ * A call to ecs_staging_begin must be followed by a call to ecs_staging_end.
+ * 
  * When staging is enabled, modifications to entities are stored to a stage.
  * This ensures that arrays are not modified while iterating. Modifications are
  * merged back to the "main stage" when ecs_staging_end is invoked.
+ *
+ * While the world is in staging mode, no structural changes (add/remove/...)
+ * can be made to the world itself. Operations must be executed on a stage
+ * instead (see ecs_get_stage).
+ *
+ * This function should only be ran from the main thread.
  *
  * @param world The world
  * @return Whether world is currently staged.
@@ -2821,8 +2854,11 @@ bool ecs_staging_begin(
     ecs_world_t *world);
 
 /** End staging.
- * If any data was staged, this operation will merge that data back to the main
- * stage.
+ * Leaves staging mode. After this operation the world may be directly mutated
+ * again. By default this operation also merges data back into the world, unless
+ * automerging was disabled explicitly.
+ *
+ * This function should only be ran from the main thread.
  *
  * @param world The world
  */
@@ -2833,6 +2869,8 @@ void ecs_staging_end(
 /** Merge individual stage.
  * Use this function to merge a stage when automerging for the stage has been
  * disabled. 
+ *
+ * This function should only be ran from the main thread.
  *
  * @param stage The stage.
  */
@@ -2894,12 +2932,12 @@ void ecs_set_automerge(
  * having N stages allows for having a defer queue per thread. 
  * 
  * @param world The world.
- * @param threads The number of threads.
+ * @param stages The number of stages.
  */
 FLECS_API
 void ecs_set_stages(
     ecs_world_t *world,
-    int32_t threads);
+    int32_t stages);
 
 /** Get number of configured stages.
  * Return number of stages set by ecs_set_stages.
@@ -2911,9 +2949,15 @@ FLECS_API
 int32_t ecs_get_stage_count(
     const ecs_world_t *world);
 
-/** Get current stage index */
+/** Get current stage id.
+ * The stage id can be used by an application to learn about which stage it is
+ * using, which typically corresponds with the worker thread id.
+ *
+ * @param world The world.
+ * @return The stage id.
+ */
 FLECS_API
-int32_t ecs_get_stage_index(
+int32_t ecs_get_stage_id(
     const ecs_world_t *world);
 
 /** Get stage-specific world pointer.

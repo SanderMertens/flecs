@@ -1631,7 +1631,7 @@ ecs_entity_t ecs_new_id(
     ecs_entity_t entity;
 
     int32_t stage_count = ecs_get_stage_count(world);
-    if (stage_count > 1) {
+    if (ecs_os_has_threading() && stage_count > 1) {
         /* Can't atomically increase number above max int */
         ecs_assert(
             world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
@@ -1679,7 +1679,7 @@ ecs_entity_t ecs_new_w_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = ecs_stage_from_world(&world);    
-    ecs_entity_t entity = ecs_new_id(world);  
+    ecs_entity_t entity = ecs_new_id(world);
 
     if (type || world->stage.scope) {
         ecs_entities_t to_add = ecs_type_to_entities(type);

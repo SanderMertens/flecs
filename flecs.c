@@ -5481,7 +5481,7 @@ ecs_entity_t ecs_new_id(
     ecs_entity_t entity;
 
     int32_t stage_count = ecs_get_stage_count(world);
-    if (stage_count > 1) {
+    if (ecs_os_has_threading() && stage_count > 1) {
         /* Can't atomically increase number above max int */
         ecs_assert(
             world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
@@ -5529,7 +5529,7 @@ ecs_entity_t ecs_new_w_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = ecs_stage_from_world(&world);    
-    ecs_entity_t entity = ecs_new_id(world);  
+    ecs_entity_t entity = ecs_new_id(world);
 
     if (type || world->stage.scope) {
         ecs_entities_t to_add = ecs_type_to_entities(type);
@@ -7364,8 +7364,25 @@ void ecs_set_stages(
 int32_t ecs_get_stage_count(
     const ecs_world_t *world)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);
     return ecs_vector_count(world->worker_stages);
+}
+
+int32_t ecs_get_stage_id(
+    const ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (world->magic == ECS_STAGE_MAGIC) {
+        ecs_stage_t *stage = (ecs_stage_t*)world;
+
+        /* Index 0 is reserved for main stage */
+        return stage->id - 1;
+    } else if (world->magic == ECS_WORLD_MAGIC) {
+        return 0;
+    } else {
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    }
 }
 
 ecs_world_t* ecs_get_stage(
@@ -12173,25 +12190,10 @@ bool ecs_enable_range_check(
     return old_value;
 }
 
-int32_t ecs_get_stage_index(
-    const ecs_world_t *world)
-{
-    if (world->magic == ECS_STAGE_MAGIC) {
-        ecs_stage_t *stage = (ecs_stage_t*)world;
-
-        /* Index 0 is reserved for main stage */
-        return stage->id - 1;
-    } else if (world->magic == ECS_WORLD_MAGIC) {
-        return 0;
-    } else {
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-    }
-}
-
 int32_t ecs_get_thread_index(
     const ecs_world_t *world)
 {
-    return ecs_get_stage_index(world);
+    return ecs_get_stage_id(world);
 }
 
 int32_t ecs_get_threads(
@@ -21078,7 +21080,7 @@ void ecs_pipeline_progress(
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
-    int32_t stage_index = ecs_get_stage_index(stage->thread_ctx);
+    int32_t stage_index = ecs_get_stage_id(stage->thread_ctx);
     int32_t stage_count = ecs_get_stage_count(world);
 
     ecs_worker_begin(stage->thread_ctx);
