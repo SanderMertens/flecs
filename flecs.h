@@ -12615,8 +12615,7 @@ public:
         std::int32_t stage_count, 
         FLECS_FLOAT delta_time, 
         void *param)
-        : m_world(world)
-        , m_stage(world)
+        : m_stage(world)
         , m_id(id)
         , m_delta_time(delta_time)
         , m_param(param)
@@ -12658,7 +12657,6 @@ public:
         }
     }
 private:
-    world_t *m_world;
     world_t *m_stage;
     entity_t m_id;
     FLECS_FLOAT m_delta_time;
