@@ -289,6 +289,7 @@
                 "reimport",
                 "reimport_module_after_reset",
                 "reimport_module_new_world",
+                "reimport_namespaced_module",
                 "c_interop_module",
                 "c_interop_after_reset",
                 "implicit_register_w_new_world"

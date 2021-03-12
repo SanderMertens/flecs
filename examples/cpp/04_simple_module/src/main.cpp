@@ -6,12 +6,12 @@ int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
     /* Import module containing Position, Velocity and Move */
-    ecs.import<SimpleModule>();
+    ecs.import<simple_module>();
 
     /* Create entity with imported components */
     ecs.entity("MyEntity")
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 1});
+        .set<simple_module::Position>({10, 20})
+        .set<simple_module::Velocity>({1, 1});
 
     ecs.set_target_fps(1);
 
