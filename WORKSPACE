@@ -4,6 +4,7 @@ new_git_repository(
     name = "bake",
     remote = "git@github.com:SanderMertens/bake.git",
     commit = "cfc90745f9daa7b7fba80f229af18cdd5029b066",
+    shallow_since = "1614835160 -0800",
 
     build_file_content = """
 cc_library(
