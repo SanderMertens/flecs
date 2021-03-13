@@ -6965,14 +6965,25 @@ void merge_stages(
         ecs_os_get_time(&t_start);
     }
 
-    /* Merge stages. Only merge if the stage has auto_merging turned on, or if
-     * this is a forced merge (like when ecs_merge is called) */
-    int32_t i, count = ecs_get_stage_count(world);
-    for (i = 0; i < count; i ++) {
-        ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
-        ecs_assert(stage->magic == ECS_STAGE_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    if (world->magic == ECS_STAGE_MAGIC) {
+        ecs_stage_t *stage = (ecs_stage_t*)world;
+
+        /* Check for consistency if force_merge is enabled. In practice this
+         * function will never get called with force_merge disabled for just
+         * a single stage. */
         if (force_merge || stage->auto_merge) {
-            ecs_defer_end((ecs_world_t*)stage);
+            ecs_defer_end(world);
+        }
+    } else {
+        /* Merge stages. Only merge if the stage has auto_merging turned on, or 
+         * if this is a forced merge (like when ecs_merge is called) */
+        int32_t i, count = ecs_get_stage_count(world);
+        for (i = 0; i < count; i ++) {
+            ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
+            ecs_assert(stage->magic == ECS_STAGE_MAGIC, ECS_INTERNAL_ERROR, NULL);
+            if (force_merge || stage->auto_merge) {
+                ecs_defer_end((ecs_world_t*)stage);
+            }
         }
     }
 
@@ -7306,6 +7317,11 @@ void ecs_stage_deinit(
     ecs_stage_t *stage)
 {
     (void)world;
+
+    /* Set magic to 0 so that accessing the stage after deinitializing it will
+     * throw an assert. */
+    stage->magic = 0;
+
     ecs_vector_free(stage->defer_queue);
 }
 
@@ -7326,6 +7342,8 @@ void ecs_set_stages(
             /* If stage contains a thread handle, ecs_set_threads was used to
              * create the stages. ecs_set_threads and ecs_set_stages should not
              * be mixed. */
+            ecs_assert(stages[i].magic == ECS_STAGE_MAGIC, 
+                ECS_INTERNAL_ERROR, NULL);
             ecs_assert(stages[i].thread == 0, ECS_INVALID_OPERATION, NULL);
             ecs_stage_deinit(world, &stages[i]);
         }
@@ -7398,16 +7416,6 @@ ecs_world_t* ecs_get_stage(
         world->worker_stages, ecs_stage_t, stage_id);
 }
 
-void ecs_stage_merge(
-    ecs_world_t *stage)
-{
-    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(stage->magic != ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
-    /* Merge single stage */
-    ecs_defer_end(stage);
-}
-
 bool ecs_staging_begin(
     ecs_world_t *world)
 {
@@ -7445,7 +7453,8 @@ void ecs_merge(
     ecs_world_t *world)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC || 
+               world->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
     do_manual_merge(world);
 }
 

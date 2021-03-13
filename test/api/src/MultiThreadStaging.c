@@ -450,7 +450,7 @@ void MultiThreadStaging_custom_thread_partial_manual_merge() {
     test_int(p1->x, 10);
     test_int(p1->y, 20);    
 
-    ecs_stage_merge(ctx_2);
+    ecs_merge(ctx_2);
 
     test_assert(ecs_has(world, e1, Position));
     test_assert(ecs_has(world, e2, Position));
