@@ -10,15 +10,19 @@ typedef struct {
     float y;
 } Velocity;
 
-/* Implement a simple move system */
 void Move(ecs_iter_t *it) {
-    /* Get the two columns from the system signature */
     Position *p = ecs_column(it, Position, 1);
     Velocity *v = ecs_column(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
+
+        /* Print the id of the current stage. This allows us to see which
+         * entities are processed by which thread. */
+        printf("Stage %d: %u\n", 
+            ecs_get_stage_id(it->world), 
+            (uint32_t)it->entities[i]);
     }
 }
 
@@ -41,7 +45,7 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     /* Create a bunch of entities */
-    for (int i = 0; i < 1000; i ++) {
+    for (int i = 0; i < 10; i ++) {
         ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
         ecs_set(world, e, Velocity, {1, 1});
     }
@@ -53,7 +57,7 @@ int main(int argc, char *argv[]) {
      * divide entities equally between the systems. */
     ecs_set_threads(world, 2);
 
-    /* Run systems. The call will block until all threads have finished. */
+    /* Run systems. */
     while (ecs_progress(world, 0)) { }
 
     /* Cleanup */
