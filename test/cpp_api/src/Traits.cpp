@@ -155,7 +155,7 @@ void Traits_system_1_trait_instance() {
     int trait_value = 0;
 
     flecs::system<>(world, nullptr, "TRAIT | Trait")
-        .action([&](flecs::iter it) {
+        .iter([&](flecs::iter it) {
             flecs::column<Trait> tr(it, 1);
             invoke_count ++;            
             for (auto i : it) {
@@ -187,7 +187,7 @@ void Traits_system_2_trait_instances() {
     int trait_value = 0;
 
     flecs::system<>(world, nullptr, "TRAIT | Trait")
-        .action([&](flecs::iter it) {
+        .iter([&](flecs::iter it) {
             flecs::column<Trait> tr(it, 1);
             invoke_count ++;            
             for (auto i : it) {

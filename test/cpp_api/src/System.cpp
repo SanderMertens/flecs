@@ -11,7 +11,7 @@ void System_action() {
         .set<Velocity>({1, 2});
 
     flecs::system<Position, Velocity>(world)
-        .action([](flecs::iter&it, flecs::column<Position> p, flecs::column<Velocity> v) {
+        .iter([](flecs::iter&it, Position *p, Velocity *v) {
             for (auto i : it) {
                 p[i].x += v[i].x;
                 p[i].y += v[i].y;
@@ -40,7 +40,7 @@ void System_action_const() {
         .set<Velocity>({1, 2});
 
     flecs::system<Position, const Velocity>(world)
-        .action([](flecs::iter&it, flecs::column<Position> p, flecs::column<const Velocity> v) {
+        .iter([](flecs::iter&it, Position *p, const Velocity* v) {
             for (auto i : it) {
                 p[i].x += v[i].x;
                 p[i].y += v[i].y;
@@ -76,8 +76,8 @@ void System_action_shared() {
         .set<Velocity>({3, 4});
 
     flecs::system<Position>(world).signature("ANY:Velocity")
-        .action([](flecs::iter&it, flecs::column<Position> p) {
-            flecs::column<const Velocity> v(it, 2);
+        .iter([](flecs::iter&it, Position *p) {
+            auto v = it.column<const Velocity>(2);
 
             if (v.is_shared()) {
                 for (auto i : it) {
@@ -127,8 +127,8 @@ void System_action_optional() {
         .set<Position>({70, 80});
 
     flecs::system<Position, Velocity*, Mass*>(world)
-        .action([](flecs::iter& it, flecs::column<Position> p, flecs::column<Velocity> v, flecs::column<Mass> m) {
-        if (v.is_set() && m.is_set()) {
+        .iter([](flecs::iter& it, Position *p, Velocity *v, Mass *m) {
+        if (it.is_set(2) && it.is_set(3)) {
             for (auto i : it) {
                 p[i].x += v[i].x * m[i].value;
                 p[i].y += v[i].y * m[i].value;
@@ -305,7 +305,7 @@ void System_signature() {
         .set<Velocity>({1, 2});
 
     flecs::system<>(world).signature("Position, Velocity")
-        .action([](flecs::iter&it) {
+        .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<Velocity> v(it, 2);
 
@@ -337,7 +337,7 @@ void System_signature_const() {
         .set<Velocity>({1, 2});
 
     flecs::system<>(world).signature("Position, [in] Velocity")
-        .action([](flecs::iter&it) {
+        .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<const Velocity> v(it, 2);
 
@@ -376,7 +376,7 @@ void System_signature_shared() {
         .set<Velocity>({3, 4});
 
     flecs::system<>(world).signature("Position, [in] ANY:Velocity")
-        .action([](flecs::iter&it) {
+        .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<const Velocity> v(it, 2);
 
@@ -428,7 +428,7 @@ void System_signature_optional() {
         .set<Position>({70, 80});
 
     flecs::system<>(world).signature("Position, ?Velocity, ?Mass")
-        .action([](flecs::iter& it) {
+        .iter([](flecs::iter& it) {
             flecs::column<Position> p(it, 1);
             flecs::column<Velocity> v(it, 2);
             flecs::column<Mass> m(it, 3);
@@ -473,11 +473,11 @@ void System_copy_name_on_create() {
     strcpy(name, "Hello");
 
     auto system_1 = flecs::system<Position>(world, name)
-        .action([](flecs::iter&it, flecs::column<Position> p) {});
+        .iter([](flecs::iter&it, Position *p) {});
 
     strcpy(name, "World");
     auto system_2 = flecs::system<Position>(world, name)
-        .action([](flecs::iter&it, flecs::column<Position> p) {});
+        .iter([](flecs::iter&it, Position *p) {});
 
     test_assert(system_1.id() != system_2.id());
 }
@@ -486,7 +486,7 @@ void System_nested_system() {
     flecs::world world;
 
     auto system_1 = flecs::system<Position>(world, "foo::bar")
-        .action([](flecs::iter&it, flecs::column<Position> p) {});
+        .iter([](flecs::iter&it, Position *p) {});
 
     test_str(system_1.name().c_str(), "bar");
 
@@ -505,7 +505,7 @@ void System_empty_signature() {
     int count = 0;
 
     flecs::system<>(world)
-        .action([&](flecs::iter it) {
+        .iter([&](flecs::iter it) {
             count ++;
         });
 
@@ -522,7 +522,7 @@ void System_action_tag() {
     int invoked = 0;
 
     world.system<MyTag>()
-        .action([&](flecs::iter it, flecs::column<MyTag>) {
+        .iter([&](flecs::iter it, MyTag*) {
             invoked ++;
         });
 

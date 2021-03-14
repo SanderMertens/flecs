@@ -20,10 +20,10 @@ int main(int argc, char *argv[]) {
     flecs::component<Position>(world, "Position");
     flecs::component<Velocity>(world, "Velocity");
 
-    flecs::system<Position, Velocity>(world)
-        .action([](const flecs::iter& it, 
-            flecs::column<Position> p, 
-            flecs::column<Velocity> v) 
+    flecs::system<Position, const Velocity>(world)
+        .iter([](const flecs::iter& it, 
+            Position *p, 
+            const Velocity *v) 
         {    
             for (auto row : it) {
                 p[row].x += v[row].x;

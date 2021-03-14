@@ -8989,8 +8989,9 @@ public:
      *
      * @return Unique index for current thread.
      */
+    ECS_DEPRECATED("use get_stage_id")
     std::int32_t get_thread_index() const {
-        return ecs_get_thread_index(m_world);
+        return ecs_get_stage_id(m_world);
     }
 
     /** Set target FPS
@@ -12547,8 +12548,8 @@ public:
         }
     }
 
-    ECS_DEPRECATED("use each or iter")
     template <typename Func>
+    ECS_DEPRECATED("use each or iter")
     void action(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
@@ -12904,8 +12905,8 @@ public:
         return system_runner_fluent(m_world, m_id, stage_current, stage_count, delta_time, param);
     }    
 
-    ECS_DEPRECATED("use each or iter")
     template <typename Func>
+    ECS_DEPRECATED("use each or iter")
     system& action(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         using invoker_t = typename _::action_invoker<typename std::decay<Func>::type, Components...>;
