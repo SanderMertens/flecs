@@ -900,7 +900,8 @@ FLECS_API
 int32_t ecs_get_threads(
     ecs_world_t *world);
 
-/** Get current thread index (DEPRECATED: use ecs_get_stage_id) */
+/** Get current thread index */
+ECS_DEPRECATED("use ecs_get_stage_id")
 FLECS_API
 int32_t ecs_get_thread_index(
     const ecs_world_t *world);

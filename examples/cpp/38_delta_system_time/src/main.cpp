@@ -18,21 +18,21 @@ int main(int argc, char *argv[]) {
 
     ecs.system<>()
         .interval(0.5)
-        .action([](flecs::iter& it) {
+        .iter([](flecs::iter& it) {
             std::cout << "t = 0.5, time elampsed = " << it.delta_system_time() 
                       << std::endl;
         });
 
     ecs.system<>()
         .interval(1.0)
-        .action([](flecs::iter& it) {
+        .iter([](flecs::iter& it) {
             std::cout << "t = 1.0, time elampsed = " << it.delta_system_time() 
                       << std::endl;
         });
 
     ecs.system<>()
         .interval(2.0)
-        .action([](flecs::iter& it) {
+        .iter([](flecs::iter& it) {
             std::cout << "t = 2.0, time elampsed = " << it.delta_system_time() 
                       << std::endl;
         });

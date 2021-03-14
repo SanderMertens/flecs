@@ -161,6 +161,14 @@ typedef int32_t ecs_size_t;
 #define ECS_UNUSED
 #endif
 
+#if defined(__GNUC__)
+#define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#elif defined(_MSC_VER)
+#define ECS_DEPRECATED(msg) __declspec(deprecated(msg))
+#else
+#define ECS_DEPRECATED(msg)
+#endif
+
 #define ECS_ALIGN(size, alignment) (ecs_size_t)((((((size_t)size) - 1) / ((size_t)alignment)) + 1) * ((size_t)alignment))
 
 /* Simple utility for determining the max of two values */
@@ -3740,7 +3748,8 @@ FLECS_API
 int32_t ecs_get_threads(
     ecs_world_t *world);
 
-/** Get current thread index (DEPRECATED: use ecs_get_stage_id) */
+/** Get current thread index */
+ECS_DEPRECATED("use ecs_get_stage_id")
 FLECS_API
 int32_t ecs_get_thread_index(
     const ecs_world_t *world);
@@ -6542,6 +6551,9 @@ void ecs_reset_clock(
  * When using progress() this operation will be invoked automatically for the
  * default pipeline (either the builtin pipeline or the pipeline set with 
  * set_pipeline()). An application may run additional pipelines.
+ *
+ * Note: calling this function from an application currently only works in
+ * single threaded applications with a single stage.
  *
  * @param world The world.
  * @param pipeline The pipeline to run.
@@ -12535,7 +12547,7 @@ public:
         }
     }
 
-    /* DEPRECATED */
+    ECS_DEPRECATED("use each or iter")
     template <typename Func>
     void action(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
@@ -12778,7 +12790,7 @@ public:
         return ecs_get_interval(m_world, m_id);
     }
 
-    // DEPRECATED: use interval instead
+    ECS_DEPRECATED("use interval")
     system& period(FLECS_FLOAT period) {
         return this->interval(period);
     }
@@ -12892,7 +12904,7 @@ public:
         return system_runner_fluent(m_world, m_id, stage_current, stage_count, delta_time, param);
     }    
 
-    /* DEPRECATED. Use iter instead. */
+    ECS_DEPRECATED("use each or iter")
     template <typename Func>
     system& action(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);

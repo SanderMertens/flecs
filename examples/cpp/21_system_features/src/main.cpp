@@ -11,11 +11,11 @@ int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
     /* Create dummy systems */
-    auto SystemA = ecs.system<>("SystemA").action(Action);
-    auto SystemB = ecs.system<>("SystemB").action(Action);
-    auto SystemC = ecs.system<>("SystemC").action(Action);
-    auto SystemD = ecs.system<>("SystemD").action(Action);
-    auto SystemE = ecs.system<>("SystemE").action(Action);
+    auto SystemA = ecs.system<>("SystemA").iter(Action);
+    auto SystemB = ecs.system<>("SystemB").iter(Action);
+    auto SystemC = ecs.system<>("SystemC").iter(Action);
+    auto SystemD = ecs.system<>("SystemD").iter(Action);
+    auto SystemE = ecs.system<>("SystemE").iter(Action);
 
     /* Create two features, each with a set of systems. Features are regular
      * types, and the name feature is just a convention to indicate that a type

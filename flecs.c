@@ -9516,7 +9516,7 @@ typedef struct EcsPipelineQuery {
 int32_t ecs_pipeline_update(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    bool start_of_frame);
+    bool start_of_frame); 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Worker API
@@ -21005,8 +21005,6 @@ int32_t ecs_pipeline_update(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_assert(pipeline != 0, ECS_INTERNAL_ERROR, NULL);
-
-    printf("update pipeline (%s)\n", ecs_get_name(world, pipeline));
 
     /* If any entity mutations happened that could have affected query matching
      * notify appropriate queries so caches are up to date. This includes the

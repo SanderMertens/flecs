@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 
     // Task that is executed every 2 seconds
     ecs.system<>()
-        .period(2.0)
+        .interval(2.0)
         .iter([](flecs::iter&) {
             std::cout << "Task executed every 2 seconds" << std::endl;
         });
