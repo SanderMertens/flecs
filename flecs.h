@@ -12905,14 +12905,19 @@ public:
         return system_runner_fluent(m_world, m_id, stage_current, stage_count, delta_time, param);
     }    
 
+    // put using outside of action so we can still use it without it being
+    // flagged as deprecated.
+    template <typename Func>
+    using action_invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
+
     template <typename Func>
     ECS_DEPRECATED("use each or iter")
     system& action(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        using invoker_t = typename _::action_invoker<typename std::decay<Func>::type, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));        
 
-        create_system(invoker_t::run, false);
+        auto ctx = FLECS_NEW(action_invoker_t<Func>)(std::forward<Func>(func));        
+
+        create_system(action_invoker_t<Func>::run, false);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
