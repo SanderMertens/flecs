@@ -324,18 +324,18 @@ ecs_entity_t ecs_new_component(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
-    bool in_progress = world->in_progress;
+    bool is_readonly = world->is_readonly;
     bool found = false;
 
     /* If world is in progress component may be registered, but only when not
      * in multithreading mode. */
-    if (in_progress) {
+    if (is_readonly) {
         ecs_assert(ecs_get_stage_count(world) == 0, 
             ECS_INVALID_WHILE_ITERATING, NULL);
 
         /* Component creation should not be deferred */
         ecs_defer_end(world);
-        world->in_progress = false;
+        world->is_readonly = false;
     }
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
@@ -375,8 +375,8 @@ ecs_entity_t ecs_new_component(
         world->stats.last_component_id = e + 1;
     }
 
-    if (in_progress) {
-        world->in_progress = true;
+    if (is_readonly) {
+        world->is_readonly = true;
         ecs_defer_begin(world);
     }
 

@@ -270,7 +270,7 @@ void ecs_run_component_trigger(
     int32_t row,
     int32_t count)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     if (table->flags & EcsTableIsPrefab) {
         return;
@@ -1149,7 +1149,7 @@ void commit(
     ecs_entities_t * added,
     ecs_entities_t * removed)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
     
     ecs_table_t *src_table = info->table;
     if (src_table == dst_table) {
@@ -1650,7 +1650,7 @@ ecs_entity_t ecs_new_id(
 ecs_entity_t ecs_new_component_id(
     ecs_world_t *world)
 {
-    if (world->in_progress) {
+    if (world->is_readonly) {
         /* Can't issue new comp id while iterating when in multithreaded mode */
         ecs_assert(ecs_get_stage_count(world) <= 1, 
             ECS_INVALID_WHILE_ITERATING, NULL);

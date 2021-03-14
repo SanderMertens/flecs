@@ -1090,7 +1090,7 @@ int32_t grow_data(
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);
 
-    if (!world->in_progress && !cur_count) {
+    if (!world->is_readonly && !cur_count) {
         ecs_table_activate(world, table, 0, true);
     }
 
@@ -1162,7 +1162,7 @@ int32_t ecs_table_append(
 
     /* If this is the first entity in this table, signal queries so that the
      * table moves from an inactive table to an active table. */
-    if (!world->in_progress && !count) {
+    if (!world->is_readonly && !count) {
         ecs_table_activate(world, table, 0, true);
     } 
 

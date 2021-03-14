@@ -2356,7 +2356,7 @@ ecs_iter_t ecs_query_iter_page(
     
     sort_tables(world, query);
 
-    if (!world->in_progress && query->flags & EcsQueryHasRefs) {
+    if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
         ecs_eval_component_monitors(world);
     }
 

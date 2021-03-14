@@ -544,13 +544,13 @@ bool ecs_staging_begin(
         ecs_defer_begin(ecs_get_stage(world, i));
     }
 
-    bool in_progress = world->in_progress;
+    bool is_readonly = world->is_readonly;
 
     /* From this point on, the world is "locked" for mutations, and it is only 
      * allowed to enqueue commands from stages */
-    world->in_progress = true;
+    world->is_readonly = true;
 
-    return in_progress;
+    return is_readonly;
 }
 
 void ecs_staging_end(
@@ -558,10 +558,10 @@ void ecs_staging_end(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->in_progress == true, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world->is_readonly == true, ECS_INVALID_OPERATION, NULL);
 
     /* After this it is safe again to mutate the world directly */
-    world->in_progress = false;
+    world->is_readonly = false;
 
     do_auto_merge(world);
 }

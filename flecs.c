@@ -613,7 +613,7 @@ struct ecs_world_t {
     /* -- World state -- */
 
     bool quit_workers;            /* Signals worker threads to quit */
-    bool in_progress;             /* Is world being progressed */
+    bool is_readonly;             /* Is world being progressed */
     bool is_fini;                 /* Is the world being cleaned up? */
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */
@@ -2785,7 +2785,7 @@ int32_t grow_data(
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);
 
-    if (!world->in_progress && !cur_count) {
+    if (!world->is_readonly && !cur_count) {
         ecs_table_activate(world, table, 0, true);
     }
 
@@ -2857,7 +2857,7 @@ int32_t ecs_table_append(
 
     /* If this is the first entity in this table, signal queries so that the
      * table moves from an inactive table to an active table. */
-    if (!world->in_progress && !count) {
+    if (!world->is_readonly && !count) {
         ecs_table_activate(world, table, 0, true);
     } 
 
@@ -4120,7 +4120,7 @@ void ecs_run_component_trigger(
     int32_t row,
     int32_t count)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     if (table->flags & EcsTableIsPrefab) {
         return;
@@ -4999,7 +4999,7 @@ void commit(
     ecs_entities_t * added,
     ecs_entities_t * removed)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
     
     ecs_table_t *src_table = info->table;
     if (src_table == dst_table) {
@@ -5500,7 +5500,7 @@ ecs_entity_t ecs_new_id(
 ecs_entity_t ecs_new_component_id(
     ecs_world_t *world)
 {
-    if (world->in_progress) {
+    if (world->is_readonly) {
         /* Can't issue new comp id while iterating when in multithreaded mode */
         ecs_assert(ecs_get_stage_count(world) <= 1, 
             ECS_INVALID_WHILE_ITERATING, NULL);
@@ -7427,13 +7427,13 @@ bool ecs_staging_begin(
         ecs_defer_begin(ecs_get_stage(world, i));
     }
 
-    bool in_progress = world->in_progress;
+    bool is_readonly = world->is_readonly;
 
     /* From this point on, the world is "locked" for mutations, and it is only 
      * allowed to enqueue commands from stages */
-    world->in_progress = true;
+    world->is_readonly = true;
 
-    return in_progress;
+    return is_readonly;
 }
 
 void ecs_staging_end(
@@ -7441,10 +7441,10 @@ void ecs_staging_end(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->in_progress == true, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world->is_readonly == true, ECS_INVALID_OPERATION, NULL);
 
     /* After this it is safe again to mutate the world directly */
-    world->in_progress = false;
+    world->is_readonly = false;
 
     do_auto_merge(world);
 }
@@ -9141,7 +9141,7 @@ ecs_entity_t ecs_import(
     void *handles_out,
     size_t handles_size)
 {
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
     const char *old_name_prefix = world->name_prefix;
@@ -9495,22 +9495,28 @@ typedef struct EcsPipelineQuery {
 //// Pipeline API
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Update a pipeline (internal function).
+ * Before running a pipeline, it must be updated. During this update phase
+ * all systems in the pipeline are collected, ordered and sync points are 
+ * inserted where necessary. This operation may only be called when staging is
+ * disabled.
+ *
+ * Because multiple threads may run a pipeline, preparing the pipeline must 
+ * happen synchronously, which is why this function is separate from 
+ * ecs_pipeline_run. Not running the prepare step may cause systems to not get
+ * ran, or ran in the wrong order.
+ *
+ * If 0 is provided for the pipeline id, the default pipeline will be ran (this
+ * is either the builtin pipeline or the pipeline set with set_pipeline()).
+ * 
+ * @param world The world.
+ * @param pipeline The pipeline to run.
+ * @return The number of elements in the pipeline.
+ */
 int32_t ecs_pipeline_update(
     ecs_world_t *world,
-    ecs_entity_t pipeline);
-
-int32_t ecs_pipeline_begin(
-    ecs_world_t *world,
-    ecs_entity_t pipeline);
-
-void ecs_pipeline_end(
-    ecs_world_t *world);
-
-void ecs_pipeline_progress(
-    ecs_world_t *world,
     ecs_entity_t pipeline,
-    FLECS_FLOAT delta_time);
-
+    bool start_of_frame);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Worker API
@@ -9526,7 +9532,9 @@ void ecs_worker_end(
     ecs_world_t *world);
 
 void ecs_workers_progress(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time);
 
 #endif
 #endif
@@ -11499,7 +11507,7 @@ ecs_stage_t *ecs_stage_from_world(
                NULL);
 
     if (world->magic == ECS_WORLD_MAGIC) {
-        ecs_assert(!world->in_progress, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
         return &world->stage;
 
     } else if (world->magic == ECS_STAGE_MAGIC) {
@@ -11683,7 +11691,7 @@ ecs_world_t *ecs_mini(void) {
     world->workers_waiting = 0;
     world->workers_running = 0;
     world->quit_workers = false;
-    world->in_progress = false;
+    world->is_readonly = false;
     world->is_fini = false;
     world->measure_frame_time = false;
     world->measure_system_time = false;
@@ -12044,7 +12052,7 @@ int ecs_fini(
     ecs_world_t *world)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!world->in_progress, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     world->is_fini = true;
@@ -12390,7 +12398,7 @@ FLECS_FLOAT ecs_frame_begin(
     FLECS_FLOAT user_delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
     ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
 
@@ -12419,7 +12427,7 @@ void ecs_frame_end(
     ecs_world_t *world)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
     world->stats.frame_count_total ++;
 
@@ -17703,7 +17711,7 @@ ecs_iter_t ecs_query_iter_page(
     
     sort_tables(world, query);
 
-    if (!world->in_progress && query->flags & EcsQueryHasRefs) {
+    if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
         ecs_eval_component_monitors(world);
     }
 
@@ -19220,7 +19228,7 @@ ecs_table_t *find_or_create(
 
     /* If we get here, table needs to be created which is only allowed when the
      * application is not currently in progress */
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entities_t ordered_entities = {
         .array = ordered,
@@ -20413,10 +20421,11 @@ void* worker(void *arg) {
     while (!world->quit_workers) {
         ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
 
-        ecs_pipeline_progress(
+        ecs_pipeline_run(
             (ecs_world_t*)stage, 
             world->pipeline, 
             world->stats.delta_time);
+
         ecs_set_scope((ecs_world_t*)stage, old_scope);
     }
 
@@ -20568,7 +20577,7 @@ bool ecs_worker_sync(
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
         ecs_staging_end(world);
-        ecs_pipeline_update(world, world->pipeline);
+        ecs_pipeline_update(world, world->pipeline, false);
         ecs_staging_begin(world);
 
     /* Synchronize all workers. The last worker to reach the sync point will
@@ -20600,10 +20609,11 @@ void ecs_worker_end(
 }
 
 void ecs_workers_progress(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t pipeline = world->pipeline;
     int32_t stage_count = ecs_get_stage_count(world);
 
     ecs_time_t start = {0};
@@ -20612,15 +20622,14 @@ void ecs_workers_progress(
     }
 
     if (stage_count == 1) {
-        ecs_pipeline_begin(world, pipeline);
+        ecs_pipeline_update(world, pipeline, true);
         ecs_entity_t old_scope = ecs_set_scope(world, 0);
         ecs_world_t *stage = ecs_get_stage(world, 0);
 
-        ecs_pipeline_progress(stage, pipeline, world->stats.delta_time);
+        ecs_pipeline_run(stage, pipeline, delta_time);
         ecs_set_scope(world, old_scope);
-        ecs_pipeline_end(world);
     } else {
-        int32_t i, sync_count = ecs_pipeline_begin(world, pipeline);
+        int32_t i, sync_count = ecs_pipeline_update(world, pipeline, true);
 
         /* Make sure workers are running and ready */
         wait_for_workers(world);
@@ -20640,14 +20649,12 @@ void ecs_workers_progress(
             ecs_staging_end(world);
 
             int32_t update_count;
-            if ((update_count = ecs_pipeline_update(world, pipeline))) {
+            if ((update_count = ecs_pipeline_update(world, pipeline, false))) {
                 /* The number of operations in the pipeline could have changed
                  * as result of the merge */
                 sync_count = update_count;
             }
         }
-
-        ecs_pipeline_end(world);
     }
 
     if (world->measure_frame_time) {
@@ -20991,29 +20998,24 @@ int32_t iter_reset(
 
 int32_t ecs_pipeline_update(
     ecs_world_t *world,
-    ecs_entity_t pipeline)
+    ecs_entity_t pipeline,
+    bool start_of_frame)
 {
-    EcsPipelineQuery *pq = ecs_get_mut(world, pipeline, EcsPipelineQuery, NULL);
-    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(pipeline != 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (build_pipeline(world, pipeline, pq)) {
-        return ecs_vector_count(pq->ops);
-    } else {
-        return 0;
+    printf("update pipeline (%s)\n", ecs_get_name(world, pipeline));
+
+    /* If any entity mutations happened that could have affected query matching
+     * notify appropriate queries so caches are up to date. This includes the
+     * pipeline query. */
+    if (start_of_frame) {
+        ecs_eval_component_monitors(world);
     }
-}
 
-int32_t ecs_pipeline_begin(
-    ecs_world_t *world,
-    ecs_entity_t pipeline)
-{
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_eval_component_monitors(world);
-
-    EcsPipelineQuery *pq = ecs_get_mut(
-        world, pipeline, EcsPipelineQuery, NULL);
+    EcsPipelineQuery *pq = ecs_get_mut(world, pipeline, EcsPipelineQuery, NULL);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -21022,18 +21024,35 @@ int32_t ecs_pipeline_begin(
     return ecs_vector_count(pq->ops);
 }
 
-void ecs_pipeline_end(
-    ecs_world_t *world)
-{
-    (void)world;
-}
-
-void ecs_pipeline_progress(
+void ecs_pipeline_run(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     FLECS_FLOAT delta_time)
 {
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_assert(world != NULL, ECS_INVALID_OPERATION, NULL);
+
+    if (!pipeline) {
+        pipeline = world->pipeline;
+    }    
+
+    /* If the world is passed to ecs_pipeline_run, the function will take care
+     * of staging, so the world should not be in staged mode when called. */
+    if (world->magic == ECS_WORLD_MAGIC) {
+        ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
+
+        /* Forward to worker_progress. This function handles staging, threading
+         * and synchronization across workers. */
+        ecs_workers_progress(world, pipeline, delta_time);
+        return;
+
+    /* If a stage is passed, the function could be ran from a worker thread. In
+     * that case the main thread should manage staging, and staging should be
+     * enabled. */
+    } else {
+        ecs_assert(world->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);  
     
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -21179,9 +21198,9 @@ bool ecs_progress(
     ecs_world_t *world,
     FLECS_FLOAT user_delta_time)
 {
-    ecs_frame_begin(world, user_delta_time);
+    float delta_time = ecs_frame_begin(world, user_delta_time);
 
-    ecs_workers_progress(world);
+    ecs_pipeline_run(world, 0, delta_time);
 
     ecs_frame_end(world);
 
@@ -21205,7 +21224,7 @@ void ecs_reset_clock(
 void ecs_deactivate_systems(
     ecs_world_t *world)
 {
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t pipeline = world->pipeline;
     const EcsPipelineQuery *pq = ecs_get( world, pipeline, EcsPipelineQuery);
@@ -21731,7 +21750,7 @@ void ecs_system_activate(
     bool activate,
     const EcsSystem *system_data)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     if (activate) {
         ecs_remove_entity(world, system, EcsInactive);
@@ -21765,7 +21784,7 @@ void ecs_enable_system(
     EcsSystem *system_data,
     bool enabled)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     ecs_query_t *query = system_data->query;
     if (!query) {
@@ -21799,7 +21818,7 @@ void ecs_init_system(
     ecs_query_t *query,
     void *ctx)
 {
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     /* Add & initialize the EcsSystem component */
     bool is_added = false;
@@ -22390,7 +22409,7 @@ ecs_entity_t ecs_new_system(
     ecs_iter_action_t action)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
@@ -22959,18 +22978,18 @@ ecs_entity_t ecs_new_component(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
-    bool in_progress = world->in_progress;
+    bool is_readonly = world->is_readonly;
     bool found = false;
 
     /* If world is in progress component may be registered, but only when not
      * in multithreading mode. */
-    if (in_progress) {
+    if (is_readonly) {
         ecs_assert(ecs_get_stage_count(world) == 0, 
             ECS_INVALID_WHILE_ITERATING, NULL);
 
         /* Component creation should not be deferred */
         ecs_defer_end(world);
-        world->in_progress = false;
+        world->is_readonly = false;
     }
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
@@ -23010,8 +23029,8 @@ ecs_entity_t ecs_new_component(
         world->stats.last_component_id = e + 1;
     }
 
-    if (in_progress) {
-        world->in_progress = true;
+    if (is_readonly) {
+        world->is_readonly = true;
         ecs_defer_begin(world);
     }
 

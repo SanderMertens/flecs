@@ -570,7 +570,7 @@ struct ecs_world_t {
     /* -- World state -- */
 
     bool quit_workers;            /* Signals worker threads to quit */
-    bool in_progress;             /* Is world being progressed */
+    bool is_readonly;             /* Is world being progressed */
     bool is_fini;                 /* Is the world being cleaned up? */
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */

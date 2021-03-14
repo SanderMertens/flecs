@@ -24,10 +24,11 @@ void* worker(void *arg) {
     while (!world->quit_workers) {
         ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
 
-        ecs_pipeline_progress(
+        ecs_pipeline_run(
             (ecs_world_t*)stage, 
             world->pipeline, 
             world->stats.delta_time);
+
         ecs_set_scope((ecs_world_t*)stage, old_scope);
     }
 
@@ -179,7 +180,7 @@ bool ecs_worker_sync(
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
         ecs_staging_end(world);
-        ecs_pipeline_update(world, world->pipeline);
+        ecs_pipeline_update(world, world->pipeline, false);
         ecs_staging_begin(world);
 
     /* Synchronize all workers. The last worker to reach the sync point will
@@ -211,10 +212,11 @@ void ecs_worker_end(
 }
 
 void ecs_workers_progress(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t pipeline = world->pipeline;
     int32_t stage_count = ecs_get_stage_count(world);
 
     ecs_time_t start = {0};
@@ -223,15 +225,14 @@ void ecs_workers_progress(
     }
 
     if (stage_count == 1) {
-        ecs_pipeline_begin(world, pipeline);
+        ecs_pipeline_update(world, pipeline, true);
         ecs_entity_t old_scope = ecs_set_scope(world, 0);
         ecs_world_t *stage = ecs_get_stage(world, 0);
 
-        ecs_pipeline_progress(stage, pipeline, world->stats.delta_time);
+        ecs_pipeline_run(stage, pipeline, delta_time);
         ecs_set_scope(world, old_scope);
-        ecs_pipeline_end(world);
     } else {
-        int32_t i, sync_count = ecs_pipeline_begin(world, pipeline);
+        int32_t i, sync_count = ecs_pipeline_update(world, pipeline, true);
 
         /* Make sure workers are running and ready */
         wait_for_workers(world);
@@ -251,14 +252,12 @@ void ecs_workers_progress(
             ecs_staging_end(world);
 
             int32_t update_count;
-            if ((update_count = ecs_pipeline_update(world, pipeline))) {
+            if ((update_count = ecs_pipeline_update(world, pipeline, false))) {
                 /* The number of operations in the pipeline could have changed
                  * as result of the merge */
                 sync_count = update_count;
             }
         }
-
-        ecs_pipeline_end(world);
     }
 
     if (world->measure_frame_time) {

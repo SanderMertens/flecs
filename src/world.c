@@ -43,7 +43,7 @@ ecs_stage_t *ecs_stage_from_world(
                NULL);
 
     if (world->magic == ECS_WORLD_MAGIC) {
-        ecs_assert(!world->in_progress, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
         return &world->stage;
 
     } else if (world->magic == ECS_STAGE_MAGIC) {
@@ -227,7 +227,7 @@ ecs_world_t *ecs_mini(void) {
     world->workers_waiting = 0;
     world->workers_running = 0;
     world->quit_workers = false;
-    world->in_progress = false;
+    world->is_readonly = false;
     world->is_fini = false;
     world->measure_frame_time = false;
     world->measure_system_time = false;
@@ -588,7 +588,7 @@ int ecs_fini(
     ecs_world_t *world)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!world->in_progress, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     world->is_fini = true;
@@ -934,7 +934,7 @@ FLECS_FLOAT ecs_frame_begin(
     FLECS_FLOAT user_delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
     ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
 
@@ -963,7 +963,7 @@ void ecs_frame_end(
     ecs_world_t *world)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
     world->stats.frame_count_total ++;
 

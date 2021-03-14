@@ -166,7 +166,13 @@ int main(int argc, char *argv[]) {
          * application would attempt to, for example, do 
          * "ecs_add(world, e, Position)" after staging_begin, an assert would be
          * thrown. It is still safe to call functions that do not mutate the 
-         * world, such as "ecs_has". */
+         * world, such as "ecs_has". 
+         *
+         * If the world were mutated while in staged mode by accident (say,
+         * because asserts are not enabled) threads that are asynchronously
+         * accessing the world may run into undefined behavior as a result of
+         * data races.          
+         */
         ecs_staging_begin(world);
 
         /* This is where the main thread would signal the threads to start
