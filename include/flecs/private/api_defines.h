@@ -77,10 +77,14 @@ typedef int32_t ecs_size_t;
 #define ECS_UNUSED
 #endif
 
+#ifndef FLECS_NO_DEPRECATED_WARNINGS
 #if defined(__GNUC__)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #elif defined(_MSC_VER)
 #define ECS_DEPRECATED(msg) __declspec(deprecated(msg))
+#else
+#define ECS_DEPRECATED(msg)
+#endif
 #else
 #define ECS_DEPRECATED(msg)
 #endif

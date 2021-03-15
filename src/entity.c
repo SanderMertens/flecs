@@ -1665,7 +1665,7 @@ ecs_entity_t ecs_new_component_id(
     /* It is possible that the world passed to this function is a stage, so
      * make sure we have the actual world. Cast away const since this is one of
      * the few functions that may modify the world while it is in readonly mode,
-     * since it is thread safe (uses atomic inc when in threading mode) */
+     * but only if single threaded. */
     ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
 
     if (unsafe_world->is_readonly) {

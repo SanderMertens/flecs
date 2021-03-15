@@ -11,6 +11,9 @@
 /* FLECS_LEGACY should be defined when building for C89 */
 // #define FLECS_LEGACY
 
+/* FLECS_NO_DEPRECATED_WARNINGS disables deprecated warnings */
+// #define FLECS_NO_DEPRECATED_WARNINGS
+
 /* FLECS_NO_CPP should be defined when building for C++ without the C++ API */
 // #define FLECS_NO_CPP
 

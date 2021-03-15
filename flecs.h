@@ -12,6 +12,9 @@
 /* FLECS_LEGACY should be defined when building for C89 */
 // #define FLECS_LEGACY
 
+/* FLECS_NO_DEPRECATED_WARNINGS disables deprecated warnings */
+// #define FLECS_NO_DEPRECATED_WARNINGS
+
 /* FLECS_NO_CPP should be defined when building for C++ without the C++ API */
 // #define FLECS_NO_CPP
 
@@ -161,10 +164,14 @@ typedef int32_t ecs_size_t;
 #define ECS_UNUSED
 #endif
 
+#ifndef FLECS_NO_DEPRECATED_WARNINGS
 #if defined(__GNUC__)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #elif defined(_MSC_VER)
 #define ECS_DEPRECATED(msg) __declspec(deprecated(msg))
+#else
+#define ECS_DEPRECATED(msg)
+#endif
 #else
 #define ECS_DEPRECATED(msg)
 #endif
