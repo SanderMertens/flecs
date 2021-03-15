@@ -7,8 +7,8 @@
 /* Worker thread */
 static
 void* worker(void *arg) {
-    ecs_thread_t *thread = arg;
-    ecs_world_t *world = thread->world;
+    ecs_stage_t *stage = arg;
+    ecs_world_t *world = stage->world;
 
     /* Start worker thread, increase counter so main thread knows how many
      * workers are ready */
@@ -22,12 +22,14 @@ void* worker(void *arg) {
     ecs_os_mutex_unlock(world->sync_mutex);
 
     while (!world->quit_workers) {
-        ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)thread, 0);
-        ecs_pipeline_progress(
-            (ecs_world_t*)thread, 
+        ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
+
+        ecs_pipeline_run(
+            (ecs_world_t*)stage, 
             world->pipeline, 
             world->stats.delta_time);
-        ecs_set_scope((ecs_world_t*)thread, old_scope);
+
+        ecs_set_scope((ecs_world_t*)stage, old_scope);
     }
 
     ecs_os_mutex_lock(world->sync_mutex);
@@ -43,28 +45,19 @@ void start_workers(
     ecs_world_t *world,
     int32_t threads)
 {
-    ecs_assert(world->workers == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_set_stages(world, threads);
 
-    world->workers = ecs_vector_new(ecs_thread_t, threads);
-    world->worker_stages = ecs_vector_new(ecs_stage_t, threads);
+    ecs_assert(ecs_get_stage_count(world) == threads, ECS_INTERNAL_ERROR, NULL);
 
     int32_t i;
     for (i = 0; i < threads; i ++) {
-        ecs_thread_t *thread =
-            ecs_vector_add(&world->workers, ecs_thread_t);
+        ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
+        ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(stage->magic == ECS_STAGE_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
-        thread->magic = ECS_THREAD_MAGIC;
-        thread->world = world;
-        thread->thread = 0;
-        thread->index = i;
-
-        thread->stage = ecs_vector_add(&world->worker_stages, ecs_stage_t);
-        ecs_stage_init(world, thread->stage);
-        thread->stage->id = 2 + i; /* 0 and 1 are reserved for main and temp */
-        thread->stage->world = (ecs_world_t*)thread;
-
-        thread->thread = ecs_os_thread_new(worker, thread);
-        ecs_assert(thread->thread != 0, ECS_THREAD_ERROR, NULL);
+        ecs_vector_get(world->worker_stages, ecs_stage_t, i);
+        stage->thread = ecs_os_thread_new(worker, stage);
+        ecs_assert(stage->thread != 0, ECS_THREAD_ERROR, NULL);
     }
 }
 
@@ -73,12 +66,12 @@ static
 void wait_for_workers(
     ecs_world_t *world)
 {
-    int32_t thread_count = ecs_vector_count(world->workers);
+    int32_t stage_count = ecs_get_stage_count(world);
     bool wait = true;
 
     do {
         ecs_os_mutex_lock(world->sync_mutex);
-        if (world->workers_running == thread_count) {
+        if (world->workers_running == stage_count) {
             wait = false;
         }
         ecs_os_mutex_unlock(world->sync_mutex);
@@ -90,11 +83,11 @@ static
 void sync_worker(
     ecs_world_t *world)
 {
-    int32_t thread_count = ecs_vector_count(world->workers);
+    int32_t stage_count = ecs_get_stage_count(world);
 
     /* Signal that thread is waiting */
     ecs_os_mutex_lock(world->sync_mutex);
-    if (++ world->workers_waiting == thread_count) {
+    if (++ world->workers_waiting == stage_count) {
         /* Only signal main thread when all threads are waiting */
         ecs_os_cond_signal(world->sync_cond);
     }
@@ -109,15 +102,15 @@ static
 void wait_for_sync(
     ecs_world_t *world)
 {
-    int32_t thread_count = ecs_vector_count(world->workers);
+    int32_t stage_count = ecs_get_stage_count(world);
 
     ecs_os_mutex_lock(world->sync_mutex);
-    if (world->workers_waiting != thread_count) {
+    if (world->workers_waiting != stage_count) {
         ecs_os_cond_wait(world->sync_cond, world->sync_mutex);
     }
     
     /* We should have been signalled unless all workers are waiting on sync */
-    ecs_assert(world->workers_waiting == thread_count, 
+    ecs_assert(world->workers_waiting == stage_count, 
         ECS_INTERNAL_ERROR, NULL);
 
     ecs_os_mutex_unlock(world->sync_mutex);
@@ -135,24 +128,30 @@ void signal_workers(
 
 /** Stop worker threads */
 static
-void ecs_stop_threads(
+bool ecs_stop_threads(
     ecs_world_t *world)
 {
+    if (!world->workers_running) {
+        return false;
+    }
+
     world->quit_workers = true;
+    
     signal_workers(world);
 
-    ecs_vector_each(world->workers, ecs_thread_t, thr, {
-        ecs_os_thread_join(thr->thread);
-        ecs_stage_deinit(world, thr->stage);
+    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
+        ecs_os_thread_join(stage->thread);
+        stage->thread = 0;
     });
 
-    ecs_vector_free(world->workers);
-    ecs_vector_free(world->worker_stages);
-    world->worker_stages = NULL;
-    world->workers = NULL;
     world->quit_workers = false;
     
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* Deinitialize stages */
+    ecs_set_stages(world, 0);
+
+    return true;
 }
 
 /* -- Private functions -- */
@@ -160,7 +159,11 @@ void ecs_stop_threads(
 void ecs_worker_begin(
     ecs_world_t *world)
 {
-    if (world->magic == ECS_WORLD_MAGIC) {
+    ecs_stage_from_world(&world);
+    int32_t stage_count = ecs_get_stage_count(world);
+    ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
+    
+    if (stage_count == 1) {
         ecs_staging_begin(world);
     }
 }
@@ -168,15 +171,20 @@ void ecs_worker_begin(
 bool ecs_worker_sync(
     ecs_world_t *world)
 {
+    ecs_stage_from_world(&world);
+
     int32_t build_count = world->stats.pipeline_build_count_total;
+    int32_t stage_count = ecs_get_stage_count(world);
+    ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t thread_count = ecs_vector_count(world->workers);
-    if (!thread_count) {
+    /* If there are no threads, merge in place */
+    if (stage_count == 1) {
         ecs_staging_end(world);
-
-        ecs_pipeline_update(world, world->pipeline);
-
+        ecs_pipeline_update(world, world->pipeline, false);
         ecs_staging_begin(world);
+
+    /* Synchronize all workers. The last worker to reach the sync point will
+     * signal the main thread, which will perform the merge. */
     } else {
         sync_worker(world);
     }
@@ -187,33 +195,44 @@ bool ecs_worker_sync(
 void ecs_worker_end(
     ecs_world_t *world)
 {
-    int32_t thread_count = ecs_vector_count(world->workers);
-    if (!thread_count) {
+    ecs_stage_from_world(&world);
+
+    int32_t stage_count = ecs_get_stage_count(world);
+    ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* If there are no threads, merge in place */
+    if (stage_count == 1) {
         ecs_staging_end(world);
+
+    /* Synchronize all workers. The last worker to reach the sync point will
+     * signal the main thread, which will perform the merge. */
     } else {
         sync_worker(world);
     }
 }
 
 void ecs_workers_progress(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time)
 {
-    ecs_entity_t pipeline = world->pipeline;
-    int32_t thread_count = ecs_vector_count(world->workers);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    int32_t stage_count = ecs_get_stage_count(world);
 
     ecs_time_t start = {0};
     if (world->measure_frame_time) {
         ecs_time_measure(&start);
     }
 
-    if (thread_count <= 1) {
-        ecs_pipeline_begin(world, pipeline);
+    if (stage_count == 1) {
+        ecs_pipeline_update(world, pipeline, true);
         ecs_entity_t old_scope = ecs_set_scope(world, 0);
-        ecs_pipeline_progress(world, pipeline, world->stats.delta_time);
+        ecs_world_t *stage = ecs_get_stage(world, 0);
+
+        ecs_pipeline_run(stage, pipeline, delta_time);
         ecs_set_scope(world, old_scope);
-        ecs_pipeline_end(world);
     } else {
-        int32_t i, sync_count = ecs_pipeline_begin(world, pipeline);
+        int32_t i, sync_count = ecs_pipeline_update(world, pipeline, true);
 
         /* Make sure workers are running and ready */
         wait_for_workers(world);
@@ -233,14 +252,12 @@ void ecs_workers_progress(
             ecs_staging_end(world);
 
             int32_t update_count;
-            if ((update_count = ecs_pipeline_update(world, pipeline))) {
+            if ((update_count = ecs_pipeline_update(world, pipeline, false))) {
                 /* The number of operations in the pipeline could have changed
                  * as result of the merge */
                 sync_count = update_count;
             }
         }
-
-        ecs_pipeline_end(world);
     }
 
     if (world->measure_frame_time) {
@@ -255,17 +272,18 @@ void ecs_set_threads(
     ecs_world_t *world,
     int32_t threads)
 {
-    ecs_assert(ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
+    ecs_assert(threads <= 1 || ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
 
-    int32_t thread_count = ecs_vector_count(world->workers);
+    int32_t stage_count = ecs_get_stage_count(world);
 
-    if (!world->arg_threads && thread_count != threads) {
+    if (!world->arg_threads && stage_count != threads) {
         /* Stop existing threads */
-        if (ecs_vector_count(world->workers)) {
-            ecs_stop_threads(world);
-            ecs_os_cond_free(world->worker_cond);
-            ecs_os_cond_free(world->sync_cond);
-            ecs_os_mutex_free(world->sync_mutex);
+        if (stage_count > 1) {
+            if (ecs_stop_threads(world)) {
+                ecs_os_cond_free(world->worker_cond);
+                ecs_os_cond_free(world->sync_cond);
+                ecs_os_mutex_free(world->sync_mutex);
+            }
         }
 
         /* Start threads if number of threads > 1 */
@@ -273,7 +291,6 @@ void ecs_set_threads(
             world->worker_cond = ecs_os_cond_new();
             world->sync_cond = ecs_os_cond_new();
             world->sync_mutex = ecs_os_mutex_new();
-            world->stage_count = 2 + threads;
             start_workers(world, threads);
         }
 

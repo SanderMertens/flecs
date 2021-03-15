@@ -282,6 +282,9 @@ ecs_entity_t ecs_new_entity(
     const char *name,
     const char *expr)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
         result = ecs_new(world, 0);
@@ -289,6 +292,7 @@ ecs_entity_t ecs_new_entity(
     }
     
     EcsType type = type_from_expr(world, name, expr);
+
     ecs_add_type(world, result, type.normalized);
 
     return result;
@@ -300,6 +304,9 @@ ecs_entity_t ecs_new_prefab(
     const char *name,
     const char *expr)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
         result = ecs_new(world, 0);
@@ -321,20 +328,20 @@ ecs_entity_t ecs_new_component(
     size_t size,
     size_t alignment)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    assert(world->magic == ECS_WORLD_MAGIC);
-    bool in_progress = world->in_progress;
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
+    bool is_readonly = world->is_readonly;
     bool found = false;
 
     /* If world is in progress component may be registered, but only when not
      * in multithreading mode. */
-    if (in_progress) {
-        ecs_assert(ecs_vector_count(world->workers) < 1, 
+    if (is_readonly) {
+        ecs_assert(ecs_get_stage_count(world) <= 1, 
             ECS_INVALID_WHILE_ITERATING, NULL);
 
         /* Component creation should not be deferred */
-        ecs_defer_end(world);
-        world->in_progress = false;
+        world->is_readonly = false;
     }
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
@@ -374,10 +381,12 @@ ecs_entity_t ecs_new_component(
         world->stats.last_component_id = e + 1;
     }
 
-    if (in_progress) {
-        world->in_progress = true;
-        ecs_defer_begin(world);
+    if (is_readonly) {
+        world->is_readonly = true;
     }
+
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);
 
     return result;
 }
@@ -388,7 +397,8 @@ ecs_entity_t ecs_new_type(
     const char *name,
     const char *expr)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {

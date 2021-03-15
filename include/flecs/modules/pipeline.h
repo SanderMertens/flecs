@@ -52,7 +52,7 @@ void ecs_set_pipeline(
  */
 FLECS_API
 ecs_entity_t ecs_get_pipeline(
-    ecs_world_t *world);  
+    const ecs_world_t *world);  
 
 /** Progress a world.
  * This operation progresses the world by running all systems that are both
@@ -97,16 +97,30 @@ FLECS_API
 void ecs_reset_clock(
     ecs_world_t *world);
 
-/** Signal exit
- * This operation signals that the application should quit. It will cause
- * ecs_progress to return false.
+/** Run pipeline.
+ * This will run all systems in the provided pipeline. This operation may be
+ * invoked from multiple threads, and only when staging is disabled, as the
+ * pipeline manages staging and, if necessary, synchronization between threads.
  *
- * @param world The world to quit.
+ * If 0 is provided for the pipeline id, the default pipeline will be ran (this
+ * is either the builtin pipeline or the pipeline set with set_pipeline()). 
+ *
+ * When using progress() this operation will be invoked automatically for the
+ * default pipeline (either the builtin pipeline or the pipeline set with 
+ * set_pipeline()). An application may run additional pipelines.
+ *
+ * Note: calling this function from an application currently only works in
+ * single threaded applications with a single stage.
+ *
+ * @param world The world.
+ * @param pipeline The pipeline to run.
  */
-FLECS_API
-void ecs_quit(
-    ecs_world_t *world);
-
+FLECS_API 
+void ecs_pipeline_run(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time);    
+    
 /** Deactivate systems that are not matched with tables.
  * By default Flecs deactivates systems that are not matched with any tables.
  * However, once a system has been matched with a table it remains activated, to

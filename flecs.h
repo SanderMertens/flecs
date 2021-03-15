@@ -161,6 +161,14 @@ typedef int32_t ecs_size_t;
 #define ECS_UNUSED
 #endif
 
+#if defined(__GNUC__)
+#define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#elif defined(_MSC_VER)
+#define ECS_DEPRECATED(msg) __declspec(deprecated(msg))
+#else
+#define ECS_DEPRECATED(msg)
+#endif
+
 #define ECS_ALIGN(size, alignment) (ecs_size_t)((((((size_t)size) - 1) / ((size_t)alignment)) + 1) * ((size_t)alignment))
 
 /* Simple utility for determining the max of two values */
@@ -2579,7 +2587,7 @@ char* ecs_module_path_from_c(
 
 FLECS_API
 bool ecs_component_has_actions(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t component);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2916,12 +2924,12 @@ ecs_type_t ecs_type_from_entity(
 
 FLECS_API
 ecs_entity_t ecs_type_to_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type);
 
 FLECS_API
 char* ecs_type_str(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type);  
 
 FLECS_API
@@ -2956,26 +2964,26 @@ ecs_type_t ecs_type_remove(
 
 FLECS_API
 bool ecs_type_has_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity);
 
 FLECS_API
 bool ecs_type_has_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has);
 
 FLECS_API
 bool ecs_type_owns_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
     bool owned);
 
 FLECS_API
 bool ecs_type_owns_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has,
     bool owned);
@@ -3469,6 +3477,24 @@ void ecs_run_post_frame(
     ecs_fini_action_t action,
     void *ctx);    
 
+/** Signal exit
+ * This operation signals that the application should quit. It will cause
+ * ecs_progress to return false.
+ *
+ * @param world The world to quit.
+ */
+FLECS_API
+void ecs_quit(
+    ecs_world_t *world);
+
+/** Return whether a quit has been signaled.
+ *
+ * @param world The world.
+ */
+FLECS_API 
+bool ecs_should_quit(
+    const ecs_world_t *world);
+
 /** Register ctor, dtor, copy & move actions for component.
  *
  * @param world The world.
@@ -3507,7 +3533,7 @@ void ecs_set_context(
  */
 FLECS_API
 void* ecs_get_context(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Get world info.
  *
@@ -3517,7 +3543,7 @@ void* ecs_get_context(
  */
 FLECS_API
 const ecs_world_info_t* ecs_get_world_info(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Dimension the world for a specified number of entities.
  * This operation will preallocate memory in the world for the specified number
@@ -3723,10 +3749,10 @@ int32_t ecs_get_threads(
     ecs_world_t *world);
 
 /** Get current thread index */
+ECS_DEPRECATED("use ecs_get_stage_id")
 FLECS_API
 int32_t ecs_get_thread_index(
-    ecs_world_t *world);
-
+    const ecs_world_t *world);
 
 /** @} */
 
@@ -4056,7 +4082,7 @@ FLECS_API void ecs_enable_component_w_entity(
  * @return True if the component is enabled, otherwise false.
  */
 FLECS_API bool ecs_is_component_enabled_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
@@ -4179,7 +4205,7 @@ FLECS_API bool ecs_is_component_enabled_w_entity(
  */
 FLECS_API
 ecs_entity_t ecs_get_case(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e,
     ecs_entity_t sw);
 
@@ -4248,7 +4274,7 @@ void ecs_delete_children(
  */
 FLECS_API
 const void* ecs_get_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
@@ -4278,7 +4304,7 @@ const void* ecs_get_w_entity(
  */
 FLECS_API
 const void* ecs_get_ref_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_ref_t *ref,
     ecs_entity_t entity,
     ecs_entity_t component);
@@ -4451,7 +4477,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
  */
 FLECS_API
 bool ecs_has_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t to_check);
 
@@ -4466,7 +4492,7 @@ bool ecs_has_entity(
  */
 FLECS_API
 bool ecs_has_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type);
 
@@ -4516,6 +4542,20 @@ bool ecs_has_type(
  * @{
  */
 
+/** Test whether an entity is valid.
+ * An entity is valid if it is not 0 and if it is alive. If the provided id has
+ * a role or a trait, the contents of the role or the trait will be checked for
+ * validity.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @return True if the entity is valid, false if the entity is not valid.
+ */
+FLECS_API
+bool ecs_is_valid(
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
 /** Test whether an entity is alive.
  *
  * @param world The world.
@@ -4524,7 +4564,7 @@ bool ecs_has_type(
  */
 FLECS_API
 bool ecs_is_alive(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 /** Test whether an entity exists.
@@ -4536,7 +4576,7 @@ bool ecs_is_alive(
  */
 FLECS_API
 bool ecs_exists(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 /** Get the type of an entity.
@@ -4547,7 +4587,7 @@ bool ecs_exists(
  */
 FLECS_API
 ecs_type_t ecs_get_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Get the typeid of an entity.
@@ -4558,7 +4598,7 @@ ecs_type_t ecs_get_type(
  */
 FLECS_API
 ecs_entity_t ecs_get_typeid(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 /** Get the name of an entity.
@@ -4570,7 +4610,7 @@ ecs_entity_t ecs_get_typeid(
  */
 FLECS_API
 const char* ecs_get_name(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Convert type role to string.
@@ -4595,7 +4635,7 @@ const char* ecs_role_str(
  */
 FLECS_API
 size_t ecs_entity_str(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     char *buffer,
     size_t buffer_len);
@@ -4612,7 +4652,7 @@ size_t ecs_entity_str(
  */
 FLECS_API
 ecs_entity_t ecs_get_parent_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
@@ -4652,7 +4692,7 @@ void ecs_enable(
  */
 FLECS_API
 int32_t ecs_count_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Count entities that have a type.
@@ -4664,7 +4704,7 @@ int32_t ecs_count_entity(
  */
 FLECS_API
 int32_t ecs_count_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type);
 
 /** Count entities that have a component, type or tag.
@@ -4686,7 +4726,7 @@ int32_t ecs_count_type(
  */
 FLECS_API
 int32_t ecs_count_w_filter(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_filter_t *filter);
 
 
@@ -4707,7 +4747,7 @@ int32_t ecs_count_w_filter(
  */
 FLECS_API
 ecs_entity_t ecs_lookup(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name);
 
 /** Lookup a child entity by name.
@@ -4721,7 +4761,7 @@ ecs_entity_t ecs_lookup(
  */
 FLECS_API
 ecs_entity_t ecs_lookup_child(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *name);
 
@@ -4744,7 +4784,7 @@ ecs_entity_t ecs_lookup_child(
  */
 FLECS_API
 ecs_entity_t ecs_lookup_path_w_sep(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *path,
     const char *sep,
@@ -4784,7 +4824,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
  */
 FLECS_API
 ecs_entity_t ecs_lookup_symbol(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name);
 
 /* Add alias for entity to global scope */
@@ -4821,7 +4861,7 @@ void ecs_use(
  */
 FLECS_API
 char* ecs_get_path_w_sep(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child,
     ecs_entity_t component,
@@ -4961,7 +5001,7 @@ ecs_entity_t ecs_add_path_w_sep(
  */
 FLECS_API
 int32_t ecs_get_child_count(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Return a scope iterator.
@@ -5027,7 +5067,7 @@ ecs_entity_t ecs_set_scope(
  */
 FLECS_API
 ecs_entity_t ecs_get_scope(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Set a name prefix for newly created entities.
  * This is a utility that lets C modules use prefixed names for C types and
@@ -5244,14 +5284,15 @@ bool ecs_query_next_w_filter(
  * as many threads as there are entities will iterate that table.
  *
  * @param it The iterator.
- * @param current Thread id of current thread.
- * @param total Total number of threads.
+ * @param stage_current Id of current stage.
+ * @param stage_count Total number of stages.
  * @returns True if more data is available, false if not.
  */
+FLECS_API
 bool ecs_query_next_worker(
     ecs_iter_t *it,
-    int32_t current,
-    int32_t total);
+    int32_t stage_current,
+    int32_t stage_count);
 
 /** Sort the output of a query.
  * This enables sorting of entities across matched tables. As a result of this
@@ -5604,21 +5645,54 @@ int32_t ecs_table_component_index(
  * @{
  */
 
-/** Begin frame. */
+/** Begin frame. 
+ * When an application does not use ecs_progress to control the main loop, it
+ * can still use Flecs features such as FPS limiting and time measurements. This
+ * operation needs to be invoked whenever a new frame is about to get processed.
+ *
+ * Calls to ecs_frame_begin must always be followed by ecs_frame_end.
+ *
+ * The function accepts a delta_time parameter, which will get passed to 
+ * systems. This value is also used to compute the amount of time the function
+ * needs to sleep to ensure it does not exceed the target_fps, when it is set.
+ * When 0 is provided for delta_time, the time will be measured.
+ *
+ * This function should only be ran from the main thread.
+ *
+ * @param world The world.
+ * @param delta_time Time elapsed since the last frame.
+ * @return The provided delta_time, or measured time if 0 was provided.
+ */
 FLECS_API
 FLECS_FLOAT ecs_frame_begin(
     ecs_world_t *world,
     FLECS_FLOAT delta_time);
 
-/** End frame. */
+/** End frame. 
+ * This operation must be called at the end of the frame, and always after
+ * ecs_frame_begin.
+ *
+ * @param world The world.
+ */
 FLECS_API
 void ecs_frame_end(
     ecs_world_t *world);
 
 /** Begin staging.
+ * When an application does not use ecs_progress to control the main loop, it
+ * can still use Flecs features such as the defer queue. When an application
+ * needs to stage changes, it needs to call this function after ecs_frame_begin.
+ * A call to ecs_staging_begin must be followed by a call to ecs_staging_end.
+ * 
  * When staging is enabled, modifications to entities are stored to a stage.
  * This ensures that arrays are not modified while iterating. Modifications are
  * merged back to the "main stage" when ecs_staging_end is invoked.
+ *
+ * While the world is in staging mode, no structural changes (add/remove/...)
+ * can be made to the world itself. Operations must be executed on a stage
+ * instead (see ecs_get_stage).
+ *
+ * This function should only be ran from the main thread.
  *
  * @param world The world
  * @return Whether world is currently staged.
@@ -5628,8 +5702,11 @@ bool ecs_staging_begin(
     ecs_world_t *world);
 
 /** End staging.
- * If any data was staged, this operation will merge that data back to the main
- * stage.
+ * Leaves staging mode. After this operation the world may be directly mutated
+ * again. By default this operation also merges data back into the world, unless
+ * automerging was disabled explicitly.
+ *
+ * This function should only be ran from the main thread.
  *
  * @param world The world
  */
@@ -5637,9 +5714,13 @@ FLECS_API
 void ecs_staging_end(
     ecs_world_t *world);
 
-/** Manually merge.
- * When automerging is set to false, an application can invoke this operation to
- * force merging all stages.
+/** Merge world or stage.
+ * When automatic merging is disabled, an application can call this
+ * operation on either an individual stage, or on the world which will merge
+ * all stages. This operation may only be called when staging is not enabled
+ * (either after progress() or after staging_end()).
+ *
+ * This operation may be called on an already merged stage or world.
  *
  * @param world The world.
  */
@@ -5672,17 +5753,85 @@ FLECS_API
 bool ecs_defer_end(
     ecs_world_t *world);
 
-/** Enable / disable automerging.
- * When automerging is enabled, running a pipeline will automatically merge when
- * necessary. With automerging disabled, merging will not happen unless the
- * application manually invokes ecs_merge.
+/** Enable/disable automerging for world or stage.
+ * When automerging is enabled, staged data will automatically be merged with
+ * the world when staging ends. This happens at the end of progress(), at a
+ * sync point or when staging_end() is called.
+ *
+ * Applications can exercise more control over when data from a stage is merged
+ * by disabling automerging. This requires an application to explicitly call
+ * merge() on the stage.
+ *
+ * When this function is invoked on the world, it sets all current stages to
+ * the provided value and sets the default for new stages. When this function is
+ * invoked on a stage, automerging is only set for that specific stage.
  *
  * @param world The world.
+ * @param automerge Whether to enable or disable automerging.
  */
 FLECS_API
 void ecs_set_automerge(
     ecs_world_t *world,
-    bool auto_merge);
+    bool automerge);
+
+/** Configure world to have N stages.
+ * This initializes N stages, which allows applications to defer operations to
+ * multiple isolated defer queues. This is typically used for applications with
+ * multiple threads, where each thread gets its own queue, and commands are
+ * merged when threads are synchronized.
+ *
+ * Note that the ecs_set_threads function already creates the appropriate
+ * number of stages. The set_stages() operation is useful for applications that
+ * want to manage their own stages and/or threads.
+ * 
+ * @param world The world.
+ * @param stages The number of stages.
+ */
+FLECS_API
+void ecs_set_stages(
+    ecs_world_t *world,
+    int32_t stages);
+
+/** Get number of configured stages.
+ * Return number of stages set by ecs_set_stages.
+ *
+ * @param world The world.
+ * @return The number of stages used for threading.
+ */
+FLECS_API
+int32_t ecs_get_stage_count(
+    const ecs_world_t *world);
+
+/** Get current stage id.
+ * The stage id can be used by an application to learn about which stage it is
+ * using, which typically corresponds with the worker thread id.
+ *
+ * @param world The world.
+ * @return The stage id.
+ */
+FLECS_API
+int32_t ecs_get_stage_id(
+    const ecs_world_t *world);
+
+/** Get stage-specific world pointer.
+ * Flecs threads can safely invoke the API as long as they have a private 
+ * context to write to, also referred to as the stage. This function returns a
+ * pointer to a stage, disguised as a world pointer.
+ *
+ * Note that this function does not(!) create a new world. It simply wraps the
+ * existing world in a thread-specific context, which the API knows how to
+ * unwrap. The reason the stage is returned as an ecs_world_t is so that it
+ * can be passed transparently to the existing API functions, vs. having to 
+ * create a dediated API for threading.
+ *
+ * @param world The world.
+ * @param stage_id The index of the stage to retrieve.
+ * @return A thread-specific pointer to the world. 
+ */
+FLECS_API
+ecs_world_t* ecs_get_stage(
+    const ecs_world_t *world,
+    int32_t stage_id);
 
 /** @} */
 
@@ -5726,7 +5875,7 @@ ecs_table_t* ecs_table_from_type(
  */
 FLECS_API
 ecs_type_t ecs_table_get_type(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** Insert record into table.
  * This will create a new record for the table, which inserts a value for each
@@ -5768,7 +5917,7 @@ ecs_record_t ecs_table_insert(
  */
 FLECS_API
 int32_t ecs_table_count(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** @} */
 
@@ -6115,6 +6264,25 @@ ecs_entity_t ecs_run(
     FLECS_FLOAT delta_time,
     void *param);
 
+/** Same as ecs_run, but subdivides entities across number of provided stages.
+ * 
+ * @param world The world.
+ * @param system The system to run.
+ * @param stage_current The id of the current stage.
+ * @param stage_count The total number of stages.
+ * @param delta_time: The time passed since the last system invocation.
+ * @param param A user-defined parameter to pass to the system.
+ * @return handle to last evaluated entity if system was interrupted.
+ */
+FLECS_API
+ecs_entity_t ecs_run_worker(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    int32_t stage_current,
+    int32_t stage_count,
+    FLECS_FLOAT delta_time,
+    void *param);
+
 /** Run system with offset/limit and type filter.
  * This operation is the same as ecs_run, but filters the entities that will be
  * iterated by the system.
@@ -6202,7 +6370,7 @@ void ecs_set_system_status_action(
  */
 FLECS_API
 ecs_query_t* ecs_get_query(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6220,19 +6388,19 @@ typedef struct ecs_dbg_system_t {
 
 FLECS_API
 int ecs_dbg_system(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system,
     ecs_dbg_system_t *dbg_out);
 
 FLECS_API
 ecs_table_t* ecs_dbg_get_active_table(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_dbg_system_t *dbg,
     int32_t index);
 
 FLECS_API
 ecs_table_t* ecs_dbg_get_inactive_table(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_dbg_system_t *dbg,
     int32_t index);
 
@@ -6244,7 +6412,7 @@ ecs_type_t ecs_dbg_get_column_type(
 
 FLECS_API
 bool ecs_dbg_match_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t system,
     ecs_match_failure_t *failure_info_out);
@@ -6327,7 +6495,7 @@ void ecs_set_pipeline(
  */
 FLECS_API
 ecs_entity_t ecs_get_pipeline(
-    ecs_world_t *world);  
+    const ecs_world_t *world);  
 
 /** Progress a world.
  * This operation progresses the world by running all systems that are both
@@ -6372,16 +6540,30 @@ FLECS_API
 void ecs_reset_clock(
     ecs_world_t *world);
 
-/** Signal exit
- * This operation signals that the application should quit. It will cause
- * ecs_progress to return false.
+/** Run pipeline.
+ * This will run all systems in the provided pipeline. This operation may be
+ * invoked from multiple threads, and only when staging is disabled, as the
+ * pipeline manages staging and, if necessary, synchronization between threads.
  *
- * @param world The world to quit.
+ * If 0 is provided for the pipeline id, the default pipeline will be ran (this
+ * is either the builtin pipeline or the pipeline set with set_pipeline()). 
+ *
+ * When using progress() this operation will be invoked automatically for the
+ * default pipeline (either the builtin pipeline or the pipeline set with 
+ * set_pipeline()). An application may run additional pipelines.
+ *
+ * Note: calling this function from an application currently only works in
+ * single threaded applications with a single stage.
+ *
+ * @param world The world.
+ * @param pipeline The pipeline to run.
  */
-FLECS_API
-void ecs_quit(
-    ecs_world_t *world);
-
+FLECS_API 
+void ecs_pipeline_run(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time);    
+    
 /** Deactivate systems that are not matched with tables.
  * By default Flecs deactivates systems that are not matched with any tables.
  * However, once a system has been matched with a table it remains activated, to
@@ -6528,7 +6710,7 @@ ecs_entity_t ecs_set_timeout(
  */
 FLECS_API
 FLECS_FLOAT ecs_get_timeout(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t timer);
 
 /** Set timer interval.
@@ -6562,7 +6744,7 @@ ecs_entity_t ecs_set_interval(
  */
 FLECS_API
 FLECS_FLOAT ecs_get_interval(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t timer);
 
 /** Start timer.
@@ -6839,7 +7021,7 @@ typedef struct ecs_dbg_table_t {
 
 FLECS_API
 void ecs_dbg_entity(
-    ecs_world_t *world, 
+    const ecs_world_t *world, 
     ecs_entity_t entity, 
     ecs_dbg_entity_t *dbg_out);
 
@@ -6850,14 +7032,14 @@ ecs_table_t *ecs_dbg_find_table(
 
 FLECS_API
 ecs_table_t *ecs_dbg_get_table(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     int32_t index);
 
 FLECS_API
 bool ecs_dbg_filter_table(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_filter_t *filter);
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_filter_t *filter);
 
 FLECS_API
 void ecs_dbg_table(
@@ -7328,7 +7510,7 @@ extern "C" {
  */
 FLECS_API
 int32_t ecs_table_find_column(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     ecs_entity_t component);
 
 /** Get table column.
@@ -7344,7 +7526,7 @@ int32_t ecs_table_find_column(
  */
 FLECS_API
 ecs_vector_t* ecs_table_get_column(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     int32_t column);
 
 /** Set table column.
@@ -7392,7 +7574,7 @@ ecs_vector_t* ecs_table_set_column(
  */
 FLECS_API
 ecs_vector_t* ecs_table_get_entities(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** Get the vector containing pointers to entity records.
  * A table stores cached pointers to entity records for fast access. This 
@@ -7404,7 +7586,7 @@ ecs_vector_t* ecs_table_get_entities(
  */ 
 FLECS_API
 ecs_vector_t* ecs_table_get_records(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** Clear records.
  * This operation clears records for a world so that they no longer point to a
@@ -7743,7 +7925,7 @@ typedef struct ecs_pipeline_stats_t {
  * @param stats Out parameter for statistics.
  */
 FLECS_API void ecs_get_world_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_world_stats_t *stats);
 
 /** Print world statistics.
@@ -7754,7 +7936,7 @@ FLECS_API void ecs_get_world_stats(
  * @param stats The statistics to print.
  */
 FLECS_API void ecs_dump_world_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_world_stats_t *stats);
 
 /** Get query statistics.
@@ -7765,8 +7947,8 @@ FLECS_API void ecs_dump_world_stats(
  * @param stats Out parameter for statistics.
  */
 FLECS_API void ecs_get_query_stats(
-    ecs_world_t *world,
-    ecs_query_t *query,
+    const ecs_world_t *world,
+    const ecs_query_t *query,
     ecs_query_stats_t *s);
 
 #ifdef FLECS_SYSTEM
@@ -7779,7 +7961,7 @@ FLECS_API void ecs_get_query_stats(
  * @return true if success, false if not a system.
  */
 FLECS_API bool ecs_get_system_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *stats);
 #endif
@@ -7794,7 +7976,7 @@ FLECS_API bool ecs_get_system_stats(
  * @return true if success, false if not a pipeline.
  */
 FLECS_API bool ecs_get_pipeline_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *stats);
 #endif
@@ -8603,6 +8785,84 @@ public:
         return ecs_progress(m_world, delta_time);
     }
 
+    /** Signal application should quit.
+     * After calling this operation, the next call to progress() returns false.
+     */
+    void quit() {
+        ecs_quit(m_world);
+    }
+
+    /** Test if quit() has been called.
+     */
+    bool should_quit() {
+        return ecs_should_quit(m_world);
+    }    
+
+    /** Begin frame.
+     * When an application does not use progress() to control the main loop, it
+     * can still use Flecs features such as FPS limiting and time measurements.
+     * This operation needs to be invoked whenever a new frame is about to get 
+     * processed.
+     *
+     * Calls to frame_begin must always be followed by frame_end.
+     *
+     * The function accepts a delta_time parameter, which will get passed to 
+     * systems. This value is also used to compute the amount of time the 
+     * function needs to sleep to ensure it does not exceed the target_fps, when 
+     * it is set. When 0 is provided for delta_time, the time will be measured.
+     *
+     * This function should only be ran from the main thread.
+     *
+     * @param delta_time Time elapsed since the last frame.
+     * @return The provided delta_time, or measured time if 0 was provided.
+     */
+    FLECS_FLOAT frame_begin(float delta_time = 0) {
+        return ecs_frame_begin(m_world, delta_time);
+    }
+
+    /** End frame. 
+     * This operation must be called at the end of the frame, and always after
+     * ecs_frame_begin.
+     *
+     * This function should only be ran from the main thread.
+     */
+    void frame_end() {
+        ecs_frame_end(m_world);
+    }
+
+    /** Begin staging.
+     * When an application does not use ecs_progress to control the main loop, it
+     * can still use Flecs features such as the defer queue. When an application
+     * needs to stage changes, it needs to call this function after ecs_frame_begin.
+     * A call to ecs_staging_begin must be followed by a call to ecs_staging_end.
+     * 
+     * When staging is enabled, modifications to entities are stored to a stage.
+     * This ensures that arrays are not modified while iterating. Modifications are
+     * merged back to the "main stage" when ecs_staging_end is invoked.
+     *
+     * While the world is in staging mode, no structural changes (add/remove/...)
+     * can be made to the world itself. Operations must be executed on a stage
+     * instead (see ecs_get_stage).
+     *
+     * This function should only be ran from the main thread.
+     *
+     * @return Whether world is currently staged.
+     */
+    bool staging_begin() {
+        return ecs_staging_begin(m_world);
+    }
+
+    /** End staging.
+     * Leaves staging mode. After this operation the world may be directly mutated
+     * again. By default this operation also merges data back into the world, unless
+     * automerging was disabled explicitly.
+     *
+     * This function should only be ran from the main thread.
+     */
+    void staging_end() {
+        ecs_staging_end(m_world);
+    }
+
     /** Defer operations until end of frame. 
      * When this operation is invoked while iterating, operations inbetween the
      * defer_begin and defer_end operations are executed at the end of the frame.
@@ -8620,6 +8880,91 @@ public:
      */
     bool defer_end() {
         return ecs_defer_end(m_world);
+    }
+
+    /** Configure world to have N stages.
+     * This initializes N stages, which allows applications to defer operations to
+     * multiple isolated defer queues. This is typically used for applications with
+     * multiple threads, where each thread gets its own queue, and commands are
+     * merged when threads are synchronized.
+     *
+     * Note that set_threads() already creates the appropriate number of stages. 
+     * The set_stages() operation is useful for applications that want to manage 
+     * their own stages and/or threads.
+     * 
+     * @param stages The number of stages.
+     */
+    void set_stages(std::int32_t stages) const {
+        ecs_set_stages(m_world, stages);
+    }
+
+    /** Get number of configured stages.
+     * Return number of stages set by set_stages.
+     *
+     * @return The number of stages used for threading.
+     */
+    std::int32_t get_stage_count() const {
+        return ecs_get_stage_count(m_world);
+    }
+
+    /** Get current stage id.
+     * The stage id can be used by an application to learn about which stage it
+     * is using, which typically corresponds with the worker thread id.
+     *
+     * @return The stage id.
+     */
+    std::int32_t get_stage_id() const {
+        return ecs_get_stage_id(m_world);
+    }
+
+    /** Enable/disable automerging for world or stage.
+     * When automerging is enabled, staged data will automatically be merged 
+     * with the world when staging ends. This happens at the end of progress(), 
+     * at a sync point or when staging_end() is called.
+     *
+     * Applications can exercise more control over when data from a stage is 
+     * merged by disabling automerging. This requires an application to 
+     * explicitly call merge() on the stage.
+     *
+     * When this function is invoked on the world, it sets all current stages to
+     * the provided value and sets the default for new stages. When this 
+     * function is invoked on a stage, automerging is only set for that specific 
+     * stage. 
+     *
+     * @param automerge Whether to enable or disable automerging.
+     */
+    void set_automerge(bool automerge) {
+        ecs_set_automerge(m_world, automerge);
+    }
+
+    /** Merge world or stage.
+     * When automatic merging is disabled, an application can call this
+     * operation on either an individual stage, or on the world which will merge
+     * all stages. This operation may only be called when staging is not enabled
+     * (either after progress() or after staging_end()).
+     *
+     * This operation may be called on an already merged stage or world.
+     */
+    void merge() {
+        ecs_merge(m_world);
+    }
+
+    /** Get stage-specific world pointer.
+     * Flecs threads can safely invoke the API as long as they have a private 
+     * context to write to, also referred to as the stage. This function returns a
+     * pointer to a stage, disguised as a world pointer.
+     *
+     * Note that this function does not(!) create a new world. It simply wraps the
+     * existing world in a thread-specific context, which the API knows how to
+     * unwrap. The reason the stage is returned as an ecs_world_t is so that it
+     * can be passed transparently to the existing API functions, vs. having to 
+     * create a dediated API for threading.
+     *
+     * @param stage_id The index of the stage to retrieve.
+     * @return A thread-specific pointer to the world. 
+     */
+    flecs::world get_stage(std::int32_t id) const {
+        return flecs::world(ecs_get_stage(m_world, id));
     }
 
     /** Set number of threads.
@@ -8644,8 +8989,9 @@ public:
      *
      * @return Unique index for current thread.
      */
+    ECS_DEPRECATED("use get_stage_id")
     std::int32_t get_thread_index() const {
-        return ecs_get_thread_index(m_world);
+        return ecs_get_stage_id(m_world);
     }
 
     /** Set target FPS
@@ -11042,7 +11388,7 @@ namespace _
 #error "implicit component registration not supported"
 #endif
 
-// Translate a typename into a langauge-agnostic identifier. This allows for
+// Translate a typename into a language-agnostic identifier. This allows for
 // registration of components/modules across language boundaries.
 template <typename T>
 struct symbol_helper
@@ -11358,6 +11704,7 @@ public:
             if (name_comp->symbol) {
                 ecs_assert( !strcmp(name_comp->symbol, symbol), 
                     ECS_COMPONENT_NAME_IN_USE, name);
+                ecs_os_free(symbol);
             } else {
                 name_comp->symbol = symbol;
             }
@@ -12179,7 +12526,7 @@ public:
             _::column_args<Components...> columns(&it);
             _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
-    }
+    } 
 
     template <typename Func>
     void each(const flecs::filter& filter, Func&& func) const {
@@ -12192,8 +12539,18 @@ public:
         }
     }
 
-    /* DEPRECATED */
     template <typename Func>
+    void each_worker(std::int32_t stage_current, std::int32_t stage_count, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
+            _::column_args<Components...> columns(&it);
+            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }
+
+    template <typename Func>
+    ECS_DEPRECATED("use each or iter")
     void action(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
@@ -12211,7 +12568,7 @@ public:
             _::column_args<Components...> columns(&it);
             _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
-    }
+    }  
 
     template <typename Func>
     void iter(const flecs::filter& filter, Func&& func) const {
@@ -12223,6 +12580,16 @@ public:
             _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
     }
+
+    template <typename Func>
+    void iter_worker(std::int32_t stage_current, std::int32_t stage_count, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
+            _::column_args<Components...> columns(&it);
+            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }      
 };
 
 
@@ -12316,14 +12683,22 @@ private:
 
 class system_runner_fluent {
 public:
-    system_runner_fluent(world_t *world, entity_t id, FLECS_FLOAT delta_time, void *param)
-        : m_world(world)
+    system_runner_fluent(
+        world_t *world, 
+        entity_t id, 
+        std::int32_t stage_current, 
+        std::int32_t stage_count, 
+        FLECS_FLOAT delta_time, 
+        void *param)
+        : m_stage(world)
         , m_id(id)
         , m_delta_time(delta_time)
         , m_param(param)
         , m_filter()
         , m_offset(0)
-        , m_limit(0) { }
+        , m_limit(0)
+        , m_stage_current(stage_current)
+        , m_stage_count(stage_count) { }
 
     system_runner_fluent& filter(filter filter) {
         m_filter = filter;
@@ -12340,18 +12715,32 @@ public:
         return *this;
     }
 
+    system_runner_fluent& stage(flecs::world& stage) {
+        m_stage = stage.c_ptr();
+        return *this;
+    }
+
     ~system_runner_fluent() {
-        ecs_run_w_filter(
-            m_world, m_id, m_delta_time, m_offset, m_limit, m_filter.c_ptr(), m_param);
+        if (m_stage_count) {
+            ecs_run_worker(
+                m_stage, m_id, m_stage_current, m_stage_count, m_delta_time,
+                m_param);            
+        } else {
+            ecs_run_w_filter(
+                m_stage, m_id, m_delta_time, m_offset, m_limit, 
+                m_filter.c_ptr(), m_param);
+        }
     }
 private:
-    world_t *m_world;
+    world_t *m_stage;
     entity_t m_id;
     FLECS_FLOAT m_delta_time;
     void *m_param;
     flecs::filter m_filter;
     std::int32_t m_offset;
     std::int32_t m_limit;
+    std::int32_t m_stage_current;
+    std::int32_t m_stage_count;
 };
 
 
@@ -12403,7 +12792,7 @@ public:
         return ecs_get_interval(m_world, m_id);
     }
 
-    // DEPRECATED: use interval instead
+    ECS_DEPRECATED("use interval")
     system& period(FLECS_FLOAT period) {
         return this->interval(period);
     }
@@ -12505,17 +12894,31 @@ public:
     }
 
     system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
-        return system_runner_fluent(m_world, m_id, delta_time, param);
+        return system_runner_fluent(m_world, m_id, 0, 0, delta_time, param);
     }
 
-    /* DEPRECATED. Use iter instead. */
+    system_runner_fluent run_worker(
+        std::int32_t stage_current, 
+        std::int32_t stage_count, 
+        FLECS_FLOAT delta_time = 0.0f, 
+        void *param = nullptr) const 
+    {
+        return system_runner_fluent(m_world, m_id, stage_current, stage_count, delta_time, param);
+    }    
+
+    // put using outside of action so we can still use it without it being
+    // flagged as deprecated.
     template <typename Func>
+    using action_invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
+
+    template <typename Func>
+    ECS_DEPRECATED("use each or iter")
     system& action(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        using invoker_t = typename _::action_invoker<typename std::decay<Func>::type, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));        
 
-        create_system(invoker_t::run, false);
+        auto ctx = FLECS_NEW(action_invoker_t<Func>)(std::forward<Func>(func));        
+
+        create_system(action_invoker_t<Func>::run, false);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);

@@ -42,14 +42,14 @@ void ecs_set_watch(
 
 /* Does one of the entity containers has specified component */
 ecs_entity_t ecs_find_in_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t table_type,
     ecs_entity_t component,
     ecs_entity_t flags);
 
 /* Obtain entity info */
 bool ecs_get_info(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_info_t *info);
 
@@ -71,13 +71,21 @@ void ecs_notify_queries_of_table(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Get current thread-specific stage */
-ecs_stage_t *ecs_get_stage(
+/* Get current stage */
+ecs_stage_t* ecs_stage_from_world(
     ecs_world_t **world_ptr);
 
+/* Get current thread-specific stage from readonly world */
+const ecs_stage_t* ecs_stage_from_readonly_world(
+    const ecs_world_t *world);
+
+/* Get actual world from world */
+const ecs_world_t* ecs_get_world(
+    const ecs_world_t *world);
+
 /* Get component callbacks */
-ecs_c_info_t *ecs_get_c_info(
-    ecs_world_t *world,
+const ecs_c_info_t *ecs_get_c_info(
+    const ecs_world_t *world,
     ecs_entity_t component);
 
 /* Get or create component callbacks */
@@ -120,24 +128,10 @@ void ecs_stage_deinit(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-/* Merge stage with main stage */
-void ecs_stage_merge(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
 /* Post-frame merge actions */
 void ecs_stage_merge_post_frame(
     ecs_world_t *world,
-    ecs_stage_t *stage);
-
-/* Begin defer for stage */
-bool ecs_stage_defer_begin(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
-bool ecs_stage_defer_end(
-    ecs_world_t *world,
-    ecs_stage_t *stage);    
+    ecs_stage_t *stage);  
 
 /* Delete table from stage */
 void ecs_delete_table(
@@ -237,7 +231,7 @@ ecs_type_t ecs_type_merge_intern(
 
 /* Test if type_id_1 contains type_id_2 */
 ecs_entity_t ecs_type_contains(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type_id_1,
     ecs_type_t type_id_2,
     bool match_all,
@@ -252,7 +246,7 @@ ecs_type_t ecs_type_add_intern(
 
 /* Find entity in prefabs of type */
 ecs_entity_t ecs_find_entity_in_prefabs(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type,
     ecs_entity_t component,
@@ -305,7 +299,7 @@ ecs_table_t* ecs_table_find_or_create(
 
 /* Get table data */
 ecs_data_t *ecs_table_get_data(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /* Get or create data */
 ecs_data_t *ecs_table_get_or_create_data(
@@ -352,7 +346,7 @@ void ecs_table_clear_data(
 
 /* Return number of entities in data */
 int32_t ecs_table_data_count(
-    ecs_data_t *data);
+    const ecs_data_t *data);
 
 /* Add a new entry to the table for the specified entity */
 int32_t ecs_table_append(
@@ -401,8 +395,8 @@ void ecs_table_set_size(
 
 /* Match table with filter */
 bool ecs_table_match_filter(
-    ecs_world_t *world,
-    ecs_table_t *table,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
     const ecs_filter_t *filter);
 
 /* Get dirty state for table columns */
@@ -471,12 +465,12 @@ void ecs_table_mark_dirty(
     ecs_entity_t component);
 
 const EcsComponent* ecs_component_from_id(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 int32_t ecs_table_switch_from_case(
-    ecs_world_t *world,
-    ecs_table_t *table,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
     ecs_entity_t add);    
 
 void ecs_table_notify(
@@ -485,6 +479,10 @@ void ecs_table_notify(
     ecs_table_event_t *event);
 
 void ecs_table_clear_edges(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+void ecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
@@ -513,9 +511,9 @@ void ecs_run_monitor(
     ecs_entity_t *entities);
 
 bool ecs_query_match(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_query_t *query,
     ecs_match_failure_t *failure_info);
 
 void ecs_query_notify(

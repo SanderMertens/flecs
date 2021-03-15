@@ -109,7 +109,7 @@ void ecs_gauge_reduce(
 }
 
 void ecs_get_world_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_world_stats_t *s)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -192,8 +192,8 @@ void ecs_get_world_stats(
 }
 
 void ecs_get_query_stats(
-    ecs_world_t *world,
-    ecs_query_t *query,
+    const ecs_world_t *world,
+    const ecs_query_t *query,
     ecs_query_stats_t *s)
 {
     (void)world;
@@ -218,7 +218,7 @@ void ecs_get_query_stats(
 
 #ifdef FLECS_SYSTEM
 bool ecs_get_system_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *s)
 {
@@ -259,7 +259,7 @@ static ecs_system_stats_t* get_system_stats(
 }
 
 bool ecs_get_pipeline_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *s)
 {
@@ -316,7 +316,7 @@ bool ecs_get_pipeline_stats(
 #endif
 
 void ecs_dump_world_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_world_stats_t *s)
 {
     int32_t t = s->t;

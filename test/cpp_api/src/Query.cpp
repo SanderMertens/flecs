@@ -16,7 +16,7 @@ void Query_action() {
 
     flecs::query<Position, Velocity> q(world);
 
-    q.action([](flecs::iter& it, flecs::column<Position> p, flecs::column<Velocity> v) {
+    q.iter([](flecs::iter& it, Position *p, Velocity *v) {
         for (auto i : it) {
             p[i].x += v[i].x;
             p[i].y += v[i].y;
@@ -40,7 +40,7 @@ void Query_action_const() {
 
     flecs::query<Position, const Velocity> q(world);
 
-    q.action([](flecs::iter& it, flecs::column<Position> p, flecs::column<const Velocity> v) {
+    q.iter([](flecs::iter& it, Position *p, const Velocity *v) {
         for (auto i : it) {
             p[i].x += v[i].x;
             p[i].y += v[i].y;
@@ -71,8 +71,8 @@ void Query_action_shared() {
 
     flecs::query<Position> q(world, "ANY:Velocity");
 
-    q.action([](flecs::iter&it, flecs::column<Position> p) {
-            flecs::column<const Velocity> v(it, 2);
+    q.iter([](flecs::iter&it, Position *p) {
+            auto v = it.column<const Velocity>(2);
 
             if (v.is_shared()) {
                 for (auto i : it) {
@@ -121,8 +121,8 @@ void Query_action_optional() {
 
     flecs::query<Position, Velocity*, Mass*> q(world);
 
-    q.action([](flecs::iter& it, flecs::column<Position> p, flecs::column<Velocity> v, flecs::column<Mass> m) {
-        if (v.is_set() && m.is_set()) {
+    q.iter([](flecs::iter& it, Position *p, Velocity *v, Mass *m) {
+        if (it.is_set(2) && it.is_set(3)) {
             for (auto i : it) {
                 p[i].x += v[i].x * m[i].value;
                 p[i].y += v[i].y * m[i].value;
@@ -293,9 +293,9 @@ void Query_signature() {
 
     flecs::query<> q(world, "Position, Velocity");
 
-    q.action([](flecs::iter& it) {
-        flecs::column<Position> p(it, 1);
-        flecs::column<Velocity> v(it, 2);
+    q.iter([](flecs::iter& it) {
+        auto p = it.column<Position>(1);
+        auto v = it.column<Velocity>(2);
 
         for (auto i : it) {
             p[i].x += v[i].x;
@@ -320,9 +320,9 @@ void Query_signature_const() {
 
     flecs::query<> q(world, "Position, [in] Velocity");
 
-    q.action([](flecs::iter& it) {
-        flecs::column<Position> p(it, 1);
-        flecs::column<const Velocity> v(it, 2);
+    q.iter([](flecs::iter& it) {
+        auto p = it.column<Position>(1);
+        auto v = it.column<const Velocity>(2);
         
         for (auto i : it) {
             p[i].x += v[i].x;
@@ -354,9 +354,9 @@ void Query_signature_shared() {
 
     flecs::query<> q(world, "Position, [in] ANY:Velocity");
     
-    q.action([](flecs::iter&it) {
-        flecs::column<Position> p(it, 1);
-        flecs::column<const Velocity> v(it, 2);
+    q.iter([](flecs::iter&it) {
+        auto p = it.column<Position>(1);
+        auto v = it.column<const Velocity>(2);
 
         if (v.is_shared()) {
             for (auto i : it) {
@@ -405,10 +405,10 @@ void Query_signature_optional() {
 
     flecs::query<> q(world, "Position, ?Velocity, ?Mass");
 
-    q.action([](flecs::iter& it) {
-        flecs::column<Position> p(it, 1);
-        flecs::column<Velocity> v(it, 2);
-        flecs::column<Mass> m(it, 3);
+    q.iter([](flecs::iter& it) {
+        auto p = it.column<Position>(1);
+        auto v = it.column<const Velocity>(2);
+        auto m = it.column<const Mass>(3);
 
         if (v.is_set() && m.is_set()) {
             for (auto i : it) {
@@ -480,8 +480,8 @@ void Query_subquery_w_expr() {
     flecs::query<Position> q(world);
     flecs::query<> sq(world, q, "Velocity");
 
-    sq.action([](flecs::iter it) {
-        flecs::column<Velocity> v(it, 1);
+    sq.iter([](flecs::iter it) {
+        auto v = it.column<Velocity>(1);
 
         for (auto i : it) {
             v[i].x ++;
@@ -503,14 +503,13 @@ void Query_query_single_trait() {
 
     flecs::entity(world).add_trait<Trait, Position>();
     auto e2 = flecs::entity(world).add_trait<Trait, Velocity>();
-    flecs::entity(world).add_trait<Trait>(flecs::entity::null(world));
     
     flecs::query<> q(world, "TRAIT | Trait > Velocity");
 
     int32_t table_count = 0;
     int32_t entity_count = 0;
 
-    q.action([&](flecs::iter it) {
+    q.iter([&](flecs::iter it) {
         table_count ++;
         for (auto i : it) {
             test_assert(it.entity(i) == e2);

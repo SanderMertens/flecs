@@ -1,7 +1,7 @@
 #include "private_api.h"
 
 ecs_entity_t ecs_find_entity_in_prefabs(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type,
     ecs_entity_t component,
@@ -50,14 +50,14 @@ ecs_entity_t ecs_find_entity_in_prefabs(
 
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
 ecs_entity_t ecs_type_contains(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type_1,
     ecs_type_t type_2,
     bool match_all,
     bool match_prefab)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
+    world = ecs_get_world(world);
     
     if (!type_1) {
         return 0;
@@ -153,17 +153,21 @@ ecs_type_t ecs_type_merge(
     ecs_type_t to_remove)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
+
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, an assert will trigger. */    
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
     
-    ecs_table_t *table = ecs_table_from_type(world, type);
+    ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
     ecs_entities_t add_array = ecs_type_to_entities(to_add);
     ecs_entities_t remove_array = ecs_type_to_entities(to_remove);
     
     table = ecs_table_traverse_remove(
-        world, table, &remove_array, NULL); 
+        unsafe_world, table, &remove_array, NULL); 
 
     table = ecs_table_traverse_add(
-        world, table, &add_array, NULL); 
+        unsafe_world, table, &add_array, NULL); 
 
     if (!table) {
         return NULL;
@@ -178,14 +182,18 @@ ecs_type_t ecs_type_find(
     int32_t count)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_get_stage(&world);
+    
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, an assert will trigger. */    
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
 
     ecs_entities_t entities = {
         .array = array,
         .count = count
     };
 
-    ecs_table_t *table = ecs_table_find_or_create(world, &entities);
+    ecs_table_t *table = ecs_table_find_or_create(unsafe_world, &entities);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return table->type;
@@ -201,7 +209,7 @@ bool has_trait(
 
 static
 bool has_case(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t sw_case,
     ecs_entity_t e)
 {
@@ -212,7 +220,7 @@ bool has_case(
 
 static
 int match_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t e,
     ecs_entity_t match_with)
@@ -263,7 +271,7 @@ int match_entity(
 
 static
 bool search_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
     bool owned)
@@ -299,6 +307,13 @@ bool search_type(
             }
 
             ecs_entity_t base = e & ECS_COMPONENT_MASK;
+            if (!ecs_is_valid(world, base)) {
+                /* This indicates that an entity has an INSTANCEOF relationship
+                 * to an invalid base. That's no good, and will be handled with
+                 * future features (e.g. automatically removing the relation) */
+                continue;
+            }
+
             ecs_type_t base_type = ecs_get_type(world, base);
 
             if (search_type(world, base_type, entity, false)) {
@@ -311,7 +326,7 @@ bool search_type(
 }
 
 bool ecs_type_has_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity)
 {
@@ -319,7 +334,7 @@ bool ecs_type_has_entity(
 }
 
 bool ecs_type_owns_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
     bool owned)
@@ -328,7 +343,7 @@ bool ecs_type_owns_entity(
 }
 
 bool ecs_type_has_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has)
 {
@@ -336,7 +351,7 @@ bool ecs_type_has_type(
 }
 
 bool ecs_type_owns_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has,
     bool owned)
@@ -350,15 +365,20 @@ ecs_type_t ecs_type_add(
     ecs_entity_t e)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
-    ecs_table_t *table = ecs_table_from_type(world, type);
+
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, an assert will trigger. */
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
+
+    ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
 
     ecs_entities_t entities = {
         .array = &e,
         .count = 1
     };
 
-    table = ecs_table_traverse_add(world, table, &entities, NULL);
+    table = ecs_table_traverse_add(unsafe_world, table, &entities, NULL);
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -371,22 +391,27 @@ ecs_type_t ecs_type_remove(
     ecs_entity_t e)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
-    ecs_table_t *table = ecs_table_from_type(world, type);
+    
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, an assert will trigger. */
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
+    
+    ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
 
     ecs_entities_t entities = {
         .array = &e,
         .count = 1
     };
 
-    table = ecs_table_traverse_remove(world, table, &entities, NULL);
+    table = ecs_table_traverse_remove(unsafe_world, table, &entities, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return table->type;    
 }
 
 char* ecs_type_str(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type)
 {
     if (!type) {

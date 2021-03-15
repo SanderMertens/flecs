@@ -149,6 +149,8 @@ bool ecs_strbuf_vappend_intern(
     memRequired = vsnprintf(
         ecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
 
+    ecs_assert(memRequired != -1, ECS_INTERNAL_ERROR, NULL);
+
     if (memRequired <= memLeftInElement) {
         /* Element was large enough to fit string */
         b->current->pos += memRequired;

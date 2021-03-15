@@ -77,7 +77,7 @@ extern "C" {
  * and to allow for passing a thread as a world to some API calls (this allows
  * for transparently passing thread context to API functions) */
 #define ECS_WORLD_MAGIC (0x65637377)
-#define ECS_THREAD_MAGIC (0x65637374)
+#define ECS_STAGE_MAGIC (0x65637374)
 
 /* Maximum number of entities that can be added in a single operation. 
  * Increasing this value will increase consumption of stack space. */
@@ -422,38 +422,26 @@ typedef struct ecs_op_t {
  * iterating. Additionally, worker threads have their own stage that lets them
  * mutate the state of entities without requiring locks. */
 struct ecs_stage_t {
-    /* This points to the world pointer associated with the stage. Even though
-     * stages belong to the same world, when multithreaded, an application will
-     * receive a pointer not to the world, but to a thread. This allows for
-     * transparently passing the thread context without having to fallback on
-     * more expensive methods such as thread local storage. This world pointer
-     * is stored in the stage, so that it can be easily passed around when for
-     * example invoking callbacks, and prevents the API from passing around two
-     * world pointers (or constantly obtaining the real world when needed). */
-    ecs_world_t *world;
-
-    int32_t id;                    /* Unique id that identifies the stage */
+    int32_t magic;              /* Magic number to verify thread pointer */
+    int32_t id;                 /* Unique id that identifies the stage */
 
     /* Are operations deferred? */
     int32_t defer;
     ecs_vector_t *defer_queue;
-    ecs_vector_t *defer_merge_queue;
+
+    ecs_world_t *thread_ctx;    /* Points to stage when a thread stage */
+    ecs_world_t *world;         /* Reference to world */
+    ecs_os_thread_t thread;     /* Thread handle (0 if no threading is used) */
 
     /* One-shot actions to be executed after the merge */
     ecs_vector_t *post_frame_actions;
 
     /* Namespacing */
     ecs_table_t *scope_table;      /* Table for current scope */
-    ecs_entity_t scope;            /* Entity of current scope */    
+    ecs_entity_t scope;            /* Entity of current scope */
 
-    /* If a system is progressing it will set this field to its columns. This
-     * will be used in debug mode to verify that a system is not doing 
-     * unanounced adding/removing of components, as this could cause 
-     * unpredictable behavior during a merge. */
-#ifndef NDEBUG    
-    ecs_entity_t system;
-    ecs_vector_t *system_columns;
-#endif
+    /* Automerging */
+    bool auto_merge;               /* Should this stage automatically merge? */
 };
 
 typedef struct ecs_store_t {
@@ -477,25 +465,10 @@ typedef struct ecs_entity_info_t {
     bool is_watched;            /* Is entity being watched */
 } ecs_entity_info_t;
 
-/** A type desribing a worker thread. When a system is invoked by a worker
- * thread, it receives a pointer to an ecs_thread_t instead of a pointer to an 
- * ecs_world_t (provided by the ecs_iter_t type). When this ecs_thread_t is passed down
- * into the flecs API, the API functions are able to tell whether this is an
- * ecs_thread_t or an ecs_world_t by looking at the 'magic' number. This allows the
- * API to transparently resolve the stage to which updates should be written,
- * without requiring different API calls when working in multi threaded mode. */
-typedef struct ecs_thread_t {
-    int32_t magic;                           /* Magic number to verify thread pointer */
-    ecs_world_t *world;                       /* Reference to world */
-    ecs_stage_t *stage;                       /* Stage for thread */
-    ecs_os_thread_t thread;                   /* Thread handle */
-    int32_t index;                           /* Index of thread */
-} ecs_thread_t;
-
 /** Supporting type to store looked up component data in specific table */
 typedef struct ecs_column_info_t {
     ecs_entity_t id;
-    ecs_c_info_t *ci;
+    const ecs_c_info_t *ci;
     int32_t column;
 } ecs_column_info_t;
 
@@ -582,9 +555,7 @@ struct ecs_world_t {
     /* -- Staging -- */
 
     ecs_stage_t stage;               /* Main storage */
-    ecs_stage_t temp_stage;          /* Stage for when processing systems */
-    ecs_vector_t *worker_stages;     /* Stages for worker threads */
-    int32_t stage_count;            /* Number of stages in world */
+    ecs_vector_t *worker_stages;     /* Stages for threads */
 
 
     /* -- Hierarchy administration -- */
@@ -595,8 +566,6 @@ struct ecs_world_t {
 
     /* -- Multithreading -- */
 
-    ecs_vector_t *workers;           /* Worker threads */
-    
     ecs_os_cond_t worker_cond;       /* Signal that worker threads can start */
     ecs_os_cond_t sync_cond;         /* Signal that worker thread job is done */
     ecs_os_mutex_t sync_mutex;       /* Mutex for job_cond */
@@ -644,10 +613,8 @@ struct ecs_world_t {
     /* -- World state -- */
 
     bool quit_workers;            /* Signals worker threads to quit */
-    bool in_progress;             /* Is world being progressed */
-    bool is_merging;              /* Is world currently being merged */
+    bool is_readonly;             /* Is world being progressed */
     bool is_fini;                 /* Is the world being cleaned up? */
-    bool auto_merge;              /* Are stages auto-merged by ecs_progress */
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */
     bool should_quit;             /* Did a system signal that app should quit */
@@ -695,14 +662,14 @@ void ecs_set_watch(
 
 /* Does one of the entity containers has specified component */
 ecs_entity_t ecs_find_in_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t table_type,
     ecs_entity_t component,
     ecs_entity_t flags);
 
 /* Obtain entity info */
 bool ecs_get_info(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_info_t *info);
 
@@ -724,13 +691,21 @@ void ecs_notify_queries_of_table(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Get current thread-specific stage */
-ecs_stage_t *ecs_get_stage(
+/* Get current stage */
+ecs_stage_t* ecs_stage_from_world(
     ecs_world_t **world_ptr);
 
+/* Get current thread-specific stage from readonly world */
+const ecs_stage_t* ecs_stage_from_readonly_world(
+    const ecs_world_t *world);
+
+/* Get actual world from world */
+const ecs_world_t* ecs_get_world(
+    const ecs_world_t *world);
+
 /* Get component callbacks */
-ecs_c_info_t *ecs_get_c_info(
-    ecs_world_t *world,
+const ecs_c_info_t *ecs_get_c_info(
+    const ecs_world_t *world,
     ecs_entity_t component);
 
 /* Get or create component callbacks */
@@ -773,24 +748,10 @@ void ecs_stage_deinit(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-/* Merge stage with main stage */
-void ecs_stage_merge(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
 /* Post-frame merge actions */
 void ecs_stage_merge_post_frame(
     ecs_world_t *world,
-    ecs_stage_t *stage);
-
-/* Begin defer for stage */
-bool ecs_stage_defer_begin(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
-bool ecs_stage_defer_end(
-    ecs_world_t *world,
-    ecs_stage_t *stage);    
+    ecs_stage_t *stage);  
 
 /* Delete table from stage */
 void ecs_delete_table(
@@ -890,7 +851,7 @@ ecs_type_t ecs_type_merge_intern(
 
 /* Test if type_id_1 contains type_id_2 */
 ecs_entity_t ecs_type_contains(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type_id_1,
     ecs_type_t type_id_2,
     bool match_all,
@@ -905,7 +866,7 @@ ecs_type_t ecs_type_add_intern(
 
 /* Find entity in prefabs of type */
 ecs_entity_t ecs_find_entity_in_prefabs(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type,
     ecs_entity_t component,
@@ -958,7 +919,7 @@ ecs_table_t* ecs_table_find_or_create(
 
 /* Get table data */
 ecs_data_t *ecs_table_get_data(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /* Get or create data */
 ecs_data_t *ecs_table_get_or_create_data(
@@ -1005,7 +966,7 @@ void ecs_table_clear_data(
 
 /* Return number of entities in data */
 int32_t ecs_table_data_count(
-    ecs_data_t *data);
+    const ecs_data_t *data);
 
 /* Add a new entry to the table for the specified entity */
 int32_t ecs_table_append(
@@ -1054,8 +1015,8 @@ void ecs_table_set_size(
 
 /* Match table with filter */
 bool ecs_table_match_filter(
-    ecs_world_t *world,
-    ecs_table_t *table,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
     const ecs_filter_t *filter);
 
 /* Get dirty state for table columns */
@@ -1124,12 +1085,12 @@ void ecs_table_mark_dirty(
     ecs_entity_t component);
 
 const EcsComponent* ecs_component_from_id(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 int32_t ecs_table_switch_from_case(
-    ecs_world_t *world,
-    ecs_table_t *table,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
     ecs_entity_t add);    
 
 void ecs_table_notify(
@@ -1138,6 +1099,10 @@ void ecs_table_notify(
     ecs_table_event_t *event);
 
 void ecs_table_clear_edges(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+void ecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
@@ -1166,9 +1131,9 @@ void ecs_run_monitor(
     ecs_entity_t *entities);
 
 bool ecs_query_match(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_query_t *query,
     ecs_match_failure_t *failure_info);
 
 void ecs_query_notify(
@@ -1821,7 +1786,7 @@ ecs_data_t* ecs_init_data(
 
 static
 ecs_flags32_t get_component_action_flags(
-    ecs_c_info_t *c_info) 
+    const ecs_c_info_t *c_info) 
 {
     ecs_flags32_t flags = 0;
 
@@ -1898,14 +1863,14 @@ void notify_component_info(
                 continue;
             }
             
-            ecs_c_info_t *c_info = ecs_get_c_info(world, c);
+            const ecs_c_info_t *c_info = ecs_get_c_info(world, c);
             if (c_info) {
                 ecs_flags32_t flags = get_component_action_flags(c_info);
                 table->flags |= flags;
             }
 
             /* Store pointer to c_info for fast access */
-            table->c_info[i] = c_info;
+            table->c_info[i] = (ecs_c_info_t*)c_info;
         }        
     }
 }
@@ -2213,40 +2178,29 @@ void unregister_query(
     }
 }
 
-static
-ecs_data_t* get_data_intern(
-    ecs_table_t *table,
-    bool create)
+ecs_data_t* ecs_table_get_data(
+    const ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *data = table->data;
-    if (data) {
-        return data;
-    }
-
-    if (!data && !create) {
-        return NULL;
-    }
-
-    return table->data = ecs_os_calloc(ECS_SIZEOF(ecs_data_t));
-}
-
-ecs_data_t* ecs_table_get_data(
-    ecs_table_t *table)
-{
-    return get_data_intern(table, false);
+    return table->data;
 }
 
 ecs_data_t* ecs_table_get_or_create_data(
     ecs_table_t *table)
 {
-    return get_data_intern(table, true);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_data_t *data = table->data;
+    if (!data) {
+        data = table->data = ecs_os_calloc(ECS_SIZEOF(ecs_data_t));
+    }
+    return data;
 }
 
 static
 void ctor_component(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_c_info_t * cdata,
     ecs_column_t * column,
     ecs_entity_t * entities,
@@ -2269,7 +2223,7 @@ void ctor_component(
 
 static
 void dtor_component(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_c_info_t * cdata,
     ecs_column_t * column,
     ecs_entity_t * entities,
@@ -2297,8 +2251,8 @@ void dtor_component(
 
 static
 void dtor_all_components(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t row,
     int32_t count)
@@ -2316,8 +2270,8 @@ void dtor_all_components(
 
 static
 void run_remove_actions(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     int32_t row,
     int32_t count)
 {
@@ -2379,8 +2333,8 @@ void ecs_table_clear_data(
  * OnRemove handlers. This is typically used when restoring a table to a
  * previous state. */
 void ecs_table_clear_silent(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     ecs_data_t *data = ecs_table_get_data(table);
     if (!data) {
@@ -2396,12 +2350,9 @@ void ecs_table_clear_silent(
     }
 }
 
-/* Delete all entities in table, invoke OnRemove handlers. This function is used
- * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as 
- * the table may have to be deactivated with systems. */
-void ecs_table_clear(
-    ecs_world_t * world,
-    ecs_table_t * table)
+void ecs_table_delete_entities(
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     ecs_data_t *data = ecs_table_get_data(table);
 
@@ -2412,7 +2363,30 @@ void ecs_table_clear(
         int32_t i, count = ecs_vector_count(data->entities);
         for(i = 0; i < count; i ++) {
             ecs_eis_delete(world, entities[i]);
-        }
+        }        
+
+        ecs_table_clear_silent(world, table);
+    }
+}
+
+/* Delete all entities in table, invoke OnRemove handlers. This function is used
+ * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as 
+ * the table may have to be deactivated with systems. */
+void ecs_table_clear(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_data_t *data = ecs_table_get_data(table);
+
+    if (data) {
+        run_remove_actions(world, table, 0, ecs_table_data_count(data));
+
+        ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
+        int32_t i, count = ecs_vector_count(data->entities);
+        for(i = 0; i < count; i ++) {
+            ecs_record_t r = {NULL, 0};
+            ecs_eis_set(world, entities[i], &r);
+        } 
 
         ecs_table_clear_silent(world, table);
     }
@@ -2421,8 +2395,8 @@ void ecs_table_clear(
 /* Unset all components in table. This function is called before a table is 
  * deleted, and invokes all UnSet handlers, if any */
 void ecs_table_unset(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
@@ -2434,8 +2408,8 @@ void ecs_table_unset(
 /* Free table resources. Do not invoke handlers and do not activate/deactivate
  * table with systems. This function is used when the world is freed. */
 void ecs_table_free(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
@@ -2475,8 +2449,8 @@ void ecs_table_free(
 
 /* Reset a table to its initial state. */
 void ecs_table_reset(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     (void)world;
     ecs_os_free(table->lo_edges);
@@ -2611,8 +2585,8 @@ void move_bitset_columns(
 
 static
 void ensure_data(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t * column_count_out,
     int32_t * sw_column_count_out,
@@ -2658,7 +2632,7 @@ void ensure_data(
 
 static
 void grow_column(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t * entities,
     ecs_column_t * column,
     ecs_c_info_t * c_info,
@@ -2732,8 +2706,8 @@ void grow_column(
 
 static
 int32_t grow_data(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t to_add,
     int32_t size,
@@ -2811,7 +2785,7 @@ int32_t grow_data(
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);
 
-    if (!world->in_progress && !cur_count) {
+    if (!world->is_readonly && !cur_count) {
         ecs_table_activate(world, table, 0, true);
     }
 
@@ -2839,8 +2813,8 @@ void fast_append(
 }
 
 int32_t ecs_table_append(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     ecs_entity_t entity,
     ecs_record_t * record,
@@ -2883,7 +2857,7 @@ int32_t ecs_table_append(
 
     /* If this is the first entity in this table, signal queries so that the
      * table moves from an inactive table to an active table. */
-    if (!world->in_progress && !count) {
+    if (!world->is_readonly && !count) {
         ecs_table_activate(world, table, 0, true);
     } 
 
@@ -2976,8 +2950,8 @@ void fast_delete(
 }
 
 void ecs_table_delete(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t index,
     bool destruct)
@@ -3153,7 +3127,7 @@ void fast_move(
 }
 
 void ecs_table_move(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t dst_entity,
     ecs_entity_t src_entity,
     ecs_table_t *new_table,
@@ -3275,8 +3249,8 @@ void ecs_table_move(
 }
 
 int32_t ecs_table_appendn(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t to_add,
     const ecs_entity_t *ids)
@@ -3286,8 +3260,8 @@ int32_t ecs_table_appendn(
 }
 
 void ecs_table_set_size(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t size)
 {
@@ -3310,14 +3284,14 @@ void ecs_table_set_size(
 }
 
 int32_t ecs_table_data_count(
-    ecs_data_t *data)
+    const ecs_data_t *data)
 {
     return data ? ecs_vector_count(data->entities) : 0;
 }
 
 static
 void swap_switch_columns(
-    ecs_table_t * table,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t row_1,
     int32_t row_2)
@@ -3337,7 +3311,7 @@ void swap_switch_columns(
 
 static
 void swap_bitset_columns(
-    ecs_table_t * table,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t row_1,
     int32_t row_2)
@@ -3356,8 +3330,8 @@ void swap_bitset_columns(
 }
 
 void ecs_table_swap(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data,
     int32_t row_1,
     int32_t row_2)
@@ -3524,7 +3498,7 @@ void merge_column(
 
 static
 void merge_table_data(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_table_t * new_table,
     ecs_table_t * old_table,
     int32_t old_count,
@@ -3677,7 +3651,7 @@ void merge_table_data(
 }
 
 int32_t ecs_table_count(
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_data_t *data = table->data;
@@ -3689,7 +3663,7 @@ int32_t ecs_table_count(
 }
 
 ecs_data_t* ecs_table_merge(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_table_t *new_table,
     ecs_table_t *old_table,
     ecs_data_t *new_data,
@@ -3758,8 +3732,8 @@ ecs_data_t* ecs_table_merge(
 }
 
 void ecs_table_replace_data(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_data_t * data)
 {
     int32_t prev_count = 0;
@@ -3789,8 +3763,8 @@ void ecs_table_replace_data(
 }
 
 bool ecs_table_match_filter(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
     const ecs_filter_t * filter)
 {
     if (!filter) {
@@ -3853,8 +3827,8 @@ int32_t* ecs_table_get_monitor(
 }
 
 void ecs_table_notify(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_table_t *table,
     ecs_table_event_t * event)
 {
     if (world->is_fini) {
@@ -4002,7 +3976,7 @@ void set_info_from_record(
 
 /* Get info from main stage */
 bool ecs_get_info(
-    ecs_world_t * world,
+    const ecs_world_t * world,
     ecs_entity_t entity,
     ecs_entity_info_t * info)
 {
@@ -4027,7 +4001,7 @@ bool ecs_get_info(
 }
 
 static
-ecs_c_info_t *get_c_info(
+const ecs_c_info_t *get_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -4146,7 +4120,7 @@ void ecs_run_component_trigger(
     int32_t row,
     int32_t count)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     if (table->flags & EcsTableIsPrefab) {
         return;
@@ -4504,7 +4478,7 @@ bool override_from_base(
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
         component = ecs_get_typeid(world, component);
-        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+        const ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         int32_t index;
 
         ecs_copy_t copy = cdata ? cdata->lifecycle.copy : NULL;
@@ -4709,7 +4683,7 @@ void ecs_components_on_add(
 
     int i;
     for (i = 0; i < component_count; i ++) {
-        ecs_c_info_t *c_info = component_info[i].ci;
+        const ecs_c_info_t *c_info = component_info[i].ci;
         ecs_vector_t *triggers;
         if (!c_info || !(triggers = c_info->on_add)) {
             continue;
@@ -4735,7 +4709,7 @@ void ecs_components_on_remove(
 
     int i;
     for (i = 0; i < component_count; i ++) {
-        ecs_c_info_t *c_info = component_info[i].ci;
+        const ecs_c_info_t *c_info = component_info[i].ci;
         ecs_vector_t *triggers;
         if (!c_info || !(triggers = c_info->on_remove)) {
             continue;
@@ -5025,7 +4999,7 @@ void commit(
     ecs_entities_t * added,
     ecs_entities_t * removed)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
     
     ecs_table_t *src_table = info->table;
     if (src_table == dst_table) {
@@ -5083,8 +5057,7 @@ void commit(
 
 static
 void* get_base_component(
-    ecs_world_t * world,
-    ecs_stage_t * stage,
+    const ecs_world_t * world,
     ecs_entity_info_t * info,
     ecs_entity_t component)
 {
@@ -5100,7 +5073,7 @@ void* get_base_component(
             ptr = get_component(&prefab_info, component);
             if (!ptr) {
                 ptr = get_base_component(
-                    world, stage, &prefab_info, component);
+                    world, &prefab_info, component);
             }
         }
     }
@@ -5196,7 +5169,7 @@ const ecs_entity_t* new_w_data(
                 continue;
             }
 
-            ecs_c_info_t *cdata = get_c_info(world, c);
+            const ecs_c_info_t *cdata = get_c_info(world, c);
             ecs_copy_t copy;
             if (cdata && (copy = cdata->lifecycle.copy)) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
@@ -5225,7 +5198,7 @@ const ecs_entity_t* new_w_data(
 
 static
 bool has_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type,
     bool match_any,
@@ -5241,8 +5214,7 @@ bool has_type(
         return true;
     }
 
-    ecs_world_t *world_arg = world;
-    ecs_type_t entity_type = ecs_get_type(world_arg, entity);
+    ecs_type_t entity_type = ecs_get_type(world, entity);
 
     return ecs_type_contains(
         world, entity_type, type, match_any, match_prefabs) != 0;
@@ -5256,6 +5228,7 @@ void add_remove(
     ecs_entities_t * to_remove)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(to_add->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(to_remove->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
@@ -5322,7 +5295,7 @@ void add_entities(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     if (ecs_defer_add(world, stage, entity, components)) {
         return;
@@ -5351,7 +5324,7 @@ void remove_entities(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);    
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     if (ecs_defer_remove(world, stage, entity, components)) {
         return;
@@ -5470,7 +5443,7 @@ void ecs_set_watch(
 }
 
 ecs_entity_t ecs_find_in_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t component,
     ecs_entity_t flags)
@@ -5505,20 +5478,30 @@ ecs_entity_t ecs_find_in_type(
 ecs_entity_t ecs_new_id(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* It is possible that the world passed to this function is a stage, so
+     * make sure we have the actual world. Cast away const since this is one of
+     * the few functions that may modify the world while it is in readonly mode,
+     * since it is thread safe (uses atomic inc when in threading mode) */
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
+
     ecs_entity_t entity;
 
-    int32_t thread_count = ecs_vector_count(world->workers);
-    if (thread_count >= 1) {
+    int32_t stage_count = ecs_get_stage_count(unsafe_world);
+    if (ecs_os_has_threading() && stage_count > 1) {
         /* Can't atomically increase number above max int */
         ecs_assert(
-            world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
+            unsafe_world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
 
-        entity = (ecs_entity_t)ecs_os_ainc((int32_t*)&world->stats.last_id);
+        entity = (ecs_entity_t)ecs_os_ainc(
+            (int32_t*)&unsafe_world->stats.last_id);
     } else {
-        entity = ecs_eis_recycle(world);
+        entity = ecs_eis_recycle(unsafe_world);
     }
 
-    ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, 
+    ecs_assert(!unsafe_world->stats.max_id || 
+        entity <= unsafe_world->stats.max_id, 
         ECS_OUT_OF_RANGE, NULL);
 
     return entity;
@@ -5527,23 +5510,31 @@ ecs_entity_t ecs_new_id(
 ecs_entity_t ecs_new_component_id(
     ecs_world_t *world)
 {
-    if (world->in_progress) {
-        /* Can't issue new id while iterating when in multithreaded mode */
-        ecs_assert(ecs_vector_count(world->workers) <= 1, 
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* It is possible that the world passed to this function is a stage, so
+     * make sure we have the actual world. Cast away const since this is one of
+     * the few functions that may modify the world while it is in readonly mode,
+     * since it is thread safe (uses atomic inc when in threading mode) */
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
+
+    if (unsafe_world->is_readonly) {
+        /* Can't issue new comp id while iterating when in multithreaded mode */
+        ecs_assert(ecs_get_stage_count(world) <= 1, 
             ECS_INVALID_WHILE_ITERATING, NULL);
     }
 
     ecs_entity_t id;
 
-    if (world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
+    if (unsafe_world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
         do {
-            id = world->stats.last_component_id ++;
-        } while (ecs_exists(world, id) && id < ECS_HI_COMPONENT_ID);        
+            id = unsafe_world->stats.last_component_id ++;
+        } while (ecs_exists(unsafe_world, id) && id < ECS_HI_COMPONENT_ID);        
     }
     
-    if (world->stats.last_component_id >= ECS_HI_COMPONENT_ID) {
+    if (unsafe_world->stats.last_component_id >= ECS_HI_COMPONENT_ID) {
         /* If the low component ids are depleted, return a regular entity id */
-        id = ecs_new_id(world);
+        id = ecs_new_id(unsafe_world);
     }
 
     return id;
@@ -5554,8 +5545,9 @@ ecs_entity_t ecs_new_w_type(
     ecs_type_t type)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);    
-    ecs_entity_t entity = ecs_new_id(world);  
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);    
+    ecs_entity_t entity = ecs_new_id(world);
 
     if (type || world->stage.scope) {
         ecs_entities_t to_add = ecs_type_to_entities(type);
@@ -5576,7 +5568,8 @@ ecs_entity_t ecs_new_w_entity(
     ecs_entity_t component)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);    
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new_id(world);
 
     if (component || stage->scope) {
@@ -5614,7 +5607,9 @@ const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_entities_t * components,
     void * data)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     const ecs_entity_t *ids;
     if (ecs_defer_bulk_new(world, stage, count, components, data, &ids)) {
         return ids;
@@ -5631,7 +5626,9 @@ const ecs_entity_t* ecs_bulk_new_w_type(
     ecs_type_t type,
     int32_t count)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     const ecs_entity_t *ids;
     ecs_entities_t components = ecs_type_to_entities(type);
     if (ecs_defer_bulk_new(world, stage, count, &components, NULL, &ids)) {
@@ -5648,7 +5645,10 @@ const ecs_entity_t* ecs_bulk_new_w_entity(
     ecs_entity_t entity,
     int32_t count)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_entities_t components = {
         .array = &entity,
         .count = 1
@@ -5668,9 +5668,9 @@ void ecs_clear(
     ecs_entity_t entity)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     if (ecs_defer_clear(world, stage, entity)) {
         return;
     }
@@ -5696,6 +5696,11 @@ void ecs_delete_children(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(parent != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_from_world(&world);
+
     ecs_vector_t *child_tables = ecs_map_get_ptr(
         world->child_tables, ecs_vector_t*, parent);
 
@@ -5718,7 +5723,7 @@ void ecs_delete_children(
             }
 
             /* Clear components from table (invokes destructors, OnRemove) */
-            ecs_table_clear(world, table);
+            ecs_table_delete_entities(world, table);
 
             /* Delete table */
             ecs_delete_table(world, table);
@@ -5737,7 +5742,7 @@ void ecs_delete(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     if (ecs_defer_delete(world, stage, entity)) {
         return;
     }
@@ -5775,6 +5780,9 @@ void ecs_add_type(
     ecs_entity_t entity,
     ecs_type_t type)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
     ecs_entities_t components = ecs_type_to_entities(type);
     add_entities(world, entity, &components);
 }
@@ -5784,6 +5792,10 @@ void ecs_add_entity(
     ecs_entity_t entity,
     ecs_entity_t to_add)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, to_add), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
     ecs_entities_t components = { .array = &to_add, .count = 1 };
     add_entities(world, entity, &components);
 }
@@ -5793,6 +5805,9 @@ void ecs_remove_type(
     ecs_entity_t entity,
     ecs_type_t type)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
     ecs_entities_t components = ecs_type_to_entities(type);
     remove_entities(world, entity, &components);
 }
@@ -5802,6 +5817,10 @@ void ecs_remove_entity(
     ecs_entity_t entity,
     ecs_entity_t to_remove)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, to_remove), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
     ecs_entities_t components = { .array = &to_remove, .count = 1 };
     remove_entities(world, entity, &components);
 }
@@ -5812,6 +5831,11 @@ void ecs_add_remove_entity(
     ecs_entity_t to_add,
     ecs_entity_t to_remove)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, to_add), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, to_remove), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
     ecs_entities_t components_add = { .array = &to_add, .count = 1 };      
     ecs_entities_t components_remove = { .array = &to_remove, .count = 1 };      
     add_remove(world, entity, &components_add, &components_remove);
@@ -5823,6 +5847,9 @@ void ecs_add_remove_type(
     ecs_type_t to_add,
     ecs_type_t to_remove)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
     ecs_entities_t components_add = ecs_type_to_entities(to_add);
     ecs_entities_t components_remove = ecs_type_to_entities(to_remove);
     add_remove(world, entity, &components_add, &components_remove);
@@ -5835,7 +5862,10 @@ ecs_entity_t ecs_clone(
     bool copy_value)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(src != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, src), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     
     if (!dst) {
         dst = ecs_new_id(world);
@@ -5876,12 +5906,17 @@ ecs_entity_t ecs_clone(
 }
 
 const void* ecs_get_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+
     ecs_entity_info_t info;
     void *ptr = NULL;
 
@@ -5897,7 +5932,7 @@ const void* ecs_get_w_entity(
         if (!ptr) {
             if (component != ecs_typeid(EcsName) && component != EcsPrefab) {
                 ptr = get_base_component(
-                    world, stage, &info, component);
+                    world, &info, component);
             }
         }        
     }
@@ -5906,7 +5941,7 @@ const void* ecs_get_w_entity(
 }
 
 const void* ecs_get_ref_w_entity(
-    ecs_world_t * world,
+    const ecs_world_t * world,
     ecs_ref_t * ref,
     ecs_entity_t entity,
     ecs_entity_t component)
@@ -5920,6 +5955,8 @@ const void* ecs_get_ref_w_entity(
     entity |= ref->entity;
 
     if (!record) {
+        /* Make sure we're not working with a stage */
+        world = ecs_get_world(world);
         record = ecs_eis_get(world, entity);
     }
 
@@ -5959,7 +5996,11 @@ void* ecs_get_mut_w_entity(
     ecs_entity_t component,
     bool * is_added)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
+    
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     void *result;
 
     if (ecs_defer_set(
@@ -6008,7 +6049,11 @@ void ecs_modified_w_entity(
     ecs_entity_t entity,
     ecs_entity_t component)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     if (ecs_defer_modified(world, stage, entity, component)) {
         return;
@@ -6044,7 +6089,7 @@ ecs_entity_t assign_ptr_w_entity(
     bool is_move,
     bool notify)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     ecs_entities_t added = {
         .array = &component,
@@ -6074,7 +6119,7 @@ ecs_entity_t assign_ptr_w_entity(
 
     if (ptr) {
         ecs_entity_t real_id = ecs_get_typeid(world, component);
-        ecs_c_info_t *cdata = get_c_info(world, real_id);
+        const ecs_c_info_t *cdata = get_c_info(world, real_id);
         if (cdata) {
             if (is_move) {
                 ecs_move_t move = cdata->lifecycle.move;
@@ -6119,16 +6164,24 @@ ecs_entity_t ecs_set_ptr_w_entity(
     size_t size,
     const void *ptr)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!entity || ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
+
     /* Safe to cast away const: function won't modify if move arg is false */
     return assign_ptr_w_entity(
         world, entity, component, size, (void*)ptr, false, true);
 }
 
 ecs_entity_t ecs_get_case(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t sw_id)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, sw_id), ECS_INVALID_PARAMETER, NULL);
+
     ecs_entity_info_t info;
     ecs_table_t *table;
     if (!ecs_get_info(world, entity, &info) || !(table = info.table)) {
@@ -6158,7 +6211,11 @@ void ecs_enable_component_w_entity(
     ecs_entity_t component,
     bool enable)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     if (ecs_defer_enable(
         world, stage, entity, component, enable))
@@ -6198,10 +6255,17 @@ void ecs_enable_component_w_entity(
 }
 
 bool ecs_is_component_enabled_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+
     ecs_entity_info_t info;
     ecs_table_t *table;
     if (!ecs_get_info(world, entity, &info) || !(table = info.table)) {
@@ -6229,10 +6293,17 @@ bool ecs_is_component_enabled_w_entity(
 }
 
 bool ecs_has_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!component || ecs_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+
     if (ECS_HAS_ROLE(component, CASE)) {
         ecs_entity_info_t info;
         ecs_table_t *table;
@@ -6255,27 +6326,40 @@ bool ecs_has_entity(
 }
 
 bool ecs_has_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     return has_type(world, entity, type, true, true);
 }
 
 ecs_entity_t ecs_get_parent_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!entity || ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!component || ecs_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
+
+    if (!entity) {
+        return 0;
+    }
+
     ecs_type_t type = ecs_get_type(world, entity);    
     ecs_entity_t parent = ecs_find_in_type(world, type, component, ECS_CHILDOF);
     return parent;
 }
 
 const char* ecs_get_name(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
     if (entity == EcsSingleton) {
         return "$";
     }
@@ -6294,6 +6378,7 @@ ecs_type_t ecs_type_from_entity(
     ecs_entity_t entity)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     if (!entity) {
         return NULL;
@@ -6308,7 +6393,7 @@ ecs_type_t ecs_type_from_entity(
 }
 
 ecs_entity_t ecs_type_to_entity(
-    ecs_world_t *world, 
+    const ecs_world_t *world, 
     ecs_type_t type)
 {
     (void)world;
@@ -6325,29 +6410,75 @@ ecs_entity_t ecs_type_to_entity(
     return *(ecs_vector_first(type, ecs_entity_t));
 }
 
-bool ecs_is_alive(
-    ecs_world_t *world,
-    ecs_entity_t e)
-{
-    return ecs_eis_is_alive(world, e);
-}
-
-bool ecs_exists(
-    ecs_world_t *world,
-    ecs_entity_t e)
-{
-    return ecs_eis_exists(world, e);
-}
-
-ecs_type_t ecs_get_type(
-    ecs_world_t *world,
+bool ecs_is_valid(
+    const ecs_world_t *world,
     ecs_entity_t entity)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_record_t *record = NULL;
 
-    record = ecs_eis_get(world, entity);
+    /* 0 is not a valid entity id */
+    if (!entity) {
+        return false;
+    }
+    
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
 
+    /* When checking roles and/or traits, the generation count may have been
+     * stripped away. Just test if the entity is 0 or not. */
+    if (ECS_HAS_ROLE(entity, TRAIT)) {
+        ecs_entity_t lo = ecs_entity_t_lo(entity);
+        ecs_entity_t hi = ecs_entity_t_hi(entity & ECS_COMPONENT_MASK);
+        return lo != 0 && hi != 0;
+    } else
+    if (entity & ECS_ROLE) {
+        return ecs_entity_t_lo(entity) != 0;
+    }
+
+    /* An id may not yet exist in the world which does not mean it cannot be
+     * used as an entity identifier. An example is when a hard-coded entity id
+     * is used. However, if the entity id does exist in the world, it must be
+     * alive. */
+    return !ecs_exists(world, entity) || ecs_is_alive(world, entity);
+}
+
+bool ecs_is_alive(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+
+    return ecs_eis_is_alive(world, entity);
+}
+
+bool ecs_exists(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+
+    return ecs_eis_exists(world, entity);
+}
+
+ecs_type_t ecs_get_type(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+
+    ecs_record_t *record = ecs_eis_get(world, entity);
     ecs_table_t *table;
     if (record && (table = record->table)) {
         return table->type;
@@ -6357,32 +6488,43 @@ ecs_type_t ecs_get_type(
 }
 
 ecs_entity_t ecs_get_typeid(
-    ecs_world_t *world,
-    ecs_entity_t e)
+    const ecs_world_t *world,
+    ecs_entity_t entity)
 {
-    if (ECS_HAS_ROLE(e, TRAIT)) {
-        ecs_entity_t trait = ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
+    if (ECS_HAS_ROLE(entity, TRAIT)) {
+        /* Make sure we're not working with a stage */
+        world = ecs_get_world(world);
+
+        ecs_entity_t trait = ecs_entity_t_hi(entity & ECS_COMPONENT_MASK);
         if (ecs_has(world, trait, EcsComponent)) {
             /* This is not a trait tag, trait is the value */
             return trait;
         } else {
             /* This is a trait tag, component is the value */
-            return ecs_entity_t_lo(e);
+            return ecs_entity_t_lo(entity);
         }
-    } else if (e & ECS_ROLE_MASK) {
+    } else if (entity & ECS_ROLE_MASK) {
         return 0;
     }
 
-    return e;
+    return entity;
 }
 
 int32_t ecs_count_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type)
 {    
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
     if (!type) {
         return 0;
     }
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
 
     return ecs_count_w_filter(world, &(ecs_filter_t){
         .include = type
@@ -6390,12 +6532,17 @@ int32_t ecs_count_type(
 }
 
 int32_t ecs_count_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity)
-{    
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
     if (!entity) {
         return 0;
     }
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
 
     /* Get temporary type that just contains entity */
     ECS_VECTOR_STACK(type, ecs_entity_t, &entity, 1);
@@ -6406,10 +6553,13 @@ int32_t ecs_count_entity(
 }
 
 int32_t ecs_count_w_filter(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_filter_t *filter)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
 
     ecs_sparse_t *tables = world->store.tables;
     int32_t i, count = ecs_sparse_count(tables);
@@ -6428,25 +6578,17 @@ int32_t ecs_count_w_filter(
 bool ecs_defer_begin(
     ecs_world_t *world)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    
-    if (world->in_progress) {
-        return ecs_stage_defer_begin(world, stage);
-    } else {
-        return ecs_defer_none(world, stage);
-    }
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    return ecs_defer_none(world, stage);
 }
 
 bool ecs_defer_end(
     ecs_world_t *world)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    
-    if (world->in_progress) {
-        return ecs_stage_defer_end(world, stage);
-    } else {
-        return ecs_defer_flush(world, stage);
-    }
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    return ecs_defer_flush(world, stage);
 }
 
 static
@@ -6519,11 +6661,18 @@ const char* ecs_role_str(
 }
 
 size_t ecs_entity_str(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     char *buffer,
     size_t buffer_len)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(buffer != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(buffer_len > 0, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
     char *ptr = buffer;
     size_t bytes_left = buffer_len - 1, required = 0;
     if (entity & ECS_ROLE_MASK) {
@@ -6632,12 +6781,20 @@ bool valid_components(
 
 /* Leave safe section. Run all deferred commands. */
 bool ecs_defer_flush(
-    ecs_world_t * world,
-    ecs_stage_t * stage)
+    ecs_world_t *world,
+    ecs_stage_t *stage)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
     if (!--stage->defer) {
+        /* Set to NULL. Processing deferred commands can cause additional
+         * commands to get enqueued (as result of reactive systems). Make sure
+         * that the original array is not reallocated, as this would complicate
+         * processing the queue. */
         ecs_vector_t *defer_queue = stage->defer_queue;
         stage->defer_queue = NULL;
+
         if (defer_queue) {
             ecs_op_t *ops = ecs_vector_first(defer_queue, ecs_op_t);
             int32_t i, count = ecs_vector_count(defer_queue);
@@ -6650,8 +6807,8 @@ bool ecs_defer_flush(
                 }
 
                 /* If entity is no longer alive, this could be because the queue
-                 * contained both a delete and a subsequent add/remove/set which
-                 * should be ignored. */
+                * contained both a delete and a subsequent add/remove/set which
+                * should be ignored. */
                 if (e && !ecs_is_alive(world, e) && ecs_eis_exists(world, e)) {
                     ecs_assert(op->kind != EcsOpNew && op->kind != EcsOpClone, 
                         ECS_INTERNAL_ERROR, NULL);
@@ -6716,7 +6873,7 @@ bool ecs_defer_flush(
                     flush_bulk_new(world, op);
 
                     /* Continue since flush_bulk_new is repsonsible for cleaning
-                     * up resources. */
+                    * up resources. */
                     continue;
                 }
 
@@ -6727,11 +6884,15 @@ bool ecs_defer_flush(
                 if (op->is._1.value) {
                     ecs_os_free(op->is._1.value);
                 }                  
-            };
-
-            if (defer_queue != stage->defer_merge_queue) {
-                ecs_vector_free(defer_queue);
             }
+
+            if (stage->defer_queue) {
+                ecs_vector_free(stage->defer_queue);
+            }
+
+            /* Restore defer queue */
+            ecs_vector_clear(defer_queue);
+            stage->defer_queue = defer_queue;
         }
 
         return true;
@@ -6808,6 +6969,65 @@ bool defer_add_remove(
     }
     
     return false;
+}
+
+static
+void merge_stages(
+    ecs_world_t *world,
+    bool force_merge)
+{
+    bool is_stage = world->magic == ECS_STAGE_MAGIC;
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
+
+    bool measure_frame_time = world->measure_frame_time;
+
+    ecs_time_t t_start;
+    if (measure_frame_time) {
+        ecs_os_get_time(&t_start);
+    }
+
+    if (is_stage) {
+        /* Check for consistency if force_merge is enabled. In practice this
+         * function will never get called with force_merge disabled for just
+         * a single stage. */
+        if (force_merge || stage->auto_merge) {
+            ecs_defer_end((ecs_world_t*)stage);
+        }
+    } else {
+        /* Merge stages. Only merge if the stage has auto_merging turned on, or 
+         * if this is a forced merge (like when ecs_merge is called) */
+        int32_t i, count = ecs_get_stage_count(world);
+        for (i = 0; i < count; i ++) {
+            ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
+            ecs_assert(s->magic == ECS_STAGE_MAGIC, ECS_INTERNAL_ERROR, NULL);
+            if (force_merge || s->auto_merge) {
+                ecs_defer_end((ecs_world_t*)s);
+            }
+        }
+    }
+
+    ecs_eval_component_monitors(world);
+
+    if (measure_frame_time) {
+        world->stats.merge_time_total += 
+            (FLECS_FLOAT)ecs_time_measure(&t_start);
+    }
+
+    world->stats.merge_count_total ++; 
+}
+
+static
+void do_auto_merge(
+    ecs_world_t *world)
+{
+    merge_stages(world, false);
+}
+
+static
+void do_manual_merge(
+    ecs_world_t *world)
+{
+    merge_stages(world, true);
 }
 
 bool ecs_defer_none(
@@ -6950,7 +7170,7 @@ bool ecs_defer_bulk_new(
                 void *data = ecs_os_malloc(size * count);
                 defer_data[c] = data;
 
-                ecs_c_info_t *cinfo = NULL;
+                const ecs_c_info_t *cinfo = NULL;
                 ecs_entity_t real_id = ecs_get_typeid(world, comp);
                 if (real_id) {
                     cinfo = ecs_get_c_info(world, real_id);
@@ -7049,7 +7269,7 @@ bool ecs_defer_set(
             }
         }
 
-        ecs_c_info_t *c_info = NULL;
+        const ecs_c_info_t *c_info = NULL;
         ecs_entity_t real_id = ecs_get_typeid(world, component);
         if (real_id) {
             c_info = ecs_get_c_info(world, real_id);
@@ -7084,48 +7304,6 @@ bool ecs_defer_set(
     return false;
 }
 
-void ecs_stage_merge(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{
-    ecs_assert(stage != &world->stage, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_assert(stage->defer == 0, ECS_INVALID_PARAMETER, NULL);
-    if (ecs_vector_count(stage->defer_merge_queue)) {
-        stage->defer ++;
-        stage->defer_queue = stage->defer_merge_queue;
-        ecs_defer_flush(world, stage);
-        ecs_vector_clear(stage->defer_merge_queue);
-        ecs_assert(stage->defer_queue == NULL, ECS_INVALID_PARAMETER, NULL);
-    }    
-}
-
-bool ecs_stage_defer_begin(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{   
-    (void)world; 
-    if (ecs_defer_none(world, stage)) {
-        stage->defer_queue = stage->defer_merge_queue;    
-        return true;  
-    }
-    return false;
-}
-
-bool ecs_stage_defer_end(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{ 
-    (void)world;
-    stage->defer --;
-    if (!stage->defer) {
-        stage->defer_merge_queue = stage->defer_queue;
-        stage->defer_queue = NULL;
-        return true;
-    }
-    return false;
-}
-
 void ecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage)
@@ -7143,12 +7321,14 @@ void ecs_stage_init(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+
     memset(stage, 0, sizeof(ecs_stage_t));
-    if (stage == &world->stage) {
-        stage->id = 0;
-    } else if (stage == &world->temp_stage) {
-        stage->id = 1;
-    }
+
+    stage->world = world;
+    stage->thread_ctx = world;
+    stage->auto_merge = true;
 }
 
 void ecs_stage_deinit(
@@ -7156,10 +7336,176 @@ void ecs_stage_deinit(
     ecs_stage_t *stage)
 {
     (void)world;
+
+    /* Set magic to 0 so that accessing the stage after deinitializing it will
+     * throw an assert. */
+    stage->magic = 0;
+
     ecs_vector_free(stage->defer_queue);
-    ecs_vector_free(stage->defer_merge_queue);
 }
 
+void ecs_set_stages(
+    ecs_world_t *world,
+    int32_t stage_count)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stages;
+    int32_t i, count = ecs_vector_count(world->worker_stages);
+
+    if (count && count != stage_count) {
+        stages = ecs_vector_first(world->worker_stages, ecs_stage_t);
+
+        for (i = 0; i < count; i ++) {
+            /* If stage contains a thread handle, ecs_set_threads was used to
+             * create the stages. ecs_set_threads and ecs_set_stages should not
+             * be mixed. */
+            ecs_assert(stages[i].magic == ECS_STAGE_MAGIC, 
+                ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(stages[i].thread == 0, ECS_INVALID_OPERATION, NULL);
+            ecs_stage_deinit(world, &stages[i]);
+        }
+
+        ecs_vector_free(world->worker_stages);
+    }
+    
+    if (stage_count) {
+        world->worker_stages = ecs_vector_new(ecs_stage_t, stage_count);
+
+        for (i = 0; i < stage_count; i ++) {
+            ecs_stage_t *stage = ecs_vector_add(
+                &world->worker_stages, ecs_stage_t);
+            ecs_stage_init(world, stage);
+            stage->magic = ECS_STAGE_MAGIC;
+            stage->id = 1 + i; /* 0 is reserved for main/temp stage */
+
+            /* Set thread_ctx to stage, as this stage might be used in a
+             * multithreaded context */
+            stage->thread_ctx = (ecs_world_t*)stage;
+        }
+    } else {
+        /* Set to NULL to prevent double frees */
+        world->worker_stages = NULL;
+    }
+
+    /* Regardless of whether the stage was just initialized or not, when the
+     * ecs_set_stages function is called, all stages inherit the auto_merge
+     * property from the world */
+    for (i = 0; i < stage_count; i ++) {
+        ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
+        stage->auto_merge = world->stage.auto_merge;
+    }
+}
+
+int32_t ecs_get_stage_count(
+    const ecs_world_t *world)
+{
+    world = ecs_get_world(world);
+    return ecs_vector_count(world->worker_stages);
+}
+
+int32_t ecs_get_stage_id(
+    const ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (world->magic == ECS_STAGE_MAGIC) {
+        ecs_stage_t *stage = (ecs_stage_t*)world;
+
+        /* Index 0 is reserved for main stage */
+        return stage->id - 1;
+    } else if (world->magic == ECS_WORLD_MAGIC) {
+        return 0;
+    } else {
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    }
+}
+
+ecs_world_t* ecs_get_stage(
+    const ecs_world_t *world,
+    int32_t stage_id)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_vector_count(world->worker_stages) > stage_id, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    return (ecs_world_t*)ecs_vector_get(
+        world->worker_stages, ecs_stage_t, stage_id);
+}
+
+bool ecs_staging_begin(
+    ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t i, count = ecs_get_stage_count(world);
+    for (i = 0; i < count; i ++) {
+        ecs_defer_begin(ecs_get_stage(world, i));
+    }
+
+    bool is_readonly = world->is_readonly;
+
+    /* From this point on, the world is "locked" for mutations, and it is only 
+     * allowed to enqueue commands from stages */
+    world->is_readonly = true;
+
+    return is_readonly;
+}
+
+void ecs_staging_end(
+    ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->is_readonly == true, ECS_INVALID_OPERATION, NULL);
+
+    /* After this it is safe again to mutate the world directly */
+    world->is_readonly = false;
+
+    do_auto_merge(world);
+}
+
+void ecs_merge(
+    ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC || 
+               world->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    do_manual_merge(world);
+}
+
+void ecs_set_automerge(
+    ecs_world_t *world,
+    bool auto_merge)
+{
+    /* If a world is provided, set auto_merge globally for the world. This
+     * doesn't actually do anything (the main stage never merges) but it serves
+     * as the default for when stages are created. */
+    if (world->magic == ECS_WORLD_MAGIC) {
+        world->stage.auto_merge = auto_merge;
+
+        /* Propagate change to all stages */
+        int i, stage_count = ecs_get_stage_count(world);
+        for (i = 0; i < stage_count; i ++) {
+            ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
+            stage->auto_merge = auto_merge;
+        }
+
+    /* If a stage is provided, override the auto_merge value for the individual
+     * stage. This allows an application to control per-stage which stage should
+     * be automatically merged and which one shouldn't */
+    } else {
+        /* Magic needs to be either a world or a stage */
+        ecs_assert(world->magic == ECS_STAGE_MAGIC, 
+            ECS_INVALID_FROM_WORKER, NULL);
+
+        ecs_stage_t *stage = (ecs_stage_t*)world;
+        stage->auto_merge = auto_merge;
+    }
+}
 
 /** Resize the vector buffer */
 static
@@ -8814,7 +9160,7 @@ ecs_entity_t ecs_import(
     void *handles_out,
     size_t handles_size)
 {
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
     const char *old_name_prefix = world->name_prefix;
@@ -8965,7 +9311,7 @@ ecs_entity_t ecs_new_module(
     size_t alignment)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     if (!e) {
         char *module_path = ecs_module_path_from_c(name);
@@ -9134,12 +9480,13 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
+    int32_t stage_current,
+    int32_t stage_count,
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
-    void *param,
-    bool ran_by_app);
+    void *param);
 
 #endif
 #endif
@@ -9167,22 +9514,28 @@ typedef struct EcsPipelineQuery {
 //// Pipeline API
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Update a pipeline (internal function).
+ * Before running a pipeline, it must be updated. During this update phase
+ * all systems in the pipeline are collected, ordered and sync points are 
+ * inserted where necessary. This operation may only be called when staging is
+ * disabled.
+ *
+ * Because multiple threads may run a pipeline, preparing the pipeline must 
+ * happen synchronously, which is why this function is separate from 
+ * ecs_pipeline_run. Not running the prepare step may cause systems to not get
+ * ran, or ran in the wrong order.
+ *
+ * If 0 is provided for the pipeline id, the default pipeline will be ran (this
+ * is either the builtin pipeline or the pipeline set with set_pipeline()).
+ * 
+ * @param world The world.
+ * @param pipeline The pipeline to run.
+ * @return The number of elements in the pipeline.
+ */
 int32_t ecs_pipeline_update(
     ecs_world_t *world,
-    ecs_entity_t pipeline);
-
-int32_t ecs_pipeline_begin(
-    ecs_world_t *world,
-    ecs_entity_t pipeline);
-
-void ecs_pipeline_end(
-    ecs_world_t *world);
-
-void ecs_pipeline_progress(
-    ecs_world_t *world,
     ecs_entity_t pipeline,
-    FLECS_FLOAT delta_time);
-
+    bool start_of_frame); 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Worker API
@@ -9198,7 +9551,9 @@ void ecs_worker_end(
     ecs_world_t *world);
 
 void ecs_workers_progress(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time);
 
 #endif
 #endif
@@ -9301,7 +9656,7 @@ void ecs_gauge_reduce(
 }
 
 void ecs_get_world_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_world_stats_t *s)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -9384,8 +9739,8 @@ void ecs_get_world_stats(
 }
 
 void ecs_get_query_stats(
-    ecs_world_t *world,
-    ecs_query_t *query,
+    const ecs_world_t *world,
+    const ecs_query_t *query,
     ecs_query_stats_t *s)
 {
     (void)world;
@@ -9410,7 +9765,7 @@ void ecs_get_query_stats(
 
 #ifdef FLECS_SYSTEM
 bool ecs_get_system_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *s)
 {
@@ -9451,7 +9806,7 @@ static ecs_system_stats_t* get_system_stats(
 }
 
 bool ecs_get_pipeline_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *s)
 {
@@ -9508,7 +9863,7 @@ bool ecs_get_pipeline_stats(
 #endif
 
 void ecs_dump_world_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_world_stats_t *s)
 {
     int32_t t = s->t;
@@ -9591,7 +9946,7 @@ ecs_data_t* duplicate_data(
             continue;
         }
 
-        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+        const ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         int16_t size = column->size;
         int16_t alignment = column->alignment;
         ecs_copy_t copy;
@@ -9993,7 +10348,7 @@ void ecs_dbg_table(
 }
 
 ecs_table_t* ecs_dbg_get_table(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     int32_t index)
 {
     if (ecs_sparse_count(world->store.tables) <= index) {
@@ -10005,15 +10360,15 @@ ecs_table_t* ecs_dbg_get_table(
 }
 
 bool ecs_dbg_filter_table(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_filter_t *filter)
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_filter_t *filter)
 {
     return ecs_table_match_filter(world, table, filter);
 }
 
 void ecs_dbg_entity(
-    ecs_world_t *world, 
+    const ecs_world_t *world, 
     ecs_entity_t entity, 
     ecs_dbg_entity_t *dbg_out)
 {
@@ -10429,7 +10784,7 @@ void bulk_delete(
     bool is_delete)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -10453,18 +10808,9 @@ void bulk_delete(
             continue;
         }
 
-        ecs_vector_t *entities = NULL;
-        if (data) {
-            entities = data->entities;
-        }
-
-        ecs_vector_each(entities, ecs_entity_t, e_ptr, {
-            ecs_eis_delete(world, *e_ptr);
-        })
-
         /* Both filters passed, clear table */
         if (is_delete) {
-            ecs_table_clear(world, table);
+            ecs_table_delete_entities(world, table);
         } else {
             ecs_table_clear_silent(world, table);
         }
@@ -10522,7 +10868,7 @@ void ecs_bulk_add_remove_type(
     const ecs_filter_t *filter)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -10580,7 +10926,7 @@ void ecs_bulk_add_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(to_add != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -10625,7 +10971,7 @@ void ecs_bulk_add_entity(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(to_add != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -10672,7 +11018,7 @@ void ecs_bulk_remove_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(to_remove != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -10717,7 +11063,7 @@ void ecs_bulk_remove_entity(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(to_remove != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -10765,7 +11111,7 @@ void ecs_bulk_remove_entity(
 
 static
 ecs_column_t *da_get_column(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     int32_t column)
 {
     ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -10809,7 +11155,7 @@ ecs_entity_t* get_entity_array(
 /* -- Public API -- */
 
 ecs_type_t ecs_table_get_type(
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
     return table->type;
 }
@@ -10851,7 +11197,7 @@ ecs_record_t ecs_table_insert(
 }
 
 int32_t ecs_table_find_column(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     ecs_entity_t component)
 {
     ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -10860,7 +11206,7 @@ int32_t ecs_table_find_column(
 }
 
 ecs_vector_t* ecs_table_get_column(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     int32_t column)
 {
     ecs_column_t *c = da_get_column(table, column);
@@ -10894,7 +11240,7 @@ ecs_vector_t* ecs_table_set_column(
 }
 
 ecs_vector_t* ecs_table_get_entities(
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
     ecs_data_t *data = table->data;
     if (!data) {
@@ -10905,7 +11251,7 @@ ecs_vector_t* ecs_table_get_entities(
 }
 
 ecs_vector_t* ecs_table_get_records(
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
     ecs_data_t *data = table->data;
     if (!data) {
@@ -11139,26 +11485,54 @@ void ecs_record_move_to(
 
 /* -- Private functions -- */
 
-ecs_stage_t *ecs_get_stage(
+const ecs_world_t* ecs_get_world(
+    const ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (world->magic == ECS_WORLD_MAGIC) {
+        return world;
+    } else {
+        return ((ecs_stage_t*)world)->world;
+    }
+}
+
+const ecs_stage_t* ecs_stage_from_readonly_world(
+    const ecs_world_t *world)
+{
+    ecs_assert(world->magic == ECS_WORLD_MAGIC ||
+               world->magic == ECS_STAGE_MAGIC,
+               ECS_INTERNAL_ERROR,
+               NULL);
+
+    if (world->magic == ECS_WORLD_MAGIC) {
+        return &world->stage;
+
+    } else if (world->magic == ECS_STAGE_MAGIC) {
+        return (ecs_stage_t*)world;
+    }
+    
+    return NULL;    
+}
+
+ecs_stage_t *ecs_stage_from_world(
     ecs_world_t **world_ptr)
 {
     ecs_world_t *world = *world_ptr;
 
     ecs_assert(world->magic == ECS_WORLD_MAGIC ||
-               world->magic == ECS_THREAD_MAGIC,
+               world->magic == ECS_STAGE_MAGIC,
                ECS_INTERNAL_ERROR,
                NULL);
 
     if (world->magic == ECS_WORLD_MAGIC) {
-        if (world->in_progress) {
-            return &world->temp_stage;
-        } else {
-            return &world->stage;
-        }
-    } else if (world->magic == ECS_THREAD_MAGIC) {
-        ecs_thread_t *thread = (ecs_thread_t*)world;
-        *world_ptr = thread->world;
-        return thread->stage;
+        ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
+        return &world->stage;
+
+    } else if (world->magic == ECS_STAGE_MAGIC) {
+        ecs_stage_t *stage = (ecs_stage_t*)world;
+        *world_ptr = stage->world;
+        return stage;
     }
     
     return NULL;
@@ -11173,6 +11547,9 @@ void eval_component_monitor(
     ecs_world_t *world,
     ecs_component_monitor_t *mon)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     if (!mon->rematch) {
         return;
     }
@@ -11239,7 +11616,9 @@ void ecs_component_monitor_free(
 }
 
 static
-void init_store(ecs_world_t *world) {
+void init_store(
+    ecs_world_t *world) 
+{
     ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
     
     /* Initialize entity index */
@@ -11332,16 +11711,12 @@ ecs_world_t *ecs_mini(void) {
     world->on_activate_components = ecs_map_new(ecs_on_demand_in_t, 0);
     world->on_enable_components = ecs_map_new(ecs_on_demand_in_t, 0);
 
-    world->stage_count = 2;
     world->worker_stages = NULL;
-    world->workers = NULL;
     world->workers_waiting = 0;
     world->workers_running = 0;
     world->quit_workers = false;
-    world->in_progress = false;
-    world->is_merging = false;
+    world->is_readonly = false;
     world->is_fini = false;
-    world->auto_merge = true;
     world->measure_frame_time = false;
     world->measure_system_time = false;
     world->should_quit = false;
@@ -11378,11 +11753,9 @@ ecs_world_t *ecs_mini(void) {
     world->arg_threads = 0;
 
     ecs_stage_init(world, &world->stage);
-    ecs_stage_init(world, &world->temp_stage);
-    init_store(world);
+    ecs_set_stages(world, 1);
 
-    world->stage.world = world;
-    world->temp_stage.world = world;
+    init_store(world);
 
     ecs_bootstrap(world);
 
@@ -11438,6 +11811,22 @@ ecs_world_t* ecs_init_w_args(
     return ecs_init();
 }
 
+void ecs_quit(
+    ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_from_world(&world);
+    world->should_quit = true;
+}
+
+bool ecs_should_quit(
+    const ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    return world->should_quit;
+}
+
 static
 void on_demand_in_map_deinit(
     ecs_map_t *map)
@@ -11473,6 +11862,9 @@ void ecs_notify_tables(
     ecs_world_t *world,
     ecs_table_event_t *event)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     ecs_sparse_t *tables = world->store.tables;
     int32_t i, count = ecs_sparse_count(tables);
 
@@ -11487,6 +11879,9 @@ void ecs_set_component_actions_w_entity(
     ecs_entity_t component,
     EcsComponentLifecycle *lifecycle)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_from_world(&world);
+
 #ifndef NDEBUG
     const EcsComponent *component_ptr = ecs_get(world, component, EcsComponent);
 
@@ -11531,10 +11926,13 @@ void ecs_set_component_actions_w_entity(
 }
 
 bool ecs_component_has_actions(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t component)
 {
-    ecs_c_info_t *c_info = ecs_get_c_info(world, component);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+
+    const ecs_c_info_t *c_info = ecs_get_c_info(world, component);
     return (c_info != NULL) && c_info->lifecycle_set;
 }
 
@@ -11543,6 +11941,9 @@ void ecs_atfini(
     ecs_fini_action_t action,
     void *ctx)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     ecs_assert(action != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_action_elem_t *elem = ecs_vector_add(&world->fini_actions, 
@@ -11558,8 +11959,9 @@ void ecs_run_post_frame(
     ecs_fini_action_t action,
     void *ctx)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(action != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     ecs_action_elem_t *elem = ecs_vector_add(&stage->post_frame_actions, 
         ecs_action_elem_t);
@@ -11639,7 +12041,7 @@ void fini_stages(
     ecs_world_t *world)
 {
     ecs_stage_deinit(world, &world->stage);
-    ecs_stage_deinit(world, &world->temp_stage);
+    ecs_set_stages(world, 0);
 }
 
 /* Cleanup child table admin */
@@ -11688,9 +12090,9 @@ void fini_misc(
 int ecs_fini(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!world->in_progress, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!world->is_merging, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     world->is_fini = true;
@@ -11735,7 +12137,8 @@ void ecs_dim(
     ecs_world_t *world,
     int32_t entity_count)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
     ecs_eis_set_size(world, entity_count + ECS_HI_COMPONENT_ID);
 }
 
@@ -11744,7 +12147,8 @@ void ecs_dim_type(
     ecs_type_t type,
     int32_t entity_count)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
     if (type) {
         ecs_table_t *table = ecs_table_from_type(world, type);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -11757,55 +12161,18 @@ void ecs_dim_type(
 void ecs_eval_component_monitors(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);    
     eval_component_monitor(world, &world->component_monitors);
     eval_component_monitor(world, &world->parent_monitors);
-}
-
-void ecs_merge(
-    ecs_world_t *world)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    assert(world->is_merging == false);
-
-    bool measure_frame_time = world->measure_frame_time;
-
-    world->is_merging = true;
-
-    ecs_time_t t_start;
-    if (measure_frame_time) {
-        ecs_os_get_time(&t_start);
-    }
-
-    ecs_stage_merge(world, &world->temp_stage);
-
-    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
-        ecs_stage_merge(world, stage);
-    });
-
-    world->is_merging = false;
-
-    ecs_eval_component_monitors(world);
-
-    if (measure_frame_time) {
-        world->stats.merge_time_total += (FLECS_FLOAT)ecs_time_measure(&t_start);
-    }
-
-    world->stats.merge_count_total ++;
-}
-
-void ecs_set_automerge(
-    ecs_world_t *world,
-    bool auto_merge)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    world->auto_merge = auto_merge;
 }
 
 void ecs_measure_frame_time(
     ecs_world_t *world,
     bool enable)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     if (world->stats.target_fps == 0.0 || enable) {
@@ -11817,13 +12184,16 @@ void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
     world->measure_system_time = enable;
 }
 
 /* Increase timer resolution based on target fps */
-static void set_timer_resolution(FLECS_FLOAT fps)
+static 
+void set_timer_resolution(
+    FLECS_FLOAT fps)
 {
     if(fps >= 60.0f) ecs_increase_timer_resolution(1);
     else ecs_increase_timer_resolution(0);
@@ -11833,7 +12203,8 @@ void ecs_set_target_fps(
     ecs_world_t *world,
     FLECS_FLOAT fps)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     if (!world->arg_fps) {
@@ -11844,9 +12215,10 @@ void ecs_set_target_fps(
 }
 
 void* ecs_get_context(
-    ecs_world_t *world)
+    const ecs_world_t *world)
 {
-    ecs_get_stage(&world);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    world = ecs_get_world(world);
     return world->context;
 }
 
@@ -11854,7 +12226,8 @@ void ecs_set_context(
     ecs_world_t *world,
     void *context)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
     world->context = context;
 }
 
@@ -11863,7 +12236,8 @@ void ecs_set_entity_range(
     ecs_entity_t id_start,
     ecs_entity_t id_end)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
     ecs_assert(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!id_end || id_end > world->stats.last_id, ECS_INVALID_PARAMETER, NULL);
 
@@ -11879,34 +12253,32 @@ bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);    
     bool old_value = world->range_check_enabled;
     world->range_check_enabled = enable;
     return old_value;
 }
 
 int32_t ecs_get_thread_index(
-    ecs_world_t *world)
+    const ecs_world_t *world)
 {
-    if (world->magic == ECS_THREAD_MAGIC) {
-        ecs_thread_t *thr = (ecs_thread_t*)world;
-        return thr->index;
-    } else if (world->magic == ECS_WORLD_MAGIC) {
-        return 0;
-    } else {
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-    }
+    return ecs_get_stage_id(world);
 }
 
 int32_t ecs_get_threads(
     ecs_world_t *world)
 {
-    return ecs_vector_count(world->workers);
+    return ecs_vector_count(world->worker_stages);
 }
 
 bool ecs_enable_locking(
     ecs_world_t *world,
     bool enable)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+
     if (enable) {
         if (!world->locking_enabled) {
             world->mutex = ecs_os_mutex_new();
@@ -11929,6 +12301,8 @@ bool ecs_enable_locking(
 void ecs_lock(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);    
     ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
     ecs_os_mutex_lock(world->mutex);
 }
@@ -11936,6 +12310,8 @@ void ecs_lock(
 void ecs_unlock(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);    
     ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
     ecs_os_mutex_unlock(world->mutex);
 }
@@ -11943,6 +12319,8 @@ void ecs_unlock(
 void ecs_begin_wait(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
     ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
     ecs_os_mutex_lock(world->thr_sync);
     ecs_os_cond_wait(world->thr_cond, world->thr_sync);
@@ -11951,19 +12329,24 @@ void ecs_begin_wait(
 void ecs_end_wait(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);    
     ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
     ecs_os_mutex_unlock(world->thr_sync);
 }
 
-ecs_c_info_t * ecs_get_c_info(
-    ecs_world_t *world,
+const ecs_c_info_t * ecs_get_c_info(
+    const ecs_world_t *world,
     ecs_entity_t component)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);   
+
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
 
     if (component < ECS_HI_COMPONENT_ID) {
-        ecs_c_info_t *c_info = &world->c_info[component];
+        const ecs_c_info_t *c_info = &world->c_info[component];
         if (c_info->component) {
             ecs_assert(c_info->component == component, ECS_INTERNAL_ERROR, NULL);
             return c_info;
@@ -11978,41 +12361,28 @@ ecs_c_info_t * ecs_get_c_info(
 ecs_c_info_t * ecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
-{    
-    ecs_c_info_t *c_info = ecs_get_c_info(world, component);
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
+
+    const ecs_c_info_t *c_info = ecs_get_c_info(world, component);
+    ecs_c_info_t *c_info_mut = NULL;
     if (!c_info) {
         if (component < ECS_HI_COMPONENT_ID) {
-            c_info = &world->c_info[component];
-            ecs_assert(c_info->component == 0, ECS_INTERNAL_ERROR, NULL);
-            c_info->component = component;
+            c_info_mut = &world->c_info[component];
+            ecs_assert(c_info_mut->component == 0, ECS_INTERNAL_ERROR, NULL);
+            c_info_mut->component = component;
         } else {
             ecs_c_info_t t_info = { 0 };
             ecs_map_set(world->t_info, component, &t_info);
-            c_info = ecs_map_get(world->t_info, ecs_c_info_t, component);
-            ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL); 
+            c_info_mut = ecs_map_get(world->t_info, ecs_c_info_t, component);
+            ecs_assert(c_info_mut != NULL, ECS_INTERNAL_ERROR, NULL); 
         }
+    } else {
+        c_info_mut = (ecs_c_info_t*)c_info;
     }
 
-    return c_info;
-}
-
-bool ecs_staging_begin(
-    ecs_world_t *world)
-{
-    bool in_progress = world->in_progress;
-    world->in_progress = true;
-    return in_progress;
-}
-
-void ecs_staging_end(
-    ecs_world_t *world)
-{
-    ecs_assert(world->in_progress == true, ECS_INVALID_OPERATION, NULL);
-
-    world->in_progress = false;
-    if (world->auto_merge) {
-        ecs_merge(world);
-    }
+    return c_info_mut;
 }
 
 static
@@ -12020,6 +12390,9 @@ double insert_sleep(
     ecs_world_t *world,
     ecs_time_t *stop)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
+
     ecs_time_t start = *stop;
     double delta_time = ecs_time_measure(stop);
 
@@ -12057,6 +12430,9 @@ FLECS_FLOAT start_measure_frame(
     ecs_world_t *world,
     FLECS_FLOAT user_delta_time)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
+
     double delta_time = 0;
 
     if (world->measure_frame_time || (user_delta_time == 0)) {
@@ -12091,6 +12467,9 @@ static
 void stop_measure_frame(
     ecs_world_t* world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
+
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
         world->stats.frame_time_total += (FLECS_FLOAT)ecs_time_measure(&t);
@@ -12101,8 +12480,9 @@ FLECS_FLOAT ecs_frame_begin(
     ecs_world_t *world,
     FLECS_FLOAT user_delta_time)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
     ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
 
@@ -12130,12 +12510,11 @@ FLECS_FLOAT ecs_frame_begin(
 void ecs_frame_end(
     ecs_world_t *world)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(world->in_progress == false, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
-    world->stats.frame_count_total ++;   
-
-    ecs_stage_merge_post_frame(world, &world->temp_stage);
+    world->stats.frame_count_total ++;
 
     ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
         ecs_stage_merge_post_frame(world, stage);
@@ -12153,8 +12532,9 @@ void ecs_frame_end(
 }
 
 const ecs_world_info_t* ecs_get_world_info(
-    ecs_world_t *world)
+    const ecs_world_t *world)
 {
+    world = ecs_get_world(world);
     return &world->stats;
 }
 
@@ -12162,6 +12542,9 @@ void ecs_notify_queries(
     ecs_world_t *world,
     ecs_query_event_t *event)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL); 
+
     int32_t i, count = ecs_vector_count(world->queries);
     ecs_query_t **queries = ecs_vector_first(world->queries, ecs_query_t*);
 
@@ -12174,6 +12557,9 @@ void ecs_delete_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL); 
+
     /* Notify queries that table is to be removed */
     ecs_notify_queries(
         world, &(ecs_query_event_t){
@@ -13165,6 +13551,8 @@ bool ecs_strbuf_vappend_intern(
     va_copy(arg_cpy, args);
     memRequired = vsnprintf(
         ecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
+
+    ecs_assert(memRequired != -1, ECS_INTERNAL_ERROR, NULL);
 
     if (memRequired <= memLeftInElement) {
         /* Element was large enough to fit string */
@@ -14254,7 +14642,7 @@ bool ecs_sig_check_constraints(
 }
 
 ecs_entity_t ecs_find_entity_in_prefabs(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type,
     ecs_entity_t component,
@@ -14303,14 +14691,14 @@ ecs_entity_t ecs_find_entity_in_prefabs(
 
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
 ecs_entity_t ecs_type_contains(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type_1,
     ecs_type_t type_2,
     bool match_all,
     bool match_prefab)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
+    world = ecs_get_world(world);
     
     if (!type_1) {
         return 0;
@@ -14406,17 +14794,21 @@ ecs_type_t ecs_type_merge(
     ecs_type_t to_remove)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
+
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, an assert will trigger. */    
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
     
-    ecs_table_t *table = ecs_table_from_type(world, type);
+    ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
     ecs_entities_t add_array = ecs_type_to_entities(to_add);
     ecs_entities_t remove_array = ecs_type_to_entities(to_remove);
     
     table = ecs_table_traverse_remove(
-        world, table, &remove_array, NULL); 
+        unsafe_world, table, &remove_array, NULL); 
 
     table = ecs_table_traverse_add(
-        world, table, &add_array, NULL); 
+        unsafe_world, table, &add_array, NULL); 
 
     if (!table) {
         return NULL;
@@ -14431,14 +14823,18 @@ ecs_type_t ecs_type_find(
     int32_t count)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_get_stage(&world);
+    
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, an assert will trigger. */    
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
 
     ecs_entities_t entities = {
         .array = array,
         .count = count
     };
 
-    ecs_table_t *table = ecs_table_find_or_create(world, &entities);
+    ecs_table_t *table = ecs_table_find_or_create(unsafe_world, &entities);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return table->type;
@@ -14454,7 +14850,7 @@ bool has_trait(
 
 static
 bool has_case(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t sw_case,
     ecs_entity_t e)
 {
@@ -14465,7 +14861,7 @@ bool has_case(
 
 static
 int match_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t e,
     ecs_entity_t match_with)
@@ -14516,7 +14912,7 @@ int match_entity(
 
 static
 bool search_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
     bool owned)
@@ -14552,6 +14948,13 @@ bool search_type(
             }
 
             ecs_entity_t base = e & ECS_COMPONENT_MASK;
+            if (!ecs_is_valid(world, base)) {
+                /* This indicates that an entity has an INSTANCEOF relationship
+                 * to an invalid base. That's no good, and will be handled with
+                 * future features (e.g. automatically removing the relation) */
+                continue;
+            }
+
             ecs_type_t base_type = ecs_get_type(world, base);
 
             if (search_type(world, base_type, entity, false)) {
@@ -14564,7 +14967,7 @@ bool search_type(
 }
 
 bool ecs_type_has_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity)
 {
@@ -14572,7 +14975,7 @@ bool ecs_type_has_entity(
 }
 
 bool ecs_type_owns_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
     bool owned)
@@ -14581,7 +14984,7 @@ bool ecs_type_owns_entity(
 }
 
 bool ecs_type_has_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has)
 {
@@ -14589,7 +14992,7 @@ bool ecs_type_has_type(
 }
 
 bool ecs_type_owns_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has,
     bool owned)
@@ -14603,15 +15006,20 @@ ecs_type_t ecs_type_add(
     ecs_entity_t e)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
-    ecs_table_t *table = ecs_table_from_type(world, type);
+
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, an assert will trigger. */
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
+
+    ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
 
     ecs_entities_t entities = {
         .array = &e,
         .count = 1
     };
 
-    table = ecs_table_traverse_add(world, table, &entities, NULL);
+    table = ecs_table_traverse_add(unsafe_world, table, &entities, NULL);
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -14624,22 +15032,27 @@ ecs_type_t ecs_type_remove(
     ecs_entity_t e)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_get_stage(&world);
-    ecs_table_t *table = ecs_table_from_type(world, type);
+    
+    /* This function is allowed while staged, as long as the type already
+     * exists. If the type does not exist yet and traversing the table graph
+     * results in the creation of a table, an assert will trigger. */
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
+    
+    ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
 
     ecs_entities_t entities = {
         .array = &e,
         .count = 1
     };
 
-    table = ecs_table_traverse_remove(world, table, &entities, NULL);
+    table = ecs_table_traverse_remove(unsafe_world, table, &entities, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return table->type;    
 }
 
 char* ecs_type_str(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type)
 {
     if (!type) {
@@ -15046,7 +15459,7 @@ void activate_table(
 
 static
 ecs_entity_t components_contains(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t table_type,
     ecs_type_t type,
     ecs_entity_t *entity_out,
@@ -15496,12 +15909,17 @@ int32_t get_component_index(
         * zero, so that a system won't try to access the data */
         if (!ECS_HAS_ROLE(component, CASE) && 
             !ECS_HAS_ROLE(component, SWITCH)) 
-        {
+        {            
             component = ecs_get_typeid(world, component);
-            const EcsComponent *data = ecs_get(
-                world, component, EcsComponent);
 
-            if (!data || !data->size) {
+            if (component) {
+                const EcsComponent *data = ecs_get(
+                    world, component, EcsComponent);
+
+                if (!data || !data->size) {
+                    result = 0;
+                }
+            } else {
                 result = 0;
             }
         }        
@@ -15625,7 +16043,7 @@ int32_t type_trait_count(
  * or else the table won't match. */
 static
 int32_t count_traits(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     ecs_type_t type)
 {
     ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
@@ -15900,7 +16318,7 @@ add_trait:
 
 static
 bool match_column(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type,
     ecs_sig_from_kind_t from_kind,
     ecs_entity_t component,
@@ -15935,9 +16353,9 @@ bool match_column(
 
 /* Match table with system */
 bool ecs_query_match(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_query_t *query,
     ecs_match_failure_t *failure_info)
 {
     /* Prevent having to add if not null checks everywhere */
@@ -17233,17 +17651,19 @@ ecs_query_t* ecs_query_new_w_sig_intern(
         *elem = result;
 
         if (result->flags & EcsQueryNeedsTables) {
-            if (ecs_has_entity(world, system, EcsMonitor)) {
-                result->flags |= EcsQueryMonitor;
-            }
-            
-            if (ecs_has_entity(world, system, EcsOnSet)) {
-                result->flags |= EcsQueryOnSet;
-            }
+            if (system) {
+                if (ecs_has_entity(world, system, EcsMonitor)) {
+                    result->flags |= EcsQueryMonitor;
+                }
+                
+                if (ecs_has_entity(world, system, EcsOnSet)) {
+                    result->flags |= EcsQueryOnSet;
+                }
 
-            if (ecs_has_entity(world, system, EcsUnSet)) {
-                result->flags |= EcsQueryUnSet;
-            }        
+                if (ecs_has_entity(world, system, EcsUnSet)) {
+                    result->flags |= EcsQueryUnSet;
+                }  
+            }      
 
             match_tables(world, result);
         } else {
@@ -17382,7 +17802,7 @@ ecs_iter_t ecs_query_iter_page(
     
     sort_tables(world, query);
 
-    if (!world->in_progress && query->flags & EcsQueryHasRefs) {
+    if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
         ecs_eval_component_monitors(world);
     }
 
@@ -17428,6 +17848,8 @@ void ecs_query_set_iter(
     int32_t row,
     int32_t count)
 {
+    (void)world;
+    
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
     
@@ -17442,7 +17864,7 @@ void ecs_query_set_iter(
     ecs_entity_t *entity_buffer = ecs_vector_first(data->entities, ecs_entity_t);  
     it->entities = &entity_buffer[row];
 
-    it->world = world;
+    it->world = NULL;
     it->query = query;
     it->column_count = ecs_vector_count(query->sig.columns);
     it->table_count = 1;
@@ -17827,10 +18249,12 @@ bool ecs_query_next(
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_query_iter_t *iter = &it->iter.query;
     ecs_page_iter_t *piter = &iter->page_iter;
-    ecs_world_t *world = it->world;
     ecs_query_t *query = it->query;
+    ecs_world_t *world = query->world;
+    (void)world;
 
-    ecs_get_stage(&world);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     ecs_table_slice_t *slice = ecs_vector_first(
         query->table_slices, ecs_table_slice_t);
     ecs_matched_table_t *tables = ecs_vector_first(
@@ -18041,7 +18465,7 @@ bool ecs_query_orphaned(
 }
 
 const EcsComponent* ecs_component_from_id(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e)
 {
     ecs_entity_t trait = 0;
@@ -18248,13 +18672,17 @@ void init_edges(
 
         if (ECS_HAS_ROLE(e, DISABLED)) {
             table->flags |= EcsTableHasDisabled;
-        }        
+        }   
 
         if (ECS_HAS_ROLE(e, CHILDOF)) {
             ecs_entity_t parent = e & ECS_COMPONENT_MASK;
             ecs_assert(!ecs_exists(world, parent) || ecs_is_alive(world, parent), ECS_INTERNAL_ERROR, NULL);
             table->flags |= EcsTableHasParent;
             register_child_table(world, table, parent);
+            
+            if (parent == EcsFlecs || parent == EcsFlecsCore) {
+                table->flags |= EcsTableHasBuiltins;
+            }
         }
 
         if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
@@ -18452,8 +18880,8 @@ ecs_entity_t find_xor_replace(
 }
 
 int32_t ecs_table_switch_from_case(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    const ecs_world_t * world,
+    const ecs_table_t * table,
     ecs_entity_t add)
 {
     ecs_type_t type = table->type;
@@ -18573,6 +19001,9 @@ ecs_table_t* ecs_table_traverse_remove(
     ecs_entities_t * to_remove,
     ecs_entities_t * removed)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    
     int32_t i, count = to_remove->count;
     ecs_entity_t *entities = to_remove->array;
     node = node ? node : &world->store.root;
@@ -18656,6 +19087,9 @@ ecs_table_t* ecs_table_traverse_add(
     ecs_entities_t * to_add,
     ecs_entities_t * added)    
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     int32_t i, count = to_add->count;
     ecs_entity_t *entities = to_add->array;
     node = node ? node : &world->store.root;
@@ -18830,7 +19264,8 @@ ecs_table_t *find_or_create(
     ecs_world_t * world,
     ecs_entities_t * entities)
 {    
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
 
     /* Make sure array is ordered and does not contain duplicates */
     int32_t type_count = entities->count;
@@ -18891,7 +19326,7 @@ ecs_table_t *find_or_create(
 
     /* If we get here, table needs to be created which is only allowed when the
      * application is not currently in progress */
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entities_t ordered_entities = {
         .array = ordered,
@@ -18916,7 +19351,8 @@ ecs_table_t* ecs_table_find_or_create(
     ecs_world_t * world,
     ecs_entities_t * components)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
     return find_or_create(world, components);
 }
 
@@ -18932,6 +19368,9 @@ ecs_table_t* ecs_table_from_type(
 void ecs_init_root_table(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
+
     ecs_entities_t entities = {
         .array = NULL,
         .count = 0
@@ -18945,6 +19384,8 @@ void ecs_table_clear_edges(
     ecs_table_t *table)
 {
     (void)world;
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
 
     uint32_t i;
 
@@ -19527,7 +19968,7 @@ const void* get_shared_column(
 
         ecs_assert(cdata != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(cdata->size == size, ECS_COLUMN_TYPE_MISMATCH, 
-            ecs_get_name(it->world, it->system));
+            it->system ? ecs_get_name(it->world, it->system) : NULL);
     }
 #endif
 
@@ -20067,8 +20508,8 @@ void ecs_increase_timer_resolution(bool enable)
 /* Worker thread */
 static
 void* worker(void *arg) {
-    ecs_thread_t *thread = arg;
-    ecs_world_t *world = thread->world;
+    ecs_stage_t *stage = arg;
+    ecs_world_t *world = stage->world;
 
     /* Start worker thread, increase counter so main thread knows how many
      * workers are ready */
@@ -20082,12 +20523,14 @@ void* worker(void *arg) {
     ecs_os_mutex_unlock(world->sync_mutex);
 
     while (!world->quit_workers) {
-        ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)thread, 0);
-        ecs_pipeline_progress(
-            (ecs_world_t*)thread, 
+        ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
+
+        ecs_pipeline_run(
+            (ecs_world_t*)stage, 
             world->pipeline, 
             world->stats.delta_time);
-        ecs_set_scope((ecs_world_t*)thread, old_scope);
+
+        ecs_set_scope((ecs_world_t*)stage, old_scope);
     }
 
     ecs_os_mutex_lock(world->sync_mutex);
@@ -20103,28 +20546,19 @@ void start_workers(
     ecs_world_t *world,
     int32_t threads)
 {
-    ecs_assert(world->workers == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_set_stages(world, threads);
 
-    world->workers = ecs_vector_new(ecs_thread_t, threads);
-    world->worker_stages = ecs_vector_new(ecs_stage_t, threads);
+    ecs_assert(ecs_get_stage_count(world) == threads, ECS_INTERNAL_ERROR, NULL);
 
     int32_t i;
     for (i = 0; i < threads; i ++) {
-        ecs_thread_t *thread =
-            ecs_vector_add(&world->workers, ecs_thread_t);
+        ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
+        ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(stage->magic == ECS_STAGE_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
-        thread->magic = ECS_THREAD_MAGIC;
-        thread->world = world;
-        thread->thread = 0;
-        thread->index = i;
-
-        thread->stage = ecs_vector_add(&world->worker_stages, ecs_stage_t);
-        ecs_stage_init(world, thread->stage);
-        thread->stage->id = 2 + i; /* 0 and 1 are reserved for main and temp */
-        thread->stage->world = (ecs_world_t*)thread;
-
-        thread->thread = ecs_os_thread_new(worker, thread);
-        ecs_assert(thread->thread != 0, ECS_THREAD_ERROR, NULL);
+        ecs_vector_get(world->worker_stages, ecs_stage_t, i);
+        stage->thread = ecs_os_thread_new(worker, stage);
+        ecs_assert(stage->thread != 0, ECS_THREAD_ERROR, NULL);
     }
 }
 
@@ -20133,12 +20567,12 @@ static
 void wait_for_workers(
     ecs_world_t *world)
 {
-    int32_t thread_count = ecs_vector_count(world->workers);
+    int32_t stage_count = ecs_get_stage_count(world);
     bool wait = true;
 
     do {
         ecs_os_mutex_lock(world->sync_mutex);
-        if (world->workers_running == thread_count) {
+        if (world->workers_running == stage_count) {
             wait = false;
         }
         ecs_os_mutex_unlock(world->sync_mutex);
@@ -20150,11 +20584,11 @@ static
 void sync_worker(
     ecs_world_t *world)
 {
-    int32_t thread_count = ecs_vector_count(world->workers);
+    int32_t stage_count = ecs_get_stage_count(world);
 
     /* Signal that thread is waiting */
     ecs_os_mutex_lock(world->sync_mutex);
-    if (++ world->workers_waiting == thread_count) {
+    if (++ world->workers_waiting == stage_count) {
         /* Only signal main thread when all threads are waiting */
         ecs_os_cond_signal(world->sync_cond);
     }
@@ -20169,15 +20603,15 @@ static
 void wait_for_sync(
     ecs_world_t *world)
 {
-    int32_t thread_count = ecs_vector_count(world->workers);
+    int32_t stage_count = ecs_get_stage_count(world);
 
     ecs_os_mutex_lock(world->sync_mutex);
-    if (world->workers_waiting != thread_count) {
+    if (world->workers_waiting != stage_count) {
         ecs_os_cond_wait(world->sync_cond, world->sync_mutex);
     }
     
     /* We should have been signalled unless all workers are waiting on sync */
-    ecs_assert(world->workers_waiting == thread_count, 
+    ecs_assert(world->workers_waiting == stage_count, 
         ECS_INTERNAL_ERROR, NULL);
 
     ecs_os_mutex_unlock(world->sync_mutex);
@@ -20195,24 +20629,30 @@ void signal_workers(
 
 /** Stop worker threads */
 static
-void ecs_stop_threads(
+bool ecs_stop_threads(
     ecs_world_t *world)
 {
+    if (!world->workers_running) {
+        return false;
+    }
+
     world->quit_workers = true;
+    
     signal_workers(world);
 
-    ecs_vector_each(world->workers, ecs_thread_t, thr, {
-        ecs_os_thread_join(thr->thread);
-        ecs_stage_deinit(world, thr->stage);
+    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
+        ecs_os_thread_join(stage->thread);
+        stage->thread = 0;
     });
 
-    ecs_vector_free(world->workers);
-    ecs_vector_free(world->worker_stages);
-    world->worker_stages = NULL;
-    world->workers = NULL;
     world->quit_workers = false;
     
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* Deinitialize stages */
+    ecs_set_stages(world, 0);
+
+    return true;
 }
 
 /* -- Private functions -- */
@@ -20220,7 +20660,11 @@ void ecs_stop_threads(
 void ecs_worker_begin(
     ecs_world_t *world)
 {
-    if (world->magic == ECS_WORLD_MAGIC) {
+    ecs_stage_from_world(&world);
+    int32_t stage_count = ecs_get_stage_count(world);
+    ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
+    
+    if (stage_count == 1) {
         ecs_staging_begin(world);
     }
 }
@@ -20228,15 +20672,20 @@ void ecs_worker_begin(
 bool ecs_worker_sync(
     ecs_world_t *world)
 {
+    ecs_stage_from_world(&world);
+
     int32_t build_count = world->stats.pipeline_build_count_total;
+    int32_t stage_count = ecs_get_stage_count(world);
+    ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t thread_count = ecs_vector_count(world->workers);
-    if (!thread_count) {
+    /* If there are no threads, merge in place */
+    if (stage_count == 1) {
         ecs_staging_end(world);
-
-        ecs_pipeline_update(world, world->pipeline);
-
+        ecs_pipeline_update(world, world->pipeline, false);
         ecs_staging_begin(world);
+
+    /* Synchronize all workers. The last worker to reach the sync point will
+     * signal the main thread, which will perform the merge. */
     } else {
         sync_worker(world);
     }
@@ -20247,33 +20696,44 @@ bool ecs_worker_sync(
 void ecs_worker_end(
     ecs_world_t *world)
 {
-    int32_t thread_count = ecs_vector_count(world->workers);
-    if (!thread_count) {
+    ecs_stage_from_world(&world);
+
+    int32_t stage_count = ecs_get_stage_count(world);
+    ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* If there are no threads, merge in place */
+    if (stage_count == 1) {
         ecs_staging_end(world);
+
+    /* Synchronize all workers. The last worker to reach the sync point will
+     * signal the main thread, which will perform the merge. */
     } else {
         sync_worker(world);
     }
 }
 
 void ecs_workers_progress(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time)
 {
-    ecs_entity_t pipeline = world->pipeline;
-    int32_t thread_count = ecs_vector_count(world->workers);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    int32_t stage_count = ecs_get_stage_count(world);
 
     ecs_time_t start = {0};
     if (world->measure_frame_time) {
         ecs_time_measure(&start);
     }
 
-    if (thread_count <= 1) {
-        ecs_pipeline_begin(world, pipeline);
+    if (stage_count == 1) {
+        ecs_pipeline_update(world, pipeline, true);
         ecs_entity_t old_scope = ecs_set_scope(world, 0);
-        ecs_pipeline_progress(world, pipeline, world->stats.delta_time);
+        ecs_world_t *stage = ecs_get_stage(world, 0);
+
+        ecs_pipeline_run(stage, pipeline, delta_time);
         ecs_set_scope(world, old_scope);
-        ecs_pipeline_end(world);
     } else {
-        int32_t i, sync_count = ecs_pipeline_begin(world, pipeline);
+        int32_t i, sync_count = ecs_pipeline_update(world, pipeline, true);
 
         /* Make sure workers are running and ready */
         wait_for_workers(world);
@@ -20293,14 +20753,12 @@ void ecs_workers_progress(
             ecs_staging_end(world);
 
             int32_t update_count;
-            if ((update_count = ecs_pipeline_update(world, pipeline))) {
+            if ((update_count = ecs_pipeline_update(world, pipeline, false))) {
                 /* The number of operations in the pipeline could have changed
                  * as result of the merge */
                 sync_count = update_count;
             }
         }
-
-        ecs_pipeline_end(world);
     }
 
     if (world->measure_frame_time) {
@@ -20315,17 +20773,18 @@ void ecs_set_threads(
     ecs_world_t *world,
     int32_t threads)
 {
-    ecs_assert(ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
+    ecs_assert(threads <= 1 || ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
 
-    int32_t thread_count = ecs_vector_count(world->workers);
+    int32_t stage_count = ecs_get_stage_count(world);
 
-    if (!world->arg_threads && thread_count != threads) {
+    if (!world->arg_threads && stage_count != threads) {
         /* Stop existing threads */
-        if (ecs_vector_count(world->workers)) {
-            ecs_stop_threads(world);
-            ecs_os_cond_free(world->worker_cond);
-            ecs_os_cond_free(world->sync_cond);
-            ecs_os_mutex_free(world->sync_mutex);
+        if (stage_count > 1) {
+            if (ecs_stop_threads(world)) {
+                ecs_os_cond_free(world->worker_cond);
+                ecs_os_cond_free(world->sync_cond);
+                ecs_os_mutex_free(world->sync_mutex);
+            }
         }
 
         /* Start threads if number of threads > 1 */
@@ -20333,7 +20792,6 @@ void ecs_set_threads(
             world->worker_cond = ecs_os_cond_new();
             world->sync_cond = ecs_os_cond_new();
             world->sync_mutex = ecs_os_mutex_new();
-            world->stage_count = 2 + threads;
             start_workers(world, threads);
         }
 
@@ -20644,29 +21102,22 @@ int32_t iter_reset(
 
 int32_t ecs_pipeline_update(
     ecs_world_t *world,
-    ecs_entity_t pipeline)
+    ecs_entity_t pipeline,
+    bool start_of_frame)
 {
-    EcsPipelineQuery *pq = ecs_get_mut(world, pipeline, EcsPipelineQuery, NULL);
-    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(pipeline != 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (build_pipeline(world, pipeline, pq)) {
-        return ecs_vector_count(pq->ops);
-    } else {
-        return 0;
+    /* If any entity mutations happened that could have affected query matching
+     * notify appropriate queries so caches are up to date. This includes the
+     * pipeline query. */
+    if (start_of_frame) {
+        ecs_eval_component_monitors(world);
     }
-}
 
-int32_t ecs_pipeline_begin(
-    ecs_world_t *world,
-    ecs_entity_t pipeline)
-{
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_eval_component_monitors(world);
-
-    EcsPipelineQuery *pq = ecs_get_mut(
-        world, pipeline, EcsPipelineQuery, NULL);
+    EcsPipelineQuery *pq = ecs_get_mut(world, pipeline, EcsPipelineQuery, NULL);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -20675,17 +21126,36 @@ int32_t ecs_pipeline_begin(
     return ecs_vector_count(pq->ops);
 }
 
-void ecs_pipeline_end(
-    ecs_world_t *world)
-{
-    (void)world;
-}
-
-void ecs_pipeline_progress(
+void ecs_pipeline_run(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     FLECS_FLOAT delta_time)
 {
+    ecs_assert(world != NULL, ECS_INVALID_OPERATION, NULL);
+
+    if (!pipeline) {
+        pipeline = world->pipeline;
+    }    
+
+    /* If the world is passed to ecs_pipeline_run, the function will take care
+     * of staging, so the world should not be in staged mode when called. */
+    if (world->magic == ECS_WORLD_MAGIC) {
+        ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
+
+        /* Forward to worker_progress. This function handles staging, threading
+         * and synchronization across workers. */
+        ecs_workers_progress(world, pipeline, delta_time);
+        return;
+
+    /* If a stage is passed, the function could be ran from a worker thread. In
+     * that case the main thread should manage staging, and staging should be
+     * enabled. */
+    } else {
+        ecs_assert(world->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);  
+    
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -20695,8 +21165,10 @@ void ecs_pipeline_progress(
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
-    ecs_worker_begin(world);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    int32_t stage_index = ecs_get_stage_id(stage->thread_ctx);
+    int32_t stage_count = ecs_get_stage_count(world);
+
+    ecs_worker_begin(stage->thread_ctx);
     
     ecs_iter_t it = ecs_query_iter(pq->query);
     while (ecs_query_next(&it)) {
@@ -20706,8 +21178,8 @@ void ecs_pipeline_progress(
         for(i = 0; i < it.count; i ++) {
             ecs_entity_t e = it.entities[i];
 
-            ecs_run_intern(world, stage, e, &sys[i], delta_time, 0, 0, 
-                NULL, NULL, false);
+            ecs_run_intern(world, stage, e, &sys[i], stage_index, stage_count, 
+                delta_time, 0, 0, NULL, NULL);
 
             ran_since_merge ++;
             world->stats.systems_ran_frame ++;
@@ -20721,7 +21193,7 @@ void ecs_pipeline_progress(
                  * current position (system). If there are a lot of systems
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
-                if (ecs_worker_sync(world)) {
+                if (ecs_worker_sync(stage->thread_ctx)) {
                     i = iter_reset(pq, &it, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
                     sys = ecs_column(&it, EcsSystem, 1);
@@ -20730,7 +21202,7 @@ void ecs_pipeline_progress(
         }
     }
 
-    ecs_worker_end(world);
+    ecs_worker_end(stage->thread_ctx);
 }
 
 static
@@ -20828,9 +21300,9 @@ bool ecs_progress(
     ecs_world_t *world,
     FLECS_FLOAT user_delta_time)
 {
-    ecs_frame_begin(world, user_delta_time);
+    float delta_time = ecs_frame_begin(world, user_delta_time);
 
-    ecs_workers_progress(world);
+    ecs_pipeline_run(world, 0, delta_time);
 
     ecs_frame_end(world);
 
@@ -20851,17 +21323,10 @@ void ecs_reset_clock(
     world->stats.world_time_total_raw = 0;
 }
 
-void ecs_quit(
-    ecs_world_t *world)
-{
-    ecs_get_stage(&world);
-    world->should_quit = true;
-}
-
 void ecs_deactivate_systems(
     ecs_world_t *world)
 {
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t pipeline = world->pipeline;
     const EcsPipelineQuery *pq = ecs_get( world, pipeline, EcsPipelineQuery);
@@ -20903,7 +21368,7 @@ void ecs_set_pipeline(
 }
 
 ecs_entity_t ecs_get_pipeline(
-    ecs_world_t *world)
+    const ecs_world_t *world)
 {
     return world->pipeline;
 }
@@ -20914,7 +21379,7 @@ ecs_entity_t ecs_new_pipeline(
     const char *name,
     const char *expr)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_new_type(world, e, name, expr);
     ecs_assert(ecs_get(world, result, EcsType) != NULL, 
@@ -20933,7 +21398,7 @@ void FlecsPipelineFini(
     void *ctx)
 {
     (void)ctx;
-    if (world->workers) {
+    if (ecs_get_stage_count(world)) {
         ecs_set_threads(world, 0);
     }
 }
@@ -21014,7 +21479,8 @@ void ProgressTimers(ecs_iter_t *it) {
             continue;
         }
 
-        FLECS_FLOAT time_elapsed = timer[i].time + it->world->stats.delta_time_raw;
+        const ecs_world_info_t *info = ecs_get_world_info(it->world);
+        FLECS_FLOAT time_elapsed = timer[i].time + info->delta_time_raw;
         FLECS_FLOAT timeout = timer[i].timeout;
         
         if (time_elapsed >= timeout) {
@@ -21094,13 +21560,13 @@ ecs_entity_t ecs_set_timeout(
 }
 
 FLECS_FLOAT ecs_get_timeout(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t timer)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(timer != 0, ECS_INVALID_PARAMETER, NULL);
 
-    EcsTimer *value = ecs_get_mut(world, timer, EcsTimer, NULL);
+    const EcsTimer *value = ecs_get(world, timer, EcsTimer);
     if (value) {
         return value->timeout;
     } else {
@@ -21129,7 +21595,7 @@ ecs_entity_t ecs_set_interval(
 }
 
 FLECS_FLOAT ecs_get_interval(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t timer)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -21138,7 +21604,7 @@ FLECS_FLOAT ecs_get_interval(
         return 0;
     }
 
-    EcsTimer *value = ecs_get_mut(world, timer, EcsTimer, NULL);
+    const EcsTimer *value = ecs_get(world, timer, EcsTimer);
     if (value) {
         return value->timeout;
     } else {
@@ -21386,7 +21852,7 @@ void ecs_system_activate(
     bool activate,
     const EcsSystem *system_data)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     if (activate) {
         ecs_remove_entity(world, system, EcsInactive);
@@ -21420,7 +21886,7 @@ void ecs_enable_system(
     EcsSystem *system_data,
     bool enabled)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     ecs_query_t *query = system_data->query;
     if (!query) {
@@ -21454,7 +21920,7 @@ void ecs_init_system(
     ecs_query_t *query,
     void *ctx)
 {
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     /* Add & initialize the EcsSystem component */
     bool is_added = false;
@@ -21534,7 +22000,7 @@ void ecs_enable(
     ecs_entity_t entity,
     bool enabled)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     const EcsType *type_ptr = ecs_get( world, entity, EcsType);
     if (type_ptr) {
@@ -21583,12 +22049,13 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
+    int32_t stage_current,
+    int32_t stage_count,    
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
-    void *param,
-    bool ran_by_app) 
+    void *param) 
 {
     if (!param) {
         param = system_data->ctx;
@@ -21623,21 +22090,12 @@ ecs_entity_t ecs_run_intern(
     if (measure_time) {
         ecs_os_get_time(&time_start);
     }
-
-#ifndef NDEBUG
-    stage->system = system;
-    stage->system_columns = system_data->query->sig.columns;
-#endif
     
-    bool defer = false;
-    if (!stage->defer) {
-        ecs_defer_begin(stage->world);
-        defer = true;
-    }
+    ecs_defer_begin(stage->thread_ctx);
 
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
-    it.world = stage->world;
+    it.world = stage->thread_ctx;
     it.system = system;
     it.delta_time = delta_time;
     it.delta_system_time = time_elapsed;
@@ -21654,32 +22112,21 @@ ecs_entity_t ecs_run_intern(
     ecs_iter_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
-    if (ran_by_app || world == stage->world) {
+    if (stage_count <= 1) {
         while (ecs_query_next_w_filter(&it, filter)) {
             action(&it);
         }
     } else {
-        ecs_thread_t *thread = (ecs_thread_t*)stage->world;
-        int32_t total = ecs_vector_count(world->workers);
-        int32_t current = thread->index;
-
-        while (ecs_query_next_worker(&it, current, total)) {
+        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
             action(&it);               
         }
     }
 
-    if (defer) {
-        ecs_defer_end(stage->world);
-    }
+    ecs_defer_end(stage->thread_ctx);
 
     if (measure_time) {
         system_data->time_spent += (FLECS_FLOAT)ecs_time_measure(&time_start);
     }
-
-#ifndef NDEBUG
-    stage->system = 0;
-    stage->system_columns = NULL;
-#endif
 
     system_data->invoke_count ++;
 
@@ -21697,24 +22144,34 @@ ecs_entity_t ecs_run_w_filter(
     const ecs_filter_t *filter,
     void *param)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    bool in_progress = ecs_staging_begin(world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     EcsSystem *system_data = (EcsSystem*)ecs_get(
         world, system, EcsSystem);
     assert(system_data != NULL);
 
-    ecs_entity_t interrupted_by = ecs_run_intern(
-        world, stage, system, system_data, delta_time, offset, limit, 
-        filter, param, true);
+    return ecs_run_intern(
+        world, stage, system, system_data, 0, 0, delta_time, offset, limit, 
+        filter, param);
+}
 
-    /* If world wasn't in progress when we entered this function, we need to
-     * merge and reset the in_progress value */
-    if (!in_progress) {
-        ecs_staging_end(world);
-    }
+ecs_entity_t ecs_run_worker(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    int32_t stage_current,
+    int32_t stage_count,
+    FLECS_FLOAT delta_time,
+    void *param)
+{
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
-    return interrupted_by;
+    EcsSystem *system_data = (EcsSystem*)ecs_get(
+        world, system, EcsSystem);
+    assert(system_data != NULL);
+
+    return ecs_run_intern(
+        world, stage, system, system_data, stage_current, stage_count, 
+        delta_time, 0, 0, NULL, param);
 }
 
 ecs_entity_t ecs_run(
@@ -21762,7 +22219,7 @@ void ecs_run_monitor(
 }
 
 ecs_query_t* ecs_get_query(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system)
 {
     const EcsQuery *q = ecs_get(world, system, EcsQuery);
@@ -22054,7 +22511,7 @@ ecs_entity_t ecs_new_system(
     ecs_iter_action_t action)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
@@ -22102,7 +22559,7 @@ ecs_entity_t ecs_new_trigger(
     const char *component_name,
     ecs_iter_action_t action)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t component = ecs_lookup_fullpath(world, component_name);
     ecs_assert(component != 0, ECS_INVALID_COMPONENT_ID, component_name);
@@ -22160,12 +22617,11 @@ void FlecsSystemImport(
     ecs_bootstrap_tag(world, EcsOnSet);
     ecs_bootstrap_tag(world, EcsUnSet);
 
+    /* Put following tags in flecs.core so they can be looked up
+     * without using the flecs.systems prefix. */
+    ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
     ecs_bootstrap_tag(world, EcsDisabledIntern);
     ecs_bootstrap_tag(world, EcsInactive);
-
-    /* Put EcsOnDemand and EcsMonitor in flecs.core so they can be looked up
-     * without using the flecs.systems prefix */
-    ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
     ecs_bootstrap_tag(world, EcsOnDemand);
     ecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
@@ -22216,7 +22672,7 @@ void FlecsSystemImport(
 
 
 int ecs_dbg_system(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system,
     ecs_dbg_system_t *dbg_out)
 {
@@ -22244,7 +22700,7 @@ int ecs_dbg_system(
 }
 
 bool ecs_dbg_match_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t system,
     ecs_match_failure_t *failure_info_out)
@@ -22582,6 +23038,9 @@ ecs_entity_t ecs_new_entity(
     const char *name,
     const char *expr)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
         result = ecs_new(world, 0);
@@ -22589,6 +23048,7 @@ ecs_entity_t ecs_new_entity(
     }
     
     EcsType type = type_from_expr(world, name, expr);
+
     ecs_add_type(world, result, type.normalized);
 
     return result;
@@ -22600,6 +23060,9 @@ ecs_entity_t ecs_new_prefab(
     const char *name,
     const char *expr)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
         result = ecs_new(world, 0);
@@ -22621,20 +23084,20 @@ ecs_entity_t ecs_new_component(
     size_t size,
     size_t alignment)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    assert(world->magic == ECS_WORLD_MAGIC);
-    bool in_progress = world->in_progress;
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
+    bool is_readonly = world->is_readonly;
     bool found = false;
 
     /* If world is in progress component may be registered, but only when not
      * in multithreading mode. */
-    if (in_progress) {
-        ecs_assert(ecs_vector_count(world->workers) < 1, 
+    if (is_readonly) {
+        ecs_assert(ecs_get_stage_count(world) <= 1, 
             ECS_INVALID_WHILE_ITERATING, NULL);
 
         /* Component creation should not be deferred */
-        ecs_defer_end(world);
-        world->in_progress = false;
+        world->is_readonly = false;
     }
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
@@ -22674,10 +23137,12 @@ ecs_entity_t ecs_new_component(
         world->stats.last_component_id = e + 1;
     }
 
-    if (in_progress) {
-        world->in_progress = true;
-        ecs_defer_begin(world);
+    if (is_readonly) {
+        world->is_readonly = true;
     }
+
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);
 
     return result;
 }
@@ -22688,7 +23153,8 @@ ecs_entity_t ecs_new_type(
     const char *name,
     const char *expr)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
@@ -22956,7 +23422,7 @@ void ecs_bootstrap(
 
 static
 bool path_append(
-    ecs_world_t *world, 
+    const ecs_world_t *world, 
     ecs_entity_t parent, 
     ecs_entity_t child, 
     ecs_entity_t component,
@@ -22964,6 +23430,9 @@ bool path_append(
     const char *prefix,
     ecs_strbuf_t *buf)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     ecs_type_t type = ecs_get_type(world, child);
     ecs_entity_t cur = ecs_find_in_type(world, type, component, ECS_CHILDOF);
     
@@ -22990,9 +23459,12 @@ bool path_append(
 
 static
 ecs_entity_t find_as_alias(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     int32_t i, count = ecs_vector_count(world->aliases);
     ecs_alias_t *aliases = ecs_vector_first(world->aliases, ecs_alias_t);
     for (i = 0; i < count; i ++) {
@@ -23002,25 +23474,6 @@ ecs_entity_t find_as_alias(
     }
 
     return 0;
-}
-
-char* ecs_get_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_entity_t child,
-    ecs_entity_t component,
-    const char *sep,
-    const char *prefix)
-{
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-
-    if (parent != child) {
-        path_append(world, parent, child, component, sep, prefix, &buf);
-    } else {
-        ecs_strbuf_appendstr(&buf, "");
-    }
-
-    return ecs_strbuf_get(&buf);
 }
 
 static
@@ -23052,7 +23505,7 @@ ecs_entity_t name_to_id(
 
 static
 ecs_entity_t find_child_in_table(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     const char *name)
 {
     /* If table doesn't have EcsName, then don't bother */
@@ -23091,10 +23544,13 @@ ecs_entity_t find_child_in_table(
 
 static
 ecs_entity_t find_child(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *name)
-{
+{        
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     (void)parent;
     
     ecs_sparse_each(world->store.tables, ecs_table_t, table, {
@@ -23105,64 +23561,6 @@ ecs_entity_t find_child(
     });    
 
     return 0;
-}
-
-ecs_entity_t ecs_lookup_child(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *name)
-{
-    ecs_entity_t result = 0;
-
-    ecs_vector_t *child_tables = ecs_map_get_ptr(
-        world->child_tables, ecs_vector_t*, parent);
-    
-    if (child_tables) {
-        ecs_vector_each(child_tables, ecs_table_t*, table_ptr, {
-            ecs_table_t *table = *table_ptr;
-            result = find_child_in_table(table, name);
-            if (result) {
-                return result;
-            }
-        });
-    }
-
-    return result;
-}
-
-ecs_entity_t ecs_lookup(
-    ecs_world_t *world,
-    const char *name)
-{   
-    if (!name) {
-        return 0;
-    }
-
-    if (is_number(name)) {
-        return name_to_id(name);
-    }
-
-    ecs_entity_t e = find_as_alias(world, name);
-    if (e) {
-        return e;
-    }    
-    
-    return ecs_lookup_child(world, 0, name);
-}
-
-ecs_entity_t ecs_lookup_symbol(
-    ecs_world_t *world,
-    const char *name)
-{   
-    if (!name) {
-        return 0;
-    }
-
-    if (is_number(name)) {
-        return name_to_id(name);
-    }   
-    
-    return find_child(world, 0, name);
 }
 
 static
@@ -23212,13 +23610,15 @@ const char *path_elem(
 
 static
 ecs_entity_t get_parent_from_path(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char **path_ptr,
     const char *prefix)
 {
     bool start_from_root = false;
     const char *path = *path_ptr;
+   
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
@@ -23230,8 +23630,7 @@ ecs_entity_t get_parent_from_path(
     }
 
     if (!start_from_root && !parent) {
-        ecs_stage_t *stage = ecs_get_stage(&world);
-        parent = stage->scope;
+        parent = ecs_get_scope(world);
     }
 
     *path_ptr = path;
@@ -23239,8 +23638,97 @@ ecs_entity_t get_parent_from_path(
     return parent;
 }
 
+char* ecs_get_path_w_sep(
+    const ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    ecs_entity_t component,
+    const char *sep,
+    const char *prefix)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);
+        
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    if (parent != child) {
+        path_append(world, parent, child, component, sep, prefix, &buf);
+    } else {
+        ecs_strbuf_appendstr(&buf, "");
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
+ecs_entity_t ecs_lookup_child(
+    const ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *name)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);    
+    
+    ecs_entity_t result = 0;
+
+    ecs_vector_t *child_tables = ecs_map_get_ptr(
+        world->child_tables, ecs_vector_t*, parent);
+    
+    if (child_tables) {
+        ecs_vector_each(child_tables, ecs_table_t*, table_ptr, {
+            ecs_table_t *table = *table_ptr;
+            result = find_child_in_table(table, name);
+            if (result) {
+                return result;
+            }
+        });
+    }
+
+    return result;
+}
+
+ecs_entity_t ecs_lookup(
+    const ecs_world_t *world,
+    const char *name)
+{   
+    if (!name) {
+        return 0;
+    }
+
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);    
+
+    if (is_number(name)) {
+        return name_to_id(name);
+    }
+
+    ecs_entity_t e = find_as_alias(world, name);
+    if (e) {
+        return e;
+    }    
+    
+    return ecs_lookup_child(world, 0, name);
+}
+
+ecs_entity_t ecs_lookup_symbol(
+    const ecs_world_t *world,
+    const char *name)
+{   
+    if (!name) {
+        return 0;
+    }
+
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);    
+
+    if (is_number(name)) {
+        return name_to_id(name);
+    }   
+    
+    return find_child(world, 0, name);
+}
+
 ecs_entity_t ecs_lookup_path_w_sep(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *path,
     const char *sep,
@@ -23249,6 +23737,9 @@ ecs_entity_t ecs_lookup_path_w_sep(
     if (!path) {
         return 0;
     }
+
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);    
 
     ecs_entity_t e = find_as_alias(world, path);
     if (e) {
@@ -23297,7 +23788,7 @@ ecs_entity_t ecs_set_scope(
     ecs_world_t *world,
     ecs_entity_t scope)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     ecs_entity_t e = ECS_CHILDOF | scope;
     ecs_entities_t to_add = {
@@ -23319,17 +23810,21 @@ ecs_entity_t ecs_set_scope(
 }
 
 ecs_entity_t ecs_get_scope(
-    ecs_world_t *world)
+    const ecs_world_t *world)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    const ecs_stage_t *stage = ecs_stage_from_readonly_world(world);
     return stage->scope;
 }
 
 int32_t ecs_get_child_count(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_vector_t *tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, entity);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);
+
+    ecs_vector_t *tables = ecs_map_get_ptr(
+        world->child_tables, ecs_vector_t*, entity);
     if (!tables) {
         return 0;
     } else {
@@ -23348,6 +23843,9 @@ ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = (ecs_world_t*)ecs_get_world(world);
+
     ecs_scope_iter_t iter = {
         .tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, parent),
         .index = 0
@@ -23364,6 +23862,9 @@ ecs_iter_t ecs_scope_iter_w_filter(
     ecs_entity_t parent,
     ecs_filter_t *filter)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = (ecs_world_t*)ecs_get_world(world);
+
     ecs_scope_iter_t iter = {
         .filter = *filter,
         .tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, parent),
@@ -23424,6 +23925,9 @@ const char* ecs_set_name_prefix(
     ecs_world_t *world,
     const char *prefix)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     const char *old_prefix = world->name_prefix;
     world->name_prefix = prefix;
     return old_prefix;
@@ -23437,6 +23941,8 @@ ecs_entity_t ecs_add_path_w_sep(
     const char *sep,
     const char *prefix)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (!path) {
         if (!entity) {
             entity = ecs_new_id(world);
@@ -23500,10 +24006,12 @@ void ecs_use(
     const char *name)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage->scope == 0 , ECS_INVALID_PARAMETER, NULL);
     ecs_assert(find_as_alias(world, name) == 0, ECS_ALREADY_DEFINED, NULL);
     (void)stage;

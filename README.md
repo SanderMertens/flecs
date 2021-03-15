@@ -26,7 +26,7 @@ ECS (Entity Component System) is a design pattern used in games and simulations 
 - Has _systems_ which are behavior matched with entities based on their components
 
 ## Documentation
-If you are still learning Flecs, these resources are a good star:
+If you are still learning Flecs, these resources are a good start:
 - [Flecs not for dummies (presentation)](https://github.com/SanderMertens/flecs_not_for_dummies)
 - [Quickstart](docs/Quickstart.md) ([docsforge](https://flecs.docsforge.com/master/quickstart/))
 - [Designing with Flecs](docs/DesignWithFlecs.md) ([docsforge](https://flecs.docsforge.com/master/designing-with-flecs/))

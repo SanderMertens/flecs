@@ -1,20 +1,21 @@
 #include <move_system.h>
 
 /* Component types */
-typedef struct Vector2D {
+typedef struct {
     float x;
     float y;
-} Vector2D;
+} Position;
 
-/* Typedefs can be used as component types */
-typedef Vector2D Position;
-typedef Vector2D Velocity;
+typedef struct {
+    float x;
+    float y;
+} Velocity;
 
 /* Implement a simple move system */
 void Move(ecs_iter_t *it) {
     /* Get the two columns from the system signature */
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Velocity, v, 2);
+    Position *p = ecs_column(it, Position, 1);
+    Velocity *v = ecs_column(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;

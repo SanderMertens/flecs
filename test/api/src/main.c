@@ -539,6 +539,7 @@ void Pipeline_no_merge_after_main_out(void);
 void Pipeline_no_merge_after_staged_in_out(void);
 void Pipeline_merge_after_staged_out_before_owned(void);
 void Pipeline_switch_pipeline(void);
+void Pipeline_run_pipeline(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_setup(void);
@@ -1349,6 +1350,9 @@ void MultiThreadStaging_5_threads_add_to_current(void);
 void MultiThreadStaging_6_threads_add_to_current(void);
 void MultiThreadStaging_2_threads_on_add(void);
 void MultiThreadStaging_new_w_count(void);
+void MultiThreadStaging_custom_thread_auto_merge(void);
+void MultiThreadStaging_custom_thread_manual_merge(void);
+void MultiThreadStaging_custom_thread_partial_manual_merge(void);
 
 // Testsuite 'Stresstests'
 void Stresstests_setup(void);
@@ -3481,6 +3485,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "switch_pipeline",
         Pipeline_switch_pipeline
+    },
+    {
+        "run_pipeline",
+        Pipeline_run_pipeline
     }
 };
 
@@ -6533,6 +6541,18 @@ bake_test_case MultiThreadStaging_testcases[] = {
     {
         "new_w_count",
         MultiThreadStaging_new_w_count
+    },
+    {
+        "custom_thread_auto_merge",
+        MultiThreadStaging_custom_thread_auto_merge
+    },
+    {
+        "custom_thread_manual_merge",
+        MultiThreadStaging_custom_thread_manual_merge
+    },
+    {
+        "custom_thread_partial_manual_merge",
+        MultiThreadStaging_custom_thread_partial_manual_merge
     }
 };
 
@@ -7267,7 +7287,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        15,
+        16,
         Pipeline_testcases
     },
     {
@@ -7463,7 +7483,7 @@ static bake_test_suite suites[] = {
         "MultiThreadStaging",
         MultiThreadStaging_setup,
         NULL,
-        7,
+        10,
         MultiThreadStaging_testcases
     },
     {

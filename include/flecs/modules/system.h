@@ -159,6 +159,25 @@ ecs_entity_t ecs_run(
     FLECS_FLOAT delta_time,
     void *param);
 
+/** Same as ecs_run, but subdivides entities across number of provided stages.
+ * 
+ * @param world The world.
+ * @param system The system to run.
+ * @param stage_current The id of the current stage.
+ * @param stage_count The total number of stages.
+ * @param delta_time: The time passed since the last system invocation.
+ * @param param A user-defined parameter to pass to the system.
+ * @return handle to last evaluated entity if system was interrupted.
+ */
+FLECS_API
+ecs_entity_t ecs_run_worker(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    int32_t stage_current,
+    int32_t stage_count,
+    FLECS_FLOAT delta_time,
+    void *param);
+
 /** Run system with offset/limit and type filter.
  * This operation is the same as ecs_run, but filters the entities that will be
  * iterated by the system.
@@ -246,7 +265,7 @@ void ecs_set_system_status_action(
  */
 FLECS_API
 ecs_query_t* ecs_get_query(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,19 +283,19 @@ typedef struct ecs_dbg_system_t {
 
 FLECS_API
 int ecs_dbg_system(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system,
     ecs_dbg_system_t *dbg_out);
 
 FLECS_API
 ecs_table_t* ecs_dbg_get_active_table(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_dbg_system_t *dbg,
     int32_t index);
 
 FLECS_API
 ecs_table_t* ecs_dbg_get_inactive_table(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_dbg_system_t *dbg,
     int32_t index);
 
@@ -288,7 +307,7 @@ ecs_type_t ecs_dbg_get_column_type(
 
 FLECS_API
 bool ecs_dbg_match_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t system,
     ecs_match_failure_t *failure_info_out);

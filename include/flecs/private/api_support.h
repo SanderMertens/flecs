@@ -113,7 +113,7 @@ char* ecs_module_path_from_c(
 
 FLECS_API
 bool ecs_component_has_actions(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t component);
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -47,7 +47,7 @@ void Trigger_on_add_tag_action() {
 
     world.system<MyTag>()
         .kind(flecs::OnAdd)
-        .action([&](flecs::iter it, flecs::column<MyTag>) {
+        .iter([&](flecs::iter it, MyTag*) {
             invoked ++;
         });
 

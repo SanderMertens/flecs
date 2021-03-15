@@ -587,9 +587,8 @@ void Queries_query_single_trait() {
 
     ECS_ENTITY(world, e1, TRAIT|Trait>Position);
     ECS_ENTITY(world, e2, TRAIT|Trait>Velocity);
-    ECS_ENTITY(world, e3, TRAIT|Trait);
-    ECS_ENTITY(world, e4, Position);
-    ECS_ENTITY(world, e5, Velocity);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Velocity);
 
     int32_t table_count = 0, entity_count = 0;
 

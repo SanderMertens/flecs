@@ -119,7 +119,7 @@ typedef struct ecs_pipeline_stats_t {
  * @param stats Out parameter for statistics.
  */
 FLECS_API void ecs_get_world_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_world_stats_t *stats);
 
 /** Print world statistics.
@@ -130,7 +130,7 @@ FLECS_API void ecs_get_world_stats(
  * @param stats The statistics to print.
  */
 FLECS_API void ecs_dump_world_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_world_stats_t *stats);
 
 /** Get query statistics.
@@ -141,8 +141,8 @@ FLECS_API void ecs_dump_world_stats(
  * @param stats Out parameter for statistics.
  */
 FLECS_API void ecs_get_query_stats(
-    ecs_world_t *world,
-    ecs_query_t *query,
+    const ecs_world_t *world,
+    const ecs_query_t *query,
     ecs_query_stats_t *s);
 
 #ifdef FLECS_SYSTEM
@@ -155,7 +155,7 @@ FLECS_API void ecs_get_query_stats(
  * @return true if success, false if not a system.
  */
 FLECS_API bool ecs_get_system_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *stats);
 #endif
@@ -170,7 +170,7 @@ FLECS_API bool ecs_get_system_stats(
  * @return true if success, false if not a pipeline.
  */
 FLECS_API bool ecs_get_pipeline_stats(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *stats);
 #endif

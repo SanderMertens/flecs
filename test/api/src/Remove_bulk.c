@@ -223,8 +223,11 @@ void Remove_bulk_remove_all_comp() {
     
     ECS_COMPONENT(world, Position);
 
-    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
-    test_assert(ids != NULL);
+    const ecs_entity_t *tmp_ids = ecs_bulk_new(world, Position, 10);
+    test_assert(tmp_ids != NULL);
+
+    ecs_entity_t ids[10];
+    memcpy(ids, tmp_ids, sizeof(ids));
 
     int i;
     for (i = 0; i < 10; i ++) {

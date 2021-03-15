@@ -19,8 +19,8 @@ void Delete_w_filter_delete_1() {
     test_int( ecs_count(world, Position), 0);
     test_int( ecs_count(world, Mass), 3);
 
-    test_assert( !ecs_get_type(world, e1));
-    test_assert( !!ecs_get_type(world, e2));
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Position);
@@ -51,8 +51,8 @@ void Delete_w_filter_delete_2() {
     test_int( ecs_count(world, Type), 0);
     test_int( ecs_count(world, Mass), 3);
 
-    test_assert( !ecs_get_type(world, e1));
-    test_assert( !!ecs_get_type(world, e2));    
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));  
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type);
@@ -89,9 +89,9 @@ void Delete_w_filter_delete_1_2_types() {
     test_int( ecs_count(world, Type_2), 0);
     test_int( ecs_count(world, Mass), 3);
 
-    test_assert( !ecs_get_type(world, e1));
-    test_assert( !ecs_get_type(world, e2));
-    test_assert( !!ecs_get_type(world, e3));
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e3));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -132,9 +132,9 @@ void Delete_w_filter_delete_2_2_types() {
     test_int( ecs_count(world, Type_2), 0);
     test_int( ecs_count(world, Mass), 3);
 
-    test_assert( !ecs_get_type(world, e1));
-    test_assert( !ecs_get_type(world, e2));
-    test_assert( !!ecs_get_type(world, e3));
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e3));    
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -181,10 +181,10 @@ void Delete_w_filter_delete_except_1() {
     test_int( ecs_count(world, Type_3), 0);
     test_int( ecs_count(world, Mass), 6);
 
-    test_assert( !ecs_get_type(world, e1));
-    test_assert( !!ecs_get_type(world, e2));
-    test_assert( !ecs_get_type(world, e3));
-    test_assert( !!ecs_get_type(world, e4));
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e3));
+    test_assert(ecs_is_alive(world, e4));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -233,10 +233,10 @@ void Delete_w_filter_delete_except_2() {
     test_int( ecs_count(world, Type_3), 3);
     test_int( ecs_count(world, Mass), 6);
 
-    test_assert( !ecs_get_type(world, e1));
-    test_assert( !!ecs_get_type(world, e2));
-    test_assert( !!ecs_get_type(world, e3));
-    test_assert( !!ecs_get_type(world, e4));
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e3));
+    test_assert(ecs_is_alive(world, e4));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -284,10 +284,10 @@ void Delete_w_filter_delete_with_any_of_2() {
     test_int( ecs_count(world, Type_3), 0);
     test_int( ecs_count(world, Mass), 0);
 
-    test_assert( !!ecs_get_type(world, e1));
-    test_assert( !ecs_get_type(world, e2));
-    test_assert( !ecs_get_type(world, e3));
-    test_assert( !ecs_get_type(world, e4));
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e3));
+    test_assert(!ecs_is_alive(world, e4));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_2);
@@ -338,10 +338,10 @@ void Delete_w_filter_delete_except_all_of_2() {
     test_int( ecs_count(world, Type_3), 3);
     test_int( ecs_count(world, Mass), 3);
 
-    test_assert( !ecs_get_type(world, e1));
-    test_assert( !ecs_get_type(world, e2));
-    test_assert( !!ecs_get_type(world, e3));
-    test_assert( !ecs_get_type(world, e4));    
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e3));
+    test_assert(!ecs_is_alive(world, e4));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -392,10 +392,10 @@ void Delete_w_filter_include_exact() {
     test_int( ecs_count(world, Type_3), 3);
     test_int( ecs_count(world, Mass), 6);
 
-    test_assert( !!ecs_get_type(world, e1));
-    test_assert( !ecs_get_type(world, e2));
-    test_assert( !!ecs_get_type(world, e3));
-    test_assert( !!ecs_get_type(world, e4));       
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e3));
+    test_assert(ecs_is_alive(world, e4));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_2);
@@ -444,10 +444,10 @@ void Delete_w_filter_exclude_exact() {
     test_int( ecs_count(world, Type_3), 0);
     test_int( ecs_count(world, Mass), 3);
 
-    test_assert( !ecs_get_type(world, e1));
-    test_assert( !!ecs_get_type(world, e2));
-    test_assert( !ecs_get_type(world, e3));
-    test_assert( !ecs_get_type(world, e4));    
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e3));
+    test_assert(!ecs_is_alive(world, e4));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -484,7 +484,7 @@ void Delete_w_filter_system_activate_test() {
     });
 
     test_int( ecs_count(world, Position), 0);
-    test_assert( !ecs_get_type(world, e1));
+    test_assert(!ecs_is_alive(world, e1));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Position);
@@ -512,8 +512,10 @@ void Delete_w_filter_skip_builtin_tables() {
     ecs_bulk_delete(world, NULL);
 
     test_int( ecs_count(world, Position), 0);
-    test_assert( !ecs_get_type(world, e1));
+    test_assert(!ecs_is_alive(world, e1));
 
+    test_assert(ecs_is_alive(world, ecs_typeid(Position)));
+    test_assert(ecs_is_alive(world, Dummy));
     test_assert(!!ecs_get_type(world, ecs_typeid(Position)));
     test_assert(!!ecs_get_type(world, Dummy));
 

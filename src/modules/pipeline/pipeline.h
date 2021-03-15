@@ -23,22 +23,28 @@ typedef struct EcsPipelineQuery {
 //// Pipeline API
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Update a pipeline (internal function).
+ * Before running a pipeline, it must be updated. During this update phase
+ * all systems in the pipeline are collected, ordered and sync points are 
+ * inserted where necessary. This operation may only be called when staging is
+ * disabled.
+ *
+ * Because multiple threads may run a pipeline, preparing the pipeline must 
+ * happen synchronously, which is why this function is separate from 
+ * ecs_pipeline_run. Not running the prepare step may cause systems to not get
+ * ran, or ran in the wrong order.
+ *
+ * If 0 is provided for the pipeline id, the default pipeline will be ran (this
+ * is either the builtin pipeline or the pipeline set with set_pipeline()).
+ * 
+ * @param world The world.
+ * @param pipeline The pipeline to run.
+ * @return The number of elements in the pipeline.
+ */
 int32_t ecs_pipeline_update(
     ecs_world_t *world,
-    ecs_entity_t pipeline);
-
-int32_t ecs_pipeline_begin(
-    ecs_world_t *world,
-    ecs_entity_t pipeline);
-
-void ecs_pipeline_end(
-    ecs_world_t *world);
-
-void ecs_pipeline_progress(
-    ecs_world_t *world,
     ecs_entity_t pipeline,
-    FLECS_FLOAT delta_time);
-
+    bool start_of_frame); 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Worker API
@@ -54,6 +60,8 @@ void ecs_worker_end(
     ecs_world_t *world);
 
 void ecs_workers_progress(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time);
 
 #endif

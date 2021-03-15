@@ -71,7 +71,8 @@ void Hierarchies_delete_children() {
 
     ecs_delete(world, e);
 
-    test_assert(ecs_get_type(world, child) == NULL);
+    test_bool(ecs_exists(world, child), true);
+    test_bool(ecs_is_alive(world, child), false);
 
     ecs_fini(world);
 }
@@ -963,9 +964,11 @@ void Hierarchies_delete_child() {
 
     ecs_delete(world, parent);
     
-    test_assert(ecs_get_type(world, parent) == NULL);
-    test_assert(ecs_get_type(world, child) == NULL);
-
+    test_bool(ecs_exists(world, parent), true);
+    test_bool(ecs_exists(world, child), true);    
+    test_bool(ecs_is_alive(world, parent), false);
+    test_bool(ecs_is_alive(world, child), false);
+    
     ecs_fini(world);
 }
 
@@ -985,9 +988,9 @@ void Hierarchies_delete_2_children() {
 
     ecs_delete(world, parent);
     
-    test_assert(ecs_get_type(world, parent) == NULL);
-    test_assert(ecs_get_type(world, child_1) == NULL);
-    test_assert(ecs_get_type(world, child_2) == NULL);
+    test_bool(ecs_is_alive(world, parent), false);
+    test_bool(ecs_is_alive(world, child_1), false);
+    test_bool(ecs_is_alive(world, child_2), false);
 
     ecs_fini(world);
 }
@@ -1013,9 +1016,9 @@ void Hierarchies_delete_2_children_different_type() {
 
     ecs_delete(world, parent);
     
-    test_assert(ecs_get_type(world, parent) == NULL);
-    test_assert(ecs_get_type(world, child_1) == NULL);
-    test_assert(ecs_get_type(world, child_2) == NULL);
+    test_bool(ecs_is_alive(world, parent), false);
+    test_bool(ecs_is_alive(world, child_1), false);
+    test_bool(ecs_is_alive(world, child_2), false);
 
     ecs_fini(world);
 }
@@ -1034,9 +1037,9 @@ void Hierarchies_delete_tree_2_levels() {
 
     ecs_delete(world, parent);
     
-    test_assert(ecs_get_type(world, parent) == NULL);
-    test_assert(ecs_get_type(world, child) == NULL);
-    test_assert(ecs_get_type(world, grand_child) == NULL);
+    test_bool(ecs_is_alive(world, parent), false);
+    test_bool(ecs_is_alive(world, child), false);
+    test_bool(ecs_is_alive(world, grand_child), false);
 
     ecs_fini(world);
 }
@@ -1058,10 +1061,10 @@ void Hierarchies_delete_tree_3_levels() {
 
     ecs_delete(world, parent);
     
-    test_assert(ecs_get_type(world, parent) == NULL);
-    test_assert(ecs_get_type(world, child) == NULL);
-    test_assert(ecs_get_type(world, grand_child) == NULL);
-    test_assert(ecs_get_type(world, great_grand_child) == NULL);
+    test_bool(ecs_is_alive(world, parent), false);
+    test_bool(ecs_is_alive(world, child), false);
+    test_bool(ecs_is_alive(world, grand_child), false);
+    test_bool(ecs_is_alive(world, great_grand_child), false);
 
     ecs_fini(world);
 }
@@ -1089,9 +1092,9 @@ void Hierarchies_delete_tree_count_tables() {
 
     ecs_delete(world, parent);
     
-    test_assert(ecs_get_type(world, parent) == NULL);
-    test_assert(ecs_get_type(world, child) == NULL);
-    test_assert(ecs_get_type(world, grand_child) == NULL);
+    test_bool(ecs_is_alive(world, parent), false);
+    test_bool(ecs_is_alive(world, child), false);
+    test_bool(ecs_is_alive(world, grand_child), false);
 
     it = ecs_query_iter(q);
     test_int(it.table_count, 0);
@@ -1125,9 +1128,9 @@ void Hierarchies_delete_tree_staged() {
     ecs_delete(world, parent);
     ecs_defer_end(world);
     
-    test_assert(ecs_get_type(world, parent) == NULL);
-    test_assert(ecs_get_type(world, child) == NULL);
-    test_assert(ecs_get_type(world, grand_child) == NULL);
+    test_bool(ecs_is_alive(world, parent), false);
+    test_bool(ecs_is_alive(world, child), false);
+    test_bool(ecs_is_alive(world, grand_child), false);
 
     it = ecs_query_iter(q);
     test_int(it.table_count, 0);

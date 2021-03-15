@@ -781,6 +781,84 @@ public:
         return ecs_progress(m_world, delta_time);
     }
 
+    /** Signal application should quit.
+     * After calling this operation, the next call to progress() returns false.
+     */
+    void quit() {
+        ecs_quit(m_world);
+    }
+
+    /** Test if quit() has been called.
+     */
+    bool should_quit() {
+        return ecs_should_quit(m_world);
+    }    
+
+    /** Begin frame.
+     * When an application does not use progress() to control the main loop, it
+     * can still use Flecs features such as FPS limiting and time measurements.
+     * This operation needs to be invoked whenever a new frame is about to get 
+     * processed.
+     *
+     * Calls to frame_begin must always be followed by frame_end.
+     *
+     * The function accepts a delta_time parameter, which will get passed to 
+     * systems. This value is also used to compute the amount of time the 
+     * function needs to sleep to ensure it does not exceed the target_fps, when 
+     * it is set. When 0 is provided for delta_time, the time will be measured.
+     *
+     * This function should only be ran from the main thread.
+     *
+     * @param delta_time Time elapsed since the last frame.
+     * @return The provided delta_time, or measured time if 0 was provided.
+     */
+    FLECS_FLOAT frame_begin(float delta_time = 0) {
+        return ecs_frame_begin(m_world, delta_time);
+    }
+
+    /** End frame. 
+     * This operation must be called at the end of the frame, and always after
+     * ecs_frame_begin.
+     *
+     * This function should only be ran from the main thread.
+     */
+    void frame_end() {
+        ecs_frame_end(m_world);
+    }
+
+    /** Begin staging.
+     * When an application does not use ecs_progress to control the main loop, it
+     * can still use Flecs features such as the defer queue. When an application
+     * needs to stage changes, it needs to call this function after ecs_frame_begin.
+     * A call to ecs_staging_begin must be followed by a call to ecs_staging_end.
+     * 
+     * When staging is enabled, modifications to entities are stored to a stage.
+     * This ensures that arrays are not modified while iterating. Modifications are
+     * merged back to the "main stage" when ecs_staging_end is invoked.
+     *
+     * While the world is in staging mode, no structural changes (add/remove/...)
+     * can be made to the world itself. Operations must be executed on a stage
+     * instead (see ecs_get_stage).
+     *
+     * This function should only be ran from the main thread.
+     *
+     * @return Whether world is currently staged.
+     */
+    bool staging_begin() {
+        return ecs_staging_begin(m_world);
+    }
+
+    /** End staging.
+     * Leaves staging mode. After this operation the world may be directly mutated
+     * again. By default this operation also merges data back into the world, unless
+     * automerging was disabled explicitly.
+     *
+     * This function should only be ran from the main thread.
+     */
+    void staging_end() {
+        ecs_staging_end(m_world);
+    }
+
     /** Defer operations until end of frame. 
      * When this operation is invoked while iterating, operations inbetween the
      * defer_begin and defer_end operations are executed at the end of the frame.
@@ -798,6 +876,91 @@ public:
      */
     bool defer_end() {
         return ecs_defer_end(m_world);
+    }
+
+    /** Configure world to have N stages.
+     * This initializes N stages, which allows applications to defer operations to
+     * multiple isolated defer queues. This is typically used for applications with
+     * multiple threads, where each thread gets its own queue, and commands are
+     * merged when threads are synchronized.
+     *
+     * Note that set_threads() already creates the appropriate number of stages. 
+     * The set_stages() operation is useful for applications that want to manage 
+     * their own stages and/or threads.
+     * 
+     * @param stages The number of stages.
+     */
+    void set_stages(std::int32_t stages) const {
+        ecs_set_stages(m_world, stages);
+    }
+
+    /** Get number of configured stages.
+     * Return number of stages set by set_stages.
+     *
+     * @return The number of stages used for threading.
+     */
+    std::int32_t get_stage_count() const {
+        return ecs_get_stage_count(m_world);
+    }
+
+    /** Get current stage id.
+     * The stage id can be used by an application to learn about which stage it
+     * is using, which typically corresponds with the worker thread id.
+     *
+     * @return The stage id.
+     */
+    std::int32_t get_stage_id() const {
+        return ecs_get_stage_id(m_world);
+    }
+
+    /** Enable/disable automerging for world or stage.
+     * When automerging is enabled, staged data will automatically be merged 
+     * with the world when staging ends. This happens at the end of progress(), 
+     * at a sync point or when staging_end() is called.
+     *
+     * Applications can exercise more control over when data from a stage is 
+     * merged by disabling automerging. This requires an application to 
+     * explicitly call merge() on the stage.
+     *
+     * When this function is invoked on the world, it sets all current stages to
+     * the provided value and sets the default for new stages. When this 
+     * function is invoked on a stage, automerging is only set for that specific 
+     * stage. 
+     *
+     * @param automerge Whether to enable or disable automerging.
+     */
+    void set_automerge(bool automerge) {
+        ecs_set_automerge(m_world, automerge);
+    }
+
+    /** Merge world or stage.
+     * When automatic merging is disabled, an application can call this
+     * operation on either an individual stage, or on the world which will merge
+     * all stages. This operation may only be called when staging is not enabled
+     * (either after progress() or after staging_end()).
+     *
+     * This operation may be called on an already merged stage or world.
+     */
+    void merge() {
+        ecs_merge(m_world);
+    }
+
+    /** Get stage-specific world pointer.
+     * Flecs threads can safely invoke the API as long as they have a private 
+     * context to write to, also referred to as the stage. This function returns a
+     * pointer to a stage, disguised as a world pointer.
+     *
+     * Note that this function does not(!) create a new world. It simply wraps the
+     * existing world in a thread-specific context, which the API knows how to
+     * unwrap. The reason the stage is returned as an ecs_world_t is so that it
+     * can be passed transparently to the existing API functions, vs. having to 
+     * create a dediated API for threading.
+     *
+     * @param stage_id The index of the stage to retrieve.
+     * @return A thread-specific pointer to the world. 
+     */
+    flecs::world get_stage(std::int32_t id) const {
+        return flecs::world(ecs_get_stage(m_world, id));
     }
 
     /** Set number of threads.
@@ -822,8 +985,9 @@ public:
      *
      * @return Unique index for current thread.
      */
+    ECS_DEPRECATED("use get_stage_id")
     std::int32_t get_thread_index() const {
-        return ecs_get_thread_index(m_world);
+        return ecs_get_stage_id(m_world);
     }
 
     /** Set target FPS
@@ -3220,7 +3384,7 @@ namespace _
 #error "implicit component registration not supported"
 #endif
 
-// Translate a typename into a langauge-agnostic identifier. This allows for
+// Translate a typename into a language-agnostic identifier. This allows for
 // registration of components/modules across language boundaries.
 template <typename T>
 struct symbol_helper
@@ -3536,6 +3700,7 @@ public:
             if (name_comp->symbol) {
                 ecs_assert( !strcmp(name_comp->symbol, symbol), 
                     ECS_COMPONENT_NAME_IN_USE, name);
+                ecs_os_free(symbol);
             } else {
                 name_comp->symbol = symbol;
             }
@@ -4357,7 +4522,7 @@ public:
             _::column_args<Components...> columns(&it);
             _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
-    }
+    } 
 
     template <typename Func>
     void each(const flecs::filter& filter, Func&& func) const {
@@ -4370,8 +4535,18 @@ public:
         }
     }
 
-    /* DEPRECATED */
     template <typename Func>
+    void each_worker(std::int32_t stage_current, std::int32_t stage_count, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
+            _::column_args<Components...> columns(&it);
+            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }
+
+    template <typename Func>
+    ECS_DEPRECATED("use each or iter")
     void action(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
@@ -4389,7 +4564,7 @@ public:
             _::column_args<Components...> columns(&it);
             _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
-    }
+    }  
 
     template <typename Func>
     void iter(const flecs::filter& filter, Func&& func) const {
@@ -4401,6 +4576,16 @@ public:
             _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
         }
     }
+
+    template <typename Func>
+    void iter_worker(std::int32_t stage_current, std::int32_t stage_count, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
+            _::column_args<Components...> columns(&it);
+            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }      
 };
 
 
@@ -4494,14 +4679,22 @@ private:
 
 class system_runner_fluent {
 public:
-    system_runner_fluent(world_t *world, entity_t id, FLECS_FLOAT delta_time, void *param)
-        : m_world(world)
+    system_runner_fluent(
+        world_t *world, 
+        entity_t id, 
+        std::int32_t stage_current, 
+        std::int32_t stage_count, 
+        FLECS_FLOAT delta_time, 
+        void *param)
+        : m_stage(world)
         , m_id(id)
         , m_delta_time(delta_time)
         , m_param(param)
         , m_filter()
         , m_offset(0)
-        , m_limit(0) { }
+        , m_limit(0)
+        , m_stage_current(stage_current)
+        , m_stage_count(stage_count) { }
 
     system_runner_fluent& filter(filter filter) {
         m_filter = filter;
@@ -4518,18 +4711,32 @@ public:
         return *this;
     }
 
+    system_runner_fluent& stage(flecs::world& stage) {
+        m_stage = stage.c_ptr();
+        return *this;
+    }
+
     ~system_runner_fluent() {
-        ecs_run_w_filter(
-            m_world, m_id, m_delta_time, m_offset, m_limit, m_filter.c_ptr(), m_param);
+        if (m_stage_count) {
+            ecs_run_worker(
+                m_stage, m_id, m_stage_current, m_stage_count, m_delta_time,
+                m_param);            
+        } else {
+            ecs_run_w_filter(
+                m_stage, m_id, m_delta_time, m_offset, m_limit, 
+                m_filter.c_ptr(), m_param);
+        }
     }
 private:
-    world_t *m_world;
+    world_t *m_stage;
     entity_t m_id;
     FLECS_FLOAT m_delta_time;
     void *m_param;
     flecs::filter m_filter;
     std::int32_t m_offset;
     std::int32_t m_limit;
+    std::int32_t m_stage_current;
+    std::int32_t m_stage_count;
 };
 
 
@@ -4581,7 +4788,7 @@ public:
         return ecs_get_interval(m_world, m_id);
     }
 
-    // DEPRECATED: use interval instead
+    ECS_DEPRECATED("use interval")
     system& period(FLECS_FLOAT period) {
         return this->interval(period);
     }
@@ -4683,17 +4890,31 @@ public:
     }
 
     system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
-        return system_runner_fluent(m_world, m_id, delta_time, param);
+        return system_runner_fluent(m_world, m_id, 0, 0, delta_time, param);
     }
 
-    /* DEPRECATED. Use iter instead. */
+    system_runner_fluent run_worker(
+        std::int32_t stage_current, 
+        std::int32_t stage_count, 
+        FLECS_FLOAT delta_time = 0.0f, 
+        void *param = nullptr) const 
+    {
+        return system_runner_fluent(m_world, m_id, stage_current, stage_count, delta_time, param);
+    }    
+
+    // put using outside of action so we can still use it without it being
+    // flagged as deprecated.
     template <typename Func>
+    using action_invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
+
+    template <typename Func>
+    ECS_DEPRECATED("use each or iter")
     system& action(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        using invoker_t = typename _::action_invoker<typename std::decay<Func>::type, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));        
 
-        create_system(invoker_t::run, false);
+        auto ctx = FLECS_NEW(action_invoker_t<Func>)(std::forward<Func>(func));        
+
+        create_system(action_invoker_t<Func>::run, false);
 
         EcsContext ctx_value = {ctx};
         ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);

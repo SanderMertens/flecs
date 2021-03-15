@@ -79,7 +79,7 @@ Action is more complex, but is faster to evaluate and allows for more control ov
 
 ```cpp
 world.system<Position, Velocity>()
-    .action([](flecs::iter& it, flecs::column<Position>& p, flecs::column<Velocity>& v) {
+    .iter([](flecs::iter& it, Position* p, Velocity* v) {
         for (auto i : it) {
             p[i].x += v[i].x;
             p[i].y += v[i].y;
@@ -105,7 +105,7 @@ That same query can also be specified as a string, at the cost of a slightly mor
 ```cpp
 auto q = ecs.query<>("Position, Velocity");
 
-q.action([](flecs::iter& it) {
+q.iter([](flecs::iter& it) {
     auto p = it.column<Position>(1);
     auto v = it.column<Velocity>(2);
 });
@@ -116,7 +116,7 @@ In most cases using template parameters is the way to go, as this provides a sli
 ```cpp
 auto q = ecs.query<>("CASCADE:Position, Position");
 
-q.action([](flecs::iter& it) {
+q.iter([](flecs::iter& it) {
     auto p_parent = it.column<Position>(1);
     auto p = it.column<Position>(2);
 });
@@ -145,8 +145,10 @@ void MySystem(ecs_iter_t *it) {
 
 In C++ you can do the same thing:
 
-```c
-auto MySystem = world.system<Position, Velocity>().action([](flecs::iter& it, Position& p, Velocity& v) {
+```cpp
+auto MySystem = world.system<Position, Velocity>().iter(
+    [](flecs::iter& it, Position *p, Velocity *v) 
+{
     int *my_context_var = static_cast<int*>(it->param());
     // ...
 });

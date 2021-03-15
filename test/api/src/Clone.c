@@ -33,25 +33,20 @@ void Clone_empty_w_value() {
 }
 
 void Clone_null() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_clone(world, 0, 0, false);
-    test_assert(e != 0);
-
-    test_assert(!ecs_get_type(world, e));
-
-    ecs_fini(world);
+    test_expect_abort();
+    ecs_clone(world, 0, 0, false);
 }
 
 void Clone_null_w_value() {
+    install_test_abort();
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_clone(world, 0, 0, true);
-    test_assert(e != 0);
-
-    test_assert(!ecs_get_type(world, e));
-
-    ecs_fini(world);
+    test_expect_abort();
+    ecs_clone(world, 0, 0, true);
 }
 
 void Clone_1_component() {

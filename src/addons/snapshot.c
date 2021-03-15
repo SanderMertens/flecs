@@ -44,7 +44,7 @@ ecs_data_t* duplicate_data(
             continue;
         }
 
-        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+        const ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         int16_t size = column->size;
         int16_t alignment = column->alignment;
         ecs_copy_t copy;

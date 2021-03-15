@@ -629,6 +629,24 @@ void ecs_run_post_frame(
     ecs_fini_action_t action,
     void *ctx);    
 
+/** Signal exit
+ * This operation signals that the application should quit. It will cause
+ * ecs_progress to return false.
+ *
+ * @param world The world to quit.
+ */
+FLECS_API
+void ecs_quit(
+    ecs_world_t *world);
+
+/** Return whether a quit has been signaled.
+ *
+ * @param world The world.
+ */
+FLECS_API 
+bool ecs_should_quit(
+    const ecs_world_t *world);
+
 /** Register ctor, dtor, copy & move actions for component.
  *
  * @param world The world.
@@ -667,7 +685,7 @@ void ecs_set_context(
  */
 FLECS_API
 void* ecs_get_context(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Get world info.
  *
@@ -677,7 +695,7 @@ void* ecs_get_context(
  */
 FLECS_API
 const ecs_world_info_t* ecs_get_world_info(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Dimension the world for a specified number of entities.
  * This operation will preallocate memory in the world for the specified number
@@ -883,10 +901,10 @@ int32_t ecs_get_threads(
     ecs_world_t *world);
 
 /** Get current thread index */
+ECS_DEPRECATED("use ecs_get_stage_id")
 FLECS_API
 int32_t ecs_get_thread_index(
-    ecs_world_t *world);
-
+    const ecs_world_t *world);
 
 /** @} */
 
@@ -1216,7 +1234,7 @@ FLECS_API void ecs_enable_component_w_entity(
  * @return True if the component is enabled, otherwise false.
  */
 FLECS_API bool ecs_is_component_enabled_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
@@ -1339,7 +1357,7 @@ FLECS_API bool ecs_is_component_enabled_w_entity(
  */
 FLECS_API
 ecs_entity_t ecs_get_case(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e,
     ecs_entity_t sw);
 
@@ -1408,7 +1426,7 @@ void ecs_delete_children(
  */
 FLECS_API
 const void* ecs_get_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
@@ -1438,7 +1456,7 @@ const void* ecs_get_w_entity(
  */
 FLECS_API
 const void* ecs_get_ref_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_ref_t *ref,
     ecs_entity_t entity,
     ecs_entity_t component);
@@ -1611,7 +1629,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
  */
 FLECS_API
 bool ecs_has_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t to_check);
 
@@ -1626,7 +1644,7 @@ bool ecs_has_entity(
  */
 FLECS_API
 bool ecs_has_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type);
 
@@ -1676,6 +1694,20 @@ bool ecs_has_type(
  * @{
  */
 
+/** Test whether an entity is valid.
+ * An entity is valid if it is not 0 and if it is alive. If the provided id has
+ * a role or a trait, the contents of the role or the trait will be checked for
+ * validity.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @return True if the entity is valid, false if the entity is not valid.
+ */
+FLECS_API
+bool ecs_is_valid(
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
 /** Test whether an entity is alive.
  *
  * @param world The world.
@@ -1684,7 +1716,7 @@ bool ecs_has_type(
  */
 FLECS_API
 bool ecs_is_alive(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 /** Test whether an entity exists.
@@ -1696,7 +1728,7 @@ bool ecs_is_alive(
  */
 FLECS_API
 bool ecs_exists(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 /** Get the type of an entity.
@@ -1707,7 +1739,7 @@ bool ecs_exists(
  */
 FLECS_API
 ecs_type_t ecs_get_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Get the typeid of an entity.
@@ -1718,7 +1750,7 @@ ecs_type_t ecs_get_type(
  */
 FLECS_API
 ecs_entity_t ecs_get_typeid(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e);
 
 /** Get the name of an entity.
@@ -1730,7 +1762,7 @@ ecs_entity_t ecs_get_typeid(
  */
 FLECS_API
 const char* ecs_get_name(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Convert type role to string.
@@ -1755,7 +1787,7 @@ const char* ecs_role_str(
  */
 FLECS_API
 size_t ecs_entity_str(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     char *buffer,
     size_t buffer_len);
@@ -1772,7 +1804,7 @@ size_t ecs_entity_str(
  */
 FLECS_API
 ecs_entity_t ecs_get_parent_w_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
@@ -1812,7 +1844,7 @@ void ecs_enable(
  */
 FLECS_API
 int32_t ecs_count_entity(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Count entities that have a type.
@@ -1824,7 +1856,7 @@ int32_t ecs_count_entity(
  */
 FLECS_API
 int32_t ecs_count_type(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_type_t type);
 
 /** Count entities that have a component, type or tag.
@@ -1846,7 +1878,7 @@ int32_t ecs_count_type(
  */
 FLECS_API
 int32_t ecs_count_w_filter(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_filter_t *filter);
 
 
@@ -1867,7 +1899,7 @@ int32_t ecs_count_w_filter(
  */
 FLECS_API
 ecs_entity_t ecs_lookup(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name);
 
 /** Lookup a child entity by name.
@@ -1881,7 +1913,7 @@ ecs_entity_t ecs_lookup(
  */
 FLECS_API
 ecs_entity_t ecs_lookup_child(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *name);
 
@@ -1904,7 +1936,7 @@ ecs_entity_t ecs_lookup_child(
  */
 FLECS_API
 ecs_entity_t ecs_lookup_path_w_sep(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *path,
     const char *sep,
@@ -1944,7 +1976,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
  */
 FLECS_API
 ecs_entity_t ecs_lookup_symbol(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name);
 
 /* Add alias for entity to global scope */
@@ -1981,7 +2013,7 @@ void ecs_use(
  */
 FLECS_API
 char* ecs_get_path_w_sep(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child,
     ecs_entity_t component,
@@ -2121,7 +2153,7 @@ ecs_entity_t ecs_add_path_w_sep(
  */
 FLECS_API
 int32_t ecs_get_child_count(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Return a scope iterator.
@@ -2187,7 +2219,7 @@ ecs_entity_t ecs_set_scope(
  */
 FLECS_API
 ecs_entity_t ecs_get_scope(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Set a name prefix for newly created entities.
  * This is a utility that lets C modules use prefixed names for C types and
@@ -2404,14 +2436,15 @@ bool ecs_query_next_w_filter(
  * as many threads as there are entities will iterate that table.
  *
  * @param it The iterator.
- * @param current Thread id of current thread.
- * @param total Total number of threads.
+ * @param stage_current Id of current stage.
+ * @param stage_count Total number of stages.
  * @returns True if more data is available, false if not.
  */
+FLECS_API
 bool ecs_query_next_worker(
     ecs_iter_t *it,
-    int32_t current,
-    int32_t total);
+    int32_t stage_current,
+    int32_t stage_count);
 
 /** Sort the output of a query.
  * This enables sorting of entities across matched tables. As a result of this
@@ -2764,21 +2797,54 @@ int32_t ecs_table_component_index(
  * @{
  */
 
-/** Begin frame. */
+/** Begin frame. 
+ * When an application does not use ecs_progress to control the main loop, it
+ * can still use Flecs features such as FPS limiting and time measurements. This
+ * operation needs to be invoked whenever a new frame is about to get processed.
+ *
+ * Calls to ecs_frame_begin must always be followed by ecs_frame_end.
+ *
+ * The function accepts a delta_time parameter, which will get passed to 
+ * systems. This value is also used to compute the amount of time the function
+ * needs to sleep to ensure it does not exceed the target_fps, when it is set.
+ * When 0 is provided for delta_time, the time will be measured.
+ *
+ * This function should only be ran from the main thread.
+ *
+ * @param world The world.
+ * @param delta_time Time elapsed since the last frame.
+ * @return The provided delta_time, or measured time if 0 was provided.
+ */
 FLECS_API
 FLECS_FLOAT ecs_frame_begin(
     ecs_world_t *world,
     FLECS_FLOAT delta_time);
 
-/** End frame. */
+/** End frame. 
+ * This operation must be called at the end of the frame, and always after
+ * ecs_frame_begin.
+ *
+ * @param world The world.
+ */
 FLECS_API
 void ecs_frame_end(
     ecs_world_t *world);
 
 /** Begin staging.
+ * When an application does not use ecs_progress to control the main loop, it
+ * can still use Flecs features such as the defer queue. When an application
+ * needs to stage changes, it needs to call this function after ecs_frame_begin.
+ * A call to ecs_staging_begin must be followed by a call to ecs_staging_end.
+ * 
  * When staging is enabled, modifications to entities are stored to a stage.
  * This ensures that arrays are not modified while iterating. Modifications are
  * merged back to the "main stage" when ecs_staging_end is invoked.
+ *
+ * While the world is in staging mode, no structural changes (add/remove/...)
+ * can be made to the world itself. Operations must be executed on a stage
+ * instead (see ecs_get_stage).
+ *
+ * This function should only be ran from the main thread.
  *
  * @param world The world
  * @return Whether world is currently staged.
@@ -2788,8 +2854,11 @@ bool ecs_staging_begin(
     ecs_world_t *world);
 
 /** End staging.
- * If any data was staged, this operation will merge that data back to the main
- * stage.
+ * Leaves staging mode. After this operation the world may be directly mutated
+ * again. By default this operation also merges data back into the world, unless
+ * automerging was disabled explicitly.
+ *
+ * This function should only be ran from the main thread.
  *
  * @param world The world
  */
@@ -2797,9 +2866,13 @@ FLECS_API
 void ecs_staging_end(
     ecs_world_t *world);
 
-/** Manually merge.
- * When automerging is set to false, an application can invoke this operation to
- * force merging all stages.
+/** Merge world or stage.
+ * When automatic merging is disabled, an application can call this
+ * operation on either an individual stage, or on the world which will merge
+ * all stages. This operation may only be called when staging is not enabled
+ * (either after progress() or after staging_end()).
+ *
+ * This operation may be called on an already merged stage or world.
  *
  * @param world The world.
  */
@@ -2832,17 +2905,85 @@ FLECS_API
 bool ecs_defer_end(
     ecs_world_t *world);
 
-/** Enable / disable automerging.
- * When automerging is enabled, running a pipeline will automatically merge when
- * necessary. With automerging disabled, merging will not happen unless the
- * application manually invokes ecs_merge.
+/** Enable/disable automerging for world or stage.
+ * When automerging is enabled, staged data will automatically be merged with
+ * the world when staging ends. This happens at the end of progress(), at a
+ * sync point or when staging_end() is called.
+ *
+ * Applications can exercise more control over when data from a stage is merged
+ * by disabling automerging. This requires an application to explicitly call
+ * merge() on the stage.
+ *
+ * When this function is invoked on the world, it sets all current stages to
+ * the provided value and sets the default for new stages. When this function is
+ * invoked on a stage, automerging is only set for that specific stage.
  *
  * @param world The world.
+ * @param automerge Whether to enable or disable automerging.
  */
 FLECS_API
 void ecs_set_automerge(
     ecs_world_t *world,
-    bool auto_merge);
+    bool automerge);
+
+/** Configure world to have N stages.
+ * This initializes N stages, which allows applications to defer operations to
+ * multiple isolated defer queues. This is typically used for applications with
+ * multiple threads, where each thread gets its own queue, and commands are
+ * merged when threads are synchronized.
+ *
+ * Note that the ecs_set_threads function already creates the appropriate
+ * number of stages. The set_stages() operation is useful for applications that
+ * want to manage their own stages and/or threads.
+ * 
+ * @param world The world.
+ * @param stages The number of stages.
+ */
+FLECS_API
+void ecs_set_stages(
+    ecs_world_t *world,
+    int32_t stages);
+
+/** Get number of configured stages.
+ * Return number of stages set by ecs_set_stages.
+ *
+ * @param world The world.
+ * @return The number of stages used for threading.
+ */
+FLECS_API
+int32_t ecs_get_stage_count(
+    const ecs_world_t *world);
+
+/** Get current stage id.
+ * The stage id can be used by an application to learn about which stage it is
+ * using, which typically corresponds with the worker thread id.
+ *
+ * @param world The world.
+ * @return The stage id.
+ */
+FLECS_API
+int32_t ecs_get_stage_id(
+    const ecs_world_t *world);
+
+/** Get stage-specific world pointer.
+ * Flecs threads can safely invoke the API as long as they have a private 
+ * context to write to, also referred to as the stage. This function returns a
+ * pointer to a stage, disguised as a world pointer.
+ *
+ * Note that this function does not(!) create a new world. It simply wraps the
+ * existing world in a thread-specific context, which the API knows how to
+ * unwrap. The reason the stage is returned as an ecs_world_t is so that it
+ * can be passed transparently to the existing API functions, vs. having to 
+ * create a dediated API for threading.
+ *
+ * @param world The world.
+ * @param stage_id The index of the stage to retrieve.
+ * @return A thread-specific pointer to the world. 
+ */
+FLECS_API
+ecs_world_t* ecs_get_stage(
+    const ecs_world_t *world,
+    int32_t stage_id);
 
 /** @} */
 
@@ -2886,7 +3027,7 @@ ecs_table_t* ecs_table_from_type(
  */
 FLECS_API
 ecs_type_t ecs_table_get_type(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** Insert record into table.
  * This will create a new record for the table, which inserts a value for each
@@ -2928,7 +3069,7 @@ ecs_record_t ecs_table_insert(
  */
 FLECS_API
 int32_t ecs_table_count(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** @} */
 

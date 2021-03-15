@@ -588,7 +588,8 @@
                 "no_merge_after_main_out",
                 "no_merge_after_staged_in_out",
                 "merge_after_staged_out_before_owned",
-                "switch_pipeline"
+                "switch_pipeline",
+                "run_pipeline"
             ]
         }, {
             "id": "SystemMisc",
@@ -1454,7 +1455,10 @@
                 "5_threads_add_to_current",
                 "6_threads_add_to_current",
                 "2_threads_on_add",
-                "new_w_count"   
+                "new_w_count",
+                "custom_thread_auto_merge",
+                "custom_thread_manual_merge",
+                "custom_thread_partial_manual_merge"
             ]
         }, {
             "id": "Stresstests",

@@ -3,7 +3,7 @@
 
 static
 bool path_append(
-    ecs_world_t *world, 
+    const ecs_world_t *world, 
     ecs_entity_t parent, 
     ecs_entity_t child, 
     ecs_entity_t component,
@@ -11,6 +11,9 @@ bool path_append(
     const char *prefix,
     ecs_strbuf_t *buf)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     ecs_type_t type = ecs_get_type(world, child);
     ecs_entity_t cur = ecs_find_in_type(world, type, component, ECS_CHILDOF);
     
@@ -37,9 +40,12 @@ bool path_append(
 
 static
 ecs_entity_t find_as_alias(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     int32_t i, count = ecs_vector_count(world->aliases);
     ecs_alias_t *aliases = ecs_vector_first(world->aliases, ecs_alias_t);
     for (i = 0; i < count; i ++) {
@@ -49,25 +55,6 @@ ecs_entity_t find_as_alias(
     }
 
     return 0;
-}
-
-char* ecs_get_path_w_sep(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_entity_t child,
-    ecs_entity_t component,
-    const char *sep,
-    const char *prefix)
-{
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-
-    if (parent != child) {
-        path_append(world, parent, child, component, sep, prefix, &buf);
-    } else {
-        ecs_strbuf_appendstr(&buf, "");
-    }
-
-    return ecs_strbuf_get(&buf);
 }
 
 static
@@ -99,7 +86,7 @@ ecs_entity_t name_to_id(
 
 static
 ecs_entity_t find_child_in_table(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     const char *name)
 {
     /* If table doesn't have EcsName, then don't bother */
@@ -138,10 +125,13 @@ ecs_entity_t find_child_in_table(
 
 static
 ecs_entity_t find_child(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *name)
-{
+{        
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     (void)parent;
     
     ecs_sparse_each(world->store.tables, ecs_table_t, table, {
@@ -152,64 +142,6 @@ ecs_entity_t find_child(
     });    
 
     return 0;
-}
-
-ecs_entity_t ecs_lookup_child(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *name)
-{
-    ecs_entity_t result = 0;
-
-    ecs_vector_t *child_tables = ecs_map_get_ptr(
-        world->child_tables, ecs_vector_t*, parent);
-    
-    if (child_tables) {
-        ecs_vector_each(child_tables, ecs_table_t*, table_ptr, {
-            ecs_table_t *table = *table_ptr;
-            result = find_child_in_table(table, name);
-            if (result) {
-                return result;
-            }
-        });
-    }
-
-    return result;
-}
-
-ecs_entity_t ecs_lookup(
-    ecs_world_t *world,
-    const char *name)
-{   
-    if (!name) {
-        return 0;
-    }
-
-    if (is_number(name)) {
-        return name_to_id(name);
-    }
-
-    ecs_entity_t e = find_as_alias(world, name);
-    if (e) {
-        return e;
-    }    
-    
-    return ecs_lookup_child(world, 0, name);
-}
-
-ecs_entity_t ecs_lookup_symbol(
-    ecs_world_t *world,
-    const char *name)
-{   
-    if (!name) {
-        return 0;
-    }
-
-    if (is_number(name)) {
-        return name_to_id(name);
-    }   
-    
-    return find_child(world, 0, name);
 }
 
 static
@@ -259,13 +191,15 @@ const char *path_elem(
 
 static
 ecs_entity_t get_parent_from_path(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char **path_ptr,
     const char *prefix)
 {
     bool start_from_root = false;
     const char *path = *path_ptr;
+   
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
@@ -277,8 +211,7 @@ ecs_entity_t get_parent_from_path(
     }
 
     if (!start_from_root && !parent) {
-        ecs_stage_t *stage = ecs_get_stage(&world);
-        parent = stage->scope;
+        parent = ecs_get_scope(world);
     }
 
     *path_ptr = path;
@@ -286,8 +219,97 @@ ecs_entity_t get_parent_from_path(
     return parent;
 }
 
+char* ecs_get_path_w_sep(
+    const ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    ecs_entity_t component,
+    const char *sep,
+    const char *prefix)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);
+        
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    if (parent != child) {
+        path_append(world, parent, child, component, sep, prefix, &buf);
+    } else {
+        ecs_strbuf_appendstr(&buf, "");
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
+ecs_entity_t ecs_lookup_child(
+    const ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *name)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);    
+    
+    ecs_entity_t result = 0;
+
+    ecs_vector_t *child_tables = ecs_map_get_ptr(
+        world->child_tables, ecs_vector_t*, parent);
+    
+    if (child_tables) {
+        ecs_vector_each(child_tables, ecs_table_t*, table_ptr, {
+            ecs_table_t *table = *table_ptr;
+            result = find_child_in_table(table, name);
+            if (result) {
+                return result;
+            }
+        });
+    }
+
+    return result;
+}
+
+ecs_entity_t ecs_lookup(
+    const ecs_world_t *world,
+    const char *name)
+{   
+    if (!name) {
+        return 0;
+    }
+
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);    
+
+    if (is_number(name)) {
+        return name_to_id(name);
+    }
+
+    ecs_entity_t e = find_as_alias(world, name);
+    if (e) {
+        return e;
+    }    
+    
+    return ecs_lookup_child(world, 0, name);
+}
+
+ecs_entity_t ecs_lookup_symbol(
+    const ecs_world_t *world,
+    const char *name)
+{   
+    if (!name) {
+        return 0;
+    }
+
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);    
+
+    if (is_number(name)) {
+        return name_to_id(name);
+    }   
+    
+    return find_child(world, 0, name);
+}
+
 ecs_entity_t ecs_lookup_path_w_sep(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t parent,
     const char *path,
     const char *sep,
@@ -296,6 +318,9 @@ ecs_entity_t ecs_lookup_path_w_sep(
     if (!path) {
         return 0;
     }
+
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);    
 
     ecs_entity_t e = find_as_alias(world, path);
     if (e) {
@@ -344,7 +369,7 @@ ecs_entity_t ecs_set_scope(
     ecs_world_t *world,
     ecs_entity_t scope)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     ecs_entity_t e = ECS_CHILDOF | scope;
     ecs_entities_t to_add = {
@@ -366,17 +391,21 @@ ecs_entity_t ecs_set_scope(
 }
 
 ecs_entity_t ecs_get_scope(
-    ecs_world_t *world)
+    const ecs_world_t *world)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    const ecs_stage_t *stage = ecs_stage_from_readonly_world(world);
     return stage->scope;
 }
 
 int32_t ecs_get_child_count(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_vector_t *tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, entity);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);
+
+    ecs_vector_t *tables = ecs_map_get_ptr(
+        world->child_tables, ecs_vector_t*, entity);
     if (!tables) {
         return 0;
     } else {
@@ -395,6 +424,9 @@ ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = (ecs_world_t*)ecs_get_world(world);
+
     ecs_scope_iter_t iter = {
         .tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, parent),
         .index = 0
@@ -411,6 +443,9 @@ ecs_iter_t ecs_scope_iter_w_filter(
     ecs_entity_t parent,
     ecs_filter_t *filter)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = (ecs_world_t*)ecs_get_world(world);
+
     ecs_scope_iter_t iter = {
         .filter = *filter,
         .tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, parent),
@@ -471,6 +506,9 @@ const char* ecs_set_name_prefix(
     ecs_world_t *world,
     const char *prefix)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     const char *old_prefix = world->name_prefix;
     world->name_prefix = prefix;
     return old_prefix;
@@ -484,6 +522,8 @@ ecs_entity_t ecs_add_path_w_sep(
     const char *sep,
     const char *prefix)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (!path) {
         if (!entity) {
             entity = ecs_new_id(world);
@@ -547,10 +587,12 @@ void ecs_use(
     const char *name)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage->scope == 0 , ECS_INVALID_PARAMETER, NULL);
     ecs_assert(find_as_alias(world, name) == 0, ECS_ALREADY_DEFINED, NULL);
     (void)stage;

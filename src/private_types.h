@@ -34,7 +34,7 @@
  * and to allow for passing a thread as a world to some API calls (this allows
  * for transparently passing thread context to API functions) */
 #define ECS_WORLD_MAGIC (0x65637377)
-#define ECS_THREAD_MAGIC (0x65637374)
+#define ECS_STAGE_MAGIC (0x65637374)
 
 /* Maximum number of entities that can be added in a single operation. 
  * Increasing this value will increase consumption of stack space. */
@@ -379,38 +379,26 @@ typedef struct ecs_op_t {
  * iterating. Additionally, worker threads have their own stage that lets them
  * mutate the state of entities without requiring locks. */
 struct ecs_stage_t {
-    /* This points to the world pointer associated with the stage. Even though
-     * stages belong to the same world, when multithreaded, an application will
-     * receive a pointer not to the world, but to a thread. This allows for
-     * transparently passing the thread context without having to fallback on
-     * more expensive methods such as thread local storage. This world pointer
-     * is stored in the stage, so that it can be easily passed around when for
-     * example invoking callbacks, and prevents the API from passing around two
-     * world pointers (or constantly obtaining the real world when needed). */
-    ecs_world_t *world;
-
-    int32_t id;                    /* Unique id that identifies the stage */
+    int32_t magic;              /* Magic number to verify thread pointer */
+    int32_t id;                 /* Unique id that identifies the stage */
 
     /* Are operations deferred? */
     int32_t defer;
     ecs_vector_t *defer_queue;
-    ecs_vector_t *defer_merge_queue;
+
+    ecs_world_t *thread_ctx;    /* Points to stage when a thread stage */
+    ecs_world_t *world;         /* Reference to world */
+    ecs_os_thread_t thread;     /* Thread handle (0 if no threading is used) */
 
     /* One-shot actions to be executed after the merge */
     ecs_vector_t *post_frame_actions;
 
     /* Namespacing */
     ecs_table_t *scope_table;      /* Table for current scope */
-    ecs_entity_t scope;            /* Entity of current scope */    
+    ecs_entity_t scope;            /* Entity of current scope */
 
-    /* If a system is progressing it will set this field to its columns. This
-     * will be used in debug mode to verify that a system is not doing 
-     * unanounced adding/removing of components, as this could cause 
-     * unpredictable behavior during a merge. */
-#ifndef NDEBUG    
-    ecs_entity_t system;
-    ecs_vector_t *system_columns;
-#endif
+    /* Automerging */
+    bool auto_merge;               /* Should this stage automatically merge? */
 };
 
 typedef struct ecs_store_t {
@@ -434,25 +422,10 @@ typedef struct ecs_entity_info_t {
     bool is_watched;            /* Is entity being watched */
 } ecs_entity_info_t;
 
-/** A type desribing a worker thread. When a system is invoked by a worker
- * thread, it receives a pointer to an ecs_thread_t instead of a pointer to an 
- * ecs_world_t (provided by the ecs_iter_t type). When this ecs_thread_t is passed down
- * into the flecs API, the API functions are able to tell whether this is an
- * ecs_thread_t or an ecs_world_t by looking at the 'magic' number. This allows the
- * API to transparently resolve the stage to which updates should be written,
- * without requiring different API calls when working in multi threaded mode. */
-typedef struct ecs_thread_t {
-    int32_t magic;                           /* Magic number to verify thread pointer */
-    ecs_world_t *world;                       /* Reference to world */
-    ecs_stage_t *stage;                       /* Stage for thread */
-    ecs_os_thread_t thread;                   /* Thread handle */
-    int32_t index;                           /* Index of thread */
-} ecs_thread_t;
-
 /** Supporting type to store looked up component data in specific table */
 typedef struct ecs_column_info_t {
     ecs_entity_t id;
-    ecs_c_info_t *ci;
+    const ecs_c_info_t *ci;
     int32_t column;
 } ecs_column_info_t;
 
@@ -539,9 +512,7 @@ struct ecs_world_t {
     /* -- Staging -- */
 
     ecs_stage_t stage;               /* Main storage */
-    ecs_stage_t temp_stage;          /* Stage for when processing systems */
-    ecs_vector_t *worker_stages;     /* Stages for worker threads */
-    int32_t stage_count;            /* Number of stages in world */
+    ecs_vector_t *worker_stages;     /* Stages for threads */
 
 
     /* -- Hierarchy administration -- */
@@ -552,8 +523,6 @@ struct ecs_world_t {
 
     /* -- Multithreading -- */
 
-    ecs_vector_t *workers;           /* Worker threads */
-    
     ecs_os_cond_t worker_cond;       /* Signal that worker threads can start */
     ecs_os_cond_t sync_cond;         /* Signal that worker thread job is done */
     ecs_os_mutex_t sync_mutex;       /* Mutex for job_cond */
@@ -601,10 +570,8 @@ struct ecs_world_t {
     /* -- World state -- */
 
     bool quit_workers;            /* Signals worker threads to quit */
-    bool in_progress;             /* Is world being progressed */
-    bool is_merging;              /* Is world currently being merged */
+    bool is_readonly;             /* Is world being progressed */
     bool is_fini;                 /* Is the world being cleaned up? */
-    bool auto_merge;              /* Are stages auto-merged by ecs_progress */
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */
     bool should_quit;             /* Did a system signal that app should quit */

@@ -32,11 +32,12 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
+    int32_t stage_current,
+    int32_t stage_count,
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
-    void *param,
-    bool ran_by_app);
+    void *param);
 
 #endif

@@ -161,7 +161,7 @@ void ecs_system_activate(
     bool activate,
     const EcsSystem *system_data)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     if (activate) {
         ecs_remove_entity(world, system, EcsInactive);
@@ -195,7 +195,7 @@ void ecs_enable_system(
     EcsSystem *system_data,
     bool enabled)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     ecs_query_t *query = system_data->query;
     if (!query) {
@@ -229,7 +229,7 @@ void ecs_init_system(
     ecs_query_t *query,
     void *ctx)
 {
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     /* Add & initialize the EcsSystem component */
     bool is_added = false;
@@ -309,7 +309,7 @@ void ecs_enable(
     ecs_entity_t entity,
     bool enabled)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     const EcsType *type_ptr = ecs_get( world, entity, EcsType);
     if (type_ptr) {
@@ -358,12 +358,13 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     EcsSystem *system_data,
+    int32_t stage_current,
+    int32_t stage_count,    
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
-    void *param,
-    bool ran_by_app) 
+    void *param) 
 {
     if (!param) {
         param = system_data->ctx;
@@ -398,21 +399,12 @@ ecs_entity_t ecs_run_intern(
     if (measure_time) {
         ecs_os_get_time(&time_start);
     }
-
-#ifndef NDEBUG
-    stage->system = system;
-    stage->system_columns = system_data->query->sig.columns;
-#endif
     
-    bool defer = false;
-    if (!stage->defer) {
-        ecs_defer_begin(stage->world);
-        defer = true;
-    }
+    ecs_defer_begin(stage->thread_ctx);
 
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
-    it.world = stage->world;
+    it.world = stage->thread_ctx;
     it.system = system;
     it.delta_time = delta_time;
     it.delta_system_time = time_elapsed;
@@ -429,32 +421,21 @@ ecs_entity_t ecs_run_intern(
     ecs_iter_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
-    if (ran_by_app || world == stage->world) {
+    if (stage_count <= 1) {
         while (ecs_query_next_w_filter(&it, filter)) {
             action(&it);
         }
     } else {
-        ecs_thread_t *thread = (ecs_thread_t*)stage->world;
-        int32_t total = ecs_vector_count(world->workers);
-        int32_t current = thread->index;
-
-        while (ecs_query_next_worker(&it, current, total)) {
+        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
             action(&it);               
         }
     }
 
-    if (defer) {
-        ecs_defer_end(stage->world);
-    }
+    ecs_defer_end(stage->thread_ctx);
 
     if (measure_time) {
         system_data->time_spent += (FLECS_FLOAT)ecs_time_measure(&time_start);
     }
-
-#ifndef NDEBUG
-    stage->system = 0;
-    stage->system_columns = NULL;
-#endif
 
     system_data->invoke_count ++;
 
@@ -472,24 +453,34 @@ ecs_entity_t ecs_run_w_filter(
     const ecs_filter_t *filter,
     void *param)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    bool in_progress = ecs_staging_begin(world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     EcsSystem *system_data = (EcsSystem*)ecs_get(
         world, system, EcsSystem);
     assert(system_data != NULL);
 
-    ecs_entity_t interrupted_by = ecs_run_intern(
-        world, stage, system, system_data, delta_time, offset, limit, 
-        filter, param, true);
+    return ecs_run_intern(
+        world, stage, system, system_data, 0, 0, delta_time, offset, limit, 
+        filter, param);
+}
 
-    /* If world wasn't in progress when we entered this function, we need to
-     * merge and reset the in_progress value */
-    if (!in_progress) {
-        ecs_staging_end(world);
-    }
+ecs_entity_t ecs_run_worker(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    int32_t stage_current,
+    int32_t stage_count,
+    FLECS_FLOAT delta_time,
+    void *param)
+{
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
 
-    return interrupted_by;
+    EcsSystem *system_data = (EcsSystem*)ecs_get(
+        world, system, EcsSystem);
+    assert(system_data != NULL);
+
+    return ecs_run_intern(
+        world, stage, system, system_data, stage_current, stage_count, 
+        delta_time, 0, 0, NULL, param);
 }
 
 ecs_entity_t ecs_run(
@@ -537,7 +528,7 @@ void ecs_run_monitor(
 }
 
 ecs_query_t* ecs_get_query(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t system)
 {
     const EcsQuery *q = ecs_get(world, system, EcsQuery);
@@ -829,7 +820,7 @@ ecs_entity_t ecs_new_system(
     ecs_iter_action_t action)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
@@ -877,7 +868,7 @@ ecs_entity_t ecs_new_trigger(
     const char *component_name,
     ecs_iter_action_t action)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t component = ecs_lookup_fullpath(world, component_name);
     ecs_assert(component != 0, ECS_INVALID_COMPONENT_ID, component_name);
@@ -935,12 +926,11 @@ void FlecsSystemImport(
     ecs_bootstrap_tag(world, EcsOnSet);
     ecs_bootstrap_tag(world, EcsUnSet);
 
+    /* Put following tags in flecs.core so they can be looked up
+     * without using the flecs.systems prefix. */
+    ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
     ecs_bootstrap_tag(world, EcsDisabledIntern);
     ecs_bootstrap_tag(world, EcsInactive);
-
-    /* Put EcsOnDemand and EcsMonitor in flecs.core so they can be looked up
-     * without using the flecs.systems prefix */
-    ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
     ecs_bootstrap_tag(world, EcsOnDemand);
     ecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);

@@ -1,7 +1,7 @@
 #include "private_api.h"
 
 const EcsComponent* ecs_component_from_id(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t e)
 {
     ecs_entity_t trait = 0;
@@ -208,13 +208,17 @@ void init_edges(
 
         if (ECS_HAS_ROLE(e, DISABLED)) {
             table->flags |= EcsTableHasDisabled;
-        }        
+        }   
 
         if (ECS_HAS_ROLE(e, CHILDOF)) {
             ecs_entity_t parent = e & ECS_COMPONENT_MASK;
             ecs_assert(!ecs_exists(world, parent) || ecs_is_alive(world, parent), ECS_INTERNAL_ERROR, NULL);
             table->flags |= EcsTableHasParent;
             register_child_table(world, table, parent);
+            
+            if (parent == EcsFlecs || parent == EcsFlecsCore) {
+                table->flags |= EcsTableHasBuiltins;
+            }
         }
 
         if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
@@ -412,8 +416,8 @@ ecs_entity_t find_xor_replace(
 }
 
 int32_t ecs_table_switch_from_case(
-    ecs_world_t * world,
-    ecs_table_t * table,
+    const ecs_world_t * world,
+    const ecs_table_t * table,
     ecs_entity_t add)
 {
     ecs_type_t type = table->type;
@@ -533,6 +537,9 @@ ecs_table_t* ecs_table_traverse_remove(
     ecs_entities_t * to_remove,
     ecs_entities_t * removed)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    
     int32_t i, count = to_remove->count;
     ecs_entity_t *entities = to_remove->array;
     node = node ? node : &world->store.root;
@@ -616,6 +623,9 @@ ecs_table_t* ecs_table_traverse_add(
     ecs_entities_t * to_add,
     ecs_entities_t * added)    
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     int32_t i, count = to_add->count;
     ecs_entity_t *entities = to_add->array;
     node = node ? node : &world->store.root;
@@ -790,7 +800,8 @@ ecs_table_t *find_or_create(
     ecs_world_t * world,
     ecs_entities_t * entities)
 {    
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
 
     /* Make sure array is ordered and does not contain duplicates */
     int32_t type_count = entities->count;
@@ -851,7 +862,7 @@ ecs_table_t *find_or_create(
 
     /* If we get here, table needs to be created which is only allowed when the
      * application is not currently in progress */
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entities_t ordered_entities = {
         .array = ordered,
@@ -876,7 +887,8 @@ ecs_table_t* ecs_table_find_or_create(
     ecs_world_t * world,
     ecs_entities_t * components)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
     return find_or_create(world, components);
 }
 
@@ -892,6 +904,9 @@ ecs_table_t* ecs_table_from_type(
 void ecs_init_root_table(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
+
     ecs_entities_t entities = {
         .array = NULL,
         .count = 0
@@ -905,6 +920,8 @@ void ecs_table_clear_edges(
     ecs_table_t *table)
 {
     (void)world;
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
 
     uint32_t i;
 

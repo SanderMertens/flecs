@@ -72,7 +72,6 @@ void MultiThread_2_thread_1_entity() {
     ecs_fini(world);
 }
 
-
 void MultiThread_2_thread_2_entity() {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -101,7 +100,6 @@ void MultiThread_2_thread_2_entity() {
 
     ecs_fini(world);
 }
-
 
 void MultiThread_2_thread_5_entity() {
     ecs_world_t *world = ecs_init();

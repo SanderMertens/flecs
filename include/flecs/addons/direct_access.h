@@ -32,7 +32,7 @@ extern "C" {
  */
 FLECS_API
 int32_t ecs_table_find_column(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     ecs_entity_t component);
 
 /** Get table column.
@@ -48,7 +48,7 @@ int32_t ecs_table_find_column(
  */
 FLECS_API
 ecs_vector_t* ecs_table_get_column(
-    ecs_table_t *table,
+    const ecs_table_t *table,
     int32_t column);
 
 /** Set table column.
@@ -96,7 +96,7 @@ ecs_vector_t* ecs_table_set_column(
  */
 FLECS_API
 ecs_vector_t* ecs_table_get_entities(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** Get the vector containing pointers to entity records.
  * A table stores cached pointers to entity records for fast access. This 
@@ -108,7 +108,7 @@ ecs_vector_t* ecs_table_get_entities(
  */ 
 FLECS_API
 ecs_vector_t* ecs_table_get_records(
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** Clear records.
  * This operation clears records for a world so that they no longer point to a

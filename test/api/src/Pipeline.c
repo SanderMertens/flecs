@@ -546,3 +546,39 @@ void Pipeline_switch_pipeline() {
 
     ecs_fini(world);
 }
+
+void Pipeline_run_pipeline() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, E, Position);
+
+    ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, SysC, EcsPostUpdate, Position);
+
+    ECS_PIPELINE(world, P1, flecs.pipeline.OnUpdate, flecs.pipeline.PostUpdate);
+    ECS_PIPELINE(world, P2, flecs.pipeline.OnUpdate);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_pipeline_run(world, P1, 1);
+
+    test_int(stats->systems_ran_frame, 3);
+    test_int(stats->merge_count_total, 1);
+    test_int(stats->pipeline_build_count_total, 1);
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 1);
+
+    ecs_pipeline_run(world, P2, 1);
+
+    test_int(stats->pipeline_build_count_total, 2);
+
+    test_int(sys_a_invoked, 2);
+    test_int(sys_b_invoked, 2);
+    test_int(sys_c_invoked, 1);
+
+    ecs_fini(world);
+}

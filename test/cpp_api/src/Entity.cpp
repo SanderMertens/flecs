@@ -540,8 +540,7 @@ void Entity_delete() {
 
     e.destruct();
 
-    test_assert(!e.has<Position>());
-    test_assert(!e.has<Velocity>());
+    test_assert(!e.is_alive());
 
     auto e2 = world.entity();
 

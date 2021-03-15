@@ -11,7 +11,7 @@ void bulk_delete(
     bool is_delete)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -35,18 +35,9 @@ void bulk_delete(
             continue;
         }
 
-        ecs_vector_t *entities = NULL;
-        if (data) {
-            entities = data->entities;
-        }
-
-        ecs_vector_each(entities, ecs_entity_t, e_ptr, {
-            ecs_eis_delete(world, *e_ptr);
-        })
-
         /* Both filters passed, clear table */
         if (is_delete) {
-            ecs_table_clear(world, table);
+            ecs_table_delete_entities(world, table);
         } else {
             ecs_table_clear_silent(world, table);
         }
@@ -104,7 +95,7 @@ void ecs_bulk_add_remove_type(
     const ecs_filter_t *filter)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -162,7 +153,7 @@ void ecs_bulk_add_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(to_add != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -207,7 +198,7 @@ void ecs_bulk_add_entity(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(to_add != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -254,7 +245,7 @@ void ecs_bulk_remove_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(to_remove != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
@@ -299,7 +290,7 @@ void ecs_bulk_remove_entity(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(to_remove != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
