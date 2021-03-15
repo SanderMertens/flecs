@@ -2587,7 +2587,7 @@ char* ecs_module_path_from_c(
 
 FLECS_API
 bool ecs_component_has_actions(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t component);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3533,7 +3533,7 @@ void ecs_set_context(
  */
 FLECS_API
 void* ecs_get_context(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Get world info.
  *
@@ -11704,6 +11704,7 @@ public:
             if (name_comp->symbol) {
                 ecs_assert( !strcmp(name_comp->symbol, symbol), 
                     ECS_COMPONENT_NAME_IN_USE, name);
+                ecs_os_free(symbol);
             } else {
                 name_comp->symbol = symbol;
             }

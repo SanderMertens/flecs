@@ -537,6 +537,9 @@ ecs_table_t* ecs_table_traverse_remove(
     ecs_entities_t * to_remove,
     ecs_entities_t * removed)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    
     int32_t i, count = to_remove->count;
     ecs_entity_t *entities = to_remove->array;
     node = node ? node : &world->store.root;
@@ -620,6 +623,9 @@ ecs_table_t* ecs_table_traverse_add(
     ecs_entities_t * to_add,
     ecs_entities_t * added)    
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
     int32_t i, count = to_add->count;
     ecs_entity_t *entities = to_add->array;
     node = node ? node : &world->store.root;
@@ -794,7 +800,8 @@ ecs_table_t *find_or_create(
     ecs_world_t * world,
     ecs_entities_t * entities)
 {    
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
 
     /* Make sure array is ordered and does not contain duplicates */
     int32_t type_count = entities->count;
@@ -880,7 +887,8 @@ ecs_table_t* ecs_table_find_or_create(
     ecs_world_t * world,
     ecs_entities_t * components)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
     return find_or_create(world, components);
 }
 
@@ -896,6 +904,9 @@ ecs_table_t* ecs_table_from_type(
 void ecs_init_root_table(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
+
     ecs_entities_t entities = {
         .array = NULL,
         .count = 0
@@ -909,6 +920,8 @@ void ecs_table_clear_edges(
     ecs_table_t *table)
 {
     (void)world;
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
 
     uint32_t i;
 

@@ -685,7 +685,7 @@ void ecs_set_context(
  */
 FLECS_API
 void* ecs_get_context(
-    ecs_world_t *world);
+    const ecs_world_t *world);
 
 /** Get world info.
  *

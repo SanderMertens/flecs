@@ -3700,6 +3700,7 @@ public:
             if (name_comp->symbol) {
                 ecs_assert( !strcmp(name_comp->symbol, symbol), 
                     ECS_COMPONENT_NAME_IN_USE, name);
+                ecs_os_free(symbol);
             } else {
                 name_comp->symbol = symbol;
             }

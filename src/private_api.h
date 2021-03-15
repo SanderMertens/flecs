@@ -84,8 +84,8 @@ const ecs_world_t* ecs_get_world(
     const ecs_world_t *world);
 
 /* Get component callbacks */
-ecs_c_info_t *ecs_get_c_info(
-    ecs_world_t *world,
+const ecs_c_info_t *ecs_get_c_info(
+    const ecs_world_t *world,
     ecs_entity_t component);
 
 /* Get or create component callbacks */

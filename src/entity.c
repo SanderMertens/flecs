@@ -151,7 +151,7 @@ bool ecs_get_info(
 }
 
 static
-ecs_c_info_t *get_c_info(
+const ecs_c_info_t *get_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -628,7 +628,7 @@ bool override_from_base(
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
         component = ecs_get_typeid(world, component);
-        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+        const ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         int32_t index;
 
         ecs_copy_t copy = cdata ? cdata->lifecycle.copy : NULL;
@@ -833,7 +833,7 @@ void ecs_components_on_add(
 
     int i;
     for (i = 0; i < component_count; i ++) {
-        ecs_c_info_t *c_info = component_info[i].ci;
+        const ecs_c_info_t *c_info = component_info[i].ci;
         ecs_vector_t *triggers;
         if (!c_info || !(triggers = c_info->on_add)) {
             continue;
@@ -859,7 +859,7 @@ void ecs_components_on_remove(
 
     int i;
     for (i = 0; i < component_count; i ++) {
-        ecs_c_info_t *c_info = component_info[i].ci;
+        const ecs_c_info_t *c_info = component_info[i].ci;
         ecs_vector_t *triggers;
         if (!c_info || !(triggers = c_info->on_remove)) {
             continue;
@@ -1319,7 +1319,7 @@ const ecs_entity_t* new_w_data(
                 continue;
             }
 
-            ecs_c_info_t *cdata = get_c_info(world, c);
+            const ecs_c_info_t *cdata = get_c_info(world, c);
             ecs_copy_t copy;
             if (cdata && (copy = cdata->lifecycle.copy)) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
@@ -2269,7 +2269,7 @@ ecs_entity_t assign_ptr_w_entity(
 
     if (ptr) {
         ecs_entity_t real_id = ecs_get_typeid(world, component);
-        ecs_c_info_t *cdata = get_c_info(world, real_id);
+        const ecs_c_info_t *cdata = get_c_info(world, real_id);
         if (cdata) {
             if (is_move) {
                 ecs_move_t move = cdata->lifecycle.move;

@@ -75,6 +75,9 @@ void merge_stages(
     ecs_world_t *world,
     bool force_merge)
 {
+    bool is_stage = world->magic == ECS_STAGE_MAGIC;
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
+
     bool measure_frame_time = world->measure_frame_time;
 
     ecs_time_t t_start;
@@ -82,24 +85,22 @@ void merge_stages(
         ecs_os_get_time(&t_start);
     }
 
-    if (world->magic == ECS_STAGE_MAGIC) {
-        ecs_stage_t *stage = (ecs_stage_t*)world;
-
+    if (is_stage) {
         /* Check for consistency if force_merge is enabled. In practice this
          * function will never get called with force_merge disabled for just
          * a single stage. */
         if (force_merge || stage->auto_merge) {
-            ecs_defer_end(world);
+            ecs_defer_end((ecs_world_t*)stage);
         }
     } else {
         /* Merge stages. Only merge if the stage has auto_merging turned on, or 
          * if this is a forced merge (like when ecs_merge is called) */
         int32_t i, count = ecs_get_stage_count(world);
         for (i = 0; i < count; i ++) {
-            ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
-            ecs_assert(stage->magic == ECS_STAGE_MAGIC, ECS_INTERNAL_ERROR, NULL);
-            if (force_merge || stage->auto_merge) {
-                ecs_defer_end((ecs_world_t*)stage);
+            ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
+            ecs_assert(s->magic == ECS_STAGE_MAGIC, ECS_INTERNAL_ERROR, NULL);
+            if (force_merge || s->auto_merge) {
+                ecs_defer_end((ecs_world_t*)s);
             }
         }
     }
@@ -268,7 +269,7 @@ bool ecs_defer_bulk_new(
                 void *data = ecs_os_malloc(size * count);
                 defer_data[c] = data;
 
-                ecs_c_info_t *cinfo = NULL;
+                const ecs_c_info_t *cinfo = NULL;
                 ecs_entity_t real_id = ecs_get_typeid(world, comp);
                 if (real_id) {
                     cinfo = ecs_get_c_info(world, real_id);
@@ -367,7 +368,7 @@ bool ecs_defer_set(
             }
         }
 
-        ecs_c_info_t *c_info = NULL;
+        const ecs_c_info_t *c_info = NULL;
         ecs_entity_t real_id = ecs_get_typeid(world, component);
         if (real_id) {
             c_info = ecs_get_c_info(world, real_id);

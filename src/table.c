@@ -91,7 +91,7 @@ ecs_data_t* ecs_init_data(
 
 static
 ecs_flags32_t get_component_action_flags(
-    ecs_c_info_t *c_info) 
+    const ecs_c_info_t *c_info) 
 {
     ecs_flags32_t flags = 0;
 
@@ -168,14 +168,14 @@ void notify_component_info(
                 continue;
             }
             
-            ecs_c_info_t *c_info = ecs_get_c_info(world, c);
+            const ecs_c_info_t *c_info = ecs_get_c_info(world, c);
             if (c_info) {
                 ecs_flags32_t flags = get_component_action_flags(c_info);
                 table->flags |= flags;
             }
 
             /* Store pointer to c_info for fast access */
-            table->c_info[i] = c_info;
+            table->c_info[i] = (ecs_c_info_t*)c_info;
         }        
     }
 }

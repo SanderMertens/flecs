@@ -425,7 +425,7 @@ typedef struct ecs_entity_info_t {
 /** Supporting type to store looked up component data in specific table */
 typedef struct ecs_column_info_t {
     ecs_entity_t id;
-    ecs_c_info_t *ci;
+    const ecs_c_info_t *ci;
     int32_t column;
 } ecs_column_info_t;
 
