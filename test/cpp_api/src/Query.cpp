@@ -72,7 +72,7 @@ void Query_action_shared() {
     flecs::query<Position> q(world, "ANY:Velocity");
 
     q.iter([](flecs::iter&it, Position *p) {
-            auto v = it.column<Velocity>(2);
+            auto v = it.column<const Velocity>(2);
 
             if (v.is_shared()) {
                 for (auto i : it) {
@@ -503,7 +503,6 @@ void Query_query_single_trait() {
 
     flecs::entity(world).add_trait<Trait, Position>();
     auto e2 = flecs::entity(world).add_trait<Trait, Velocity>();
-    flecs::entity(world).add_trait<Trait>(flecs::entity::null(world));
     
     flecs::query<> q(world, "TRAIT | Trait > Velocity");
 

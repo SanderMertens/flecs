@@ -5478,20 +5478,30 @@ ecs_entity_t ecs_find_in_type(
 ecs_entity_t ecs_new_id(
     ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* It is possible that the world passed to this function is a stage, so
+     * make sure we have the actual world. Cast away const since this is one of
+     * the few functions that may modify the world while it is in readonly mode,
+     * since it is thread safe (uses atomic inc when in threading mode) */
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
+
     ecs_entity_t entity;
 
-    int32_t stage_count = ecs_get_stage_count(world);
+    int32_t stage_count = ecs_get_stage_count(unsafe_world);
     if (ecs_os_has_threading() && stage_count > 1) {
         /* Can't atomically increase number above max int */
         ecs_assert(
-            world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
+            unsafe_world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
 
-        entity = (ecs_entity_t)ecs_os_ainc((int32_t*)&world->stats.last_id);
+        entity = (ecs_entity_t)ecs_os_ainc(
+            (int32_t*)&unsafe_world->stats.last_id);
     } else {
-        entity = ecs_eis_recycle(world);
+        entity = ecs_eis_recycle(unsafe_world);
     }
 
-    ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, 
+    ecs_assert(!unsafe_world->stats.max_id || 
+        entity <= unsafe_world->stats.max_id, 
         ECS_OUT_OF_RANGE, NULL);
 
     return entity;
@@ -5500,7 +5510,15 @@ ecs_entity_t ecs_new_id(
 ecs_entity_t ecs_new_component_id(
     ecs_world_t *world)
 {
-    if (world->is_readonly) {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* It is possible that the world passed to this function is a stage, so
+     * make sure we have the actual world. Cast away const since this is one of
+     * the few functions that may modify the world while it is in readonly mode,
+     * since it is thread safe (uses atomic inc when in threading mode) */
+    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
+
+    if (unsafe_world->is_readonly) {
         /* Can't issue new comp id while iterating when in multithreaded mode */
         ecs_assert(ecs_get_stage_count(world) <= 1, 
             ECS_INVALID_WHILE_ITERATING, NULL);
@@ -5508,15 +5526,15 @@ ecs_entity_t ecs_new_component_id(
 
     ecs_entity_t id;
 
-    if (world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
+    if (unsafe_world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
         do {
-            id = world->stats.last_component_id ++;
-        } while (ecs_exists(world, id) && id < ECS_HI_COMPONENT_ID);        
+            id = unsafe_world->stats.last_component_id ++;
+        } while (ecs_exists(unsafe_world, id) && id < ECS_HI_COMPONENT_ID);        
     }
     
-    if (world->stats.last_component_id >= ECS_HI_COMPONENT_ID) {
+    if (unsafe_world->stats.last_component_id >= ECS_HI_COMPONENT_ID) {
         /* If the low component ids are depleted, return a regular entity id */
-        id = ecs_new_id(world);
+        id = ecs_new_id(unsafe_world);
     }
 
     return id;
@@ -11850,6 +11868,9 @@ void ecs_set_component_actions_w_entity(
     ecs_entity_t component,
     EcsComponentLifecycle *lifecycle)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+        
 #ifndef NDEBUG
     const EcsComponent *component_ptr = ecs_get(world, component, EcsComponent);
 
@@ -22934,6 +22955,9 @@ ecs_entity_t ecs_new_entity(
     const char *name,
     const char *expr)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
         result = ecs_new(world, 0);
@@ -22953,6 +22977,9 @@ ecs_entity_t ecs_new_prefab(
     const char *name,
     const char *expr)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
         result = ecs_new(world, 0);
@@ -22974,19 +23001,19 @@ ecs_entity_t ecs_new_component(
     size_t size,
     size_t alignment)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
     bool is_readonly = world->is_readonly;
     bool found = false;
 
     /* If world is in progress component may be registered, but only when not
      * in multithreading mode. */
     if (is_readonly) {
-        ecs_assert(ecs_get_stage_count(world) == 0, 
+        ecs_assert(ecs_get_stage_count(world) <= 1, 
             ECS_INVALID_WHILE_ITERATING, NULL);
 
         /* Component creation should not be deferred */
-        ecs_defer_end(world);
         world->is_readonly = false;
     }
 
@@ -23029,8 +23056,10 @@ ecs_entity_t ecs_new_component(
 
     if (is_readonly) {
         world->is_readonly = true;
-        ecs_defer_begin(world);
     }
+
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);
 
     return result;
 }
@@ -23041,7 +23070,8 @@ ecs_entity_t ecs_new_type(
     const char *name,
     const char *expr)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
