@@ -20,9 +20,9 @@ int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
     // Create 3 entities with Position and Mass
-    flecs::entity_range(ecs, 3)
-        .add<Position>()
-        .add<Mass>();
+    ecs.entity().add<Position>().add<Mass>();
+    ecs.entity().add<Position>().add<Mass>();
+    ecs.entity().add<Position>().add<Mass>();
 
     // There will be 3 entities with Position and 0 with Velocity
     std::cout << "There are " << ecs.count<Position>() << " entities with Position" << std::endl;

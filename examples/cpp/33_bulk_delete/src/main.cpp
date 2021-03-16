@@ -16,13 +16,14 @@ int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
     // Create 3 entities with Position
-    flecs::entity_range(ecs, 3)
-        .add<Position>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>();
 
     // Create 3 entities with Position, Velocity
-    flecs::entity_range(ecs, 3)
-        .add<Position>()
-        .add<Velocity>();
+    ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>().add<Velocity>();
 
     // There will be 6 entities with Position and 3 with Velocity
     std::cout << "There are " << ecs.count<Position>() << " entities with Position" << std::endl;
