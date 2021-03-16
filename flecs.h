@@ -8023,158 +8023,6 @@ FLECS_API void ecs_gauge_reduce(
 #include <array>
 #include <functional>
 
-
-// Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
-// Rationale:
-//  - Using macros here instead of a templated function bc clients might override ecs_os_malloc
-//    to contain extra debug info like source tracking location. Using a template function
-//    in that scenario would collapse all source location into said function vs. the
-//    actual call site
-//  - FLECS_PLACEMENT_NEW(): exists to remove any naked new calls/make it easy to identify any regressions
-//    by grepping for new/delete
-
-#define FLECS_PLACEMENT_NEW(_ptr, _type)  ::new(flecs::_::placement_new_tag, _ptr) _type
-#define FLECS_NEW(_type)                  FLECS_PLACEMENT_NEW(ecs_os_malloc(sizeof(_type)), _type)
-#define FLECS_DELETE(_ptr)          \
-  do {                              \
-    if (_ptr) {                     \
-      flecs::_::destruct_obj(_ptr); \
-      ecs_os_free(_ptr);            \
-    }                               \
-  } while (false)
-
-namespace flecs {
-namespace _
-{
-// Dummy Placement new tag to disambiguate from any other operator new overrides
-struct placement_new_tag_t{};
-constexpr placement_new_tag_t placement_new_tag{};
-template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
-}
-}
-
-inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
-inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utility to convert template argument pack to array of columns
-////////////////////////////////////////////////////////////////////////////////
-
-namespace _ {
-
-template <typename ... Components>
-class column_args {
-public:    
-    struct Column {
-        void *ptr;
-        bool is_shared;
-    };
-
-    using Columns = std::array<Column, sizeof...(Components)>;
-
-    column_args(ecs_iter_t* iter) {
-        populate_columns(iter, 0, (typename std::remove_reference<typename std::remove_pointer<Components>::type>::type*)nullptr...);
-    }
-
-    Columns m_columns;
-
-private:
-    /* Dummy function when last component has been added */
-    void populate_columns(ecs_iter_t *iter, size_t index) { 
-        (void)iter;
-        (void)index;
-    }
-
-    /* Populate columns array recursively */
-    template <typename T, typename... Targs>
-    void populate_columns(ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
-        int32_t column = static_cast<int32_t>(index + 1);
-        void *ptr = ecs_column_w_size(iter, sizeof(*comp), column);
-        m_columns[index].ptr = ptr;
-        m_columns[index].is_shared = !ecs_is_owned(iter, column) && ptr != nullptr;
-        populate_columns(iter, index + 1, comps ...);
-    }
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utility to convert type trait to flecs signature syntax */
-////////////////////////////////////////////////////////////////////////////////
-
-namespace _
-{
-
-template <typename T,
-    typename std::enable_if< std::is_const<T>::value == true, void>::type* = nullptr>
-constexpr const char *inout_modifier() {
-    return "[in] ";
-}
-
-template <typename T,
-    typename std::enable_if< std::is_reference<T>::value == true, void>::type* = nullptr>
-constexpr const char *inout_modifier() {
-    return "[out] ";
-}
-
-template <typename T,
-    typename std::enable_if<std::is_const<T>::value == false && std::is_reference<T>::value == false, void>::type* = nullptr>
-constexpr const char *inout_modifier() {
-    return "";
-}
-
-template <typename T,
-    typename std::enable_if< std::is_pointer<T>::value == true, void>::type* = nullptr>
-constexpr const char *optional_modifier() {
-    return "?";
-}
-
-template <typename T,
-    typename std::enable_if< std::is_pointer<T>::value == false, void>::type* = nullptr>
-constexpr const char *optional_modifier() {
-    return "";
-} 
-
-/** Convert template arguments to string */
-template <typename ...Components>
-bool pack_args_to_string(world_t *world, std::stringstream& str, bool is_each) {
-    (void)world;
-
-    std::array<const char*, sizeof...(Components)> ids = {
-        (_::component_info<Components>::name(world))...
-    };
-
-    std::array<const char*, sizeof...(Components)> inout_modifiers = {
-        (inout_modifier<Components>())...
-    }; 
-
-    std::array<const char*, sizeof...(Components)> optional_modifiers = {
-        (optional_modifier<Components>())...
-    };        
-
-    size_t i = 0;
-    for (auto id : ids) {
-        if (i) {
-            str << ",";
-        }
-        
-        str << inout_modifiers[i];
-        str << optional_modifiers[i];
-
-        if (is_each) {
-            str << "ANY:";
-        }
-        str << id;
-        i ++;
-    }  
-
-    return i != 0;
-}
-
-} // namespace _
-
-} // namespace flecs
-
 namespace flecs {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8279,6 +8127,168 @@ static const ecs_entity_t Switch = ECS_SWITCH;
 static const ecs_entity_t Case = ECS_CASE;
 static const ecs_entity_t Owned = ECS_OWNED;
 
+}
+
+
+// Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
+// Rationale:
+//  - Using macros here instead of a templated function bc clients might override ecs_os_malloc
+//    to contain extra debug info like source tracking location. Using a template function
+//    in that scenario would collapse all source location into said function vs. the
+//    actual call site
+//  - FLECS_PLACEMENT_NEW(): exists to remove any naked new calls/make it easy to identify any regressions
+//    by grepping for new/delete
+
+#define FLECS_PLACEMENT_NEW(_ptr, _type)  ::new(flecs::_::placement_new_tag, _ptr) _type
+#define FLECS_NEW(_type)                  FLECS_PLACEMENT_NEW(ecs_os_malloc(sizeof(_type)), _type)
+#define FLECS_DELETE(_ptr)          \
+  do {                              \
+    if (_ptr) {                     \
+      flecs::_::destruct_obj(_ptr); \
+      ecs_os_free(_ptr);            \
+    }                               \
+  } while (false)
+
+namespace flecs 
+{
+
+namespace _
+{
+
+// Dummy Placement new tag to disambiguate from any other operator new overrides
+struct placement_new_tag_t{};
+constexpr placement_new_tag_t placement_new_tag{};
+template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
+
+} // namespace _
+
+} // namespace flecs
+
+inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
+inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Utility to convert template argument pack to array of columns
+////////////////////////////////////////////////////////////////////////////////
+
+namespace flecs 
+{
+
+namespace _ 
+{
+
+template <typename ... Components>
+class column_args {
+public:    
+    struct Column {
+        void *ptr;
+        bool is_shared;
+    };
+
+    using Columns = std::array<Column, sizeof...(Components)>;
+
+    column_args(ecs_iter_t* iter) {
+        populate_columns(iter, 0, (typename std::remove_reference<typename std::remove_pointer<Components>::type>::type*)nullptr...);
+    }
+
+    Columns m_columns;
+
+private:
+    /* Dummy function when last component has been added */
+    void populate_columns(ecs_iter_t *iter, size_t index) { 
+        (void)iter;
+        (void)index;
+    }
+
+    /* Populate columns array recursively */
+    template <typename T, typename... Targs>
+    void populate_columns(ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
+        int32_t column = static_cast<int32_t>(index + 1);
+        void *ptr = ecs_column_w_size(iter, sizeof(*comp), column);
+        m_columns[index].ptr = ptr;
+        m_columns[index].is_shared = !ecs_is_owned(iter, column) && ptr != nullptr;
+        populate_columns(iter, index + 1, comps ...);
+    }
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Utility to convert type trait to flecs signature syntax */
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T,
+    typename std::enable_if< std::is_const<T>::value == true, void>::type* = nullptr>
+constexpr const char *inout_modifier() {
+    return "[in] ";
+}
+
+template <typename T,
+    typename std::enable_if< std::is_reference<T>::value == true, void>::type* = nullptr>
+constexpr const char *inout_modifier() {
+    return "[out] ";
+}
+
+template <typename T,
+    typename std::enable_if<std::is_const<T>::value == false && std::is_reference<T>::value == false, void>::type* = nullptr>
+constexpr const char *inout_modifier() {
+    return "";
+}
+
+template <typename T,
+    typename std::enable_if< std::is_pointer<T>::value == true, void>::type* = nullptr>
+constexpr const char *optional_modifier() {
+    return "?";
+}
+
+template <typename T,
+    typename std::enable_if< std::is_pointer<T>::value == false, void>::type* = nullptr>
+constexpr const char *optional_modifier() {
+    return "";
+} 
+
+/** Convert template arguments to string */
+template <typename ...Components>
+bool pack_args_to_string(world_t *world, std::stringstream& str, bool is_each = false) {
+    (void)world;
+
+    std::array<const char*, sizeof...(Components)> ids = {
+        (_::component_info<Components>::name(world))...
+    };
+
+    std::array<const char*, sizeof...(Components)> inout_modifiers = {
+        (inout_modifier<Components>())...
+    }; 
+
+    std::array<const char*, sizeof...(Components)> optional_modifiers = {
+        (optional_modifier<Components>())...
+    };        
+
+    size_t i = 0;
+    for (auto id : ids) {
+        if (i) {
+            str << ",";
+        }
+        
+        str << inout_modifiers[i];
+        str << optional_modifiers[i];
+
+        if (is_each) {
+            str << "ANY:";
+        }
+        str << id;
+        i ++;
+    }  
+
+    return i != 0;
+}
+
+} // namespace _
+
+} // namespace flecs
+
+namespace flecs 
+{
 
 /** Unsafe wrapper class around a column.
  * This class can be used when a system does not know the type of a column at
@@ -8824,140 +8834,10 @@ inline column<T>::column(iter &iter, int32_t col) {
     *this = iter.column<T>(col);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// Utility class to invoke a system each
-////////////////////////////////////////////////////////////////////////////////
+} // namespace flecs
 
-template <typename Func, typename ... Components>
-class each_invoker {
-    using Columns = typename column_args<Components ...>::Columns;
-
-public:
-    explicit each_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
-    explicit each_invoker(const Func& func) noexcept : m_func(func) { }
-
-    // Invoke system
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
-        flecs::iter iter_wrapper(iter);
-        (void)index;
-        (void)columns;
-
-        // Use any_column so we can transparently use shared components
-        for (auto row : iter_wrapper) {
-            func(iter_wrapper.entity(row), (_::any_column<typename std::remove_reference<Components>::type>(
-                 (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, 
-                    static_cast<size_t>(iter->count), comps.is_shared))[row]...);
-        }
-    }
-
-    // Add components one by one to parameter pack
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
-        each_invoker::call_system(iter, func, index + 1, columns, comps..., columns[index]);
-    }
-
-    // Callback provided to flecs system
-    static void run(ecs_iter_t *iter) {
-        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        each_invoker *self = (each_invoker*)ctx->ctx;
-        column_args<Components...> columns(iter);
-        call_system(iter, self->m_func, 0, columns.m_columns);
-    }
-
-private:
-    Func m_func;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utility class to invoke a system action
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename Func, typename ... Components>
-class action_invoker {
-    using Columns = typename column_args<Components ...>::Columns;
-
-public:
-    explicit action_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
-    explicit action_invoker(const Func& func) noexcept : m_func(func) { }
-
-    /* Invoke system */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
-        (void)index;
-        (void)columns;
-
-        flecs::iter iter_wrapper(iter);
-        
-        func(iter_wrapper, (column<typename std::remove_reference< typename std::remove_pointer<Components>::type >::type>(
-            (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, iter->count, comps.is_shared))...);
-    }
-
-    /** Add components one by one to parameter pack */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
-        call_system(iter, func, index + 1, columns, comps..., columns[index]);
-    }
-
-    /** Callback provided to flecs */
-    static void run(ecs_iter_t *iter) {
-        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        action_invoker *self = (action_invoker*)ctx->ctx;
-        column_args<Components...> columns(iter);
-        call_system(iter, self->m_func, 0, columns.m_columns);
-    }
-
-private:
-    Func m_func;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utility class to invoke a system iterate action
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename Func, typename ... Components>
-class iter_invoker {
-    using Columns = typename column_args<Components ...>::Columns;
-
-public:
-    explicit iter_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
-    explicit iter_invoker(const Func& func) noexcept : m_func(func) { }
-
-    /* Invoke system */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
-        (void)index;
-        (void)columns;
-        flecs::iter iter_wrapper(iter);
-        func(iter_wrapper, ((typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr)...);
-    }
-
-    /** Add components one by one to parameter pack */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
-        call_system(iter, func, index + 1, columns, comps..., columns[index]);
-    }
-
-    /** Callback provided to flecs */
-    static void run(ecs_iter_t *iter) {
-        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        iter_invoker *self = (iter_invoker*)ctx->ctx;
-        column_args<Components...> columns(iter);
-        call_system(iter, self->m_func, 0, columns.m_columns);
-    }
-
-private:
-    Func m_func;
-};
-
-} // namespace _
+namespace flecs 
+{
 
 /** The world.
  * The world is the container of all ECS data and systems. If the world is
@@ -9629,7 +9509,11 @@ private:
     world_t *m_world;
     bool m_owned;
 };
-////////////////////////////////////////////////////////////////////////////////
+
+} // namespace flecs
+
+namespace flecs 
+{
 
 /** Fluent API for chaining entity operations
  * This class contains entity operations that can be chained. For example, by
@@ -11319,40 +11203,10 @@ public:
     }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// Entity range, allows for operating on a range of consecutive entities
-////////////////////////////////////////////////////////////////////////////////
+} // namespace flecs
 
-ECS_DEPRECATED("do not use")
-class entity_range final : public entity_builder<entity_range> {
-public:
-    entity_range(const world& world, std::int32_t count) 
-        : m_world(world.c_ptr())
-        , m_ids( ecs_bulk_new_w_type(m_world, nullptr, count))
-        , m_count(count) { }
-
-    entity_range(const world& world, std::int32_t count, flecs::type type) 
-        : m_world(world.c_ptr())
-        , m_ids( ecs_bulk_new_w_type(m_world, type.c_ptr(), count))
-        , m_count(count) { }
-
-    template <typename Func>
-    void invoke(Func&& action) const {
-        for (int i = 0; i < m_count; i ++) {
-            action(m_world, m_ids[i]);
-        }
-    }
-
-private:
-    world_t *m_world;
-    const entity_t *m_ids;
-    std::int32_t m_count;
-};
-
-template <typename T>
-flecs::entity ref<T>::entity() const {
-    return flecs::entity(m_world, m_entity);
-}
+namespace flecs 
+{
 
 ////////////////////////////////////////////////////////////////////////////////
 //// A collection of component ids used to describe the contents of a table
@@ -11527,12 +11381,18 @@ private:
     type_t m_type;
     type_t m_normalized;
 };
+
+} // namespace flecs
 ////////////////////////////////////////////////////////////////////////////////
 //// Register component, provide global access to component handles / metadata
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace _
+namespace flecs 
 {
+
+namespace _ 
+{
+    
     // Trick to obtain typename from type, as described here
     // https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
     //
@@ -12128,12 +11988,11 @@ template <typename T> type_t component_info<T>::s_type( nullptr );
 template <typename T> std::string component_info<T>::s_name("");
 template <typename T> bool component_info<T>::s_allow_tag( true );
 
+} // namespace _
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Register a component with flecs
 ////////////////////////////////////////////////////////////////////////////////
-
-} // namespace _
 
 /** Plain old datatype, no lifecycle actions are registered */
 template <typename T>
@@ -12249,6 +12108,11 @@ flecs::entity_t type_id() {
     return _::component_info<T>::id();
 }
 
+} // namespace flecs
+
+namespace flecs 
+{
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Define a module
 ////////////////////////////////////////////////////////////////////////////////
@@ -12327,6 +12191,181 @@ flecs::entity import(world& world) {
 
     return flecs::entity(world, m);
 }
+
+} // namespace flecs
+
+namespace flecs 
+{
+
+////////////////////////////////////////////////////////////////////////////////
+//// A filter is used to match subsets of tables
+////////////////////////////////////////////////////////////////////////////////
+ 
+class filter {
+public:
+    filter() 
+        : m_world( nullptr )
+        , m_filter{ } {}
+
+    explicit filter(const world& world) 
+        : m_world( world.c_ptr() )
+        , m_filter{ } { }
+
+    filter& include(type type) {
+        m_filter.include = ecs_type_merge(m_world, m_filter.include, type.c_ptr(), nullptr);
+        return *this;
+    }
+
+    filter& include(entity entity) {
+        m_filter.include = ecs_type_add(m_world, m_filter.include, entity.id());
+        return *this;
+    }
+
+    template <typename T>
+    filter& include() {
+        m_filter.include = ecs_type_add(m_world, m_filter.include, _::component_info<T>::id(m_world));
+        return *this;
+    }
+
+    filter& include_kind(match_kind kind) {
+        m_filter.include_kind = static_cast<ecs_match_kind_t>(kind);
+        return *this;
+    }
+
+    type include() {
+        return type(m_world, m_filter.include);
+    }
+
+    filter& exclude(type type) {
+        m_filter.exclude = ecs_type_merge(m_world, m_filter.exclude, type.c_ptr(), nullptr);
+        return *this;
+    }
+
+    filter& exclude(entity entity) {
+        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, entity.id());
+        return *this;
+    }
+
+    template <typename T>
+    filter& exclude() {
+        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, _::component_info<T>::id(m_world));
+        return *this;
+    }
+ 
+    filter& exclude_kind(match_kind kind) {
+        m_filter.exclude_kind = static_cast<ecs_match_kind_t>(kind);
+        return *this;
+    }
+
+    type exclude() {
+        return type(m_world, m_filter.exclude);
+    }  
+
+    const filter_t* c_ptr() const {
+        if (m_world) {
+            return &m_filter;
+        } else {
+            return nullptr;
+        }
+    }
+
+private:
+    world_t *m_world;
+    filter_t m_filter;
+};
+
+} // namespace flecs
+
+namespace flecs 
+{
+
+////////////////////////////////////////////////////////////////////////////////
+//// Snapshots make a copy of the world state that can be restored
+////////////////////////////////////////////////////////////////////////////////
+
+class snapshot final {
+public:
+    explicit snapshot(const world& world)
+        : m_world( world )
+        , m_snapshot( nullptr ) { }
+
+    snapshot(const snapshot& obj) 
+        : m_world( obj.m_world )
+    { 
+        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot, nullptr);
+        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);
+    }
+
+    snapshot(snapshot&& obj) 
+        : m_world(obj.m_world)
+        , m_snapshot(obj.m_snapshot)
+    {
+        obj.m_snapshot = nullptr;
+    }
+
+    snapshot& operator=(const snapshot& obj) {
+        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
+        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot, nullptr);
+        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);        
+        return *this;
+    }
+
+    snapshot& operator=(snapshot&& obj) {
+        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
+        m_snapshot = obj.m_snapshot;
+        obj.m_snapshot = nullptr;
+        return *this;
+    }
+
+    void take() {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_snapshot);
+        }
+
+        m_snapshot = ecs_snapshot_take(m_world.c_ptr());
+    }
+
+    void take(flecs::filter filter) {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_snapshot);
+        }
+
+        ecs_iter_t it = ecs_filter_iter(m_world.c_ptr(), filter.c_ptr());
+        m_snapshot = ecs_snapshot_take_w_iter(
+            &it, ecs_filter_next);
+    }
+
+    void restore() {
+        if (m_snapshot) {
+            ecs_snapshot_restore(m_world.c_ptr(), m_snapshot);
+            m_snapshot = nullptr;
+        }
+    }
+
+    ~snapshot() {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_snapshot);
+        }
+    }
+
+    snapshot_t* c_ptr() const {
+        return m_snapshot;
+    }
+
+    snapshot_filter filter(const filter& filter);
+
+    filter_iterator begin();
+
+    filter_iterator end();
+private:
+    const world& m_world;
+    snapshot_t *m_snapshot;
+};
+
+} // namespace flecs
+
+namespace flecs
+{
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility for iterating over tables that match a filter
@@ -12501,84 +12540,913 @@ inline filter_iterator snapshot::end() {
     return filter_iterator(ecs_snapshot_next);
 }
 
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
-//// A filter is used to match subsets of tables
+//// Utility class to invoke a system each
 ////////////////////////////////////////////////////////////////////////////////
- 
-class filter {
+
+namespace flecs 
+{
+
+namespace _ 
+{
+
+template <typename Func, typename ... Components>
+class each_invoker {
+    using Columns = typename column_args<Components ...>::Columns;
+
 public:
-    filter() 
-        : m_world( nullptr )
-        , m_filter{ } {}
+    explicit each_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
+    explicit each_invoker(const Func& func) noexcept : m_func(func) { }
 
-    explicit filter(const world& world) 
-        : m_world( world.c_ptr() )
-        , m_filter{ } { }
+    // Invoke system
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
+        flecs::iter iter_wrapper(iter);
+        (void)index;
+        (void)columns;
 
-    filter& include(type type) {
-        m_filter.include = ecs_type_merge(m_world, m_filter.include, type.c_ptr(), nullptr);
-        return *this;
-    }
-
-    filter& include(entity entity) {
-        m_filter.include = ecs_type_add(m_world, m_filter.include, entity.id());
-        return *this;
-    }
-
-    template <typename T>
-    filter& include() {
-        m_filter.include = ecs_type_add(m_world, m_filter.include, _::component_info<T>::id(m_world));
-        return *this;
-    }
-
-    filter& include_kind(match_kind kind) {
-        m_filter.include_kind = static_cast<ecs_match_kind_t>(kind);
-        return *this;
-    }
-
-    type include() {
-        return type(m_world, m_filter.include);
-    }
-
-    filter& exclude(type type) {
-        m_filter.exclude = ecs_type_merge(m_world, m_filter.exclude, type.c_ptr(), nullptr);
-        return *this;
-    }
-
-    filter& exclude(entity entity) {
-        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, entity.id());
-        return *this;
-    }
-
-    template <typename T>
-    filter& exclude() {
-        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, _::component_info<T>::id(m_world));
-        return *this;
-    }
- 
-    filter& exclude_kind(match_kind kind) {
-        m_filter.exclude_kind = static_cast<ecs_match_kind_t>(kind);
-        return *this;
-    }
-
-    type exclude() {
-        return type(m_world, m_filter.exclude);
-    }  
-
-    const filter_t* c_ptr() const {
-        if (m_world) {
-            return &m_filter;
-        } else {
-            return nullptr;
+        // Use any_column so we can transparently use shared components
+        for (auto row : iter_wrapper) {
+            func(iter_wrapper.entity(row), (_::any_column<typename std::remove_reference<Components>::type>(
+                 (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, 
+                    static_cast<size_t>(iter->count), comps.is_shared))[row]...);
         }
     }
 
+    // Add components one by one to parameter pack
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
+        each_invoker::call_system(iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
+    // Callback provided to flecs system
+    static void run(ecs_iter_t *iter) {
+        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
+        each_invoker *self = (each_invoker*)ctx->ctx;
+        column_args<Components...> columns(iter);
+        call_system(iter, self->m_func, 0, columns.m_columns);
+    }
+
 private:
-    world_t *m_world;
-    filter_t m_filter;
+    Func m_func;
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+//// Utility class to invoke a system action
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Func, typename ... Components>
+class action_invoker {
+    using Columns = typename column_args<Components ...>::Columns;
+
+public:
+    explicit action_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
+    explicit action_invoker(const Func& func) noexcept : m_func(func) { }
+
+    /* Invoke system */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+
+        flecs::iter iter_wrapper(iter);
+        
+        func(iter_wrapper, (column<typename std::remove_reference< typename std::remove_pointer<Components>::type >::type>(
+            (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, iter->count, comps.is_shared))...);
+    }
+
+    /** Add components one by one to parameter pack */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
+        call_system(iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
+    /** Callback provided to flecs */
+    static void run(ecs_iter_t *iter) {
+        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
+        action_invoker *self = (action_invoker*)ctx->ctx;
+        column_args<Components...> columns(iter);
+        call_system(iter, self->m_func, 0, columns.m_columns);
+    }
+
+private:
+    Func m_func;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//// Utility class to invoke a system iterate action
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Func, typename ... Components>
+class iter_invoker {
+    using Columns = typename column_args<Components ...>::Columns;
+
+public:
+    explicit iter_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
+    explicit iter_invoker(const Func& func) noexcept : m_func(func) { }
+
+    /* Invoke system */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+        flecs::iter iter_wrapper(iter);
+        func(iter_wrapper, ((typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr)...);
+    }
+
+    /** Add components one by one to parameter pack */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
+        call_system(iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
+    /** Callback provided to flecs */
+    static void run(ecs_iter_t *iter) {
+        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
+        iter_invoker *self = (iter_invoker*)ctx->ctx;
+        column_args<Components...> columns(iter);
+        call_system(iter, self->m_func, 0, columns.m_columns);
+    }
+
+private:
+    Func m_func;
+};
+
+} // namespace _
+
+} // namespace flecs
+
+namespace flecs 
+{
+
+////////////////////////////////////////////////////////////////////////////////
+//// Persistent queries
+////////////////////////////////////////////////////////////////////////////////
+
+class query_base {
+public:
+    query_base()
+        : m_world(nullptr), m_query(nullptr) { }    
+    
+    query_base(world_t *world, query_t *query)
+        : m_world(world), m_query(query) { }
+
+    /** Get pointer to C query object.
+     */
+    query_t* c_ptr() const {
+        return m_query;
+    }
+
+    /** Sort the output of a query.
+     * This enables sorting of entities across matched tables. As a result of this
+     * operation, the order of entities in the matched tables may be changed. 
+     * Resorting happens when a query iterator is obtained, and only if the table
+     * data has changed.
+     *
+     * If multiple queries that match the same (sub)set of tables specify different 
+     * sorting functions, resorting is likely to happen every time an iterator is
+     * obtained, which can significantly slow down iterations.
+     *
+     * The sorting function will be applied to the specified component. Resorting
+     * only happens if that component has changed, or when the entity order in the
+     * table has changed. If no component is provided, resorting only happens when
+     * the entity order changes.
+     *
+     * @tparam T The component used to sort.
+     * @param compare The compare function used to sort the components.
+     */
+    template <typename T>
+    void order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
+        ecs_query_order_by(m_world, m_query, 
+            flecs::_::component_info<T>::id(m_world),
+            (ecs_compare_action_t)compare);
+    }
+
+    /** Sort the output of a query.
+     * Same as order_by<T>, but with component identifier.
+     *
+     * @param component The component used to sort.
+     * @param compare The compare function used to sort the components.
+     */
+    void order_by(flecs::entity component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
+        ecs_query_order_by(m_world, m_query, component.id(), compare);
+    }    
+
+    /** Group and sort matched tables.
+     * Similar yo ecs_query_order_by, but instead of sorting individual entities, this
+     * operation only sorts matched tables. This can be useful of a query needs to
+     * enforce a certain iteration order upon the tables it is iterating, for 
+     * example by giving a certain component or tag a higher priority.
+     *
+     * The sorting function assigns a "rank" to each type, which is then used to
+     * sort the tables. Tables with higher ranks will appear later in the iteration.
+     * 
+     * Resorting happens when a query iterator is obtained, and only if the set of
+     * matched tables for a query has changed. If table sorting is enabled together
+     * with entity sorting, table sorting takes precedence, and entities will be
+     * sorted within each set of tables that are assigned the same rank.
+     *
+     * @tparam T The component used to determine the group rank.
+     * @param rank The rank action.
+     */
+    template <typename T>
+    void group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+        ecs_query_group_by(m_world, m_query, 
+            flecs::_::component_info<T>::id(m_world), rank);
+    }
+
+    /** Group and sort matched tables.
+     * Same as group_by<T>, but with component identifier.
+     *
+     * @param component The component used to determine the group rank.
+     * @param rank The rank action.
+     */
+    void group_by(flecs::entity component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+        ecs_query_group_by(m_world, m_query, component.id(), rank);
+    }
+
+    /** Returns whether the query data changed since the last iteration.
+     * This operation must be invoked before obtaining the iterator, as this will
+     * reset the changed state. The operation will return true after:
+     * - new entities have been matched with
+     * - matched entities were deleted
+     * - matched components were changed
+     * 
+     * @return true if entities changed, otherwise false.
+     */
+    bool changed() {
+        return ecs_query_changed(m_query);
+    }
+
+    /** Returns whether query is orphaned.
+     * When the parent query of a subquery is deleted, it is left in an orphaned
+     * state. The only valid operation on an orphaned query is deleting it. Only
+     * subqueries can be orphaned.
+     *
+     * @return true if query is orphaned, otherwise false.
+     */
+    bool orphaned() {
+        return ecs_query_orphaned(m_query);
+    }
+
+    /** Free the query.
+     */
+    void destruct() {
+        ecs_query_free(m_query);
+        m_world = nullptr;
+        m_query = nullptr;
+    }
+
+    template <typename Func>
+    void iter(Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next(&it)) {
+            _::column_args<> columns(&it);
+            _::iter_invoker<Func>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }  
+
+protected:
+    world_t *m_world;
+    query_t *m_query;
+};
+
+template<typename ... Components>
+class query : public query_base {
+    using Columns = typename _::column_args<Components...>::Columns;
+
+public:
+    query() : query_base(nullptr, nullptr) { }
+
+    explicit query(const world& world) {
+        std::stringstream str;
+        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        m_world = world.c_ptr();
+        m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
+    }
+
+    explicit query(const world& world, query_base& parent) {
+        std::stringstream str;
+        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        m_world = world.c_ptr();
+        m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
+    }
+
+    explicit query(const world& world, const char *expr) {
+        std::stringstream str;
+        m_world = world.c_ptr();
+        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+            m_query = ecs_query_new(world.c_ptr(), expr);
+        } else {
+            str << "," << expr;
+            m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
+        }
+    }
+
+    explicit query(const world& world, query_base& parent, const char *expr) {
+        std::stringstream str;
+        m_world = world.c_ptr();
+        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
+            m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
+        } else {
+            str << "," << expr;
+            m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
+        }
+    }
+
+    query_iterator<Components...> begin() const;
+
+    query_iterator<Components...> end() const;
+
+    template <typename Func>
+    void each(Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next(&it)) {
+            _::column_args<Components...> columns(&it);
+            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    } 
+
+    template <typename Func>
+    void each(const flecs::filter& filter, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+        const filter_t* filter_ptr = filter.c_ptr();
+
+        while (ecs_query_next_w_filter(&it, filter_ptr)) {
+            _::column_args<Components...> columns(&it);
+            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }
+
+    template <typename Func>
+    void each_worker(std::int32_t stage_current, std::int32_t stage_count, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
+            _::column_args<Components...> columns(&it);
+            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }
+
+    template <typename Func>
+    ECS_DEPRECATED("use each or iter")
+    void action(Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next(&it)) {
+            _::column_args<Components...> columns(&it);
+            _::action_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }
+
+    template <typename Func>
+    void iter(Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next(&it)) {
+            _::column_args<Components...> columns(&it);
+            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }  
+
+    template <typename Func>
+    void iter(const flecs::filter& filter, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);        
+        const filter_t* filter_ptr = filter.c_ptr();
+
+        while (ecs_query_next_w_filter(&it, filter_ptr)) {
+            _::column_args<Components...> columns(&it);
+            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }
+
+    template <typename Func>
+    void iter_worker(std::int32_t stage_current, std::int32_t stage_count, Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_query);
+
+        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
+            _::column_args<Components...> columns(&it);
+            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        }
+    }      
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//// Persistent queries
+////////////////////////////////////////////////////////////////////////////////
+
+template<typename ... Components>
+class query_iterator
+{
+public:
+    query_iterator()
+        : m_has_next(false)
+        , m_iter{ } { }
+
+    query_iterator(const query<Components...>& query) 
+        : m_iter( ecs_query_iter(query.c_ptr()) )
+    {
+        m_has_next = ecs_query_next(&m_iter);
+    }
+
+    bool operator!=(query_iterator const& other) const {
+        return m_has_next != other.m_has_next;
+    }
+
+    flecs::iter const operator*() const {
+        return flecs::iter(&m_iter);
+    }
+
+    query_iterator& operator++() {
+        m_has_next = ecs_query_next(&m_iter);
+        return *this;
+    }
+
+private:
+    bool m_has_next;
+    ecs_iter_t m_iter;
+};
+
+template<typename ... Components>
+inline query_iterator<Components...> query<Components...>::begin() const {
+    return query_iterator<Components...>(*this);
+}
+
+template<typename ... Components>
+inline query_iterator<Components...> query<Components...>::end() const {
+    return query_iterator<Components...>();
+}
+
+} // namespace flecs
+
+namespace flecs 
+{
+
+////////////////////////////////////////////////////////////////////////////////
+//// Fluent interface to run a system manually
+////////////////////////////////////////////////////////////////////////////////
+
+class system_runner_fluent {
+public:
+    system_runner_fluent(
+        world_t *world, 
+        entity_t id, 
+        std::int32_t stage_current, 
+        std::int32_t stage_count, 
+        FLECS_FLOAT delta_time, 
+        void *param)
+        : m_stage(world)
+        , m_id(id)
+        , m_delta_time(delta_time)
+        , m_param(param)
+        , m_filter()
+        , m_offset(0)
+        , m_limit(0)
+        , m_stage_current(stage_current)
+        , m_stage_count(stage_count) { }
+
+    system_runner_fluent& filter(filter filter) {
+        m_filter = filter;
+        return *this;
+    }
+
+    system_runner_fluent& offset(std::int32_t offset) {
+        m_offset = offset;
+        return *this;
+    }
+
+    system_runner_fluent& limit(std::int32_t limit) {
+        m_limit = limit;
+        return *this;
+    }
+
+    system_runner_fluent& stage(flecs::world& stage) {
+        m_stage = stage.c_ptr();
+        return *this;
+    }
+
+    ~system_runner_fluent() {
+        if (m_stage_count) {
+            ecs_run_worker(
+                m_stage, m_id, m_stage_current, m_stage_count, m_delta_time,
+                m_param);            
+        } else {
+            ecs_run_w_filter(
+                m_stage, m_id, m_delta_time, m_offset, m_limit, 
+                m_filter.c_ptr(), m_param);
+        }
+    }
+private:
+    world_t *m_stage;
+    entity_t m_id;
+    FLECS_FLOAT m_delta_time;
+    void *m_param;
+    flecs::filter m_filter;
+    std::int32_t m_offset;
+    std::int32_t m_limit;
+    std::int32_t m_stage_current;
+    std::int32_t m_stage_count;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Register a system with Flecs
+////////////////////////////////////////////////////////////////////////////////
+
+template<typename ... Components>
+class system final : public entity {
+public:
+    explicit system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr) 
+        : entity(world, name)
+        , m_kind(static_cast<ecs_entity_t>(OnUpdate)) 
+        , m_signature(signature)
+        , m_interval(0.0)
+        , m_on_demand(false)
+        , m_hidden(false)
+        , m_finalized(false) { 
+            ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
+        }
+
+    explicit system(const flecs::world& world, flecs::entity id) 
+        : entity(world, id.id())
+        , m_finalized(true) { }
+
+    system& signature(const char *signature) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(!m_signature, ECS_INVALID_PARAMETER, NULL);
+        m_signature = signature;
+        return *this;
+    }
+
+    system& kind(entity_t kind) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        m_kind = static_cast<ecs_entity_t>(kind);
+        return *this;
+    }
+
+    system& interval(FLECS_FLOAT interval) {
+        if (!m_finalized) {
+            m_interval = interval;
+        } else {
+            ecs_set_interval(m_world, m_id, interval);
+        }
+        return *this;
+    }
+
+    FLECS_FLOAT interval() {
+        return ecs_get_interval(m_world, m_id);
+    }
+
+    ECS_DEPRECATED("use interval")
+    system& period(FLECS_FLOAT period) {
+        return this->interval(period);
+    }
+
+    system& on_demand() {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        m_on_demand = true;
+        return *this;
+    }
+
+    system& hidden() {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        m_hidden = true;
+        return *this;
+    }
+
+    /** Same as query::order_by */
+    template <typename T>
+    system& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
+        ecs_compare_action_t cmp = reinterpret_cast<ecs_compare_action_t>(compare);
+        return this->order_by(
+            flecs::entity(m_world, _::component_info<T>::id(m_world)), cmp);
+    }
+
+    /** Same as query::order_by */
+    system& order_by(flecs::entity component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
+        if (!m_finalized) {
+            m_order_by = reinterpret_cast<ecs_compare_action_t>(compare);
+            m_order_by_component = component;
+        } else {
+            const EcsQuery *q = ecs_get(m_world, m_id, EcsQuery);
+            ecs_assert(q != NULL, ECS_INVALID_OPERATION, NULL);
+            ecs_query_order_by(m_world, q->query, 
+                component.id(), reinterpret_cast<ecs_compare_action_t>(compare));
+        }
+        return *this;
+    }
+
+    /** Same as query::group_by */
+    template <typename T>
+    system& group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+        ecs_rank_type_action_t rnk = reinterpret_cast<ecs_rank_type_action_t>(rank);
+        return this->group_by(
+            flecs::entity(m_world, _::component_info<T>::id(m_world)), rnk);
+    }
+
+    /** Same as query::group_by */
+    system& group_by(flecs::entity component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+        if (!m_finalized) {
+            m_group_by = reinterpret_cast<ecs_rank_type_action_t>(rank);
+            m_group_by_component = component;
+        } else {
+            const EcsQuery *q = ecs_get(m_world, m_id, EcsQuery);
+            ecs_assert(q != NULL, ECS_INVALID_OPERATION, NULL);
+            ecs_query_group_by(m_world, q->query, component.id(),
+                reinterpret_cast<ecs_rank_type_action_t>(rank));
+        }
+        return *this;
+    }    
+
+    void enable() {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        ecs_enable(m_world, m_id, true);
+    }
+
+    void disable() {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        ecs_enable(m_world, m_id, false);
+    }
+
+    void set_period(FLECS_FLOAT period) const {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        ecs_set_interval(m_world, m_id, period);
+    }
+
+    void set_context(void *ctx) {
+        if (!m_finalized) {
+            m_ctx = ctx;
+        } else {
+            EcsContext ctx_value = { ctx };
+            ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+        }
+    }
+
+    void* get_context() const {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+
+        const EcsContext *ctx = ecs_get(m_world, m_id, EcsContext);
+        if (ctx) {
+            return (void*)ctx->ctx;
+        } else {
+            return NULL;
+        }
+    }
+
+    query_base query() const {
+        const EcsQuery *q = ecs_get(m_world, m_id, EcsQuery);
+        return query_base(m_world, q->query);
+    }
+
+    system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
+        return system_runner_fluent(m_world, m_id, 0, 0, delta_time, param);
+    }
+
+    system_runner_fluent run_worker(
+        std::int32_t stage_current, 
+        std::int32_t stage_count, 
+        FLECS_FLOAT delta_time = 0.0f, 
+        void *param = nullptr) const 
+    {
+        return system_runner_fluent(m_world, m_id, stage_current, stage_count, delta_time, param);
+    }    
+
+    // put using outside of action so we can still use it without it being
+    // flagged as deprecated.
+    template <typename Func>
+    using action_invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
+
+    template <typename Func>
+    ECS_DEPRECATED("use each or iter")
+    system& action(Func&& func) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+
+        auto ctx = FLECS_NEW(action_invoker_t<Func>)(std::forward<Func>(func));        
+
+        create_system(action_invoker_t<Func>::run, false);
+
+        EcsContext ctx_value = {ctx};
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+
+        return *this;
+    }
+
+     /* Iter (or each) is mandatory and always the last thing that 
+      * is added in the fluent method chain. Create system signature from both 
+      * template parameters and anything provided by the signature method. */
+    template <typename Func>
+    system& iter(Func&& func) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        using invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
+
+        create_system(invoker_t::run, false);
+
+        EcsContext ctx_value = {ctx};
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+
+        return *this;
+    }    
+
+    /* Each is similar to action, but accepts a function that operates on a
+     * single entity */
+    template <typename Func>
+    system& each(Func&& func) {
+        using invoker_t = typename _::each_invoker<typename std::decay<Func>::type, Components...>;
+        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
+
+        create_system(invoker_t::run, true);
+
+        EcsContext ctx_value = {ctx};
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+
+        return *this;
+    }
+
+    ~system() = default;
+private:
+    template <typename Invoker>
+    entity_t create_system(Invoker invoker, bool is_each) {
+        ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
+
+        entity_t e;
+        bool is_trigger = m_kind == flecs::OnAdd || m_kind == flecs::OnRemove;
+
+        if (is_trigger) {
+            // Don't add ANY source to each function if this is a trigger
+            is_each = false;
+        }
+
+        std::string signature = build_signature(is_each);
+
+        if (!signature.length()) {
+            signature = "0";
+        }
+
+        if (is_trigger) {
+            e = ecs_new_trigger(
+                m_world, 
+                m_id,
+                nullptr, 
+                m_kind, 
+                signature.c_str(), 
+                invoker);
+        } else {
+            e = ecs_new_system(
+                m_world, 
+                m_id,
+                nullptr, 
+                m_kind, 
+                signature.c_str(), 
+                invoker);
+        }
+
+        ecs_assert(e == m_id, ECS_INTERNAL_ERROR, NULL);
+
+        if (m_interval != 0) {
+            ecs_set_interval(m_world, e, m_interval);
+        }
+
+        m_finalized = true;
+
+        if (m_ctx) {
+            this->set_context(m_ctx);
+        }
+
+        if (m_order_by) {
+            this->order_by(m_order_by_component, m_order_by);
+        }
+
+        if (m_group_by) {
+            this->group_by(m_group_by_component, m_group_by);
+        }
+
+        return e;
+    }
+
+    std::string build_signature(bool is_each) {
+        bool is_set = false;
+
+        std::stringstream str;
+        if (_::pack_args_to_string<Components ...>(m_world, str, is_each)) {
+            is_set = true;
+        }
+
+        if (m_signature) {
+            if (is_set) {
+                str << ",";
+            }
+            str << m_signature;
+            is_set = true;
+        }
+
+        if (m_hidden) {
+            if (is_set) {
+                str << ",";
+            }            
+            str << "SYSTEM:Hidden";
+            is_set = true;
+        }    
+
+        if (m_on_demand) {
+            if (is_set) {
+                str << ",";
+            }            
+            str << "SYSTEM:EcsOnDemand";
+            is_set = true;
+        } 
+
+        return str.str();       
+    }
+
+    ecs_entity_t m_kind;
+    const char *m_signature = nullptr;
+    void *m_ctx = nullptr;
+
+    ecs_compare_action_t m_order_by = nullptr;
+    flecs::entity m_order_by_component;
+
+    ecs_rank_type_action_t m_group_by = nullptr;
+    flecs::entity m_group_by_component;
+
+    FLECS_FLOAT m_interval;
+    bool m_on_demand;
+    bool m_hidden;
+    bool m_finalized; // After set to true, system is created & sig is fixed
+};
+
+} // namespace flecs
+
+namespace flecs 
+{
+
+////////////////////////////////////////////////////////////////////////////////
+//// Reader for world/snapshot serialization
+////////////////////////////////////////////////////////////////////////////////
+
+class reader final {
+public:
+    explicit reader(world& world) {
+        m_reader = ecs_reader_init(world.c_ptr());
+    }
+
+    reader(world& world, snapshot& snapshot) {
+        (void)world;
+        ecs_iter_t it = ecs_snapshot_iter(snapshot.c_ptr(), nullptr);
+        m_reader = ecs_reader_init_w_iter(&it, ecs_snapshot_next);
+    }
+
+    int32_t read(char *buffer, std::int64_t size) {
+        return ecs_reader_read(buffer, static_cast<int32_t>(size), &m_reader);
+    }
+
+private:
+    ecs_reader_t m_reader;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//// Writer for world deserialization
+////////////////////////////////////////////////////////////////////////////////
+
+class writer final {
+public:
+    explicit writer(world& world) {
+        m_writer = ecs_writer_init(world.c_ptr());
+    }
+
+    int32_t write(const char *buffer, std::int64_t size) {
+        return ecs_writer_write(buffer, static_cast<int32_t>(size), &m_writer);
+    }
+
+private:
+    ecs_writer_t m_writer;
+};
+
+} // namespace flecs
+
+
+
+namespace flecs 
+{
 
 inline flecs::type entity::type() const {
     return flecs::type(m_world, ecs_get_type(m_world, m_id));
@@ -12591,6 +13459,46 @@ inline flecs::type entity::to_type() const {
 
 inline child_iterator entity::children() const {
     return flecs::child_iterator(*this);
+}
+
+} // namespace flecs
+
+namespace flecs 
+{
+
+////////////////////////////////////////////////////////////////////////////////
+//// Entity range, allows for operating on a range of consecutive entities
+////////////////////////////////////////////////////////////////////////////////
+
+
+class ECS_DEPRECATED("do not use") entity_range final : public entity_builder<entity_range> {
+public:
+    entity_range(const world& world, std::int32_t count) 
+        : m_world(world.c_ptr())
+        , m_ids( ecs_bulk_new_w_type(m_world, nullptr, count))
+        , m_count(count) { }
+
+    entity_range(const world& world, std::int32_t count, flecs::type type) 
+        : m_world(world.c_ptr())
+        , m_ids( ecs_bulk_new_w_type(m_world, type.c_ptr(), count))
+        , m_count(count) { }
+
+    template <typename Func>
+    void invoke(Func&& action) const {
+        for (int i = 0; i < m_count; i ++) {
+            action(m_world, m_ids[i]);
+        }
+    }
+
+private:
+    world_t *m_world;
+    const entity_t *m_ids;
+    std::int32_t m_count;
+};
+
+template <typename T>
+flecs::entity ref<T>::entity() const {
+    return flecs::entity(m_world, m_entity);
 }
 
 template <typename base>
@@ -12746,6 +13654,11 @@ inline flecs::entity entity::get_case(flecs::type sw) const {
     return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw.id()));
 }
 
+}
+
+namespace flecs 
+{
+
 inline flecs::entity iter::system() const {
     return flecs::entity(m_iter->world, m_iter->system);
 }
@@ -12778,6 +13691,11 @@ inline type iter::column_type(int32_t col) const {
 inline type iter::table_type() const {
     return flecs::type(m_iter->world, ecs_iter_type(m_iter));
 }
+
+} // namespace flecs
+
+namespace flecs 
+{
 
 inline void world::delete_entities(flecs::filter filter) const {
     ecs_bulk_delete(m_world, filter.c_ptr());
@@ -12990,6 +13908,8 @@ template <typename... Args>
 inline flecs::snapshot world::snapshot(Args &&... args) const {
     return flecs::snapshot(*this, std::forward<Args>(args)...);
 }
+
+} // namespace flecs
 #endif
 #endif
 
