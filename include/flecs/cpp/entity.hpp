@@ -1,4 +1,6 @@
 
+#include "deprecated/entity.hpp"
+
 namespace flecs 
 {
 
@@ -14,21 +16,6 @@ template <typename Base>
 class entity_builder {
     using base_type = const Base;
 public:
-
-    /** Add an entity to an entity by id.
-     * This adds a raw entity id (64 bit integer) to the type of the current
-     * entity.
-     * 
-     * @param entity The entity id to add.
-     */
-    base_type& add(entity_t entity) const {
-        static_cast<base_type*>(this)->invoke(
-        [entity](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, entity);
-        });
-        return *static_cast<base_type*>(this);         
-    }
-
     /** Add a component to an entity.
      * To ensure the component is initialized, it should have a constructor.
      * 
@@ -36,11 +23,8 @@ public:
      */
     template <typename T>
     base_type& add() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, _::component_info<T>::id(world));
-        });
-        return *static_cast<base_type*>(this);
+        ecs_add_entity(world(), id(), _::cpp_type<T>::id(world()));
+        return *base();
     }
 
     /** Add an entity to an entity.
@@ -48,21 +32,9 @@ public:
      *
      * @param entity The entity to add.
      */
-    base_type& add(const entity& entity) const;
-
-    /** Add a type to an entity by its C pointer.
-     * A type is a vector of component ids. This operation adds all components
-     * in a single operation, and is a more efficient version of doing 
-     * individual add operations.
-     *
-     * @param type The C type to add.
-     */
-    base_type& add(type_t type) const {
-        static_cast<base_type*>(this)->invoke(
-        [type](world_t *world, entity_t id) {
-            ecs_add_type(world, id, type);
-        });
-        return *static_cast<base_type*>(this); 
+    base_type& add(const Base& entity) const {
+        ecs_add_entity(world(), id(), entity.id());
+        return *base();
     }
 
     /** Add a type to an entity.
@@ -72,89 +44,32 @@ public:
      * 
      * @param type The type to add.
      */
-    base_type& add(type type) const;
+    base_type& add(const type& type) const;
 
-    /** Add a trait.
-     * This operation adds a trait for an entity by entity id. If the trait
-     * is a component, a value of the trait type will be associated with the
-     * entity. If the trait is not a component, a value of the component type
-     * will be associated with the entity. If both the trait and component ids
-     * are regular entities, no values will be associated with the entity.
+    /** Add a pair.
+     * This operation adds a pair to the entity.
      *
-     * @param trait The trait id.
-     * @param entity The entity identifier.
+     * @param relation The relation id.
+     * @param object The object id.
      */
-    base_type& add_trait(entity_t trait, entity_t entity) const {
-        static_cast<base_type*>(this)->invoke(
-        [entity, trait](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, 
-                ecs_trait(entity, trait));
-        });
-        return *static_cast<base_type*>(this); 
+    base_type& add(const Base& relation, const Base& object) const {
+        ecs_add_pair(world(), id(), relation.id(), object.id());
+        return *base();
     }
 
-    /** Add a trait.
-     * This operation adds a trait for a component. A value of the trait type
-     * will be associated with the entity.
+    /** Add a pair.
+     * This operation adds a pair to the entity.
      *
-     * @tparam T the trait type.
-     * @tparam C the component type.
+     * @tparam Relation the relation type.
+     * @tparam Object the object type.
      */
-    template<typename T, typename C>
-    base_type& add_trait() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {       
-            ecs_add_entity(world, id, 
-                ecs_trait(_::component_info<C>::id(world), 
-                          _::component_info<T>::id(world)));
-        });
-        return *static_cast<base_type*>(this); 
+    template<typename Relation, typename Object>
+    base_type& add() const {
+        ecs_add_pair(world(), id(),
+            _::cpp_type<Relation>::id(world()), 
+            _::cpp_type<Object>::id(world()));
+        return *base(); 
     }
-
-    /** Add a trait.
-     * This operation adds a trait for a component. A value of the trait 
-     * type will be associated with the entity. 
-     *
-     * @tparam T The trait to add.
-     * @param component The component for which to add the trait.
-     */
-    template<typename T>
-    base_type& add_trait(flecs::entity component) const;
-
-    /** Add a trait tag.
-     * This operation adds a trait tag for a component. A value of the component 
-     * type will be associated with the entity. Note that the trait tag passed 
-     * into this function should not be a component.
-     *
-     * @tparam C The component type.
-     * @param trait The trait identifier.
-     */
-    template<typename C>
-    base_type& add_trait_tag(flecs::entity trait) const;
-
-    /** Add a trait.
-     * This operation adds a trait for an entity by entity id. If the trait
-     * is a component, a value of the trait type will be associated with the
-     * entity. If the trait is not a component, a value of the component type
-     * will be associated with the entity. If both the trait and component ids
-     * are regular entities, no values will be associated with the entity.
-     *
-     * @param trait The trait to add.
-     * @param entity The tag for which to add the trait.
-     */
-    base_type& add_trait(flecs::entity trait, flecs::entity entity) const;
-
-    /** Remove an entity from an entity by id.
-     *
-     * @param entity The entity id to remove.
-     */
-    base_type& remove(entity_t entity) const {
-        static_cast<base_type*>(this)->invoke(
-        [entity](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, entity);
-        });
-        return *static_cast<base_type*>(this);
-    }    
 
     /** Remove a component from an entity.
      *
@@ -162,32 +77,17 @@ public:
      */
     template <typename T>
     base_type& remove() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, _::component_info<T>::id(world));
-        });
-        return *static_cast<base_type*>(this);
+        ecs_remove_entity(world(), id(), _::cpp_type<T>::id(world()));
+        return *base();
     }
 
     /** Remove an entity from an entity.
      *
      * @param entity The entity to remove.
      */
-    base_type& remove(const entity& entity) const;
-
-    /** Remove a type from an entity by its C pointer.
-     * A type is a vector of component ids. This operation adds all components
-     * in a single operation, and is a more efficient version of doing 
-     * individual add operations.
-     *
-     * @param type the pointer to the type to remove.
-     */
-    base_type& remove(type_t type) const {
-        static_cast<base_type*>(this)->invoke(
-        [type](world_t *world, entity_t id) {
-            ecs_remove_type(world, id, type);
-        });
-        return *static_cast<base_type*>(this);         
+    base_type& remove(const Base& entity) const {
+        ecs_remove_entity(world(), id(), entity.id());
+        return *base();
     }
 
     /** Remove a type from an entity.
@@ -197,150 +97,40 @@ public:
      *
      * @param type the type to remove.
      */
-    base_type& remove(type type) const;
+    base_type& remove(const type& type) const;
 
-    /** Remove a trait.
-     * This operation removes a trait for an entity by entity id.
+    /** Remove a pair.
+     * This operation removes a pair from the entity.
      *
-     * @param trait The trait to remove.
-     * @param entity The entity for which to remove the trait.
+     * @param relation The relation id.
+     * @param object The object id.
      */
-    base_type& remove_trait(entity_t trait, entity_t entity) const {
-        static_cast<base_type*>(this)->invoke(
-        [entity, trait](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, 
-                ecs_trait(entity, trait));
-        });
-        return *static_cast<base_type*>(this);         
+    base_type& remove(const Base& relation, const Base& object) const {
+        ecs_remove_pair(world(), id(), relation.id(), object.id());
+        return *base();
     }
 
-    /** Remove a trait.
-     * This operation removes a trait for a component.
+    /** Removes a pair.
+     * This operation removes a pair from the entity.
      *
-     * @tparam T The trait to remove.
-     * @tparam C The component for which to remove the trait.
+     * @tparam Relation the relation type.
+     * @tparam Object the object type.
      */
-    template<typename T, typename C>
-    base_type& remove_trait() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {   
-            ecs_remove_entity(world, id,
-                ecs_trait(_::component_info<C>::id(world), 
-                          _::component_info<T>::id(world)));
-        });
-        return *static_cast<base_type*>(this);
+    template<typename Relation, typename Object>
+    base_type& remove() const {
+        ecs_remove_pair(world(), id(),
+            _::cpp_type<Relation>::id(world()), 
+            _::cpp_type<Object>::id(world()));
+        return *base(); 
     }
-
-    /** Remove a trait.
-     * This operation removes a trait tag for a component. The trait should not
-     * be a component.
-     *
-     * @tparam T The trait to remove.
-     * @param component The component for which to remove the trait.
-     */
-    template<typename T>
-    base_type& remove_trait(flecs::entity component) const;
-
-    /** Remove a trait tag.
-     * This operation removes a trait tag for a component. The trait should not
-     * be a component.
-     *
-     * @tparam C The component for which to remove the trait.
-     * @param trait The trait to remove.
-     */
-    template<typename C>
-    base_type& remove_trait_tag(flecs::entity trait) const;
-
-    /** Remove a trait.
-     * This operation removes a trait for an entity.
-     *
-     * @param trait The trait to remove.
-     * @param entity The entity for which to remove the trait.
-     */
-    base_type& remove_trait(flecs::entity trait, flecs::entity entity) const;
-
-    /** Add a parent entity to an entity by id.
-     *
-     * @param parent The id of the parent to add.
-     */    
-    base_type& add_childof(entity_t parent) const {
-        static_cast<base_type*>(this)->invoke(
-        [parent](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, ECS_CHILDOF | parent);
-        });
-        return *static_cast<base_type*>(this);  
-    }
-
-    /** Add a parent entity to an entity.
-     * 
-     * @param parent The parent to add.
-     */
-    base_type& add_childof(const entity& parent) const;
-
-    /** Remove a parent entity from an entity by id.
-     *
-     * @param parent The id of the parent to remove.
-     */
-    base_type& remove_childof(entity_t parent) const {
-        static_cast<base_type*>(this)->invoke(
-        [parent](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, ECS_CHILDOF | parent);
-        });
-        return *static_cast<base_type*>(this);  
-    }
-
-    /** Remove a parent entity from an entity.
-     *
-     * @param parent The parent to remove.
-     */
-    base_type& remove_childof(const entity& parent) const;
-
-    /** Add a base entity to an entity by id.
-     *
-     * @param base The base id to add.
-     */    
-    base_type& add_instanceof(entity_t base) const {
-        static_cast<base_type*>(this)->invoke(
-        [base](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, ECS_INSTANCEOF | base);
-        });
-        return *static_cast<base_type*>(this);  
-    }
-
-    /** Add a base entity to an entity.
-     *
-     * @param base The base to add.
-     */
-    base_type& add_instanceof(const entity& base) const;  
-
-    /** Remove a base entity from an entity by id.
-     *
-     * @param base The base id to remove.
-     */
-    base_type& remove_instanceof(entity_t base) const {
-        static_cast<base_type*>(this)->invoke(
-        [base](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, ECS_INSTANCEOF | base);
-        });
-        return *static_cast<base_type*>(this);
-    }
-
-    /** Remove a base entity from an entity.
-     *
-     * @param base The base to remove.
-     */
-    base_type& remove_instanceof(const entity& base) const;
 
     /** Add owned flag for component (forces ownership when instantiating)
      *
      * @param entity The entity for which to add the OWNED flag
      */    
-    base_type& add_owned(entity_t entity) const {
-        static_cast<base_type*>(this)->invoke(
-        [entity](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, ECS_OWNED | entity);
-        });
-        return *static_cast<base_type*>(this);  
+    base_type& add_owned(const Base& entity) const {
+        ecs_add_entity(world(), id(), ECS_OWNED | entity.id());
+        return *base();  
     }
 
     /** Add owned flag for component (forces ownership when instantiating)
@@ -349,11 +139,8 @@ public:
      */    
     template <typename T>
     base_type& add_owned() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, ECS_OWNED | _::component_info<T>::id(world));
-        });
-        return *static_cast<base_type*>(this);  
+        ecs_add_entity(world(), id(), ECS_OWNED | _::cpp_type<T>::id(world()));
+        return *base();  
     }
 
     /** Add owned flag for type entity.
@@ -362,7 +149,7 @@ public:
      *
      * @param type The type for which to add the OWNED flag
      */    
-    base_type& add_owned(flecs::type type) const;
+    base_type& add_owned(const type& type) const;
 
     /** Add a switch to an entity by id.
      * The switch entity must be a type, that is it must have the EcsType
@@ -370,21 +157,10 @@ public:
      *
      * @param sw The switch entity id to add.
      */    
-    base_type& add_switch(entity_t sw) const {
-        static_cast<base_type*>(this)->invoke(
-        [sw](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, ECS_SWITCH | sw);
-        });
-        return *static_cast<base_type*>(this);  
+    base_type& add_switch(const Base& sw) const {
+        ecs_add_entity(world(), id(), ECS_SWITCH | sw.id());
+        return *base();  
     }
-
-    /** Add a switch to an entity.
-     * The switch entity must be a type, that is it must have the EcsType
-     * component.
-     *
-     * @param sw The switch entity to add.
-     */ 
-    base_type& add_switch(const entity& sw) const;
 
     /** Add a switch to an entity.
      * Any instance of flecs::type can be used as a switch.
@@ -397,19 +173,10 @@ public:
      *
      * @param sw The switch entity id to remove.
      */    
-    base_type& remove_switch(entity_t sw) const {
-        static_cast<base_type*>(this)->invoke(
-        [sw](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, ECS_SWITCH | sw);
-        });
-        return *static_cast<base_type*>(this);  
+    base_type& remove_switch(const Base& sw) const {
+        ecs_remove_entity(world(), id(), ECS_SWITCH | sw.id());
+        return *base();  
     }
-
-    /** Remove a switch from an entity.
-     *
-     * @param sw The switch entity to remove.
-     */ 
-    base_type& remove_switch(const entity& sw) const;
     
     /** Remove a switch from an entity.
      * Any instance of flecs::type can be used as a switch.
@@ -423,12 +190,9 @@ public:
      *
      * @param sw_case The case entity id to add.
      */    
-    base_type& add_case(entity_t sw_case) const {
-        static_cast<base_type*>(this)->invoke(
-        [sw_case](world_t *world, entity_t id) {
-            ecs_add_entity(world, id, ECS_CASE | sw_case);
-        });
-        return *static_cast<base_type*>(this);
+    base_type& add_case(const Base& sw_case) const {
+        ecs_add_entity(world(), id(), ECS_CASE | sw_case.id());
+        return *base();
     }
 
     /** Add a switch to an entity by id.
@@ -438,27 +202,17 @@ public:
      */   
     template<typename T>
     base_type& add_case() const {
-        return this->add_case(_::component_info<T>::id());
+        return this->add_case(_::cpp_type<T>::id());
     }
-
-    /** Add a case to an entity.
-     * The case must belong to a switch that is already added to the entity.
-     *
-     * @param sw_case The case entity to add.
-     */ 
-    base_type& add_case(const entity& sw_case) const;
 
     /** Remove a case from an entity by id.
      * The case must belong to a switch that is already added to the entity.
      *
      * @param sw_case The case entity id to remove.
      */    
-    base_type& remove_case(entity_t sw_case) const {
-        static_cast<base_type*>(this)->invoke(
-        [sw_case](world_t *world, entity_t id) {
-            ecs_remove_entity(world, id, ECS_CASE | sw_case);
-        });
-        return *static_cast<base_type*>(this);  
+    base_type& remove_case(const Base& sw_case) const {
+        ecs_remove_entity(world(), id(), ECS_CASE | sw_case.id());
+        return *base();  
     }
 
     /** Remove a switch from an entity by id.
@@ -468,26 +222,16 @@ public:
      */   
     template<typename T>
     base_type& remove_case() const {
-        return this->remove_case(_::component_info<T>::id());
-    }    
-
-    /** Remove a case from an entity.
-     * The case must belong to a switch that is already added to the entity.
-     *
-     * @param sw_case The case entity id to remove.
-     */ 
-    base_type& remove_case(const entity& sw_case) const;
+        return this->remove_case(_::cpp_type<T>::id());
+    }
 
     /** Enable an entity.
      * Enabled entities are matched with systems and can be searched with
      * queries.
      */
     base_type& enable() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_enable(world, id, true);
-        });
-        return *static_cast<base_type*>(this);
+        ecs_enable(world(), id(), true);
+        return *base();
     }
 
     /** Disable an entity.
@@ -495,11 +239,8 @@ public:
      * with queries, unless explicitly specified in the query expression.
      */
     base_type& disable() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_enable(world, id, false);
-        });
-        return *static_cast<base_type*>(this);
+        ecs_enable(world(), id(), false);
+        return *base();
     }
 
     /** Enable a component.
@@ -510,11 +251,8 @@ public:
      */   
     template<typename T>
     base_type& enable() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_enable_component_w_entity(world, id, _::component_info<T>::id(), true);
-        });
-        return *static_cast<base_type*>(this);
+        ecs_enable_component_w_entity(world(), id(), _::cpp_type<T>::id(), true);
+        return *base();
     }  
 
     /** Disable a component.
@@ -525,145 +263,115 @@ public:
      */   
     template<typename T>
     base_type& disable() const {
-        static_cast<base_type*>(this)->invoke(
-        [](world_t *world, entity_t id) {
-            ecs_enable_component_w_entity(world, id, _::component_info<T>::id(), false);
-        });
-        return *static_cast<base_type*>(this);
+        ecs_enable_component_w_entity(world(), id(), _::cpp_type<T>::id(), false);
+        return *base();
     }  
 
     /** Enable a component.
      * See enable<T>.
      *
-     * @param id The component to enable.
+     * @param component The component to enable.
      */   
-    base_type& enable(flecs::entity_t id) const {
-        static_cast<base_type*>(this)->invoke(
-        [id](world_t *world, entity_t e) {
-            ecs_enable_component_w_entity(world, e, id, true);
-        }); 
-        return *static_cast<base_type*>(this);       
+    base_type& enable(const Base& component) const {
+        ecs_enable_component_w_entity(world(), id(), component.id(), true);
+        return *base();       
     }
 
     /** Disable a component.
      * See disable<T>.
      *
-     * @param id The component to disable.
+     * @param component The component to disable.
      */   
-    base_type& disable(flecs::entity_t id) const {
-        static_cast<base_type*>(this)->invoke(
-        [id](world_t *world, entity_t e) {
-            ecs_enable_component_w_entity(world, e, id, false);
-        }); 
-        return *static_cast<base_type*>(this);       
-    }
-
-    /** Enable a component.
-     * See enable<T>.
-     *
-     * @param entity The component to enable.
-     */   
-    base_type& enable(const flecs::entity& entity) const;
-
-    /** Disable a component.
-     * See disable<T>.
-     *
-     * @param entity The component to disable.
-     */   
-    base_type& disable(const flecs::entity& entity) const;
-
-    /** Set a component for an entity.
-     * This operation overwrites the component value. If the entity did not yet
-     * have the component, this operation will add it.
-     *
-     * @tparam T The component to set.
-     * @param value The value to assign to the component.
-     */
-    template <typename T>
-    const base_type& set(T&& value) const {
-        static_cast<base_type*>(this)->invoke(
-        [&value](world_t *world, entity_t id) {
-            auto comp_id = _::component_info<T>::id(world);
-
-            ecs_assert(_::component_info<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-
-            ecs_set_ptr_w_entity(
-                world, id, comp_id, sizeof(T), &value);
-        });
-        return *static_cast<base_type*>(this);
+    base_type& disable(const Base& component) const {
+        ecs_enable_component_w_entity(world(), id(), component.id(), false);
+        return *base();       
     }
 
     /** Set a component for an entity.
-     * This operation overwrites the component value. If the entity did not yet
-     * have the component, this operation will add it.
+     * This operation sets the component value. If the entity did not yet
+     * have the component, it will be added.
      *
      * @tparam T The component to set.
      * @param value The value to assign to the component.
      */
     template <typename T>
     const base_type& set(const T& value) const {
-        static_cast<base_type*>(this)->invoke(
-        [&value](world_t *world, entity_t id) {
-            auto comp_id = _::component_info<T>::id(world);
+        auto comp_id = _::cpp_type<T>::id(world());
 
-            ecs_assert(_::component_info<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<T>::size() != 0, 
+            ECS_INVALID_PARAMETER, NULL);
 
-            ecs_set_ptr_w_entity(
-                world, id, comp_id, sizeof(T), &value);
-        });
-        return *static_cast<base_type*>(this);
+        ecs_set_ptr_w_entity(world(), id(), 
+            comp_id, sizeof(T), &value);
+
+        return *base();
     }
 
-    /** Set a trait for an entity.
-     * This operation overwrites the trait value. If the entity did not yet
-     * have the trait, this operation will add it.
+    /** Set a pair for an entity.
+     * This operation sets the pair value, and uses the relation as type. If the
+     * entity did not yet have the pair, it will be added.
      *
-     * @tparam T The trait to set.
-     * @tparam C The component for which to set the trait.
-     * @param value The value to assign to the trait.     
+     * @tparam Relation The relation part of the pair.
+     * @tparam Object The object part of the pair.
+     * @param value The value to set.
      */
-    template <typename T, typename C>
-    const base_type& set_trait(const T& value) const {
-        static_cast<base_type*>(this)->invoke(
-        [&value](world_t *world, entity_t id) {
-            auto t_id = _::component_info<T>::id(world);
+    template <typename Relation, typename Object>
+    const base_type& set(const Relation& value) const {
+        auto comp_id = _::cpp_type<Relation>::id(world());
 
-            ecs_assert(_::component_info<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<Relation>::size() != 0, 
+            ECS_INVALID_PARAMETER, NULL);
 
-            ecs_set_ptr_w_entity(world, id, 
-                ecs_trait(_::component_info<C>::id(world), t_id),
-                        sizeof(T), &value);
-        });
-        return *static_cast<base_type*>(this);
-    } 
+        ecs_set_ptr_w_entity(world(), id(),
+            ecs_pair(comp_id, _::cpp_type<Object>::id(world())),
+            sizeof(Relation), &value);
 
-    /** Set a trait tag for a component.
-     * This operation overwrites the trait value. If the entity did not yet
-     * have the trait, this operation will add it.
+        return *base();
+    }
+
+    /** Set a pair for an entity.
+     * This operation sets the pair value, and uses the relation as type. If the
+     * entity did not yet have the pair, it will be added.
      *
-     * This operation should be used for traits that are not components. If a
-     * trait is not a component, it will assume the type of the component it is
-     * assigned to.
-     *
-     * @tparam C The component for which to set the trait.
-     * @param value The value to assign to the trait.      
+     * @tparam Relation The relation part of the pair.
+     * @param object The object part of the pair.
+     * @param value The value to set.
      */
-    template <typename C>
-    const base_type& set_trait_tag(flecs::entity trait, const C& value) const;
+    template <typename Relation>
+    const base_type& set(const Base& object, const Relation& value) const {
+        auto comp_id = _::cpp_type<Relation>::id(world());
 
-    /** Set a trait for an entity.
-     * This operation overwrites the trait value. If the entity did not yet
-     * have the trait, this operation will add it.
+        ecs_assert(_::cpp_type<Relation>::size() != 0, 
+            ECS_INVALID_PARAMETER, NULL);
+
+        ecs_set_ptr_w_entity(world(), id(),
+            ecs_pair(comp_id, object.id()),
+            sizeof(Relation), &value);
+
+        return *base();
+    }    
+
+    /** Set a pair for an entity.
+     * This operation sets the pair value, and uses the relation as type. If the
+     * entity did not yet have the pair, it will be added.
      *
-     * @tparam T The trait to set.
-     * @param value The value to assign to the trait. 
-     * @param entity The entity for which to set the trait.
+     * @tparam Object The object part of the pair.
+     * @param relation The relation part of the pair.
+     * @param value The value to set.
      */
-    template <typename T>
-    const base_type& set_trait(const T& value, flecs::entity entity) const;
+    template <typename Object>
+    const base_type& set_object(const Base& relation, const Object& value) const {
+        auto comp_id = _::cpp_type<Object>::id(world());
+
+        ecs_assert(_::cpp_type<Object>::size() != 0, 
+            ECS_INVALID_PARAMETER, NULL);
+
+        ecs_set_ptr_w_entity(world(), id(),
+            ecs_pair(relation.id(), comp_id),
+            sizeof(Object), &value);
+
+        return *base();
+    }
 
     /** Patch a component value.
      * This operation allows an application to partially overwrite a component 
@@ -675,22 +383,20 @@ public:
      */
     template <typename T>
     const base_type& patch(std::function<void(T&, bool)> func) const {
-        static_cast<base_type*>(this)->invoke(
-        [&func](world_t *world, entity_t id) {
-            auto comp_id = _::component_info<T>::id(world);
+        auto comp_id = _::cpp_type<T>::id(world());
 
-            ecs_assert(_::component_info<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<T>::size() != 0, 
+            ECS_INVALID_PARAMETER, NULL);
 
-            bool is_added;
-            T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-                world, id, comp_id, &is_added));
-            if (ptr) {
-                func(*ptr, !is_added);
-                ecs_modified_w_entity(world, id, comp_id);
-            }
-        });
-        return *static_cast<base_type*>(this);
+        bool is_added;
+        T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
+            world(), id(), comp_id, &is_added));
+        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        func(*ptr, !is_added);
+        ecs_modified_w_entity(world(), id(), comp_id);
+
+        return *base();
     }      
 
     /** Patch a component value.
@@ -703,23 +409,26 @@ public:
      */
     template <typename T>
     const base_type& patch(std::function<void(T&)> func) const {
-        static_cast<base_type*>(this)->invoke(
-        [&func](world_t *world, entity_t id) {
-            auto comp_id = _::component_info<T>::id(world);
+        auto comp_id = _::cpp_type<T>::id(world());
 
-            ecs_assert(_::component_info<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<T>::size() != 0, 
+            ECS_INVALID_PARAMETER, NULL);
 
-            bool is_added;
-            T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-                world, id, comp_id, &is_added));
-            if (ptr) {
-                func(*ptr);
-                ecs_modified_w_entity(world, id, comp_id);
-            }
-        });
-        return *static_cast<base_type*>(this);
-    }            
+        bool is_added;
+        T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
+            world(), id(), comp_id, &is_added));
+        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        func(*ptr);
+        ecs_modified_w_entity(world(), id(), comp_id);
+
+        return *base();
+    }
+
+private:
+    const Base* base() const { return static_cast<const Base*>(this); }
+    flecs::world_t* world() const { return base()->world().c_ptr(); }
+    flecs::entity_t id() const { return base()->id(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -732,18 +441,16 @@ public:
     ref()
         : m_world( nullptr )
         , m_entity( 0 )
-        , m_ref() 
-    {       
-    }
+        , m_ref() { }
 
     ref(world_t *world, entity_t entity) 
         : m_world( world )
         , m_entity( entity )
         , m_ref() 
     {
-        auto comp_id = _::component_info<T>::id(world);
+        auto comp_id = _::cpp_type<T>::id(world);
 
-        ecs_assert(_::component_info<T>::size() != 0, 
+        ecs_assert(_::cpp_type<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
         ecs_get_ref_w_entity(
@@ -752,7 +459,7 @@ public:
 
     const T* operator->() {
         const T* result = static_cast<const T*>(ecs_get_ref_w_entity(
-            m_world, &m_ref, m_entity, _::component_info<T>::id(m_world)));
+            m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world)));
 
         ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -762,7 +469,7 @@ public:
     const T* get() {
         if (m_entity) {
             ecs_get_ref_w_entity(
-                m_world, &m_ref, m_entity, _::component_info<T>::id(m_world));    
+                m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world));    
         }
 
         return static_cast<T*>(m_ref.ptr);
@@ -773,16 +480,19 @@ public:
 private:
     world_t *m_world;
     entity_t m_entity;
-    ecs_ref_t m_ref;
+    flecs::ref_t m_ref;
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Entity class
- * This class provides access to entity operations.
- */
-class entity : public entity_builder<entity> {
+ * This class provides access to entity operations. */
+class entity : 
+    public entity_builder<entity>, 
+    public entity_deprecated<entity>, 
+    public entity_builder_deprecated<entity> 
+{
 public:
     /** Default constructor.
      */
@@ -794,17 +504,9 @@ public:
      *
      * @param world The world in which to create the entity.
      */
-    explicit entity(const world& world) 
+    explicit entity(const flecs::world& world) 
         : m_world( world.c_ptr() )
         , m_id( ecs_new_w_type(m_world, 0) ) { }
-
-    /** Create entity.
-     *
-     * @param world Pointer to the world in which to create the entity.
-     */
-    explicit entity(world_t *world) 
-        : m_world( world )
-        , m_id( world ? ecs_new_w_type(world, 0) : 0 ) { }
 
     /** Create a named entity.
      * Named entities can be looked up with the lookup functions. Entity names
@@ -816,7 +518,7 @@ public:
      * @param name The entity name.
      * @param is_component If true, the entity will be created from the pool of component ids (default = false).
      */
-    entity(const world& world, const char *name, bool is_component = false) 
+    explicit entity(const flecs::world& world, const char *name, bool is_component = false) 
         : m_world( world.c_ptr() )
         , m_id( ecs_lookup_path_w_sep(m_world, 0, name, "::", "::") ) 
         { 
@@ -830,46 +532,27 @@ public:
             }
         }
 
-    /** Create a named entity.
-     * Named entities can be looked up with the lookup functions. Entity names
-     * may be scoped, where each element in the name is separated by "::".
-     * For example: "Foo::Bar". If parts of the hierarchy in the scoped name do
-     * not yet exist, they will be automatically created.
-     *
-     * @param world The world in which to create the entity.
-     * @param name The entity name.
-     * @param is_component If true, the entity will be created from the pool of component ids (default = false).
-     */
-    entity(const world& world, std::string name, bool is_component = false) 
-        : m_world( world.c_ptr() )
-        , m_id( ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::") ) 
-        { 
-            if (!m_id) {
-                if (is_component) {
-                    m_id = ecs_new_component_id(m_world);
-                }
-
-                m_id = ecs_add_path_w_sep(
-                    m_world, m_id, 0, name.c_str(), "::", "::");
-            }
-        }         
-
     /** Wrap an existing entity id.
      *
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    entity(const world& world, entity_t id) 
+    explicit entity(const flecs::world& world, const entity& id) 
         : m_world( world.c_ptr() )
-        , m_id(id) { }
+        , m_id(id.id()) { }
 
     /** Wrap an existing entity id.
      *
      * @param world Pointer to the world in which the entity is created.
      * @param id The entity id.
      */
-    entity(world_t *world, entity_t id) 
+    explicit entity(world_t *world, const entity& id) 
         : m_world( world )
+        , m_id(id.id()) { }
+
+    /** Allow conversion from flecs::entity_t to flecs::entity */
+    entity(entity_t id)
+        : m_world( nullptr )
         , m_id(id) { }
 
     /** Equality operator. */
@@ -893,13 +576,13 @@ public:
      * @param world The world.
      */
     static
-    flecs::entity null(const world& world) {
-        return flecs::entity(world.c_ptr(), (ecs_entity_t)0);
+    flecs::entity null(const flecs::world& world) {
+        return flecs::entity(world.c_ptr(), (entity_t)0);
     }
 
     static
     flecs::entity null() {
-        return flecs::entity(nullptr, (ecs_entity_t)0);
+        return flecs::entity((entity_t)0);
     }    
 
     /** Get entity id.
@@ -1036,9 +719,9 @@ public:
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
 
-        auto comp_id = _::component_info<T>::id(m_world);
+        auto comp_id = _::cpp_type<T>::id(m_world);
 
-        ecs_assert(_::component_info<T>::size() != 0, 
+        ecs_assert(_::cpp_type<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
         return static_cast<const T*>(
@@ -1084,9 +767,9 @@ public:
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
 
-        auto comp_id = _::component_info<T>::id(m_world);
+        auto comp_id = _::cpp_type<T>::id(m_world);
 
-        ecs_assert(_::component_info<T>::size() != 0, 
+        ecs_assert(_::cpp_type<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
         return static_cast<T*>(
@@ -1125,168 +808,6 @@ public:
         return ecs_get_mut_w_entity(m_world, m_id, component_id, is_added);
     }
 
-    /** Get trait value.
-     * 
-     * @tparam T The trait to get.
-     * @tparam C The component for which to get the trait.
-     * @return Pointer to the trait value, nullptr if the entity does not
-     *         have the trait.
-     */
-    template<typename T, typename C>
-    const T* get_trait() const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        
-        auto t_id = _::component_info<T>::id(m_world);
-
-        ecs_assert(_::component_info<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-
-        return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            _::component_info<C>::id(m_world), t_id)));
-    }   
-
-    /** Get trait value.
-     * 
-     * @tparam T The trait to get.
-     * @param component The component for which to get the trait.
-     * @return Pointer to the trait value, nullptr if the entity does not
-     *         have the trait.
-     */
-    template<typename T>
-    const T* get_trait(flecs::entity component) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-
-        auto comp_id = _::component_info<T>::id(m_world);
-
-        ecs_assert(_::component_info<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-
-        return static_cast<const T*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            component.id(), comp_id)));
-    }
-
-    /** Get trait tag value.
-     * The trait passed to this function should not be a component. If a trait
-     * is not a component, the trait assumes the type of the component it is
-     * assigned to.
-     * 
-     * @tparam C The component for which to get the trait
-     * @param trait The trait to get.
-     * @return Pointer to the trait value, nullptr if the entity does not
-     *         have the trait.
-     */
-    template<typename C>
-    const C* get_trait_tag(flecs::entity trait) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-
-        auto comp_id = _::component_info<C>::id(m_world);
-
-        ecs_assert(_::component_info<C>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-
-        return static_cast<const C*>(ecs_get_w_entity(m_world, m_id, ecs_trait(
-            comp_id, trait.id())));
-    }
-
-    /** Get trait tag value (untyped).
-     * If a trait is not a component, the trait assumes the type of the 
-     * component it is assigned to.
-     * 
-     * @param trait The trait to get.
-     * @param component The component for which to get the trait.
-     * @return Pointer to the trait value, nullptr if the entity does not
-     *         have the trait.
-     */
-    const void* get_trait(flecs::entity trait, flecs::entity component) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_get_w_entity(m_world, m_id, ecs_trait(
-            component.id(), trait.id()));
-    }
-
-    /** Get mutable trait value.
-     * This operation returns a mutable pointer to the trait. If the entity
-     * did not yet have the trait, it will be added. If a base entity had
-     * the trait, it will be overridden, and the value of the base trait
-     * will be copied to the entity before this function returns.
-     *
-     * @tparam T The trait to get.
-     * @tparam C The component for which to get the trait.
-     * @param is_added If provided, this parameter will be set to true if the trait was added.
-     * @return Pointer to the trait value.
-     */
-    template <typename T, typename C>
-    T* get_trait_mut(bool *is_added = nullptr) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-
-        auto t_id = _::component_info<T>::id(m_world);
-
-        ecs_assert(_::component_info<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-
-        return static_cast<T*>(
-            ecs_get_mut_w_entity(
-                m_world, m_id, ecs_trait(_::component_info<C>::id(m_world), 
-                    t_id), is_added));
-    }    
-
-    /** Get mutable trait value.
-     * This operation returns a mutable pointer to the trait. If the entity
-     * did not yet have the trait, it will be added. If a base entity had
-     * the trait, it will be overridden, and the value of the base trait
-     * will be copied to the entity before this function returns.
-     *
-     * @tparam T The trait to get.
-     * @param component The component for which to get the trait.
-     * @param is_added If provided, this parameter will be set to true if the trait was added.
-     * @return Pointer to the trait value.
-     */
-    template <typename T>
-    T* get_trait_mut(flecs::entity component, bool *is_added = nullptr) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-
-        auto comp_id = _::component_info<T>::id(m_world);
-
-        ecs_assert(_::component_info<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-
-        return static_cast<T*>(
-            ecs_get_mut_w_entity(
-                m_world, m_id, ecs_trait( comp_id, component.id()), is_added));
-    }
-
-    /** Get mutable trait tag value.
-     * This operation returns a mutable pointer to the trait. If the entity
-     * did not yet have the trait, it will be added. If a base entity had
-     * the trait, it will be overridden, and the value of the base trait
-     * will be copied to the entity before this function returns.
-     *
-     * The trait passed to the function should not be a component.
-     *
-     * @tparam C The component for which to get the trait.
-     * @param trait The trait to get.
-     * @param is_added If provided, this parameter will be set to true if the trait was added.
-     * @return Pointer to the trait value.
-     */
-    template <typename C>
-    C* get_trait_tag_mut(flecs::entity trait, bool *is_added = nullptr) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(_::component_info<C>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-        return static_cast<C*>(
-            ecs_get_mut_w_entity(
-                m_world, m_id, ecs_trait(
-                    _::component_info<C>::id(m_world),
-                    trait.id()),
-                    is_added));
-    }    
-
     /** Signal that component was modified.
      *
      * @tparam T component that was modified.
@@ -1296,9 +817,9 @@ public:
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
 
-        auto comp_id = _::component_info<T>::id(m_world);
+        auto comp_id = _::cpp_type<T>::id(m_world);
 
-        ecs_assert(_::component_info<T>::size() != 0, 
+        ecs_assert(_::cpp_type<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
         ecs_modified_w_entity(m_world, m_id, comp_id);
@@ -1337,9 +858,9 @@ public:
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
 
         // Ensure component is registered
-        _::component_info<T>::id(m_world);
+        _::cpp_type<T>::id(m_world);
 
-        ecs_assert(_::component_info<T>::size() != 0, 
+        ecs_assert(_::cpp_type<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
         return ref<T>(m_world, m_id);
@@ -1357,7 +878,7 @@ public:
     template <typename T>
     flecs::entity get_parent() {
         return flecs::entity(m_world, ecs_get_parent_w_entity(m_world, m_id, 
-            _::component_info<T>::id(m_world)));
+            _::cpp_type<T>::id(m_world)));
     }
 
     flecs::entity get_parent(flecs::entity e) {
@@ -1476,7 +997,7 @@ public:
      */
     template <typename T>
     bool has() const {
-        return has(_::component_info<T>::id(m_world));
+        return has(_::cpp_type<T>::id(m_world));
     }
 
     /** Check if entity owns the provided entity id.
@@ -1521,7 +1042,7 @@ public:
      */
     template <typename T>
     bool owns() const {
-        return owns(_::component_info<T>::id(m_world));
+        return owns(_::cpp_type<T>::id(m_world));
     }
 
     /** Check if entity has the provided trait.
@@ -1535,8 +1056,8 @@ public:
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, ecs_trait(
-            _::component_info<C>::id(m_world), 
-            _::component_info<T>::id(m_world)));
+            _::cpp_type<C>::id(m_world), 
+            _::cpp_type<T>::id(m_world)));
     }
 
     /** Check if entity has the provided trait.
@@ -1550,7 +1071,7 @@ public:
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, ecs_trait(
-            component.id(), _::component_info<T>::id(m_world)));
+            component.id(), _::cpp_type<T>::id(m_world)));
     }
 
     /** Check if entity has the provided trait tag.
@@ -1565,7 +1086,7 @@ public:
         ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, ecs_trait(
-           _::component_info<C>::id(m_world), trait.id()));
+           _::cpp_type<C>::id(m_world), trait.id()));
     }
 
     /** Check if entity has the provided trait.
@@ -1587,7 +1108,7 @@ public:
      * @param sw The switch to check.
      * @return True if the entity has the provided switch, false otherwise.
      */
-    bool has_switch(flecs::type sw) const;
+    bool has_switch(const flecs::type& sw) const;
 
     /** Check if entity has the provided case id.
      *
@@ -1611,7 +1132,7 @@ public:
 
     template<typename T>
     bool has_case() const {
-        return this->has_case(_::component_info<T>::id(m_world));
+        return this->has_case(_::cpp_type<T>::id(m_world));
     }
 
     /** Get case for switch.
@@ -1619,7 +1140,7 @@ public:
      * @param sw The switch for which to obtain the case.
      * @return True if the entity has the provided case, false otherwise.
      */
-    flecs::entity get_case(flecs::type sw) const;
+    flecs::entity get_case(const flecs::type& sw) const;
 
     /** Test if component is enabled.
      *
@@ -1629,7 +1150,7 @@ public:
     template<typename T>
     bool is_enabled() {
         return ecs_is_component_enabled_w_entity(
-            m_world, m_id, _::component_info<T>::id(m_world));
+            m_world, m_id, _::cpp_type<T>::id(m_world));
     }
 
     /** Test if component is enabled.

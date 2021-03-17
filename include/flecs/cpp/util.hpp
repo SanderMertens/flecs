@@ -122,7 +122,7 @@ bool pack_args_to_string(world_t *world, std::stringstream& str, bool is_each = 
     (void)world;
 
     std::array<const char*, sizeof...(Components)> ids = {
-        (_::component_info<Components>::name(world))...
+        (_::cpp_type<Components>::name(world))...
     };
 
     std::array<const char*, sizeof...(Components)> inout_modifiers = {

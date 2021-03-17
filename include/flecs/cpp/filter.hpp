@@ -28,7 +28,7 @@ public:
 
     template <typename T>
     filter& include() {
-        m_filter.include = ecs_type_add(m_world, m_filter.include, _::component_info<T>::id(m_world));
+        m_filter.include = ecs_type_add(m_world, m_filter.include, _::cpp_type<T>::id(m_world));
         return *this;
     }
 
@@ -53,7 +53,7 @@ public:
 
     template <typename T>
     filter& exclude() {
-        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, _::component_info<T>::id(m_world));
+        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, _::cpp_type<T>::id(m_world));
         return *this;
     }
  

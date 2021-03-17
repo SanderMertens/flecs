@@ -376,7 +376,7 @@ public:
     template <typename T>
     flecs::column<T> table_column() const {
         auto type = ecs_iter_type(m_iter);
-        auto col = ecs_type_index_of(type, _::component_info<T>::id());
+        auto col = ecs_type_index_of(type, _::cpp_type<T>::id());
         ecs_assert(col != -1, ECS_INVALID_PARAMETER, NULL);
         return flecs::column<T>(static_cast<T*>(ecs_table_column(m_iter, col)), 
             static_cast<std::size_t>(m_iter->count), false);
@@ -443,7 +443,7 @@ public:
      */
     template <typename T>
     const T& shared(int32_t col) const {
-        ecs_assert(ecs_column_entity(m_iter, col) == _::component_info<T>::id(m_iter->world), ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(ecs_column_entity(m_iter, col) == _::cpp_type<T>::id(m_iter->world), ECS_COLUMN_TYPE_MISMATCH, NULL);
         ecs_assert(!ecs_is_owned(m_iter, col), ECS_COLUMN_IS_NOT_SHARED, NULL);
         return *static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), col));
     }
@@ -487,7 +487,7 @@ private:
         ecs_entity_t column_entity = ecs_column_entity(m_iter, column_id);
         ecs_assert(column_entity & ECS_PAIR || column_entity & ECS_SWITCH || 
             column_entity & ECS_CASE ||
-            column_entity == _::component_info<T>::id(m_iter->world), 
+            column_entity == _::cpp_type<T>::id(m_iter->world), 
             ECS_COLUMN_TYPE_MISMATCH, NULL);
 #endif
 
@@ -532,7 +532,7 @@ private:
     /* Get single field, check if correct type is used */
     template <typename T>
     T& get_element(int32_t col, int32_t row) const {
-        ecs_assert(ecs_column_entity(m_iter, col) == _::component_info<T>::id(m_iter->world), ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(ecs_column_entity(m_iter, col) == _::cpp_type<T>::id(m_iter->world), ECS_COLUMN_TYPE_MISMATCH, NULL);
         return *static_cast<T*>(ecs_element_w_size(m_iter, sizeof(T), col, row));
     }       
 

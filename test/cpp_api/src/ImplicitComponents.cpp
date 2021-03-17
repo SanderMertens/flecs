@@ -7,7 +7,7 @@ struct Pair {
 void ImplicitComponents_add() {
     flecs::world world;
 
-    auto e = flecs::entity(world).add<Position>();
+    auto e = world.entity().add<Position>();
 
     test_str(e.type().str().c_str(), "Position");
     test_assert(e.has<Position>());
@@ -19,7 +19,7 @@ void ImplicitComponents_add() {
 void ImplicitComponents_remove() {
     flecs::world world;
 
-    auto e = flecs::entity(world).remove<Position>();
+    auto e = world.entity().remove<Position>();
 
     test_assert(!e.has<Position>());
 
@@ -30,7 +30,7 @@ void ImplicitComponents_remove() {
 void ImplicitComponents_has() {
     flecs::world world;
 
-    auto e = flecs::entity(world);
+    auto e = world.entity();
     test_assert(!e.has<Position>());
 
     auto position = world.lookup("Position");
@@ -40,7 +40,7 @@ void ImplicitComponents_has() {
 void ImplicitComponents_set() {
     flecs::world world;
 
-    auto e = flecs::entity(world).set<Position>({10, 20});
+    auto e = world.entity().set<Position>({10, 20});
 
     test_str(e.type().str().c_str(), "Position");
     test_assert(e.has<Position>());
@@ -55,7 +55,7 @@ void ImplicitComponents_set() {
 void ImplicitComponents_get() {
     flecs::world world;
 
-    auto e = flecs::entity(world);
+    auto e = world.entity();
 
     auto *p = e.get<Position>();
     test_assert(p == nullptr);
@@ -67,9 +67,9 @@ void ImplicitComponents_get() {
 void ImplicitComponents_add_trait() {
     flecs::world world;
 
-    auto e = flecs::entity(world).add_trait<Pair, Position>();
+    auto e = world.entity().add_trait<Pair, Position>();
 
-    test_str(e.type().str().c_str(), "PAIR|Pair>Position");
+    test_str(e.type().str().c_str(), "(Pair,Position)");
     test_assert((e.has_trait<Pair, Position>()));
 
     auto position = world.lookup("Position");
@@ -82,7 +82,7 @@ void ImplicitComponents_add_trait() {
 void ImplicitComponents_remove_trait() {
     flecs::world world;
 
-    auto e = flecs::entity(world).remove_trait<Position, Pair>();
+    auto e = world.entity().remove_trait<Position, Pair>();
 
     test_assert((!e.has_trait<Position, Pair>()));
 
@@ -132,10 +132,10 @@ void ImplicitComponents_system_optional() {
             }
         });
 
-    flecs::entity(world).set<Rotation>({10});
-    flecs::entity(world).set<Mass>({20});
+    world.entity().set<Rotation>({10});
+    world.entity().set<Mass>({20});
 
-    flecs::entity(world)
+    world.entity()
         .set<Rotation>({30})
         .set<Mass>({40});
 
@@ -174,7 +174,7 @@ void ImplicitComponents_system_const() {
     auto velocity = world.lookup("Velocity");
     test_assert(velocity.id() != 0);  
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
@@ -227,7 +227,7 @@ void ImplicitComponents_reinit() {
 
     // Reset component id using internals (currently the only way to simulate
     // registration across translation units)
-    flecs::_::component_info<Position>::reset();
+    flecs::_::cpp_type<Position>::reset();
 
     world.entity()
         .add<Position>();
@@ -251,7 +251,7 @@ void ImplicitComponents_reinit_scoped() {
 
     // Reset component id using internals (currently the only way to simulate
     // registration across translation units)
-    flecs::_::component_info<Foo::Position>::reset();
+    flecs::_::cpp_type<Foo::Position>::reset();
 
     world.entity()
         .add<Foo::Position>();
@@ -284,7 +284,7 @@ void ImplicitComponents_reinit_w_lifecycle() {
 
     // Reset component id using internals (currently the only way to simulate
     // registration across translation units)
-    flecs::_::component_info<Position>::reset();
+    flecs::_::cpp_type<Position>::reset();
 
     e = world.entity()
         .add<Position>();

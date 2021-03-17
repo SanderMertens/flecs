@@ -462,7 +462,7 @@ public:
      */
     template <typename T>
     entity_t type_id() {
-        return _::component_info<T>::id(m_world);
+        return _::cpp_type<T>::id(m_world);
     }
 
     /** Get singleton entity for type.
@@ -582,7 +582,7 @@ public:
     template <typename T>
     int count() const {
         return ecs_count_type(
-            m_world, _::component_info<T>::type(m_world));
+            m_world, _::cpp_type<T>::type(m_world));
     }
 
     /** Count entities matching a filter.

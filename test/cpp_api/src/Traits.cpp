@@ -7,17 +7,14 @@ typedef struct Pair {
 void Traits_add_component_trait() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Pair>(world, "Pair");
-
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .add_trait<Pair, Position>();
 
     test_assert(entity.id() != 0);
     test_assert((entity.has_trait<Pair, Position>()));
     test_assert((!entity.has_trait<Position, Pair>()));
 
-    test_str(entity.type().str().c_str(), "PAIR|Pair>Position");
+    test_str(entity.type().str().c_str(), "(Pair,Position)");
 }
 
 void Traits_add_tag_trait() {
@@ -32,7 +29,7 @@ void Traits_add_tag_trait() {
     test_assert(entity.id() != 0);
     test_assert(entity.has_trait_tag<Position>(Pair));
     test_assert(!entity.has_trait<Position>(Pair));
-    test_str(entity.type().str().c_str(), "PAIR|Pair>Position");
+    test_str(entity.type().str().c_str(), "(Pair,Position)");
 }
 
 void Traits_add_tag_trait_to_tag() {
@@ -46,7 +43,7 @@ void Traits_add_tag_trait_to_tag() {
 
     test_assert(entity.id() != 0);
     test_assert(entity.has_trait(Pair, Tag));
-    test_str(entity.type().str().c_str(), "PAIR|Pair>Tag");
+    test_str(entity.type().str().c_str(), "(Pair,Tag)");
 }
 
 void Traits_remove_component_trait() {
@@ -62,7 +59,7 @@ void Traits_remove_component_trait() {
     test_assert((entity.has_trait<Pair, Position>()));
     test_assert((!entity.has_trait<Position, Pair>()));
 
-    test_str(entity.type().str().c_str(), "PAIR|Pair>Position");
+    test_str(entity.type().str().c_str(), "(Pair,Position)");
 
     entity.remove_trait<Position, Pair>();
     test_assert(!(entity.has_trait<Position, Pair>()));
@@ -80,7 +77,7 @@ void Traits_remove_tag_trait() {
     test_assert(entity.id() != 0);
     test_assert(entity.has_trait_tag<Position>(Pair));
     test_assert(!entity.has_trait<Position>(Pair));
-    test_str(entity.type().str().c_str(), "PAIR|Pair>Position");
+    test_str(entity.type().str().c_str(), "(Pair,Position)");
 
     entity.remove_trait<Position>(Pair);
     test_assert(!entity.has_trait<Position>(Pair));
@@ -97,7 +94,7 @@ void Traits_remove_tag_trait_to_tag() {
 
     test_assert(entity.id() != 0);
     test_assert(entity.has_trait(Pair, Tag));
-    test_str(entity.type().str().c_str(), "PAIR|Pair>Tag");
+    test_str(entity.type().str().c_str(), "(Pair,Tag)");
 
     entity.remove_trait(Tag, Pair);
     test_assert(!entity.has_trait(Tag, Pair));
@@ -116,7 +113,7 @@ void Traits_set_component_trait() {
     test_assert((entity.has_trait<Pair, Position>()));
     test_assert((!entity.has_trait<Position, Pair>()));
 
-    test_str(entity.type().str().c_str(), "PAIR|Pair>Position");
+    test_str(entity.type().str().c_str(), "(Pair,Position)");
 
     const Pair *t = entity.get_trait<Pair, Position>();
     test_int(t->value, 10);
@@ -133,7 +130,7 @@ void Traits_set_tag_trait() {
 
     test_assert(entity.id() != 0);
     test_assert(entity.has_trait_tag<Position>(Pair));
-    test_str(entity.type().str().c_str(), "PAIR|Pair>Position");
+    test_str(entity.type().str().c_str(), "(Pair,Position)");
 
     const Position *p = entity.get_trait_tag<Position>(Pair);
     test_assert(p != NULL);

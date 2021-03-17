@@ -14,13 +14,18 @@ public:
         sync_from_flecs();
     }
 
-    type(const flecs::world& world, type_t t)
+    explicit type(const flecs::world& world, type_t t)
         : entity( world.c_ptr(), 0 )
         , m_type( t )
         , m_normalized( t ) { }
 
-    type(world_t *world, type_t t)
+    explicit type(world_t *world, type_t t)
         : entity( world, 0 )
+        , m_type( t )
+        , m_normalized( t ) { }
+
+    type(type_t t)
+        : entity( 0 )
         , m_type( t )
         , m_normalized( t ) { }
 
@@ -55,12 +60,12 @@ public:
     template <typename T, typename C>
     type& add_trait() {
         m_type = ecs_type_add(m_world, m_type, 
-            ecs_trait(_::component_info<C>::id(m_world),
-                      _::component_info<T>::id(m_world)));
+            ecs_trait(_::cpp_type<C>::id(m_world),
+                      _::cpp_type<T>::id(m_world)));
 
         m_normalized = ecs_type_add(m_world, m_normalized, 
-            ecs_trait(_::component_info<C>::id(m_world),
-                      _::component_info<T>::id(m_world)));
+            ecs_trait(_::cpp_type<C>::id(m_world),
+                      _::cpp_type<T>::id(m_world)));
         
         sync_from_me();
         return *this;
@@ -70,11 +75,11 @@ public:
     type& add_trait(flecs::entity component) {
         m_type = ecs_type_add(m_world, m_type, 
             ecs_trait(component.id(),
-                      _::component_info<T>::id(m_world)));
+                      _::cpp_type<T>::id(m_world)));
 
         m_normalized = ecs_type_add(m_world, m_normalized, 
             ecs_trait(component.id(),
-                      _::component_info<T>::id(m_world)));
+                      _::cpp_type<T>::id(m_world)));
         
         sync_from_me();
         return *this;
@@ -94,10 +99,10 @@ public:
     template <typename C>
     type& add_trait_tag(flecs::entity trait) {
         m_type = ecs_type_add(m_world, m_type, 
-            ecs_trait(_::component_info<C>::id(), trait.id()));
+            ecs_trait(_::cpp_type<C>::id(), trait.id()));
 
         m_normalized = ecs_type_add(m_world, m_normalized, 
-            ecs_trait(_::component_info<C>::id(), trait.id()));
+            ecs_trait(_::cpp_type<C>::id(), trait.id()));
         
         sync_from_me();
         return *this;

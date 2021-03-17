@@ -24,6 +24,7 @@ using type_t = ecs_type_t;
 using snapshot_t = ecs_snapshot_t;
 using filter_t = ecs_filter_t;
 using query_t = ecs_query_t;
+using ref_t = ecs_ref_t;
 
 class world;
 class snapshot;
@@ -54,7 +55,7 @@ enum match_kind {
 namespace _
 {
 template <typename T>
-class component_info;
+class cpp_type;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

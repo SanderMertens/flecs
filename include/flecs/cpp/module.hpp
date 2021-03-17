@@ -38,16 +38,16 @@ ecs_entity_t do_import(world& world) {
     ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
     ecs_os_free(symbol);
 
-    _::component_info<T>::init(world.c_ptr(), m, false);
+    _::cpp_type<T>::init(world.c_ptr(), m, false);
 
-    ecs_assert(_::component_info<T>::size() != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INTERNAL_ERROR, NULL);
 
     // Set module singleton component
 
     ecs_set_ptr_w_entity(
         world.c_ptr(), m,
-        _::component_info<T>::id_no_lifecycle(world.c_ptr()), 
-        _::component_info<T>::size(),
+        _::cpp_type<T>::id_no_lifecycle(world.c_ptr()), 
+        _::cpp_type<T>::size(),
         module_data);
 
     ecs_log_pop();     
@@ -61,11 +61,11 @@ flecs::entity import(world& world) {
 
     ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
     
-    if (!_::component_info<T>::registered()) {
+    if (!_::cpp_type<T>::registered()) {
 
         /* Module is registered with world, initialize static data */
         if (m) {
-            _::component_info<T>::init(world.c_ptr(), m, false);
+            _::cpp_type<T>::init(world.c_ptr(), m, false);
         
         /* Module is not yet registered, register it now */
         } else {

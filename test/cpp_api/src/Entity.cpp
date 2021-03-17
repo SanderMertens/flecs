@@ -3,7 +3,7 @@
 void Entity_new() {
     flecs::world world;
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 }
 
@@ -20,7 +20,7 @@ void Entity_new_add() {
 
     flecs::component<Position>(world, "Position");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .add<Position>();
 
     test_assert(entity.id() != 0);
@@ -33,7 +33,7 @@ void Entity_new_add_2() {
     flecs::component<Position>(world, "Position");
     flecs::component<Velocity>(world, "Velocity");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .add<Position>()
         .add<Velocity>();
 
@@ -47,7 +47,7 @@ void Entity_new_set() {
 
     flecs::component<Position>(world, "Position");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20});
 
     test_assert(entity.id() != 0);
@@ -64,7 +64,7 @@ void Entity_new_set_2() {
     flecs::component<Position>(world, "Position");
     flecs::component<Velocity>(world, "Velocity");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
@@ -86,7 +86,7 @@ void Entity_add() {
 
     flecs::component<Position>(world, "Position");
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.add<Position>();
@@ -98,7 +98,7 @@ void Entity_remove() {
 
     flecs::component<Position>(world, "Position");
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.add<Position>();
@@ -113,7 +113,7 @@ void Entity_set() {
 
     flecs::component<Position>(world, "Position");
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.set<Position>({10, 20});
@@ -130,7 +130,7 @@ void Entity_replace() {
     flecs::component<Position>(world, "Position");
     flecs::component<Velocity>(world, "Velocity");
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.patch<Position>([](Position& p, bool exists) {
@@ -157,7 +157,7 @@ void Entity_add_2() {
     flecs::component<Position>(world, "Position");
     flecs::component<Velocity>(world, "Velocity");
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.add<Position>()
@@ -170,10 +170,10 @@ void Entity_add_2() {
 void Entity_add_entity() {
     flecs::world world;
 
-    auto tag = flecs::entity(world);
+    auto tag = world.entity();
     test_assert(tag.id() != 0);
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.add(tag);
@@ -183,10 +183,10 @@ void Entity_add_entity() {
 void Entity_add_childof() {
     flecs::world world;
 
-    auto parent = flecs::entity(world);
+    auto parent = world.entity();
     test_assert(parent.id() != 0);
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.add_childof(parent);
@@ -196,10 +196,10 @@ void Entity_add_childof() {
 void Entity_add_instanceof() {
     flecs::world world;
 
-    auto base = flecs::entity(world);
+    auto base = world.entity();
     test_assert(base.id() != 0);
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.add_instanceof(base);
@@ -212,7 +212,7 @@ void Entity_remove_2() {
     flecs::component<Position>(world, "Position");
     flecs::component<Velocity>(world, "Velocity");
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.add<Position>()
@@ -234,7 +234,7 @@ void Entity_set_2() {
     flecs::component<Position>(world, "Position");
     flecs::component<Velocity>(world, "Velocity");
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.set<Position>({10, 20})
@@ -254,10 +254,10 @@ void Entity_set_2() {
 void Entity_remove_entity() {
     flecs::world world;
 
-    auto tag = flecs::entity(world);
+    auto tag = world.entity();
     test_assert(tag.id() != 0);
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.add(tag);
@@ -270,10 +270,10 @@ void Entity_remove_entity() {
 void Entity_remove_childof() {
     flecs::world world;
 
-    auto parent = flecs::entity(world);
+    auto parent = world.entity();
     test_assert(parent.id() != 0);
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.add_childof(parent);
@@ -286,10 +286,10 @@ void Entity_remove_childof() {
 void Entity_remove_instanceof() {
     flecs::world world;
 
-    auto base = flecs::entity(world);
+    auto base = world.entity();
     test_assert(base.id() != 0);
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
     test_assert(entity.id() != 0);
 
     entity.add_instanceof(base);
@@ -304,7 +304,7 @@ void Entity_get_generic() {
 
     auto position = flecs::component<Position>(world, "Position");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20});
 
     test_assert(entity.id() != 0);
@@ -323,7 +323,7 @@ void Entity_get_mut_generic() {
 
     auto position = flecs::component<Position>(world, "Position");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20});
 
     test_assert(entity.id() != 0);
@@ -352,7 +352,7 @@ void Entity_get_generic_w_id() {
 
     auto position = flecs::component<Position>(world, "Position");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20});
 
     test_assert(entity.id() != 0);
@@ -371,7 +371,7 @@ void Entity_get_mut_generic_w_id() {
 
     auto position = flecs::component<Position>(world, "Position");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20});
 
     test_assert(entity.id() != 0);
@@ -398,7 +398,7 @@ void Entity_get_mut_generic_w_id() {
 void Entity_add_role() {
     flecs::world world;
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
 
     entity = entity.add_role(flecs::Pair);
 
@@ -408,7 +408,7 @@ void Entity_add_role() {
 void Entity_remove_role() {
     flecs::world world;
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
 
     flecs::entity_t id = entity.id();
 
@@ -424,7 +424,7 @@ void Entity_remove_role() {
 void Entity_has_role() {
     flecs::world world;
 
-    auto entity = flecs::entity(world);
+    auto entity = world.entity();
 
     entity = entity.add_role(flecs::Pair);
 
@@ -438,8 +438,8 @@ void Entity_has_role() {
 void Entity_trait_role() {
     flecs::world world;
 
-    auto a = flecs::entity(world);
-    auto b = flecs::entity(world);
+    auto a = world.entity();
+    auto b = world.entity();
 
     auto comb = flecs::entity::comb(a, b);
     comb = comb.add_role(flecs::Pair);
@@ -456,8 +456,8 @@ void Entity_trait_role() {
 void Entity_equals() {
     flecs::world world;
 
-    auto e1 = flecs::entity(world);
-    auto e2 = flecs::entity(world);
+    auto e1 = world.entity();
+    auto e2 = world.entity();
 
     auto id1 = flecs::entity(world, e1.id());
     auto id2 = flecs::entity(world, e2.id());
@@ -470,9 +470,9 @@ void Entity_equals() {
 void Entity_has_childof() {
     flecs::world world;
 
-    auto parent = flecs::entity(world);
+    auto parent = world.entity();
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add_childof(parent);
 
     test_assert(e.has_childof(parent));
@@ -481,9 +481,9 @@ void Entity_has_childof() {
 void Entity_has_instanceof() {
     flecs::world world;
 
-    auto base = flecs::entity(world);
+    auto base = world.entity();
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add_instanceof(base);
 
     test_assert(e.has_instanceof(base));
@@ -492,12 +492,12 @@ void Entity_has_instanceof() {
 void Entity_has_instanceof_indirect() {
     flecs::world world;
 
-    auto base_of_base = flecs::entity(world);
+    auto base_of_base = world.entity();
 
-    auto base = flecs::entity(world)
+    auto base = world.entity()
         .add_instanceof(base_of_base);
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add_instanceof(base);
 
     test_assert(e.has_instanceof(base_of_base));
@@ -506,7 +506,7 @@ void Entity_has_instanceof_indirect() {
 void Entity_null_string() {
     flecs::world world;
 
-    auto e = flecs::entity(world);
+    auto e = world.entity();
 
     test_str(e.name().c_str(), "");
 }

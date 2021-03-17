@@ -326,13 +326,13 @@ void register_lifecycle_actions(
 // It seems like component registration does not always work correctly in Unreal
 // engine when recreating a world. A plausible cause for this is the hot 
 // reloading of dynamic libraries by the engine. A workaround for this issue is
-// to call flecs::_::component_info<T>::reset() before recreating the world.
+// to call flecs::_::cpp_type<T>::reset() before recreating the world.
 // This will reset the global component state and avoids conflicts. The exact
 // cause of the issue is investigated here: 
 //   https://github.com/SanderMertens/flecs/issues/293
 
 template <typename T>
-class component_info final {
+class cpp_type final {
 public:
     // Initialize component identifier
     static void init(world_t* world, entity_t entity, bool allow_tag = true) {
@@ -598,10 +598,10 @@ private:
 };
 
 // Global templated variables that hold component identifier and other info
-template <typename T> entity_t component_info<T>::s_id( 0 );
-template <typename T> type_t component_info<T>::s_type( nullptr );
-template <typename T> std::string component_info<T>::s_name("");
-template <typename T> bool component_info<T>::s_allow_tag( true );
+template <typename T> entity_t cpp_type<T>::s_id( 0 );
+template <typename T> type_t cpp_type<T>::s_type( nullptr );
+template <typename T> std::string cpp_type<T>::s_name("");
+template <typename T> bool cpp_type<T>::s_allow_tag( true );
 
 } // namespace _
 
@@ -619,10 +619,10 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     world_t *world_ptr = world.c_ptr();
     entity_t id = 0;
 
-    if (_::component_info<T>::registered()) {
+    if (_::cpp_type<T>::registered()) {
         /* Obtain component id. Because the component is already registered,
          * this operation does nothing besides returning the existing id */
-        id = _::component_info<T>::id_no_lifecycle(world_ptr, name, allow_tag);
+        id = _::cpp_type<T>::id_no_lifecycle(world_ptr, name, allow_tag);
 
         /* If entity is not empty check if the name matches */
         if (ecs_get_type(world_ptr, id) != nullptr) {
@@ -649,8 +649,8 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
          * If the component was registered already, nothing will change. */
         ecs_entity_t entity = ecs_new_component(
             world.c_ptr(), id, nullptr, 
-            _::component_info<T>::size(), 
-            _::component_info<T>::alignment());
+            _::cpp_type<T>::size(), 
+            _::cpp_type<T>::alignment());
         
         (void)entity;
         
@@ -683,13 +683,13 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         }
 
         /* Register id as usual */
-        id = _::component_info<T>::id_no_lifecycle(world_ptr, name, allow_tag);
+        id = _::cpp_type<T>::id_no_lifecycle(world_ptr, name, allow_tag);
     }
 
-    _::component_info<T>::init(world_ptr, id, allow_tag);
-    _::component_info<const T>::init(world_ptr, id, allow_tag);
-    _::component_info<T*>::init(world_ptr, id, allow_tag);
-    _::component_info<T&>::init(world_ptr, id, allow_tag);
+    _::cpp_type<T>::init(world_ptr, id, allow_tag);
+    _::cpp_type<const T>::init(world_ptr, id, allow_tag);
+    _::cpp_type<T*>::init(world_ptr, id, allow_tag);
+    _::cpp_type<T&>::init(world_ptr, id, allow_tag);
     
     return world.entity(id);
 }
@@ -699,7 +699,7 @@ template <typename T>
 flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
-    if (_::component_info<T>::size()) {
+    if (_::cpp_type<T>::size()) {
         _::register_lifecycle_actions<T>(world.c_ptr(), result.id(),
             true, true, true, true);
     }
@@ -720,7 +720,7 @@ flecs::entity relocatable_component(const flecs::world& world, const char *name 
 
 template <typename T>
 flecs::entity_t type_id() {
-    return _::component_info<T>::id();
+    return _::cpp_type<T>::id();
 }
 
 } // namespace flecs

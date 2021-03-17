@@ -139,7 +139,7 @@ public:
     system& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
         ecs_compare_action_t cmp = reinterpret_cast<ecs_compare_action_t>(compare);
         return this->order_by(
-            flecs::entity(m_world, _::component_info<T>::id(m_world)), cmp);
+            flecs::entity(m_world, _::cpp_type<T>::id(m_world)), cmp);
     }
 
     /** Same as query::order_by */
@@ -161,7 +161,7 @@ public:
     system& group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
         ecs_rank_type_action_t rnk = reinterpret_cast<ecs_rank_type_action_t>(rank);
         return this->group_by(
-            flecs::entity(m_world, _::component_info<T>::id(m_world)), rnk);
+            flecs::entity(m_world, _::cpp_type<T>::id(m_world)), rnk);
     }
 
     /** Same as query::group_by */
