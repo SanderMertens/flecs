@@ -79,10 +79,6 @@ ecs_stage_t* ecs_stage_from_world(
 const ecs_stage_t* ecs_stage_from_readonly_world(
     const ecs_world_t *world);
 
-/* Get actual world from world */
-const ecs_world_t* ecs_get_world(
-    const ecs_world_t *world);
-
 /* Get component callbacks */
 const ecs_c_info_t *ecs_get_c_info(
     const ecs_world_t *world,
