@@ -400,9 +400,9 @@ void Entity_add_role() {
 
     auto entity = flecs::entity(world);
 
-    entity = entity.add_role(flecs::Trait);
+    entity = entity.add_role(flecs::Pair);
 
-    test_assert(entity.id() & ECS_TRAIT);
+    test_assert(entity.id() & ECS_PAIR);
 }
 
 void Entity_remove_role() {
@@ -412,9 +412,9 @@ void Entity_remove_role() {
 
     flecs::entity_t id = entity.id();
 
-    entity = entity.add_role(flecs::Trait);
+    entity = entity.add_role(flecs::Pair);
 
-    test_assert(entity.id() & ECS_TRAIT);
+    test_assert(entity.id() & ECS_PAIR);
 
     entity = entity.remove_role();
 
@@ -426,13 +426,13 @@ void Entity_has_role() {
 
     auto entity = flecs::entity(world);
 
-    entity = entity.add_role(flecs::Trait);
+    entity = entity.add_role(flecs::Pair);
 
-    test_assert(entity.has_role(flecs::Trait));
+    test_assert(entity.has_role(flecs::Pair));
 
     entity = entity.remove_role();
 
-    test_assert(!entity.has_role(flecs::Trait));
+    test_assert(!entity.has_role(flecs::Pair));
 }
 
 void Entity_trait_role() {
@@ -442,9 +442,9 @@ void Entity_trait_role() {
     auto b = flecs::entity(world);
 
     auto comb = flecs::entity::comb(a, b);
-    comb = comb.add_role(flecs::Trait);
+    comb = comb.add_role(flecs::Pair);
     
-    test_assert(comb.has_role(flecs::Trait));
+    test_assert(comb.has_role(flecs::Pair));
 
     auto lo = comb.lo();
     auto hi = comb.remove_role().hi();

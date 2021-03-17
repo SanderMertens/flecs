@@ -485,7 +485,7 @@ private:
     flecs::column<T> get_column(int32_t column_id) const {
 #ifndef NDEBUG
         ecs_entity_t column_entity = ecs_column_entity(m_iter, column_id);
-        ecs_assert(column_entity & ECS_TRAIT || column_entity & ECS_SWITCH || 
+        ecs_assert(column_entity & ECS_PAIR || column_entity & ECS_SWITCH || 
             column_entity & ECS_CASE ||
             column_entity == _::component_info<T>::id(m_iter->world), 
             ECS_COLUMN_TYPE_MISMATCH, NULL);

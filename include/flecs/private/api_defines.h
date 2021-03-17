@@ -159,22 +159,22 @@ typedef int32_t ecs_size_t;
 /** Translate C type to module struct. */
 #define ecs_iter_action(T) FLECS__F##T
 
-#ifndef FLECS_LEGACY
-
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Utilities for working with trait identifiers
+//// Utilities for working with pair identifiers
 ////////////////////////////////////////////////////////////////////////////////
 
 #define ecs_entity_t_lo(value) ((uint32_t)(value))
 #define ecs_entity_t_hi(value) ((uint32_t)((value) >> 32))
-#define ecs_entity_t_comb(v1, v2) (((uint64_t)(v2) << 32) + (uint32_t)(v1))
-#define ecs_trait(comp, trait) ECS_TRAIT | ecs_entity_t_comb(comp, trait)
+#define ecs_entity_t_comb(lo, hi) (((uint64_t)(hi) << 32) + (uint32_t)(lo))
+#define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macro's for ctor, dtor, move and copy
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifndef FLECS_LEGACY
 
 /* Constructor / destructor convenience macro */
 #define ECS_XTOR_IMPL(type, postfix, var, ...)\
@@ -272,7 +272,9 @@ typedef int32_t ecs_size_t;
             __VA_ARGS__\
         }\
     }
+    
 #endif
+
 #ifdef __cplusplus
 }
 #endif

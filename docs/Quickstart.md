@@ -249,7 +249,7 @@ query.each([](flecs::entity e, Position& p, const Velocity &v) {
 Queries are registered with the world, and entities (types) are continuously matched with a query. This means that when an application iterates over a query, matching has already happened, which makes it very fast.
 
 ## Traits
-Traits are a special kind of component that is added to an entity,component tuple. Trait components can be useful for implementing functionality that is not specific to one component. A typical example is implementing a timer after which a component should be deleted. We can define the trait component type like this:
+Traits are a special kind of component that is added to an entity,component tuple. Pair components can be useful for implementing functionality that is not specific to one component. A typical example is implementing a timer after which a component should be deleted. We can define the trait component type like this:
 
 ```c
 typedef struct ExpiryTimer {
@@ -294,13 +294,13 @@ e.set_trait<ExpiryTimer, StaminaBuff>({ 5 });
 Now we need to write a system to increase the timer and execute the remove logic. The system definition looks almost like a regular system:
 
 ```c
-ECS_SYSTEM(world, ExpireComponents, EcsOnUpdate, TRAIT | ExpiryTimer);
+ECS_SYSTEM(world, ExpireComponents, EcsOnUpdate, PAIR | ExpiryTimer);
 ```
 ```cpp
-world.system<>("ExpireComponents", "TRAIT | ExpiryTimer").iter(ExpiryTimer);
+world.system<>("ExpireComponents", "PAIR | ExpiryTimer").iter(ExpiryTimer);
 ```
 
-Note that the `ExpiryTimer` has the `TRAIT` role. This lets the system know it should match this component as a trait, not as a regular component. Now lets look at the implementation of this system:
+Note that the `ExpiryTimer` has the `PAIR` role. This lets the system know it should match this component as a trait, not as a regular component. Now lets look at the implementation of this system:
 
 ```c
 void ExpireComponents(ecs_iter_t *it) {

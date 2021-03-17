@@ -55,7 +55,7 @@ typedef int (*ecs_parse_action_t)(
     ecs_entity_t flags,
     const char *component,
     const char *source,
-    const char *trait,
+    const char *pair,
     const char *name,
     void *ctx);
 
@@ -233,7 +233,7 @@ typedef struct ecs_matched_table_t {
  * return the location of the table in either list in constant time.
  *
  * If a table is matched multiple times by a query, such as can happen when a
- * query matches traits, a table can occupy multiple indices.
+ * query matches pairs, a table can occupy multiple indices.
  */
 typedef struct ecs_table_indices_t {
     int32_t *indices; /* If indices are negative, table is in empty list */
@@ -258,7 +258,7 @@ typedef struct ecs_table_slice_t {
 #define EcsQueryMatchDisabled (16)   /* Does query match disabled */
 #define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
 #define EcsQueryHasRefs (64)         /* Does query have references */
-#define EcsQueryHasTraits (128)      /* Does query have traits */
+#define EcsQueryHasTraits (128)      /* Does query have pairs */
 #define EcsQueryIsSubquery (256)     /* Is query a subquery */
 #define EcsQueryIsOrphaned (512)     /* Is subquery orphaned */
 #define EcsQueryHasOutColumns (1024) /* Does query have out columns */

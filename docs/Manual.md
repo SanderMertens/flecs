@@ -2282,10 +2282,10 @@ const ExpiryTime *et_vel = ecs_get_trait(world, e, Position, ExpiryTime);
 ```
 
 ### Traits and queries
-To write a query (or system) that iterates over a trait, the TRAIT role should be added to the query signature:
+To write a query (or system) that iterates over a trait, the PAIR role should be added to the query signature:
 
 ```c
-ecs_query_t *q = ecs_query_new(world, "TRAIT | ExpiryTimer");
+ecs_query_t *q = ecs_query_new(world, "PAIR | ExpiryTimer");
 ```
 
 This will iterate all entities with the ExpiryTimer trait, for each instance of the trait. If an entity has the trait instantiated two times, the query will iterate that entity two times. Other than that traits are much like regular components, in that a query provides a trait like a regular C array. This is an example of what an `ExpireComponents` system could look like:
@@ -2325,10 +2325,10 @@ void ExpireComponents(ecs_iter_t *it) {
 Additionally, a query can also subscribe for a trait applied to a specific component:
 
 ```c
-ecs_query_t *q = ecs_query_new(world, "TRAIT | ExpiryTimer > Position");
+ecs_query_t *q = ecs_query_new(world, "PAIR | ExpiryTimer > Position");
 ```
 
-### Trait tags
+### Pair tags
 Tags can also be used as traits, in which case they assume the type of the component. This example uses a trait tag to add the `Position` component twice, once as a regular component, and once for the `WorldSpace` trait:
 
 ```c
@@ -2353,25 +2353,25 @@ Data for trait tags can be retrieved with the `ecs_get_trait_tag` function:
 const Position *p = ecs_get_trait_tag(world, e, WorldSpace, Position);
 ```
 
-### Trait encoding
-Traits are encoded in the entity id, by using the upper 32 bits of the identifier to store the id of the trait. The lower 32 bits of the identifier are used to store the component to which the trait is applied. To indicate that the combined identifiers are a trait, the `TRAIT` role is added.
+### Pair encoding
+Traits are encoded in the entity id, by using the upper 32 bits of the identifier to store the id of the trait. The lower 32 bits of the identifier are used to store the component to which the trait is applied. To indicate that the combined identifiers are a trait, the `PAIR` role is added.
 
 To create a trait from a trait identifier and a component identifier, an application could use the following code:
 
 ```c
-ECS_COMPONENT(world, Trait);
+ECS_COMPONENT(world, Pair);
 ECS_COMPONENT(world, Component);
 
 ecs_entity_t lo = ecs_typeid(Component);
-ecs_entity_t hi = ecs_typeid(Trait);
+ecs_entity_t hi = ecs_typeid(Pair);
 
-ecs_entity_t trait = (lo + hi << 32) | ECS_TRAIT;
+ecs_entity_t trait = (lo + hi << 32) | ECS_PAIR;
 ```
 
 The API provides a convenience macro to make this easier:
 
 ```c
-ecs_entity_t trait = ecs_trait(ecs_typeid(Component), ecs_typeid(Trait));
+ecs_entity_t trait = ecs_trait(ecs_typeid(Component), ecs_typeid(Pair));
 ```
 
 To extract the component id from a trait, an application must get the lower 32 bits of an entity identifier. The API provides the convenience `ecs_entity_t_lo` macro to do this:
@@ -2381,10 +2381,10 @@ To extract the component id from a trait, an application must get the lower 32 b
 ecs_entity_t comp = ecs_entity_t_lo(trait);
 ```
 
-To obtain the trait, the application first has to remove the `ECS_TRAIT` role, after which the upper 32 bits should be used. To remove the `ECS_TRAIT` role the application can apply the `ECS_COMPONENT_MASK` mask with a bitwise AND, after which the trait component id can be obtained with `ecs_entity_t_hi`:
+To obtain the trait, the application first has to remove the `ECS_PAIR` role, after which the upper 32 bits should be used. To remove the `ECS_PAIR` role the application can apply the `ECS_COMPONENT_MASK` mask with a bitwise AND, after which the trait component id can be obtained with `ecs_entity_t_hi`:
 
 ```c
-// This extracts the id of Trait
+// This extracts the id of Pair
 ecs_entity_t trait_comp = ecs_entity_t_hi(trait & ECS_COMPONENT_MASK);
 ```
 

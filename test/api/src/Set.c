@@ -428,16 +428,16 @@ void Set_get_mut_tag_existing_w_comp() {
     ecs_get_mut_w_entity(world, e, MyTag, &is_added);
 }
 
-void Set_get_mut_tag_new_w_trait() {
+void Set_get_mut_tag_new_w_pair() {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
     ECS_TAG(world, MyTag);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ecs_trait(Trait, ecs_typeid(Position)));
+    ecs_entity_t e = ecs_new_w_entity(world, ecs_pair(ecs_typeid(Position), Pair));
     test_assert(e != 0);
 
     test_expect_abort();
@@ -446,19 +446,19 @@ void Set_get_mut_tag_new_w_trait() {
     ecs_get_mut_w_entity(world, e, MyTag, &is_added);
 }
 
-void Set_get_mut_tag_existing_w_trait() {
+void Set_get_mut_tag_existing_w_pair() {
     install_test_abort();
     
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
     ECS_TAG(world, MyTag);
 
     ecs_entity_t e = ecs_new(world, MyTag);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, MyTag));
-    ecs_add_entity(world, e, ecs_trait(Trait, ecs_typeid(Position)));
+    ecs_add_pair(world, e, Pair, ecs_typeid(Position));
 
     test_expect_abort();
 

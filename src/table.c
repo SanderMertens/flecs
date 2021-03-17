@@ -117,7 +117,7 @@ ecs_flags32_t get_component_action_flags(
     return flags;  
 }
 
-/* Check if table has instance of component, including traits */
+/* Check if table has instance of component, including pairs */
 static
 bool has_component(
     ecs_world_t *world,

@@ -4,20 +4,20 @@ const EcsComponent* ecs_component_from_id(
     const ecs_world_t *world,
     ecs_entity_t e)
 {
-    ecs_entity_t trait = 0;
+    ecs_entity_t pair = 0;
 
-    /* If this is a trait, get the trait component from the identifier */
-    if (ECS_HAS_ROLE(e, TRAIT)) {
-        trait = e;
+    /* If this is a pair, get the pair component from the identifier */
+    if (ECS_HAS_ROLE(e, PAIR)) {
+        pair = e;
         e = e & ECS_COMPONENT_MASK;
         e = ecs_entity_t_hi(e);
     }
 
     const EcsComponent *component = ecs_get(world, e, EcsComponent);
-    if (!component && trait) {
-        /* If this is a trait column and the trait is not a component, use
-         * the component type of the component the trait is applied to. */
-        e = ecs_entity_t_lo(trait);
+    if (!component && pair) {
+        /* If this is a pair column and the pair is not a component, use
+         * the component type of the component the pair is applied to. */
+        e = ecs_entity_t_lo(pair);
         component = ecs_get(world, e, EcsComponent);
     }
 

@@ -136,11 +136,11 @@ void DeferredActions_defer_bulk_new_w_data() {
     ecs_fini(world);
 }
 
-void DeferredActions_defer_bulk_new_w_data_trait() {
+void DeferredActions_defer_bulk_new_w_data_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
     ecs_frame_begin(world, 1);
 
@@ -148,11 +148,11 @@ void DeferredActions_defer_bulk_new_w_data_trait() {
 
     ecs_defer_begin(world);
 
-    ecs_entity_t trait_id = ecs_trait(ecs_typeid(Position), Trait);
+    ecs_entity_t pair_id = ecs_pair(Pair, ecs_typeid(Position));
     
     const ecs_entity_t *temp_ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_entities_t){
-            .array = (ecs_entity_t[]){trait_id},
+            .array = (ecs_entity_t[]){pair_id},
             .count = 1
         },
         (void*[]){
@@ -166,38 +166,38 @@ void DeferredActions_defer_bulk_new_w_data_trait() {
     ecs_entity_t ids[3];
     memcpy(ids, temp_ids, sizeof(ecs_entity_t) * 3);
 
-    test_assert(!ecs_has_entity(world, ids[0], trait_id));
-    test_assert(!ecs_has_entity(world, ids[1], trait_id));
-    test_assert(!ecs_has_entity(world, ids[2], trait_id)); 
+    test_assert(!ecs_has_entity(world, ids[0], pair_id));
+    test_assert(!ecs_has_entity(world, ids[1], pair_id));
+    test_assert(!ecs_has_entity(world, ids[2], pair_id)); 
 
     ecs_defer_end(world);
 
-    test_assert(!ecs_has_entity(world, ids[0], trait_id));
-    test_assert(!ecs_has_entity(world, ids[1], trait_id));
-    test_assert(!ecs_has_entity(world, ids[2], trait_id));
+    test_assert(!ecs_has_entity(world, ids[0], pair_id));
+    test_assert(!ecs_has_entity(world, ids[1], pair_id));
+    test_assert(!ecs_has_entity(world, ids[2], pair_id));
 
     ecs_defer_end(world);
 
-    test_assert(ecs_has_entity(world, ids[0], trait_id));
-    test_assert(ecs_has_entity(world, ids[1], trait_id));
-    test_assert(ecs_has_entity(world, ids[2], trait_id));
+    test_assert(ecs_has_entity(world, ids[0], pair_id));
+    test_assert(ecs_has_entity(world, ids[1], pair_id));
+    test_assert(ecs_has_entity(world, ids[2], pair_id));
 
     ecs_frame_end(world);
 
-    test_assert(ecs_has_entity(world, ids[0], trait_id));
-    test_assert(ecs_has_entity(world, ids[1], trait_id));
-    test_assert(ecs_has_entity(world, ids[2], trait_id));
+    test_assert(ecs_has_entity(world, ids[0], pair_id));
+    test_assert(ecs_has_entity(world, ids[1], pair_id));
+    test_assert(ecs_has_entity(world, ids[2], pair_id));
 
     const Position *
-    p = ecs_get_w_entity(world, ids[0], trait_id);
+    p = ecs_get_w_entity(world, ids[0], pair_id);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_w_entity(world, ids[1], trait_id);
+    p = ecs_get_w_entity(world, ids[1], pair_id);
     test_int(p->x, 30);
     test_int(p->y, 40);
 
-    p = ecs_get_w_entity(world, ids[2], trait_id);
+    p = ecs_get_w_entity(world, ids[2], pair_id);
     test_int(p->x, 50);
     test_int(p->y, 60);
 
@@ -789,7 +789,7 @@ void DeferredActions_defer_modify() {
     ecs_fini(world);
 }
 
-void DeferredActions_defer_set_trait() {
+void DeferredActions_defer_set_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -799,11 +799,11 @@ void DeferredActions_defer_set_trait() {
 
     ecs_defer_begin(world);
 
-    ecs_set_trait(world, e, Position, Velocity, {1, 2});
+    ecs_set_pair(world, e, Velocity, ecs_typeid(Position), {1, 2});
 
     ecs_defer_end(world);
 
-    test_assert(ecs_has_trait(world, e, ecs_typeid(Position), ecs_typeid(Velocity)));
+    test_assert(ecs_has_pair(world, e, ecs_typeid(Velocity), ecs_typeid(Position)));
 
     ecs_fini(world);    
 }
@@ -1297,25 +1297,24 @@ void DeferredActions_defer_return_value() {
     ecs_fini(world);
 }
  
-void DeferredActions_defer_get_mut_trait() {
+void DeferredActions_defer_get_mut_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
     ecs_entity_t e = ecs_new_id(world);
 
     ecs_defer_begin(world);
 
-    Position *p = ecs_get_mut_w_entity(world, e, 
-        ecs_trait(ecs_typeid(Position), Trait), NULL);
+    Position *p = ecs_get_mut_pair(world, e, Position, Pair, NULL);
     test_assert(p != NULL);
     p->x = 10;
     p->y = 20;
 
     ecs_defer_end(world);
 
-    const Position *pc = ecs_get_w_entity(world, e, ecs_trait(ecs_typeid(Position), Trait));
+    const Position *pc = ecs_get_pair(world, e, Position, Pair);
     test_assert(pc != NULL);
     test_int(pc->x, 10);
     test_int(pc->y, 20);

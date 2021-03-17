@@ -86,7 +86,7 @@ int main(void) {
      * system will only match with entities that have all the traits set with
      * the same cardinality. If for example an entity has two instances of Lerp
      * and LerpStart but three of LerpStop, the system will not match. */
-    ECS_SYSTEM(world, DoLerp, EcsOnUpdate, TRAIT | Lerp, TRAIT | Lerp > *, TRAIT | LerpStart, TRAIT | LerpStop);
+    ECS_SYSTEM(world, DoLerp, EcsOnUpdate, PAIR | Lerp, PAIR | Lerp > *, PAIR | LerpStart, PAIR | LerpStop);
 
     /* System that prints Position, so we can see the lerp in action */
     ECS_SYSTEM(world, PrintPosition, EcsOnUpdate, Position);

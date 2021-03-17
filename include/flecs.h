@@ -55,6 +55,8 @@
 #include "flecs/private/strbuf.h"        /* Efficient string builder */
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
 
+#include "flecs/deprecated.h" /* Deprecated functions */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -252,8 +254,8 @@ typedef struct EcsTrigger {
 /** Switches allow for fast switching between mutually exclusive components */
 #define ECS_SWITCH (ECS_ROLE | ((ecs_entity_t)0x7B << 56))
 
-/** The TRAIT role indicates that the entity is a trait identifier. */
-#define ECS_TRAIT (ECS_ROLE | ((ecs_entity_t)0x7A << 56))
+/** The PAIR role indicates that the entity is a pair identifier. */
+#define ECS_PAIR (ECS_ROLE | ((ecs_entity_t)0x7A << 56))
 
 /** Enforce that all entities of a type are present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
@@ -1248,123 +1250,177 @@ FLECS_API bool ecs_is_component_enabled_w_entity(
 
 
 /**
- * @defgroup traits Traits
+ * @defgroup pairs Pairs
  * @{
  */
 
-/** Add a trait
- * This operation adds a trait from an entity.
+/** Add a pair.
+ * This operation adds a pair to an entity. A pair is a combination of a 
+ * relation and an object, can can be used to store relationships between
+ * entities. Example:
+ *
+ * subject = Alice, relation = Likes, object = Bob
+ *
+ * This operation accepts regular entities. For passing in component identifiers
+ * use ecs_typeid, like this:
+ *
+ * ecs_add_pair(world, subject, ecs_typeid(relation), object) 
  *
  * @param world The world.
- * @param entity The entity.
- * @param component The entity for which to remove the trait.
- * @param trait The trait to remove.
+ * @param subject The entity to which to add the pair.
+ * @param relation The relation part of the pair to add.
+ * @param object The object part of the pair to add.
  */
-#define ecs_add_trait(world, entity, component, trait)\
-    ecs_add_entity(world, entity, ecs_trait(component, trait))
+#define ecs_add_pair(world, subject, relation, object)\
+    ecs_add_entity(world, subject, ecs_pair(relation, object))
 
-/** Remove a trait
- * This operation removes a trait from an entity.
+/** Remove a pair.
+ * This operation removes a pair from an entity. A pair is a combination of a 
+ * relation and an object, can can be used to store relationships between
+ * entities. Example:
+ *
+ * subject = Alice, relation = Likes, object = Bob
+ *
+ * This operation accepts regular entities. For passing in component identifiers
+ * use ecs_typeid, like this:
+ *
+ * ecs_remove_pair(world, subject, ecs_typeid(relation), object)
  *
  * @param world The world.
- * @param entity The entity.
- * @param component The entity for which to remove the trait.
- * @param trait The trait to remove.
+ * @param subject The entity from which to remove the pair.
+ * @param relation The relation part of the pair to remove.
+ * @param object The object part of the pair to remove.
  */
-#define ecs_remove_trait(world, entity, component, trait)\
-    ecs_remove_entity(world, entity, ecs_trait(component, trait))
+#define ecs_remove_pair(world, subject, relation, object)\
+    ecs_remove_entity(world, subject, ecs_pair(relation, object))
 
-/** Test if an entity has a trait.
- * This operation returns true if the entity has the provided trait for the
- * specified component in its type.
+/** Test for a pair.
+ * This operation tests if an entity has a pair. This operation accepts regular 
+ * entities. For passing in component identifiers use ecs_typeid, like this:
+ *
+ * ecs_has_pair(world, subject, ecs_typeid(relation), object)
  *
  * @param world The world.
- * @param entity The entity.
- * @param component The entity.
- * @param trait The entity.
- * @return True if the entity has the trait, false if not.
+ * @param subject The entity from which to remove the pair.
+ * @param relation The relation part of the pair to remove.
+ * @param object The object part of the pair to remove.
  */
-#define ecs_has_trait(world, entity, component, trait)\
-    ecs_has_entity(world, entity, ecs_trait(component, trait))
+#define ecs_has_pair(world, subject, relation, object)\
+    ecs_has_entity(world, subject, ecs_pair(relation, object))
 
 
 #ifndef FLECS_LEGACY
-/** Set trait for component. 
- * This operation adds a trait for an entity and component. Traits can be added
- * multiple times to the same entity, as long as it is for different components.
+
+/** Set relation of pair.
+ * This operation sets data for a pair, where the relation determines the type.
+ * A pair is a combination of a relation and an object, can can be used to store 
+ * relationships between entities.
  *
- * Traits can be matched with systems by providing the TRAIT role to the 
- * trait component in the system signature. A system will match multiple times
- * with the same entity if the trait is added for multiple components.
+ * Pairs can contain data if either the relation or object of the pair are a
+ * component. If both are a component, the relation takes precedence.
  *
- * * This operation can only be used with traits that are components.
+ * If this operation is used with a pair where the relation is not a component,
+ * it will fail. The object part of the pair expects a regular entity. To pass
+ * a component as object, use ecs_typeid like this:
+ *
+ * ecs_set_pair(world, subject, relation, ecs_typeid(object))
  *
  * @param world The world.
- * @param e The entity.
- * @param component The component for which to add the trait.
- * @param trait The trait to add.
+ * @param subject The entity on which to set the pair.
+ * @param relation The relation part of the pair. This must be a component.
+ * @param object The object part of the pair.
  */
-#define ecs_set_trait(world, entity, component, trait, ...)\
-    ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_typeid(component), ecs_typeid(trait)), sizeof(trait), &(trait)__VA_ARGS__)
+#define ecs_set_pair(world, subject, relation, object, ...)\
+    ecs_set_ptr_w_entity(world, subject,\
+        ecs_pair(ecs_typeid(relation), object),\
+        sizeof(relation), &(relation)__VA_ARGS__)
 
 
-/** Set tag trait for component. 
- * This operation is similar to ecs_set_trait, but is used for trait tags. When
- * a trait tag is set on an entity, the trait type is not used (tags have no
- * type) and instead the component type is used.
+/** Set object of pair.
+ * This operation sets data for a pair, where the object determines the type.
+ * A pair is a combination of a relation and an object, can can be used to store 
+ * relationships between entities.
  *
- * This operation can only be used with traits that are not components.
+ * Pairs can contain data if either the relation or object of the pair are a
+ * component. If both are a component, the relation takes precedence.
+ *
+ * If this operation is used with a pair where the object is not a component,
+ * it will fail. The relation part of the pair expects a regular entity. To pass
+ * a component as relation, use ecs_typeid like this:
+ *
+ * ecs_set_pair_object(world, subject, ecs_typeid(relation), object)
  *
  * @param world The world.
- * @param e The entity.
- * @param component The component for which to add the trait.
- * @param trait The trait to add.
+ * @param subject The entity.
+ * @param relation The relation part of the pair.
+ * @param object The object part of the pair. This must be a component.
  */
-#define ecs_set_trait_tag(world, entity, trait, component, ...)\
-    ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_typeid(component), trait), sizeof(component), &(component)__VA_ARGS__)
+#define ecs_set_pair_object(world, subject, relation, object, ...)\
+    ecs_set_ptr_w_entity(world, subject,\
+        ecs_pair(relation, ecs_typeid(object)),\
+        sizeof(object), &(object)__VA_ARGS__)
+
+#define ecs_get_mut_pair(world, subject, relation, object, is_added)\
+    ((relation*)ecs_get_mut_w_entity(world, subject,\
+        ecs_pair(ecs_typeid(relation), object), is_added))
+
+#define ecs_get_mut_pair_object(world, subject, relation, object, is_added)\
+    ((object*)ecs_get_mut_w_entity(world, subject,\
+        ecs_pair(relation, ecs_typeid(object)), is_added))
+
+#define ecs_modified_pair(world, subject, relation, object)\
+    ecs_modified_w_entity(world, subject, ecs_pair(relation, object))
 
 #endif
 
-/** Get trait for component. 
- * This operation obtains the value of a trait for a componetn that has been 
- * added by ecs_set_trait.
+/** Get relation of pair. 
+ * This operation obtains the value of a pair, where the relation determines the
+ * type. A pair is a combination of a relation and an object, can can be used to 
+ * store relationships between entities.
+ *
+ * Pairs can contain data if either the relation or object of the pair are a
+ * component. If both are a component, the relation takes precedence.  
+ *
+ * If this operation is used with a pair where the relation is not a component,
+ * it will fail. The object part of the pair expects a regular entity. To pass
+ * a component as relation, use ecs_typeid like this: 
+ *
+ * ecs_get_pair(world, subject, relation, ecs_typeid(object)) 
  *
  * @param world The world.
- * @param e The entity.
- * @param component The component to which the trait was added.
- * @param trait The trait that was added.
+ * @param subject The entity.
+ * @param relation The relation part of the pair. Must be a component.
+ * @param object The object part of the pair.
  */
-#define ecs_get_trait(world, entity, component, trait)\
-    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_typeid(component), ecs_typeid(trait))))
+#define ecs_get_pair(world, subject, relation, object)\
+    ((relation*)ecs_get_w_entity(world, subject,\
+        ecs_pair(ecs_typeid(relation), object)))
 
-/** Get trait tag for component. 
- * This operation obtains the value of a trait for a componetn that has been 
- * added by ecs_set_trait.
+/** Get object of pair. 
+ * This operation obtains the value of a pair, where the object determines the
+ * type. A pair is a combination of a relation and an object, can can be used to 
+ * store relationships between entities.
+ *
+ * Pairs can contain data if either the relation or object of the pair are a
+ * component. If both are a component, the relation takes precedence.  
+ *
+ * If this operation is used with a pair where the object is not a component,
+ * it will fail. The relation part of the pair expects a regular entity. To pass
+ * a component as relation, use ecs_typeid like this: 
+ *
+ * ecs_get_pair_object(world, subject, ecs_typeid(relation), object)
  *
  * @param world The world.
- * @param e The entity.
- * @param trait The trait that was added.
- * @param component The component to which the trait was added.
+ * @param subject The entity.
+ * @param relation The relation part of the pair. Must be a component.
+ * @param object The object part of the pair.
  */
-#define ecs_get_trait_tag(world, entity, trait, component)\
-    ((component*)ecs_get_w_entity(world, entity, ecs_trait(ecs_typeid(component), trait)))
-
-/** Get case for switch.
- * This operation gets the current case for the specified switch. If the current
- * switch is not set for the entity, the operation will return 0.
- *
- * @param world The world.
- * @param e The entity.
- * @param sw The switch for which to obtain the case.
- * @return The current case for the specified switch. 
- */
-FLECS_API
-ecs_entity_t ecs_get_case(
-    const ecs_world_t *world,
-    ecs_entity_t e,
-    ecs_entity_t sw);
+#define ecs_get_pair_object(world, subject, relation, object)\
+    ((object*)ecs_get_w_entity(world, subject,\
+        ecs_pair(relation, ecs_typeid(object))))
 
 /** @} */
+
 
 /**
  * @defgroup deleting Deleting Entities and components
@@ -1412,6 +1468,7 @@ void ecs_delete_children(
     ecs_entity_t parent);
 
 /** @} */
+
 
 /**
  * @defgroup getting Getting Components
@@ -1476,6 +1533,29 @@ const void* ecs_get_ref_w_entity(
 #define ecs_get_ref(world, ref, entity, component)\
     ((const component*)ecs_get_ref_w_entity(world, ref, entity, ecs_typeid(component)))
 
+/** Get case for switch.
+ * This operation gets the current case for the specified switch. If the current
+ * switch is not set for the entity, the operation will return 0.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param sw The switch for which to obtain the case.
+ * @return The current case for the specified switch. 
+ */
+FLECS_API
+ecs_entity_t ecs_get_case(
+    const ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t sw);
+
+/** @} */
+
+
+/**
+ * @defgroup setting Setting Components
+ * @{
+ */
+
 /** Get a mutable pointer to a component.
  * This operation is similar to ecs_get_w_entity but it returns a mutable 
  * pointer. If this operation is invoked from inside a system, the entity will
@@ -1495,7 +1575,7 @@ void* ecs_get_mut_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,
-    bool *is_added);
+    bool *is_added); 
 
 /** Get a mutable pointer to a component.
  * Same as ecs_get_mut_w_entity but accepts a component typename.
@@ -1534,14 +1614,6 @@ void ecs_modified_w_entity(
  */
 #define ecs_modified(world, entity, component)\
     ecs_modified_w_entity(world, entity, ecs_typeid(component))
-
-
-/** @} */
-
-/**
- * @defgroup setting Setting Components
- * @{
- */
 
 /** Set the value of a component.
  * This operation allows an application to set the value of a component. The
@@ -1596,6 +1668,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
 #endif
 
 /** @} */
+
 
 /**
  * @defgroup singleton Singleton components
@@ -1699,7 +1772,7 @@ bool ecs_has_type(
 
 /** Test whether an entity is valid.
  * An entity is valid if it is not 0 and if it is alive. If the provided id has
- * a role or a trait, the contents of the role or the trait will be checked for
+ * a role or a pair, the contents of the role or the pair will be checked for
  * validity.
  *
  * @param world The world.
@@ -1884,8 +1957,8 @@ int32_t ecs_count_w_filter(
     const ecs_world_t *world,
     const ecs_filter_t *filter);
 
-
 /** @} */
+
 
 /**
  * @defgroup lookup Lookups
@@ -1990,6 +2063,7 @@ void ecs_use(
     const char *name);
 
 /** @} */
+
 
 /**
  * @defgroup paths Paths
@@ -2140,8 +2214,8 @@ ecs_entity_t ecs_add_path_w_sep(
 #define ecs_add_fullpath(world, entity, path)\
     ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
 
-
 /** @} */
+
 
 /**
  * @defgroup scopes Scopes
@@ -2239,6 +2313,7 @@ const char* ecs_set_name_prefix(
     const char *prefix);    
 
 /** @} */
+
 
 /**
  * @defgroup filters Filters
@@ -2530,6 +2605,7 @@ bool ecs_query_orphaned(
 
 /** @} */
 
+
 /**
  * @defgroup iterator Iterators
  * @{
@@ -2794,6 +2870,7 @@ int32_t ecs_table_component_index(
 
 
 /** @} */
+
 
 /**
  * @defgroup staging Staging

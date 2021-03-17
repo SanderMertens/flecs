@@ -25,7 +25,7 @@
 
 #define TOK_ROLE_CHILDOF "CHILDOF"
 #define TOK_ROLE_INSTANCEOF "INSTANCEOF"
-#define TOK_ROLE_TRAIT "TRAIT"
+#define TOK_ROLE_TRAIT "PAIR"
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
 #define TOK_ROLE_XOR "XOR"
@@ -144,7 +144,7 @@ ecs_entity_t parse_role(
     } else if (!ecs_os_strcmp(token, TOK_ROLE_INSTANCEOF)) {
         return ECS_INSTANCEOF;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_TRAIT)) {
-        return ECS_TRAIT;            
+        return ECS_PAIR;            
     } else if (!ecs_os_strcmp(token, TOK_ROLE_AND)) {
         return ECS_AND;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_OR)) {
@@ -299,7 +299,7 @@ const char* parse_element(
 
         /* Is token a trait? (using shorthand notation) */
         if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            elem.role = ECS_TRAIT;
+            elem.role = ECS_PAIR;
             ptr += 3;
             goto parse_trait;
         }
@@ -355,7 +355,7 @@ parse_source:
 
         /* Is token a trait? (using shorthand notation) */
         if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            elem.role = ECS_TRAIT;
+            elem.role = ECS_PAIR;
             ptr += 3;
             goto parse_trait;
         }        

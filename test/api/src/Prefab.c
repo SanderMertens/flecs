@@ -2708,20 +2708,20 @@ void Prefab_force_owned_type() {
     ecs_fini(world);
 }
 
-void Prefab_force_owned_type_w_trait() {
+void Prefab_force_owned_type_w_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, TRAIT | Position > Velocity);
+    ECS_TYPE(world, Type, PAIR | Position > Velocity);
 
-    ECS_PREFAB(world, Prefab, TRAIT | Position > Velocity, OWNED | Type);
+    ECS_PREFAB(world, Prefab, PAIR | Position > Velocity, OWNED | Type);
 
     ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
 
-    ecs_entity_t trait = ecs_trait(ecs_typeid(Velocity), ecs_typeid(Position));
-    test_assert(ecs_has_entity(world, e, trait));
-    test_assert(ecs_owns_entity(world, e, trait, true));  
+    ecs_entity_t pair = ecs_pair(ecs_typeid(Position), ecs_typeid(Velocity));
+    test_assert(ecs_has_entity(world, e, pair));
+    test_assert(ecs_owns_entity(world, e, pair, true));  
 
     ecs_fini(world);
 }

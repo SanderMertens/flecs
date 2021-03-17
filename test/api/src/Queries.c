@@ -578,21 +578,21 @@ void Queries_subquery_rematch_w_sub_optional() {
     ecs_fini(world);
 }
 
-void Queries_query_single_trait() {
+void Queries_query_single_pairs() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
-    ECS_ENTITY(world, e1, TRAIT|Trait>Position);
-    ECS_ENTITY(world, e2, TRAIT|Trait>Velocity);
+    ECS_ENTITY(world, e1, PAIR|Pair>Position);
+    ECS_ENTITY(world, e2, PAIR|Pair>Velocity);
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Velocity);
 
     int32_t table_count = 0, entity_count = 0;
 
-    ecs_query_t *q = ecs_query_new(world, "TRAIT | Trait > Velocity");
+    ecs_query_t *q = ecs_query_new(world, "PAIR | Pair > Velocity");
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
         table_count ++;

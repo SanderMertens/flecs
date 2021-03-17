@@ -13,7 +13,7 @@ int parse_type_action(
     ecs_entity_t role,
     const char *entity_id,
     const char *source_id,
-    const char *trait_id,
+    const char *pair_id,
     const char *arg_name,
     void *data)
 {
@@ -51,15 +51,15 @@ int parse_type_action(
             return -1;
         }
 
-        if (trait_id) {
-            ecs_entity_t trait = ecs_lookup_fullpath(world, trait_id);
-            if (!trait) {
+        if (pair_id) {
+            ecs_entity_t pair = ecs_lookup_fullpath(world, pair_id);
+            if (!pair) {
                 ecs_parser_error(name, sig, column, 
-                    "unresolved trait identifier '%s'", trait_id);
+                    "unresolved pair identifier '%s'", pair_id);
                 return -1;
             }
 
-            entity = ecs_entity_t_comb(entity, trait);
+            entity = ecs_entity_t_comb(entity, pair);
         }        
 
         if (oper_kind == EcsOperAnd) {

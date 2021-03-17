@@ -62,11 +62,11 @@ int main(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, ExpiryTimer);
 
-    /* Create a system that matches ExpiryTimer as a trait. Without the TRAIT
+    /* Create a system that matches ExpiryTimer as a trait. Without the PAIR
      * role the system would look for entities that added ExpiryTimer as usual,
      * but with the role the system will be matched against every component to
      * which the trait has been applied. */
-    ECS_SYSTEM(world, ExpireComponents, EcsOnUpdate, TRAIT | ExpiryTimer);
+    ECS_SYSTEM(world, ExpireComponents, EcsOnUpdate, PAIR | ExpiryTimer);
 
     /* Create an entity with Position and Velocity */
     ecs_entity_t e = ecs_new(world, 0);

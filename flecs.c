@@ -98,7 +98,7 @@ typedef int (*ecs_parse_action_t)(
     ecs_entity_t flags,
     const char *component,
     const char *source,
-    const char *trait,
+    const char *pair,
     const char *name,
     void *ctx);
 
@@ -276,7 +276,7 @@ typedef struct ecs_matched_table_t {
  * return the location of the table in either list in constant time.
  *
  * If a table is matched multiple times by a query, such as can happen when a
- * query matches traits, a table can occupy multiple indices.
+ * query matches pairs, a table can occupy multiple indices.
  */
 typedef struct ecs_table_indices_t {
     int32_t *indices; /* If indices are negative, table is in empty list */
@@ -301,7 +301,7 @@ typedef struct ecs_table_slice_t {
 #define EcsQueryMatchDisabled (16)   /* Does query match disabled */
 #define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
 #define EcsQueryHasRefs (64)         /* Does query have references */
-#define EcsQueryHasTraits (128)      /* Does query have traits */
+#define EcsQueryHasTraits (128)      /* Does query have pairs */
 #define EcsQueryIsSubquery (256)     /* Is query a subquery */
 #define EcsQueryIsOrphaned (512)     /* Is subquery orphaned */
 #define EcsQueryHasOutColumns (1024) /* Does query have out columns */
@@ -1812,7 +1812,7 @@ ecs_flags32_t get_component_action_flags(
     return flags;  
 }
 
-/* Check if table has instance of component, including traits */
+/* Check if table has instance of component, including pairs */
 static
 bool has_component(
     ecs_world_t *world,
@@ -5355,7 +5355,7 @@ void *get_mutable(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert((component & ECS_COMPONENT_MASK) == component || ECS_HAS_ROLE(component, TRAIT), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((component & ECS_COMPONENT_MASK) == component || ECS_HAS_ROLE(component, PAIR), ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
     if (ecs_get_info(world, entity, info) && info->table) {
@@ -6424,9 +6424,9 @@ bool ecs_is_valid(
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
 
-    /* When checking roles and/or traits, the generation count may have been
+    /* When checking roles and/or pairs, the generation count may have been
      * stripped away. Just test if the entity is 0 or not. */
-    if (ECS_HAS_ROLE(entity, TRAIT)) {
+    if (ECS_HAS_ROLE(entity, PAIR)) {
         ecs_entity_t lo = ecs_entity_t_lo(entity);
         ecs_entity_t hi = ecs_entity_t_hi(entity & ECS_COMPONENT_MASK);
         return lo != 0 && hi != 0;
@@ -6494,16 +6494,16 @@ ecs_entity_t ecs_get_typeid(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    if (ECS_HAS_ROLE(entity, TRAIT)) {
+    if (ECS_HAS_ROLE(entity, PAIR)) {
         /* Make sure we're not working with a stage */
         world = ecs_get_world(world);
 
-        ecs_entity_t trait = ecs_entity_t_hi(entity & ECS_COMPONENT_MASK);
-        if (ecs_has(world, trait, EcsComponent)) {
-            /* This is not a trait tag, trait is the value */
-            return trait;
+        ecs_entity_t pair = ecs_entity_t_hi(entity & ECS_COMPONENT_MASK);
+        if (ecs_has(world, pair, EcsComponent)) {
+            /* This is not a pair object, relation is the value */
+            return pair;
         } else {
-            /* This is a trait tag, component is the value */
+            /* This is a pair object, object is the value */
             return ecs_entity_t_lo(entity);
         }
     } else if (entity & ECS_ROLE_MASK) {
@@ -6629,8 +6629,8 @@ const char* ecs_role_str(
     if (ECS_HAS_ROLE(entity, INSTANCEOF)) {
         return "INSTANCEOF";
     } else
-    if (ECS_HAS_ROLE(entity, TRAIT)) {
-        return "TRAIT";
+    if (ECS_HAS_ROLE(entity, PAIR)) {
+        return "PAIR";
     } else
     if (ECS_HAS_ROLE(entity, DISABLED)) {
         return "DISABLED";
@@ -6682,7 +6682,7 @@ size_t ecs_entity_str(
     }
 
     ecs_entity_t e = entity & ECS_COMPONENT_MASK;
-    if (ECS_HAS_ROLE(entity, TRAIT)) {
+    if (ECS_HAS_ROLE(entity, PAIR)) {
         ecs_entity_t lo = ecs_entity_t_lo(e);
         ecs_entity_t hi = ecs_entity_t_hi(e);
 
@@ -13894,7 +13894,7 @@ bool ecs_strbuf_list_appendstr(
 
 #define TOK_ROLE_CHILDOF "CHILDOF"
 #define TOK_ROLE_INSTANCEOF "INSTANCEOF"
-#define TOK_ROLE_TRAIT "TRAIT"
+#define TOK_ROLE_TRAIT "PAIR"
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
 #define TOK_ROLE_XOR "XOR"
@@ -14013,7 +14013,7 @@ ecs_entity_t parse_role(
     } else if (!ecs_os_strcmp(token, TOK_ROLE_INSTANCEOF)) {
         return ECS_INSTANCEOF;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_TRAIT)) {
-        return ECS_TRAIT;            
+        return ECS_PAIR;            
     } else if (!ecs_os_strcmp(token, TOK_ROLE_AND)) {
         return ECS_AND;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_OR)) {
@@ -14168,7 +14168,7 @@ const char* parse_element(
 
         /* Is token a trait? (using shorthand notation) */
         if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            elem.role = ECS_TRAIT;
+            elem.role = ECS_PAIR;
             ptr += 3;
             goto parse_trait;
         }
@@ -14224,7 +14224,7 @@ parse_source:
 
         /* Is token a trait? (using shorthand notation) */
         if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            elem.role = ECS_TRAIT;
+            elem.role = ECS_PAIR;
             ptr += 3;
             goto parse_trait;
         }        
@@ -14841,11 +14841,11 @@ ecs_type_t ecs_type_find(
 }
 
 static
-bool has_trait(
-    ecs_entity_t trait,
+bool has_pair(
+    ecs_entity_t pair,
     ecs_entity_t e)
 {
-    return trait == ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
+    return pair == ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
 }
 
 static
@@ -14866,14 +14866,14 @@ int match_entity(
     ecs_entity_t e,
     ecs_entity_t match_with)
 {
-    if (ECS_HAS_ROLE(match_with, TRAIT)) {
+    if (ECS_HAS_ROLE(match_with, PAIR)) {
         ecs_entity_t hi = ecs_entity_t_hi(match_with & ECS_COMPONENT_MASK);
         ecs_entity_t lo = ecs_entity_t_lo(match_with);
 
         if (lo == EcsWildcard) {
             ecs_assert(hi != 0, ECS_INTERNAL_ERROR, NULL);
             
-            if (!ECS_HAS_ROLE(e, TRAIT) || !has_trait(hi, e)) {
+            if (!ECS_HAS_ROLE(e, PAIR) || !has_pair(hi, e)) {
                 return 0;
             }
 
@@ -14889,7 +14889,7 @@ int match_entity(
 
             return -1;
         } else if (!hi) {
-            if (ECS_HAS_ROLE(e, TRAIT) && has_trait(lo, e)) {
+            if (ECS_HAS_ROLE(e, PAIR) && has_pair(lo, e)) {
                 return 1;
             }
         }
@@ -15118,19 +15118,19 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     return 0;
 }
 
-int32_t ecs_type_trait_index_of(
+int32_t ecs_type_pair_index_of(
     ecs_type_t type, 
     int32_t start_index, 
-    ecs_entity_t trait)
+    ecs_entity_t pair)
 {
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     for (i = start_index; i < count; i ++) {
         ecs_entity_t e = array[i];
-        if (ECS_HAS_ROLE(e, TRAIT)) {
+        if (ECS_HAS_ROLE(e, PAIR)) {
             e &= ECS_COMPONENT_MASK;
-            if (trait == ecs_entity_t_hi(e)) {
+            if (pair == ecs_entity_t_hi(e)) {
                 return i;
             }
         }
@@ -15787,7 +15787,7 @@ int32_t get_trait_index(
     } else {
         /* First time for this iteration that the trait index is resolved, look
          * it up in the type. */
-        result = ecs_type_trait_index_of(table_type, 
+        result = ecs_type_pair_index_of(table_type, 
             trait_offsets[column_index].index, component);
         trait_offsets[column_index].index = result + 1;
         trait_offsets[column_index].count = count;
@@ -15820,15 +15820,15 @@ int32_t get_component_index(
 
             result += table->sw_column_offset;
         } else
-        if (ECS_HAS_ROLE(component, TRAIT)) { 
+        if (ECS_HAS_ROLE(component, PAIR)) { 
             /* If only the lo part of the trait identifier is set, interpret it
              * as the trait to match. This will match any instance of the trait
-             * on the entity and in a signature looks like "TRAIT | MyTrait". */
+             * on the entity and in a signature looks like "PAIR | MyTrait". */
             if (!ecs_entity_t_hi(component & ECS_COMPONENT_MASK)) {
                 ecs_assert(trait_offsets != NULL, 
                     ECS_INTERNAL_ERROR, NULL);
 
-                /* Strip the TRAIT role */
+                /* Strip the PAIR role */
                 component &= ECS_COMPONENT_MASK;
 
                 /* Get index of trait. Start looking from the last trait index
@@ -15854,7 +15854,7 @@ int32_t get_component_index(
             } else {
                 /* If trait does have the hi part of the identifier set, this is
                  * a fully qualified trait identifier. In a signature this looks
-                 * like "TRAIT | MyTrait > Comp". */
+                 * like "PAIR | MyTrait > Comp". */
                 ecs_entity_t lo = ecs_entity_t_lo(component);
                 if (lo == EcsWildcard) {
                     ecs_assert(trait_offsets != NULL, 
@@ -15862,7 +15862,7 @@ int32_t get_component_index(
 
                     /* Get id for the trait to lookup by taking the trait from
                      * the high 32 bits, move it to the low 32 bits, and reapply
-                     * the TRAIT mask. */
+                     * the PAIR mask. */
                     component = ecs_entity_t_hi(component & ECS_COMPONENT_MASK);
 
                     /* If the low part of the identifier is the wildcard entity,
@@ -16001,7 +16001,7 @@ ecs_entity_t is_column_trait(
     /* For now traits are only supported on owned columns */
     if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
         ecs_entity_t c = column->is.component;
-        if (ECS_HAS_ROLE(c, TRAIT)) {
+        if (ECS_HAS_ROLE(c, PAIR)) {
             if (!(ecs_entity_t_hi(c & ECS_COMPONENT_MASK))) {
                 return c;
             } else
@@ -16027,7 +16027,7 @@ int32_t type_trait_count(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
-        if (ECS_HAS_ROLE(e, TRAIT)) {
+        if (ECS_HAS_ROLE(e, PAIR)) {
             e &= ECS_COMPONENT_MASK;
             if (ecs_entity_t_hi(e) == trait) {
                 result ++;
@@ -18468,20 +18468,20 @@ const EcsComponent* ecs_component_from_id(
     const ecs_world_t *world,
     ecs_entity_t e)
 {
-    ecs_entity_t trait = 0;
+    ecs_entity_t pair = 0;
 
-    /* If this is a trait, get the trait component from the identifier */
-    if (ECS_HAS_ROLE(e, TRAIT)) {
-        trait = e;
+    /* If this is a pair, get the pair component from the identifier */
+    if (ECS_HAS_ROLE(e, PAIR)) {
+        pair = e;
         e = e & ECS_COMPONENT_MASK;
         e = ecs_entity_t_hi(e);
     }
 
     const EcsComponent *component = ecs_get(world, e, EcsComponent);
-    if (!component && trait) {
-        /* If this is a trait column and the trait is not a component, use
-         * the component type of the component the trait is applied to. */
-        e = ecs_entity_t_lo(trait);
+    if (!component && pair) {
+        /* If this is a pair column and the pair is not a component, use
+         * the component type of the component the pair is applied to. */
+        e = ecs_entity_t_lo(pair);
         component = ecs_get(world, e, EcsComponent);
     }
 
@@ -22769,7 +22769,7 @@ int parse_type_action(
     ecs_entity_t role,
     const char *entity_id,
     const char *source_id,
-    const char *trait_id,
+    const char *pair_id,
     const char *arg_name,
     void *data)
 {
@@ -22807,15 +22807,15 @@ int parse_type_action(
             return -1;
         }
 
-        if (trait_id) {
-            ecs_entity_t trait = ecs_lookup_fullpath(world, trait_id);
-            if (!trait) {
+        if (pair_id) {
+            ecs_entity_t pair = ecs_lookup_fullpath(world, pair_id);
+            if (!pair) {
                 ecs_parser_error(name, sig, column, 
-                    "unresolved trait identifier '%s'", trait_id);
+                    "unresolved pair identifier '%s'", pair_id);
                 return -1;
             }
 
-            entity = ecs_entity_t_comb(entity, trait);
+            entity = ecs_entity_t_comb(entity, pair);
         }        
 
         if (oper_kind == EcsOperAnd) {

@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-struct Trait {
+struct Pair {
     int value;
 };
 
@@ -67,29 +67,29 @@ void ImplicitComponents_get() {
 void ImplicitComponents_add_trait() {
     flecs::world world;
 
-    auto e = flecs::entity(world).add_trait<Trait, Position>();
+    auto e = flecs::entity(world).add_trait<Pair, Position>();
 
-    test_str(e.type().str().c_str(), "TRAIT|Trait>Position");
-    test_assert((e.has_trait<Trait, Position>()));
+    test_str(e.type().str().c_str(), "PAIR|Pair>Position");
+    test_assert((e.has_trait<Pair, Position>()));
 
     auto position = world.lookup("Position");
     test_assert(position.id() != 0);
 
-    auto trait = world.lookup("Trait");
+    auto trait = world.lookup("Pair");
     test_assert(trait.id() != 0);    
 }
 
 void ImplicitComponents_remove_trait() {
     flecs::world world;
 
-    auto e = flecs::entity(world).remove_trait<Position, Trait>();
+    auto e = flecs::entity(world).remove_trait<Position, Pair>();
 
-    test_assert((!e.has_trait<Position, Trait>()));
+    test_assert((!e.has_trait<Position, Pair>()));
 
     auto position = world.lookup("Position");
     test_assert(position.id() != 0);
 
-    auto trait = world.lookup("Trait");
+    auto trait = world.lookup("Pair");
     test_assert(trait.id() != 0);   
 }
 

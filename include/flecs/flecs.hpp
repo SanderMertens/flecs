@@ -111,7 +111,7 @@ static const ecs_entity_t Singleton = EcsSingleton;
 /** Builtin roles */
 static const ecs_entity_t Childof = ECS_CHILDOF;
 static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
-static const ecs_entity_t Trait = ECS_TRAIT;
+static const ecs_entity_t Pair = ECS_PAIR;
 static const ecs_entity_t Switch = ECS_SWITCH;
 static const ecs_entity_t Case = ECS_CASE;
 static const ecs_entity_t Owned = ECS_OWNED;

@@ -341,7 +341,7 @@ int32_t get_trait_index(
     } else {
         /* First time for this iteration that the trait index is resolved, look
          * it up in the type. */
-        result = ecs_type_trait_index_of(table_type, 
+        result = ecs_type_pair_index_of(table_type, 
             trait_offsets[column_index].index, component);
         trait_offsets[column_index].index = result + 1;
         trait_offsets[column_index].count = count;
@@ -374,15 +374,15 @@ int32_t get_component_index(
 
             result += table->sw_column_offset;
         } else
-        if (ECS_HAS_ROLE(component, TRAIT)) { 
+        if (ECS_HAS_ROLE(component, PAIR)) { 
             /* If only the lo part of the trait identifier is set, interpret it
              * as the trait to match. This will match any instance of the trait
-             * on the entity and in a signature looks like "TRAIT | MyTrait". */
+             * on the entity and in a signature looks like "PAIR | MyTrait". */
             if (!ecs_entity_t_hi(component & ECS_COMPONENT_MASK)) {
                 ecs_assert(trait_offsets != NULL, 
                     ECS_INTERNAL_ERROR, NULL);
 
-                /* Strip the TRAIT role */
+                /* Strip the PAIR role */
                 component &= ECS_COMPONENT_MASK;
 
                 /* Get index of trait. Start looking from the last trait index
@@ -408,7 +408,7 @@ int32_t get_component_index(
             } else {
                 /* If trait does have the hi part of the identifier set, this is
                  * a fully qualified trait identifier. In a signature this looks
-                 * like "TRAIT | MyTrait > Comp". */
+                 * like "PAIR | MyTrait > Comp". */
                 ecs_entity_t lo = ecs_entity_t_lo(component);
                 if (lo == EcsWildcard) {
                     ecs_assert(trait_offsets != NULL, 
@@ -416,7 +416,7 @@ int32_t get_component_index(
 
                     /* Get id for the trait to lookup by taking the trait from
                      * the high 32 bits, move it to the low 32 bits, and reapply
-                     * the TRAIT mask. */
+                     * the PAIR mask. */
                     component = ecs_entity_t_hi(component & ECS_COMPONENT_MASK);
 
                     /* If the low part of the identifier is the wildcard entity,
@@ -555,7 +555,7 @@ ecs_entity_t is_column_trait(
     /* For now traits are only supported on owned columns */
     if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
         ecs_entity_t c = column->is.component;
-        if (ECS_HAS_ROLE(c, TRAIT)) {
+        if (ECS_HAS_ROLE(c, PAIR)) {
             if (!(ecs_entity_t_hi(c & ECS_COMPONENT_MASK))) {
                 return c;
             } else
@@ -581,7 +581,7 @@ int32_t type_trait_count(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
-        if (ECS_HAS_ROLE(e, TRAIT)) {
+        if (ECS_HAS_ROLE(e, PAIR)) {
             e &= ECS_COMPONENT_MASK;
             if (ecs_entity_t_hi(e) == trait) {
                 result ++;

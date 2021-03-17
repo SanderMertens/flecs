@@ -1505,7 +1505,7 @@ void *get_mutable(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert((component & ECS_COMPONENT_MASK) == component || ECS_HAS_ROLE(component, TRAIT), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((component & ECS_COMPONENT_MASK) == component || ECS_HAS_ROLE(component, PAIR), ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
     if (ecs_get_info(world, entity, info) && info->table) {
@@ -2574,9 +2574,9 @@ bool ecs_is_valid(
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
 
-    /* When checking roles and/or traits, the generation count may have been
+    /* When checking roles and/or pairs, the generation count may have been
      * stripped away. Just test if the entity is 0 or not. */
-    if (ECS_HAS_ROLE(entity, TRAIT)) {
+    if (ECS_HAS_ROLE(entity, PAIR)) {
         ecs_entity_t lo = ecs_entity_t_lo(entity);
         ecs_entity_t hi = ecs_entity_t_hi(entity & ECS_COMPONENT_MASK);
         return lo != 0 && hi != 0;
@@ -2644,16 +2644,16 @@ ecs_entity_t ecs_get_typeid(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    if (ECS_HAS_ROLE(entity, TRAIT)) {
+    if (ECS_HAS_ROLE(entity, PAIR)) {
         /* Make sure we're not working with a stage */
         world = ecs_get_world(world);
 
-        ecs_entity_t trait = ecs_entity_t_hi(entity & ECS_COMPONENT_MASK);
-        if (ecs_has(world, trait, EcsComponent)) {
-            /* This is not a trait tag, trait is the value */
-            return trait;
+        ecs_entity_t pair = ecs_entity_t_hi(entity & ECS_COMPONENT_MASK);
+        if (ecs_has(world, pair, EcsComponent)) {
+            /* This is not a pair object, relation is the value */
+            return pair;
         } else {
-            /* This is a trait tag, component is the value */
+            /* This is a pair object, object is the value */
             return ecs_entity_t_lo(entity);
         }
     } else if (entity & ECS_ROLE_MASK) {
@@ -2779,8 +2779,8 @@ const char* ecs_role_str(
     if (ECS_HAS_ROLE(entity, INSTANCEOF)) {
         return "INSTANCEOF";
     } else
-    if (ECS_HAS_ROLE(entity, TRAIT)) {
-        return "TRAIT";
+    if (ECS_HAS_ROLE(entity, PAIR)) {
+        return "PAIR";
     } else
     if (ECS_HAS_ROLE(entity, DISABLED)) {
         return "DISABLED";
@@ -2832,7 +2832,7 @@ size_t ecs_entity_str(
     }
 
     ecs_entity_t e = entity & ECS_COMPONENT_MASK;
-    if (ECS_HAS_ROLE(entity, TRAIT)) {
+    if (ECS_HAS_ROLE(entity, PAIR)) {
         ecs_entity_t lo = ecs_entity_t_lo(e);
         ecs_entity_t hi = ecs_entity_t_hi(e);
 

@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-struct Trait {
+struct Pair {
     float value;
 };
 
@@ -501,10 +501,10 @@ void Query_subquery_w_expr() {
 void Query_query_single_trait() {
     flecs::world world;
 
-    flecs::entity(world).add_trait<Trait, Position>();
-    auto e2 = flecs::entity(world).add_trait<Trait, Velocity>();
+    flecs::entity(world).add_trait<Pair, Position>();
+    auto e2 = flecs::entity(world).add_trait<Pair, Velocity>();
     
-    flecs::query<> q(world, "TRAIT | Trait > Velocity");
+    flecs::query<> q(world, "PAIR | Pair > Velocity");
 
     int32_t table_count = 0;
     int32_t entity_count = 0;

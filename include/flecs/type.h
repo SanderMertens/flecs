@@ -96,10 +96,10 @@ int32_t ecs_type_index_of(
     ecs_entity_t component);
 
 FLECS_API
-int32_t ecs_type_trait_index_of(
+int32_t ecs_type_pair_index_of(
     ecs_type_t type, 
     int32_t start_index, 
-    ecs_entity_t trait);
+    ecs_entity_t pair);
 
 #ifdef __cplusplus
 }

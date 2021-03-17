@@ -1657,15 +1657,15 @@ void SystemMisc_rw_out_explicit_from_entity() {
     ecs_fini(world);
 }
 
-void SystemMisc_activate_system_for_table_w_n_traits() {
+void SystemMisc_activate_system_for_table_w_n_pairs() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Trait);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, TRAIT | Trait);
+    ECS_TAG(world, Pair);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PAIR | Pair);
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, TRAIT | Trait > TagA, TRAIT | Trait > TagB);
+    ECS_TYPE(world, Type, PAIR | Pair > TagA, PAIR | Pair > TagB);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);    
@@ -1681,9 +1681,9 @@ void SystemMisc_activate_system_for_table_w_n_traits() {
     test_int(ctx.e[0], e);
     test_int(ctx.e[1], e);
 
-    test_int(ctx.c[0][0], ecs_trait(TagA, Trait));
+    test_int(ctx.c[0][0], ecs_pair(Pair, TagA));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[1][0], ecs_trait(TagB, Trait));
+    test_int(ctx.c[1][0], ecs_pair(Pair, TagB));
     test_int(ctx.s[1][0], 0);    
 
     ecs_fini(world);

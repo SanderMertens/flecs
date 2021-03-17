@@ -200,11 +200,11 @@ ecs_type_t ecs_type_find(
 }
 
 static
-bool has_trait(
-    ecs_entity_t trait,
+bool has_pair(
+    ecs_entity_t pair,
     ecs_entity_t e)
 {
-    return trait == ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
+    return pair == ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
 }
 
 static
@@ -225,14 +225,14 @@ int match_entity(
     ecs_entity_t e,
     ecs_entity_t match_with)
 {
-    if (ECS_HAS_ROLE(match_with, TRAIT)) {
+    if (ECS_HAS_ROLE(match_with, PAIR)) {
         ecs_entity_t hi = ecs_entity_t_hi(match_with & ECS_COMPONENT_MASK);
         ecs_entity_t lo = ecs_entity_t_lo(match_with);
 
         if (lo == EcsWildcard) {
             ecs_assert(hi != 0, ECS_INTERNAL_ERROR, NULL);
             
-            if (!ECS_HAS_ROLE(e, TRAIT) || !has_trait(hi, e)) {
+            if (!ECS_HAS_ROLE(e, PAIR) || !has_pair(hi, e)) {
                 return 0;
             }
 
@@ -248,7 +248,7 @@ int match_entity(
 
             return -1;
         } else if (!hi) {
-            if (ECS_HAS_ROLE(e, TRAIT) && has_trait(lo, e)) {
+            if (ECS_HAS_ROLE(e, PAIR) && has_pair(lo, e)) {
                 return 1;
             }
         }
@@ -477,19 +477,19 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     return 0;
 }
 
-int32_t ecs_type_trait_index_of(
+int32_t ecs_type_pair_index_of(
     ecs_type_t type, 
     int32_t start_index, 
-    ecs_entity_t trait)
+    ecs_entity_t pair)
 {
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     for (i = start_index; i < count; i ++) {
         ecs_entity_t e = array[i];
-        if (ECS_HAS_ROLE(e, TRAIT)) {
+        if (ECS_HAS_ROLE(e, PAIR)) {
             e &= ECS_COMPONENT_MASK;
-            if (trait == ecs_entity_t_hi(e)) {
+            if (pair == ecs_entity_t_hi(e)) {
                 return i;
             }
         }

@@ -28,11 +28,11 @@ int main(int argc, char *argv[]) {
     /* Register trait component so that the system can resolve it by name */
     ecs.component<ExpiryTimer>();
 
-    /* Create a system that matches ExpiryTimer as a trait. Without the TRAIT
+    /* Create a system that matches ExpiryTimer as a trait. Without the PAIR
      * role the system would look for entities that added ExpiryTimer as usual,
      * but with the role the system will be matched against every component to
      * which the trait has been applied. */
-    ecs.system<>(nullptr, "TRAIT | ExpiryTimer")
+    ecs.system<>(nullptr, "PAIR | ExpiryTimer")
         .iter([](flecs::iter it) {
             /* First, get the trait component */
             flecs::column<ExpiryTimer> et(it, 1);
