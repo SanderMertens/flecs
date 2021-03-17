@@ -2989,7 +2989,7 @@ ecs_world_t* ecs_get_stage(
     int32_t stage_id);
 
 /** Get actual world from world
- * @param world A thread-specific pointer to the world.
+ * @param world A pointer to a stage or the world.
  * @return The world.
  */
 FLECS_API
