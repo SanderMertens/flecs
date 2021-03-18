@@ -646,23 +646,23 @@ void Entity_force_owned_type_w_trait() {
     flecs::world world;
 
     auto type = world.type()
-        .add_trait<Position, Velocity>()
+        .add<Position, Velocity>()
         .add<Velocity>();
 
     auto prefab = world.prefab()
-        .add_trait<Position, Velocity>()
+        .add<Position, Velocity>()
         .add<Rotation>()
         .add_owned(type);
 
     auto e = world.entity()
         .add_instanceof(prefab);
     
-    test_assert((e.has_trait<Position, Velocity>()));
+    test_assert((e.has<Position, Velocity>()));
     test_assert(e.has<Rotation>());
     test_assert(!e.owns<Rotation>());
 
-    const Position *pp = prefab.get_trait<Position, Velocity>();
-    const Position *p = e.get_trait<Position, Velocity>();
+    const Position *pp = prefab.get<Position, Velocity>();
+    const Position *p = e.get<Position, Velocity>();
     test_assert(pp != p);
 }
 

@@ -1,4 +1,6 @@
 
+#include "deprecated/type.hpp"
+
 namespace flecs 
 {
 
@@ -6,126 +8,70 @@ namespace flecs
 //// A collection of component ids used to describe the contents of a table
 ////////////////////////////////////////////////////////////////////////////////
 
-class type final : entity {
+class type final : public type_deprecated<type> {
 public:
     explicit type(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr)
-        : entity(world, ecs_new_type(world.c_ptr(), 0, name, expr))
+        : m_entity(world, ecs_new_type(world.c_ptr(), 0, name, expr))
     { 
         sync_from_flecs();
     }
 
     explicit type(const flecs::world& world, type_t t)
-        : entity( world.c_ptr(), 0 )
+        : m_entity( world.c_ptr(), 0 )
         , m_type( t )
         , m_normalized( t ) { }
 
     explicit type(world_t *world, type_t t)
-        : entity( world, 0 )
+        : m_entity( world, 0 )
         , m_type( t )
         , m_normalized( t ) { }
 
     type(type_t t)
-        : entity( 0 )
+        : m_entity( 0 )
         , m_type( t )
         , m_normalized( t ) { }
 
     type& add(const type& t) {
-        m_type = ecs_type_add(m_world, m_type, t.id());
-        m_normalized = ecs_type_merge(m_world, m_normalized, t.c_ptr(), nullptr);
+        m_type = ecs_type_add(world().c_ptr(), m_type, t.id());
+        m_normalized = ecs_type_merge(world().c_ptr(), m_normalized, t.c_ptr(), nullptr);
         sync_from_me();
         return *this;
     }
 
     type& add(const entity& e) {
-        m_type = ecs_type_add(m_world, m_type, e.id());
-        m_normalized = ecs_type_add(m_world, m_normalized, e.id());
+        m_type = ecs_type_add(world().c_ptr(), m_type, e.id());
+        m_normalized = ecs_type_add(world().c_ptr(), m_normalized, e.id());
         sync_from_me();
-        return *this;
-    }
-
-    type& add_instanceof(const entity& e) {
-        m_type = ecs_type_add(m_world, m_type, e.id() | ECS_INSTANCEOF);
-        m_normalized = ecs_type_add(m_world, m_normalized, e.id() | ECS_INSTANCEOF);
-        sync_from_me();
-        return *this;
-    }
-
-    type& add_childof(const entity& e) {
-        m_type = ecs_type_add(m_world, m_type, e.id() | ECS_CHILDOF);
-        m_normalized = ecs_type_add(m_world, m_normalized, e.id() | ECS_CHILDOF);
-        sync_from_me();
-        return *this;
-    }
-
-    template <typename T, typename C>
-    type& add_trait() {
-        m_type = ecs_type_add(m_world, m_type, 
-            ecs_trait(_::cpp_type<C>::id(m_world),
-                      _::cpp_type<T>::id(m_world)));
-
-        m_normalized = ecs_type_add(m_world, m_normalized, 
-            ecs_trait(_::cpp_type<C>::id(m_world),
-                      _::cpp_type<T>::id(m_world)));
-        
-        sync_from_me();
-        return *this;
-    }
-
-    template <typename T>
-    type& add_trait(flecs::entity component) {
-        m_type = ecs_type_add(m_world, m_type, 
-            ecs_trait(component.id(),
-                      _::cpp_type<T>::id(m_world)));
-
-        m_normalized = ecs_type_add(m_world, m_normalized, 
-            ecs_trait(component.id(),
-                      _::cpp_type<T>::id(m_world)));
-        
-        sync_from_me();
-        return *this;
-    }
-
-    type& add_trait(flecs::entity trait, flecs::entity component) {
-        m_type = ecs_type_add(m_world, m_type, 
-            ecs_trait(component.id(), trait.id()));
-
-        m_normalized = ecs_type_add(m_world, m_normalized, 
-            ecs_trait(component.id(), trait.id()));
-        
-        sync_from_me();
-        return *this;
-    }      
-
-    template <typename C>
-    type& add_trait_tag(flecs::entity trait) {
-        m_type = ecs_type_add(m_world, m_type, 
-            ecs_trait(_::cpp_type<C>::id(), trait.id()));
-
-        m_normalized = ecs_type_add(m_world, m_normalized, 
-            ecs_trait(_::cpp_type<C>::id(), trait.id()));
-        
-        sync_from_me();
-        return *this;
-    }            
-
-    template <typename ... Components>
-    type& add() {
-        flecs::stringstream str;
-        if (!_::pack_args_to_string<Components...>(m_world, str)) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        }
-
-        flecs::string expr = str.str();
-        ecs_type_t t = ecs_type_from_str(m_world, expr.c_str());
-        m_type = ecs_type_merge(m_world, m_type, t, nullptr);
-        m_normalized = ecs_type_merge(m_world, m_normalized, t, nullptr);
-        sync_from_me();
-
         return *this;
     }    
 
+    template <typename T>
+    type& add() {
+        return this->add(_::cpp_type<T>::id(world().c_ptr()));
+    }
+
+    type& add(const flecs::entity& relation, const flecs::entity& object) {
+        return this->add(ecs_pair(relation.id(), object.id()));
+    }
+
+    template <typename Relation, typename Object>
+    type& add() {
+        return this->add<Relation>(_::cpp_type<Object>::id(world().c_ptr()));
+    }
+
+    template <typename Relation>
+    type& add(const flecs::entity& object) {
+        return this->add(_::cpp_type<Relation>::id(world().c_ptr()),
+                object.id());
+    }     
+
+    template <typename Object>
+    type& add_object(const flecs::entity& relation) {
+        return this->add(relation.id(), _::cpp_type<Object>::id(world().c_ptr()));
+    }
+
     flecs::string str() const {
-        char *str = ecs_type_str(m_world, m_type);
+        char *str = ecs_type_str(world().c_ptr(), m_type);
         return flecs::string(str);
     }
 
@@ -133,23 +79,24 @@ public:
         return m_type;
     }
 
-    // Expose entity id without making the entity class public.
-    entity_t id() const {
-        return m_id;
+    flecs::entity_t id() const { 
+        return m_entity.id(); 
     }
+
+    flecs::world world() const { 
+        return m_entity.world();
+    } 
 
     type_t c_normalized() const {
         return m_normalized;
     }
 
     void enable() const {
-        ecs_assert(m_id != 0, ECS_INVALID_OPERATION, NULL);
-        ecs_enable(m_world, m_id, true);
+        ecs_enable(world().c_ptr(), id(), true);
     }
 
     void disable() const {
-        ecs_assert(m_id != 0, ECS_INVALID_OPERATION, NULL);
-        ecs_enable(m_world, m_id, false);
+        ecs_enable(world().c_ptr(), id(), false);
     }
 
     flecs::vector<entity_t> vector() {
@@ -158,8 +105,7 @@ public:
 
 private:
     void sync_from_me() {
-        ecs_assert(m_id != 0, ECS_INVALID_OPERATION, NULL);
-        EcsType *tc = ecs_get_mut(m_world, m_id, EcsType, NULL);
+        EcsType *tc = ecs_get_mut(world().c_ptr(), id(), EcsType, NULL);
         if (tc) {
             tc->type = m_type;
             tc->normalized = m_normalized;
@@ -167,14 +113,14 @@ private:
     }
 
     void sync_from_flecs() {
-        ecs_assert(m_id != 0, ECS_INVALID_OPERATION, NULL);
-        EcsType *tc = ecs_get_mut(m_world, m_id, EcsType, NULL);
+        EcsType *tc = ecs_get_mut(world().c_ptr(), id(), EcsType, NULL);
         if (tc) {
             m_type = tc->type;
             m_normalized = tc->normalized;
         }
-    }    
+    }   
 
+    flecs::entity m_entity;
     type_t m_type;
     type_t m_normalized;
 };

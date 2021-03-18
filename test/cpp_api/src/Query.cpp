@@ -501,8 +501,8 @@ void Query_subquery_w_expr() {
 void Query_query_single_trait() {
     flecs::world world;
 
-    flecs::entity(world).add_trait<Pair, Position>();
-    auto e2 = flecs::entity(world).add_trait<Pair, Velocity>();
+    flecs::entity(world).add<Pair, Position>();
+    auto e2 = flecs::entity(world).add<Pair, Velocity>();
     
     flecs::query<> q(world, "PAIR | Pair > Velocity");
 

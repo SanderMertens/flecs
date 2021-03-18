@@ -67,30 +67,30 @@ void ImplicitComponents_get() {
 void ImplicitComponents_add_trait() {
     flecs::world world;
 
-    auto e = world.entity().add_trait<Pair, Position>();
+    auto e = world.entity().add<Pair, Position>();
 
     test_str(e.type().str().c_str(), "(Pair,Position)");
-    test_assert((e.has_trait<Pair, Position>()));
+    test_assert((e.has<Pair, Position>()));
 
     auto position = world.lookup("Position");
     test_assert(position.id() != 0);
 
-    auto trait = world.lookup("Pair");
-    test_assert(trait.id() != 0);    
+    auto pair = world.lookup("Pair");
+    test_assert(pair.id() != 0);    
 }
 
 void ImplicitComponents_remove_trait() {
     flecs::world world;
 
-    auto e = world.entity().remove_trait<Position, Pair>();
+    auto e = world.entity().remove<Position, Pair>();
 
-    test_assert((!e.has_trait<Position, Pair>()));
+    test_assert((!e.has<Position, Pair>()));
 
     auto position = world.lookup("Position");
     test_assert(position.id() != 0);
 
-    auto trait = world.lookup("Pair");
-    test_assert(trait.id() != 0);   
+    auto pair = world.lookup("Pair");
+    test_assert(pair.id() != 0);   
 }
 
 void ImplicitComponents_module() {

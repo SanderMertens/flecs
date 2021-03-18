@@ -8,11 +8,11 @@ void Traits_add_component_trait() {
     flecs::world world;
 
     auto entity = world.entity()
-        .add_trait<Pair, Position>();
+        .add<Pair, Position>();
 
     test_assert(entity.id() != 0);
-    test_assert((entity.has_trait<Pair, Position>()));
-    test_assert((!entity.has_trait<Position, Pair>()));
+    test_assert((entity.has<Pair, Position>()));
+    test_assert((!entity.has<Position, Pair>()));
 
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 }
@@ -21,28 +21,28 @@ void Traits_add_tag_trait() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
-    auto Pair = flecs::entity(world, "Pair");
+    auto Pair = world.entity("Pair");
 
-    auto entity = flecs::entity(world)
-        .add_trait_tag<Position>(Pair);
+    auto entity = world.entity()
+        .add_object<Position>(Pair);
 
     test_assert(entity.id() != 0);
-    test_assert(entity.has_trait_tag<Position>(Pair));
-    test_assert(!entity.has_trait<Position>(Pair));
+    test_assert(entity.has_object<Position>(Pair));
+    test_assert(!entity.has<Position>(Pair));
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 }
 
 void Traits_add_tag_trait_to_tag() {
     flecs::world world;
 
-    auto Tag = flecs::entity(world, "Tag");
-    auto Pair = flecs::entity(world, "Pair");
+    auto Tag = world.entity("Tag");
+    auto Pair = world.entity("Pair");
 
-    auto entity = flecs::entity(world)
-        .add_trait(Pair, Tag);
+    auto entity = world.entity()
+        .add(Pair, Tag);
 
     test_assert(entity.id() != 0);
-    test_assert(entity.has_trait(Pair, Tag));
+    test_assert(entity.has(Pair, Tag));
     test_str(entity.type().str().c_str(), "(Pair,Tag)");
 }
 
@@ -52,87 +52,83 @@ void Traits_remove_component_trait() {
     flecs::component<Position>(world, "Position");
     flecs::component<Pair>(world, "Pair");
 
-    auto entity = flecs::entity(world)
-        .add_trait<Pair, Position>();
+    auto entity = world.entity()
+        .add<Pair, Position>();
 
     test_assert(entity.id() != 0);
-    test_assert((entity.has_trait<Pair, Position>()));
-    test_assert((!entity.has_trait<Position, Pair>()));
+    test_assert((entity.has<Pair, Position>()));
+    test_assert((!entity.has<Position, Pair>()));
 
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 
     entity.remove_trait<Position, Pair>();
-    test_assert(!(entity.has_trait<Position, Pair>()));
+    test_assert(!(entity.has<Position, Pair>()));
 }
 
 void Traits_remove_tag_trait() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
-    auto Pair = flecs::entity(world, "Pair");
+    auto Pair = world.entity("Pair");
 
-    auto entity = flecs::entity(world)
-        .add_trait_tag<Position>(Pair);
+    auto entity = world.entity()
+        .add_object<Position>(Pair);
 
     test_assert(entity.id() != 0);
-    test_assert(entity.has_trait_tag<Position>(Pair));
-    test_assert(!entity.has_trait<Position>(Pair));
+    test_assert(entity.has_object<Position>(Pair));
+    test_assert(!entity.has<Position>(Pair));
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 
     entity.remove_trait<Position>(Pair);
-    test_assert(!entity.has_trait<Position>(Pair));
+    test_assert(!entity.has<Position>(Pair));
 }
 
 void Traits_remove_tag_trait_to_tag() {
     flecs::world world;
 
-    auto Tag = flecs::entity(world, "Tag");
-    auto Pair = flecs::entity(world, "Pair");
+    auto Tag = world.entity("Tag");
+    auto Pair = world.entity("Pair");
 
-    auto entity = flecs::entity(world)
-        .add_trait(Pair, Tag);
+    auto entity = world.entity()
+        .add(Pair, Tag);
 
     test_assert(entity.id() != 0);
-    test_assert(entity.has_trait(Pair, Tag));
+    test_assert(entity.has(Pair, Tag));
     test_str(entity.type().str().c_str(), "(Pair,Tag)");
 
     entity.remove_trait(Tag, Pair);
-    test_assert(!entity.has_trait(Tag, Pair));
+    test_assert(!entity.has(Tag, Pair));
 }
 
 void Traits_set_component_trait() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Pair>(world, "Pair");
-
-    auto entity = flecs::entity(world)
-        .set_trait<Pair, Position>({10});
+    auto entity = world.entity()
+        .set<Pair, Position>({10});
 
     test_assert(entity.id() != 0);
-    test_assert((entity.has_trait<Pair, Position>()));
-    test_assert((!entity.has_trait<Position, Pair>()));
+    test_assert((entity.has<Pair, Position>()));
+    test_assert((!entity.has<Position, Pair>()));
 
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 
-    const Pair *t = entity.get_trait<Pair, Position>();
+    const Pair *t = entity.get<Pair, Position>();
     test_int(t->value, 10);
 }
 
 void Traits_set_tag_trait() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    auto Pair = flecs::entity(world, "Pair");
+    auto Pair = world.entity("Pair");
 
-    auto entity = flecs::entity(world)
-        .set_trait_tag<Position>(Pair, {10, 20});
+    auto entity = world.entity()
+        .set_object<Position>(Pair, {10, 20});
 
     test_assert(entity.id() != 0);
-    test_assert(entity.has_trait_tag<Position>(Pair));
+    test_assert(entity.has_object<Position>(Pair));
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 
-    const Position *p = entity.get_trait_tag<Position>(Pair);
+    const Position *p = entity.get_object<Position>(Pair);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -141,11 +137,8 @@ void Traits_set_tag_trait() {
 void Traits_system_1_trait_instance() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Pair>(world, "Pair");
-
-    flecs::entity(world)
-        .set_trait<Pair, Position>({10});
+    world.entity()
+        .set<Pair, Position>({10});
 
     int invoke_count = 0;
     int entity_count = 0;
@@ -171,13 +164,9 @@ void Traits_system_1_trait_instance() {
 void Traits_system_2_trait_instances() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-    flecs::component<Pair>(world, "Pair");
-
-    flecs::entity(world)
-        .set_trait<Pair, Position>({10})
-        .set_trait<Pair, Velocity>({20});
+    world.entity()
+        .set<Pair, Position>({10})
+        .set<Pair, Velocity>({20});
 
     int invoke_count = 0;
     int entity_count = 0;
@@ -203,29 +192,26 @@ void Traits_system_2_trait_instances() {
 void Traits_override_trait() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Pair>(world, "Pair");
+    auto base = world.entity()
+        .set<Pair, Position>({10});
 
-    auto base = flecs::entity(world)
-        .set_trait<Pair, Position>({10});
-
-    auto instance = flecs::entity(world)
+    auto instance = world.entity()
         .add_instanceof(base);
 
-    test_assert((instance.has_trait<Pair, Position>()));
-    const Pair *t = instance.get_trait<Pair, Position>();
+    test_assert((instance.has<Pair, Position>()));
+    const Pair *t = instance.get<Pair, Position>();
     test_int(t->value, 10);
 
-    const Pair *t_2 = base.get_trait<Pair, Position>();
+    const Pair *t_2 = base.get<Pair, Position>();
     test_assert(t == t_2);
 
-    instance.add_trait<Pair, Position>();
-    t = instance.get_trait<Pair, Position>();
+    instance.add<Pair, Position>();
+    t = instance.get<Pair, Position>();
     test_int(t->value, 10);
     test_assert(t != t_2);
 
     instance.remove_trait<Pair, Position>();
-    t = instance.get_trait<Pair, Position>();
+    t = instance.get<Pair, Position>();
     test_int(t->value, 10);
     test_assert(t == t_2);    
 }
@@ -233,31 +219,30 @@ void Traits_override_trait() {
 void Traits_override_tag_trait() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    auto Pair = flecs::entity(world);
+    auto Pair = world.entity();
 
-    auto base = flecs::entity(world)
-        .set_trait_tag<Position>(Pair, {10, 20});
+    auto base = world.entity()
+        .set_object<Position>(Pair, {10, 20});
 
-    auto instance = flecs::entity(world)
+    auto instance = world.entity()
         .add_instanceof(base);
 
-    test_assert((instance.has_trait_tag<Position>(Pair)));
-    const Position *t = instance.get_trait_tag<Position>(Pair);
+    test_assert((instance.has_object<Position>(Pair)));
+    const Position *t = instance.get_object<Position>(Pair);
     test_int(t->x, 10);
     test_int(t->y, 20);
 
-    const Position *t_2 = base.get_trait_tag<Position>(Pair);
+    const Position *t_2 = base.get_object<Position>(Pair);
     test_assert(t == t_2);
 
-    instance.add_trait_tag<Position>(Pair);
-    t = instance.get_trait_tag<Position>(Pair);
+    instance.add_object<Position>(Pair);
+    t = instance.get_object<Position>(Pair);
     test_int(t->x, 10);
     test_int(t->y, 20);
     test_assert(t != t_2);
 
     instance.remove_trait_tag<Position>(Pair);
-    t = instance.get_trait_tag<Position>(Pair);
+    t = instance.get_object<Position>(Pair);
     test_int(t->x, 10);
     test_int(t->y, 20);
     test_assert(t == t_2); 
@@ -266,10 +251,7 @@ void Traits_override_tag_trait() {
 void Traits_get_mut_trait() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Pair>(world, "Pair");
-
-    auto e = flecs::entity(world);
+    auto e = world.entity();
 
     bool added = false;
     Pair *t = e.get_trait_mut<Pair, Position>(&added);
@@ -277,7 +259,7 @@ void Traits_get_mut_trait() {
     test_bool(added, true);
     t->value = 10;
 
-    const Pair *t_2 = e.get_trait<Pair, Position>();
+    const Pair *t_2 = e.get<Pair, Position>();
     test_assert(t == t_2);
     test_int(t->value, 10);
 }
@@ -285,11 +267,8 @@ void Traits_get_mut_trait() {
 void Traits_get_mut_trait_existing() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Pair>(world, "Pair");
-
-    auto e = flecs::entity(world)
-        .set_trait<Pair, Position>({20});
+    auto e = world.entity()
+        .set<Pair, Position>({20});
 
     bool added = false;
     Pair *t = e.get_trait_mut<Pair, Position>(&added);
@@ -298,7 +277,7 @@ void Traits_get_mut_trait_existing() {
     test_int(t->value, 20);
     t->value = 10;
 
-    const Pair *t_2 = e.get_trait<Pair, Position>();
+    const Pair *t_2 = e.get<Pair, Position>();
     test_assert(t == t_2);
     test_int(t->value, 10);
 }
@@ -306,10 +285,9 @@ void Traits_get_mut_trait_existing() {
 void Traits_get_mut_trait_tag() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    auto Pair = flecs::entity(world);
+    auto Pair = world.entity();
 
-    auto e = flecs::entity(world);
+    auto e = world.entity();
 
     bool added = false;
     Position *p = e.get_trait_tag_mut<Position>(Pair, &added);
@@ -318,7 +296,7 @@ void Traits_get_mut_trait_tag() {
     p->x = 10;
     p->y = 20;
 
-    const Position *p_2 = e.get_trait_tag<Position>(Pair);
+    const Position *p_2 = e.get_object<Position>(Pair);
     test_assert(p == p_2);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -327,11 +305,10 @@ void Traits_get_mut_trait_tag() {
 void Traits_get_mut_trait_tag_existing() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    auto Pair = flecs::entity(world);
+    auto Pair = world.entity();
 
-    auto e = flecs::entity(world)
-        .set_trait_tag<Position>(Pair, {10, 20});
+    auto e = world.entity()
+        .set_object<Position>(Pair, {10, 20});
 
     bool added = false;
     Position *p = e.get_trait_tag_mut<Position>(Pair, &added);
@@ -340,7 +317,7 @@ void Traits_get_mut_trait_tag_existing() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Position *p_2 = e.get_trait_tag<Position>(Pair);
+    const Position *p_2 = e.get_object<Position>(Pair);
     test_assert(p == p_2);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -349,78 +326,78 @@ void Traits_get_mut_trait_tag_existing() {
 void Traits_type_w_trait() {
     flecs::world world;
 
-    auto Type = flecs::type(world)
-        .add_trait<Pair, Position>();
+    auto Type = world.type()
+        .add<Pair, Position>();
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add(Type);
 
-    test_assert((e.has_trait<Pair, Position>()));
+    test_assert((e.has<Pair, Position>()));
 }
 
 void Traits_type_w_trait_tag() {
     flecs::world world;
 
-    auto Tag = flecs::entity(world);
+    auto Tag = world.entity();
 
-    auto Type = flecs::type(world)
-        .add_trait<Pair>(Tag);
+    auto Type = world.type()
+        .add<Pair>(Tag);
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add(Type);
 
-    test_assert((e.has_trait<Pair>(Tag)));
+    test_assert((e.has<Pair>(Tag)));
 }
 
 void Traits_type_w_trait_tags() {
     flecs::world world;
 
-    auto Tag = flecs::entity(world);
-    auto Pair = flecs::entity(world);
+    auto Tag = world.entity();
+    auto Pair = world.entity();
 
-    auto Type = flecs::type(world)
-        .add_trait(Pair, Tag);
+    auto Type = world.type()
+        .add(Pair, Tag);
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add(Type);
 
-    test_assert((e.has_trait(Pair, Tag)));
+    test_assert((e.has(Pair, Tag)));
 }
 
 void Traits_type_w_tag_trait() {
     flecs::world world;
 
-    auto Tag = flecs::entity(world);
+    auto Tag = world.entity();
 
-    auto Type = flecs::type(world)
-        .add_trait<Pair>(Tag);
+    auto Type = world.type()
+        .add<Pair>(Tag);
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add(Type);
 
-    test_assert((e.has_trait<Pair>(Tag)));
+    test_assert((e.has<Pair>(Tag)));
 }
 
 void Traits_override_trait_w_type() {
     flecs::world world;
 
-    auto Prefab = flecs::prefab(world, "Prefab")
-        .set_trait<Pair, Position>({10});
+    auto Prefab = world.prefab("Prefab")
+        .set<Pair, Position>({10});
 
-    auto Type = flecs::type(world)
+    auto Type = world.type()
         .add_instanceof(Prefab)
-        .add_trait<Pair, Position>();
+        .add<Pair, Position>();
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add(Type);
 
-    test_assert((e.has_trait<Pair, Position>()));
+    test_assert((e.has<Pair, Position>()));
 
-    const Pair *t_1 = Prefab.get_trait<Pair, Position>();
+    const Pair *t_1 = Prefab.get<Pair, Position>();
     test_assert(t_1 != nullptr);
     test_int(t_1->value, 10);
 
-    const Pair *t_2 = e.get_trait<Pair, Position>();
+    const Pair *t_2 = e.get<Pair, Position>();
     test_assert(t_2 != nullptr);
 
     test_assert(t_1 != t_2);
@@ -430,25 +407,25 @@ void Traits_override_trait_w_type() {
 void Traits_override_trait_w_type_tag() {
     flecs::world world;
 
-    auto Tag = flecs::entity(world);
+    auto Tag = world.entity();
 
-    auto Prefab = flecs::prefab(world, "Prefab")
-        .set_trait<Pair>({10}, Tag);
+    auto Prefab = world.prefab("Prefab")
+        .set<Pair>(Tag, {10});
 
-    auto Type = flecs::type(world)
+    auto Type = world.type()
         .add_instanceof(Prefab)
-        .add_trait<Pair>(Tag);
+        .add<Pair>(Tag);
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add(Type);
 
-    test_assert((e.has_trait<Pair>(Tag)));
+    test_assert((e.has<Pair>(Tag)));
 
-    const Pair *t_1 = Prefab.get_trait<Pair>(Tag);
+    const Pair *t_1 = Prefab.get<Pair>(Tag);
     test_assert(t_1 != nullptr);
     test_int(t_1->value, 10);
 
-    const Pair *t_2 = e.get_trait<Pair>(Tag);
+    const Pair *t_2 = e.get<Pair>(Tag);
     test_assert(t_2 != nullptr);
 
     test_assert(t_1 != t_2);
@@ -458,26 +435,26 @@ void Traits_override_trait_w_type_tag() {
 void Traits_override_tag_trait_w_type() {
     flecs::world world;
 
-    auto Pair = flecs::entity(world);
+    auto Pair = world.entity();
 
-    auto Prefab = flecs::prefab(world, "Prefab")
-        .set_trait_tag<Position>(Pair, {10, 20});
+    auto Prefab = world.prefab("Prefab")
+        .set_object<Position>(Pair, {10, 20});
 
-    auto Type = flecs::type(world)
+    auto Type = world.type()
         .add_instanceof(Prefab)
-        .add_trait_tag<Position>(Pair);
+        .add_object<Position>(Pair);
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add(Type);
 
-    test_assert((e.has_trait_tag<Position>(Pair)));
+    test_assert((e.has_object<Position>(Pair)));
 
-    const Position *p_1 = Prefab.get_trait_tag<Position>(Pair);
+    const Position *p_1 = Prefab.get_object<Position>(Pair);
     test_assert(p_1 != nullptr);
     test_int(p_1->x, 10);
     test_int(p_1->y, 20);
 
-    const Position *p_2 = e.get_trait_tag<Position>(Pair);
+    const Position *p_2 = e.get_object<Position>(Pair);
     test_assert(p_2 != nullptr);
 
     test_assert(p_1 != p_2);

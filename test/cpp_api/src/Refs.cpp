@@ -3,8 +3,6 @@
 void Refs_get_ref() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-
     auto e = flecs::entity(world)
         .set<Position>({10, 20});
 
@@ -15,9 +13,6 @@ void Refs_get_ref() {
 
 void Refs_ref_after_add() {
     flecs::world world;
-
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
 
     auto e = flecs::entity(world)
         .set<Position>({10, 20});
@@ -31,9 +26,6 @@ void Refs_ref_after_add() {
 
 void Refs_ref_after_remove() {
     flecs::world world;
-
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
 
     auto e = flecs::entity(world)
         .set<Position>({10, 20})
@@ -49,9 +41,6 @@ void Refs_ref_after_remove() {
 void Refs_ref_after_set() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-
     auto e = flecs::entity(world)
         .set<Position>({10, 20});
 
@@ -64,8 +53,6 @@ void Refs_ref_after_set() {
 
 void Refs_ref_before_set() {
     flecs::world world;
-
-    flecs::component<Position>(world, "Position");
 
     auto e = flecs::entity(world);
     auto ref = e.get_ref<Position>();

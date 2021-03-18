@@ -65,10 +65,30 @@ public:
      */
     template<typename Relation, typename Object>
     base_type& add() const {
-        ecs_add_pair(world(), id(),
-            _::cpp_type<Relation>::id(world()), 
-            _::cpp_type<Object>::id(world()));
-        return *base(); 
+        return this->add<Relation>(_::cpp_type<Object>::id(world()));
+    }
+
+    /** Add a pair.
+     * This operation adds a pair to the entity.
+     *
+     * @tparam Relation the relation type.
+     * @param object the object type.
+     */
+    template<typename Relation>
+    base_type& add(const Base& object) const {
+        return this->add(_::cpp_type<Relation>::id(world()), object.id());
+    }    
+
+    /** Add a pair with object type.
+     * This operation adds a pair to the entity. The relation part of the pair
+     * should not be a component.
+     *
+     * @param relation the relation type.
+     * @tparam Object the object type.
+     */
+    template<typename Object>
+    base_type& add_object(const Base& relation) const {
+        return this->add(relation.id(),  _::cpp_type<Object>::id(world()));
     }
 
     /** Remove a component from an entity.
@@ -118,11 +138,19 @@ public:
      */
     template<typename Relation, typename Object>
     base_type& remove() const {
-        ecs_remove_pair(world(), id(),
-            _::cpp_type<Relation>::id(world()), 
-            _::cpp_type<Object>::id(world()));
-        return *base(); 
+        return this->remove<Relation>(_::cpp_type<Object>::id(world()));
     }
+
+    /** Removes a pair with object type.
+     * This operation removes a pair from the entity.
+     *
+     * @param relation the relation type.
+     * @tparam Object the object type.
+     */
+    template<typename Object>
+    base_type& remove(const Base& relation) const {
+        return this->remove(relation.id(), _::cpp_type<Object>::id(world()));
+    }    
 
     /** Add owned flag for component (forces ownership when instantiating)
      *
@@ -680,14 +708,8 @@ public:
      */
     template <typename T>
     const T* get() const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-
         auto comp_id = _::cpp_type<T>::id(m_world);
-
-        ecs_assert(_::cpp_type<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const T*>(
             ecs_get_w_entity(m_world, m_id, comp_id));
     }
@@ -698,23 +720,61 @@ public:
      * @return Pointer to the component value, nullptr if the entity does not
      *         have the component.
      */
-    const void* get(flecs::entity component) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+    const void* get(const flecs::entity& component) const {
         return ecs_get_w_entity(m_world, m_id, component.id());
     }
 
-    /** Get component value (untyped).
-     * 
-     * @param component The id of the component to get.
-     * @return Pointer to the component value, nullptr if the entity does not
-     *         have the component.
+    /** Get a pair.
+     * This operation gets the value for a pair from the entity.
+     *
+     * @tparam Relation the relation type.
+     * @tparam Object the object type.
      */
-    const void* get(entity_t component_id) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_get_w_entity(m_world, m_id, component_id);
-    } 
+    template<typename Relation, typename Object>
+    const Relation* get() const {
+        return this->get<Relation>(_::cpp_type<Object>::id(m_world));
+    }
+
+    /** Get a pair.
+     * This operation gets the value for a pair from the entity. 
+     *
+     * @tparam Relation the relation type.
+     * @param object the object.
+     */
+    template<typename Relation>
+    const Relation* get(const flecs::entity& object) const {
+        auto comp_id = _::cpp_type<Relation>::id(m_world);
+        ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<const Relation*>(
+            ecs_get_w_entity(m_world, m_id, ecs_pair(comp_id, object.id())));
+    }
+
+    /** Get a pair (untyped).
+     * This operation gets the value for a pair from the entity. If neither the
+     * relation nor the object part of the pair are components, the operation 
+     * will fail.
+     *
+     * @param relation the relation.
+     * @param object the object.
+     */
+    const void* get(const flecs::entity& relation, const flecs::entity& object) const {
+        return ecs_get_w_entity(m_world, m_id, ecs_pair(relation.id(), object.id()));
+    }
+
+    /** Get the object part from a pair.
+     * This operation gets the value for a pair from the entity. The relation
+     * part of the pair should not be a component.
+     *
+     * @tparam Object the object type.
+     * @param relation the relation.
+     */
+    template<typename Object>
+    const Object* get_object(const flecs::entity& relation) const {
+        auto comp_id = _::cpp_type<Object>::id(m_world);
+        ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<const Object*>(
+            ecs_get_w_entity(m_world, m_id, ecs_pair(relation.id(), comp_id)));
+    }
 
     /** Get mutable component value.
      * This operation returns a mutable pointer to the component. If the entity
@@ -728,14 +788,8 @@ public:
      */
     template <typename T>
     T* get_mut(bool *is_added = nullptr) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-
         auto comp_id = _::cpp_type<T>::id(m_world);
-
-        ecs_assert(_::cpp_type<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<T*>(
             ecs_get_mut_w_entity(m_world, m_id, comp_id, is_added));
     }
@@ -751,8 +805,6 @@ public:
      * @return Pointer to the component value.
      */
     void* get_mut(flecs::entity component, bool *is_added = nullptr) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_get_mut_w_entity(m_world, m_id, component.id(), is_added);
     }
 
@@ -767,10 +819,62 @@ public:
      * @return Pointer to the component value.
      */
     void* get_mut(entity_t component_id, bool *is_added = nullptr) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_get_mut_w_entity(m_world, m_id, component_id, is_added);
     }
+
+    /** Get mutable pointer for a pair.
+     * This operation gets the value for a pair from the entity.
+     *
+     * @tparam Relation the relation type.
+     * @tparam Object the object type.
+     */
+    template <typename Relation, typename Object>
+    Relation* get_mut(bool *is_added = nullptr) const {
+        return this->get_mut<Relation>(
+            _::cpp_type<Object>::id(m_world), is_added);
+    }
+
+    /** Get mutable pointer for a pair.
+     * This operation gets the value for a pair from the entity.
+     *
+     * @tparam Relation the relation type.
+     * @param object the object.
+     */
+    template <typename Relation>
+    Relation* get_mut(const flecs::entity& object, bool *is_added = nullptr) const {
+        auto comp_id = _::cpp_type<Relation>::id(m_world);
+        ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<Relation*>(
+            ecs_get_mut_w_entity(m_world, m_id, 
+                ecs_pair(comp_id, object.id()), is_added));
+    }
+
+    /** Get mutable pointer for a pair (untyped).
+     * This operation gets the value for a pair from the entity. If neither the
+     * relation or object are a component, the operation will fail.
+     *
+     * @param relation the relation.
+     * @param object the object.
+     */
+    void* get_mut(const flecs::entity& relation, const flecs::entity& object, bool *is_added = nullptr) const {
+        return ecs_get_mut_w_entity(m_world, m_id, 
+                ecs_pair(relation.id(), object.id()), is_added);
+    }
+
+    /** Get mutable pointer for the object from a pair.
+     * This operation gets the value for a pair from the entity.
+     *
+     * @tparam Object the object type.
+     * @param relation the relation.
+     */
+    template <typename Object>
+    Object* get_mut_object(const flecs::entity& relation, bool *is_added = nullptr) const {
+        auto comp_id = _::cpp_type<Object>::id(m_world);
+        ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<Object*>(
+            ecs_get_mut_w_entity(m_world, m_id, 
+                ecs_pair(relation.id(), comp_id), is_added));
+    }           
 
     /** Signal that component was modified.
      *
@@ -778,14 +882,8 @@ public:
      */
     template <typename T>
     void modified() const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-
         auto comp_id = _::cpp_type<T>::id(m_world);
-
-        ecs_assert(_::cpp_type<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_modified_w_entity(m_world, m_id, comp_id);
     }
 
@@ -793,21 +891,43 @@ public:
      *
      * @param component component that was modified.
      */
-    void modified(flecs::entity component) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
+    void modified(const flecs::entity& component) const {
         ecs_modified_w_entity(m_world, m_id, component.id());
+    }  
+
+    /** Signal that the relation part of a pair was modified.
+     *
+     * @tparam Relation the relation type.
+     * @tparam Object the object type.
+     */
+    template <typename Relation, typename Object>
+    void modified() const {
+        this->modified<Relation>(_::cpp_type<Object>::id(m_world));
     }
 
-    /** Signal that component was modified.
+    /** Signal that the relation part of a pair was modified.
      *
-     * @param component id of component that was modified.
+     * @tparam Relation the relation type.
+     * @param object the object.
      */
-    void modified(entity_t component) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_modified_w_entity(m_world, m_id, component);
-    }        
+    template <typename Relation>
+    void modified(const flecs::entity& object) const {
+        auto comp_id = _::cpp_type<Relation>::id(m_world);
+        ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_modified_w_entity(m_world, m_id, ecs_pair(comp_id, object.id()));
+    }
+
+    /** Signal that a pair has modified (untyped).
+     * If neither the relation or object part of the pair are a component, the
+     * operation will fail.
+     *
+     * @param relation the relation.
+     * @param object the object.
+     */
+    void modified(const flecs::entity& relation, const flecs::entity& object) const {
+        ecs_modified_w_entity(m_world, m_id, 
+            ecs_pair(relation.id(), object.id()));
+    }    
 
     /** Get reference to component.
      * A reference allows for quick and safe access to a component value, and is
@@ -818,15 +938,9 @@ public:
      */
     template <typename T>
     ref<T> get_ref() const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-
         // Ensure component is registered
         _::cpp_type<T>::id(m_world);
-
-        ecs_assert(_::cpp_type<T>::size() != 0, 
-                ECS_INVALID_PARAMETER, NULL);
-
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return ref<T>(m_world, m_id);
     }
 
@@ -854,8 +968,6 @@ public:
      * the entity id.
      */
     void clear() const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_clear(m_world, m_id);
     }
 
@@ -864,8 +976,6 @@ public:
      * flecs::entity object goes out of scope.
      */
     void destruct() const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_delete(m_world, m_id);
     }
 
@@ -877,43 +987,8 @@ public:
      * @return The found entity, or entity::null if no entity matched.
      */
     entity lookup(const char *path) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::");
         return entity(m_world, id);
-    }
-
-    /** Check if entity has the provided entity.
-     *
-     * @param entity The entity id to check.
-     * @return True if the entity has the provided entity id, false otherwise.
-     */
-    bool has(entity_t e) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_has_entity(m_world, m_id, e);
-    }
-
-    /** Check if entity has the provided parent.
-     *
-     * @param parent The parent id to check.
-     * @return True if the entity has the provided parent id, false otherwise.
-     */
-    bool has_childof(entity_t parent) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_has_entity(m_world, m_id, ECS_CHILDOF | parent);
-    }    
-
-    /** Check if entity has the provided base.
-     *
-     * @param base The entity id to check.
-     * @return True if the entity has the provided base id, false otherwise.
-     */
-    bool has_instanceof(entity_t base) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_has_entity(m_world, m_id, ECS_INSTANCEOF | base);
     }
 
     /** Check if entity has the provided type.
@@ -922,8 +997,6 @@ public:
      * @return True if the entity has the provided type, false otherwise.
      */
     bool has(type_t type) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
         return ecs_has_type(m_world, m_id, type);
     }
 
@@ -933,26 +1006,8 @@ public:
      * @return True if the entity has the provided entity, false otherwise.
      */
     bool has(const entity& e) const {
-        return has(e.id());
-    }
-
-    /** Check if entity has the provided parent.
-     *
-     * @param parent The entity to check.
-     * @return True if the entity has the provided parent, false otherwise.
-     */
-    bool has_childof(const entity& parent) const {
-        return has_childof(parent.id());
-    }  
-
-    /** Check if entity has the provided base.
-     *
-     * @param base The entity to check.
-     * @return True if the entity has the provided base, false otherwise.
-     */
-    bool has_instanceof(const entity& base) const {
-        return has_instanceof(base.id());
-    }        
+        return ecs_has_entity(m_world, m_id, e.id());
+    }     
 
     /** Check if entity has the provided component.
      *
@@ -961,19 +1016,59 @@ public:
      */
     template <typename T>
     bool has() const {
-        return has(_::cpp_type<T>::id(m_world));
+        return ecs_has_entity(m_world, m_id, _::cpp_type<T>::id(m_world));
     }
 
-    /** Check if entity owns the provided entity id.
-     * An entity id is owned if it is not shared from a base entity.
+    /** Check if entity has the provided pair.
      *
-     * @param entity The entity id to check.
-     * @return True if the entity owns the provided entity id, false otherwise.
+     * @tparam Relation The relation type.
+     * @param Object The object type.
+     * @return True if the entity has the provided component, false otherwise.
      */
-    bool owns(entity_t e) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_owns_entity(m_world, m_id, e, true);
+    template <typename Relation, typename Object>
+    bool has() const {
+        return this->has<Relation>(_::cpp_type<Object>::id(m_world));
+    }
+
+    /** Check if entity has the provided pair.
+     *
+     * @tparam Relation The relation type.
+     * @param object The object.
+     * @return True if the entity has the provided component, false otherwise.
+     */
+    template <typename Relation>
+    bool has(const flecs::entity& object) const {
+        auto comp_id = _::cpp_type<Relation>::id(m_world);
+        ecs_assert(_::cpp_type<Relation>::size() != 0, 
+            ECS_INVALID_PARAMETER, NULL);
+        return ecs_has_entity(m_world, m_id, 
+            ecs_pair(comp_id, object.id()));
+    }
+
+    /** Check if entity has the provided pair.
+     *
+     * @param relation The relation.
+     * @param object The object.
+     * @return True if the entity has the provided component, false otherwise.
+     */
+    bool has(const flecs::entity& relation, const flecs::entity& object) const {
+        return ecs_has_entity(m_world, m_id, 
+            ecs_pair(relation.id(), object.id()));
+    }
+
+    /** Check if entity has the provided pair.
+     *
+     * @tparam Object The object type.
+     * @param relation The relation.
+     * @return True if the entity has the provided component, false otherwise.
+     */
+    template <typename Object>
+    bool has_object(const flecs::entity& relation) const {
+        auto comp_id = _::cpp_type<Object>::id(m_world);
+        ecs_assert(_::cpp_type<Object>::size() != 0, 
+            ECS_INVALID_PARAMETER, NULL);
+        return ecs_has_entity(m_world, m_id, 
+            ecs_pair(relation.id(), comp_id));
     }
 
     /** Check if entity owns the provided type.
@@ -983,9 +1078,8 @@ public:
      * @return True if the entity owns the provided type, false otherwise.
      */
     bool owns(type_t type) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_type_owns_type(m_world, ecs_get_type(m_world, m_id), type, true);
+        return ecs_type_owns_type(
+            m_world, ecs_get_type(m_world, m_id), type, true);
     }
 
     /** Check if entity owns the provided entity.
@@ -994,8 +1088,8 @@ public:
      * @param entity The entity to check.
      * @return True if the entity owns the provided entity, false otherwise.
      */
-    bool owns(const entity& e) const {
-        return owns(e.id());
+    bool owns(const flecs::entity& e) const {
+        return ecs_owns_entity(m_world, m_id, e.id(), true);
     }
 
     /** Check if entity owns the provided component.
@@ -1009,64 +1103,6 @@ public:
         return owns(_::cpp_type<T>::id(m_world));
     }
 
-    /** Check if entity has the provided trait.
-     *
-     * @tparam T The trait to check.
-     * @tparam C The component for which to check the trait.
-     * @return True if the entity has the provided trait, false otherwise.
-     */
-    template<typename T, typename C>
-    bool has_trait() const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_has_entity(m_world, m_id, ecs_trait(
-            _::cpp_type<C>::id(m_world), 
-            _::cpp_type<T>::id(m_world)));
-    }
-
-    /** Check if entity has the provided trait.
-     *
-     * @tparam T The trait to check.
-     * @param component The component for which to check the trait.
-     * @return True if the entity has the provided trait, false otherwise.
-     */
-    template<typename T>
-    bool has_trait(flecs::entity component) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_has_entity(m_world, m_id, ecs_trait(
-            component.id(), _::cpp_type<T>::id(m_world)));
-    }
-
-    /** Check if entity has the provided trait tag.
-     * The provided trait tag should not be a component.
-     *
-     * @tparam C The component for which to check the trait tag.
-     * @param trait The trait tag to check.
-     * @return True if the entity has the provided trait tag, false otherwise.
-     */
-    template<typename C>
-    bool has_trait_tag(flecs::entity trait) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_has_entity(m_world, m_id, ecs_trait(
-           _::cpp_type<C>::id(m_world), trait.id()));
-    }
-
-    /** Check if entity has the provided trait.
-     * The provided trait should not be a component.
-     *
-     * @param trait The trait to check.
-     * @param component The component for which to check the trait.
-     * @return True if the entity has the provided trait, false otherwise.
-     */
-    bool has_trait(flecs::entity trait, flecs::entity e) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_has_entity(m_world, m_id, ecs_trait(
-            e.id(), trait.id()));
-    }
-
     /** Check if entity has the provided switch.
      *
      * @param sw The switch to check.
@@ -1074,24 +1110,13 @@ public:
      */
     bool has_switch(const flecs::type& sw) const;
 
-    /** Check if entity has the provided case id.
-     *
-     * @param sw_case The case id to check.
-     * @return True if the entity has the provided case, false otherwise.
-     */
-    bool has_case(entity_t sw_case) const {
-        ecs_assert(m_world != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-        return ecs_has_entity(m_world, m_id, flecs::Case | sw_case);
-    }
-
     /** Check if entity has the provided case.
      *
      * @param sw_case The case to check.
      * @return True if the entity has the provided case, false otherwise.
      */
-    bool has_case(flecs::entity sw_case) const {
-        return this->has_case(sw_case.id());
+    bool has_case(const flecs::entity& sw_case) const {
+        return ecs_has_entity(m_world, m_id, flecs::Case | sw_case.id());
     }
 
     template<typename T>
@@ -1115,16 +1140,6 @@ public:
     bool is_enabled() {
         return ecs_is_component_enabled_w_entity(
             m_world, m_id, _::cpp_type<T>::id(m_world));
-    }
-
-    /** Test if component is enabled.
-     *
-     * @param id The component to test.
-     * @return True if the component is enabled, false if it has been disabled.
-     */
-    bool is_enabled(flecs::entity_t id) {
-        return ecs_is_component_enabled_w_entity(
-            m_world, m_id, id);
     }
 
     /** Test if component is enabled.

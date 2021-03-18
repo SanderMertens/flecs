@@ -63,10 +63,9 @@ void Type_1_component() {
 void Type_2_component() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-
-    auto type = flecs::type(world).add<Position, Velocity>();
+    auto type = flecs::type(world)
+        .add<Position>()
+        .add<Velocity>();
 
     auto entity = flecs::entity(world);
     test_assert(entity.id() != 0);
