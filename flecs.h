@@ -5840,7 +5840,7 @@ ecs_world_t* ecs_get_stage(
     const ecs_world_t *world,
     int32_t stage_id);
 
-/** Get actual world from world
+/** Get actual world from world.
  * @param world A pointer to a stage or the world.
  * @return The world.
  */
@@ -5848,6 +5848,16 @@ FLECS_API
 const ecs_world_t* ecs_get_world(
     const ecs_world_t *world);
 
+/** Test whether the current world object is readonly.
+ * This function allows the code to test whether the currently used world object
+ * is readonly or whether it allows for writing.  
+ *
+ * @param world A pointer to a stage or the world.
+ * @return True if the world or stage is readonly.
+ */
+FLECS_API
+bool ecs_stage_is_readonly(
+    const ecs_world_t *stage);
 
 /** @} */
 
@@ -8633,7 +8643,7 @@ public:
      */
     flecs::type column_type(int32_t col) const;
 
-    /** Obtain entity being iterated over for row.
+    /** Obtain mutable handle to entity being iterated over.
      *
      * @param row Row being iterated over.
      */
@@ -9107,6 +9117,27 @@ public:
      */
     flecs::world get_stage(std::int32_t id) const {
         return flecs::world(ecs_get_stage(m_world, id));
+    }
+
+    /** Get actual world.
+     * If the current object points to a stage, this operation will return the
+     * actual world.
+     *
+     * @return The actual world.
+     */
+    flecs::world get_world() const {
+        /* Safe cast, mutability is checked */
+        return flecs::world((flecs::world_t*)ecs_get_world(m_world));
+    }
+
+    /** Test whether the current world object is readonly.
+     * This function allows the code to test whether the currently used world object
+     * is readonly or whether it allows for writing.  
+     *
+     * @return True if the world or stage is readonly.
+     */
+    bool is_readonly() const {
+        return ecs_stage_is_readonly(m_world);
     }
 
     /** Set number of threads.
@@ -10317,16 +10348,16 @@ public:
      * @param world The world in which to create the entity.
      */
     explicit entity(const world& world) 
-        : m_world( world.c_ptr() )
-        , m_id( ecs_new_w_type(m_world, 0) ) { }
+        : m_world( world.get_world().c_ptr() )
+        , m_id( ecs_new_w_type(world.c_ptr(), 0) ) { }
 
     /** Create entity.
      *
      * @param world Pointer to the world in which to create the entity.
      */
     explicit entity(world_t *world) 
-        : m_world( world )
-        , m_id( world ? ecs_new_w_type(world, 0) : 0 ) { }
+        : m_world( flecs::world(world).get_world().c_ptr() )
+        , m_id( m_world ? ecs_new_w_type(world, 0) : 0 ) { }
 
     /** Create a named entity.
      * Named entities can be looked up with the lookup functions. Entity names
@@ -10338,8 +10369,8 @@ public:
      * @param name The entity name.
      * @param is_component If true, the entity will be created from the pool of component ids (default = false).
      */
-    entity(const world& world, const char *name, bool is_component = false) 
-        : m_world( world.c_ptr() )
+    explicit entity(const world& world, const char *name, bool is_component = false) 
+        : m_world( world.get_world().c_ptr() )
         , m_id( ecs_lookup_path_w_sep(m_world, 0, name, "::", "::") ) 
         { 
             if (!m_id) {
@@ -10348,7 +10379,7 @@ public:
                 }
 
                 m_id = ecs_add_path_w_sep(
-                    m_world, m_id, 0, name, "::", "::");
+                    world.c_ptr(), m_id, 0, name, "::", "::");
             }
         }
 
@@ -10362,8 +10393,8 @@ public:
      * @param name The entity name.
      * @param is_component If true, the entity will be created from the pool of component ids (default = false).
      */
-    entity(const world& world, std::string name, bool is_component = false) 
-        : m_world( world.c_ptr() )
+    explicit entity(const world& world, std::string name, bool is_component = false) 
+        : m_world( world.get_world().c_ptr() )
         , m_id( ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::") ) 
         { 
             if (!m_id) {
@@ -10372,7 +10403,7 @@ public:
                 }
 
                 m_id = ecs_add_path_w_sep(
-                    m_world, m_id, 0, name.c_str(), "::", "::");
+                    world.c_ptr(), m_id, 0, name.c_str(), "::", "::");
             }
         }         
 
@@ -10381,8 +10412,8 @@ public:
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    entity(const world& world, entity_t id) 
-        : m_world( world.c_ptr() )
+    explicit entity(const world& world, entity_t id) 
+        : m_world( world.get_world().c_ptr() )
         , m_id(id) { }
 
     /** Wrap an existing entity id.
@@ -10390,8 +10421,13 @@ public:
      * @param world Pointer to the world in which the entity is created.
      * @param id The entity id.
      */
-    entity(world_t *world, entity_t id) 
-        : m_world( world )
+    explicit entity(world_t *world, entity_t id) 
+        : m_world( flecs::world(world).get_world().c_ptr() )
+        , m_id(id) { }
+
+    /** Implicit conversion from flecs::entity_t to flecs::entity */
+    entity(entity_t id) 
+        : m_world(nullptr)
         , m_id(id) { }
 
     /** Equality operator. */
@@ -10416,13 +10452,13 @@ public:
      */
     static
     flecs::entity null(const world& world) {
-        return flecs::entity(world.c_ptr(), (ecs_entity_t)0);
+        return flecs::entity(world.get_world().c_ptr(), (ecs_entity_t)0);
     }
 
     static
     flecs::entity null() {
         return flecs::entity(nullptr, (ecs_entity_t)0);
-    }    
+    }
 
     /** Get entity id.
      * @return The integer entity id.
@@ -10533,6 +10569,58 @@ public:
      */
     flecs::world world() const {
         return flecs::world(m_world);
+    }
+
+    /** Return mutable entity handle for current stage 
+     * When an entity handle created from the world is used while the world is
+     * in staged mode, it will only allow for readonly operations since 
+     * structural changes are not allowed on the world while in staged mode.
+     * 
+     * To do mutations on the entity, this operation provides a handle to the
+     * entity that uses the stage instead of the actual world.
+     *
+     * Note that staged entity handles should never be stored persistently, in
+     * components or elsewhere. An entity handle should always point to the
+     * main world.
+     *
+     * Also note that this operation is not necessary when doing mutations on an
+     * entity outside of a system. It is allowed to do entity operations 
+     * directly on the world, as long as the world is not in staged mode.
+     *
+     * @param stage The current stage.
+     * @return An entity handle that allows for mutations in the current stage.
+     */
+    flecs::entity mut(const flecs::world& stage) const {
+        ecs_assert(!stage.is_readonly(), ECS_INVALID_PARAMETER, 
+            "cannot use readonly world/stage to create mutable handle");
+        return flecs::entity(m_id).set_stage(stage.c_ptr());
+    }
+
+    /** Same as mut(world), but for iterator.
+     * This operation allows for the construction of a mutable entity handle
+     * from an iterator.
+     *
+     * @param stage An created for the current stage.
+     * @return An entity handle that allows for mutations in the current stage.
+     */
+    flecs::entity mut(const flecs::iter& it) const {
+        ecs_assert(!it.world().is_readonly(), ECS_INVALID_PARAMETER, 
+            "cannot use iterator created for readonly world/stage to create mutable handle");
+        return flecs::entity(m_id).set_stage(it.world().c_ptr());
+    }
+
+    /** Same as mut(world), but for entity.
+     * This operation allows for the construction of a mutable entity handle
+     * from another entity. This is useful in each() functions, which only 
+     * provide a handle to the entity being iterated over.
+     *
+     * @param stage An created for the current stage.
+     * @return An entity handle that allows for mutations in the current stage.
+     */
+    flecs::entity mut(const flecs::entity& e) const {
+        ecs_assert(!e.world().is_readonly(), ECS_INVALID_PARAMETER, 
+            "cannot use entity created for readonly world/stage to create mutable handle");
+        return flecs::entity(m_id).set_stage(e.m_world);
     }
 
     /** Return the type.
@@ -11198,8 +11286,13 @@ public:
     }    
 
 protected:
+    flecs::entity set_stage(world_t *stage) {
+        m_world = stage;
+        return *this;
+    }
+
     world_t *m_world;
-    entity_t m_id; 
+    entity_t m_id;
 };
 
 /** Prefab class */
@@ -12437,8 +12530,8 @@ public:
         : m_has_next(false)
         , m_iter{ } { }
 
-    tree_iterator(flecs::entity entity) 
-        : m_iter( ecs_scope_iter(entity.world().c_ptr(), entity.id()) )
+    tree_iterator(flecs::world_t *world, const flecs::entity_t entity) 
+        : m_iter( ecs_scope_iter(world, entity ))
     {
         m_has_next = ecs_scope_next(&m_iter);
     }
@@ -12517,11 +12610,12 @@ private:
 
 class child_iterator {
 public:
-    child_iterator(const entity& entity) 
-        : m_parent( entity ) { }
+    child_iterator(const flecs::entity& entity) 
+        : m_world( entity.world().c_ptr() )
+        , m_parent( entity.id() ) { }
 
     inline tree_iterator begin() const {
-        return tree_iterator(m_parent);
+        return tree_iterator(m_world, m_parent);
     }
 
     inline tree_iterator end() const {
@@ -12529,7 +12623,8 @@ public:
     }
 
 private:
-    const entity& m_parent;
+    flecs::world_t *m_world;
+    flecs::entity_t m_parent;
 };
 
 
@@ -13678,7 +13773,8 @@ inline flecs::world iter::world() const {
 
 inline flecs::entity iter::entity(size_t row) const {
     ecs_assert(row < (size_t)m_iter->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-    return flecs::entity(m_iter->world, m_iter->entities[row]);
+    return flecs::entity(m_iter->entities[row])
+        .mut(this->world());
 }
 
 /* Obtain column source (0 if self) */

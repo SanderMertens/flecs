@@ -142,6 +142,15 @@ void System_order_by_id(void);
 void System_order_by_type_after_create(void);
 void System_order_by_id_after_create(void);
 void System_get_query(void);
+void System_add_from_each(void);
+void System_delete_from_each(void);
+void System_add_from_each_world_handle(void);
+void System_new_from_each(void);
+void System_add_from_iter(void);
+void System_delete_from_iter(void);
+void System_add_from_iter_world_handle(void);
+void System_new_from_iter(void);
+void System_each_w_mut_children_it(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -778,6 +787,42 @@ bake_test_case System_testcases[] = {
     {
         "get_query",
         System_get_query
+    },
+    {
+        "add_from_each",
+        System_add_from_each
+    },
+    {
+        "delete_from_each",
+        System_delete_from_each
+    },
+    {
+        "add_from_each_world_handle",
+        System_add_from_each_world_handle
+    },
+    {
+        "new_from_each",
+        System_new_from_each
+    },
+    {
+        "add_from_iter",
+        System_add_from_iter
+    },
+    {
+        "delete_from_iter",
+        System_delete_from_iter
+    },
+    {
+        "add_from_iter_world_handle",
+        System_add_from_iter_world_handle
+    },
+    {
+        "new_from_iter",
+        System_new_from_iter
+    },
+    {
+        "each_w_mut_children_it",
+        System_each_w_mut_children_it
     }
 };
 
@@ -1283,7 +1328,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        25,
+        34,
         System_testcases
     },
     {

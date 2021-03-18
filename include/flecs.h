@@ -2988,7 +2988,7 @@ ecs_world_t* ecs_get_stage(
     const ecs_world_t *world,
     int32_t stage_id);
 
-/** Get actual world from world
+/** Get actual world from world.
  * @param world A pointer to a stage or the world.
  * @return The world.
  */
@@ -2996,6 +2996,16 @@ FLECS_API
 const ecs_world_t* ecs_get_world(
     const ecs_world_t *world);
 
+/** Test whether the current world object is readonly.
+ * This function allows the code to test whether the currently used world object
+ * is readonly or whether it allows for writing.  
+ *
+ * @param world A pointer to a stage or the world.
+ * @return True if the world or stage is readonly.
+ */
+FLECS_API
+bool ecs_stage_is_readonly(
+    const ecs_world_t *stage);
 
 /** @} */
 
