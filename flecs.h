@@ -8212,10 +8212,7 @@ FLECS_API void ecs_gauge_reduce(
 
 #pragma once
 
-#include <string>
-#include <sstream>
-#include <array>
-#include <functional>
+#include <type_traits>
 
 namespace flecs {
 
@@ -8362,13 +8359,152 @@ template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
 inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
 inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
 
+namespace flecs
+{
+
+////////////////////////////////////////////////////////////////////////////////
+//// Flecs string utilities
+////////////////////////////////////////////////////////////////////////////////
+
+class string_view;
+
+// This removes dependencies on std::string (and therefore STL) and allows the 
+// API to return allocated strings without incurring additional allocations when
+// wrapping in an std::string.
+class string {
+public:
+    explicit string() 
+        : m_str(nullptr)
+        , m_const_str("")
+        , m_length(0) { }
+
+    explicit string(char *str) 
+        : m_str(str)
+        , m_const_str(str ? str : "")
+        , m_length(str ? ecs_os_strlen(str) : 0) { }
+
+    ~string() {
+        // If flecs is included in a binary but is not used, it is possible that
+        // the OS API is not initialized. Calling ecs_os_free in that case could
+        // crash the application during exit. However, if a string has been set
+        // flecs has been used, and OS API should have been initialized.
+        if (m_str) {
+            ecs_os_free(m_str);
+        }
+    }
+
+    string(string&& str) {
+        ecs_os_free(m_str);
+        m_str = str.m_str;
+        m_const_str = str.m_const_str;
+        m_length = str.m_length;
+        str.m_str = nullptr;
+    }
+
+    operator const char*() const {
+        return m_const_str;
+    }
+
+    string& operator=(string&& str) {
+        ecs_os_free(m_str);
+        m_str = str.m_str;
+        m_const_str = str.m_const_str;
+        m_length = str.m_length;
+        str.m_str = nullptr;
+        return *this;
+    }
+
+    // Ban implicit copies/allocations
+    string& operator=(const string& str) = delete;
+    string(const string& str) = delete;
+
+    const char* c_str() const {
+        return m_const_str;
+    }
+
+    std::size_t length() {
+        return static_cast<std::size_t>(m_length);
+    }
+
+    std::size_t size() {
+        return length();
+    }
+
+    void clear() {
+        ecs_os_free(m_str);
+        m_str = nullptr;
+        m_const_str = nullptr;
+    }
+
+protected:
+    // Must be constructed through string_view. This allows for using the string
+    // class for both owned and non-owned strings, which can reduce allocations
+    // when code conditionally should store a literal or an owned string.
+    // Making this constructor private forces the code to explicitly create a
+    // string_view which emphasizes that the string won't be freed by the class.
+    string(const char *str)
+        : m_str(nullptr)
+        , m_const_str(str ? str : "")
+        , m_length(str ? ecs_os_strlen(str) : 0) { }
+
+    char *m_str = nullptr;
+    const char *m_const_str;
+    ecs_size_t m_length;
+};
+
+// For consistency, the API returns a string_view where it could have returned
+// a const char*, so an application won't have to think about whether to call
+// c_str() or not. The string_view is a thin wrapper around a string that forces
+// the API to indicate explicitly when a string is owned or not.
+class string_view : public string {
+public:
+    explicit string_view(const char *str)
+        : string(str) { }
+};
+
+// Wrapper around ecs_strbuf_t that provides a simple stringstream like API.
+class stringstream {
+public:
+    explicit stringstream() 
+        : m_buf(ECS_STRBUF_INIT) { }
+
+    ~stringstream() {
+        ecs_strbuf_reset(&m_buf);
+    }
+
+    stringstream(stringstream&& str) {
+        ecs_strbuf_reset(&m_buf);
+        m_buf = str.m_buf;
+        str.m_buf = ECS_STRBUF_INIT;
+    }
+
+    stringstream& operator=(stringstream&& str) {
+        ecs_strbuf_reset(&m_buf);
+        m_buf = str.m_buf;
+        str.m_buf = ECS_STRBUF_INIT;
+        return *this;
+    }
+
+    // Ban implicit copies/allocations
+    stringstream& operator=(const stringstream& str) = delete;
+    stringstream(const stringstream& str) = delete;    
+
+    stringstream& operator<<(const char* str) {
+        ecs_strbuf_appendstr(&m_buf, str);
+        return *this;
+    }
+
+    flecs::string str() {
+        return flecs::string(ecs_strbuf_get(&m_buf));
+    }
+
+private:
+    ecs_strbuf_t m_buf;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility to convert template argument pack to array of columns
 ////////////////////////////////////////////////////////////////////////////////
-
-namespace flecs 
-{
 
 namespace _ 
 {
@@ -8381,7 +8517,7 @@ public:
         bool is_shared;
     };
 
-    using Columns = std::array<Column, sizeof...(Components)>;
+    using Columns = Column[sizeof...(Components)];
 
     column_args(ecs_iter_t* iter) {
         populate_columns(iter, 0, (typename std::remove_reference<typename std::remove_pointer<Components>::type>::type*)nullptr...);
@@ -8444,18 +8580,18 @@ constexpr const char *optional_modifier() {
 
 /** Convert template arguments to string */
 template <typename ...Components>
-bool pack_args_to_string(world_t *world, std::stringstream& str, bool is_each = false) {
+bool pack_args_to_string(world_t *world, flecs::stringstream& str, bool is_each = false) {
     (void)world;
 
-    std::array<const char*, sizeof...(Components)> ids = {
+    const char* ids[sizeof...(Components)] = {
         (_::cpp_type<Components>::name(world))...
     };
 
-    std::array<const char*, sizeof...(Components)> inout_modifiers = {
+    const char* inout_modifiers[sizeof...(Components)] = {
         (inout_modifier<Components>())...
     }; 
 
-    std::array<const char*, sizeof...(Components)> optional_modifiers = {
+    const char* optional_modifiers[sizeof...(Components)] = {
         (optional_modifier<Components>())...
     };        
 
@@ -9222,7 +9358,7 @@ public:
      * 
      * @param stages The number of stages.
      */
-    void set_stages(std::int32_t stages) const {
+    void set_stages(int32_t stages) const {
         ecs_set_stages(m_world, stages);
     }
 
@@ -9231,7 +9367,7 @@ public:
      *
      * @return The number of stages used for threading.
      */
-    std::int32_t get_stage_count() const {
+    int32_t get_stage_count() const {
         return ecs_get_stage_count(m_world);
     }
 
@@ -9241,7 +9377,7 @@ public:
      *
      * @return The stage id.
      */
-    std::int32_t get_stage_id() const {
+    int32_t get_stage_id() const {
         return ecs_get_stage_id(m_world);
     }
 
@@ -9291,7 +9427,7 @@ public:
      * @param stage_id The index of the stage to retrieve.
      * @return A thread-specific pointer to the world. 
      */
-    flecs::world get_stage(std::int32_t id) const {
+    flecs::world get_stage(int32_t id) const {
         return flecs::world(ecs_get_stage(m_world, id));
     }
 
@@ -9301,7 +9437,7 @@ public:
      *
      * @param threads Number of threads.
      */
-    void set_threads(std::int32_t threads) const {
+    void set_threads(int32_t threads) const {
         ecs_set_threads(m_world, threads);
     }
 
@@ -9309,7 +9445,7 @@ public:
      *
      * @return Number of configured threads.
      */
-    std::int32_t get_threads() const {
+    int32_t get_threads() const {
         return ecs_get_threads(m_world);
     }
 
@@ -9318,7 +9454,7 @@ public:
      * @return Unique index for current thread.
      */
     ECS_DEPRECATED("use get_stage_id")
-    std::int32_t get_thread_index() const {
+    int32_t get_thread_index() const {
         return ecs_get_stage_id(m_world);
     }
 
@@ -9345,7 +9481,7 @@ public:
      *
      * @return Monotonically increasing frame count.
      */
-    std::int32_t get_tick() const {
+    int32_t get_tick() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->frame_count_total;
     }
@@ -9390,7 +9526,7 @@ public:
      *
      * @param entity_count Number of entities to preallocate memory for.
      */
-    void dim(std::int32_t entity_count) const {
+    void dim(int32_t entity_count) const {
         ecs_dim(m_world, entity_count);
     }
 
@@ -9401,7 +9537,7 @@ public:
      * @param type Type to preallocate memory for.
      * @param entity_count Number of entities to preallocate memory for.
      */
-    void dim_type(type_t t, std::int32_t entity_count) const {
+    void dim_type(type_t t, int32_t entity_count) const {
         ecs_dim_type(m_world, t, entity_count);
     }
 
@@ -9449,12 +9585,6 @@ public:
      */
     flecs::entity lookup(const char *name) const;
 
-    /** Lookup entity by name.
-     *
-     * @overload
-     */    
-    flecs::entity lookup(std::string& name) const;
-
     /** Set singleton component.
      */
     template <typename T>
@@ -9472,8 +9602,8 @@ public:
 
     /** Patch singleton component.
      */
-    template <typename T>
-    void patch(std::function<void(T&)> func) const;
+    template <typename T, typename Func>
+    void patch(const Func& func) const;
 
     /** Get singleton component.
      */
@@ -10311,34 +10441,8 @@ public:
      * @tparam T The component to patch.
      * @param func The function invoked by this operation.
      */
-    template <typename T>
-    const base_type& patch(std::function<void(T&, bool)> func) const {
-        auto comp_id = _::cpp_type<T>::id(world());
-
-        ecs_assert(_::cpp_type<T>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
-
-        bool is_added;
-        T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-            world(), id(), comp_id, &is_added));
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        func(*ptr, !is_added);
-        ecs_modified_w_entity(world(), id(), comp_id);
-
-        return *base();
-    }      
-
-    /** Patch a component value.
-     * This operation allows an application to partially overwrite a component 
-     * value. The operation invokes a function with a reference to the value to
-     * write.
-     *
-     * @tparam T The component to patch.
-     * @param func The function invoked by this operation.
-     */
-    template <typename T>
-    const base_type& patch(std::function<void(T&)> func) const {
+    template <typename T, typename Func>
+    const base_type& patch(const Func& func) const {
         auto comp_id = _::cpp_type<T>::id(world());
 
         ecs_assert(_::cpp_type<T>::size() != 0, 
@@ -10588,14 +10692,10 @@ public:
      *
      * @return The entity name, or an empty string if the entity has no name.
      */
-    std::string name() const {
+    flecs::string_view name() const {
         const EcsName *name = static_cast<const EcsName*>(
             ecs_get_w_entity(m_world, m_id, ecs_entity(EcsName)));
-        if (name && name->value) {
-            return std::string(name->value);
-        } else {
-            return std::string();
-        }
+        return flecs::string_view(name ? name->value : nullptr);
     }
 
     /** Return the entity path.
@@ -10603,15 +10703,9 @@ public:
      * @return The hierarchical entity path, or an empty string if the entity 
      *         has no name.
      */
-    std::string path(const char *sep = "::", const char *init_sep = "::") const {
+    flecs::string path(const char *sep = "::", const char *init_sep = "::") const {
         char *path = ecs_get_path_w_sep(m_world, 0, m_id, 0, sep, init_sep);
-        if (path) {
-            std::string result = std::string(path);
-            ecs_os_free(path);
-            return result;
-        } else {
-            return std::string();
-        }
+        return flecs::string(path);
     }   
 
     bool enabled() {
@@ -11254,12 +11348,12 @@ public:
 
     template <typename ... Components>
     type& add() {
-        std::stringstream str;
+        flecs::stringstream str;
         if (!_::pack_args_to_string<Components...>(m_world, str)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
-        std::string expr = str.str();
+        flecs::string expr = str.str();
         ecs_type_t t = ecs_type_from_str(m_world, expr.c_str());
         m_type = ecs_type_merge(m_world, m_type, t, nullptr);
         m_normalized = ecs_type_merge(m_world, m_normalized, t, nullptr);
@@ -11268,11 +11362,9 @@ public:
         return *this;
     }    
 
-    std::string str() const {
+    flecs::string str() const {
         char *str = ecs_type_str(m_world, m_type);
-        std::string result(str);
-        ecs_os_free(str);
-        return result;
+        return flecs::string(str);
     }
 
     type_t c_ptr() const {
@@ -11685,11 +11777,8 @@ public:
         // name as the fully qualified flecs path.
         char *path = ecs_get_fullpath(world, entity);
         s_id = entity;
-        s_name = path;
+        s_name = flecs::string(path);
         s_allow_tag = allow_tag;
-
-        // s_name is an std::string, so it will have made a copy
-        ecs_os_free(path);
     }
 
     // Obtain a component identifier without registering lifecycle callbacks.
@@ -11920,15 +12009,15 @@ public:
 private:
     static entity_t s_id;
     static type_t s_type;
-    static std::string s_name;
-    static std::string s_symbol;
+    static flecs::string s_name;
+    static flecs::string s_symbol;
     static bool s_allow_tag;
 };
 
 // Global templated variables that hold component identifier and other info
 template <typename T> entity_t cpp_type<T>::s_id( 0 );
 template <typename T> type_t cpp_type<T>::s_type( nullptr );
-template <typename T> std::string cpp_type<T>::s_name("");
+template <typename T> flecs::string cpp_type<T>::s_name;
 template <typename T> bool cpp_type<T>::s_allow_tag( true );
 
 } // namespace _
@@ -12774,7 +12863,7 @@ public:
     query() : query_base(nullptr, nullptr) { }
 
     explicit query(const world& world) {
-        std::stringstream str;
+        flecs::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
@@ -12784,7 +12873,7 @@ public:
     }
 
     explicit query(const world& world, query_base& parent) {
-        std::stringstream str;
+        flecs::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
@@ -12794,7 +12883,7 @@ public:
     }
 
     explicit query(const world& world, const char *expr) {
-        std::stringstream str;
+        flecs::stringstream str;
         m_world = world.c_ptr();
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_query_new(world.c_ptr(), expr);
@@ -12805,7 +12894,7 @@ public:
     }
 
     explicit query(const world& world, query_base& parent, const char *expr) {
-        std::stringstream str;
+        flecs::stringstream str;
         m_world = world.c_ptr();
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
@@ -12841,7 +12930,7 @@ public:
     }
 
     template <typename Func>
-    void each_worker(std::int32_t stage_current, std::int32_t stage_count, Func&& func) const {
+    void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next_worker(&it, stage_current, stage_count)) {
@@ -12883,7 +12972,7 @@ public:
     }
 
     template <typename Func>
-    void iter_worker(std::int32_t stage_current, std::int32_t stage_count, Func&& func) const {
+    void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next_worker(&it, stage_current, stage_count)) {
@@ -12953,8 +13042,8 @@ public:
     system_runner_fluent(
         world_t *world, 
         entity_t id, 
-        std::int32_t stage_current, 
-        std::int32_t stage_count, 
+        int32_t stage_current, 
+        int32_t stage_count, 
         FLECS_FLOAT delta_time, 
         void *param)
         : m_stage(world)
@@ -12972,12 +13061,12 @@ public:
         return *this;
     }
 
-    system_runner_fluent& offset(std::int32_t offset) {
+    system_runner_fluent& offset(int32_t offset) {
         m_offset = offset;
         return *this;
     }
 
-    system_runner_fluent& limit(std::int32_t limit) {
+    system_runner_fluent& limit(int32_t limit) {
         m_limit = limit;
         return *this;
     }
@@ -13004,10 +13093,10 @@ private:
     FLECS_FLOAT m_delta_time;
     void *m_param;
     flecs::filter m_filter;
-    std::int32_t m_offset;
-    std::int32_t m_limit;
-    std::int32_t m_stage_current;
-    std::int32_t m_stage_count;
+    int32_t m_offset;
+    int32_t m_limit;
+    int32_t m_stage_current;
+    int32_t m_stage_count;
 };
 
 
@@ -13165,8 +13254,8 @@ public:
     }
 
     system_runner_fluent run_worker(
-        std::int32_t stage_current, 
-        std::int32_t stage_count, 
+        int32_t stage_current, 
+        int32_t stage_count, 
         FLECS_FLOAT delta_time = 0.0f, 
         void *param = nullptr) const 
     {
@@ -13239,10 +13328,10 @@ private:
             is_each = false;
         }
 
-        std::string signature = build_signature(is_each);
+        flecs::string signature = build_signature(is_each);
 
         if (!signature.length()) {
-            signature = "0";
+            signature = flecs::string_view("0");
         }
 
         if (is_trigger) {
@@ -13286,10 +13375,10 @@ private:
         return e;
     }
 
-    std::string build_signature(bool is_each) {
+    flecs::string build_signature(bool is_each) {
         bool is_set = false;
 
-        std::stringstream str;
+        flecs::stringstream str;
         if (_::pack_args_to_string<Components ...>(m_world, str, is_each)) {
             is_set = true;
         }
@@ -13358,7 +13447,7 @@ public:
         m_reader = ecs_reader_init_w_iter(&it, ecs_snapshot_next);
     }
 
-    int32_t read(char *buffer, std::int64_t size) {
+    int32_t read(char *buffer, int64_t size) {
         return ecs_reader_read(buffer, static_cast<int32_t>(size), &m_reader);
     }
 
@@ -13376,7 +13465,7 @@ public:
         m_writer = ecs_writer_init(world.c_ptr());
     }
 
-    int32_t write(const char *buffer, std::int64_t size) {
+    int32_t write(const char *buffer, int64_t size) {
         return ecs_writer_write(buffer, static_cast<int32_t>(size), &m_writer);
     }
 
@@ -13416,11 +13505,11 @@ namespace flecs
 
 class ECS_DEPRECATED("do not use") entity_range final {
 public:
-    entity_range(const world& world, std::int32_t count) 
+    entity_range(const world& world, int32_t count) 
         : m_world(world.c_ptr())
         , m_ids( ecs_bulk_new_w_type(m_world, nullptr, count)) { }
 
-    entity_range(const world& world, std::int32_t count, flecs::type type) 
+    entity_range(const world& world, int32_t count, flecs::type type) 
         : m_world(world.c_ptr())
         , m_ids( ecs_bulk_new_w_type(m_world, type.c_ptr(), count)) { }
 
@@ -13617,11 +13706,6 @@ inline entity world::lookup(const char *name) const {
     return flecs::entity(*this, id);
 }
 
-inline entity world::lookup(std::string& name) const {
-    auto id = ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::");
-    return flecs::entity(*this, id);
-}
-
 template <typename T>
 void world::set(T value) const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
@@ -13640,8 +13724,8 @@ void world::modified() const {
     return e.modified<T>();
 }
 
-template <typename T>
-void world::patch(std::function<void(T&)> func) const {
+template <typename T, typename Func>
+void world::patch(const Func& func) const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     e.patch<T>(func);
 } 

@@ -107,11 +107,6 @@ inline entity world::lookup(const char *name) const {
     return flecs::entity(*this, id);
 }
 
-inline entity world::lookup(std::string& name) const {
-    auto id = ecs_lookup_path_w_sep(m_world, 0, name.c_str(), "::", "::");
-    return flecs::entity(*this, id);
-}
-
 template <typename T>
 void world::set(T value) const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
@@ -130,8 +125,8 @@ void world::modified() const {
     return e.modified<T>();
 }
 
-template <typename T>
-void world::patch(std::function<void(T&)> func) const {
+template <typename T, typename Func>
+void world::patch(const Func& func) const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     e.patch<T>(func);
 } 

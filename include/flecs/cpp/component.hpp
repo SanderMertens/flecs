@@ -357,11 +357,8 @@ public:
         // name as the fully qualified flecs path.
         char *path = ecs_get_fullpath(world, entity);
         s_id = entity;
-        s_name = path;
+        s_name = flecs::string(path);
         s_allow_tag = allow_tag;
-
-        // s_name is an std::string, so it will have made a copy
-        ecs_os_free(path);
     }
 
     // Obtain a component identifier without registering lifecycle callbacks.
@@ -592,15 +589,15 @@ public:
 private:
     static entity_t s_id;
     static type_t s_type;
-    static std::string s_name;
-    static std::string s_symbol;
+    static flecs::string s_name;
+    static flecs::string s_symbol;
     static bool s_allow_tag;
 };
 
 // Global templated variables that hold component identifier and other info
 template <typename T> entity_t cpp_type<T>::s_id( 0 );
 template <typename T> type_t cpp_type<T>::s_type( nullptr );
-template <typename T> std::string cpp_type<T>::s_name("");
+template <typename T> flecs::string cpp_type<T>::s_name;
 template <typename T> bool cpp_type<T>::s_allow_tag( true );
 
 } // namespace _

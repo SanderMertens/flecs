@@ -36,13 +36,152 @@ template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
 inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
 inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
 
+namespace flecs
+{
+
+////////////////////////////////////////////////////////////////////////////////
+//// Flecs string utilities
+////////////////////////////////////////////////////////////////////////////////
+
+class string_view;
+
+// This removes dependencies on std::string (and therefore STL) and allows the 
+// API to return allocated strings without incurring additional allocations when
+// wrapping in an std::string.
+class string {
+public:
+    explicit string() 
+        : m_str(nullptr)
+        , m_const_str("")
+        , m_length(0) { }
+
+    explicit string(char *str) 
+        : m_str(str)
+        , m_const_str(str ? str : "")
+        , m_length(str ? ecs_os_strlen(str) : 0) { }
+
+    ~string() {
+        // If flecs is included in a binary but is not used, it is possible that
+        // the OS API is not initialized. Calling ecs_os_free in that case could
+        // crash the application during exit. However, if a string has been set
+        // flecs has been used, and OS API should have been initialized.
+        if (m_str) {
+            ecs_os_free(m_str);
+        }
+    }
+
+    string(string&& str) {
+        ecs_os_free(m_str);
+        m_str = str.m_str;
+        m_const_str = str.m_const_str;
+        m_length = str.m_length;
+        str.m_str = nullptr;
+    }
+
+    operator const char*() const {
+        return m_const_str;
+    }
+
+    string& operator=(string&& str) {
+        ecs_os_free(m_str);
+        m_str = str.m_str;
+        m_const_str = str.m_const_str;
+        m_length = str.m_length;
+        str.m_str = nullptr;
+        return *this;
+    }
+
+    // Ban implicit copies/allocations
+    string& operator=(const string& str) = delete;
+    string(const string& str) = delete;
+
+    const char* c_str() const {
+        return m_const_str;
+    }
+
+    std::size_t length() {
+        return static_cast<std::size_t>(m_length);
+    }
+
+    std::size_t size() {
+        return length();
+    }
+
+    void clear() {
+        ecs_os_free(m_str);
+        m_str = nullptr;
+        m_const_str = nullptr;
+    }
+
+protected:
+    // Must be constructed through string_view. This allows for using the string
+    // class for both owned and non-owned strings, which can reduce allocations
+    // when code conditionally should store a literal or an owned string.
+    // Making this constructor private forces the code to explicitly create a
+    // string_view which emphasizes that the string won't be freed by the class.
+    string(const char *str)
+        : m_str(nullptr)
+        , m_const_str(str ? str : "")
+        , m_length(str ? ecs_os_strlen(str) : 0) { }
+
+    char *m_str = nullptr;
+    const char *m_const_str;
+    ecs_size_t m_length;
+};
+
+// For consistency, the API returns a string_view where it could have returned
+// a const char*, so an application won't have to think about whether to call
+// c_str() or not. The string_view is a thin wrapper around a string that forces
+// the API to indicate explicitly when a string is owned or not.
+class string_view : public string {
+public:
+    explicit string_view(const char *str)
+        : string(str) { }
+};
+
+// Wrapper around ecs_strbuf_t that provides a simple stringstream like API.
+class stringstream {
+public:
+    explicit stringstream() 
+        : m_buf(ECS_STRBUF_INIT) { }
+
+    ~stringstream() {
+        ecs_strbuf_reset(&m_buf);
+    }
+
+    stringstream(stringstream&& str) {
+        ecs_strbuf_reset(&m_buf);
+        m_buf = str.m_buf;
+        str.m_buf = ECS_STRBUF_INIT;
+    }
+
+    stringstream& operator=(stringstream&& str) {
+        ecs_strbuf_reset(&m_buf);
+        m_buf = str.m_buf;
+        str.m_buf = ECS_STRBUF_INIT;
+        return *this;
+    }
+
+    // Ban implicit copies/allocations
+    stringstream& operator=(const stringstream& str) = delete;
+    stringstream(const stringstream& str) = delete;    
+
+    stringstream& operator<<(const char* str) {
+        ecs_strbuf_appendstr(&m_buf, str);
+        return *this;
+    }
+
+    flecs::string str() {
+        return flecs::string(ecs_strbuf_get(&m_buf));
+    }
+
+private:
+    ecs_strbuf_t m_buf;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility to convert template argument pack to array of columns
 ////////////////////////////////////////////////////////////////////////////////
-
-namespace flecs 
-{
 
 namespace _ 
 {
@@ -55,7 +194,7 @@ public:
         bool is_shared;
     };
 
-    using Columns = std::array<Column, sizeof...(Components)>;
+    using Columns = Column[sizeof...(Components)];
 
     column_args(ecs_iter_t* iter) {
         populate_columns(iter, 0, (typename std::remove_reference<typename std::remove_pointer<Components>::type>::type*)nullptr...);
@@ -118,18 +257,18 @@ constexpr const char *optional_modifier() {
 
 /** Convert template arguments to string */
 template <typename ...Components>
-bool pack_args_to_string(world_t *world, std::stringstream& str, bool is_each = false) {
+bool pack_args_to_string(world_t *world, flecs::stringstream& str, bool is_each = false) {
     (void)world;
 
-    std::array<const char*, sizeof...(Components)> ids = {
+    const char* ids[sizeof...(Components)] = {
         (_::cpp_type<Components>::name(world))...
     };
 
-    std::array<const char*, sizeof...(Components)> inout_modifiers = {
+    const char* inout_modifiers[sizeof...(Components)] = {
         (inout_modifier<Components>())...
     }; 
 
-    std::array<const char*, sizeof...(Components)> optional_modifiers = {
+    const char* optional_modifiers[sizeof...(Components)] = {
         (optional_modifier<Components>())...
     };        
 

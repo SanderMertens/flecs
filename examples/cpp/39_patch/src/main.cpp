@@ -5,16 +5,12 @@
 // patch lets an application to read a value before setting it.
 
 struct Counter {
+    Counter() : value(0) { std::cout << "Counter constructed" << std::endl; }
     int value;
 };
 
 void inc(flecs::entity e) {
-    e.patch<Counter>([](Counter& counter, bool exists) {
-        // If this is the first time that we're setting Counter, initialize.
-        if (!exists) {
-            counter.value = 0;
-        }
-
+    e.patch<Counter>([](Counter& counter) {
         // Add one to the previous value of counter
         counter.value ++;
     });

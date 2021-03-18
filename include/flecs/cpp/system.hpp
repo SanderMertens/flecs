@@ -11,8 +11,8 @@ public:
     system_runner_fluent(
         world_t *world, 
         entity_t id, 
-        std::int32_t stage_current, 
-        std::int32_t stage_count, 
+        int32_t stage_current, 
+        int32_t stage_count, 
         FLECS_FLOAT delta_time, 
         void *param)
         : m_stage(world)
@@ -30,12 +30,12 @@ public:
         return *this;
     }
 
-    system_runner_fluent& offset(std::int32_t offset) {
+    system_runner_fluent& offset(int32_t offset) {
         m_offset = offset;
         return *this;
     }
 
-    system_runner_fluent& limit(std::int32_t limit) {
+    system_runner_fluent& limit(int32_t limit) {
         m_limit = limit;
         return *this;
     }
@@ -62,10 +62,10 @@ private:
     FLECS_FLOAT m_delta_time;
     void *m_param;
     flecs::filter m_filter;
-    std::int32_t m_offset;
-    std::int32_t m_limit;
-    std::int32_t m_stage_current;
-    std::int32_t m_stage_count;
+    int32_t m_offset;
+    int32_t m_limit;
+    int32_t m_stage_current;
+    int32_t m_stage_count;
 };
 
 
@@ -223,8 +223,8 @@ public:
     }
 
     system_runner_fluent run_worker(
-        std::int32_t stage_current, 
-        std::int32_t stage_count, 
+        int32_t stage_current, 
+        int32_t stage_count, 
         FLECS_FLOAT delta_time = 0.0f, 
         void *param = nullptr) const 
     {
@@ -297,10 +297,10 @@ private:
             is_each = false;
         }
 
-        std::string signature = build_signature(is_each);
+        flecs::string signature = build_signature(is_each);
 
         if (!signature.length()) {
-            signature = "0";
+            signature = flecs::string_view("0");
         }
 
         if (is_trigger) {
@@ -344,10 +344,10 @@ private:
         return e;
     }
 
-    std::string build_signature(bool is_each) {
+    flecs::string build_signature(bool is_each) {
         bool is_set = false;
 
-        std::stringstream str;
+        flecs::stringstream str;
         if (_::pack_args_to_string<Components ...>(m_world, str, is_each)) {
             is_set = true;
         }

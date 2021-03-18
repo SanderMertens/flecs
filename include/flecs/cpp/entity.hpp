@@ -381,34 +381,8 @@ public:
      * @tparam T The component to patch.
      * @param func The function invoked by this operation.
      */
-    template <typename T>
-    const base_type& patch(std::function<void(T&, bool)> func) const {
-        auto comp_id = _::cpp_type<T>::id(world());
-
-        ecs_assert(_::cpp_type<T>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
-
-        bool is_added;
-        T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-            world(), id(), comp_id, &is_added));
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        func(*ptr, !is_added);
-        ecs_modified_w_entity(world(), id(), comp_id);
-
-        return *base();
-    }      
-
-    /** Patch a component value.
-     * This operation allows an application to partially overwrite a component 
-     * value. The operation invokes a function with a reference to the value to
-     * write.
-     *
-     * @tparam T The component to patch.
-     * @param func The function invoked by this operation.
-     */
-    template <typename T>
-    const base_type& patch(std::function<void(T&)> func) const {
+    template <typename T, typename Func>
+    const base_type& patch(const Func& func) const {
         auto comp_id = _::cpp_type<T>::id(world());
 
         ecs_assert(_::cpp_type<T>::size() != 0, 
@@ -658,14 +632,10 @@ public:
      *
      * @return The entity name, or an empty string if the entity has no name.
      */
-    std::string name() const {
+    flecs::string_view name() const {
         const EcsName *name = static_cast<const EcsName*>(
             ecs_get_w_entity(m_world, m_id, ecs_entity(EcsName)));
-        if (name && name->value) {
-            return std::string(name->value);
-        } else {
-            return std::string();
-        }
+        return flecs::string_view(name ? name->value : nullptr);
     }
 
     /** Return the entity path.
@@ -673,15 +643,9 @@ public:
      * @return The hierarchical entity path, or an empty string if the entity 
      *         has no name.
      */
-    std::string path(const char *sep = "::", const char *init_sep = "::") const {
+    flecs::string path(const char *sep = "::", const char *init_sep = "::") const {
         char *path = ecs_get_path_w_sep(m_world, 0, m_id, 0, sep, init_sep);
-        if (path) {
-            std::string result = std::string(path);
-            ecs_os_free(path);
-            return result;
-        } else {
-            return std::string();
-        }
+        return flecs::string(path);
     }   
 
     bool enabled() {

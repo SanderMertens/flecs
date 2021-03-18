@@ -1,5 +1,7 @@
 #include <cpp_api.h>
 
+#include <string>
+
 class POD {
 public:
     POD() {

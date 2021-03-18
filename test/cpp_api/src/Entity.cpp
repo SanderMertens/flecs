@@ -133,8 +133,7 @@ void Entity_replace() {
     auto entity = world.entity();
     test_assert(entity.id() != 0);
 
-    entity.patch<Position>([](Position& p, bool exists) {
-        test_assert(!exists);
+    entity.patch<Position>([](Position& p) {
         p.x = 10;
         p.y = 20;
     });
@@ -143,8 +142,7 @@ void Entity_replace() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    entity.patch<Position>([](Position& p_arg, bool exists) {
-        test_assert(exists);
+    entity.patch<Position>([](Position& p_arg) {
         p_arg.x = 30;
     });
 

@@ -18,7 +18,7 @@ public:
         m_reader = ecs_reader_init_w_iter(&it, ecs_snapshot_next);
     }
 
-    int32_t read(char *buffer, std::int64_t size) {
+    int32_t read(char *buffer, int64_t size) {
         return ecs_reader_read(buffer, static_cast<int32_t>(size), &m_reader);
     }
 
@@ -36,7 +36,7 @@ public:
         m_writer = ecs_writer_init(world.c_ptr());
     }
 
-    int32_t write(const char *buffer, std::int64_t size) {
+    int32_t write(const char *buffer, int64_t size) {
         return ecs_writer_write(buffer, static_cast<int32_t>(size), &m_writer);
     }
 

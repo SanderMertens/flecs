@@ -7,10 +7,7 @@
 
 #pragma once
 
-#include <string>
-#include <sstream>
-#include <array>
-#include <functional>
+#include <type_traits>
 
 namespace flecs {
 

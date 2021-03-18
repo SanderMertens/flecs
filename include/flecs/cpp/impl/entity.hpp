@@ -9,11 +9,11 @@ namespace flecs
 
 class ECS_DEPRECATED("do not use") entity_range final {
 public:
-    entity_range(const world& world, std::int32_t count) 
+    entity_range(const world& world, int32_t count) 
         : m_world(world.c_ptr())
         , m_ids( ecs_bulk_new_w_type(m_world, nullptr, count)) { }
 
-    entity_range(const world& world, std::int32_t count, flecs::type type) 
+    entity_range(const world& world, int32_t count, flecs::type type) 
         : m_world(world.c_ptr())
         , m_ids( ecs_bulk_new_w_type(m_world, type.c_ptr(), count)) { }
 

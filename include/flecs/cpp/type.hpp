@@ -110,12 +110,12 @@ public:
 
     template <typename ... Components>
     type& add() {
-        std::stringstream str;
+        flecs::stringstream str;
         if (!_::pack_args_to_string<Components...>(m_world, str)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
-        std::string expr = str.str();
+        flecs::string expr = str.str();
         ecs_type_t t = ecs_type_from_str(m_world, expr.c_str());
         m_type = ecs_type_merge(m_world, m_type, t, nullptr);
         m_normalized = ecs_type_merge(m_world, m_normalized, t, nullptr);
@@ -124,11 +124,9 @@ public:
         return *this;
     }    
 
-    std::string str() const {
+    flecs::string str() const {
         char *str = ecs_type_str(m_world, m_type);
-        std::string result(str);
-        ecs_os_free(str);
-        return result;
+        return flecs::string(str);
     }
 
     type_t c_ptr() const {

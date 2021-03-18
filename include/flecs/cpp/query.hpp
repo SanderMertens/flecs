@@ -143,7 +143,7 @@ public:
     query() : query_base(nullptr, nullptr) { }
 
     explicit query(const world& world) {
-        std::stringstream str;
+        flecs::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
@@ -153,7 +153,7 @@ public:
     }
 
     explicit query(const world& world, query_base& parent) {
-        std::stringstream str;
+        flecs::stringstream str;
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
@@ -163,7 +163,7 @@ public:
     }
 
     explicit query(const world& world, const char *expr) {
-        std::stringstream str;
+        flecs::stringstream str;
         m_world = world.c_ptr();
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_query_new(world.c_ptr(), expr);
@@ -174,7 +174,7 @@ public:
     }
 
     explicit query(const world& world, query_base& parent, const char *expr) {
-        std::stringstream str;
+        flecs::stringstream str;
         m_world = world.c_ptr();
         if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
             m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
@@ -210,7 +210,7 @@ public:
     }
 
     template <typename Func>
-    void each_worker(std::int32_t stage_current, std::int32_t stage_count, Func&& func) const {
+    void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next_worker(&it, stage_current, stage_count)) {
@@ -252,7 +252,7 @@ public:
     }
 
     template <typename Func>
-    void iter_worker(std::int32_t stage_current, std::int32_t stage_count, Func&& func) const {
+    void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
 
         while (ecs_query_next_worker(&it, stage_current, stage_count)) {
