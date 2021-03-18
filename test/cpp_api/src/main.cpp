@@ -115,6 +115,7 @@ void Type_2_component(void);
 void Type_1_component_signature(void);
 void Type_2_component_signature(void);
 void Type_type_no_name(void);
+void Type_null_args(void);
 
 // Testsuite 'System'
 void System_action(void);
@@ -151,6 +152,7 @@ void System_delete_from_iter(void);
 void System_add_from_iter_world_handle(void);
 void System_new_from_iter(void);
 void System_each_w_mut_children_it(void);
+void System_readonly_children_iter(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -684,6 +686,10 @@ bake_test_case Type_testcases[] = {
     {
         "type_no_name",
         Type_type_no_name
+    },
+    {
+        "null_args",
+        Type_null_args
     }
 };
 
@@ -823,6 +829,10 @@ bake_test_case System_testcases[] = {
     {
         "each_w_mut_children_it",
         System_each_w_mut_children_it
+    },
+    {
+        "readonly_children_iter",
+        System_readonly_children_iter
     }
 };
 
@@ -1321,14 +1331,14 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        8,
+        9,
         Type_testcases
     },
     {
         "System",
         NULL,
         NULL,
-        34,
+        35,
         System_testcases
     },
     {

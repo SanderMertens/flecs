@@ -974,3 +974,29 @@ void System_each_w_mut_children_it() {
     test_assert(e2.has<Velocity>());
     test_assert(e3.has<Velocity>());
 }
+
+void System_readonly_children_iter() {
+    flecs::world world;
+
+    auto parent = world.entity();
+    world.entity().set<Entity>({ parent });
+    world.entity().set<Position>({1, 0}).add_childof(parent);
+    world.entity().set<Position>({1, 0}).add_childof(parent);
+    world.entity().set<Position>({1, 0}).add_childof(parent);
+
+    auto sys = world.system<const Entity>()
+        .iter([](const flecs::iter& it, const Entity* c) {
+            for (auto i : it) {
+                for (flecs::iter child_it : c[i].e.children()) {
+                    for (auto c : child_it) {
+                        // Dummy code to ensure we can access the entity
+                        const Position *p = child_it.entity(c).get<Position>();
+                        test_int(p->x, 1);
+                        test_int(p->y, 0);
+                    }
+                }
+            }
+        });
+
+    world.progress();
+}

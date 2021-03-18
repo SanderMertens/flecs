@@ -271,7 +271,8 @@ public:
      */
     flecs::world get_world() const {
         /* Safe cast, mutability is checked */
-        return flecs::world((flecs::world_t*)ecs_get_world(m_world));
+        return flecs::world(
+            m_world ? (flecs::world_t*)ecs_get_world(m_world) : nullptr);
     }
 
     /** Test whether the current world object is readonly.

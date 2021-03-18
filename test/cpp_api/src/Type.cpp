@@ -116,3 +116,12 @@ void Type_type_no_name() {
     auto e = world.entity(id);
     test_assert(!e.has<flecs::Name>());
 }
+
+void Type_null_args() {
+    flecs::world world;
+
+    flecs::type(nullptr, nullptr);
+
+    // Make sure code didn't crash
+    test_assert(true);
+}
