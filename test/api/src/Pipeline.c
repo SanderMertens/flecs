@@ -582,3 +582,18 @@ void Pipeline_run_pipeline() {
 
     ecs_fini(world);
 }
+
+void Pipeline_get_pipeline_from_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t pipeline = ecs_get_pipeline(world);
+    test_assert(pipeline != 0);
+
+    /* Get default stage */
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    test_assert(stage != NULL);
+
+    test_assert(pipeline == ecs_get_pipeline(stage));
+
+    ecs_fini(world);
+}

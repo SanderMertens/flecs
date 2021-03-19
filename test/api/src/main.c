@@ -540,6 +540,7 @@ void Pipeline_no_merge_after_staged_in_out(void);
 void Pipeline_merge_after_staged_out_before_owned(void);
 void Pipeline_switch_pipeline(void);
 void Pipeline_run_pipeline(void);
+void Pipeline_get_pipeline_from_stage(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_setup(void);
@@ -3491,6 +3492,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "run_pipeline",
         Pipeline_run_pipeline
+    },
+    {
+        "get_pipeline_from_stage",
+        Pipeline_get_pipeline_from_stage
     }
 };
 
@@ -7301,7 +7306,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        16,
+        17,
         Pipeline_testcases
     },
     {
