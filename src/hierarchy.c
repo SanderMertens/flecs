@@ -421,11 +421,11 @@ int32_t ecs_get_child_count(
 }
 
 ecs_iter_t ecs_scope_iter(
-    ecs_world_t *world,
+    ecs_world_t *iter_world,
     ecs_entity_t parent)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = (ecs_world_t*)ecs_get_world(world);
+    ecs_assert(iter_world != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_world_t *world = (ecs_world_t*)ecs_get_world(iter_world);
 
     ecs_scope_iter_t iter = {
         .tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, parent),
@@ -433,18 +433,18 @@ ecs_iter_t ecs_scope_iter(
     };
 
     return (ecs_iter_t) {
-        .world = world,
+        .world = iter_world,
         .iter.parent = iter
     };
 }
 
 ecs_iter_t ecs_scope_iter_w_filter(
-    ecs_world_t *world,
+    ecs_world_t *iter_world,
     ecs_entity_t parent,
     ecs_filter_t *filter)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = (ecs_world_t*)ecs_get_world(world);
+    ecs_assert(iter_world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_world_t *world = (ecs_world_t*)ecs_get_world(iter_world);
 
     ecs_scope_iter_t iter = {
         .filter = *filter,
@@ -453,7 +453,7 @@ ecs_iter_t ecs_scope_iter_w_filter(
     };
 
     return (ecs_iter_t) {
-        .world = world,
+        .world = iter_world,
         .iter.parent = iter,
         .table_count = ecs_vector_count(iter.tables)
     };

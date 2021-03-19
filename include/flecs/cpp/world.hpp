@@ -263,6 +263,28 @@ public:
         return flecs::world(ecs_get_stage(m_world, id));
     }
 
+    /** Get actual world.
+     * If the current object points to a stage, this operation will return the
+     * actual world.
+     *
+     * @return The actual world.
+     */
+    flecs::world get_world() const {
+        /* Safe cast, mutability is checked */
+        return flecs::world(
+            m_world ? (flecs::world_t*)ecs_get_world(m_world) : nullptr);
+    }
+
+    /** Test whether the current world object is readonly.
+     * This function allows the code to test whether the currently used world object
+     * is readonly or whether it allows for writing.  
+     *
+     * @return True if the world or stage is readonly.
+     */
+    bool is_readonly() const {
+        return ecs_stage_is_readonly(m_world);
+    }
+
     /** Set number of threads.
      * This will distribute the load evenly across the configured number of 
      * threads for each system.

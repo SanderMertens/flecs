@@ -988,12 +988,13 @@
             ]
         }, {
             "id": "SystemCascade",
-            "setup": true,
             "testcases": [
                 "cascade_depth_1",
                 "cascade_depth_2",
                 "add_after_match",
-                "adopt_after_match"
+                "adopt_after_match",
+                "rematch_w_empty_table",
+                "query_w_only_cascade"
             ]
         }, {
             "id": "SystemManual",

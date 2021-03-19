@@ -753,3 +753,250 @@ void System_get_query() {
 
     test_int(count, 3);
 }
+
+void System_add_from_each() {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>();
+
+    auto e1 = world.entity().set<Position>({0, 0});
+    auto e2 = world.entity().set<Position>({1, 0});
+    auto e3 = world.entity().set<Position>({2, 0});
+
+    auto sys = world.system<const Position>()
+        .each([](flecs::entity e, const Position& p) {
+            e.add<Velocity>();
+            // Add is deferred
+            test_assert(!e.has<Velocity>());
+        });
+
+    world.progress();
+
+    test_assert(e1.has<Velocity>());
+    test_assert(e2.has<Velocity>());
+    test_assert(e3.has<Velocity>());
+}
+
+void System_delete_from_each() {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>();
+
+    auto e1 = world.entity().set<Position>({0, 0});
+    auto e2 = world.entity().set<Position>({1, 0});
+    auto e3 = world.entity().set<Position>({2, 0});
+
+    auto sys = world.system<const Position>()
+        .each([](flecs::entity e, const Position& p) {
+            e.destruct();
+            // Delete is deferred
+            test_assert(e.is_alive());
+        });
+
+    world.progress();
+
+    test_assert(!e1.is_alive());
+    test_assert(!e2.is_alive());
+    test_assert(!e3.is_alive());
+}
+
+struct Entity {
+    flecs::entity e;
+};
+
+void System_add_from_each_world_handle() {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Entity>({world.entity()});
+    auto e2 = world.entity().set<Entity>({world.entity()});
+    auto e3 = world.entity().set<Entity>({world.entity()});
+
+    auto sys = world.system<const Entity>()
+        .each([](flecs::entity e, const Entity& c) {
+            c.e.mut(e).add<Position>();
+        });
+
+    world.progress();
+
+    test_assert(e1.get<Entity>()->e.has<Position>());
+    test_assert(e2.get<Entity>()->e.has<Position>());
+    test_assert(e3.get<Entity>()->e.has<Position>());
+}
+
+void System_new_from_each() {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Position>({0, 0});
+    auto e2 = world.entity().set<Position>({0, 0});
+    auto e3 = world.entity().set<Position>({0, 0});
+
+    auto sys = world.system<const Position>()
+        .each([](flecs::entity e, const Position& p) {
+            e.set<Entity>({
+                e.world().entity().mut(e).add<Velocity>()
+            });
+        });
+
+    world.progress();
+
+    test_assert(e1.has<Entity>());
+    test_assert(e2.has<Entity>());
+    test_assert(e3.has<Entity>());
+
+    test_assert(e1.get<Entity>()->e.has<Velocity>());
+    test_assert(e2.get<Entity>()->e.has<Velocity>());
+    test_assert(e3.get<Entity>()->e.has<Velocity>());
+}
+
+void System_add_from_iter() {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>();
+
+    auto e1 = world.entity().set<Position>({0, 0});
+    auto e2 = world.entity().set<Position>({1, 0});
+    auto e3 = world.entity().set<Position>({2, 0});
+
+    auto sys = world.system<const Position>()
+        .iter([](flecs::iter& it, const Position* p) {
+            for (auto i : it) {
+                it.entity(i).add<Velocity>();
+                test_assert(!it.entity(i).has<Velocity>());
+            }
+        });
+
+    world.progress();
+
+    test_assert(e1.has<Velocity>());
+    test_assert(e2.has<Velocity>());
+    test_assert(e3.has<Velocity>());
+}
+
+void System_delete_from_iter() {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>();
+
+    auto e1 = world.entity().set<Position>({0, 0});
+    auto e2 = world.entity().set<Position>({1, 0});
+    auto e3 = world.entity().set<Position>({2, 0});
+
+    auto sys = world.system<const Position>()
+        .iter([](const flecs::iter& it, const Position* p) {
+            for (auto i : it) {
+                it.entity(i).destruct();
+                // Delete is deferred
+                test_assert(it.entity(i).is_alive());
+            }
+        });
+
+    world.progress();
+
+    test_assert(!e1.is_alive());
+    test_assert(!e2.is_alive());
+    test_assert(!e3.is_alive());
+}
+
+void System_add_from_iter_world_handle() {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Entity>({world.entity()});
+    auto e2 = world.entity().set<Entity>({world.entity()});
+    auto e3 = world.entity().set<Entity>({world.entity()});
+
+    auto sys = world.system<const Entity>()
+        .iter([](const flecs::iter& it, const Entity* c) {
+            for (auto i : it) {
+                c[i].e.mut(it).add<Position>();
+            }
+        });
+
+    world.progress();
+
+    test_assert(e1.get<Entity>()->e.has<Position>());
+    test_assert(e2.get<Entity>()->e.has<Position>());
+    test_assert(e3.get<Entity>()->e.has<Position>());
+}
+
+void System_new_from_iter() {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Position>({0, 0});
+    auto e2 = world.entity().set<Position>({0, 0});
+    auto e3 = world.entity().set<Position>({0, 0});
+
+    auto sys = world.system<const Position>()
+        .iter([](const flecs::iter& it, const Position* p) {
+            for (auto i : it) {
+                it.entity(i).set<Entity>({
+                    it.world().entity().mut(it).add<Velocity>()
+                });
+            }
+        });
+
+    world.progress();
+
+    test_assert(e1.has<Entity>());
+    test_assert(e2.has<Entity>());
+    test_assert(e3.has<Entity>());
+
+    test_assert(e1.get<Entity>()->e.has<Velocity>());
+    test_assert(e2.get<Entity>()->e.has<Velocity>());
+    test_assert(e3.get<Entity>()->e.has<Velocity>());
+}
+
+void System_each_w_mut_children_it() {
+    flecs::world world;
+
+    auto parent = world.entity().set<Position>({0, 0});
+    auto e1 = world.entity().set<Position>({0, 0}).add_childof(parent);
+    auto e2 = world.entity().set<Position>({0, 0}).add_childof(parent);
+    auto e3 = world.entity().set<Position>({0, 0}).add_childof(parent);
+
+    auto sys = world.system<const Position>()
+        .iter([](const flecs::iter& it, const Position* p) {
+            for (auto i : it) {
+                for (flecs::iter child_it : it.entity(i).children()) {
+                    for (auto c : child_it) {
+                        child_it.entity(c).add<Velocity>();
+                    }
+                }
+            }
+        });
+
+    world.progress();
+
+    test_assert(e1.has<Velocity>());
+    test_assert(e2.has<Velocity>());
+    test_assert(e3.has<Velocity>());
+}
+
+void System_readonly_children_iter() {
+    flecs::world world;
+
+    auto parent = world.entity();
+    world.entity().set<Entity>({ parent });
+    world.entity().set<Position>({1, 0}).add_childof(parent);
+    world.entity().set<Position>({1, 0}).add_childof(parent);
+    world.entity().set<Position>({1, 0}).add_childof(parent);
+
+    auto sys = world.system<const Entity>()
+        .iter([](const flecs::iter& it, const Entity* c) {
+            for (auto i : it) {
+                for (flecs::iter child_it : c[i].e.children()) {
+                    for (auto c : child_it) {
+                        // Dummy code to ensure we can access the entity
+                        const Position *p = child_it.entity(c).get<Position>();
+                        test_int(p->x, 1);
+                        test_int(p->y, 0);
+                    }
+                }
+            }
+        });
+
+    world.progress();
+}

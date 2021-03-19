@@ -115,6 +115,7 @@ void Type_2_component(void);
 void Type_1_component_signature(void);
 void Type_2_component_signature(void);
 void Type_type_no_name(void);
+void Type_null_args(void);
 
 // Testsuite 'System'
 void System_action(void);
@@ -142,6 +143,16 @@ void System_order_by_id(void);
 void System_order_by_type_after_create(void);
 void System_order_by_id_after_create(void);
 void System_get_query(void);
+void System_add_from_each(void);
+void System_delete_from_each(void);
+void System_add_from_each_world_handle(void);
+void System_new_from_each(void);
+void System_add_from_iter(void);
+void System_delete_from_iter(void);
+void System_add_from_iter_world_handle(void);
+void System_new_from_iter(void);
+void System_each_w_mut_children_it(void);
+void System_readonly_children_iter(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -675,6 +686,10 @@ bake_test_case Type_testcases[] = {
     {
         "type_no_name",
         Type_type_no_name
+    },
+    {
+        "null_args",
+        Type_null_args
     }
 };
 
@@ -778,6 +793,46 @@ bake_test_case System_testcases[] = {
     {
         "get_query",
         System_get_query
+    },
+    {
+        "add_from_each",
+        System_add_from_each
+    },
+    {
+        "delete_from_each",
+        System_delete_from_each
+    },
+    {
+        "add_from_each_world_handle",
+        System_add_from_each_world_handle
+    },
+    {
+        "new_from_each",
+        System_new_from_each
+    },
+    {
+        "add_from_iter",
+        System_add_from_iter
+    },
+    {
+        "delete_from_iter",
+        System_delete_from_iter
+    },
+    {
+        "add_from_iter_world_handle",
+        System_add_from_iter_world_handle
+    },
+    {
+        "new_from_iter",
+        System_new_from_iter
+    },
+    {
+        "each_w_mut_children_it",
+        System_each_w_mut_children_it
+    },
+    {
+        "readonly_children_iter",
+        System_readonly_children_iter
     }
 };
 
@@ -1276,14 +1331,14 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        8,
+        9,
         Type_testcases
     },
     {
         "System",
         NULL,
         NULL,
-        25,
+        35,
         System_testcases
     },
     {

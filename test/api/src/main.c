@@ -911,11 +911,12 @@ void SystemOnDemand_on_demand_task_w_not_from_entity(void);
 void SystemOnDemand_enable_after_user_disable(void);
 
 // Testsuite 'SystemCascade'
-void SystemCascade_setup(void);
 void SystemCascade_cascade_depth_1(void);
 void SystemCascade_cascade_depth_2(void);
 void SystemCascade_add_after_match(void);
 void SystemCascade_adopt_after_match(void);
+void SystemCascade_rematch_w_empty_table(void);
+void SystemCascade_query_w_only_cascade(void);
 
 // Testsuite 'SystemManual'
 void SystemManual_setup(void);
@@ -4911,6 +4912,14 @@ bake_test_case SystemCascade_testcases[] = {
     {
         "adopt_after_match",
         SystemCascade_adopt_after_match
+    },
+    {
+        "rematch_w_empty_table",
+        SystemCascade_rematch_w_empty_table
+    },
+    {
+        "query_w_only_cascade",
+        SystemCascade_query_w_only_cascade
     }
 };
 
@@ -7383,9 +7392,9 @@ static bake_test_suite suites[] = {
     },
     {
         "SystemCascade",
-        SystemCascade_setup,
         NULL,
-        4,
+        NULL,
+        6,
         SystemCascade_testcases
     },
     {

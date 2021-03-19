@@ -128,7 +128,8 @@
                 "2_component",
                 "1_component_signature",
                 "2_component_signature",
-                "type_no_name"
+                "type_no_name",
+                "null_args"
             ]
         }, {
             "id": "System",
@@ -157,7 +158,17 @@
                 "order_by_id",
                 "order_by_type_after_create",
                 "order_by_id_after_create",
-                "get_query"
+                "get_query",
+                "add_from_each",
+                "delete_from_each",
+                "add_from_each_world_handle",
+                "new_from_each",
+                "add_from_iter",
+                "delete_from_iter",
+                "add_from_iter_world_handle",
+                "new_from_iter",
+                "each_w_mut_children_it",
+                "readonly_children_iter"
             ]
         }, {
             "id": "Trigger",

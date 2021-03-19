@@ -336,7 +336,7 @@ public:
      */
     flecs::type column_type(int32_t col) const;
 
-    /** Obtain entity being iterated over for row.
+    /** Obtain mutable handle to entity being iterated over.
      *
      * @param row Row being iterated over.
      */

@@ -318,6 +318,65 @@ void SystemCascade_adopt_after_match() {
     ecs_fini(world);
 }
 
-void SystemCascade_setup() {
-    // Implement testcase
+void SystemCascade_rematch_w_empty_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "CASCADE:Position, Velocity");
+    test_assert(q != NULL);
+
+    ecs_entity_t parent = ecs_new(world, Position);
+    ecs_add(world, parent, Velocity);
+
+    ecs_entity_t child = ecs_new(world, Velocity);
+    ecs_add_entity(world, child, ECS_CHILDOF | parent);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], parent);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], child);
+    test_assert(!ecs_query_next(&it));
+
+    // Change parent, trigger rematch
+    ecs_remove(world, parent, Position);
+
+    it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], parent);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], child);
+    test_assert(!ecs_query_next(&it));    
+
+    ecs_fini(world);
+}
+
+void SystemCascade_query_w_only_cascade() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "CASCADE:Position");;
+    test_assert(q != NULL);
+
+    ecs_entity_t parent = ecs_new(world, Position);
+    ecs_entity_t child = ecs_new(world, Position);
+    ecs_add_entity(world, child, ECS_CHILDOF | parent);
+    ecs_add(world, child, Velocity);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 0); // Task system, matches nothing
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
 }

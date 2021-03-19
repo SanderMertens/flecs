@@ -752,7 +752,7 @@ add_trait:
              * a disabled column for the queried for component. If so, cache it
              * in a vector as the iterator will need to skip the entity when the
              * component is disabled. */
-            if (index && (table->flags & EcsTableHasDisabled)) {
+            if (index && (table && table->flags & EcsTableHasDisabled)) {
                 ecs_entity_t bs_id = 
                     (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
                 int32_t bs_index = ecs_type_index_of(table->type, bs_id);
@@ -1918,7 +1918,8 @@ void resolve_cascade_container(
                 query->tables, ecs_matched_table_t, table_data_index);            
         } else {
             table_data = ecs_vector_get(
-                query->empty_tables, ecs_matched_table_t, table_data_index);
+                query->empty_tables, ecs_matched_table_t, 
+                    -1 * table_data_index - 1);
         }
         
         ecs_assert(table_data->iter_data.references != 0, ECS_INTERNAL_ERROR, NULL);

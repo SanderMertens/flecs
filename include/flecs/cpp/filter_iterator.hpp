@@ -63,8 +63,8 @@ public:
         : m_has_next(false)
         , m_iter{ } { }
 
-    tree_iterator(flecs::entity entity) 
-        : m_iter( ecs_scope_iter(entity.world().c_ptr(), entity.id()) )
+    tree_iterator(flecs::world_t *world, const flecs::entity_t entity) 
+        : m_iter( ecs_scope_iter(world, entity ))
     {
         m_has_next = ecs_scope_next(&m_iter);
     }
@@ -143,11 +143,12 @@ private:
 
 class child_iterator {
 public:
-    child_iterator(const entity& entity) 
-        : m_parent( entity ) { }
+    child_iterator(const flecs::entity& entity) 
+        : m_world( entity.world().c_ptr() )
+        , m_parent( entity.id() ) { }
 
     inline tree_iterator begin() const {
-        return tree_iterator(m_parent);
+        return tree_iterator(m_world, m_parent);
     }
 
     inline tree_iterator end() const {
@@ -155,7 +156,8 @@ public:
     }
 
 private:
-    const entity& m_parent;
+    flecs::world_t *m_world;
+    flecs::entity_t m_parent;
 };
 
 

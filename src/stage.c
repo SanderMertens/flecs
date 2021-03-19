@@ -605,3 +605,21 @@ void ecs_set_automerge(
         stage->auto_merge = auto_merge;
     }
 }
+
+bool ecs_stage_is_readonly(
+    const ecs_world_t *stage)
+{
+    const ecs_world_t *world = ecs_get_world(stage);
+
+    if (world->is_readonly) {
+        if (stage->magic == ECS_WORLD_MAGIC) {
+            return true;
+        }
+    } else {
+        if (stage->magic == ECS_STAGE_MAGIC) {
+            return true;
+        }
+    }
+
+    return false;
+}
