@@ -1090,7 +1090,8 @@
                 "override_2_prefabs",
                 "rematch_after_add_instanceof_to_parent",
                 "child_of_instance",
-                "rematch_after_prefab_delete"
+                "rematch_after_prefab_delete",
+                "add_tag_w_low_id_to_instance"
             ]
         }, {
             "id": "System_w_FromContainer",

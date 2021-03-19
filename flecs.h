@@ -9127,7 +9127,8 @@ public:
      */
     flecs::world get_world() const {
         /* Safe cast, mutability is checked */
-        return flecs::world((flecs::world_t*)ecs_get_world(m_world));
+        return flecs::world(
+            m_world ? (flecs::world_t*)ecs_get_world(m_world) : nullptr);
     }
 
     /** Test whether the current world object is readonly.
@@ -13773,8 +13774,12 @@ inline flecs::world iter::world() const {
 
 inline flecs::entity iter::entity(size_t row) const {
     ecs_assert(row < (size_t)m_iter->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-    return flecs::entity(m_iter->entities[row])
-        .mut(this->world());
+    if (!this->world().is_readonly()) {
+        return flecs::entity(m_iter->entities[row])
+            .mut(this->world());
+    } else {
+        return flecs::entity(this->world().c_ptr(), m_iter->entities[row]);
+    }
 }
 
 /* Obtain column source (0 if self) */

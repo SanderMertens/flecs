@@ -229,6 +229,7 @@ void ImplicitComponents_reinit(void);
 void ImplicitComponents_reinit_scoped(void);
 void ImplicitComponents_reinit_w_lifecycle(void);
 void ImplicitComponents_first_use_in_system(void);
+void ImplicitComponents_first_use_tag_in_system(void);
 
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
@@ -1107,6 +1108,10 @@ bake_test_case ImplicitComponents_testcases[] = {
     {
         "first_use_in_system",
         ImplicitComponents_first_use_in_system
+    },
+    {
+        "first_use_tag_in_system",
+        ImplicitComponents_first_use_tag_in_system
     }
 };
 
@@ -1380,7 +1385,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        17,
+        18,
         ImplicitComponents_testcases
     },
     {

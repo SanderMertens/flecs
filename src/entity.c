@@ -742,6 +742,14 @@ void ecs_components_override(
             continue;
         }
 
+        /* column_index is lower than column count, which means we must have
+         * data columns */
+        ecs_assert(data->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!data->columns[column_index].size) {
+            continue;
+        }
+
         ecs_column_t *column = &columns[column_index];
         if (override_component(world, component, type, data, column, 
             row, count)) 
