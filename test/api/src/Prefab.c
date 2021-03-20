@@ -2962,3 +2962,21 @@ void Prefab_rematch_after_prefab_delete() {
 
     ecs_fini(world);
 }
+
+void Prefab_add_tag_w_low_id_to_instance() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t Tag = ecs_new_component_id(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_add_entity(world, base, Tag);
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_add(world, e, Position);
+    ecs_add_entity(world, e, Tag);
+    
+    test_assert(ecs_has_entity(world, e, Tag));
+
+    ecs_fini(world);
+}

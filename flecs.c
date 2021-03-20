@@ -4588,6 +4588,14 @@ void ecs_components_override(
             continue;
         }
 
+        /* column_index is lower than column count, which means we must have
+         * data columns */
+        ecs_assert(data->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!data->columns[column_index].size) {
+            continue;
+        }
+
         ecs_column_t *column = &columns[column_index];
         if (override_component(world, component, type, data, column, 
             row, count)) 
@@ -21381,6 +21389,8 @@ void ecs_set_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
     ecs_assert( ecs_get(world, pipeline, EcsPipelineQuery) != NULL, 
         ECS_INVALID_PARAMETER, NULL);
 
@@ -21390,6 +21400,8 @@ void ecs_set_pipeline(
 ecs_entity_t ecs_get_pipeline(
     const ecs_world_t *world)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
     return world->pipeline;
 }
 
@@ -23059,7 +23071,7 @@ ecs_entity_t ecs_new_entity(
     const char *expr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_stage_from_world(&world);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {
@@ -23081,7 +23093,7 @@ ecs_entity_t ecs_new_prefab(
     const char *expr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_stage_from_world(&world);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
     if (!result) {

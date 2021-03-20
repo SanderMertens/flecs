@@ -540,6 +540,7 @@ void Pipeline_no_merge_after_staged_in_out(void);
 void Pipeline_merge_after_staged_out_before_owned(void);
 void Pipeline_switch_pipeline(void);
 void Pipeline_run_pipeline(void);
+void Pipeline_get_pipeline_from_stage(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_setup(void);
@@ -1007,6 +1008,7 @@ void Prefab_override_2_prefabs(void);
 void Prefab_rematch_after_add_instanceof_to_parent(void);
 void Prefab_child_of_instance(void);
 void Prefab_rematch_after_prefab_delete(void);
+void Prefab_add_tag_w_low_id_to_instance(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_setup(void);
@@ -3490,6 +3492,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "run_pipeline",
         Pipeline_run_pipeline
+    },
+    {
+        "get_pipeline_from_stage",
+        Pipeline_get_pipeline_from_stage
     }
 };
 
@@ -5257,6 +5263,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "rematch_after_prefab_delete",
         Prefab_rematch_after_prefab_delete
+    },
+    {
+        "add_tag_w_low_id_to_instance",
+        Prefab_add_tag_w_low_id_to_instance
     }
 };
 
@@ -7296,7 +7306,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        16,
+        17,
         Pipeline_testcases
     },
     {
@@ -7415,7 +7425,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        75,
+        76,
         Prefab_testcases
     },
     {

@@ -308,3 +308,23 @@ void ImplicitComponents_first_use_in_system() {
 
     test_assert(e.has<Velocity>());
 }
+
+namespace ns {
+    struct NsTag { };
+}
+
+void ImplicitComponents_first_use_tag_in_system() {
+    flecs::world world;
+
+    world.system<Position>()
+        .each([](flecs::entity e, Position& p) {
+            e.add<Tag>();
+            e.add<ns::NsTag>();
+        });
+
+    auto e = world.entity().add<Position>();
+
+    world.progress();
+
+    test_assert(e.has<Tag>());
+}
