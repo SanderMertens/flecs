@@ -1227,7 +1227,7 @@ void* get_base_component(
     void *ptr = NULL;
 
     while (!ptr && (p = find_prefab(type, p)) != -1) {
-        ecs_entity_t prefab = type_buffer[p] & ECS_COMPONENT_MASK;
+        ecs_entity_t prefab = ECS_PAIR_OBJECT(type_buffer[p]);
         ecs_entity_info_t prefab_info;
         if (ecs_get_info(world, prefab, &prefab_info) && prefab_info.table) {
             ptr = get_component(&prefab_info, component);
@@ -2585,8 +2585,8 @@ bool ecs_is_valid(
     /* When checking roles and/or pairs, the generation count may have been
      * stripped away. Just test if the entity is 0 or not. */
     if (ECS_HAS_ROLE(entity, PAIR)) {
-        ecs_entity_t lo = ecs_entity_t_lo(entity);
-        ecs_entity_t hi = ecs_entity_t_hi(entity & ECS_COMPONENT_MASK);
+        ecs_entity_t lo = ECS_PAIR_OBJECT(entity);
+        ecs_entity_t hi = ECS_PAIR_RELATION(entity);
         return lo != 0 && hi != 0;
     } else
     if (entity & ECS_ROLE) {

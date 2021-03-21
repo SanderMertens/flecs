@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
             ecs_set(world, Child, Position, {30, 40});
 
     /* Create instance of root */
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | RootPrefab);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, RootPrefab);
 
     /* Lookup child in the instance we just created. This child will have e in
      * its type with a CHILDOF mask, and the prefab Child in its type with an

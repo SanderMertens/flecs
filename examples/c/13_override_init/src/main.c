@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     ecs_set(world, base, Mass, {10});
 
     /* Create instances which share the Mass component from a base */
-    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
 
     /* Add component without setting it. This will initialize the new component
      * with the value from the base, which is a common approach to initializing
