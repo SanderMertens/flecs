@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+#define EcsSingleton (ECS_HI_COMPONENT_ID + 26)
+
 #define ecs_trait(comp, trait) (ECS_PAIR | ecs_entity_t_comb(comp, trait))
 
 /** Add a trait

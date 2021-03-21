@@ -127,8 +127,8 @@ typedef struct ecs_table_leaf_t {
 /** Flags for quickly checking for special properties of a table. */
 #define EcsTableHasBuiltins         1u    /**< Does table have builtin components */
 #define EcsTableIsPrefab            2u    /**< Does the table store prefabs */
-#define EcsTableHasBase             4u    /**< Does the table type has INSTANCEOF */
-#define EcsTableHasParent           8u    /**< Does the table type has CHILDOF */
+#define EcsTableHasBase             4u    /**< Does the table type has IsA */
+#define EcsTableHasParent           8u    /**< Does the table type has ChildOf */
 #define EcsTableHasComponentData    16u   /**< Does the table have component data */
 #define EcsTableHasXor              32u   /**< Does the table type has XOR */
 #define EcsTableIsDisabled          64u   /**< Does the table type has EcsDisabled */
@@ -485,7 +485,7 @@ struct ecs_world_t {
     /* Parent monitors are like normal component monitors except that the
      * conditions under which a parent component is flagged dirty is different.
      * Parent component flags are marked dirty when an entity that is a parent
-     * adds or removes a CHILDOF flag. In that case, every component of that
+     * adds or removes a ChildOf relation. In that case, every component of that
      * parent will be marked dirty. This allows column modifiers like CASCADE
      * to correctly determine when the depth ranking of a table has changed. */
     ecs_component_monitor_t parent_monitors; 

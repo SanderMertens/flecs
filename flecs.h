@@ -222,6 +222,23 @@ typedef int32_t ecs_size_t;
 #define ECS_COMPONENT_MASK    ((ecs_entity_t)~ECS_ROLE_MASK)
 #define ECS_TYPE_ROLE_START   ECS_CHILDOF
 #define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
+#define ECS_PAIR_RELATION(e)  (ECS_HAS_ROLE(e, PAIR) ? ecs_entity_t_hi(e & ECS_COMPONENT_MASK) : (e & ECS_ROLE_MASK))
+#define ECS_PAIR_OBJECT(e)    (ecs_entity_t_lo(e))
+#define ECS_HAS_PAIR(e, rel)  (ECS_HAS_ROLE(e, PAIR) && (ECS_PAIR_RELATION(e) == rel))
+
+#define ECS_HAS_RELATION(e, rel) (\
+    (((rel == ECS_CHILDOF) || (rel == EcsChildOf)) &&\
+        (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_PAIR(e, EcsChildOf))) ||\
+    (((rel == ECS_INSTANCEOF) || (rel == EcsIsA)) &&\
+        (ECS_HAS_ROLE(e, INSTANCEOF) || ECS_HAS_PAIR(e, EcsIsA))) ||\
+    ECS_HAS_PAIR(e, rel))
+
+#define ECS_HAS_PAIR_OBJECT(e, rel, obj)\
+    (ECS_HAS_RELATION(e, rel) && ECS_PAIR_OBJECT(e) == obj)
+
+#define ECS_HAS(e, type_id)(\
+    (e == type_id) ||\
+    (ECS_HAS_PAIR_OBJECT(e, ECS_PAIR_RELATION(type_id), ECS_PAIR_OBJECT(type_id))))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2150,6 +2167,8 @@ bool ecs_os_has_modules(void);
 extern "C" {
 #endif
 
+#define EcsSingleton (ECS_HI_COMPONENT_ID + 26)
+
 #define ecs_trait(comp, trait) (ECS_PAIR | ecs_entity_t_comb(comp, trait))
 
 /** Add a trait
@@ -2923,6 +2942,13 @@ void _ecs_err(
     int32_t line,
     const char *fmt,
     ...);
+
+FLECS_API
+void _ecs_deprecated(
+    const char *file, 
+    int32_t line, 
+    const char *msg);
+
 FLECS_API
 void ecs_log_push(void);
 
@@ -2940,6 +2966,12 @@ void ecs_log_pop(void);
 #define ecs_err(...)\
     _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
 
+#ifndef FLECS_NO_DEPRECATED_WARNINGS
+#define ecs_deprecated(...)\
+    _ecs_deprecated(__FILE__, __LINE__, __VA_ARGS__)
+#else
+#define ecs_deprecated(...)
+#endif
 
 /* If in debug mode and no tracing verbosity is defined, compile all tracing */
 #if !defined(NDEBUG) && !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
@@ -3294,8 +3326,16 @@ typedef struct EcsTrigger {
 #define EcsFlecs (ECS_HI_COMPONENT_ID + 23)
 #define EcsFlecsCore (ECS_HI_COMPONENT_ID + 24)
 #define EcsWorld (ECS_HI_COMPONENT_ID + 25)
-#define EcsSingleton (ECS_HI_COMPONENT_ID + 26)
+
+/* Ids used by rule solver */
 #define EcsWildcard (ECS_HI_COMPONENT_ID + 27)
+#define EcsThis (ECS_HI_COMPONENT_ID + 28)
+#define EcsTransitive (ECS_HI_COMPONENT_ID + 29)
+#define EcsFinal (ECS_HI_COMPONENT_ID + 30)
+
+/* Builtin relationships */
+#define EcsIsA (ECS_HI_COMPONENT_ID + 31)
+#define EcsChildOf (ECS_HI_COMPONENT_ID + 32)
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
@@ -8326,17 +8366,26 @@ static const ecs_entity_t PreStore = EcsPreStore;
 static const ecs_entity_t OnStore = EcsOnStore;
 static const ecs_entity_t PostFrame = EcsPostFrame;
 
-/** Builtin entity ids */
-static const ecs_entity_t World = EcsWorld;
-static const ecs_entity_t Singleton = EcsSingleton;
-
 /** Builtin roles */
-static const ecs_entity_t Childof = ECS_CHILDOF;
-static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
 static const ecs_entity_t Pair = ECS_PAIR;
 static const ecs_entity_t Switch = ECS_SWITCH;
 static const ecs_entity_t Case = ECS_CASE;
 static const ecs_entity_t Owned = ECS_OWNED;
+
+/* Builtin entity ids */
+static const ecs_entity_t Flecs = EcsFlecs;
+static const ecs_entity_t FlecsCore = EcsFlecsCore;
+static const ecs_entity_t World = World;
+
+/* Ids used by rule solver */
+static const ecs_entity_t Wildcard = EcsWildcard;
+static const ecs_entity_t This = EcsThis;
+static const ecs_entity_t Transitive = EcsTransitive;
+static const ecs_entity_t Final = EcsFinal;
+
+/* Builtin relationships */
+static const ecs_entity_t IsA = EcsIsA;
+static const ecs_entity_t ChildOf = EcsChildOf;
 
 }
 
@@ -10672,7 +10721,7 @@ public:
      */
     explicit entity(const flecs::world& world, const entity& id) 
         : m_world( world.get_world().c_ptr() )
-        , m_id(id) { }
+        , m_id(id.id()) { }
 
     /** Wrap an existing entity id.
      *
@@ -11331,7 +11380,8 @@ public:
      * @return True if the component is enabled, false if it has been disabled.
      */
     bool is_enabled(const flecs::entity& e) {
-        return is_enabled(e.id());
+        return ecs_is_component_enabled_w_entity(
+            m_world, m_id, e.id());
     }
 
     /** Get current delta time.

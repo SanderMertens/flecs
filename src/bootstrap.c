@@ -140,7 +140,7 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t entities[] = {ecs_typeid(EcsComponent), ecs_typeid(EcsName), ECS_CHILDOF | EcsFlecsCore};
+    ecs_entity_t entities[] = {ecs_typeid(EcsComponent), ecs_typeid(EcsName), ecs_pair(EcsChildOf, EcsFlecsCore)};
     ecs_entities_t array = {
         .array = entities,
         .count = 3
@@ -166,6 +166,19 @@ ecs_table_t* bootstrap_component_table(
     result->column_count = 2;
     
     return result;
+}
+
+static
+void bootstrap_entity(
+    ecs_world_t *world,
+    ecs_entity_t id,
+    const char *name,
+    ecs_entity_t parent)
+{
+    ecs_set(world, id, EcsName, {.value = name});
+    ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_lookup(world, name) == id, ECS_INTERNAL_ERROR, NULL);
+    ecs_add_pair(world, id, EcsChildOf, parent);
 }
 
 void ecs_bootstrap(
@@ -210,27 +223,30 @@ void ecs_bootstrap(
     ecs_add_entity(world, EcsFlecs, EcsModule);
     ecs_set(world, EcsFlecsCore, EcsName, {.value = "core"});
     ecs_add_entity(world, EcsFlecsCore, EcsModule);
-    ecs_add_entity(world, EcsFlecsCore, ECS_CHILDOF | EcsFlecs);
+    ecs_add_pair(world, EcsFlecsCore, EcsChildOf, EcsFlecs);
 
-    /* Initialize EcsWorld */
-    ecs_set(world, EcsWorld, EcsName, {.value = "World"});
-    ecs_assert(ecs_get_name(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, "World") == EcsWorld, ECS_INTERNAL_ERROR, NULL);
-    ecs_add_entity(world, EcsWorld, ECS_CHILDOF | EcsFlecsCore);
+    /* Initialize builtin entities */
+    bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
+    bootstrap_entity(world, EcsSingleton, "$", EcsFlecsCore);
+    bootstrap_entity(world, EcsThis, ".", EcsFlecsCore);
+    bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
+    bootstrap_entity(world, EcsTransitive, "Transitive", EcsFlecsCore);
+    bootstrap_entity(world, EcsFinal, "Final", EcsFlecsCore);
+    bootstrap_entity(world, EcsIsA, "IsA", EcsFlecsCore);
+    bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
 
-    /* Initialize EcsSingleton */
-    ecs_set(world, EcsSingleton, EcsName, {.value = "$"});
-    ecs_assert(ecs_get_name(world, EcsSingleton) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, "$") == EcsSingleton, ECS_INTERNAL_ERROR, NULL);
-    ecs_add_entity(world, EcsSingleton, ECS_CHILDOF | EcsFlecsCore);
+    /* Mark entities as transitive */
+    ecs_add_entity(world, EcsIsA, EcsTransitive);
 
-    /* Initialize EcsWildcard */
-    ecs_set(world, EcsWildcard, EcsName, {.value = "*"});
-    ecs_assert(ecs_get_name(world, EcsWildcard) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, "*") == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
-    ecs_add_entity(world, EcsWildcard, ECS_CHILDOF | EcsFlecsCore);    
+    /* Mark entities as final */
+    ecs_add_entity(world, ecs_typeid(EcsComponent), EcsFinal);
+    ecs_add_entity(world, ecs_typeid(EcsName), EcsFinal);
+    ecs_add_entity(world, EcsTransitive, EcsFinal);
+    ecs_add_entity(world, EcsFinal, EcsFinal);
+    ecs_add_entity(world, EcsIsA, EcsFinal);
 
     ecs_set_scope(world, 0);
 
     ecs_log_pop();
 }
+

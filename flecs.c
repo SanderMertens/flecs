@@ -170,8 +170,8 @@ typedef struct ecs_table_leaf_t {
 /** Flags for quickly checking for special properties of a table. */
 #define EcsTableHasBuiltins         1u    /**< Does table have builtin components */
 #define EcsTableIsPrefab            2u    /**< Does the table store prefabs */
-#define EcsTableHasBase             4u    /**< Does the table type has INSTANCEOF */
-#define EcsTableHasParent           8u    /**< Does the table type has CHILDOF */
+#define EcsTableHasBase             4u    /**< Does the table type has IsA */
+#define EcsTableHasParent           8u    /**< Does the table type has ChildOf */
 #define EcsTableHasComponentData    16u   /**< Does the table have component data */
 #define EcsTableHasXor              32u   /**< Does the table type has XOR */
 #define EcsTableIsDisabled          64u   /**< Does the table type has EcsDisabled */
@@ -528,7 +528,7 @@ struct ecs_world_t {
     /* Parent monitors are like normal component monitors except that the
      * conditions under which a parent component is flagged dirty is different.
      * Parent component flags are marked dirty when an entity that is a parent
-     * adds or removes a CHILDOF flag. In that case, every component of that
+     * adds or removes a ChildOf relation. In that case, every component of that
      * parent will be marked dirty. This allows column modifiers like CASCADE
      * to correctly determine when the depth ranking of a table has changed. */
     ecs_component_monitor_t parent_monitors; 
@@ -647,7 +647,7 @@ ecs_type_t ecs_bootstrap_type(
 
 #define ecs_bootstrap_tag(world, name)\
     ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = (char*)#name});\
-    ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
+    ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1582,6 +1582,14 @@ void _ecs_assert(
 
         ecs_os_abort();
     }
+}
+
+void _ecs_deprecated(
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    ecs_err("%s:%d: %s", file, line, msg);
 }
 
 const char* ecs_strerror(
@@ -4348,10 +4356,10 @@ void instantiate_children(
             continue;
         }
 
-        /* Keep track of the element that creates the CHILDOF relationship with
+        /* Keep track of the element that creates the ChildOf relationship with
         * the prefab parent. We need to replace this element to make sure the
         * created children point to the instance and not the prefab */ 
-        if (ECS_HAS_ROLE(c, CHILDOF) && (c & ECS_COMPONENT_MASK) == base) {
+        if (ECS_HAS_RELATION(c, EcsChildOf) && (ecs_entity_t_lo(c) == base)) {
             base_index = pos;
         }        
 
@@ -4384,8 +4392,8 @@ void instantiate_children(
     for (i = row; i < count + row; i ++) {
         ecs_entity_t instance = entities[i];
 
-        /* Replace CHILDOF element in the component array with instance id */
-        components.array[base_index] = ECS_CHILDOF | instance;
+        /* Replace ChildOf element in the component array with instance id */
+        components.array[base_index] = ecs_pair(EcsChildOf, instance);
 
         /* Find or create table */
         ecs_table_t *i_table = ecs_table_find_or_create(world, &components);
@@ -4948,9 +4956,11 @@ bool update_component_monitor_w_array(
         ecs_entity_t component = entities->array[i];
         if (component < ECS_HI_COMPONENT_ID) {
             ecs_component_monitor_mark(mon, component);
-        } else if (ECS_HAS_ROLE(component, CHILDOF)) {
+
+        } else if (ECS_HAS_RELATION(component, EcsChildOf)) {
             childof_changed = true;
-        } else if (ECS_HAS_ROLE(component, INSTANCEOF)) {
+
+        } else if (ECS_HAS_RELATION(component, EcsIsA)) {
             /* If an INSTANCEOF relationship is added to a monitored entity (can
              * be either a parent or a base) component monitors need to be
              * evaluated for the components of the prefab. */
@@ -5455,19 +5465,17 @@ ecs_entity_t ecs_find_in_type(
     ecs_vector_each(type, ecs_entity_t, c_ptr, {
         ecs_entity_t c = *c_ptr;
 
-        if (flags) {
-            if ((c & flags) != flags) {
-                continue;
-            }
+        if (!ECS_HAS_RELATION(c, flags)) {
+            continue;
         }
 
-        ecs_entity_t e = c & ECS_COMPONENT_MASK;
+        ecs_entity_t e = ecs_entity_t_lo(c);
 
         if (component) {
-           ecs_type_t component_type = ecs_get_type(world, e);
-           if (!ecs_type_has_entity(world, component_type, component)) {
-               continue;
-           }
+            ecs_type_t component_type = ecs_get_type(world, e);
+            if (!ecs_type_has_entity(world, component_type, component)) {
+                continue;
+            }
         }
 
         return e;
@@ -5587,13 +5595,13 @@ ecs_entity_t ecs_new_w_entity(
         }  
 
         ecs_entity_t old_scope = 0;
-        if (ECS_HAS_ROLE(component, CHILDOF)) {
+        if (ECS_HAS_RELATION(component, EcsChildOf)) {
             old_scope = ecs_set_scope(world, 0);
         }
 
         new(world, entity, &to_add);
 
-        if (ECS_HAS_ROLE(component, CHILDOF)) {
+        if (ECS_HAS_RELATION(component, EcsChildOf)) {
             ecs_set_scope(world, old_scope);
         }
 
@@ -6104,7 +6112,7 @@ ecs_entity_t assign_ptr_w_entity(
         entity = ecs_new_id(world);
         ecs_entity_t scope = stage->scope;
         if (scope) {
-            ecs_add_entity(world, entity, ECS_CHILDOF | scope);
+            ecs_add_pair(world, entity, EcsChildOf, scope);
         }
     }
 
@@ -6353,7 +6361,7 @@ ecs_entity_t ecs_get_parent_w_entity(
     }
 
     ecs_type_t type = ecs_get_type(world, entity);    
-    ecs_entity_t parent = ecs_find_in_type(world, type, component, ECS_CHILDOF);
+    ecs_entity_t parent = ecs_find_in_type(world, type, component, EcsChildOf);
     return parent;
 }
 
@@ -6778,8 +6786,8 @@ bool valid_components(
     int32_t i, count = entities->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
-        if (ECS_HAS_ROLE(e, CHILDOF)) {
-            e &= ECS_COMPONENT_MASK;
+        if (ECS_HAS_RELATION(e, EcsChildOf)) {
+            e = ecs_entity_t_lo(e);
             if (ecs_exists(world, e) && !ecs_is_alive(world, e)) {
                 return false;
             }
@@ -6833,7 +6841,7 @@ bool ecs_defer_flush(
                 switch(op->kind) {
                 case EcsOpNew:
                     if (op->scope) {
-                        ecs_add_entity(world, e, ECS_CHILDOF | op->scope);
+                        ecs_add_pair(world, e, EcsChildOf, op->scope);
                     }
                     /* Fallthrough */
                 case EcsOpAdd:
@@ -10316,9 +10324,9 @@ void ecs_dbg_table(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
-        if (ECS_HAS_ROLE(e, CHILDOF)) {
+        if (ECS_HAS_RELATION(e, EcsChildOf)) {
             ecs_dbg_entity_t parent_dbg;
-            ecs_dbg_entity(world, e & ECS_COMPONENT_MASK, &parent_dbg);
+            ecs_dbg_entity(world, ECS_PAIR_OBJECT(e), &parent_dbg);
 
             ecs_dbg_table_t parent_table_dbg;
             ecs_dbg_table(world, parent_dbg.table, &parent_table_dbg);
@@ -10331,7 +10339,7 @@ void ecs_dbg_table(
 
             /* Add entity to list of parent entities */
             dbg_out->parent_entities = ecs_type_add(
-                world, dbg_out->parent_entities, e & ECS_COMPONENT_MASK);
+                world, dbg_out->parent_entities, ECS_PAIR_OBJECT(e));
         }
 
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {
@@ -14930,7 +14938,7 @@ int match_entity(
         }
     }
 
-    if (e == match_with) {
+    if (ECS_HAS(e, match_with)) {
         return 1;
     }
 
@@ -15495,8 +15503,8 @@ ecs_entity_t components_contains(
     ecs_vector_each(table_type, ecs_entity_t, c_ptr, {
         ecs_entity_t entity = *c_ptr;
 
-        if (ECS_HAS_ROLE(entity, CHILDOF)) {
-            entity &= ECS_COMPONENT_MASK;
+        if (ECS_HAS_RELATION(entity, EcsChildOf)) {
+            entity = ECS_PAIR_OBJECT(entity);
 
             ecs_record_t *record = ecs_eis_get(world, entity);
             ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
@@ -15564,8 +15572,8 @@ int32_t rank_by_depth(
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     for (i = count - 1; i >= 0; i --) {
-        if (ECS_HAS_ROLE(array[i], CHILDOF)) {
-            ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_COMPONENT_MASK);
+        if (ECS_HAS_RELATION(array[i], EcsChildOf)) {
+            ecs_type_t c_type = ecs_get_type(world, ECS_PAIR_OBJECT(array[i]));
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type, ecs_entity_t);
 
@@ -15762,7 +15770,7 @@ void get_comp_and_src(
         {
             component = column->is.component;
             entity = ecs_find_in_type(
-                world, table_type, component, ECS_CHILDOF);
+                world, table_type, component, EcsChildOf);
 
         } else if (op == EcsOperOr) {
             component = components_contains(
@@ -16367,7 +16375,7 @@ bool match_column(
 
     } else if (from_kind == EcsFromParent) {
         failure_info->reason = EcsMatchFromContainer;
-        return ecs_find_in_type(world, type, component, ECS_CHILDOF) != 0;
+        return ecs_find_in_type(world, type, component, EcsChildOf) != 0;
 
     } else if (from_kind == EcsFromEntity) {
         failure_info->reason = EcsMatchFromEntity;
@@ -17410,7 +17418,7 @@ void resolve_cascade_container(
 
         /* Resolve container entity */
         ecs_entity_t container = ecs_find_in_type(
-            world, table_type, ref->component, ECS_CHILDOF);    
+            world, table_type, ref->component, EcsChildOf);
 
         /* If container was found, update the reference */
         if (container) {
@@ -18513,9 +18521,6 @@ const EcsComponent* ecs_component_from_id(
         component = ecs_get(world, e, EcsComponent);
     }
 
-    ecs_assert(!component || !ECS_HAS_ROLE(e, CHILDOF), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!component || !ECS_HAS_ROLE(e, INSTANCEOF), ECS_INTERNAL_ERROR, NULL);
-
     return component;
 }
 
@@ -18702,9 +18707,13 @@ void init_edges(
             table->flags |= EcsTableHasDisabled;
         }   
 
-        if (ECS_HAS_ROLE(e, CHILDOF)) {
-            ecs_entity_t parent = e & ECS_COMPONENT_MASK;
-            ecs_assert(!ecs_exists(world, parent) || ecs_is_alive(world, parent), ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t parent = 0;
+
+        if (ECS_HAS_RELATION(e, EcsChildOf)) {
+            parent = ecs_entity_t_lo(e);
+        }
+
+        if (parent) {
             table->flags |= EcsTableHasParent;
             register_child_table(world, table, parent);
             
@@ -18713,8 +18722,8 @@ void init_edges(
             }
         }
 
-        if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
-            ecs_set_watch(world, e & ECS_COMPONENT_MASK);
+        if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
+            ecs_set_watch(world, ecs_entity_t_lo(e));
         }
     }
 
@@ -23010,7 +23019,7 @@ ecs_entity_t ecs_lookup_w_id(
         if (!ecs_exists(world, e)) {
             ecs_entity_t scope = world->stage.scope;
             if (scope) {
-                ecs_add_entity(world, e, ECS_CHILDOF | scope);
+                ecs_add_pair(world, e, EcsChildOf, scope);
             }
         }
 
@@ -23071,6 +23080,8 @@ ecs_entity_t ecs_new_entity(
     const char *expr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Function cannot be called from a stage, use regular ecs_new */
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
@@ -23093,6 +23104,8 @@ ecs_entity_t ecs_new_prefab(
     const char *expr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Function cannot be called from a stage, use regular ecs_new */
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
@@ -23141,7 +23154,7 @@ ecs_entity_t ecs_new_component(
     /* ecs_new_component_id does not add the scope, so add it explicitly */
     ecs_entity_t scope = world->stage.scope;
     if (scope) {
-        ecs_add_entity(world, result, ECS_CHILDOF | scope);
+        ecs_add_pair(world, result, EcsChildOf, scope);
     }
 
     if (found) {
@@ -23356,7 +23369,7 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t entities[] = {ecs_typeid(EcsComponent), ecs_typeid(EcsName), ECS_CHILDOF | EcsFlecsCore};
+    ecs_entity_t entities[] = {ecs_typeid(EcsComponent), ecs_typeid(EcsName), ecs_pair(EcsChildOf, EcsFlecsCore)};
     ecs_entities_t array = {
         .array = entities,
         .count = 3
@@ -23382,6 +23395,19 @@ ecs_table_t* bootstrap_component_table(
     result->column_count = 2;
     
     return result;
+}
+
+static
+void bootstrap_entity(
+    ecs_world_t *world,
+    ecs_entity_t id,
+    const char *name,
+    ecs_entity_t parent)
+{
+    ecs_set(world, id, EcsName, {.value = name});
+    ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_lookup(world, name) == id, ECS_INTERNAL_ERROR, NULL);
+    ecs_add_pair(world, id, EcsChildOf, parent);
 }
 
 void ecs_bootstrap(
@@ -23426,30 +23452,33 @@ void ecs_bootstrap(
     ecs_add_entity(world, EcsFlecs, EcsModule);
     ecs_set(world, EcsFlecsCore, EcsName, {.value = "core"});
     ecs_add_entity(world, EcsFlecsCore, EcsModule);
-    ecs_add_entity(world, EcsFlecsCore, ECS_CHILDOF | EcsFlecs);
+    ecs_add_pair(world, EcsFlecsCore, EcsChildOf, EcsFlecs);
 
-    /* Initialize EcsWorld */
-    ecs_set(world, EcsWorld, EcsName, {.value = "World"});
-    ecs_assert(ecs_get_name(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, "World") == EcsWorld, ECS_INTERNAL_ERROR, NULL);
-    ecs_add_entity(world, EcsWorld, ECS_CHILDOF | EcsFlecsCore);
+    /* Initialize builtin entities */
+    bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
+    bootstrap_entity(world, EcsSingleton, "$", EcsFlecsCore);
+    bootstrap_entity(world, EcsThis, ".", EcsFlecsCore);
+    bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
+    bootstrap_entity(world, EcsTransitive, "Transitive", EcsFlecsCore);
+    bootstrap_entity(world, EcsFinal, "Final", EcsFlecsCore);
+    bootstrap_entity(world, EcsIsA, "IsA", EcsFlecsCore);
+    bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
 
-    /* Initialize EcsSingleton */
-    ecs_set(world, EcsSingleton, EcsName, {.value = "$"});
-    ecs_assert(ecs_get_name(world, EcsSingleton) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, "$") == EcsSingleton, ECS_INTERNAL_ERROR, NULL);
-    ecs_add_entity(world, EcsSingleton, ECS_CHILDOF | EcsFlecsCore);
+    /* Mark entities as transitive */
+    ecs_add_entity(world, EcsIsA, EcsTransitive);
 
-    /* Initialize EcsWildcard */
-    ecs_set(world, EcsWildcard, EcsName, {.value = "*"});
-    ecs_assert(ecs_get_name(world, EcsWildcard) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, "*") == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
-    ecs_add_entity(world, EcsWildcard, ECS_CHILDOF | EcsFlecsCore);    
+    /* Mark entities as final */
+    ecs_add_entity(world, ecs_typeid(EcsComponent), EcsFinal);
+    ecs_add_entity(world, ecs_typeid(EcsName), EcsFinal);
+    ecs_add_entity(world, EcsTransitive, EcsFinal);
+    ecs_add_entity(world, EcsFinal, EcsFinal);
+    ecs_add_entity(world, EcsIsA, EcsFinal);
 
     ecs_set_scope(world, 0);
 
     ecs_log_pop();
 }
+
 
 
 static
@@ -23466,7 +23495,7 @@ bool path_append(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
     ecs_type_t type = ecs_get_type(world, child);
-    ecs_entity_t cur = ecs_find_in_type(world, type, component, ECS_CHILDOF);
+    ecs_entity_t cur = ecs_find_in_type(world, type, component, EcsChildOf);
     
     if (cur) {
         if (cur != parent && cur != EcsFlecsCore) {
@@ -23822,7 +23851,7 @@ ecs_entity_t ecs_set_scope(
 {
     ecs_stage_t *stage = ecs_stage_from_world(&world);
 
-    ecs_entity_t e = ECS_CHILDOF | scope;
+    ecs_entity_t e = ecs_pair(EcsChildOf, scope);
     ecs_entities_t to_add = {
         .array = &e,
         .count = 1
@@ -23981,7 +24010,7 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         if (parent) {
-            ecs_add_entity(world, entity, ECS_CHILDOF | entity);
+            ecs_add_pair(world, entity, EcsChildOf, entity);
         }
 
         return entity;
@@ -24012,7 +24041,7 @@ ecs_entity_t ecs_add_path_w_sep(
             ecs_os_free(name);
 
             if (cur) {
-                ecs_add_entity(world, e, ECS_CHILDOF | cur);
+                ecs_add_pair(world, e, EcsChildOf, cur);
             }
         }
 

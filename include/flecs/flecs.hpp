@@ -102,17 +102,26 @@ static const ecs_entity_t PreStore = EcsPreStore;
 static const ecs_entity_t OnStore = EcsOnStore;
 static const ecs_entity_t PostFrame = EcsPostFrame;
 
-/** Builtin entity ids */
-static const ecs_entity_t World = EcsWorld;
-static const ecs_entity_t Singleton = EcsSingleton;
-
 /** Builtin roles */
-static const ecs_entity_t Childof = ECS_CHILDOF;
-static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
 static const ecs_entity_t Pair = ECS_PAIR;
 static const ecs_entity_t Switch = ECS_SWITCH;
 static const ecs_entity_t Case = ECS_CASE;
 static const ecs_entity_t Owned = ECS_OWNED;
+
+/* Builtin entity ids */
+static const ecs_entity_t Flecs = EcsFlecs;
+static const ecs_entity_t FlecsCore = EcsFlecsCore;
+static const ecs_entity_t World = World;
+
+/* Ids used by rule solver */
+static const ecs_entity_t Wildcard = EcsWildcard;
+static const ecs_entity_t This = EcsThis;
+static const ecs_entity_t Transitive = EcsTransitive;
+static const ecs_entity_t Final = EcsFinal;
+
+/* Builtin relationships */
+static const ecs_entity_t IsA = EcsIsA;
+static const ecs_entity_t ChildOf = EcsChildOf;
 
 }
 

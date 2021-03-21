@@ -57,6 +57,13 @@ void _ecs_err(
     int32_t line,
     const char *fmt,
     ...);
+
+FLECS_API
+void _ecs_deprecated(
+    const char *file, 
+    int32_t line, 
+    const char *msg);
+
 FLECS_API
 void ecs_log_push(void);
 
@@ -74,6 +81,12 @@ void ecs_log_pop(void);
 #define ecs_err(...)\
     _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
 
+#ifndef FLECS_NO_DEPRECATED_WARNINGS
+#define ecs_deprecated(...)\
+    _ecs_deprecated(__FILE__, __LINE__, __VA_ARGS__)
+#else
+#define ecs_deprecated(...)
+#endif
 
 /* If in debug mode and no tracing verbosity is defined, compile all tracing */
 #if !defined(NDEBUG) && !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))

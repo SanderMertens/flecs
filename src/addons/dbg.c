@@ -33,9 +33,9 @@ void ecs_dbg_table(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
-        if (ECS_HAS_ROLE(e, CHILDOF)) {
+        if (ECS_HAS_RELATION(e, EcsChildOf)) {
             ecs_dbg_entity_t parent_dbg;
-            ecs_dbg_entity(world, e & ECS_COMPONENT_MASK, &parent_dbg);
+            ecs_dbg_entity(world, ECS_PAIR_OBJECT(e), &parent_dbg);
 
             ecs_dbg_table_t parent_table_dbg;
             ecs_dbg_table(world, parent_dbg.table, &parent_table_dbg);
@@ -48,7 +48,7 @@ void ecs_dbg_table(
 
             /* Add entity to list of parent entities */
             dbg_out->parent_entities = ecs_type_add(
-                world, dbg_out->parent_entities, e & ECS_COMPONENT_MASK);
+                world, dbg_out->parent_entities, ECS_PAIR_OBJECT(e));
         }
 
         if (ECS_HAS_ROLE(e, INSTANCEOF)) {

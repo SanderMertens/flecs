@@ -262,7 +262,7 @@ int match_entity(
         }
     }
 
-    if (e == match_with) {
+    if (ECS_HAS(e, match_with)) {
         return 1;
     }
 

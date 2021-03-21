@@ -21,9 +21,6 @@ const EcsComponent* ecs_component_from_id(
         component = ecs_get(world, e, EcsComponent);
     }
 
-    ecs_assert(!component || !ECS_HAS_ROLE(e, CHILDOF), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!component || !ECS_HAS_ROLE(e, INSTANCEOF), ECS_INTERNAL_ERROR, NULL);
-
     return component;
 }
 
@@ -210,9 +207,13 @@ void init_edges(
             table->flags |= EcsTableHasDisabled;
         }   
 
-        if (ECS_HAS_ROLE(e, CHILDOF)) {
-            ecs_entity_t parent = e & ECS_COMPONENT_MASK;
-            ecs_assert(!ecs_exists(world, parent) || ecs_is_alive(world, parent), ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t parent = 0;
+
+        if (ECS_HAS_RELATION(e, EcsChildOf)) {
+            parent = ecs_entity_t_lo(e);
+        }
+
+        if (parent) {
             table->flags |= EcsTableHasParent;
             register_child_table(world, table, parent);
             
@@ -221,8 +222,8 @@ void init_edges(
             }
         }
 
-        if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
-            ecs_set_watch(world, e & ECS_COMPONENT_MASK);
+        if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
+            ecs_set_watch(world, ecs_entity_t_lo(e));
         }
     }
 

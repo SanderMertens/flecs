@@ -27,7 +27,7 @@ ecs_type_t ecs_bootstrap_type(
 
 #define ecs_bootstrap_tag(world, name)\
     ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = (char*)#name});\
-    ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
+    ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world))
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -222,7 +222,7 @@ ecs_entity_t ecs_lookup_w_id(
         if (!ecs_exists(world, e)) {
             ecs_entity_t scope = world->stage.scope;
             if (scope) {
-                ecs_add_entity(world, e, ECS_CHILDOF | scope);
+                ecs_add_pair(world, e, EcsChildOf, scope);
             }
         }
 
@@ -357,7 +357,7 @@ ecs_entity_t ecs_new_component(
     /* ecs_new_component_id does not add the scope, so add it explicitly */
     ecs_entity_t scope = world->stage.scope;
     if (scope) {
-        ecs_add_entity(world, result, ECS_CHILDOF | scope);
+        ecs_add_pair(world, result, EcsChildOf, scope);
     }
 
     if (found) {

@@ -502,10 +502,10 @@ void instantiate_children(
             continue;
         }
 
-        /* Keep track of the element that creates the CHILDOF relationship with
+        /* Keep track of the element that creates the ChildOf relationship with
         * the prefab parent. We need to replace this element to make sure the
         * created children point to the instance and not the prefab */ 
-        if (ECS_HAS_ROLE(c, CHILDOF) && (c & ECS_COMPONENT_MASK) == base) {
+        if (ECS_HAS_RELATION(c, EcsChildOf) && (ecs_entity_t_lo(c) == base)) {
             base_index = pos;
         }        
 
@@ -538,8 +538,8 @@ void instantiate_children(
     for (i = row; i < count + row; i ++) {
         ecs_entity_t instance = entities[i];
 
-        /* Replace CHILDOF element in the component array with instance id */
-        components.array[base_index] = ECS_CHILDOF | instance;
+        /* Replace ChildOf element in the component array with instance id */
+        components.array[base_index] = ecs_pair(EcsChildOf, instance);
 
         /* Find or create table */
         ecs_table_t *i_table = ecs_table_find_or_create(world, &components);
@@ -1102,9 +1102,11 @@ bool update_component_monitor_w_array(
         ecs_entity_t component = entities->array[i];
         if (component < ECS_HI_COMPONENT_ID) {
             ecs_component_monitor_mark(mon, component);
-        } else if (ECS_HAS_ROLE(component, CHILDOF)) {
+
+        } else if (ECS_HAS_RELATION(component, EcsChildOf)) {
             childof_changed = true;
-        } else if (ECS_HAS_ROLE(component, INSTANCEOF)) {
+
+        } else if (ECS_HAS_RELATION(component, EcsIsA)) {
             /* If an INSTANCEOF relationship is added to a monitored entity (can
              * be either a parent or a base) component monitors need to be
              * evaluated for the components of the prefab. */
@@ -1609,19 +1611,17 @@ ecs_entity_t ecs_find_in_type(
     ecs_vector_each(type, ecs_entity_t, c_ptr, {
         ecs_entity_t c = *c_ptr;
 
-        if (flags) {
-            if ((c & flags) != flags) {
-                continue;
-            }
+        if (!ECS_HAS_RELATION(c, flags)) {
+            continue;
         }
 
-        ecs_entity_t e = c & ECS_COMPONENT_MASK;
+        ecs_entity_t e = ecs_entity_t_lo(c);
 
         if (component) {
-           ecs_type_t component_type = ecs_get_type(world, e);
-           if (!ecs_type_has_entity(world, component_type, component)) {
-               continue;
-           }
+            ecs_type_t component_type = ecs_get_type(world, e);
+            if (!ecs_type_has_entity(world, component_type, component)) {
+                continue;
+            }
         }
 
         return e;
@@ -1741,13 +1741,13 @@ ecs_entity_t ecs_new_w_entity(
         }  
 
         ecs_entity_t old_scope = 0;
-        if (ECS_HAS_ROLE(component, CHILDOF)) {
+        if (ECS_HAS_RELATION(component, EcsChildOf)) {
             old_scope = ecs_set_scope(world, 0);
         }
 
         new(world, entity, &to_add);
 
-        if (ECS_HAS_ROLE(component, CHILDOF)) {
+        if (ECS_HAS_RELATION(component, EcsChildOf)) {
             ecs_set_scope(world, old_scope);
         }
 
@@ -2258,7 +2258,7 @@ ecs_entity_t assign_ptr_w_entity(
         entity = ecs_new_id(world);
         ecs_entity_t scope = stage->scope;
         if (scope) {
-            ecs_add_entity(world, entity, ECS_CHILDOF | scope);
+            ecs_add_pair(world, entity, EcsChildOf, scope);
         }
     }
 
@@ -2507,7 +2507,7 @@ ecs_entity_t ecs_get_parent_w_entity(
     }
 
     ecs_type_t type = ecs_get_type(world, entity);    
-    ecs_entity_t parent = ecs_find_in_type(world, type, component, ECS_CHILDOF);
+    ecs_entity_t parent = ecs_find_in_type(world, type, component, EcsChildOf);
     return parent;
 }
 
@@ -2932,8 +2932,8 @@ bool valid_components(
     int32_t i, count = entities->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
-        if (ECS_HAS_ROLE(e, CHILDOF)) {
-            e &= ECS_COMPONENT_MASK;
+        if (ECS_HAS_RELATION(e, EcsChildOf)) {
+            e = ecs_entity_t_lo(e);
             if (ecs_exists(world, e) && !ecs_is_alive(world, e)) {
                 return false;
             }
@@ -2987,7 +2987,7 @@ bool ecs_defer_flush(
                 switch(op->kind) {
                 case EcsOpNew:
                     if (op->scope) {
-                        ecs_add_entity(world, e, ECS_CHILDOF | op->scope);
+                        ecs_add_pair(world, e, EcsChildOf, op->scope);
                     }
                     /* Fallthrough */
                 case EcsOpAdd:

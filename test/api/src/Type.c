@@ -983,7 +983,7 @@ void Type_type_to_expr_pair_w_comp() {
     ECS_TYPE(world, Type, PAIR | Position > Velocity);
 
     char *expr = ecs_type_str(world, ecs_type(Type));
-    test_str(expr, "PAIR|Position>Velocity");
+    test_str(expr, "(Position,Velocity)");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -1166,7 +1166,7 @@ void Type_entity_pair_str() {
 
     char buffer[256];
     size_t result = ecs_entity_str(world, e, buffer, 256);
-    test_str(buffer, "PAIR|Bar>Foo");
+    test_str(buffer, "(Bar,Foo)");
     test_int(strlen(buffer), result);
 
     ecs_fini(world);

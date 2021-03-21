@@ -22,8 +22,8 @@ ecs_entity_t components_contains(
     ecs_vector_each(table_type, ecs_entity_t, c_ptr, {
         ecs_entity_t entity = *c_ptr;
 
-        if (ECS_HAS_ROLE(entity, CHILDOF)) {
-            entity &= ECS_COMPONENT_MASK;
+        if (ECS_HAS_RELATION(entity, EcsChildOf)) {
+            entity = ECS_PAIR_OBJECT(entity);
 
             ecs_record_t *record = ecs_eis_get(world, entity);
             ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
@@ -91,8 +91,8 @@ int32_t rank_by_depth(
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     for (i = count - 1; i >= 0; i --) {
-        if (ECS_HAS_ROLE(array[i], CHILDOF)) {
-            ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_COMPONENT_MASK);
+        if (ECS_HAS_RELATION(array[i], EcsChildOf)) {
+            ecs_type_t c_type = ecs_get_type(world, ECS_PAIR_OBJECT(array[i]));
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type, ecs_entity_t);
 
@@ -289,7 +289,7 @@ void get_comp_and_src(
         {
             component = column->is.component;
             entity = ecs_find_in_type(
-                world, table_type, component, ECS_CHILDOF);
+                world, table_type, component, EcsChildOf);
 
         } else if (op == EcsOperOr) {
             component = components_contains(
@@ -894,7 +894,7 @@ bool match_column(
 
     } else if (from_kind == EcsFromParent) {
         failure_info->reason = EcsMatchFromContainer;
-        return ecs_find_in_type(world, type, component, ECS_CHILDOF) != 0;
+        return ecs_find_in_type(world, type, component, EcsChildOf) != 0;
 
     } else if (from_kind == EcsFromEntity) {
         failure_info->reason = EcsMatchFromEntity;
@@ -1937,7 +1937,7 @@ void resolve_cascade_container(
 
         /* Resolve container entity */
         ecs_entity_t container = ecs_find_in_type(
-            world, table_type, ref->component, ECS_CHILDOF);    
+            world, table_type, ref->component, EcsChildOf);
 
         /* If container was found, update the reference */
         if (container) {

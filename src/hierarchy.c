@@ -15,7 +15,7 @@ bool path_append(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
     ecs_type_t type = ecs_get_type(world, child);
-    ecs_entity_t cur = ecs_find_in_type(world, type, component, ECS_CHILDOF);
+    ecs_entity_t cur = ecs_find_in_type(world, type, component, EcsChildOf);
     
     if (cur) {
         if (cur != parent && cur != EcsFlecsCore) {
@@ -371,7 +371,7 @@ ecs_entity_t ecs_set_scope(
 {
     ecs_stage_t *stage = ecs_stage_from_world(&world);
 
-    ecs_entity_t e = ECS_CHILDOF | scope;
+    ecs_entity_t e = ecs_pair(EcsChildOf, scope);
     ecs_entities_t to_add = {
         .array = &e,
         .count = 1
@@ -530,7 +530,7 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         if (parent) {
-            ecs_add_entity(world, entity, ECS_CHILDOF | entity);
+            ecs_add_pair(world, entity, EcsChildOf, entity);
         }
 
         return entity;
@@ -561,7 +561,7 @@ ecs_entity_t ecs_add_path_w_sep(
             ecs_os_free(name);
 
             if (cur) {
-                ecs_add_entity(world, e, ECS_CHILDOF | cur);
+                ecs_add_pair(world, e, EcsChildOf, cur);
             }
         }
 

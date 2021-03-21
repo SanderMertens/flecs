@@ -325,8 +325,16 @@ typedef struct EcsTrigger {
 #define EcsFlecs (ECS_HI_COMPONENT_ID + 23)
 #define EcsFlecsCore (ECS_HI_COMPONENT_ID + 24)
 #define EcsWorld (ECS_HI_COMPONENT_ID + 25)
-#define EcsSingleton (ECS_HI_COMPONENT_ID + 26)
+
+/* Ids used by rule solver */
 #define EcsWildcard (ECS_HI_COMPONENT_ID + 27)
+#define EcsThis (ECS_HI_COMPONENT_ID + 28)
+#define EcsTransitive (ECS_HI_COMPONENT_ID + 29)
+#define EcsFinal (ECS_HI_COMPONENT_ID + 30)
+
+/* Builtin relationships */
+#define EcsIsA (ECS_HI_COMPONENT_ID + 31)
+#define EcsChildOf (ECS_HI_COMPONENT_ID + 32)
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
