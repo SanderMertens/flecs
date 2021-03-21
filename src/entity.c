@@ -315,7 +315,7 @@ void run_set_systems_for_entities(
          *
          * One thing to note is that the system may be invoked for a table that
          * is not the same as the entity for which the system is invoked. This
-         * can happen in the case of instancing, where adding an INSTANCEOF
+         * can happen in the case of instancing, where adding an IsA
          * relationship conceptually adds components to an entity, but the 
          * actual components are stored on the base entity. */
         ecs_vector_t **on_set_systems = table->on_set;
@@ -444,7 +444,7 @@ int32_t find_prefab(
 
     for (i = n + 1; i < count; i ++) {
         ecs_entity_t e = buffer[i];
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
             return i;
         }
     }
@@ -680,8 +680,8 @@ bool override_component(
             break;
         }
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            if (override_from_base(world, e & ECS_COMPONENT_MASK, component, 
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            if (override_from_base(world, ECS_PAIR_OBJECT(e), component, 
                 data, column, row, count))
             {
                 return true;
@@ -716,8 +716,8 @@ void ecs_components_override(
         ecs_entity_t component = component_info[i].id;
 
         if (component >= ECS_HI_COMPONENT_ID) {
-            if (ECS_HAS_ROLE(component, INSTANCEOF)) {
-                ecs_entity_t base = component & ECS_COMPONENT_MASK;
+            if (ECS_HAS_RELATION(component, EcsIsA)) {
+                ecs_entity_t base = ECS_PAIR_OBJECT(component);
 
                 /* Illegal to create an instance of 0 */
                 ecs_assert(base != 0, ECS_INVALID_PARAMETER, NULL);
@@ -1107,7 +1107,7 @@ bool update_component_monitor_w_array(
             childof_changed = true;
 
         } else if (ECS_HAS_RELATION(component, EcsIsA)) {
-            /* If an INSTANCEOF relationship is added to a monitored entity (can
+            /* If an IsA relationship is added to a monitored entity (can
              * be either a parent or a base) component monitors need to be
              * evaluated for the components of the prefab. */
             ecs_entity_t base = component & ECS_COMPONENT_MASK;
@@ -1115,7 +1115,7 @@ bool update_component_monitor_w_array(
             ecs_entities_t base_entities = ecs_type_to_entities(type);
 
             /* This evaluates the component monitor for all components of the
-             * base entity. If the base entity contains INSTANCEOF relationships
+             * base entity. If the base entity contains IsA relationships
              * these will be evaluated recursively as well. */
             update_component_monitor_w_array(world, mon, &base_entities);               
         }

@@ -1984,13 +1984,10 @@ bool is_override(
 
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities[i];
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
             if (ecs_has_entity(world, e & ECS_COMPONENT_MASK, comp)) {
                 return true;
             }
-        } else {
-            /* ECS_INSTANCEOF will always appear at the end of a type */
-            return false;
         }
     }
 
@@ -4169,7 +4166,7 @@ void run_set_systems_for_entities(
          *
          * One thing to note is that the system may be invoked for a table that
          * is not the same as the entity for which the system is invoked. This
-         * can happen in the case of instancing, where adding an INSTANCEOF
+         * can happen in the case of instancing, where adding an IsA
          * relationship conceptually adds components to an entity, but the 
          * actual components are stored on the base entity. */
         ecs_vector_t **on_set_systems = table->on_set;
@@ -4298,7 +4295,7 @@ int32_t find_prefab(
 
     for (i = n + 1; i < count; i ++) {
         ecs_entity_t e = buffer[i];
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
             return i;
         }
     }
@@ -4534,8 +4531,8 @@ bool override_component(
             break;
         }
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            if (override_from_base(world, e & ECS_COMPONENT_MASK, component, 
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            if (override_from_base(world, ECS_PAIR_OBJECT(e), component, 
                 data, column, row, count))
             {
                 return true;
@@ -4570,8 +4567,8 @@ void ecs_components_override(
         ecs_entity_t component = component_info[i].id;
 
         if (component >= ECS_HI_COMPONENT_ID) {
-            if (ECS_HAS_ROLE(component, INSTANCEOF)) {
-                ecs_entity_t base = component & ECS_COMPONENT_MASK;
+            if (ECS_HAS_RELATION(component, EcsIsA)) {
+                ecs_entity_t base = ECS_PAIR_OBJECT(component);
 
                 /* Illegal to create an instance of 0 */
                 ecs_assert(base != 0, ECS_INVALID_PARAMETER, NULL);
@@ -4961,7 +4958,7 @@ bool update_component_monitor_w_array(
             childof_changed = true;
 
         } else if (ECS_HAS_RELATION(component, EcsIsA)) {
-            /* If an INSTANCEOF relationship is added to a monitored entity (can
+            /* If an IsA relationship is added to a monitored entity (can
              * be either a parent or a base) component monitors need to be
              * evaluated for the components of the prefab. */
             ecs_entity_t base = component & ECS_COMPONENT_MASK;
@@ -4969,7 +4966,7 @@ bool update_component_monitor_w_array(
             ecs_entities_t base_entities = ecs_type_to_entities(type);
 
             /* This evaluates the component monitor for all components of the
-             * base entity. If the base entity contains INSTANCEOF relationships
+             * base entity. If the base entity contains IsA relationships
              * these will be evaluated recursively as well. */
             update_component_monitor_w_array(world, mon, &base_entities);               
         }
@@ -10342,9 +10339,9 @@ void ecs_dbg_table(
                 world, dbg_out->parent_entities, ECS_PAIR_OBJECT(e));
         }
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
             ecs_dbg_entity_t base_dbg;
-            ecs_dbg_entity(world, e & ECS_COMPONENT_MASK, &base_dbg);
+            ecs_dbg_entity(world, ECS_PAIR_OBJECT(e), &base_dbg);
 
             ecs_dbg_table_t base_table_dbg;
             ecs_dbg_table(world, base_dbg.table, &base_table_dbg);            
@@ -10367,11 +10364,11 @@ void ecs_dbg_table(
 
             /* Add entity to list of base entities */
             dbg_out->base_entities = ecs_type_add(
-                world, dbg_out->base_entities, e & ECS_COMPONENT_MASK);
+                world, dbg_out->base_entities, ECS_PAIR_OBJECT(e));
 
             /* Add base entities of entity to list of base entities */
             dbg_out->base_entities = ecs_type_add(
-                world, base_table_dbg.base_entities, e & ECS_COMPONENT_MASK);                                                       
+                world, base_table_dbg.base_entities, ECS_PAIR_OBJECT(e));
         }
     }
 
@@ -14691,8 +14688,8 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = array[i];
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            ecs_entity_t prefab = e & ECS_COMPONENT_MASK;
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            ecs_entity_t prefab = ECS_PAIR_OBJECT(e);
             ecs_type_t prefab_type = ecs_get_type(world, prefab);
 
             if (prefab == previous) {
@@ -14710,12 +14707,6 @@ ecs_entity_t ecs_find_entity_in_prefabs(
                     return prefab;
                 }
             }
-        } else {
-            /* If this is not a prefab, the following entities won't
-                * be prefabs either because the array is sorted, and
-                * the prefab bit is 2^63 which ensures that prefabs are
-                * guaranteed to be the last entities in the type */
-            break;
         }
     }
 
@@ -14978,13 +14969,13 @@ bool search_type(
     if (!matched && !owned && entity != EcsPrefab && entity != EcsDisabled) {
         for (i = count - 1; i >= 0; i --) {
             ecs_entity_t e = ids[i];
-            if (!ECS_HAS_ROLE(e, INSTANCEOF)) {
+            if (!ECS_HAS_RELATION(e, EcsIsA)) {
                 break;
             }
 
-            ecs_entity_t base = e & ECS_COMPONENT_MASK;
+            ecs_entity_t base = ECS_PAIR_OBJECT(e);
             if (!ecs_is_valid(world, base)) {
-                /* This indicates that an entity has an INSTANCEOF relationship
+                /* This indicates that an entity has an IsA relationship
                  * to an invalid base. That's no good, and will be handled with
                  * future features (e.g. automatically removing the relation) */
                 continue;
@@ -18695,7 +18686,7 @@ void init_edges(
             table->flags |= EcsTableHasXor;
         }
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
             table->flags |= EcsTableHasBase;
         }
 
@@ -19088,7 +19079,7 @@ void find_owned_components(
     ecs_entity_t base,
     ecs_entities_t * owned)
 {
-    /* If we're adding an INSTANCEOF relationship, check if the base
+    /* If we're adding an IsA relationship, check if the base
      * has OWNED components that need to be added to the instance */
     ecs_type_t t = ecs_get_type(world, base);
 
@@ -19096,8 +19087,8 @@ void find_owned_components(
     ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            find_owned_components(world, node, e & ECS_COMPONENT_MASK, owned);
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            find_owned_components(world, node, ECS_PAIR_OBJECT(e), owned);
         } else
         if (ECS_HAS_ROLE(e, OWNED)) {
             e = e & ECS_COMPONENT_MASK;
@@ -19112,7 +19103,7 @@ void find_owned_components(
                     owned->array[owned->count ++] = n_entities[j];
                 }
             } else {
-                owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;
+                owned->array[owned->count ++] = ECS_PAIR_OBJECT(e);
             }
         }
     }
@@ -19157,8 +19148,8 @@ ecs_table_t* ecs_table_traverse_add(
             added->array[added->count ++] = e; 
         }
 
-        if ((node != next) && ECS_HAS_ROLE(e, INSTANCEOF)) {
-            find_owned_components(world, next, ECS_COMPONENT_MASK & e, &owned);
+        if ((node != next) && ECS_HAS_RELATION(e, EcsIsA)) {
+            find_owned_components(world, next, ECS_PAIR_OBJECT(e), &owned);
         }        
 
         node = next;

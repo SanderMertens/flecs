@@ -51,9 +51,9 @@ void ecs_dbg_table(
                 world, dbg_out->parent_entities, ECS_PAIR_OBJECT(e));
         }
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
             ecs_dbg_entity_t base_dbg;
-            ecs_dbg_entity(world, e & ECS_COMPONENT_MASK, &base_dbg);
+            ecs_dbg_entity(world, ECS_PAIR_OBJECT(e), &base_dbg);
 
             ecs_dbg_table_t base_table_dbg;
             ecs_dbg_table(world, base_dbg.table, &base_table_dbg);            
@@ -76,11 +76,11 @@ void ecs_dbg_table(
 
             /* Add entity to list of base entities */
             dbg_out->base_entities = ecs_type_add(
-                world, dbg_out->base_entities, e & ECS_COMPONENT_MASK);
+                world, dbg_out->base_entities, ECS_PAIR_OBJECT(e));
 
             /* Add base entities of entity to list of base entities */
             dbg_out->base_entities = ecs_type_add(
-                world, base_table_dbg.base_entities, e & ECS_COMPONENT_MASK);                                                       
+                world, base_table_dbg.base_entities, ECS_PAIR_OBJECT(e));
         }
     }
 

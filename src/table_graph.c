@@ -195,7 +195,7 @@ void init_edges(
             table->flags |= EcsTableHasXor;
         }
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
             table->flags |= EcsTableHasBase;
         }
 
@@ -588,7 +588,7 @@ void find_owned_components(
     ecs_entity_t base,
     ecs_entities_t * owned)
 {
-    /* If we're adding an INSTANCEOF relationship, check if the base
+    /* If we're adding an IsA relationship, check if the base
      * has OWNED components that need to be added to the instance */
     ecs_type_t t = ecs_get_type(world, base);
 
@@ -596,8 +596,8 @@ void find_owned_components(
     ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            find_owned_components(world, node, e & ECS_COMPONENT_MASK, owned);
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            find_owned_components(world, node, ECS_PAIR_OBJECT(e), owned);
         } else
         if (ECS_HAS_ROLE(e, OWNED)) {
             e = e & ECS_COMPONENT_MASK;
@@ -612,7 +612,7 @@ void find_owned_components(
                     owned->array[owned->count ++] = n_entities[j];
                 }
             } else {
-                owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;
+                owned->array[owned->count ++] = ECS_PAIR_OBJECT(e);
             }
         }
     }
@@ -657,8 +657,8 @@ ecs_table_t* ecs_table_traverse_add(
             added->array[added->count ++] = e; 
         }
 
-        if ((node != next) && ECS_HAS_ROLE(e, INSTANCEOF)) {
-            find_owned_components(world, next, ECS_COMPONENT_MASK & e, &owned);
+        if ((node != next) && ECS_HAS_RELATION(e, EcsIsA)) {
+            find_owned_components(world, next, ECS_PAIR_OBJECT(e), &owned);
         }        
 
         node = next;

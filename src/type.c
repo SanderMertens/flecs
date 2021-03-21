@@ -15,8 +15,8 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = array[i];
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            ecs_entity_t prefab = e & ECS_COMPONENT_MASK;
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            ecs_entity_t prefab = ECS_PAIR_OBJECT(e);
             ecs_type_t prefab_type = ecs_get_type(world, prefab);
 
             if (prefab == previous) {
@@ -34,12 +34,6 @@ ecs_entity_t ecs_find_entity_in_prefabs(
                     return prefab;
                 }
             }
-        } else {
-            /* If this is not a prefab, the following entities won't
-                * be prefabs either because the array is sorted, and
-                * the prefab bit is 2^63 which ensures that prefabs are
-                * guaranteed to be the last entities in the type */
-            break;
         }
     }
 
@@ -302,13 +296,13 @@ bool search_type(
     if (!matched && !owned && entity != EcsPrefab && entity != EcsDisabled) {
         for (i = count - 1; i >= 0; i --) {
             ecs_entity_t e = ids[i];
-            if (!ECS_HAS_ROLE(e, INSTANCEOF)) {
+            if (!ECS_HAS_RELATION(e, EcsIsA)) {
                 break;
             }
 
-            ecs_entity_t base = e & ECS_COMPONENT_MASK;
+            ecs_entity_t base = ECS_PAIR_OBJECT(e);
             if (!ecs_is_valid(world, base)) {
-                /* This indicates that an entity has an INSTANCEOF relationship
+                /* This indicates that an entity has an IsA relationship
                  * to an invalid base. That's no good, and will be handled with
                  * future features (e.g. automatically removing the relation) */
                 continue;
