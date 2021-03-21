@@ -1262,6 +1262,26 @@ FLECS_API bool ecs_is_component_enabled_w_entity(
  * @{
  */
 
+/** Create entity with pair.
+ * This operation creates a new entity with a pair. A pair is a combination of a 
+ * relation and an object, can can be used to store relationships between
+ * entities. Example:
+ *
+ * subject = Alice, relation = Likes, object = Bob
+ *
+ * This operation accepts regular entities. For passing in component identifiers
+ * use ecs_typeid, like this:
+ *
+ * ecs_new_w_pair(world, ecs_typeid(relation), object) 
+ *
+ * @param world The world.
+ * @param relation The relation part of the pair to add.
+ * @param object The object part of the pair to add.
+ * @return The new entity.
+ */
+#define ecs_new_w_pair(world, relation, object)\
+    ecs_new_w_entity(world, ecs_pair(relation, object))
+
 /** Add a pair.
  * This operation adds a pair to an entity. A pair is a combination of a 
  * relation and an object, can can be used to store relationships between

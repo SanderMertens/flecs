@@ -992,7 +992,7 @@ void DeferredActions_defer_add_child_to_deleted_parent() {
 
     ecs_defer_begin(world);
 
-    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
     ecs_add(world, child, Velocity);
     ecs_delete(world, parent);
 
@@ -1218,16 +1218,16 @@ void DeferredActions_discard_child() {
     ecs_delete(world, e);
     test_assert(ecs_is_alive(world, e));    
 
-    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | e);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, e);
     test_assert(child != 0);
-    test_assert(!ecs_has_entity(world, child, ECS_CHILDOF | e));
+    test_assert(!ecs_has_pair(world, child, EcsChildOf, e));
 
     ecs_defer_end(world);
 
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_is_alive(world, child));
     test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has_entity(world, child, ECS_CHILDOF | e));
+    test_assert(!ecs_has_pair(world, child, EcsChildOf, e));
 
     ecs_defer_end(world);
 
@@ -1262,8 +1262,8 @@ void DeferredActions_discard_child_w_add() {
     ecs_entity_t child = ecs_new(world, 0);
     test_assert(child != 0);
 
-    ecs_add_entity(world, child, ECS_CHILDOF | e);
-    test_assert(!ecs_has_entity(world, child, ECS_CHILDOF | e));
+    ecs_add_pair(world, child, EcsChildOf, e);
+    test_assert(!ecs_has_pair(world, child, EcsChildOf, e));
 
     ecs_defer_end(world);
 
