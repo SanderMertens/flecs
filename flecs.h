@@ -8192,6 +8192,12 @@ inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      n
 
 namespace flecs 
 {
+    // Utility to get actual type
+    template<typename Type>
+    struct base_type {
+        typedef typename std::remove_pointer<
+            typename std::decay<Type>::type>::type type;
+    };
 
 namespace _ 
 {
@@ -11754,24 +11760,16 @@ void register_lifecycle_actions(
     if (!ecs_component_has_actions(world, component)) {
         EcsComponentLifecycle cl{};
         if (ctor) {
-            cl.ctor = _::component_ctor<
-                typename std::remove_const<
-                    typename std::remove_pointer<T>::type>::type>;
+            cl.ctor = _::component_ctor<typename base_type<T>::type>;
         }
         if (dtor) {
-            cl.dtor = _::component_dtor<
-                typename std::remove_const<
-                    typename std::remove_pointer<T>::type>::type>;
+            cl.dtor = _::component_dtor<typename base_type<T>::type>;
         }
         if (copy) {
-            cl.copy = _::component_copy<
-                typename std::remove_const<
-                    typename std::remove_pointer<T>::type>::type>;
+            cl.copy = _::component_copy<typename base_type<T>::type>;
         }
         if (move) {
-            cl.move = _::component_move<
-                typename std::remove_const<
-                    typename std::remove_pointer<T>::type>::type>;
+            cl.move = _::component_move<typename base_type<T>::type>;
         }
 
         ecs_set_component_actions_w_entity( world, component, &cl);
@@ -11820,6 +11818,7 @@ void register_lifecycle_actions(
 
 template <typename T>
 class component_info final {
+
 public:
     // Initialize component identifier
     static void init(world_t* world, entity_t entity, bool allow_tag = true) {
@@ -11892,8 +11891,11 @@ public:
             flecs::world w(world);
             flecs::entity result = entity(w, name, true);
             
-            // Init the component_info instance with the identiifer.
-            init(world, result.id(), allow_tag);
+            // Initialize types with identifier
+            component_info<typename base_type<T>::type>::init(world, result.id(), allow_tag);
+            component_info<const typename base_type<T>::type>::init(world, result.id(), allow_tag);
+            component_info<typename base_type<T>::type*>::init(world, result.id(), allow_tag);
+            component_info<typename base_type<T>::type&>::init(world, result.id(), allow_tag);
 
             // Now use the resulting identifier to register the component. Note
             // that the name is not passed into this function, as the entity was
@@ -12048,7 +12050,7 @@ public:
         if (s_allow_tag && std::is_empty<T>::value) {
             return 0;
         } else {
-            return sizeof(typename std::remove_pointer<T>::type);
+            return sizeof(typename base_type<T>::type);
         }
     }
 
@@ -12059,7 +12061,7 @@ public:
         if (size() == 0) {
             return 0;
         } else {
-            return alignof(typename std::remove_pointer<T>::type);
+            return alignof(typename base_type<T>::type);
         }
     }
 
@@ -12172,11 +12174,6 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         /* Register id as usual */
         id = _::component_info<T>::id_no_lifecycle(world_ptr, name, allow_tag);
     }
-
-    _::component_info<T>::init(world_ptr, id, allow_tag);
-    _::component_info<const T>::init(world_ptr, id, allow_tag);
-    _::component_info<T*>::init(world_ptr, id, allow_tag);
-    _::component_info<T&>::init(world_ptr, id, allow_tag);
     
     return world.entity(id);
 }

@@ -43,6 +43,12 @@ inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      n
 
 namespace flecs 
 {
+    // Utility to get actual type
+    template<typename Type>
+    struct base_type {
+        typedef typename std::remove_pointer<
+            typename std::decay<Type>::type>::type type;
+    };
 
 namespace _ 
 {
