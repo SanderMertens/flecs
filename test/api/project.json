@@ -590,7 +590,8 @@
                 "merge_after_staged_out_before_owned",
                 "switch_pipeline",
                 "run_pipeline",
-                "get_pipeline_from_stage"
+                "get_pipeline_from_stage",
+                "3_systems_3_types"
             ]
         }, {
             "id": "SystemMisc",
@@ -701,6 +702,12 @@
                 "sort_1000_entities_w_duplicates",
                 "sort_1000_entities_again",
                 "sort_1000_entities_2_types",
+                "sort_1500_entities_3_types",
+                "sort_2000_entities_4_types",
+                "sort_2_entities_2_types",
+                "sort_3_entities_3_types",
+                "sort_3_entities_3_types_2",
+                "sort_4_entities_4_types",
                 "sort_1000_entities_2_types_again",
                 "sort_1000_entities_add_type_after_sort",
                 "sort_shared_component"

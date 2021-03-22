@@ -597,3 +597,30 @@ void Pipeline_get_pipeline_from_stage() {
 
     ecs_fini(world);
 }
+
+void Pipeline_3_systems_3_types() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t s1 = ecs_new_system(world, 0, "SysA", EcsOnUpdate, "Position", SysA);
+    ecs_entity_t s2 = ecs_new_system(world, 0, NULL, EcsOnUpdate, "Position", SysB);
+    ecs_entity_t s3 = ecs_new_system(world, 0, "SysC", EcsOnUpdate, ":Position", SysC);
+
+    test_assert(s1 != 0);
+    test_assert(s2 != 0);
+    test_assert(s3 != 0);
+
+    ecs_add_entity(world, s3, Tag);
+
+    ecs_new(world, Position);
+
+    ecs_progress(world, 1);  
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 1);
+
+    ecs_fini(world);
+}

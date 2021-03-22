@@ -16746,11 +16746,11 @@ void build_sorted_table_range(
 
             if (compare(e1, ptr1, e2, ptr2) > 0) {
                 min = j;
+                e1 = e_from_helper(&helper[min]);
             }
         }
 
         sort_helper_t *cur_helper = &helper[min];
-
         if (!cur || cur->table != cur_helper->table) {
             cur = ecs_vector_add(&query->table_slices, ecs_table_slice_t);
             ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -21032,7 +21032,7 @@ bool build_pipeline(
         EcsSystem *sys = ecs_column(&it, EcsSystem, 1);        
 
         int i;
-        for (i = 0; i < it.count; i ++) {            
+        for (i = 0; i < it.count; i ++) {      
             ecs_query_t *q = sys[i].query;
             if (!q) {
                 continue;
@@ -23066,6 +23066,8 @@ ecs_entity_t ecs_new_entity(
     const char *expr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Function cannot be called from a stage, use regular ecs_new */
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);
@@ -23088,6 +23090,8 @@ ecs_entity_t ecs_new_prefab(
     const char *expr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Function cannot be called from a stage, use regular ecs_new */
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_lookup_w_id(world, e, name);

@@ -541,6 +541,7 @@ void Pipeline_merge_after_staged_out_before_owned(void);
 void Pipeline_switch_pipeline(void);
 void Pipeline_run_pipeline(void);
 void Pipeline_get_pipeline_from_stage(void);
+void Pipeline_3_systems_3_types(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_setup(void);
@@ -647,6 +648,12 @@ void Sorting_sort_1000_entities(void);
 void Sorting_sort_1000_entities_w_duplicates(void);
 void Sorting_sort_1000_entities_again(void);
 void Sorting_sort_1000_entities_2_types(void);
+void Sorting_sort_1500_entities_3_types(void);
+void Sorting_sort_2000_entities_4_types(void);
+void Sorting_sort_2_entities_2_types(void);
+void Sorting_sort_3_entities_3_types(void);
+void Sorting_sort_3_entities_3_types_2(void);
+void Sorting_sort_4_entities_4_types(void);
 void Sorting_sort_1000_entities_2_types_again(void);
 void Sorting_sort_1000_entities_add_type_after_sort(void);
 void Sorting_sort_shared_component(void);
@@ -3496,6 +3503,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "get_pipeline_from_stage",
         Pipeline_get_pipeline_from_stage
+    },
+    {
+        "3_systems_3_types",
+        Pipeline_3_systems_3_types
     }
 };
 
@@ -3906,6 +3917,30 @@ bake_test_case Sorting_testcases[] = {
     {
         "sort_1000_entities_2_types",
         Sorting_sort_1000_entities_2_types
+    },
+    {
+        "sort_1500_entities_3_types",
+        Sorting_sort_1500_entities_3_types
+    },
+    {
+        "sort_2000_entities_4_types",
+        Sorting_sort_2000_entities_4_types
+    },
+    {
+        "sort_2_entities_2_types",
+        Sorting_sort_2_entities_2_types
+    },
+    {
+        "sort_3_entities_3_types",
+        Sorting_sort_3_entities_3_types
+    },
+    {
+        "sort_3_entities_3_types_2",
+        Sorting_sort_3_entities_3_types_2
+    },
+    {
+        "sort_4_entities_4_types",
+        Sorting_sort_4_entities_4_types
     },
     {
         "sort_1000_entities_2_types_again",
@@ -7306,7 +7341,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        17,
+        18,
         Pipeline_testcases
     },
     {
@@ -7320,7 +7355,7 @@ static bake_test_suite suites[] = {
         "Sorting",
         NULL,
         NULL,
-        20,
+        26,
         Sorting_testcases
     },
     {

@@ -181,7 +181,6 @@ FLECS_API void ecs_gauge_reduce(
     ecs_gauge_t *src,
     int32_t t_src);
 
-
 #ifdef __cplusplus
 }
 #endif

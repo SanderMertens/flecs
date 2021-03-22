@@ -206,7 +206,7 @@ bool build_pipeline(
         EcsSystem *sys = ecs_column(&it, EcsSystem, 1);        
 
         int i;
-        for (i = 0; i < it.count; i ++) {            
+        for (i = 0; i < it.count; i ++) {      
             ecs_query_t *q = sys[i].query;
             if (!q) {
                 continue;
