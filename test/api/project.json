@@ -591,7 +591,15 @@
                 "switch_pipeline",
                 "run_pipeline",
                 "get_pipeline_from_stage",
-                "3_systems_3_types"
+                "3_systems_3_types",
+                "random_read_after_random_write_out_in",
+                "random_read_after_random_write_inout_in",
+                "random_read_after_random_write_out_inout",
+                "random_read_after_random_write_inout_inout",
+                "random_read_after_random_write_w_not_write",
+                "random_read_after_random_write_w_not_read",
+                "random_read_after_random_write_w_wildcard",
+                "random_in_after_random_inout_after_random_out"
             ]
         }, {
             "id": "SystemMisc",

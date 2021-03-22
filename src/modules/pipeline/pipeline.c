@@ -110,6 +110,25 @@ void reset_write_state(
 }
 
 static
+int32_t get_any_write_state(
+    write_state_t *write_state)
+{
+    if (write_state->wildcard) {
+        return WriteToStage;
+    }
+
+    ecs_map_iter_t it = ecs_map_iter(write_state->components);
+    int32_t *elem;
+    while ((elem = ecs_map_next(&it, int32_t, NULL))) {
+        if (*elem == WriteToStage) {
+            return WriteToStage;
+        }
+    }
+
+    return 0;
+}
+
+static
 bool check_column_component(
     ecs_sig_column_t *column,
     bool is_active,
@@ -124,9 +143,7 @@ bool check_column_component(
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsIn:
-            if (state == WriteToStage) {
-                return true;
-            } else if (write_state->wildcard) {
+            if (state == WriteToStage || write_state->wildcard) {
                 return true;
             }
             // fall through
@@ -138,6 +155,24 @@ bool check_column_component(
     } else if (column->from_kind == EcsFromEmpty || 
                column->oper_kind == EcsOperNot) 
     {
+        bool needs_merge = false;
+
+        switch(column->inout_kind) {
+        case EcsIn:
+        case EcsInOut:
+            if (state == WriteToStage) {
+                needs_merge = true;
+            }
+            if (component == EcsWildcard) {
+                if (get_any_write_state(write_state) == WriteToStage) {
+                    needs_merge = true;
+                }
+            }
+            break;
+        default:
+            break;
+        };
+
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsOut:
@@ -147,7 +182,11 @@ bool check_column_component(
             break;
         default:
             break;
-        };
+        };   
+
+        if (needs_merge) {
+            return true;
+        }
     }
 
     return false;

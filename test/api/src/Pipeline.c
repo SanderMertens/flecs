@@ -624,3 +624,236 @@ void Pipeline_3_systems_3_types() {
 
     ecs_fini(world);
 }
+
+static
+void RandomWrite(ecs_iter_t *it) {
+    ecs_entity_t ecs_typeid(Position) = ecs_column_entity(it, 2);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Position, {1, 2});
+    }
+}
+
+static
+void RandomRead(ecs_iter_t *it) {
+    ecs_entity_t ecs_typeid(Position) = ecs_lookup(it->world, "Position");
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        const Position *p = ecs_get(it->world, it->entities[i], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+}
+
+static
+void RandomReadWrite(ecs_iter_t *it) {
+    ecs_entity_t ecs_typeid(Position) = ecs_lookup(it->world, "Position");
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        const Position *p = ecs_get(it->world, it->entities[i], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+
+        ecs_set(it->world, it->entities[i], Position, {p->x + 1, p->y + 1});
+    }
+}
+
+static
+void RandomReadAfterRW(ecs_iter_t *it) {
+    ecs_entity_t ecs_typeid(Position) = ecs_lookup(it->world, "Position");
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        const Position *p = ecs_get(it->world, it->entities[i], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 2);
+        test_int(p->y, 3);
+    }
+}
+
+static
+void RandomRead_Not(ecs_iter_t *it) {
+    ecs_entity_t ecs_typeid(Position) = ecs_column_entity(it, 2);
+    ecs_type_t ecs_type(Position) = ecs_column_type(it, 2);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        test_assert(!ecs_has(it->world, it->entities[i], Position));
+        const Position *p = ecs_get(it->world, it->entities[i], Position);
+        test_assert(p == NULL);
+    }
+}
+
+void Pipeline_random_read_after_random_write_out_in() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] :Position);
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] :Position);
+    
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_progress(world, 1);  
+
+    test_assert(ecs_has(world, e, Position));
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_random_read_after_random_write_inout_in() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [inout] :Position);
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] :Position);
+    
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_progress(world, 1);  
+
+    test_assert(ecs_has(world, e, Position));
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_random_read_after_random_write_out_inout() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] :Position);
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [inout] :Position);
+    
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_progress(world, 1);  
+
+    test_assert(ecs_has(world, e, Position));
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_random_read_after_random_write_inout_inout() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [inout] :Position);
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [inout] :Position);
+    
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_progress(world, 1);  
+
+    test_assert(ecs_has(world, e, Position));
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_random_read_after_random_write_w_not_write() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] !Position);
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] :Position);
+    
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_progress(world, 1);  
+
+    test_assert(ecs_has(world, e, Position));
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_random_read_after_random_write_w_not_read() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] :Position);
+    ECS_SYSTEM(world, RandomRead_Not, EcsOnUpdate, Tag, [in] !Position);
+    
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_progress(world, 1);
+
+    test_assert(ecs_has(world, e, Position));
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_random_read_after_random_write_w_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] :Position);
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] :*);
+    
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_progress(world, 1);
+
+    test_assert(ecs_has(world, e, Position));
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_random_in_after_random_inout_after_random_out() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] :Position);
+    ECS_SYSTEM(world, RandomReadWrite, EcsOnUpdate, Tag, [inout] :Position);
+    ECS_SYSTEM(world, RandomReadAfterRW, EcsOnUpdate, Tag, [in] :Position);
+    
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_progress(world, 1);
+
+    test_assert(ecs_has(world, e, Position));
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+
+    ecs_fini(world);
+}

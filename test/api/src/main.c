@@ -542,6 +542,14 @@ void Pipeline_switch_pipeline(void);
 void Pipeline_run_pipeline(void);
 void Pipeline_get_pipeline_from_stage(void);
 void Pipeline_3_systems_3_types(void);
+void Pipeline_random_read_after_random_write_out_in(void);
+void Pipeline_random_read_after_random_write_inout_in(void);
+void Pipeline_random_read_after_random_write_out_inout(void);
+void Pipeline_random_read_after_random_write_inout_inout(void);
+void Pipeline_random_read_after_random_write_w_not_write(void);
+void Pipeline_random_read_after_random_write_w_not_read(void);
+void Pipeline_random_read_after_random_write_w_wildcard(void);
+void Pipeline_random_in_after_random_inout_after_random_out(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_setup(void);
@@ -3507,6 +3515,38 @@ bake_test_case Pipeline_testcases[] = {
     {
         "3_systems_3_types",
         Pipeline_3_systems_3_types
+    },
+    {
+        "random_read_after_random_write_out_in",
+        Pipeline_random_read_after_random_write_out_in
+    },
+    {
+        "random_read_after_random_write_inout_in",
+        Pipeline_random_read_after_random_write_inout_in
+    },
+    {
+        "random_read_after_random_write_out_inout",
+        Pipeline_random_read_after_random_write_out_inout
+    },
+    {
+        "random_read_after_random_write_inout_inout",
+        Pipeline_random_read_after_random_write_inout_inout
+    },
+    {
+        "random_read_after_random_write_w_not_write",
+        Pipeline_random_read_after_random_write_w_not_write
+    },
+    {
+        "random_read_after_random_write_w_not_read",
+        Pipeline_random_read_after_random_write_w_not_read
+    },
+    {
+        "random_read_after_random_write_w_wildcard",
+        Pipeline_random_read_after_random_write_w_wildcard
+    },
+    {
+        "random_in_after_random_inout_after_random_out",
+        Pipeline_random_in_after_random_inout_after_random_out
     }
 };
 
@@ -7341,7 +7381,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        18,
+        26,
         Pipeline_testcases
     },
     {
