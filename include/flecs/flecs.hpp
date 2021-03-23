@@ -139,5 +139,6 @@ static const ecs_entity_t ChildOf = EcsChildOf;
 #include <flecs/cpp/query.hpp>
 #include <flecs/cpp/system.hpp>
 #include <flecs/cpp/reader_writer.hpp>
-
 #include <flecs/cpp/impl.hpp>
+
+#include <flecs/cpp/deprecated/flecs.hpp>

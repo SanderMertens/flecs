@@ -1287,3 +1287,160 @@ void Hierarchies_add_child_to_recycled_parent() {
 
     ecs_fini(world);
 }
+
+void Hierarchies_get_type_after_recycled_parent_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+    test_assert( ecs_get_type(world, parent) == NULL);
+
+    ecs_delete(world, parent);
+    test_assert( !ecs_is_alive(world, parent));
+
+    parent = ecs_new(world, Position);
+    test_assert(parent != 0);
+    test_assert(ecs_entity_t_lo(parent) != parent); // Ensure recycled
+    test_assert( ecs_get_type(world, parent) != NULL);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_assert(e != 0);
+    test_assert( ecs_get_type(world, parent) != NULL);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_rematch_after_add_to_recycled_parent() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag, PARENT:Position");
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+
+    ecs_delete(world, parent);
+    test_assert( !ecs_is_alive(world, parent));
+
+    parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_assert(e != 0);
+    test_assert( ecs_has_pair(world, e, EcsChildOf, parent));
+    ecs_add(world, e, Tag);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_set(world, parent, Position, {10, 20});
+
+    ecs_progress(world, 0);
+
+    it = ecs_query_iter(q);
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+
+    const Position *p = ecs_column(&it, Position, 2);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(ecs_column_source(&it, 2) == parent);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_cascade_after_recycled_parent_change() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag, CASCADE:Position");
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+    ecs_entity_t child = ecs_new(world, 0);
+    test_assert(child != 0);
+
+    ecs_delete(world, parent);
+    test_assert( !ecs_is_alive(world, parent));
+    ecs_delete(world, child);
+    test_assert( !ecs_is_alive(world, child));
+
+    parent = ecs_new_w_entity(world, Tag);
+    test_assert(parent != 0);
+    child = ecs_new_w_entity(world, Tag);
+    test_assert(child != 0);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    ecs_entity_t e = ecs_new_w_entity(world, Tag);
+    test_assert(e != 0);
+
+    ecs_add_pair(world, e, EcsChildOf, child);
+    test_assert( ecs_has_pair(world, e, EcsChildOf, child));
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == parent);
+    test_assert(ecs_column_source(&it, 2) == 0);
+    const Position *p = ecs_column(&it, Position, 2);
+    test_assert(p == NULL);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == child);
+    test_assert(ecs_column_source(&it, 2) == 0);
+    p = ecs_column(&it, Position, 2);
+    test_assert(p == NULL);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e);
+    test_assert(ecs_column_source(&it, 2) == 0);
+    p = ecs_column(&it, Position, 2);
+    test_assert(p == NULL);
+
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_set(world, parent, Position, {10, 20});
+    ecs_set(world, child, Position, {20, 30});
+
+    ecs_progress(world, 0);
+
+    it = ecs_query_iter(q);
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == parent);
+    test_assert(ecs_column_source(&it, 2) == 0);
+    p = ecs_column(&it, Position, 2);
+    test_assert(p == NULL);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == child);
+    test_assert(ecs_column_source(&it, 2) == parent);
+    p = ecs_column(&it, Position, 2);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e);
+    test_assert(ecs_column_source(&it, 2) == child);
+    p = ecs_column(&it, Position, 2);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 30);
+
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_fini(world);
+}

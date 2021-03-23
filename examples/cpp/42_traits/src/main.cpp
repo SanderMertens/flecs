@@ -70,11 +70,11 @@ int main(int argc, char *argv[]) {
 
     /* Assign the trait to the Position component. After 3 seconds Position will
      * be removed from the entity */
-    e.set_trait<ExpiryTimer, Position>({ 3, 0 });
+    e.set<ExpiryTimer, Position>({ 3, 0 });
 
     /* Also assign the trait to the Velocity comopnent. After 2 seconds the
      * Velocity component will be removed. */
-    e.set_trait<ExpiryTimer, Velocity>({ 2, 0 });
+    e.set<ExpiryTimer, Velocity>({ 2, 0 });
 
     /* Note that the trait has been added to the same entity twice, which is not
      * something that is ordinarily possible with a component. */

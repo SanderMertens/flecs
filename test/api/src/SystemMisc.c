@@ -1530,7 +1530,7 @@ void SystemMisc_rw_in_implicit_shared() {
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
-    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e, EcsIsA, base);
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
@@ -1608,7 +1608,7 @@ void SystemMisc_rw_out_explicit_shared() {
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
-    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e, EcsIsA, base);
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);

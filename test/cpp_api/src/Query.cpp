@@ -63,7 +63,7 @@ void Query_action_shared() {
 
     auto e1 = flecs::entity(world)
         .set<Position>({10, 20})
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
     auto e2 = flecs::entity(world)
         .set<Position>({10, 20})
@@ -207,7 +207,7 @@ void Query_each_shared() {
 
     auto e1 = flecs::entity(world)
         .set<Position>({10, 20})
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
     auto e2 = flecs::entity(world)
         .set<Position>({10, 20})
@@ -346,7 +346,7 @@ void Query_signature_shared() {
 
     auto e1 = flecs::entity(world)
         .set<Position>({10, 20})
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
     auto e2 = flecs::entity(world)
         .set<Position>({10, 20})
@@ -543,7 +543,7 @@ void Query_shared_tag_w_each() {
         .add<Tag>();
 
     auto e = world.entity()
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
     q.each([&](flecs::entity qe, Tag) {
         test_assert(qe == e);

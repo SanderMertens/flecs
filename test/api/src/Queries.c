@@ -711,7 +711,7 @@ void Queries_query_optional_owned() {
     ecs_entity_t base = ecs_new(world, Velocity);
     
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e1, EcsIsA, base);
 
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add(world, e2, Velocity);
@@ -756,7 +756,7 @@ void Queries_query_optional_shared() {
     ecs_entity_t base = ecs_new(world, Velocity);
     
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e1, EcsIsA, base);
 
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add(world, e2, Velocity);
@@ -800,10 +800,10 @@ void Queries_query_optional_shared_nested() {
 
     ecs_entity_t base_base = ecs_new(world, Velocity);
     ecs_entity_t base = ecs_new(world, 0);
-    ecs_add_entity(world, base, ECS_INSTANCEOF | base_base);
+    ecs_add_pair(world, base, EcsIsA, base_base);
     
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e1, EcsIsA, base);
 
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add(world, e2, Velocity);
@@ -848,7 +848,7 @@ void Queries_query_optional_any() {
     ecs_entity_t base = ecs_new(world, Velocity);
     
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e1, EcsIsA, base);
 
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add(world, e2, Velocity);
@@ -895,7 +895,7 @@ void Queries_query_rematch_optional_after_add() {
     ecs_entity_t base = ecs_new(world, 0);
     
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e1, EcsIsA, base);
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add(world, e2, Velocity);
     ecs_entity_t e3 = ecs_new(world, Position);
@@ -990,7 +990,7 @@ void Queries_get_shared_tag() {
     ECS_TAG(world, Tag);
 
     ecs_entity_t base = ecs_new(world, Tag);
-    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_query_t *q = ecs_query_new(world, "SHARED:Tag");
 

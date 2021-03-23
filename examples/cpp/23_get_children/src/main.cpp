@@ -24,10 +24,10 @@ int main(int argc, char *argv[]) {
 
     // Create a simple hierarchy with 2 levels
     auto Parent = ecs.entity("Parent");
-        auto Child1 = ecs.entity("Child1").add_childof(Parent);
-            ecs.entity("GrandChild").add_childof(Child1);
-        ecs.entity("Child2").add_childof(Parent);
-        ecs.entity("Child3").add_childof(Parent);
+        auto Child1 = ecs.entity("Child1").add(flecs::ChildOf, Parent);
+            ecs.entity("GrandChild").add(flecs::ChildOf, Child1);
+        ecs.entity("Child2").add(flecs::ChildOf, Parent);
+        ecs.entity("Child3").add(flecs::ChildOf, Parent);
     
     print_tree(Parent);    
 }

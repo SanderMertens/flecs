@@ -61,7 +61,7 @@ void Traits_remove_component_trait() {
 
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 
-    entity.remove_trait<Position, Pair>();
+    entity.remove<Position, Pair>();
     test_assert(!(entity.has<Position, Pair>()));
 }
 
@@ -79,7 +79,7 @@ void Traits_remove_tag_trait() {
     test_assert(!entity.has<Position>(Pair));
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 
-    entity.remove_trait<Position>(Pair);
+    entity.remove<Position>(Pair);
     test_assert(!entity.has<Position>(Pair));
 }
 
@@ -96,7 +96,7 @@ void Traits_remove_tag_trait_to_tag() {
     test_assert(entity.has(Pair, Tag));
     test_str(entity.type().str().c_str(), "(Pair,Tag)");
 
-    entity.remove_trait(Tag, Pair);
+    entity.remove(Tag, Pair);
     test_assert(!entity.has(Tag, Pair));
 }
 
@@ -196,7 +196,7 @@ void Traits_override_trait() {
         .set<Pair, Position>({10});
 
     auto instance = world.entity()
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
     test_assert((instance.has<Pair, Position>()));
     const Pair *t = instance.get<Pair, Position>();
@@ -210,7 +210,7 @@ void Traits_override_trait() {
     test_int(t->value, 10);
     test_assert(t != t_2);
 
-    instance.remove_trait<Pair, Position>();
+    instance.remove<Pair, Position>();
     t = instance.get<Pair, Position>();
     test_int(t->value, 10);
     test_assert(t == t_2);    
@@ -225,7 +225,7 @@ void Traits_override_tag_trait() {
         .set_object<Position>(Pair, {10, 20});
 
     auto instance = world.entity()
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
     test_assert((instance.has_object<Position>(Pair)));
     const Position *t = instance.get_object<Position>(Pair);
@@ -241,7 +241,7 @@ void Traits_override_tag_trait() {
     test_int(t->y, 20);
     test_assert(t != t_2);
 
-    instance.remove_trait_tag<Position>(Pair);
+    instance.remove_object<Position>(Pair);
     t = instance.get_object<Position>(Pair);
     test_int(t->x, 10);
     test_int(t->y, 20);
@@ -254,7 +254,7 @@ void Traits_get_mut_trait() {
     auto e = world.entity();
 
     bool added = false;
-    Pair *t = e.get_trait_mut<Pair, Position>(&added);
+    Pair *t = e.get_mut<Pair, Position>(&added);
     test_assert(t != NULL);
     test_bool(added, true);
     t->value = 10;
@@ -271,7 +271,7 @@ void Traits_get_mut_trait_existing() {
         .set<Pair, Position>({20});
 
     bool added = false;
-    Pair *t = e.get_trait_mut<Pair, Position>(&added);
+    Pair *t = e.get_mut<Pair, Position>(&added);
     test_assert(t != NULL);
     test_bool(added, false);
     test_int(t->value, 20);
@@ -290,7 +290,7 @@ void Traits_get_mut_trait_tag() {
     auto e = world.entity();
 
     bool added = false;
-    Position *p = e.get_trait_tag_mut<Position>(Pair, &added);
+    Position *p = e.get_mut_object<Position>(Pair, &added);
     test_assert(p != NULL);
     test_bool(added, true);
     p->x = 10;
@@ -311,7 +311,7 @@ void Traits_get_mut_trait_tag_existing() {
         .set_object<Position>(Pair, {10, 20});
 
     bool added = false;
-    Position *p = e.get_trait_tag_mut<Position>(Pair, &added);
+    Position *p = e.get_mut_object<Position>(Pair, &added);
     test_assert(p != NULL);
     test_bool(added, false);
     test_int(p->x, 10);
@@ -385,7 +385,7 @@ void Traits_override_trait_w_type() {
         .set<Pair, Position>({10});
 
     auto Type = world.type()
-        .add_instanceof(Prefab)
+        .add(flecs::IsA, Prefab)
         .add<Pair, Position>();
 
     auto e = world.entity()
@@ -413,7 +413,7 @@ void Traits_override_trait_w_type_tag() {
         .set<Pair>(Tag, {10});
 
     auto Type = world.type()
-        .add_instanceof(Prefab)
+        .add(flecs::IsA, Prefab)
         .add<Pair>(Tag);
 
     auto e = world.entity()
@@ -441,7 +441,7 @@ void Traits_override_tag_trait_w_type() {
         .set_object<Position>(Pair, {10, 20});
 
     auto Type = world.type()
-        .add_instanceof(Prefab)
+        .add(flecs::IsA, Prefab)
         .add_object<Position>(Pair);
 
     auto e = world.entity()

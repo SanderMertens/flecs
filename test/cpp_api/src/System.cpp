@@ -69,7 +69,7 @@ void System_action_shared() {
 
     auto e1 = flecs::entity(world)
         .set<Position>({10, 20})
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
     auto e2 = flecs::entity(world)
         .set<Position>({10, 20})
@@ -217,7 +217,7 @@ void System_each_shared() {
 
     auto e1 = flecs::entity(world)
         .set<Position>({10, 20})
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
     auto e2 = flecs::entity(world)
         .set<Position>({10, 20})
@@ -369,7 +369,7 @@ void System_signature_shared() {
 
     auto e1 = flecs::entity(world)
         .set<Position>({10, 20})
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
     auto e2 = flecs::entity(world)
         .set<Position>({10, 20})
@@ -953,9 +953,9 @@ void System_each_w_mut_children_it() {
     flecs::world world;
 
     auto parent = world.entity().set<Position>({0, 0});
-    auto e1 = world.entity().set<Position>({0, 0}).add_childof(parent);
-    auto e2 = world.entity().set<Position>({0, 0}).add_childof(parent);
-    auto e3 = world.entity().set<Position>({0, 0}).add_childof(parent);
+    auto e1 = world.entity().set<Position>({0, 0}).add(flecs::ChildOf, parent);
+    auto e2 = world.entity().set<Position>({0, 0}).add(flecs::ChildOf, parent);
+    auto e3 = world.entity().set<Position>({0, 0}).add(flecs::ChildOf, parent);
 
     auto sys = world.system<const Position>()
         .iter([](const flecs::iter& it, const Position* p) {
@@ -980,9 +980,9 @@ void System_readonly_children_iter() {
 
     auto parent = world.entity();
     world.entity().set<Entity>({ parent });
-    world.entity().set<Position>({1, 0}).add_childof(parent);
-    world.entity().set<Position>({1, 0}).add_childof(parent);
-    world.entity().set<Position>({1, 0}).add_childof(parent);
+    world.entity().set<Position>({1, 0}).add(flecs::ChildOf, parent);
+    world.entity().set<Position>({1, 0}).add(flecs::ChildOf, parent);
+    world.entity().set<Position>({1, 0}).add(flecs::ChildOf, parent);
 
     auto sys = world.system<const Entity>()
         .iter([](const flecs::iter& it, const Entity* c) {

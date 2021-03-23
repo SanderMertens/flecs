@@ -513,7 +513,7 @@ void SystemOnSet_bulk_new_1_from_base() {
             .array = (ecs_entity_t[]){
                 ecs_typeid(Velocity),
                 ecs_typeid(Mass),
-                ECS_INSTANCEOF | Base
+                ecs_pair(EcsIsA, Base)
             }, 
             .count = 3
         },
@@ -560,7 +560,7 @@ void SystemOnSet_set_1_of_2_1_from_base() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Base);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, Velocity);
@@ -597,7 +597,7 @@ void SystemOnSet_set_1_of_3_1_from_base() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Base);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, Velocity);
@@ -658,7 +658,7 @@ void SystemOnSet_add_base() {
     ecs_entity_t e = ecs_new(world, Velocity);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
@@ -687,7 +687,7 @@ void SystemOnSet_add_base_to_1_overridden() {
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
@@ -708,7 +708,7 @@ void SystemOnSet_add_base_to_2_overridden() {
     ecs_add(world, e, Velocity);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
@@ -728,7 +728,7 @@ void SystemOnSet_add_base_to_1_of_2_overridden() {
     ecs_entity_t e = ecs_new(world, Velocity);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
@@ -744,7 +744,7 @@ void SystemOnSet_add_base_to_1_of_2_overridden() {
     e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
@@ -764,7 +764,7 @@ void SystemOnSet_on_set_after_remove_override() {
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_remove(world, e, Position);
@@ -795,10 +795,10 @@ void SystemOnSet_no_set_after_remove_base() {
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
-    ecs_remove_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_remove_entity(world, e, ecs_pair(EcsIsA, Base));
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
@@ -835,10 +835,10 @@ void SystemOnSet_un_set_after_remove_base() {
     ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
-    ecs_remove_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_remove_entity(world, e, ecs_pair(EcsIsA, Base));
     test_int(ctx.invoked, 1);
 
     ecs_fini(world);

@@ -55,7 +55,7 @@
 #include "flecs/private/strbuf.h"        /* Efficient string builder */
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
 
-#include "flecs/deprecated.h" /* Deprecated functions */
+#include "flecs/private/deprecated.h" /* Deprecated functions */
 
 #ifdef __cplusplus
 extern "C" {
@@ -240,14 +240,6 @@ typedef struct EcsTrigger {
 /** Role bit added to roles to differentiate between roles and generations */
 #define ECS_ROLE ((uint64_t)1 << 63)
 
-/** The INSTANCEOF role indicates that the components from the entity should be
- * shared with the entity that instantiates the type. */
-#define ECS_INSTANCEOF (ECS_ROLE | ((ecs_entity_t)0x7E << 56))
-
-/** The CHILDOF role indicates that the entity should be treated as a parent of
- * the entity that instantiates the type. */
-#define ECS_CHILDOF (ECS_ROLE | ((ecs_entity_t)0x7D << 56))
-
 /** Cases are used to switch between mutually exclusive components */
 #define ECS_CASE (ECS_ROLE | ((ecs_entity_t)0x7C << 56))
 
@@ -333,8 +325,8 @@ typedef struct EcsTrigger {
 #define EcsFinal (ECS_HI_COMPONENT_ID + 30)
 
 /* Builtin relationships */
-#define EcsIsA (ECS_HI_COMPONENT_ID + 31)
-#define EcsChildOf (ECS_HI_COMPONENT_ID + 32)
+#define EcsChildOf (ECS_HI_COMPONENT_ID + 31)
+#define EcsIsA (ECS_HI_COMPONENT_ID + 32)
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */

@@ -180,7 +180,7 @@ ECS_PREFAB(world, Parent);
     ECS_PREFAB(world, ChildPrefab, Position, CHILDOF | Parent);
 
 // Instantiate Parent
-ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Parent);
 
 // In v1 'e' would have a child with type [ECS_INSTANCEOF | ChildPrefab]. In 
 // v2 'e' the child has type [Position, CHILDOF | e].

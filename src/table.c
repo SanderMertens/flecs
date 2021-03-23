@@ -286,7 +286,7 @@ bool is_override(
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities[i];
         if (ECS_HAS_RELATION(e, EcsIsA)) {
-            if (ecs_has_entity(world, e & ECS_COMPONENT_MASK, comp)) {
+            if (ecs_has_entity(world, ECS_PAIR_OBJECT(e), comp)) {
                 return true;
             }
         }

@@ -504,7 +504,7 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
 
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
 
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | Prefab);
+    ecs_add_pair(world, e1, EcsIsA, Prefab);
 
     ecs_add_pair(world, e1, EcsChildOf, parent_1);
     ecs_set(world, e1, Position, {1, 2});

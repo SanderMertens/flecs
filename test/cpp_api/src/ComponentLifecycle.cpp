@@ -121,7 +121,7 @@ void ComponentLifecycle_copy_on_override() {
     auto e = flecs::entity(world);
     test_assert(e.id() != 0);
     
-    e.add_instanceof(base);
+    e.add(flecs::IsA, base);
     test_int(POD::ctor_invoked, 0);
 
     e.add<POD>();
@@ -190,7 +190,7 @@ void ComponentLifecycle_non_pod_override() {
     auto e = flecs::entity(world);
     test_assert(e.id() != 0);
     
-    e.add_instanceof(base);
+    e.add(flecs::IsA, base);
 
     e.add<Str>();
 

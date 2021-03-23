@@ -141,6 +141,17 @@ public:
         return this->remove<Relation>(_::cpp_type<Object>::id(world()));
     }
 
+    /** Remove a pair.
+     * This operation adds a pair to the entity.
+     *
+     * @tparam Relation the relation type.
+     * @param object the object type.
+     */
+    template<typename Relation>
+    base_type& remove(const Base& object) const {
+        return this->remove(_::cpp_type<Relation>::id(world()), object.id());
+    }  
+
     /** Removes a pair with object type.
      * This operation removes a pair from the entity.
      *
@@ -148,7 +159,7 @@ public:
      * @tparam Object the object type.
      */
     template<typename Object>
-    base_type& remove(const Base& relation) const {
+    base_type& remove_object(const Base& relation) const {
         return this->remove(relation.id(), _::cpp_type<Object>::id(world()));
     }    
 

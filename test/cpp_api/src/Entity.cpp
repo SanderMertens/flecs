@@ -187,8 +187,8 @@ void Entity_add_childof() {
     auto entity = world.entity();
     test_assert(entity.id() != 0);
 
-    entity.add_childof(parent);
-    test_assert(entity.has(flecs::Childof | parent.id()));
+    entity.add(flecs::ChildOf, parent);
+    test_assert(entity.has(flecs::ChildOf, parent.id()));
 }
 
 void Entity_add_instanceof() {
@@ -200,8 +200,8 @@ void Entity_add_instanceof() {
     auto entity = world.entity();
     test_assert(entity.id() != 0);
 
-    entity.add_instanceof(base);
-    test_assert(entity.has(flecs::Instanceof | base.id()));
+    entity.add(flecs::IsA, base);
+    test_assert(entity.has(flecs::IsA, base.id()));
 }
 
 void Entity_remove_2() {
@@ -274,11 +274,11 @@ void Entity_remove_childof() {
     auto entity = world.entity();
     test_assert(entity.id() != 0);
 
-    entity.add_childof(parent);
-    test_assert(entity.has(flecs::Childof | parent.id()));
+    entity.add(flecs::ChildOf, parent);
+    test_assert(entity.has(flecs::ChildOf, parent.id()));
 
-    entity.remove_childof(parent);
-    test_assert(!entity.has(flecs::Childof | parent.id()));
+    entity.remove(flecs::ChildOf, parent);
+    test_assert(!entity.has(flecs::ChildOf, parent.id()));
 }
 
 void Entity_remove_instanceof() {
@@ -290,11 +290,11 @@ void Entity_remove_instanceof() {
     auto entity = world.entity();
     test_assert(entity.id() != 0);
 
-    entity.add_instanceof(base);
-    test_assert(entity.has(flecs::Instanceof | base.id()));
+    entity.add(flecs::IsA, base);
+    test_assert(entity.has(flecs::IsA, base.id()));
     
-    entity.remove_instanceof(base);
-    test_assert(!entity.has(flecs::Instanceof | base.id()));
+    entity.remove(flecs::IsA, base);
+    test_assert(!entity.has(flecs::IsA, base.id()));
 }
 
 void Entity_get_generic() {
@@ -471,9 +471,9 @@ void Entity_has_childof() {
     auto parent = world.entity();
 
     auto e = world.entity()
-        .add_childof(parent);
+        .add(flecs::ChildOf, parent);
 
-    test_assert(e.has_childof(parent));
+    test_assert(e.has(flecs::ChildOf, parent));
 }
 
 void Entity_has_instanceof() {
@@ -482,9 +482,9 @@ void Entity_has_instanceof() {
     auto base = world.entity();
 
     auto e = world.entity()
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
-    test_assert(e.has_instanceof(base));
+    test_assert(e.has(flecs::IsA, base));
 }
 
 void Entity_has_instanceof_indirect() {
@@ -493,12 +493,12 @@ void Entity_has_instanceof_indirect() {
     auto base_of_base = world.entity();
 
     auto base = world.entity()
-        .add_instanceof(base_of_base);
+        .add(flecs::IsA, base_of_base);
 
     auto e = world.entity()
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
-    test_assert(e.has_instanceof(base_of_base));
+    test_assert(e.has(flecs::IsA, base_of_base));
 }
 
 void Entity_null_string() {
@@ -572,7 +572,7 @@ void Entity_foce_owned() {
         .add_owned<Position>();
 
     auto e = world.entity()
-        .add_instanceof(prefab);
+        .add(flecs::IsA, prefab);
     
     test_assert(e.has<Position>());
     test_assert(e.owns<Position>());
@@ -590,7 +590,7 @@ void Entity_force_owned_2() {
         .add_owned<Velocity>();
 
     auto e = world.entity()
-        .add_instanceof(prefab);
+        .add(flecs::IsA, prefab);
     
     test_assert(e.has<Position>());
     test_assert(e.owns<Position>());
@@ -607,10 +607,10 @@ void Entity_force_owned_nested() {
         .add_owned<Position>();
 
     auto prefab_2 = world.prefab()
-        .add_instanceof(prefab);
+        .add(flecs::IsA, prefab);
 
     auto e = world.entity()
-        .add_instanceof(prefab_2);
+        .add(flecs::IsA, prefab_2);
     
     test_assert(e.has<Position>());
     test_assert(e.owns<Position>());
@@ -632,7 +632,7 @@ void Entity_force_owned_type() {
         .add_owned(type);
 
     auto e = world.entity()
-        .add_instanceof(prefab);
+        .add(flecs::IsA, prefab);
     
     test_assert(e.has<Position>());
     test_assert(e.owns<Position>());
@@ -655,7 +655,7 @@ void Entity_force_owned_type_w_trait() {
         .add_owned(type);
 
     auto e = world.entity()
-        .add_instanceof(prefab);
+        .add(flecs::IsA, prefab);
     
     test_assert((e.has<Position, Velocity>()));
     test_assert(e.has<Rotation>());
@@ -701,9 +701,9 @@ void Entity_get_parent() {
         .add<Mass>();
 
     auto child = world.entity()
-        .add_childof(parent1)
-        .add_childof(parent2)
-        .add_childof(parent3);
+        .add(flecs::ChildOf, parent1)
+        .add(flecs::ChildOf, parent2)
+        .add(flecs::ChildOf, parent3);
 
     auto p = child.get_parent<Velocity>();
     test_assert(p.id() != 0);
@@ -727,9 +727,9 @@ void Entity_get_parent_w_tag() {
         .add(TagC);
 
     auto child = world.entity()
-        .add_childof(parent1)
-        .add_childof(parent2)
-        .add_childof(parent3);
+        .add(flecs::ChildOf, parent1)
+        .add(flecs::ChildOf, parent2)
+        .add(flecs::ChildOf, parent3);
 
     auto p = child.get_parent(TagB);
     test_assert(p.id() != 0);

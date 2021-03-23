@@ -292,7 +292,10 @@
                 "get_child_count_no_children",
                 "scope_iter_after_delete_tree",
                 "add_child_after_delete_tree",
-                "add_child_to_recycled_parent"
+                "add_child_to_recycled_parent",
+                "get_type_after_recycled_parent_add",
+                "rematch_after_add_to_recycled_parent",
+                "cascade_after_recycled_parent_change"
             ]
         }, {
             "id": "Add_bulk",
@@ -1100,7 +1103,17 @@
                 "rematch_after_add_instanceof_to_parent",
                 "child_of_instance",
                 "rematch_after_prefab_delete",
-                "add_tag_w_low_id_to_instance"
+                "add_tag_w_low_id_to_instance",
+                "get_type_after_base_add",
+                "get_type_after_recycled_base_add",                
+                "new_w_recycled_base",
+                "add_recycled_base",
+                "remove_recycled_base",
+                "get_from_recycled_base",
+                "override_from_recycled_base",
+                "remove_override_from_recycled_base",
+                "instantiate_tree_from_recycled_base",
+                "rematch_after_add_to_recycled_base"
             ]
         }, {
             "id": "System_w_FromContainer",

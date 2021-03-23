@@ -1117,7 +1117,7 @@ ecs_entity_t base = ecs_new(world, 0);
 ecs_add(world, base, Position);
 
 // Entity 'e' does not own Position, Position is shared
-ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 ```
 
 An example of a signature expression with `OWNED:
@@ -2040,7 +2040,7 @@ ecs_entity_t base = ecs_new(world, 0);
 ecs_set(world, base, Position, {10, 20});
 
 // Create an instance of the base
-ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
 
 // Instance now shares Position with base
 ecs_get(world, base, Position) == ecs_get(world, instance, Position); // 1
@@ -2066,10 +2066,10 @@ INSTANCEOF relationships can be nested:
 ecs_entity_t base = ecs_new(world, 0);
 ecs_set(world, base, Position, {10, 20});
 
-ecs_entity_t derived = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+ecs_entity_t derived = ecs_new_w_pair(world, EcsIsA, base);
 
 // Create instance of 'derived', which is also an instance of base
-ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | derived);
+ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, derived);
 
 // All three entities now share Position
 ecs_get(world, base, Position) == ecs_get(world, instance, Position); // 1
@@ -2084,7 +2084,7 @@ Instances can override components from their base by adding the component as the
 ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
 
 // Create an instance of the base
-ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
 
 // Override Position
 ecs_add(world, instance, Position);
@@ -2118,11 +2118,11 @@ ecs_set(world, base, Position, {10, 20});
 ecs_set(world, base, Velocity, {1, 1});
 
 // Create derived entity, override Position
-ecs_entity_t derived = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+ecs_entity_t derived = ecs_new_w_pair(world, EcsIsA, base);
 ecs_add(world, base, Position);
 
 // Create instance of 'derived', which is also an instance of base
-ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | derived);
+ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, derived);
 
 // The instance now shares Position from derived, and Velocity from base
 ```
@@ -2139,7 +2139,7 @@ ecs_add_entity(world, world, Base, ECS_OWNED | ecs_typeid(Position));
 
 // Create entity from BaseType. This adds the INSTANCEOF relationship in addition 
 // to overriding Position, effectively initializing the Position component for the instance.
-ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | Base);
+ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, Base);
 ```
 
 The combination of instancing, overriding and OWNED is one of the fastest and easiest ways to create an entity with a set of initialized components. The OWNED relationship can also be specified inside type expressions. The following example is equivalent to the previous one:
@@ -2149,7 +2149,7 @@ ECS_ENTITY(world, Base, Position, OWNED | Position);
 
 ecs_set(world, Base, Position, {10, 20});
 
-ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | Base);
+ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, Base);
 ```
 
 ### Instance hierarchies
@@ -2161,7 +2161,7 @@ ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
 
 // Create instance of parent, two childs are added to the instance
-ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | parent);
+ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, parent);
 ```
 
 The children that are copied to the instance will have exactly the same set of components as the children of the base. For example, if the base child has components `Position, Velocity`, the instance child will also have `Position, Velocity`. Furthermore, the values of the base child components will be copied to the instance child:
@@ -2173,7 +2173,7 @@ ecs_set(world, child, EcsName, {"Child"}); // Give child a name, so we can look 
 ecs_set(world, child, Position, {10, 20});
 
 // Create instance of parent, two childs are added to the instance
-ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | parent);
+ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, parent);
 ecs_entity_t instance_child = ecs_lookup_path(world, instance, "Child");
 const Position *p = ecs_get(world, instance_child, Position);
 printf("{%f, %f}\n", p->x, p->y); // Prints {10, 20}
@@ -2197,7 +2197,7 @@ ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_add_entity(world, child, ECS_INSTANCEOF | child_base);
 
 // Create instance of parent, two childs are added to the instance
-ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | parent);
+ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, parent);
 ecs_entity_t instance_child = ecs_lookup_path(world, instance, "Child");
 
 // The component is now shared with the child and child_base
@@ -2404,14 +2404,14 @@ auto Jane = flecs::entity(world);
 auto Jeff = flecs::entity(world);
 
 // Create the relationships
-Jane.add_trait(HasMother, Alice);
-Jane.add_trait(HasFather, Bob);
+Jane.add(HasMother, Alice);
+Jane.add(HasFather, Bob);
 
-Jeff.add_trait(HasMother, Alice);
-Jeff.add_trait(HasFater, Bob);
+Jeff.add(HasMother, Alice);
+Jeff.add(HasFater, Bob);
 
-Jane.add_trait(HasSibling, Jeff);
-Jeff.add_trait(HasSibling, Jane);
+Jane.add(HasSibling, Jeff);
+Jeff.add(HasSibling, Jane);
 ```
 
 To test if an entity has a trait, applications can use the `has_trait` function:

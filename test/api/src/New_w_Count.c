@@ -625,7 +625,7 @@ void New_w_Count_new_w_data_override_set_comp() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_entities_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position), ECS_INSTANCEOF | base},
+            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_pair(EcsIsA, base)},
             .count = 2
         },
         (void*[]){
@@ -641,9 +641,9 @@ void New_w_Count_new_w_data_override_set_comp() {
     test_assert(ecs_has(world, ids[1], Position));
     test_assert(ecs_has(world, ids[2], Position));
 
-    test_assert(ecs_has_entity(world, ids[0], ECS_INSTANCEOF | base));
-    test_assert(ecs_has_entity(world, ids[1], ECS_INSTANCEOF | base));
-    test_assert(ecs_has_entity(world, ids[2], ECS_INSTANCEOF | base));
+    test_assert(ecs_has_pair(world, ids[0], EcsIsA, base));
+    test_assert(ecs_has_pair(world, ids[1], EcsIsA, base));
+    test_assert(ecs_has_pair(world, ids[2], EcsIsA, base));
 
     const Position *
     p = ecs_get(world, ids[0], Position);
@@ -677,7 +677,7 @@ void New_w_Count_new_w_data_override_set_pair() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_entities_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position), ECS_INSTANCEOF | base},
+            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_pair(EcsIsA, base)},
             .count = 2
         },
         (void*[]){
@@ -693,9 +693,9 @@ void New_w_Count_new_w_data_override_set_pair() {
     test_assert(ecs_has(world, ids[1], Position));
     test_assert(ecs_has(world, ids[2], Position));
 
-    test_assert(ecs_has_entity(world, ids[0], ECS_INSTANCEOF | base));
-    test_assert(ecs_has_entity(world, ids[1], ECS_INSTANCEOF | base));
-    test_assert(ecs_has_entity(world, ids[2], ECS_INSTANCEOF | base));
+    test_assert(ecs_has_pair(world, ids[0], EcsIsA, base));
+    test_assert(ecs_has_pair(world, ids[1], EcsIsA, base));
+    test_assert(ecs_has_pair(world, ids[2], EcsIsA, base));
 
     const Position *
     p = ecs_get(world, ids[0], Position);

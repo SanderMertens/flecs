@@ -2070,7 +2070,7 @@ void SystemPeriodic_shared_only() {
     ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, SHARED:Position);
 
     ecs_entity_t base = ecs_new(world, Position);
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_progress(world, 0);
 

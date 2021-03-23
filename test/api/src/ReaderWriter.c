@@ -983,9 +983,9 @@ int inheritance_test(int buffer_size) {
         base = ecs_set(world, 0, Position, {1, 2});
         ecs_type(base) = ecs_type_from_entity(world, base);
 
-        e1 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-        e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-        e3 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        e1 = ecs_new_w_pair(world, EcsIsA, base);
+        e2 = ecs_new_w_pair(world, EcsIsA, base);
+        e3 = ecs_new_w_pair(world, EcsIsA, base);
 
         v = serialize_to_vector(world, buffer_size);
 
@@ -996,7 +996,7 @@ int inheritance_test(int buffer_size) {
 
     {
         ECS_COMPONENT(world, Position);
-        ecs_type(base) = ecs_type_from_entity(world, ECS_INSTANCEOF | base);
+        ecs_type(base) = ecs_type_from_entity(world, ecs_pair(EcsIsA, base));
 
         test_int( ecs_count(world, Position), 4);
         test_int( ecs_count(world, base), 3);
@@ -1058,11 +1058,11 @@ int simple_w_inheritance_test(int buffer_size) {
         base = ecs_set(world, 0, Position, {1, 2});
         ecs_type(base) = ecs_type_from_entity(world, base);
 
-        e1 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        e1 = ecs_new_w_pair(world, EcsIsA, base);
         ecs_set(world, e1, Velocity, {3, 4});
-        e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        e2 = ecs_new_w_pair(world, EcsIsA, base);
         ecs_set(world, e2, Velocity, {5, 6});
-        e3 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        e3 = ecs_new_w_pair(world, EcsIsA, base);
         ecs_set(world, e3, Velocity, {7, 8});
 
         v = serialize_to_vector(world, buffer_size);
@@ -1075,7 +1075,7 @@ int simple_w_inheritance_test(int buffer_size) {
     {
         ECS_COMPONENT(world, Position);
         ECS_COMPONENT(world, Velocity);
-        ecs_type(base) = ecs_type_from_entity(world, ECS_INSTANCEOF | base);
+        ecs_type(base) = ecs_type_from_entity(world, ecs_pair(EcsIsA, base));
 
         test_int( ecs_count(world, Position), 4);
         test_int( ecs_count(world, Velocity), 3);

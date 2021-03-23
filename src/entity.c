@@ -681,7 +681,7 @@ bool override_component(
         }
 
         if (ECS_HAS_RELATION(e, EcsIsA)) {
-            if (override_from_base(world, ECS_PAIR_OBJECT(e), component, 
+            if (override_from_base(world, ecs_pair_object(world, e), component,
                 data, column, row, count))
             {
                 return true;
@@ -732,6 +732,7 @@ void ecs_components_override(
                     .array = &component,
                     .count = 1
                 };
+
                 table_without_base = ecs_table_traverse_remove(world, 
                     table_without_base, &to_remove, NULL);
             }
@@ -1110,7 +1111,7 @@ bool update_component_monitor_w_array(
             /* If an IsA relationship is added to a monitored entity (can
              * be either a parent or a base) component monitors need to be
              * evaluated for the components of the prefab. */
-            ecs_entity_t base = component & ECS_COMPONENT_MASK;
+            ecs_entity_t base = ecs_pair_object(world, component);
             ecs_type_t type = ecs_get_type(world, base);
             ecs_entities_t base_entities = ecs_type_to_entities(type);
 
@@ -1227,7 +1228,7 @@ void* get_base_component(
     void *ptr = NULL;
 
     while (!ptr && (p = find_prefab(type, p)) != -1) {
-        ecs_entity_t prefab = ECS_PAIR_OBJECT(type_buffer[p]);
+        ecs_entity_t prefab = ecs_pair_object(world, type_buffer[p]);
         ecs_entity_info_t prefab_info;
         if (ecs_get_info(world, prefab, &prefab_info) && prefab_info.table) {
             ptr = get_component(&prefab_info, component);
@@ -1615,7 +1616,7 @@ ecs_entity_t ecs_find_in_type(
             continue;
         }
 
-        ecs_entity_t e = ecs_entity_t_lo(c);
+        ecs_entity_t e = ecs_pair_object(world, c);
 
         if (component) {
             ecs_type_t component_type = ecs_get_type(world, e);
@@ -2700,13 +2701,13 @@ ecs_entity_t ecs_get_typeid(
         /* Make sure we're not working with a stage */
         world = ecs_get_world(world);
 
-        ecs_entity_t pair = ecs_entity_t_hi(entity & ECS_COMPONENT_MASK);
-        if (ecs_has(world, pair, EcsComponent)) {
+        ecs_entity_t rel = ECS_PAIR_RELATION(entity);
+        if (ecs_has(world, rel, EcsComponent)) {
             /* This is not a pair object, relation is the value */
-            return pair;
+            return rel;
         } else {
             /* This is a pair object, object is the value */
-            return ecs_entity_t_lo(entity);
+            return ECS_PAIR_OBJECT(entity);
         }
     } else if (entity & ECS_ROLE_MASK) {
         return 0;
@@ -2884,9 +2885,10 @@ size_t ecs_entity_str(
     }
 
     ecs_entity_t e = entity & ECS_COMPONENT_MASK;
+
     if (ECS_HAS_ROLE(entity, PAIR)) {
-        ecs_entity_t lo = ecs_entity_t_lo(e);
-        ecs_entity_t hi = ecs_entity_t_hi(e);
+        ecs_entity_t lo = ECS_PAIR_OBJECT(entity);
+        ecs_entity_t hi = ECS_PAIR_RELATION(entity);
 
         lo = ecs_get_alive(world, lo);
         hi = ecs_get_alive(world, hi);

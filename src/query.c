@@ -92,7 +92,7 @@ int32_t rank_by_depth(
 
     for (i = count - 1; i >= 0; i --) {
         if (ECS_HAS_RELATION(array[i], EcsChildOf)) {
-            ecs_type_t c_type = ecs_get_type(world, ECS_PAIR_OBJECT(array[i]));
+            ecs_type_t c_type = ecs_get_type(world, ecs_pair_object(world, array[i]));
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type, ecs_entity_t);
 
@@ -378,7 +378,7 @@ int32_t get_component_index(
             /* If only the lo part of the trait identifier is set, interpret it
              * as the trait to match. This will match any instance of the trait
              * on the entity and in a signature looks like "PAIR | MyTrait". */
-            if (!ecs_entity_t_hi(component & ECS_COMPONENT_MASK)) {
+            if (!ECS_PAIR_RELATION(component)) {
                 ecs_assert(trait_offsets != NULL, 
                     ECS_INTERNAL_ERROR, NULL);
 
@@ -411,13 +411,12 @@ int32_t get_component_index(
                  * like "PAIR | MyTrait > Comp". */
                 ecs_entity_t lo = ecs_entity_t_lo(component);
                 if (lo == EcsWildcard) {
-                    ecs_assert(trait_offsets != NULL, 
-                        ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(trait_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
 
                     /* Get id for the trait to lookup by taking the trait from
                      * the high 32 bits, move it to the low 32 bits, and reapply
                      * the PAIR mask. */
-                    component = ecs_entity_t_hi(component & ECS_COMPONENT_MASK);
+                    component = ECS_PAIR_RELATION(component);
 
                     /* If the low part of the identifier is the wildcard entity,
                      * this column is requesting the component to which the 
@@ -556,11 +555,11 @@ ecs_entity_t is_column_trait(
     if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
         ecs_entity_t c = column->is.component;
         if (ECS_HAS_ROLE(c, PAIR)) {
-            if (!(ecs_entity_t_hi(c & ECS_COMPONENT_MASK))) {
+            if (!ECS_PAIR_RELATION(c)) {
                 return c;
             } else
-            if (ecs_entity_t_lo(c) == EcsWildcard) {
-                return ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
+            if (ECS_PAIR_OBJECT(c) == EcsWildcard) {
+                return ECS_PAIR_RELATION(c);
             }
         }
     }
@@ -582,8 +581,7 @@ int32_t type_trait_count(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
         if (ECS_HAS_ROLE(e, PAIR)) {
-            e &= ECS_COMPONENT_MASK;
-            if (ecs_entity_t_hi(e) == trait) {
+            if (ECS_PAIR_RELATION(e) == trait) {
                 result ++;
             }
         }

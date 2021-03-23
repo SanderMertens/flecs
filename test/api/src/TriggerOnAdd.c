@@ -499,7 +499,7 @@ void TriggerOnAdd_override_after_add_in_on_add() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);

@@ -9,15 +9,14 @@ const EcsComponent* ecs_component_from_id(
     /* If this is a pair, get the pair component from the identifier */
     if (ECS_HAS_ROLE(e, PAIR)) {
         pair = e;
-        e = e & ECS_COMPONENT_MASK;
-        e = ecs_entity_t_hi(e);
+        e = ECS_PAIR_RELATION(e);
     }
 
     const EcsComponent *component = ecs_get(world, e, EcsComponent);
     if (!component && pair) {
         /* If this is a pair column and the pair is not a component, use
          * the component type of the component the pair is applied to. */
-        e = ecs_entity_t_lo(pair);
+        e = ECS_PAIR_OBJECT(pair);
 
         /* Because generations are not stored in the pair, get the currently
          * alive id */
@@ -257,7 +256,7 @@ void init_edges(
         }
 
         if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
-            ecs_set_watch(world, ecs_entity_t_lo(e));
+            ecs_set_watch(world, ecs_pair_object(world, e));
         }
     }
 
@@ -695,7 +694,8 @@ ecs_table_t* ecs_table_traverse_add(
         }
 
         if ((node != next) && ECS_HAS_RELATION(e, EcsIsA)) {
-            find_owned_components(world, next, ECS_PAIR_OBJECT(e), &owned);
+            find_owned_components(
+                world, next, ecs_pair_object(world, e), &owned);
         }        
 
         node = next;

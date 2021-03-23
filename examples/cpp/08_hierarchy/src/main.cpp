@@ -98,22 +98,22 @@ int main(int argc, char *argv[]) {
         .set<Velocity>({1, 2});
 
         auto Child1 = ecs.entity("Child1")
-            .add_childof(Root)
+            .add(flecs::ChildOf, Root)
             .add<WorldPosition>()
             .set<Position>({100, 100});
 
             ecs.entity("GChild1")
-                .add_childof(Child1)
+                .add(flecs::ChildOf, Child1)
                 .add<WorldPosition>()
                 .set<Position>({1000, 1000});
 
         auto Child2 = ecs.entity("Child2")
-            .add_childof(Root)
+            .add(flecs::ChildOf, Root)
             .add<WorldPosition>()
             .set<Position>({200, 200});
 
             ecs.entity("GChild2")
-                .add_childof(Child2)
+                .add(flecs::ChildOf, Child2)
                 .add<WorldPosition>()
                 .set<Position>({2000, 2000});
 

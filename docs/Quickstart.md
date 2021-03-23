@@ -285,10 +285,10 @@ auto e = world.entity();
 
 // Add HealthBuff, set the ExpiryTimer trait for HealthBuff to 10 seconds
 e.add<HealthBuff>();
-e.set_trait<ExpiryTimer, HealthBuff>({ 10 });
+e.set<ExpiryTimer, HealthBuff>({ 10 });
 
 // Add StaminaBuff, set the ExpiryTimer trait for StaminaBuff to 5 seconds
-e.set_trait<ExpiryTimer, StaminaBuff>({ 5 });
+e.set<ExpiryTimer, StaminaBuff>({ 5 });
 ```
 
 Now we need to write a system to increase the timer and execute the remove logic. The system definition looks almost like a regular system:

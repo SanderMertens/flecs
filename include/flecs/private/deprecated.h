@@ -10,6 +10,9 @@
 extern "C" {
 #endif
 
+#define ECS_INSTANCEOF (ECS_ROLE | ((ecs_entity_t)0x7E << 56))
+#define ECS_CHILDOF    (ECS_ROLE | ((ecs_entity_t)0x7D << 56))
+
 #define EcsSingleton (ECS_HI_COMPONENT_ID + 26)
 
 #define ecs_trait(comp, trait) (ECS_PAIR | ecs_entity_t_comb(comp, trait))

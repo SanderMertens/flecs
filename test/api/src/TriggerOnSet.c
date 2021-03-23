@@ -323,7 +323,7 @@ void TriggerOnSet_on_set_after_override() {
     ecs_set_context(world, &ctx);
 
     /* instantiate prefab */
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);

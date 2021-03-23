@@ -272,6 +272,8 @@ typedef int32_t ecs_size_t;
 #define ecs_entity_t_comb(lo, hi) (((uint64_t)(hi) << 32) + (uint32_t)(lo))
 #define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
 
+/* Get object from pair with the correct (current) generation count */
+#define ecs_pair_object(world, pair) ecs_get_alive(world, ECS_PAIR_OBJECT(pair))
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macro's for ctor, dtor, move and copy
@@ -2171,6 +2173,9 @@ bool ecs_os_has_modules(void);
 extern "C" {
 #endif
 
+#define ECS_INSTANCEOF (ECS_ROLE | ((ecs_entity_t)0x7E << 56))
+#define ECS_CHILDOF    (ECS_ROLE | ((ecs_entity_t)0x7D << 56))
+
 #define EcsSingleton (ECS_HI_COMPONENT_ID + 26)
 
 #define ecs_trait(comp, trait) (ECS_PAIR | ecs_entity_t_comb(comp, trait))
@@ -3245,14 +3250,6 @@ typedef struct EcsTrigger {
 /** Role bit added to roles to differentiate between roles and generations */
 #define ECS_ROLE ((uint64_t)1 << 63)
 
-/** The INSTANCEOF role indicates that the components from the entity should be
- * shared with the entity that instantiates the type. */
-#define ECS_INSTANCEOF (ECS_ROLE | ((ecs_entity_t)0x7E << 56))
-
-/** The CHILDOF role indicates that the entity should be treated as a parent of
- * the entity that instantiates the type. */
-#define ECS_CHILDOF (ECS_ROLE | ((ecs_entity_t)0x7D << 56))
-
 /** Cases are used to switch between mutually exclusive components */
 #define ECS_CASE (ECS_ROLE | ((ecs_entity_t)0x7C << 56))
 
@@ -3338,8 +3335,8 @@ typedef struct EcsTrigger {
 #define EcsFinal (ECS_HI_COMPONENT_ID + 30)
 
 /* Builtin relationships */
-#define EcsIsA (ECS_HI_COMPONENT_ID + 31)
-#define EcsChildOf (ECS_HI_COMPONENT_ID + 32)
+#define EcsChildOf (ECS_HI_COMPONENT_ID + 31)
+#define EcsIsA (ECS_HI_COMPONENT_ID + 32)
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
@@ -10119,7 +10116,7 @@ public:
     }
 
     ECS_DEPRECATED("use add(flecs::IsA, base)")
-    base_type& add_instanceof(const Base& base_entity) const {
+    base_type& add(flecs::IsA, const Base& base_entity) const {
         ecs_add_entity(world(), id(), ECS_INSTANCEOF | base_entity.id());
         return *base();        
     }
@@ -11542,7 +11539,7 @@ public:
     }
 
     ECS_DEPRECATED("use add(flecs::IsA, base)")
-    type& add_instanceof(const entity& e) {
+    type& add(flecs::IsA, const entity& e) {
         return static_cast<Base*>(this)->add(ECS_INSTANCEOF | e.id());
     }
 
@@ -13743,7 +13740,6 @@ private:
 } // namespace flecs
 
 
-
 namespace flecs 
 {
 
@@ -14081,6 +14077,16 @@ inline flecs::snapshot world::snapshot(Args &&... args) const {
 }
 
 } // namespace flecs
+
+
+namespace flecs
+{
+
+static const ecs_entity_t Singleton = EcsSingleton;
+static const ecs_entity_t Childof = ECS_CHILDOF;
+static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
+
+}
 #endif
 #endif
 

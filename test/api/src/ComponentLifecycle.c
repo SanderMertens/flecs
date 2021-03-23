@@ -265,7 +265,7 @@ void ComponentLifecycle_copy_on_override() {
     ecs_entity_t base = ecs_new(world, Position);
     test_int(ctx.copy.invoked, 0);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
     test_int(ctx.copy.invoked, 0);
 
     ecs_add(world, e, Position);
@@ -1489,7 +1489,7 @@ void ComponentLifecycle_copy_on_override_pair() {
     test_int(ctx.ctor.invoked, 1);
     test_int(ctx.copy.invoked, 0);
 
-    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
     test_int(ctx.ctor.invoked, 1); /* No change */
     test_int(ctx.copy.invoked, 0);
 
@@ -1528,7 +1528,7 @@ void ComponentLifecycle_copy_on_override_pair_tag() {
     test_int(ctx.ctor.invoked, 1);
     test_int(ctx.copy.invoked, 0);
 
-    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
     test_int(ctx.ctor.invoked, 1); /* No change */
     test_int(ctx.copy.invoked, 0);
 

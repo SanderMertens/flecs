@@ -273,6 +273,9 @@ void Hierarchies_get_child_count_no_children(void);
 void Hierarchies_scope_iter_after_delete_tree(void);
 void Hierarchies_add_child_after_delete_tree(void);
 void Hierarchies_add_child_to_recycled_parent(void);
+void Hierarchies_get_type_after_recycled_parent_add(void);
+void Hierarchies_rematch_after_add_to_recycled_parent(void);
+void Hierarchies_cascade_after_recycled_parent_change(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -1017,6 +1020,16 @@ void Prefab_rematch_after_add_instanceof_to_parent(void);
 void Prefab_child_of_instance(void);
 void Prefab_rematch_after_prefab_delete(void);
 void Prefab_add_tag_w_low_id_to_instance(void);
+void Prefab_get_type_after_base_add(void);
+void Prefab_get_type_after_recycled_base_add(void);
+void Prefab_new_w_recycled_base(void);
+void Prefab_add_recycled_base(void);
+void Prefab_remove_recycled_base(void);
+void Prefab_get_from_recycled_base(void);
+void Prefab_override_from_recycled_base(void);
+void Prefab_remove_override_from_recycled_base(void);
+void Prefab_instantiate_tree_from_recycled_base(void);
+void Prefab_rematch_after_add_to_recycled_base(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_setup(void);
@@ -2530,6 +2543,18 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "add_child_to_recycled_parent",
         Hierarchies_add_child_to_recycled_parent
+    },
+    {
+        "get_type_after_recycled_parent_add",
+        Hierarchies_get_type_after_recycled_parent_add
+    },
+    {
+        "rematch_after_add_to_recycled_parent",
+        Hierarchies_rematch_after_add_to_recycled_parent
+    },
+    {
+        "cascade_after_recycled_parent_change",
+        Hierarchies_cascade_after_recycled_parent_change
     }
 };
 
@@ -5306,6 +5331,46 @@ bake_test_case Prefab_testcases[] = {
     {
         "add_tag_w_low_id_to_instance",
         Prefab_add_tag_w_low_id_to_instance
+    },
+    {
+        "get_type_after_base_add",
+        Prefab_get_type_after_base_add
+    },
+    {
+        "get_type_after_recycled_base_add",
+        Prefab_get_type_after_recycled_base_add
+    },
+    {
+        "new_w_recycled_base",
+        Prefab_new_w_recycled_base
+    },
+    {
+        "add_recycled_base",
+        Prefab_add_recycled_base
+    },
+    {
+        "remove_recycled_base",
+        Prefab_remove_recycled_base
+    },
+    {
+        "get_from_recycled_base",
+        Prefab_get_from_recycled_base
+    },
+    {
+        "override_from_recycled_base",
+        Prefab_override_from_recycled_base
+    },
+    {
+        "remove_override_from_recycled_base",
+        Prefab_remove_override_from_recycled_base
+    },
+    {
+        "instantiate_tree_from_recycled_base",
+        Prefab_instantiate_tree_from_recycled_base
+    },
+    {
+        "rematch_after_add_to_recycled_base",
+        Prefab_rematch_after_add_to_recycled_base
     }
 };
 
@@ -7236,7 +7301,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        74,
+        77,
         Hierarchies_testcases
     },
     {
@@ -7460,7 +7525,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        76,
+        86,
         Prefab_testcases
     },
     {

@@ -16,7 +16,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
         ecs_entity_t e = array[i];
 
         if (ECS_HAS_RELATION(e, EcsIsA)) {
-            ecs_entity_t prefab = ECS_PAIR_OBJECT(e);
+            ecs_entity_t prefab = ecs_pair_object(world, e);
             ecs_type_t prefab_type = ecs_get_type(world, prefab);
 
             if (prefab == previous) {
@@ -95,9 +95,8 @@ ecs_entity_t ecs_type_contains(
 
         if (e1 != e2) {
             if (match_prefab && e2 != 
-                ecs_typeid(EcsName) && e2 != 
-                EcsPrefab && e2 != 
-                EcsDisabled) 
+                ecs_typeid(EcsName) && 
+                e2 != EcsPrefab && e2 != EcsDisabled) 
             {
                 if (ecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
                     e1 = e2;
@@ -198,7 +197,7 @@ bool has_pair(
     ecs_entity_t pair,
     ecs_entity_t e)
 {
-    return pair == ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
+    return pair == ECS_PAIR_RELATION(e);
 }
 
 static
@@ -220,8 +219,8 @@ int match_entity(
     ecs_entity_t match_with)
 {
     if (ECS_HAS_ROLE(match_with, PAIR)) {
-        ecs_entity_t hi = ecs_entity_t_hi(match_with & ECS_COMPONENT_MASK);
-        ecs_entity_t lo = ecs_entity_t_lo(match_with);
+        ecs_entity_t hi = ECS_PAIR_RELATION(match_with);
+        ecs_entity_t lo = ECS_PAIR_OBJECT(match_with);
 
         if (lo == EcsWildcard) {
             ecs_assert(hi != 0, ECS_INTERNAL_ERROR, NULL);
@@ -233,7 +232,7 @@ int match_entity(
             ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
             int32_t i, count = ecs_vector_count(type);
 
-            ecs_entity_t comp = ecs_entity_t_lo(e);
+            ecs_entity_t comp = ECS_PAIR_OBJECT(e);
             for (i = 0; i < count; i ++) {
                 if (comp == ids[i]) {
                     return 2;
@@ -300,7 +299,7 @@ bool search_type(
                 break;
             }
 
-            ecs_entity_t base = ECS_PAIR_OBJECT(e);
+            ecs_entity_t base = ecs_pair_object(world, e);
             if (!ecs_is_valid(world, base)) {
                 /* This indicates that an entity has an IsA relationship
                  * to an invalid base. That's no good, and will be handled with
@@ -482,8 +481,7 @@ int32_t ecs_type_pair_index_of(
     for (i = start_index; i < count; i ++) {
         ecs_entity_t e = array[i];
         if (ECS_HAS_ROLE(e, PAIR)) {
-            e &= ECS_COMPONENT_MASK;
-            if (pair == ecs_entity_t_hi(e)) {
+            if (pair == ECS_PAIR_RELATION(e)) {
                 return i;
             }
         }

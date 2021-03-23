@@ -71,17 +71,17 @@ int main(int argc, char *argv[]) {
 
     /* Create entities which share the Mass component from a base */
     ecs.entity("MyInstance1")
-        .add_instanceof(LightEntity)
+        .add(flecs::IsA, LightEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10});
 
     ecs.entity("MyInstance2")
-        .add_instanceof(HeavyEntity)
+        .add(flecs::IsA, HeavyEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10}); 
 
     ecs.entity("MyInstance3")
-        .add_instanceof(HeavyEntity)
+        .add(flecs::IsA, HeavyEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10});                
 
