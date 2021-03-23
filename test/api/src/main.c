@@ -272,6 +272,7 @@ void Hierarchies_get_child_count_2_tables(void);
 void Hierarchies_get_child_count_no_children(void);
 void Hierarchies_scope_iter_after_delete_tree(void);
 void Hierarchies_add_child_after_delete_tree(void);
+void Hierarchies_add_child_to_recycled_parent(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -384,6 +385,13 @@ void Delete_alive_while_staged_w_delete(void);
 void Delete_alive_while_staged_w_delete_recycled_id(void);
 void Delete_alive_after_recycle(void);
 void Delete_delete_recycled(void);
+void Delete_get_alive_for_alive(void);
+void Delete_get_alive_for_recycled(void);
+void Delete_get_alive_for_not_alive(void);
+void Delete_get_alive_w_generation_for_recycled_alive(void);
+void Delete_get_alive_w_generation_for_recycled_not_alive(void);
+void Delete_get_alive_for_0(void);
+void Delete_get_alive_for_nonexistent(void);
 
 // Testsuite 'Delete_w_filter'
 void Delete_w_filter_delete_1(void);
@@ -1095,8 +1103,7 @@ void Type_type_has(void);
 void Type_type_has_not(void);
 void Type_zero_type_has_not(void);
 void Type_type_has_prefab(void);
-void Type_type_has_container(void);
-void Type_type_has_prefab_container(void);
+void Type_type_has_parent(void);
 void Type_type_has_pair(void);
 void Type_type_has_pair_exact(void);
 void Type_type_has_pair_wildcard(void);
@@ -2519,6 +2526,10 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "add_child_after_delete_tree",
         Hierarchies_add_child_after_delete_tree
+    },
+    {
+        "add_child_to_recycled_parent",
+        Hierarchies_add_child_to_recycled_parent
     }
 };
 
@@ -2915,6 +2926,34 @@ bake_test_case Delete_testcases[] = {
     {
         "delete_recycled",
         Delete_delete_recycled
+    },
+    {
+        "get_alive_for_alive",
+        Delete_get_alive_for_alive
+    },
+    {
+        "get_alive_for_recycled",
+        Delete_get_alive_for_recycled
+    },
+    {
+        "get_alive_for_not_alive",
+        Delete_get_alive_for_not_alive
+    },
+    {
+        "get_alive_w_generation_for_recycled_alive",
+        Delete_get_alive_w_generation_for_recycled_alive
+    },
+    {
+        "get_alive_w_generation_for_recycled_not_alive",
+        Delete_get_alive_w_generation_for_recycled_not_alive
+    },
+    {
+        "get_alive_for_0",
+        Delete_get_alive_for_0
+    },
+    {
+        "get_alive_for_nonexistent",
+        Delete_get_alive_for_nonexistent
     }
 };
 
@@ -5571,12 +5610,8 @@ bake_test_case Type_testcases[] = {
         Type_type_has_prefab
     },
     {
-        "type_has_container",
-        Type_type_has_container
-    },
-    {
-        "type_has_prefab_container",
-        Type_type_has_prefab_container
+        "type_has_parent",
+        Type_type_has_parent
     },
     {
         "type_has_pair",
@@ -7201,7 +7236,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        73,
+        74,
         Hierarchies_testcases
     },
     {
@@ -7257,7 +7292,7 @@ static bake_test_suite suites[] = {
         "Delete",
         Delete_setup,
         NULL,
-        19,
+        26,
         Delete_testcases
     },
     {
@@ -7467,7 +7502,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        90,
+        89,
         Type_testcases
     },
     {

@@ -676,7 +676,7 @@ bool override_component(
     do {
         ecs_entity_t e = type_array[i];
 
-        if (e < ECS_TYPE_ROLE_START) {
+        if (!(e & ECS_ROLE_MASK)) {
             break;
         }
 
@@ -949,7 +949,7 @@ int32_t new_entity(
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!record) {
-        record = ecs_eis_get_or_create(world, entity);
+        record = ecs_eis_ensure(world, entity);
     }
 
     new_row = ecs_table_append(
@@ -2613,6 +2613,50 @@ bool ecs_is_alive(
     return ecs_eis_is_alive(world, entity);
 }
 
+ecs_entity_t ecs_get_alive(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (ecs_is_alive(world, entity)) {
+        return entity;
+    }
+
+    /* Make sure id does not have generation. This guards against accidentally
+     * "upcasting" a not alive identifier to a alive one. */
+    ecs_assert((uint32_t)entity == entity, ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+
+    ecs_entity_t current = ecs_eis_get_current(world, entity);
+    if (!current || !ecs_is_alive(world, current)) {
+        return 0;
+    }
+
+    return current;
+}
+
+void ecs_ensure(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (ecs_eis_is_alive(world, entity)) {
+        /* Nothing to be done, already alive */
+        return;
+    }
+
+    /* Ensure id exists. The underlying datastructure will verify that the
+     * generation count matches the provided one. */
+    ecs_eis_ensure(world, entity);
+}
+
 bool ecs_exists(
     const ecs_world_t *world,
     ecs_entity_t entity)
@@ -2843,6 +2887,9 @@ size_t ecs_entity_str(
     if (ECS_HAS_ROLE(entity, PAIR)) {
         ecs_entity_t lo = ecs_entity_t_lo(e);
         ecs_entity_t hi = ecs_entity_t_hi(e);
+
+        lo = ecs_get_alive(world, lo);
+        hi = ecs_get_alive(world, hi);
 
         if (hi) {
             char *hi_path = ecs_get_fullpath(world, hi);

@@ -51,10 +51,11 @@ extern "C" {
 #define ecs_eis_get(world, entity) ecs_sparse_get_sparse((world->store).entity_index, ecs_record_t, entity)
 #define ecs_eis_get_any(world, entity) ecs_sparse_get_sparse_any((world->store).entity_index, ecs_record_t, entity)
 #define ecs_eis_set(world, entity, ...) (ecs_sparse_set((world->store).entity_index, ecs_record_t, entity, (__VA_ARGS__)))
-#define ecs_eis_get_or_create(world, entity) ecs_sparse_get_or_create((world->store).entity_index, ecs_record_t, entity)
+#define ecs_eis_ensure(world, entity) ecs_sparse_ensure((world->store).entity_index, ecs_record_t, entity)
 #define ecs_eis_delete(world, entity) ecs_sparse_remove((world->store).entity_index, entity)
 #define ecs_eis_set_generation(world, entity) ecs_sparse_set_generation((world->store).entity_index, entity)
 #define ecs_eis_is_alive(world, entity) ecs_sparse_is_alive((world->store).entity_index, entity)
+#define ecs_eis_get_current(world, entity) ecs_sparse_get_current((world->store).entity_index, entity)
 #define ecs_eis_exists(world, entity) ecs_sparse_exists((world->store).entity_index, entity)
 #define ecs_eis_recycle(world) ecs_sparse_new_id((world->store).entity_index)
 #define ecs_eis_clear_entity(world, entity, is_watched) ecs_eis_set((world->store).entity_index, entity, &(ecs_record_t){NULL, is_watched})
@@ -3707,7 +3708,7 @@ ecs_data_t* ecs_table_merge(
             record = old_records[i];
             ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
         } else {
-            record = ecs_eis_get_or_create(world, old_entities[i]);
+            record = ecs_eis_ensure(world, old_entities[i]);
         }
 
         bool is_monitored = record->row < 0;
@@ -4527,7 +4528,7 @@ bool override_component(
     do {
         ecs_entity_t e = type_array[i];
 
-        if (e < ECS_TYPE_ROLE_START) {
+        if (!(e & ECS_ROLE_MASK)) {
             break;
         }
 
@@ -4800,7 +4801,7 @@ int32_t new_entity(
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!record) {
-        record = ecs_eis_get_or_create(world, entity);
+        record = ecs_eis_ensure(world, entity);
     }
 
     new_row = ecs_table_append(
@@ -6464,6 +6465,50 @@ bool ecs_is_alive(
     return ecs_eis_is_alive(world, entity);
 }
 
+ecs_entity_t ecs_get_alive(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (ecs_is_alive(world, entity)) {
+        return entity;
+    }
+
+    /* Make sure id does not have generation. This guards against accidentally
+     * "upcasting" a not alive identifier to a alive one. */
+    ecs_assert((uint32_t)entity == entity, ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+
+    ecs_entity_t current = ecs_eis_get_current(world, entity);
+    if (!current || !ecs_is_alive(world, current)) {
+        return 0;
+    }
+
+    return current;
+}
+
+void ecs_ensure(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (ecs_eis_is_alive(world, entity)) {
+        /* Nothing to be done, already alive */
+        return;
+    }
+
+    /* Ensure id exists. The underlying datastructure will verify that the
+     * generation count matches the provided one. */
+    ecs_eis_ensure(world, entity);
+}
+
 bool ecs_exists(
     const ecs_world_t *world,
     ecs_entity_t entity)
@@ -6694,6 +6739,9 @@ size_t ecs_entity_str(
     if (ECS_HAS_ROLE(entity, PAIR)) {
         ecs_entity_t lo = ecs_entity_t_lo(e);
         ecs_entity_t hi = ecs_entity_t_hi(e);
+
+        lo = ecs_get_alive(world, lo);
+        hi = ecs_get_alive(world, hi);
 
         if (hi) {
             char *hi_path = ecs_get_fullpath(world, hi);
@@ -8332,7 +8380,9 @@ ecs_sparse_t* _ecs_sparse_new(
 
     /* Consume first value in dense array as 0 is used in the sparse array to
      * indicate that a sparse element hasn't been paired yet. */
-    ecs_vector_add(&result->dense, uint64_t);
+    uint64_t *first = ecs_vector_add(&result->dense, uint64_t);
+    *first = 0;
+
     result->count = 1;
 
     return result;
@@ -8425,7 +8475,7 @@ uint64_t ecs_sparse_last_id(
     return dense_array[sparse->count - 1];
 }
 
-void* _ecs_sparse_get_or_create(
+void* _ecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -8457,12 +8507,22 @@ void* _ecs_sparse_get_or_create(
         } else {
             /* Dense is already alive, nothing to be done */
         }
+
+        /* Ensure provided generation matches current. Only allow mismatching
+         * generations if the provided generation count is 0. This allows for
+         * using the ensure function in combination with ids that have their
+         * generation stripped. */
+        ecs_vector_t *dense_vector = sparse->dense;
+        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);    
+        ecs_assert(!gen || dense_array[dense] == (index | gen), ECS_INTERNAL_ERROR, NULL);
+        (void)dense_vector;
+        (void)dense_array;
     } else {
         /* Element is not paired yet. Must add a new element to dense array */
         grow_dense(sparse);
 
         ecs_vector_t *dense_vector = sparse->dense;
-        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);
+        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);    
         int32_t dense_count = ecs_vector_count(dense_vector) - 1;
         int32_t count = sparse->count ++;
 
@@ -8492,7 +8552,7 @@ void* _ecs_sparse_set(
     uint64_t index,
     void * value)
 {
-    void *ptr = _ecs_sparse_get_or_create(sparse, elem_size, index);
+    void *ptr = _ecs_sparse_ensure(sparse, elem_size, index);
     ecs_os_memcpy(ptr, value, elem_size);
     return ptr;
 }
@@ -8612,6 +8672,23 @@ bool ecs_sparse_is_alive(
     return try_sparse(sparse, index) != NULL;
 }
 
+uint64_t ecs_sparse_get_current(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return 0;
+    }
+
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+
+    /* If dense is 0 (tombstone) this will return 0 */
+    return dense_array[dense];
+}
+
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -8685,7 +8762,7 @@ void sparse_copy(
     for (i = 0; i < count - 1; i ++) {
         uint64_t index = indices[i];
         void *src_ptr = _ecs_sparse_get_sparse(src, size, index);
-        void *dst_ptr = _ecs_sparse_get_or_create(dst, size, index);
+        void *dst_ptr = _ecs_sparse_ensure(dst, size, index);
         ecs_sparse_set_generation(dst, index);
         ecs_os_memcpy(dst_ptr, src_ptr, size);
     }
@@ -8838,7 +8915,7 @@ void ecs_table_writer_finalize_table(
                     table, table_data, record_ptr->row - 1, false);
             }
         } else {
-            record_ptr = ecs_eis_get_or_create(world, entities[i]);
+            record_ptr = ecs_eis_ensure(world, entities[i]);
         }
 
         record_ptr->row = i + 1;
@@ -11208,7 +11285,7 @@ ecs_record_t* ecs_record_ensure(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_record_t *r = ecs_eis_get_or_create(world, entity);
+    ecs_record_t *r = ecs_eis_ensure(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     return r;
 }
@@ -18509,6 +18586,14 @@ const EcsComponent* ecs_component_from_id(
         /* If this is a pair column and the pair is not a component, use
          * the component type of the component the pair is applied to. */
         e = ecs_entity_t_lo(pair);
+
+        /* Because generations are not stored in the pair, get the currently
+         * alive id */
+        e = ecs_get_alive(world, e);
+
+        /* If a pair is used with a not alive id, the pair is not valid */
+        ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+
         component = ecs_get(world, e, EcsComponent);
     }
 
@@ -18535,6 +18620,32 @@ int32_t data_column_count(
             ecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;
+        }
+    });
+
+    return count;
+}
+
+/* Ensure the ids used in the columns exist */
+static
+int32_t ensure_columns(
+    ecs_world_t * world,
+    ecs_table_t * table)
+{
+    int32_t count = 0;
+    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
+        ecs_entity_t component = *c_ptr;
+
+        if (ECS_HAS_ROLE(component, PAIR)) {
+            ecs_entity_t rel = ECS_PAIR_RELATION(component);
+            ecs_entity_t obj = ECS_PAIR_OBJECT(component);
+            ecs_ensure(world, rel);
+            ecs_ensure(world, obj);
+        } else if (component & ECS_ROLE_MASK) {
+            ecs_entity_t e = ECS_PAIR_OBJECT(component);
+            ecs_ensure(world, e);
+        } else {
+            ecs_ensure(world, component);
         }
     });
 
@@ -18746,6 +18857,9 @@ void init_table(
     table->on_set_override = NULL;
     table->un_set_all = NULL;
     table->alloc_count = 0;
+
+    /* Ensure the component ids for the table exist */
+    ensure_columns(world, table);
 
     table->queries = NULL;
     table->column_count = data_column_count(world, table);
@@ -23306,7 +23420,7 @@ void _bootstrap_component(
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Create record in entity index */
-    ecs_record_t *record = ecs_eis_get_or_create(world, entity);
+    ecs_record_t *record = ecs_eis_ensure(world, entity);
     record->table = table;
 
     /* Insert row into table to store EcsComponent itself */

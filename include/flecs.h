@@ -229,7 +229,7 @@ typedef struct EcsTrigger {
  * are added to an entity by using a bitwise OR (|). An example:
  *
  * ecs_entity_t parent = ecs_new(world, 0);
- * ecs_entity_t child = ecs_add_entity(world, e, ECS_CHILDOF | parent);
+ * ecs_entity_t child = ecs_add_pair(world, e, EcsChildOf, parent);
  *
  * Type flags can also be used in type expressions, without the ECS prefix:
  *
@@ -1821,6 +1821,55 @@ bool ecs_is_valid(
 FLECS_API
 bool ecs_is_alive(
     const ecs_world_t *world,
+    ecs_entity_t e);
+
+/** Get alive identifier.
+ * In some cases an application may need to work with identifiers from which
+ * the generation has been stripped. A typical scenario in which this happens is
+ * when iterating relationships in an entity type.
+ *
+ * For example, when obtaining the parent id from a ChildOf relation, the parent
+ * (object part of the pair) will have been stored in a 32 bit value, which 
+ * cannot store the entity generation. This function can retrieve the identifier
+ * with the current generation for that id.
+ *
+ * If the provided identifier is not alive, the function will return 0.
+ *
+ * @param world The world.
+ * @param e The for which to obtain the current alive entity id.
+ * @return The alive entity id if there is one, or 0 if the id is not alive.
+ */
+FLECS_API
+ecs_entity_t ecs_get_alive(
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
+/** Ensure id is alive.
+ * This operation ensures that the provided id is alive. This is useful in
+ * scenarios where an application has an existing id that has not been created
+ * with ecs_new (such as a global constant or an id from a remote application).
+ *
+ * Before this operation the id must either not yet exist, or must exist with
+ * the same generation as the provided id. If the id has been recycled and the
+ * provided id does not have the same generation count, the function will fail.
+ *
+ * If the provided entity is not alive, and the provided generation count is
+ * equal to the current generation (which is the future generation when the id
+ * will be recycled) the id will become alive again.
+ *
+ * If the provided id has a non-zero generation count and the id does not exist
+ * in the world, the id will be created with the specified generation.
+ *
+ * This behavior ensures that an application can use ecs_ensure to track the
+ * lifecycle of an id without explicitly having to create it. It also protects
+ * against reviving an id with a generation count that was not yet due.
+ *
+ * @param world The world.
+ * @param entity The entity id to make alive.
+ */
+FLECS_API
+void ecs_ensure(
+    ecs_world_t *world,
     ecs_entity_t e);
 
 /** Test whether an entity exists.

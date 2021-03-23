@@ -1467,16 +1467,16 @@ void SystemMisc_redeclare_system_explicit_id_no_name() {
 void SystemMisc_declare_different_id_same_name() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e_1 = ecs_new(world, 0);
-    ecs_entity_t e_2 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new(world, 0);
 
-    ecs_entity_t s_1 = ecs_new_system(world, e_1, "Move", EcsOnUpdate, "0", Dummy);
-    test_assert(e_1 == s_1);
+    ecs_entity_t s_1 = ecs_new_system(world, e1, "Move", EcsOnUpdate, "0", Dummy);
+    test_assert(e1 == s_1);
 
-    ecs_entity_t s_2 = ecs_new_system(world, e_2, "Move", EcsOnUpdate, "0", Dummy);
-    test_assert(e_2 == s_2);
+    ecs_entity_t s_2 = ecs_new_system(world, e2, "Move", EcsOnUpdate, "0", Dummy);
+    test_assert(e2 == s_2);
 
-    test_assert(e_1 != e_2);
+    test_assert(e1 != e2);
 
     ecs_fini(world);
 }
@@ -1487,16 +1487,16 @@ void SystemMisc_declare_different_id_same_name_w_scope() {
     ecs_entity_t scope = ecs_new(world, 0);
     ecs_set_scope(world, scope);
 
-    ecs_entity_t e_1 = ecs_new(world, 0);
-    ecs_entity_t e_2 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new(world, 0);
 
-    ecs_entity_t s_1 = ecs_new_system(world, e_1, "Move", EcsOnUpdate, "0", Dummy);
-    test_assert(e_1 == s_1);
+    ecs_entity_t s_1 = ecs_new_system(world, e1, "Move", EcsOnUpdate, "0", Dummy);
+    test_assert(e1 == s_1);
 
-    ecs_entity_t s_2 = ecs_new_system(world, e_2, "Move", EcsOnUpdate, "0", Dummy);
-    test_assert(e_2 == s_2);
+    ecs_entity_t s_2 = ecs_new_system(world, e2, "Move", EcsOnUpdate, "0", Dummy);
+    test_assert(e2 == s_2);
 
-    test_assert(e_1 != e_2);
+    test_assert(e1 != e2);
 
     ecs_fini(world);
 }

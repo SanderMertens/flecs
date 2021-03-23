@@ -51,13 +51,13 @@ void Run_run() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -76,12 +76,12 @@ void Run_run() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.e[3], e_4);
-    test_int(ctx.e[4], e_5);
-    test_int(ctx.e[5], e_6);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.e[3], e4);
+    test_int(ctx.e[4], e5);
+    test_int(ctx.e[5], e6);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -108,7 +108,7 @@ void Run_run_w_param() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e1, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position);
 
@@ -128,11 +128,11 @@ void Run_run_w_param() {
     test_int(ctx.column_count, 1);
     test_ptr(ctx.param, &param);
 
-    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[0], e1);
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_int(p->x, 15);
     test_int(p->y, 25);
 
@@ -147,13 +147,13 @@ void Run_run_w_offset() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -172,10 +172,10 @@ void Run_run_w_offset() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_3);
-    test_int(ctx.e[1], e_4);
-    test_int(ctx.e[2], e_5);
-    test_int(ctx.e[3], e_6);
+    test_int(ctx.e[0], e3);
+    test_int(ctx.e[1], e4);
+    test_int(ctx.e[2], e5);
+    test_int(ctx.e[3], e6);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -205,13 +205,13 @@ void Run_run_w_offset_skip_1_archetype() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -230,9 +230,9 @@ void Run_run_w_offset_skip_1_archetype() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_4);
-    test_int(ctx.e[1], e_5);
-    test_int(ctx.e[2], e_6);
+    test_int(ctx.e[0], e4);
+    test_int(ctx.e[1], e5);
+    test_int(ctx.e[2], e6);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -262,13 +262,13 @@ void Run_run_w_offset_skip_1_archetype_plus_one() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -287,8 +287,8 @@ void Run_run_w_offset_skip_1_archetype_plus_one() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_5);
-    test_int(ctx.e[1], e_6);
+    test_int(ctx.e[0], e5);
+    test_int(ctx.e[1], e6);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -318,13 +318,13 @@ void Run_run_w_offset_skip_2_archetypes() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -343,17 +343,17 @@ void Run_run_w_offset_skip_2_archetypes() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_6);
+    test_int(ctx.e[0], e6);
 
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_6, Position);
+    const Position *p = ecs_get(world, e6, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    const Velocity *v = ecs_get(world, e_6, Velocity);
+    const Velocity *v = ecs_get(world, e6, Velocity);
     test_int(v->x, 30);
     test_int(v->y, 40);        
 
@@ -368,13 +368,13 @@ void Run_run_w_limit_skip_1_archetype() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -393,11 +393,11 @@ void Run_run_w_limit_skip_1_archetype() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.e[3], e_4);
-    test_int(ctx.e[4], e_5);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.e[3], e4);
+    test_int(ctx.e[4], e5);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -427,13 +427,13 @@ void Run_run_w_limit_skip_1_archetype_minus_one() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -452,10 +452,10 @@ void Run_run_w_limit_skip_1_archetype_minus_one() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.e[3], e_4);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.e[3], e4);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -485,13 +485,13 @@ void Run_run_w_limit_skip_2_archetypes() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -510,9 +510,9 @@ void Run_run_w_limit_skip_2_archetypes() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -542,13 +542,13 @@ void Run_run_w_offset_1_limit_max() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -567,11 +567,11 @@ void Run_run_w_offset_1_limit_max() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_2);
-    test_int(ctx.e[1], e_3);
-    test_int(ctx.e[2], e_4);
-    test_int(ctx.e[3], e_5);
-    test_int(ctx.e[4], e_6);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.e[1], e3);
+    test_int(ctx.e[2], e4);
+    test_int(ctx.e[3], e5);
+    test_int(ctx.e[4], e6);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -601,13 +601,13 @@ void Run_run_w_offset_1_limit_minus_1() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -626,10 +626,10 @@ void Run_run_w_offset_1_limit_minus_1() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_2);
-    test_int(ctx.e[1], e_3);
-    test_int(ctx.e[2], e_4);
-    test_int(ctx.e[3], e_5);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.e[1], e3);
+    test_int(ctx.e[2], e4);
+    test_int(ctx.e[3], e5);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -659,13 +659,13 @@ void Run_run_w_offset_2_type_limit_max() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -684,9 +684,9 @@ void Run_run_w_offset_2_type_limit_max() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_4);
-    test_int(ctx.e[1], e_5);
-    test_int(ctx.e[2], e_6);
+    test_int(ctx.e[0], e4);
+    test_int(ctx.e[1], e5);
+    test_int(ctx.e[2], e6);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -716,13 +716,13 @@ void Run_run_w_offset_2_type_limit_minus_1() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -741,8 +741,8 @@ void Run_run_w_offset_2_type_limit_minus_1() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_4);
-    test_int(ctx.e[1], e_5);
+    test_int(ctx.e[0], e4);
+    test_int(ctx.e[1], e5);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -772,13 +772,13 @@ void Run_run_w_limit_1_all_offsets() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -803,12 +803,12 @@ void Run_run_w_limit_1_all_offsets() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_3);
-    test_int(ctx.e[2], e_2);
-    test_int(ctx.e[3], e_4);
-    test_int(ctx.e[4], e_6);
-    test_int(ctx.e[5], e_5);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e3);
+    test_int(ctx.e[2], e2);
+    test_int(ctx.e[3], e4);
+    test_int(ctx.e[4], e6);
+    test_int(ctx.e[5], e5);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -838,13 +838,13 @@ void Run_run_w_offset_out_of_bounds() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -871,13 +871,13 @@ void Run_run_w_limit_out_of_bounds() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -896,7 +896,7 @@ void Run_run_w_limit_out_of_bounds() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_6);
+    test_int(ctx.e[0], e6);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -926,13 +926,13 @@ void Run_run_w_component_filter() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -953,8 +953,8 @@ void Run_run_w_component_filter() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_4);
-    test_int(ctx.e[1], e_5);
+    test_int(ctx.e[0], e4);
+    test_int(ctx.e[1], e5);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -986,13 +986,13 @@ void Run_run_w_type_filter_of_2() {
 
     ECS_TYPE(world, Type, Mass, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Mass, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Mass, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -1013,7 +1013,7 @@ void Run_run_w_type_filter_of_2() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_6);
+    test_int(ctx.e[0], e6);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -1045,13 +1045,13 @@ void Run_run_w_container_filter() {
 
     ECS_TYPE(world, Type, Mass, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Mass, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Mass, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position);
 
@@ -1062,13 +1062,13 @@ void Run_run_w_container_filter() {
     ecs_entity_t parent = ecs_new(world, 0);
 
     /* Adopt child entities */
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_6, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_7, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e4, EcsChildOf, parent);
+    ecs_add_pair(world, e6, EcsChildOf, parent);
+    ecs_add_pair(world, e7, EcsChildOf, parent);
 
     /* Get type from parent to use as filter */
-    ecs_type_t ecs_type(Parent) = ecs_type_from_entity(world, ECS_CHILDOF | parent);
+    ecs_type_t ecs_type(Parent) = ecs_type_from_entity(world, ecs_pair(EcsChildOf, parent));
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -1084,10 +1084,10 @@ void Run_run_w_container_filter() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    probe_has_entity(&ctx, e_1);
-    probe_has_entity(&ctx, e_4);
-    probe_has_entity(&ctx, e_6);
-    probe_has_entity(&ctx, e_7);
+    probe_has_entity(&ctx, e1);
+    probe_has_entity(&ctx, e4);
+    probe_has_entity(&ctx, e6);
+    probe_has_entity(&ctx, e7);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -1110,7 +1110,7 @@ void Run_run_no_match() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e1, Position);
 
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
@@ -1239,18 +1239,18 @@ void Run_run_w_interrupt() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e_6, Position, Velocity, Mass, Rotation);
-    ECS_ENTITY(world, e_7, Position);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Mass, Rotation);
+    ECS_ENTITY(world, e7, Position);
 
     ECS_SYSTEM(world, Interrupt, 0, Position);
 
     ecs_entity_t e = ecs_run(world, Interrupt, 0, NULL);
-    test_int(e, e_3);
+    test_int(e, e3);
  
     ecs_fini(world);
 }

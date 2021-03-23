@@ -86,7 +86,7 @@ void _bootstrap_component(
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Create record in entity index */
-    ecs_record_t *record = ecs_eis_get_or_create(world, entity);
+    ecs_record_t *record = ecs_eis_ensure(world, entity);
     record->table = table;
 
     /* Insert row into table to store EcsComponent itself */

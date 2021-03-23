@@ -18,6 +18,14 @@ const EcsComponent* ecs_component_from_id(
         /* If this is a pair column and the pair is not a component, use
          * the component type of the component the pair is applied to. */
         e = ecs_entity_t_lo(pair);
+
+        /* Because generations are not stored in the pair, get the currently
+         * alive id */
+        e = ecs_get_alive(world, e);
+
+        /* If a pair is used with a not alive id, the pair is not valid */
+        ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+
         component = ecs_get(world, e, EcsComponent);
     }
 
@@ -44,6 +52,32 @@ int32_t data_column_count(
             ecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;
+        }
+    });
+
+    return count;
+}
+
+/* Ensure the ids used in the columns exist */
+static
+int32_t ensure_columns(
+    ecs_world_t * world,
+    ecs_table_t * table)
+{
+    int32_t count = 0;
+    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
+        ecs_entity_t component = *c_ptr;
+
+        if (ECS_HAS_ROLE(component, PAIR)) {
+            ecs_entity_t rel = ECS_PAIR_RELATION(component);
+            ecs_entity_t obj = ECS_PAIR_OBJECT(component);
+            ecs_ensure(world, rel);
+            ecs_ensure(world, obj);
+        } else if (component & ECS_ROLE_MASK) {
+            ecs_entity_t e = ECS_PAIR_OBJECT(component);
+            ecs_ensure(world, e);
+        } else {
+            ecs_ensure(world, component);
         }
     });
 
@@ -255,6 +289,9 @@ void init_table(
     table->on_set_override = NULL;
     table->un_set_all = NULL;
     table->alloc_count = 0;
+
+    /* Ensure the component ids for the table exist */
+    ensure_columns(world, table);
 
     table->queries = NULL;
     table->column_count = data_column_count(world, table);

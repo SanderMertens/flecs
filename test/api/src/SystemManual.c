@@ -42,9 +42,9 @@ void SystemManual_1_type_1_component() {
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, Iter, 0, Position);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
     
 
     Probe ctx = {0};
@@ -58,23 +58,23 @@ void SystemManual_1_type_1_component() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get(world, e_3, Position);
+    p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -168,7 +168,7 @@ void SystemManual_no_automerge() {
 
     ECS_SYSTEM(world, AddVelocity, 0, Position, :Velocity);
 
-    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e1, Position);
 
     ecs_set_automerge(world, false);
 
@@ -177,15 +177,15 @@ void SystemManual_no_automerge() {
 
     ecs_run(stage, AddVelocity, 1, NULL);
 
-    test_assert(!ecs_has(stage, e_1, Velocity));
+    test_assert(!ecs_has(stage, e1, Velocity));
 
     ecs_staging_end(world);
 
-    test_assert(!ecs_has(world, e_1, Velocity));
+    test_assert(!ecs_has(world, e1, Velocity));
 
     ecs_merge(world);
 
-    test_assert(ecs_has(world, e_1, Velocity));
+    test_assert(ecs_has(world, e1, Velocity));
 
     ecs_fini(world);
 }

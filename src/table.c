@@ -2008,7 +2008,7 @@ ecs_data_t* ecs_table_merge(
             record = old_records[i];
             ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
         } else {
-            record = ecs_eis_get_or_create(world, old_entities[i]);
+            record = ecs_eis_ensure(world, old_entities[i]);
         }
 
         bool is_monitored = record->row < 0;

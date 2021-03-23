@@ -479,12 +479,12 @@ The generation is encoded in the entity id, which means that even though the bas
 To test whether an entity is alive, an application can use the `ecs_is_alive` call:
 
 ```c
-ecs_entity_t e_1 = ecs_new(world, 0);
-ecs_delete(world, e_1);
+ecs_entity_t e1 = ecs_new(world, 0);
+ecs_delete(world, e1);
 
-ecs_entity_t e_2 = ecs_new(world, 0);
-ecs_is_alive(world, e_1); // false
-ecs_is_alive(world, e_2); // true
+ecs_entity_t e2 = ecs_new(world, 0);
+ecs_is_alive(world, e1); // false
+ecs_is_alive(world, e2); // true
 ```
 
 It is not allowed to invoke operations on an entity that is not alive, and doing so may result in an assert. The only operation that is allowed on an entity that is not alive is `ecs_delete`. Calling delete multiple times on an entity that is not alive will not increase the generation. Additionally, it is also not allowed to add child entities to an entity that is not alive. This will also result in an assert.
@@ -616,7 +616,7 @@ This example shows how to add an entity as a parent:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
-ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ```
 
 Here, `ECS_CHILDOF` is the type flag. This is an overview of the different type flags:
@@ -632,7 +632,7 @@ Here, `ECS_CHILDOF` is the type flag. This is an overview of the different type 
 Entities with type flags can be dynamically added or removed:
 
 ```c
-ecs_add_entity(world, child, ECS_CHILDOF | parent);
+ecs_add_pair(world, child, EcsChildOf, parent);
 ecs_remove_entity(world, child, ECS_CHILDOF | parent);
 ```
 
@@ -1189,7 +1189,7 @@ The `PARENT` modifier requests a component from the parent of an entity. This wo
 ecs_entity_t parent = ecs_new(world, 0);
 ecs_add(world, parent, Position);
 
-ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ```
 
 Queries that use a `PARENT` column should access the column data as if it were a `SHARED` column, as a pointer and not as an array:
@@ -1879,13 +1879,13 @@ Entities in Flecs can be organized in hierarchies, which is useful when for exam
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
-ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ```
 
 CHILDOF relationships can be added and removed dynamically, similar to how components can be added and removed:
 
 ```c
-ecs_add_entity(world, child, ECS_CHILDOF | parent);
+ecs_add_pair(world, child, EcsChildOf, parent);
 ecs_remove_entity(world, child, ECS_CHILDOF | parent);
 ```
 
@@ -2157,8 +2157,8 @@ If a base entity has children, instances of that base entity will, when the INST
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
-ecs_entity_t child_1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
-ecs_entity_t child_2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
+ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
 
 // Create instance of parent, two childs are added to the instance
 ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | parent);
@@ -2168,7 +2168,7 @@ The children that are copied to the instance will have exactly the same set of c
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
-ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_set(world, child, EcsName, {"Child"}); // Give child a name, so we can look it up
 ecs_set(world, child, Position, {10, 20});
 
@@ -2193,7 +2193,7 @@ ecs_set(world, child_base, Position, {10, 20});
 ecs_set(world, child, EcsName, {"Child"});
 
 // Create actual child that is an instance of child base
-ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_add_entity(world, child, ECS_INSTANCEOF | child_base);
 
 // Create instance of parent, two childs are added to the instance

@@ -42,12 +42,12 @@ void System_w_FromEntity_2_column_1_from_entity() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Mass);
-    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e1, Mass);
+    ECS_ENTITY(world, e2, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, e_1:Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, e1:Mass, Position);
 
-    ecs_set(world, e_1, Mass, {5});
+    ecs_set(world, e1, Mass, {5});
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -60,13 +60,13 @@ void System_w_FromEntity_2_column_1_from_entity() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_2);
+    test_int(ctx.e[0], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
-    test_int(ctx.s[0][0], e_1);
+    test_int(ctx.s[0][0], e1);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_2, Position);
+    const Position *p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 50);
     test_int(p->y, 100);
@@ -97,18 +97,18 @@ void System_w_FromEntity_task_from_entity() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e1, Position);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, e_1:Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, e1:Position);
 
     ecs_progress(world, 1);
 
     test_bool(dummy_invoked, true);
     test_assert(dummy_component == ecs_typeid(Position));
-    test_assert(dummy_source == e_1);
+    test_assert(dummy_source == e1);
 
     dummy_reset();
-    ecs_remove(world, e_1, Position);
+    ecs_remove(world, e1, Position);
 
     ecs_progress(world, 1);
     test_bool(dummy_invoked, false);
@@ -121,21 +121,21 @@ void System_w_FromEntity_task_not_from_entity() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e1, Position);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !e_1:Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !e1:Position);
 
     ecs_progress(world, 1);
 
     test_bool(dummy_invoked, false);
 
-    ecs_remove(world, e_1, Position);
+    ecs_remove(world, e1, Position);
 
     ecs_progress(world, 1);
 
     test_bool(dummy_invoked, true);
     test_assert(dummy_component == ecs_typeid(Position));
-    test_assert(dummy_source == e_1);
+    test_assert(dummy_source == e1);
 
     ecs_fini(world);
 }

@@ -315,7 +315,9 @@ ecs_sparse_t* _ecs_sparse_new(
 
     /* Consume first value in dense array as 0 is used in the sparse array to
      * indicate that a sparse element hasn't been paired yet. */
-    ecs_vector_add(&result->dense, uint64_t);
+    uint64_t *first = ecs_vector_add(&result->dense, uint64_t);
+    *first = 0;
+
     result->count = 1;
 
     return result;
@@ -408,7 +410,7 @@ uint64_t ecs_sparse_last_id(
     return dense_array[sparse->count - 1];
 }
 
-void* _ecs_sparse_get_or_create(
+void* _ecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -440,12 +442,22 @@ void* _ecs_sparse_get_or_create(
         } else {
             /* Dense is already alive, nothing to be done */
         }
+
+        /* Ensure provided generation matches current. Only allow mismatching
+         * generations if the provided generation count is 0. This allows for
+         * using the ensure function in combination with ids that have their
+         * generation stripped. */
+        ecs_vector_t *dense_vector = sparse->dense;
+        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);    
+        ecs_assert(!gen || dense_array[dense] == (index | gen), ECS_INTERNAL_ERROR, NULL);
+        (void)dense_vector;
+        (void)dense_array;
     } else {
         /* Element is not paired yet. Must add a new element to dense array */
         grow_dense(sparse);
 
         ecs_vector_t *dense_vector = sparse->dense;
-        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);
+        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);    
         int32_t dense_count = ecs_vector_count(dense_vector) - 1;
         int32_t count = sparse->count ++;
 
@@ -475,7 +487,7 @@ void* _ecs_sparse_set(
     uint64_t index,
     void * value)
 {
-    void *ptr = _ecs_sparse_get_or_create(sparse, elem_size, index);
+    void *ptr = _ecs_sparse_ensure(sparse, elem_size, index);
     ecs_os_memcpy(ptr, value, elem_size);
     return ptr;
 }
@@ -595,6 +607,23 @@ bool ecs_sparse_is_alive(
     return try_sparse(sparse, index) != NULL;
 }
 
+uint64_t ecs_sparse_get_current(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return 0;
+    }
+
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+
+    /* If dense is 0 (tombstone) this will return 0 */
+    return dense_array[dense];
+}
+
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -668,7 +697,7 @@ void sparse_copy(
     for (i = 0; i < count - 1; i ++) {
         uint64_t index = indices[i];
         void *src_ptr = _ecs_sparse_get_sparse(src, size, index);
-        void *dst_ptr = _ecs_sparse_get_or_create(dst, size, index);
+        void *dst_ptr = _ecs_sparse_ensure(dst, size, index);
         ecs_sparse_set_generation(dst, index);
         ecs_os_memcpy(dst_ptr, src_ptr, size);
     }

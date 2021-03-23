@@ -33,15 +33,15 @@ void Internals_deactivate_table() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* System is now matched with archetype of entities. Delete entities to
      * deactivate table for system */
-    ecs_delete(world, e_1);
-    ecs_delete(world, e_2);
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
 
     test_assert(true);
 
@@ -56,8 +56,8 @@ void Internals_activate_table() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
 
     test_assert(true);
 
@@ -72,13 +72,13 @@ void Internals_activate_deactivate_table() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
 
     /* System is now matched with archetype of entities. Delete entities to
      * deactivate table for system */
-    ecs_delete(world, e_1);
-    ecs_delete(world, e_2);
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
 
     test_assert(true);
 
@@ -93,17 +93,17 @@ void Internals_activate_deactivate_reactive() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
 
     /* System is now matched with archetype of entities. Delete entities to
      * deactivate table for system */
-    ecs_delete(world, e_1);
-    ecs_delete(world, e_2);
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
 
     /* Add entities of same type to trigger table reactivation */
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
 
     test_assert(true);
 
@@ -119,17 +119,17 @@ void Internals_activate_deactivate_activate_other() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
 
     /* System is now matched with archetype of entities. Delete entities to
      * deactivate table for system */
-    ecs_delete(world, e_1);
-    ecs_delete(world, e_2);
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
 
     /* Add entities of different type type to trigger new table activation */
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity);
 
     test_assert(true);
 
@@ -192,14 +192,16 @@ void Internals_recreate_deleted_table() {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t parent_A = ecs_new(world, 0);
-    ecs_entity_t child_A = ecs_new_w_entity(world, ECS_CHILDOF | parent_A);
+    ecs_entity_t child_A = ecs_new_w_pair(world, EcsChildOf, parent_A);
     test_assert(parent_A != 0);
     test_assert(child_A != 0);
 
     ecs_delete(world, parent_A); // Deletes table
+    test_assert( !ecs_is_alive(world, parent_A));
+    test_assert( !ecs_is_alive(world, child_A));
 
     ecs_entity_t parent_B = ecs_new(world, 0);
-    ecs_entity_t child_B = ecs_new_w_entity(world, ECS_CHILDOF | parent_B);
+    ecs_entity_t child_B = ecs_new_w_pair(world, EcsChildOf, parent_B);
     test_assert(parent_B != 0);
     test_assert(child_B != 0);
     

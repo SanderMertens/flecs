@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     ecs_set(world, base, Mass, {10});
 
     /* Create instances which share the Mass component from a base */
-    ecs_entity_t instance = ecs_new_w_paur(world, EcsIsA, base);
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
 
     /* Print value before overriding Mass. The component is not owned, as it is
      * shared with the base entity. */

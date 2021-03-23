@@ -73,7 +73,7 @@ ecs_record_t* ecs_record_ensure(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_record_t *r = ecs_eis_get_or_create(world, entity);
+    ecs_record_t *r = ecs_eis_ensure(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     return r;
 }

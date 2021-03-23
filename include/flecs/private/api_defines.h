@@ -133,7 +133,6 @@ typedef int32_t ecs_size_t;
 #define ECS_GENERATION(e)     ((e & ECS_GENERATION_MASK) >> 32)
 #define ECS_GENERATION_INC(e) ((e & ~ECS_GENERATION_MASK) | ((ECS_GENERATION(e) + 1) << 32))
 #define ECS_COMPONENT_MASK    ((ecs_entity_t)~ECS_ROLE_MASK)
-#define ECS_TYPE_ROLE_START   ECS_CHILDOF
 #define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
 #define ECS_PAIR_RELATION(e)  (ECS_HAS_ROLE(e, PAIR) ? ecs_entity_t_hi(e & ECS_COMPONENT_MASK) : (e & ECS_ROLE_MASK))
 #define ECS_PAIR_OBJECT(e)    (ecs_entity_t_lo(e))

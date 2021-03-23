@@ -220,7 +220,6 @@ typedef int32_t ecs_size_t;
 #define ECS_GENERATION(e)     ((e & ECS_GENERATION_MASK) >> 32)
 #define ECS_GENERATION_INC(e) ((e & ~ECS_GENERATION_MASK) | ((ECS_GENERATION(e) + 1) << 32))
 #define ECS_COMPONENT_MASK    ((ecs_entity_t)~ECS_ROLE_MASK)
-#define ECS_TYPE_ROLE_START   ECS_CHILDOF
 #define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
 #define ECS_PAIR_RELATION(e)  (ECS_HAS_ROLE(e, PAIR) ? ecs_entity_t_hi(e & ECS_COMPONENT_MASK) : (e & ECS_ROLE_MASK))
 #define ECS_PAIR_OBJECT(e)    (ecs_entity_t_lo(e))
@@ -1028,6 +1027,11 @@ FLECS_API bool ecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
     uint64_t index);
 
+/** Return identifier with current generation set. */
+FLECS_API uint64_t ecs_sparse_get_current(
+    const ecs_sparse_t *sparse,
+    uint64_t index);
+
 /** Get value from sparse set by dense id. This function is useful in 
  * combination with ecs_sparse_count for iterating all values in the set. */
 FLECS_API void* _ecs_sparse_get(
@@ -1066,13 +1070,13 @@ FLECS_API void* _ecs_sparse_get_sparse_any(
     ((type*)_ecs_sparse_get_sparse_any(sparse, sizeof(type), index))
 
 /** Get or create element by (sparse) id. */
-FLECS_API void* _ecs_sparse_get_or_create(
+FLECS_API void* _ecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t index);
 
-#define ecs_sparse_get_or_create(sparse, type, index)\
-    ((type*)_ecs_sparse_get_or_create(sparse, sizeof(type), index))
+#define ecs_sparse_ensure(sparse, type, index)\
+    ((type*)_ecs_sparse_ensure(sparse, sizeof(type), index))
 
 /** Set value. */
 FLECS_API void* _ecs_sparse_set(
@@ -3230,7 +3234,7 @@ typedef struct EcsTrigger {
  * are added to an entity by using a bitwise OR (|). An example:
  *
  * ecs_entity_t parent = ecs_new(world, 0);
- * ecs_entity_t child = ecs_add_entity(world, e, ECS_CHILDOF | parent);
+ * ecs_entity_t child = ecs_add_pair(world, e, EcsChildOf, parent);
  *
  * Type flags can also be used in type expressions, without the ECS prefix:
  *
@@ -4822,6 +4826,55 @@ bool ecs_is_valid(
 FLECS_API
 bool ecs_is_alive(
     const ecs_world_t *world,
+    ecs_entity_t e);
+
+/** Get alive identifier.
+ * In some cases an application may need to work with identifiers from which
+ * the generation has been stripped. A typical scenario in which this happens is
+ * when iterating relationships in an entity type.
+ *
+ * For example, when obtaining the parent id from a ChildOf relation, the parent
+ * (object part of the pair) will have been stored in a 32 bit value, which 
+ * cannot store the entity generation. This function can retrieve the identifier
+ * with the current generation for that id.
+ *
+ * If the provided identifier is not alive, the function will return 0.
+ *
+ * @param world The world.
+ * @param e The for which to obtain the current alive entity id.
+ * @return The alive entity id if there is one, or 0 if the id is not alive.
+ */
+FLECS_API
+ecs_entity_t ecs_get_alive(
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
+/** Ensure id is alive.
+ * This operation ensures that the provided id is alive. This is useful in
+ * scenarios where an application has an existing id that has not been created
+ * with ecs_new (such as a global constant or an id from a remote application).
+ *
+ * Before this operation the id must either not yet exist, or must exist with
+ * the same generation as the provided id. If the id has been recycled and the
+ * provided id does not have the same generation count, the function will fail.
+ *
+ * If the provided entity is not alive, and the provided generation count is
+ * equal to the current generation (which is the future generation when the id
+ * will be recycled) the id will become alive again.
+ *
+ * If the provided id has a non-zero generation count and the id does not exist
+ * in the world, the id will be created with the specified generation.
+ *
+ * This behavior ensures that an application can use ecs_ensure to track the
+ * lifecycle of an id without explicitly having to create it. It also protects
+ * against reviving an id with a generation count that was not yet due.
+ *
+ * @param world The world.
+ * @param entity The entity id to make alive.
+ */
+FLECS_API
+void ecs_ensure(
+    ecs_world_t *world,
     ecs_entity_t e);
 
 /** Test whether an entity exists.

@@ -432,3 +432,118 @@ void Delete_delete_recycled() {
 
     ecs_fini(world);
 }
+
+void Delete_get_alive_for_alive() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_exists(world, e));
+
+    ecs_entity_t a = ecs_get_alive(world, e);
+    test_assert(a != 0);
+    test_assert(e == a);
+
+    ecs_fini(world);
+}
+
+void Delete_get_alive_for_recycled() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+    
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_exists(world, e));
+
+    e = ecs_new(world, 0);
+    test_assert(ecs_entity_t_lo(e) != e); // Ensure id is recycled
+
+    ecs_entity_t a = ecs_get_alive(world, ecs_entity_t_lo(e));
+    test_assert(a != 0);
+    test_assert(e == a);
+
+    ecs_fini(world);
+}
+
+void Delete_get_alive_for_not_alive() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+    
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_exists(world, e));
+
+    // Ensure id has no generation
+    test_assert(ecs_entity_t_lo(e) == e);
+
+    ecs_entity_t a = ecs_get_alive(world, e);
+    test_assert(a == 0);
+
+    ecs_fini(world);
+}
+
+void Delete_get_alive_w_generation_for_recycled_alive() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+    
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_exists(world, e));
+
+    e = ecs_new(world, 0);
+    test_assert(ecs_entity_t_lo(e) != e);
+
+    ecs_entity_t a = ecs_get_alive(world, e);
+    test_assert(a != 0);
+    test_assert(e == a);
+
+    ecs_fini(world);
+}
+
+void Delete_get_alive_w_generation_for_recycled_not_alive() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+    
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_exists(world, e));
+
+    e = ecs_new(world, 0);
+    test_assert(ecs_entity_t_lo(e) != e);
+
+    ecs_delete(world, e);
+
+    test_expect_abort();
+
+    // Will assert, because function is called with generation that is not alive
+    ecs_get_alive(world, e);
+}
+
+void Delete_get_alive_for_0() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    test_expect_abort();
+    ecs_get_alive(world, 0);
+}
+
+void Delete_get_alive_for_nonexistent() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_get_alive(world, 1000);
+    test_assert(e == 0);
+
+    ecs_fini(world);
+}

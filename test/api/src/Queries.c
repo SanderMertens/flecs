@@ -338,11 +338,11 @@ void Queries_subquery_unmatch() {
     ecs_entity_t e1 = ecs_new(world, 0);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
-    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_new(world, 0);
     ecs_add(world, e2, Position);
-    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query_new(world, "Position, PARENT:Position");
     test_assert(q != NULL);
@@ -411,11 +411,11 @@ void Queries_subquery_rematch() {
     ecs_entity_t e1 = ecs_new(world, 0);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
-    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_new(world, 0);
     ecs_add(world, e2, Position);
-    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query_new(world, "Position, PARENT:Position");
     test_assert(q != NULL);
@@ -497,11 +497,11 @@ void Queries_subquery_rematch_w_parent_optional() {
     ecs_entity_t e1 = ecs_new(world, 0);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
-    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_new(world, 0);
     ecs_add(world, e2, Position);
-    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query_new(world, "Position, ?PARENT:Position");
     test_assert(q != NULL);
@@ -544,11 +544,11 @@ void Queries_subquery_rematch_w_sub_optional() {
     ecs_entity_t e1 = ecs_new(world, 0);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
-    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_new(world, 0);
     ecs_add(world, e2, Position);
-    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query_new(world, "Position, ?PARENT:Position");
     test_assert(q != NULL);

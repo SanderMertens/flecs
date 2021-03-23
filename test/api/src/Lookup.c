@@ -61,8 +61,8 @@ void Lookup_lookup_child() {
     ecs_entity_t e1 = ecs_set(world, 0, EcsName, {"Child"});
     ecs_entity_t e2 = ecs_set(world, 0, EcsName, {"Child"});
 
-    ecs_add_entity(world, e1, ECS_CHILDOF | Parent1);
-    ecs_add_entity(world, e2, ECS_CHILDOF | Parent2);
+    ecs_add_pair(world, e1, EcsChildOf, Parent1);
+    ecs_add_pair(world, e2, EcsChildOf, Parent2);
 
     ecs_entity_t lookup = ecs_lookup_child(world, Parent1, "Child");
     test_assert(lookup != 0);
@@ -157,11 +157,11 @@ void Lookup_lookup_path_w_digit() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_set(world, 0, EcsName, {"parent"});
-    ecs_entity_t e = ecs_set(world, 0, EcsName, { .value = "10_id" });
-    ecs_add_entity(world, e, ECS_CHILDOF | parent);
+    ecs_entity_t e1 = ecs_set(world, 0, EcsName, { .value = "10_id" });
+    ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_lookup_fullpath(world, "parent.10_id");
-    test_assert(e2 == e);
+    test_assert(e2 == e1);
 
     ecs_fini(world);
 }
@@ -217,7 +217,7 @@ void Lookup_lookup_scoped_alias() {
     test_assert(p != 0);
     ecs_entity_t e = ecs_set(world, 0, EcsName, {"MyEntity"});
     test_assert(e != 0);
-    ecs_add_entity(world, e, ECS_CHILDOF | p);
+    ecs_add_pair(world, e, EcsChildOf, p);
 
     ecs_use(world, e, "MyAlias");
 
