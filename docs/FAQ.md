@@ -55,6 +55,9 @@ Flecs stores entities with the same set of components in the same arrays in an "
 
 Because Flecs systems provide direct access to C arrays, a system is invoked multiple times, once for each set of arrays.
 
+### Why is the value of a component not set in an OnAdd trigger?
+The OnAdd trigger is invoked before the component value is assigned. If you need to respond to a component value, use an `OnSet` system. For more information on when triggers, monitors and OnSet systems are invoked, see this diagram: https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#component-add-flow
+
 ### Why does Flecs abort when I try to use threads?
 Flecs has an operating system abstraction API with threading functions that are not set by default. Check (or use) the OS API examples to see how to set the OS API.
 
@@ -64,8 +67,8 @@ Flecs functions need access to component handles before they can do anything. In
 ### How do I pass component handles around in an application?
 See the previous question.
 
-### When to use each vs. action when evaluating a query or system?
-Queries and systems offer two ways to iterate them, which is using `each` and `action`. Each is the simpler version of the two, which iterates each individual entity: 
+### When to use each vs. iter when evaluating a query or system?
+Queries and systems offer two ways to iterate them, which is using `each` and `iter`. Each is the simpler version of the two, which iterates each individual entity: 
 
 ```cpp
 world.system<Position, Velocity>()
@@ -75,7 +78,7 @@ world.system<Position, Velocity>()
     });
 ```
 
-Action is more complex, but is faster to evaluate and allows for more control over how the loop is executed:
+Iter is more complex, but is faster to evaluate and allows for more control over how the loop is executed:
 
 ```cpp
 world.system<Position, Velocity>()
@@ -87,7 +90,7 @@ world.system<Position, Velocity>()
     });
 ```
 
-Additionally, `action` can be used for more complex queries (see next question).
+Additionally, `iter` can be used for more complex queries (see next question).
 
 ### Why can I create queries and systems both as template parameters and as strings?
 In the C++ API you can express simple queries with plain template parameters like this example:
@@ -179,7 +182,7 @@ ecs_run(world, MySystem, delta_time, &some_param);
 No, a query for `Position, Velocity` matches with the same entities as `Velocity, Position`.
 
 ### Can I add/remove components in a system?
-Yes.
+Yes, you can use the regular add/remove functions in systems. Note however that these operations will not have an immediate effect, as they are _deferred_ until the end of the frame. See this diagram on staging for more information: https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#staging-flow
 
 ### Why are updates to components made by my system lost?
 If you have a system in which you both write to component arrays as well as adding/removing components from your entity, it may happen that you lose your updates. A solution to this problem is to split up your system in two, one that sets the component values, and one that adds/removes the components.
