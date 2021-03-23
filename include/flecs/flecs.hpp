@@ -7,6 +7,7 @@
 
 #pragma once
 
+// The C++ API does not use STL, save for type_traits
 #include <type_traits>
 
 namespace flecs {

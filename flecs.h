@@ -8501,7 +8501,7 @@ namespace flecs
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Flecs string utilities
+//// Flecs STL (FTL?)
 ////////////////////////////////////////////////////////////////////////////////
 
 class string_view;
@@ -8604,7 +8604,7 @@ public:
 class stringstream {
 public:
     explicit stringstream() 
-        : m_buf(ECS_STRBUF_INIT) { }
+        : m_buf({}) { }
 
     ~stringstream() {
         ecs_strbuf_reset(&m_buf);
@@ -8613,13 +8613,13 @@ public:
     stringstream(stringstream&& str) {
         ecs_strbuf_reset(&m_buf);
         m_buf = str.m_buf;
-        str.m_buf = ECS_STRBUF_INIT;
+        str.m_buf = {};
     }
 
     stringstream& operator=(stringstream&& str) {
         ecs_strbuf_reset(&m_buf);
         m_buf = str.m_buf;
-        str.m_buf = ECS_STRBUF_INIT;
+        str.m_buf = {};
         return *this;
     }
 
@@ -8640,6 +8640,80 @@ private:
     ecs_strbuf_t m_buf;
 };
 
+// Array class. Simple std::array like utility that is mostly there to aid
+// template code, where the expanded array size would be 0.
+template <typename T>
+class array_iterator
+{
+public:
+    explicit array_iterator(T* value, int index) {
+        m_value = value;
+        m_index = index;
+    }
+
+    bool operator!=(array_iterator const& other) const
+    {
+        return m_index != other.m_index;
+    }
+
+    T & operator*() const
+    {
+        return m_value[m_index];
+    }
+
+    array_iterator& operator++()
+    {
+        ++m_index;
+        return *this;
+    }
+
+private:
+    T* m_value;
+    int m_index;
+};
+
+template <typename T, size_t Size, class Enable = void> 
+class array { };
+
+template <typename T, size_t Size>
+class array<T, Size, typename std::enable_if<Size != 0>::type> {
+public:
+    array() {};
+
+    array(const T (&elems)[Size]) {
+        int i = 0;
+        for (auto it = this->begin(); it != this->end(); ++ it) {
+            *it = elems[i ++];
+        }
+    }
+
+    T& operator[](size_t index) {
+        return m_array[index];
+    }
+
+    array_iterator<T> begin() {
+        return array_iterator<T>(m_array, 0);
+    }
+
+    array_iterator<T> end() {
+        return array_iterator<T>(m_array, Size);
+    }
+private:
+    T m_array[Size];
+};
+
+// Specialized class for zero-sized array
+template <typename T, size_t Size>
+class array<T, Size, typename std::enable_if<Size == 0>::type> {
+public:
+    array() {};
+    array(const T* (&elems)) { }
+    T operator[](size_t index) { abort(); (void)index; return T(); }
+    array_iterator<T> begin() { return array_iterator<T>(nullptr, 0); }
+    array_iterator<T> end() { return array_iterator<T>(nullptr, 0); }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility to convert template argument pack to array of columns
 ////////////////////////////////////////////////////////////////////////////////
@@ -8655,7 +8729,7 @@ public:
         bool is_shared;
     };
 
-    using Columns = Column[sizeof...(Components)];
+    using Columns = flecs::array<Column, sizeof...(Components)>;
 
     column_args(ecs_iter_t* iter) {
         populate_columns(iter, 0, (typename std::remove_reference<typename std::remove_pointer<Components>::type>::type*)nullptr...);
@@ -8721,17 +8795,17 @@ template <typename ...Components>
 bool pack_args_to_string(world_t *world, flecs::stringstream& str, bool is_each = false) {
     (void)world;
 
-    const char* ids[sizeof...(Components)] = {
+    flecs::array<const char*, sizeof...(Components)> ids ({
         (_::cpp_type<Components>::name(world))...
-    };
-
-    const char* inout_modifiers[sizeof...(Components)] = {
+    });
+    
+    flecs::array<const char*, sizeof...(Components)> inout_modifiers ({
         (inout_modifier<Components>())...
-    }; 
+    });
 
-    const char* optional_modifiers[sizeof...(Components)] = {
+    flecs::array<const char*, sizeof...(Components)> optional_modifiers ({
         (optional_modifier<Components>())...
-    };        
+    });
 
     size_t i = 0;
     for (auto id : ids) {
@@ -10116,7 +10190,7 @@ public:
     }
 
     ECS_DEPRECATED("use add(flecs::IsA, base)")
-    base_type& add(flecs::IsA, const Base& base_entity) const {
+    base_type& add_instanceof(const Base& base_entity) const {
         ecs_add_entity(world(), id(), ECS_INSTANCEOF | base_entity.id());
         return *base();        
     }
@@ -10391,6 +10465,17 @@ public:
         return this->remove<Relation>(_::cpp_type<Object>::id(world()));
     }
 
+    /** Remove a pair.
+     * This operation adds a pair to the entity.
+     *
+     * @tparam Relation the relation type.
+     * @param object the object type.
+     */
+    template<typename Relation>
+    base_type& remove(const Base& object) const {
+        return this->remove(_::cpp_type<Relation>::id(world()), object.id());
+    }  
+
     /** Removes a pair with object type.
      * This operation removes a pair from the entity.
      *
@@ -10398,7 +10483,7 @@ public:
      * @tparam Object the object type.
      */
     template<typename Object>
-    base_type& remove(const Base& relation) const {
+    base_type& remove_object(const Base& relation) const {
         return this->remove(relation.id(), _::cpp_type<Object>::id(world()));
     }    
 
@@ -11539,7 +11624,7 @@ public:
     }
 
     ECS_DEPRECATED("use add(flecs::IsA, base)")
-    type& add(flecs::IsA, const entity& e) {
+    type& add_instanceof(const entity& e) {
         return static_cast<Base*>(this)->add(ECS_INSTANCEOF | e.id());
     }
 
