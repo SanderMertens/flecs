@@ -764,7 +764,7 @@ void System_add_from_each() {
     auto e2 = world.entity().set<Position>({1, 0});
     auto e3 = world.entity().set<Position>({2, 0});
 
-    auto sys = world.system<const Position>()
+    world.system<const Position>()
         .each([](flecs::entity e, const Position& p) {
             e.add<Velocity>();
             // Add is deferred
@@ -788,7 +788,7 @@ void System_delete_from_each() {
     auto e2 = world.entity().set<Position>({1, 0});
     auto e3 = world.entity().set<Position>({2, 0});
 
-    auto sys = world.system<const Position>()
+    world.system<const Position>()
         .each([](flecs::entity e, const Position& p) {
             e.destruct();
             // Delete is deferred
@@ -813,7 +813,7 @@ void System_add_from_each_world_handle() {
     auto e2 = world.entity().set<Entity>({world.entity()});
     auto e3 = world.entity().set<Entity>({world.entity()});
 
-    auto sys = world.system<const Entity>()
+    world.system<const Entity>()
         .each([](flecs::entity e, const Entity& c) {
             c.e.mut(e).add<Position>();
         });
@@ -832,7 +832,7 @@ void System_new_from_each() {
     auto e2 = world.entity().set<Position>({0, 0});
     auto e3 = world.entity().set<Position>({0, 0});
 
-    auto sys = world.system<const Position>()
+    world.system<const Position>()
         .each([](flecs::entity e, const Position& p) {
             e.set<Entity>({
                 e.world().entity().mut(e).add<Velocity>()
@@ -860,7 +860,7 @@ void System_add_from_iter() {
     auto e2 = world.entity().set<Position>({1, 0});
     auto e3 = world.entity().set<Position>({2, 0});
 
-    auto sys = world.system<const Position>()
+    world.system<const Position>()
         .iter([](flecs::iter& it, const Position* p) {
             for (auto i : it) {
                 it.entity(i).add<Velocity>();
@@ -885,7 +885,7 @@ void System_delete_from_iter() {
     auto e2 = world.entity().set<Position>({1, 0});
     auto e3 = world.entity().set<Position>({2, 0});
 
-    auto sys = world.system<const Position>()
+    world.system<const Position>()
         .iter([](const flecs::iter& it, const Position* p) {
             for (auto i : it) {
                 it.entity(i).destruct();
@@ -908,7 +908,7 @@ void System_add_from_iter_world_handle() {
     auto e2 = world.entity().set<Entity>({world.entity()});
     auto e3 = world.entity().set<Entity>({world.entity()});
 
-    auto sys = world.system<const Entity>()
+    world.system<const Entity>()
         .iter([](const flecs::iter& it, const Entity* c) {
             for (auto i : it) {
                 c[i].e.mut(it).add<Position>();
@@ -929,7 +929,7 @@ void System_new_from_iter() {
     auto e2 = world.entity().set<Position>({0, 0});
     auto e3 = world.entity().set<Position>({0, 0});
 
-    auto sys = world.system<const Position>()
+    world.system<const Position>()
         .iter([](const flecs::iter& it, const Position* p) {
             for (auto i : it) {
                 it.entity(i).set<Entity>({
@@ -957,7 +957,7 @@ void System_each_w_mut_children_it() {
     auto e2 = world.entity().set<Position>({0, 0}).add(flecs::ChildOf, parent);
     auto e3 = world.entity().set<Position>({0, 0}).add(flecs::ChildOf, parent);
 
-    auto sys = world.system<const Position>()
+    world.system<const Position>()
         .iter([](const flecs::iter& it, const Position* p) {
             for (auto i : it) {
                 for (flecs::iter child_it : it.entity(i).children()) {
@@ -984,7 +984,7 @@ void System_readonly_children_iter() {
     world.entity().set<Position>({1, 0}).add(flecs::ChildOf, parent);
     world.entity().set<Position>({1, 0}).add(flecs::ChildOf, parent);
 
-    auto sys = world.system<const Entity>()
+    world.system<const Entity>()
         .iter([](const flecs::iter& it, const Entity* c) {
             for (auto i : it) {
                 for (flecs::iter child_it : c[i].e.children()) {

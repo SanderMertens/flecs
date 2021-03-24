@@ -148,7 +148,9 @@ public:
             m_order_by = reinterpret_cast<ecs_compare_action_t>(compare);
             m_order_by_component = component;
         } else {
-            const EcsQuery *q = ecs_get(m_world, m_id, EcsQuery);
+            const EcsQuery *q = static_cast<const EcsQuery*>(
+                ecs_get_w_id(m_world, m_id, ecs_id(EcsQuery)));
+
             ecs_assert(q != NULL, ECS_INVALID_OPERATION, NULL);
             ecs_query_order_by(m_world, q->query, 
                 component.id(), reinterpret_cast<ecs_compare_action_t>(compare));
@@ -170,7 +172,8 @@ public:
             m_group_by = reinterpret_cast<ecs_rank_type_action_t>(rank);
             m_group_by_component = component;
         } else {
-            const EcsQuery *q = ecs_get(m_world, m_id, EcsQuery);
+            const EcsQuery *q = static_cast<const EcsQuery*>(
+                ecs_get_w_id(m_world, m_id, ecs_id(EcsQuery)));
             ecs_assert(q != NULL, ECS_INVALID_OPERATION, NULL);
             ecs_query_group_by(m_world, q->query, component.id(),
                 reinterpret_cast<ecs_rank_type_action_t>(rank));
@@ -205,16 +208,18 @@ public:
     void* get_context() const {
         ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
 
-        const EcsContext *ctx = ecs_get(m_world, m_id, EcsContext);
+        const EcsContext *ctx = static_cast<const EcsContext*>(
+            ecs_get_w_id(m_world, m_id, ecs_id(EcsContext)));
         if (ctx) {
-            return (void*)ctx->ctx;
+            return const_cast<void*>(ctx->ctx);
         } else {
             return NULL;
         }
     }
 
     query_base query() const {
-        const EcsQuery *q = ecs_get(m_world, m_id, EcsQuery);
+        const EcsQuery *q = static_cast<const EcsQuery*>(
+            ecs_get_w_id(m_world, m_id, ecs_id(EcsQuery)));
         return query_base(m_world, q->query);
     }
 

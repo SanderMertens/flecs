@@ -11,13 +11,11 @@ struct simple_module {
     // ensures that type names cannot clash between modules.
 
     struct Position {
-        float x;
-        float y;
+        double x, y;
     };
 
     struct Velocity {
-        float x;
-        float y;
+        double x, y;
     };
 
     simple_module(flecs::world& ecs) {

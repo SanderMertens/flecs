@@ -1,16 +1,10 @@
 #include <snapshot_w_filter.h>
 
-typedef struct Position {
-    float x;
-    float y;
-} Position;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
-typedef struct Velocity {
-    float x;
-    float y;
-} Velocity;
-
-typedef float Mass;
+typedef double Mass;
 
 void Move(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);

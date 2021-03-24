@@ -1,14 +1,8 @@
 #include <simple_threads.h>
 
 typedef struct {
-    float x;
-    float y;
-} Position;
-
-typedef struct {
-    float x;
-    float y;
-} Velocity;
+    double x, y;
+} Position, Velocity;
 
 void Move(ecs_iter_t *it) {
     Position *p = ecs_column(it, Position, 1);

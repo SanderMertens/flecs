@@ -248,7 +248,7 @@ template <typename T, size_t Size>
 class array<T, Size, typename std::enable_if<Size == 0>::type> {
 public:
     array() {};
-    array(const T* (&elems)) { }
+    array(const T* (&elems)) { (void)elems; }
     T operator[](size_t index) { abort(); (void)index; return T(); }
     array_iterator<T> begin() { return array_iterator<T>(nullptr, 0); }
     array_iterator<T> end() { return array_iterator<T>(nullptr, 0); }
@@ -273,7 +273,7 @@ public:
     using Columns = flecs::array<Column, sizeof...(Components)>;
 
     column_args(ecs_iter_t* iter) {
-        populate_columns(iter, 0, (typename std::remove_reference<typename std::remove_pointer<Components>::type>::type*)nullptr...);
+        populate_columns(iter, 0, static_cast<typename std::remove_reference<typename std::remove_pointer<Components>::type>::type*>(nullptr)...);
     }
 
     Columns m_columns;

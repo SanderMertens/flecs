@@ -74,10 +74,10 @@ ecs_entity_t ecs_import_from_library(
 /** Define module
  */
 #define ECS_MODULE(world, id)\
-    ECS_ENTITY_VAR(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_id_t ecs_id(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
-    id *handles = (id*)ecs_get_mut(world, ecs_typeid(id), id, NULL);\
-    (void)ecs_typeid(id);\
+    id *handles = (id*)ecs_get_mut(world, ecs_id(id), id, NULL);\
+    (void)ecs_id(id);\
     (void)ecs_type(id);\
     (void)handles;
 
@@ -98,31 +98,23 @@ ecs_entity_t ecs_import_from_library(
 #define ECS_IMPORT(world, id) \
     id ecs_module(id);\
     char *id##__name = ecs_module_path_from_c(#id);\
-    ECS_ENTITY_VAR(id) = ecs_import(\
+    ecs_id_t ecs_id(id) = ecs_import(\
         world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
     ecs_os_free(id##__name);\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id##ImportHandles(ecs_module(id));\
-    (void)ecs_typeid(id);\
+    (void)ecs_id(id);\
     (void)ecs_type(id);\
-
-/** Declare type variable */
-#define ECS_TYPE_VAR(id)\
-    ecs_type_t ecs_type(id)
-
-/** Declare entity variable */
-#define ECS_ENTITY_VAR(id)\
-    ecs_entity_t ecs_typeid(id)
 
 /** Utility macro for declaring a component inside a handles type */
 #define ECS_DECLARE_COMPONENT(id)\
-    ECS_ENTITY_VAR(id);\
-    ECS_TYPE_VAR(id)
+    ecs_id_t ecs_id(id);\
+    ecs_type_t ecs_type(id)
 
 /** Utility macro for declaring an entity inside a handles type */
 #define ECS_DECLARE_ENTITY(id)\
     ecs_entity_t id;\
-    ECS_TYPE_VAR(id)
+    ecs_type_t ecs_type(id)
 
 /** Utility macro for declaring a type inside a handles type */
 #define ECS_DECLARE_TYPE(id)\
@@ -130,7 +122,7 @@ ecs_entity_t ecs_import_from_library(
 
 /** Utility macro for setting a component in a module function */
 #define ECS_SET_COMPONENT(id)\
-    if (handles) handles->ecs_typeid(id) = ecs_typeid(id);\
+    if (handles) handles->ecs_id(id) = ecs_id(id);\
     if (handles) handles->ecs_type(id) = ecs_type(id)
 
 /** Utility macro for setting an entity in a module function */
@@ -153,9 +145,9 @@ ecs_entity_t ecs_import_from_library(
 
 /** Utility macro for importing a component */
 #define ECS_IMPORT_COMPONENT(handles, id)\
-    ECS_ENTITY_VAR(id) = (handles).ecs_typeid(id); (void)ecs_typeid(id);\
+    ecs_id_t ecs_id(id) = (handles).ecs_id(id); (void)ecs_id(id);\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
-    (void)ecs_typeid(id);\
+    (void)ecs_id(id);\
     (void)ecs_type(id)
 
 /** Utility macro for importing an entity */

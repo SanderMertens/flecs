@@ -44,12 +44,6 @@ class query;
 template<typename ... Components>
 class system;
 
-enum match_kind {
-    MatchAll = EcsMatchAll,
-    MatchAny = EcsMatchAny,
-    MatchExact = EcsMatchExact
-};
-
 namespace _
 {
 template <typename T>
@@ -142,4 +136,6 @@ static const ecs_entity_t ChildOf = EcsChildOf;
 #include <flecs/cpp/reader_writer.hpp>
 #include <flecs/cpp/impl.hpp>
 
-#include <flecs/cpp/deprecated/flecs.hpp>
+#ifdef FLECS_DEPRECATED
+#include <flecs/addons/deprecated/flecs.hpp>
+#endif

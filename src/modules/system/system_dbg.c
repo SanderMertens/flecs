@@ -19,7 +19,7 @@ int ecs_dbg_system(
     *dbg_out = (ecs_dbg_system_t){.system = system};
     dbg_out->active_table_count = ecs_vector_count(system_data->query->tables);
     dbg_out->inactive_table_count = ecs_vector_count(system_data->query->empty_tables);
-    dbg_out->enabled = !ecs_has_entity(world, system, EcsDisabled);
+    dbg_out->enabled = !ecs_has_id(world, system, EcsDisabled);
 
     ecs_vector_each(system_data->query->tables, ecs_matched_table_t, mt, {
         ecs_table_t *table = mt->iter_data.table;
@@ -81,7 +81,7 @@ ecs_type_t ecs_dbg_get_column_type(
         result = column->is.type;
         break;
     default:
-        result = ecs_type_from_entity(world, column->is.component);
+        result = ecs_type_from_id(world, column->is.component);
         break;
     }
     

@@ -1,14 +1,8 @@
 #include <on_demand_system.h>
 
-typedef struct Position {
-    float x;
-    float y;
-} Position;
-
-typedef struct Velocity {
-    float x;
-    float y;
-} Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 void Move(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);

@@ -7,13 +7,11 @@
 
 /* Component types */
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 void save_to_file(flecs::world& ecs, const char *filename) {

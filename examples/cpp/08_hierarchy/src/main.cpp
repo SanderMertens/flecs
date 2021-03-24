@@ -2,18 +2,15 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct WorldPosition {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 /* Implement a simple move system */

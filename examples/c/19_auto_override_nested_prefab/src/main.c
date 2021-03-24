@@ -1,12 +1,9 @@
 #include <auto_override_nested_prefab.h>
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
-
-typedef Vector2D Position;
+typedef struct {
+    double x, y;
+} Position;
 
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps

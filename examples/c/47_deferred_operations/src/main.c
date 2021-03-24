@@ -1,14 +1,8 @@
 #include <deferred_operations.h>
 
-typedef struct Position {
-    float x;
-    float y;
-} Position;
-
-typedef struct Velocity {
-    float x;
-    float y;
-} Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 void SetVelocity(ecs_iter_t *it) {
     Velocity *v = ecs_column(it, Velocity, 1);

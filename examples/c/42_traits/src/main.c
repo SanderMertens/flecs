@@ -1,15 +1,9 @@
 #include <traits.h>
 
 /* Ordinary position & velocity components */
-typedef struct Position {
-    float x;
-    float y;
-} Position;
-
-typedef struct Velocity {
-    float x;
-    float y;
-} Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 /* This component will be used as a trait. A trait is a component that can be
  * added to an entity / component pair, which lets applications implement
@@ -17,8 +11,8 @@ typedef struct Velocity {
  * trait implements a timer after which the component it is attached to is
  * removed from the entity. */
 typedef struct ExpiryTimer {
-    float expiry_time;
-    float t;
+    double expiry_time;
+    double t;
 } ExpiryTimer;
 
 /* The system that executes the trait logic */
@@ -39,7 +33,7 @@ void ExpireComponents(ecs_iter_t *it) {
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         /* Increase timer. When timer hits expiry time, remove component */
-        et[i].t += it->delta_time;
+        et[i].t += (double)it->delta_time;
         if (et[i].t >= et[i].expiry_time) {
             /* Remove both the component and the trait. If the trait would not
              * be removed, the system would still be invoked after this. */

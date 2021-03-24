@@ -10,7 +10,7 @@ ecs_op_t* new_defer_op(ecs_stage_t *stage) {
 static 
 void new_defer_component_ids(
     ecs_op_t *op, 
-    ecs_entities_t *components)
+    const ecs_entities_t *components)
 {
     int32_t components_count = components->count;
     if (components_count == 1) {
@@ -239,7 +239,7 @@ bool ecs_defer_bulk_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     int32_t count,
-    ecs_entities_t *components_ids,
+    const ecs_entities_t *components_ids,
     void **component_data,
     const ecs_entity_t **ids_out)
 {
@@ -362,7 +362,7 @@ bool ecs_defer_set(
         op->is._1.value = ecs_os_malloc(size);
 
         if (!value) {
-            value = ecs_get_w_entity(world, entity, component);
+            value = ecs_get_w_id(world, entity, component);
             if (is_added) {
                 *is_added = value == NULL;
             }

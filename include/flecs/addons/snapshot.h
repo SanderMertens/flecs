@@ -19,6 +19,9 @@
 extern "C" {
 #endif
 
+/** A snapshot stores the state of a world in a particular point in time. */
+typedef struct ecs_snapshot_t ecs_snapshot_t;
+
 /** Create a snapshot.
  * This operation makes a copy of all component in the world that matches the 
  * specified filter.

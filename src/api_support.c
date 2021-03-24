@@ -317,7 +317,7 @@ ecs_entity_t ecs_new_prefab(
         ecs_set_symbol(world, result, name);
     }
 
-    ecs_add_entity(world, result, EcsPrefab);
+    ecs_add_id(world, result, EcsPrefab);
 
     EcsType type = type_from_expr(world, name, expr);
     ecs_add_type(world, result, type.normalized);

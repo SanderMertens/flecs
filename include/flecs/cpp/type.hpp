@@ -1,5 +1,10 @@
 
-#include "deprecated/type.hpp"
+#ifdef FLECS_DEPRECATED
+#include "../addons/deprecated/type.hpp"
+#else
+template <typename Base>
+class type_deprecated { };
+#endif
 
 namespace flecs 
 {
@@ -100,12 +105,13 @@ public:
     }
 
     flecs::vector<entity_t> vector() {
-        return flecs::vector<entity_t>( (ecs_vector_t*)m_normalized );
+        return flecs::vector<entity_t>( const_cast<ecs_vector_t*>(m_normalized));
     }
 
 private:
     void sync_from_me() {
-        EcsType *tc = ecs_get_mut(world().c_ptr(), id(), EcsType, NULL);
+        EcsType *tc = static_cast<EcsType*>(
+            ecs_get_mut_w_id(world().c_ptr(), id(), ecs_id(EcsType), NULL));
         if (tc) {
             tc->type = m_type;
             tc->normalized = m_normalized;
@@ -113,7 +119,8 @@ private:
     }
 
     void sync_from_flecs() {
-        EcsType *tc = ecs_get_mut(world().c_ptr(), id(), EcsType, NULL);
+        EcsType *tc = static_cast<EcsType*>(
+            ecs_get_mut_w_id(world().c_ptr(), id(), ecs_id(EcsType), NULL));
         if (tc) {
             m_type = tc->type;
             m_normalized = tc->normalized;

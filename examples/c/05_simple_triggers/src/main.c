@@ -1,8 +1,7 @@
 #include <simple_triggers.h>
 
-typedef struct Position {
-    float x;
-    float y;
+typedef struct {
+    double x, y;
 } Position;
 
 /* This system will be called when Position is added */

@@ -42,7 +42,7 @@ public:
     void order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
         ecs_query_order_by(m_world, m_query, 
             flecs::_::cpp_type<T>::id(m_world),
-            (ecs_compare_action_t)compare);
+            reinterpret_cast<ecs_compare_action_t>(compare));
     }
 
     /** Sort the output of a query.

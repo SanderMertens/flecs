@@ -57,7 +57,7 @@ ecs_entity_t ecs_import(
 
     /* Copy value of module component in handles_out parameter */
     if (handles_size && handles_out) {
-        void *handles_ptr = ecs_get_mut_w_entity(world, e, e, NULL);
+        void *handles_ptr = ecs_get_mut_w_id(world, e, e, NULL);
         ecs_os_memcpy(handles_out, handles_ptr, ecs_from_size_t(handles_size));   
     }
 
@@ -201,11 +201,11 @@ ecs_entity_t ecs_new_module(
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Add module tag */
-    ecs_add_entity(world, result, EcsModule);
+    ecs_add_id(world, result, EcsModule);
 
     /* Add module to itself. This way we have all the module information stored
      * in a single contained entity that we can use for namespacing */
-    ecs_set_ptr_w_entity(world, result, result, size, NULL);
+    ecs_set_ptr_w_id(world, result, result, size, NULL);
 
     /* Set the current scope to the module */
     ecs_set_scope(world, result);

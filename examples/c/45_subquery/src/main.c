@@ -7,15 +7,9 @@
  * of memory that is required to store them. */
 
 /* Component types */
-typedef struct Position {
-    float x;
-    float y;
-} Position;
-
-typedef struct Velocity {
-    float x;
-    float y;
-} Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);

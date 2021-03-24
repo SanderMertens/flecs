@@ -3,17 +3,15 @@
 
 /* Component types */
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Force {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Mass {
-    float value;
+    double value;
 };
 
 /* Implement a move system with support for shared columns */

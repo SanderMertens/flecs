@@ -1,8 +1,7 @@
 #include <global_component.h>
 
-typedef struct Position {
-    float x;
-    float y;
+typedef struct {
+    double x, y;
 } Position;
 
 /* Declare component handle globally so other functions can access it. The

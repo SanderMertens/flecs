@@ -3,13 +3,11 @@
 
 // Component types
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 // Type passed as thread arg

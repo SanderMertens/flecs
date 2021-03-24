@@ -11,7 +11,7 @@ inline flecs::world iter::world() const {
 }
 
 inline flecs::entity iter::entity(size_t row) const {
-    ecs_assert(row < (size_t)m_iter->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+    ecs_assert(row < static_cast<size_t>(m_iter->count), ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
     if (!this->world().is_readonly()) {
         return flecs::entity(m_iter->entities[row])
             .mut(this->world());

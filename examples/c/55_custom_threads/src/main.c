@@ -2,14 +2,8 @@
 
 /* Component types */
 typedef struct {
-    float x;
-    float y;
-} Position;
-
-typedef struct {
-    float x;
-    float y;
-} Velocity;
+    double x, y;
+} Position, Velocity;
 
 /* Type passed as thread arg */
 typedef struct {

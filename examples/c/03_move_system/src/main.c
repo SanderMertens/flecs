@@ -2,14 +2,8 @@
 
 /* Component types */
 typedef struct {
-    float x;
-    float y;
-} Position;
-
-typedef struct {
-    float x;
-    float y;
-} Velocity;
+    double x, y;
+} Position, Velocity;
 
 /* Implement a simple move system */
 void Move(ecs_iter_t *it) {

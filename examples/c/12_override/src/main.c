@@ -1,7 +1,7 @@
 #include <override.h>
 
 /* Component types */
-typedef float Mass;
+typedef double Mass;
 
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps

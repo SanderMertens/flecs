@@ -65,7 +65,7 @@ static ECS_MOVE(EcsName, dst, src, {
 /* -- Bootstrapping -- */
 
 #define bootstrap_component(world, table, name)\
-    _bootstrap_component(world, table, ecs_typeid(name), #name, sizeof(name),\
+    _bootstrap_component(world, table, ecs_id(name), #name, sizeof(name),\
         ECS_ALIGNOF(name))
 
 static
@@ -125,9 +125,9 @@ static
 void bootstrap_types(
     ecs_world_t *world)
 {
-    ecs_type(EcsComponent) = ecs_bootstrap_type(world, ecs_typeid(EcsComponent));
-    ecs_type(EcsType) = ecs_bootstrap_type(world, ecs_typeid(EcsType));
-    ecs_type(EcsName) = ecs_bootstrap_type(world, ecs_typeid(EcsName));
+    ecs_type(EcsComponent) = ecs_bootstrap_type(world, ecs_id(EcsComponent));
+    ecs_type(EcsType) = ecs_bootstrap_type(world, ecs_id(EcsType));
+    ecs_type(EcsName) = ecs_bootstrap_type(world, ecs_id(EcsName));
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -140,7 +140,7 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t entities[] = {ecs_typeid(EcsComponent), ecs_typeid(EcsName), ecs_pair(EcsChildOf, EcsFlecsCore)};
+    ecs_entity_t entities[] = {ecs_id(EcsComponent), ecs_id(EcsName), ecs_pair(EcsChildOf, EcsFlecsCore)};
     ecs_entities_t array = {
         .array = entities,
         .count = 3
@@ -220,9 +220,9 @@ void ecs_bootstrap(
 
     /* Initialize scopes */
     ecs_set(world, EcsFlecs, EcsName, {.value = "flecs"});
-    ecs_add_entity(world, EcsFlecs, EcsModule);
+    ecs_add_id(world, EcsFlecs, EcsModule);
     ecs_set(world, EcsFlecsCore, EcsName, {.value = "core"});
-    ecs_add_entity(world, EcsFlecsCore, EcsModule);
+    ecs_add_id(world, EcsFlecsCore, EcsModule);
     ecs_add_pair(world, EcsFlecsCore, EcsChildOf, EcsFlecs);
 
     /* Initialize builtin entities */
@@ -236,14 +236,14 @@ void ecs_bootstrap(
     bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
 
     /* Mark entities as transitive */
-    ecs_add_entity(world, EcsIsA, EcsTransitive);
+    ecs_add_id(world, EcsIsA, EcsTransitive);
 
     /* Mark entities as final */
-    ecs_add_entity(world, ecs_typeid(EcsComponent), EcsFinal);
-    ecs_add_entity(world, ecs_typeid(EcsName), EcsFinal);
-    ecs_add_entity(world, EcsTransitive, EcsFinal);
-    ecs_add_entity(world, EcsFinal, EcsFinal);
-    ecs_add_entity(world, EcsIsA, EcsFinal);
+    ecs_add_id(world, ecs_id(EcsComponent), EcsFinal);
+    ecs_add_id(world, ecs_id(EcsName), EcsFinal);
+    ecs_add_id(world, EcsTransitive, EcsFinal);
+    ecs_add_id(world, EcsFinal, EcsFinal);
+    ecs_add_id(world, EcsIsA, EcsFinal);
 
     ecs_set_scope(world, 0);
 

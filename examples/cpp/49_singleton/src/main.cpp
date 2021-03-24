@@ -6,8 +6,7 @@ struct Game {
 };
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 int main(int, char *[]) {

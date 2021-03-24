@@ -1,8 +1,7 @@
 #include <sorting.h>
 
-typedef struct Position {
-    float x;
-    float y;
+typedef struct {
+    double x, y;
 } Position;
 
 /* Order by x member of Position */

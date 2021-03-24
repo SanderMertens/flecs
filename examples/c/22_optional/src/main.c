@@ -1,8 +1,8 @@
 #include <optional.h>
 
-typedef float Health;
-typedef float Stamina;
-typedef float Mana;
+typedef double Health;
+typedef double Stamina;
+typedef double Mana;
 
 void Regenerate(ecs_iter_t *it) {
     ECS_COLUMN(it, Health, health, 1);

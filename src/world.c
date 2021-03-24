@@ -209,9 +209,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     world->magic = ECS_WORLD_MAGIC;
-    memset(&world->c_info, 0, sizeof(ecs_c_info_t) * ECS_HI_COMPONENT_ID); 
-
-    world->t_info = ecs_map_new(ecs_c_info_t, 0);  
+    world->type_info = ecs_sparse_new(ecs_c_info_t);
     world->fini_actions = NULL; 
 
     world->aliases = NULL;
@@ -391,7 +389,7 @@ void ecs_notify_tables(
     }
 }
 
-void ecs_set_component_actions_w_entity(
+void ecs_set_component_actions_w_id(
     ecs_world_t *world,
     ecs_entity_t component,
     EcsComponentLifecycle *lifecycle)
@@ -517,20 +515,17 @@ static
 void fini_component_lifecycle(
     ecs_world_t *world)
 {
-    int32_t i;
-    for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
-        ecs_vector_free(world->c_info[i].on_add);
-        ecs_vector_free(world->c_info[i].on_remove);
+    int32_t i, count = ecs_sparse_count(world->type_info);
+    for (i = 0; i < count; i ++) {
+        ecs_c_info_t *type_info = ecs_sparse_get(
+            world->type_info, ecs_c_info_t, i);
+        ecs_assert(type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_vector_free(type_info->on_add);
+        ecs_vector_free(type_info->on_remove);
     }
 
-    ecs_map_iter_t it = ecs_map_iter(world->t_info);
-    ecs_c_info_t *c_info;
-    while ((c_info = ecs_map_next(&it, ecs_c_info_t, NULL))) {
-        ecs_vector_free(c_info->on_add);
-        ecs_vector_free(c_info->on_remove);
-    }    
-
-    ecs_map_free(world->t_info);
+    ecs_sparse_free(world->type_info);
 }
 
 /* Cleanup queries */
@@ -659,22 +654,6 @@ void ecs_dim(
     ecs_eis_set_size(world, entity_count + ECS_HI_COMPONENT_ID);
 }
 
-void ecs_dim_type(
-    ecs_world_t *world,
-    ecs_type_t type,
-    int32_t entity_count)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    if (type) {
-        ecs_table_t *table = ecs_table_from_type(world, type);
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        
-        ecs_data_t *data = ecs_table_get_or_create_data(table);
-        ecs_table_set_size(world, table, data, entity_count);
-    }
-}
-
 void ecs_eval_component_monitors(
     ecs_world_t *world)
 {
@@ -692,7 +671,7 @@ void ecs_measure_frame_time(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
-    if (world->stats.target_fps == 0.0 || enable) {
+    if (world->stats.target_fps == 0.0f || enable) {
         world->measure_frame_time = enable;
     }
 }
@@ -777,12 +756,6 @@ bool ecs_enable_range_check(
     return old_value;
 }
 
-int32_t ecs_get_thread_index(
-    const ecs_world_t *world)
-{
-    return ecs_get_stage_id(world);
-}
-
 int32_t ecs_get_threads(
     ecs_world_t *world)
 {
@@ -862,17 +835,7 @@ const ecs_c_info_t * ecs_get_c_info(
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
 
-    if (component < ECS_HI_COMPONENT_ID) {
-        const ecs_c_info_t *c_info = &world->c_info[component];
-        if (c_info->component) {
-            ecs_assert(c_info->component == component, ECS_INTERNAL_ERROR, NULL);
-            return c_info;
-        } else {
-            return NULL;
-        }
-    } else {
-        return ecs_map_get(world->t_info, ecs_c_info_t, component);
-    }
+    return ecs_sparse_get_sparse(world->type_info, ecs_c_info_t, component);
 }
 
 ecs_c_info_t * ecs_get_or_create_c_info(
@@ -885,16 +848,9 @@ ecs_c_info_t * ecs_get_or_create_c_info(
     const ecs_c_info_t *c_info = ecs_get_c_info(world, component);
     ecs_c_info_t *c_info_mut = NULL;
     if (!c_info) {
-        if (component < ECS_HI_COMPONENT_ID) {
-            c_info_mut = &world->c_info[component];
-            ecs_assert(c_info_mut->component == 0, ECS_INTERNAL_ERROR, NULL);
-            c_info_mut->component = component;
-        } else {
-            ecs_c_info_t t_info = { 0 };
-            ecs_map_set(world->t_info, component, &t_info);
-            c_info_mut = ecs_map_get(world->t_info, ecs_c_info_t, component);
-            ecs_assert(c_info_mut != NULL, ECS_INTERNAL_ERROR, NULL); 
-        }
+        c_info_mut = ecs_sparse_ensure(
+            world->type_info, ecs_c_info_t, component);
+        ecs_assert(c_info_mut != NULL, ECS_INTERNAL_ERROR, NULL);         
     } else {
         c_info_mut = (ecs_c_info_t*)c_info;
     }
@@ -903,7 +859,7 @@ ecs_c_info_t * ecs_get_or_create_c_info(
 }
 
 static
-double insert_sleep(
+FLECS_FLOAT insert_sleep(
     ecs_world_t *world,
     ecs_time_t *stop)
 {
@@ -911,33 +867,35 @@ double insert_sleep(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
 
     ecs_time_t start = *stop;
-    double delta_time = ecs_time_measure(stop);
+    FLECS_FLOAT delta_time = (FLECS_FLOAT)ecs_time_measure(stop);
 
-    if (world->stats.target_fps == 0) {
+    if (world->stats.target_fps == (FLECS_FLOAT)0.0) {
         return delta_time;
     }
 
-    double target_delta_time = (1.0 / world->stats.target_fps);
+    FLECS_FLOAT target_delta_time = 
+        ((FLECS_FLOAT)1.0 / (FLECS_FLOAT)world->stats.target_fps);
 
     /* Calculate the time we need to sleep by taking the measured delta from the
      * previous frame, and subtracting it from target_delta_time. */
-    double sleep = target_delta_time - delta_time;
+    FLECS_FLOAT sleep = target_delta_time - delta_time;
 
     /* Pick a sleep interval that is 20 times lower than the time one frame
      * should take. This means that this function at most iterates 20 times in
      * a busy loop */
-    double sleep_time = sleep / 4.0;
+    FLECS_FLOAT sleep_time = sleep / (FLECS_FLOAT)4.0;
 
     do {
         /* Only call sleep when sleep_time is not 0. On some platforms, even
          * a sleep with a timeout of 0 can cause stutter. */
         if (sleep_time != 0) {
-            ecs_sleepf(sleep_time);
+            ecs_sleepf((double)sleep_time);
         }
 
         ecs_time_t now = start;
-        delta_time = ecs_time_measure(&now);
-    } while ((target_delta_time - delta_time) > (sleep_time / 2.0));
+        delta_time = (FLECS_FLOAT)ecs_time_measure(&now);
+    } while ((target_delta_time - delta_time) > 
+        (sleep_time / (FLECS_FLOAT)2.0));
 
     return delta_time;
 }
@@ -950,7 +908,7 @@ FLECS_FLOAT start_measure_frame(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
 
-    double delta_time = 0;
+    FLECS_FLOAT delta_time = 0;
 
     if (world->measure_frame_time || (user_delta_time == 0)) {
         ecs_time_t t = world->frame_start_time;
@@ -962,9 +920,10 @@ FLECS_FLOAT start_measure_frame(
             } else {
                 ecs_time_measure(&t);
                 if (world->stats.target_fps != 0) {
-                    delta_time = 1.0 / world->stats.target_fps;
+                    delta_time = (FLECS_FLOAT)1.0 / world->stats.target_fps;
                 } else {
-                    delta_time = 1.0 / 60.0; /* Best guess */
+                    /* Best guess */
+                    delta_time = (FLECS_FLOAT)1.0 / (FLECS_FLOAT)60.0; 
                 }
             }
         

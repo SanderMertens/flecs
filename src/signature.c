@@ -63,15 +63,15 @@ int entity_compare(
 }
 
 static
-void vec_add_entity(
+void vec_add_id(
     ecs_vector_t **vec,
-    ecs_entity_t entity)
+    ecs_id_t id)
 {
-    ecs_entity_t *e = ecs_vector_add(vec, ecs_entity_t);
-    *e = entity;
+    ecs_id_t *e = ecs_vector_add(vec, ecs_id_t);
+    *e = id;
 
     /* Keep array sorted so that we can use it in type compare operations */
-    ecs_vector_sort(*vec, ecs_entity_t, entity_compare);
+    ecs_vector_sort(*vec, ecs_id_t, entity_compare);
 }
 
 
@@ -725,10 +725,10 @@ int ecs_sig_add(
         if (elem->oper_kind == EcsOperAnd) {
             ecs_entity_t prev = elem->is.component;
             elem->is.type = NULL;
-            vec_add_entity(&elem->is.type, prev);
-            vec_add_entity(&elem->is.type, component);
+            vec_add_id(&elem->is.type, prev);
+            vec_add_id(&elem->is.type, component);
         } else {
-            vec_add_entity(&elem->is.type, component);
+            vec_add_id(&elem->is.type, component);
         }      
 
         elem->from_kind = from_kind;
@@ -757,7 +757,7 @@ bool ecs_sig_check_constraints(
 
         if (from_kind == EcsFromEntity) {
             ecs_type_t type = ecs_get_type(world, elem->source);
-            if (ecs_type_has_entity(world, type, elem->is.component)) {
+            if (ecs_type_has_id(world, type, elem->is.component)) {
                 if (oper_kind == EcsOperNot) {
                     return false;
                 }

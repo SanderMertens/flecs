@@ -43,7 +43,7 @@ const void* get_shared_column(
 
     ecs_ref_t *ref = &refs[-table_column - 1];
 
-    return (void*)ecs_get_ref_w_entity(
+    return (void*)ecs_get_ref_w_id(
         it->world, ref, ref->entity, ref->component);
 }
 

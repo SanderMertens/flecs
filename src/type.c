@@ -23,7 +23,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
                 continue;
             }
 
-            if (ecs_type_owns_entity(
+            if (ecs_type_owns_id(
                 world, prefab_type, component, true)) 
             {
                 return prefab;
@@ -95,7 +95,7 @@ ecs_entity_t ecs_type_contains(
 
         if (e1 != e2) {
             if (match_prefab && e2 != 
-                ecs_typeid(EcsName) && 
+                ecs_id(EcsName) && 
                 e2 != EcsPrefab && e2 != EcsDisabled) 
             {
                 if (ecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
@@ -208,11 +208,11 @@ bool has_case(
 {
     const EcsType *type_ptr = ecs_get(world, e & ECS_COMPONENT_MASK, EcsType);
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_type_has_entity(world, type_ptr->normalized, sw_case);
+    return ecs_type_has_id(world, type_ptr->normalized, sw_case);
 }
 
 static
-int match_entity(
+int match_id(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t e,
@@ -282,7 +282,7 @@ bool search_type(
     int matched = 0;
 
     for (i = 0; i < count; i ++) {
-        int ret = match_entity(world, type, ids[i], entity);
+        int ret = match_id(world, type, ids[i], entity);
         switch(ret) {
         case 0: break;
         case 1: return true;
@@ -318,7 +318,7 @@ bool search_type(
     return matched != 0;
 }
 
-bool ecs_type_has_entity(
+bool ecs_type_has_id(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity)
@@ -326,7 +326,7 @@ bool ecs_type_has_entity(
     return search_type(world, type, entity, false);
 }
 
-bool ecs_type_owns_entity(
+bool ecs_type_owns_id(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
@@ -430,7 +430,7 @@ char* ecs_type_str(
             ecs_os_strcpy(buffer, "EcsComponent");
             len = ecs_os_strlen("EcsComponent");
         } else {
-            len = ecs_from_size_t(ecs_entity_str(world, e, buffer, 256));
+            len = ecs_from_size_t(ecs_id_str(world, e, buffer, 256));
         }
 
         dst = ecs_vector_addn(&chbuf, char, len);
@@ -450,7 +450,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_entity_t xor)
 {
     ecs_assert(
-        ecs_type_owns_entity(world, type, ECS_XOR | xor, true),
+        ecs_type_owns_id(world, type, ECS_XOR | xor, true),
         ECS_INVALID_PARAMETER, NULL);
 
     const EcsType *type_ptr = ecs_get(world, xor, EcsType);
@@ -462,7 +462,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     for (i = 0; i < count; i ++) {
-        if (ecs_type_owns_entity(world, xor_type, array[i], true)) {
+        if (ecs_type_owns_id(world, xor_type, array[i], true)) {
             return array[i];
         }
     }

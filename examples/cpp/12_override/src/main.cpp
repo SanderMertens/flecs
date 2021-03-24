@@ -2,7 +2,7 @@
 #include <iostream>
 
 struct Mass {
-    float value;
+    double value;
 };
 
 int main(int argc, char *argv[]) {

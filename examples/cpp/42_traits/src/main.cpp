@@ -3,13 +3,11 @@
 
 /* Ordinary position & velocity components */
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 /* This component will be used as a trait. A trait is a component that can be

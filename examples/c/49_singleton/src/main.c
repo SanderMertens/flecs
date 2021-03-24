@@ -10,9 +10,8 @@ typedef struct Game {
     int score;
 } Game;
 
-typedef struct Position {
-    float x;
-    float y;
+typedef struct {
+    double x, y;
 } Position;
 
 void KeepScore(ecs_iter_t *it) {

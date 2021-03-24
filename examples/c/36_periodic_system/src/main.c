@@ -1,13 +1,9 @@
 #include <periodic_system.h>
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
-
-typedef Vector2D Position;
-typedef Vector2D Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 void Move(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);

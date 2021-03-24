@@ -1,14 +1,10 @@
 #include <filter_iter.h>
 
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
-typedef Vector2D Position;
-typedef Vector2D Velocity;
-
-typedef float Mass;
+typedef double Mass;
 
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps

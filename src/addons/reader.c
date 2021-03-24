@@ -148,7 +148,7 @@ void ecs_table_reader_next(
             if (reader->column_index >= 1) {
                 ecs_entity_t e = type_buffer[reader->column_index - 1];
                 
-                if (e != ecs_typeid(EcsName)) {
+                if (e != ecs_id(EcsName)) {
                     reader->state = EcsTableColumnHeader;
                 } else {
                     reader->state = EcsTableColumnNameHeader;

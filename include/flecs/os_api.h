@@ -289,28 +289,46 @@ void ecs_os_set_api_defaults(void);
 #ifndef ecs_os_strdup
 #define ecs_os_strdup(str) ecs_os_api.strdup_(str)
 #endif
+
+#ifdef __cplusplus
+#define ecs_os_strlen(str) static_cast<ecs_size_t>(strlen(str))
+#define ecs_os_strncmp(str1, str2, num) strncmp(str1, str2, static_cast<size_t>(num))
+#define ecs_os_memcmp(ptr1, ptr2, num) memcmp(ptr1, ptr2, static_cast<size_t>(num))
+#define ecs_os_memcpy(ptr1, ptr2, num) memcpy(ptr1, ptr2, static_cast<size_t>(num))
+#define ecs_os_memset(ptr, value, num) memset(ptr, value, static_cast<size_t>(num))
+#define ecs_os_memmove(ptr, value, num) memmove(ptr, value, static_cast<size_t>(num))
+#else
 #define ecs_os_strlen(str) (ecs_size_t)strlen(str)
-#define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
 #define ecs_os_strncmp(str1, str2, num) strncmp(str1, str2, (size_t)(num))
 #define ecs_os_memcmp(ptr1, ptr2, num) memcmp(ptr1, ptr2, (size_t)(num))
 #define ecs_os_memcpy(ptr1, ptr2, num) memcpy(ptr1, ptr2, (size_t)(num))
 #define ecs_os_memset(ptr, value, num) memset(ptr, value, (size_t)(num))
 #define ecs_os_memmove(ptr, value, num) memmove(ptr, value, (size_t)(num))
+#endif
+
+#define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
 
 #if defined(_MSC_VER)
 #define ecs_os_strcat(str1, str2) strcat_s(str1, INT_MAX, str2)
 #define ecs_os_sprintf(ptr, ...) sprintf_s(ptr, INT_MAX, __VA_ARGS__)
 #define ecs_os_vsprintf(ptr, fmt, args) vsprintf_s(ptr, INT_MAX, fmt, args)
 #define ecs_os_strcpy(str1, str2) strcpy_s(str1, INT_MAX, str2)
+#ifdef __cplusplus
+#define ecs_os_strncpy(str1, str2, num) strncpy_s(str1, INT_MAX, str2, static_cast<size_t>(num))
+#else
 #define ecs_os_strncpy(str1, str2, num) strncpy_s(str1, INT_MAX, str2, (size_t)(num))
+#endif
 #else
 #define ecs_os_strcat(str1, str2) strcat(str1, str2)
 #define ecs_os_sprintf(ptr, ...) sprintf(ptr, __VA_ARGS__)
 #define ecs_os_vsprintf(ptr, fmt, args) vsprintf(ptr, fmt, args)
 #define ecs_os_strcpy(str1, str2) strcpy(str1, str2)
+#ifdef __cplusplus
+#define ecs_os_strncpy(str1, str2, num) strncpy(str1, str2, static_cast<size_t>(num))
+#else
 #define ecs_os_strncpy(str1, str2, num) strncpy(str1, str2, (size_t)(num))
 #endif
-
+#endif
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new_(callback, param)

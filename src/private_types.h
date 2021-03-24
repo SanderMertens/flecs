@@ -454,9 +454,7 @@ struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
-
-    ecs_c_info_t c_info[ECS_HI_COMPONENT_ID]; /* Component callbacks & triggers */
-    ecs_map_t *t_info;                        /* Tag triggers */
+    ecs_sparse_t *type_info;     /* Component lifecycle info */
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;

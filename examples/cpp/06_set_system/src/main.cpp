@@ -2,8 +2,7 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 /* This system will be called when Position is added */

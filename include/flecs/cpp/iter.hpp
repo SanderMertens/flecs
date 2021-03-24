@@ -30,7 +30,7 @@ public:
         // Use any_column so we can transparently use shared components
         for (auto row : iter_wrapper) {
             func(iter_wrapper.entity(row), (_::any_column<typename std::remove_reference<Components>::type>(
-                 (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, 
+                 static_cast<typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
                     static_cast<size_t>(iter->count), comps.is_shared))[row]...);
         }
     }
@@ -44,8 +44,9 @@ public:
 
     // Callback provided to flecs system
     static void run(ecs_iter_t *iter) {
-        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        each_invoker *self = (each_invoker*)ctx->ctx;
+        const Context *ctx = static_cast<const Context*>(
+            ecs_get_w_id(iter->world, iter->system, ecs_id(EcsContext)));
+        const each_invoker *self = static_cast<const each_invoker*>(ctx->ctx);
         column_args<Components...> columns(iter);
         call_system(iter, self->m_func, 0, columns.m_columns);
     }
@@ -77,7 +78,9 @@ public:
         flecs::iter iter_wrapper(iter);
         
         func(iter_wrapper, (column<typename std::remove_reference< typename std::remove_pointer<Components>::type >::type>(
-            (typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr, iter->count, comps.is_shared))...);
+            static_cast<typename std::remove_reference< 
+                typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
+                    iter->count, comps.is_shared))...);
     }
 
     /** Add components one by one to parameter pack */
@@ -89,8 +92,9 @@ public:
 
     /** Callback provided to flecs */
     static void run(ecs_iter_t *iter) {
-        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        action_invoker *self = (action_invoker*)ctx->ctx;
+        const Context *ctx = static_cast<const Context*>(
+                ecs_get_w_id(iter->world, iter->system, ecs_id(EcsContext)));
+        const action_invoker *self = static_cast<const action_invoker*>(ctx->ctx);
         column_args<Components...> columns(iter);
         call_system(iter, self->m_func, 0, columns.m_columns);
     }
@@ -118,7 +122,9 @@ public:
         (void)index;
         (void)columns;
         flecs::iter iter_wrapper(iter);
-        func(iter_wrapper, ((typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*)comps.ptr)...);
+        func(iter_wrapper, (
+            static_cast<typename std::remove_reference< 
+                typename std::remove_pointer<Components>::type >::type*>(comps.ptr))...);
     }
 
     /** Add components one by one to parameter pack */
@@ -130,8 +136,9 @@ public:
 
     /** Callback provided to flecs */
     static void run(ecs_iter_t *iter) {
-        const Context *ctx = ecs_get(iter->world, iter->system, EcsContext);
-        iter_invoker *self = (iter_invoker*)ctx->ctx;
+        const Context *ctx = static_cast<const Context*>(
+            ecs_get_w_id(iter->world, iter->system, ecs_id(EcsContext)));
+        const iter_invoker *self = static_cast<const iter_invoker*>(ctx->ctx);
         column_args<Components...> columns(iter);
         call_system(iter, self->m_func, 0, columns.m_columns);
     }

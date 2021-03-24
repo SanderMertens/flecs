@@ -1,11 +1,11 @@
 #include <merge_world.h>
 
 typedef struct {
-    float x, y;
+    double x, y;
 } Position, Velocity;
 
 typedef struct {
-    float value;
+    double value;
 } Mass;
 
 ECS_COMPONENT_DECLARE(Position);

@@ -1,14 +1,16 @@
 #include <inheritance.h>
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
+typedef struct {
+    double x, y;
+} Position;
 
-typedef Vector2D Position;
-typedef Vector2D Force;
-typedef float Mass;
+typedef struct {
+    double x;
+    double y;
+} Force;
+
+typedef double Mass;
 
 /* Implement a simple move system */
 void Move(ecs_iter_t *it) {

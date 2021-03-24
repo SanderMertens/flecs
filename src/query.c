@@ -486,7 +486,7 @@ int32_t get_component_index(
         result = 0;
     } else if (op == EcsOperOptional) {
         /* If table doesn't have the field, mark it as no data */
-        if (!ecs_type_has_entity(world, table_type, component)) {
+        if (!ecs_type_has_id(world, table_type, component)) {
             result = 0;
         }
     }
@@ -532,7 +532,7 @@ ecs_vector_t* add_ref(
     if (ecs_has(world, component, EcsComponent)) {
         if (c_info->size && from != EcsFromEmpty) {
             if (e) {
-                ecs_get_ref_w_entity(
+                ecs_get_ref_w_id(
                     world, ref, e, component);
                 ecs_set_watch(world, e);                     
             }
@@ -634,7 +634,7 @@ ecs_type_t get_column_type(
         ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
         return type->normalized;
     } else {
-        return ecs_type_from_entity(world, component);
+        return ecs_type_from_id(world, component);
     }    
 }
 
@@ -879,16 +879,16 @@ bool match_column(
 {
     if (from_kind == EcsFromAny) {
         failure_info->reason = EcsMatchFromSelf;
-        return ecs_type_has_entity(world, type, component);
+        return ecs_type_has_id(world, type, component);
         
     } else if (from_kind == EcsFromOwned) {
         failure_info->reason = EcsMatchFromOwned;
-        return ecs_type_owns_entity(world, type, component, true);
+        return ecs_type_owns_id(world, type, component, true);
 
     } else if (from_kind == EcsFromShared) {
         failure_info->reason = EcsMatchFromShared;
-        return !ecs_type_owns_entity(world, type, component, true) &&
-            ecs_type_owns_entity(world, type, component, false);
+        return !ecs_type_owns_id(world, type, component, true) &&
+            ecs_type_owns_id(world, type, component, false);
 
     } else if (from_kind == EcsFromParent) {
         failure_info->reason = EcsMatchFromContainer;
@@ -897,7 +897,7 @@ bool match_column(
     } else if (from_kind == EcsFromEntity) {
         failure_info->reason = EcsMatchFromEntity;
         ecs_type_t source_type = ecs_get_type(world, source);
-        return ecs_type_has_entity(world, source_type, component);
+        return ecs_type_has_id(world, source_type, component);
     } else {
         return true;
     }
@@ -927,7 +927,7 @@ bool ecs_query_match(
     ecs_type_t type, table_type = table->type;
 
     /* Don't match disabled entities */
-    if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_owns_entity(
+    if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_owns_id(
         world, table_type, EcsDisabled, true))
     {
         failure_info->reason = EcsMatchEntityIsDisabled;
@@ -935,7 +935,7 @@ bool ecs_query_match(
     }
 
     /* Don't match prefab entities */
-    if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_owns_entity(
+    if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_owns_id(
         world, table_type, EcsPrefab, true))
     {
         failure_info->reason = EcsMatchEntityIsPrefab;
@@ -1229,7 +1229,7 @@ void build_sorted_table_range(
             const EcsComponent *cptr = ecs_get(world, component, EcsComponent);
             ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            helper[to_sort].ptr = ecs_get_w_entity(world, base, component);
+            helper[to_sort].ptr = ecs_get_w_id(world, base, component);
             helper[to_sort].elem_size = cptr->size;
             helper[to_sort].shared = true;
         } else {
@@ -1574,7 +1574,7 @@ void process_signature(
                 /* If the signature explicitly indicates interest in EcsDisabled,
                  * signal that disabled entities should be matched. By default,
                  * disabled entities are not matched. */
-                if (ecs_type_owns_entity(
+                if (ecs_type_owns_id(
                     world, column->is.type, EcsDisabled, true))
                 {
                     query->flags |= EcsQueryMatchDisabled;
@@ -1591,7 +1591,7 @@ void process_signature(
                 /* If the signature explicitly indicates interest in EcsPrefab,
                 * signal that disabled entities should be matched. By default,
                 * prefab entities are not matched. */
-                if (ecs_type_owns_entity(
+                if (ecs_type_owns_id(
                     world, column->is.type, EcsPrefab, true))
                 {
                     query->flags |= EcsQueryMatchPrefab;
@@ -1940,7 +1940,7 @@ void resolve_cascade_container(
         /* If container was found, update the reference */
         if (container) {
             references[ref_index].entity = container;
-            ecs_get_ref_w_entity(
+            ecs_get_ref_w_id(
                 world, &references[ref_index], container, 
                 ref->component);
         } else {
@@ -2094,9 +2094,9 @@ void rematch_tables(
      * already dis/enabled this operation has no side effects. */
     if (query->system) {
         if (ecs_sig_check_constraints(world, &query->sig)) {
-            ecs_remove_entity(world, query->system, EcsDisabledIntern);
+            ecs_remove_id(world, query->system, EcsDisabledIntern);
         } else {
-            ecs_add_entity(world, query->system, EcsDisabledIntern);
+            ecs_add_id(world, query->system, EcsDisabledIntern);
         }
     }
 }
@@ -2205,15 +2205,15 @@ ecs_query_t* ecs_query_new_w_sig_intern(
 
         if (result->flags & EcsQueryNeedsTables) {
             if (system) {
-                if (ecs_has_entity(world, system, EcsMonitor)) {
+                if (ecs_has_id(world, system, EcsMonitor)) {
                     result->flags |= EcsQueryMonitor;
                 }
                 
-                if (ecs_has_entity(world, system, EcsOnSet)) {
+                if (ecs_has_id(world, system, EcsOnSet)) {
                     result->flags |= EcsQueryOnSet;
                 }
 
-                if (ecs_has_entity(world, system, EcsUnSet)) {
+                if (ecs_has_id(world, system, EcsUnSet)) {
                     result->flags |= EcsQueryUnSet;
                 }  
             }      

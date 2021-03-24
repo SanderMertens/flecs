@@ -2,8 +2,7 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 int main(int argc, char *argv[]) {

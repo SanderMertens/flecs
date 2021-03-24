@@ -1,7 +1,7 @@
 #include <dynamic_buffer.h>
 
 typedef struct {
-    float x, y;
+    double x, y;
 } Position;
 
 /* Non-POD component type with a dynamic buffer */

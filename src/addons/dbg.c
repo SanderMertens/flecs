@@ -68,7 +68,7 @@ void ecs_dbg_table(
             dbg_out->shared = ecs_type_merge(
                 world, dbg_out->shared, NULL, ecs_type(EcsName));
             dbg_out->shared = ecs_type_merge(
-                world, dbg_out->shared, NULL, ecs_type_from_entity(world, EcsPrefab));
+                world, dbg_out->shared, NULL, ecs_type_from_id(world, EcsPrefab));
 
             /* Shared components are always masked by owned components */
             dbg_out->shared = ecs_type_merge(

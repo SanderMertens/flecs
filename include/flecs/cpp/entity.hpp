@@ -1,5 +1,11 @@
 
-#include "deprecated/entity.hpp"
+#ifdef FLECS_DEPRECATED
+#include "../addons/deprecated/entity.hpp"
+#else
+template <typename Base>
+class entity_builder_deprecated { };
+class entity_deprecated { };
+#endif
 
 namespace flecs 
 {
@@ -590,12 +596,12 @@ public:
      */
     static
     flecs::entity null(const flecs::world& world) {
-        return flecs::entity(world.get_world().c_ptr(), (ecs_entity_t)0);
+        return flecs::entity(world.get_world().c_ptr(), static_cast<entity_t>(0));
     }
 
     static
     flecs::entity null() {
-        return flecs::entity((entity_t)0);
+        return flecs::entity(static_cast<entity_t>(0));
     }
 
     /** Get entity id.
@@ -659,6 +665,14 @@ public:
         return ((m_id & ECS_ROLE_MASK) == role);
     }
 
+    /** Check is entity is valid.
+     *
+     * @return True if the entity is alive, false otherwise.
+     */
+    bool is_valid() {
+        return ecs_is_valid(m_world, m_id);
+    }
+
     /** Check is entity is alive.
      *
      * @return True if the entity is alive, false otherwise.
@@ -673,7 +687,7 @@ public:
      */
     flecs::string_view name() const {
         const EcsName *name = static_cast<const EcsName*>(
-            ecs_get_w_entity(m_world, m_id, ecs_entity(EcsName)));
+            ecs_get_w_entity(m_world, m_id, static_cast<ecs_entity_t>(ecs_id(EcsName))));
         return flecs::string_view(name ? name->value : nullptr);
     }
 

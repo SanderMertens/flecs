@@ -6,6 +6,12 @@ namespace flecs
 //// A filter is used to match subsets of tables
 ////////////////////////////////////////////////////////////////////////////////
  
+enum match_kind {
+    MatchAll = EcsMatchAll,
+    MatchAny = EcsMatchAny,
+    MatchExact = EcsMatchExact
+};
+
 class filter {
 public:
     filter() 

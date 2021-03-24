@@ -1,15 +1,15 @@
 #include <delta_system_time.h>
 
 void Period05(ecs_iter_t *it) {
-    printf("t = 0.5, elapsed time = %f\n", it->delta_system_time);
+    printf("t = 0.5, elapsed time = %f\n", (double)it->delta_system_time);
 }
 
 void Period10(ecs_iter_t *it) {
-    printf("t = 1.0, elapsed time = %f\n", it->delta_system_time);
+    printf("t = 1.0, elapsed time = %f\n", (double)it->delta_system_time);
 }
 
 void Period20(ecs_iter_t *it) {
-    printf("t = 2.0, elapsed time = %f\n", it->delta_system_time);
+    printf("t = 2.0, elapsed time = %f\n", (double)it->delta_system_time);
 }
 
 int main(int argc, char *argv[]) {

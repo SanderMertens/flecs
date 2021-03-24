@@ -1,7 +1,7 @@
 #include <disable_component.h>
 
 typedef struct {
-    float x, y;
+    double x, y;
 } Position;
 
 void PrintPosition(ecs_iter_t *it) {

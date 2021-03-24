@@ -455,18 +455,18 @@ public:
     }
 
     T& operator[](size_t index) {
-        return ecs_vector_get(m_vector, T, index)[0];
+        return *static_cast<T*>(_ecs_vector_get(m_vector, ECS_VECTOR_T(T), index));
     }
 
     vector_iterator<T> begin() {
         return vector_iterator<T>(
-            ecs_vector_first(m_vector, T), 0);
+            static_cast<T*>(_ecs_vector_first(m_vector, ECS_VECTOR_T(T))), 0);
     }
 
     vector_iterator<T> end() {
         return vector_iterator<T>(
-            ecs_vector_last(m_vector, T),
-            ecs_vector_count(m_vector));
+            static_cast<T*>(_ecs_vector_last(m_vector, ECS_VECTOR_T(T))),
+                ecs_vector_count(m_vector));
     }    
 
     void clear() {
@@ -474,25 +474,25 @@ public:
     }
 
     void add(T& value) {
-        T* elem = ecs_vector_add(&m_vector, T);
+        T* elem = static_cast<T*>(_ecs_vector_add(&m_vector, ECS_VECTOR_T(T)));
         *elem = value;
     }
 
     void add(T&& value) {
-        T* elem = ecs_vector_add(&m_vector, T);
+        T* elem = static_cast<T*>(_ecs_vector_add(&m_vector, ECS_VECTOR_T(T)))
         *elem = value;
-    }    
+    }
 
     T& get(int32_t index) {
-        return ecs_vector_get(m_vector, T, index);
+        return *static_cast<T*>(_ecs_vector_get(m_vector, ECS_VECTOR_T(T), index));
     }
 
     T& first() {
-        return ecs_vector_first(m_vector, T);
+        return static_cast<T*>(_ecs_vector_first(m_vector, ECS_VECTOR_T(T)));
     }
 
     T& last() {
-        return ecs_vector_last(m_vector, T);
+        return static_cast<T*>(_ecs_vector_last(m_vector, ECS_VECTOR_T(T)));
     }
 
     int32_t count() {

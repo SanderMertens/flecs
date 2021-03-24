@@ -1,14 +1,16 @@
 #include <override_init.h>
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
+typedef struct {
+    double x, y;
+} Position;
 
-typedef Vector2D Position;
-typedef Vector2D Force;
-typedef float Mass;
+typedef struct {
+    double x;
+    double y;
+} Force;
+
+typedef double Mass;
 
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps

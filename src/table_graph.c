@@ -46,8 +46,8 @@ int32_t data_column_count(
          * vectors are sorted. 
          * Explicitly check for EcsComponent and EcsName since the ecs_has check
          * doesn't work during bootstrap. */
-        if ((component == ecs_typeid(EcsComponent)) || 
-            (component == ecs_typeid(EcsName)) || 
+        if ((component == ecs_id(EcsComponent)) || 
+            (component == ecs_id(EcsName)) || 
             ecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;
@@ -220,7 +220,7 @@ void init_edges(
             table->flags |= EcsTableIsDisabled;
         }
 
-        if (e == ecs_typeid(EcsComponent)) {
+        if (e == ecs_id(EcsComponent)) {
             table->flags |= EcsTableHasComponentData;
         }
 
@@ -436,13 +436,13 @@ ecs_entity_t find_xor_replace(
                 const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                if (ecs_type_owns_entity(
+                if (ecs_type_owns_id(
                     world, type_ptr->normalized, add, true)) 
                 {
                     xor_type = type_ptr->normalized;
                 }
             } else if (xor_type) {
-                if (ecs_type_owns_entity(world, xor_type, e, true)) {
+                if (ecs_type_owns_id(world, xor_type, e, true)) {
                     return e;
                 }
             }
@@ -472,7 +472,7 @@ int32_t ecs_table_switch_from_case(
         /* Fast path, we can get the switch type from the column data */
         for (i = 0; i < count; i ++) {
             ecs_type_t sw_type = sw_columns[i].type;
-            if (ecs_type_owns_entity(world, sw_type, add, true)) {
+            if (ecs_type_owns_id(world, sw_type, add, true)) {
                 return i;
             }
         }
@@ -487,7 +487,7 @@ int32_t ecs_table_switch_from_case(
             const EcsType *type_ptr = ecs_get(world, e, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            if (ecs_type_owns_entity(
+            if (ecs_type_owns_id(
                 world, type_ptr->normalized, add, true)) 
             {
                 return i;
@@ -790,7 +790,7 @@ int32_t count_occurrences(
             break;
         }
 
-        if (ecs_type_has_entity(world, type, e)) {
+        if (ecs_type_has_id(world, type, e)) {
             count ++;
         }
     }
