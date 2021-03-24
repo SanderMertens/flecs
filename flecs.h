@@ -869,7 +869,7 @@ public:
     }
 
     T& operator[](size_t index) {
-        return static_cast<T>(_ecs_vector_get(m_vector, ECS_VECTOR_T(T), index)[0]);
+        return *static_cast<T*>(_ecs_vector_get(m_vector, ECS_VECTOR_T(T), index));
     }
 
     vector_iterator<T> begin() {
@@ -898,7 +898,7 @@ public:
     }
 
     T& get(int32_t index) {
-        return static_cast<T>(_ecs_vector_get(m_vector, ECS_VECTOR_T(T), index)[0]);
+        return *static_cast<T*>(_ecs_vector_get(m_vector, ECS_VECTOR_T(T), index));
     }
 
     T& first() {
@@ -2812,7 +2812,7 @@ ecs_sig_t* ecs_query_get_sig(
 
 /** Calculate offset from address */
 #ifdef __cplusplus
-#define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (reinterpret_cast<uintptr_t>(offset)))
+#define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))
 #else
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 #endif
@@ -8350,7 +8350,6 @@ FLECS_API void ecs_gauge_reduce(
     ecs_gauge_t *src,
     int32_t t_src);
 
-
 #ifdef __cplusplus
 }
 #endif
@@ -8675,6 +8674,7 @@ private:
 template <typename T>
 class array_iterator
 {
+<<<<<<< HEAD
 public:
     explicit array_iterator(T* value, int index) {
         m_value = value;
@@ -8747,6 +8747,14 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility to convert template argument pack to array of columns
 ////////////////////////////////////////////////////////////////////////////////
+=======
+    // Utility to get actual type
+    template<typename Type>
+    struct base_type {
+        typedef typename std::remove_pointer<
+            typename std::decay<Type>::type>::type type;
+    };
+>>>>>>> origin/master
 
 namespace _ 
 {
@@ -12085,24 +12093,16 @@ void register_lifecycle_actions(
     if (!ecs_component_has_actions(world, component)) {
         EcsComponentLifecycle cl{};
         if (ctor) {
-            cl.ctor = _::component_ctor<
-                typename std::remove_const<
-                    typename std::remove_pointer<T>::type>::type>;
+            cl.ctor = _::component_ctor<typename base_type<T>::type>;
         }
         if (dtor) {
-            cl.dtor = _::component_dtor<
-                typename std::remove_const<
-                    typename std::remove_pointer<T>::type>::type>;
+            cl.dtor = _::component_dtor<typename base_type<T>::type>;
         }
         if (copy) {
-            cl.copy = _::component_copy<
-                typename std::remove_const<
-                    typename std::remove_pointer<T>::type>::type>;
+            cl.copy = _::component_copy<typename base_type<T>::type>;
         }
         if (move) {
-            cl.move = _::component_move<
-                typename std::remove_const<
-                    typename std::remove_pointer<T>::type>::type>;
+            cl.move = _::component_move<typename base_type<T>::type>;
         }
 
         ecs_set_component_actions_w_entity( world, component, &cl);
@@ -12118,7 +12118,7 @@ void register_lifecycle_actions(
 // Because of how global (templated) variables are instantiated, it is possible
 // that different instances for the same component exist across different
 // translation units. This is handled transparently by flecs. When a component
-// id is requested from the component_info class, but the id is uninitialized, a 
+// id is requested from the cpp_type class, but the id is uninitialized, a 
 // lookup by name will be performed for the component on the world, which will 
 // return the id with which the component was already registered. This means 
 // component identifiers are eventually consistent across translation units.
@@ -12220,8 +12220,11 @@ public:
             flecs::world w(world);
             flecs::entity result = entity(w, name, true);
             
-            // Init the component_info instance with the identiifer.
-            init(world, result.id(), allow_tag);
+            // Initialize types with identifier
+            cpp_type<typename base_type<T>::type>::init(world, result.id(), allow_tag);
+            cpp_type<const typename base_type<T>::type>::init(world, result.id(), allow_tag);
+            cpp_type<typename base_type<T>::type*>::init(world, result.id(), allow_tag);
+            cpp_type<typename base_type<T>::type&>::init(world, result.id(), allow_tag);
 
             // Now use the resulting identifier to register the component. Note
             // that the name is not passed into this function, as the entity was
@@ -12377,7 +12380,7 @@ public:
         if (s_allow_tag && std::is_empty<T>::value) {
             return 0;
         } else {
-            return sizeof(typename std::remove_pointer<T>::type);
+            return sizeof(typename base_type<T>::type);
         }
     }
 
@@ -12388,7 +12391,7 @@ public:
         if (size() == 0) {
             return 0;
         } else {
-            return alignof(typename std::remove_pointer<T>::type);
+            return alignof(typename base_type<T>::type);
         }
     }
 
@@ -12502,11 +12505,6 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         /* Register id as usual */
         id = _::cpp_type<T>::id_no_lifecycle(world_ptr, name, allow_tag);
     }
-
-    _::cpp_type<T>::init(world_ptr, id, allow_tag);
-    _::cpp_type<const T>::init(world_ptr, id, allow_tag);
-    _::cpp_type<T*>::init(world_ptr, id, allow_tag);
-    _::cpp_type<T&>::init(world_ptr, id, allow_tag);
     
     return world.entity(id);
 }

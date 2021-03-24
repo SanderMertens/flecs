@@ -328,3 +328,110 @@ void ImplicitComponents_first_use_tag_in_system() {
 
     test_assert(e.has<Tag>());
 }
+
+void ImplicitComponents_use_const() {
+    flecs::world world;
+
+    world.use<const Position>();
+
+    auto e = world.entity()
+        .set<Position>({10, 20});
+
+    test_assert(e.has<Position>());
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void ImplicitComponents_use_const_w_stage() {
+    flecs::world world;
+
+    world.use<const Velocity>();
+
+    auto e = world.entity()
+        .set<Position>({10, 20});
+
+    world.system<Position>()
+        .each([](flecs::entity e, Position&) {
+            e.set<Velocity>({1, 2});
+        });
+
+    world.progress();
+
+    test_assert(e.has<Velocity>());
+
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void ImplicitComponents_use_const_w_threads() {
+    bake_set_os_api();
+
+    flecs::world world;
+
+    world.use<const Velocity>();
+
+    auto e = world.entity()
+        .set<Position>({10, 20});
+
+    world.system<Position>()
+        .each([](flecs::entity e, Position&) {
+            e.set<Velocity>({1, 2});
+        });
+
+    world.set_threads(2);
+
+    world.progress();
+
+    test_assert(e.has<Velocity>());
+
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void ImplicitComponents_implicit_base() {
+    flecs::world world;
+
+    auto v = world.use<Position>();
+
+    test_int(v.id(), flecs::type_id<Position>());
+    test_int(v.id(), flecs::type_id<const Position>());
+    test_int(v.id(), flecs::type_id<Position*>());
+    test_int(v.id(), flecs::type_id<Position&>());
+}
+
+void ImplicitComponents_implicit_const() {
+    flecs::world world;
+
+    auto v = world.use<const Position>();
+
+    test_int(v.id(), flecs::type_id<Position>());
+    test_int(v.id(), flecs::type_id<const Position>());
+    test_int(v.id(), flecs::type_id<Position*>());
+    test_int(v.id(), flecs::type_id<Position&>());
+}
+
+void ImplicitComponents_implicit_ref() {
+    flecs::world world;
+
+    auto v = world.use<Position&>();
+
+    test_int(v.id(), flecs::type_id<Position>());
+    test_int(v.id(), flecs::type_id<const Position>());
+    test_int(v.id(), flecs::type_id<Position*>());
+    test_int(v.id(), flecs::type_id<Position&>());
+}
+
+void ImplicitComponents_implicit_ptr() {
+    flecs::world world;
+
+    auto v = world.use<Position*>();
+
+    test_int(v.id(), flecs::type_id<Position>());
+    test_int(v.id(), flecs::type_id<const Position>());
+    test_int(v.id(), flecs::type_id<Position*>());
+    test_int(v.id(), flecs::type_id<Position&>());
+}

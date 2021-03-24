@@ -552,6 +552,15 @@ void Pipeline_merge_after_staged_out_before_owned(void);
 void Pipeline_switch_pipeline(void);
 void Pipeline_run_pipeline(void);
 void Pipeline_get_pipeline_from_stage(void);
+void Pipeline_3_systems_3_types(void);
+void Pipeline_random_read_after_random_write_out_in(void);
+void Pipeline_random_read_after_random_write_inout_in(void);
+void Pipeline_random_read_after_random_write_out_inout(void);
+void Pipeline_random_read_after_random_write_inout_inout(void);
+void Pipeline_random_read_after_random_write_w_not_write(void);
+void Pipeline_random_read_after_random_write_w_not_read(void);
+void Pipeline_random_read_after_random_write_w_wildcard(void);
+void Pipeline_random_in_after_random_inout_after_random_out(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_setup(void);
@@ -658,6 +667,12 @@ void Sorting_sort_1000_entities(void);
 void Sorting_sort_1000_entities_w_duplicates(void);
 void Sorting_sort_1000_entities_again(void);
 void Sorting_sort_1000_entities_2_types(void);
+void Sorting_sort_1500_entities_3_types(void);
+void Sorting_sort_2000_entities_4_types(void);
+void Sorting_sort_2_entities_2_types(void);
+void Sorting_sort_3_entities_3_types(void);
+void Sorting_sort_3_entities_3_types_2(void);
+void Sorting_sort_4_entities_4_types(void);
 void Sorting_sort_1000_entities_2_types_again(void);
 void Sorting_sort_1000_entities_add_type_after_sort(void);
 void Sorting_sort_shared_component(void);
@@ -3560,6 +3575,42 @@ bake_test_case Pipeline_testcases[] = {
     {
         "get_pipeline_from_stage",
         Pipeline_get_pipeline_from_stage
+    },
+    {
+        "3_systems_3_types",
+        Pipeline_3_systems_3_types
+    },
+    {
+        "random_read_after_random_write_out_in",
+        Pipeline_random_read_after_random_write_out_in
+    },
+    {
+        "random_read_after_random_write_inout_in",
+        Pipeline_random_read_after_random_write_inout_in
+    },
+    {
+        "random_read_after_random_write_out_inout",
+        Pipeline_random_read_after_random_write_out_inout
+    },
+    {
+        "random_read_after_random_write_inout_inout",
+        Pipeline_random_read_after_random_write_inout_inout
+    },
+    {
+        "random_read_after_random_write_w_not_write",
+        Pipeline_random_read_after_random_write_w_not_write
+    },
+    {
+        "random_read_after_random_write_w_not_read",
+        Pipeline_random_read_after_random_write_w_not_read
+    },
+    {
+        "random_read_after_random_write_w_wildcard",
+        Pipeline_random_read_after_random_write_w_wildcard
+    },
+    {
+        "random_in_after_random_inout_after_random_out",
+        Pipeline_random_in_after_random_inout_after_random_out
     }
 };
 
@@ -3970,6 +4021,30 @@ bake_test_case Sorting_testcases[] = {
     {
         "sort_1000_entities_2_types",
         Sorting_sort_1000_entities_2_types
+    },
+    {
+        "sort_1500_entities_3_types",
+        Sorting_sort_1500_entities_3_types
+    },
+    {
+        "sort_2000_entities_4_types",
+        Sorting_sort_2000_entities_4_types
+    },
+    {
+        "sort_2_entities_2_types",
+        Sorting_sort_2_entities_2_types
+    },
+    {
+        "sort_3_entities_3_types",
+        Sorting_sort_3_entities_3_types
+    },
+    {
+        "sort_3_entities_3_types_2",
+        Sorting_sort_3_entities_3_types_2
+    },
+    {
+        "sort_4_entities_4_types",
+        Sorting_sort_4_entities_4_types
     },
     {
         "sort_1000_entities_2_types_again",
@@ -7406,7 +7481,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        17,
+        26,
         Pipeline_testcases
     },
     {
@@ -7420,7 +7495,7 @@ static bake_test_suite suites[] = {
         "Sorting",
         NULL,
         NULL,
-        20,
+        26,
         Sorting_testcases
     },
     {

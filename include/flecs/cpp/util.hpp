@@ -258,6 +258,12 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility to convert template argument pack to array of columns
 ////////////////////////////////////////////////////////////////////////////////
+    // Utility to get actual type
+    template<typename Type>
+    struct base_type {
+        typedef typename std::remove_pointer<
+            typename std::decay<Type>::type>::type type;
+    };
 
 namespace _ 
 {

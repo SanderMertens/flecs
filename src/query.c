@@ -1276,11 +1276,11 @@ void build_sorted_table_range(
 
             if (compare(e1, ptr1, e2, ptr2) > 0) {
                 min = j;
+                e1 = e_from_helper(&helper[min]);
             }
         }
 
         sort_helper_t *cur_helper = &helper[min];
-
         if (!cur || cur->table != cur_helper->table) {
             cur = ecs_vector_add(&query->table_slices, ecs_table_slice_t);
             ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
