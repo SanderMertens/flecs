@@ -15,10 +15,10 @@ typedef struct {
 } Position;
 
 void KeepScore(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     // The singleton component can be retrieved as a regular column
-    Game *g = ecs_column(it, Game, 2);
+    Game *g = ecs_term(it, Game, 2);
 
     for (int i = 0; i < it->count; i ++) {
         if (p[i].x > 1) {

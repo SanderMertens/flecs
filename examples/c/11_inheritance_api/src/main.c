@@ -15,9 +15,9 @@ typedef double Mass;
 /* Implement a simple move system */
 void Move(ecs_iter_t *it) {
     /* Get the two columns from the system signature */
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Force, v, 2);
-    ECS_COLUMN(it, Mass, m, 3);
+    Position *p = ecs_term(it, Position, 1);
+    Force *v = ecs_term(it, Force, 2);
+    Mass *m = ecs_term(it, Mass, 3);
 
     for (int i = 0; i < it->count; i ++) {
         if (!ecs_is_owned(it, 3)) {

@@ -658,7 +658,7 @@ static
 void OnSetTrigger(
     ecs_iter_t *it)
 {
-    EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
+    EcsTrigger *ct = ecs_term(it, EcsTrigger, 1);
     
     trigger_set(it->world, it->entities, ct, it->count);
 }
@@ -667,8 +667,8 @@ static
 void OnSetTriggerCtx(
     ecs_iter_t *it)
 {
-    EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
-    EcsContext *ctx = ecs_column(it, EcsContext, 2);
+    EcsTrigger *ct = ecs_term(it, EcsTrigger, 1);
+    EcsContext *ctx = ecs_term(it, EcsContext, 2);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -683,7 +683,7 @@ static
 void OnSetComponentLifecycle(
     ecs_iter_t *it)
 {
-    EcsComponentLifecycle *cl = ecs_column(it, EcsComponentLifecycle, 1);
+    EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
     ecs_world_t *world = it->world;
 
     int i;
@@ -698,7 +698,7 @@ static
 void DisableSystem(
     ecs_iter_t *it)
 {
-    EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
+    EcsSystem *system_data = ecs_term(it, EcsSystem, 1);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -712,7 +712,7 @@ static
 void EnableSystem(
     ecs_iter_t *it)
 {
-    EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
+    EcsSystem *system_data = ecs_term(it, EcsSystem, 1);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -729,7 +729,7 @@ void CreateSignature(
     ecs_world_t *world = it->world;
     ecs_entity_t *entities = it->entities;
 
-    EcsSignatureExpr *signature = ecs_column(it, EcsSignatureExpr, 1);
+    EcsSignatureExpr *signature = ecs_term(it, EcsSignatureExpr, 1);
     
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -758,7 +758,7 @@ void CreateQuery(
     ecs_world_t *world = it->world;
     ecs_entity_t *entities = it->entities;
 
-    EcsSignature *signature = ecs_column(it, EcsSignature, 1);
+    EcsSignature *signature = ecs_term(it, EcsSignature, 1);
     
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -780,9 +780,9 @@ void CreateSystem(
     ecs_world_t *world = it->world;
     ecs_entity_t *entities = it->entities;
 
-    EcsQuery *query = ecs_column(it, EcsQuery, 1);
-    EcsIterAction *action = ecs_column(it, EcsIterAction, 2);
-    EcsContext *ctx = ecs_column(it, EcsContext, 3);
+    EcsQuery *query = ecs_term(it, EcsQuery, 1);
+    EcsIterAction *action = ecs_term(it, EcsIterAction, 2);
+    EcsContext *ctx = ecs_term(it, EcsContext, 3);
     
     int32_t i;
     for (i = 0; i < it->count; i ++) {

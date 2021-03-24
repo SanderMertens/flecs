@@ -7,7 +7,7 @@ typedef struct {
 void PrintPosition(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
-    Position *p = ecs_column(it, Position, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     for (int i = 0; i < it->count; i ++) {
         printf("%s: {%f, %f}\n", 

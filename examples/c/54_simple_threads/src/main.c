@@ -5,8 +5,8 @@ typedef struct {
 } Position, Velocity;
 
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
-    Velocity *v = ecs_column(it, Velocity, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;

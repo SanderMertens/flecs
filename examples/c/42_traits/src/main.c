@@ -18,7 +18,7 @@ typedef struct ExpiryTimer {
 /* The system that executes the trait logic */
 void ExpireComponents(ecs_iter_t *it) {
     /* First, get the trait component just like a normal component */
-    ExpiryTimer *et = ecs_column(it, ExpiryTimer, 1);
+    ExpiryTimer *et = ecs_term(it, ExpiryTimer, 1);
 
     /* Get the handle to the trait. This will tell us on which component the
      * trait is applied */

@@ -383,6 +383,87 @@ bool ecs_type_owns_entity(
     ecs_entity_t entity,
     bool owned);
 
+ECS_DEPRECATED("use ecs_term/ecs_term_w_size")
+FLECS_API
+void* ecs_column_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int32_t column);
+
+#define ecs_column(it, T, column)\
+    ecs_column_w_size(it, sizeof(T), column)
+
+ECS_DEPRECATED("no replacement")
+FLECS_API
+int32_t ecs_column_index_from_name(
+    const ecs_iter_t *it,
+    const char *name);
+
+ECS_DEPRECATED("no replacement")
+FLECS_API
+void *ecs_element_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int32_t column,
+    int32_t row);
+
+#define ecs_element(it, type, column, row)\
+    ((type*)ecs_element_w_size(it, sizeof(type), column, row))
+
+ECS_DEPRECATED("use ecs_term_source")
+FLECS_API
+ecs_entity_t ecs_column_source(
+    const ecs_iter_t *it,
+    int32_t column);
+
+ECS_DEPRECATED("use ecs_term_id")
+FLECS_API
+ecs_entity_t ecs_column_entity(
+    const ecs_iter_t *it,
+    int32_t column);
+
+ECS_DEPRECATED("no replacement")
+FLECS_API
+ecs_type_t ecs_column_type(
+    const ecs_iter_t *it,
+    int32_t column);
+
+ECS_DEPRECATED("use ecs_term_size")
+FLECS_API
+size_t ecs_column_size(
+    const ecs_iter_t *it,
+    int32_t column);
+
+ECS_DEPRECATED("use ecs_term_is_readonly")
+FLECS_API
+bool ecs_is_readonly(
+    const ecs_iter_t *it,
+    int32_t column);
+
+ECS_DEPRECATED("use ecs_term_is_owned")
+FLECS_API
+bool ecs_is_owned(
+    const ecs_iter_t *it,
+    int32_t column);
+
+ECS_DEPRECATED("use ecs_iter_column")
+FLECS_API
+void* ecs_table_column(
+    const ecs_iter_t *it,
+    int32_t column);
+
+ECS_DEPRECATED("use ecs_iter_column_size")
+FLECS_API
+size_t ecs_table_column_size(
+    const ecs_iter_t *it,
+    int32_t column);
+
+ECS_DEPRECATED("use ecs_iter_column_index")
+FLECS_API
+int32_t ecs_table_component_index(
+    const ecs_iter_t *it,
+    ecs_entity_t component);
+
 #ifdef __cplusplus
 }
 #endif

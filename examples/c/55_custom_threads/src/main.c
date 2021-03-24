@@ -19,8 +19,8 @@ ECS_COMPONENT_DECLARE(Velocity);
 /* Implement a simple move system */
 void Move(ecs_iter_t *it) {
     /* Get the two columns from the system signature */
-    Position *p = ecs_column(it, Position, 1);
-    Velocity *v = ecs_column(it, Velocity, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
@@ -62,8 +62,8 @@ void* thread_func(void *arg) {
         ecs_iter_t it = ecs_query_iter(ctx->query);
 
         while (ecs_query_next_worker(&it, stage_id, stage_count)) {
-            Position *p = ecs_column(&it, Position, 1);
-            Velocity *v = ecs_column(&it, Velocity, 2);
+            Position *p = ecs_term(&it, Position, 1);
+            Velocity *v = ecs_term(&it, Velocity, 2);
 
             for (int i = 0; i < it.count; i ++) {
                 p[i].x += v[i].x;

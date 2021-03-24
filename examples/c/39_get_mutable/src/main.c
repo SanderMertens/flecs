@@ -11,7 +11,7 @@ void PrintCounterAdd(ecs_iter_t *it) {
 }
 
 void PrintCounterSet(ecs_iter_t *it) {
-    ECS_COLUMN(it, Counter, counter, 1);
+    Counter *counter = ecs_term(it, Counter, 1);
 
     for (int i = 0; i < it->count; i ++) {
         printf("%s: Counter set to %d\n", 

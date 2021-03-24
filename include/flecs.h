@@ -2436,227 +2436,194 @@ bool ecs_query_orphaned(
  * @{
  */
 
-/** Obtain column data. 
- * This operation is to be used to obtain a component array for a specific 
- * column in the system or query signature. The column is identified by the 
- * provided index. For example, if this is the provided signature:
- * 
- * Position, Velocity
- * 
- * Position is at index 1, and Velocity is at index 2.
+/** Obtain data for a query term.
+ * This operation retrieves a pointer to an array of data that belongs to the
+ * term in the query. The index refers to the location of the term in the query,
+ * and starts counting from one.
  *
- * This operation may return NULL if the column is optional, and the current
- * table does not have the data. Additionally, if the column points to a shared
- * component or a reference, the returned value should be interpreted as a 
- * pointer instead of an array.
+ * For example, the query "Position, Velocity" will return the Position array
+ * for index 1, and the Velocity array for index 2.
  *
- * The provided size must match the size of the component, otherwise the 
- * function may fail.
- * 
+ * When the specified term is not owned by the entity this function returns a
+ * pointer instead of an array. This happens when the source of a term is not
+ * the entity being iterated, such as a shared component (from a prefab), a
+ * component from a parent, or another entity. The ecs_term_is_owned operation
+ * can be used to test dynamically if a term is owned.
+ *
+ * The provided size must be either 0 or must match the size of the datatype
+ * of the returned array. If the size does not match, the operation may assert.
+ * The size can be dynamically obtained with ecs_term_size.
+ *
  * @param it The iterator.
- * @param size The size of the component.
- * @param column The index identifying the column in a signature.
- * @return A pointer to the column data.
+ * @param size The size of the returned array.
+ * @param index The index of the term in the query.
+ * @return A pointer to the data associated with the term.
  */
 FLECS_API
-void* ecs_column_w_size(
+void* ecs_term_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t column);
+    int32_t index);
 
-/** Obtain column data. 
- * This operation is similar to ecs_column_w_size, except that it accepts the
- * component typename.
- * 
- * @param it The iterator.
- * @param type The typename of the component for which to obtain the data.
- * @param column The index identifying the column in a signature.
- * @return A pointer to the column data.
- */
-#define ecs_column(it, type, column)\
-    ((type*)ecs_column_w_size(it, sizeof(type), column))
+/** Same as ecs_term_w_size, but accepts a type instead of a size. */
+#define ecs_term(it, T, index)\
+    ((T*)ecs_term_w_size(it, sizeof(T), index))
 
-/** Get column index by name.
- * This function obtains a column index by name. This function can only be used
- * if a query signature contains names.
+/** Obtain the component/pair id for a term.
+ * This operation retrieves the id for the specified query term. Typically this
+ * is the component id, but it can also be a pair id or a role annotated id,
+ * depending on the term.
  *
  * @param it The iterator.
- * @param name The column name.
- * @return Index of the column (to be used with ecs_column_* functions).
+ * @param index The index of the term in the query.
+ * @return The id associated with te term.
  */
 FLECS_API
-int32_t ecs_column_index_from_name(
+ecs_id_t ecs_term_id(
     const ecs_iter_t *it,
-    const char *name);
+    int32_t index);
 
-/** Test if column is owned or not.
- * The following signature shows an example of one owned components and two
- * components that are not owned by the current entity:
- * 
- * Position, PARENT:Velocity, MyEntity:Mass
- * 
- * Position is an owned component. Velocity and Mass both belong to a different
- * entity. This operation will return false for Position, and true for Velocity
- * and Mass. If a component is matched from a prefab, this operation will also
- * return false.
- * 
- * @param it The it parameter passed into the system.
- * @param index The index identifying the column in a system signature.
- * @return True if column is owned, false if column is not.
- */
-FLECS_API
-bool ecs_is_owned(
-    const ecs_iter_t *it,
-    int32_t column);
-
-/** Obtain a single element. 
- * This operation is similar to ecs_column, but instead of an array it obtains
- * a single element from a component array. The advantage of using ecs_element
- * is that a system can be agnostic towards whether a component is owned or not,
- * at the cost of some additional performance overhead.
+/** Obtain the source for a term.
+ * This operation retrieves the source of the specified term. A source is the
+ * entity from which the data is retrieved. If the term is owned by the iterated
+ * over entity/entities, the function will return id 0.
+ *
+ * This operation can be useful to retrieve, for example, the id of a parent
+ * entity when a component from a parent has been requested, or to retrieve the
+ * id from a prefab, in the case of a shared component.
  *
  * @param it The iterator.
- * @param size The component size.
- * @param column The index identifying the column in a signature.
- * @param row The current row in the table.
- * @return A pointer to the current element.
+ * @param index The index of the term in the query.
+ * @return The source associated with te term.
  */
 FLECS_API
-void *ecs_element_w_size(
+ecs_entity_t ecs_term_source(
     const ecs_iter_t *it,
-    size_t size,
-    int32_t column,
-    int32_t row);
+    int32_t index);
 
-/** Obtain a single element. 
- * Same as ecs_element_w_size, but allows specifying a typename instead of a
- * size.
+/** Obtain the size for a term.
+ * This operation retrieves the size of the datatype for the term.
  *
  * @param it The iterator.
- * @param type The column type.
- * @param column The index identifying the column in a signature.
- * @param row The current row in the table.
- * @return A pointer to the current element.
- */
-#define ecs_element(it, type, column, row)\
-    ((type*)ecs_element_w_size(it, sizeof(type), column, row))
-
-/** Obtain the source of a signature column.
- * This operation returns the source of a signature column. By default this will
- * return 0 for regular columns, but for columns where the components are
- * provided by entities other than the entity being iterated over, this will
- * return the source of the component.
- * 
- * @param it Pointer to the it object passed into the system callback.
- * @param column The index identifying the column in a signature.
- * @return The source entity for the column. 
+ * @param index The index of the term in the query.
+ * @return The size of the datatype associated with te term.
  */
 FLECS_API
-ecs_entity_t ecs_column_source(
+size_t ecs_term_size(
     const ecs_iter_t *it,
-    int32_t column);
+    int32_t index);
 
-/** Obtain the entity id of the signature column.
- * This operation returns the entity id of the component or tag used in the
- * system signature. For example, when provided this signature:
+/** Test whether the term is readonly
+ * This operation returns whether this is a readonly term. Readonly terms are
+ * annotated with [in], or are added as a const type in the C++ API.
  *
- * Position, Velocity
- *
- * ecs_column_entity(world, 1) will return the component handle for Position and
- * ecs_column_entity(world, 2) will return the componnet handle for Velocity.
- * 
  * @param it The iterator.
- * @param column The index identifying the column in a signature.
- * @return The entity id of the signature column.
+ * @param index The index of the term in the query.
+ * @return Whether the term is readonly.
  */
 FLECS_API
-ecs_entity_t ecs_column_entity(
+bool ecs_term_is_readonly(
     const ecs_iter_t *it,
-    int32_t column);
+    int32_t index);    
 
-/** Obtain the type of a column from inside a system. 
- * This operation is equivalent to ecs_column_entity, except that it returns
- * a type, instead of an entity handle. Invoking this function is the same as
- * doing:
- * 
- * ecs_type_from_entity( ecs_column_entity(it, index));
- * 
- * @param it The iterator.
- * @param column The index identifying the column in a signature.
- * @return The type for the specified column, or NULL if failed.
- */ 
-FLECS_API
-ecs_type_t ecs_column_type(
-    const ecs_iter_t *it,
-    int32_t column);
-
-/** Get the size of the component of the specified column.
+/** Test whether the term is owned
+ * This operation returns whether the term is owned by the currently iterated
+ * entity. This function will return false when the term is owned by another
+ * entity, such as a parent or a prefab.
  *
  * @param it The iterator.
- * @param column The column for which to obtain the size.
+ * @param index The index of the term in the query.
+ * @return Whether the term is owned by the iterated over entity/entities.
  */
 FLECS_API
-size_t ecs_column_size(
+bool ecs_term_is_owned(
     const ecs_iter_t *it,
-    int32_t column);
+    int32_t index);   
 
-/** Is the column readonly.
- * This operation returns if the column is a readonly column. Readonly columns
- * are marked in the system signature with the [in] modifier. 
- * 
- * @param it Pointer to the it object passed into the system callback.
- * @param column An index identifying the column.
- * @return True if the column is readonly, false otherwise. */
-FLECS_API
-bool ecs_is_readonly(
-    const ecs_iter_t *it,
-    int32_t column);
-
-/** Get type of table that system is currently iterating over. 
- * This will return the type for all entities that are currently being iterated
- * over, until ecs_iter_next is invoked.
+/** Get the type of the currently entity/entities.
+ * This operation returns the type of the current iterated entity/entities. A
+ * type is a vector that contains all ids of the components that an entity has.
  *
  * @param it The iterator.
- * @return The type of the current table.
+ * @return The type of the currently iterated entity/entities.
  */
 FLECS_API
 ecs_type_t ecs_iter_type(
     const ecs_iter_t *it);
 
-/** Get component array from table.
- * In some cases an application may require access to the table component arrays
- * directly instead of going through the signature to table mapping. A typical
- * scenario where this would be used is when using a filter iterator, where
- * there is no signature, and thus ecs_column cannot be used.
+/** Find the column index for a given id.
+ * This operation finds the index of a column in the current type for the 
+ * specified id. For example, if an entity has type Position, Velocity, and the
+ * application requests the id for the Velocity component, this function will
+ * return 1.
+ *
+ * Note that the column index returned by this function starts from 0, as
+ * opposed to 1 for the terms. The reason for this is that the returned index
+ * is equivalent to using the ecs_type_get_index function, with as type the
+ * value returned by ecs_iter_type.
+ *
+ * This operation can be used to request columns that are not requested by a
+ * query. For example, a query may request Position, Velocity, but an entity
+ * may also have Mass. With this function the iterator can request the data for
+ * Mass as well, when used in combination with ecs_iter_column.
  *
  * @param it The iterator.
- * @param column The index identifying the column in a table.
- * @return The component array corresponding to the column index.
+ * @return The type of the currently iterated entity/entities.
  */
 FLECS_API
-void* ecs_table_column(
+int32_t ecs_iter_find_column(
     const ecs_iter_t *it,
-    int32_t column);
+    ecs_id_t id);
 
-/** Get the size of a table column.
+/** Obtain data for a column index.
+ * This operation can be used with the id obtained from ecs_iter_find_column to
+ * request data from the currently iterated over entity/entities that is not
+ * requested by the query.
+ *
+ * The data in the returned pointer can be accessed using the same index as
+ * the one used to access the arrays returned by the ecs_term function.
+ *
+ * The provided size must be either 0 or must match the size of the datatype
+ * of the returned array. If the size does not match, the operation may assert.
+ * The size can be dynamically obtained with ecs_iter_column_size.
+ *
+ * Note that this function can be used together with ecs_iter_type to 
+ * dynamically iterate all data that the matched entities have. An application
+ * can use the ecs_vector_count function to obtain the number of elements in a
+ * type. All indices from 0..ecs_vector_count(type) are valid column indices.
+ *
+ * Additionally, note that this provides unprotected access to the column data.
+ * An iterator cannot know or prevent accessing columns that are not queried for
+ * and thus applications should only use this when it can be guaranteed that
+ * there are no other threads reading/writing the same column data.
  *
  * @param it The iterator.
- * @param column The column for which to obtain the size.
+ * @param size The size of the column.
+ * @param index The index of the column.
+ * @return The data belonging to the column.
  */
 FLECS_API
-size_t ecs_table_column_size(
+void* ecs_iter_column_w_size(
     const ecs_iter_t *it,
-    int32_t column);
+    size_t size,
+    int32_t index);
 
-/** Get the index of the table column for a component.
- * 
+/** Same as ecs_iter_column_w_size, but accepts a type instead of a size. */
+#define ecs_iter_column(it, T, index)\
+    ((T*)ecs_iter_column_w_size(it, sizeof(T), index))
+
+/** Obtain size for a column index.
+ * This operation obtains the size for a column. The size is equal to the size
+ * of the datatype associated with the column.
+ *
  * @param it The iterator.
- * @param component The component for which to obtain the index.
+ * @param index The index of the column.
+ * @return The size belonging to the column.
  */
 FLECS_API
-int32_t ecs_table_component_index(
+size_t ecs_iter_column_size(
     const ecs_iter_t *it,
-    ecs_entity_t component);
+    int32_t index);    
 
 /** @} */
 

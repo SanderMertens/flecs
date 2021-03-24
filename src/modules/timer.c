@@ -18,8 +18,8 @@ void AddTickSource(ecs_iter_t *it) {
 
 static
 void ProgressTimers(ecs_iter_t *it) {
-    EcsTimer *timer = ecs_column(it, EcsTimer, 1);
-    EcsTickSource *tick_source = ecs_column(it, EcsTickSource, 2);
+    EcsTimer *timer = ecs_term(it, EcsTimer, 1);
+    EcsTickSource *tick_source = ecs_term(it, EcsTickSource, 2);
 
     ecs_assert(timer != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -56,8 +56,8 @@ void ProgressTimers(ecs_iter_t *it) {
 
 static
 void ProgressRateFilters(ecs_iter_t *it) {
-    EcsRateFilter *filter = ecs_column(it, EcsRateFilter, 1);
-    EcsTickSource *tick_dst = ecs_column(it, EcsTickSource, 2);
+    EcsRateFilter *filter = ecs_term(it, EcsRateFilter, 1);
+    EcsTickSource *tick_dst = ecs_term(it, EcsTickSource, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {

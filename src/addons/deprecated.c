@@ -196,4 +196,100 @@ bool ecs_type_owns_entity(
     return ecs_type_owns_id(world, type, entity, owned);
 }
 
+ecs_type_t ecs_column_type(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->table->types != NULL, ECS_INTERNAL_ERROR, NULL);
+    return it->table->types[index - 1];
+}
+
+int32_t ecs_column_index_from_name(
+    const ecs_iter_t *it,
+    const char *name)
+{
+    ecs_sig_column_t *column = NULL;
+    if (it->query) {
+        int32_t i, count = ecs_vector_count(it->query->sig.columns);
+        for (i = 0; i < count; i ++) {
+            column = ecs_vector_get(
+                it->query->sig.columns, ecs_sig_column_t, i);
+            if (column->name) {
+                if (!strcmp(name, column->name)) {
+                    return i + 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+void* ecs_column_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int32_t column)
+{
+    return ecs_term_w_size(it, size, column);
+}
+
+bool ecs_is_owned(
+    const ecs_iter_t *it,
+    int32_t column)
+{
+    return ecs_term_is_owned(it, column);
+}
+
+bool ecs_is_readonly(
+    const ecs_iter_t *it,
+    int32_t column)
+{
+    return ecs_term_is_readonly(it, column);
+}
+
+ecs_entity_t ecs_column_source(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    return ecs_term_source(it, index);
+}
+
+ecs_id_t ecs_column_entity(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    return ecs_term_id(it, index);
+}
+
+size_t ecs_column_size(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    return ecs_term_size(it, index);
+}
+
+int32_t ecs_table_component_index(
+    const ecs_iter_t *it,
+    ecs_entity_t component)
+{
+    return ecs_iter_find_column(it, component);
+}
+
+void* ecs_table_column(
+    const ecs_iter_t *it,
+    int32_t column_index)
+{
+    return ecs_iter_column_w_size(it, 0, column_index);
+}
+
+size_t ecs_table_column_size(
+    const ecs_iter_t *it,
+    int32_t column_index)
+{
+    return ecs_iter_column_size(it, column_index);
+}
+
 #endif

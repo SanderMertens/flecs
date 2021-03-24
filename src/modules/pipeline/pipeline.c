@@ -242,7 +242,7 @@ bool build_pipeline(
     /* Iterate systems in pipeline, add ops for running / merging */
     ecs_iter_t it = ecs_query_iter(query);
     while (ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);        
+        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
         int i;
         for (i = 0; i < it.count; i ++) {      
@@ -408,7 +408,7 @@ void ecs_pipeline_run(
     
     ecs_iter_t it = ecs_query_iter(pq->query);
     while (ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);
+        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
         int32_t i;
         for(i = 0; i < it.count; i ++) {
@@ -432,7 +432,7 @@ void ecs_pipeline_run(
                 if (ecs_worker_sync(stage->thread_ctx)) {
                     i = iter_reset(pq, &it, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
-                    sys = ecs_column(&it, EcsSystem, 1);
+                    sys = ecs_term(&it, EcsSystem, 1);
                 }
             }
         }
@@ -577,7 +577,7 @@ void ecs_deactivate_systems(
     ecs_defer_none(world, &world->stage);
 
     while( ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);
+        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {

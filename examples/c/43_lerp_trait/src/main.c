@@ -12,7 +12,7 @@ typedef struct Lerp {
 
 void DoLerp(ecs_iter_t *it) {
     /* Get the Lerp trait column */
-    Lerp *l = ecs_column(it, Lerp, 1);
+    Lerp *l = ecs_term(it, Lerp, 1);
 
     /* This is the actual component value. Because the system can match any
      * component type, the size is unknown. */
@@ -65,7 +65,7 @@ void DoLerp(ecs_iter_t *it) {
 }
 
 void PrintPosition(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     for (int32_t i = 0; i < it->count; i ++) {
         printf("{%f, %f}\n", p[i].x, p[i].y);

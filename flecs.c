@@ -9431,6 +9431,102 @@ bool ecs_type_owns_entity(
     return ecs_type_owns_id(world, type, entity, owned);
 }
 
+ecs_type_t ecs_column_type(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->table->types != NULL, ECS_INTERNAL_ERROR, NULL);
+    return it->table->types[index - 1];
+}
+
+int32_t ecs_column_index_from_name(
+    const ecs_iter_t *it,
+    const char *name)
+{
+    ecs_sig_column_t *column = NULL;
+    if (it->query) {
+        int32_t i, count = ecs_vector_count(it->query->sig.columns);
+        for (i = 0; i < count; i ++) {
+            column = ecs_vector_get(
+                it->query->sig.columns, ecs_sig_column_t, i);
+            if (column->name) {
+                if (!strcmp(name, column->name)) {
+                    return i + 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+void* ecs_column_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int32_t column)
+{
+    return ecs_term_w_size(it, size, column);
+}
+
+bool ecs_is_owned(
+    const ecs_iter_t *it,
+    int32_t column)
+{
+    return ecs_term_is_owned(it, column);
+}
+
+bool ecs_is_readonly(
+    const ecs_iter_t *it,
+    int32_t column)
+{
+    return ecs_term_is_readonly(it, column);
+}
+
+ecs_entity_t ecs_column_source(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    return ecs_term_source(it, index);
+}
+
+ecs_id_t ecs_column_entity(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    return ecs_term_id(it, index);
+}
+
+size_t ecs_column_size(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    return ecs_term_size(it, index);
+}
+
+int32_t ecs_table_component_index(
+    const ecs_iter_t *it,
+    ecs_entity_t component)
+{
+    return ecs_iter_find_column(it, component);
+}
+
+void* ecs_table_column(
+    const ecs_iter_t *it,
+    int32_t column_index)
+{
+    return ecs_iter_column_w_size(it, 0, column_index);
+}
+
+size_t ecs_table_column_size(
+    const ecs_iter_t *it,
+    int32_t column_index)
+{
+    return ecs_iter_column_size(it, column_index);
+}
+
 #endif
 
 #ifdef FLECS_MODULE
@@ -20296,7 +20392,7 @@ bool get_table_column(
 }
 
 static
-void* get_column(
+void* get_term(
     const ecs_iter_t *it,
     ecs_size_t size,
     int32_t column,
@@ -20322,24 +20418,15 @@ void* get_column(
 
 /* --- Public API --- */
 
-void* ecs_column_w_size(
+void* ecs_term_w_size(
     const ecs_iter_t *it,
     size_t size,
     int32_t column)
 {
-    return get_column(it, ecs_from_size_t(size), column, 0);
+    return get_term(it, ecs_from_size_t(size), column, 0);
 }
 
-void* ecs_element_w_size(
-    const ecs_iter_t *it, 
-    size_t size,
-    int32_t column,
-    int32_t row)
-{
-    return get_column(it, ecs_from_size_t(size), column, row);
-}
-
-bool ecs_is_owned(
+bool ecs_term_is_owned(
     const ecs_iter_t *it,
     int32_t column)
 {
@@ -20352,7 +20439,7 @@ bool ecs_is_owned(
     return table_column >= 0;
 }
 
-bool ecs_is_readonly(
+bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t column)
 {
@@ -20368,7 +20455,7 @@ bool ecs_is_readonly(
     return column_data->inout_kind == EcsIn;
 }
 
-ecs_entity_t ecs_column_source(
+ecs_entity_t ecs_term_source(
     const ecs_iter_t *it,
     int32_t index)
 {
@@ -20388,18 +20475,7 @@ ecs_entity_t ecs_column_source(
     return ref->entity;
 }
 
-ecs_type_t ecs_column_type(
-    const ecs_iter_t *it,
-    int32_t index)
-{
-    ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(it->table->types != NULL, ECS_INTERNAL_ERROR, NULL);
-    return it->table->types[index - 1];
-}
-
-ecs_entity_t ecs_column_entity(
+ecs_id_t ecs_term_id(
     const ecs_iter_t *it,
     int32_t index)
 {
@@ -20410,7 +20486,7 @@ ecs_entity_t ecs_column_entity(
     return it->table->components[index - 1];
 }
 
-size_t ecs_column_size(
+size_t ecs_term_size(
     const ecs_iter_t *it,
     int32_t index)
 {
@@ -20419,28 +20495,7 @@ size_t ecs_column_size(
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(it->table->columns != NULL, ECS_INTERNAL_ERROR, NULL);
     int32_t table_column = it->table->columns[index - 1];
-    return ecs_table_column_size(it, table_column - 1);
-}
-
-int32_t ecs_column_index_from_name(
-    const ecs_iter_t *it,
-    const char *name)
-{
-    ecs_sig_column_t *column = NULL;
-    if (it->query) {
-        int32_t i, count = ecs_vector_count(it->query->sig.columns);
-        for (i = 0; i < count; i ++) {
-            column = ecs_vector_get(
-                it->query->sig.columns, ecs_sig_column_t, i);
-            if (column->name) {
-                if (!strcmp(name, column->name)) {
-                    return i + 1;
-                }
-            }
-        }
-    }
-
-    return 0;
+    return ecs_iter_column_size(it, table_column - 1);
 }
 
 ecs_type_t ecs_iter_type(
@@ -20455,7 +20510,7 @@ ecs_type_t ecs_iter_type(
     return table->type;
 }
 
-int32_t ecs_table_component_index(
+int32_t ecs_iter_find_column(
     const ecs_iter_t *it,
     ecs_entity_t component)
 {
@@ -20465,8 +20520,9 @@ int32_t ecs_table_component_index(
     return ecs_type_index_of(it->table->table->type, component);
 }
 
-void* ecs_table_column(
+void* ecs_iter_column_w_size(
     const ecs_iter_t *it,
+    size_t size,
     int32_t column_index)
 {
     /* See ecs_iter_type */ 
@@ -20483,10 +20539,12 @@ void* ecs_table_column(
 
     ecs_column_t *columns = it->table_columns;
     ecs_column_t *column = &columns[column_index];
+    ecs_assert(!size || (ecs_size_t)size == column->size, ECS_INVALID_PARAMETER, NULL);
+
     return ecs_vector_first_t(column->data, column->size, column->alignment);
 }
 
-size_t ecs_table_column_size(
+size_t ecs_iter_column_size(
     const ecs_iter_t *it,
     int32_t column_index)
 {
@@ -20506,6 +20564,16 @@ size_t ecs_table_column_size(
     ecs_column_t *column = &columns[column_index];
     
     return ecs_to_size_t(column->size);
+}
+
+// DEPRECATED
+void* ecs_element_w_size(
+    const ecs_iter_t *it, 
+    size_t size,
+    int32_t column,
+    int32_t row)
+{
+    return get_term(it, ecs_from_size_t(size), column, row);
 }
 
 int8_t ecs_to_i8(
@@ -21337,7 +21405,7 @@ bool build_pipeline(
     /* Iterate systems in pipeline, add ops for running / merging */
     ecs_iter_t it = ecs_query_iter(query);
     while (ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);        
+        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
         int i;
         for (i = 0; i < it.count; i ++) {      
@@ -21503,7 +21571,7 @@ void ecs_pipeline_run(
     
     ecs_iter_t it = ecs_query_iter(pq->query);
     while (ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);
+        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
         int32_t i;
         for(i = 0; i < it.count; i ++) {
@@ -21527,7 +21595,7 @@ void ecs_pipeline_run(
                 if (ecs_worker_sync(stage->thread_ctx)) {
                     i = iter_reset(pq, &it, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
-                    sys = ecs_column(&it, EcsSystem, 1);
+                    sys = ecs_term(&it, EcsSystem, 1);
                 }
             }
         }
@@ -21672,7 +21740,7 @@ void ecs_deactivate_systems(
     ecs_defer_none(world, &world->stage);
 
     while( ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);
+        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {
@@ -21801,8 +21869,8 @@ void AddTickSource(ecs_iter_t *it) {
 
 static
 void ProgressTimers(ecs_iter_t *it) {
-    EcsTimer *timer = ecs_column(it, EcsTimer, 1);
-    EcsTickSource *tick_source = ecs_column(it, EcsTickSource, 2);
+    EcsTimer *timer = ecs_term(it, EcsTimer, 1);
+    EcsTickSource *tick_source = ecs_term(it, EcsTickSource, 2);
 
     ecs_assert(timer != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -21839,8 +21907,8 @@ void ProgressTimers(ecs_iter_t *it) {
 
 static
 void ProgressRateFilters(ecs_iter_t *it) {
-    EcsRateFilter *filter = ecs_column(it, EcsRateFilter, 1);
-    EcsTickSource *tick_dst = ecs_column(it, EcsTickSource, 2);
+    EcsRateFilter *filter = ecs_term(it, EcsRateFilter, 1);
+    EcsTickSource *tick_dst = ecs_term(it, EcsTickSource, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -22684,7 +22752,7 @@ static
 void OnSetTrigger(
     ecs_iter_t *it)
 {
-    EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
+    EcsTrigger *ct = ecs_term(it, EcsTrigger, 1);
     
     trigger_set(it->world, it->entities, ct, it->count);
 }
@@ -22693,8 +22761,8 @@ static
 void OnSetTriggerCtx(
     ecs_iter_t *it)
 {
-    EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
-    EcsContext *ctx = ecs_column(it, EcsContext, 2);
+    EcsTrigger *ct = ecs_term(it, EcsTrigger, 1);
+    EcsContext *ctx = ecs_term(it, EcsContext, 2);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -22709,7 +22777,7 @@ static
 void OnSetComponentLifecycle(
     ecs_iter_t *it)
 {
-    EcsComponentLifecycle *cl = ecs_column(it, EcsComponentLifecycle, 1);
+    EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
     ecs_world_t *world = it->world;
 
     int i;
@@ -22724,7 +22792,7 @@ static
 void DisableSystem(
     ecs_iter_t *it)
 {
-    EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
+    EcsSystem *system_data = ecs_term(it, EcsSystem, 1);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -22738,7 +22806,7 @@ static
 void EnableSystem(
     ecs_iter_t *it)
 {
-    EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
+    EcsSystem *system_data = ecs_term(it, EcsSystem, 1);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -22755,7 +22823,7 @@ void CreateSignature(
     ecs_world_t *world = it->world;
     ecs_entity_t *entities = it->entities;
 
-    EcsSignatureExpr *signature = ecs_column(it, EcsSignatureExpr, 1);
+    EcsSignatureExpr *signature = ecs_term(it, EcsSignatureExpr, 1);
     
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -22784,7 +22852,7 @@ void CreateQuery(
     ecs_world_t *world = it->world;
     ecs_entity_t *entities = it->entities;
 
-    EcsSignature *signature = ecs_column(it, EcsSignature, 1);
+    EcsSignature *signature = ecs_term(it, EcsSignature, 1);
     
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -22806,9 +22874,9 @@ void CreateSystem(
     ecs_world_t *world = it->world;
     ecs_entity_t *entities = it->entities;
 
-    EcsQuery *query = ecs_column(it, EcsQuery, 1);
-    EcsIterAction *action = ecs_column(it, EcsIterAction, 2);
-    EcsContext *ctx = ecs_column(it, EcsContext, 3);
+    EcsQuery *query = ecs_term(it, EcsQuery, 1);
+    EcsIterAction *action = ecs_term(it, EcsIterAction, 2);
+    EcsContext *ctx = ecs_term(it, EcsContext, 3);
     
     int32_t i;
     for (i = 0; i < it->count; i ++) {
