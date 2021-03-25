@@ -4,7 +4,7 @@ typedef struct Pair {
     float value;
 } Pair;
 
-void Traits_add_component_trait() {
+void Pairs_add_component_pair() {
     flecs::world world;
 
     auto entity = world.entity()
@@ -17,7 +17,7 @@ void Traits_add_component_trait() {
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 }
 
-void Traits_add_tag_trait() {
+void Pairs_add_tag_pair() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -32,7 +32,7 @@ void Traits_add_tag_trait() {
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 }
 
-void Traits_add_tag_trait_to_tag() {
+void Pairs_add_tag_pair_to_tag() {
     flecs::world world;
 
     auto Tag = world.entity("Tag");
@@ -46,7 +46,7 @@ void Traits_add_tag_trait_to_tag() {
     test_str(entity.type().str().c_str(), "(Pair,Tag)");
 }
 
-void Traits_remove_component_trait() {
+void Pairs_remove_component_pair() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -65,7 +65,7 @@ void Traits_remove_component_trait() {
     test_assert(!(entity.has<Position, Pair>()));
 }
 
-void Traits_remove_tag_trait() {
+void Pairs_remove_tag_pair() {
     flecs::world world;
 
     flecs::component<Position>(world, "Position");
@@ -83,7 +83,7 @@ void Traits_remove_tag_trait() {
     test_assert(!entity.has<Position>(Pair));
 }
 
-void Traits_remove_tag_trait_to_tag() {
+void Pairs_remove_tag_pair_to_tag() {
     flecs::world world;
 
     auto Tag = world.entity("Tag");
@@ -100,7 +100,7 @@ void Traits_remove_tag_trait_to_tag() {
     test_assert(!entity.has(Tag, Pair));
 }
 
-void Traits_set_component_trait() {
+void Pairs_set_component_pair() {
     flecs::world world;
 
     auto entity = world.entity()
@@ -116,7 +116,7 @@ void Traits_set_component_trait() {
     test_int(t->value, 10);
 }
 
-void Traits_set_tag_trait() {
+void Pairs_set_tag_pair() {
     flecs::world world;
 
     auto Pair = world.entity("Pair");
@@ -134,7 +134,7 @@ void Traits_set_tag_trait() {
     test_int(p->y, 20);
 }
 
-void Traits_system_1_trait_instance() {
+void Pairs_system_1_pair_instance() {
     flecs::world world;
 
     world.entity()
@@ -161,7 +161,7 @@ void Traits_system_1_trait_instance() {
     test_int(trait_value, 10);
 }
 
-void Traits_system_2_trait_instances() {
+void Pairs_system_2_pair_instances() {
     flecs::world world;
 
     world.entity()
@@ -189,7 +189,7 @@ void Traits_system_2_trait_instances() {
     test_int(trait_value, 30);
 }
 
-void Traits_override_trait() {
+void Pairs_override_pair() {
     flecs::world world;
 
     auto base = world.entity()
@@ -216,7 +216,7 @@ void Traits_override_trait() {
     test_assert(t == t_2);    
 }
 
-void Traits_override_tag_trait() {
+void Pairs_override_tag_pair() {
     flecs::world world;
 
     auto Pair = world.entity();
@@ -248,7 +248,7 @@ void Traits_override_tag_trait() {
     test_assert(t == t_2); 
 }
 
-void Traits_get_mut_trait() {
+void Pairs_get_mut_pair() {
     flecs::world world;
 
     auto e = world.entity();
@@ -264,7 +264,7 @@ void Traits_get_mut_trait() {
     test_int(t->value, 10);
 }
 
-void Traits_get_mut_trait_existing() {
+void Pairs_get_mut_pair_existing() {
     flecs::world world;
 
     auto e = world.entity()
@@ -282,7 +282,7 @@ void Traits_get_mut_trait_existing() {
     test_int(t->value, 10);
 }
 
-void Traits_get_mut_trait_tag() {
+void Pairs_get_mut_pair_tag() {
     flecs::world world;
 
     auto Pair = world.entity();
@@ -302,7 +302,7 @@ void Traits_get_mut_trait_tag() {
     test_int(p->y, 20);
 }
 
-void Traits_get_mut_trait_tag_existing() {
+void Pairs_get_mut_pair_tag_existing() {
     flecs::world world;
 
     auto Pair = world.entity();
@@ -323,7 +323,7 @@ void Traits_get_mut_trait_tag_existing() {
     test_int(p->y, 20);
 }
 
-void Traits_type_w_trait() {
+void Pairs_type_w_pair() {
     flecs::world world;
 
     auto Type = world.type()
@@ -335,7 +335,7 @@ void Traits_type_w_trait() {
     test_assert((e.has<Pair, Position>()));
 }
 
-void Traits_type_w_trait_tag() {
+void Pairs_type_w_pair_tag() {
     flecs::world world;
 
     auto Tag = world.entity();
@@ -349,7 +349,7 @@ void Traits_type_w_trait_tag() {
     test_assert((e.has<Pair>(Tag)));
 }
 
-void Traits_type_w_trait_tags() {
+void Pairs_type_w_pair_tags() {
     flecs::world world;
 
     auto Tag = world.entity();
@@ -364,7 +364,7 @@ void Traits_type_w_trait_tags() {
     test_assert((e.has(Pair, Tag)));
 }
 
-void Traits_type_w_tag_trait() {
+void Pairs_type_w_tag_pair() {
     flecs::world world;
 
     auto Tag = world.entity();
@@ -378,7 +378,7 @@ void Traits_type_w_tag_trait() {
     test_assert((e.has<Pair>(Tag)));
 }
 
-void Traits_override_trait_w_type() {
+void Pairs_override_pair_w_type() {
     flecs::world world;
 
     auto Prefab = world.prefab("Prefab")
@@ -404,7 +404,7 @@ void Traits_override_trait_w_type() {
     test_int(t_2->value, 10);
 }
 
-void Traits_override_trait_w_type_tag() {
+void Pairs_override_pair_w_type_tag() {
     flecs::world world;
 
     auto Tag = world.entity();
@@ -432,7 +432,7 @@ void Traits_override_trait_w_type_tag() {
     test_int(t_2->value, 10);    
 }
 
-void Traits_override_tag_trait_w_type() {
+void Pairs_override_tag_pair_w_type() {
     flecs::world world;
 
     auto Pair = world.entity();
@@ -460,4 +460,84 @@ void Traits_override_tag_trait_w_type() {
     test_assert(p_1 != p_2);
     test_int(p_2->x, 10);
     test_int(p_2->y, 20);
+}
+
+void Pairs_get_relation_from_id() {
+    flecs::world world;
+
+    auto rel = world.entity();
+    auto obj = world.entity();
+
+    flecs::id pair(rel, obj);
+
+    test_assert(pair.relation() == rel);
+    test_assert(pair.object() != rel);
+
+    test_assert(pair.relation().is_alive());
+    test_assert(pair.relation().is_valid());
+}
+
+void Pairs_get_object_from_id() {
+    flecs::world world;
+
+    auto rel = world.entity();
+    auto obj = world.entity();
+
+    flecs::id pair(rel, obj);
+
+    test_assert(pair.relation() != obj);
+    test_assert(pair.object() == obj);
+
+    test_assert(pair.object().is_alive());
+    test_assert(pair.object().is_valid());
+}
+
+void Pairs_get_recycled_relation_from_id() {
+    flecs::world world;
+
+    auto rel = world.entity();
+    auto obj = world.entity();
+
+    rel.destruct();
+    obj.destruct();
+
+    rel = world.entity();
+    obj = world.entity();
+
+    // Make sure ids are recycled
+    test_assert((uint32_t)rel.id() != rel.id());
+    test_assert((uint32_t)obj.id() != obj.id());
+
+    flecs::id pair(rel, obj);
+
+    test_assert(pair.relation() == rel);
+    test_assert(pair.object() != rel);
+
+    test_assert(pair.relation().is_alive());
+    test_assert(pair.relation().is_valid());
+}
+
+void Pairs_get_recycled_object_from_id() {
+    flecs::world world;
+
+    auto rel = world.entity();
+    auto obj = world.entity();
+
+    rel.destruct();
+    obj.destruct();
+
+    rel = world.entity();
+    obj = world.entity();
+
+    // Make sure ids are recycled
+    test_assert((uint32_t)rel.id() != rel.id());
+    test_assert((uint32_t)obj.id() != obj.id());
+
+    flecs::id pair(rel, obj);
+
+    test_assert(pair.relation() == rel);
+    test_assert(pair.object() != rel);
+
+    test_assert(pair.object().is_alive());
+    test_assert(pair.object().is_valid());
 }

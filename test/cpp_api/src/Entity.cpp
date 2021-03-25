@@ -433,7 +433,7 @@ void Entity_has_role() {
     test_assert(!entity.has_role(flecs::Pair));
 }
 
-void Entity_trait_role() {
+void Entity_pair_role() {
     flecs::world world;
 
     auto a = world.entity();
@@ -642,7 +642,7 @@ void Entity_force_owned_type() {
     test_assert(!e.owns<Rotation>());
 }
 
-void Entity_force_owned_type_w_trait() {
+void Entity_force_owned_type_w_pair() {
     flecs::world world;
 
     auto type = world.type()

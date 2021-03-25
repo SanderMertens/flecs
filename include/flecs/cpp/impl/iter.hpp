@@ -23,13 +23,13 @@ inline flecs::entity iter::entity(size_t row) const {
 /* Obtain column source (0 if self) */
 template <typename Base>
 inline flecs::entity iter_deprecated<Base>::column_source(int32_t col) const {
-    return flecs::entity(iter()->world, ecs_column_source(iter(), col));
+    return flecs::entity(iter()->world, ecs_term_source(iter(), col));
 }
 
 /* Obtain component/tag entity of column */
 template <typename Base>
 inline flecs::entity iter_deprecated<Base>::column_entity(int32_t col) const {
-    return flecs::entity(iter()->world, ecs_column_entity(iter(), col));
+    return flecs::entity(iter()->world, ecs_term_id(iter(), col));
 }
 
 /* Obtain type of column */
@@ -47,6 +47,14 @@ inline type iter_deprecated<Base>::table_type() const {
 template <typename T>
 inline column<T>::column(iter &iter, int32_t index) {
     *this = iter.term<T>(index);
+}
+
+inline flecs::entity iter::term_source(int32_t index) const {
+    return flecs::entity(m_iter->world, ecs_term_source(m_iter, index));
+}
+
+inline flecs::entity iter::term_id(int32_t index) const {
+    return flecs::entity(m_iter->world, ecs_term_id(m_iter, index));
 }
 
 } // namespace flecs

@@ -498,7 +498,7 @@ void Query_subquery_w_expr() {
     test_int(v->y, 2);
 }
 
-void Query_query_single_trait() {
+void Query_query_single_pair() {
     flecs::world world;
 
     flecs::entity(world).add<Pair, Position>();

@@ -10,6 +10,102 @@ class entity_deprecated { };
 namespace flecs 
 {
 
+/** Class that stores a flecs id.
+ * A flecs id is an identifier that can store an entity id, an relation-object 
+ * pair, or role annotated id (such as SWITCH | Movement).
+ */
+class id {
+public:
+    id() 
+        : m_world(nullptr)
+        , m_id(0) { }
+
+    explicit id(flecs::id_t value) 
+        : m_world(nullptr)
+        , m_id(value) { }
+
+    explicit id(flecs::world_t *world, flecs::id_t value) 
+        : m_world(world)
+        , m_id(value) { }
+
+    explicit id(flecs::world_t *world, flecs::id_t relation, flecs::id_t object)
+        : m_world(world)
+        , m_id(ecs_pair(relation, object)) { }
+
+    explicit id(flecs::id_t relation, flecs::id_t object)
+        : m_world(nullptr)
+        , m_id(ecs_pair(relation, object)) { }
+
+    explicit id(const flecs::id& relation, const flecs::id& object)
+        : m_world(relation.world())
+        , m_id(ecs_pair(relation.m_id, object.m_id)) { }
+
+    /** Test if id is pair (has relation, object) */
+    bool is_pair() const {
+        return (m_id & ECS_ROLE_MASK) == flecs::Pair;
+    }
+
+    /* Test if id has the Switch role */
+    bool is_switch() const {
+        return (m_id & ECS_ROLE_MASK) == flecs::Switch;
+    }
+
+    /* Test if id has the Case role */
+    bool is_case() const {
+        return (m_id & ECS_ROLE_MASK) == flecs::Case;
+    }
+
+    /* Return id with role added */
+    flecs::id add_role(flecs::id_t role) const {
+        return flecs::id(m_world, m_id | role);
+    }
+
+    /* Return id with role removed */
+    flecs::entity remove_role(flecs::id_t role) const;
+
+    /* Return id without role */
+    flecs::entity remove_role() const;
+
+    /* Test if id has specified role */
+    bool has_role(flecs::id_t role) const {        
+        return ((m_id & ECS_ROLE_MASK) == role);
+    }
+
+    /* Test if id has any role */
+    bool has_role() const {
+        return (m_id & ECS_ROLE_MASK) != 0;
+    }
+
+    /** Get relation from pair.
+     * If the id is not a pair, this operation will fail. When the id has a
+     * world, the operation will ensure that the returned id has the correct
+     * generation count.
+     */
+    flecs::entity relation() const;
+
+    /** Get object from pair.
+     * If the id is not a pair, this operation will fail. When the id has a
+     * world, the operation will ensure that the returned id has the correct
+     * generation count.
+     */
+    flecs::entity object() const;
+
+    /* Get entity.
+     * This operation will fail if the id is not a valid entity identifier. */
+    flecs::entity entity() const;
+
+    /** Get world. */
+    flecs::world_t* world() const {
+        return m_world;
+    }
+
+protected:
+    /* World is optional, but guarantees that entity identifiers extracted from
+     * the id are valid */
+    flecs::world_t *m_world;
+    flecs::id_t m_id;
+};
+
 /** Fluent API for chaining entity operations
  * This class contains entity operations that can be chained. For example, by
  * using this class, an entity can be created like this:
@@ -502,12 +598,12 @@ private:
     flecs::ref_t m_ref;
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Entity class
  * This class provides access to entity operations. */
 class entity : 
+    public id,
     public entity_builder<entity>, 
     public entity_deprecated<entity>, 
     public entity_builder_deprecated<entity> 
@@ -516,16 +612,14 @@ public:
     /** Default constructor.
      */
     explicit entity()
-        : m_world( nullptr )
-        , m_id( 0 ) { }
+        : flecs::id() { }
 
     /** Create entity.
      *
      * @param world The world in which to create the entity.
      */
     explicit entity(const flecs::world& world) 
-        : m_world( world.get_world().c_ptr() )
-        , m_id( ecs_new_w_type(world.c_ptr(), 0) ) { }
+        : flecs::id( world.get_world(), ecs_new_w_type(world.c_ptr(), 0) ) { }
 
     /** Create a named entity.
      * Named entities can be looked up with the lookup functions. Entity names
@@ -538,9 +632,10 @@ public:
      * @param is_component If true, the entity will be created from the pool of component ids (default = false).
      */
     explicit entity(const flecs::world& world, const char *name, bool is_component = false) 
-        : m_world( world.get_world().c_ptr() )
-        , m_id( ecs_lookup_path_w_sep(m_world, 0, name, "::", "::") ) 
+        : flecs::id( world.get_world(), 0)
         { 
+            m_id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
+
             if (!m_id) {
                 if (is_component) {
                     m_id = ecs_new_component_id(m_world);
@@ -556,9 +651,8 @@ public:
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    explicit entity(const flecs::world& world, const entity& id) 
-        : m_world( world.get_world().c_ptr() )
-        , m_id(id.id()) { }
+    explicit entity(const flecs::world& world, const entity& id)
+        : flecs::id( world.get_world(), id.id() ) { }
 
     /** Wrap an existing entity id.
      *
@@ -566,13 +660,15 @@ public:
      * @param id The entity id.
      */
     explicit entity(world_t *world, const entity& id) 
-        : m_world( flecs::world(world).get_world().c_ptr() )
-        , m_id(id.id()) { }
+        : flecs::id( flecs::world(world).get_world(), id.id() ) { }
 
     /** Implicit conversion from flecs::entity_t to flecs::entity. */
     entity(entity_t id) 
-        : m_world(nullptr)
-        , m_id(id) { }
+        : flecs::id( nullptr, id ) { }
+
+    /** Implicit conversion from flecs::id to flecs::entity. */
+    entity(flecs::id value) 
+        : flecs::id( value ) { }
 
     /** Equality operator. */
     bool operator==(const entity& e) {
@@ -609,60 +705,6 @@ public:
      */
     entity_t id() const {
         return m_id;
-    }
-
-    /** Get lo entity id.
-     * @return A new entity containing the lower 32 bits of the entity id.
-     */
-    flecs::entity lo() const {
-        return flecs::entity(m_world, ecs_entity_t_lo(m_id));
-    }
-
-    /** Get hi entity id.
-     * @return A new entity containing the higher 32 bits of the entity id.
-     */
-    flecs::entity hi() const {
-        return flecs::entity(m_world, ecs_entity_t_hi(m_id));
-    }
-
-    /** Combine two entity ids.
-     * @return A new entity that combines the provided entity ids in the lower
-     *         and higher 32 bits of the entity id.
-     */
-    static 
-    flecs::entity comb(flecs::entity lo, flecs::entity hi) {
-        return flecs::entity(lo.world(), 
-            ecs_entity_t_comb(lo.id(), hi.id()));
-    }
-
-    /** Add role.
-     * Roles are added to entity ids in types to indicate which role they play.
-     * Examples of roles are flecs::Instanceof and flecs::Childof. 
-     *
-     * @return A new entity with the specified role set.
-     */
-    flecs::entity add_role(entity_t role) const {
-        return flecs::entity(m_world, m_id | role);
-    }
-
-    /** Remove role.
-     * Roles are added to entity ids in types to indicate which role they play.
-     * Examples of roles are flecs::Instanceof and flecs::Childof. 
-     *    
-     * @return A new entity with any roles removed.
-     */
-    flecs::entity remove_role() const {
-        return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
-    }
-
-    /** Check if entity has specified role.
-     * Roles are added to entity ids in types to indicate which role they play.
-     * Examples of roles are flecs::Instanceof and flecs::Childof. 
-     *    
-     * @return True if the entity has the role, false otherwise.
-     */
-    bool has_role(entity_t role) const {        
-        return ((m_id & ECS_ROLE_MASK) == role);
     }
 
     /** Check is entity is valid.
@@ -1258,9 +1300,6 @@ protected:
         m_world = stage;
         return *this;
     }
-
-    world_t *m_world;
-    entity_t m_id;
 };
 
 /** Prefab class */

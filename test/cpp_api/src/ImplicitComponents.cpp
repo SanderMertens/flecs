@@ -64,7 +64,7 @@ void ImplicitComponents_get() {
     test_assert(position.id() != 0);
 }
 
-void ImplicitComponents_add_trait() {
+void ImplicitComponents_add_pair() {
     flecs::world world;
 
     auto e = world.entity().add<Pair, Position>();
@@ -79,7 +79,7 @@ void ImplicitComponents_add_trait() {
     test_assert(pair.id() != 0);    
 }
 
-void ImplicitComponents_remove_trait() {
+void ImplicitComponents_remove_pair() {
     flecs::world world;
 
     auto e = world.entity().remove<Position, Pair>();

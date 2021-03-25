@@ -39,6 +39,9 @@ public:
         obj.m_owned = false;
     }
 
+    /* Implicit conversion to world_t* */
+    operator world_t*() const { return m_world; }
+
     /** Not allowed to copy a world. May only take a reference.
      */
     world& operator=(const world& obj) = delete;
