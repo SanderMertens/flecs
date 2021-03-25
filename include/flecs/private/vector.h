@@ -488,11 +488,11 @@ public:
     }
 
     T& first() {
-        return static_cast<T*>(_ecs_vector_first(m_vector, ECS_VECTOR_T(T)));
+        return *static_cast<T*>(_ecs_vector_first(m_vector, ECS_VECTOR_T(T)));
     }
 
     T& last() {
-        return static_cast<T*>(_ecs_vector_last(m_vector, ECS_VECTOR_T(T)));
+        return *static_cast<T*>(_ecs_vector_last(m_vector, ECS_VECTOR_T(T)));
     }
 
     int32_t count() {
