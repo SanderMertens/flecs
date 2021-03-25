@@ -8431,6 +8431,7 @@ namespace flecs {
 ////////////////////////////////////////////////////////////////////////////////
 
 using world_t = ecs_world_t;
+using id_t = ecs_id_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using snapshot_t = ecs_snapshot_t;
@@ -8485,53 +8486,53 @@ using ViewAction = EcsIterAction;
 using Context = EcsContext;
 
 /* Builtin tag ids */
-static const ecs_entity_t Module = EcsModule;
-static const ecs_entity_t Prefab = EcsPrefab;
-static const ecs_entity_t Hidden = EcsHidden;
-static const ecs_entity_t Disabled = EcsDisabled;
-static const ecs_entity_t DisabledIntern = EcsDisabledIntern;
-static const ecs_entity_t Inactive = EcsInactive;
-static const ecs_entity_t OnDemand = EcsOnDemand;
-static const ecs_entity_t Monitor = EcsMonitor;
-static const ecs_entity_t Pipeline = EcsPipeline;
+static const flecs::entity_t Module = EcsModule;
+static const flecs::entity_t Prefab = EcsPrefab;
+static const flecs::entity_t Hidden = EcsHidden;
+static const flecs::entity_t Disabled = EcsDisabled;
+static const flecs::entity_t DisabledIntern = EcsDisabledIntern;
+static const flecs::entity_t Inactive = EcsInactive;
+static const flecs::entity_t OnDemand = EcsOnDemand;
+static const flecs::entity_t Monitor = EcsMonitor;
+static const flecs::entity_t Pipeline = EcsPipeline;
 
 /* Trigger tags */
-static const ecs_entity_t OnAdd = EcsOnAdd;
-static const ecs_entity_t OnRemove = EcsOnRemove;
-static const ecs_entity_t OnSet = EcsOnSet;
+static const flecs::entity_t OnAdd = EcsOnAdd;
+static const flecs::entity_t OnRemove = EcsOnRemove;
+static const flecs::entity_t OnSet = EcsOnSet;
 
 /* Builtin pipeline tags */
-static const ecs_entity_t PreFrame = EcsPreFrame;
-static const ecs_entity_t OnLoad = EcsOnLoad;
-static const ecs_entity_t PostLoad = EcsPostLoad;
-static const ecs_entity_t PreUpdate = EcsPreUpdate;
-static const ecs_entity_t OnUpdate = EcsOnUpdate;
-static const ecs_entity_t OnValidate = EcsOnValidate;
-static const ecs_entity_t PostUpdate = EcsPostUpdate;
-static const ecs_entity_t PreStore = EcsPreStore;
-static const ecs_entity_t OnStore = EcsOnStore;
-static const ecs_entity_t PostFrame = EcsPostFrame;
+static const flecs::entity_t PreFrame = EcsPreFrame;
+static const flecs::entity_t OnLoad = EcsOnLoad;
+static const flecs::entity_t PostLoad = EcsPostLoad;
+static const flecs::entity_t PreUpdate = EcsPreUpdate;
+static const flecs::entity_t OnUpdate = EcsOnUpdate;
+static const flecs::entity_t OnValidate = EcsOnValidate;
+static const flecs::entity_t PostUpdate = EcsPostUpdate;
+static const flecs::entity_t PreStore = EcsPreStore;
+static const flecs::entity_t OnStore = EcsOnStore;
+static const flecs::entity_t PostFrame = EcsPostFrame;
 
 /** Builtin roles */
-static const ecs_entity_t Pair = ECS_PAIR;
-static const ecs_entity_t Switch = ECS_SWITCH;
-static const ecs_entity_t Case = ECS_CASE;
-static const ecs_entity_t Owned = ECS_OWNED;
+static const flecs::entity_t Pair = ECS_PAIR;
+static const flecs::entity_t Switch = ECS_SWITCH;
+static const flecs::entity_t Case = ECS_CASE;
+static const flecs::entity_t Owned = ECS_OWNED;
 
 /* Builtin entity ids */
-static const ecs_entity_t Flecs = EcsFlecs;
-static const ecs_entity_t FlecsCore = EcsFlecsCore;
-static const ecs_entity_t World = World;
+static const flecs::entity_t Flecs = EcsFlecs;
+static const flecs::entity_t FlecsCore = EcsFlecsCore;
+static const flecs::entity_t World = World;
 
 /* Ids used by rule solver */
-static const ecs_entity_t Wildcard = EcsWildcard;
-static const ecs_entity_t This = EcsThis;
-static const ecs_entity_t Transitive = EcsTransitive;
-static const ecs_entity_t Final = EcsFinal;
+static const flecs::entity_t Wildcard = EcsWildcard;
+static const flecs::entity_t This = EcsThis;
+static const flecs::entity_t Transitive = EcsTransitive;
+static const flecs::entity_t Final = EcsFinal;
 
 /* Builtin relationships */
-static const ecs_entity_t IsA = EcsIsA;
-static const ecs_entity_t ChildOf = EcsChildOf;
+static const flecs::entity_t IsA = EcsIsA;
+static const flecs::entity_t ChildOf = EcsChildOf;
 
 }
 
@@ -9132,63 +9133,81 @@ namespace flecs
 template<typename Base>
 class iter_deprecated {
 public:
+    ECS_DEPRECATED("use term_count(int32_t)")
     int32_t column_count() const {
         return base()->term_count();
     }
 
+    ECS_DEPRECATED("use term_size(int32_t)")
     size_t column_size(int32_t col) const {
         return base()->term_size(col);
     }
     
+    ECS_DEPRECATED("use is_owned(int32_t)")
     bool is_shared(int32_t col) const {
         return !base()->is_owned(col);
     }
 
+    ECS_DEPRECATED("use term_source(int32_t)")
     flecs::entity column_source(int32_t col) const;
 
+    ECS_DEPRECATED("use term_id(int32_t)")
     flecs::entity column_entity(int32_t col) const;
 
+    ECS_DEPRECATED("no replacement")
     flecs::type column_type(int32_t col) const;
 
+    ECS_DEPRECATED("use type()")
     type table_type() const; 
 
     template <typename T,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
+    ECS_DEPRECATED("use term<const T>(int32_t)")
     flecs::column<T> column(int32_t col) const {
         return base()->template term<T>(col);
     }
 
     template <typename T,
-        typename std::enable_if<std::is_const<T>::value == false, void>::type* = nullptr>
+        typename std::enable_if<
+            std::is_const<T>::value == false, void>::type* = nullptr>
+    ECS_DEPRECATED("use term<T>(int32_t)")
     flecs::column<T> column(int32_t col) const {
-        ecs_assert(!ecs_is_readonly(iter(), col), ECS_COLUMN_ACCESS_VIOLATION, NULL);
+        ecs_assert(!ecs_is_readonly(iter(), col), 
+            ECS_COLUMN_ACCESS_VIOLATION, NULL);
         return base()->template term<T>(col);
     }  
 
+    ECS_DEPRECATED("use term(int32_t)")
     flecs::unsafe_column column(int32_t col) const {
         return base()->term(col);
     }
 
     template <typename T>
+    ECS_DEPRECATED("use owned<T>(int32_t)")
     flecs::column<T> owned(int32_t col) const {
         return base()->template owned<T>(col);
     }
 
     template <typename T>
+    ECS_DEPRECATED("use shared<T>(int32_t)")
     const T& shared(int32_t col) const {
         return base()->template shared<T>(col);
     }
 
     template <typename T,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>    
+    ECS_DEPRECATED("no replacement")
     T& element(int32_t col, int32_t row) const {
         return base()->template get_element<T>(col, row);
     }
 
     template <typename T,
-        typename std::enable_if<std::is_const<T>::value == false, void>::type* = nullptr>
+        typename std::enable_if<
+            std::is_const<T>::value == false, void>::type* = nullptr>
+    ECS_DEPRECATED("no replacement")
     T& element(int32_t col, int32_t row) const {
-        ecs_assert(!ecs_is_readonly(iter(), col), ECS_COLUMN_ACCESS_VIOLATION, NULL);
+        ecs_assert(!ecs_is_readonly(iter(), col), 
+            ECS_COLUMN_ACCESS_VIOLATION, NULL);
         return base()->template get_element<T>(col, row);
     }
 
@@ -9271,7 +9290,7 @@ public:
     
     /** Obtain type of the entities being iterated over.
      */
-    type type() const;    
+    flecs::type type() const;
 
     /** Access param field. 
      * The param field contains the value assigned to flecs::Context, or the
@@ -9557,6 +9576,9 @@ public:
         obj.m_world = nullptr;
         obj.m_owned = false;
     }
+
+    /* Implicit conversion to world_t* */
+    operator world_t*() const { return m_world; }
 
     /** Not allowed to copy a world. May only take a reference.
      */
@@ -10457,6 +10479,23 @@ public:
             e.id(), trait.id()));
     }
 
+    ECS_DEPRECATED("use object()")
+    Base lo() const {
+        return Base(world(), ecs_entity_t_lo(id()));
+    }
+
+    ECS_DEPRECATED("use relation()")
+    Base hi() const {
+        return Base(world(), ecs_entity_t_hi(id()));
+    }
+
+    ECS_DEPRECATED("use flecs::id(relation, object)")
+    static 
+    Base comb(Base lo, Base hi) {
+        return Base(lo.world(), 
+            ecs_entity_t_comb(lo.id(), hi.id()));
+    }
+
 private:
     const Base* base() const { return static_cast<const Base*>(this); }
     flecs::world_t* world() const { return base()->world().c_ptr(); }
@@ -10472,6 +10511,113 @@ class entity_deprecated { };
 
 namespace flecs 
 {
+
+/** Class that stores a flecs id.
+ * A flecs id is an identifier that can store an entity id, an relation-object 
+ * pair, or role annotated id (such as SWITCH | Movement).
+ */
+class id {
+public:
+    id() 
+        : m_world(nullptr)
+        , m_id(0) { }
+
+    explicit id(flecs::id_t value) 
+        : m_world(nullptr)
+        , m_id(value) { }
+
+    explicit id(flecs::world_t *world, flecs::id_t value) 
+        : m_world(world)
+        , m_id(value) { }
+
+    explicit id(flecs::world_t *world, flecs::id_t relation, flecs::id_t object)
+        : m_world(world)
+        , m_id(ecs_pair(relation, object)) { }
+
+    explicit id(flecs::id_t relation, flecs::id_t object)
+        : m_world(nullptr)
+        , m_id(ecs_pair(relation, object)) { }
+
+    explicit id(const flecs::id& relation, const flecs::id& object)
+        : m_world(relation.world())
+        , m_id(ecs_pair(relation.m_id, object.m_id)) { }
+
+    /** Test if id is pair (has relation, object) */
+    bool is_pair() const {
+        return (m_id & ECS_ROLE_MASK) == flecs::Pair;
+    }
+
+    /* Test if id has the Switch role */
+    bool is_switch() const {
+        return (m_id & ECS_ROLE_MASK) == flecs::Switch;
+    }
+
+    /* Test if id has the Case role */
+    bool is_case() const {
+        return (m_id & ECS_ROLE_MASK) == flecs::Case;
+    }
+
+    /* Return id with role added */
+    flecs::id add_role(flecs::id_t role) const {
+        return flecs::id(m_world, m_id | role);
+    }
+
+    /* Return id with role removed */
+    flecs::entity remove_role(flecs::id_t role) const;
+
+    /* Return id without role */
+    flecs::entity remove_role() const;
+
+    /* Test if id has specified role */
+    bool has_role(flecs::id_t role) const {
+        return ((m_id & ECS_ROLE_MASK) == role);
+    }
+
+    /* Test if id has any role */
+    bool has_role() const {
+        return (m_id & ECS_ROLE_MASK) != 0;
+    }
+
+    flecs::entity role() const;
+
+    /* Test if id has specified relation */
+    bool has_relation(flecs::id_t relation) const {
+        if (!is_pair()) {
+            return false;
+        }
+        return ECS_PAIR_RELATION(m_id) == relation;
+    }
+
+    /** Get relation from pair.
+     * If the id is not a pair, this operation will fail. When the id has a
+     * world, the operation will ensure that the returned id has the correct
+     * generation count.
+     */
+    flecs::entity relation() const;
+
+    /** Get object from pair.
+     * If the id is not a pair, this operation will fail. When the id has a
+     * world, the operation will ensure that the returned id has the correct
+     * generation count.
+     */
+    flecs::entity object() const;
+
+    /** Get world. */
+    flecs::world_t* world() const {
+        return m_world;
+    }
+
+    /** Convert id to string. */
+    flecs::string role_str() const {
+        return flecs::string_view( ecs_role_str(m_id & ECS_ROLE_MASK));
+    }
+
+protected:
+    /* World is optional, but guarantees that entity identifiers extracted from
+     * the id are valid */
+    flecs::world_t *m_world;
+    flecs::id_t m_id;
+};
 
 /** Fluent API for chaining entity operations
  * This class contains entity operations that can be chained. For example, by
@@ -10965,12 +11111,12 @@ private:
     flecs::ref_t m_ref;
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Entity class
  * This class provides access to entity operations. */
 class entity : 
+    public id,
     public entity_builder<entity>, 
     public entity_deprecated<entity>, 
     public entity_builder_deprecated<entity> 
@@ -10979,16 +11125,14 @@ public:
     /** Default constructor.
      */
     explicit entity()
-        : m_world( nullptr )
-        , m_id( 0 ) { }
+        : flecs::id() { }
 
     /** Create entity.
      *
      * @param world The world in which to create the entity.
      */
     explicit entity(const flecs::world& world) 
-        : m_world( world.get_world().c_ptr() )
-        , m_id( ecs_new_w_type(world.c_ptr(), 0) ) { }
+        : flecs::id( world.get_world(), ecs_new_w_type(world.c_ptr(), 0) ) { }
 
     /** Create a named entity.
      * Named entities can be looked up with the lookup functions. Entity names
@@ -11001,9 +11145,10 @@ public:
      * @param is_component If true, the entity will be created from the pool of component ids (default = false).
      */
     explicit entity(const flecs::world& world, const char *name, bool is_component = false) 
-        : m_world( world.get_world().c_ptr() )
-        , m_id( ecs_lookup_path_w_sep(m_world, 0, name, "::", "::") ) 
+        : flecs::id( world.get_world(), 0)
         { 
+            m_id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
+
             if (!m_id) {
                 if (is_component) {
                     m_id = ecs_new_component_id(m_world);
@@ -11019,9 +11164,8 @@ public:
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    explicit entity(const flecs::world& world, const entity& id) 
-        : m_world( world.get_world().c_ptr() )
-        , m_id(id.id()) { }
+    explicit entity(const flecs::world& world, const entity& id)
+        : flecs::id( world.get_world(), id.id() ) { }
 
     /** Wrap an existing entity id.
      *
@@ -11029,13 +11173,15 @@ public:
      * @param id The entity id.
      */
     explicit entity(world_t *world, const entity& id) 
-        : m_world( flecs::world(world).get_world().c_ptr() )
-        , m_id(id.id()) { }
+        : flecs::id( flecs::world(world).get_world(), id.id() ) { }
 
     /** Implicit conversion from flecs::entity_t to flecs::entity. */
     entity(entity_t id) 
-        : m_world(nullptr)
-        , m_id(id) { }
+        : flecs::id( nullptr, id ) { }
+
+    /** Implicit conversion from flecs::id to flecs::entity. */
+    entity(flecs::id value) 
+        : flecs::id( value ) { }
 
     /** Equality operator. */
     bool operator==(const entity& e) {
@@ -11072,60 +11218,6 @@ public:
      */
     entity_t id() const {
         return m_id;
-    }
-
-    /** Get lo entity id.
-     * @return A new entity containing the lower 32 bits of the entity id.
-     */
-    flecs::entity lo() const {
-        return flecs::entity(m_world, ecs_entity_t_lo(m_id));
-    }
-
-    /** Get hi entity id.
-     * @return A new entity containing the higher 32 bits of the entity id.
-     */
-    flecs::entity hi() const {
-        return flecs::entity(m_world, ecs_entity_t_hi(m_id));
-    }
-
-    /** Combine two entity ids.
-     * @return A new entity that combines the provided entity ids in the lower
-     *         and higher 32 bits of the entity id.
-     */
-    static 
-    flecs::entity comb(flecs::entity lo, flecs::entity hi) {
-        return flecs::entity(lo.world(), 
-            ecs_entity_t_comb(lo.id(), hi.id()));
-    }
-
-    /** Add role.
-     * Roles are added to entity ids in types to indicate which role they play.
-     * Examples of roles are flecs::Instanceof and flecs::Childof. 
-     *
-     * @return A new entity with the specified role set.
-     */
-    flecs::entity add_role(entity_t role) const {
-        return flecs::entity(m_world, m_id | role);
-    }
-
-    /** Remove role.
-     * Roles are added to entity ids in types to indicate which role they play.
-     * Examples of roles are flecs::Instanceof and flecs::Childof. 
-     *    
-     * @return A new entity with any roles removed.
-     */
-    flecs::entity remove_role() const {
-        return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
-    }
-
-    /** Check if entity has specified role.
-     * Roles are added to entity ids in types to indicate which role they play.
-     * Examples of roles are flecs::Instanceof and flecs::Childof. 
-     *    
-     * @return True if the entity has the role, false otherwise.
-     */
-    bool has_role(entity_t role) const {        
-        return ((m_id & ECS_ROLE_MASK) == role);
     }
 
     /** Check is entity is valid.
@@ -11239,6 +11331,69 @@ public:
      * @return A type that contains only this entity.
      */
     flecs::type to_type() const;
+
+    /** Iterate contents (type) of an entity.
+     */
+    template <typename Func>
+    void each(const Func& func) const {
+        const ecs_vector_t *type = ecs_get_type(m_world, m_id);
+        if (!type) {
+            return;
+        }
+
+        const ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+        int32_t count = ecs_vector_count(type);
+
+        for (int i = 0; i < count; i ++) {
+            ecs_id_t id = ids[i];
+            flecs::entity ent(m_world, id);
+            func(ent); 
+
+            // Case is not stored in type, so handle separately
+            if ((id & ECS_ROLE_MASK) == flecs::Switch) {
+                ent = flecs::entity(
+                    m_world, flecs::Case | ecs_get_case(
+                            m_world, m_id, ent.object().id()));
+                func(ent);
+            }
+        }
+    }
+
+    /** Iterate contents (type) of an entity for a specific relationship.
+     */
+    template <typename Func>
+    void each(flecs::entity_t rel, const Func& func) const {
+        const ecs_vector_t *type = ecs_get_type(m_world, m_id);
+        if (!type) {
+            return;
+        }
+
+        const ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+        int32_t count = ecs_vector_count(type);
+
+        // First, skip to the point where the relationship starts
+        // TODO: replace this with an O(1) search when the new table lookup
+        //       datastructures land
+        int i;
+        for (i = 0; i < count; i ++) {
+            ecs_id_t id = ids[i];
+            if (ECS_PAIR_RELATION(id) == rel) {
+                break;
+            }
+        }
+
+        // Iterate all entries until the relationship stops
+        for (; i < count; i ++) {
+            ecs_id_t id = ids[i];
+            if (ECS_PAIR_RELATION(id) != rel) {
+                break;
+            }
+
+            flecs::id id_cl(m_world, ids[i]);
+            flecs::entity ent(m_world, id_cl.object());
+            func(ent);         
+        }
+    }    
 
     /** Get component value.
      * 
@@ -11671,6 +11826,15 @@ public:
      */
     flecs::entity get_case(const flecs::type& sw) const;
 
+    /** Get case for switch.
+     *
+     * @param sw The switch for which to obtain the case.
+     * @return True if the entity has the provided case, false otherwise.
+     */
+    flecs::entity get_case(const flecs::entity& sw) const {
+        return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw.id()));
+    }
+
     /** Test if component is enabled.
      *
      * @tparam T The component to test.
@@ -11721,9 +11885,6 @@ protected:
         m_world = stage;
         return *this;
     }
-
-    world_t *m_world;
-    entity_t m_id;
 };
 
 /** Prefab class */
@@ -14076,6 +14237,42 @@ inline flecs::entity entity::get_case(const flecs::type& sw) const {
     return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw.id()));
 }
 
+inline flecs::entity id::role() const {
+    return flecs::entity(m_world, m_id & ECS_ROLE_MASK);
+}
+
+inline flecs::entity id::relation() const {
+    ecs_assert(is_pair(), ECS_INVALID_OPERATION, NULL);
+
+    flecs::entity_t e = ECS_PAIR_RELATION(m_id);
+    if (m_world) {
+        return flecs::entity(m_world, ecs_get_alive(m_world, e));
+    } else {
+        return flecs::entity(e);
+    }
+}
+
+inline flecs::entity id::object() const {
+    flecs::entity_t e = ECS_PAIR_OBJECT(m_id);
+    if (m_world) {
+        return flecs::entity(m_world, ecs_get_alive(m_world, e));
+    } else {
+        return flecs::entity(m_world, e);
+    }
+}
+
+/* Return id with role removed */
+inline flecs::entity id::remove_role(flecs::id_t role) const {
+    (void)role;
+    ecs_assert((m_id & ECS_ROLE_MASK) == role, ECS_INVALID_PARAMETER, NULL);
+    return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
+}
+
+/* Return id without role */
+inline flecs::entity id::remove_role() const {
+    return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
+}
+
 }
 
 namespace flecs 
@@ -14102,13 +14299,13 @@ inline flecs::entity iter::entity(size_t row) const {
 /* Obtain column source (0 if self) */
 template <typename Base>
 inline flecs::entity iter_deprecated<Base>::column_source(int32_t col) const {
-    return flecs::entity(iter()->world, ecs_column_source(iter(), col));
+    return flecs::entity(iter()->world, ecs_term_source(iter(), col));
 }
 
 /* Obtain component/tag entity of column */
 template <typename Base>
 inline flecs::entity iter_deprecated<Base>::column_entity(int32_t col) const {
-    return flecs::entity(iter()->world, ecs_column_entity(iter(), col));
+    return flecs::entity(iter()->world, ecs_term_id(iter(), col));
 }
 
 /* Obtain type of column */
@@ -14126,6 +14323,14 @@ inline type iter_deprecated<Base>::table_type() const {
 template <typename T>
 inline column<T>::column(iter &iter, int32_t index) {
     *this = iter.term<T>(index);
+}
+
+inline flecs::entity iter::term_source(int32_t index) const {
+    return flecs::entity(m_iter->world, ecs_term_source(m_iter, index));
+}
+
+inline flecs::entity iter::term_id(int32_t index) const {
+    return flecs::entity(m_iter->world, ecs_term_id(m_iter, index));
 }
 
 } // namespace flecs

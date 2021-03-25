@@ -67,13 +67,23 @@ public:
     flecs::entity remove_role() const;
 
     /* Test if id has specified role */
-    bool has_role(flecs::id_t role) const {        
+    bool has_role(flecs::id_t role) const {
         return ((m_id & ECS_ROLE_MASK) == role);
     }
 
     /* Test if id has any role */
     bool has_role() const {
         return (m_id & ECS_ROLE_MASK) != 0;
+    }
+
+    flecs::entity role() const;
+
+    /* Test if id has specified relation */
+    bool has_relation(flecs::id_t relation) const {
+        if (!is_pair()) {
+            return false;
+        }
+        return ECS_PAIR_RELATION(m_id) == relation;
     }
 
     /** Get relation from pair.
@@ -90,13 +100,14 @@ public:
      */
     flecs::entity object() const;
 
-    /* Get entity.
-     * This operation will fail if the id is not a valid entity identifier. */
-    flecs::entity entity() const;
-
     /** Get world. */
     flecs::world_t* world() const {
         return m_world;
+    }
+
+    /** Convert id to string. */
+    flecs::string role_str() const {
+        return flecs::string_view( ecs_role_str(m_id & ECS_ROLE_MASK));
     }
 
 protected:
@@ -819,6 +830,71 @@ public:
      */
     flecs::type to_type() const;
 
+    /** Iterate contents (type) of an entity.
+     */
+    template <typename Func>
+    void each(const Func& func) const {
+        const ecs_vector_t *type = ecs_get_type(m_world, m_id);
+        if (!type) {
+            return;
+        }
+
+        const ecs_id_t *ids = static_cast<ecs_id_t*>(
+            _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
+        int32_t count = ecs_vector_count(type);
+
+        for (int i = 0; i < count; i ++) {
+            ecs_id_t id = ids[i];
+            flecs::entity ent(m_world, id);
+            func(ent); 
+
+            // Case is not stored in type, so handle separately
+            if ((id & ECS_ROLE_MASK) == flecs::Switch) {
+                ent = flecs::entity(
+                    m_world, flecs::Case | ecs_get_case(
+                            m_world, m_id, ent.object().id()));
+                func(ent);
+            }
+        }
+    }
+
+    /** Iterate contents (type) of an entity for a specific relationship.
+     */
+    template <typename Func>
+    void each(flecs::entity_t rel, const Func& func) const {
+        const ecs_vector_t *type = ecs_get_type(m_world, m_id);
+        if (!type) {
+            return;
+        }
+
+        const ecs_id_t *ids = static_cast<ecs_id_t*>(
+            _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
+        int32_t count = ecs_vector_count(type);
+
+        // First, skip to the point where the relationship starts
+        // TODO: replace this with an O(1) search when the new table lookup
+        //       datastructures land
+        int i;
+        for (i = 0; i < count; i ++) {
+            ecs_id_t id = ids[i];
+            if (ECS_PAIR_RELATION(id) == rel) {
+                break;
+            }
+        }
+
+        // Iterate all entries until the relationship stops
+        for (; i < count; i ++) {
+            ecs_id_t id = ids[i];
+            if (ECS_PAIR_RELATION(id) != rel) {
+                break;
+            }
+
+            flecs::id id_cl(m_world, ids[i]);
+            flecs::entity ent(m_world, id_cl.object());
+            func(ent);         
+        }
+    }    
+
     /** Get component value.
      * 
      * @tparam T The component to get.
@@ -1249,6 +1325,15 @@ public:
      * @return True if the entity has the provided case, false otherwise.
      */
     flecs::entity get_case(const flecs::type& sw) const;
+
+    /** Get case for switch.
+     *
+     * @param sw The switch for which to obtain the case.
+     * @return True if the entity has the provided case, false otherwise.
+     */
+    flecs::entity get_case(const flecs::entity& sw) const {
+        return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw.id()));
+    }
 
     /** Test if component is enabled.
      *
