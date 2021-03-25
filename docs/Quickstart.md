@@ -331,7 +331,7 @@ void ExpireComponents(ecs_iter_t *it) {
 ```cpp
 void ExpireComponents(flecs::iter& it) {
     /* Get the trait component */
-    ExpiryTimer *et = it.column<ExpiryTimer>(1);
+    ExpiryTimer *et = it.term<ExpiryTimer>(1);
 
     /* Get the trait handle */
     auto trait = it.column_entity(1);

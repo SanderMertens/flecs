@@ -20528,6 +20528,7 @@ void* ecs_iter_column_w_size(
     /* See ecs_iter_type */ 
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
     
     ecs_table_t *table = it->table->table;
     ecs_assert(column_index < ecs_vector_count(table->type), 

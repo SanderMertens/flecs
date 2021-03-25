@@ -94,7 +94,7 @@ void Singleton_singleton_system() {
 
     world.system<>(nullptr, "$Position")
         .iter([](flecs::iter it) {
-            auto p = it.column<Position>(1);
+            auto p = it.term<Position>(1);
             test_int(p->x, 10);
             test_int(p->y, 20);
 

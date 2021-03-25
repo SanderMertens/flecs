@@ -35,11 +35,11 @@ int main(int argc, char *argv[]) {
     /* Create a system that subscribes for all entities that have a Direction
      * and that are walking */
     ecs.system<>("Walk", "CASE | Walking, SWITCH | Direction")
-        .iter([](flecs::iter it) {
+        .iter([](const flecs::iter& it) {
             /* Get the column with direction states. This is stored as an array
              * with identifiers to the individual states */
-            flecs::column<flecs::entity_t> movement(it, 1);
-            flecs::column<flecs::entity_t> direction(it, 2);
+            auto movement = it.term<flecs::entity_t>(1);
+            auto direction = it.term<flecs::entity_t>(2);
 
             for (auto i : it) {
                 std::cout << it.entity(i).name() 

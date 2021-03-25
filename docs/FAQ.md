@@ -109,8 +109,8 @@ That same query can also be specified as a string, at the cost of a slightly mor
 auto q = ecs.query<>("Position, Velocity");
 
 q.iter([](flecs::iter& it) {
-    auto p = it.column<Position>(1);
-    auto v = it.column<Velocity>(2);
+    auto p = it.term<Position>(1);
+    auto v = it.term<Velocity>(2);
 });
 ```
 
@@ -120,8 +120,8 @@ In most cases using template parameters is the way to go, as this provides a sli
 auto q = ecs.query<>("CASCADE:Position, Position");
 
 q.iter([](flecs::iter& it) {
-    auto p_parent = it.column<Position>(1);
-    auto p = it.column<Position>(2);
+    auto p_parent = it.term<Position>(1);
+    auto p = it.term<Position>(2);
 });
 ```
 

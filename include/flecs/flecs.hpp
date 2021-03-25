@@ -23,6 +23,7 @@ using snapshot_t = ecs_snapshot_t;
 using filter_t = ecs_filter_t;
 using query_t = ecs_query_t;
 using ref_t = ecs_ref_t;
+using iter_t = ecs_iter_t;
 
 class world;
 class snapshot;

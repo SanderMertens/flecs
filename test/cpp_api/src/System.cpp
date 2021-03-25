@@ -77,7 +77,7 @@ void System_action_shared() {
 
     flecs::system<Position>(world).signature("ANY:Velocity")
         .iter([](flecs::iter&it, Position *p) {
-            auto v = it.column<const Velocity>(2);
+            auto v = it.term<const Velocity>(2);
 
             if (v.is_shared()) {
                 for (auto i : it) {
@@ -744,7 +744,7 @@ void System_get_query() {
     auto q = sys.query();
 
     q.iter([&](flecs::iter &it) {
-        auto pos = it.column<const Position>(1);
+        auto pos = it.term<const Position>(1);
         for (auto i : it) {
             test_int(i, pos[i].x);
             count ++;

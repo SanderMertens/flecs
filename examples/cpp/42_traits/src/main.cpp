@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     ecs.system<>(nullptr, "PAIR | ExpiryTimer")
         .iter([](flecs::iter it) {
             /* First, get the trait component */
-            flecs::column<ExpiryTimer> et(it, 1);
+            auto et = it.term<ExpiryTimer>(1);
 
             /* Get the handle to the trait. This will tell us on which component
              * the trait is applied */

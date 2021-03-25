@@ -21,23 +21,32 @@ inline flecs::entity iter::entity(size_t row) const {
 }
 
 /* Obtain column source (0 if self) */
-inline flecs::entity iter::column_source(int32_t col) const {
-    return flecs::entity(m_iter->world, ecs_column_source(m_iter, col));
+template <typename Base>
+inline flecs::entity iter_deprecated<Base>::column_source(int32_t col) const {
+    return flecs::entity(iter()->world, ecs_column_source(iter(), col));
 }
 
 /* Obtain component/tag entity of column */
-inline flecs::entity iter::column_entity(int32_t col) const {
-    return flecs::entity(m_iter->world, ecs_column_entity(m_iter, col));
+template <typename Base>
+inline flecs::entity iter_deprecated<Base>::column_entity(int32_t col) const {
+    return flecs::entity(iter()->world, ecs_column_entity(iter(), col));
 }
 
 /* Obtain type of column */
-inline type iter::column_type(int32_t col) const {
-    return flecs::type(m_iter->world, ecs_column_type(m_iter, col));
+template <typename Base>
+inline type iter_deprecated<Base>::column_type(int32_t col) const {
+    return flecs::type(iter()->world, ecs_column_type(iter(), col));
 }
 
 /* Obtain type of table being iterated over */
-inline type iter::table_type() const {
-    return flecs::type(m_iter->world, ecs_iter_type(m_iter));
+template <typename Base>
+inline type iter_deprecated<Base>::table_type() const {
+    return flecs::type(iter()->world, ecs_iter_type(iter()));
+}
+
+template <typename T>
+inline column<T>::column(iter &iter, int32_t index) {
+    *this = iter.term<T>(index);
 }
 
 } // namespace flecs

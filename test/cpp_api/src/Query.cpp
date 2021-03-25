@@ -72,7 +72,7 @@ void Query_action_shared() {
     flecs::query<Position> q(world, "ANY:Velocity");
 
     q.iter([](flecs::iter&it, Position *p) {
-            auto v = it.column<const Velocity>(2);
+            auto v = it.term<const Velocity>(2);
 
             if (v.is_shared()) {
                 for (auto i : it) {
@@ -294,8 +294,8 @@ void Query_signature() {
     flecs::query<> q(world, "Position, Velocity");
 
     q.iter([](flecs::iter& it) {
-        auto p = it.column<Position>(1);
-        auto v = it.column<Velocity>(2);
+        auto p = it.term<Position>(1);
+        auto v = it.term<Velocity>(2);
 
         for (auto i : it) {
             p[i].x += v[i].x;
@@ -321,8 +321,8 @@ void Query_signature_const() {
     flecs::query<> q(world, "Position, [in] Velocity");
 
     q.iter([](flecs::iter& it) {
-        auto p = it.column<Position>(1);
-        auto v = it.column<const Velocity>(2);
+        auto p = it.term<Position>(1);
+        auto v = it.term<const Velocity>(2);
         
         for (auto i : it) {
             p[i].x += v[i].x;
@@ -355,8 +355,8 @@ void Query_signature_shared() {
     flecs::query<> q(world, "Position, [in] ANY:Velocity");
     
     q.iter([](flecs::iter&it) {
-        auto p = it.column<Position>(1);
-        auto v = it.column<const Velocity>(2);
+        auto p = it.term<Position>(1);
+        auto v = it.term<const Velocity>(2);
 
         if (v.is_shared()) {
             for (auto i : it) {
@@ -406,9 +406,9 @@ void Query_signature_optional() {
     flecs::query<> q(world, "Position, ?Velocity, ?Mass");
 
     q.iter([](flecs::iter& it) {
-        auto p = it.column<Position>(1);
-        auto v = it.column<const Velocity>(2);
-        auto m = it.column<const Mass>(3);
+        auto p = it.term<Position>(1);
+        auto v = it.term<const Velocity>(2);
+        auto m = it.term<const Mass>(3);
 
         if (v.is_set() && m.is_set()) {
             for (auto i : it) {
@@ -481,7 +481,7 @@ void Query_subquery_w_expr() {
     flecs::query<> sq(world, q, "Velocity");
 
     sq.iter([](flecs::iter it) {
-        auto v = it.column<Velocity>(1);
+        auto v = it.term<Velocity>(1);
 
         for (auto i : it) {
             v[i].x ++;
