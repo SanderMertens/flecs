@@ -131,21 +131,37 @@ static
 bool ecs_stop_threads(
     ecs_world_t *world)
 {
-    if (!world->workers_running) {
+    bool threads_active = false;
+
+    /* Test if threads are created. Cannot use workers_running, since this is
+     * a potential race if threads haven't spun up yet. */
+    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
+        if (stage->thread) {
+            threads_active = true;
+            break;
+        }
+        stage->thread = 0;
+    });
+
+    /* If no threads are active, just return */
+    if (!threads_active) {
         return false;
     }
 
+    /* Make sure all threads are running, to ensure they catch the signal */
+    wait_for_workers(world);
+
+    /* Signal threads should quit */
     world->quit_workers = true;
-    
     signal_workers(world);
 
+    /* Join all threads with main */
     ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
         ecs_os_thread_join(stage->thread);
         stage->thread = 0;
     });
 
     world->quit_workers = false;
-    
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Deinitialize stages */

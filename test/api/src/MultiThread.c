@@ -874,3 +874,13 @@ void MultiThread_reactive_system() {
     ecs_fini(world);
 }
 
+void MultiThread_fini_after_set_threads() {
+    ecs_world_t * world = ecs_init();
+
+    ecs_set_threads(world, 2);
+
+    ecs_fini(world);
+
+    // Make sure code doesn't crash
+    test_assert(true);
+}
