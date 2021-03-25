@@ -10955,8 +10955,27 @@ public:
         ecs_assert(_::cpp_type<T>::size() != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
-        ecs_set_ptr_w_entity(world(), id(), 
-            comp_id, sizeof(T), &value);
+        T& ptr = *static_cast<T*>(
+            ecs_get_mut_w_id(world(), id(), comp_id, NULL));
+        ptr = std::move(value);
+
+        ecs_modified_w_id(world(), id(), comp_id);
+
+        return *base();
+    }
+
+    template <typename T>
+    const base_type& set(T&& value) const {
+        auto comp_id = _::cpp_type<T>::id(world());
+
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+
+        T& ptr = *static_cast<T*>(
+            ecs_get_mut_w_id(world(), id(), comp_id, NULL));
+
+        ptr = std::move(value);
+
+        ecs_modified_w_id(world(), id(), comp_id);
 
         return *base();
     }
@@ -11341,7 +11360,8 @@ public:
             return;
         }
 
-        const ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+        const ecs_id_t *ids = static_cast<ecs_id_t*>(
+            _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
         int32_t count = ecs_vector_count(type);
 
         for (int i = 0; i < count; i ++) {
@@ -11368,7 +11388,8 @@ public:
             return;
         }
 
-        const ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+        const ecs_id_t *ids = static_cast<ecs_id_t*>(
+            _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
         int32_t count = ecs_vector_count(type);
 
         // First, skip to the point where the relationship starts

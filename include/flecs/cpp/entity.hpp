@@ -453,8 +453,35 @@ public:
         ecs_assert(_::cpp_type<T>::size() != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
-        ecs_set_ptr_w_entity(world(), id(), 
-            comp_id, sizeof(T), &value);
+        T& ptr = *static_cast<T*>(
+            ecs_get_mut_w_id(world(), id(), comp_id, NULL));
+
+        ptr = std::move(value);
+
+        ecs_modified_w_id(world(), id(), comp_id);
+
+        return *base();
+    }
+
+    /** Set a component for an entity.
+     * This operation sets the component value. If the entity did not yet
+     * have the component, it will be added.
+     *
+     * @tparam T The component to set.
+     * @param value The value to assign to the component.
+     */
+    template <typename T>
+    const base_type& set(T&& value) const {
+        auto comp_id = _::cpp_type<T>::id(world());
+
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+
+        T& ptr = *static_cast<T*>(
+            ecs_get_mut_w_id(world(), id(), comp_id, NULL));
+
+        ptr = std::move(value);
+
+        ecs_modified_w_id(world(), id(), comp_id);
 
         return *base();
     }

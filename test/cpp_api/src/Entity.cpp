@@ -795,3 +795,31 @@ void Entity_get_nonempty_type() {
     test_assert(type_2.id() == 0);
     test_int(type_1.vector().size(), 1);
 }
+
+void Entity_set_no_copy() {
+    flecs::world world;
+
+    auto e = world.entity()
+        .set<POD>({10});
+    test_int(POD::copy_invoked, 0);
+
+    test_assert(e.has<POD>());
+    const POD *p = e.get<POD>();
+    test_assert(p != NULL);
+    test_int(p->value, 10);
+}
+
+void Entity_set_copy() {
+    flecs::world world;
+
+    POD val(10);
+
+    auto e = world.entity()
+        .set<POD>(val);
+    test_int(POD::copy_invoked, 1);
+
+    test_assert(e.has<POD>());
+    const POD *p = e.get<POD>();
+    test_assert(p != NULL);
+    test_int(p->value, 10);
+}

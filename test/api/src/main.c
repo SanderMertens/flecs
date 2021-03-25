@@ -683,6 +683,7 @@ void Queries_query_changed_after_delete(void);
 void Queries_query_changed_after_add(void);
 void Queries_query_changed_after_remove(void);
 void Queries_query_changed_after_set(void);
+void Queries_query_change_after_modified(void);
 void Queries_query_change_after_out_system(void);
 void Queries_query_change_after_in_system(void);
 void Queries_subquery_match_existing(void);
@@ -4080,6 +4081,10 @@ bake_test_case Queries_testcases[] = {
     {
         "query_changed_after_set",
         Queries_query_changed_after_set
+    },
+    {
+        "query_change_after_modified",
+        Queries_query_change_after_modified
     },
     {
         "query_change_after_out_system",
@@ -7502,7 +7507,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        31,
+        32,
         Queries_testcases
     },
     {

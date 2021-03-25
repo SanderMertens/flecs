@@ -59,6 +59,8 @@ void Entity_is_enabled_component_enabled(void);
 void Entity_is_disabled_component_enabled(void);
 void Entity_get_type(void);
 void Entity_get_nonempty_type(void);
+void Entity_set_no_copy(void);
+void Entity_set_copy(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -494,6 +496,14 @@ bake_test_case Entity_testcases[] = {
     {
         "get_nonempty_type",
         Entity_get_nonempty_type
+    },
+    {
+        "set_no_copy",
+        Entity_set_no_copy
+    },
+    {
+        "set_copy",
+        Entity_set_copy
     }
 };
 
@@ -1363,7 +1373,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        50,
+        52,
         Entity_testcases
     },
     {

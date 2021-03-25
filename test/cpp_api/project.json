@@ -65,7 +65,9 @@
                 "is_enabled_component_enabled",
                 "is_disabled_component_enabled",
                 "get_type",
-                "get_nonempty_type"
+                "get_nonempty_type",
+                "set_no_copy",
+                "set_copy"
             ]
         }, {
             "id": "Pairs",

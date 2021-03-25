@@ -2,42 +2,6 @@
 
 #include <string>
 
-class POD {
-public:
-    POD() {
-        ctor_invoked ++;
-        value = 10;
-    }
-
-    POD(int v) {
-        ctor_invoked ++;
-        value = v;
-    }    
-
-    ~POD() {
-        dtor_invoked ++;
-    }
-
-    POD& operator=(const POD& obj) {
-        copy_invoked ++;
-        this->value = obj.value;
-        return *this;
-    }
-
-    POD& operator=(POD&& obj) {
-        move_invoked ++;
-        this->value = obj.value;
-        return *this;
-    }   
-
-    int value;
-
-    static int ctor_invoked;
-    static int dtor_invoked;
-    static int copy_invoked;
-    static int move_invoked;
-};
-
 int POD::ctor_invoked = 0;
 int POD::dtor_invoked = 0;
 int POD::copy_invoked = 0;
@@ -97,8 +61,8 @@ void ComponentLifecycle_copy_on_set() {
     test_assert(e.has<POD>());
     test_int(POD::ctor_invoked, 2);
     test_int(POD::dtor_invoked, 1);
-    test_int(POD::copy_invoked, 1);
-    test_int(POD::move_invoked, 0);
+    test_int(POD::copy_invoked, 0);
+    test_int(POD::move_invoked, 1);
 }
 
 void ComponentLifecycle_copy_on_override() {
@@ -112,7 +76,7 @@ void ComponentLifecycle_copy_on_override() {
     base.set<POD>({10});
     test_int(POD::ctor_invoked, 2);
     test_int(POD::dtor_invoked, 1);
-    test_int(POD::copy_invoked, 1);
+    test_int(POD::copy_invoked, 0);
     POD::ctor_invoked = 0;
     POD::dtor_invoked = 0;
     POD::copy_invoked = 0;

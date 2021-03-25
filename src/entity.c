@@ -2235,6 +2235,8 @@ void ecs_modified_w_id(
         ecs_run_set_systems(world, &added, 
             info.table, info.data, info.row, 1, false);
     }
+
+    ecs_table_mark_dirty(info.table, id);
     
     ecs_defer_flush(world, stage);
 }

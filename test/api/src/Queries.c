@@ -115,6 +115,29 @@ void Queries_query_changed_after_set() {
     ecs_fini(world);
 }
 
+void Queries_query_change_after_modified() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t e1 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+    test_assert(ecs_query_changed(q) == true);
+
+    ecs_query_iter(q);
+    test_assert(ecs_query_changed(q) == false);
+
+    ecs_modified(world, e1, Position);
+    test_assert(ecs_query_changed(q) == true);
+
+    ecs_query_iter(q);
+    test_assert(ecs_query_changed(q) == false);
+
+    ecs_fini(world);
+}
+
 void Sys(ecs_iter_t *it) { }
 
 void Queries_query_change_after_out_system() {
