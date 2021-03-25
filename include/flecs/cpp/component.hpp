@@ -292,7 +292,7 @@ void register_lifecycle_actions(
 // Because of how global (templated) variables are instantiated, it is possible
 // that different instances for the same component exist across different
 // translation units. This is handled transparently by flecs. When a component
-// id is requested from the component_info class, but the id is uninitialized, a 
+// id is requested from the cpp_type class, but the id is uninitialized, a 
 // lookup by name will be performed for the component on the world, which will 
 // return the id with which the component was already registered. This means 
 // component identifiers are eventually consistent across translation units.
@@ -318,14 +318,13 @@ void register_lifecycle_actions(
 // It seems like component registration does not always work correctly in Unreal
 // engine when recreating a world. A plausible cause for this is the hot 
 // reloading of dynamic libraries by the engine. A workaround for this issue is
-// to call flecs::_::component_info<T>::reset() before recreating the world.
+// to call flecs::_::cpp_type<T>::reset() before recreating the world.
 // This will reset the global component state and avoids conflicts. The exact
 // cause of the issue is investigated here: 
 //   https://github.com/SanderMertens/flecs/issues/293
 
 template <typename T>
-class component_info final {
-
+class cpp_type final {
 public:
     // Initialize component identifier
     static void init(world_t* world, entity_t entity, bool allow_tag = true) {
@@ -350,11 +349,8 @@ public:
         // name as the fully qualified flecs path.
         char *path = ecs_get_fullpath(world, entity);
         s_id = entity;
-        s_name = path;
+        s_name = flecs::string(path);
         s_allow_tag = allow_tag;
-
-        // s_name is an std::string, so it will have made a copy
-        ecs_os_free(path);
     }
 
     // Obtain a component identifier without registering lifecycle callbacks.
@@ -399,10 +395,10 @@ public:
             flecs::entity result = entity(w, name, true);
             
             // Initialize types with identifier
-            component_info<typename base_type<T>::type>::init(world, result.id(), allow_tag);
-            component_info<const typename base_type<T>::type>::init(world, result.id(), allow_tag);
-            component_info<typename base_type<T>::type*>::init(world, result.id(), allow_tag);
-            component_info<typename base_type<T>::type&>::init(world, result.id(), allow_tag);
+            cpp_type<typename base_type<T>::type>::init(world, result.id(), allow_tag);
+            cpp_type<const typename base_type<T>::type>::init(world, result.id(), allow_tag);
+            cpp_type<typename base_type<T>::type*>::init(world, result.id(), allow_tag);
+            cpp_type<typename base_type<T>::type&>::init(world, result.id(), allow_tag);
 
             // Now use the resulting identifier to register the component. Note
             // that the name is not passed into this function, as the entity was
@@ -421,7 +417,8 @@ public:
             // user (erroneously) attempts to register the same datatype with
             // the same name. Without verifying that the actual C++ type name
             // matches, that scenario would go undetected.
-            EcsName *name_comp = ecs_get_mut(world, entity, EcsName, NULL);
+            EcsName *name_comp = static_cast<EcsName*>(ecs_get_mut_w_id(
+                world, entity, ecs_id(EcsName), NULL));
             char *symbol = symbol_helper<T>::symbol();
 
             if (name_comp->symbol) {
@@ -588,16 +585,16 @@ public:
 private:
     static entity_t s_id;
     static type_t s_type;
-    static std::string s_name;
-    static std::string s_symbol;
+    static flecs::string s_name;
+    static flecs::string s_symbol;
     static bool s_allow_tag;
 };
 
 // Global templated variables that hold component identifier and other info
-template <typename T> entity_t component_info<T>::s_id( 0 );
-template <typename T> type_t component_info<T>::s_type( nullptr );
-template <typename T> std::string component_info<T>::s_name("");
-template <typename T> bool component_info<T>::s_allow_tag( true );
+template <typename T> entity_t cpp_type<T>::s_id( 0 );
+template <typename T> type_t cpp_type<T>::s_type( nullptr );
+template <typename T> flecs::string cpp_type<T>::s_name;
+template <typename T> bool cpp_type<T>::s_allow_tag( true );
 
 } // namespace _
 
@@ -615,10 +612,10 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     world_t *world_ptr = world.c_ptr();
     entity_t id = 0;
 
-    if (_::component_info<T>::registered()) {
+    if (_::cpp_type<T>::registered()) {
         /* Obtain component id. Because the component is already registered,
          * this operation does nothing besides returning the existing id */
-        id = _::component_info<T>::id_no_lifecycle(world_ptr, name, allow_tag);
+        id = _::cpp_type<T>::id_no_lifecycle(world_ptr, name, allow_tag);
 
         /* If entity is not empty check if the name matches */
         if (ecs_get_type(world_ptr, id) != nullptr) {
@@ -645,8 +642,8 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
          * If the component was registered already, nothing will change. */
         ecs_entity_t entity = ecs_new_component(
             world.c_ptr(), id, nullptr, 
-            _::component_info<T>::size(), 
-            _::component_info<T>::alignment());
+            _::cpp_type<T>::size(), 
+            _::cpp_type<T>::alignment());
         
         (void)entity;
         
@@ -665,7 +662,8 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         /* If entity exists, compare symbol name to ensure that the component
          * we are trying to register under this name is the same */
         if (entity) {
-            const EcsName *name_comp = ecs_get_mut(world.c_ptr(), entity, EcsName, NULL);
+            const EcsName *name_comp = static_cast<EcsName*>(ecs_get_mut_w_id(
+                world.c_ptr(), entity, ecs_id(EcsName), NULL));
             ecs_assert(name_comp != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(name_comp->symbol != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -679,7 +677,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         }
 
         /* Register id as usual */
-        id = _::component_info<T>::id_no_lifecycle(world_ptr, name, allow_tag);
+        id = _::cpp_type<T>::id_no_lifecycle(world_ptr, name, allow_tag);
     }
     
     return world.entity(id);
@@ -690,7 +688,7 @@ template <typename T>
 flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
-    if (_::component_info<T>::size()) {
+    if (_::cpp_type<T>::size()) {
         _::register_lifecycle_actions<T>(world.c_ptr(), result.id(),
             true, true, true, true);
     }
@@ -711,7 +709,7 @@ flecs::entity relocatable_component(const flecs::world& world, const char *name 
 
 template <typename T>
 flecs::entity_t type_id() {
-    return _::component_info<T>::id();
+    return _::cpp_type<T>::id();
 }
 
 } // namespace flecs

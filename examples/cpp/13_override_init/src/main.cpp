@@ -2,7 +2,7 @@
 #include <iostream>
 
 struct Mass {
-    float value;
+    double value;
 };
 
 int main(int argc, char *argv[]) {
@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     auto base = ecs.entity().set<Mass>({10});
 
     /* Create instances which share the Mass component from a base */
-    auto instance = ecs.entity().add_instanceof(base);
+    auto instance = ecs.entity().add(flecs::IsA, base);
 
     /* Add component without setting it. This will initialize the new component
      * with the value from the base, which is a common approach to initializing

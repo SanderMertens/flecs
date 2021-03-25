@@ -1,13 +1,12 @@
 #include <set_system.h>
 
-typedef struct Position {
-    float x;
-    float y;
+typedef struct {
+    double x, y;
 } Position;
 
 /* This system will be called when Position is added */
 void AddPosition(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x = 10;
@@ -18,7 +17,7 @@ void AddPosition(ecs_iter_t *it) {
 
 /* This system will be called when Position is set */
 void SetPosition(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     for (int i = 0; i < it->count; i ++) {
         printf("Position set -> {%f, %f}\n",

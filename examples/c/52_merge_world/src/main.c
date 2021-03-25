@@ -1,11 +1,11 @@
 #include <merge_world.h>
 
 typedef struct {
-    float x, y;
+    double x, y;
 } Position, Velocity;
 
 typedef struct {
-    float value;
+    double value;
 } Mass;
 
 ECS_COMPONENT_DECLARE(Position);
@@ -124,8 +124,8 @@ int main(void) {
     ecs_iter_t it = ecs_query_iter(q);
     
     while (ecs_query_next(&it)) {
-        Position *p = ecs_column(&it, Position, 1);
-        Velocity *v = ecs_column(&it, Velocity, 2);
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
 
         for (int i = 0; i < it.count; i ++) {
             printf("%u: Position{%f, %f}, Velocity{%f, %f}\n",

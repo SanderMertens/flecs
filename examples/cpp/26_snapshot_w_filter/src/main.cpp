@@ -3,17 +3,15 @@
 
 /* Component types */
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Mass {
-    float value;
+    double value;
 };
 
 int main(int argc, char *argv[]) {

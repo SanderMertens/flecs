@@ -1,13 +1,9 @@
 #include <nested_variant.h>
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
-
-typedef Vector2D Position;
-typedef Vector2D Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
@@ -34,7 +30,7 @@ int main(int argc, char *argv[]) {
             ecs_set(world, Child2, Velocity, {50, 60});
 
     /* Create instance of RootPrefab */
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | RootPrefab);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, RootPrefab);
 
     /* Print types of child1 and child2 */
     ecs_entity_t child1 = ecs_lookup_child(world, e, "Child1");

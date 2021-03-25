@@ -110,7 +110,7 @@ void ecs_table_writer_finalize_table(
                     table, table_data, record_ptr->row - 1, false);
             }
         } else {
-            record_ptr = ecs_eis_get_or_create(world, entities[i]);
+            record_ptr = ecs_eis_ensure(world, entities[i]);
         }
 
         record_ptr->row = i + 1;

@@ -2,13 +2,11 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 int main(int argc, char *argv[]) {
@@ -26,18 +24,18 @@ int main(int argc, char *argv[]) {
         
         /* Create two child prefabs that inherit from ChildBase */
         ecs.prefab("Child1")
-            .add_childof(Root)
-            .add_instanceof(ChildBase)
+            .add(flecs::ChildOf, Root)
+            .add(flecs::IsA, ChildBase)
             .set<Velocity>({30, 40});
 
         ecs.prefab("Child2")
-            .add_childof(Root)
-            .add_instanceof(ChildBase)
+            .add(flecs::ChildOf, Root)
+            .add(flecs::IsA, ChildBase)
             .set<Velocity>({50, 60});            
 
     /* Create instance of Root */
     auto e = ecs.entity()
-        .add_instanceof(Root);
+        .add(flecs::IsA, Root);
 
     /* Print types of child1 and child2 */
     auto child1 = e.lookup("Child1");

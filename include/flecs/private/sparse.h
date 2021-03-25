@@ -117,6 +117,11 @@ FLECS_API bool ecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
     uint64_t index);
 
+/** Return identifier with current generation set. */
+FLECS_API uint64_t ecs_sparse_get_current(
+    const ecs_sparse_t *sparse,
+    uint64_t index);
+
 /** Get value from sparse set by dense id. This function is useful in 
  * combination with ecs_sparse_count for iterating all values in the set. */
 FLECS_API void* _ecs_sparse_get(
@@ -155,13 +160,13 @@ FLECS_API void* _ecs_sparse_get_sparse_any(
     ((type*)_ecs_sparse_get_sparse_any(sparse, sizeof(type), index))
 
 /** Get or create element by (sparse) id. */
-FLECS_API void* _ecs_sparse_get_or_create(
+FLECS_API void* _ecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t index);
 
-#define ecs_sparse_get_or_create(sparse, type, index)\
-    ((type*)_ecs_sparse_get_or_create(sparse, sizeof(type), index))
+#define ecs_sparse_ensure(sparse, type, index)\
+    ((type*)_ecs_sparse_ensure(sparse, sizeof(type), index))
 
 /** Set value. */
 FLECS_API void* _ecs_sparse_set(

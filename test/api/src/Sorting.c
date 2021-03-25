@@ -1173,10 +1173,10 @@ void Sorting_sort_shared_component() {
     ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 0});
     ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
     ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
-    ecs_entity_t e6 = ecs_new_w_entity(world, ECS_INSTANCEOF | base_3);
-    ecs_entity_t e7 = ecs_new_w_entity(world, ECS_INSTANCEOF | base_2);
-    ecs_entity_t e8 = ecs_new_w_entity(world, ECS_INSTANCEOF | base_1);
-    ecs_entity_t e9 = ecs_new_w_entity(world, ECS_INSTANCEOF | base_1);
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsIsA, base_3);
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsIsA, base_2);
+    ecs_entity_t e8 = ecs_new_w_pair(world, EcsIsA, base_1);
+    ecs_entity_t e9 = ecs_new_w_pair(world, EcsIsA, base_1);
 
     ecs_query_t *q = ecs_query_new(world, "ANY:Position");
     ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);

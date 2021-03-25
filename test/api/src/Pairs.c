@@ -1,19 +1,19 @@
 #include <api.h>
 
-typedef struct Trait {
+typedef struct Rel {
     float value;
-} Trait;
+} Rel;
 
-typedef struct TraitA {
+typedef struct RelA {
     float value;
-} TraitA;
+} RelA;
 
-typedef struct TraitB {
+typedef struct RelB {
     float value;
-} TraitB;
+} RelB;
 
 void ProcessTraits(ecs_iter_t *it) {
-    Trait *tr = ecs_column(it, Trait, 1);
+    Rel *tr = ecs_column(it, Rel, 1);
 
     probe_system(it);
 
@@ -25,38 +25,39 @@ void ProcessTraits(ecs_iter_t *it) {
     }
 }
 
-void Traits_type_w_one_trait() {
+void Pairs_type_w_one_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
-    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, TRAIT | Trait);
+    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, PAIR | Rel);
 
-    /* Ensure that trait is matched against different components */
-    ecs_entity_t e1 = ecs_set_trait(world, 0, Position, Trait, {
+    /* Ensure that pair is matched against different components */
+    ecs_entity_t e1 = ecs_set_pair(world, 0, Rel, ecs_typeid(Position), {
         .value = 10
-    });  
-    test_assert(e1 != 0);
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Position), ecs_typeid(Trait)));
+    });
 
-    ecs_entity_t e2 = ecs_set_trait(world, 0, Velocity, Trait, {
+    test_assert(e1 != 0);
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(Rel), ecs_typeid(Position)));
+
+    ecs_entity_t e2 = ecs_set_pair(world, 0, Rel, ecs_typeid(Velocity), {
         .value = 20
     });
     test_assert(e2 != 0);
-    test_assert( ecs_has_trait(world, e2, ecs_typeid(Velocity), ecs_typeid(Trait)));
+    test_assert( ecs_has_pair(world, e2, ecs_typeid(Rel), ecs_typeid(Velocity)));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 0);
 
-    const Trait* tr = ecs_get_trait(world, e1, Position, Trait);
+    const Rel* tr = ecs_get_pair(world, e1, Rel, ecs_typeid(Position));
     test_assert(tr != NULL);
     test_int(tr->value, 11);
 
-    tr = ecs_get_trait(world, e2, Velocity, Trait);
+    tr = ecs_get_pair(world, e2, Rel, ecs_typeid(Velocity));
     test_assert(tr != NULL);
     test_int(tr->value, 21); 
 
@@ -70,15 +71,15 @@ void Traits_type_w_one_trait() {
     test_int(ctx.e[1], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Position));
 
-    c = ctx.c[1][0] & ECS_COMPONENT_MASK;
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    c = ctx.c[1][0];
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Velocity));
 
     test_int(ctx.s[0][0], 0);
@@ -87,56 +88,56 @@ void Traits_type_w_one_trait() {
     ecs_fini(world);
 }
 
-void Traits_type_w_two_traits() {
+void Pairs_type_w_two_pairs() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
-    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, TRAIT | Trait);
+    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, PAIR | Rel);
 
-    /* Ensure that trait is matched against different components on same entity */
+    /* Ensure that pair is matched against different components on same entity */
     ecs_entity_t e1 = ecs_new(world, 0);
-    ecs_set_trait(world, e1, Position, Trait, {
+    ecs_set_pair(world, e1, Rel, ecs_typeid(Position), {
         .value = 10
     });  
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Position), ecs_typeid(Trait)));
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(Rel), ecs_typeid(Position)));
 
-    ecs_set_trait(world, e1, Velocity, Trait, {
+    ecs_set_pair(world, e1, Rel, ecs_typeid(Velocity), {
         .value = 20
     });      
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Velocity), ecs_typeid(Trait)));
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(Rel), ecs_typeid(Velocity)));
 
     ecs_entity_t e2 = ecs_new(world, 0);
-    ecs_set_trait(world, e2, Position, Trait, {
+    ecs_set_pair(world, e2, Rel, ecs_typeid(Position), {
         .value = 30
     });
-    test_assert( ecs_has_trait(world, e2, ecs_typeid(Position), ecs_typeid(Trait)));
+    test_assert( ecs_has_pair(world, e2, ecs_typeid(Rel), ecs_typeid(Position)));
 
-    ecs_set_trait(world, e2, Velocity, Trait, {
+    ecs_set_pair(world, e2, Rel, ecs_typeid(Velocity), {
         .value = 40
     });
-    test_assert( ecs_has_trait(world, e2, ecs_typeid(Position), ecs_typeid(Trait)));
+    test_assert( ecs_has_pair(world, e2, ecs_typeid(Rel), ecs_typeid(Position)));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 0);
 
-    const Trait* tr = ecs_get_trait(world, e1, Position, Trait);
+    const Rel* tr = ecs_get_pair(world, e1, Rel, ecs_typeid(Position));
     test_assert(tr != NULL);
     test_int(tr->value, 11);
 
-    tr = ecs_get_trait(world, e1, Velocity, Trait);
+    tr = ecs_get_pair(world, e1, Rel, ecs_typeid(Velocity));
     test_assert(tr != NULL);
     test_int(tr->value, 21);
 
-    tr = ecs_get_trait(world, e2, Position, Trait);
+    tr = ecs_get_pair(world, e2, Rel, ecs_typeid(Position));
     test_assert(tr != NULL);
     test_int(tr->value, 31);
 
-    tr = ecs_get_trait(world, e2, Velocity, Trait);
+    tr = ecs_get_pair(world, e2, Rel, ecs_typeid(Velocity));
     test_assert(tr != NULL);
     test_int(tr->value, 41); 
 
@@ -152,15 +153,15 @@ void Traits_type_w_two_traits() {
     test_int(ctx.e[3], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Velocity));
 
-    c = ctx.c[1][0] & ECS_COMPONENT_MASK;
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    c = ctx.c[1][0];
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Position));
 
     test_int(ctx.s[0][0], 0);
@@ -171,65 +172,64 @@ void Traits_type_w_two_traits() {
     ecs_fini(world);
 }
 
-void Traits_add_trait() {
+void Pairs_add_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
-    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, TRAIT | Trait);
+    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, PAIR | Rel);
 
     ecs_entity_t e1 = ecs_new(world, 0);
     test_assert(e1 != 0);
 
-    ecs_add_trait(world, e1, ecs_typeid(Position), ecs_typeid(Trait));
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Position), ecs_typeid(Trait)));
+    ecs_add_pair(world, e1, ecs_typeid(Rel), ecs_typeid(Position));
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(Rel), ecs_typeid(Position)));
 
     ecs_fini(world);
 }
 
-void Traits_remove_trait() {
+void Pairs_remove_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
-    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, TRAIT | Trait);
+    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, PAIR | Rel);
 
-    ecs_entity_t e1 = ecs_set_trait(world, 0, Position, Trait, {
+    ecs_entity_t e1 = ecs_set_pair(world, 0, Rel, ecs_typeid(Position), {
         .value = 10
     });  
     test_assert(e1 != 0);
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Position), ecs_typeid(Trait)));
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(Rel), ecs_typeid(Position)));
 
-    ecs_remove_trait(world, e1, ecs_typeid(Position), ecs_typeid(Trait));
-
-    test_assert( !ecs_has_trait(world, e1, ecs_typeid(Position), ecs_typeid(Trait)));
+    ecs_remove_pair(world, e1, ecs_typeid(Rel), ecs_typeid(Position));
+    test_assert( !ecs_has_pair(world, e1, ecs_typeid(Rel), ecs_typeid(Position)));
 
     ecs_fini(world);
 }
 
-void Traits_add_tag_trait_for_tag() {
+void Pairs_add_tag_pair_for_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag1);
     ECS_TAG(world, Tag2);
-    ECS_TAG(world, TraitTag);
+    ECS_TAG(world, Rel);
 
-    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, TRAIT | TraitTag);
+    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, PAIR | Rel);
 
-    /* Ensure that trait is matched against different components */
+    /* Ensure that pair is matched against different components */
     ecs_entity_t e1 = ecs_new(world, 0);
-    ecs_add_entity(world, e1, ecs_trait(Tag1, TraitTag));
+    ecs_add_pair(world, e1, Rel, Tag1);
     test_assert(e1 != 0);
-    test_assert( ecs_has_entity(world, e1, ecs_trait(Tag1, TraitTag)));
+    test_assert( ecs_has_pair(world, e1, Rel, Tag1));
 
     ecs_entity_t e2 = ecs_new(world, 0);
-    ecs_add_entity(world, e2, ecs_trait(Tag2, TraitTag));
+    ecs_add_pair(world, e2, Rel, Tag2);
     test_assert(e2 != 0);
-    test_assert( ecs_has_entity(world, e2, ecs_trait(Tag2, TraitTag)));
+    test_assert( ecs_has_pair(world, e2, Rel, Tag2));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -247,15 +247,15 @@ void Traits_add_tag_trait_for_tag() {
 
     ecs_entity_t c = ctx.c[0][0];
 
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, TraitTag);
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, Rel);
     test_int(lo, Tag1);
 
-    c = ctx.c[1][0] & ECS_COMPONENT_MASK;
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, TraitTag);
+    c = ctx.c[1][0];
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, Rel);
     test_int(lo, Tag2);
 
     test_int(ctx.s[0][0], 0);
@@ -280,38 +280,38 @@ void ProcessValueTraits(ecs_iter_t *it) {
     }
 }
 
-void Traits_add_tag_trait_for_component() {
+void Pairs_add_tag_pair_for_component() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, TraitTag);
+    ECS_TAG(world, Rel);
 
-    ECS_SYSTEM(world, ProcessValueTraits, EcsOnUpdate, TRAIT | TraitTag);
+    ECS_SYSTEM(world, ProcessValueTraits, EcsOnUpdate, PAIR | Rel);
 
-    ecs_entity_t e1 = ecs_set_trait_tag(world, 0, TraitTag, Position, {
+    ecs_entity_t e1 = ecs_set_pair_object(world, 0, Rel, Position, {
         .x = 1,
         .y = 2
     });
-    test_assert( ecs_has_entity(world, e1, ecs_trait(ecs_typeid(Position), TraitTag)));
+    test_assert( ecs_has_pair(world, e1, Rel, ecs_typeid(Position)));
 
-    ecs_entity_t e2 = ecs_set_trait_tag(world, 0, TraitTag, Velocity, {
+    ecs_entity_t e2 = ecs_set_pair_object(world, 0, Rel, Velocity, {
         .x = 3,
         .y = 4
     });
-    test_assert( ecs_has_entity(world, e2, ecs_trait(ecs_typeid(Velocity), TraitTag)));
+    test_assert( ecs_has_pair(world, e2, Rel, ecs_typeid(Velocity)));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 0);
 
-    const Position* tr_p = ecs_get_w_entity(world, e1, ecs_trait(ecs_typeid(Position), TraitTag));
+    const Position* tr_p = ecs_get_pair_object(world, e1, Rel, Position);
     test_assert(tr_p != NULL);
     test_int(tr_p->x, 11);
     test_int(tr_p->y, 22);
 
-    const Velocity* tr_v = ecs_get_w_entity(world, e2, ecs_trait(ecs_typeid(Velocity), TraitTag));
+    const Velocity* tr_v = ecs_get_pair_object(world, e2, Rel, Velocity);
     test_assert(tr_v != NULL);
     test_int(tr_v->x, 13);
     test_int(tr_v->y, 24);
@@ -326,15 +326,15 @@ void Traits_add_tag_trait_for_component() {
     test_int(ctx.e[1], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, TraitTag);
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, Rel);
     test_int(lo, ecs_typeid(Position));
 
-    c = ctx.c[1][0] & ECS_COMPONENT_MASK;
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, TraitTag);
+    c = ctx.c[1][0];
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, Rel);
     test_int(lo, ecs_typeid(Velocity));
 
     test_int(ctx.s[0][0], 0);
@@ -344,8 +344,8 @@ void Traits_add_tag_trait_for_component() {
 }
 
 void ProcessTwoTraits(ecs_iter_t *it) {
-    TraitA *tr_a = ecs_column(it, TraitA, 1);
-    TraitB *tr_b = ecs_column(it, TraitB, 2);
+    RelA *tr_a = ecs_column(it, RelA, 1);
+    RelB *tr_b = ecs_column(it, RelB, 2);
 
     probe_system(it);
 
@@ -356,45 +356,45 @@ void ProcessTwoTraits(ecs_iter_t *it) {
     }
 }
 
-void Traits_query_2_traits() {
+void Pairs_query_2_pairs() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, TraitA);
-    ECS_COMPONENT(world, TraitB);
+    ECS_COMPONENT(world, RelA);
+    ECS_COMPONENT(world, RelB);
 
-    ECS_SYSTEM(world, ProcessTwoTraits, EcsOnUpdate, TRAIT | TraitA, TRAIT | TraitB);
+    ECS_SYSTEM(world, ProcessTwoTraits, EcsOnUpdate, PAIR | RelA, PAIR | RelB);
 
-    /* Create entity with both TraitA and TraitB */
-    ecs_entity_t e1 = ecs_set_trait(world, 0, Position, TraitA, {
+    /* Create entity with both RelA and RelB */
+    ecs_entity_t e1 = ecs_set_pair(world, 0, RelA, ecs_typeid(Position), {
         .value = 1
     });
 
-    ecs_set_trait(world, e1, Position, TraitB, {
+    ecs_set_pair(world, e1, RelB, ecs_typeid(Position), {
         .value = 2
-    });    
+    });
 
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Position), ecs_typeid(TraitA)));
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Position), ecs_typeid(TraitB)));
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(RelA), ecs_typeid(Position)));
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(RelB), ecs_typeid(Position)));
 
-    /* Create entity with only TraitA. Should not be matched with system */
-    ecs_entity_t e2 = ecs_set_trait(world, 0, Position, TraitA, {
+    /* Create entity with only RelA. Should not be matched with system */
+    ecs_entity_t e2 = ecs_set_pair(world, 0, RelA, ecs_typeid(Position), {
         .value = 3
     });
-    test_assert( ecs_has_trait(world, e2, ecs_typeid(Position), ecs_typeid(TraitA)));
+    test_assert( ecs_has_pair(world, e2, ecs_typeid(RelA), ecs_typeid(Position)));
 
     /* Run system */
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
     ecs_progress(world, 0);
 
-    const TraitA *tr_a = ecs_get_trait(world, e1, Position, TraitA);
+    const RelA *tr_a = ecs_get_pair(world, e1, RelA, ecs_typeid(Position));
     test_int(tr_a->value, 2);
 
-    const TraitB *tr_b = ecs_get_trait(world, e1, Position, TraitB);
+    const RelB *tr_b = ecs_get_pair(world, e1, RelB, ecs_typeid(Position));
     test_int(tr_b->value, 3);
 
-    tr_a = ecs_get_trait(world, e2, Position, TraitA);
+    tr_a = ecs_get_pair(world, e2, RelA, ecs_typeid(Position));
     test_int(tr_a->value, 3);
 
     test_int(ctx.count, 1);
@@ -406,67 +406,67 @@ void Traits_query_2_traits() {
     test_int(ctx.e[0], e1);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(TraitA));
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(RelA));
     test_int(lo, ecs_typeid(Position));
 
     c = ctx.c[0][1];
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(TraitB));
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(RelB));
     test_int(lo, ecs_typeid(Position));    
 
     ecs_fini(world);
 }
 
-void Traits_query_2_traits_2_instances_per_type() {
+void Pairs_query_2_pairs_2_instances_per_type() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, TraitA);
-    ECS_COMPONENT(world, TraitB);
+    ECS_COMPONENT(world, RelA);
+    ECS_COMPONENT(world, RelB);
 
-    ECS_SYSTEM(world, ProcessTwoTraits, EcsOnUpdate, TRAIT | TraitA, TRAIT | TraitB);
+    ECS_SYSTEM(world, ProcessTwoTraits, EcsOnUpdate, PAIR | RelA, PAIR | RelB);
 
-    /* Create entity with both TraitA and TraitB, applied to two components*/
-    ecs_entity_t e1 = ecs_set_trait(world, 0, Position, TraitA, {
+    /* Create entity with both RelA and RelB, applied to two components*/
+    ecs_entity_t e1 = ecs_set_pair(world, 0, RelA, ecs_typeid(Position), {
         .value = 1
     });
 
-    ecs_set_trait(world, e1, Position, TraitB, {
+    ecs_set_pair(world, e1, RelB, ecs_typeid(Position), {
         .value = 2
     });
 
-    ecs_set_trait(world, e1, Velocity, TraitA, {
+    ecs_set_pair(world, e1, RelA, ecs_typeid(Velocity), {
         .value = 3
     });
 
-    ecs_set_trait(world, e1, Velocity, TraitB, {
+    ecs_set_pair(world, e1, RelB, ecs_typeid(Velocity), {
         .value = 4
     });        
 
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Position), ecs_typeid(TraitA)));
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Position), ecs_typeid(TraitB)));
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Velocity), ecs_typeid(TraitA)));
-    test_assert( ecs_has_trait(world, e1, ecs_typeid(Velocity), ecs_typeid(TraitB)));
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(RelA), ecs_typeid(Position)));
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(RelB), ecs_typeid(Position)));
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(RelA), ecs_typeid(Velocity)));
+    test_assert( ecs_has_pair(world, e1, ecs_typeid(RelB), ecs_typeid(Velocity)));
 
     /* Run system */
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
     ecs_progress(world, 0);
 
-    const TraitA *tr_a = ecs_get_trait(world, e1, Position, TraitA);
+    const RelA *tr_a = ecs_get_pair(world, e1, RelA, ecs_typeid(Position));
     test_int(tr_a->value, 2);
 
-    tr_a = ecs_get_trait(world, e1, Velocity, TraitA);
-    test_int(tr_a->value, 4);    
+    tr_a = ecs_get_pair(world, e1, RelA, ecs_typeid(Velocity));
+    test_int(tr_a->value, 4);
 
-    const TraitB *tr_b = ecs_get_trait(world, e1, Position, TraitB);
+    const RelB *tr_b = ecs_get_pair(world, e1, RelB, ecs_typeid(Position));
     test_int(tr_b->value, 3);
 
-    tr_b = ecs_get_trait(world, e1, Velocity, TraitB);
+    tr_b = ecs_get_pair(world, e1, RelB, ecs_typeid(Velocity));
     test_int(tr_b->value, 5);
 
     test_int(ctx.count, 2);
@@ -479,54 +479,54 @@ void Traits_query_2_traits_2_instances_per_type() {
     test_int(ctx.e[1], e1);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(TraitA));
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(RelA));
     test_int(lo, ecs_typeid(Position));
 
     c = ctx.c[0][1];
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(TraitB));
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(RelB));
     test_int(lo, ecs_typeid(Position));    
 
     c = ctx.c[1][0];
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(TraitA));
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(RelA));
     test_int(lo, ecs_typeid(Velocity));
 
     c = ctx.c[1][1];
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(TraitB));
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(RelB));
     test_int(lo, ecs_typeid(Velocity));  
 
     ecs_fini(world);
 }
 
-void Traits_override_trait() {
+void Pairs_override_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
     ecs_entity_t base = ecs_new(world, 0);
-    ecs_set_trait(world, base, Position, Trait, {.value = 10});
+    ecs_set_pair(world, base, Rel, ecs_typeid(Position), {.value = 10});
 
-    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-    test_assert(ecs_has_trait(world, instance, ecs_typeid(Position), ecs_typeid(Trait)));
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_has_pair(world, instance, ecs_typeid(Rel), ecs_typeid(Position)));
 
-    const Trait *t = ecs_get_trait(world, instance, Position, Trait);
+    const Rel *t = ecs_get_pair(world, instance, Rel, ecs_typeid(Position));
     test_assert(t != NULL);
     test_int(t->value, 10);
 
-    const Trait *t_2 = ecs_get_trait(world, base, Position, Trait);
+    const Rel *t_2 = ecs_get_pair(world, base, Rel, ecs_typeid(Position));
     test_assert(t_2 != NULL);
     test_assert(t == t_2);
 
-    ecs_add_trait(world, instance, ecs_typeid(Position), ecs_typeid(Trait));
-    t = ecs_get_trait(world, instance, Position, Trait);
+    ecs_add_pair(world, instance, ecs_typeid(Rel), ecs_typeid(Position));
+    t = ecs_get_pair(world, instance, Rel, ecs_typeid(Position));
     test_assert(t != NULL);
     test_int(t->value, 10);
     test_assert(t != t_2);
@@ -534,29 +534,29 @@ void Traits_override_trait() {
     ecs_fini(world);
 }
 
-void Traits_override_tag_trait() {
+void Pairs_override_tag_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Rel);
 
     ecs_entity_t base = ecs_new(world, 0);
-    ecs_set_trait_tag(world, base, Trait, Position, {.x = 10, .y = 20});
+    ecs_set_pair_object(world, base, Rel, Position, {.x = 10, .y = 20});
 
-    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-    test_assert(ecs_has_trait(world, instance, ecs_typeid(Position), Trait));
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_has_pair(world, instance, Rel, ecs_typeid(Position)));
 
-    const Position *t = ecs_get_trait_tag(world, instance, Trait, Position);
+    const Position *t = ecs_get_pair_object(world, instance, Rel, Position);
     test_assert(t != NULL);
     test_int(t->x, 10);
     test_int(t->y, 20);
 
-    const Position *t_2 = ecs_get_trait_tag(world, base, Trait, Position);
+    const Position *t_2 = ecs_get_pair_object(world, base, Rel, Position);
     test_assert(t_2 != NULL);
     test_assert(t == t_2);
 
-    ecs_add_trait(world, instance, ecs_typeid(Position), Trait);
-    t = ecs_get_trait_tag(world, instance, Trait, Position);
+    ecs_add_pair(world, instance, Rel, ecs_typeid(Position));
+    t = ecs_get_pair_object(world, instance, Rel, Position);
     test_assert(t != NULL);
     test_int(t->x, 10);
     test_int(t->y, 20);
@@ -565,34 +565,34 @@ void Traits_override_tag_trait() {
     ecs_fini(world);
 }
 
-void Traits_trait_wildcard_system() {
+void Pairs_pair_wildcard_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
-    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, TRAIT | Trait, TRAIT | Trait > *);
+    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, PAIR | Rel, PAIR | Rel > *);
 
-    /* Ensure that trait is matched against different components */
+    /* Ensure that pair is matched against different components */
     ecs_entity_t e1 = 
-    ecs_set_trait(world, 0, Position, Trait, {
+    ecs_set_pair(world, 0, Rel, ecs_typeid(Position), {
         .value = 10
     });
     ecs_add(world, e1, Position);
 
     ecs_entity_t e2 = 
-    ecs_set_trait(world, 0, Velocity, Trait, {
+    ecs_set_pair(world, 0, Rel, ecs_typeid(Velocity), {
         .value = 20
     });
     ecs_add(world, e2, Velocity);
 
     /* This entity should not be matched as it doesn't have Position */
-    ecs_set_trait(world, 0, Position, Trait, {
+    ecs_set_pair(world, 0, Rel, ecs_typeid(Position), {
         .value = 20
     });
 
-    /* This entity should not be matched as it doesn't have the trait */
+    /* This entity should not be matched as it doesn't have the pair */
     ecs_set(world, 0, Position, { 10, 20 });
 
     Probe ctx = {0};
@@ -600,11 +600,11 @@ void Traits_trait_wildcard_system() {
 
     ecs_progress(world, 0);
 
-    const Trait* tr = ecs_get_trait(world, e1, Position, Trait);
+    const Rel* tr = ecs_get_pair(world, e1, Rel, ecs_typeid(Position));
     test_assert(tr != NULL);
     test_int(tr->value, 11);
 
-    tr = ecs_get_trait(world, e2, Velocity, Trait);
+    tr = ecs_get_pair(world, e2, Rel, ecs_typeid(Velocity));
     test_assert(tr != NULL);
     test_int(tr->value, 21); 
 
@@ -618,16 +618,16 @@ void Traits_trait_wildcard_system() {
     test_int(ctx.e[1], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Position));
     test_int(ctx.c[0][1], ecs_typeid(Position));
 
-    c = ctx.c[1][0] & ECS_COMPONENT_MASK;
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    c = ctx.c[1][0];
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Velocity));
     test_int(ctx.c[1][1], ecs_typeid(Velocity));
 
@@ -642,34 +642,34 @@ void IterTraitWildcard(ecs_iter_t *it) {
     probe_system(it);
 }
 
-void Traits_trait_only_wildcard_system() {
+void Pairs_pair_only_wildcard_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
-    ECS_SYSTEM(world, IterTraitWildcard, EcsOnUpdate, TRAIT | Trait > *);
+    ECS_SYSTEM(world, IterTraitWildcard, EcsOnUpdate, PAIR | Rel > *);
 
-    /* Ensure that trait is matched against different components */
+    /* Ensure that pair is matched against different components */
     ecs_entity_t e1 = 
-    ecs_set_trait(world, 0, Position, Trait, {
+    ecs_set_pair(world, 0, Rel, ecs_typeid(Position), {
         .value = 10
     });
     ecs_add(world, e1, Position);
 
     ecs_entity_t e2 = 
-    ecs_set_trait(world, 0, Velocity, Trait, {
+    ecs_set_pair(world, 0, Rel, ecs_typeid(Velocity), {
         .value = 20
     });
     ecs_add(world, e2, Velocity);
 
     /* This entity should not be matched as it doesn't have Position */
-    ecs_set_trait(world, 0, Position, Trait, {
+    ecs_set_pair(world, 0, Rel, ecs_typeid(Position), {
         .value = 20
     });
 
-    /* This entity should not be matched as it doesn't have the trait */
+    /* This entity should not be matched as it doesn't have the pair */
     ecs_set(world, 0, Position, { 10, 20 });
 
     Probe ctx = {0};
@@ -695,47 +695,47 @@ void Traits_trait_only_wildcard_system() {
     ecs_fini(world);
 }
 
-static int set_trait_invoked = 0;
+static int set_pair_invoked = 0;
 
 static
 void SetTrait(ecs_iter_t *it) {
-    set_trait_invoked ++;
+    set_pair_invoked ++;
     probe_system(it);
 }
 
-void Traits_trait_wildcard_on_set() {
+void Pairs_pair_wildcard_on_set() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
-    ECS_SYSTEM(world, SetTrait, EcsOnSet, TRAIT | Trait > *);
+    ECS_SYSTEM(world, SetTrait, EcsOnSet, PAIR | Rel > *);
 
-    /* Ensure that trait is matched against different components */
+    /* Ensure that pair is matched against different components */
     ecs_entity_t e1 = 
-    ecs_set_trait(world, 0, Position, Trait, { .value = 10 });
+    ecs_set_pair(world, 0, Rel, ecs_typeid(Position), { .value = 10 });
     ecs_add(world, e1, Position);
-    test_int(set_trait_invoked, 0);
+    test_int(set_pair_invoked, 0);
 
     ecs_entity_t e2 = 
-    ecs_set_trait(world, 0, Velocity, Trait, { .value = 20 });
+    ecs_set_pair(world, 0, Rel, ecs_typeid(Velocity), { .value = 20 });
     ecs_add(world, e2, Velocity);
-    test_int(set_trait_invoked, 0);
+    test_int(set_pair_invoked, 0);
 
-    /* This entity should not trigger as it doesn't have the trait */
+    /* This entity should not trigger as it doesn't have the pair */
     ecs_set(world, 0, Position, { 10, 20 });
-    test_int(set_trait_invoked, 0);
+    test_int(set_pair_invoked, 0);
 
     /* Set Position on e1, should trigger OnSet */
     ecs_set(world, e1, Position, {10, 20});
-    test_int(set_trait_invoked, 1);
+    test_int(set_pair_invoked, 1);
 
     ecs_set(world, e2, Position, {10, 20});
-    test_int(set_trait_invoked, 1);
+    test_int(set_pair_invoked, 1);
 
     ecs_set(world, e2, Velocity, {10, 20});
-    test_int(set_trait_invoked, 2);
+    test_int(set_pair_invoked, 2);
 
     ecs_fini(world);
 }
@@ -745,20 +745,20 @@ void TraitTrigger(ecs_iter_t *it) {
     probe_system(it);
 }
 
-void Traits_on_add_trait() {
+void Pairs_on_add_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
-    ECS_TRIGGER(world, TraitTrigger, EcsOnAdd, Trait);
+    ECS_TRIGGER(world, TraitTrigger, EcsOnAdd, Rel);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));
+    ecs_add_pair(world, e, ecs_typeid(Rel), ecs_typeid(Position));
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -768,13 +768,13 @@ void Traits_on_add_trait() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Position));  
 
     ctx = (Probe){ 0 };
-    ecs_add_trait(world, e, ecs_typeid(Velocity), ecs_typeid(Trait));
+    ecs_add_pair(world, e, ecs_typeid(Rel), ecs_typeid(Velocity));
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -784,19 +784,19 @@ void Traits_on_add_trait() {
     test_int(ctx.e[0], e);
 
     c = ctx.c[0][0];
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Velocity));
 
     ecs_fini(world);
 }
 
-void Traits_on_add_trait_tag() {
+void Pairs_on_add_pair_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Rel);
 
     ECS_TRIGGER(world, TraitTrigger, EcsOnAdd, Position);
 
@@ -804,7 +804,7 @@ void Traits_on_add_trait_tag() {
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_trait(world, e, ecs_typeid(Position), Trait);
+    ecs_add_pair(world, e, Rel, ecs_typeid(Position));
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -814,32 +814,32 @@ void Traits_on_add_trait_tag() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, Trait);
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, Rel);
     test_int(lo, ecs_typeid(Position));  
 
     ecs_fini(world);
 }
 
-void Traits_on_remove_trait() {
+void Pairs_on_remove_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
-    ECS_TRIGGER(world, TraitTrigger, EcsOnRemove, Trait);
+    ECS_TRIGGER(world, TraitTrigger, EcsOnRemove, Rel);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));
-    ecs_add_trait(world, e, ecs_typeid(Velocity), ecs_typeid(Trait));
+    ecs_add_pair(world, e, ecs_typeid(Rel), ecs_typeid(Position));
+    ecs_add_pair(world, e, ecs_typeid(Rel), ecs_typeid(Velocity));
     test_int(ctx.count, 0);
 
-    ecs_remove_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));
+    ecs_remove_pair(world, e, ecs_typeid(Rel), ecs_typeid(Position));
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, TraitTrigger);
@@ -848,13 +848,13 @@ void Traits_on_remove_trait() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Position));  
 
     ctx = (Probe){ 0 };
-    ecs_remove_trait(world, e, ecs_typeid(Velocity), ecs_typeid(Trait));
+    ecs_remove_pair(world, e, ecs_typeid(Rel), ecs_typeid(Velocity));
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, TraitTrigger);
@@ -863,19 +863,19 @@ void Traits_on_remove_trait() {
     test_int(ctx.e[0], e);
 
     c = ctx.c[0][0];
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Velocity));
 
     ecs_fini(world);
 }
 
-void Traits_on_remove_trait_tag() {
+void Pairs_on_remove_pair_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Rel);
 
     ECS_TRIGGER(world, TraitTrigger, EcsOnRemove, Position);
 
@@ -883,10 +883,10 @@ void Traits_on_remove_trait_tag() {
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_trait(world, e, ecs_typeid(Position), Trait);
+    ecs_add_pair(world, e, Rel, ecs_typeid(Position));
     test_int(ctx.count, 0);
 
-    ecs_remove_trait(world, e, ecs_typeid(Position), Trait);    
+    ecs_remove_pair(world, e, Rel, ecs_typeid(Position));
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, TraitTrigger);
@@ -895,29 +895,29 @@ void Traits_on_remove_trait_tag() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, Trait);
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, Rel);
     test_int(lo, ecs_typeid(Position));  
 
     ecs_fini(world);
 }
 
-void Traits_on_remove_trait_on_delete() {
+void Pairs_on_remove_pair_on_delete() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
-    ECS_TRIGGER(world, TraitTrigger, EcsOnRemove, Trait);
+    ECS_TRIGGER(world, TraitTrigger, EcsOnRemove, Rel);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));
-    ecs_add_trait(world, e, ecs_typeid(Velocity), ecs_typeid(Trait));
+    ecs_add_pair(world, e, ecs_typeid(Rel), ecs_typeid(Position));
+    ecs_add_pair(world, e, ecs_typeid(Rel), ecs_typeid(Velocity));
     test_int(ctx.count, 0);
 
     ecs_delete(world, e);
@@ -929,17 +929,17 @@ void Traits_on_remove_trait_on_delete() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Position));  
 
     test_int(ctx.e[1], e);
 
     c = ctx.c[1][0];
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, ecs_typeid(Trait));
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, ecs_typeid(Rel));
     test_int(lo, ecs_typeid(Velocity));
 
     ecs_fini(world);
@@ -955,12 +955,12 @@ void TraitTriggerVelocity(ecs_iter_t *it) {
     TraitTrigger(it);
 }
 
-void Traits_on_remove_trait_tag_on_delete() {
+void Pairs_on_remove_pair_tag_on_delete() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Rel);
 
     ECS_TRIGGER(world, TraitTriggerPosition, EcsOnRemove, Position);
     ECS_TRIGGER(world, TraitTriggerVelocity, EcsOnRemove, Velocity);
@@ -969,8 +969,8 @@ void Traits_on_remove_trait_tag_on_delete() {
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_trait(world, e, ecs_typeid(Position), Trait);
-    ecs_add_trait(world, e, ecs_typeid(Velocity), Trait);
+    ecs_add_pair(world, e, Rel, ecs_typeid(Position));
+    ecs_add_pair(world, e, Rel, ecs_typeid(Velocity));
     test_int(ctx.count, 0);
 
     ecs_delete(world, e);
@@ -982,40 +982,40 @@ void Traits_on_remove_trait_tag_on_delete() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    ecs_entity_t lo = ecs_entity_t_lo(c);
-    test_int(hi, Trait);
+    ecs_entity_t hi = ECS_PAIR_RELATION(c);
+    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, Rel);
     test_int(lo, ecs_typeid(Position));  
 
     test_int(ctx.e[1], e);
 
     c = ctx.c[1][0];
-    hi = ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
-    lo = ecs_entity_t_lo(c);
-    test_int(hi, Trait);
+    hi = ECS_PAIR_RELATION(c);
+    lo = ECS_PAIR_OBJECT(c);
+    test_int(hi, Rel);
     test_int(lo, ecs_typeid(Velocity));
 
     ecs_fini(world);
 }
 
-void Traits_trait_from_shared() {
+void Pairs_pair_from_shared() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
     ecs_entity_t base = ecs_new(world, 0);
-    ecs_add_trait(world, base, ecs_typeid(Position), ecs_typeid(Trait));
+    ecs_add_pair(world, base, ecs_typeid(Rel), ecs_typeid(Position));
 
     ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e, EcsIsA, base);
 
-    ecs_query_t *q = ecs_query_new(world, "SHARED:TRAIT|Trait>Position"); // ew
+    ecs_query_t *q = ecs_query_new(world, "SHARED:PAIR|Rel>Position"); // ew
     
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        Trait *t = ecs_column(&it, Trait, 1);
+        Rel *t = ecs_column(&it, Rel, 1);
         test_assert(t != NULL);
 
         int i;
@@ -1030,16 +1030,16 @@ void Traits_trait_from_shared() {
     ecs_fini(world);
 }
 
-void Traits_simple_trait_syntax() {
+void Pairs_simple_pair_syntax() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
     ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));
+    ecs_add_pair(world, e, ecs_typeid(Rel), ecs_typeid(Position));
 
-    ecs_query_t *q = ecs_query_new(world, "Trait FOR Position"); // not ew
+    ecs_query_t *q = ecs_query_new(world, "Rel FOR Position"); // not ew
     
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
@@ -1056,21 +1056,21 @@ void Traits_simple_trait_syntax() {
     ecs_fini(world);
 }
 
-void Traits_trait_w_component_query() {
+void Pairs_pair_w_component_query() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Rel);
 
     ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));
+    ecs_add_pair(world, e, ecs_typeid(Rel), ecs_typeid(Position));
 
-    ecs_query_t *q = ecs_query_new(world, "TRAIT | Trait > Position");
+    ecs_query_t *q = ecs_query_new(world, "PAIR | Rel > Position");
     
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        Trait *t = ecs_column(&it, Trait, 1);
+        Rel *t = ecs_column(&it, Rel, 1);
         test_assert(t != NULL);
 
         int i;
@@ -1085,17 +1085,17 @@ void Traits_trait_w_component_query() {
     ecs_fini(world);
 }
 
-void Traits_query_trait_or_component() {
+void Pairs_query_pair_or_component() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Rel);
 
     ecs_entity_t e1 = ecs_new(world, 0);
-    ecs_add_trait(world, e1, ecs_typeid(Position), Trait);
+    ecs_add_pair(world, e1, Rel, ecs_typeid(Position));
     ecs_entity_t e2 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "TRAIT | Trait > Position || Position");
+    ecs_query_t *q = ecs_query_new(world, "PAIR | Rel > Position || Position");
     
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
@@ -1115,19 +1115,19 @@ void Traits_query_trait_or_component() {
     ecs_fini(world);
 }
 
-void Traits_query_trait_or_trait() {
+void Pairs_query_pair_or_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, TraitA);
-    ECS_TAG(world, TraitB);
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
 
     ecs_entity_t e1 = ecs_new(world, 0);
-    ecs_add_trait(world, e1, ecs_typeid(Position), TraitA);
+    ecs_add_pair(world, e1, RelA, ecs_typeid(Position));
     ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_add_trait(world, e2, ecs_typeid(Position), TraitB);
+    ecs_add_pair(world, e2, RelB, ecs_typeid(Position));
 
-    ecs_query_t *q = ecs_query_new(world, "TRAIT | TraitA > Position || TRAIT | TraitB > Position");
+    ecs_query_t *q = ecs_query_new(world, "PAIR | RelA > Position || PAIR | RelB > Position");
     
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
@@ -1147,17 +1147,17 @@ void Traits_query_trait_or_trait() {
     ecs_fini(world);
 }
 
-void Traits_query_not_trait() {
+void Pairs_query_not_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Rel);
 
     ecs_entity_t e1 = ecs_new(world, Position);
     ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_add_trait(world, e2, ecs_typeid(Position), Trait);
+    ecs_add_pair(world, e2, Rel, ecs_typeid(Position));
 
-    ecs_query_t *q = ecs_query_new(world, "!TRAIT | Trait > Position, Position");
+    ecs_query_t *q = ecs_query_new(world, "!PAIR | Rel > Position, Position");
     
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
@@ -1178,3 +1178,4 @@ void Traits_query_not_trait() {
 
     ecs_fini(world);
 }
+

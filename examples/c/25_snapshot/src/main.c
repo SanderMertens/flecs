@@ -1,18 +1,12 @@
 #include <snapshot.h>
 
-typedef struct Position {
-    float x;
-    float y;
-} Position;
-
-typedef struct Velocity {
-    float x;
-    float y;
-} Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 void Move(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Velocity, v, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;

@@ -1,8 +1,7 @@
 #include <helloworld.h>
 
-typedef struct Position {
-    float x;
-    float y;
+typedef struct {
+    double x, y;
 } Position;
 
 int main(int argc, char *argv[]) {

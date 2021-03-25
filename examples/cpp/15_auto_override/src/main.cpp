@@ -2,13 +2,11 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 int main(int argc, char *argv[]) {
@@ -30,7 +28,7 @@ int main(int argc, char *argv[]) {
      * values with the values of the Base entity. This is a common approach to
      * creating entities with an initialized set of components. */
     auto Movable = ecs.type("Movable")
-        .add_instanceof(Base)
+        .add(flecs::IsA, Base)
         .add<Position>()
         .add<Velocity>();
 

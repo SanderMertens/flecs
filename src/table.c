@@ -117,7 +117,7 @@ ecs_flags32_t get_component_action_flags(
     return flags;  
 }
 
-/* Check if table has instance of component, including traits */
+/* Check if table has instance of component, including pairs */
 static
 bool has_component(
     ecs_world_t *world,
@@ -285,13 +285,10 @@ bool is_override(
 
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities[i];
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            if (ecs_has_entity(world, e & ECS_COMPONENT_MASK, comp)) {
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            if (ecs_has_id(world, ECS_PAIR_OBJECT(e), comp)) {
                 return true;
             }
-        } else {
-            /* ECS_INSTANCEOF will always appear at the end of a type */
-            return false;
         }
     }
 
@@ -2011,7 +2008,7 @@ ecs_data_t* ecs_table_merge(
             record = old_records[i];
             ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
         } else {
-            record = ecs_eis_get_or_create(world, old_entities[i]);
+            record = ecs_eis_ensure(world, old_entities[i]);
         }
 
         bool is_monitored = record->row < 0;

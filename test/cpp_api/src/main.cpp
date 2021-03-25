@@ -35,7 +35,7 @@ void Entity_get_mut_generic_w_id(void);
 void Entity_add_role(void);
 void Entity_remove_role(void);
 void Entity_has_role(void);
-void Entity_trait_role(void);
+void Entity_pair_role(void);
 void Entity_equals(void);
 void Entity_has_childof(void);
 void Entity_has_instanceof(void);
@@ -49,7 +49,7 @@ void Entity_foce_owned(void);
 void Entity_force_owned_2(void);
 void Entity_force_owned_nested(void);
 void Entity_force_owned_type(void);
-void Entity_force_owned_type_w_trait(void);
+void Entity_force_owned_type_w_pair(void);
 void Entity_tag_has_size_zero(void);
 void Entity_get_null_name(void);
 void Entity_get_parent(void);
@@ -59,31 +59,37 @@ void Entity_is_enabled_component_enabled(void);
 void Entity_is_disabled_component_enabled(void);
 void Entity_get_type(void);
 void Entity_get_nonempty_type(void);
+void Entity_set_no_copy(void);
+void Entity_set_copy(void);
 
-// Testsuite 'Traits'
-void Traits_add_component_trait(void);
-void Traits_add_tag_trait(void);
-void Traits_add_tag_trait_to_tag(void);
-void Traits_remove_component_trait(void);
-void Traits_remove_tag_trait(void);
-void Traits_remove_tag_trait_to_tag(void);
-void Traits_set_component_trait(void);
-void Traits_set_tag_trait(void);
-void Traits_system_1_trait_instance(void);
-void Traits_system_2_trait_instances(void);
-void Traits_override_trait(void);
-void Traits_override_tag_trait(void);
-void Traits_get_mut_trait(void);
-void Traits_get_mut_trait_existing(void);
-void Traits_get_mut_trait_tag(void);
-void Traits_get_mut_trait_tag_existing(void);
-void Traits_type_w_trait(void);
-void Traits_type_w_trait_tag(void);
-void Traits_type_w_trait_tags(void);
-void Traits_type_w_tag_trait(void);
-void Traits_override_trait_w_type(void);
-void Traits_override_trait_w_type_tag(void);
-void Traits_override_tag_trait_w_type(void);
+// Testsuite 'Pairs'
+void Pairs_add_component_pair(void);
+void Pairs_add_tag_pair(void);
+void Pairs_add_tag_pair_to_tag(void);
+void Pairs_remove_component_pair(void);
+void Pairs_remove_tag_pair(void);
+void Pairs_remove_tag_pair_to_tag(void);
+void Pairs_set_component_pair(void);
+void Pairs_set_tag_pair(void);
+void Pairs_system_1_pair_instance(void);
+void Pairs_system_2_pair_instances(void);
+void Pairs_override_pair(void);
+void Pairs_override_tag_pair(void);
+void Pairs_get_mut_pair(void);
+void Pairs_get_mut_pair_existing(void);
+void Pairs_get_mut_pair_tag(void);
+void Pairs_get_mut_pair_tag_existing(void);
+void Pairs_type_w_pair(void);
+void Pairs_type_w_pair_tag(void);
+void Pairs_type_w_pair_tags(void);
+void Pairs_type_w_tag_pair(void);
+void Pairs_override_pair_w_type(void);
+void Pairs_override_pair_w_type_tag(void);
+void Pairs_override_tag_pair_w_type(void);
+void Pairs_get_relation_from_id(void);
+void Pairs_get_object_from_id(void);
+void Pairs_get_recycled_relation_from_id(void);
+void Pairs_get_recycled_object_from_id(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -176,7 +182,7 @@ void Query_signature_shared(void);
 void Query_signature_optional(void);
 void Query_subquery(void);
 void Query_subquery_w_expr(void);
-void Query_query_single_trait(void);
+void Query_query_single_pair(void);
 void Query_tag_w_each(void);
 void Query_shared_tag_w_each(void);
 void Query_sort_by(void);
@@ -217,8 +223,8 @@ void ImplicitComponents_remove(void);
 void ImplicitComponents_has(void);
 void ImplicitComponents_set(void);
 void ImplicitComponents_get(void);
-void ImplicitComponents_add_trait(void);
-void ImplicitComponents_remove_trait(void);
+void ImplicitComponents_add_pair(void);
+void ImplicitComponents_remove_pair(void);
 void ImplicitComponents_module(void);
 void ImplicitComponents_system(void);
 void ImplicitComponents_system_optional(void);
@@ -396,8 +402,8 @@ bake_test_case Entity_testcases[] = {
         Entity_has_role
     },
     {
-        "trait_role",
-        Entity_trait_role
+        "pair_role",
+        Entity_pair_role
     },
     {
         "equals",
@@ -452,8 +458,8 @@ bake_test_case Entity_testcases[] = {
         Entity_force_owned_type
     },
     {
-        "force_owned_type_w_trait",
-        Entity_force_owned_type_w_trait
+        "force_owned_type_w_pair",
+        Entity_force_owned_type_w_pair
     },
     {
         "tag_has_size_zero",
@@ -490,101 +496,125 @@ bake_test_case Entity_testcases[] = {
     {
         "get_nonempty_type",
         Entity_get_nonempty_type
+    },
+    {
+        "set_no_copy",
+        Entity_set_no_copy
+    },
+    {
+        "set_copy",
+        Entity_set_copy
     }
 };
 
-bake_test_case Traits_testcases[] = {
+bake_test_case Pairs_testcases[] = {
     {
-        "add_component_trait",
-        Traits_add_component_trait
+        "add_component_pair",
+        Pairs_add_component_pair
     },
     {
-        "add_tag_trait",
-        Traits_add_tag_trait
+        "add_tag_pair",
+        Pairs_add_tag_pair
     },
     {
-        "add_tag_trait_to_tag",
-        Traits_add_tag_trait_to_tag
+        "add_tag_pair_to_tag",
+        Pairs_add_tag_pair_to_tag
     },
     {
-        "remove_component_trait",
-        Traits_remove_component_trait
+        "remove_component_pair",
+        Pairs_remove_component_pair
     },
     {
-        "remove_tag_trait",
-        Traits_remove_tag_trait
+        "remove_tag_pair",
+        Pairs_remove_tag_pair
     },
     {
-        "remove_tag_trait_to_tag",
-        Traits_remove_tag_trait_to_tag
+        "remove_tag_pair_to_tag",
+        Pairs_remove_tag_pair_to_tag
     },
     {
-        "set_component_trait",
-        Traits_set_component_trait
+        "set_component_pair",
+        Pairs_set_component_pair
     },
     {
-        "set_tag_trait",
-        Traits_set_tag_trait
+        "set_tag_pair",
+        Pairs_set_tag_pair
     },
     {
-        "system_1_trait_instance",
-        Traits_system_1_trait_instance
+        "system_1_pair_instance",
+        Pairs_system_1_pair_instance
     },
     {
-        "system_2_trait_instances",
-        Traits_system_2_trait_instances
+        "system_2_pair_instances",
+        Pairs_system_2_pair_instances
     },
     {
-        "override_trait",
-        Traits_override_trait
+        "override_pair",
+        Pairs_override_pair
     },
     {
-        "override_tag_trait",
-        Traits_override_tag_trait
+        "override_tag_pair",
+        Pairs_override_tag_pair
     },
     {
-        "get_mut_trait",
-        Traits_get_mut_trait
+        "get_mut_pair",
+        Pairs_get_mut_pair
     },
     {
-        "get_mut_trait_existing",
-        Traits_get_mut_trait_existing
+        "get_mut_pair_existing",
+        Pairs_get_mut_pair_existing
     },
     {
-        "get_mut_trait_tag",
-        Traits_get_mut_trait_tag
+        "get_mut_pair_tag",
+        Pairs_get_mut_pair_tag
     },
     {
-        "get_mut_trait_tag_existing",
-        Traits_get_mut_trait_tag_existing
+        "get_mut_pair_tag_existing",
+        Pairs_get_mut_pair_tag_existing
     },
     {
-        "type_w_trait",
-        Traits_type_w_trait
+        "type_w_pair",
+        Pairs_type_w_pair
     },
     {
-        "type_w_trait_tag",
-        Traits_type_w_trait_tag
+        "type_w_pair_tag",
+        Pairs_type_w_pair_tag
     },
     {
-        "type_w_trait_tags",
-        Traits_type_w_trait_tags
+        "type_w_pair_tags",
+        Pairs_type_w_pair_tags
     },
     {
-        "type_w_tag_trait",
-        Traits_type_w_tag_trait
+        "type_w_tag_pair",
+        Pairs_type_w_tag_pair
     },
     {
-        "override_trait_w_type",
-        Traits_override_trait_w_type
+        "override_pair_w_type",
+        Pairs_override_pair_w_type
     },
     {
-        "override_trait_w_type_tag",
-        Traits_override_trait_w_type_tag
+        "override_pair_w_type_tag",
+        Pairs_override_pair_w_type_tag
     },
     {
-        "override_tag_trait_w_type",
-        Traits_override_tag_trait_w_type
+        "override_tag_pair_w_type",
+        Pairs_override_tag_pair_w_type
+    },
+    {
+        "get_relation_from_id",
+        Pairs_get_relation_from_id
+    },
+    {
+        "get_object_from_id",
+        Pairs_get_object_from_id
+    },
+    {
+        "get_recycled_relation_from_id",
+        Pairs_get_recycled_relation_from_id
+    },
+    {
+        "get_recycled_object_from_id",
+        Pairs_get_recycled_object_from_id
     }
 };
 
@@ -925,8 +955,8 @@ bake_test_case Query_testcases[] = {
         Query_subquery_w_expr
     },
     {
-        "query_single_trait",
-        Query_query_single_trait
+        "query_single_pair",
+        Query_query_single_pair
     },
     {
         "tag_w_each",
@@ -1069,12 +1099,12 @@ bake_test_case ImplicitComponents_testcases[] = {
         ImplicitComponents_get
     },
     {
-        "add_trait",
-        ImplicitComponents_add_trait
+        "add_pair",
+        ImplicitComponents_add_pair
     },
     {
-        "remove_trait",
-        ImplicitComponents_remove_trait
+        "remove_pair",
+        ImplicitComponents_remove_pair
     },
     {
         "module",
@@ -1343,15 +1373,15 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        50,
+        52,
         Entity_testcases
     },
     {
-        "Traits",
+        "Pairs",
         NULL,
         NULL,
-        23,
-        Traits_testcases
+        27,
+        Pairs_testcases
     },
     {
         "Switch",

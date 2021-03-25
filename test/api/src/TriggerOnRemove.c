@@ -221,7 +221,7 @@ void TriggerOnRemove_remove_watched() {
     test_assert(e != 0);
 
     /* Make parent entity watched */
-    ecs_new_w_entity(world, ECS_CHILDOF | e);
+    ecs_new_w_pair(world, EcsChildOf, e);
 
     ecs_remove(world, e, Position);
 
@@ -243,7 +243,7 @@ void TriggerOnRemove_delete_watched() {
     test_assert(e != 0);
 
     /* Make parent entity watched */
-    ecs_new_w_entity(world, ECS_CHILDOF | e);
+    ecs_new_w_pair(world, EcsChildOf, e);
 
     ecs_delete(world, e);
 
@@ -273,19 +273,19 @@ void TriggerOnRemove_on_remove_in_on_update() {
     IterData ctx = {.component = ecs_typeid(Velocity)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_1 = ecs_new(world, Type);
-    ecs_entity_t e_2 = ecs_new(world, Type);
-    ecs_entity_t e_3 = ecs_new(world, Type);
+    ecs_entity_t e1 = ecs_new(world, Type);
+    ecs_entity_t e2 = ecs_new(world, Type);
+    ecs_entity_t e3 = ecs_new(world, Type);
 
     ecs_progress(world, 1);
 
-    test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_3, Position));
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
 
-    test_assert( !ecs_has(world, e_1, Velocity));
-    test_assert( !ecs_has(world, e_2, Velocity));
-    test_assert( !ecs_has(world, e_3, Velocity));
+    test_assert( !ecs_has(world, e1, Velocity));
+    test_assert( !ecs_has(world, e2, Velocity));
+    test_assert( !ecs_has(world, e3, Velocity));
 
     test_assert(dummy_called);
 

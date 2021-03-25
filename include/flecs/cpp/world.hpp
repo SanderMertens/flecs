@@ -39,6 +39,9 @@ public:
         obj.m_owned = false;
     }
 
+    /* Implicit conversion to world_t* */
+    operator world_t*() const { return m_world; }
+
     /** Not allowed to copy a world. May only take a reference.
      */
     world& operator=(const world& obj) = delete;
@@ -190,7 +193,7 @@ public:
      * 
      * @param stages The number of stages.
      */
-    void set_stages(std::int32_t stages) const {
+    void set_stages(int32_t stages) const {
         ecs_set_stages(m_world, stages);
     }
 
@@ -199,7 +202,7 @@ public:
      *
      * @return The number of stages used for threading.
      */
-    std::int32_t get_stage_count() const {
+    int32_t get_stage_count() const {
         return ecs_get_stage_count(m_world);
     }
 
@@ -209,7 +212,7 @@ public:
      *
      * @return The stage id.
      */
-    std::int32_t get_stage_id() const {
+    int32_t get_stage_id() const {
         return ecs_get_stage_id(m_world);
     }
 
@@ -259,7 +262,7 @@ public:
      * @param stage_id The index of the stage to retrieve.
      * @return A thread-specific pointer to the world. 
      */
-    flecs::world get_stage(std::int32_t id) const {
+    flecs::world get_stage(int32_t id) const {
         return flecs::world(ecs_get_stage(m_world, id));
     }
 
@@ -272,7 +275,7 @@ public:
     flecs::world get_world() const {
         /* Safe cast, mutability is checked */
         return flecs::world(
-            m_world ? (flecs::world_t*)ecs_get_world(m_world) : nullptr);
+            m_world ? const_cast<flecs::world_t*>(ecs_get_world(m_world)) : nullptr);
     }
 
     /** Test whether the current world object is readonly.
@@ -291,7 +294,7 @@ public:
      *
      * @param threads Number of threads.
      */
-    void set_threads(std::int32_t threads) const {
+    void set_threads(int32_t threads) const {
         ecs_set_threads(m_world, threads);
     }
 
@@ -299,7 +302,7 @@ public:
      *
      * @return Number of configured threads.
      */
-    std::int32_t get_threads() const {
+    int32_t get_threads() const {
         return ecs_get_threads(m_world);
     }
 
@@ -308,7 +311,7 @@ public:
      * @return Unique index for current thread.
      */
     ECS_DEPRECATED("use get_stage_id")
-    std::int32_t get_thread_index() const {
+    int32_t get_thread_index() const {
         return ecs_get_stage_id(m_world);
     }
 
@@ -335,7 +338,7 @@ public:
      *
      * @return Monotonically increasing frame count.
      */
-    std::int32_t get_tick() const {
+    int32_t get_tick() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->frame_count_total;
     }
@@ -380,7 +383,7 @@ public:
      *
      * @param entity_count Number of entities to preallocate memory for.
      */
-    void dim(std::int32_t entity_count) const {
+    void dim(int32_t entity_count) const {
         ecs_dim(m_world, entity_count);
     }
 
@@ -391,7 +394,7 @@ public:
      * @param type Type to preallocate memory for.
      * @param entity_count Number of entities to preallocate memory for.
      */
-    void dim_type(type_t t, std::int32_t entity_count) const {
+    void dim_type(type_t t, int32_t entity_count) const {
         ecs_dim_type(m_world, t, entity_count);
     }
 
@@ -439,12 +442,6 @@ public:
      */
     flecs::entity lookup(const char *name) const;
 
-    /** Lookup entity by name.
-     *
-     * @overload
-     */    
-    flecs::entity lookup(std::string& name) const;
-
     /** Set singleton component.
      */
     template <typename T>
@@ -462,8 +459,8 @@ public:
 
     /** Patch singleton component.
      */
-    template <typename T>
-    void patch(std::function<void(T&)> func) const;
+    template <typename T, typename Func>
+    void patch(const Func& func) const;
 
     /** Get singleton component.
      */
@@ -484,7 +481,7 @@ public:
      */
     template <typename T>
     entity_t type_id() {
-        return _::component_info<T>::id(m_world);
+        return _::cpp_type<T>::id(m_world);
     }
 
     /** Get singleton entity for type.
@@ -604,7 +601,7 @@ public:
     template <typename T>
     int count() const {
         return ecs_count_type(
-            m_world, _::component_info<T>::type(m_world));
+            m_world, _::cpp_type<T>::type(m_world));
     }
 
     /** Count entities matching a filter.

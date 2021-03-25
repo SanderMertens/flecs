@@ -4,25 +4,29 @@ const EcsComponent* ecs_component_from_id(
     const ecs_world_t *world,
     ecs_entity_t e)
 {
-    ecs_entity_t trait = 0;
+    ecs_entity_t pair = 0;
 
-    /* If this is a trait, get the trait component from the identifier */
-    if (ECS_HAS_ROLE(e, TRAIT)) {
-        trait = e;
-        e = e & ECS_COMPONENT_MASK;
-        e = ecs_entity_t_hi(e);
+    /* If this is a pair, get the pair component from the identifier */
+    if (ECS_HAS_ROLE(e, PAIR)) {
+        pair = e;
+        e = ECS_PAIR_RELATION(e);
     }
 
     const EcsComponent *component = ecs_get(world, e, EcsComponent);
-    if (!component && trait) {
-        /* If this is a trait column and the trait is not a component, use
-         * the component type of the component the trait is applied to. */
-        e = ecs_entity_t_lo(trait);
+    if (!component && pair) {
+        /* If this is a pair column and the pair is not a component, use
+         * the component type of the component the pair is applied to. */
+        e = ECS_PAIR_OBJECT(pair);
+
+        /* Because generations are not stored in the pair, get the currently
+         * alive id */
+        e = ecs_get_alive(world, e);
+
+        /* If a pair is used with a not alive id, the pair is not valid */
+        ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+
         component = ecs_get(world, e, EcsComponent);
     }
-
-    ecs_assert(!component || !ECS_HAS_ROLE(e, CHILDOF), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!component || !ECS_HAS_ROLE(e, INSTANCEOF), ECS_INTERNAL_ERROR, NULL);
 
     return component;
 }
@@ -42,11 +46,37 @@ int32_t data_column_count(
          * vectors are sorted. 
          * Explicitly check for EcsComponent and EcsName since the ecs_has check
          * doesn't work during bootstrap. */
-        if ((component == ecs_typeid(EcsComponent)) || 
-            (component == ecs_typeid(EcsName)) || 
+        if ((component == ecs_id(EcsComponent)) || 
+            (component == ecs_id(EcsName)) || 
             ecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;
+        }
+    });
+
+    return count;
+}
+
+/* Ensure the ids used in the columns exist */
+static
+int32_t ensure_columns(
+    ecs_world_t * world,
+    ecs_table_t * table)
+{
+    int32_t count = 0;
+    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
+        ecs_entity_t component = *c_ptr;
+
+        if (ECS_HAS_ROLE(component, PAIR)) {
+            ecs_entity_t rel = ECS_PAIR_RELATION(component);
+            ecs_entity_t obj = ECS_PAIR_OBJECT(component);
+            ecs_ensure(world, rel);
+            ecs_ensure(world, obj);
+        } else if (component & ECS_ROLE_MASK) {
+            ecs_entity_t e = ECS_PAIR_OBJECT(component);
+            ecs_ensure(world, e);
+        } else {
+            ecs_ensure(world, component);
         }
     });
 
@@ -190,7 +220,7 @@ void init_edges(
             table->flags |= EcsTableIsDisabled;
         }
 
-        if (e == ecs_typeid(EcsComponent)) {
+        if (e == ecs_id(EcsComponent)) {
             table->flags |= EcsTableHasComponentData;
         }
 
@@ -198,7 +228,7 @@ void init_edges(
             table->flags |= EcsTableHasXor;
         }
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
             table->flags |= EcsTableHasBase;
         }
 
@@ -210,9 +240,13 @@ void init_edges(
             table->flags |= EcsTableHasDisabled;
         }   
 
-        if (ECS_HAS_ROLE(e, CHILDOF)) {
-            ecs_entity_t parent = e & ECS_COMPONENT_MASK;
-            ecs_assert(!ecs_exists(world, parent) || ecs_is_alive(world, parent), ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t parent = 0;
+
+        if (ECS_HAS_RELATION(e, EcsChildOf)) {
+            parent = ecs_entity_t_lo(e);
+        }
+
+        if (parent) {
             table->flags |= EcsTableHasParent;
             register_child_table(world, table, parent);
             
@@ -221,8 +255,8 @@ void init_edges(
             }
         }
 
-        if (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_ROLE(e, INSTANCEOF)) {
-            ecs_set_watch(world, e & ECS_COMPONENT_MASK);
+        if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
+            ecs_set_watch(world, ecs_pair_object(world, e));
         }
     }
 
@@ -254,6 +288,9 @@ void init_table(
     table->on_set_override = NULL;
     table->un_set_all = NULL;
     table->alloc_count = 0;
+
+    /* Ensure the component ids for the table exist */
+    ensure_columns(world, table);
 
     table->queries = NULL;
     table->column_count = data_column_count(world, table);
@@ -399,13 +436,13 @@ ecs_entity_t find_xor_replace(
                 const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                if (ecs_type_owns_entity(
+                if (ecs_type_owns_id(
                     world, type_ptr->normalized, add, true)) 
                 {
                     xor_type = type_ptr->normalized;
                 }
             } else if (xor_type) {
-                if (ecs_type_owns_entity(world, xor_type, e, true)) {
+                if (ecs_type_owns_id(world, xor_type, e, true)) {
                     return e;
                 }
             }
@@ -435,7 +472,7 @@ int32_t ecs_table_switch_from_case(
         /* Fast path, we can get the switch type from the column data */
         for (i = 0; i < count; i ++) {
             ecs_type_t sw_type = sw_columns[i].type;
-            if (ecs_type_owns_entity(world, sw_type, add, true)) {
+            if (ecs_type_owns_id(world, sw_type, add, true)) {
                 return i;
             }
         }
@@ -450,7 +487,7 @@ int32_t ecs_table_switch_from_case(
             const EcsType *type_ptr = ecs_get(world, e, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            if (ecs_type_owns_entity(
+            if (ecs_type_owns_id(
                 world, type_ptr->normalized, add, true)) 
             {
                 return i;
@@ -587,7 +624,7 @@ void find_owned_components(
     ecs_entity_t base,
     ecs_entities_t * owned)
 {
-    /* If we're adding an INSTANCEOF relationship, check if the base
+    /* If we're adding an IsA relationship, check if the base
      * has OWNED components that need to be added to the instance */
     ecs_type_t t = ecs_get_type(world, base);
 
@@ -595,8 +632,8 @@ void find_owned_components(
     ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            find_owned_components(world, node, e & ECS_COMPONENT_MASK, owned);
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            find_owned_components(world, node, ECS_PAIR_OBJECT(e), owned);
         } else
         if (ECS_HAS_ROLE(e, OWNED)) {
             e = e & ECS_COMPONENT_MASK;
@@ -611,7 +648,7 @@ void find_owned_components(
                     owned->array[owned->count ++] = n_entities[j];
                 }
             } else {
-                owned->array[owned->count ++] = e & ECS_COMPONENT_MASK;
+                owned->array[owned->count ++] = ECS_PAIR_OBJECT(e);
             }
         }
     }
@@ -656,8 +693,9 @@ ecs_table_t* ecs_table_traverse_add(
             added->array[added->count ++] = e; 
         }
 
-        if ((node != next) && ECS_HAS_ROLE(e, INSTANCEOF)) {
-            find_owned_components(world, next, ECS_COMPONENT_MASK & e, &owned);
+        if ((node != next) && ECS_HAS_RELATION(e, EcsIsA)) {
+            find_owned_components(
+                world, next, ecs_pair_object(world, e), &owned);
         }        
 
         node = next;
@@ -752,7 +790,7 @@ int32_t count_occurrences(
             break;
         }
 
-        if (ecs_type_has_entity(world, type, e)) {
+        if (ecs_type_has_id(world, type, e)) {
             count ++;
         }
     }

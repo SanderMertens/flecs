@@ -242,7 +242,7 @@ bool build_pipeline(
     /* Iterate systems in pipeline, add ops for running / merging */
     ecs_iter_t it = ecs_query_iter(query);
     while (ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);        
+        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
         int i;
         for (i = 0; i < it.count; i ++) {      
@@ -252,7 +252,7 @@ bool build_pipeline(
             }
 
             bool needs_merge = false;
-            bool is_active = !ecs_has_entity(
+            bool is_active = !ecs_has_id(
                 world, it.entities[i], EcsInactive);
 
             ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
@@ -408,7 +408,7 @@ void ecs_pipeline_run(
     
     ecs_iter_t it = ecs_query_iter(pq->query);
     while (ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);
+        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
         int32_t i;
         for(i = 0; i < it.count; i ++) {
@@ -432,7 +432,7 @@ void ecs_pipeline_run(
                 if (ecs_worker_sync(stage->thread_ctx)) {
                     i = iter_reset(pq, &it, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
-                    sys = ecs_column(&it, EcsSystem, 1);
+                    sys = ecs_term(&it, EcsSystem, 1);
                 }
             }
         }
@@ -491,7 +491,7 @@ void EcsOnAddPipeline(
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
         ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
-            ecs_typeid(EcsSystem), 0, NULL);
+            ecs_id(EcsSystem), 0, NULL);
         ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0, NULL);
         ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
             EcsDisabledIntern, 0, NULL);
@@ -507,7 +507,7 @@ void EcsOnAddPipeline(
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
         ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
-            ecs_typeid(EcsSystem), 0, NULL);
+            ecs_id(EcsSystem), 0, NULL);
         ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
             EcsDisabledIntern, 0, NULL);
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
@@ -577,14 +577,14 @@ void ecs_deactivate_systems(
     ecs_defer_none(world, &world->stage);
 
     while( ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_column(&it, EcsSystem, 1);
+        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {
             ecs_query_t *query = sys[i].query;
             if (query) {
                 if (!ecs_vector_count(query->tables)) {
-                    ecs_add_entity(world, it.entities[i], EcsInactive);
+                    ecs_add_id(world, it.entities[i], EcsInactive);
                 }
             }
         }
@@ -625,7 +625,7 @@ ecs_entity_t ecs_new_pipeline(
     ecs_assert(ecs_get(world, result, EcsType) != NULL, 
         ECS_INTERNAL_ERROR, NULL);
 
-    ecs_add_entity(world, result, EcsPipeline);
+    ecs_add_id(world, result, EcsPipeline);
 
     return result;
 }
@@ -671,7 +671,7 @@ void FlecsPipelineImport(
     ECS_TYPE_IMPL(EcsPipelineQuery);
 
     /* Set ctor and dtor for PipelineQuery */
-    ecs_set(world, ecs_typeid(EcsPipelineQuery), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(EcsPipelineQuery), EcsComponentLifecycle, {
         .ctor = ecs_ctor(EcsPipelineQuery),
         .dtor = ecs_dtor(EcsPipelineQuery)
     });

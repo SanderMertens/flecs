@@ -760,9 +760,9 @@ int empty_parent_test(int buffer_size) {
 
     ecs_entity_t parent = ecs_new(world, 0);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
-    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
-    ecs_entity_t e3 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, parent);
 
     ecs_vector_t *v = serialize_to_vector(world, buffer_size);
 
@@ -771,7 +771,7 @@ int empty_parent_test(int buffer_size) {
     world = deserialize_from_vector(v, buffer_size);
 
     {
-        ecs_type_t ecs_type(parent) = ecs_type_from_entity(world, ECS_CHILDOF | parent);
+        ecs_type_t ecs_type(parent) = ecs_type_from_entity(world, ecs_pair(EcsChildOf, parent));
         test_int( ecs_count(world, parent), 3);
 
         test_assert( ecs_get_type(world, e1) != NULL);
@@ -782,9 +782,9 @@ int empty_parent_test(int buffer_size) {
         test_assert( ecs_has(world, e2, parent));
         test_assert( ecs_has(world, e3, parent));        
 
-        test_assert( ecs_has_entity(world, e1, ECS_CHILDOF | parent));
-        test_assert( ecs_has_entity(world, e2, ECS_CHILDOF | parent));
-        test_assert( ecs_has_entity(world, e3, ECS_CHILDOF | parent));  
+        test_assert( ecs_has_pair(world, e1, EcsChildOf, parent));
+        test_assert( ecs_has_pair(world, e2, EcsChildOf, parent));
+        test_assert( ecs_has_pair(world, e3, EcsChildOf, parent));  
 
         ecs_fini(world);
 
@@ -820,9 +820,9 @@ int parent_test(int buffer_size) {
         parent = ecs_set(world, 0, Position, {1, 2});
         ecs_type(parent) = ecs_type_from_entity(world, parent);
 
-        e1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
-        e2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
-        e3 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+        e1 = ecs_new_w_pair(world, EcsChildOf, parent);
+        e2 = ecs_new_w_pair(world, EcsChildOf, parent);
+        e3 = ecs_new_w_pair(world, EcsChildOf, parent);
 
         v = serialize_to_vector(world, buffer_size);
 
@@ -834,7 +834,7 @@ int parent_test(int buffer_size) {
     {
         ECS_COMPONENT(world, Position);
 
-        ecs_type(parent) = ecs_type_from_entity(world, ECS_CHILDOF | parent);
+        ecs_type(parent) = ecs_type_from_entity(world, ecs_pair(EcsChildOf, parent));
 
         test_int( ecs_count(world, Position), 1);
         test_int( ecs_count(world, parent), 3);
@@ -847,9 +847,9 @@ int parent_test(int buffer_size) {
         test_assert( ecs_has(world, e2, parent));
         test_assert( ecs_has(world, e3, parent));        
 
-        test_assert( ecs_has_entity(world, e1, ECS_CHILDOF | parent));
-        test_assert( ecs_has_entity(world, e2, ECS_CHILDOF | parent));
-        test_assert( ecs_has_entity(world, e3, ECS_CHILDOF | parent)); 
+        test_assert( ecs_has_pair(world, e1, EcsChildOf, parent));
+        test_assert( ecs_has_pair(world, e2, EcsChildOf, parent));
+        test_assert( ecs_has_pair(world, e3, EcsChildOf, parent)); 
 
         ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT:Position);
         Probe ctx = {0};
@@ -889,13 +889,13 @@ int simple_w_parent_test(int buffer_size) {
 
         parent = ecs_set(world, 0, Position, {1, 2});
 
-        e1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+        e1 = ecs_new_w_pair(world, EcsChildOf, parent);
         ecs_set(world, e1, Position, {1, 2});
 
-        e2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+        e2 = ecs_new_w_pair(world, EcsChildOf, parent);
         ecs_set(world, e2, Position, {3, 4});
 
-        e3 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+        e3 = ecs_new_w_pair(world, EcsChildOf, parent);
         ecs_set(world, e3, Position, {5, 6});
 
         v = serialize_to_vector(world, buffer_size);
@@ -909,7 +909,7 @@ int simple_w_parent_test(int buffer_size) {
         ECS_COMPONENT(world, Position);
 
         test_int( ecs_count(world, Position), 4);
-        test_int( ecs_count_entity(world, ECS_CHILDOF | parent), 3);
+        test_int( ecs_count_entity(world, ecs_pair(EcsChildOf, parent)), 3);
 
         test_assert( !!ecs_get_type(world, e1));
         test_assert( !!ecs_get_type(world, e2));
@@ -919,13 +919,13 @@ int simple_w_parent_test(int buffer_size) {
         test_assert( ecs_has(world, e2, Position));
         test_assert( ecs_has(world, e3, Position));   
 
-        test_assert( ecs_has_entity(world, e1, ECS_CHILDOF | parent));
-        test_assert( ecs_has_entity(world, e2, ECS_CHILDOF | parent));
-        test_assert( ecs_has_entity(world, e3, ECS_CHILDOF | parent));        
+        test_assert( ecs_has_pair(world, e1, EcsChildOf, parent));
+        test_assert( ecs_has_pair(world, e2, EcsChildOf, parent));
+        test_assert( ecs_has_pair(world, e3, EcsChildOf, parent));        
 
-        test_assert( ecs_has_entity(world, e1, ECS_CHILDOF | parent));
-        test_assert( ecs_has_entity(world, e2, ECS_CHILDOF | parent));
-        test_assert( ecs_has_entity(world, e3, ECS_CHILDOF | parent)); 
+        test_assert( ecs_has_pair(world, e1, EcsChildOf, parent));
+        test_assert( ecs_has_pair(world, e2, EcsChildOf, parent));
+        test_assert( ecs_has_pair(world, e3, EcsChildOf, parent)); 
 
         const Position *
         p = ecs_get(world, e1, Position);
@@ -983,9 +983,9 @@ int inheritance_test(int buffer_size) {
         base = ecs_set(world, 0, Position, {1, 2});
         ecs_type(base) = ecs_type_from_entity(world, base);
 
-        e1 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-        e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-        e3 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        e1 = ecs_new_w_pair(world, EcsIsA, base);
+        e2 = ecs_new_w_pair(world, EcsIsA, base);
+        e3 = ecs_new_w_pair(world, EcsIsA, base);
 
         v = serialize_to_vector(world, buffer_size);
 
@@ -996,7 +996,7 @@ int inheritance_test(int buffer_size) {
 
     {
         ECS_COMPONENT(world, Position);
-        ecs_type(base) = ecs_type_from_entity(world, ECS_INSTANCEOF | base);
+        ecs_type(base) = ecs_type_from_entity(world, ecs_pair(EcsIsA, base));
 
         test_int( ecs_count(world, Position), 4);
         test_int( ecs_count(world, base), 3);
@@ -1058,11 +1058,11 @@ int simple_w_inheritance_test(int buffer_size) {
         base = ecs_set(world, 0, Position, {1, 2});
         ecs_type(base) = ecs_type_from_entity(world, base);
 
-        e1 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        e1 = ecs_new_w_pair(world, EcsIsA, base);
         ecs_set(world, e1, Velocity, {3, 4});
-        e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        e2 = ecs_new_w_pair(world, EcsIsA, base);
         ecs_set(world, e2, Velocity, {5, 6});
-        e3 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        e3 = ecs_new_w_pair(world, EcsIsA, base);
         ecs_set(world, e3, Velocity, {7, 8});
 
         v = serialize_to_vector(world, buffer_size);
@@ -1075,7 +1075,7 @@ int simple_w_inheritance_test(int buffer_size) {
     {
         ECS_COMPONENT(world, Position);
         ECS_COMPONENT(world, Velocity);
-        ecs_type(base) = ecs_type_from_entity(world, ECS_INSTANCEOF | base);
+        ecs_type(base) = ecs_type_from_entity(world, ecs_pair(EcsIsA, base));
 
         test_int( ecs_count(world, Position), 4);
         test_int( ecs_count(world, Velocity), 3);

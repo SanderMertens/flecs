@@ -24,5 +24,43 @@ struct Rotation {
 
 struct Tag { };
 
+class POD {
+public:
+    POD() {
+        ctor_invoked ++;
+        value = 10;
+    }
+
+    POD(int v) {
+        ctor_invoked ++;
+        value = v;
+    }    
+
+    ~POD() {
+        dtor_invoked ++;
+    }
+
+    POD& operator=(const POD& obj) {
+        copy_invoked ++;
+        this->value = obj.value;
+        return *this;
+    }
+
+    POD& operator=(POD&& obj) {
+        move_invoked ++;
+        this->value = obj.value;
+        return *this;
+    }   
+
+    int value;
+
+    static int ctor_invoked;
+    static int dtor_invoked;
+    static int copy_invoked;
+    static int move_invoked;
+};
+
+
+
 #endif
 

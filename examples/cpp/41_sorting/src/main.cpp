@@ -2,8 +2,7 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 // Order by x member of Position */

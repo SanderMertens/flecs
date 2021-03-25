@@ -144,7 +144,7 @@ void Monitor_1_parent() {
     ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e, EcsChildOf, parent);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
@@ -174,7 +174,7 @@ void Monitor_1_comp_1_parent() {
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e, EcsChildOf, parent);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);

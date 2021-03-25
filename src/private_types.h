@@ -55,7 +55,7 @@ typedef int (*ecs_parse_action_t)(
     ecs_entity_t flags,
     const char *component,
     const char *source,
-    const char *trait,
+    const char *pair,
     const char *name,
     void *ctx);
 
@@ -127,8 +127,8 @@ typedef struct ecs_table_leaf_t {
 /** Flags for quickly checking for special properties of a table. */
 #define EcsTableHasBuiltins         1u    /**< Does table have builtin components */
 #define EcsTableIsPrefab            2u    /**< Does the table store prefabs */
-#define EcsTableHasBase             4u    /**< Does the table type has INSTANCEOF */
-#define EcsTableHasParent           8u    /**< Does the table type has CHILDOF */
+#define EcsTableHasBase             4u    /**< Does the table type has IsA */
+#define EcsTableHasParent           8u    /**< Does the table type has ChildOf */
 #define EcsTableHasComponentData    16u   /**< Does the table have component data */
 #define EcsTableHasXor              32u   /**< Does the table type has XOR */
 #define EcsTableIsDisabled          64u   /**< Does the table type has EcsDisabled */
@@ -233,7 +233,7 @@ typedef struct ecs_matched_table_t {
  * return the location of the table in either list in constant time.
  *
  * If a table is matched multiple times by a query, such as can happen when a
- * query matches traits, a table can occupy multiple indices.
+ * query matches pairs, a table can occupy multiple indices.
  */
 typedef struct ecs_table_indices_t {
     int32_t *indices; /* If indices are negative, table is in empty list */
@@ -258,7 +258,7 @@ typedef struct ecs_table_slice_t {
 #define EcsQueryMatchDisabled (16)   /* Does query match disabled */
 #define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
 #define EcsQueryHasRefs (64)         /* Does query have references */
-#define EcsQueryHasTraits (128)      /* Does query have traits */
+#define EcsQueryHasTraits (128)      /* Does query have pairs */
 #define EcsQueryIsSubquery (256)     /* Is query a subquery */
 #define EcsQueryIsOrphaned (512)     /* Is subquery orphaned */
 #define EcsQueryHasOutColumns (1024) /* Does query have out columns */
@@ -454,9 +454,7 @@ struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
-
-    ecs_c_info_t c_info[ECS_HI_COMPONENT_ID]; /* Component callbacks & triggers */
-    ecs_map_t *t_info;                        /* Tag triggers */
+    ecs_sparse_t *type_info;     /* Component lifecycle info */
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;
@@ -485,7 +483,7 @@ struct ecs_world_t {
     /* Parent monitors are like normal component monitors except that the
      * conditions under which a parent component is flagged dirty is different.
      * Parent component flags are marked dirty when an entity that is a parent
-     * adds or removes a CHILDOF flag. In that case, every component of that
+     * adds or removes a ChildOf relation. In that case, every component of that
      * parent will be marked dirty. This allows column modifiers like CASCADE
      * to correctly determine when the depth ranking of a table has changed. */
     ecs_component_monitor_t parent_monitors; 

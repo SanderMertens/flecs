@@ -62,7 +62,7 @@ void print_value(
     float value)
 {
     ecs_size_t len = ecs_os_strlen(name);
-    printf("%s: %*s %.2f\n", name, 32 - len, "", value);
+    printf("%s: %*s %.2f\n", name, 32 - len, "", (double)value);
 }
 
 static
@@ -128,7 +128,7 @@ void ecs_get_world_stats(
     record_counter(&s->pipeline_build_count_total, t, world->stats.pipeline_build_count_total);
     record_counter(&s->systems_ran_frame, t, world->stats.systems_ran_frame);
 
-    if (delta_world_time != 0.0 && delta_frame_count != 0.0) {
+    if (delta_world_time != 0.0f && delta_frame_count != 0.0f) {
         record_gauge(
             &s->fps, t, 1.0f / (delta_world_time / (float)delta_frame_count));
     } else {
@@ -136,9 +136,9 @@ void ecs_get_world_stats(
     }
 
     record_gauge(&s->entity_count, t, ecs_sparse_count(world->store.entity_index));
-    record_gauge(&s->component_count, t, ecs_count_entity(world, ecs_typeid(EcsComponent)));
+    record_gauge(&s->component_count, t, ecs_count_id(world, ecs_id(EcsComponent)));
     record_gauge(&s->query_count, t, ecs_vector_count(world->queries));
-    record_gauge(&s->system_count, t, ecs_count_entity(world, ecs_typeid(EcsSystem)));
+    record_gauge(&s->system_count, t, ecs_count_id(world, ecs_id(EcsSystem)));
 
     record_counter(&s->new_count, t, world->new_count);
     record_counter(&s->bulk_new_count, t, world->bulk_new_count);
@@ -168,7 +168,7 @@ void ecs_get_world_stats(
         if (entity_count == 1) {
             ecs_data_t *data = ecs_table_get_data(table);
             ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-            if (ecs_type_has_entity(world, table->type, entities[0])) {
+            if (ecs_type_has_id(world, table->type, entities[0])) {
                 singleton_table_count ++;
             }
         }
@@ -232,8 +232,8 @@ bool ecs_get_system_stats(
 
     record_counter(&s->time_spent, t, ptr->time_spent);
     record_counter(&s->invoke_count, t, ptr->invoke_count);
-    record_gauge(&s->active, t, !ecs_has_entity(world, system, EcsInactive));
-    record_gauge(&s->enabled, t, !ecs_has_entity(world, system, EcsDisabled));
+    record_gauge(&s->active, t, !ecs_has_id(world, system, EcsInactive));
+    record_gauge(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
 
     return true;
 }

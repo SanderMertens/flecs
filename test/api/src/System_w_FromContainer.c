@@ -53,17 +53,17 @@ void System_w_FromContainer_1_column_from_container() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -76,25 +76,25 @@ void System_w_FromContainer_1_column_from_container() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_3, Position);
+    p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -109,17 +109,17 @@ void System_w_FromContainer_2_column_1_from_container() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
-    ECS_ENTITY(world, e_2, Position, Velocity);
-    ECS_ENTITY(world, e_3, Position, Velocity);
-    ECS_ENTITY(world, e_4, Position, Velocity);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position, Velocity);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -132,9 +132,9 @@ void System_w_FromContainer_2_column_1_from_container() {
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
@@ -142,32 +142,32 @@ void System_w_FromContainer_2_column_1_from_container() {
     test_int(ctx.c[0][2], ecs_typeid(Velocity));
     test_int(ctx.s[0][2], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_3, Position);
+    p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    const Velocity *v = ecs_get(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 60);
     test_int(v->y, 80);
 
-    v = ecs_get(world, e_2, Velocity);
+    v = ecs_get(world, e2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 60);
     test_int(v->y, 80);
 
-    v = ecs_get(world, e_3, Velocity);
+    v = ecs_get(world, e3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 60);
     test_int(v->y, 80);
@@ -228,19 +228,19 @@ void System_w_FromContainer_3_column_2_from_container() {
     ECS_COMPONENT(world, Rotation);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
 
     ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, PARENT:Mass, PARENT:Rotation, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
     ecs_set(world, parent, Rotation, {3});
 
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+    ecs_add_pair(world, e4, EcsChildOf, parent);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -253,9 +253,9 @@ void System_w_FromContainer_3_column_2_from_container() {
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_4);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e4);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Rotation));
@@ -263,17 +263,17 @@ void System_w_FromContainer_3_column_2_from_container() {
     test_int(ctx.c[0][2], ecs_typeid(Position));
     test_int(ctx.s[0][2], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get(world, e_4, Position);
+    p = ecs_get(world, e4, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
@@ -288,30 +288,30 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     ECS_COMPONENT(world, Rotation);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
-    ECS_ENTITY(world, e_5, Position);
-    ECS_ENTITY(world, e_6, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
+    ECS_ENTITY(world, e5, Position);
+    ECS_ENTITY(world, e6, Position);
 
     ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, PARENT:Mass, PARENT:Rotation, Position);
 
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
 
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_1);
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_2);
+    ecs_add_pair(world, e1, EcsChildOf, parent_1);
+    ecs_add_pair(world, e1, EcsChildOf, parent_2);
 
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_1);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
+    ecs_add_pair(world, e2, EcsChildOf, parent_1);
+    ecs_add_pair(world, e2, EcsChildOf, parent_2);
 
-    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_1);
-    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_2);
+    ecs_add_pair(world, e3, EcsChildOf, parent_1);
+    ecs_add_pair(world, e3, EcsChildOf, parent_2);
 
-    /* e_4 and e_5 should not be matched */
-    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_1);
-    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_2);
+    /* e4 and e5 should not be matched */
+    ecs_add_pair(world, e4, EcsChildOf, parent_1);
+    ecs_add_pair(world, e5, EcsChildOf, parent_2);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -324,9 +324,9 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent_1);
     test_int(ctx.c[0][1], ecs_typeid(Rotation));
@@ -334,17 +334,17 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     test_int(ctx.c[0][2], ecs_typeid(Position));
     test_int(ctx.s[0][2], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get(world, e_3, Position);
+    p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
@@ -359,21 +359,21 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     ECS_COMPONENT(world, Rotation);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
-    ECS_ENTITY(world, e_5, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
+    ECS_ENTITY(world, e5, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, !PARENT:Mass, Position);
 
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
 
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_2);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
-    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_2);
-    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_1);
+    ecs_add_pair(world, e1, EcsChildOf, parent_2);
+    ecs_add_pair(world, e2, EcsChildOf, parent_2);
+    ecs_add_pair(world, e3, EcsChildOf, parent_2);
+    ecs_add_pair(world, e4, EcsChildOf, parent_1);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -386,10 +386,10 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_5);
-    test_int(ctx.e[1], e_1);
-    test_int(ctx.e[2], e_2);
-    test_int(ctx.e[3], e_3);
+    test_int(ctx.e[0], e5);
+    test_int(ctx.e[1], e1);
+    test_int(ctx.e[2], e2);
+    test_int(ctx.e[3], e3);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_typeid(Position));
@@ -399,22 +399,22 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     test_int(ctx.c[1][1], ecs_typeid(Position));
     test_int(ctx.s[1][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get(world, e_3, Position);
+    p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get(world, e_5, Position);
+    p = ecs_get(world, e5, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -429,12 +429,12 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     ECS_COMPONENT(world, Rotation);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
-    ECS_ENTITY(world, e_5, Position);
-    ECS_ENTITY(world, e_6, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
+    ECS_ENTITY(world, e5, Position);
+    ECS_ENTITY(world, e6, Position);
 
     ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, !PARENT:Mass, PARENT:Rotation, Position);
 
@@ -443,11 +443,11 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     ecs_entity_t parent_3 = ecs_set(world, 0, Mass, {4});
     ecs_set(world, parent_3, Rotation, {5});
 
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_2);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
-    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_2);
-    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_1);
-    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_3);
+    ecs_add_pair(world, e1, EcsChildOf, parent_2);
+    ecs_add_pair(world, e2, EcsChildOf, parent_2);
+    ecs_add_pair(world, e3, EcsChildOf, parent_2);
+    ecs_add_pair(world, e4, EcsChildOf, parent_1);
+    ecs_add_pair(world, e5, EcsChildOf, parent_3);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -460,9 +460,9 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_typeid(Rotation));
@@ -470,17 +470,17 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     test_int(ctx.c[0][2], ecs_typeid(Position));
     test_int(ctx.s[0][2], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
 
-    p = ecs_get(world, e_3, Position);
+    p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
@@ -497,17 +497,17 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
 
     ECS_PREFAB(world, Prefab, Rotation);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, !PARENT:Mass, Position);
 
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
 
-    ecs_add_entity(world, e_1, ECS_INSTANCEOF | Prefab);
+    ecs_add_pair(world, e1, EcsIsA, Prefab);
 
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_1);
-    ecs_set(world, e_1, Position, {1, 2});
+    ecs_add_pair(world, e1, EcsChildOf, parent_1);
+    ecs_set(world, e1, Position, {1, 2});
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -520,18 +520,18 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_2);
+    test_int(ctx.e[0], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -548,12 +548,12 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     ECS_COMPONENT(world, Rotation);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
-    ECS_ENTITY(world, e_5, Position);
-    ECS_ENTITY(world, e_6, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
+    ECS_ENTITY(world, e5, Position);
+    ECS_ENTITY(world, e6, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass || PARENT:Rotation, Position);
 
@@ -563,12 +563,12 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
                             ecs_set(world, parent_3, Mass, {5});
     ecs_entity_t parent_4 = ecs_set(world, 0, Velocity, {10, 20});
 
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_1);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
-    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_3);
-    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_4);
-    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_2);
-    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_3);
+    ecs_add_pair(world, e1, EcsChildOf, parent_1);
+    ecs_add_pair(world, e2, EcsChildOf, parent_2);
+    ecs_add_pair(world, e3, EcsChildOf, parent_3);
+    ecs_add_pair(world, e4, EcsChildOf, parent_4);
+    ecs_add_pair(world, e5, EcsChildOf, parent_2);
+    ecs_add_pair(world, e5, EcsChildOf, parent_3);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -581,10 +581,10 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.e[3], e_5);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.e[3], e5);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent_1);
     test_int(ctx.c[0][1], ecs_typeid(Position));
@@ -602,22 +602,22 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     test_int(ctx.c[3][1], ecs_typeid(Position));
     test_int(ctx.s[3][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);
 
-    p = ecs_get(world, e_3, Position);
+    p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
     test_int(p->x, 40);
     test_int(p->y, 80);
 
-    p = ecs_get(world, e_5, Position);
+    p = ecs_get(world, e5, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);
@@ -652,16 +652,16 @@ void System_w_FromContainer_add_component_after_match() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -676,19 +676,19 @@ void System_w_FromContainer_add_component_after_match() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -702,21 +702,21 @@ void System_w_FromContainer_add_component_after_match_and_rematch() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    /* This will rematch tables, but not match Iter with e_1 and e_2 because the
+    /* This will rematch tables, but not match Iter with e1 and e2 because the
      * parent does not have Mass yet */
     ecs_progress(world, 1);
     test_int(ctx.count, 0);
@@ -733,19 +733,19 @@ void System_w_FromContainer_add_component_after_match_and_rematch() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -759,19 +759,19 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ECS_ENTITY(world, Parent, 0);
-    ECS_ENTITY(world, e_1, Position, CHILDOF | Parent);
-    ECS_ENTITY(world, e_2, Position, CHILDOF | Parent);
+    ECS_ENTITY(world, e1, Position, CHILDOF | Parent);
+    ECS_ENTITY(world, e2, Position, CHILDOF | Parent);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    /* This will rematch tables, but not match Iter with e_1 and e_2 because the
+    /* This will rematch tables, but not match Iter with e1 and e2 because the
      * Parent does not have Mass yet */
     ecs_progress(world, 1);
     test_int(ctx.count, 0);
@@ -788,19 +788,19 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], Parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -825,20 +825,20 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);     
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);     
 
     ECS_SYSTEM(world, SetMass, EcsOnUpdate, Velocity, :Mass);
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ECS_ENTITY(world, Parent, Velocity);
-    ECS_ENTITY(world, e_1, Position, CHILDOF | Parent);
-    ECS_ENTITY(world, e_2, Position, CHILDOF | Parent);  
+    ECS_ENTITY(world, e1, Position, CHILDOF | Parent);
+    ECS_ENTITY(world, e2, Position, CHILDOF | Parent);  
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    /* This will rematch tables, but not match Iter with e_1 and e_2 because the
+    /* This will rematch tables, but not match Iter with e1 and e2 because the
      * Parent does not have Mass yet */
     ecs_progress(world, 1);
     test_int(ctx.count, 0);
@@ -853,19 +853,19 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], Parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -879,15 +879,15 @@ void System_w_FromContainer_add_component_after_match_unmatch() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, !PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -902,13 +902,13 @@ void System_w_FromContainer_add_component_after_match_unmatch() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_3);
+    test_int(ctx.e[0], e3);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_3, Position);
+    const Position *p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -922,15 +922,15 @@ void System_w_FromContainer_add_component_after_match_unmatch_match() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, !PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -945,19 +945,19 @@ void System_w_FromContainer_add_component_after_match_unmatch_match() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -971,16 +971,16 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -995,21 +995,21 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_1);
-    test_int(ctx.e[3], e_2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e1);
+    test_int(ctx.e[3], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 22);
     test_int(p->y, 42);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 22);
     test_int(p->y, 42);
@@ -1034,10 +1034,10 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ECS_COMPONENT(world, Mass);
     ECS_ENTITY(world, Tag, 0);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
     ECS_TRIGGER(world, AddMass, EcsOnAdd, Tag);
@@ -1045,8 +1045,8 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ecs_set(world, AddMass, EcsContext, {&ecs_typeid(Mass)});
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_add_entity(world, parent, Tag);
 
@@ -1061,19 +1061,19 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1087,15 +1087,15 @@ void System_w_FromContainer_adopt_after_match() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, Mass);
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -1110,19 +1110,19 @@ void System_w_FromContainer_adopt_after_match() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1136,13 +1136,13 @@ void System_w_FromContainer_new_child_after_match() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ECS_ENTITY(world, parent, Mass);
-    ECS_ENTITY(world, e_1, CHILDOF | parent, Position);
-    ECS_ENTITY(world, e_2, CHILDOF | parent, Position);
+    ECS_ENTITY(world, e1, CHILDOF | parent, Position);
+    ECS_ENTITY(world, e2, CHILDOF | parent, Position);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -1157,19 +1157,19 @@ void System_w_FromContainer_new_child_after_match() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1198,21 +1198,21 @@ void System_w_FromContainer_select_same_from_container() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
-    ECS_ENTITY(world, e_2, Position);
-    ECS_ENTITY(world, e_3, Position);
-    ECS_ENTITY(world, e_4, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+    ECS_ENTITY(world, e3, Position);
+    ECS_ENTITY(world, e4, Position);
 
     ECS_SYSTEM(world, IterSame, EcsOnUpdate, PARENT:Position, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
 
-    ecs_set(world, e_1, Position, {10, 20});
-    ecs_set(world, e_2, Position, {20, 40});
-    ecs_set(world, e_3, Position, {30, 60});
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 40});
+    ecs_set(world, e3, Position, {30, 60});
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1225,25 +1225,25 @@ void System_w_FromContainer_select_same_from_container() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 22);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 21);
     test_int(p->y, 42);
 
-    p = ecs_get(world, e_3, Position);
+    p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
     test_int(p->x, 31);
     test_int(p->y, 62);
@@ -1257,12 +1257,12 @@ void System_w_FromContainer_realloc_after_match() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e1, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1275,13 +1275,13 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[0], e1);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1307,13 +1307,13 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[0], e1);
     test_int(ctx.c[0][0], ecs_typeid(Mass));
     test_int(ctx.s[0][0], parent);
     test_int(ctx.c[0][1], ecs_typeid(Position));
     test_int(ctx.s[0][1], 0);
 
-    p = ecs_get(world, e_1, Position);
+    p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);

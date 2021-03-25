@@ -3,13 +3,11 @@
 
 /* Component types */
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 int main(int argc, char *argv[]) {
@@ -24,8 +22,8 @@ int main(int argc, char *argv[]) {
             // The delta_time value obtained through the entity comes from the
             // world and is the value passed into world.progress or, if no value
             // is provided, the value that flecs measured automatically.
-            p.x += v.x * e.delta_time();
-            p.y += v.y * e.delta_time();
+            p.x += v.x * static_cast<double>(e.delta_time());
+            p.y += v.y * static_cast<double>(e.delta_time());
 
             std::cout << "Moved " << e.name() << " to {" <<
                 p.x << ", " << p.y << "}" << std::endl;

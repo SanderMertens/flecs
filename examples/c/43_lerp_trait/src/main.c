@@ -1,45 +1,45 @@
 #include <lerp_trait.h>
 
 typedef struct Position {
-    float x;
-    float y;
+    double x;
+    double y;
 } Position;
 
 typedef struct Lerp {
-    float value;
-    float lerp_time;
+    double value;
+    double lerp_time;
 } Lerp;
 
 void DoLerp(ecs_iter_t *it) {
     /* Get the Lerp trait column */
-    Lerp *l = ecs_column(it, Lerp, 1);
+    Lerp *l = ecs_term(it, Lerp, 1);
 
     /* This is the actual component value. Because the system can match any
      * component type, the size is unknown. */
     size_t size = ecs_column_size(it, 2);
-    float *cur = ecs_column_w_size(it, size, 2);    
+    double *cur = ecs_column_w_size(it, size, 2);    
 
     /* These are the trait columns for LerpStart and LerpStop. Because these are
      * trait tags, the system does not know their types at compile time. */
-    float *start = ecs_column_w_size(it, size, 3);
-    float *stop = ecs_column_w_size(it, size, 4);
+    double *start = ecs_column_w_size(it, size, 3);
+    double *stop = ecs_column_w_size(it, size, 4);
 
     /* Apply the lerp. Because we don't know the type of the component we'll
-     * assume that the component consists out of only float values. We can then
-     * iterate the component pointer with increments of sizeof(float) and apply
+     * assume that the component consists out of only double values. We can then
+     * iterate the component pointer with increments of sizeof(double) and apply
      * the lerp to each pointer.
      *
      * A more complete implementation of a lerp could add support for multiple
      * datatypes like double, which could be done by either adding a field to
      * the Lerp trait, or by introducing a Lerp4 and Lerp8 trait. */
     for (int32_t i = 0; i < it->count; i ++) {
-        float lerp = l[i].value + it->delta_time / l[i].lerp_time;
-        bool lerp_done = lerp >= 1.0f;
-        lerp = (lerp * !lerp_done) + (1.0f * lerp_done);
+        double lerp = l[i].value + (double)it->delta_time / l[i].lerp_time;
+        bool lerp_done = lerp >= 1.0;
+        lerp = (lerp * !lerp_done) + (1.0 * lerp_done);
 
         /* Do the actual lerp */
-        for (size_t s = 0; s < size; s += sizeof(float)) {
-            *cur = *start * (1.0f - lerp) + *stop * lerp;
+        for (size_t s = 0; s < size; s += sizeof(double)) {
+            *cur = *start * (1.0 - lerp) + *stop * lerp;
 
             cur ++;
             start ++;
@@ -65,7 +65,7 @@ void DoLerp(ecs_iter_t *it) {
 }
 
 void PrintPosition(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     for (int32_t i = 0; i < it->count; i ++) {
         printf("{%f, %f}\n", p[i].x, p[i].y);
@@ -86,7 +86,7 @@ int main(void) {
      * system will only match with entities that have all the traits set with
      * the same cardinality. If for example an entity has two instances of Lerp
      * and LerpStart but three of LerpStop, the system will not match. */
-    ECS_SYSTEM(world, DoLerp, EcsOnUpdate, TRAIT | Lerp, TRAIT | Lerp > *, TRAIT | LerpStart, TRAIT | LerpStop);
+    ECS_SYSTEM(world, DoLerp, EcsOnUpdate, PAIR | Lerp, PAIR | Lerp > *, PAIR | LerpStart, PAIR | LerpStop);
 
     /* System that prints Position, so we can see the lerp in action */
     ECS_SYSTEM(world, PrintPosition, EcsOnUpdate, Position);

@@ -422,17 +422,17 @@ void New_w_Count_new_w_data_w_comp_and_tag() {
     ecs_fini(world);
 }
 
-void New_w_Count_new_w_data_trait() {
+void New_w_Count_new_w_data_pair() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t trait_id = ecs_trait(ecs_typeid(Position), Trait);
+    ecs_entity_t pair_id = ecs_pair(Pair, ecs_typeid(Position));
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_entities_t){
-            .array = (ecs_entity_t[]){trait_id},
+            .array = (ecs_entity_t[]){pair_id},
             .count = 1
         },
         (void*[]){
@@ -444,46 +444,46 @@ void New_w_Count_new_w_data_trait() {
             NULL
         });
 
-    test_assert(ecs_has_entity(world, ids[0], trait_id));
-    test_assert(ecs_has_entity(world, ids[1], trait_id));
-    test_assert(ecs_has_entity(world, ids[2], trait_id));
+    test_assert(ecs_has_entity(world, ids[0], pair_id));
+    test_assert(ecs_has_entity(world, ids[1], pair_id));
+    test_assert(ecs_has_entity(world, ids[2], pair_id));
 
     const Position *
-    p = ecs_get_w_entity(world, ids[0], trait_id);
+    p = ecs_get_w_entity(world, ids[0], pair_id);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_w_entity(world, ids[1], trait_id);
+    p = ecs_get_w_entity(world, ids[1], pair_id);
     test_int(p->x, 30);
     test_int(p->y, 40);
 
-    p = ecs_get_w_entity(world, ids[2], trait_id);
+    p = ecs_get_w_entity(world, ids[2], pair_id);
     test_int(p->x, 50);
     test_int(p->y, 60);
 
     ecs_fini(world);
 }
 
-void New_w_Count_new_w_data_trait_tag() {
+void New_w_Count_new_w_data_pair_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
     ECS_TAG(world, Tag);
     
-    ecs_entity_t trait_id = ecs_trait(Tag, Trait);
+    ecs_entity_t pair_id = ecs_pair(Pair, Tag);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_entities_t){
-            .array = (ecs_entity_t[]){trait_id},
+            .array = (ecs_entity_t[]){pair_id},
             .count = 1
         },
         (void*[]){
             NULL
         });
 
-    test_assert(ecs_has_entity(world, ids[0], trait_id));
-    test_assert(ecs_has_entity(world, ids[1], trait_id));
-    test_assert(ecs_has_entity(world, ids[2], trait_id));
+    test_assert(ecs_has_entity(world, ids[0], pair_id));
+    test_assert(ecs_has_entity(world, ids[1], pair_id));
+    test_assert(ecs_has_entity(world, ids[2], pair_id));
 
     ecs_fini(world);
 }
@@ -625,7 +625,7 @@ void New_w_Count_new_w_data_override_set_comp() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_entities_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position), ECS_INSTANCEOF | base},
+            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_pair(EcsIsA, base)},
             .count = 2
         },
         (void*[]){
@@ -641,9 +641,9 @@ void New_w_Count_new_w_data_override_set_comp() {
     test_assert(ecs_has(world, ids[1], Position));
     test_assert(ecs_has(world, ids[2], Position));
 
-    test_assert(ecs_has_entity(world, ids[0], ECS_INSTANCEOF | base));
-    test_assert(ecs_has_entity(world, ids[1], ECS_INSTANCEOF | base));
-    test_assert(ecs_has_entity(world, ids[2], ECS_INSTANCEOF | base));
+    test_assert(ecs_has_pair(world, ids[0], EcsIsA, base));
+    test_assert(ecs_has_pair(world, ids[1], EcsIsA, base));
+    test_assert(ecs_has_pair(world, ids[2], EcsIsA, base));
 
     const Position *
     p = ecs_get(world, ids[0], Position);
@@ -661,23 +661,23 @@ void New_w_Count_new_w_data_override_set_comp() {
     ecs_fini(world);
 }
 
-void New_w_Count_new_w_data_override_set_trait() {
+void New_w_Count_new_w_data_override_set_pair() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t trait_id = ecs_trait(ecs_entity(Position), Trait);
+    ecs_entity_t pair_id = ecs_pair(Pair, ecs_typeid(Position));
 
     ecs_entity_t base = ecs_new(world, 0);
-    Position *ptr = ecs_get_mut_w_entity(world, base, trait_id, NULL);
+    Position *ptr = ecs_get_mut_w_entity(world, base, pair_id, NULL);
     test_assert(ptr != NULL);
     ptr->x = 100;
     ptr->y = 200;
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_entities_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position), ECS_INSTANCEOF | base},
+            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_pair(EcsIsA, base)},
             .count = 2
         },
         (void*[]){
@@ -693,9 +693,9 @@ void New_w_Count_new_w_data_override_set_trait() {
     test_assert(ecs_has(world, ids[1], Position));
     test_assert(ecs_has(world, ids[2], Position));
 
-    test_assert(ecs_has_entity(world, ids[0], ECS_INSTANCEOF | base));
-    test_assert(ecs_has_entity(world, ids[1], ECS_INSTANCEOF | base));
-    test_assert(ecs_has_entity(world, ids[2], ECS_INSTANCEOF | base));
+    test_assert(ecs_has_pair(world, ids[0], EcsIsA, base));
+    test_assert(ecs_has_pair(world, ids[1], EcsIsA, base));
+    test_assert(ecs_has_pair(world, ids[2], EcsIsA, base));
 
     const Position *
     p = ecs_get(world, ids[0], Position);

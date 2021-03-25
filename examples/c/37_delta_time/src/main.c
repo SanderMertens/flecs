@@ -1,23 +1,19 @@
 #include <delta_time.h>
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
-
-typedef Vector2D Position;
-typedef Vector2D Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 void Move(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Velocity, v, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
         /* Use delta_time to update the entity proportionally to the amount of
          * time that has passed inbetween frames. */
-        p[i].x += v[i].x * it->delta_time;
-        p[i].y += v[i].y * it->delta_time;
+        p[i].x += v[i].x * (double)it->delta_time;
+        p[i].y += v[i].y * (double)it->delta_time;
 
         printf("%s moved to {.x = %f, .y = %f}\n",
             ecs_get_name(it->world, it->entities[i]),

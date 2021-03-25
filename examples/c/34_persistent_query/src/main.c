@@ -1,14 +1,9 @@
 #include <persistent_query.h>
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
-
-/* Typedefs can be used as component types */
-typedef Vector2D Position;
-typedef Vector2D Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
@@ -44,8 +39,8 @@ int main(int argc, char *argv[]) {
     ecs_iter_t it = ecs_query_iter(q);
 
     while (ecs_query_next(&it)) {        
-        Position *p = ecs_column(&it, Position, 1);
-        Velocity *v = ecs_column(&it, Velocity, 2);
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
 
         for (int i = 0; i < it.count; i ++) {
             p[i].x += v[i].x;

@@ -189,7 +189,7 @@ void Reference_get_ref_monitored() {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
-    ecs_new_w_entity(world, ECS_CHILDOF | e);
+    ecs_new_w_pair(world, EcsChildOf, e);
     
     ecs_ref_t ref = {0};
     const Position *p = ecs_get_ref(world, &ref, e, Position);

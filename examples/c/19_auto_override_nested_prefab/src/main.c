@@ -1,12 +1,9 @@
 #include <auto_override_nested_prefab.h>
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
-
-typedef Vector2D Position;
+typedef struct {
+    double x, y;
+} Position;
 
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
@@ -35,7 +32,7 @@ int main(int argc, char *argv[]) {
     /* Create type that automatically overrides Position from RootPrefab */
     ECS_TYPE(world, Root, INSTANCEOF | RootPrefab, Position);
 
-    /* Create new entity from Root. Don't use ECS_INSTANCEOF, as we're using a
+    /* Create new entity from Root. Don't use EcsIsA, as we're using a
      * regular type which already has the INSTANCEOF relationship. */
     ecs_entity_t e = ecs_new(world, Root);
 

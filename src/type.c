@@ -15,15 +15,15 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = array[i];
 
-        if (ECS_HAS_ROLE(e, INSTANCEOF)) {
-            ecs_entity_t prefab = e & ECS_COMPONENT_MASK;
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            ecs_entity_t prefab = ecs_pair_object(world, e);
             ecs_type_t prefab_type = ecs_get_type(world, prefab);
 
             if (prefab == previous) {
                 continue;
             }
 
-            if (ecs_type_owns_entity(
+            if (ecs_type_owns_id(
                 world, prefab_type, component, true)) 
             {
                 return prefab;
@@ -34,12 +34,6 @@ ecs_entity_t ecs_find_entity_in_prefabs(
                     return prefab;
                 }
             }
-        } else {
-            /* If this is not a prefab, the following entities won't
-                * be prefabs either because the array is sorted, and
-                * the prefab bit is 2^63 which ensures that prefabs are
-                * guaranteed to be the last entities in the type */
-            break;
         }
     }
 
@@ -101,9 +95,8 @@ ecs_entity_t ecs_type_contains(
 
         if (e1 != e2) {
             if (match_prefab && e2 != 
-                ecs_typeid(EcsName) && e2 != 
-                EcsPrefab && e2 != 
-                EcsDisabled) 
+                ecs_id(EcsName) && 
+                e2 != EcsPrefab && e2 != EcsDisabled) 
             {
                 if (ecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
                     e1 = e2;
@@ -200,11 +193,11 @@ ecs_type_t ecs_type_find(
 }
 
 static
-bool has_trait(
-    ecs_entity_t trait,
+bool has_pair(
+    ecs_entity_t pair,
     ecs_entity_t e)
 {
-    return trait == ecs_entity_t_hi(e & ECS_COMPONENT_MASK);
+    return pair == ECS_PAIR_RELATION(e);
 }
 
 static
@@ -215,31 +208,31 @@ bool has_case(
 {
     const EcsType *type_ptr = ecs_get(world, e & ECS_COMPONENT_MASK, EcsType);
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_type_has_entity(world, type_ptr->normalized, sw_case);
+    return ecs_type_has_id(world, type_ptr->normalized, sw_case);
 }
 
 static
-int match_entity(
+int match_id(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t e,
     ecs_entity_t match_with)
 {
-    if (ECS_HAS_ROLE(match_with, TRAIT)) {
-        ecs_entity_t hi = ecs_entity_t_hi(match_with & ECS_COMPONENT_MASK);
-        ecs_entity_t lo = ecs_entity_t_lo(match_with);
+    if (ECS_HAS_ROLE(match_with, PAIR)) {
+        ecs_entity_t hi = ECS_PAIR_RELATION(match_with);
+        ecs_entity_t lo = ECS_PAIR_OBJECT(match_with);
 
         if (lo == EcsWildcard) {
             ecs_assert(hi != 0, ECS_INTERNAL_ERROR, NULL);
             
-            if (!ECS_HAS_ROLE(e, TRAIT) || !has_trait(hi, e)) {
+            if (!ECS_HAS_ROLE(e, PAIR) || !has_pair(hi, e)) {
                 return 0;
             }
 
             ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
             int32_t i, count = ecs_vector_count(type);
 
-            ecs_entity_t comp = ecs_entity_t_lo(e);
+            ecs_entity_t comp = ECS_PAIR_OBJECT(e);
             for (i = 0; i < count; i ++) {
                 if (comp == ids[i]) {
                     return 2;
@@ -248,7 +241,7 @@ int match_entity(
 
             return -1;
         } else if (!hi) {
-            if (ECS_HAS_ROLE(e, TRAIT) && has_trait(lo, e)) {
+            if (ECS_HAS_ROLE(e, PAIR) && has_pair(lo, e)) {
                 return 1;
             }
         }
@@ -262,7 +255,7 @@ int match_entity(
         }
     }
 
-    if (e == match_with) {
+    if (ECS_HAS(e, match_with)) {
         return 1;
     }
 
@@ -289,7 +282,7 @@ bool search_type(
     int matched = 0;
 
     for (i = 0; i < count; i ++) {
-        int ret = match_entity(world, type, ids[i], entity);
+        int ret = match_id(world, type, ids[i], entity);
         switch(ret) {
         case 0: break;
         case 1: return true;
@@ -302,13 +295,13 @@ bool search_type(
     if (!matched && !owned && entity != EcsPrefab && entity != EcsDisabled) {
         for (i = count - 1; i >= 0; i --) {
             ecs_entity_t e = ids[i];
-            if (!ECS_HAS_ROLE(e, INSTANCEOF)) {
+            if (!ECS_HAS_RELATION(e, EcsIsA)) {
                 break;
             }
 
-            ecs_entity_t base = e & ECS_COMPONENT_MASK;
+            ecs_entity_t base = ecs_pair_object(world, e);
             if (!ecs_is_valid(world, base)) {
-                /* This indicates that an entity has an INSTANCEOF relationship
+                /* This indicates that an entity has an IsA relationship
                  * to an invalid base. That's no good, and will be handled with
                  * future features (e.g. automatically removing the relation) */
                 continue;
@@ -325,7 +318,7 @@ bool search_type(
     return matched != 0;
 }
 
-bool ecs_type_has_entity(
+bool ecs_type_has_id(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity)
@@ -333,7 +326,7 @@ bool ecs_type_has_entity(
     return search_type(world, type, entity, false);
 }
 
-bool ecs_type_owns_entity(
+bool ecs_type_owns_id(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
@@ -437,7 +430,7 @@ char* ecs_type_str(
             ecs_os_strcpy(buffer, "EcsComponent");
             len = ecs_os_strlen("EcsComponent");
         } else {
-            len = ecs_from_size_t(ecs_entity_str(world, e, buffer, 256));
+            len = ecs_from_size_t(ecs_id_str(world, e, buffer, 256));
         }
 
         dst = ecs_vector_addn(&chbuf, char, len);
@@ -457,7 +450,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_entity_t xor)
 {
     ecs_assert(
-        ecs_type_owns_entity(world, type, ECS_XOR | xor, true),
+        ecs_type_owns_id(world, type, ECS_XOR | xor, true),
         ECS_INVALID_PARAMETER, NULL);
 
     const EcsType *type_ptr = ecs_get(world, xor, EcsType);
@@ -469,7 +462,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     for (i = 0; i < count; i ++) {
-        if (ecs_type_owns_entity(world, xor_type, array[i], true)) {
+        if (ecs_type_owns_id(world, xor_type, array[i], true)) {
             return array[i];
         }
     }
@@ -477,19 +470,18 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     return 0;
 }
 
-int32_t ecs_type_trait_index_of(
+int32_t ecs_type_pair_index_of(
     ecs_type_t type, 
     int32_t start_index, 
-    ecs_entity_t trait)
+    ecs_entity_t pair)
 {
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     for (i = start_index; i < count; i ++) {
         ecs_entity_t e = array[i];
-        if (ECS_HAS_ROLE(e, TRAIT)) {
-            e &= ECS_COMPONENT_MASK;
-            if (trait == ecs_entity_t_hi(e)) {
+        if (ECS_HAS_ROLE(e, PAIR)) {
+            if (pair == ECS_PAIR_RELATION(e)) {
                 return i;
             }
         }

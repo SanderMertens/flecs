@@ -3,21 +3,20 @@
 
 /* Component types */
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Force {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Mass {
-    float value;
+    double value;
 };
 
 /* Implement a move system with support for shared columns */
-void Move(flecs::iter& it, Position *p, Force *f, Mass *m) {
+void Move(const flecs::iter& it, Position *p, Force *f) {
+    auto m = it.column<const Mass>(3);
 
     for (auto row : it) {
         /* Explicitly check if the Mass column is shared or not. If the column
@@ -47,10 +46,13 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world ecs(argc, argv);
 
+    /* Explicitly define Mass so it can be used from the query string */
+    ecs.component<Mass>();
+
     /* Define a system called Move that is executed every frame, and subscribes
      * for the 'Position', 'Force' and 'Mass' components. The Mass component
      * will be either shared or owned. */
-    ecs.system<Position, Force, Mass>().iter(Move);
+    ecs.system<Position, Force>("Move", "ANY:Mass").iter(Move);
 
     /* Demonstrate that a system can also use 'each' to abstract away from the
      * difference between shared and owned components */
@@ -71,17 +73,17 @@ int main(int argc, char *argv[]) {
 
     /* Create entities which share the Mass component from a base */
     ecs.entity("MyInstance1")
-        .add_instanceof(LightEntity)
+        .add(flecs::IsA, LightEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10});
 
     ecs.entity("MyInstance2")
-        .add_instanceof(HeavyEntity)
+        .add(flecs::IsA, HeavyEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10}); 
 
     ecs.entity("MyInstance3")
-        .add_instanceof(HeavyEntity)
+        .add(flecs::IsA, HeavyEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10});                
 

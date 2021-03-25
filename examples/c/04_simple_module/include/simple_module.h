@@ -9,14 +9,9 @@ extern "C" {
 #endif
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
-
-/* Typedefs can be used as component types */
-typedef Vector2D Position;
-typedef Vector2D Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 /* This type is used to store handles to everything that the module contains. 
  * When the module is loaded, this type will be registered as component, and

@@ -135,7 +135,7 @@ void TriggerOnSet_clone() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -143,18 +143,18 @@ void TriggerOnSet_clone() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[0], e1);
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 20);
 
     ctx = (Probe){0};
 
-   ecs_clone(world, 0, e_1, false);
+   ecs_clone(world, 0, e1, false);
 
     /* OnSet function should not have been called, because value has not been 
      * copied */
@@ -173,7 +173,7 @@ void TriggerOnSet_clone_w_value() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -181,18 +181,18 @@ void TriggerOnSet_clone_w_value() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[0], e1);
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 20);
 
     ctx = (Probe){0};
 
-    ecs_entity_t e_2 = ecs_clone(world, 0, e_1, true);
+    ecs_entity_t e2 = ecs_clone(world, 0, e1, true);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -200,11 +200,11 @@ void TriggerOnSet_clone_w_value() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_2);
+    test_int(ctx.e[0], e2);
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 12);
     test_int(p->y, 20);
@@ -323,7 +323,7 @@ void TriggerOnSet_on_set_after_override() {
     ecs_set_context(world, &ctx);
 
     /* instantiate prefab */
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);

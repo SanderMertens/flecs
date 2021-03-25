@@ -22,8 +22,8 @@ ecs_entity_t components_contains(
     ecs_vector_each(table_type, ecs_entity_t, c_ptr, {
         ecs_entity_t entity = *c_ptr;
 
-        if (ECS_HAS_ROLE(entity, CHILDOF)) {
-            entity &= ECS_COMPONENT_MASK;
+        if (ECS_HAS_RELATION(entity, EcsChildOf)) {
+            entity = ECS_PAIR_OBJECT(entity);
 
             ecs_record_t *record = ecs_eis_get(world, entity);
             ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
@@ -91,8 +91,8 @@ int32_t rank_by_depth(
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     for (i = count - 1; i >= 0; i --) {
-        if (ECS_HAS_ROLE(array[i], CHILDOF)) {
-            ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_COMPONENT_MASK);
+        if (ECS_HAS_RELATION(array[i], EcsChildOf)) {
+            ecs_type_t c_type = ecs_get_type(world, ecs_pair_object(world, array[i]));
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type, ecs_entity_t);
 
@@ -289,7 +289,7 @@ void get_comp_and_src(
         {
             component = column->is.component;
             entity = ecs_find_in_type(
-                world, table_type, component, ECS_CHILDOF);
+                world, table_type, component, EcsChildOf);
 
         } else if (op == EcsOperOr) {
             component = components_contains(
@@ -341,7 +341,7 @@ int32_t get_trait_index(
     } else {
         /* First time for this iteration that the trait index is resolved, look
          * it up in the type. */
-        result = ecs_type_trait_index_of(table_type, 
+        result = ecs_type_pair_index_of(table_type, 
             trait_offsets[column_index].index, component);
         trait_offsets[column_index].index = result + 1;
         trait_offsets[column_index].count = count;
@@ -374,15 +374,15 @@ int32_t get_component_index(
 
             result += table->sw_column_offset;
         } else
-        if (ECS_HAS_ROLE(component, TRAIT)) { 
+        if (ECS_HAS_ROLE(component, PAIR)) { 
             /* If only the lo part of the trait identifier is set, interpret it
              * as the trait to match. This will match any instance of the trait
-             * on the entity and in a signature looks like "TRAIT | MyTrait". */
-            if (!ecs_entity_t_hi(component & ECS_COMPONENT_MASK)) {
+             * on the entity and in a signature looks like "PAIR | MyTrait". */
+            if (!ECS_PAIR_RELATION(component)) {
                 ecs_assert(trait_offsets != NULL, 
                     ECS_INTERNAL_ERROR, NULL);
 
-                /* Strip the TRAIT role */
+                /* Strip the PAIR role */
                 component &= ECS_COMPONENT_MASK;
 
                 /* Get index of trait. Start looking from the last trait index
@@ -408,16 +408,15 @@ int32_t get_component_index(
             } else {
                 /* If trait does have the hi part of the identifier set, this is
                  * a fully qualified trait identifier. In a signature this looks
-                 * like "TRAIT | MyTrait > Comp". */
+                 * like "PAIR | MyTrait > Comp". */
                 ecs_entity_t lo = ecs_entity_t_lo(component);
                 if (lo == EcsWildcard) {
-                    ecs_assert(trait_offsets != NULL, 
-                        ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(trait_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
 
                     /* Get id for the trait to lookup by taking the trait from
                      * the high 32 bits, move it to the low 32 bits, and reapply
-                     * the TRAIT mask. */
-                    component = ecs_entity_t_hi(component & ECS_COMPONENT_MASK);
+                     * the PAIR mask. */
+                    component = ECS_PAIR_RELATION(component);
 
                     /* If the low part of the identifier is the wildcard entity,
                      * this column is requesting the component to which the 
@@ -487,7 +486,7 @@ int32_t get_component_index(
         result = 0;
     } else if (op == EcsOperOptional) {
         /* If table doesn't have the field, mark it as no data */
-        if (!ecs_type_has_entity(world, table_type, component)) {
+        if (!ecs_type_has_id(world, table_type, component)) {
             result = 0;
         }
     }
@@ -533,7 +532,7 @@ ecs_vector_t* add_ref(
     if (ecs_has(world, component, EcsComponent)) {
         if (c_info->size && from != EcsFromEmpty) {
             if (e) {
-                ecs_get_ref_w_entity(
+                ecs_get_ref_w_id(
                     world, ref, e, component);
                 ecs_set_watch(world, e);                     
             }
@@ -555,12 +554,12 @@ ecs_entity_t is_column_trait(
     /* For now traits are only supported on owned columns */
     if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
         ecs_entity_t c = column->is.component;
-        if (ECS_HAS_ROLE(c, TRAIT)) {
-            if (!(ecs_entity_t_hi(c & ECS_COMPONENT_MASK))) {
+        if (ECS_HAS_ROLE(c, PAIR)) {
+            if (!ECS_PAIR_RELATION(c)) {
                 return c;
             } else
-            if (ecs_entity_t_lo(c) == EcsWildcard) {
-                return ecs_entity_t_hi(c & ECS_COMPONENT_MASK);
+            if (ECS_PAIR_OBJECT(c) == EcsWildcard) {
+                return ECS_PAIR_RELATION(c);
             }
         }
     }
@@ -581,9 +580,8 @@ int32_t type_trait_count(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
-        if (ECS_HAS_ROLE(e, TRAIT)) {
-            e &= ECS_COMPONENT_MASK;
-            if (ecs_entity_t_hi(e) == trait) {
+        if (ECS_HAS_ROLE(e, PAIR)) {
+            if (ECS_PAIR_RELATION(e) == trait) {
                 result ++;
             }
         }
@@ -636,7 +634,7 @@ ecs_type_t get_column_type(
         ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
         return type->normalized;
     } else {
-        return ecs_type_from_entity(world, component);
+        return ecs_type_from_id(world, component);
     }    
 }
 
@@ -881,25 +879,25 @@ bool match_column(
 {
     if (from_kind == EcsFromAny) {
         failure_info->reason = EcsMatchFromSelf;
-        return ecs_type_has_entity(world, type, component);
+        return ecs_type_has_id(world, type, component);
         
     } else if (from_kind == EcsFromOwned) {
         failure_info->reason = EcsMatchFromOwned;
-        return ecs_type_owns_entity(world, type, component, true);
+        return ecs_type_owns_id(world, type, component, true);
 
     } else if (from_kind == EcsFromShared) {
         failure_info->reason = EcsMatchFromShared;
-        return !ecs_type_owns_entity(world, type, component, true) &&
-            ecs_type_owns_entity(world, type, component, false);
+        return !ecs_type_owns_id(world, type, component, true) &&
+            ecs_type_owns_id(world, type, component, false);
 
     } else if (from_kind == EcsFromParent) {
         failure_info->reason = EcsMatchFromContainer;
-        return ecs_find_in_type(world, type, component, ECS_CHILDOF) != 0;
+        return ecs_find_in_type(world, type, component, EcsChildOf) != 0;
 
     } else if (from_kind == EcsFromEntity) {
         failure_info->reason = EcsMatchFromEntity;
         ecs_type_t source_type = ecs_get_type(world, source);
-        return ecs_type_has_entity(world, source_type, component);
+        return ecs_type_has_id(world, source_type, component);
     } else {
         return true;
     }
@@ -929,7 +927,7 @@ bool ecs_query_match(
     ecs_type_t type, table_type = table->type;
 
     /* Don't match disabled entities */
-    if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_owns_entity(
+    if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_owns_id(
         world, table_type, EcsDisabled, true))
     {
         failure_info->reason = EcsMatchEntityIsDisabled;
@@ -937,7 +935,7 @@ bool ecs_query_match(
     }
 
     /* Don't match prefab entities */
-    if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_owns_entity(
+    if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_owns_id(
         world, table_type, EcsPrefab, true))
     {
         failure_info->reason = EcsMatchEntityIsPrefab;
@@ -1231,7 +1229,7 @@ void build_sorted_table_range(
             const EcsComponent *cptr = ecs_get(world, component, EcsComponent);
             ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            helper[to_sort].ptr = ecs_get_w_entity(world, base, component);
+            helper[to_sort].ptr = ecs_get_w_id(world, base, component);
             helper[to_sort].elem_size = cptr->size;
             helper[to_sort].shared = true;
         } else {
@@ -1576,7 +1574,7 @@ void process_signature(
                 /* If the signature explicitly indicates interest in EcsDisabled,
                  * signal that disabled entities should be matched. By default,
                  * disabled entities are not matched. */
-                if (ecs_type_owns_entity(
+                if (ecs_type_owns_id(
                     world, column->is.type, EcsDisabled, true))
                 {
                     query->flags |= EcsQueryMatchDisabled;
@@ -1593,7 +1591,7 @@ void process_signature(
                 /* If the signature explicitly indicates interest in EcsPrefab,
                 * signal that disabled entities should be matched. By default,
                 * prefab entities are not matched. */
-                if (ecs_type_owns_entity(
+                if (ecs_type_owns_id(
                     world, column->is.type, EcsPrefab, true))
                 {
                     query->flags |= EcsQueryMatchPrefab;
@@ -1937,12 +1935,12 @@ void resolve_cascade_container(
 
         /* Resolve container entity */
         ecs_entity_t container = ecs_find_in_type(
-            world, table_type, ref->component, ECS_CHILDOF);    
+            world, table_type, ref->component, EcsChildOf);
 
         /* If container was found, update the reference */
         if (container) {
             references[ref_index].entity = container;
-            ecs_get_ref_w_entity(
+            ecs_get_ref_w_id(
                 world, &references[ref_index], container, 
                 ref->component);
         } else {
@@ -2096,9 +2094,9 @@ void rematch_tables(
      * already dis/enabled this operation has no side effects. */
     if (query->system) {
         if (ecs_sig_check_constraints(world, &query->sig)) {
-            ecs_remove_entity(world, query->system, EcsDisabledIntern);
+            ecs_remove_id(world, query->system, EcsDisabledIntern);
         } else {
-            ecs_add_entity(world, query->system, EcsDisabledIntern);
+            ecs_add_id(world, query->system, EcsDisabledIntern);
         }
     }
 }
@@ -2207,15 +2205,15 @@ ecs_query_t* ecs_query_new_w_sig_intern(
 
         if (result->flags & EcsQueryNeedsTables) {
             if (system) {
-                if (ecs_has_entity(world, system, EcsMonitor)) {
+                if (ecs_has_id(world, system, EcsMonitor)) {
                     result->flags |= EcsQueryMonitor;
                 }
                 
-                if (ecs_has_entity(world, system, EcsOnSet)) {
+                if (ecs_has_id(world, system, EcsOnSet)) {
                     result->flags |= EcsQueryOnSet;
                 }
 
-                if (ecs_has_entity(world, system, EcsUnSet)) {
+                if (ecs_has_id(world, system, EcsUnSet)) {
                     result->flags |= EcsQueryUnSet;
                 }  
             }      

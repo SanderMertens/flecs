@@ -8,7 +8,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #define ECS_TYPE_DECL(component)\
-static const ecs_entity_t __##component = ecs_typeid(component);\
+static const ecs_entity_t __##component = ecs_id(component);\
 ECS_VECTOR_DECL(FLECS__T##component, ecs_entity_t, 1)
 
 #define ECS_TYPE_IMPL(component)\
@@ -23,11 +23,11 @@ ecs_type_t ecs_bootstrap_type(
     ecs_entity_t entity);
 
 #define ecs_bootstrap_component(world, name)\
-    ecs_new_component(world, ecs_typeid(name), #name, sizeof(name), ECS_ALIGNOF(name))
+    ecs_new_component(world, ecs_id(name), #name, sizeof(name), ECS_ALIGNOF(name))
 
 #define ecs_bootstrap_tag(world, name)\
     ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = (char*)#name});\
-    ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
+    ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,7 +165,7 @@ bool ecs_defer_bulk_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     int32_t count,
-    ecs_entities_t *components,
+    const ecs_entities_t *components,
     void **component_data,
     const ecs_entity_t **ids_out);
 

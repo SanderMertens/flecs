@@ -3,13 +3,11 @@
 
 // Component types
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 // Type passed as thread arg
@@ -26,8 +24,8 @@ void* thread_func(void *arg) {
     auto system = ctx->system;
     auto query = ctx->query;
 
-    std::int32_t stage_id = ecs.get_stage_id();
-    std::int32_t stage_count = ecs.get_stage_count();
+    int32_t stage_id = ecs.get_stage_id();
+    int32_t stage_count = ecs.get_stage_count();
 
     // The worker thread's main loop would start here, but because this is an
     // example without threads and we call the thread explicitly from the main 

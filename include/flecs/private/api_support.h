@@ -39,7 +39,7 @@ extern ecs_type_t
 /** This allows passing 0 as type to functions that accept types */
 #define FLECS__TNULL 0
 #define FLECS__T0 0
-
+#define FLECS__E0 0
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Functions used in declarative (macro) API
@@ -258,7 +258,11 @@ ecs_sig_t* ecs_query_get_sig(
 #define ECS_INVALID_OPERATION (50)
 
 /** Calculate offset from address */
+#ifdef __cplusplus
+#define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))
+#else
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
+#endif
 
 #ifdef __cplusplus
 }

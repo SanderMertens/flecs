@@ -17,8 +17,8 @@
 void Walk(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     
-    ecs_entity_t *m = ecs_column(it, ecs_entity_t, 1);
-    ecs_entity_t *d = ecs_column(it, ecs_entity_t, 2);
+    ecs_entity_t *m = ecs_term(it, ecs_entity_t, 1);
+    ecs_entity_t *d = ecs_term(it, ecs_entity_t, 2);
 
     for (int i = 0; i < it->count; i ++) {
         printf("%s: Movement: %s, Direction: %s\n",

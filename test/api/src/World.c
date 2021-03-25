@@ -23,15 +23,15 @@ void World_progress_w_0() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
+    ECS_ENTITY(world, e1, Position, Velocity);
 
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_set(world, e_1, Position, {0, 0});
-    ecs_set(world, e_1, Velocity, {1, 2});
+    ecs_set(world, e1, Position, {0, 0});
+    ecs_set(world, e1, Velocity, {1, 2});
 
     ecs_progress(world, 0);
 
@@ -41,13 +41,13 @@ void World_progress_w_0() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[0], e1);
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_assert(p->x != 0);
     test_assert(p->y != 0);
@@ -61,15 +61,15 @@ void World_progress_w_t() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e_1, Position, Velocity);
+    ECS_ENTITY(world, e1, Position, Velocity);
 
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_set(world, e_1, Position, {0, 0});
-    ecs_set(world, e_1, Velocity, {1, 2});
+    ecs_set(world, e1, Position, {0, 0});
+    ecs_set(world, e1, Velocity, {1, 2});
 
     ecs_progress(world, 2);
 
@@ -79,13 +79,13 @@ void World_progress_w_t() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[0], e1);
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.c[0][1], ecs_typeid(Velocity));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 4);

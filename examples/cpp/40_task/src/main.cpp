@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     // It is possible to add components to a task, just like regular systems
     auto system = ecs.system<>(nullptr, "SYSTEM:TaskContext")
         .iter([](flecs::iter& it) {
-            flecs::column<const TaskContext> ctx(it, 1);
+            auto ctx = it.term<const TaskContext>(1);
             std::cout << "Task with context: " << ctx->value << std::endl;
         });
 

@@ -152,7 +152,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macOS-latest ]
+        os: [ ubuntu-latest ]
         compiler: [ gcc, clang ]
 
     steps:
@@ -244,16 +244,24 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: mkdir
+      - name: Create Flecs build folder
         run: mkdir cmake_build
 
-      - name: cmake configure
+      - name: Build Flecs
         working-directory: cmake_build
-        run: cmake ..
+        run: |
+          cmake ..
+          cmake --build .
 
-      - name: cmake build
-        working-directory: cmake_build
-        run: cmake --build .
+      - name: Create examples build folder
+        working-directory: examples
+        run: mkdir cmake_build
+
+      - name: Build examples
+        working-directory: examples/cmake_build
+        run: |
+          cmake ..
+          cmake --build .
 
   cmake-windows:
     timeout-minutes: 20
@@ -263,56 +271,21 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
 
-      - name: mkdir
+      - name: Create Flecs build folder
         run: mkdir cmake_build
 
-      - name: cmake configure
+      - name: Build Flecs
         working-directory: cmake_build
-        run: cmake ..
+        run: |
+          cmake ..
+          cmake --build .
 
-      - name: cmake build
-        working-directory: cmake_build
-        run: cmake --build .
-
-  cmake-unix-examples:
-    timeout-minutes: 40
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, macOS-latest ]
-        compiler: [ gcc, clang ]
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: mkdir
+      - name: Create examples build folder
         working-directory: examples
         run: mkdir cmake_build
 
-      - name: cmake configure
+      - name: Build examples
         working-directory: examples/cmake_build
-        run: cmake ..
-
-      - name: cmake build
-        working-directory: examples/cmake_build
-        run: cmake --build .
-
-  cmake-windows-examples:
-    timeout-minutes: 40
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ilammy/msvc-dev-cmd@v1
-
-      - name: mkdir
-        working-directory: examples
-        run: mkdir cmake_build
-
-      - name: cmake configure
-        working-directory: examples/cmake_build
-        run: cmake ..
-
-      - name: cmake build
-        working-directory: examples/cmake_build
-        run: cmake --build .
+        run: | 
+          cmake ..
+          cmake --build .

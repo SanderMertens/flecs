@@ -2,13 +2,11 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 int main(int argc, char *argv[]) {
@@ -25,11 +23,11 @@ int main(int argc, char *argv[]) {
         .set<Position>({10, 20});
 
     auto SubPrefab1 = ecs.prefab("SubPrefab1")
-        .add_instanceof(BasePrefab)
+        .add(flecs::IsA, BasePrefab)
         .set<Velocity>({1, 2});
 
     auto SubPrefab2 = ecs.prefab("SubPrefab2")
-        .add_instanceof(BasePrefab)
+        .add(flecs::IsA, BasePrefab)
         .set<Velocity>({3, 4});
 
     std::cout << SubPrefab1.type().str() << std::endl;
@@ -39,12 +37,12 @@ int main(int argc, char *argv[]) {
      * from the BasePrefab, while Velocity will be overridden from SubPrefab1
      * and SubPrefab2 respectively. */
     auto Sub1 = ecs.type("Sub1")
-        .add_instanceof(SubPrefab1)
+        .add(flecs::IsA, SubPrefab1)
         .add<Position>()
         .add<Velocity>();
 
     auto Sub2 = ecs.type("Sub2")
-        .add_instanceof(SubPrefab2)
+        .add(flecs::IsA, SubPrefab2)
         .add<Position>()
         .add<Velocity>();
 

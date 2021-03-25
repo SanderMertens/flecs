@@ -513,7 +513,7 @@ void SystemOnSet_bulk_new_1_from_base() {
             .array = (ecs_entity_t[]){
                 ecs_typeid(Velocity),
                 ecs_typeid(Mass),
-                ECS_INSTANCEOF | Base
+                ecs_pair(EcsIsA, Base)
             }, 
             .count = 3
         },
@@ -560,7 +560,7 @@ void SystemOnSet_set_1_of_2_1_from_base() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Base);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, Velocity);
@@ -597,7 +597,7 @@ void SystemOnSet_set_1_of_3_1_from_base() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Base);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, Velocity);
@@ -658,7 +658,7 @@ void SystemOnSet_add_base() {
     ecs_entity_t e = ecs_new(world, Velocity);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
@@ -687,7 +687,7 @@ void SystemOnSet_add_base_to_1_overridden() {
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
@@ -708,7 +708,7 @@ void SystemOnSet_add_base_to_2_overridden() {
     ecs_add(world, e, Velocity);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
@@ -728,7 +728,7 @@ void SystemOnSet_add_base_to_1_of_2_overridden() {
     ecs_entity_t e = ecs_new(world, Velocity);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
@@ -744,7 +744,7 @@ void SystemOnSet_add_base_to_1_of_2_overridden() {
     e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
@@ -764,7 +764,7 @@ void SystemOnSet_on_set_after_remove_override() {
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
     ecs_remove(world, e, Position);
@@ -795,10 +795,10 @@ void SystemOnSet_no_set_after_remove_base() {
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
-    ecs_remove_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_remove_entity(world, e, ecs_pair(EcsIsA, Base));
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
@@ -835,10 +835,10 @@ void SystemOnSet_un_set_after_remove_base() {
     ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.invoked, 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
-    ecs_remove_entity(world, e, ECS_INSTANCEOF | Base);
+    ecs_remove_entity(world, e, ecs_pair(EcsIsA, Base));
     test_int(ctx.invoked, 1);
 
     ecs_fini(world);
@@ -855,27 +855,27 @@ void SystemOnSet_add_to_current_in_on_set() {
     ecs_set_context(world, &ctx);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e_1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e_2 = ecs_set(world, 0, Position, {11, 21});
-    ecs_entity_t e_3 = ecs_set(world, 0, Position, {12, 22});
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {11, 21});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {12, 22});
 
-    test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_3, Position));
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
 
-    test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_2, Velocity));
-    test_assert( ecs_has(world, e_3, Velocity));
+    test_assert( ecs_has(world, e1, Velocity));
+    test_assert( ecs_has(world, e2, Velocity));
+    test_assert( ecs_has(world, e3, Velocity));
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_int(p->x, 11);
     test_int(p->y, 21);
 
-    p = ecs_get(world, e_3, Position);
+    p = ecs_get(world, e3, Position);
     test_int(p->x, 12);
     test_int(p->y, 22);
 
@@ -894,31 +894,31 @@ void SystemOnSet_remove_from_current_in_on_set() {
     ecs_set_context(world, &ctx);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e_1 = ecs_new(world, Type);
-    ecs_entity_t e_2 = ecs_new(world, Type);
-    ecs_entity_t e_3 = ecs_new(world, Type);
+    ecs_entity_t e1 = ecs_new(world, Type);
+    ecs_entity_t e2 = ecs_new(world, Type);
+    ecs_entity_t e3 = ecs_new(world, Type);
 
-    e_1 = ecs_set(world, e_1, Position, {10, 20});
-    e_2 = ecs_set(world, e_2, Position, {11, 21});
-    e_3 = ecs_set(world, e_3, Position, {12, 22});
+    e1 = ecs_set(world, e1, Position, {10, 20});
+    e2 = ecs_set(world, e2, Position, {11, 21});
+    e3 = ecs_set(world, e3, Position, {12, 22});
 
-    test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_3, Position));
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
 
-    test_assert( !ecs_has(world, e_1, Velocity));
-    test_assert( !ecs_has(world, e_2, Velocity));
-    test_assert( !ecs_has(world, e_3, Velocity));
+    test_assert( !ecs_has(world, e1, Velocity));
+    test_assert( !ecs_has(world, e2, Velocity));
+    test_assert( !ecs_has(world, e3, Velocity));
 
-    const Position *p = ecs_get(world, e_1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get(world, e_2, Position);
+    p = ecs_get(world, e2, Position);
     test_int(p->x, 11);
     test_int(p->y, 21);
 
-    p = ecs_get(world, e_3, Position);
+    p = ecs_get(world, e3, Position);
     test_int(p->x, 12);
     test_int(p->y, 22);
 
@@ -937,21 +937,21 @@ void SystemOnSet_remove_set_component_in_on_set() {
     ecs_set_context(world, &ctx);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e_1 = ecs_new(world, Type);
-    ecs_entity_t e_2 = ecs_new(world, Type);
-    ecs_entity_t e_3 = ecs_new(world, Type);
+    ecs_entity_t e1 = ecs_new(world, Type);
+    ecs_entity_t e2 = ecs_new(world, Type);
+    ecs_entity_t e3 = ecs_new(world, Type);
 
-    e_1 = ecs_set(world, e_1, Position, {10, 20});
-    e_2 = ecs_set(world, e_2, Position, {11, 21});
-    e_3 = ecs_set(world, e_3, Position, {12, 22});
+    e1 = ecs_set(world, e1, Position, {10, 20});
+    e2 = ecs_set(world, e2, Position, {11, 21});
+    e3 = ecs_set(world, e3, Position, {12, 22});
 
-    test_assert( !ecs_has(world, e_1, Position));
-    test_assert( !ecs_has(world, e_2, Position));
-    test_assert( !ecs_has(world, e_3, Position));
+    test_assert( !ecs_has(world, e1, Position));
+    test_assert( !ecs_has(world, e2, Position));
+    test_assert( !ecs_has(world, e3, Position));
 
-    test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_2, Velocity));
-    test_assert( ecs_has(world, e_3, Velocity));
+    test_assert( ecs_has(world, e1, Velocity));
+    test_assert( ecs_has(world, e2, Velocity));
+    test_assert( ecs_has(world, e3, Velocity));
 
     ecs_fini(world);
 }
@@ -969,9 +969,9 @@ void SystemOnSet_match_table_created_w_add_in_on_set() {
     IterData add_ctx = {.component = ecs_typeid(Velocity)};
     ecs_set_context(world, &add_ctx);
 
-    ecs_entity_t e_1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e_2 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e_3 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {10, 20});
 
     ecs_progress(world, 1);
 
@@ -981,9 +981,9 @@ void SystemOnSet_match_table_created_w_add_in_on_set() {
     test_int(pv_probe.column_count, 2);
     test_null(pv_probe.param);
 
-    test_int(pv_probe.e[0], e_1);
-    test_int(pv_probe.e[1], e_2);
-    test_int(pv_probe.e[2], e_3);
+    test_int(pv_probe.e[0], e1);
+    test_int(pv_probe.e[1], e2);
+    test_int(pv_probe.e[2], e3);
     test_int(pv_probe.c[0][0], ecs_typeid(Position));
     test_int(pv_probe.s[0][0], 0);
     test_int(pv_probe.c[0][1], ecs_typeid(Velocity));

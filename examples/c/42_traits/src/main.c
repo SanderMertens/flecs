@@ -1,15 +1,9 @@
 #include <traits.h>
 
 /* Ordinary position & velocity components */
-typedef struct Position {
-    float x;
-    float y;
-} Position;
-
-typedef struct Velocity {
-    float x;
-    float y;
-} Velocity;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
 /* This component will be used as a trait. A trait is a component that can be
  * added to an entity / component pair, which lets applications implement
@@ -17,14 +11,14 @@ typedef struct Velocity {
  * trait implements a timer after which the component it is attached to is
  * removed from the entity. */
 typedef struct ExpiryTimer {
-    float expiry_time;
-    float t;
+    double expiry_time;
+    double t;
 } ExpiryTimer;
 
 /* The system that executes the trait logic */
 void ExpireComponents(ecs_iter_t *it) {
     /* First, get the trait component just like a normal component */
-    ExpiryTimer *et = ecs_column(it, ExpiryTimer, 1);
+    ExpiryTimer *et = ecs_term(it, ExpiryTimer, 1);
 
     /* Get the handle to the trait. This will tell us on which component the
      * trait is applied */
@@ -39,7 +33,7 @@ void ExpireComponents(ecs_iter_t *it) {
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         /* Increase timer. When timer hits expiry time, remove component */
-        et[i].t += it->delta_time;
+        et[i].t += (double)it->delta_time;
         if (et[i].t >= et[i].expiry_time) {
             /* Remove both the component and the trait. If the trait would not
              * be removed, the system would still be invoked after this. */
@@ -62,11 +56,11 @@ int main(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, ExpiryTimer);
 
-    /* Create a system that matches ExpiryTimer as a trait. Without the TRAIT
+    /* Create a system that matches ExpiryTimer as a trait. Without the PAIR
      * role the system would look for entities that added ExpiryTimer as usual,
      * but with the role the system will be matched against every component to
      * which the trait has been applied. */
-    ECS_SYSTEM(world, ExpireComponents, EcsOnUpdate, TRAIT | ExpiryTimer);
+    ECS_SYSTEM(world, ExpireComponents, EcsOnUpdate, PAIR | ExpiryTimer);
 
     /* Create an entity with Position and Velocity */
     ecs_entity_t e = ecs_new(world, 0);

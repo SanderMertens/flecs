@@ -28,18 +28,18 @@ int main(int argc, char *argv[]) {
     ecs.staging_begin();
 
     // Create an entity in each stage
-    auto e_1 = stage_1.entity("e_stage_1");
-    auto e_2 = stage_2.entity("e_stage_2");
-    auto e_3 = stage_3.entity("e_stage_3");
+    auto e1 = stage_1.entity("e_stage_1");
+    auto e2 = stage_2.entity("e_stage_2");
+    auto e3 = stage_3.entity("e_stage_3");
 
     // End staging. This will only merge the stages for which automerging has
     // been enabled, which in this case is just stage_1.
     ecs.staging_end();
 
-    // Show that only e_1 has a name
-    std::cout << "e_1: \"" << e_1.name() << "\", "
-        << "e_2: \"" << e_2.name() << "\", "
-        << "e_3: \"" << e_3.name() << "\"" << std::endl;
+    // Show that only e1 has a name
+    std::cout << "e1: \"" << e1.name() << "\", "
+        << "e2: \"" << e2.name() << "\", "
+        << "e3: \"" << e3.name() << "\"" << std::endl;
 
     // Now merge the remaining stages. We could either call merge() on the world
     // which merges all stages, or we could merge each individual stage. The
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     stage_2.merge();
 
     // All entities are now merged
-    std::cout << "e_1: \"" << e_1.name() << "\", "
-        << "e_2: \"" << e_2.name() << "\", "
-        << "e_3: \"" << e_3.name() << "\"" << std::endl;
+    std::cout << "e1: \"" << e1.name() << "\", "
+        << "e2: \"" << e2.name() << "\", "
+        << "e3: \"" << e3.name() << "\"" << std::endl;
 }

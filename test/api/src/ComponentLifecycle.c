@@ -265,7 +265,7 @@ void ComponentLifecycle_copy_on_override() {
     ecs_entity_t base = ecs_new(world, Position);
     test_int(ctx.copy.invoked, 0);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
     test_int(ctx.copy.invoked, 0);
 
     ecs_add(world, e, Position);
@@ -1174,20 +1174,20 @@ void ComponentLifecycle_delete_in_stage() {
     ecs_fini(world);
 }
 
-typedef struct Trait {
+typedef struct Pair {
     float value_1;
     float value_2;
-} Trait;
+} Pair;
 
-void ComponentLifecycle_ctor_on_add_trait() {
+void ComponentLifecycle_ctor_on_add_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Pair);
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_typeid(Trait), EcsComponentLifecycle, {
+    ecs_set(world, ecs_typeid(Pair), EcsComponentLifecycle, {
         .ctor = comp_ctor,
         .ctx = &ctx
     });
@@ -1195,56 +1195,56 @@ void ComponentLifecycle_ctor_on_add_trait() {
     ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.ctor.invoked, 0);
 
-    ecs_add_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));
+    ecs_add_pair(world, e, ecs_typeid(Pair), ecs_typeid(Position));
     test_int(ctx.ctor.invoked, 1);
     test_assert(ctx.ctor.world == world);
-    test_int(ctx.ctor.component, ecs_typeid(Trait));
+    test_int(ctx.ctor.component, ecs_typeid(Pair));
     test_int(ctx.ctor.entity, e);
-    test_int(ctx.ctor.size, sizeof(Trait));
+    test_int(ctx.ctor.size, sizeof(Pair));
     test_int(ctx.ctor.count, 1);
 
     ecs_fini(world);
 }
 
-void ComponentLifecycle_ctor_on_add_trait_set_ctor_after_table() {
+void ComponentLifecycle_ctor_on_add_pair_set_ctor_after_table() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Pair);
 
     cl_ctx ctx = { { 0 } };
 
     ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.ctor.invoked, 0);
-    ecs_add_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));
+    ecs_add_pair(world, e, ecs_typeid(Pair), ecs_typeid(Position));
 
-    /* Remove trait so we can add it again after registering the ctor */
-    ecs_remove_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));
+    /* Remove pair so we can add it again after registering the ctor */
+    ecs_remove_pair(world, e, ecs_typeid(Pair), ecs_typeid(Position));
 
     /* Register component after table has been created */
-    ecs_set(world, ecs_typeid(Trait), EcsComponentLifecycle, {
+    ecs_set(world, ecs_typeid(Pair), EcsComponentLifecycle, {
         .ctor = comp_ctor,
         .ctx = &ctx
     });
 
     /* Re-add */
-    ecs_add_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));    
+    ecs_add_pair(world, e, ecs_typeid(Pair), ecs_typeid(Position));    
 
     test_int(ctx.ctor.invoked, 1);
     test_assert(ctx.ctor.world == world);
-    test_int(ctx.ctor.component, ecs_typeid(Trait));
+    test_int(ctx.ctor.component, ecs_typeid(Pair));
     test_int(ctx.ctor.entity, e);
-    test_int(ctx.ctor.size, sizeof(Trait));
+    test_int(ctx.ctor.size, sizeof(Pair));
     test_int(ctx.ctor.count, 1);
 
     ecs_fini(world);
 }
 
-void ComponentLifecycle_ctor_on_add_trait_tag() {
+void ComponentLifecycle_ctor_on_add_pair_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
     cl_ctx ctx = { { 0 } };
 
@@ -1256,7 +1256,7 @@ void ComponentLifecycle_ctor_on_add_trait_tag() {
     ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.ctor.invoked, 0);
 
-    ecs_add_trait(world, e, ecs_typeid(Position), Trait);
+    ecs_add_pair(world, e, Pair, ecs_typeid(Position));
 
     test_int(ctx.ctor.invoked, 1);
     test_assert(ctx.ctor.world == world);
@@ -1268,20 +1268,20 @@ void ComponentLifecycle_ctor_on_add_trait_tag() {
     ecs_fini(world);
 }
 
-void ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table() {
+void ComponentLifecycle_ctor_on_add_pair_tag_set_ctor_after_table() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
     cl_ctx ctx = { { 0 } };
 
     ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.ctor.invoked, 0);
-    ecs_add_trait(world, e, ecs_typeid(Position), Trait);
+    ecs_add_pair(world, e, Pair, ecs_typeid(Position));
 
-    /* Remove trait so we can add it again after registering the ctor */
-    ecs_remove_trait(world, e, ecs_typeid(Position), Trait);
+    /* Remove pair so we can add it again after registering the ctor */
+    ecs_remove_pair(world, e, Pair, ecs_typeid(Position));
 
     /* Register component after table has been created */
     ecs_set(world, ecs_typeid(Position), EcsComponentLifecycle, {
@@ -1290,7 +1290,7 @@ void ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table() {
     });
 
     /* Re-add */
-    ecs_add_trait(world, e, ecs_typeid(Position), Trait); 
+    ecs_add_pair(world, e, Pair, ecs_typeid(Position)); 
 
     test_int(ctx.ctor.invoked, 1);
     test_assert(ctx.ctor.world == world);
@@ -1302,15 +1302,15 @@ void ComponentLifecycle_ctor_on_add_trait_tag_set_ctor_after_table() {
     ecs_fini(world);
 }
 
-void ComponentLifecycle_ctor_on_move_trait() {
+void ComponentLifecycle_ctor_on_move_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Pair);
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_typeid(Trait), EcsComponentLifecycle, {
+    ecs_set(world, ecs_typeid(Pair), EcsComponentLifecycle, {
         .ctor = comp_ctor,
         .ctx = &ctx
     });
@@ -1319,14 +1319,14 @@ void ComponentLifecycle_ctor_on_move_trait() {
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.ctor.invoked, 0);
 
-    /* Add trait to existing table */
-    ecs_add_trait(world, e, ecs_typeid(Position), ecs_typeid(Trait));
+    /* Add pair to existing table */
+    ecs_add_pair(world, e, ecs_typeid(Pair), ecs_typeid(Position));
 
     test_int(ctx.ctor.invoked, 1);
     test_assert(ctx.ctor.world == world);
-    test_int(ctx.ctor.component, ecs_typeid(Trait));
+    test_int(ctx.ctor.component, ecs_typeid(Pair));
     test_int(ctx.ctor.entity, e);
-    test_int(ctx.ctor.size, sizeof(Trait));
+    test_int(ctx.ctor.size, sizeof(Pair));
     test_int(ctx.ctor.count, 1);
 
     ecs_fini(world);
@@ -1470,50 +1470,50 @@ void ComponentLifecycle_move_on_delete() {
     ecs_fini(world);
 }
 
-void ComponentLifecycle_copy_on_override_trait() {
+void ComponentLifecycle_copy_on_override_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Pair);
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_typeid(Trait), EcsComponentLifecycle, {
+    ecs_set(world, ecs_typeid(Pair), EcsComponentLifecycle, {
         .ctor = comp_ctor,
         .copy = comp_copy,
         .ctx = &ctx
     });
 
     ecs_entity_t base = ecs_new(world, 0);
-    ecs_add_trait(world, base, ecs_typeid(Position), ecs_typeid(Trait));
+    ecs_add_pair(world, base, ecs_typeid(Pair), ecs_typeid(Position));
     test_int(ctx.ctor.invoked, 1);
     test_int(ctx.copy.invoked, 0);
 
-    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
     test_int(ctx.ctor.invoked, 1); /* No change */
     test_int(ctx.copy.invoked, 0);
 
     ctx = (cl_ctx){ { 0 } };
 
     /* Override */
-    ecs_add_trait(world, instance, ecs_typeid(Position), ecs_typeid(Trait));
+    ecs_add_pair(world, instance, ecs_typeid(Pair), ecs_typeid(Position));
 
     test_int(ctx.ctor.invoked, 1);
     test_int(ctx.copy.invoked, 1);
     test_assert(ctx.copy.world == world);
-    test_int(ctx.copy.component, ecs_typeid(Trait));
+    test_int(ctx.copy.component, ecs_typeid(Pair));
     test_int(ctx.copy.entity, instance);
-    test_int(ctx.copy.size, sizeof(Trait));
+    test_int(ctx.copy.size, sizeof(Pair));
     test_int(ctx.copy.count, 1);
 
     ecs_fini(world);
 }
 
-void ComponentLifecycle_copy_on_override_trait_tag() {
+void ComponentLifecycle_copy_on_override_pair_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
     cl_ctx ctx = { { 0 } };
 
@@ -1524,18 +1524,18 @@ void ComponentLifecycle_copy_on_override_trait_tag() {
     });
 
     ecs_entity_t base = ecs_new(world, 0);
-    ecs_add_trait(world, base, ecs_typeid(Position), Trait);
+    ecs_add_pair(world, base, Pair, ecs_typeid(Position));
     test_int(ctx.ctor.invoked, 1);
     test_int(ctx.copy.invoked, 0);
 
-    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
     test_int(ctx.ctor.invoked, 1); /* No change */
     test_int(ctx.copy.invoked, 0);
 
     ctx = (cl_ctx){ { 0 } };
 
     /* Override */
-    ecs_add_trait(world, instance, ecs_typeid(Position), Trait);
+    ecs_add_pair(world, instance, Pair, ecs_typeid(Position));
 
     test_int(ctx.ctor.invoked, 1);
     test_int(ctx.copy.invoked, 1);
@@ -1548,15 +1548,15 @@ void ComponentLifecycle_copy_on_override_trait_tag() {
     ecs_fini(world);
 }
 
-void ComponentLifecycle_copy_on_set_trait() {
+void ComponentLifecycle_copy_on_set_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Trait);
+    ECS_COMPONENT(world, Pair);
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_typeid(Trait), EcsComponentLifecycle, {
+    ecs_set(world, ecs_typeid(Pair), EcsComponentLifecycle, {
         .copy = comp_copy,
         .ctx = &ctx
     });
@@ -1564,22 +1564,22 @@ void ComponentLifecycle_copy_on_set_trait() {
     ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.copy.invoked, 0);
     
-    ecs_set_trait(world, e, Position, Trait, {0, 0});
+    ecs_set_pair(world, e, Pair, ecs_typeid(Position), {0, 0});
     test_int(ctx.copy.invoked, 1);
     test_assert(ctx.copy.world == world);
-    test_int(ctx.copy.component, ecs_typeid(Trait));
+    test_int(ctx.copy.component, ecs_typeid(Pair));
     test_int(ctx.copy.entity, e);
-    test_int(ctx.copy.size, sizeof(Trait));
+    test_int(ctx.copy.size, sizeof(Pair));
     test_int(ctx.copy.count, 1);
 
     ecs_fini(world);
 }
 
-void ComponentLifecycle_copy_on_set_trait_tag() {
+void ComponentLifecycle_copy_on_set_pair_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
     cl_ctx ctx = { { 0 } };
 
@@ -1591,7 +1591,7 @@ void ComponentLifecycle_copy_on_set_trait_tag() {
     ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.copy.invoked, 0);
     
-    ecs_set_trait_tag(world, e, Trait, Position, {0, 0});
+    ecs_set_pair_object(world, e, Pair, Position, {0, 0});
     test_int(ctx.copy.invoked, 1);
     test_assert(ctx.copy.world == world);
     test_int(ctx.copy.component, ecs_typeid(Position));

@@ -6,8 +6,7 @@ struct Game {
 };
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 int main(int, char *[]) {
@@ -24,7 +23,7 @@ int main(int, char *[]) {
     ecs.system<Position>(nullptr, "$Game")
         .iter([](flecs::iter it, Position* p) {
             // The singleton component can be retrieved as a regular column
-            auto game = it.column<Game>(2); // 2, because Position is 1
+            auto game = it.term<Game>(2); // 2, because Position is 1
 
             for (auto i : it) {
                 if (p[i].x > 1) {

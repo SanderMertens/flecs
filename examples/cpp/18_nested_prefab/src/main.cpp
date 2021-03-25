@@ -2,13 +2,11 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 int main(int argc, char *argv[]) {
@@ -25,11 +23,11 @@ int main(int argc, char *argv[]) {
          * cause the child prefab to be instantiated whenever an instanceof
          * RootPrefab is created. */
         ecs.prefab("Child")
-            .add_childof(Root)
+            .add(flecs::ChildOf, Root)
             .set<Position>({30, 40});
 
     auto e = ecs.entity()
-        .add_instanceof(Root);
+        .add(flecs::IsA, Root);
 
     /* Lookup child in the instance we just created. This child will have e in
      * its type with a CHILDOF mask, and the prefab Child in its type with an

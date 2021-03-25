@@ -136,7 +136,7 @@ void World_reregister_after_reset() {
     auto p1 = w.component<Position>("Position");
 
     // Simulate different binary
-    flecs::_::component_info<Position>::reset();
+    flecs::_::cpp_type<Position>::reset();
 
     auto p2 = w.component<Position>("Position");
 
@@ -151,7 +151,7 @@ void World_implicit_reregister_after_reset() {
     flecs::entity_t p_id_1 = flecs::type_id<Position>();
 
     // Simulate different binary
-    flecs::_::component_info<Position>::reset();
+    flecs::_::cpp_type<Position>::reset();
 
     w.entity().add<Position>();
 
@@ -168,7 +168,7 @@ void World_reregister_after_reset_w_namespace() {
     flecs::entity_t p_id_1 = flecs::type_id<ns::FooComp>();
 
     // Simulate different binary
-    flecs::_::component_info<ns::FooComp>::reset();
+    flecs::_::cpp_type<ns::FooComp>::reset();
 
     w.component<ns::FooComp>();
 
@@ -200,7 +200,7 @@ void World_reregister_after_reset_different_name() {
     w.component<Position>("Position");
 
     // Simulate different binary
-    flecs::_::component_info<Position>::reset();
+    flecs::_::cpp_type<Position>::reset();
 
     w.component<Position>("Velocity");
 }
@@ -221,7 +221,7 @@ void World_reimport_module_after_reset() {
     auto m1 = w.import<FooModule>();
 
     // Simulate different binary
-    flecs::_::component_info<FooModule>::reset();
+    flecs::_::cpp_type<FooModule>::reset();
 
     auto m2 = w.import<FooModule>();
     
@@ -279,7 +279,7 @@ void World_c_interop_after_reset() {
     auto e_pos = w.lookup("test::interop::module::Position");
     test_assert(e_pos.id() != 0);
 
-    flecs::_::component_info<test::interop::module>::reset();
+    flecs::_::cpp_type<test::interop::module>::reset();
 
     w.import<test::interop::module>();
 }

@@ -15,7 +15,7 @@ bool path_append(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
     ecs_type_t type = ecs_get_type(world, child);
-    ecs_entity_t cur = ecs_find_in_type(world, type, component, ECS_CHILDOF);
+    ecs_entity_t cur = ecs_find_in_type(world, type, component, EcsChildOf);
     
     if (cur) {
         if (cur != parent && cur != EcsFlecsCore) {
@@ -90,7 +90,7 @@ ecs_entity_t find_child_in_table(
     const char *name)
 {
     /* If table doesn't have EcsName, then don't bother */
-    int32_t name_index = ecs_type_index_of(table->type, ecs_typeid(EcsName));
+    int32_t name_index = ecs_type_index_of(table->type, ecs_id(EcsName));
     if (name_index == -1) {
         return 0;
     }
@@ -353,7 +353,7 @@ tail:
     if (!cur) {
         if (!core_searched) {
             if (parent) {
-                parent = ecs_get_parent_w_entity(world, parent, 0);
+                parent = ecs_get_object_w_id(world, parent, EcsChildOf, 0);
             } else {
                 parent = EcsFlecsCore;
                 core_searched = true;
@@ -371,7 +371,7 @@ ecs_entity_t ecs_set_scope(
 {
     ecs_stage_t *stage = ecs_stage_from_world(&world);
 
-    ecs_entity_t e = ECS_CHILDOF | scope;
+    ecs_entity_t e = ecs_pair(EcsChildOf, scope);
     ecs_entities_t to_add = {
         .array = &e,
         .count = 1
@@ -530,7 +530,7 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         if (parent) {
-            ecs_add_entity(world, entity, ECS_CHILDOF | entity);
+            ecs_add_pair(world, entity, EcsChildOf, entity);
         }
 
         return entity;
@@ -561,7 +561,7 @@ ecs_entity_t ecs_add_path_w_sep(
             ecs_os_free(name);
 
             if (cur) {
-                ecs_add_entity(world, e, ECS_CHILDOF | cur);
+                ecs_add_pair(world, e, EcsChildOf, cur);
             }
         }
 

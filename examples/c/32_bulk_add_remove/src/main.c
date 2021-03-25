@@ -1,17 +1,12 @@
 #include <bulk_add_remove.h>
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
+typedef struct {
+    double x, y;
+} Position, Velocity;
 
-/* Typedefs can be used as component types */
-typedef Vector2D Position;
-typedef Vector2D Velocity;
-
-typedef struct Mass {
-    float value;
+typedef struct {
+    double value;
 } Mass;
 
 int main(int argc, char *argv[]) {

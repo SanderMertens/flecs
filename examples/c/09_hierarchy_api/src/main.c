@@ -1,20 +1,26 @@
 #include <hierarchy_api.h>
 
 /* Component types */
-typedef struct Vector2D {
-    float x;
-    float y;
-} Vector2D;
+typedef struct {
+    double x, y;
+} Position;
 
-typedef Vector2D Position;
-typedef Vector2D WorldPosition;
-typedef Vector2D Velocity;
+typedef struct {
+    double x;
+    double y;
+} WorldPosition;
+
+typedef struct {
+    double x, y;
+} Velocity;
+
+typedef double Mass;
 
 /* Implement a simple move system */
 void Move(ecs_iter_t *it) {
     /* Get the two columns from the system signature */
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Velocity, v, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
@@ -35,9 +41,9 @@ void Move(ecs_iter_t *it) {
  * just assign the Position to the WorldPosition. */
 void Transform(ecs_iter_t *it) {
     /* Get the two columns from the system signature */
-    WorldPosition *parent_wp = ecs_column(it, WorldPosition, 1);
-    WorldPosition *wp = ecs_column(it, WorldPosition, 2);
-    Position *p = ecs_column(it, Position, 3);
+    WorldPosition *parent_wp = ecs_term(it, WorldPosition, 1);
+    WorldPosition *wp = ecs_term(it, WorldPosition, 2);
+    Position *p = ecs_term(it, Position, 3);
 
     if (!parent_wp) {
         for (int i = 0; i < it->count; i ++) {
@@ -90,22 +96,22 @@ int main(int argc, char *argv[]) {
     ecs_set(world, Root, Position, {0, 0});
     ecs_set(world, Root, Velocity, {1, 2});
 
-        ecs_entity_t Child1 = ecs_new_w_entity(world, ECS_CHILDOF | Root);
+        ecs_entity_t Child1 = ecs_new_w_pair(world, EcsChildOf, Root);
         ecs_set(world, Child1, EcsName, {.value = "Child1"});
         ecs_add(world, Child1, WorldPosition);
         ecs_set(world, Child1, Position, {100, 100});
 
-            ecs_entity_t GChild1 = ecs_new_w_entity(world, ECS_CHILDOF | Child1);
+            ecs_entity_t GChild1 = ecs_new_w_pair(world, EcsChildOf, Child1);
             ecs_set(world, GChild1, EcsName, {.value = "GChild1"});
             ecs_add(world, GChild1, WorldPosition);
             ecs_set(world, GChild1, Position, {1000, 1000});
 
-        ecs_entity_t Child2 = ecs_new_w_entity(world, ECS_CHILDOF | Root);
+        ecs_entity_t Child2 = ecs_new_w_pair(world, EcsChildOf, Root);
         ecs_set(world, Child2, EcsName, {.value = "Child2"});
         ecs_add(world, Child2, WorldPosition);
         ecs_set(world, Child2, Position, {100, 100});
 
-            ecs_entity_t GChild2 = ecs_new_w_entity(world, ECS_CHILDOF | Child1);
+            ecs_entity_t GChild2 = ecs_new_w_pair(world, EcsChildOf, Child1);
             ecs_set(world, GChild2, EcsName, {.value = "GChild1"});
             ecs_add(world, GChild2, WorldPosition);
             ecs_set(world, GChild2, Position, {1000, 1000});

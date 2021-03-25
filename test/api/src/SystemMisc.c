@@ -1467,16 +1467,16 @@ void SystemMisc_redeclare_system_explicit_id_no_name() {
 void SystemMisc_declare_different_id_same_name() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e_1 = ecs_new(world, 0);
-    ecs_entity_t e_2 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new(world, 0);
 
-    ecs_entity_t s_1 = ecs_new_system(world, e_1, "Move", EcsOnUpdate, "0", Dummy);
-    test_assert(e_1 == s_1);
+    ecs_entity_t s_1 = ecs_new_system(world, e1, "Move", EcsOnUpdate, "0", Dummy);
+    test_assert(e1 == s_1);
 
-    ecs_entity_t s_2 = ecs_new_system(world, e_2, "Move", EcsOnUpdate, "0", Dummy);
-    test_assert(e_2 == s_2);
+    ecs_entity_t s_2 = ecs_new_system(world, e2, "Move", EcsOnUpdate, "0", Dummy);
+    test_assert(e2 == s_2);
 
-    test_assert(e_1 != e_2);
+    test_assert(e1 != e2);
 
     ecs_fini(world);
 }
@@ -1487,16 +1487,16 @@ void SystemMisc_declare_different_id_same_name_w_scope() {
     ecs_entity_t scope = ecs_new(world, 0);
     ecs_set_scope(world, scope);
 
-    ecs_entity_t e_1 = ecs_new(world, 0);
-    ecs_entity_t e_2 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new(world, 0);
 
-    ecs_entity_t s_1 = ecs_new_system(world, e_1, "Move", EcsOnUpdate, "0", Dummy);
-    test_assert(e_1 == s_1);
+    ecs_entity_t s_1 = ecs_new_system(world, e1, "Move", EcsOnUpdate, "0", Dummy);
+    test_assert(e1 == s_1);
 
-    ecs_entity_t s_2 = ecs_new_system(world, e_2, "Move", EcsOnUpdate, "0", Dummy);
-    test_assert(e_2 == s_2);
+    ecs_entity_t s_2 = ecs_new_system(world, e2, "Move", EcsOnUpdate, "0", Dummy);
+    test_assert(e2 == s_2);
 
-    test_assert(e_1 != e_2);
+    test_assert(e1 != e2);
 
     ecs_fini(world);
 }
@@ -1530,7 +1530,7 @@ void SystemMisc_rw_in_implicit_shared() {
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
-    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e, EcsIsA, base);
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
@@ -1608,7 +1608,7 @@ void SystemMisc_rw_out_explicit_shared() {
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
-    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e, EcsIsA, base);
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
@@ -1657,15 +1657,15 @@ void SystemMisc_rw_out_explicit_from_entity() {
     ecs_fini(world);
 }
 
-void SystemMisc_activate_system_for_table_w_n_traits() {
+void SystemMisc_activate_system_for_table_w_n_pairs() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Trait);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, TRAIT | Trait);
+    ECS_TAG(world, Pair);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PAIR | Pair);
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, TRAIT | Trait > TagA, TRAIT | Trait > TagB);
+    ECS_TYPE(world, Type, PAIR | Pair > TagA, PAIR | Pair > TagB);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);    
@@ -1681,9 +1681,9 @@ void SystemMisc_activate_system_for_table_w_n_traits() {
     test_int(ctx.e[0], e);
     test_int(ctx.e[1], e);
 
-    test_int(ctx.c[0][0], ecs_trait(TagA, Trait));
+    test_int(ctx.c[0][0], ecs_pair(Pair, TagA));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[1][0], ecs_trait(TagB, Trait));
+    test_int(ctx.c[1][0], ecs_pair(Pair, TagB));
     test_int(ctx.s[1][0], 0);    
 
     ecs_fini(world);

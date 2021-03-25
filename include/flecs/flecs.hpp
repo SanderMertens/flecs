@@ -7,10 +7,8 @@
 
 #pragma once
 
-#include <string>
-#include <sstream>
-#include <array>
-#include <functional>
+// The C++ API does not use STL, save for type_traits
+#include <type_traits>
 
 namespace flecs {
 
@@ -19,11 +17,14 @@ namespace flecs {
 ////////////////////////////////////////////////////////////////////////////////
 
 using world_t = ecs_world_t;
+using id_t = ecs_id_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using snapshot_t = ecs_snapshot_t;
 using filter_t = ecs_filter_t;
 using query_t = ecs_query_t;
+using ref_t = ecs_ref_t;
+using iter_t = ecs_iter_t;
 
 class world;
 class snapshot;
@@ -45,16 +46,10 @@ class query;
 template<typename ... Components>
 class system;
 
-enum match_kind {
-    MatchAll = EcsMatchAll,
-    MatchAny = EcsMatchAny,
-    MatchExact = EcsMatchExact
-};
-
 namespace _
 {
 template <typename T>
-class component_info;
+class cpp_type;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,44 +72,53 @@ using ViewAction = EcsIterAction;
 using Context = EcsContext;
 
 /* Builtin tag ids */
-static const ecs_entity_t Module = EcsModule;
-static const ecs_entity_t Prefab = EcsPrefab;
-static const ecs_entity_t Hidden = EcsHidden;
-static const ecs_entity_t Disabled = EcsDisabled;
-static const ecs_entity_t DisabledIntern = EcsDisabledIntern;
-static const ecs_entity_t Inactive = EcsInactive;
-static const ecs_entity_t OnDemand = EcsOnDemand;
-static const ecs_entity_t Monitor = EcsMonitor;
-static const ecs_entity_t Pipeline = EcsPipeline;
+static const flecs::entity_t Module = EcsModule;
+static const flecs::entity_t Prefab = EcsPrefab;
+static const flecs::entity_t Hidden = EcsHidden;
+static const flecs::entity_t Disabled = EcsDisabled;
+static const flecs::entity_t DisabledIntern = EcsDisabledIntern;
+static const flecs::entity_t Inactive = EcsInactive;
+static const flecs::entity_t OnDemand = EcsOnDemand;
+static const flecs::entity_t Monitor = EcsMonitor;
+static const flecs::entity_t Pipeline = EcsPipeline;
 
 /* Trigger tags */
-static const ecs_entity_t OnAdd = EcsOnAdd;
-static const ecs_entity_t OnRemove = EcsOnRemove;
-static const ecs_entity_t OnSet = EcsOnSet;
+static const flecs::entity_t OnAdd = EcsOnAdd;
+static const flecs::entity_t OnRemove = EcsOnRemove;
+static const flecs::entity_t OnSet = EcsOnSet;
 
 /* Builtin pipeline tags */
-static const ecs_entity_t PreFrame = EcsPreFrame;
-static const ecs_entity_t OnLoad = EcsOnLoad;
-static const ecs_entity_t PostLoad = EcsPostLoad;
-static const ecs_entity_t PreUpdate = EcsPreUpdate;
-static const ecs_entity_t OnUpdate = EcsOnUpdate;
-static const ecs_entity_t OnValidate = EcsOnValidate;
-static const ecs_entity_t PostUpdate = EcsPostUpdate;
-static const ecs_entity_t PreStore = EcsPreStore;
-static const ecs_entity_t OnStore = EcsOnStore;
-static const ecs_entity_t PostFrame = EcsPostFrame;
-
-/** Builtin entity ids */
-static const ecs_entity_t World = EcsWorld;
-static const ecs_entity_t Singleton = EcsSingleton;
+static const flecs::entity_t PreFrame = EcsPreFrame;
+static const flecs::entity_t OnLoad = EcsOnLoad;
+static const flecs::entity_t PostLoad = EcsPostLoad;
+static const flecs::entity_t PreUpdate = EcsPreUpdate;
+static const flecs::entity_t OnUpdate = EcsOnUpdate;
+static const flecs::entity_t OnValidate = EcsOnValidate;
+static const flecs::entity_t PostUpdate = EcsPostUpdate;
+static const flecs::entity_t PreStore = EcsPreStore;
+static const flecs::entity_t OnStore = EcsOnStore;
+static const flecs::entity_t PostFrame = EcsPostFrame;
 
 /** Builtin roles */
-static const ecs_entity_t Childof = ECS_CHILDOF;
-static const ecs_entity_t Instanceof = ECS_INSTANCEOF;
-static const ecs_entity_t Trait = ECS_TRAIT;
-static const ecs_entity_t Switch = ECS_SWITCH;
-static const ecs_entity_t Case = ECS_CASE;
-static const ecs_entity_t Owned = ECS_OWNED;
+static const flecs::entity_t Pair = ECS_PAIR;
+static const flecs::entity_t Switch = ECS_SWITCH;
+static const flecs::entity_t Case = ECS_CASE;
+static const flecs::entity_t Owned = ECS_OWNED;
+
+/* Builtin entity ids */
+static const flecs::entity_t Flecs = EcsFlecs;
+static const flecs::entity_t FlecsCore = EcsFlecsCore;
+static const flecs::entity_t World = World;
+
+/* Ids used by rule solver */
+static const flecs::entity_t Wildcard = EcsWildcard;
+static const flecs::entity_t This = EcsThis;
+static const flecs::entity_t Transitive = EcsTransitive;
+static const flecs::entity_t Final = EcsFinal;
+
+/* Builtin relationships */
+static const flecs::entity_t IsA = EcsIsA;
+static const flecs::entity_t ChildOf = EcsChildOf;
 
 }
 
@@ -132,5 +136,8 @@ static const ecs_entity_t Owned = ECS_OWNED;
 #include <flecs/cpp/query.hpp>
 #include <flecs/cpp/system.hpp>
 #include <flecs/cpp/reader_writer.hpp>
-
 #include <flecs/cpp/impl.hpp>
+
+#ifdef FLECS_DEPRECATED
+#include <flecs/addons/deprecated/flecs.hpp>
+#endif

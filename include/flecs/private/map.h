@@ -220,11 +220,12 @@ public:
     }
 
     void set(K& key, T& value) {
-        ecs_map_set(m_map, reinterpret_cast<ecs_map_key_t>(key), &value);
+        _ecs_map_set(m_map, sizeof(T), reinterpret_cast<ecs_map_key_t>(key), &value);
     }
 
     T& get(K& key) {
-        *(T*)ecs_map_get(m_map, T, reinterpret_cast<ecs_map_key_t>(key));
+        static_cast<T*>(_ecs_map_get(m_map, sizeof(T),
+            reinterpret_cast<ecs_map_key_t>(key)));
     }
 
 private:

@@ -191,7 +191,7 @@ void Has_owns() {
     test_assert( ecs_has(world, base, Velocity));
     test_assert( ecs_owns(world, base, Velocity, true));
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e, EcsIsA, base);
     test_assert( ecs_has(world, e, Velocity));
     test_assert( !ecs_owns(world, e, Velocity, true));
  
@@ -207,9 +207,9 @@ void Has_has_entity() {
     ecs_entity_t base = ecs_new(world, 0);
     test_assert(base != 0);
 
-    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e, EcsIsA, base);
     test_assert( !ecs_has_entity(world, e, base));
-    test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | base));
+    test_assert( ecs_has_pair(world, e, EcsIsA, base));
  
     ecs_fini(world);
 }
@@ -255,17 +255,17 @@ void Has_has_entity_owned() {
 
     ecs_add_entity(world, e, f);
     ecs_add_entity(world, base, g);
-    ecs_add_entity(world, e, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e, EcsIsA, base);
 
     test_assert( ecs_has_entity(world, e, f));
     test_assert( ecs_has_entity(world, e, g));
     test_assert( !ecs_has_entity(world, e, base));
-    test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | base));
+    test_assert( ecs_has_pair(world, e, EcsIsA, base));
     test_assert( ecs_owns_entity(world, e, f, true));
     test_assert( !ecs_owns_entity(world, e, g, true));
     test_assert( !ecs_owns_entity(world, e, base, true));
 
-    test_assert( ecs_owns_entity(world, e, ECS_INSTANCEOF | base, true));
+    test_assert( ecs_owns_entity(world, e, ecs_pair(EcsIsA, base), true));
  
     ecs_fini(world);
 }

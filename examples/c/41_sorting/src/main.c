@@ -1,8 +1,7 @@
 #include <sorting.h>
 
-typedef struct Position {
-    float x;
-    float y;
+typedef struct {
+    double x, y;
 } Position;
 
 /* Order by x member of Position */
@@ -21,7 +20,7 @@ int compare_position(
 
 /* Iterate iterator, printed values will be ordered */
 void print_iter(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {

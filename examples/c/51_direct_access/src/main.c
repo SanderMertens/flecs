@@ -1,7 +1,7 @@
 #include <direct_access.h>
 
 typedef struct {
-    float x, y;
+    double x, y;
 } Position, Velocity;
 
 int main(void) {

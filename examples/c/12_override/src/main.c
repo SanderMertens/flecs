@@ -1,7 +1,7 @@
 #include <override.h>
 
 /* Component types */
-typedef float Mass;
+typedef double Mass;
 
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     ecs_set(world, base, Mass, {10});
 
     /* Create instances which share the Mass component from a base */
-    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
 
     /* Print value before overriding Mass. The component is not owned, as it is
      * shared with the base entity. */

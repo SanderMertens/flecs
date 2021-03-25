@@ -2,13 +2,11 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Printable {};
@@ -24,10 +22,10 @@ int main(int argc, char *argv[]) {
     /* The 'Move' is marked as on_demand which means Flecs will only
      * run this system if there is interest in any of its [out] columns. In this
      * case the system will only be ran if there is interest in Position. */
-    ecs.system<>(nullptr, "[out] Position, Velocity").on_demand()
+    ecs.system<>(nullptr, "[out] Position, [in] Velocity").on_demand()
         .iter([](flecs::iter& it){
-            flecs::column<Position> p(it, 1);
-            flecs::column<Velocity> v(it, 2);
+            auto p = it.term<Position>(1);
+            auto v = it.term<const Velocity>(2);
 
             for (auto row: it) {
                 p[row].x += v[row].x;

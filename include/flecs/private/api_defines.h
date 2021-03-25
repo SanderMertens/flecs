@@ -58,11 +58,16 @@ typedef uint64_t ecs_flags64_t;
 
 /* Keep unsigned integers out of the codebase as they do more harm than good */
 typedef int32_t ecs_size_t;
+
+#ifdef __cplusplus
+#define ECS_SIZEOF(T) static_cast<ecs_size_t>(sizeof(T))
+#else
 #define ECS_SIZEOF(T) (ecs_size_t)sizeof(T)
+#endif
 
 /* Use alignof in C++, or a trick in C. */
 #ifdef __cplusplus
-#define ECS_ALIGNOF(T) (int64_t)alignof(T)
+#define ECS_ALIGNOF(T) static_cast<int64_t>(alignof(T))
 #elif defined(_MSC_VER)
 #define ECS_ALIGNOF(T) (int64_t)__alignof(T)
 #elif defined(__GNUC__)
@@ -127,14 +132,30 @@ typedef int32_t ecs_size_t;
 //// Entity id macro's
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_ROLE_MASK         ((ecs_entity_t)0xFF << 56)
-#define ECS_ENTITY_MASK       ((uint64_t)0xFFFFFFFF)
-#define ECS_GENERATION_MASK   ((uint64_t)0xFFFF << 32)
+#define ECS_ROLE_MASK         (0xFFull << 56)
+#define ECS_ENTITY_MASK       (0xFFFFFFFFull)
+#define ECS_GENERATION_MASK   (0xFFFFull << 32)
 #define ECS_GENERATION(e)     ((e & ECS_GENERATION_MASK) >> 32)
 #define ECS_GENERATION_INC(e) ((e & ~ECS_GENERATION_MASK) | ((ECS_GENERATION(e) + 1) << 32))
-#define ECS_COMPONENT_MASK    ((ecs_entity_t)~ECS_ROLE_MASK)
-#define ECS_TYPE_ROLE_START   ECS_CHILDOF
+#define ECS_COMPONENT_MASK    (~ECS_ROLE_MASK)
 #define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
+#define ECS_PAIR_RELATION(e)  (ECS_HAS_ROLE(e, PAIR) ? ecs_entity_t_hi(e & ECS_COMPONENT_MASK) : (e & ECS_ROLE_MASK))
+#define ECS_PAIR_OBJECT(e)    (ecs_entity_t_lo(e))
+#define ECS_HAS_PAIR(e, rel)  (ECS_HAS_ROLE(e, PAIR) && (ECS_PAIR_RELATION(e) == rel))
+
+#define ECS_HAS_RELATION(e, rel) (\
+    (((rel == ECS_CHILDOF) || (rel == EcsChildOf)) &&\
+        (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_PAIR(e, EcsChildOf))) ||\
+    (((rel == ECS_INSTANCEOF) || (rel == EcsIsA)) &&\
+        (ECS_HAS_ROLE(e, INSTANCEOF) || ECS_HAS_PAIR(e, EcsIsA))) ||\
+    ECS_HAS_PAIR(e, rel))
+
+#define ECS_HAS_PAIR_OBJECT(e, rel, obj)\
+    (ECS_HAS_RELATION(e, rel) && ECS_PAIR_OBJECT(e) == obj)
+
+#define ECS_HAS(e, type_id)(\
+    (e == type_id) ||\
+    (ECS_HAS_PAIR_OBJECT(e, ECS_PAIR_RELATION(type_id), ECS_PAIR_OBJECT(type_id))))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,11 +165,8 @@ typedef int32_t ecs_size_t;
 /** Translate C type to ecs_type_t variable. */
 #define ecs_type(T) FLECS__T##T
 
-/** Translate C type to entity id. */
-#define ecs_typeid(T) FLECS__E##T
-
-/* DEPRECATED: old way to get entity id from type */
-#define ecs_entity(T) ecs_typeid(T)
+/** Translate C type to id. */
+#define ecs_id(T) FLECS__E##T
 
 /** Translate C type to module struct. */
 #define ecs_module(T) FLECS__M##T
@@ -159,22 +177,31 @@ typedef int32_t ecs_size_t;
 /** Translate C type to module struct. */
 #define ecs_iter_action(T) FLECS__F##T
 
-#ifndef FLECS_LEGACY
-
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Utilities for working with trait identifiers
+//// Utilities for working with pair identifiers
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __cplusplus
+#define ecs_entity_t_lo(value) (static_cast<uint32_t>(value))
+#define ecs_entity_t_hi(value) (static_cast<uint32_t>((value) >> 32))
+#define ecs_entity_t_comb(lo, hi) ((static_cast<uint64_t>(hi) << 32) + static_cast<uint32_t>(lo))
+#else
 #define ecs_entity_t_lo(value) ((uint32_t)(value))
 #define ecs_entity_t_hi(value) ((uint32_t)((value) >> 32))
-#define ecs_entity_t_comb(v1, v2) (((uint64_t)(v2) << 32) + (uint32_t)(v1))
-#define ecs_trait(comp, trait) ECS_TRAIT | ecs_entity_t_comb(comp, trait)
+#define ecs_entity_t_comb(lo, hi) (((uint64_t)(hi) << 32) + (uint32_t)(lo))
+#endif
 
+#define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
+
+/* Get object from pair with the correct (current) generation count */
+#define ecs_pair_object(world, pair) ecs_get_alive(world, ECS_PAIR_OBJECT(pair))
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macro's for ctor, dtor, move and copy
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifndef FLECS_LEGACY
 
 /* Constructor / destructor convenience macro */
 #define ECS_XTOR_IMPL(type, postfix, var, ...)\
@@ -272,7 +299,24 @@ typedef int32_t ecs_size_t;
             __VA_ARGS__\
         }\
     }
+    
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+//// Deprecated constants
+////////////////////////////////////////////////////////////////////////////////
+
+/* These constants should no longer be used, but are required by the core to
+ * guarantee backwards compatibility */
+#define ECS_INSTANCEOF (ECS_ROLE | (0x7Eull << 56))
+#define ECS_CHILDOF    (ECS_ROLE | (0x7Dull << 56))
+#define ECS_AND (ECS_ROLE | (0x79ull << 56))
+#define ECS_OR (ECS_ROLE | (0x78ull << 56))
+#define ECS_XOR (ECS_ROLE | (0x77ull << 56))
+#define ECS_NOT (ECS_ROLE | (0x76ull << 56))
+
+#define EcsSingleton   (ECS_HI_COMPONENT_ID + 26)
+
 #ifdef __cplusplus
 }
 #endif

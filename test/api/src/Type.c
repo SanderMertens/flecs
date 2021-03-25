@@ -147,16 +147,16 @@ void Type_type_has_prefab() {
 
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t entities[2] = {ecs_typeid(Position), ecs_typeid(Velocity) | ECS_INSTANCEOF};
+    ecs_entity_t entities[2] = {ecs_typeid(Position), ecs_pair(EcsIsA, ecs_typeid(Velocity))};
     ecs_type_t t = ecs_type_find(world, entities, 2);
     test_assert(t != ecs_type(Type));
     test_assert( ecs_type_has_entity(world, t, ecs_typeid(Position)));
-    test_assert( ecs_type_has_entity(world, t, ECS_INSTANCEOF | ecs_typeid(Velocity)));
+    test_assert( ecs_type_has_entity(world, t, ecs_pair(EcsIsA, ecs_typeid(Velocity))));
 
     ecs_fini(world);
 }
 
-void Type_type_has_container() {
+void Type_type_has_parent() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -164,196 +164,179 @@ void Type_type_has_container() {
 
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t entities[2] = {ecs_typeid(Position), ecs_typeid(Velocity) | ECS_CHILDOF};
+    ecs_entity_t entities[2] = {ecs_typeid(Position), ecs_pair(EcsChildOf, ecs_typeid(Velocity))};
     ecs_type_t t = ecs_type_find(world, entities, 2);
     test_assert(t != ecs_type(Type));
     test_assert( ecs_type_has_entity(world, t, ecs_typeid(Position)));
-    test_assert( ecs_type_has_entity(world, t, ECS_CHILDOF | ecs_typeid(Velocity)));
+    test_assert( ecs_type_has_entity(world, t, ecs_pair(EcsChildOf, ecs_typeid(Velocity))));
 
     ecs_fini(world);
 }
 
-void Type_type_has_prefab_container() {
+void Type_type_has_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_TYPE(world, Type, PAIR | Pair > Position);
 
-    ecs_entity_t entities[2] = {ecs_typeid(Position), ecs_typeid(Velocity) | ECS_INSTANCEOF | ECS_CHILDOF};
-    ecs_type_t t = ecs_type_find(world, entities, 2);
-    test_assert(t != ecs_type(Type));
-    test_assert( ecs_type_has_entity(world, t, ecs_typeid(Position)));
-    test_assert( ecs_type_has_entity(world, t, ECS_INSTANCEOF | ECS_CHILDOF | ecs_typeid(Velocity)));
-
-    ecs_fini(world);
-}
-
-void Type_type_has_trait() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
-
-    ECS_TYPE(world, Type, TRAIT | Trait > Position);
-
-    ecs_entity_t entities[2] = {ecs_trait(ecs_typeid(Position), Trait)};
+    ecs_entity_t entities[2] = {ecs_pair(Pair, ecs_typeid(Position))};
     ecs_type_t t = ecs_type_find(world, entities, 1);
     test_assert(t == ecs_type(Type));
-    test_assert( ecs_type_has_entity(world, t, ECS_TRAIT | Trait));
+    test_assert( ecs_type_has_entity(world, t, ECS_PAIR | Pair));
 
     ecs_fini(world);
 }
 
-void Type_type_has_trait_exact() {
+void Type_type_has_pair_exact() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, Type, TRAIT | Trait > Position);
+    ECS_TYPE(world, Type, PAIR | Pair > Position);
 
-    ecs_entity_t entities[2] = {ecs_trait(ecs_typeid(Position), Trait)};
+    ecs_entity_t entities[2] = {ecs_pair(Pair, ecs_typeid(Position))};
     ecs_type_t t = ecs_type_find(world, entities, 1);
     test_assert(t == ecs_type(Type));
-    test_assert( ecs_type_has_entity(world, t, ecs_trait(ecs_typeid(Position), Trait)));
+    test_assert( ecs_type_has_entity(world, t, ecs_pair(Pair, ecs_typeid(Position))));
 
     ecs_fini(world);
 }
 
-void Type_type_has_trait_wildcard() {
+void Type_type_has_pair_wildcard() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, TypeMatch, TRAIT | Trait > Position, Position);
-    ECS_TYPE(world, TypeNoMatch, TRAIT | Trait > Position);
+    ECS_TYPE(world, TypeMatch, PAIR | Pair > Position, Position);
+    ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position);
 
     test_assert( ecs_type_has_entity(world, ecs_type(TypeMatch), 
-        ecs_trait(EcsWildcard, Trait)));
+        ecs_pair(Pair, EcsWildcard)));
 
     test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
-        ecs_trait(EcsWildcard, Trait)));
+        ecs_pair(Pair, EcsWildcard)));
 
     ecs_fini(world);
 }
 
-void Type_type_has_trait_wildcard_multiple() {
+void Type_type_has_pair_wildcard_multiple() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, TypeMatch, TRAIT | Trait > Position, Position, TRAIT | Trait > Velocity, Velocity);
-    ECS_TYPE(world, TypeNoMatch, TRAIT | Trait > Position, Position, TRAIT | Trait > Velocity);
+    ECS_TYPE(world, TypeMatch, PAIR | Pair > Position, Position, PAIR | Pair > Velocity, Velocity);
+    ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position, Position, PAIR | Pair > Velocity);
 
     test_assert( ecs_type_has_entity(world, ecs_type(TypeMatch),
-        ecs_trait(EcsWildcard, Trait)));
+        ecs_pair(Pair, EcsWildcard)));
 
     test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
-        ecs_trait(EcsWildcard, Trait)));
+        ecs_pair(Pair, EcsWildcard)));
 
     ecs_fini(world);
 }
 
-void Type_type_has_trait_wildcard_no_trait() {
+void Type_type_has_pair_wildcard_no_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
     ECS_TYPE(world, TypeNoMatch, Position);
 
     test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
-        ecs_trait(EcsWildcard, Trait)));
+        ecs_pair(Pair, EcsWildcard)));
 
     ecs_fini(world);
 }
 
-void Type_type_owns_trait() {
+void Type_type_owns_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, Type, TRAIT | Trait > Position);
+    ECS_TYPE(world, Type, PAIR | Pair > Position);
 
-    ecs_entity_t entities[2] = {ecs_trait(ecs_typeid(Position), Trait)};
+    ecs_entity_t entities[2] = {ecs_pair(Pair, ecs_typeid(Position))};
     ecs_type_t t = ecs_type_find(world, entities, 1);
     test_assert(t == ecs_type(Type));
-    test_assert( ecs_type_owns_entity(world, t, ECS_TRAIT | Trait, true));
+    test_assert( ecs_type_owns_entity(world, t, ECS_PAIR | Pair, true));
 
     ecs_fini(world);
 }
 
-void Type_type_owns_trait_exact() {
+void Type_type_owns_pair_exact() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, Type, TRAIT | Trait > Position);
+    ECS_TYPE(world, Type, PAIR | Pair > Position);
 
-    ecs_entity_t entities[2] = {ecs_trait(ecs_typeid(Position), Trait)};
+    ecs_entity_t entities[2] = {ecs_pair(Pair, ecs_typeid(Position))};
     ecs_type_t t = ecs_type_find(world, entities, 1);
     test_assert(t == ecs_type(Type));
-    test_assert( ecs_type_owns_entity(world, t, ecs_trait(ecs_typeid(Position), Trait), true));
+    test_assert( ecs_type_owns_entity(world, t, ecs_pair(Pair, ecs_typeid(Position)), true));
 
     ecs_fini(world);
 }
 
-void Type_type_owns_trait_wildcard() {
+void Type_type_owns_pair_wildcard() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, TypeMatch, TRAIT | Trait > Position, Position);
-    ECS_TYPE(world, TypeNoMatch, TRAIT | Trait > Position);
+    ECS_TYPE(world, TypeMatch, PAIR | Pair > Position, Position);
+    ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position);
 
     test_assert( ecs_type_owns_entity(world, ecs_type(TypeMatch), 
-        ecs_trait(EcsWildcard, Trait), true));
+        ecs_pair(Pair, EcsWildcard), true));
 
     test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
-        ecs_trait(EcsWildcard, Trait), true));
+        ecs_pair(Pair, EcsWildcard), true));
 
     ecs_fini(world);
 }
 
-void Type_type_owns_trait_wildcard_multiple() {
+void Type_type_owns_pair_wildcard_multiple() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, TypeMatch, TRAIT | Trait > Position, Position, TRAIT | Trait > Velocity, Velocity);
-    ECS_TYPE(world, TypeNoMatch, TRAIT | Trait > Position, Position, TRAIT | Trait > Velocity);
+    ECS_TYPE(world, TypeMatch, PAIR | Pair > Position, Position, PAIR | Pair > Velocity, Velocity);
+    ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position, Position, PAIR | Pair > Velocity);
 
     test_assert( ecs_type_owns_entity(world, ecs_type(TypeMatch), 
-        ecs_trait(EcsWildcard, Trait), true));
+        ecs_pair(Pair, EcsWildcard), true));
 
     test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
-        ecs_trait(EcsWildcard, Trait), true));
+        ecs_pair(Pair, EcsWildcard), true));
 
     ecs_fini(world);
 }
 
-void Type_type_owns_trait_wildcard_no_trait() {
+void Type_type_owns_pair_wildcard_no_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
     ECS_TYPE(world, TypeNoMatch, Position);
 
     test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
-        ecs_trait(EcsWildcard, Trait), true));
+        ecs_pair(Pair, EcsWildcard), true));
 
     ecs_fini(world);
 }
@@ -434,7 +417,7 @@ void Type_type_merge_overlap_w_flag() {
 
     ecs_entity_t type2_entities[2];
     type2_entities[0] = ecs_typeid(Mass);
-    type2_entities[1] = ecs_typeid(Velocity) | ECS_INSTANCEOF;
+    type2_entities[1] = ecs_pair(EcsIsA, ecs_typeid(Velocity));
     ecs_type_t type2 = ecs_type_find(world, type2_entities, 2);
 
     ecs_type_t t = ecs_type_merge(world, ecs_type(Type1), type2, 0);
@@ -445,7 +428,7 @@ void Type_type_merge_overlap_w_flag() {
     test_int(entities[0], ecs_typeid(Position));
     test_int(entities[1], ecs_typeid(Velocity));
     test_int(entities[2], ecs_typeid(Mass));
-    test_int(entities[3], ecs_typeid(Velocity) | ECS_INSTANCEOF);
+    test_int(entities[3], ecs_pair(EcsIsA, ecs_typeid(Velocity)));
 
     ecs_fini(world);
 }
@@ -459,12 +442,12 @@ void Type_type_merge_overlap_w_flags_from_both() {
 
     ecs_entity_t type1_entities[2];
     type1_entities[0] = ecs_typeid(Position);
-    type1_entities[1] = ecs_typeid(Velocity) | ECS_CHILDOF;
+    type1_entities[1] = ecs_pair(EcsChildOf, ecs_typeid(Velocity));
     ecs_type_t ecs_type(Type1) = ecs_type_find(world, type1_entities, 2);
 
     ecs_entity_t type2_entities[2];
     type2_entities[0] = ecs_typeid(Mass);
-    type2_entities[1] = ecs_typeid(Velocity) | ECS_INSTANCEOF;
+    type2_entities[1] = ecs_pair(EcsIsA, ecs_typeid(Velocity));
     ecs_type_t type2 = ecs_type_find(world, type2_entities, 2);
 
     ecs_type_t t = ecs_type_merge(world, ecs_type(Type1), type2, 0);
@@ -474,8 +457,8 @@ void Type_type_merge_overlap_w_flags_from_both() {
     ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
     test_int(entities[0], ecs_typeid(Position));
     test_int(entities[1], ecs_typeid(Mass));
-    test_int(entities[2], ecs_typeid(Velocity) | ECS_CHILDOF);
-    test_int(entities[3], ecs_typeid(Velocity) | ECS_INSTANCEOF);
+    test_int(entities[2], ecs_pair(EcsChildOf, ecs_typeid(Velocity)));
+    test_int(entities[3], ecs_pair(EcsIsA, ecs_typeid(Velocity)));
 
     ecs_fini(world);
 }
@@ -964,7 +947,7 @@ void Type_type_to_expr_childof() {
     ecs_fini(world);
 }
 
-void Type_type_to_expr_trait() {
+void Type_type_to_expr_pair() {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -972,18 +955,18 @@ void Type_type_to_expr_trait() {
     test_expect_abort();
 
     /* Cannot create a type that just sets the hi id */
-    ECS_TYPE(world, Type, TRAIT | Position);
+    ECS_TYPE(world, Type, PAIR | Position);
 }
 
-void Type_type_to_expr_trait_w_comp() {
+void Type_type_to_expr_pair_w_comp() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, TRAIT | Position > Velocity);
+    ECS_TYPE(world, Type, PAIR | Position > Velocity);
 
     char *expr = ecs_type_str(world, ecs_type(Type));
-    test_str(expr, "TRAIT|Position>Velocity");
+    test_str(expr, "(Position,Velocity)");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -1057,7 +1040,7 @@ void Type_type_from_expr_instanceof() {
 
     ecs_type_t type = ecs_type_from_str(world, "INSTANCEOF | Base");
     test_int(ecs_vector_count(type), 1);
-    test_assert(ecs_type_has_entity(world, type, ECS_INSTANCEOF | Base));
+    test_assert(ecs_type_has_entity(world, type, ecs_pair(EcsIsA, Base)));
 
     ecs_fini(world);
 }
@@ -1069,32 +1052,32 @@ void Type_type_from_expr_childof() {
 
     ecs_type_t type = ecs_type_from_str(world, "CHILDOF | Parent");
     test_int(ecs_vector_count(type), 1);
-    test_assert(ecs_type_has_entity(world, type, ECS_CHILDOF | Parent));
+    test_assert(ecs_type_has_entity(world, type, ecs_pair(EcsChildOf, Parent)));
 
     ecs_fini(world);
 }
 
-void Type_type_from_expr_trait() {
+void Type_type_from_expr_pair() {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
     
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
     /* Cannot create a type that only sets the hi id */
     test_expect_abort();
-    ecs_type_from_str(world, "TRAIT | Trait");
+    ecs_type_from_str(world, "PAIR | Pair");
 }
 
-void Type_type_from_expr_trait_w_comp() {
+void Type_type_from_expr_pair_w_comp() {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
-    ecs_type_t type = ecs_type_from_str(world, "TRAIT | Trait > Position");
+    ecs_type_t type = ecs_type_from_str(world, "PAIR | Pair > Position");
     test_int(ecs_vector_count(type), 1);
-    test_assert(ecs_type_has_entity(world, type, ecs_trait(ecs_typeid(Position), Trait)));
+    test_assert(ecs_type_has_entity(world, type, ecs_pair(Pair, ecs_typeid(Position))));
 
     ecs_fini(world);
 }
@@ -1131,11 +1114,11 @@ void Type_entity_instanceof_str() {
 
     ECS_ENTITY(world, Foo, 0);
 
-    ecs_entity_t e = ECS_INSTANCEOF | Foo;
+    ecs_entity_t e = ecs_pair(EcsIsA, Foo);
 
     char buffer[256];
     size_t result = ecs_entity_str(world, e, buffer, 256);
-    test_str(buffer, "INSTANCEOF|Foo");
+    test_str(buffer, "(IsA,Foo)");
     test_int(strlen(buffer), result);
 
     ecs_fini(world);
@@ -1146,27 +1129,27 @@ void Type_entity_childof_str() {
 
     ECS_ENTITY(world, Foo, 0);
 
-    ecs_entity_t e = ECS_CHILDOF | Foo;
+    ecs_entity_t e = ecs_pair(EcsChildOf, Foo);
 
     char buffer[256];
     size_t result = ecs_entity_str(world, e, buffer, 256);
-    test_str(buffer, "CHILDOF|Foo");
+    test_str(buffer, "(ChildOf,Foo)");
     test_int(strlen(buffer), result);
 
     ecs_fini(world);
 }
 
-void Type_entity_trait_str() {
+void Type_entity_pair_str() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Foo, 0);
     ECS_ENTITY(world, Bar, 0);
 
-    ecs_entity_t e = ecs_trait(Foo, Bar);
+    ecs_entity_t e = ecs_pair(Bar, Foo);
 
     char buffer[256];
     size_t result = ecs_entity_str(world, e, buffer, 256);
-    test_str(buffer, "TRAIT|Bar>Foo");
+    test_str(buffer, "(Bar,Foo)");
     test_int(strlen(buffer), result);
 
     ecs_fini(world);
@@ -1267,13 +1250,13 @@ void Type_entity_str_small_buffer() {
 
     ECS_ENTITY(world, Foo, 0);
 
-    ecs_entity_t e = ECS_INSTANCEOF | Foo;
+    ecs_entity_t e = ecs_pair(EcsChildOf, Foo);
 
     char buffer[10];
     size_t result = ecs_entity_str(world, e, buffer, 10);
-    test_str(buffer, "INSTANCEO");
+    test_str(buffer, "(ChildOf,");
     test_int(strlen(buffer), 9);
-    test_int(strlen("INSTANCEOF|Foo"), result);
+    test_int(strlen("(ChildOf,Foo)"), result);
 
     ecs_fini(world);
 }
@@ -1288,9 +1271,9 @@ void Type_role_instanceof_str() {
     test_str(ecs_role_str(e), "INSTANCEOF");
 }
 
-void Type_role_trait_str() {
-    ecs_entity_t e = ECS_TRAIT;
-    test_str(ecs_role_str(e), "TRAIT");
+void Type_role_pair_str() {
+    ecs_entity_t e = ECS_PAIR;
+    test_str(ecs_role_str(e), "PAIR");
 }
 
 void Type_role_switch_str() {

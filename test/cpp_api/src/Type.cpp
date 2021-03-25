@@ -23,13 +23,13 @@ void Type_add_instanceof() {
 
     auto base = flecs::entity(world);
     auto type = flecs::type(world)
-        .add_instanceof(base);
+        .add(flecs::IsA, base);
 
     auto entity = flecs::entity(world);
     test_assert(entity.id() != 0);
 
     entity.add(type);
-    test_assert(entity.has(flecs::Instanceof | base.id()));
+    test_assert(entity.has(flecs::IsA, base.id()));
 }
 
 void Type_add_childof() {
@@ -37,13 +37,13 @@ void Type_add_childof() {
 
     auto parent = flecs::entity(world);
     auto type = flecs::type(world)
-        .add_childof(parent);
+        .add(flecs::ChildOf, parent);
 
     auto entity = flecs::entity(world);
     test_assert(entity.id() != 0);
 
     entity.add(type);
-    test_assert(entity.has(flecs::Childof | parent.id()));
+    test_assert(entity.has(flecs::ChildOf, parent.id()));
 }
 
 void Type_1_component() {
@@ -63,10 +63,9 @@ void Type_1_component() {
 void Type_2_component() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
-
-    auto type = flecs::type(world).add<Position, Velocity>();
+    auto type = flecs::type(world)
+        .add<Position>()
+        .add<Velocity>();
 
     auto entity = flecs::entity(world);
     test_assert(entity.id() != 0);

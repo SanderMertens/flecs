@@ -3,13 +3,11 @@
 
 /* Ordinary position & velocity components */
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 /* This component will be used as a trait. A trait is a component that can be
@@ -25,40 +23,42 @@ struct ExpiryTimer {
 int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
-    /* Register trait component so that the system can resolve it by name */
+    /* Register pair component so that the system can resolve it by name */
     ecs.component<ExpiryTimer>();
 
-    /* Create a system that matches ExpiryTimer as a trait. Without the TRAIT
+    /* Create a system that matches ExpiryTimer as a pair. Without the PAIR
      * role the system would look for entities that added ExpiryTimer as usual,
      * but with the role the system will be matched against every component to
-     * which the trait has been applied. */
-    ecs.system<>(nullptr, "TRAIT | ExpiryTimer")
+     * which the pair has been applied. */
+    ecs.system<>(nullptr, "PAIR | ExpiryTimer")
         .iter([](flecs::iter it) {
-            /* First, get the trait component */
-            flecs::column<ExpiryTimer> et(it, 1);
+            /* First, get the pair component */
+            auto et = it.term<ExpiryTimer>(1);
 
-            /* Get the handle to the trait. This will tell us on which component
-             * the trait is applied */
-            flecs::entity trait = it.column_entity(1);
+            /* Get the id of the term, which contains the pair */
+            flecs::entity pair = it.term_id(1);
 
-            /* Obtain the component handle. The component handle is always in 
-             * the lower 32 bits of the trait handle. */
-            flecs::entity comp = trait.lo();
+            std::cout << "WORLD: " << pair.world().c_ptr() << std::endl;
+
+            /* Obtain component id, which is the 'object' part of the pair */
+            flecs::entity obj = pair.object();
+
+            std::cout << "WORLD: " << obj.world().c_ptr() << std::endl;
 
             for (auto i : it) {
                 /* Increase timer. When it equals expiry time, remove component */
                 et[i].t += it.delta_time();
                 if (et[i].t >= et[i].expiry_time) {
-                    /* Remove both the component and the trait. If the trait 
+                    /* Remove both the component and the pair. If the pair 
                      * would not be removed, the system would still be invoked 
                      * after this. */
-                    std::cout << "Remove component " << comp.name() << std::endl;
+                    std::cout << "Remove component " << obj.name() << std::endl;
 
                     /* Removes component (Position or Velocity) */
-                    it.entity(i).remove(comp);
+                    it.entity(i).remove(obj);
 
-                    /* Removes trait */
-                    it.entity(i).remove(trait);                    
+                    /* Removes pair */
+                    it.entity(i).remove(pair);                    
                 }
             }
         });
@@ -68,15 +68,15 @@ int main(int argc, char *argv[]) {
         .add<Position>()
         .add<Velocity>();
 
-    /* Assign the trait to the Position component. After 3 seconds Position will
+    /* Assign the pair to the Position component. After 3 seconds Position will
      * be removed from the entity */
-    e.set_trait<ExpiryTimer, Position>({ 3, 0 });
+    e.set<ExpiryTimer, Position>({ 3, 0 });
 
-    /* Also assign the trait to the Velocity comopnent. After 2 seconds the
+    /* Also assign the pair to the Velocity comopnent. After 2 seconds the
      * Velocity component will be removed. */
-    e.set_trait<ExpiryTimer, Velocity>({ 2, 0 });
+    e.set<ExpiryTimer, Velocity>({ 2, 0 });
 
-    /* Note that the trait has been added to the same entity twice, which is not
+    /* Note that the pair has been added to the same entity twice, which is not
      * something that is ordinarily possible with a component. */
 
     /* Run the main loop until both components have been removed */

@@ -115,6 +115,29 @@ void Queries_query_changed_after_set() {
     ecs_fini(world);
 }
 
+void Queries_query_change_after_modified() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t e1 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+    test_assert(ecs_query_changed(q) == true);
+
+    ecs_query_iter(q);
+    test_assert(ecs_query_changed(q) == false);
+
+    ecs_modified(world, e1, Position);
+    test_assert(ecs_query_changed(q) == true);
+
+    ecs_query_iter(q);
+    test_assert(ecs_query_changed(q) == false);
+
+    ecs_fini(world);
+}
+
 void Sys(ecs_iter_t *it) { }
 
 void Queries_query_change_after_out_system() {
@@ -338,11 +361,11 @@ void Queries_subquery_unmatch() {
     ecs_entity_t e1 = ecs_new(world, 0);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
-    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_new(world, 0);
     ecs_add(world, e2, Position);
-    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query_new(world, "Position, PARENT:Position");
     test_assert(q != NULL);
@@ -411,11 +434,11 @@ void Queries_subquery_rematch() {
     ecs_entity_t e1 = ecs_new(world, 0);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
-    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_new(world, 0);
     ecs_add(world, e2, Position);
-    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query_new(world, "Position, PARENT:Position");
     test_assert(q != NULL);
@@ -497,11 +520,11 @@ void Queries_subquery_rematch_w_parent_optional() {
     ecs_entity_t e1 = ecs_new(world, 0);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
-    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_new(world, 0);
     ecs_add(world, e2, Position);
-    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query_new(world, "Position, ?PARENT:Position");
     test_assert(q != NULL);
@@ -544,11 +567,11 @@ void Queries_subquery_rematch_w_sub_optional() {
     ecs_entity_t e1 = ecs_new(world, 0);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
-    ecs_add_entity(world, e1, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_new(world, 0);
     ecs_add(world, e2, Position);
-    ecs_add_entity(world, e2, ECS_CHILDOF | parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query_new(world, "Position, ?PARENT:Position");
     test_assert(q != NULL);
@@ -578,21 +601,21 @@ void Queries_subquery_rematch_w_sub_optional() {
     ecs_fini(world);
 }
 
-void Queries_query_single_trait() {
+void Queries_query_single_pairs() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Trait);
+    ECS_TAG(world, Pair);
 
-    ECS_ENTITY(world, e1, TRAIT|Trait>Position);
-    ECS_ENTITY(world, e2, TRAIT|Trait>Velocity);
+    ECS_ENTITY(world, e1, PAIR|Pair>Position);
+    ECS_ENTITY(world, e2, PAIR|Pair>Velocity);
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Velocity);
 
     int32_t table_count = 0, entity_count = 0;
 
-    ecs_query_t *q = ecs_query_new(world, "TRAIT | Trait > Velocity");
+    ecs_query_t *q = ecs_query_new(world, "PAIR | Pair > Velocity");
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
         table_count ++;
@@ -711,7 +734,7 @@ void Queries_query_optional_owned() {
     ecs_entity_t base = ecs_new(world, Velocity);
     
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e1, EcsIsA, base);
 
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add(world, e2, Velocity);
@@ -756,7 +779,7 @@ void Queries_query_optional_shared() {
     ecs_entity_t base = ecs_new(world, Velocity);
     
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e1, EcsIsA, base);
 
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add(world, e2, Velocity);
@@ -800,10 +823,10 @@ void Queries_query_optional_shared_nested() {
 
     ecs_entity_t base_base = ecs_new(world, Velocity);
     ecs_entity_t base = ecs_new(world, 0);
-    ecs_add_entity(world, base, ECS_INSTANCEOF | base_base);
+    ecs_add_pair(world, base, EcsIsA, base_base);
     
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e1, EcsIsA, base);
 
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add(world, e2, Velocity);
@@ -848,7 +871,7 @@ void Queries_query_optional_any() {
     ecs_entity_t base = ecs_new(world, Velocity);
     
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e1, EcsIsA, base);
 
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add(world, e2, Velocity);
@@ -895,7 +918,7 @@ void Queries_query_rematch_optional_after_add() {
     ecs_entity_t base = ecs_new(world, 0);
     
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
+    ecs_add_pair(world, e1, EcsIsA, base);
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add(world, e2, Velocity);
     ecs_entity_t e3 = ecs_new(world, Position);
@@ -990,7 +1013,7 @@ void Queries_get_shared_tag() {
     ECS_TAG(world, Tag);
 
     ecs_entity_t base = ecs_new(world, Tag);
-    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_query_t *q = ecs_query_new(world, "SHARED:Tag");
 

@@ -27,19 +27,19 @@ int main(int argc, char *argv[]) {
     ecs_staging_begin(world);
 
     /* Create an entity in each stage */
-    ecs_entity_t e_1 = ecs_set(stage_1, 0, EcsName, {.value = "e_stage_1"});
-    ecs_entity_t e_2 = ecs_set(stage_2, 0, EcsName, {.value = "e_stage_2"});
-    ecs_entity_t e_3 = ecs_set(stage_3, 0, EcsName, {.value = "e_stage_3"});
+    ecs_entity_t e1 = ecs_set(stage_1, 0, EcsName, {.value = "e_stage_1"});
+    ecs_entity_t e2 = ecs_set(stage_2, 0, EcsName, {.value = "e_stage_2"});
+    ecs_entity_t e3 = ecs_set(stage_3, 0, EcsName, {.value = "e_stage_3"});
 
     /* End staging. This will only merge the stages for which automerging has
      * been enabled, which in this case is just stage_1. */
     ecs_staging_end(world);
 
-    /* Show that only e_1 has a name */
-    printf("e_1: \"%s\", e_2: %s, e_3: %s\n",
-        ecs_get_name(world, e_1),
-        ecs_get_name(world, e_2),
-        ecs_get_name(world, e_3));
+    /* Show that only e1 has a name */
+    printf("e1: \"%s\", e2: %s, e3: %s\n",
+        ecs_get_name(world, e1),
+        ecs_get_name(world, e2),
+        ecs_get_name(world, e3));
 
     /* Now merge the remaining stages. We could either call merge() on the world
      * which merges all stages, or we could merge each individual stage. The
@@ -49,8 +49,8 @@ int main(int argc, char *argv[]) {
     ecs_merge(stage_2);
 
     /* All entities are now merged */
-    printf("e_1: \"%s\", e_2: \"%s\", e_3: \"%s\"\n",
-        ecs_get_name(world, e_1),
-        ecs_get_name(world, e_2),
-        ecs_get_name(world, e_3));
+    printf("e1: \"%s\", e2: \"%s\", e3: \"%s\"\n",
+        ecs_get_name(world, e1),
+        ecs_get_name(world, e2),
+        ecs_get_name(world, e3));
 }

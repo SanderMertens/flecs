@@ -2,18 +2,15 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct WorldPosition {
-    float x;
-    float y;
+    double x, y;
 };
 
 struct Velocity {
-    float x;
-    float y;
+    double x, y;
 };
 
 /* Implement a simple move system */
@@ -32,7 +29,7 @@ void Move(flecs::entity e, Position& p, const Velocity& v) {
  * If the CASCADE column is not set, the system matched a root. In that case,
  * just assign the Position to the WorldPosition. */
 void Transform(flecs::iter& it, WorldPosition* wp, Position *p) {
-    flecs::column<const WorldPosition> parent_wp(it, 3);
+    auto parent_wp = it.term<const WorldPosition>(3);
 
     if (!parent_wp.is_set()) {
         for (auto row : it) {
@@ -98,22 +95,22 @@ int main(int argc, char *argv[]) {
         .set<Velocity>({1, 2});
 
         auto Child1 = ecs.entity("Child1")
-            .add_childof(Root)
+            .add(flecs::ChildOf, Root)
             .add<WorldPosition>()
             .set<Position>({100, 100});
 
             ecs.entity("GChild1")
-                .add_childof(Child1)
+                .add(flecs::ChildOf, Child1)
                 .add<WorldPosition>()
                 .set<Position>({1000, 1000});
 
         auto Child2 = ecs.entity("Child2")
-            .add_childof(Root)
+            .add(flecs::ChildOf, Root)
             .add<WorldPosition>()
             .set<Position>({200, 200});
 
             ecs.entity("GChild2")
-                .add_childof(Child2)
+                .add(flecs::ChildOf, Child2)
                 .add<WorldPosition>()
                 .set<Position>({2000, 2000});
 

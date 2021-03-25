@@ -2,15 +2,15 @@
 #include <iostream>
 
 struct Health {
-    float value;
+    double value;
 };
 
 struct Stamina {
-    float value;
+    double value;
 };
 
 struct Mana {
-    float value;
+    double value;
 };
 
 int main(int argc, char *argv[]) {

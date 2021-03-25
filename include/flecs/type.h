@@ -14,12 +14,12 @@ extern "C" {
 #endif
 
 FLECS_API
-ecs_type_t ecs_type_from_entity(
+ecs_type_t ecs_type_from_id(
     ecs_world_t *world,
     ecs_entity_t entity);
 
 FLECS_API
-ecs_entity_t ecs_type_to_entity(
+ecs_entity_t ecs_type_to_id(
     const ecs_world_t *world,
     ecs_type_t type);
 
@@ -59,7 +59,7 @@ ecs_type_t ecs_type_remove(
     ecs_entity_t entity);
 
 FLECS_API
-bool ecs_type_has_entity(
+bool ecs_type_has_id(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity);
@@ -71,7 +71,7 @@ bool ecs_type_has_type(
     ecs_type_t has);
 
 FLECS_API
-bool ecs_type_owns_entity(
+bool ecs_type_owns_id(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
@@ -96,10 +96,10 @@ int32_t ecs_type_index_of(
     ecs_entity_t component);
 
 FLECS_API
-int32_t ecs_type_trait_index_of(
+int32_t ecs_type_pair_index_of(
     ecs_type_t type, 
     int32_t start_index, 
-    ecs_entity_t trait);
+    ecs_entity_t pair);
 
 #ifdef __cplusplus
 }

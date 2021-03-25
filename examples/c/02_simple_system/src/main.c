@@ -9,7 +9,7 @@ typedef struct Message {
 void PrintMessage(ecs_iter_t *it) {
     /* Get a pointer to the array of the first column in the system. The order
      * of columns is the same as the one provided in the system signature. */
-    ECS_COLUMN(it, Message, msg, 1);
+    Message *msg = ecs_term(it, Message, 1);
     
     /* Iterate all the messages */
     for (int i = 0; i < it->count; i ++) {

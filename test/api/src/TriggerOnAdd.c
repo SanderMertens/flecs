@@ -308,13 +308,13 @@ void TriggerOnAdd_clone_match_1_of_1() {
     ECS_COMPONENT(world, Position);
     ECS_TRIGGER(world, Init, EcsOnAdd, Position);
 
-    ecs_entity_t e_1 = ecs_new(world, Position);
-    test_assert(e_1 != 0);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    test_assert(e1 != 0);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_2 = ecs_clone(world, 0, e_1, false);
+    ecs_entity_t e2 = ecs_clone(world, 0, e1, false);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -322,11 +322,11 @@ void TriggerOnAdd_clone_match_1_of_1() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_2);
+    test_int(ctx.e[0], e2);
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get(world, e_2, Position);
+    const Position *p = ecs_get(world, e2, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -341,13 +341,13 @@ void TriggerOnAdd_clone_match_1_of_2() {
     ECS_TYPE(world, Type, Position, Velocity);
     ECS_TRIGGER(world, Init, EcsOnAdd, Position);
 
-    ecs_entity_t e_1 = ecs_new(world, Type);
-    test_assert(e_1 != 0);
+    ecs_entity_t e1 = ecs_new(world, Type);
+    test_assert(e1 != 0);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_2 = ecs_clone(world, 0, e_1, false);
+    ecs_entity_t e2 = ecs_clone(world, 0, e1, false);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -355,11 +355,11 @@ void TriggerOnAdd_clone_match_1_of_2() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_2);
+    test_int(ctx.e[0], e2);
     test_int(ctx.c[0][0], ecs_typeid(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get(world, e_2, Position);
+    const Position *p = ecs_get(world, e2, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -499,7 +499,7 @@ void TriggerOnAdd_override_after_add_in_on_add() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -758,21 +758,21 @@ void TriggerOnAdd_remove_added_component_in_on_add_w_set() {
     IterData ctx = {.component = ecs_typeid(Position)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_1 = ecs_new(world, Velocity);
-    ecs_entity_t e_2 = ecs_new(world, Velocity);
-    ecs_entity_t e_3 = ecs_new(world, Velocity);
+    ecs_entity_t e1 = ecs_new(world, Velocity);
+    ecs_entity_t e2 = ecs_new(world, Velocity);
+    ecs_entity_t e3 = ecs_new(world, Velocity);
 
-    e_1 = ecs_set(world, e_1, Position, {10, 20});
-    e_2 = ecs_set(world, e_2, Position, {11, 21});
-    e_3 = ecs_set(world, e_3, Position, {12, 22});
+    e1 = ecs_set(world, e1, Position, {10, 20});
+    e2 = ecs_set(world, e2, Position, {11, 21});
+    e3 = ecs_set(world, e3, Position, {12, 22});
 
-    test_assert( !ecs_has(world, e_1, Position));
-    test_assert( !ecs_has(world, e_2, Position));
-    test_assert( !ecs_has(world, e_3, Position));
+    test_assert( !ecs_has(world, e1, Position));
+    test_assert( !ecs_has(world, e2, Position));
+    test_assert( !ecs_has(world, e3, Position));
 
-    test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_2, Velocity));
-    test_assert( ecs_has(world, e_3, Velocity));
+    test_assert( ecs_has(world, e1, Velocity));
+    test_assert( ecs_has(world, e2, Velocity));
+    test_assert( ecs_has(world, e3, Velocity));
 
     ecs_fini(world);
 }
@@ -801,21 +801,21 @@ void TriggerOnAdd_on_add_in_on_add() {
     IterData ctx = {.component = ecs_typeid(Velocity), .component_3 = ecs_typeid(Mass)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_1 = ecs_new(world, Position);
-    ecs_entity_t e_2 = ecs_new(world, Position);
-    ecs_entity_t e_3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
 
-    test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_3, Position));
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
 
-    test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_2, Velocity));
-    test_assert( ecs_has(world, e_3, Velocity));
+    test_assert( ecs_has(world, e1, Velocity));
+    test_assert( ecs_has(world, e2, Velocity));
+    test_assert( ecs_has(world, e3, Velocity));
 
-    test_assert( ecs_has(world, e_1, Mass));
-    test_assert( ecs_has(world, e_2, Mass));
-    test_assert( ecs_has(world, e_3, Mass));
+    test_assert( ecs_has(world, e1, Mass));
+    test_assert( ecs_has(world, e2, Mass));
+    test_assert( ecs_has(world, e3, Mass));
 
     ecs_fini(world);
 }
@@ -840,17 +840,17 @@ void TriggerOnAdd_on_remove_in_on_add() {
     IterData ctx = {.component = ecs_typeid(Velocity)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_1 = ecs_new(world, Type);
-    ecs_entity_t e_2 = ecs_new(world, Type);
-    ecs_entity_t e_3 = ecs_new(world, Type);
+    ecs_entity_t e1 = ecs_new(world, Type);
+    ecs_entity_t e2 = ecs_new(world, Type);
+    ecs_entity_t e3 = ecs_new(world, Type);
 
-    test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_3, Position));
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
 
-    test_assert( !ecs_has(world, e_1, Velocity));
-    test_assert( !ecs_has(world, e_2, Velocity));
-    test_assert( !ecs_has(world, e_3, Velocity));
+    test_assert( !ecs_has(world, e1, Velocity));
+    test_assert( !ecs_has(world, e2, Velocity));
+    test_assert( !ecs_has(world, e3, Velocity));
 
     test_assert(dummy_called);
 
@@ -870,33 +870,33 @@ void TriggerOnAdd_on_set_in_on_add() {
     IterData ctx = {.component = ecs_typeid(Rotation), .component_3 = ecs_typeid(Mass)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_1 = ecs_new(world, Position);
-    ecs_entity_t e_2 = ecs_new(world, Position);
-    ecs_entity_t e_3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
 
-    test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_3, Position));
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
 
-    test_assert( ecs_has(world, e_1, Rotation));
-    test_assert( ecs_has(world, e_2, Rotation));
-    test_assert( ecs_has(world, e_3, Rotation));
+    test_assert( ecs_has(world, e1, Rotation));
+    test_assert( ecs_has(world, e2, Rotation));
+    test_assert( ecs_has(world, e3, Rotation));
 
-    test_assert( ecs_has(world, e_1, Mass));
-    test_assert( ecs_has(world, e_2, Mass));
-    test_assert( ecs_has(world, e_3, Mass));
+    test_assert( ecs_has(world, e1, Mass));
+    test_assert( ecs_has(world, e2, Mass));
+    test_assert( ecs_has(world, e3, Mass));
 
-    const Rotation *r = ecs_get(world, e_1, Rotation);
+    const Rotation *r = ecs_get(world, e1, Rotation);
     test_assert(r != NULL);
-    test_int(*r, 10 + e_1);
+    test_int(*r, 10 + e1);
 
-    r = ecs_get(world, e_2, Rotation);
+    r = ecs_get(world, e2, Rotation);
     test_assert(r != NULL);
-    test_int(*r, 10 + e_2);
+    test_int(*r, 10 + e2);
 
-    r = ecs_get(world, e_3, Rotation);
+    r = ecs_get(world, e3, Rotation);
     test_assert(r != NULL);
-    test_int(*r, 10 + e_3);
+    test_int(*r, 10 + e3);
 
     ecs_fini(world);
 }
@@ -914,23 +914,23 @@ void TriggerOnAdd_on_add_in_on_update() {
     IterData ctx = {.component = ecs_typeid(Velocity), .component_3 = ecs_typeid(Mass)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_1 = ecs_new(world, Position);
-    ecs_entity_t e_2 = ecs_new(world, Position);
-    ecs_entity_t e_3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
 
     ecs_progress(world, 1);
 
-    test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_3, Position));
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
 
-    test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_2, Velocity));
-    test_assert( ecs_has(world, e_3, Velocity));
+    test_assert( ecs_has(world, e1, Velocity));
+    test_assert( ecs_has(world, e2, Velocity));
+    test_assert( ecs_has(world, e3, Velocity));
 
-    test_assert( ecs_has(world, e_1, Mass));
-    test_assert( ecs_has(world, e_2, Mass));
-    test_assert( ecs_has(world, e_3, Mass));
+    test_assert( ecs_has(world, e1, Mass));
+    test_assert( ecs_has(world, e2, Mass));
+    test_assert( ecs_has(world, e3, Mass));
 
     ecs_fini(world);
 }

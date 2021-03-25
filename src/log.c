@@ -325,6 +325,14 @@ void _ecs_assert(
     }
 }
 
+void _ecs_deprecated(
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    ecs_err("%s:%d: %s", file, line, msg);
+}
+
 const char* ecs_strerror(
     int32_t error_code)
 {

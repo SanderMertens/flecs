@@ -2,8 +2,7 @@
 #include <iostream>
 
 struct Position {
-    float x;
-    float y;
+    double x, y;
 };
 
 int main(int argc, char *argv[]) {
@@ -26,12 +25,12 @@ int main(int argc, char *argv[]) {
          * string-based type expression to create the type, as the type needs to
          * be fully constructed before registering it with the prefab parent. */
         ecs.prefab("Child")
-            .add_childof(RootPrefab)
-            .add_instanceof(ChildPrefab);
+            .add(flecs::ChildOf, RootPrefab)
+            .add(flecs::IsA, ChildPrefab);
 
     /* Create type that automatically overrides Position from RootPrefab */
     auto Root = ecs.type("Root")
-        .add_instanceof(RootPrefab)
+        .add(flecs::IsA, RootPrefab)
         .add<Position>();
 
     /* Create new entity from Root. Don't use add_instanceof, as we're using a
