@@ -246,12 +246,10 @@ public:
     system& action(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
 
-        auto ctx = FLECS_NEW(action_invoker_t<Func>)(std::forward<Func>(func));        
+        auto ctx = FLECS_NEW(action_invoker_t<Func>)(std::forward<Func>(func));
+        this->set<_::SystemCppContext>({ctx});
 
         create_system(action_invoker_t<Func>::run, false);
-
-        EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }
@@ -264,11 +262,9 @@ public:
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         using invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
         auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
+        this->set<_::SystemCppContext>({ctx});
 
         create_system(invoker_t::run, false);
-
-        EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }    
@@ -279,11 +275,9 @@ public:
     system& each(Func&& func) {
         using invoker_t = typename _::each_invoker<typename std::decay<Func>::type, Components...>;
         auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
+        this->set<_::SystemCppContext>({ctx});
 
         create_system(invoker_t::run, true);
-
-        EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }

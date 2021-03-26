@@ -902,11 +902,11 @@ public:
     }
 
     T& first() {
-        return static_cast<T*>(_ecs_vector_first(m_vector, ECS_VECTOR_T(T)));
+        return *static_cast<T*>(_ecs_vector_first(m_vector, ECS_VECTOR_T(T)));
     }
 
     T& last() {
-        return static_cast<T*>(_ecs_vector_last(m_vector, ECS_VECTOR_T(T)));
+        return *static_cast<T*>(_ecs_vector_last(m_vector, ECS_VECTOR_T(T)));
     }
 
     int32_t count() {
@@ -10957,6 +10957,7 @@ public:
 
         T& ptr = *static_cast<T*>(
             ecs_get_mut_w_id(world(), id(), comp_id, NULL));
+
         ptr = std::move(value);
 
         ecs_modified_w_id(world(), id(), comp_id);
@@ -10964,6 +10965,13 @@ public:
         return *base();
     }
 
+    /** Set a component for an entity.
+     * This operation sets the component value. If the entity did not yet
+     * have the component, it will be added.
+     *
+     * @tparam T The component to set.
+     * @param value The value to assign to the component.
+     */
     template <typename T>
     const base_type& set(T&& value) const {
         auto comp_id = _::cpp_type<T>::id(world());
@@ -13274,9 +13282,40 @@ namespace flecs
 
 namespace _ 
 {
+class invoker { };
+
+struct SystemCppContext {
+public:
+    SystemCppContext() : m_ctx(nullptr) { }
+
+    SystemCppContext(invoker *ctx) : m_ctx(ctx) { }    
+
+    ~SystemCppContext() {
+        FLECS_DELETE(m_ctx);
+    }
+
+    SystemCppContext& operator=(const SystemCppContext& obj) {
+        ecs_os_abort(); // should never be copied
+        this->m_ctx = obj.m_ctx;
+        return *this;
+    }
+
+    SystemCppContext& operator=(SystemCppContext&& obj) {
+        this->m_ctx = obj.m_ctx;
+        obj.m_ctx = nullptr;
+        return *this;
+    }
+
+    invoker* ctx() const {
+        return m_ctx;
+    }
+
+private:
+    invoker *m_ctx;
+};
 
 template <typename Func, typename ... Components>
-class each_invoker {
+class each_invoker : public invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
@@ -13308,9 +13347,11 @@ public:
 
     // Callback provided to flecs system
     static void run(ecs_iter_t *iter) {
-        const Context *ctx = static_cast<const Context*>(
-            ecs_get_w_id(iter->world, iter->system, ecs_id(EcsContext)));
-        const each_invoker *self = static_cast<const each_invoker*>(ctx->ctx);
+        const SystemCppContext *ctx = static_cast<const SystemCppContext*>(
+            ecs_get_w_id(iter->world, iter->system, 
+                _::cpp_type<SystemCppContext>().id()));
+                
+        const each_invoker *self = static_cast<const each_invoker*>(ctx->ctx());
         column_args<Components...> columns(iter);
         call_system(iter, self->m_func, 0, columns.m_columns);
     }
@@ -13325,7 +13366,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename Func, typename ... Components>
-class action_invoker {
+class action_invoker : public invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
@@ -13358,7 +13399,7 @@ public:
     static void run(ecs_iter_t *iter) {
         const Context *ctx = static_cast<const Context*>(
                 ecs_get_w_id(iter->world, iter->system, ecs_id(EcsContext)));
-        const action_invoker *self = static_cast<const action_invoker*>(ctx->ctx);
+        const action_invoker *self = static_cast<const action_invoker*>(ctx->ctx());
         column_args<Components...> columns(iter);
         call_system(iter, self->m_func, 0, columns.m_columns);
     }
@@ -13372,7 +13413,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename Func, typename ... Components>
-class iter_invoker {
+class iter_invoker : public invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
@@ -13400,9 +13441,11 @@ public:
 
     /** Callback provided to flecs */
     static void run(ecs_iter_t *iter) {
-        const Context *ctx = static_cast<const Context*>(
-            ecs_get_w_id(iter->world, iter->system, ecs_id(EcsContext)));
-        const iter_invoker *self = static_cast<const iter_invoker*>(ctx->ctx);
+        const SystemCppContext *ctx = static_cast<const SystemCppContext*>(
+            ecs_get_w_id(iter->world, iter->system, 
+                _::cpp_type<SystemCppContext>().id()));
+
+        const iter_invoker *self = static_cast<const iter_invoker*>(ctx->ctx());
         column_args<Components...> columns(iter);
         call_system(iter, self->m_func, 0, columns.m_columns);
     }
@@ -13610,7 +13653,8 @@ public:
 
         while (ecs_query_next(&it)) {
             _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+            _::each_invoker<Func, Components...>::call_system(
+                &it, func, 0, columns.m_columns);
         }
     } 
 
@@ -13621,7 +13665,8 @@ public:
 
         while (ecs_query_next_w_filter(&it, filter_ptr)) {
             _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+            _::each_invoker<Func, Components...>::call_system(
+                &it, func, 0, columns.m_columns);
         }
     }
 
@@ -13631,7 +13676,8 @@ public:
 
         while (ecs_query_next_worker(&it, stage_current, stage_count)) {
             _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+            _::each_invoker<Func, Components...>::call_system(
+                &it, func, 0, columns.m_columns);
         }
     }
 
@@ -13973,12 +14019,10 @@ public:
     system& action(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
 
-        auto ctx = FLECS_NEW(action_invoker_t<Func>)(std::forward<Func>(func));        
+        auto ctx = FLECS_NEW(action_invoker_t<Func>)(std::forward<Func>(func));
+        this->set<_::SystemCppContext>({ctx});
 
         create_system(action_invoker_t<Func>::run, false);
-
-        EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }
@@ -13991,11 +14035,9 @@ public:
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         using invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
         auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
+        this->set<_::SystemCppContext>({ctx});
 
         create_system(invoker_t::run, false);
-
-        EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }    
@@ -14006,11 +14048,9 @@ public:
     system& each(Func&& func) {
         using invoker_t = typename _::each_invoker<typename std::decay<Func>::type, Components...>;
         auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
+        this->set<_::SystemCppContext>({ctx});
 
         create_system(invoker_t::run, true);
-
-        EcsContext ctx_value = {ctx};
-        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
 
         return *this;
     }
@@ -14427,6 +14467,7 @@ inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");
     pod_component<Type>("flecs::core::Type");
     pod_component<Name>("flecs::core::Name");
+    component<flecs::_::SystemCppContext>();
 }
 
 template <typename T>

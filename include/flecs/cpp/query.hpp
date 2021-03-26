@@ -194,7 +194,8 @@ public:
 
         while (ecs_query_next(&it)) {
             _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+            _::each_invoker<Func, Components...>::call_system(
+                &it, func, 0, columns.m_columns);
         }
     } 
 
@@ -205,7 +206,8 @@ public:
 
         while (ecs_query_next_w_filter(&it, filter_ptr)) {
             _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+            _::each_invoker<Func, Components...>::call_system(
+                &it, func, 0, columns.m_columns);
         }
     }
 
@@ -215,7 +217,8 @@ public:
 
         while (ecs_query_next_worker(&it, stage_current, stage_count)) {
             _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+            _::each_invoker<Func, Components...>::call_system(
+                &it, func, 0, columns.m_columns);
         }
     }
 

@@ -70,6 +70,7 @@ inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");
     pod_component<Type>("flecs::core::Type");
     pod_component<Name>("flecs::core::Name");
+    component<flecs::_::SystemCppContext>();
 }
 
 template <typename T>
