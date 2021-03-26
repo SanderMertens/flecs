@@ -109,7 +109,7 @@ static const flecs::entity_t Owned = ECS_OWNED;
 /* Builtin entity ids */
 static const flecs::entity_t Flecs = EcsFlecs;
 static const flecs::entity_t FlecsCore = EcsFlecsCore;
-static const flecs::entity_t World = World;
+static const flecs::entity_t World = EcsWorld;
 
 /* Ids used by rule solver */
 static const flecs::entity_t Wildcard = EcsWildcard;

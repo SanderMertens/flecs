@@ -8515,6 +8515,7 @@ static const flecs::entity_t OnStore = EcsOnStore;
 static const flecs::entity_t PostFrame = EcsPostFrame;
 
 /** Builtin roles */
+static const flecs::entity_t Trait = ECS_PAIR;
 static const flecs::entity_t Pair = ECS_PAIR;
 static const flecs::entity_t Switch = ECS_SWITCH;
 static const flecs::entity_t Case = ECS_CASE;
@@ -8523,7 +8524,7 @@ static const flecs::entity_t Owned = ECS_OWNED;
 /* Builtin entity ids */
 static const flecs::entity_t Flecs = EcsFlecs;
 static const flecs::entity_t FlecsCore = EcsFlecsCore;
-static const flecs::entity_t World = World;
+static const flecs::entity_t World = EcsWorld;
 
 /* Ids used by rule solver */
 static const flecs::entity_t Wildcard = EcsWildcard;
