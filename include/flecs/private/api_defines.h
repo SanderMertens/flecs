@@ -314,6 +314,7 @@ typedef int32_t ecs_size_t;
 #define ECS_OR (ECS_ROLE | (0x78ull << 56))
 #define ECS_XOR (ECS_ROLE | (0x77ull << 56))
 #define ECS_NOT (ECS_ROLE | (0x76ull << 56))
+#define ECS_TRAIT ECS_PAIR
 
 #define EcsSingleton   (ECS_HI_COMPONENT_ID + 26)
 

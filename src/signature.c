@@ -25,7 +25,8 @@
 
 #define TOK_ROLE_CHILDOF "CHILDOF"
 #define TOK_ROLE_INSTANCEOF "INSTANCEOF"
-#define TOK_ROLE_TRAIT "PAIR"
+#define TOK_ROLE_TRAIT "TRAIT"
+#define TOK_ROLE_PAIR "PAIR"
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
 #define TOK_ROLE_XOR "XOR"
@@ -143,7 +144,9 @@ ecs_entity_t parse_role(
         return ECS_CHILDOF;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_INSTANCEOF)) {
         return ECS_INSTANCEOF;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_TRAIT)) {
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_TRAIT) || 
+               !ecs_os_strcmp(token, TOK_ROLE_PAIR)) 
+    {
         return ECS_PAIR;            
     } else if (!ecs_os_strcmp(token, TOK_ROLE_AND)) {
         return ECS_AND;

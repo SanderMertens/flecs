@@ -1551,6 +1551,9 @@ void Error_log_log(void);
 void Error_log_warning(void);
 void Error_log_error(void);
 
+// Testsuite 'Deprecated'
+void Deprecated_trait_type_str(void);
+
 bake_test_case New_testcases[] = {
     {
         "empty",
@@ -7332,6 +7335,13 @@ bake_test_case Error_testcases[] = {
     }
 };
 
+bake_test_case Deprecated_testcases[] = {
+    {
+        "trait_type_str",
+        Deprecated_trait_type_str
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "New",
@@ -7745,10 +7755,17 @@ static bake_test_suite suites[] = {
         NULL,
         11,
         Error_testcases
+    },
+    {
+        "Deprecated",
+        NULL,
+        NULL,
+        1,
+        Deprecated_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 59);
+    return bake_test_run("api", argc, argv, suites, 60);
 }

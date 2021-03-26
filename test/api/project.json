@@ -1673,6 +1673,11 @@
                 "log_warning",
                 "log_error"
             ]
+        }, {
+            "id": "Deprecated",
+            "testcases": [
+                "trait_type_str"
+            ]
         }]
     }
 }
