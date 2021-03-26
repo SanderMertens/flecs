@@ -13397,8 +13397,10 @@ public:
 
     /** Callback provided to flecs */
     static void run(ecs_iter_t *iter) {
-        const Context *ctx = static_cast<const Context*>(
-                ecs_get_w_id(iter->world, iter->system, ecs_id(EcsContext)));
+        const SystemCppContext *ctx = static_cast<const SystemCppContext*>(
+            ecs_get_w_id(iter->world, iter->system, 
+                _::cpp_type<SystemCppContext>().id()));
+                
         const action_invoker *self = static_cast<const action_invoker*>(ctx->ctx());
         column_args<Components...> columns(iter);
         call_system(iter, self->m_func, 0, columns.m_columns);
