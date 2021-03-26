@@ -86,6 +86,7 @@ static const flecs::entity_t Pipeline = EcsPipeline;
 static const flecs::entity_t OnAdd = EcsOnAdd;
 static const flecs::entity_t OnRemove = EcsOnRemove;
 static const flecs::entity_t OnSet = EcsOnSet;
+static const flecs::entity_t UnSet = EcsUnSet;
 
 /* Builtin pipeline tags */
 static const flecs::entity_t PreFrame = EcsPreFrame;
