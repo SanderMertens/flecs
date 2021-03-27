@@ -541,3 +541,181 @@ void Pairs_get_recycled_object_from_id() {
     test_assert(pair.object().is_alive());
     test_assert(pair.object().is_valid());
 }
+
+void Pairs_each() {
+    flecs::world world;
+
+    auto p_1 = world.entity();
+    auto p_2 = world.entity();
+
+    auto e = world.entity()
+        .add(p_1)
+        .add(p_2);
+
+    int32_t count = 0;
+
+    e.each([&](flecs::entity e) {
+        if (count == 0) {
+            test_assert(e == p_1);
+        } else if (count == 1) {
+            test_assert(e == p_2);
+        } else {
+            test_assert(false);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void Pairs_each_pair() {
+    flecs::world world;
+
+    auto pair = world.component<Pair>();
+    auto pos = world.component<Position>();
+    auto vel = world.component<Velocity>();
+
+    auto e = world.entity()
+        .add<Pair, Position>()
+        .add<Pair, Velocity>();
+
+    int32_t count = 0;
+
+    e.each(pair, [&](flecs::entity object) {
+        if (count == 0) {
+            test_assert(object == pos);
+        } else if (count == 1) {
+            test_assert(object == vel);
+        } else {
+            test_assert(false);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void Pairs_each_pair_by_type() {
+    flecs::world world;
+
+    auto pos = world.component<Position>();
+    auto vel = world.component<Velocity>();
+
+    auto e = world.entity()
+        .add<Pair, Position>()
+        .add<Pair, Velocity>();
+
+    int32_t count = 0;
+
+    e.each<Pair>([&](flecs::entity object) {
+        if (count == 0) {
+            test_assert(object == pos);
+        } else if (count == 1) {
+            test_assert(object == vel);
+        } else {
+            test_assert(false);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void Pairs_each_pair_w_childof() {
+    flecs::world world;
+
+    auto p_1 = world.entity();
+    auto p_2 = world.entity();
+
+    auto e = world.entity()
+        .add(flecs::ChildOf, p_1)
+        .add(flecs::ChildOf, p_2);
+
+    int32_t count = 0;
+
+    e.each(flecs::ChildOf, [&](flecs::entity object) {
+        if (count == 0) {
+            test_assert(object == p_1);
+        } else if (count == 1) {
+            test_assert(object == p_2);
+        } else {
+            test_assert(false);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void Pairs_each_pair_w_recycled_rel() {
+    flecs::world world;
+
+    auto e_1 = world.entity();
+    auto e_2 = world.entity();
+
+    world.entity().destruct(); // force recycling
+
+    auto pair = world.entity();
+
+    test_assert((uint32_t)pair.id() != pair.id()); // ensure recycled
+
+    auto e = world.entity()
+        .add(pair, e_1)
+        .add(pair, e_2);
+
+    int32_t count = 0;
+
+    // should work correctly
+    e.each(pair, [&](flecs::entity object) {
+        if (count == 0) {
+            test_assert(object == e_1);
+        } else if (count == 1) {
+            test_assert(object == e_2);
+        } else {
+            test_assert(false);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void Pairs_each_pair_w_recycled_obj() {
+    flecs::world world;
+
+    auto pair = world.component<Pair>();
+
+    world.entity().destruct(); // force recycling
+    auto e_1 = world.entity();
+    test_assert((uint32_t)e_1.id() != e_1.id()); // ensure recycled
+
+    world.entity().destruct();
+    auto e_2 = world.entity();    
+    test_assert((uint32_t)e_2.id() != e_2.id());
+
+    auto e = world.entity()
+        .add<Pair>(e_1)
+        .add<Pair>(e_2);
+
+    int32_t count = 0;
+
+    // should work correctly
+    e.each(pair, [&](flecs::entity object) {
+        if (count == 0) {
+            test_assert(object == e_1);
+        } else if (count == 1) {
+            test_assert(object == e_2);
+        } else {
+            test_assert(false);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}

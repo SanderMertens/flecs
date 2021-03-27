@@ -1179,3 +1179,90 @@ void Pairs_query_not_pair() {
     ecs_fini(world);
 }
 
+void Pairs_get_typeid_w_recycled_rel() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t o = ecs_new_id(world);
+    test_assert(o != 0);
+
+    ecs_entity_t dummy = ecs_new_id(world);
+    ecs_delete(world, dummy); // force recycle
+
+    // don't use ECS_COMPONENT, because it will try to get low ids first
+    ecs_entity_t pos = ecs_set(world, 0, EcsComponent, {4});
+    test_assert(pos != 0);
+    test_assert((uint32_t)pos != pos); // ensure recycled
+
+    ecs_id_t pair = ecs_pair(pos, o);
+    ecs_entity_t tid = ecs_get_typeid(world, pair);
+    test_assert(tid != 0);
+    test_assert(tid == pos);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_typeid_w_recycled_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t r = ecs_new_id(world);
+    test_assert(r != 0);
+
+    ecs_entity_t dummy = ecs_new_id(world);
+    ecs_delete(world, dummy); // force recycle
+
+    // don't use ECS_COMPONENT, because it will try to get low ids first
+    ecs_entity_t pos = ecs_set(world, 0, EcsComponent, {4});
+    test_assert(pos != 0);
+    test_assert((uint32_t)pos != pos); // ensure recycled
+
+    ecs_id_t pair = ecs_pair(r, pos);
+    ecs_entity_t tid = ecs_get_typeid(world, pair);
+    test_assert(tid != 0);
+    test_assert(tid == pos);
+
+    ecs_fini(world);
+}
+
+void Pairs_id_str_w_recycled_rel() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t o = ecs_set(world, 0, EcsName, {"o"});
+    test_assert(o != 0);
+
+    ecs_entity_t dummy = ecs_new_id(world);
+    ecs_delete(world, dummy); // force recycle
+
+    ecs_entity_t r = ecs_set(world, 0, EcsName, {"r"});
+    test_assert(r != 0);
+    test_assert((uint32_t)r != r); // ensure recycled
+
+    ecs_id_t pair = ecs_pair(r, o);
+    char buff[64];
+    ecs_id_str(world, pair, buff, sizeof(buff));
+
+    test_str(buff, "(r,o)");
+
+    ecs_fini(world);
+}
+
+void Pairs_id_str_w_recycled_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t r = ecs_set(world, 0, EcsName, {"r"});
+    test_assert(r != 0);
+
+    ecs_entity_t dummy = ecs_new_id(world);
+    ecs_delete(world, dummy); // force recycle
+
+    ecs_entity_t o = ecs_set(world, 0, EcsName, {"o"});
+    test_assert(o != 0);
+    test_assert((uint32_t)o != o); // ensure recycled
+
+    ecs_id_t pair = ecs_pair(r, o);
+    char buff[64];
+    ecs_id_str(world, pair, buff, sizeof(buff));
+
+    test_str(buff, "(r,o)");
+
+    ecs_fini(world);
+}

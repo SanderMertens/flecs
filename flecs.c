@@ -6551,13 +6551,13 @@ ecs_id_t ecs_get_typeid(
         /* Make sure we're not working with a stage */
         world = ecs_get_world(world);
 
-        ecs_entity_t rel = ECS_PAIR_RELATION(id);
+        ecs_entity_t rel = ecs_get_alive(world, ECS_PAIR_RELATION(id));
         if (ecs_has(world, rel, EcsComponent)) {
             /* This is not a pair object, relation is the value */
             return rel;
         } else {
             /* This is a pair object, object is the value */
-            return ECS_PAIR_OBJECT(id);
+            return ecs_get_alive(world, ECS_PAIR_OBJECT(id));
         }
     } else if (id & ECS_ROLE_MASK) {
         return 0;
@@ -10038,6 +10038,9 @@ void ecs_gauge_reduce(
     ecs_gauge_t *src,
     int32_t t_src)
 {
+    ecs_assert(dst != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(src != NULL, ECS_INVALID_PARAMETER, NULL);
+
     bool min_set = false;
     dst->min[t_dst] = 0;
     dst->avg[t_dst] = 0;
@@ -10063,6 +10066,8 @@ void ecs_get_world_stats(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
 
     int32_t t = s->t = t_next(s->t);
 
@@ -10145,7 +10150,12 @@ void ecs_get_query_stats(
     const ecs_query_t *query,
     ecs_query_stats_t *s)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
+
+    world = ecs_get_world(world);
 
     int32_t t = s->t = t_next(s->t);
 
@@ -10171,6 +10181,12 @@ bool ecs_get_system_stats(
     ecs_entity_t system,
     ecs_system_stats_t *s)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(system != 0, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
     const EcsSystem *ptr = ecs_get(world, system, EcsSystem);
     if (!ptr) {
         return false;
@@ -10195,6 +10211,9 @@ static ecs_system_stats_t* get_system_stats(
     ecs_map_t *systems,
     ecs_entity_t system)
 {
+    ecs_assert(systems != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(system != 0, ECS_INVALID_PARAMETER, NULL);
+
     ecs_system_stats_t *s = ecs_map_get(systems, ecs_system_stats_t, system);
     if (!s) {
         ecs_system_stats_t stats;
@@ -10212,6 +10231,12 @@ bool ecs_get_pipeline_stats(
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *s)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     if (!pq) {
         return false;
@@ -10269,6 +10294,11 @@ void ecs_dump_world_stats(
     const ecs_world_stats_t *s)
 {
     int32_t t = s->t;
+
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);    
     
     print_counter("Frame", t, &s->frame_count_total);
     printf("-------------------------------------\n");
@@ -18828,7 +18858,7 @@ const EcsComponent* ecs_component_from_id(
     /* If this is a pair, get the pair component from the identifier */
     if (ECS_HAS_ROLE(e, PAIR)) {
         pair = e;
-        e = ECS_PAIR_RELATION(e);
+        e = ecs_get_alive(world, ECS_PAIR_RELATION(e));
     }
 
     const EcsComponent *component = ecs_get(world, e, EcsComponent);

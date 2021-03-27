@@ -737,6 +737,10 @@ void Pairs_on_remove_pair_on_delete(void);
 void Pairs_on_remove_pair_tag_on_delete(void);
 void Pairs_pair_from_shared(void);
 void Pairs_simple_pair_syntax(void);
+void Pairs_get_typeid_w_recycled_rel(void);
+void Pairs_get_typeid_w_recycled_obj(void);
+void Pairs_id_str_w_recycled_rel(void);
+void Pairs_id_str_w_recycled_obj(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -4296,6 +4300,22 @@ bake_test_case Pairs_testcases[] = {
     {
         "simple_pair_syntax",
         Pairs_simple_pair_syntax
+    },
+    {
+        "get_typeid_w_recycled_rel",
+        Pairs_get_typeid_w_recycled_rel
+    },
+    {
+        "get_typeid_w_recycled_obj",
+        Pairs_get_typeid_w_recycled_obj
+    },
+    {
+        "id_str_w_recycled_rel",
+        Pairs_id_str_w_recycled_rel
+    },
+    {
+        "id_str_w_recycled_obj",
+        Pairs_id_str_w_recycled_obj
     }
 };
 
@@ -7529,7 +7549,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        25,
+        29,
         Pairs_testcases
     },
     {

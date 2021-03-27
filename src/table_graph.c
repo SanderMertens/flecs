@@ -9,7 +9,7 @@ const EcsComponent* ecs_component_from_id(
     /* If this is a pair, get the pair component from the identifier */
     if (ECS_HAS_ROLE(e, PAIR)) {
         pair = e;
-        e = ECS_PAIR_RELATION(e);
+        e = ecs_get_alive(world, ECS_PAIR_RELATION(e));
     }
 
     const EcsComponent *component = ecs_get(world, e, EcsComponent);

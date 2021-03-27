@@ -90,6 +90,12 @@ void Pairs_get_relation_from_id(void);
 void Pairs_get_object_from_id(void);
 void Pairs_get_recycled_relation_from_id(void);
 void Pairs_get_recycled_object_from_id(void);
+void Pairs_each(void);
+void Pairs_each_pair(void);
+void Pairs_each_pair_by_type(void);
+void Pairs_each_pair_w_childof(void);
+void Pairs_each_pair_w_recycled_rel(void);
+void Pairs_each_pair_w_recycled_obj(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -615,6 +621,30 @@ bake_test_case Pairs_testcases[] = {
     {
         "get_recycled_object_from_id",
         Pairs_get_recycled_object_from_id
+    },
+    {
+        "each",
+        Pairs_each
+    },
+    {
+        "each_pair",
+        Pairs_each_pair
+    },
+    {
+        "each_pair_by_type",
+        Pairs_each_pair_by_type
+    },
+    {
+        "each_pair_w_childof",
+        Pairs_each_pair_w_childof
+    },
+    {
+        "each_pair_w_recycled_rel",
+        Pairs_each_pair_w_recycled_rel
+    },
+    {
+        "each_pair_w_recycled_obj",
+        Pairs_each_pair_w_recycled_obj
     }
 };
 
@@ -1380,7 +1410,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        27,
+        33,
         Pairs_testcases
     },
     {

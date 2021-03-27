@@ -66,6 +66,9 @@ public:
     /* Return id without role */
     flecs::entity remove_role() const;
 
+    /* Return id without role */
+    flecs::entity remove_generation() const;    
+
     /* Test if id has specified role */
     bool has_role(flecs::id_t role) const {
         return ((m_id & ECS_ROLE_MASK) == role);
@@ -888,11 +891,13 @@ public:
     /** Iterate contents (type) of an entity for a specific relationship.
      */
     template <typename Func>
-    void each(flecs::entity_t rel, const Func& func) const {
+    void each(const flecs::entity& rel, const Func& func) const {
         const ecs_vector_t *type = ecs_get_type(m_world, m_id);
         if (!type) {
             return;
         }
+
+        flecs::entity_t rel_id = rel.remove_generation().id();
 
         const ecs_id_t *ids = static_cast<ecs_id_t*>(
             _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
@@ -904,7 +909,7 @@ public:
         int i;
         for (i = 0; i < count; i ++) {
             ecs_id_t id = ids[i];
-            if (ECS_PAIR_RELATION(id) == rel) {
+            if (ECS_PAIR_RELATION(id) == rel_id) {
                 break;
             }
         }
@@ -912,7 +917,7 @@ public:
         // Iterate all entries until the relationship stops
         for (; i < count; i ++) {
             ecs_id_t id = ids[i];
-            if (ECS_PAIR_RELATION(id) != rel) {
+            if (ECS_PAIR_RELATION(id) != rel_id) {
                 break;
             }
 
@@ -920,7 +925,14 @@ public:
             flecs::entity ent(m_world, id_cl.object());
             func(ent);         
         }
-    }    
+    }
+
+    /** Iterate contents (type) of an entity for a specific relationship.
+     */
+    template <typename Rel, typename Func>
+    void each(const Func& func) const { 
+        return each(_::cpp_type<Rel>::id(m_world), func);
+    }
 
     /** Get component value.
      * 

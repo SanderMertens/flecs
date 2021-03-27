@@ -98,4 +98,9 @@ inline flecs::entity id::remove_role() const {
     return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
 }
 
+/* Return id without role */
+inline flecs::entity id::remove_generation() const {
+    return flecs::entity(m_world, static_cast<uint32_t>(m_id));
+}
+
 }

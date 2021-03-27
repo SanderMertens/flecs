@@ -2701,13 +2701,13 @@ ecs_id_t ecs_get_typeid(
         /* Make sure we're not working with a stage */
         world = ecs_get_world(world);
 
-        ecs_entity_t rel = ECS_PAIR_RELATION(id);
+        ecs_entity_t rel = ecs_get_alive(world, ECS_PAIR_RELATION(id));
         if (ecs_has(world, rel, EcsComponent)) {
             /* This is not a pair object, relation is the value */
             return rel;
         } else {
             /* This is a pair object, object is the value */
-            return ECS_PAIR_OBJECT(id);
+            return ecs_get_alive(world, ECS_PAIR_OBJECT(id));
         }
     } else if (id & ECS_ROLE_MASK) {
         return 0;

@@ -98,7 +98,14 @@
                 "get_relation_from_id",
                 "get_object_from_id",
                 "get_recycled_relation_from_id",
-                "get_recycled_object_from_id"
+                "get_recycled_object_from_id",
+                "each",
+                "each_pair",
+                "each_pair_by_type",
+                "each_pair_w_childof",
+                "each_pair_w_recycled_rel",
+                "each_pair_w_recycled_obj"
+
             ]
         }, {
             "id": "Switch",

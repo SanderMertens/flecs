@@ -794,7 +794,11 @@
                 "on_remove_pair_on_delete",
                 "on_remove_pair_tag_on_delete",
                 "pair_from_shared",
-                "simple_pair_syntax"
+                "simple_pair_syntax",
+                "get_typeid_w_recycled_rel",
+                "get_typeid_w_recycled_obj",
+                "id_str_w_recycled_rel",
+                "id_str_w_recycled_obj"
             ]
         }, {
             "id": "TriggerOnAdd",
