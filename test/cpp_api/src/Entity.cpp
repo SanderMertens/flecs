@@ -823,3 +823,38 @@ void Entity_set_copy() {
     test_assert(p != NULL);
     test_int(p->value, 10);
 }
+
+void Entity_add_owned() {
+    flecs::world world;
+
+    auto base = world.entity()
+        .add_owned<Position>();
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert(e.has<Position>());
+    test_assert(e.owns<Position>());
+}
+
+void Entity_set_owned() {
+    flecs::world world;
+
+    auto base = world.entity()
+        .set_owned<Position>({10, 20});
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert(e.has<Position>());
+    test_assert(e.owns<Position>());
+
+    const Position* p = e.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Position* p_base = base.get<Position>();
+    test_assert(p != p_base);
+    test_int(p_base->x, 10);
+    test_int(p_base->y, 20);
+}

@@ -67,7 +67,9 @@
                 "get_type",
                 "get_nonempty_type",
                 "set_no_copy",
-                "set_copy"
+                "set_copy",
+                "add_owned",
+                "set_owned"
             ]
         }, {
             "id": "Pairs",

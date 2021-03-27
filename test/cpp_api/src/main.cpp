@@ -61,6 +61,8 @@ void Entity_get_type(void);
 void Entity_get_nonempty_type(void);
 void Entity_set_no_copy(void);
 void Entity_set_copy(void);
+void Entity_add_owned(void);
+void Entity_set_owned(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -510,6 +512,14 @@ bake_test_case Entity_testcases[] = {
     {
         "set_copy",
         Entity_set_copy
+    },
+    {
+        "add_owned",
+        Entity_add_owned
+    },
+    {
+        "set_owned",
+        Entity_set_owned
     }
 };
 
@@ -1403,7 +1413,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        52,
+        54,
         Entity_testcases
     },
     {

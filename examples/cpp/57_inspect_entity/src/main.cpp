@@ -84,7 +84,6 @@ void visit_is_a(const entity& e, std::uint32_t lvl = 0) {
 int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
-
     // SpaceShip state machine
     auto ShipStateType = ecs.type("ShipState")
         .add<ShipState::Idle>()
@@ -94,8 +93,8 @@ int main(int argc, char *argv[]) {
     // Base SpaceShip
     auto SpaceShip = ecs.prefab("SpaceShip")
         .set<MaxVelocity>({100})
-        .set<Position>({0, 0}).add_owned<Position>()
-        .set<Velocity>({0, 0}).add_owned<Velocity>()
+        .set_owned<Position>({0, 0})
+        .set_owned<Velocity>({0, 0})
         .add<CanFly>()
         .add_switch(ShipStateType)
             .add_case<ShipState::Idle>();

@@ -298,13 +298,19 @@ public:
         return *base();  
     }
 
-    /** Add owned flag for type entity.
-     * This will ensure that all components in the type are owned for instances
-     * of this entity.
-     *
-     * @param type The type for which to add the OWNED flag
-     */    
+    ECS_DEPRECATED("use add_owned(flecs::entity e)")
     base_type& add_owned(const type& type) const;
+
+    /** Set value, add owned flag.
+     *
+     * @tparam T The component to set and for which to add the OWNED flag
+     */    
+    template <typename T>
+    base_type& set_owned(T&& val) const {
+        this->add_owned<T>();
+        this->set<T>(std::forward<T>(val));
+        return *base();  
+    }    
 
     /** Add a switch to an entity by id.
      * The switch entity must be a type, that is it must have the EcsType
