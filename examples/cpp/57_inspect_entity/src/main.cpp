@@ -12,7 +12,7 @@ struct Position {
     double x, y;
 };
 
-struct Velocity {
+struct Velocity {  
     double x, y;
 };
 
@@ -94,8 +94,8 @@ int main(int argc, char *argv[]) {
     // Base SpaceShip
     auto SpaceShip = ecs.prefab("SpaceShip")
         .set<MaxVelocity>({100})
-        .add_owned<Position>()
-        .add_owned<Velocity>()
+        .set<Position>({0, 0}).add_owned<Position>()
+        .set<Velocity>({0, 0}).add_owned<Velocity>()
         .add<CanFly>()
         .add_switch(ShipStateType)
             .add_case<ShipState::Idle>();
