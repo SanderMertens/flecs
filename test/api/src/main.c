@@ -712,6 +712,10 @@ void Queries_orphaned_query(void);
 void Queries_nested_orphaned_query(void);
 void Queries_invalid_access_orphaned_query(void);
 void Queries_stresstest_query_free(void);
+void Queries_only_from_entity(void);
+void Queries_only_from_singleton(void);
+void Queries_only_not_from_entity(void);
+void Queries_only_not_from_singleton(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -957,6 +961,7 @@ void SystemManual_setup(void);
 void SystemManual_1_type_1_component(void);
 void SystemManual_activate_status(void);
 void SystemManual_no_automerge(void);
+void SystemManual_dont_run_w_unmatching_entity_query(void);
 
 // Testsuite 'Tasks'
 void Tasks_no_components(void);
@@ -4207,6 +4212,22 @@ bake_test_case Queries_testcases[] = {
     {
         "stresstest_query_free",
         Queries_stresstest_query_free
+    },
+    {
+        "only_from_entity",
+        Queries_only_from_entity
+    },
+    {
+        "only_from_singleton",
+        Queries_only_from_singleton
+    },
+    {
+        "only_not_from_entity",
+        Queries_only_not_from_entity
+    },
+    {
+        "only_not_from_singleton",
+        Queries_only_not_from_singleton
     }
 };
 
@@ -5119,6 +5140,10 @@ bake_test_case SystemManual_testcases[] = {
     {
         "no_automerge",
         SystemManual_no_automerge
+    },
+    {
+        "dont_run_w_unmatching_entity_query",
+        SystemManual_dont_run_w_unmatching_entity_query
     }
 };
 
@@ -7552,7 +7577,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        32,
+        36,
         Queries_testcases
     },
     {
@@ -7636,7 +7661,7 @@ static bake_test_suite suites[] = {
         "SystemManual",
         SystemManual_setup,
         NULL,
-        3,
+        4,
         SystemManual_testcases
     },
     {

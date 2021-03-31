@@ -1168,3 +1168,87 @@ void Queries_stresstest_query_free() {
 
     ecs_fini(world);
 }
+
+void Queries_only_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"E"});
+
+    ecs_query_t *q = ecs_query_new(world, "E:Tag");
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_add(world, e, Tag);
+
+    it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_assert(ecs_term_source(&it, 1) == e);
+    test_assert(ecs_term_id(&it, 1) == Tag);
+
+    ecs_fini(world);
+}
+
+void Queries_only_from_singleton() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"E"});
+
+    ecs_query_t *q = ecs_query_new(world, "$E");
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_add_id(world, e, e);
+
+    it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_assert(ecs_term_source(&it, 1) == e);
+    test_assert(ecs_term_id(&it, 1) == e);
+
+    ecs_fini(world);
+}
+
+void Queries_only_not_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"E"});
+
+    ecs_query_t *q = ecs_query_new(world, "!E:Tag");
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_assert(ecs_term_source(&it, 1) == e);
+    test_assert(ecs_term_id(&it, 1) == Tag);
+
+    ecs_add(world, e, Tag);
+
+    it = ecs_query_iter(q);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Queries_only_not_from_singleton() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"E"});
+
+    ecs_query_t *q = ecs_query_new(world, "!$E");
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_assert(ecs_term_source(&it, 1) == e);
+    test_assert(ecs_term_id(&it, 1) == e);
+
+    ecs_add_id(world, e, e);
+
+    it = ecs_query_iter(q);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}

@@ -352,6 +352,7 @@ public:
      * @param sw_case The case entity id to add.
      */    
     base_type& add_case(const Base& sw_case) const {
+        printf("switch id = %d\n", sw_case.id());
         ecs_add_entity(world(), id(), ECS_CASE | sw_case.id());
         return *base();
     }

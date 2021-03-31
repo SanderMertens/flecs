@@ -9975,7 +9975,20 @@ public:
      */
     void deactivate_systems() {
         ecs_deactivate_systems(m_world);
-    }    
+    }
+
+    /** Set current scope.
+     *
+     * @param scope The scope to set.
+     * @return The current scope;
+     */
+    flecs::entity set_scope(const flecs::entity& scope) const;
+
+    /** Get current scope.
+     *
+     * @return The current scope.
+     */
+    flecs::entity get_scope() const;
 
     /** Lookup entity by name.
      * 
@@ -10857,6 +10870,7 @@ public:
      * @param sw_case The case entity id to add.
      */    
     base_type& add_case(const Base& sw_case) const {
+        printf("switch id = %d\n", sw_case.id());
         ecs_add_entity(world(), id(), ECS_CASE | sw_case.id());
         return *base();
     }
@@ -12903,6 +12917,9 @@ ecs_entity_t do_import(world& world) {
         _::cpp_type<T>::size(),
         module_data);
 
+    // Add module tag        
+    ecs_add_id(world.c_ptr(), m, flecs::Module);
+
     ecs_log_pop();     
 
     return m;
@@ -14526,6 +14543,14 @@ inline void world::use(flecs::entity e, const char *alias) {
         ecs_get_name(m_world, id);
     }
     ecs_use(m_world, id, alias);
+}
+
+inline flecs::entity world::set_scope(const flecs::entity& scope) const {
+    return flecs::entity(ecs_set_scope(m_world, scope.id()));
+}
+
+inline flecs::entity world::get_scope() const {
+    return flecs::entity(ecs_get_scope(m_world));
 }
 
 inline entity world::lookup(const char *name) const {

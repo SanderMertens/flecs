@@ -318,6 +318,7 @@ struct ecs_query_t {
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
     bool needs_reorder;         /* Whether next iteration should reorder */
+    bool constraints_satisfied; /* Are all term constraints satisfied */
 };
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -429,12 +430,17 @@ typedef struct ecs_column_info_t {
     int32_t column;
 } ecs_column_info_t;
 
-/* Component monitors */
+/* Component monitor */
 typedef struct ecs_component_monitor_t {
-    bool dirty_flags[ECS_HI_COMPONENT_ID];
-    ecs_vector_t *monitors[ECS_HI_COMPONENT_ID];
-    bool rematch;
+    ecs_vector_t *queries;  /* Queries registered for component monitor */
+    bool is_dirty;          /* Should queries be rematched? */
 } ecs_component_monitor_t;
+
+/* Component monitors */
+typedef struct ecs_component_monitors_t {
+    ecs_map_t *monitors; /* map<ecs_component_monitor_t> */
+    bool rematch;        /* should monitors be reevaluated? */
+} ecs_component_monitors_t;
 
 /* fini actions */
 typedef struct ecs_action_elem_t {
@@ -478,7 +484,7 @@ struct ecs_world_t {
      * Queries register themselves as component monitors for specific components
      * and when these components change they are rematched. The component 
      * monitors are evaluated during a merge. */
-    ecs_component_monitor_t component_monitors;
+    ecs_component_monitors_t component_monitors;
 
     /* Parent monitors are like normal component monitors except that the
      * conditions under which a parent component is flagged dirty is different.
@@ -486,7 +492,7 @@ struct ecs_world_t {
      * adds or removes a ChildOf relation. In that case, every component of that
      * parent will be marked dirty. This allows column modifiers like CASCADE
      * to correctly determine when the depth ranking of a table has changed. */
-    ecs_component_monitor_t parent_monitors; 
+    ecs_component_monitors_t parent_monitors; 
 
 
     /* -- Systems -- */

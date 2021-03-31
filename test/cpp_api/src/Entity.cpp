@@ -28,7 +28,7 @@ void Entity_new_named_from_scope() {
     test_assert(child.id() != 0);
 
     world.set_scope(prev);
-    
+
     test_str(child.name().c_str(), "Bar");
     test_str(child.path().c_str(), "::Foo::Bar");
 }
@@ -912,4 +912,33 @@ void Entity_set_owned() {
     test_assert(p != p_base);
     test_int(p_base->x, 10);
     test_int(p_base->y, 20);
+}
+
+void Entity_implicit_name_to_char() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo");
+    test_assert(entity.id() != 0);
+    test_str(entity.name().c_str(), "Foo");
+
+    test_str(entity.name(), "Foo");
+}
+
+void Entity_implicit_path_to_char() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo::Bar");
+    test_assert(entity.id() != 0);
+    test_str(entity.name().c_str(), "Bar");
+
+    test_str(entity.path(), "::Foo::Bar");
+}
+
+void Entity_implicit_type_str_to_char() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo");
+    test_assert(entity.id() != 0);
+
+    test_str(entity.type().str(), "Name");
 }

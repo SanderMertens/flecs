@@ -767,7 +767,11 @@
                 "orphaned_query",
                 "nested_orphaned_query",
                 "invalid_access_orphaned_query",
-                "stresstest_query_free"
+                "stresstest_query_free",
+                "only_from_entity",
+                "only_from_singleton",
+                "only_not_from_entity",
+                "only_not_from_singleton"
             ]
         }, {
             "id": "Pairs",
@@ -1036,7 +1040,8 @@
             "testcases": [
                 "1_type_1_component",
                 "activate_status",
-                "no_automerge"
+                "no_automerge",
+                "dont_run_w_unmatching_entity_query"
             ]
         }, {
             "id": "Tasks",

@@ -362,6 +362,7 @@ struct ecs_query_t {
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
     bool needs_reorder;         /* Whether next iteration should reorder */
+    bool constraints_satisfied; /* Are all term constraints satisfied */
 };
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -473,12 +474,17 @@ typedef struct ecs_column_info_t {
     int32_t column;
 } ecs_column_info_t;
 
-/* Component monitors */
+/* Component monitor */
 typedef struct ecs_component_monitor_t {
-    bool dirty_flags[ECS_HI_COMPONENT_ID];
-    ecs_vector_t *monitors[ECS_HI_COMPONENT_ID];
-    bool rematch;
+    ecs_vector_t *queries;  /* Queries registered for component monitor */
+    bool is_dirty;          /* Should queries be rematched? */
 } ecs_component_monitor_t;
+
+/* Component monitors */
+typedef struct ecs_component_monitors_t {
+    ecs_map_t *monitors; /* map<ecs_component_monitor_t> */
+    bool rematch;        /* should monitors be reevaluated? */
+} ecs_component_monitors_t;
 
 /* fini actions */
 typedef struct ecs_action_elem_t {
@@ -522,7 +528,7 @@ struct ecs_world_t {
      * Queries register themselves as component monitors for specific components
      * and when these components change they are rematched. The component 
      * monitors are evaluated during a merge. */
-    ecs_component_monitor_t component_monitors;
+    ecs_component_monitors_t component_monitors;
 
     /* Parent monitors are like normal component monitors except that the
      * conditions under which a parent component is flagged dirty is different.
@@ -530,7 +536,7 @@ struct ecs_world_t {
      * adds or removes a ChildOf relation. In that case, every component of that
      * parent will be marked dirty. This allows column modifiers like CASCADE
      * to correctly determine when the depth ranking of a table has changed. */
-    ecs_component_monitor_t parent_monitors; 
+    ecs_component_monitors_t parent_monitors; 
 
 
     /* -- Systems -- */
@@ -712,11 +718,11 @@ void ecs_eval_component_monitors(
     ecs_world_t *world);
 
 void ecs_component_monitor_mark(
-    ecs_component_monitor_t *mon,
+    ecs_component_monitors_t *mon,
     ecs_entity_t component);
 
 void ecs_component_monitor_register(
-    ecs_component_monitor_t *mon,
+    ecs_component_monitors_t *mon,
     ecs_entity_t component,
     ecs_query_t *query);
 
@@ -4939,7 +4945,7 @@ void delete_entity(
 static
 bool update_component_monitor_w_array(
     ecs_world_t *world,
-    ecs_component_monitor_t * mon,
+    ecs_component_monitors_t * mon,
     ecs_entities_t * entities)
 {
     bool childof_changed = false;
@@ -4951,10 +4957,7 @@ bool update_component_monitor_w_array(
     int i;
     for (i = 0; i < entities->count; i ++) {
         ecs_entity_t component = entities->array[i];
-        if (component < ECS_HI_COMPONENT_ID) {
-            ecs_component_monitor_mark(mon, component);
-
-        } else if (ECS_HAS_RELATION(component, EcsChildOf)) {
+        if (ECS_HAS_RELATION(component, EcsChildOf)) {
             childof_changed = true;
 
         } else if (ECS_HAS_RELATION(component, EcsIsA)) {
@@ -4969,6 +4972,9 @@ bool update_component_monitor_w_array(
              * base entity. If the base entity contains IsA relationships
              * these will be evaluated recursively as well. */
             update_component_monitor_w_array(world, mon, &base_entities);               
+        } else {
+            printf(" -> update monitor for %s\n", ecs_get_name(world, component));
+            ecs_component_monitor_mark(mon, component);
         }
     }
 
@@ -5057,6 +5063,7 @@ void commit(
     * update the matched tables when the application adds or removes a 
     * component from, for example, a container. */
     if (info->is_watched) {
+        printf("watched entity got modified\n");
         update_component_monitors(world, entity, added, removed);
     }
 
@@ -11977,7 +11984,7 @@ ecs_stage_t *ecs_stage_from_world(
 static
 void eval_component_monitor(
     ecs_world_t *world,
-    ecs_component_monitor_t *mon)
+    ecs_component_monitors_t *mon)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
@@ -11986,65 +11993,73 @@ void eval_component_monitor(
         return;
     }
 
-    ecs_vector_t *eval[ECS_HI_COMPONENT_ID];
-    int32_t eval_count = 0;
+    ecs_map_iter_t it = ecs_map_iter(mon->monitors);
+    ecs_component_monitor_t *m;
 
-    int32_t i;
-    for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
-        if (mon->dirty_flags[i]) {
-            eval[eval_count ++] = mon->monitors[i];
-            mon->dirty_flags[i] = 0;
+    while ((m = ecs_map_next(&it, ecs_component_monitor_t, NULL))) {
+        if (m->is_dirty) {
+            ecs_vector_each(m->queries, ecs_query_t*, q_ptr, {
+                ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
+                    .kind = EcsQueryTableRematch
+                });
+            });    
+            m->is_dirty = false;        
         }
     }
 
-    for (i = 0; i < eval_count; i ++) {
-        ecs_vector_each(eval[i], ecs_query_t*, q_ptr, {
-            ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
-                .kind = EcsQueryTableRematch
-            });
-        });
-    }
-    
     mon->rematch = false;
 }
 
 void ecs_component_monitor_mark(
-    ecs_component_monitor_t *mon,
+    ecs_component_monitors_t *mon,
     ecs_entity_t component)
 {
     /* Only flag if there are actually monitors registered, so that we
      * don't waste cycles evaluating monitors if there's no interest */
-    if (mon->monitors[component]) {
-        mon->dirty_flags[component] = true;
+    ecs_component_monitor_t *m = ecs_map_get(mon->monitors, 
+        ecs_component_monitor_t, component);
+    if (m) {
+        m->is_dirty = true;
         mon->rematch = true;
     }
 }
 
 void ecs_component_monitor_register(
-    ecs_component_monitor_t *mon,
+    ecs_component_monitors_t *mon,
     ecs_entity_t component,
     ecs_query_t *query)
 {
     ecs_assert(mon != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(mon->monitors != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Ignore component ids > ECS_HI_COMPONENT_ID */
-    if(component >= ECS_HI_COMPONENT_ID) {
-        return;
-    }    
+    ecs_component_monitor_t *m = ecs_map_ensure(
+        mon->monitors, ecs_component_monitor_t, component);
 
-    ecs_query_t **q = ecs_vector_add(&mon->monitors[component], ecs_query_t*);
+    ecs_query_t **q = ecs_vector_add(&m->queries, ecs_query_t*);
     *q = query;
 }
 
 static
-void ecs_component_monitor_free(
-    ecs_component_monitor_t *mon)
+void ecs_component_monitor_init(
+    ecs_component_monitors_t *mon)
 {
-    int i;
-    for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
-        ecs_vector_free(mon->monitors[i]);
+    mon->monitors = ecs_map_new(ecs_component_monitor_t, 0);
+}
+
+static
+void ecs_component_monitor_fini(
+    ecs_component_monitors_t *mon)
+{
+    ecs_map_iter_t it = ecs_map_iter(mon->monitors);
+    ecs_component_monitor_t *m;
+
+    while ((m = ecs_map_next(&it, ecs_component_monitor_t, NULL))) {
+        ecs_vector_free(m->queries);
     }
+
+    ecs_map_free(mon->monitors);
 }
 
 static
@@ -12134,8 +12149,8 @@ ecs_world_t *ecs_mini(void) {
     world->child_tables = NULL;
     world->name_prefix = NULL;
 
-    memset(&world->component_monitors, 0, sizeof(world->component_monitors));
-    memset(&world->parent_monitors, 0, sizeof(world->parent_monitors));
+    ecs_component_monitor_init(&world->component_monitors);
+    ecs_component_monitor_init(&world->parent_monitors);
 
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
     world->on_activate_components = ecs_map_new(ecs_on_demand_in_t, 0);
@@ -12509,8 +12524,8 @@ void fini_misc(
     on_demand_in_map_deinit(world->on_enable_components);
     ecs_map_free(world->type_handles);
     ecs_vector_free(world->fini_tasks);
-    ecs_component_monitor_free(&world->component_monitors);
-    ecs_component_monitor_free(&world->parent_monitors);
+    ecs_component_monitor_fini(&world->component_monitors);
+    ecs_component_monitor_fini(&world->parent_monitors);
 }
 
 /* The destroyer of worlds */
@@ -17924,13 +17939,8 @@ void rematch_tables(
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
-    if (query->system) {
-        if (ecs_sig_check_constraints(world, &query->sig)) {
-            ecs_remove_id(world, query->system, EcsDisabledIntern);
-        } else {
-            ecs_add_id(world, query->system, EcsDisabledIntern);
-        }
-    }
+    query->constraints_satisfied = 
+        ecs_sig_check_constraints(world, &query->sig);
 }
 
 static
@@ -18057,6 +18067,9 @@ ecs_query_t* ecs_query_new_w_sig_intern(
             add_table(world, result, NULL);
         }
     }
+
+    result->constraints_satisfied = 
+        ecs_sig_check_constraints(world, &result->sig);
 
     if (result->cascade_by) {
         result->group_table = rank_by_depth;
@@ -18188,6 +18201,7 @@ ecs_iter_t ecs_query_iter_page(
     sort_tables(world, query);
 
     if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
+        printf("eval monitors\n");
         ecs_eval_component_monitors(world);
     }
 
@@ -18639,6 +18653,13 @@ bool ecs_query_next(
     (void)world;
 
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
+    printf("constraints satisfied: %d\n", 
+        ecs_sig_check_constraints(world, &query->sig));
+
+    if (!query->constraints_satisfied) {
+        return false;
+    }
 
     ecs_table_slice_t *slice = ecs_vector_first(
         query->table_slices, ecs_table_slice_t);

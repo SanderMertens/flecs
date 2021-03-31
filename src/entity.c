@@ -1089,7 +1089,7 @@ void delete_entity(
 static
 bool update_component_monitor_w_array(
     ecs_world_t *world,
-    ecs_component_monitor_t * mon,
+    ecs_component_monitors_t * mon,
     ecs_entities_t * entities)
 {
     bool childof_changed = false;
@@ -1101,10 +1101,7 @@ bool update_component_monitor_w_array(
     int i;
     for (i = 0; i < entities->count; i ++) {
         ecs_entity_t component = entities->array[i];
-        if (component < ECS_HI_COMPONENT_ID) {
-            ecs_component_monitor_mark(mon, component);
-
-        } else if (ECS_HAS_RELATION(component, EcsChildOf)) {
+        if (ECS_HAS_RELATION(component, EcsChildOf)) {
             childof_changed = true;
 
         } else if (ECS_HAS_RELATION(component, EcsIsA)) {
@@ -1119,6 +1116,8 @@ bool update_component_monitor_w_array(
              * base entity. If the base entity contains IsA relationships
              * these will be evaluated recursively as well. */
             update_component_monitor_w_array(world, mon, &base_entities);               
+        } else {
+            ecs_component_monitor_mark(mon, component);
         }
     }
 

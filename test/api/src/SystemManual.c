@@ -189,3 +189,29 @@ void SystemManual_no_automerge() {
 
     ecs_fini(world);
 }
+
+static int dummy_ran = 0;
+
+void DummySystem(ecs_iter_t *it) {
+    ecs_entity_t Tag = ecs_term_id(it, 1);
+    ecs_add_id(it->world, Tag, Tag);
+    dummy_ran ++;
+}
+
+void SystemManual_dont_run_w_unmatching_entity_query() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, DummySystem, 0, !$Tag);
+
+    ecs_run(world, DummySystem, 0, NULL);
+    test_int(dummy_ran, 1);
+
+    dummy_ran = 0;
+
+    ecs_run(world, DummySystem, 0, NULL);
+    test_int(dummy_ran, 0);
+
+    ecs_fini(world);
+}

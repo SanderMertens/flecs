@@ -72,7 +72,10 @@
                 "set_no_copy",
                 "set_copy",
                 "add_owned",
-                "set_owned"
+                "set_owned",
+                "implicit_name_to_char",
+                "implicit_path_to_char",
+                "implicit_type_str_to_char"
             ]
         }, {
             "id": "Pairs",
