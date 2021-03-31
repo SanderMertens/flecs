@@ -50,6 +50,9 @@ ecs_entity_t do_import(world& world) {
         _::cpp_type<T>::size(),
         module_data);
 
+    // Add module tag        
+    ecs_add_id(world.c_ptr(), m, flecs::Module);
+
     ecs_log_pop();     
 
     return m;

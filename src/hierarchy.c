@@ -194,7 +194,8 @@ ecs_entity_t get_parent_from_path(
     const ecs_world_t *world,
     ecs_entity_t parent,
     const char **path_ptr,
-    const char *prefix)
+    const char *prefix,
+    bool new_entity)
 {
     bool start_from_root = false;
     const char *path = *path_ptr;
@@ -210,7 +211,7 @@ ecs_entity_t get_parent_from_path(
         }
     }
 
-    if (!start_from_root && !parent) {
+    if (!start_from_root && !parent && new_entity) {
         parent = ecs_get_scope(world);
     }
 
@@ -336,7 +337,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
         sep = ".";
     }
 
-    parent = get_parent_from_path(world, parent, &path, prefix);
+    parent = get_parent_from_path(world, parent, &path, prefix, true);
 
 retry:
     cur = parent;
@@ -539,7 +540,7 @@ ecs_entity_t ecs_add_path_w_sep(
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr = path;
 
-    parent = get_parent_from_path(world, parent, &path, prefix);
+    parent = get_parent_from_path(world, parent, &path, prefix, entity == 0);
 
     ecs_entity_t cur = parent;
 
@@ -552,8 +553,12 @@ ecs_entity_t ecs_add_path_w_sep(
             if (entity && !path_elem(ptr, buff, sep)) {
                 e = entity;
             }
+
+            if (!e) {
+                e = ecs_new_id(world);
+            }
             
-            e = ecs_set(world, e, EcsName, {
+            ecs_set(world, e, EcsName, {
                 .value = name,
                 .alloc_value = name
             });

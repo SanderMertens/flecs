@@ -15,6 +15,61 @@ void Entity_new_named() {
     test_str(entity.name().c_str(), "Foo");
 }
 
+void Entity_new_named_from_scope() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo");
+    test_assert(entity.id() != 0);
+    test_str(entity.name().c_str(), "Foo");
+
+    auto prev = world.set_scope(entity);
+
+    auto child = world.entity("Bar");
+    test_assert(child.id() != 0);
+
+    world.set_scope(prev);
+    
+    test_str(child.name().c_str(), "Bar");
+    test_str(child.path().c_str(), "::Foo::Bar");
+}
+
+void Entity_new_nested_named_from_scope() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo");
+    test_assert(entity.id() != 0);
+    test_str(entity.name().c_str(), "Foo");
+
+    auto prev = world.set_scope(entity);
+
+    auto child = world.entity("Bar::Hello");
+    test_assert(child.id() != 0);
+
+    world.set_scope(prev);
+
+    test_str(child.name().c_str(), "Hello");
+    test_str(child.path().c_str(), "::Foo::Bar::Hello");
+}
+
+void Entity_new_nested_named_from_nested_scope() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo::Bar");
+    test_assert(entity.id() != 0);
+    test_str(entity.name().c_str(), "Bar");
+    test_str(entity.path().c_str(), "::Foo::Bar");
+
+    auto prev = world.set_scope(entity);
+
+    auto child = world.entity("Hello::World");
+    test_assert(child.id() != 0);
+
+    world.set_scope(prev);
+
+    test_str(child.name().c_str(), "World");
+    test_str(child.path().c_str(), "::Foo::Bar::Hello::World");
+}
+
 void Entity_new_add() {
     flecs::world world;
 

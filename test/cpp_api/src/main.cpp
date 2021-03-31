@@ -11,6 +11,9 @@
 // Testsuite 'Entity'
 void Entity_new(void);
 void Entity_new_named(void);
+void Entity_new_named_from_scope(void);
+void Entity_new_nested_named_from_scope(void);
+void Entity_new_nested_named_from_nested_scope(void);
 void Entity_new_add(void);
 void Entity_new_add_2(void);
 void Entity_new_set(void);
@@ -224,6 +227,7 @@ void Refs_ref_before_set(void);
 void Module_import(void);
 void Module_lookup_from_scope(void);
 void Module_nested_module(void);
+void Module_nested_type_module(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -312,6 +316,18 @@ bake_test_case Entity_testcases[] = {
     {
         "new_named",
         Entity_new_named
+    },
+    {
+        "new_named_from_scope",
+        Entity_new_named_from_scope
+    },
+    {
+        "new_nested_named_from_scope",
+        Entity_new_nested_named_from_scope
+    },
+    {
+        "new_nested_named_from_nested_scope",
+        Entity_new_nested_named_from_nested_scope
     },
     {
         "new_add",
@@ -1114,6 +1130,10 @@ bake_test_case Module_testcases[] = {
     {
         "nested_module",
         Module_nested_module
+    },
+    {
+        "nested_type_module",
+        Module_nested_type_module
     }
 };
 
@@ -1413,7 +1433,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        54,
+        57,
         Entity_testcases
     },
     {
@@ -1483,7 +1503,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        3,
+        4,
         Module_testcases
     },
     {

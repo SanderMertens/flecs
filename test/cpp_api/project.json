@@ -18,6 +18,9 @@
             "testcases": [
                 "new",
                 "new_named",
+                "new_named_from_scope",
+                "new_nested_named_from_scope",
+                "new_nested_named_from_nested_scope",
                 "new_add",
                 "new_add_2",
                 "new_set",
@@ -251,7 +254,8 @@
             "testcases": [
                 "import",
                 "lookup_from_scope",
-                "nested_module"
+                "nested_module",
+                "nested_type_module"
             ]
         }, {
             "id": "ImplicitComponents",

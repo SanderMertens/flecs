@@ -934,6 +934,53 @@ void Hierarchies_add_path_existing_depth_2() {
     ecs_fini(world);
 }
 
+void Hierarchies_add_path_from_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_from_path(world, 0, "foo.bar");
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "bar");    
+
+    ecs_set_scope(world, e);
+
+    ecs_entity_t id = ecs_new_id(world);
+    test_assert(id != 0);
+
+    ecs_entity_t f = ecs_add_path(world, id, 0, "hello.world");
+    test_assert(f != 0);
+    test_str(ecs_get_name(world, f), "world");
+
+    char *path = ecs_get_fullpath(world, f);
+    test_str(path, "hello.world");
+    ecs_os_free(path);
+
+    ecs_set_scope(world, 0);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_add_path_from_scope_new_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_from_path(world, 0, "foo.bar");
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "bar");    
+
+    ecs_set_scope(world, e);
+
+    ecs_entity_t id = ecs_add_path(world, 0, 0, "hello.world");
+    test_assert(id != 0);
+    test_str(ecs_get_name(world, id), "world");
+
+    char *path = ecs_get_fullpath(world, id);
+    test_str(path, "foo.bar.hello.world");
+    ecs_os_free(path);
+
+    ecs_set_scope(world, 0);
+
+    ecs_fini(world);
+}
+
 void Hierarchies_new_w_child_in_root() {
     ecs_world_t *world = ecs_init();
 
