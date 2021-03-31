@@ -291,3 +291,38 @@ void TriggerOnRemove_on_remove_in_on_update() {
 
     ecs_fini(world);
 }
+
+static int dummy_dtor_invoked = 0;
+
+typedef struct DummyComp {
+    int value;
+} DummyComp;
+
+static
+void RemoveDummyComp(ecs_iter_t *it) { 
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        test_assert(ecs_is_valid(it->world, it->entities[i]));
+        test_assert(ecs_is_alive(it->world, it->entities[i]));
+    }
+
+    dummy_dtor_invoked ++;
+}
+
+void TriggerOnRemove_valid_entity_after_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, DummyComp);
+    ECS_TRIGGER(world, RemoveDummyComp, EcsOnRemove, DummyComp);
+
+    ecs_entity_t e = ecs_new(world, DummyComp);
+    test_assert(e != 0);
+
+    ecs_delete(world, e);
+    test_assert(!ecs_is_valid(world, e));
+    test_assert(!ecs_is_alive(world, e));
+
+    test_int(dummy_dtor_invoked, 1);
+
+    ecs_fini(world); 
+}

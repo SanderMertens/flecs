@@ -1905,7 +1905,7 @@ void ecs_delete(
         return;
     }
 
-    ecs_record_t *r = ecs_sparse_remove_get(
+    ecs_record_t *r = ecs_sparse_get_sparse(
         world->store.entity_index, ecs_record_t, entity);
     if (r) {
         ecs_entity_info_t info = {0};
@@ -1928,6 +1928,9 @@ void ecs_delete(
             r->table = NULL;
         }
         r->row = 0;
+
+        /* Remove (and invalidate) entity after executing handlers */
+        ecs_sparse_remove(world->store.entity_index, entity);
     }
 
     ecs_defer_flush(world, stage);

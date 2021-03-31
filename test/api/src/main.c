@@ -534,6 +534,7 @@ void ComponentLifecycle_prevent_lifecycle_overwrite(void);
 void ComponentLifecycle_prevent_lifecycle_overwrite_null_callbacks(void);
 void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks(void);
 void ComponentLifecycle_set_lifecycle_after_trigger(void);
+void ComponentLifecycle_valid_entity_in_dtor_after_delete(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_setup(void);
@@ -786,6 +787,7 @@ void TriggerOnRemove_delete_match_1_of_2(void);
 void TriggerOnRemove_delete_no_match_1(void);
 void TriggerOnRemove_remove_watched(void);
 void TriggerOnRemove_delete_watched(void);
+void TriggerOnRemove_valid_entity_after_delete(void);
 
 // Testsuite 'TriggerOnSet'
 void TriggerOnSet_set(void);
@@ -3528,6 +3530,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "set_lifecycle_after_trigger",
         ComponentLifecycle_set_lifecycle_after_trigger
+    },
+    {
+        "valid_entity_in_dtor_after_delete",
+        ComponentLifecycle_valid_entity_in_dtor_after_delete
     }
 };
 
@@ -4489,6 +4495,10 @@ bake_test_case TriggerOnRemove_testcases[] = {
     {
         "delete_watched",
         TriggerOnRemove_delete_watched
+    },
+    {
+        "valid_entity_after_delete",
+        TriggerOnRemove_valid_entity_after_delete
     }
 };
 
@@ -7549,7 +7559,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        41,
+        42,
         ComponentLifecycle_testcases
     },
     {
@@ -7598,7 +7608,7 @@ static bake_test_suite suites[] = {
         "TriggerOnRemove",
         NULL,
         NULL,
-        8,
+        9,
         TriggerOnRemove_testcases
     },
     {
