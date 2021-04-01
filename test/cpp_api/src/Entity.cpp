@@ -15,6 +15,61 @@ void Entity_new_named() {
     test_str(entity.name().c_str(), "Foo");
 }
 
+void Entity_new_named_from_scope() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo");
+    test_assert(entity.id() != 0);
+    test_str(entity.name().c_str(), "Foo");
+
+    auto prev = world.set_scope(entity);
+
+    auto child = world.entity("Bar");
+    test_assert(child.id() != 0);
+
+    world.set_scope(prev);
+
+    test_str(child.name().c_str(), "Bar");
+    test_str(child.path().c_str(), "::Foo::Bar");
+}
+
+void Entity_new_nested_named_from_scope() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo");
+    test_assert(entity.id() != 0);
+    test_str(entity.name().c_str(), "Foo");
+
+    auto prev = world.set_scope(entity);
+
+    auto child = world.entity("Bar::Hello");
+    test_assert(child.id() != 0);
+
+    world.set_scope(prev);
+
+    test_str(child.name().c_str(), "Hello");
+    test_str(child.path().c_str(), "::Foo::Bar::Hello");
+}
+
+void Entity_new_nested_named_from_nested_scope() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo::Bar");
+    test_assert(entity.id() != 0);
+    test_str(entity.name().c_str(), "Bar");
+    test_str(entity.path().c_str(), "::Foo::Bar");
+
+    auto prev = world.set_scope(entity);
+
+    auto child = world.entity("Hello::World");
+    test_assert(child.id() != 0);
+
+    world.set_scope(prev);
+
+    test_str(child.name().c_str(), "World");
+    test_str(child.path().c_str(), "::Foo::Bar::Hello::World");
+}
+
 void Entity_new_add() {
     flecs::world world;
 
@@ -857,4 +912,119 @@ void Entity_set_owned() {
     test_assert(p != p_base);
     test_int(p_base->x, 10);
     test_int(p_base->y, 20);
+}
+
+void Entity_implicit_name_to_char() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo");
+    test_assert(entity.id() != 0);
+    test_str(entity.name().c_str(), "Foo");
+
+    test_str(entity.name(), "Foo");
+}
+
+void Entity_implicit_path_to_char() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo::Bar");
+    test_assert(entity.id() != 0);
+    test_str(entity.name().c_str(), "Bar");
+
+    test_str(entity.path(), "::Foo::Bar");
+}
+
+void Entity_implicit_type_str_to_char() {
+    flecs::world world;
+
+    auto entity = flecs::entity(world, "Foo");
+    test_assert(entity.id() != 0);
+
+    test_str(entity.type().str(), "Name");
+}
+
+void Entity_entity_to_entity_view() {
+    flecs::world world;
+
+    flecs::entity e = world.entity()
+        .set<Position>({10, 20});
+    test_assert(e.id() != 0);
+
+    flecs::entity_view ev = e;
+    test_assert(ev.id() != 0);
+    test_assert(e.id() == ev.id());
+
+    const Position *p = ev.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_entity_view_to_entity_world() {
+    flecs::world world;
+
+    flecs::entity e = world.entity()
+        .set<Position>({10, 20});
+    test_assert(e.id() != 0);
+
+    flecs::entity_view ev = e;
+    test_assert(ev.id() != 0);
+    test_assert(e.id() == ev.id());
+
+    flecs::entity ew = ev.mut(world);
+    ew.set<Position>({10, 20});
+
+    test_assert(ev.has<Position>());
+    const Position *p = ev.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_entity_view_to_entity_stage() {
+    flecs::world world;
+
+    flecs::entity_view ev = world.entity();
+
+    auto stage = world.get_stage(0);
+
+    world.staging_begin();
+
+    flecs::entity ew = ev.mut(stage);
+
+    ew.set<Position>({10, 20});
+    test_assert(!ew.has<Position>());
+
+    world.staging_end();
+
+    test_assert(ew.has<Position>());
+    test_assert(ev.has<Position>());
+
+    const Position *p = ev.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_create_entity_view_from_stage() {
+    flecs::world world;
+
+    auto stage = world.get_stage(0);
+
+    world.staging_begin();
+
+    flecs::entity_view ev = stage.entity();
+    test_assert(ev != 0);
+
+    world.staging_end();
+
+    // Ensure we can use created ev out of stage
+    auto ew = ev.mut(world);
+    ew.set<Position>({10, 20});
+    test_assert(ev.has<Position>());
+
+    const Position *p = ev.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 }

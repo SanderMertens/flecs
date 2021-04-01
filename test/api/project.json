@@ -276,7 +276,9 @@
                 "add_path_depth_2", 
                 "add_path_existing_depth_0",
                 "add_path_existing_depth_1",
-                "add_path_existing_depth_2",                                
+                "add_path_existing_depth_2",
+                "add_path_from_scope",
+                "add_path_from_scope_new_entity",
                 "new_w_child_in_root",
                 "delete_child",
                 "delete_2_children",
@@ -579,7 +581,8 @@
                 "prevent_lifecycle_overwrite",
                 "prevent_lifecycle_overwrite_null_callbacks",
                 "allow_lifecycle_overwrite_equal_callbacks",
-                "set_lifecycle_after_trigger"
+                "set_lifecycle_after_trigger",
+                "valid_entity_in_dtor_after_delete"
             ]
         }, {
             "id": "Pipeline",
@@ -765,7 +768,11 @@
                 "orphaned_query",
                 "nested_orphaned_query",
                 "invalid_access_orphaned_query",
-                "stresstest_query_free"
+                "stresstest_query_free",
+                "only_from_entity",
+                "only_from_singleton",
+                "only_not_from_entity",
+                "only_not_from_singleton"
             ]
         }, {
             "id": "Pairs",
@@ -841,7 +848,8 @@
                 "delete_match_1_of_2",
                 "delete_no_match_1",
                 "remove_watched",
-                "delete_watched"
+                "delete_watched",
+                "valid_entity_after_delete"
             ]
         }, {
             "id": "TriggerOnSet",
@@ -1034,7 +1042,8 @@
             "testcases": [
                 "1_type_1_component",
                 "activate_status",
-                "no_automerge"
+                "no_automerge",
+                "dont_run_w_unmatching_entity_query"
             ]
         }, {
             "id": "Tasks",

@@ -103,6 +103,14 @@ inline void world::use(flecs::entity e, const char *alias) {
     ecs_use(m_world, id, alias);
 }
 
+inline flecs::entity world::set_scope(const flecs::entity& scope) const {
+    return flecs::entity(ecs_set_scope(m_world, scope.id()));
+}
+
+inline flecs::entity world::get_scope() const {
+    return flecs::entity(ecs_get_scope(m_world));
+}
+
 inline entity world::lookup(const char *name) const {
     auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
     return flecs::entity(*this, id);

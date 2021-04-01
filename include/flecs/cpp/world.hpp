@@ -434,7 +434,20 @@ public:
      */
     void deactivate_systems() {
         ecs_deactivate_systems(m_world);
-    }    
+    }
+
+    /** Set current scope.
+     *
+     * @param scope The scope to set.
+     * @return The current scope;
+     */
+    flecs::entity set_scope(const flecs::entity& scope) const;
+
+    /** Get current scope.
+     *
+     * @return The current scope.
+     */
+    flecs::entity get_scope() const;
 
     /** Lookup entity by name.
      * 

@@ -211,8 +211,11 @@ private:
 #ifdef FLECS_DEPRECATED
 #include "../addons/deprecated/iter.hpp"
 #else
+namespace flecs
+{
 template <typename Base>
 class iter_deprecated { };
+}
 #endif
 
 namespace flecs

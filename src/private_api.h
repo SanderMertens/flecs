@@ -93,11 +93,11 @@ void ecs_eval_component_monitors(
     ecs_world_t *world);
 
 void ecs_component_monitor_mark(
-    ecs_component_monitor_t *mon,
+    ecs_component_monitors_t *mon,
     ecs_entity_t component);
 
 void ecs_component_monitor_register(
-    ecs_component_monitor_t *mon,
+    ecs_component_monitors_t *mon,
     ecs_entity_t component,
     ecs_query_t *query);
 

@@ -62,7 +62,7 @@ ecs_stage_t *ecs_stage_from_world(
 static
 void eval_component_monitor(
     ecs_world_t *world,
-    ecs_component_monitor_t *mon)
+    ecs_component_monitors_t *mon)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
@@ -71,65 +71,73 @@ void eval_component_monitor(
         return;
     }
 
-    ecs_vector_t *eval[ECS_HI_COMPONENT_ID];
-    int32_t eval_count = 0;
+    ecs_map_iter_t it = ecs_map_iter(mon->monitors);
+    ecs_component_monitor_t *m;
 
-    int32_t i;
-    for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
-        if (mon->dirty_flags[i]) {
-            eval[eval_count ++] = mon->monitors[i];
-            mon->dirty_flags[i] = 0;
+    while ((m = ecs_map_next(&it, ecs_component_monitor_t, NULL))) {
+        if (m->is_dirty) {
+            ecs_vector_each(m->queries, ecs_query_t*, q_ptr, {
+                ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
+                    .kind = EcsQueryTableRematch
+                });
+            });    
+            m->is_dirty = false;        
         }
     }
 
-    for (i = 0; i < eval_count; i ++) {
-        ecs_vector_each(eval[i], ecs_query_t*, q_ptr, {
-            ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
-                .kind = EcsQueryTableRematch
-            });
-        });
-    }
-    
     mon->rematch = false;
 }
 
 void ecs_component_monitor_mark(
-    ecs_component_monitor_t *mon,
+    ecs_component_monitors_t *mon,
     ecs_entity_t component)
 {
     /* Only flag if there are actually monitors registered, so that we
      * don't waste cycles evaluating monitors if there's no interest */
-    if (mon->monitors[component]) {
-        mon->dirty_flags[component] = true;
+    ecs_component_monitor_t *m = ecs_map_get(mon->monitors, 
+        ecs_component_monitor_t, component);
+    if (m) {
+        m->is_dirty = true;
         mon->rematch = true;
     }
 }
 
 void ecs_component_monitor_register(
-    ecs_component_monitor_t *mon,
+    ecs_component_monitors_t *mon,
     ecs_entity_t component,
     ecs_query_t *query)
 {
     ecs_assert(mon != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(mon->monitors != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Ignore component ids > ECS_HI_COMPONENT_ID */
-    if(component >= ECS_HI_COMPONENT_ID) {
-        return;
-    }    
+    ecs_component_monitor_t *m = ecs_map_ensure(
+        mon->monitors, ecs_component_monitor_t, component);
 
-    ecs_query_t **q = ecs_vector_add(&mon->monitors[component], ecs_query_t*);
+    ecs_query_t **q = ecs_vector_add(&m->queries, ecs_query_t*);
     *q = query;
 }
 
 static
-void ecs_component_monitor_free(
-    ecs_component_monitor_t *mon)
+void ecs_component_monitor_init(
+    ecs_component_monitors_t *mon)
 {
-    int i;
-    for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
-        ecs_vector_free(mon->monitors[i]);
+    mon->monitors = ecs_map_new(ecs_component_monitor_t, 0);
+}
+
+static
+void ecs_component_monitor_fini(
+    ecs_component_monitors_t *mon)
+{
+    ecs_map_iter_t it = ecs_map_iter(mon->monitors);
+    ecs_component_monitor_t *m;
+
+    while ((m = ecs_map_next(&it, ecs_component_monitor_t, NULL))) {
+        ecs_vector_free(m->queries);
     }
+
+    ecs_map_free(mon->monitors);
 }
 
 static
@@ -219,8 +227,8 @@ ecs_world_t *ecs_mini(void) {
     world->child_tables = NULL;
     world->name_prefix = NULL;
 
-    memset(&world->component_monitors, 0, sizeof(world->component_monitors));
-    memset(&world->parent_monitors, 0, sizeof(world->parent_monitors));
+    ecs_component_monitor_init(&world->component_monitors);
+    ecs_component_monitor_init(&world->parent_monitors);
 
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
     world->on_activate_components = ecs_map_new(ecs_on_demand_in_t, 0);
@@ -594,8 +602,8 @@ void fini_misc(
     on_demand_in_map_deinit(world->on_enable_components);
     ecs_map_free(world->type_handles);
     ecs_vector_free(world->fini_tasks);
-    ecs_component_monitor_free(&world->component_monitors);
-    ecs_component_monitor_free(&world->parent_monitors);
+    ecs_component_monitor_fini(&world->component_monitors);
+    ecs_component_monitor_fini(&world->parent_monitors);
 }
 
 /* The destroyer of worlds */

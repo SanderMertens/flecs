@@ -29,6 +29,7 @@ using iter_t = ecs_iter_t;
 class world;
 class snapshot;
 class entity;
+class entity_view;
 class type;
 class iter;
 class filter;

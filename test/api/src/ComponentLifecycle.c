@@ -1684,3 +1684,49 @@ void ComponentLifecycle_set_lifecycle_after_trigger() {
 
     ecs_fini(world);  
 }
+
+static int dummy_dtor_invoked = 0;
+
+typedef struct Dummy {
+    int value;
+} Dummy;
+
+static
+void dummy_dtor(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entity_ptr,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    int i;
+    for (i = 0; i < count; i ++) {
+        test_assert(ecs_is_valid(world, entity_ptr[i]));
+        test_assert(ecs_is_alive(world, entity_ptr[i]));
+    }
+
+    dummy_dtor_invoked ++;
+}
+
+void ComponentLifecycle_valid_entity_in_dtor_after_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Dummy);
+
+    ecs_set(world, ecs_typeid(Dummy), EcsComponentLifecycle, {
+        .dtor = dummy_dtor
+    });
+
+    ecs_entity_t e = ecs_new(world, Dummy);
+    test_assert(e != 0);
+
+    ecs_delete(world, e);
+    test_assert(!ecs_is_valid(world, e));
+    test_assert(!ecs_is_alive(world, e));
+
+    test_int(dummy_dtor_invoked, 1);
+
+    ecs_fini(world);  
+}

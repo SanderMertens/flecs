@@ -244,23 +244,6 @@ public:
             e.id(), trait.id()));
     }
 
-    ECS_DEPRECATED("use object()")
-    Base lo() const {
-        return Base(world(), ecs_entity_t_lo(id()));
-    }
-
-    ECS_DEPRECATED("use relation()")
-    Base hi() const {
-        return Base(world(), ecs_entity_t_hi(id()));
-    }
-
-    ECS_DEPRECATED("use flecs::id(relation, object)")
-    static 
-    Base comb(Base lo, Base hi) {
-        return Base(lo.world(), 
-            ecs_entity_t_comb(lo.id(), hi.id()));
-    }
-
 private:
     const Base* base() const { return static_cast<const Base*>(this); }
     flecs::world_t* world() const { return base()->world().c_ptr(); }

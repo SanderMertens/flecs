@@ -18,6 +18,9 @@
             "testcases": [
                 "new",
                 "new_named",
+                "new_named_from_scope",
+                "new_nested_named_from_scope",
+                "new_nested_named_from_nested_scope",
                 "new_add",
                 "new_add_2",
                 "new_set",
@@ -69,7 +72,14 @@
                 "set_no_copy",
                 "set_copy",
                 "add_owned",
-                "set_owned"
+                "set_owned",
+                "implicit_name_to_char",
+                "implicit_path_to_char",
+                "implicit_type_str_to_char",
+                "entity_to_entity_view",
+                "entity_view_to_entity_world",
+                "entity_view_to_entity_stage",
+                "create_entity_view_from_stage"
             ]
         }, {
             "id": "Pairs",
@@ -251,7 +261,8 @@
             "testcases": [
                 "import",
                 "lookup_from_scope",
-                "nested_module"
+                "nested_module",
+                "nested_type_module"
             ]
         }, {
             "id": "ImplicitComponents",

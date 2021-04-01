@@ -2092,13 +2092,22 @@ void rematch_tables(
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
+    bool satisfied = query->constraints_satisfied = 
+        ecs_sig_check_constraints(world, &query->sig);
+
+    /* Enable/disable system. After constraint checking was added to regular
+     * query iterators this is strictly no longer necessary, but is still there
+     * to not break backwards compatibility, and should be harmless.
+     *
+     * TODO: remove when moving to v3
+     */
     if (query->system) {
-        if (ecs_sig_check_constraints(world, &query->sig)) {
+        if (satisfied) {
             ecs_remove_id(world, query->system, EcsDisabledIntern);
         } else {
             ecs_add_id(world, query->system, EcsDisabledIntern);
         }
-    }
+    }        
 }
 
 static
@@ -2225,6 +2234,9 @@ ecs_query_t* ecs_query_new_w_sig_intern(
             add_table(world, result, NULL);
         }
     }
+
+    result->constraints_satisfied = 
+        ecs_sig_check_constraints(world, &result->sig);
 
     if (result->cascade_by) {
         result->group_table = rank_by_depth;
@@ -2807,6 +2819,10 @@ bool ecs_query_next(
     (void)world;
 
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+
+    if (!query->constraints_satisfied) {
+        return false;
+    }
 
     ecs_table_slice_t *slice = ecs_vector_first(
         query->table_slices, ecs_table_slice_t);

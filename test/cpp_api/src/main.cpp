@@ -11,6 +11,9 @@
 // Testsuite 'Entity'
 void Entity_new(void);
 void Entity_new_named(void);
+void Entity_new_named_from_scope(void);
+void Entity_new_nested_named_from_scope(void);
+void Entity_new_nested_named_from_nested_scope(void);
 void Entity_new_add(void);
 void Entity_new_add_2(void);
 void Entity_new_set(void);
@@ -63,6 +66,13 @@ void Entity_set_no_copy(void);
 void Entity_set_copy(void);
 void Entity_add_owned(void);
 void Entity_set_owned(void);
+void Entity_implicit_name_to_char(void);
+void Entity_implicit_path_to_char(void);
+void Entity_implicit_type_str_to_char(void);
+void Entity_entity_to_entity_view(void);
+void Entity_entity_view_to_entity_world(void);
+void Entity_entity_view_to_entity_stage(void);
+void Entity_create_entity_view_from_stage(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -224,6 +234,7 @@ void Refs_ref_before_set(void);
 void Module_import(void);
 void Module_lookup_from_scope(void);
 void Module_nested_module(void);
+void Module_nested_type_module(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -312,6 +323,18 @@ bake_test_case Entity_testcases[] = {
     {
         "new_named",
         Entity_new_named
+    },
+    {
+        "new_named_from_scope",
+        Entity_new_named_from_scope
+    },
+    {
+        "new_nested_named_from_scope",
+        Entity_new_nested_named_from_scope
+    },
+    {
+        "new_nested_named_from_nested_scope",
+        Entity_new_nested_named_from_nested_scope
     },
     {
         "new_add",
@@ -520,6 +543,34 @@ bake_test_case Entity_testcases[] = {
     {
         "set_owned",
         Entity_set_owned
+    },
+    {
+        "implicit_name_to_char",
+        Entity_implicit_name_to_char
+    },
+    {
+        "implicit_path_to_char",
+        Entity_implicit_path_to_char
+    },
+    {
+        "implicit_type_str_to_char",
+        Entity_implicit_type_str_to_char
+    },
+    {
+        "entity_to_entity_view",
+        Entity_entity_to_entity_view
+    },
+    {
+        "entity_view_to_entity_world",
+        Entity_entity_view_to_entity_world
+    },
+    {
+        "entity_view_to_entity_stage",
+        Entity_entity_view_to_entity_stage
+    },
+    {
+        "create_entity_view_from_stage",
+        Entity_create_entity_view_from_stage
     }
 };
 
@@ -1114,6 +1165,10 @@ bake_test_case Module_testcases[] = {
     {
         "nested_module",
         Module_nested_module
+    },
+    {
+        "nested_type_module",
+        Module_nested_type_module
     }
 };
 
@@ -1413,7 +1468,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        54,
+        64,
         Entity_testcases
     },
     {
@@ -1483,7 +1538,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        3,
+        4,
         Module_testcases
     },
     {
