@@ -69,6 +69,10 @@ void Entity_set_owned(void);
 void Entity_implicit_name_to_char(void);
 void Entity_implicit_path_to_char(void);
 void Entity_implicit_type_str_to_char(void);
+void Entity_entity_to_entity_view(void);
+void Entity_entity_view_to_entity_world(void);
+void Entity_entity_view_to_entity_stage(void);
+void Entity_create_entity_view_from_stage(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -551,6 +555,22 @@ bake_test_case Entity_testcases[] = {
     {
         "implicit_type_str_to_char",
         Entity_implicit_type_str_to_char
+    },
+    {
+        "entity_to_entity_view",
+        Entity_entity_to_entity_view
+    },
+    {
+        "entity_view_to_entity_world",
+        Entity_entity_view_to_entity_world
+    },
+    {
+        "entity_view_to_entity_stage",
+        Entity_entity_view_to_entity_stage
+    },
+    {
+        "create_entity_view_from_stage",
+        Entity_create_entity_view_from_stage
     }
 };
 
@@ -1448,7 +1468,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        60,
+        64,
         Entity_testcases
     },
     {

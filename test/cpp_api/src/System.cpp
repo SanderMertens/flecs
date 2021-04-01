@@ -835,7 +835,7 @@ void System_new_from_each() {
     world.system<const Position>()
         .each([](flecs::entity e, const Position& p) {
             e.set<Entity>({
-                e.world().entity().mut(e).add<Velocity>()
+                e.world().entity().add<Velocity>()
             });
         });
 
@@ -933,7 +933,7 @@ void System_new_from_iter() {
         .iter([](const flecs::iter& it, const Position* p) {
             for (auto i : it) {
                 it.entity(i).set<Entity>({
-                    it.world().entity().mut(it).add<Velocity>()
+                    it.world().entity().add<Velocity>()
                 });
             }
         });

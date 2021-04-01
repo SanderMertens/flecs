@@ -143,7 +143,7 @@ private:
 
 class child_iterator {
 public:
-    child_iterator(const flecs::entity& entity) 
+    child_iterator(const flecs::entity_view& entity) 
         : m_world( entity.world().c_ptr() )
         , m_parent( entity.id() ) { }
 

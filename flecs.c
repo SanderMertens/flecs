@@ -4973,7 +4973,6 @@ bool update_component_monitor_w_array(
              * these will be evaluated recursively as well. */
             update_component_monitor_w_array(world, mon, &base_entities);               
         } else {
-            printf(" -> update monitor for %s\n", ecs_get_name(world, component));
             ecs_component_monitor_mark(mon, component);
         }
     }
@@ -5063,7 +5062,6 @@ void commit(
     * update the matched tables when the application adds or removes a 
     * component from, for example, a container. */
     if (info->is_watched) {
-        printf("watched entity got modified\n");
         update_component_monitors(world, entity, added, removed);
     }
 
@@ -5763,7 +5761,7 @@ void ecs_delete(
         return;
     }
 
-    ecs_record_t *r = ecs_sparse_remove_get(
+    ecs_record_t *r = ecs_sparse_get_sparse(
         world->store.entity_index, ecs_record_t, entity);
     if (r) {
         ecs_entity_info_t info = {0};
@@ -5786,6 +5784,9 @@ void ecs_delete(
             r->table = NULL;
         }
         r->row = 0;
+
+        /* Remove (and invalidate) entity after executing handlers */
+        ecs_sparse_remove(world->store.entity_index, entity);
     }
 
     ecs_defer_flush(world, stage);
@@ -17939,8 +17940,22 @@ void rematch_tables(
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
-    query->constraints_satisfied = 
+    bool satisfied = query->constraints_satisfied = 
         ecs_sig_check_constraints(world, &query->sig);
+
+    /* Enable/disable system. After constraint checking was added to regular
+     * query iterators this is strictly no longer necessary, but is still there
+     * to not break backwards compatibility, and should be harmless.
+     *
+     * TODO: remove when moving to v3
+     */
+    if (query->system) {
+        if (satisfied) {
+            ecs_remove_id(world, query->system, EcsDisabledIntern);
+        } else {
+            ecs_add_id(world, query->system, EcsDisabledIntern);
+        }
+    }        
 }
 
 static
@@ -18201,7 +18216,6 @@ ecs_iter_t ecs_query_iter_page(
     sort_tables(world, query);
 
     if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
-        printf("eval monitors\n");
         ecs_eval_component_monitors(world);
     }
 
@@ -18653,9 +18667,6 @@ bool ecs_query_next(
     (void)world;
 
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
-
-    printf("constraints satisfied: %d\n", 
-        ecs_sig_check_constraints(world, &query->sig));
 
     if (!query->constraints_satisfied) {
         return false;

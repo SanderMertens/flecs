@@ -942,3 +942,89 @@ void Entity_implicit_type_str_to_char() {
 
     test_str(entity.type().str(), "Name");
 }
+
+void Entity_entity_to_entity_view() {
+    flecs::world world;
+
+    flecs::entity e = world.entity()
+        .set<Position>({10, 20});
+    test_assert(e.id() != 0);
+
+    flecs::entity_view ev = e;
+    test_assert(ev.id() != 0);
+    test_assert(e.id() == ev.id());
+
+    const Position *p = ev.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_entity_view_to_entity_world() {
+    flecs::world world;
+
+    flecs::entity e = world.entity()
+        .set<Position>({10, 20});
+    test_assert(e.id() != 0);
+
+    flecs::entity_view ev = e;
+    test_assert(ev.id() != 0);
+    test_assert(e.id() == ev.id());
+
+    flecs::entity ew = ev.mut(world);
+    ew.set<Position>({10, 20});
+
+    test_assert(ev.has<Position>());
+    const Position *p = ev.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_entity_view_to_entity_stage() {
+    flecs::world world;
+
+    flecs::entity_view ev = world.entity();
+
+    auto stage = world.get_stage(0);
+
+    world.staging_begin();
+
+    flecs::entity ew = ev.mut(stage);
+
+    ew.set<Position>({10, 20});
+    test_assert(!ew.has<Position>());
+
+    world.staging_end();
+
+    test_assert(ew.has<Position>());
+    test_assert(ev.has<Position>());
+
+    const Position *p = ev.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_create_entity_view_from_stage() {
+    flecs::world world;
+
+    auto stage = world.get_stage(0);
+
+    world.staging_begin();
+
+    flecs::entity_view ev = stage.entity();
+    test_assert(ev != 0);
+
+    world.staging_end();
+
+    // Ensure we can use created ev out of stage
+    auto ew = ev.mut(world);
+    ew.set<Position>({10, 20});
+    test_assert(ev.has<Position>());
+
+    const Position *p = ev.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
