@@ -9,6 +9,7 @@
 Flecs is a fast and lightweight Entity Component System with a focus on high performance game development ([join the Discord!](https://discord.gg/MRSAZqb)). Highlights of the framework are:
 
 - Fast to compile & integrate in any project with zero-dependency core that is written entirely in C99
+- Highly portable with C++11 API that does not depend on any STL types
 - Provides (SoA) access to raw component arrays for optimal cache efficiency and vectorization
 - Archetype-storage with unique graph-based design enables high performance entity mutations 
 - Flexible API primitives allow for efficient implementation of prefabs, runtime tags and entity graphs
