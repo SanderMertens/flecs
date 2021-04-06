@@ -235,6 +235,8 @@ void Module_import(void);
 void Module_lookup_from_scope(void);
 void Module_nested_module(void);
 void Module_nested_type_module(void);
+void Module_module_type_w_explicit_name(void);
+void Module_component_redefinition_outside_module(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -1169,6 +1171,14 @@ bake_test_case Module_testcases[] = {
     {
         "nested_type_module",
         Module_nested_type_module
+    },
+    {
+        "module_type_w_explicit_name",
+        Module_module_type_w_explicit_name
+    },
+    {
+        "component_redefinition_outside_module",
+        Module_component_redefinition_outside_module
     }
 };
 
@@ -1538,7 +1548,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        4,
+        6,
         Module_testcases
     },
     {

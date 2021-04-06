@@ -605,8 +605,17 @@ template <typename T> bool cpp_type<T>::s_allow_tag( true );
 /** Plain old datatype, no lifecycle actions are registered */
 template <typename T>
 flecs::entity pod_component(const flecs::world& world, const char *name = nullptr, bool allow_tag = true) {
+    bool implicit_name = false;
     if (!name) {
         name = _::name_helper<T>::name();
+
+        /* Keep track of whether name was explicitly set. If not, and the 
+         * component was already registered, just use the registered name.
+         *
+         * The registered name may differ from the typename as the registered
+         * name includes the flecs scope. This can in theory be different from
+         * the C++ namespace though it is good practice to keep them the same */
+        implicit_name = true;
     }
 
     world_t *world_ptr = world.c_ptr();
@@ -619,18 +628,19 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
 
         /* If entity is not empty check if the name matches */
         if (ecs_get_type(world_ptr, id) != nullptr) {
-            if (id >= EcsFirstUserComponentId) {
+            if (!implicit_name && id >= EcsFirstUserComponentId) {
                 char *path = ecs_get_path_w_sep(
                     world_ptr, 0, id, 0, "::", nullptr);
                 ecs_assert(!strcmp(path, name), 
                     ECS_INCONSISTENT_COMPONENT_NAME, name);
                 ecs_os_free(path);
             }
+        } else {
+            /* Register name with entity, so that when the entity is created the
+             * correct id will be resolved from the name. Only do this when the
+             * entity is empty.*/
+            ecs_add_path_w_sep(world_ptr, id, 0, name, "::", "::");
         }
-
-        /* Register name with entity, so that when the entity is created the
-         * correct id will be resolved from the name. */
-        ecs_add_path_w_sep(world_ptr, id, 0, name, "::", "::");
 
         /* If a component was already registered with this id but with a 
          * different size, the ecs_new_component function will fail. */

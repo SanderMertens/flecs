@@ -1695,6 +1695,12 @@ ecs_entity_t ecs_new_component_id(
         id = ecs_new_id(unsafe_world);
     }
 
+    /* Add scope to component */
+    ecs_entity_t scope = unsafe_world->stage.scope;
+    if (scope) {
+        ecs_add_pair(world, id, EcsChildOf, scope);
+    }    
+
     return id;
 }
 

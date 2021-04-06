@@ -262,7 +262,9 @@
                 "import",
                 "lookup_from_scope",
                 "nested_module",
-                "nested_type_module"
+                "nested_type_module",
+                "module_type_w_explicit_name",
+                "component_redefinition_outside_module"
             ]
         }, {
             "id": "ImplicitComponents",
