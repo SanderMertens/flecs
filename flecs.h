@@ -2702,8 +2702,20 @@ typedef enum ecs_sig_oper_kind_t {
     EcsOperLast = 5
 } ecs_sig_oper_kind_t;
 
+#define EcsIsDefault    (0)
+#define EcsIsSelf       (1)
+#define EcsIsSuperSet   (2)
+#define EcsIsSubSet     (4)
+
+typedef struct ecs_sig_identifier_t {
+    ecs_entity_t entity;
+    char *name;
+    uint8_t is_a;
+} ecs_sig_identifier_t;
+
 /** Type that describes a single column in the system signature */
 typedef struct ecs_sig_column_t {
+    /* Legacy fields -- will soon be removed */
     ecs_sig_from_kind_t from_kind;        /* Element kind (Entity, Component) */
     ecs_sig_oper_kind_t oper_kind;   /* Operator kind (AND, OR, NOT) */
     ecs_sig_inout_kind_t inout_kind; /* Is component read or written */
@@ -2712,7 +2724,16 @@ typedef struct ecs_sig_column_t {
         ecs_entity_t component;      /* Used for AND operator */
     } is;
     ecs_entity_t source;             /* Source entity (used with FromEntity) */
-    char *name;                /* Name of column */
+    char *name;                      /* Name of column */
+
+    ecs_sig_identifier_t *argv;
+    int32_t argc;                    /* Number of arguments */   
+
+    /* New fields -- currently populatd together with legacy fields */
+    ecs_sig_inout_kind_t inout;
+    ecs_sig_identifier_t pred;
+    ecs_sig_identifier_t args[2];
+    ecs_sig_oper_kind_t oper; 
 } ecs_sig_column_t;
 
 /** Type that stores a parsed signature */
@@ -2724,7 +2745,7 @@ typedef struct ecs_sig_t {
 
 /** Parse signature. */
 FLECS_API
-void ecs_sig_init(
+int ecs_sig_init(
     ecs_world_t *world,
     const char *name,
     const char *expr,
@@ -2742,10 +2763,13 @@ int ecs_sig_add(
     ecs_sig_t *sig,
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t access_kind,
+    ecs_sig_inout_kind_t inout_kind,
     ecs_entity_t component,
     ecs_entity_t source,
-    const char *arg_name);
+    const char *arg_type,
+    const char *arg_name,
+    int32_t argc,
+    char **argv);
 
 /** Create query based on signature object. */
 FLECS_API

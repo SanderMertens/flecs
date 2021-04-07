@@ -15,6 +15,8 @@ int parse_type_action(
     const char *source_id,
     const char *pair_id,
     const char *arg_name,
+    int argc,
+    char **argv,
     void *data)
 {
     ecs_vector_t **array = data;
@@ -26,6 +28,12 @@ int parse_type_action(
             "column names not supported in type expression");
         return -1;
     }
+
+    if (argc || argv) {
+        ecs_parser_error(name, sig, column, 
+            "column arguments not supported in type expression");
+        return -1;
+    }    
 
     if (strcmp(entity_id, "0")) {
         ecs_entity_t entity = 0;

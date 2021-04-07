@@ -101,6 +101,8 @@ typedef int (*ecs_parse_action_t)(
     const char *source,
     const char *pair,
     const char *name,
+    int32_t argc,
+    char **argv,
     void *ctx);
 
 /** Component-specific data */
@@ -14297,6 +14299,8 @@ bool ecs_strbuf_list_appendstr(
 #define TOK_ANNOTATE_CLOSE ']'
 #define TOK_WILDCARD '*'
 #define TOK_SINGLETON '$'
+#define TOK_PAREN_OPEN '('
+#define TOK_PAREN_CLOSE ')'
 
 #define TOK_ANY "ANY"
 #define TOK_OWNED "OWNED"
@@ -14323,6 +14327,19 @@ bool ecs_strbuf_list_appendstr(
 #define ECS_MAX_TOKEN_SIZE (256)
 
 typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
+
+typedef struct sig_element_t {
+    ecs_entity_t role;
+    ecs_sig_inout_kind_t inout_kind;
+    ecs_sig_from_kind_t from_kind;
+    ecs_sig_oper_kind_t oper_kind;
+    char *trait;
+    char *source;
+    char *component;
+    char *name;
+    char **argv;
+    int32_t argc;
+} sig_element_t;
 
 /** Skip spaces when parsing signature */
 static
@@ -14519,16 +14536,56 @@ const char* parse_annotation(
     return ptr + 1;
 }
 
-typedef struct sig_element_t {
-    ecs_entity_t role;
-    ecs_sig_inout_kind_t inout_kind;
-    ecs_sig_from_kind_t from_kind;
-    ecs_sig_oper_kind_t oper_kind;
-    char *trait;
-    char *source;
-    char *component;
-    char *name;
-} sig_element_t;
+static
+void append_arg(
+    sig_element_t *elem,
+    const char *token)
+{
+    elem->argc ++;
+    elem->argv = ecs_os_realloc(
+        elem->argv, elem->argc * ECS_SIZEOF(char*));
+    elem->argv[elem->argc - 1] = ecs_os_strdup(token);
+}
+
+static
+const char* parse_arguments(
+    const char *name,
+    const char *sig,
+    int64_t column,
+    const char *ptr,
+    char *token,
+    sig_element_t *elem)
+{
+    (void)column;
+
+    do {
+        if (valid_identifier_char(ptr[0])) {
+            ptr = parse_identifier(name, sig, (ptr - sig), ptr, token);
+            if (!ptr) {
+                return NULL;
+            }
+
+            append_arg(elem, token);
+
+            if (ptr[0] == TOK_AND) {
+                ptr = skip_space(ptr + 1);
+            } else if (ptr[0] == TOK_PAREN_CLOSE) {
+                ptr = skip_space(ptr + 1);
+                break;
+            } else {
+                ecs_parser_error(name, sig, (ptr - sig), "expected ',' or ')'");
+                return NULL;
+            }
+
+        } else {
+            ecs_parser_error(name, sig, (ptr - sig), "expected variable identifier");
+            return NULL;
+        }
+
+    } while (true);
+
+    return ptr;
+}
 
 static
 const char* parse_element(
@@ -14562,6 +14619,25 @@ const char* parse_element(
         ptr = skip_space(ptr + 1);
     }
 
+    if (ptr[0] == TOK_PAREN_OPEN) {
+        ptr = parse_identifier(name, sig, (ptr - sig), ptr + 1, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        if (ptr[0] == TOK_AND) {
+            ptr ++;
+
+            /* Implicitly append This subject */
+            append_arg(&elem, ".");
+
+            goto parse_predicate;
+        } else {
+            ecs_parser_error(name, sig, (ptr - sig), 
+                "unexpected character '%c'", ptr[0]);
+        }
+    }
+
     /* If next token is the start of an identifier, it could be either a type
      * role, source or component identifier */
     if (valid_identifier_char(ptr[0])) {
@@ -14580,6 +14656,12 @@ const char* parse_element(
         if (ptr[0] == TOK_ROLE && ptr[1] != TOK_ROLE) {
             ptr ++;
             goto parse_role;
+        }
+
+        /* Is token a predicate? */
+        if (ptr[0] == TOK_PAREN_OPEN) {
+            ptr ++;
+            goto parse_predicate;    
         }
 
         /* Is token a trait? (using shorthand notation) */
@@ -14682,6 +14764,23 @@ parse_role:
         return NULL;
     }
 
+parse_predicate:
+    elem.component = ecs_os_strdup(token);
+    
+    ptr = skip_space(ptr);
+    if (valid_identifier_char(ptr[0])) {
+        ptr = parse_arguments(name, sig, (ptr - sig), ptr, token, &elem);
+        if (!ptr) {
+            return NULL;
+        }
+    } else {
+        ecs_parser_error(name, sig, (ptr - sig), 
+            "expected predicate arguments");
+        return NULL;
+    }
+
+    goto parse_done;
+
 parse_trait:
     elem.trait = ecs_os_strdup(token);
 
@@ -14762,6 +14861,16 @@ int ecs_parse_expr(
 {
     sig_element_t elem;
 
+    if (!sig) {
+        return 0;
+    }
+
+    sig = skip_space(sig);
+
+    if (!sig[0]) {
+        return 0;
+    }
+
     bool is_or = false;
     const char *ptr = sig;
     while ((ptr = parse_element(name, ptr, &elem))) {
@@ -14772,19 +14881,22 @@ int ecs_parse_expr(
 
         if (action(world, name, sig, ptr - sig, 
             elem.from_kind, elem.oper_kind, elem.inout_kind, elem.role,
-            elem.component, elem.source, elem.trait, elem.name, ctx))
+            elem.component, elem.source, elem.trait, elem.name, elem.argc, 
+            elem.argv, ctx))
         {
-            if (!name) {
-                return -1;
-            }
-
-            ecs_abort(ECS_INVALID_SIGNATURE, sig);
+            return -1;
         }
 
         ecs_os_free(elem.component);
         ecs_os_free(elem.source);
         ecs_os_free(elem.trait);
         ecs_os_free(elem.name);
+
+        int i;
+        for (i = 0; i < elem.argc; i ++) {
+            ecs_os_free(elem.argv[i]);
+        }
+        ecs_os_free(elem.argv);
 
         is_or = false;
         if (!strncmp(ptr, TOK_OR, 2)) {
@@ -14817,14 +14929,29 @@ int ecs_parse_expr(
     }
 
     if (!ptr) {
-        if (!name) {
-            return -1;
-        }
-        
-        ecs_abort(ECS_INVALID_SIGNATURE, sig);
+        return -1;
     }
 
     return 0;
+}
+
+static
+bool ecs_identifier_is_variable(
+    const char *id)
+{
+    if (id[0] == '_') {
+        return true;
+    }
+
+    const char *ptr;
+    char ch;
+    for (ptr = id; (ch = *ptr); ptr ++) {
+        if (!isupper(ch)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /** Parse callback that adds component to the components array for a system */
@@ -14842,6 +14969,8 @@ int ecs_parse_signature_action(
     const char *source_id,
     const char *trait_id,
     const char *arg_name,
+    int32_t argc,
+    char **argv,
     void *data)
 {
     ecs_sig_t *sig = data;
@@ -14853,6 +14982,7 @@ int ecs_parse_signature_action(
         if (from_kind ==  EcsFromEntity) {
             ecs_parser_error(name, expr, column, 
                 "singleton component '%s' cannot have a source", entity_id);
+            return -1;
         }
 
         from_kind = EcsFromEntity;
@@ -14860,17 +14990,20 @@ int ecs_parse_signature_action(
         entity_id ++;
     }
 
+    ecs_entity_t source = 0, component = 0;
+    
     /* Lookup component handle by string identifier */
-    ecs_entity_t source = 0, component = ecs_lookup_fullpath(world, entity_id);
+    component = ecs_lookup_fullpath(world, entity_id);
     if (!component) {
         /* "0" is a valid expression used to indicate that a system matches no
-         * components */
+        * components */
         if (!strcmp(entity_id, "0")) {
             /* No need to add 0 component to signature */
             return 0;
         } else {
             ecs_parser_error(name, expr, column, 
                 "unresolved component identifier '%s'", entity_id);
+            return -1;
         }
     }
 
@@ -14884,6 +15017,7 @@ int ecs_parse_signature_action(
         if (!trait) {
             ecs_parser_error(name, expr, column, 
                 "unresolved trait identifier '%s'", trait_id);
+            return -1;
         } else {
             component = ecs_entity_t_comb(component, trait);
         }
@@ -14896,15 +15030,16 @@ int ecs_parse_signature_action(
         if (!source) {
             ecs_parser_error(name, expr, column, 
                 "unresolved source identifier '%s'", source_id);
+            return -1;
         }
     }
 
     return ecs_sig_add(
         world, sig, from_kind, oper_kind, inout_kind, component, source, 
-        arg_name);
+        entity_id, arg_name, argc, argv);
 }
 
-void ecs_sig_init(
+int ecs_sig_init(
     ecs_world_t *world,
     const char *name,
     const char *expr,
@@ -14916,7 +15051,11 @@ void ecs_sig_init(
         sig->expr = ecs_os_strdup("0");
     }
 
-    ecs_parse_expr(world, name, sig->expr, ecs_parse_signature_action, sig);
+    sig->columns = NULL;
+    sig->name = NULL;
+
+    return ecs_parse_expr(
+        world, name, sig->expr, ecs_parse_signature_action, sig);
 }
 
 void ecs_sig_deinit(
@@ -14926,7 +15065,15 @@ void ecs_sig_deinit(
         if (column->oper_kind == EcsOperOr) {
             ecs_vector_free(column->is.type);
         }
+        
+        ecs_os_free(column->pred.name);
         ecs_os_free(column->name);
+
+        int i;
+        for (i = 0; i < column->argc; i ++) {
+            ecs_os_free(column->argv[i].name);
+        }
+        ecs_os_free(column->argv);
     });
 
     ecs_vector_free(sig->columns);
@@ -14941,7 +15088,10 @@ int ecs_sig_add(
     ecs_sig_inout_kind_t inout_kind,
     ecs_entity_t component,
     ecs_entity_t source,
-    const char *arg_name)
+    const char *arg_type,
+    const char *arg_name,
+    int32_t argc,
+    char **argv)
 {
     ecs_sig_column_t *elem;
 
@@ -14953,6 +15103,7 @@ int ecs_sig_add(
         if (!type) {
             ecs_parser_error(sig->name, sig->expr, 0, 
                 "AND flag can only be applied to types");
+            return -1;
         }
 
         elem->is.component = component;
@@ -14960,6 +15111,7 @@ int ecs_sig_add(
         elem->oper_kind = EcsOperAll;
         elem->inout_kind = inout_kind;
         elem->source = source;
+        elem->argc = 0;
 
     } else 
 
@@ -14971,6 +15123,7 @@ int ecs_sig_add(
         if (!type) {
             ecs_parser_error(sig->name, sig->expr, 0, 
                 "OR flag can only be applied to types");
+            return -1;
         }
 
         elem->is.type = ecs_vector_copy(type->normalized, ecs_entity_t);
@@ -14978,6 +15131,7 @@ int ecs_sig_add(
         elem->oper_kind = EcsOperOr;
         elem->inout_kind = inout_kind;
         elem->source = source;
+        elem->argc = 0;
     } else
 
     /* AND (default) and optional columns are stored the same way */
@@ -14988,6 +15142,7 @@ int ecs_sig_add(
         elem->inout_kind = inout_kind;
         elem->is.component = component;
         elem->source = source;
+        elem->argc = 0;
 
     /* OR columns store a type id instead of a single component */
     } else {
@@ -15020,11 +15175,56 @@ int ecs_sig_add(
         elem->oper_kind = oper_kind;
     }
 
-    if (arg_name) {
-        elem->name = ecs_os_strdup(arg_name);
-    } else {
+    if (oper_kind != EcsOperOr) {
         elem->name = NULL;
+        if (arg_name) {
+            elem->name = ecs_os_strdup(arg_name);
+        }
+
+        elem->pred.entity = component;
+        elem->pred.name = NULL;
+        if (arg_type) {
+            elem->pred.name = ecs_os_strdup(arg_type);
+        }
+
+        if (argc) {
+            elem->argv = ecs_os_malloc(ECS_SIZEOF(ecs_sig_identifier_t) * argc);
+
+            int i;
+            for (i = 0; i < argc; i ++) {
+                elem->argv[i].name = ecs_os_strdup(argv[i]);
+                if (!ecs_identifier_is_variable(argv[i])) {
+                    elem->argv[i].entity = ecs_lookup_fullpath(world, argv[i]);
+                    if (!elem->argv[i].entity) {
+                        ecs_parser_error(sig->name, sig->expr, -1, 
+                            "unresolved identifier '%s'", argv[i]);
+                        return -1;
+                    }
+                } else {
+                    elem->argv[i].entity = 0;
+                }
+            }
+        } else {
+            /* If no arguments are provided, this (.) is the implicit default. */
+            argc = 1;
+            elem->argv = ecs_os_malloc(ECS_SIZEOF(ecs_sig_identifier_t));
+            elem->argv[0] = (ecs_sig_identifier_t) {
+                .entity = EcsThis,
+                .name = ecs_os_strdup(".")
+            };
+        }
+
+        elem->argc = argc;
     }
+
+    if (argc != 0) {
+        elem->args[0] = elem->argv[0];
+    }
+    if (argc > 1) {
+        elem->args[1] = elem->argv[1];
+    }
+
+    elem->oper = oper_kind;
 
     return 0;
 error:
@@ -21708,10 +21908,10 @@ void add_pipeline_tags_to_sig(
     for (i = 0; i < count; i ++) {
         if (!i) {
             ecs_sig_add(world, sig, EcsFromAny, EcsOperAnd, EcsIn, entities[i], 
-                0, NULL);
+                0, NULL, NULL, 0, NULL);
         } else {
             ecs_sig_add(world, sig, EcsFromAny, EcsOperOr, EcsIn, entities[i], 
-                0, NULL);
+                0, NULL, NULL, 0, NULL);
         }
     }
 }
@@ -21744,10 +21944,11 @@ void EcsOnAddPipeline(
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
         ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
-            ecs_id(EcsSystem), 0, NULL);
-        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0, NULL);
+            ecs_id(EcsSystem), 0, NULL, NULL, 0, NULL);
+        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0, 
+            NULL, NULL, 0, NULL);
         ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
-            EcsDisabledIntern, 0, NULL);
+            EcsDisabledIntern, 0, NULL, NULL, 0, NULL);
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Create the query. Sort the query by system id and phase */
@@ -21760,9 +21961,9 @@ void EcsOnAddPipeline(
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
         ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
-            ecs_id(EcsSystem), 0, NULL);
+            ecs_id(EcsSystem), 0, NULL, NULL, 0, NULL);
         ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
-            EcsDisabledIntern, 0, NULL);
+            EcsDisabledIntern, 0, NULL, NULL, 0, NULL);
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Use the same sorting functions for the build query */
@@ -23264,6 +23465,8 @@ int parse_type_action(
     const char *source_id,
     const char *pair_id,
     const char *arg_name,
+    int argc,
+    char **argv,
     void *data)
 {
     ecs_vector_t **array = data;
@@ -23275,6 +23478,12 @@ int parse_type_action(
             "column names not supported in type expression");
         return -1;
     }
+
+    if (argc || argv) {
+        ecs_parser_error(name, sig, column, 
+            "column arguments not supported in type expression");
+        return -1;
+    }    
 
     if (strcmp(entity_id, "0")) {
         ecs_entity_t entity = 0;
@@ -23852,8 +24061,12 @@ void bootstrap_entity(
 {
     ecs_set(world, id, EcsName, {.value = name});
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, name) == id, ECS_INTERNAL_ERROR, NULL);
     ecs_add_pair(world, id, EcsChildOf, parent);
+
+    if (!parent || parent == EcsFlecsCore) {
+        ecs_assert(ecs_lookup_fullpath(world, name) == id, 
+            ECS_INTERNAL_ERROR, NULL);
+    }
 }
 
 void ecs_bootstrap(
@@ -23903,7 +24116,7 @@ void ecs_bootstrap(
     /* Initialize builtin entities */
     bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
     bootstrap_entity(world, EcsSingleton, "$", EcsFlecsCore);
-    bootstrap_entity(world, EcsThis, ".", EcsFlecsCore);
+    bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
     bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
     bootstrap_entity(world, EcsTransitive, "Transitive", EcsFlecsCore);
     bootstrap_entity(world, EcsFinal, "Final", EcsFlecsCore);
@@ -24247,7 +24460,11 @@ ecs_entity_t ecs_lookup_path_w_sep(
     }
 
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);    
+    world = ecs_get_world(world);
+
+    if (path[0] == '.' && !path[1]) {
+        return EcsThis;
+    }
 
     ecs_entity_t e = find_as_alias(world, path);
     if (e) {

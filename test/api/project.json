@@ -205,6 +205,32 @@
                 "not_added"
             ]
         }, {
+            "id": "Parser",
+            "testcases": [
+                "resolve_this",
+                "resolve_wildcard",
+                "resolve_is_a",
+                "component_implicit_subject",
+                "component_explicit_subject",
+                "component_explicit_subject_this",
+                "component_explicit_subject_this_by_name",
+                "component_explicit_subject_wildcard",
+                "pair_implicit_subject",
+                "pair_implicit_subject_wildcard_pred",
+                "pair_implicit_subject_wildcard_obj",
+                "pair_implicit_subject_this_pred",
+                "pair_implicit_subject_this_obj",
+                "pair_explicit_subject",
+                "pair_explicit_subject_this",
+                "pair_explicit_subject_this_by_name",
+                "pair_explicit_subject_wildcard_pred",
+                "pair_explicit_subject_wildcard_subj",
+                "pair_explicit_subject_wildcard_obj",
+                "component_not",
+                "pair_implicit_subject_not",
+                "pair_explicit_subject_not"
+            ]
+        }, {
             "id": "GlobalComponentIds",
             "testcases": [
                 "declare",

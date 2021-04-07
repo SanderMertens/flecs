@@ -57,6 +57,8 @@ typedef int (*ecs_parse_action_t)(
     const char *source,
     const char *pair,
     const char *name,
+    int32_t argc,
+    char **argv,
     void *ctx);
 
 /** Component-specific data */

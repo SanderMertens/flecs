@@ -321,7 +321,11 @@ ecs_entity_t ecs_lookup_path_w_sep(
     }
 
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);    
+    world = ecs_get_world(world);
+
+    if (path[0] == '.' && !path[1]) {
+        return EcsThis;
+    }
 
     ecs_entity_t e = find_as_alias(world, path);
     if (e) {

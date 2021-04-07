@@ -188,6 +188,30 @@ void Remove_1_from_empty(void);
 void Remove_type_from_empty(void);
 void Remove_not_added(void);
 
+// Testsuite 'Parser'
+void Parser_resolve_this(void);
+void Parser_resolve_wildcard(void);
+void Parser_resolve_is_a(void);
+void Parser_component_implicit_subject(void);
+void Parser_component_explicit_subject(void);
+void Parser_component_explicit_subject_this(void);
+void Parser_component_explicit_subject_this_by_name(void);
+void Parser_component_explicit_subject_wildcard(void);
+void Parser_pair_implicit_subject(void);
+void Parser_pair_implicit_subject_wildcard_pred(void);
+void Parser_pair_implicit_subject_wildcard_obj(void);
+void Parser_pair_implicit_subject_this_pred(void);
+void Parser_pair_implicit_subject_this_obj(void);
+void Parser_pair_explicit_subject(void);
+void Parser_pair_explicit_subject_this(void);
+void Parser_pair_explicit_subject_this_by_name(void);
+void Parser_pair_explicit_subject_wildcard_pred(void);
+void Parser_pair_explicit_subject_wildcard_subj(void);
+void Parser_pair_explicit_subject_wildcard_obj(void);
+void Parser_component_not(void);
+void Parser_pair_implicit_subject_not(void);
+void Parser_pair_explicit_subject_not(void);
+
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
 void GlobalComponentIds_declare_w_entity(void);
@@ -2246,6 +2270,97 @@ bake_test_case Remove_testcases[] = {
     {
         "not_added",
         Remove_not_added
+    }
+};
+
+bake_test_case Parser_testcases[] = {
+    {
+        "resolve_this",
+        Parser_resolve_this
+    },
+    {
+        "resolve_wildcard",
+        Parser_resolve_wildcard
+    },
+    {
+        "resolve_is_a",
+        Parser_resolve_is_a
+    },
+    {
+        "component_implicit_subject",
+        Parser_component_implicit_subject
+    },
+    {
+        "component_explicit_subject",
+        Parser_component_explicit_subject
+    },
+    {
+        "component_explicit_subject_this",
+        Parser_component_explicit_subject_this
+    },
+    {
+        "component_explicit_subject_this_by_name",
+        Parser_component_explicit_subject_this_by_name
+    },
+    {
+        "component_explicit_subject_wildcard",
+        Parser_component_explicit_subject_wildcard
+    },
+    {
+        "pair_implicit_subject",
+        Parser_pair_implicit_subject
+    },
+    {
+        "pair_implicit_subject_wildcard_pred",
+        Parser_pair_implicit_subject_wildcard_pred
+    },
+    {
+        "pair_implicit_subject_wildcard_obj",
+        Parser_pair_implicit_subject_wildcard_obj
+    },
+    {
+        "pair_implicit_subject_this_pred",
+        Parser_pair_implicit_subject_this_pred
+    },
+    {
+        "pair_implicit_subject_this_obj",
+        Parser_pair_implicit_subject_this_obj
+    },
+    {
+        "pair_explicit_subject",
+        Parser_pair_explicit_subject
+    },
+    {
+        "pair_explicit_subject_this",
+        Parser_pair_explicit_subject_this
+    },
+    {
+        "pair_explicit_subject_this_by_name",
+        Parser_pair_explicit_subject_this_by_name
+    },
+    {
+        "pair_explicit_subject_wildcard_pred",
+        Parser_pair_explicit_subject_wildcard_pred
+    },
+    {
+        "pair_explicit_subject_wildcard_subj",
+        Parser_pair_explicit_subject_wildcard_subj
+    },
+    {
+        "pair_explicit_subject_wildcard_obj",
+        Parser_pair_explicit_subject_wildcard_obj
+    },
+    {
+        "component_not",
+        Parser_component_not
+    },
+    {
+        "pair_implicit_subject_not",
+        Parser_pair_implicit_subject_not
+    },
+    {
+        "pair_explicit_subject_not",
+        Parser_pair_explicit_subject_not
     }
 };
 
@@ -7451,6 +7566,13 @@ static bake_test_suite suites[] = {
         Remove_testcases
     },
     {
+        "Parser",
+        NULL,
+        NULL,
+        22,
+        Parser_testcases
+    },
+    {
         "GlobalComponentIds",
         NULL,
         NULL,
@@ -7832,5 +7954,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 60);
+    return bake_test_run("api", argc, argv, suites, 61);
 }

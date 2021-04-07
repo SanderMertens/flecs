@@ -177,8 +177,12 @@ void bootstrap_entity(
 {
     ecs_set(world, id, EcsName, {.value = name});
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, name) == id, ECS_INTERNAL_ERROR, NULL);
     ecs_add_pair(world, id, EcsChildOf, parent);
+
+    if (!parent || parent == EcsFlecsCore) {
+        ecs_assert(ecs_lookup_fullpath(world, name) == id, 
+            ECS_INTERNAL_ERROR, NULL);
+    }
 }
 
 void ecs_bootstrap(
@@ -228,7 +232,7 @@ void ecs_bootstrap(
     /* Initialize builtin entities */
     bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
     bootstrap_entity(world, EcsSingleton, "$", EcsFlecsCore);
-    bootstrap_entity(world, EcsThis, ".", EcsFlecsCore);
+    bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
     bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
     bootstrap_entity(world, EcsTransitive, "Transitive", EcsFlecsCore);
     bootstrap_entity(world, EcsFinal, "Final", EcsFlecsCore);
