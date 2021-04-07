@@ -209,7 +209,7 @@ public:
      * @return True if the entity is alive, false otherwise.
      */
     bool is_valid() {
-        return ecs_is_valid(m_world, m_id);
+        return m_world && ecs_is_valid(m_world, m_id);
     }
 
     /** Check is entity is alive.
@@ -217,7 +217,7 @@ public:
      * @return True if the entity is alive, false otherwise.
      */
     bool is_alive() {
-        return ecs_is_alive(m_world, m_id);
+        return m_world && ecs_is_alive(m_world, m_id);
     }
 
     /** Return the entity name.
