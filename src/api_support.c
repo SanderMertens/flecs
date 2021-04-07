@@ -354,12 +354,6 @@ ecs_entity_t ecs_new_component(
         found = true;
     }
 
-    /* ecs_new_component_id does not add the scope, so add it explicitly */
-    ecs_entity_t scope = world->stage.scope;
-    if (scope) {
-        ecs_add_pair(world, result, EcsChildOf, scope);
-    }
-
     if (found) {
         ecs_set_symbol(world, result, name);
     }

@@ -920,6 +920,13 @@ void Timer_start_stop_interval(void);
 void Timer_rate_filter(void);
 void Timer_rate_filter_w_rate_filter_src(void);
 void Timer_rate_filter_w_timer_src(void);
+void Timer_rate_filter_with_empty_src(void);
+void Timer_one_shot_timer_entity(void);
+void Timer_interval_timer_entity(void);
+void Timer_rate_entity(void);
+void Timer_nested_rate_entity(void);
+void Timer_nested_rate_entity_empty_src(void);
+void Timer_naked_tick_entity(void);
 
 // Testsuite 'SystemOnDemand'
 void SystemOnDemand_enable_out_after_in(void);
@@ -4997,6 +5004,34 @@ bake_test_case Timer_testcases[] = {
     {
         "rate_filter_w_timer_src",
         Timer_rate_filter_w_timer_src
+    },
+    {
+        "rate_filter_with_empty_src",
+        Timer_rate_filter_with_empty_src
+    },
+    {
+        "one_shot_timer_entity",
+        Timer_one_shot_timer_entity
+    },
+    {
+        "interval_timer_entity",
+        Timer_interval_timer_entity
+    },
+    {
+        "rate_entity",
+        Timer_rate_entity
+    },
+    {
+        "nested_rate_entity",
+        Timer_nested_rate_entity
+    },
+    {
+        "nested_rate_entity_empty_src",
+        Timer_nested_rate_entity_empty_src
+    },
+    {
+        "naked_tick_entity",
+        Timer_naked_tick_entity
     }
 };
 
@@ -7650,7 +7685,7 @@ static bake_test_suite suites[] = {
         "Timer",
         NULL,
         NULL,
-        9,
+        16,
         Timer_testcases
     },
     {

@@ -68,6 +68,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Install GCC
+        run: |
+          sudo apt-get install -y gcc-${{ matrix.compiler-version }}
+          sudo apt-get install -y g++-${{ matrix.compiler-version }}
+      
       - name: Install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -101,6 +106,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Install Clang
+        run: |
+          sudo apt-get install -y clang-${{ matrix.compiler-version }}
+          sudo apt-get install -y clang++-${{ matrix.compiler-version }}      
+      
       - name: Install bake
         run: |
           git clone https://github.com/SanderMertens/bake

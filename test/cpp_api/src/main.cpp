@@ -177,6 +177,8 @@ void System_add_from_iter_world_handle(void);
 void System_new_from_iter(void);
 void System_each_w_mut_children_it(void);
 void System_readonly_children_iter(void);
+void System_rate_filter(void);
+void System_update_rate_filter(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -235,6 +237,8 @@ void Module_import(void);
 void Module_lookup_from_scope(void);
 void Module_nested_module(void);
 void Module_nested_type_module(void);
+void Module_module_type_w_explicit_name(void);
+void Module_component_redefinition_outside_module(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -962,6 +966,14 @@ bake_test_case System_testcases[] = {
     {
         "readonly_children_iter",
         System_readonly_children_iter
+    },
+    {
+        "rate_filter",
+        System_rate_filter
+    },
+    {
+        "update_rate_filter",
+        System_update_rate_filter
     }
 };
 
@@ -1169,6 +1181,14 @@ bake_test_case Module_testcases[] = {
     {
         "nested_type_module",
         Module_nested_type_module
+    },
+    {
+        "module_type_w_explicit_name",
+        Module_module_type_w_explicit_name
+    },
+    {
+        "component_redefinition_outside_module",
+        Module_component_redefinition_outside_module
     }
 };
 
@@ -1503,7 +1523,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        35,
+        37,
         System_testcases
     },
     {
@@ -1538,7 +1558,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        4,
+        6,
         Module_testcases
     },
     {

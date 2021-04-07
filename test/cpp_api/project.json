@@ -194,7 +194,9 @@
                 "add_from_iter_world_handle",
                 "new_from_iter",
                 "each_w_mut_children_it",
-                "readonly_children_iter"
+                "readonly_children_iter",
+                "rate_filter",
+                "update_rate_filter"
             ]
         }, {
             "id": "Trigger",
@@ -262,7 +264,9 @@
                 "import",
                 "lookup_from_scope",
                 "nested_module",
-                "nested_type_module"
+                "nested_type_module",
+                "module_type_w_explicit_name",
+                "component_redefinition_outside_module"
             ]
         }, {
             "id": "ImplicitComponents",

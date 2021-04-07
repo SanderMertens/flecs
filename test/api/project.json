@@ -993,7 +993,14 @@
                 "start_stop_interval",
                 "rate_filter",
                 "rate_filter_w_rate_filter_src",
-                "rate_filter_w_timer_src"
+                "rate_filter_w_timer_src",
+                "rate_filter_with_empty_src",
+                "one_shot_timer_entity",
+                "interval_timer_entity",
+                "rate_entity",
+                "nested_rate_entity",
+                "nested_rate_entity_empty_src",
+                "naked_tick_entity"
             ]
         }, {
             "id": "SystemOnDemand",

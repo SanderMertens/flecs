@@ -70,6 +70,8 @@ void ProgressRateFilters(ecs_iter_t *it) {
             const EcsTickSource *tick_src = ecs_get(it->world, src, EcsTickSource);
             if (tick_src) {
                 inc = tick_src->tick;
+            } else {
+                inc = true;
             }
         } else {
             inc = true;
@@ -87,6 +89,18 @@ void ProgressRateFilters(ecs_iter_t *it) {
         } else {
             tick_dst[i].tick = false;
         }
+    }
+}
+
+static
+void ProgressTickSource(ecs_iter_t *it) {
+    EcsTickSource *tick_src = ecs_term(it, EcsTickSource, 1);
+
+    /* If tick source has no filters, tick unconditionally */
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        tick_src[i].tick = true;
+        tick_src[i].time_elapsed = it->delta_time;
     }
 }
 
@@ -185,7 +199,7 @@ void ecs_stop_timer(
     ptr->active = false;
 }
 
-ecs_entity_t ecs_set_rate_filter(
+ecs_entity_t ecs_set_rate(
     ecs_world_t *world,
     ecs_entity_t filter,
     int32_t rate,
@@ -204,6 +218,16 @@ ecs_entity_t ecs_set_rate_filter(
     }  
 
     return filter;     
+}
+
+/* Deprecated */
+ecs_entity_t ecs_set_rate_filter(
+    ecs_world_t *world,
+    ecs_entity_t filter,
+    int32_t rate,
+    ecs_entity_t source)
+{
+    return ecs_set_rate(world, filter, rate, source);
 }
 
 void ecs_set_tick_source(
@@ -241,6 +265,9 @@ void FlecsTimerImport(
 
     /* Rate filter handling */
     ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, [in] RateFilter, [out] flecs.system.TickSource);
+
+    /* TickSource without a timer or rate filter just increases each frame */
+    ECS_SYSTEM(world, ProgressTickSource, EcsPreFrame, [out] flecs.system.TickSource, !RateFilter, !Timer);
 }
 
 #endif

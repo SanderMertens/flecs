@@ -40,7 +40,7 @@ extern ecs_type_t
 
 /* Component used to provide a tick source to systems */
 typedef struct EcsTickSource {
-    bool tick;           /* True if providing tick */
+    bool tick;                 /* True if providing tick */
     FLECS_FLOAT time_elapsed;  /* Time elapsed since last tick */
 } EcsTickSource;
 
