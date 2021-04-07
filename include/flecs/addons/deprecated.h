@@ -464,6 +464,14 @@ int32_t ecs_table_component_index(
     const ecs_iter_t *it,
     ecs_entity_t component);
 
+ECS_DEPRECATED("use ecs_set_rate")
+FLECS_API
+ecs_entity_t ecs_set_rate_filter(
+    ecs_world_t *world,
+    ecs_entity_t filter,
+    int32_t rate,
+    ecs_entity_t source);
+
 #ifdef __cplusplus
 }
 #endif

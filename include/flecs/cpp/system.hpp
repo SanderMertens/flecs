@@ -81,6 +81,7 @@ public:
         , m_kind(static_cast<ecs_entity_t>(OnUpdate)) 
         , m_signature(signature)
         , m_interval(0.0)
+        , m_rate(0)
         , m_on_demand(false)
         , m_hidden(false)
         , m_finalized(false) { 
@@ -98,12 +99,30 @@ public:
         return *this;
     }
 
+    /** Specify when the system should be ran.
+     * Use this function to set in which phase the system should run or whether
+     * the system is reactive. Valid values for reactive systems are:
+     *
+     * flecs::OnAdd
+     * flecs::OnRemove
+     * flecs::OnSet
+     * flecs::OnUnSet
+     *
+     * @param kind The kind that specifies when the system should be ran.
+     */
     system& kind(entity_t kind) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_kind = static_cast<ecs_entity_t>(kind);
         return *this;
     }
 
+    /** Set system interval.
+     * This operation will cause the system to be ran at the specified interval.
+     *
+     * The timer is synchronous, and is incremented each frame by delta_time.
+     *
+     * @param interval The interval value.
+     */
     system& interval(FLECS_FLOAT interval) {
         if (!m_finalized) {
             m_interval = interval;
@@ -113,6 +132,45 @@ public:
         return *this;
     }
 
+    /** Set system rate.
+     * This operation will cause the system to be ran at a multiple of the 
+     * provided tick source. The tick source may be any entity, including
+     * another system.
+     *
+     * @param tick_source The tick source.
+     * @param rate The multiple at which to run the system.
+     */
+    system& rate(const flecs::entity& tick_source, int32_t rate) {
+        if (!m_finalized) {
+            m_rate = rate;
+            m_tick_source = tick_source;
+        } else {
+            ecs_set_rate(m_world, m_id, rate, tick_source.id());
+        }
+        return *this;
+    }
+
+    /** Set system rate.
+     * This operation will cause the system to be ran at a multiple of the 
+     * frame tick frequency. If a tick source was provided, this just updates
+     * the rate of the system.
+     *
+     * @param rate The multiple at which to run the system.
+     */
+    system& rate(int32_t rate) {
+        if (!m_finalized) {
+            m_rate = rate;
+        } else {
+            ecs_set_rate(m_world, m_id, rate, m_tick_source.id());
+        }
+        return *this;
+    }    
+
+    /** Get interval
+     * Get interval at which the system is running.
+     *
+     * @return The timer entity.
+     */
     FLECS_FLOAT interval() {
         return ecs_get_interval(m_world, m_id);
     }
@@ -326,6 +384,10 @@ private:
             ecs_set_interval(m_world, e, m_interval);
         }
 
+        if (m_rate != 0) {
+            ecs_set_rate(m_world, m_id, m_rate, m_tick_source.id());
+        }
+
         m_finalized = true;
 
         if (m_ctx) {
@@ -389,6 +451,9 @@ private:
     flecs::entity m_group_by_component;
 
     FLECS_FLOAT m_interval;
+    int32_t m_rate;
+    flecs::entity m_tick_source;
+
     bool m_on_demand;
     bool m_hidden;
     bool m_finalized; // After set to true, system is created & sig is fixed

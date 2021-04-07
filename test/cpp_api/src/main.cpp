@@ -177,6 +177,8 @@ void System_add_from_iter_world_handle(void);
 void System_new_from_iter(void);
 void System_each_w_mut_children_it(void);
 void System_readonly_children_iter(void);
+void System_rate_filter(void);
+void System_update_rate_filter(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -964,6 +966,14 @@ bake_test_case System_testcases[] = {
     {
         "readonly_children_iter",
         System_readonly_children_iter
+    },
+    {
+        "rate_filter",
+        System_rate_filter
+    },
+    {
+        "update_rate_filter",
+        System_update_rate_filter
     }
 };
 
@@ -1513,7 +1523,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        35,
+        37,
         System_testcases
     },
     {
