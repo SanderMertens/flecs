@@ -14,6 +14,18 @@ ecs_sig_column_t* sig_columns(ecs_sig_t *sig) {
     return result;
 }
 
+#define test_pred(column, e, isa)\
+    test_int(column.pred.entity, e);\
+    test_int(column.pred.is_a, isa);
+
+#define test_subj(column, e, isa)\
+    test_int(column.args[0].entity, e);\
+    test_int(column.args[0].is_a, isa);
+
+#define test_obj(column, e, isa)\
+    test_int(column.args[1].entity, e);\
+    test_int(column.args[1].is_a, isa);
+
 void Parser_resolve_this() {
     ecs_world_t *world = ecs_init();
 
@@ -64,8 +76,8 @@ void Parser_component_implicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -85,8 +97,8 @@ void Parser_component_explicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, Subj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], Subj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -105,8 +117,8 @@ void Parser_component_explicit_subject_this() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -125,8 +137,8 @@ void Parser_component_explicit_subject_this_by_name() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -145,8 +157,8 @@ void Parser_component_explicit_subject_wildcard() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsWildcard);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsWildcard, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -166,9 +178,9 @@ void Parser_pair_implicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -188,9 +200,9 @@ void Parser_pair_implicit_subject_wildcard_pred() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, EcsWildcard);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], EcsWildcard, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -210,9 +222,9 @@ void Parser_pair_implicit_subject_wildcard_obj() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, EcsWildcard);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], EcsWildcard, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -232,9 +244,9 @@ void Parser_pair_implicit_subject_this_pred() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, EcsThis);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], EcsThis, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -254,9 +266,9 @@ void Parser_pair_implicit_subject_this_obj() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, EcsThis);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -277,9 +289,9 @@ void Parser_pair_explicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, Subj);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], Subj, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -299,9 +311,9 @@ void Parser_pair_explicit_subject_this() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -321,9 +333,9 @@ void Parser_pair_explicit_subject_this_by_name() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -343,9 +355,9 @@ void Parser_pair_explicit_subject_wildcard_pred() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, EcsWildcard);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], EcsWildcard, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -365,9 +377,9 @@ void Parser_pair_explicit_subject_wildcard_subj() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsWildcard);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsWildcard, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -387,9 +399,9 @@ void Parser_pair_explicit_subject_wildcard_obj() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, EcsWildcard);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], EcsWildcard, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -408,8 +420,8 @@ void Parser_in_component_implicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsIn);
 
@@ -429,8 +441,8 @@ void Parser_in_component_explicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, Subj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], Subj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsIn);
 
@@ -450,9 +462,9 @@ void Parser_in_pair_implicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsIn);
 
@@ -473,9 +485,9 @@ void Parser_in_pair_explicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, Subj);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], Subj, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsIn);
 
@@ -494,8 +506,8 @@ void Parser_inout_component_implicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
@@ -515,8 +527,8 @@ void Parser_inout_component_explicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, Subj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], Subj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
@@ -536,9 +548,9 @@ void Parser_inout_pair_implicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
@@ -559,9 +571,9 @@ void Parser_inout_pair_explicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, Subj);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], Subj, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
@@ -580,8 +592,8 @@ void Parser_out_component_implicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsOut);
 
@@ -601,8 +613,8 @@ void Parser_out_component_explicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, Subj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], Subj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsOut);
 
@@ -622,9 +634,9 @@ void Parser_out_pair_implicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsOut);
 
@@ -645,9 +657,9 @@ void Parser_out_pair_explicit_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, Subj);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], Subj, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsOut);
 
@@ -666,8 +678,8 @@ void Parser_component_singleton() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, Pred);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], Pred, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -688,8 +700,8 @@ void Parser_this_singleton() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, EcsThis);
-    test_int(columns[0].args[0].entity, EcsThis);
+    test_pred(columns[0], EcsThis, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -708,8 +720,8 @@ void Parser_component_implicit_no_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, 0);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], 0, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -728,8 +740,8 @@ void Parser_component_explicit_no_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, 0);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], 0, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -749,9 +761,9 @@ void Parser_pair_no_subject() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, 0);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], 0, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -770,8 +782,8 @@ void Parser_component_not() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOperNot);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -791,9 +803,9 @@ void Parser_pair_implicit_subject_not() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, EcsThis);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperNot);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -814,9 +826,9 @@ void Parser_pair_explicit_subject_not() {
     test_int(sig_count(&sig), 1);
 
     ecs_sig_column_t *columns = sig_columns(&sig);
-    test_int(columns[0].pred.entity, Pred);
-    test_int(columns[0].args[0].entity, Subj);
-    test_int(columns[0].args[1].entity, Obj);
+    test_pred(columns[0], Pred, EcsIsDefault);
+    test_subj(columns[0], Subj, EcsIsDefault);
+    test_obj(columns[0], Obj, EcsIsDefault);
     test_int(columns[0].oper, EcsOperNot);
     test_int(columns[0].inout, EcsInOutDefault);
 

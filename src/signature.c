@@ -924,6 +924,7 @@ int ecs_sig_add(
 
         elem->pred.entity = component;
         elem->pred.name = NULL;
+        elem->pred.is_a = 0;
         if (arg_type) {
             elem->pred.name = ecs_os_strdup(arg_type);
         }
@@ -960,14 +961,17 @@ int ecs_sig_add(
 
     if (source) {
         elem->args[0].entity = source;
+        elem->args[0].is_a = 0;
     }
 
     if (argc != 0) {
         elem->args[0] = elem->argv[0];
+        elem->args[0].is_a = 0;
     }
 
     if (argc > 1) {
         elem->args[1] = elem->argv[1];
+        elem->args[1].is_a = 0;
     }
 
     elem->oper = oper_kind;
