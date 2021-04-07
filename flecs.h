@@ -2675,6 +2675,7 @@ bool ecs_component_has_actions(
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef enum ecs_sig_inout_kind_t {
+    EcsInOutDefault,
     EcsInOut,
     EcsIn,
     EcsOut
@@ -2694,12 +2695,12 @@ typedef enum ecs_sig_from_kind_t {
 
 /** Type describing an operator used in an signature of a system signature */
 typedef enum ecs_sig_oper_kind_t {
-    EcsOperAnd = 0,
-    EcsOperOr = 1,
-    EcsOperNot = 2,
-    EcsOperOptional = 3,
-    EcsOperAll = 4,
-    EcsOperLast = 5
+    EcsOperAnd,
+    EcsOperOr,
+    EcsOperNot,
+    EcsOperOptional,
+    EcsOperAll,
+    EcsOperLast
 } ecs_sig_oper_kind_t;
 
 #define EcsIsDefault    (0)

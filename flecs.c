@@ -1544,10 +1544,28 @@ void _ecs_parser_error(
         va_start(valist, fmt);
         char *msg = ecs_vasprintf(fmt, valist);
 
-        ecs_os_err("%s:%d: error: %s", name, column + 1, msg);
-        ecs_os_err("    %s", expr);
-        ecs_os_err("    %*s^", column, "");
+        if (column != -1) {
+            if (name) {
+                ecs_os_err("%s:%d: error: %s", name, column + 1, msg);
+            } else {
+                ecs_os_err("%d: error: %s", column + 1, msg);
+            }
+        } else {
+            if (name) {
+                ecs_os_err("%s: error: %s", name, msg);
+            } else {
+                ecs_os_err("error: %s", msg);
+            }            
+        }
         
+        ecs_os_err("    %s", expr);
+
+        if (column != -1) {
+            ecs_os_err("    %*s^", column, "");
+        } else {
+            ecs_os_err("");
+        }
+
         ecs_os_free(msg);        
     }
 
@@ -14284,6 +14302,9 @@ bool ecs_strbuf_list_appendstr(
     return ecs_strbuf_appendstr(buffer, str);
 }
 
+/* TODO: after new query parser is working & code is ported to new types for
+ *       storing terms, this code needs a big cleanup */
+
 #define ECS_ANNOTATION_LENGTH_MAX (16)
 
 #define TOK_SOURCE ':'
@@ -14593,11 +14614,12 @@ const char* parse_element(
     const char *sig,
     sig_element_t *elem_out)
 {
-    bool explicit_inout = false;
     const char *ptr = sig;
     char token[ECS_MAX_TOKEN_SIZE] = {0};
+    bool arg_list = false;
+
     sig_element_t elem = {
-        .inout_kind = EcsInOut,
+        .inout_kind = EcsInOutDefault,
         .from_kind = EcsFromOwned,
         .oper_kind = EcsOperAnd
     };
@@ -14606,7 +14628,6 @@ const char* parse_element(
 
     /* Inout specifiers always come first */
     if (ptr[0] == TOK_ANNOTATE_OPEN) {
-        explicit_inout = true;
         ptr = parse_annotation(name, sig, (ptr - sig), ptr + 1, &elem.inout_kind);
         if (!ptr) {
             return NULL;
@@ -14661,6 +14682,7 @@ const char* parse_element(
         /* Is token a predicate? */
         if (ptr[0] == TOK_PAREN_OPEN) {
             ptr ++;
+            arg_list = true;
             goto parse_predicate;    
         }
 
@@ -14774,9 +14796,15 @@ parse_predicate:
             return NULL;
         }
     } else {
-        ecs_parser_error(name, sig, (ptr - sig), 
-            "expected predicate arguments");
-        return NULL;
+        if (arg_list && ptr[0] == TOK_PAREN_CLOSE) {
+            elem.from_kind = EcsFromEmpty;
+        } else {
+            ecs_parser_error(name, sig, (ptr - sig), 
+                "expected predicate arguments");
+            return NULL;
+        }
+
+        ptr ++;
     }
 
     goto parse_done;
@@ -14838,12 +14866,6 @@ parse_done:
             ecs_parser_error(name, sig, (ptr - sig), 
                 "invalid source modifier for 0"); 
             return NULL;
-        }
-    }
-
-    if (!explicit_inout) {
-        if (elem.from_kind != EcsFromOwned) {
-            elem.inout_kind = EcsIn;
         }
     }
 
@@ -14952,6 +14974,13 @@ bool ecs_identifier_is_variable(
     }
 
     return true;
+}
+
+static
+bool ecs_is_0(
+    const char *id)
+{
+    return id[0] == '0' && !id[1];
 }
 
 /** Parse callback that adds component to the components array for a system */
@@ -15095,6 +15124,16 @@ int ecs_sig_add(
 {
     ecs_sig_column_t *elem;
 
+    /* Temporary fix for backwards compatibility, if no InOut is set, derive */
+    ecs_sig_inout_kind_t inout_tmp = inout_kind;
+    if (inout_kind == EcsInOutDefault) {
+        if (from_kind != EcsFromOwned) {
+            inout_tmp = EcsIn;
+        } else {
+            inout_tmp = EcsInOut;
+        }
+    }
+
     /* If component has AND role, all components of specified type must match */
     if (ECS_HAS_ROLE(component, AND)) {
         elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
@@ -15109,7 +15148,7 @@ int ecs_sig_add(
         elem->is.component = component;
         elem->from_kind = from_kind;
         elem->oper_kind = EcsOperAll;
-        elem->inout_kind = inout_kind;
+        elem->inout_kind = inout_tmp;
         elem->source = source;
         elem->argc = 0;
 
@@ -15129,7 +15168,7 @@ int ecs_sig_add(
         elem->is.type = ecs_vector_copy(type->normalized, ecs_entity_t);
         elem->from_kind = from_kind;
         elem->oper_kind = EcsOperOr;
-        elem->inout_kind = inout_kind;
+        elem->inout_kind = inout_tmp;
         elem->source = source;
         elem->argc = 0;
     } else
@@ -15139,14 +15178,14 @@ int ecs_sig_add(
         elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
         elem->from_kind = from_kind;
         elem->oper_kind = oper_kind;
-        elem->inout_kind = inout_kind;
+        elem->inout_kind = inout_tmp;
         elem->is.component = component;
         elem->source = source;
         elem->argc = 0;
 
     /* OR columns store a type id instead of a single component */
     } else {
-        ecs_assert(inout_kind != EcsOut, ECS_INVALID_SIGNATURE, NULL);
+        ecs_assert(inout_tmp != EcsOut, ECS_INVALID_SIGNATURE, NULL);
         elem = ecs_vector_last(sig->columns, ecs_sig_column_t);
 
         if (elem->from_kind != from_kind) {
@@ -15175,6 +15214,10 @@ int ecs_sig_add(
         elem->oper_kind = oper_kind;
     }
 
+    if (!source && from_kind != EcsFromEmpty) {
+        source = EcsThis;
+    }
+
     if (oper_kind != EcsOperOr) {
         elem->name = NULL;
         if (arg_name) {
@@ -15193,7 +15236,7 @@ int ecs_sig_add(
             int i;
             for (i = 0; i < argc; i ++) {
                 elem->argv[i].name = ecs_os_strdup(argv[i]);
-                if (!ecs_identifier_is_variable(argv[i])) {
+                if (!ecs_identifier_is_variable(argv[i]) && !ecs_is_0(argv[i])) {
                     elem->argv[i].entity = ecs_lookup_fullpath(world, argv[i]);
                     if (!elem->argv[i].entity) {
                         ecs_parser_error(sig->name, sig->expr, -1, 
@@ -15209,22 +15252,28 @@ int ecs_sig_add(
             argc = 1;
             elem->argv = ecs_os_malloc(ECS_SIZEOF(ecs_sig_identifier_t));
             elem->argv[0] = (ecs_sig_identifier_t) {
-                .entity = EcsThis,
-                .name = ecs_os_strdup(".")
+                .entity = source,
+                .name = NULL
             };
         }
 
         elem->argc = argc;
     }
 
+    if (source) {
+        elem->args[0].entity = source;
+    }
+
     if (argc != 0) {
         elem->args[0] = elem->argv[0];
     }
+
     if (argc > 1) {
         elem->args[1] = elem->argv[1];
     }
 
     elem->oper = oper_kind;
+    elem->inout = inout_kind;
 
     return 0;
 error:
@@ -21594,6 +21643,7 @@ bool check_column_component(
       && column->oper_kind != EcsOperNot) 
     {
         switch(column->inout_kind) {
+        case EcsInOutDefault:
         case EcsInOut:
         case EcsIn:
             if (state == WriteToStage || write_state->wildcard) {
@@ -21611,6 +21661,7 @@ bool check_column_component(
         bool needs_merge = false;
 
         switch(column->inout_kind) {
+        case EcsInOutDefault:
         case EcsIn:
         case EcsInOut:
             if (state == WriteToStage) {
@@ -21627,6 +21678,7 @@ bool check_column_component(
         };
 
         switch(column->inout_kind) {
+        case EcsInOutDefault:
         case EcsInOut:
         case EcsOut:
             if (is_active) {

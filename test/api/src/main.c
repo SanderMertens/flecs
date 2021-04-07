@@ -208,6 +208,23 @@ void Parser_pair_explicit_subject_this_by_name(void);
 void Parser_pair_explicit_subject_wildcard_pred(void);
 void Parser_pair_explicit_subject_wildcard_subj(void);
 void Parser_pair_explicit_subject_wildcard_obj(void);
+void Parser_in_component_implicit_subject(void);
+void Parser_in_component_explicit_subject(void);
+void Parser_in_pair_implicit_subject(void);
+void Parser_in_pair_explicit_subject(void);
+void Parser_inout_component_implicit_subject(void);
+void Parser_inout_component_explicit_subject(void);
+void Parser_inout_pair_implicit_subject(void);
+void Parser_inout_pair_explicit_subject(void);
+void Parser_out_component_implicit_subject(void);
+void Parser_out_component_explicit_subject(void);
+void Parser_out_pair_implicit_subject(void);
+void Parser_out_pair_explicit_subject(void);
+void Parser_component_singleton(void);
+void Parser_this_singleton(void);
+void Parser_component_implicit_no_subject(void);
+void Parser_component_explicit_no_subject(void);
+void Parser_pair_no_subject(void);
 void Parser_component_not(void);
 void Parser_pair_implicit_subject_not(void);
 void Parser_pair_explicit_subject_not(void);
@@ -2349,6 +2366,74 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_explicit_subject_wildcard_obj",
         Parser_pair_explicit_subject_wildcard_obj
+    },
+    {
+        "in_component_implicit_subject",
+        Parser_in_component_implicit_subject
+    },
+    {
+        "in_component_explicit_subject",
+        Parser_in_component_explicit_subject
+    },
+    {
+        "in_pair_implicit_subject",
+        Parser_in_pair_implicit_subject
+    },
+    {
+        "in_pair_explicit_subject",
+        Parser_in_pair_explicit_subject
+    },
+    {
+        "inout_component_implicit_subject",
+        Parser_inout_component_implicit_subject
+    },
+    {
+        "inout_component_explicit_subject",
+        Parser_inout_component_explicit_subject
+    },
+    {
+        "inout_pair_implicit_subject",
+        Parser_inout_pair_implicit_subject
+    },
+    {
+        "inout_pair_explicit_subject",
+        Parser_inout_pair_explicit_subject
+    },
+    {
+        "out_component_implicit_subject",
+        Parser_out_component_implicit_subject
+    },
+    {
+        "out_component_explicit_subject",
+        Parser_out_component_explicit_subject
+    },
+    {
+        "out_pair_implicit_subject",
+        Parser_out_pair_implicit_subject
+    },
+    {
+        "out_pair_explicit_subject",
+        Parser_out_pair_explicit_subject
+    },
+    {
+        "component_singleton",
+        Parser_component_singleton
+    },
+    {
+        "this_singleton",
+        Parser_this_singleton
+    },
+    {
+        "component_implicit_no_subject",
+        Parser_component_implicit_no_subject
+    },
+    {
+        "component_explicit_no_subject",
+        Parser_component_explicit_no_subject
+    },
+    {
+        "pair_no_subject",
+        Parser_pair_no_subject
     },
     {
         "component_not",
@@ -7569,7 +7654,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        22,
+        39,
         Parser_testcases
     },
     {

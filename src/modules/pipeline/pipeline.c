@@ -141,6 +141,7 @@ bool check_column_component(
       && column->oper_kind != EcsOperNot) 
     {
         switch(column->inout_kind) {
+        case EcsInOutDefault:
         case EcsInOut:
         case EcsIn:
             if (state == WriteToStage || write_state->wildcard) {
@@ -158,6 +159,7 @@ bool check_column_component(
         bool needs_merge = false;
 
         switch(column->inout_kind) {
+        case EcsInOutDefault:
         case EcsIn:
         case EcsInOut:
             if (state == WriteToStage) {
@@ -174,6 +176,7 @@ bool check_column_component(
         };
 
         switch(column->inout_kind) {
+        case EcsInOutDefault:
         case EcsInOut:
         case EcsOut:
             if (is_active) {
