@@ -22140,7 +22140,7 @@ void ecs_stop_timer(
     ptr->active = false;
 }
 
-ecs_entity_t ecs_set_rate_filter(
+ecs_entity_t ecs_set_rate(
     ecs_world_t *world,
     ecs_entity_t filter,
     int32_t rate,
@@ -22159,6 +22159,16 @@ ecs_entity_t ecs_set_rate_filter(
     }  
 
     return filter;     
+}
+
+/* Deprecated */
+ecs_entity_t ecs_set_rate_filter(
+    ecs_world_t *world,
+    ecs_entity_t filter,
+    int32_t rate,
+    ecs_entity_t source)
+{
+    return ecs_set_rate(world, filter, rate, source);
 }
 
 void ecs_set_tick_source(
@@ -22198,7 +22208,7 @@ void FlecsTimerImport(
     ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, [in] RateFilter, [out] flecs.system.TickSource);
 
     /* TickSource without a timer or rate filter just increases each frame */
-    ECS_SYSTEM(world, ProgressTickSource, EcsPreFrame, !RateFilter, !Timer, [out] flecs.system.TickSource);
+    ECS_SYSTEM(world, ProgressTickSource, EcsPreFrame, [out] flecs.system.TickSource, !RateFilter, !Timer);
 }
 
 #endif

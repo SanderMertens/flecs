@@ -292,13 +292,4 @@ size_t ecs_table_column_size(
     return ecs_iter_column_size(it, column_index);
 }
 
-ecs_entity_t ecs_set_rate_filter(
-    ecs_world_t *world,
-    ecs_entity_t filter,
-    int32_t rate,
-    ecs_entity_t source)
-{
-    return ecs_set_rate(world, filter, rate, source);
-}
-
 #endif
