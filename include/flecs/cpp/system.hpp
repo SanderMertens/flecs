@@ -106,7 +106,7 @@ public:
      * flecs::OnAdd
      * flecs::OnRemove
      * flecs::OnSet
-     * flecs::OnUnSet
+     * flecs::UnSet
      *
      * @param kind The kind that specifies when the system should be ran.
      */
@@ -166,7 +166,7 @@ public:
         return *this;
     }    
 
-    /** Get interval
+    /** Get interval.
      * Get interval at which the system is running.
      *
      * @return The timer entity.
