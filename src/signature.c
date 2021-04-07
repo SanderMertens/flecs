@@ -941,6 +941,7 @@ int ecs_sig_add(
     }
 
     elem->oper = oper_kind;
+    elem->inout = inout_kind;
 
     return 0;
 error:

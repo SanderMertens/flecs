@@ -68,6 +68,8 @@ void Parser_component_implicit_subject() {
     test_int(columns[0].args[0].entity, EcsThis);
     test_int(columns[0].oper, EcsOperAnd);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -87,6 +89,8 @@ void Parser_component_explicit_subject() {
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -104,6 +108,8 @@ void Parser_component_explicit_subject_this() {
     test_int(columns[0].args[0].entity, EcsThis);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
+
+    ecs_sig_deinit(&sig);
 
     ecs_fini(world);
 }
@@ -123,6 +129,8 @@ void Parser_component_explicit_subject_this_by_name() {
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -140,6 +148,8 @@ void Parser_component_explicit_subject_wildcard() {
     test_int(columns[0].args[0].entity, EcsWildcard);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
+
+    ecs_sig_deinit(&sig);
 
     ecs_fini(world);
 }
@@ -161,6 +171,8 @@ void Parser_pair_implicit_subject() {
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -180,6 +192,8 @@ void Parser_pair_implicit_subject_wildcard_pred() {
     test_int(columns[0].args[1].entity, Obj);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
+
+    ecs_sig_deinit(&sig);
 
     ecs_fini(world);
 }
@@ -201,6 +215,8 @@ void Parser_pair_implicit_subject_wildcard_obj() {
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -221,6 +237,8 @@ void Parser_pair_implicit_subject_this_pred() {
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -240,6 +258,8 @@ void Parser_pair_implicit_subject_this_obj() {
     test_int(columns[0].args[1].entity, EcsThis);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
+
+    ecs_sig_deinit(&sig);
 
     ecs_fini(world);
 }
@@ -262,6 +282,8 @@ void Parser_pair_explicit_subject() {
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -281,6 +303,8 @@ void Parser_pair_explicit_subject_this() {
     test_int(columns[0].args[1].entity, Obj);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
+
+    ecs_sig_deinit(&sig);
 
     ecs_fini(world);
 }
@@ -302,6 +326,8 @@ void Parser_pair_explicit_subject_this_by_name() {
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -321,6 +347,8 @@ void Parser_pair_explicit_subject_wildcard_pred() {
     test_int(columns[0].args[1].entity, Obj);
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
+
+    ecs_sig_deinit(&sig);
 
     ecs_fini(world);
 }
@@ -342,6 +370,8 @@ void Parser_pair_explicit_subject_wildcard_subj() {
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -362,6 +392,8 @@ void Parser_pair_explicit_subject_wildcard_obj() {
     test_int(columns[0].oper, EcsOperAnd);
     test_int(columns[0].inout, EcsInOut);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -379,6 +411,8 @@ void Parser_component_not() {
     test_int(columns[0].args[0].entity, EcsThis);
     test_int(columns[0].oper, EcsOperNot);
     test_int(columns[0].inout, EcsInOut);
+
+    ecs_sig_deinit(&sig);
 
     ecs_fini(world);
 }
@@ -400,6 +434,8 @@ void Parser_pair_implicit_subject_not() {
     test_int(columns[0].oper, EcsOperNot);
     test_int(columns[0].inout, EcsInOut);
 
+    ecs_sig_deinit(&sig);
+
     ecs_fini(world);
 }
 
@@ -420,6 +456,8 @@ void Parser_pair_explicit_subject_not() {
     test_int(columns[0].args[1].entity, Obj);
     test_int(columns[0].oper, EcsOperNot);
     test_int(columns[0].inout, EcsInOut);
+
+    ecs_sig_deinit(&sig);
 
     ecs_fini(world);
 }
