@@ -56,6 +56,10 @@ Here is some awesome content provided by the community (thanks everyone! :heart:
 This is a simple flecs example in the C99 API:
 
 ```c
+/* @file: main.c */
+
+#include <flecs.h>
+
 typedef struct {
   float x;
   float y;
@@ -87,10 +91,18 @@ int main(int argc, char *argv[]) {
   while (ecs_progress(ecs, 0)) { }
 }
 ```
+```
+$ gcc -I. flecs.c main.c -o example
+$ ./example
+```
 
 Here is the same example but in the C++11 API:
 
 ```c++
+/* @file: main.cpp */
+
+#include <flecs.h>
+
 struct Position {
   float x;
   float y;
@@ -117,6 +129,12 @@ int main(int argc, char *argv[]) {
 
   while (ecs.progress()) { }
 }
+```
+```
+$ gcc -c flecs.c -o flecs.o
+$ g++ -c --std=c++0x -I. main.cpp -o main.o
+$ g++ flecs.o main.o -o example
+$ ./example
 ```
 
 ## Building
