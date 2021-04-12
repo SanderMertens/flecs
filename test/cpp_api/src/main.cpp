@@ -307,6 +307,8 @@ void World_reimport_namespaced_module(void);
 void World_c_interop_module(void);
 void World_c_interop_after_reset(void);
 void World_implicit_register_w_new_world(void);
+void World_count(void);
+void World_staged_count(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -1441,6 +1443,14 @@ bake_test_case World_testcases[] = {
     {
         "implicit_register_w_new_world",
         World_implicit_register_w_new_world
+    },
+    {
+        "count",
+        World_count
+    },
+    {
+        "staged_count",
+        World_staged_count
     }
 };
 
@@ -1586,7 +1596,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        17,
+        19,
         World_testcases
     },
     {

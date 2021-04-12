@@ -308,3 +308,45 @@ void World_implicit_register_w_new_world() {
         test_int(p->y, 20);
     }    
 }
+
+void World_count() {
+    flecs::world w;
+
+    test_int(w.count<Position>(), 0);
+
+    w.entity().add<Position>();
+    w.entity().add<Position>();
+    w.entity().add<Position>();
+    w.entity().add<Position>().add<Mass>();
+    w.entity().add<Position>().add<Mass>();
+    w.entity().add<Position>().add<Velocity>();
+
+    test_int(w.count<Position>(), 6);
+}
+
+void World_staged_count() {
+    flecs::world w;
+
+    flecs::world stage = w.get_stage(0);
+
+    w.staging_begin();
+
+    test_int(stage.count<Position>(), 0);
+
+    w.staging_end();
+
+    w.staging_begin();
+
+    stage.entity().add<Position>();
+    stage.entity().add<Position>();
+    stage.entity().add<Position>();
+    stage.entity().add<Position>().add<Mass>();
+    stage.entity().add<Position>().add<Mass>();
+    stage.entity().add<Position>().add<Velocity>();
+
+    test_int(stage.count<Position>(), 0);
+
+    w.staging_end();
+
+    test_int(stage.count<Position>(), 6);
+}

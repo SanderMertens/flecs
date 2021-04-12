@@ -613,8 +613,7 @@ public:
      */
     template <typename T>
     int count() const {
-        return ecs_count_type(
-            m_world, _::cpp_type<T>::type(m_world));
+        return ecs_count_id(m_world, _::cpp_type<T>::id(m_world));
     }
 
     /** Count entities matching a filter.
