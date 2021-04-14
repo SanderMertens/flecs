@@ -7605,6 +7605,12 @@ bool ecs_stage_is_readonly(
 {
     const ecs_world_t *world = ecs_get_world(stage);
 
+    if (stage->magic == ECS_STAGE_MAGIC) {
+        if (((ecs_stage_t*)stage)->asynchronous) {
+            return false;
+        }
+    }
+
     if (world->is_readonly) {
         if (stage->magic == ECS_WORLD_MAGIC) {
             return true;
@@ -7640,6 +7646,20 @@ void ecs_async_stage_free(
     ecs_stage_t *stage = (ecs_stage_t*)world;
     ecs_assert(stage->asynchronous == true, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_deinit(stage->world, stage);
+}
+
+bool ecs_stage_is_async(
+    ecs_world_t *stage)
+{
+    if (!stage) {
+        return false;
+    }
+    
+    if (stage->magic != ECS_STAGE_MAGIC) {
+        return false;
+    }
+
+    return ((ecs_stage_t*)stage)->asynchronous;
 }
 
 /** Resize the vector buffer */
