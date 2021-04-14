@@ -350,3 +350,17 @@ void World_staged_count() {
 
     test_int(stage.count<Position>(), 6);
 }
+
+void World_async_stage_add() {
+    flecs::world w;
+
+    w.component<Position>();
+
+    auto e = w.entity();
+
+    flecs::world async = std::move(w.async_stage());
+    e.mut(async).add<Position>();
+    test_assert(!e.has<Position>());
+    async.merge();
+    test_assert(e.has<Position>());
+}

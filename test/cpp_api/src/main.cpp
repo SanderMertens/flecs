@@ -309,6 +309,7 @@ void World_c_interop_after_reset(void);
 void World_implicit_register_w_new_world(void);
 void World_count(void);
 void World_staged_count(void);
+void World_async_stage_add(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -1451,6 +1452,10 @@ bake_test_case World_testcases[] = {
     {
         "staged_count",
         World_staged_count
+    },
+    {
+        "async_stage_add",
+        World_async_stage_add
     }
 };
 
@@ -1596,7 +1601,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        19,
+        20,
         World_testcases
     },
     {

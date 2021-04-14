@@ -344,7 +344,8 @@
                 "c_interop_after_reset",
                 "implicit_register_w_new_world",
                 "count",
-                "staged_count"
+                "staged_count",
+                "async_stage_add"
             ]
         }, {
             "id": "Singleton",

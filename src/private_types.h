@@ -398,8 +398,9 @@ struct ecs_stage_t {
     ecs_table_t *scope_table;      /* Table for current scope */
     ecs_entity_t scope;            /* Entity of current scope */
 
-    /* Automerging */
+    /* Properties */
     bool auto_merge;               /* Should this stage automatically merge? */
+    bool asynchronous;             /* Is stage asynchronous? (write only) */
 };
 
 typedef struct ecs_store_t {

@@ -1333,6 +1333,15 @@ void DeferredActions_discard_child(void);
 void DeferredActions_discard_child_w_add(void);
 void DeferredActions_defer_return_value(void);
 void DeferredActions_defer_get_mut_pair(void);
+void DeferredActions_async_stage_add(void);
+void DeferredActions_async_stage_add_twice(void);
+void DeferredActions_async_stage_remove(void);
+void DeferredActions_async_stage_clear(void);
+void DeferredActions_async_stage_delete(void);
+void DeferredActions_async_stage_new(void);
+void DeferredActions_async_stage_no_get(void);
+void DeferredActions_async_stage_readonly(void);
+void DeferredActions_async_stage_is_async(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -6558,6 +6567,42 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_get_mut_pair",
         DeferredActions_defer_get_mut_pair
+    },
+    {
+        "async_stage_add",
+        DeferredActions_async_stage_add
+    },
+    {
+        "async_stage_add_twice",
+        DeferredActions_async_stage_add_twice
+    },
+    {
+        "async_stage_remove",
+        DeferredActions_async_stage_remove
+    },
+    {
+        "async_stage_clear",
+        DeferredActions_async_stage_clear
+    },
+    {
+        "async_stage_delete",
+        DeferredActions_async_stage_delete
+    },
+    {
+        "async_stage_new",
+        DeferredActions_async_stage_new
+    },
+    {
+        "async_stage_no_get",
+        DeferredActions_async_stage_no_get
+    },
+    {
+        "async_stage_readonly",
+        DeferredActions_async_stage_readonly
+    },
+    {
+        "async_stage_is_async",
+        DeferredActions_async_stage_is_async
     }
 };
 
@@ -7783,7 +7828,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        35,
+        44,
         DeferredActions_testcases
     },
     {

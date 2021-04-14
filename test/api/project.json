@@ -1434,7 +1434,16 @@
                 "discard_child",
                 "discard_child_w_add",
                 "defer_return_value",
-                "defer_get_mut_pair"
+                "defer_get_mut_pair",
+                "async_stage_add",
+                "async_stage_add_twice",
+                "async_stage_remove",
+                "async_stage_clear",
+                "async_stage_delete",
+                "async_stage_new",
+                "async_stage_no_get",
+                "async_stage_readonly",
+                "async_stage_is_async"
             ]
         }, {
             "id": "SingleThreadStaging",

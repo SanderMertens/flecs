@@ -1638,6 +1638,8 @@ ecs_entity_t ecs_new_id(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    const ecs_stage_t *stage = ecs_stage_from_readonly_world(world);
+
     /* It is possible that the world passed to this function is a stage, so
      * make sure we have the actual world. Cast away const since this is one of
      * the few functions that may modify the world while it is in readonly mode,
@@ -1647,7 +1649,7 @@ ecs_entity_t ecs_new_id(
     ecs_entity_t entity;
 
     int32_t stage_count = ecs_get_stage_count(unsafe_world);
-    if (ecs_os_has_threading() && stage_count > 1) {
+    if (stage->asynchronous || (ecs_os_has_threading() && stage_count > 1)) {
         /* Can't atomically increase number above max int */
         ecs_assert(
             unsafe_world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
@@ -2081,6 +2083,8 @@ const void* ecs_get_w_id(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_stage_from_readonly_world(world)->asynchronous == false, 
+        ECS_INVALID_PARAMETER, NULL);
 
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
