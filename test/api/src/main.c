@@ -748,6 +748,7 @@ void Pairs_get_typeid_w_recycled_rel(void);
 void Pairs_get_typeid_w_recycled_obj(void);
 void Pairs_id_str_w_recycled_rel(void);
 void Pairs_id_str_w_recycled_obj(void);
+void Pairs_set_object_w_zero_sized_rel_comp(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -4369,6 +4370,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "id_str_w_recycled_obj",
         Pairs_id_str_w_recycled_obj
+    },
+    {
+        "set_object_w_zero_sized_rel_comp",
+        Pairs_set_object_w_zero_sized_rel_comp
     }
 };
 
@@ -7674,7 +7679,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        29,
+        30,
         Pairs_testcases
     },
     {

@@ -358,7 +358,7 @@ void World_async_stage_add() {
 
     auto e = w.entity();
 
-    flecs::world async = std::move(w.async_stage());
+    flecs::world async = w.async_stage();
     e.mut(async).add<Position>();
     test_assert(!e.has<Position>());
     async.merge();

@@ -1030,19 +1030,19 @@ void System_rate_filter() {
             l1_b_count ++;
         });
 
-    auto l1_c = world.system<>("l1_c")
+    world.system<>("l1_c")
         .rate(root, 3)
         .iter([&](flecs::iter& it) {
             l1_c_count ++;
         });        
 
-    auto l2_a = world.system<>("l2_a")
+    world.system<>("l2_a")
         .rate(l1_a, 2)
         .iter([&](flecs::iter& it) {
             l2_a_count ++;
         });
 
-    auto l2_b = world.system<>("l2_b")
+    world.system<>("l2_b")
         .rate(l1_b, 2)
         .iter([&](flecs::iter& it) {
             l2_b_count ++;
@@ -1079,7 +1079,7 @@ void System_update_rate_filter() {
             l1_count ++;
         });  
 
-    auto l2 = world.system<>("l2")
+    world.system<>("l2")
         .rate(l1, 3)
         .iter([&](flecs::iter& it) {
             l2_count ++;

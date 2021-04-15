@@ -1266,3 +1266,20 @@ void Pairs_id_str_w_recycled_obj() {
 
     ecs_fini(world);
 }
+
+void Pairs_set_object_w_zero_sized_rel_comp() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t r = ecs_set(world, 0, EcsComponent, {0});
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_set_pair_object(world, 0, r, Position, {10, 20});
+    
+    const Position *p = ecs_get_pair_object(world, e, r, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

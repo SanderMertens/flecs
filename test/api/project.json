@@ -805,7 +805,8 @@
                 "get_typeid_w_recycled_rel",
                 "get_typeid_w_recycled_obj",
                 "id_str_w_recycled_rel",
-                "id_str_w_recycled_obj"
+                "id_str_w_recycled_obj",
+                "set_object_w_zero_sized_rel_comp"
             ]
         }, {
             "id": "TriggerOnAdd",
