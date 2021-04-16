@@ -120,16 +120,23 @@ bool ecs_component_has_actions(
 //// Signature API
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef enum ecs_sig_inout_kind_t {
+typedef enum ecs_inout_kind_t {
     EcsInOutDefault,
     EcsInOut,
     EcsIn,
     EcsOut
-} ecs_sig_inout_kind_t;
+} ecs_inout_kind_t;
+
+typedef enum ecs_var_kind_t {
+    EcsVarDefault,
+    EcsVarIsVariable,
+    EcsVarIsEntity
+} ecs_var_kind_t;
 
 /** Type that is used by systems to indicate where to fetch a component from */
-typedef enum ecs_sig_from_kind_t {
-    EcsFromAny,            /* Get component from self (default) */
+typedef enum ecs_from_kind_t {
+    EcsFromDefault,
+    EcsFromAny,             /* Get component from self (default) */
     EcsFromOwned,           /* Get owned component from self */
     EcsFromShared,          /* Get shared component from self */
     EcsFromParent,          /* Get component from container */
@@ -137,58 +144,66 @@ typedef enum ecs_sig_from_kind_t {
     EcsFromEmpty,           /* Get entity handle by id */
     EcsFromEntity,          /* Get component from other entity */
     EcsCascade              /* Walk component in cascading (hierarchy) order */
-} ecs_sig_from_kind_t;
+} ecs_from_kind_t;
 
 /** Type describing an operator used in an signature of a system signature */
-typedef enum ecs_sig_oper_kind_t {
-    EcsOperAnd,
-    EcsOperOr,
-    EcsOperNot,
-    EcsOperOptional,
+typedef enum ecs_oper_kind_t {
+    EcsAnd,
+    EcsOr,
+    EcsNot,
+    EcsOptional,
     EcsOperAll,
     EcsOperLast
-} ecs_sig_oper_kind_t;
+} ecs_oper_kind_t;
 
 #define EcsIsDefault    (0)
 #define EcsIsSelf       (1)
 #define EcsIsSuperSet   (2)
 #define EcsIsSubSet     (4)
 
-typedef struct ecs_sig_identifier_t {
+typedef struct ecs_term_id_t {
     ecs_entity_t entity;
     char *name;
     uint8_t is_a;
-} ecs_sig_identifier_t;
+    ecs_var_kind_t var_kind;
+} ecs_term_id_t;
 
 /** Type that describes a single column in the system signature */
-typedef struct ecs_sig_column_t {
+typedef struct ecs_term_t {
     /* Legacy fields -- will soon be removed */
-    ecs_sig_from_kind_t from_kind;        /* Element kind (Entity, Component) */
-    ecs_sig_oper_kind_t oper_kind;   /* Operator kind (AND, OR, NOT) */
-    ecs_sig_inout_kind_t inout_kind; /* Is component read or written */
+    ecs_from_kind_t from_kind;   /* Element kind (Entity, Component) */
     union {
         ecs_vector_t *type;          /* Used for OR operator */
         ecs_entity_t component;      /* Used for AND operator */
     } is;
-    ecs_entity_t source;             /* Source entity (used with FromEntity) */
     char *name;                      /* Name of column */
 
-    ecs_sig_identifier_t *argv;
-    int32_t argc;                    /* Number of arguments */   
-
-    /* New fields -- currently populatd together with legacy fields */
-    ecs_sig_inout_kind_t inout;
-    ecs_sig_identifier_t pred;
-    ecs_sig_identifier_t args[2];
-    ecs_sig_oper_kind_t oper; 
-} ecs_sig_column_t;
+    /* New fields -- currently populated together with legacy fields */
+    ecs_inout_kind_t inout;
+    ecs_term_id_t pred;
+    ecs_term_id_t args[2];
+    ecs_oper_kind_t oper;
+    ecs_entity_t role;
+} ecs_term_t;
 
 /** Type that stores a parsed signature */
 typedef struct ecs_sig_t {
     const char *name;           /* Optional name used for debugging */
     char *expr;                 /* Original expression string */
-    ecs_vector_t *columns;      /* Columns that contain parsed data */
+    ecs_vector_t *terms;        /* Terms that contain parsed data */
 } ecs_sig_t;
+
+/* Resolve identifiers in term */
+int ecs_term_resolve(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    int64_t column,
+    ecs_term_t *term);
+
+/* Set legacy fields in term */
+void ecs_term_set_legacy(
+    ecs_term_t *term);    
 
 /** Parse signature. */
 FLECS_API
@@ -208,15 +223,12 @@ FLECS_API
 int ecs_sig_add(
     ecs_world_t *world,
     ecs_sig_t *sig,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t component,
-    ecs_entity_t source,
-    const char *arg_type,
-    const char *arg_name,
-    int32_t argc,
-    char **argv);
+    ecs_term_t *term);
+
+/* Convert sig to string */
+char* ecs_sig_str(
+    ecs_world_t *world,
+    ecs_sig_t *sig);
 
 /** Create query based on signature object. */
 FLECS_API

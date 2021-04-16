@@ -24,29 +24,29 @@ struct Rotation {
 
 struct Tag { };
 
-class POD {
+class Pod {
 public:
-    POD() {
+    Pod() {
         ctor_invoked ++;
         value = 10;
     }
 
-    POD(int v) {
+    Pod(int v) {
         ctor_invoked ++;
         value = v;
     }    
 
-    ~POD() {
+    ~Pod() {
         dtor_invoked ++;
     }
 
-    POD& operator=(const POD& obj) {
+    Pod& operator=(const Pod& obj) {
         copy_invoked ++;
         this->value = obj.value;
         return *this;
     }
 
-    POD& operator=(POD&& obj) {
+    Pod& operator=(Pod&& obj) {
         move_invoked ++;
         this->value = obj.value;
         return *this;

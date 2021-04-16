@@ -1174,9 +1174,9 @@ void Queries_only_from_entity() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"E"});
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"e"});
 
-    ecs_query_t *q = ecs_query_new(world, "E:Tag");
+    ecs_query_t *q = ecs_query_new(world, "e:Tag");
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(!ecs_query_next(&it));
 
@@ -1195,9 +1195,9 @@ void Queries_only_from_singleton() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"E"});
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"e"});
 
-    ecs_query_t *q = ecs_query_new(world, "$E");
+    ecs_query_t *q = ecs_query_new(world, "$e");
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(!ecs_query_next(&it));
 
@@ -1216,9 +1216,9 @@ void Queries_only_not_from_entity() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"E"});
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"e"});
 
-    ecs_query_t *q = ecs_query_new(world, "!E:Tag");
+    ecs_query_t *q = ecs_query_new(world, "!e:Tag");
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it));
     test_assert(ecs_term_source(&it, 1) == e);
@@ -1237,9 +1237,9 @@ void Queries_only_not_from_singleton() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"E"});
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"e"});
 
-    ecs_query_t *q = ecs_query_new(world, "!$E");
+    ecs_query_t *q = ecs_query_new(world, "!$e");
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it));
     test_assert(ecs_term_source(&it, 1) == e);

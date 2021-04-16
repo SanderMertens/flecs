@@ -40,13 +40,13 @@ void activate_in_columns(
     ecs_map_t *component_map,
     bool activate)
 {
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
-    int32_t i, count = ecs_vector_count(query->sig.columns);
+    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    int32_t i, count = ecs_vector_count(query->sig.terms);
 
     for (i = 0; i < count; i ++) {
-        if (columns[i].inout_kind == EcsIn) {
+        if (terms[i].inout == EcsIn) {
             ecs_on_demand_in_t *in = get_in_component(
-                component_map, columns[i].is.component);
+                component_map, terms[i].is.component);
             ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
 
             in->count += activate ? 1 : -1;
@@ -101,11 +101,11 @@ void register_out_columns(
     EcsSystem *system_data)
 {
     ecs_query_t *query = system_data->query;
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
-    int32_t i, out_count = 0, count = ecs_vector_count(query->sig.columns);
+    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    int32_t i, out_count = 0, count = ecs_vector_count(query->sig.terms);
 
     for (i = 0; i < count; i ++) {
-        if (columns[i].inout_kind == EcsOut) {
+        if (terms[i].inout == EcsOut) {
             if (!system_data->on_demand) {
                 system_data->on_demand = ecs_os_malloc(sizeof(ecs_on_demand_out_t));
                 ecs_assert(system_data->on_demand != NULL, ECS_OUT_OF_MEMORY, NULL);
@@ -117,26 +117,26 @@ void register_out_columns(
             /* If column operator is NOT and the inout kind is [out], the system
              * explicitly states that it will create the component (it is not
              * there, yet it is an out column). In this case it doesn't make
-             * sense to wait until [in] columns get activated (matched with
+             * sense to wait until [in] terms get activated (matched with
              * entities) since the component is not there yet. Therefore add it
              * to the on_enable_components list, so this system will be enabled
              * when a [in] column is enabled, rather than activated */
             ecs_map_t *component_map;
-            if (columns[i].oper_kind == EcsOperNot) {
+            if (terms[i].oper == EcsNot) {
                 component_map = world->on_enable_components;
             } else {
                 component_map = world->on_activate_components;
             }
 
             register_out_column(
-                component_map, columns[i].is.component, 
+                component_map, terms[i].is.component, 
                 system_data->on_demand);
 
             out_count ++;
         }
     }
 
-    /* If there are no out columns in the on-demand system, the system will
+    /* If there are no out terms in the on-demand system, the system will
      * never be enabled */
     ecs_assert(out_count != 0, ECS_NO_OUT_COLUMNS, ecs_get_name(world, system));
 }
@@ -254,7 +254,7 @@ void ecs_init_system(
     /* Only run this code when the system is created for the first time */
     if (is_added) {
         /* If tables have been matched with this system it is active, and we
-         * should activate the in-columns, if any. This will ensure that any
+         * should activate the in terms, if any. This will ensure that any
          * OnDemand systems get enabled. */
         if (ecs_vector_count(query->tables)) {
             ecs_system_activate(world, system, true, sptr);
@@ -274,25 +274,23 @@ void ecs_init_system(
             ecs_add_id(world, system, EcsDisabledIntern);
         }
 
-        /* If the query has a OnDemand system tag, register its [out] columns */
+        /* If the query has a OnDemand system tag, register its [out] terms */
         if (ecs_has_id(world, system, EcsOnDemand)) {
             register_out_columns(world, system, sptr);
             ecs_assert(sptr->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
 
             /* If there are no systems currently interested in any of the [out]
-             * columns of the on demand system, disable it */
+             * terms of the on demand system, disable it */
             if (!sptr->on_demand->count) {
                 ecs_add_id(world, system, EcsDisabledIntern);
             }        
         }
 
         /* Check if system has out columns */
-        int32_t i, count = ecs_vector_count(query->sig.columns);
-        ecs_sig_column_t *columns = ecs_vector_first(
-                query->sig.columns, ecs_sig_column_t);
-        
+        int32_t i, count = ecs_vector_count(query->sig.terms);
+        ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
         for (i = 0; i < count; i ++) {
-            if (columns[i].inout_kind != EcsIn) {
+            if (terms[i].inout != EcsIn) {
                 break;
             }
         }
@@ -742,9 +740,9 @@ void CreateSignature(
         ecs_set_ptr(world, e, EcsSignature, &sig);
 
         /* If sig has FromSystem columns, add components to the entity */
-        ecs_vector_each(sig.signature.columns, ecs_sig_column_t, column, {
-            if (column->from_kind == EcsFromSystem) {
-                ecs_add_id(world, e, column->is.component);
+        ecs_vector_each(sig.signature.terms, ecs_term_t, term, {
+            if (term->from_kind == EcsFromSystem) {
+                ecs_add_id(world, e, term->is.component);
             }
         });    
     }

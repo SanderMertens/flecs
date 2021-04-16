@@ -192,6 +192,7 @@ void Remove_not_added(void);
 void Parser_resolve_this(void);
 void Parser_resolve_wildcard(void);
 void Parser_resolve_is_a(void);
+void Parser_0(void);
 void Parser_component_implicit_subject(void);
 void Parser_component_explicit_subject(void);
 void Parser_component_explicit_subject_this(void);
@@ -225,9 +226,43 @@ void Parser_this_singleton(void);
 void Parser_component_implicit_no_subject(void);
 void Parser_component_explicit_no_subject(void);
 void Parser_pair_no_subject(void);
+void Parser_variable_single_char(void);
+void Parser_variable_multi_char(void);
+void Parser_variable_multi_char_w_underscore(void);
+void Parser_variable_multi_char_w_number(void);
+void Parser_escaped_all_caps_single_char(void);
+void Parser_escaped_all_caps_multi_char(void);
 void Parser_component_not(void);
 void Parser_pair_implicit_subject_not(void);
 void Parser_pair_explicit_subject_not(void);
+void Parser_pred_implicit_subject_w_role(void);
+void Parser_pred_explicit_subject_w_role(void);
+void Parser_pred_no_subject_w_role(void);
+void Parser_pair_implicit_subject_w_role(void);
+void Parser_pair_explicit_subject_w_role(void);
+void Parser_inout_role_pred_implicit_subject(void);
+void Parser_inout_role_pred_no_subject(void);
+void Parser_inout_role_pred_explicit_subject(void);
+void Parser_inout_role_pair_implicit_subject(void);
+void Parser_inout_role_pair_explicit_subject(void);
+void Parser_2_pred_implicit_subject(void);
+void Parser_2_pred_no_subject(void);
+void Parser_2_pred_explicit_subject(void);
+void Parser_2_pair_implicit_subject(void);
+void Parser_2_pair_explicit_subject(void);
+void Parser_2_pred_role(void);
+void Parser_2_pair_implicit_subj_role(void);
+void Parser_2_pair_explicit_subj_role(void);
+void Parser_2_or_pred_implicit_subj(void);
+void Parser_2_or_pred_explicit_subj(void);
+void Parser_2_or_pair_implicit_subj(void);
+void Parser_2_or_pair_explicit_subj(void);
+void Parser_2_or_pred_inout(void);
+void Parser_1_digit_pred_implicit_subj(void);
+void Parser_1_digit_pred_no_subj(void);
+void Parser_1_digit_pred_explicit_subj(void);
+void Parser_1_digit_pair_implicit_subj(void);
+void Parser_1_digit_pair_explicit_subj(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -2304,6 +2339,10 @@ bake_test_case Parser_testcases[] = {
         Parser_resolve_is_a
     },
     {
+        "0",
+        Parser_0
+    },
+    {
         "component_implicit_subject",
         Parser_component_implicit_subject
     },
@@ -2436,6 +2475,30 @@ bake_test_case Parser_testcases[] = {
         Parser_pair_no_subject
     },
     {
+        "variable_single_char",
+        Parser_variable_single_char
+    },
+    {
+        "variable_multi_char",
+        Parser_variable_multi_char
+    },
+    {
+        "variable_multi_char_w_underscore",
+        Parser_variable_multi_char_w_underscore
+    },
+    {
+        "variable_multi_char_w_number",
+        Parser_variable_multi_char_w_number
+    },
+    {
+        "escaped_all_caps_single_char",
+        Parser_escaped_all_caps_single_char
+    },
+    {
+        "escaped_all_caps_multi_char",
+        Parser_escaped_all_caps_multi_char
+    },
+    {
         "component_not",
         Parser_component_not
     },
@@ -2446,6 +2509,118 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_explicit_subject_not",
         Parser_pair_explicit_subject_not
+    },
+    {
+        "pred_implicit_subject_w_role",
+        Parser_pred_implicit_subject_w_role
+    },
+    {
+        "pred_explicit_subject_w_role",
+        Parser_pred_explicit_subject_w_role
+    },
+    {
+        "pred_no_subject_w_role",
+        Parser_pred_no_subject_w_role
+    },
+    {
+        "pair_implicit_subject_w_role",
+        Parser_pair_implicit_subject_w_role
+    },
+    {
+        "pair_explicit_subject_w_role",
+        Parser_pair_explicit_subject_w_role
+    },
+    {
+        "inout_role_pred_implicit_subject",
+        Parser_inout_role_pred_implicit_subject
+    },
+    {
+        "inout_role_pred_no_subject",
+        Parser_inout_role_pred_no_subject
+    },
+    {
+        "inout_role_pred_explicit_subject",
+        Parser_inout_role_pred_explicit_subject
+    },
+    {
+        "inout_role_pair_implicit_subject",
+        Parser_inout_role_pair_implicit_subject
+    },
+    {
+        "inout_role_pair_explicit_subject",
+        Parser_inout_role_pair_explicit_subject
+    },
+    {
+        "2_pred_implicit_subject",
+        Parser_2_pred_implicit_subject
+    },
+    {
+        "2_pred_no_subject",
+        Parser_2_pred_no_subject
+    },
+    {
+        "2_pred_explicit_subject",
+        Parser_2_pred_explicit_subject
+    },
+    {
+        "2_pair_implicit_subject",
+        Parser_2_pair_implicit_subject
+    },
+    {
+        "2_pair_explicit_subject",
+        Parser_2_pair_explicit_subject
+    },
+    {
+        "2_pred_role",
+        Parser_2_pred_role
+    },
+    {
+        "2_pair_implicit_subj_role",
+        Parser_2_pair_implicit_subj_role
+    },
+    {
+        "2_pair_explicit_subj_role",
+        Parser_2_pair_explicit_subj_role
+    },
+    {
+        "2_or_pred_implicit_subj",
+        Parser_2_or_pred_implicit_subj
+    },
+    {
+        "2_or_pred_explicit_subj",
+        Parser_2_or_pred_explicit_subj
+    },
+    {
+        "2_or_pair_implicit_subj",
+        Parser_2_or_pair_implicit_subj
+    },
+    {
+        "2_or_pair_explicit_subj",
+        Parser_2_or_pair_explicit_subj
+    },
+    {
+        "2_or_pred_inout",
+        Parser_2_or_pred_inout
+    },
+    {
+        "1_digit_pred_implicit_subj",
+        Parser_1_digit_pred_implicit_subj
+    },
+    {
+        "1_digit_pred_no_subj",
+        Parser_1_digit_pred_no_subj
+    },
+    {
+        "1_digit_pred_explicit_subj",
+        Parser_1_digit_pred_explicit_subj
+    },
+    {
+        "1_digit_pair_implicit_subj",
+        Parser_1_digit_pair_implicit_subj
+    },
+    {
+        "1_digit_pair_explicit_subj",
+        Parser_1_digit_pair_explicit_subj
     }
 };
 
@@ -7654,7 +7829,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        39,
+        74,
         Parser_testcases
     },
     {

@@ -1462,10 +1462,10 @@ void SystemPeriodic_two_refs() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, E, Position, Velocity);
+    ECS_ENTITY(world, e, Position, Velocity);
     ECS_ENTITY(world, E2, Mass);
 
-    ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, E:Position, E:Velocity, :E, Mass);
+    ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, e:Position, e:Velocity, :e, Mass);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1476,10 +1476,10 @@ void SystemPeriodic_two_refs() {
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 4);
     test_int(ctx.c[0][0], ecs_typeid(Position));
-    test_int(ctx.s[0][0], E);
+    test_int(ctx.s[0][0], e);
     test_int(ctx.c[0][1], ecs_typeid(Velocity));
-    test_int(ctx.s[0][1], E);
-    test_int(ctx.c[0][2], E);
+    test_int(ctx.s[0][1], e);
+    test_int(ctx.c[0][2], e);
     test_int(ctx.s[0][2], 0);
     test_int(ctx.c[0][3], ecs_typeid(Mass));
     test_int(ctx.s[0][3], 0);

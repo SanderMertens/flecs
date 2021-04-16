@@ -1129,23 +1129,23 @@ void SystemMisc_one_named_column_of_two() {
     ecs_sig_t sig = {0};
     ecs_sig_init(world, NULL, "Position pos, Velocity", &sig);
 
-    ecs_vector_t *columns = sig.columns;
-    test_int(ecs_vector_count(columns), 2);
+    ecs_vector_t *terms = sig.terms;
+    test_int(ecs_vector_count(terms), 2);
 
-    ecs_sig_column_t *
-    column = ecs_vector_get(columns, ecs_sig_column_t, 0);
-    test_assert(column->oper_kind == EcsOperAnd);
-    test_assert(column->from_kind == EcsFromOwned);
-    test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_typeid(Position));
-    test_str(column->name, "pos");
+    ecs_term_t *
+    term = ecs_vector_get(terms, ecs_term_t, 0);
+    test_assert(term->oper == EcsAnd);
+    test_assert(term->from_kind == EcsFromOwned);
+    test_assert(term->inout == EcsInOutDefault);
+    test_assert(term->is.component == ecs_typeid(Position));
+    test_str(term->name, "pos");
 
-    column = ecs_vector_get(columns, ecs_sig_column_t, 1);
-    test_assert(column->oper_kind == EcsOperAnd);
-    test_assert(column->from_kind == EcsFromOwned);
-    test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_typeid(Velocity));
-    test_str(column->name, NULL);
+    term = ecs_vector_get(terms, ecs_term_t, 1);
+    test_assert(term->oper == EcsAnd);
+    test_assert(term->from_kind == EcsFromOwned);
+    test_assert(term->inout == EcsInOutDefault);
+    test_assert(term->is.component == ecs_typeid(Velocity));
+    test_str(term->name, NULL);
 
     ecs_sig_deinit(&sig);
 
@@ -1161,23 +1161,23 @@ void SystemMisc_two_named_columns_of_two() {
     ecs_sig_t sig = {0};
     ecs_sig_init(world, NULL, "Position pos, Velocity vel", &sig);
 
-    ecs_vector_t *columns = sig.columns;
-    test_int(ecs_vector_count(columns), 2);
+    ecs_vector_t *terms = sig.terms;
+    test_int(ecs_vector_count(terms), 2);
 
-    ecs_sig_column_t *
-    column = ecs_vector_get(columns, ecs_sig_column_t, 0);
-    test_assert(column->oper_kind == EcsOperAnd);
-    test_assert(column->from_kind == EcsFromOwned);
-    test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_typeid(Position));
-    test_str(column->name, "pos");
+    ecs_term_t *
+    term = ecs_vector_get(terms, ecs_term_t, 0);
+    test_assert(term->oper == EcsAnd);
+    test_assert(term->from_kind == EcsFromOwned);
+    test_assert(term->inout == EcsInOutDefault);
+    test_assert(term->is.component == ecs_typeid(Position));
+    test_str(term->name, "pos");
 
-    column = ecs_vector_get(columns, ecs_sig_column_t, 1);
-    test_assert(column->oper_kind == EcsOperAnd);
-    test_assert(column->from_kind == EcsFromOwned);
-    test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_typeid(Velocity));
-    test_str(column->name, "vel");
+    term = ecs_vector_get(terms, ecs_term_t, 1);
+    test_assert(term->oper == EcsAnd);
+    test_assert(term->from_kind == EcsFromOwned);
+    test_assert(term->inout == EcsInOutDefault);
+    test_assert(term->is.component == ecs_typeid(Velocity));
+    test_str(term->name, "vel");
 
     ecs_sig_deinit(&sig);
 
@@ -1562,9 +1562,9 @@ void SystemMisc_rw_in_implicit_from_entity() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_ENTITY(world, E, Velocity);
+    ECS_ENTITY(world, f, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, E:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, f:Velocity");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -1640,9 +1640,9 @@ void SystemMisc_rw_out_explicit_from_entity() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_ENTITY(world, E, Velocity);
+    ECS_ENTITY(world, f, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] E:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] f:Velocity");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);

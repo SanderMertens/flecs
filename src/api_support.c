@@ -7,83 +7,48 @@ int parse_type_action(
     const char *name,
     const char *sig,
     int64_t column,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t role,
-    const char *entity_id,
-    const char *source_id,
-    const char *pair_id,
-    const char *arg_name,
-    int argc,
-    char **argv,
+    ecs_term_t *term,
     void *data)
 {
     ecs_vector_t **array = data;
-    (void)source_id;
-    (void)inout_kind;
-    
-    if (arg_name) {
+
+    if (term->name) {
         ecs_parser_error(name, sig, column, 
             "column names not supported in type expression");
         return -1;
     }
 
-    if (argc || argv) {
+    if (term->oper != EcsAnd) {
         ecs_parser_error(name, sig, column, 
-            "column arguments not supported in type expression");
+            "operator other than AND not supported in type expression");
         return -1;
-    }    
-
-    if (strcmp(entity_id, "0")) {
-        ecs_entity_t entity = 0;
-
-        if (from_kind != EcsFromOwned) {
-            if (!name) {
-                return -1;
-            }
-
-            ecs_parser_error(name, sig, column, 
-                "source modifiers not supported for type expressions");
-            return -1;
-        }
-
-        entity = ecs_lookup_fullpath(world, entity_id);
-        if (!entity) {
-            if (!name) {
-                return -1;
-            }
-
-            ecs_parser_error(name, sig, column, 
-                "unresolved identifier '%s'", entity_id);
-            return -1;
-        }
-
-        if (pair_id) {
-            ecs_entity_t pair = ecs_lookup_fullpath(world, pair_id);
-            if (!pair) {
-                ecs_parser_error(name, sig, column, 
-                    "unresolved pair identifier '%s'", pair_id);
-                return -1;
-            }
-
-            entity = ecs_entity_t_comb(entity, pair);
-        }        
-
-        if (oper_kind == EcsOperAnd) {
-            ecs_entity_t* e_ptr = ecs_vector_add(array, ecs_entity_t);
-            *e_ptr = entity | role;
-        } else {
-            if (!name) {
-                return -1;
-            }
-
-            /* Only AND and OR operators are supported for type expressions */
-            ecs_parser_error(name, sig, column, 
-                "invalid operator for type expression");
-            return -1;
-        }
     }
+
+    if (ecs_term_resolve(world, name, sig, column, term)) {
+        return -1;
+    }
+
+    ecs_term_set_legacy(term);
+
+    if (term->args[0].entity == 0) {
+        /* Empty term */
+        return 0;
+    }
+
+    if (term->from_kind != EcsFromOwned) {
+        ecs_parser_error(name, sig, column, 
+            "source modifiers not supported for type expressions");
+        return -1;
+    }
+
+    if (term->args[0].entity != EcsThis) {
+        ecs_parser_error(name, sig, column, 
+            "subject other than this not supported in type expression");
+        return -1;
+    }
+
+    ecs_entity_t* elem = ecs_vector_add(array, ecs_entity_t);
+    *elem = term->is.component | term->role;
 
     return 0;
 }

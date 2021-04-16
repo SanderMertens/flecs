@@ -92,17 +92,8 @@ typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,                 
     const char *id,
     const char *expr,
-    int64_t column,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t flags,
-    const char *component,
-    const char *source,
-    const char *pair,
-    const char *name,
-    int32_t argc,
-    char **argv,
+    int64_t pos,
+    ecs_term_t *term,
     void *ctx);
 
 /** Component-specific data */
@@ -2046,16 +2037,16 @@ void register_on_set(
 
         /* Add system to each matched column. This makes it easy to get the list 
          * of systems when setting a single component. */
-        ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns,
-            ecs_sig_column_t);
-        int32_t i, count = ecs_vector_count(query->sig.columns);
+        ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+        int32_t i, count = ecs_vector_count(query->sig.terms);
+        
         for (i = 0; i < count; i ++) {
-            ecs_sig_column_t *column = &columns[i];
-            ecs_sig_oper_kind_t oper_kind = column->oper_kind;
-            ecs_sig_from_kind_t from_kind = column->from_kind;
+            ecs_term_t *term = &terms[i];
+            ecs_oper_kind_t oper = term->oper;
+            ecs_from_kind_t from_kind = term->from_kind;
 
             if ((from_kind != EcsFromAny && from_kind != EcsFromOwned) ||
-                (oper_kind != EcsOperAnd && oper_kind != EcsOperOptional)) 
+                (oper != EcsAnd && oper != EcsOptional)) 
             {
                 continue;
             }
@@ -9482,14 +9473,14 @@ int32_t ecs_column_index_from_name(
     const ecs_iter_t *it,
     const char *name)
 {
-    ecs_sig_column_t *column = NULL;
+    ecs_term_t *term = NULL;
     if (it->query) {
-        int32_t i, count = ecs_vector_count(it->query->sig.columns);
+        int32_t i, count = ecs_vector_count(it->query->sig.terms);
         for (i = 0; i < count; i ++) {
-            column = ecs_vector_get(
-                it->query->sig.columns, ecs_sig_column_t, i);
-            if (column->name) {
-                if (!strcmp(name, column->name)) {
+            term = ecs_vector_get(
+                it->query->sig.terms, ecs_term_t, i);
+            if (term->name) {
+                if (!strcmp(name, term->name)) {
                     return i + 1;
                 }
             }
@@ -14322,6 +14313,7 @@ bool ecs_strbuf_list_appendstr(
 #define TOK_SINGLETON '$'
 #define TOK_PAREN_OPEN '('
 #define TOK_PAREN_CLOSE ')'
+#define TOK_AS_ENTITY '\\'
 
 #define TOK_ANY "ANY"
 #define TOK_OWNED "OWNED"
@@ -14340,6 +14332,7 @@ bool ecs_strbuf_list_appendstr(
 #define TOK_ROLE_NOT "NOT"
 #define TOK_ROLE_SWITCH "SWITCH"
 #define TOK_ROLE_CASE "CASE"
+#define TOK_ROLE_DISABLED "DISABLED"
 
 #define TOK_IN "in"
 #define TOK_OUT "out"
@@ -14348,19 +14341,6 @@ bool ecs_strbuf_list_appendstr(
 #define ECS_MAX_TOKEN_SIZE (256)
 
 typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
-
-typedef struct sig_element_t {
-    ecs_entity_t role;
-    ecs_sig_inout_kind_t inout_kind;
-    ecs_sig_from_kind_t from_kind;
-    ecs_sig_oper_kind_t oper_kind;
-    char *trait;
-    char *source;
-    char *component;
-    char *name;
-    char **argv;
-    int32_t argc;
-} sig_element_t;
 
 /** Skip spaces when parsing signature */
 static
@@ -14371,6 +14351,36 @@ const char *skip_space(
         ptr ++;
     }
     return ptr;
+}
+
+static
+bool ecs_is_0(
+    const char *id)
+{
+    return id[0] == '0' && !id[1];
+}
+
+static
+bool ecs_is_var(
+    const char *id)
+{
+    if (id[0] == '_') {
+        return true;
+    }
+
+    if (isdigit(id[0])) {
+        return false;
+    }
+
+    const char *ptr;
+    char ch;
+    for (ptr = id; (ch = *ptr); ptr ++) {
+        if (!isupper(ch) && ch != '_' && !isdigit(ch)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 static
@@ -14399,12 +14409,22 @@ void vec_add_id(
 /* -- Private functions -- */
 
 static
-bool valid_identifier_char(
+bool valid_token_start_char(
     char ch)
 {
-    if (ch && (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.' || 
-        ch == TOK_SINGLETON || ch == TOK_WILDCARD)) 
-    {
+    if (ch && (isalpha(ch) || (ch == '.') || (ch == '_') || (ch == '*') ||
+        (ch == '0') || (ch == TOK_AS_ENTITY) || isdigit(ch))) {
+        return true;
+    }
+
+    return false;
+}
+
+static
+bool valid_token_char(
+    char ch)
+{
+    if (ch && (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.')) {
         return true;
     }
 
@@ -14423,7 +14443,7 @@ bool valid_operator_char(
 }
 
 static
-const char* parse_identifier(
+const char* parse_token(
     const char *name,
     const char *sig,
     int64_t column,
@@ -14431,16 +14451,20 @@ const char* parse_identifier(
     char *token_out)
 {
     ptr = skip_space(ptr);
-
     char *tptr = token_out, ch = ptr[0];
 
-    if (!valid_identifier_char(ch)) {
-        ecs_parser_error(name, sig, column, "invalid identifier", ptr);
+    if (!valid_token_start_char(ch)) {
+        ecs_parser_error(name, sig, column, 
+            "invalid start of identifier '%s'", ptr);
         return NULL;
     }
 
+    tptr[0] = ch;
+    tptr ++;
+    ptr ++;
+
     for (; (ch = *ptr); ptr ++) {
-        if (!valid_identifier_char(ch)) {
+        if (!valid_token_char(ch)) {
             break;
         }
 
@@ -14451,6 +14475,26 @@ const char* parse_identifier(
     tptr[0] = '\0';
 
     return skip_space(ptr);
+}
+
+static
+void parse_identifier(
+    const char *token,
+    ecs_term_id_t *out)
+{
+    const char *tptr = token;
+    char ch = token[0];
+    if (ch == TOK_AS_ENTITY) {
+        tptr ++;
+    }
+
+    out->name = ecs_os_strdup(tptr);
+    
+    if (ch == TOK_AS_ENTITY) {
+        out->var_kind = EcsVarIsEntity;
+    } else if (ecs_is_var(tptr)) {
+        out->var_kind = EcsVarIsVariable;
+    }
 }
 
 static
@@ -14482,6 +14526,8 @@ ecs_entity_t parse_role(
         return ECS_CASE;
     } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
         return ECS_OWNED;
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_DISABLED)) {
+        return ECS_DISABLED;        
     } else {
         ecs_parser_error(name, sig, column, "invalid role '%s'", token);
         return 0;
@@ -14489,7 +14535,7 @@ ecs_entity_t parse_role(
 }
 
 static
-ecs_sig_from_kind_t parse_source(
+ecs_from_kind_t parse_source(
     const char *token)
 {
     if        (!ecs_os_strcmp(token, TOK_PARENT)) {
@@ -14510,13 +14556,13 @@ ecs_sig_from_kind_t parse_source(
 } 
 
 static
-ecs_sig_oper_kind_t parse_operator(
+ecs_oper_kind_t parse_operator(
     char ch)
 {
     if (ch == TOK_OPTIONAL) {
-        return EcsOperOptional;
+        return EcsOptional;
     } else if (ch == TOK_NOT) {
-        return EcsOperNot;
+        return EcsNot;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
@@ -14528,11 +14574,11 @@ const char* parse_annotation(
     const char *sig,
     int64_t column,
     const char *ptr, 
-    ecs_sig_inout_kind_t *inout_kind_out)
+    ecs_inout_kind_t *inout_kind_out)
 {
     char token[ECS_MAX_TOKEN_SIZE];
 
-    ptr = parse_identifier(name, sig, column, ptr, token);
+    ptr = parse_token(name, sig, column, ptr, token);
     if (!ptr) {
         return NULL;
     }
@@ -14558,35 +14604,32 @@ const char* parse_annotation(
 }
 
 static
-void append_arg(
-    sig_element_t *elem,
-    const char *token)
-{
-    elem->argc ++;
-    elem->argv = ecs_os_realloc(
-        elem->argv, elem->argc * ECS_SIZEOF(char*));
-    elem->argv[elem->argc - 1] = ecs_os_strdup(token);
-}
-
-static
 const char* parse_arguments(
     const char *name,
     const char *sig,
     int64_t column,
     const char *ptr,
     char *token,
-    sig_element_t *elem)
+    ecs_term_t *elem)
 {
     (void)column;
 
+    int32_t arg = 0;
+
     do {
-        if (valid_identifier_char(ptr[0])) {
-            ptr = parse_identifier(name, sig, (ptr - sig), ptr, token);
+        if (valid_token_start_char(ptr[0])) {
+            if (arg == 2) {
+                ecs_parser_error(name, sig, (ptr - sig), 
+                    "too many arguments in term");
+                return NULL;
+            }
+
+            ptr = parse_token(name, sig, (ptr - sig), ptr, token);
             if (!ptr) {
                 return NULL;
             }
 
-            append_arg(elem, token);
+            parse_identifier(token, &elem->args[arg]);
 
             if (ptr[0] == TOK_AND) {
                 ptr = skip_space(ptr + 1);
@@ -14594,14 +14637,18 @@ const char* parse_arguments(
                 ptr = skip_space(ptr + 1);
                 break;
             } else {
-                ecs_parser_error(name, sig, (ptr - sig), "expected ',' or ')'");
+                ecs_parser_error(name, sig, (ptr - sig), 
+                    "expected ',' or ')'");
                 return NULL;
             }
 
         } else {
-            ecs_parser_error(name, sig, (ptr - sig), "expected variable identifier");
+            ecs_parser_error(name, sig, (ptr - sig), 
+                "expected variable identifier");
             return NULL;
         }
+
+        arg ++;
 
     } while (true);
 
@@ -14612,23 +14659,17 @@ static
 const char* parse_element(
     const char *name,
     const char *sig,
-    sig_element_t *elem_out)
+    ecs_term_t *elem_out)
 {
     const char *ptr = sig;
     char token[ECS_MAX_TOKEN_SIZE] = {0};
-    bool arg_list = false;
-
-    sig_element_t elem = {
-        .inout_kind = EcsInOutDefault,
-        .from_kind = EcsFromOwned,
-        .oper_kind = EcsOperAnd
-    };
+    ecs_term_t elem = { 0 };
 
     ptr = skip_space(ptr);
 
     /* Inout specifiers always come first */
     if (ptr[0] == TOK_ANNOTATE_OPEN) {
-        ptr = parse_annotation(name, sig, (ptr - sig), ptr + 1, &elem.inout_kind);
+        ptr = parse_annotation(name, sig, (ptr - sig), ptr + 1, &elem.inout);
         if (!ptr) {
             return NULL;
         }
@@ -14636,33 +14677,14 @@ const char* parse_element(
     }
 
     if (valid_operator_char(ptr[0])) {
-        elem.oper_kind = parse_operator(ptr[0]);
+        elem.oper = parse_operator(ptr[0]);
         ptr = skip_space(ptr + 1);
-    }
-
-    if (ptr[0] == TOK_PAREN_OPEN) {
-        ptr = parse_identifier(name, sig, (ptr - sig), ptr + 1, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        if (ptr[0] == TOK_AND) {
-            ptr ++;
-
-            /* Implicitly append This subject */
-            append_arg(&elem, ".");
-
-            goto parse_predicate;
-        } else {
-            ecs_parser_error(name, sig, (ptr - sig), 
-                "unexpected character '%c'", ptr[0]);
-        }
     }
 
     /* If next token is the start of an identifier, it could be either a type
      * role, source or component identifier */
-    if (valid_identifier_char(ptr[0])) {
-        ptr = parse_identifier(name, sig, (ptr - sig), ptr, token);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, sig, (ptr - sig), ptr, token);
         if (!ptr) {
             return NULL;
         }
@@ -14679,26 +14701,51 @@ const char* parse_element(
             goto parse_role;
         }
 
-        /* Is token a predicate? */
-        if (ptr[0] == TOK_PAREN_OPEN) {
-            ptr ++;
-            arg_list = true;
-            goto parse_predicate;    
-        }
-
         /* Is token a trait? (using shorthand notation) */
         if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            elem.role = ECS_PAIR;
+            elem.pred.entity = ECS_PAIR;
             ptr += 3;
             goto parse_trait;
         }
 
-        /* If it is neither, the next token must be a component */
-        goto parse_component;
+        /* Is token a predicate? */
+        if (ptr[0] == TOK_PAREN_OPEN) {
+            goto parse_predicate;    
+        }
+
+        /* Next token must be a predicate */
+        goto parse_predicate;
 
     /* If next token is the source token, this is an empty source */
     } else if (ptr[0] == TOK_SOURCE) {
         goto empty_source;
+
+    /* If next token is a singleton, assign identifier to pred and subject */
+    } else if (ptr[0] == TOK_SINGLETON) {
+        ptr ++;
+        if (valid_token_start_char(ptr[0])) {
+            ptr = parse_token(name, sig, (ptr - sig), ptr, token);
+            if (!ptr) {
+                return NULL;
+            }
+
+            goto parse_singleton;
+        
+        /* Deprecated, but still supported: singleton entity */
+        } else if (ptr[0] == TOK_SOURCE) {
+            ecs_os_strcpy(token, "$");
+            ptr ++;
+            goto parse_source;
+
+        } else {
+            ecs_parser_error(name, sig, (ptr - sig), 
+                "expected identifier after singleton operator");
+            return NULL;
+        }
+
+    /* Pair with implicit subject */
+    } else if (ptr[0] == TOK_PAREN_OPEN) {
+        goto parse_pair;
 
     /* Nothing else expected here */
     } else {
@@ -14710,13 +14757,13 @@ const char* parse_element(
 empty_source:
     elem.from_kind = EcsFromEmpty;
     ptr = skip_space(ptr + 1);
-    if (valid_identifier_char(ptr[0])) {
-        ptr = parse_identifier(name, sig, (ptr - sig), ptr, token);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, sig, (ptr - sig), ptr, token);
         if (!ptr) {
             return NULL;
         }
 
-        goto parse_component;
+        goto parse_predicate;
     } else {
         ecs_parser_error(name, sig, (ptr - sig), 
             "expected identifier after source operator");
@@ -14726,12 +14773,12 @@ empty_source:
 parse_source:
     elem.from_kind = parse_source(token);
     if (elem.from_kind == EcsFromEntity) {
-        elem.source = ecs_os_strdup(token);
+        parse_identifier(token, &elem.args[0]);
     }
 
     ptr = skip_space(ptr);
-    if (valid_identifier_char(ptr[0])) {
-        ptr = parse_identifier(name, sig, (ptr - sig), ptr, token);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, sig, (ptr - sig), ptr, token);
         if (!ptr) {
             return NULL;
         }
@@ -14744,13 +14791,13 @@ parse_source:
 
         /* Is token a trait? (using shorthand notation) */
         if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            elem.role = ECS_PAIR;
+            elem.pred.entity = ECS_PAIR;
             ptr += 3;
             goto parse_trait;
         }        
 
-        /* If not, it's a component */
-        goto parse_component;
+        /* If not, it's a predicate */
+        goto parse_predicate;
     } else {
         ecs_parser_error(name, sig, (ptr - sig), 
             "expected identifier after source");
@@ -14766,8 +14813,8 @@ parse_role:
     ptr = skip_space(ptr);
 
     /* If next token is the source token, this is an empty source */
-    if (valid_identifier_char(ptr[0])) {
-        ptr = parse_identifier(name, sig, (ptr - sig), ptr, token);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, sig, (ptr - sig), ptr, token);
         if (!ptr) {
             return NULL;
         }
@@ -14778,8 +14825,11 @@ parse_role:
             goto parse_trait;
         }
 
-        /* If not, it's a component */
-        goto parse_component;
+        /* If not, it's a predicate */
+        goto parse_predicate;
+
+    } else if (ptr[0] == TOK_PAREN_OPEN) {
+        goto parse_pair;
     } else {
         ecs_parser_error(name, sig, (ptr - sig), 
             "expected identifier after role");
@@ -14787,52 +14837,100 @@ parse_role:
     }
 
 parse_predicate:
-    elem.component = ecs_os_strdup(token);
-    
+    parse_identifier(token, &elem.pred);
+
     ptr = skip_space(ptr);
-    if (valid_identifier_char(ptr[0])) {
-        ptr = parse_arguments(name, sig, (ptr - sig), ptr, token, &elem);
+    
+    if (ptr[0] == TOK_PAREN_OPEN) {
+        ptr ++;
+        if (ptr[0] == TOK_PAREN_CLOSE) {
+            elem.from_kind = EcsFromEmpty;
+            ptr ++;
+            ptr = skip_space(ptr);
+        } else {
+            ptr = parse_arguments(name, sig, (ptr - sig), ptr, token, &elem);
+        }
+
+        goto parse_done;
+
+    } else if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, sig, (ptr - sig), ptr, token);
         if (!ptr) {
             return NULL;
         }
-    } else {
-        if (arg_list && ptr[0] == TOK_PAREN_CLOSE) {
-            elem.from_kind = EcsFromEmpty;
-        } else {
-            ecs_parser_error(name, sig, (ptr - sig), 
-                "expected predicate arguments");
-            return NULL;
-        }
 
-        ptr ++;
+        goto parse_name;
     }
 
     goto parse_done;
 
-parse_trait:
-    elem.trait = ecs_os_strdup(token);
+parse_pair:
+    ptr = parse_token(name, sig, (ptr - sig), ptr + 1, token);
+    if (!ptr) {
+        return NULL;
+    }
 
+    if (ptr[0] == TOK_AND) {
+        ptr ++;
+        elem.args[0].name = ecs_os_strdup(".");
+        goto parse_pair_predicate;
+    } else {
+        ecs_parser_error(name, sig, (ptr - sig), 
+            "unexpected character '%c'", ptr[0]);
+    }
+
+parse_pair_predicate:
+    parse_identifier(token, &elem.pred);
     ptr = skip_space(ptr);
-    if (valid_identifier_char(ptr[0])) {
-        ptr = parse_identifier(name, sig, (ptr - sig), ptr, token);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, sig, (ptr - sig), ptr, token);
         if (!ptr) {
             return NULL;
         }
 
-        /* Can only be a component */
-        goto parse_component;
+        if (ptr[0] == TOK_PAREN_CLOSE) {
+            ptr ++;
+            goto parse_pair_object;
+        } else {
+            ecs_parser_error(name, sig, (ptr - sig), 
+                "unexpected character '%c'", ptr[0]);
+            return NULL;
+        }
+    } else if (ptr[0] == TOK_PAREN_CLOSE) {
+        /* No object */
+        goto parse_done;
+    }
+
+parse_pair_object:
+    parse_identifier(token, &elem.args[1]);
+    ptr = skip_space(ptr);
+    goto parse_done; 
+
+parse_trait:
+    parse_identifier(token, &elem.pred);
+
+    ptr = skip_space(ptr);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, sig, (ptr - sig), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        /* Can only be an object */
+        goto parse_trait_target;
     } else {
         ecs_parser_error(name, sig, (ptr - sig), 
             "expected identifier after trait");
         return NULL;
     }
 
-parse_component:
-    elem.component = ecs_os_strdup(token);
+parse_trait_target:
+    parse_identifier(".", &elem.args[0]);
+    parse_identifier(token, &elem.args[1]);
 
     ptr = skip_space(ptr);
-    if (valid_identifier_char(ptr[0])) {
-        ptr = parse_identifier(name, sig, (ptr - sig), ptr, token);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, sig, (ptr - sig), ptr, token);
         if (!ptr) {
             return NULL;
         }
@@ -14843,6 +14941,11 @@ parse_component:
         /* If nothing else, parsing of this element is done */
         goto parse_done;
     }
+
+parse_singleton:
+    parse_identifier(token, &elem.pred);
+    parse_identifier(token, &elem.args[0]);
+    goto parse_done;
 
 parse_name:
     elem.name = ecs_os_strdup(token);
@@ -14855,18 +14958,18 @@ parse_done:
         return NULL;
     }
 
-    if (!ecs_os_strcmp(elem.component, "0")) {
+    if (!ecs_os_strcmp(elem.pred.name, "0")) {
         if (ptr[0]) {
             ecs_parser_error(name, sig, (ptr - sig), 
                 "unexpected element after 0"); 
             return NULL;
         }
 
-        if (elem.from_kind != EcsFromOwned) {
-            ecs_parser_error(name, sig, (ptr - sig), 
-                "invalid source modifier for 0"); 
-            return NULL;
-        }
+        elem.from_kind = EcsFromEmpty;
+    }
+
+    if (!elem.args[0].name && elem.from_kind != EcsFromEmpty) {
+        elem.args[0].name = ecs_os_strdup(".");
     }
 
     *elem_out = elem;
@@ -14881,7 +14984,7 @@ int ecs_parse_expr(
     ecs_parse_action_t action,
     void *ctx)
 {
-    sig_element_t elem;
+    ecs_term_t elem;
 
     if (!sig) {
         return 0;
@@ -14897,43 +15000,23 @@ int ecs_parse_expr(
     const char *ptr = sig;
     while ((ptr = parse_element(name, ptr, &elem))) {
         if (is_or) {
-            ecs_assert(elem.oper_kind == EcsOperAnd, ECS_INVALID_SIGNATURE, sig);
-            elem.oper_kind = EcsOperOr;
+            ecs_assert(elem.oper == EcsAnd, ECS_INVALID_SIGNATURE, sig);
+            elem.oper = EcsOr;
         }
 
-        if (action(world, name, sig, ptr - sig, 
-            elem.from_kind, elem.oper_kind, elem.inout_kind, elem.role,
-            elem.component, elem.source, elem.trait, elem.name, elem.argc, 
-            elem.argv, ctx))
-        {
+        if (elem.oper == EcsOr && elem.from_kind == EcsFromEmpty) {
+            ecs_parser_error(name, sig, (ptr - sig), 
+                "invalid empty source in OR expression"); 
             return -1;
         }
 
-        ecs_os_free(elem.component);
-        ecs_os_free(elem.source);
-        ecs_os_free(elem.trait);
-        ecs_os_free(elem.name);
-
-        int i;
-        for (i = 0; i < elem.argc; i ++) {
-            ecs_os_free(elem.argv[i]);
+        if (action(world, name, sig, ptr - sig, &elem, ctx)) {
+            return -1;
         }
-        ecs_os_free(elem.argv);
 
         is_or = false;
         if (!strncmp(ptr, TOK_OR, 2)) {
             is_or = true;
-            if (elem.from_kind == EcsFromEmpty) {
-                ecs_parser_error(name, sig, ptr - sig, 
-                    "invalid empty source in or expression");
-                return -1;
-            }
-
-            if (elem.from_kind == EcsFromSystem) {
-                ecs_parser_error(name, sig, ptr - sig, 
-                    "invalid system source in or expression");
-                return -1;
-            }
         }
 
         if (ptr[0]) {
@@ -14958,29 +15041,79 @@ int ecs_parse_expr(
 }
 
 static
-bool ecs_identifier_is_variable(
-    const char *id)
+int resolve_identifier(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    int64_t column,    
+    ecs_term_id_t *identifier)
 {
-    if (id[0] == '_') {
-        return true;
+    if (!identifier->name) {
+        return 0;
     }
 
-    const char *ptr;
-    char ch;
-    for (ptr = id; (ch = *ptr); ptr ++) {
-        if (!isupper(ch)) {
-            return false;
+    if (identifier->var_kind == EcsVarDefault) {
+        if (ecs_is_var(identifier->name)) {
+            identifier->var_kind = EcsVarIsVariable;
         }
     }
 
-    return true;
+    if (identifier->var_kind != EcsVarIsVariable) {
+        if (ecs_is_0(identifier->name)) {
+            identifier->entity = 0;
+        } else {
+            ecs_entity_t e = ecs_lookup_fullpath(world, identifier->name);
+            if (!e) {
+                ecs_parser_error(name, expr, column, 
+                    "unresolved identifier '%s'");
+                return -1;
+            }
+
+            /* Use OR, as entity may have already been populated with role */
+            identifier->entity = e;
+        }
+    }
+
+    return 0;
 }
 
-static
-bool ecs_is_0(
-    const char *id)
+void ecs_term_set_legacy(
+    ecs_term_t *term)
 {
-    return id[0] == '0' && !id[1];
+    if (term->from_kind == EcsFromDefault) {
+        if (term->args[0].entity == EcsThis) {
+            term->from_kind = EcsFromOwned;
+        } else if (!term->args[0].entity) {
+            term->from_kind = EcsFromEmpty;
+        } else {
+            term->from_kind = EcsFromEntity;
+            ecs_assert(term->args[0].entity != 0, ECS_INTERNAL_ERROR, NULL);
+        }
+    } else {
+        if (term->from_kind == EcsFromDefault || 
+            term->from_kind == EcsFromOwned || 
+            term->from_kind == EcsFromAny || 
+            term->from_kind == EcsFromShared) 
+        {
+            term->args[0].entity = EcsThis;
+            term->args[0].name = ecs_os_strdup(".");
+        }
+    }
+
+    if (term->args[1].name) {
+        term->is.component = ecs_pair(
+            term->pred.entity, term->args[1].entity);
+    } else {
+        term->is.component = term->pred.entity;
+    }
+
+    if (term->role == ECS_AND) {
+        term->oper = EcsOperAll;
+    } else if (term->role == ECS_OR) {
+        term->oper = EcsOr;
+    } else {
+        term->is.component |= term->role;
+    }
 }
 
 /** Parse callback that adds component to the components array for a system */
@@ -14990,82 +15123,33 @@ int ecs_parse_signature_action(
     const char *name,
     const char *expr,
     int64_t column,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t role,
-    const char *entity_id,
-    const char *source_id,
-    const char *trait_id,
-    const char *arg_name,
-    int32_t argc,
-    char **argv,
+    ecs_term_t *term,
     void *data)
 {
-    ecs_sig_t *sig = data;
-    bool is_singleton = false;
+    (void)name;
+    (void)expr;
+    (void)column;
+    return ecs_sig_add(world, data, term);
+}
 
-    ecs_assert(sig != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (entity_id[0] == '$') {
-        if (from_kind ==  EcsFromEntity) {
-            ecs_parser_error(name, expr, column, 
-                "singleton component '%s' cannot have a source", entity_id);
-            return -1;
-        }
-
-        from_kind = EcsFromEntity;
-        is_singleton = true;
-        entity_id ++;
+int ecs_term_resolve(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    int64_t column,
+    ecs_term_t *term)
+{
+    if (resolve_identifier(world, name, expr, column, &term->pred)) {
+        return -1;
+    }
+    if (resolve_identifier(world, name, expr, column, &term->args[0])) {
+        return -1;
+    }
+    if (resolve_identifier(world, name, expr, column, &term->args[1])) {
+        return -1;
     }
 
-    ecs_entity_t source = 0, component = 0;
-    
-    /* Lookup component handle by string identifier */
-    component = ecs_lookup_fullpath(world, entity_id);
-    if (!component) {
-        /* "0" is a valid expression used to indicate that a system matches no
-        * components */
-        if (!strcmp(entity_id, "0")) {
-            /* No need to add 0 component to signature */
-            return 0;
-        } else {
-            ecs_parser_error(name, expr, column, 
-                "unresolved component identifier '%s'", entity_id);
-            return -1;
-        }
-    }
-
-    if (is_singleton) {
-        source = component;
-    }
-
-    /* Lookup trait handle by string identifier */
-    if (trait_id) {
-        ecs_entity_t trait = ecs_lookup_fullpath(world, trait_id);
-        if (!trait) {
-            ecs_parser_error(name, expr, column, 
-                "unresolved trait identifier '%s'", trait_id);
-            return -1;
-        } else {
-            component = ecs_entity_t_comb(component, trait);
-        }
-    }
-
-    component |= role;
-
-    if (!source && from_kind == EcsFromEntity) {
-        source = ecs_lookup_fullpath(world, source_id);
-        if (!source) {
-            ecs_parser_error(name, expr, column, 
-                "unresolved source identifier '%s'", source_id);
-            return -1;
-        }
-    }
-
-    return ecs_sig_add(
-        world, sig, from_kind, oper_kind, inout_kind, component, source, 
-        entity_id, arg_name, argc, argv);
+    return 0;
 }
 
 int ecs_sig_init(
@@ -15074,233 +15158,232 @@ int ecs_sig_init(
     const char *expr,
     ecs_sig_t *sig)
 {
-    if (expr && ecs_os_strlen(expr)) {
+    if (expr && ecs_os_strlen(expr) && strcmp(expr, "0")) {
         sig->expr = ecs_os_strdup(expr);
     } else {
-        sig->expr = ecs_os_strdup("0");
+        sig->expr = NULL;
     }
 
-    sig->columns = NULL;
+    sig->terms = NULL;
     sig->name = NULL;
 
-    return ecs_parse_expr(
-        world, name, sig->expr, ecs_parse_signature_action, sig);
+    if (sig->expr) {
+        return ecs_parse_expr(
+            world, name, sig->expr, ecs_parse_signature_action, sig);
+    } else {
+        return 0;
+    }
 }
 
 void ecs_sig_deinit(
     ecs_sig_t *sig)
 {   
-    ecs_vector_each(sig->columns, ecs_sig_column_t, column, {
-        if (column->oper_kind == EcsOperOr) {
+    ecs_vector_each(sig->terms, ecs_term_t, column, {
+        if (column->oper == EcsOr) {
             ecs_vector_free(column->is.type);
         }
         
         ecs_os_free(column->pred.name);
+        ecs_os_free(column->args[0].name);
+        ecs_os_free(column->args[1].name);
         ecs_os_free(column->name);
-
-        int i;
-        for (i = 0; i < column->argc; i ++) {
-            ecs_os_free(column->argv[i].name);
-        }
-        ecs_os_free(column->argv);
     });
 
-    ecs_vector_free(sig->columns);
+    ecs_vector_free(sig->terms);
     ecs_os_free(sig->expr);
 }
 
 int ecs_sig_add(
     ecs_world_t *world,
     ecs_sig_t *sig,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t component,
-    ecs_entity_t source,
-    const char *arg_type,
-    const char *arg_name,
-    int32_t argc,
-    char **argv)
+    ecs_term_t *term)
 {
-    ecs_sig_column_t *elem;
-
-    /* Temporary fix for backwards compatibility, if no InOut is set, derive */
-    ecs_sig_inout_kind_t inout_tmp = inout_kind;
-    if (inout_kind == EcsInOutDefault) {
-        if (from_kind != EcsFromOwned) {
-            inout_tmp = EcsIn;
-        } else {
-            inout_tmp = EcsInOut;
-        }
+    /* Resolve identifiers in term */
+    if (ecs_term_resolve(world, sig->name, sig->expr, 0, term)) {
+        return -1;
     }
 
-    /* If component has AND role, all components of specified type must match */
-    if (ECS_HAS_ROLE(component, AND)) {
-        elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
-        component &= ECS_ENTITY_MASK;
-        const EcsType *type = ecs_get(world, component, EcsType);
+    /* Patch up legacy fields */
+    ecs_term_set_legacy(term);
+
+    ecs_term_t *elem;
+    if (term->oper != EcsOr) {
+        elem = ecs_vector_add(&sig->terms, ecs_term_t);
+        *elem = *term;
+
+    /* If term role is OR, component should be a type */
+    } else if (term->role == ECS_OR) {
+        const EcsType *type = ecs_get(world, term->is.component, EcsType);
         if (!type) {
             ecs_parser_error(sig->name, sig->expr, 0, 
-                "AND flag can only be applied to types");
+                "entity used with OR must be a type");
             return -1;
         }
 
-        elem->is.component = component;
-        elem->from_kind = from_kind;
-        elem->oper_kind = EcsOperAll;
-        elem->inout_kind = inout_tmp;
-        elem->source = source;
-        elem->argc = 0;
-
-    } else 
-
-    /* If component has OR role, add type as OR column */
-    if (ECS_HAS_ROLE(component, OR)) {
-        elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
-        component &= ECS_ENTITY_MASK;
-        const EcsType *type = ecs_get(world, component, EcsType);
-        if (!type) {
-            ecs_parser_error(sig->name, sig->expr, 0, 
-                "OR flag can only be applied to types");
-            return -1;
-        }
-
+        elem = ecs_vector_add(&sig->terms, ecs_term_t);
+        *elem = *term;
         elem->is.type = ecs_vector_copy(type->normalized, ecs_entity_t);
-        elem->from_kind = from_kind;
-        elem->oper_kind = EcsOperOr;
-        elem->inout_kind = inout_tmp;
-        elem->source = source;
-        elem->argc = 0;
-    } else
 
-    /* AND (default) and optional columns are stored the same way */
-    if (oper_kind != EcsOperOr) {
-        elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
-        elem->from_kind = from_kind;
-        elem->oper_kind = oper_kind;
-        elem->inout_kind = inout_tmp;
-        elem->is.component = component;
-        elem->source = source;
-        elem->argc = 0;
-
-    /* OR columns store a type id instead of a single component */
     } else {
-        ecs_assert(inout_tmp != EcsOut, ECS_INVALID_SIGNATURE, NULL);
-        elem = ecs_vector_last(sig->columns, ecs_sig_column_t);
-
-        if (elem->from_kind != from_kind) {
-            /* Cannot mix FromEntity and FromComponent in OR */
+        /* OR follows OR or AND, AND being the first elem of the expression */        
+        elem = ecs_vector_last(sig->terms, ecs_term_t);
+        ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (elem->oper != EcsAnd && elem->oper != EcsOr) {
             ecs_parser_error(sig->name, sig->expr, 0, 
-                "cannot mix source kinds in || expression");
-            goto error;
+                "unexpected || operator in expression");
+            return -1;
         }
 
-        if (elem->oper_kind != EcsOperAnd && elem->oper_kind != EcsOperOr) {
+        if (elem->from_kind != term->from_kind) {
             ecs_parser_error(sig->name, sig->expr, 0, 
-                "cannot mix operators in || expression");
-            goto error;         
+                "cannot mix subjects in OR expression");
+            return -1;
         }
 
-        if (elem->oper_kind == EcsOperAnd) {
-            ecs_entity_t prev = elem->is.component;
+        if (term->inout == EcsInOutDefault) {
+            term->inout = elem->inout;
+        }
+
+        if (elem->inout != term->inout) {
+            ecs_parser_error(sig->name, sig->expr, 0, 
+                "cannot mix in/out in OR expression");
+            return -1;
+        }
+
+        if (elem->oper == EcsAnd) {
+            ecs_entity_t last_component = elem->is.component;
             elem->is.type = NULL;
-            vec_add_id(&elem->is.type, prev);
-            vec_add_id(&elem->is.type, component);
-        } else {
-            vec_add_id(&elem->is.type, component);
-        }      
-
-        elem->from_kind = from_kind;
-        elem->oper_kind = oper_kind;
-    }
-
-    if (!source && from_kind != EcsFromEmpty) {
-        source = EcsThis;
-    }
-
-    if (oper_kind != EcsOperOr) {
-        elem->name = NULL;
-        if (arg_name) {
-            elem->name = ecs_os_strdup(arg_name);
+            vec_add_id(&elem->is.type, last_component);
+            elem->oper = EcsOr;
         }
 
-        elem->pred.entity = component;
-        elem->pred.name = NULL;
-        elem->pred.is_a = 0;
-        if (arg_type) {
-            elem->pred.name = ecs_os_strdup(arg_type);
-        }
-
-        if (argc) {
-            elem->argv = ecs_os_malloc(ECS_SIZEOF(ecs_sig_identifier_t) * argc);
-
-            int i;
-            for (i = 0; i < argc; i ++) {
-                elem->argv[i].name = ecs_os_strdup(argv[i]);
-                if (!ecs_identifier_is_variable(argv[i]) && !ecs_is_0(argv[i])) {
-                    elem->argv[i].entity = ecs_lookup_fullpath(world, argv[i]);
-                    if (!elem->argv[i].entity) {
-                        ecs_parser_error(sig->name, sig->expr, -1, 
-                            "unresolved identifier '%s'", argv[i]);
-                        return -1;
-                    }
-                } else {
-                    elem->argv[i].entity = 0;
-                }
-            }
-        } else {
-            /* If no arguments are provided, this (.) is the implicit default. */
-            argc = 1;
-            elem->argv = ecs_os_malloc(ECS_SIZEOF(ecs_sig_identifier_t));
-            elem->argv[0] = (ecs_sig_identifier_t) {
-                .entity = source,
-                .name = NULL
-            };
-        }
-
-        elem->argc = argc;
+        vec_add_id(&elem->is.type, term->is.component);
     }
-
-    if (source) {
-        elem->args[0].entity = source;
-        elem->args[0].is_a = 0;
-    }
-
-    if (argc != 0) {
-        elem->args[0] = elem->argv[0];
-        elem->args[0].is_a = 0;
-    }
-
-    if (argc > 1) {
-        elem->args[1] = elem->argv[1];
-        elem->args[1].is_a = 0;
-    }
-
-    elem->oper = oper_kind;
-    elem->inout = inout_kind;
 
     return 0;
-error:
-    return -1;
 }
+
+static
+bool sig_id_set(
+    ecs_term_id_t *id)
+{
+    return (id->name != NULL) || (id->entity != 0);
+}
+
+static
+void sig_add_id(
+    ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_term_id_t *id)
+{
+    if (id->name) {
+        ecs_strbuf_appendstr(buf, id->name);
+    } else if (id->entity) {
+        char *path = ecs_get_fullpath(world, id->entity);
+        ecs_strbuf_appendstr(buf, path);
+        ecs_os_free(path);
+    } else {
+        ecs_strbuf_appendstr(buf, "0");
+    }
+}
+
+char* ecs_sig_str(
+    ecs_world_t *world,
+    ecs_sig_t *sig)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
+    int32_t i, count = ecs_vector_count(sig->terms);
+
+    for (i = 0; i < count; i ++) {
+        if (i) {
+            ecs_strbuf_appendstr(&buf, ", ");
+        }
+
+        ecs_term_t *term = &terms[i];
+        if (term->inout == EcsIn) {
+            ecs_strbuf_appendstr(&buf, "[in] ");
+        } else if (term->inout == EcsInOut) {
+            ecs_strbuf_appendstr(&buf, "[inout] ");
+        } else if (term->inout == EcsInOut) {
+            ecs_strbuf_appendstr(&buf, "[out] ");
+        }
+
+        if (term->role) {
+            ecs_strbuf_appendstr(&buf, ecs_role_str(term->role));
+            ecs_strbuf_appendstr(&buf, " ");
+        }
+
+        ecs_assert(term->oper == term->oper, ECS_INTERNAL_ERROR, NULL);
+
+        if (term->oper != EcsOr) {
+            if (term->oper == EcsNot) {
+                ecs_strbuf_appendstr(&buf, "!");
+            } else if (term->oper == EcsOptional) {
+                ecs_strbuf_appendstr(&buf, "?");
+            }
+
+            if (term->args[0].entity == EcsThis && sig_id_set(&term->args[1])) {
+                ecs_strbuf_appendstr(&buf, "(");
+            }
+
+            if (!sig_id_set(&term->args[1]) && 
+                (term->pred.entity != term->args[0].entity)) 
+            {
+                sig_add_id(world, &buf, &term->pred);
+
+                if (!sig_id_set(&term->args[0])) {
+                    ecs_strbuf_appendstr(&buf, "()");
+                } else if (term->args[0].entity != EcsThis) {
+                    ecs_strbuf_appendstr(&buf, "(");
+                    sig_add_id(world, &buf, &term->args[0]);
+                }
+
+                if (sig_id_set(&term->args[1])) {
+                    ecs_strbuf_appendstr(&buf, ", ");
+                    sig_add_id(world, &buf, &term->args[1]);
+                    ecs_strbuf_appendstr(&buf, ")");
+                }
+            } else {
+                ecs_strbuf_appendstr(&buf, "$");
+                sig_add_id(world, &buf, &term->pred);
+            }
+        } else {
+            int32_t j = 0, id_count = ecs_vector_count(term->is.type);
+            ecs_entity_t *ids = ecs_vector_first(term->is.type, ecs_entity_t);
+            char id_buf[256];
+            for (j = 0; j < id_count; j ++) {
+                ecs_entity_str(world, ids[j], id_buf, 256);
+                ecs_strbuf_appendstr(&buf, id_buf);
+                if (j < (id_count - 1)) {
+                    ecs_strbuf_appendstr(&buf, " || ");
+                }
+            }
+        }
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
 
 /* Check if system meets constraints of non-table columns */
 bool ecs_sig_check_constraints(
     ecs_world_t *world,
     ecs_sig_t *sig)
 {
-    ecs_vector_each(sig->columns, ecs_sig_column_t, elem, {
-        ecs_sig_from_kind_t from_kind = elem->from_kind;
-        ecs_sig_oper_kind_t oper_kind = elem->oper_kind;
+    ecs_vector_each(sig->terms, ecs_term_t, elem, {
+        ecs_from_kind_t from_kind = elem->from_kind;
+        ecs_oper_kind_t oper = elem->oper;
 
         if (from_kind == EcsFromEntity) {
-            ecs_type_t type = ecs_get_type(world, elem->source);
+            ecs_type_t type = ecs_get_type(world, elem->args[0].entity);
             if (ecs_type_has_id(world, type, elem->is.component)) {
-                if (oper_kind == EcsOperNot) {
+                if (oper == EcsNot) {
                     return false;
                 }
             } else {
-                if (oper_kind != EcsOperNot) {
+                if (oper != EcsNot) {
                     return false;
                 }
             }
@@ -16182,8 +16265,8 @@ static
 ecs_entity_t get_cascade_component(
     ecs_query_t *query)
 {
-    ecs_sig_column_t *column = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
-    return column[query->cascade_by - 1].is.component;
+    ecs_term_t *term = ecs_vector_first(query->sig.terms, ecs_term_t);
+    return term[query->cascade_by - 1].is.component;
 }
 #endif
 
@@ -16355,65 +16438,69 @@ void get_comp_and_src(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_type_t table_type,
-    ecs_sig_column_t *column,
-    ecs_sig_oper_kind_t op,
-    ecs_sig_from_kind_t from,
+    ecs_term_t *term,
+    ecs_oper_kind_t op,
+    ecs_from_kind_t from,
     ecs_entity_t *component_out,
     ecs_entity_t *entity_out)
 {
     ecs_entity_t component = 0, entity = 0;
 
-    if (op == EcsOperNot) {
-        entity = column->source;
+    if (op == EcsNot) {
+        entity = term->args[0].entity;
     }
 
     /* Column that retrieves data from self or a fixed entity */
     if (from == EcsFromAny || from == EcsFromEntity || 
         from == EcsFromOwned || from == EcsFromShared) 
     {
-        if (op == EcsOperAnd || op == EcsOperNot || op == EcsOperOptional) {
-            component = column->is.component;
+        if (op == EcsAnd || op == EcsNot || op == EcsOptional) {
+            component = term->is.component;
         } else if (op == EcsOperAll) {
-            component = column->is.component & ECS_COMPONENT_MASK;
-        } else if (op == EcsOperOr) {
+            component = term->is.component & ECS_COMPONENT_MASK;
+        } else if (op == EcsOr) {
             component = ecs_type_contains(
-                world, table_type, column->is.type, 
+                world, table_type, term->is.type, 
                 false, true);
         }
 
         if (from == EcsFromEntity) {
-            entity = column->source;
+            entity = term->args[0].entity;
         }
 
     /* Column that just passes a handle to the system (no data) */
     } else if (from == EcsFromEmpty) {
-        component = column->is.component;
+        component = term->is.component;
 
     /* Column that retrieves data from a dynamic entity */
     } else if (from == EcsFromParent || from == EcsCascade) {
-        if (op == EcsOperAnd ||
-            op == EcsOperOptional)
+        if (op == EcsAnd ||
+            op == EcsOptional)
         {
-            component = column->is.component;
+            component = term->is.component;
             entity = ecs_find_in_type(
                 world, table_type, component, EcsChildOf);
 
-        } else if (op == EcsOperOr) {
+        } else if (op == EcsOr) {
             component = components_contains(
                 world,
                 table_type,
-                column->is.type,
+                term->is.type,
                 &entity,
                 false);
         }
 
     /* Column that retrieves data from a system */
     } else if (from == EcsFromSystem) {
-        if (op == EcsOperAnd) {
-            component = column->is.component;
+        if (op == EcsAnd) {
+            component = term->is.component;
         }
 
         entity = query->system;
+    }
+
+    if (entity == EcsThis) {
+        entity = 0;
     }
 
     *component_out = component;
@@ -16464,7 +16551,7 @@ int32_t get_component_index(
     ecs_type_t table_type,
     ecs_entity_t *component_out,
     int32_t column_index,
-    ecs_sig_oper_kind_t op,
+    ecs_oper_kind_t op,
     trait_offset_t *trait_offsets,
     int32_t count)
 {
@@ -16591,7 +16678,7 @@ int32_t get_component_index(
 
     if (op == EcsOperAll) {
         result = 0;
-    } else if (op == EcsOperOptional) {
+    } else if (op == EcsOptional) {
         /* If table doesn't have the field, mark it as no data */
         if (!ecs_type_has_id(world, table_type, component)) {
             result = 0;
@@ -16609,7 +16696,7 @@ ecs_vector_t* add_ref(
     ecs_vector_t *references,
     ecs_entity_t component,
     ecs_entity_t entity,
-    ecs_sig_from_kind_t from)
+    ecs_from_kind_t from)
 {
     const EcsComponent *c_info = ecs_get(world, component, EcsComponent);
     
@@ -16653,14 +16740,14 @@ ecs_vector_t* add_ref(
 
 static
 ecs_entity_t is_column_trait(
-    ecs_sig_column_t *column)
+    ecs_term_t *term)
 {
-    ecs_sig_from_kind_t from_kind = column->from_kind;
-    ecs_sig_oper_kind_t oper_kind = column->oper_kind;
+    ecs_from_kind_t from_kind = term->from_kind;
+    ecs_oper_kind_t oper = term->oper;
 
     /* For now traits are only supported on owned columns */
-    if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
-        ecs_entity_t c = column->is.component;
+    if (from_kind == EcsFromOwned && oper == EcsAnd) {
+        ecs_entity_t c = term->is.component;
         if (ECS_HAS_ROLE(c, PAIR)) {
             if (!ECS_PAIR_RELATION(c)) {
                 return c;
@@ -16705,12 +16792,12 @@ int32_t count_traits(
     const ecs_query_t *query,
     ecs_type_t type)
 {
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
-    int32_t i, count = ecs_vector_count(query->sig.columns);
+    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    int32_t i, count = ecs_vector_count(query->sig.terms);
     int32_t first_count = 0, trait_count = 0;
 
     for (i = 0; i < count; i ++) {
-        ecs_entity_t trait = is_column_trait(&columns[i]);
+        ecs_entity_t trait = is_column_trait(&terms[i]);
         if (trait) {
             trait_count = type_trait_count(type, trait);
             if (!first_count) {
@@ -16733,10 +16820,10 @@ int32_t count_traits(
 static
 ecs_type_t get_column_type(
     ecs_world_t *world,
-    ecs_sig_oper_kind_t oper_kind,
+    ecs_oper_kind_t oper,
     ecs_entity_t component)
 {
-    if (oper_kind == EcsOperAll) {
+    if (oper == EcsOperAll) {
         const EcsType *type = ecs_get(world, component, EcsType);
         ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
         return type->normalized;
@@ -16753,7 +16840,7 @@ void add_table(
     ecs_table_t *table)
 {
     ecs_type_t table_type = NULL;
-    int32_t c, column_count = ecs_vector_count(query->sig.columns);
+    int32_t c, term_count = ecs_vector_count(query->sig.terms);
 
     if (table) {
         table_type = table->type;
@@ -16770,7 +16857,7 @@ void add_table(
     trait_offset_t *trait_offsets = NULL;
     if (trait_count) {
         trait_offsets = ecs_os_calloc(
-            ECS_SIZEOF(trait_offset_t) * column_count);
+            ECS_SIZEOF(trait_offset_t) * term_count);
     }
 
     /* From here we recurse */
@@ -16789,39 +16876,39 @@ add_trait:
     /* If grouping is enabled for query, assign the group rank to the table */
     group_table(world, query, &table_data);
 
-    if (column_count) {
+    if (term_count) {
         /* Array that contains the system column to table column mapping */
-        table_data.iter_data.columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * column_count);
+        table_data.iter_data.columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * term_count);
         ecs_assert(table_data.iter_data.columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Store the components of the matched table. In the case of OR expressions,
         * components may differ per matched table. */
-        table_data.iter_data.components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * column_count);
+        table_data.iter_data.components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * term_count);
         ecs_assert(table_data.iter_data.components != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Also cache types, so no lookup is needed while iterating */
-        table_data.iter_data.types = ecs_os_malloc(ECS_SIZEOF(ecs_type_t) * column_count);
+        table_data.iter_data.types = ecs_os_malloc(ECS_SIZEOF(ecs_type_t) * term_count);
         ecs_assert(table_data.iter_data.types != NULL, ECS_OUT_OF_MEMORY, NULL);        
     }
 
     /* Walk columns parsed from the system signature */
-    ecs_sig_column_t *columns = ecs_vector_first(
-        query->sig.columns, ecs_sig_column_t);
+    ecs_term_t *terms = ecs_vector_first(
+        query->sig.terms, ecs_term_t);
 
-    for (c = 0; c < column_count; c ++) {
-        ecs_sig_column_t *column = &columns[c];
+    for (c = 0; c < term_count; c ++) {
+        ecs_term_t *term = &terms[c];
         ecs_entity_t entity = 0, component = 0;
-        ecs_sig_oper_kind_t op = column->oper_kind;
-        ecs_sig_from_kind_t from = column->from_kind;
+        ecs_oper_kind_t op = term->oper;
+        ecs_from_kind_t from = term->from_kind;
 
-        if (op == EcsOperNot) {
+        if (op == EcsNot) {
             from = EcsFromEmpty;
         }
 
         table_data.iter_data.columns[c] = 0;
 
         /* Get actual component and component source for current column */
-        get_comp_and_src(world, query, table_type, column, op, from, &component, 
+        get_comp_and_src(world, query, table_type, term, op, from, &component, 
             &entity);
 
         /* This column does not retrieve data from a static entity (either
@@ -16831,11 +16918,11 @@ add_trait:
                 &component, c, op, trait_offsets, trait_cur + 1);
 
             if (index == -1) {
-                if (from == EcsFromOwned && op == EcsOperOptional) {
+                if (from == EcsFromOwned && op == EcsOptional) {
                     index = 0;
                 }
             } else {
-                if (from == EcsFromShared && op == EcsOperOptional) {
+                if (from == EcsFromShared && op == EcsOptional) {
                     index = 0;
                 }
             }
@@ -16979,7 +17066,7 @@ static
 bool match_column(
     const ecs_world_t *world,
     ecs_type_t type,
-    ecs_sig_from_kind_t from_kind,
+    ecs_from_kind_t from_kind,
     ecs_entity_t component,
     ecs_entity_t source,
     ecs_match_failure_t *failure_info)
@@ -17054,39 +17141,39 @@ bool ecs_query_match(
         return false;
     }
 
-    int32_t i, column_count = ecs_vector_count(query->sig.columns);
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
+    int32_t i, column_count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
 
     for (i = 0; i < column_count; i ++) {
-        ecs_sig_column_t *elem = &columns[i];
-        ecs_sig_from_kind_t from_kind = elem->from_kind;
-        ecs_sig_oper_kind_t oper_kind = elem->oper_kind;
+        ecs_term_t *term = &terms[i];
+        ecs_from_kind_t from_kind = term->from_kind;
+        ecs_oper_kind_t oper = term->oper;
 
         failure_info->column = i + 1;
 
-        if (oper_kind == EcsOperAnd) {
+        if (oper == EcsAnd) {
             if (!match_column(
-                world, table_type, from_kind, elem->is.component, 
-                elem->source, failure_info)) 
+                world, table_type, from_kind, term->is.component, 
+                term->args[0].entity, failure_info)) 
             {
                 return false;
             }
 
-        } else if (oper_kind == EcsOperNot) {
+        } else if (oper == EcsNot) {
             if (match_column(
-                world, table_type, from_kind, elem->is.component, 
-                elem->source, failure_info)) 
+                world, table_type, from_kind, term->is.component, 
+                term->args[0].entity, failure_info)) 
             {
                 return false;
             }           
 
-        } else if (oper_kind == EcsOperOr || oper_kind == EcsOperAll) {
-            bool match_all = oper_kind == EcsOperAll;
+        } else if (oper == EcsOr || oper == EcsOperAll) {
+            bool match_all = oper == EcsOperAll;
             if (match_all) {
-                const EcsType *type_ptr = ecs_get(world, elem->is.component, EcsType);
+                const EcsType *type_ptr = ecs_get(world, term->is.component, EcsType);
                 type = type_ptr->normalized;
             } else {
-                type = elem->is.type;
+                type = term->is.type;
             }
 
             if (from_kind == EcsFromAny) {
@@ -17565,13 +17652,13 @@ static
 bool has_refs(
     ecs_sig_t *sig)
 {
-    int32_t i, count = ecs_vector_count(sig->columns);
-    ecs_sig_column_t *columns = ecs_vector_first(sig->columns, ecs_sig_column_t);
+    int32_t i, count = ecs_vector_count(sig->terms);
+    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
 
     for (i = 0; i < count; i ++) {
-        ecs_sig_from_kind_t from_kind = columns[i].from_kind;
+        ecs_from_kind_t from_kind = terms[i].from_kind;
 
-        if (columns[i].oper_kind == EcsOperNot && from_kind == EcsFromEmpty) {
+        if (terms[i].oper == EcsNot && from_kind == EcsFromEmpty) {
             /* Special case: if oper kind is Not and the query contained a
              * shared expression, the expression is translated to FromId to
              * prevent resolving the ref */
@@ -17591,11 +17678,11 @@ static
 bool has_traits(
     ecs_sig_t *sig)
 {
-    int32_t i, count = ecs_vector_count(sig->columns);
-    ecs_sig_column_t *columns = ecs_vector_first(sig->columns, ecs_sig_column_t);
+    int32_t i, count = ecs_vector_count(sig->terms);
+    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
 
     for (i = 0; i < count; i ++) {
-        if (is_column_trait(&columns[i])) {
+        if (is_column_trait(&terms[i])) {
             return true;
         }
     }
@@ -17608,7 +17695,7 @@ void register_monitors(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    ecs_vector_each(query->sig.columns, ecs_sig_column_t, column, {
+    ecs_vector_each(query->sig.terms, ecs_term_t, term, {
         /* If component is requested with CASCADE source register component as a
          * parent monitor. Parent monitors keep track of whether an entity moved
          * in the hierarchy, which potentially requires the query to reorder its
@@ -17616,15 +17703,15 @@ void register_monitors(
          * Also register a regular component monitor for EcsCascade columns.
          * This ensures that when the component used in the CASCADE column
          * is added or removed tables are updated accordingly*/
-        if (column->from_kind == EcsCascade) {
-            if (column->oper_kind != EcsOperOr) {
+        if (term->from_kind == EcsCascade) {
+            if (term->oper != EcsOr) {
                 ecs_component_monitor_register(
-                    &world->parent_monitors, column->is.component, query);
+                    &world->parent_monitors, term->is.component, query);
 
                 ecs_component_monitor_register(
-                    &world->component_monitors, column->is.component, query);
+                    &world->component_monitors, term->is.component, query);
             } else {
-                ecs_vector_each(column->is.type, ecs_entity_t, e_ptr, {
+                ecs_vector_each(term->is.type, ecs_entity_t, e_ptr, {
                     ecs_component_monitor_register(
                         &world->parent_monitors, *e_ptr, query);
 
@@ -17634,18 +17721,18 @@ void register_monitors(
             }
 
         /* FromSelf also requires registering a monitor, as FromSelf columns can
-         * be matched with prefabs. The only column kinds that do not require
+         * be matched with prefabs. The only term kinds that do not require
          * registering a monitor are FromOwned and FromNothing. */
-        } else if (column->from_kind == EcsFromAny || 
-            column->from_kind == EcsFromShared ||
-            column->from_kind == EcsFromEntity ||
-            column->from_kind == EcsFromParent)
+        } else if (term->from_kind == EcsFromAny || 
+            term->from_kind == EcsFromShared ||
+            term->from_kind == EcsFromEntity ||
+            term->from_kind == EcsFromParent)
         {
-            if (column->oper_kind != EcsOperOr) {
+            if (term->oper != EcsOr) {
                 ecs_component_monitor_register(
-                    &world->component_monitors, column->is.component, query);
+                    &world->component_monitors, term->is.component, query);
             } else {
-                ecs_vector_each(column->is.type, ecs_entity_t, e_ptr, {
+                ecs_vector_each(term->is.type, ecs_entity_t, e_ptr, {
                     ecs_component_monitor_register(
                         &world->component_monitors, *e_ptr, query);
                 });
@@ -17659,52 +17746,60 @@ void process_signature(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    int i, count = ecs_vector_count(query->sig.columns);
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
+    int i, count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
 
     for (i = 0; i < count; i ++) {
-        ecs_sig_column_t *column = &columns[i];
-        ecs_sig_oper_kind_t op = column->oper_kind; 
-        ecs_sig_from_kind_t from = column->from_kind; 
-        ecs_sig_inout_kind_t inout = column->inout_kind;
+        ecs_term_t *term = &terms[i];
+        ecs_oper_kind_t op = term->oper; 
+        ecs_from_kind_t from = term->from_kind; 
+        ecs_inout_kind_t inout = term->inout;
+
+        /* Queries do not support variables */
+        ecs_assert(term->pred.var_kind != EcsVarIsVariable, 
+            ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(term->args[0].var_kind != EcsVarIsVariable, 
+            ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(term->args[1].var_kind != EcsVarIsVariable, 
+            ECS_INVALID_PARAMETER, NULL);
 
         if (inout != EcsIn) {
             query->flags |= EcsQueryHasOutColumns;
         }
 
-        if (op == EcsOperOptional) {
+        if (op == EcsOptional) {
             query->flags |= EcsQueryHasOptional;
         }        
 
         if (!(query->flags & EcsQueryMatchDisabled)) {
-            if (op == EcsOperOr) {
+            if (op == EcsOr) {
                 /* If the signature explicitly indicates interest in EcsDisabled,
                  * signal that disabled entities should be matched. By default,
                  * disabled entities are not matched. */
                 if (ecs_type_owns_id(
-                    world, column->is.type, EcsDisabled, true))
+                    world, term->is.type, EcsDisabled, true))
                 {
                     query->flags |= EcsQueryMatchDisabled;
                 }         
-            } else if (op == EcsOperAnd || op == EcsOperOptional) {
-                if (column->is.component == EcsDisabled) {
+            } else if (op == EcsAnd || op == EcsOptional) {
+                if (term->is.component == EcsDisabled) {
                     query->flags |= EcsQueryMatchDisabled;
                 }
             }
         }
 
         if (!(query->flags & EcsQueryMatchPrefab)) {
-            if (op == EcsOperOr) {
+            if (op == EcsOr) {
                 /* If the signature explicitly indicates interest in EcsPrefab,
                 * signal that disabled entities should be matched. By default,
                 * prefab entities are not matched. */
                 if (ecs_type_owns_id(
-                    world, column->is.type, EcsPrefab, true))
+                    world, term->is.type, EcsPrefab, true))
                 {
                     query->flags |= EcsQueryMatchPrefab;
                 }            
-            } else if (op == EcsOperAnd || op == EcsOperOptional) {
-                if (column->is.component == EcsPrefab) {
+            } else if (op == EcsAnd || op == EcsOptional) {
+                if (term->is.component == EcsPrefab) {
                     query->flags |= EcsQueryMatchPrefab;
                 }
             }
@@ -17720,12 +17815,12 @@ void process_signature(
 
         if (from == EcsCascade) {
             query->cascade_by = i + 1;
-            query->rank_on_component = column->is.component;
+            query->rank_on_component = term->is.component;
         }
 
         if (from == EcsFromEntity) {
-            ecs_assert(column->source != 0, ECS_INTERNAL_ERROR, NULL);
-            ecs_set_watch(world, column->source);
+            ecs_assert(term->args[0].entity != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_set_watch(world, term->args[0].entity);
         }
     }
 
@@ -18337,7 +18432,7 @@ ecs_query_t* ecs_query_new_w_sig_intern(
             match_tables(world, result);
         } else {
             /* Add stub table that resolves references (if any) so everything is
-            * preprocessed when the query is evaluated. */
+             * preprocessed when the query is evaluated. */
             add_table(world, result, NULL);
         }
     }
@@ -18499,7 +18594,7 @@ ecs_iter_t ecs_query_iter_page(
     return (ecs_iter_t){
         .world = world,
         .query = query,
-        .column_count = ecs_vector_count(query->sig.columns),
+        .column_count = ecs_vector_count(query->sig.terms),
         .table_count = table_count,
         .inactive_table_count = ecs_vector_count(query->empty_tables),
         .iter.query = it
@@ -18538,7 +18633,7 @@ void ecs_query_set_iter(
 
     it->world = NULL;
     it->query = query;
-    it->column_count = ecs_vector_count(query->sig.columns);
+    it->column_count = ecs_vector_count(query->sig.terms);
     it->table_count = 1;
     it->inactive_table_count = 0;
     it->table_columns = data->columns;
@@ -18899,12 +18994,12 @@ void mark_columns_dirty(
     ecs_table_t *table = table_data->iter_data.table;
 
     if (table && table->dirty_state) {
-        int32_t i, count = ecs_vector_count(query->sig.columns);
-        ecs_sig_column_t *columns = ecs_vector_first(
-            query->sig.columns, ecs_sig_column_t);
+        int32_t i, count = ecs_vector_count(query->sig.terms);
+        ecs_term_t *terms = ecs_vector_first(
+            query->sig.terms, ecs_term_t);
 
         for (i = 0; i < count; i ++) {
-            if (columns[i].inout_kind != EcsIn) {
+            if (terms[i].inout != EcsIn && (terms[i].inout != EcsInOutDefault || terms[i].from_kind == EcsFromOwned)) {
                 int32_t table_column = table_data->iter_data.columns[i];
                 if (table_column > 0) {
                     table->dirty_state[table_column] ++;
@@ -20747,18 +20842,18 @@ void* get_term(
 void* ecs_term_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t column)
+    int32_t term)
 {
-    return get_term(it, ecs_from_size_t(size), column, 0);
+    return get_term(it, ecs_from_size_t(size), term, 0);
 }
 
 bool ecs_term_is_owned(
     const ecs_iter_t *it,
-    int32_t column)
+    int32_t term)
 {
     int32_t table_column;
 
-    if (!get_table_column(it, column, &table_column)) {
+    if (!get_table_column(it, term, &table_column)) {
         return true;
     }
 
@@ -20767,7 +20862,7 @@ bool ecs_term_is_owned(
 
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
-    int32_t column)
+    int32_t term)
 {
     ecs_query_t *query = it->query;
 
@@ -20775,10 +20870,12 @@ bool ecs_term_is_readonly(
     ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
     (void)query;
 
-    ecs_sig_column_t *column_data = ecs_vector_get(
-        it->query->sig.columns, ecs_sig_column_t, column - 1);
+    ecs_term_t *term_data = ecs_vector_get(
+        it->query->sig.terms, ecs_term_t, term - 1);
 
-    return column_data->inout_kind == EcsIn;
+    return (term_data->inout == EcsIn) || 
+        (term_data->inout == EcsInOutDefault && 
+         term_data->from_kind != EcsFromOwned);
 }
 
 ecs_entity_t ecs_term_source(
@@ -21636,17 +21733,17 @@ int32_t get_any_write_state(
 
 static
 bool check_column_component(
-    ecs_sig_column_t *column,
+    ecs_term_t *term,
     bool is_active,
     ecs_entity_t component,
     write_state_t *write_state)    
 {
     int32_t state = get_write_state(write_state->components, component);
 
-    if ((column->from_kind == EcsFromAny || column->from_kind == EcsFromOwned) 
-      && column->oper_kind != EcsOperNot) 
+    if ((term->from_kind == EcsFromAny || term->from_kind == EcsFromOwned) 
+      && term->oper != EcsNot) 
     {
-        switch(column->inout_kind) {
+        switch(term->inout) {
         case EcsInOutDefault:
         case EcsInOut:
         case EcsIn:
@@ -21655,16 +21752,16 @@ bool check_column_component(
             }
             // fall through
         case EcsOut:
-            if (is_active && column->inout_kind != EcsIn) {
+            if (is_active && term->inout != EcsIn) {
                 set_write_state(write_state, component, WriteToMain);
             }
         };
-    } else if (column->from_kind == EcsFromEmpty || 
-               column->oper_kind == EcsOperNot) 
+    } else if (term->from_kind == EcsFromEmpty || 
+               term->oper == EcsNot) 
     {
         bool needs_merge = false;
 
-        switch(column->inout_kind) {
+        switch(term->inout) {
         case EcsInOutDefault:
         case EcsIn:
         case EcsInOut:
@@ -21681,8 +21778,12 @@ bool check_column_component(
             break;
         };
 
-        switch(column->inout_kind) {
+        switch(term->inout) {
         case EcsInOutDefault:
+            if (term->from_kind != EcsFromOwned) {
+                break;
+            }
+            // fall through
         case EcsInOut:
         case EcsOut:
             if (is_active) {
@@ -21703,13 +21804,13 @@ bool check_column_component(
 
 static
 bool check_column(
-    ecs_sig_column_t *column,
+    ecs_term_t *term,
     bool is_active,
     write_state_t *write_state)
 {
-    if (column->oper_kind != EcsOperOr) {
+    if (term->oper != EcsOr) {
         return check_column_component(
-            column, is_active, column->is.component, write_state);
+            term, is_active, term->is.component, write_state);
     }  
 
     return false;
@@ -21764,8 +21865,8 @@ bool build_pipeline(
             bool is_active = !ecs_has_id(
                 world, it.entities[i], EcsInactive);
 
-            ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
-                needs_merge |= check_column(column, is_active, &ws);
+            ecs_vector_each(q->sig.terms, ecs_term_t, term, {
+                needs_merge |= check_column(term, is_active, &ws);
             });
 
             if (needs_merge) {
@@ -21778,8 +21879,8 @@ bool build_pipeline(
                  * should not insert unnecessary merges.  */
                 needs_merge = false;
                 if (is_active) {
-                    ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
-                        needs_merge |= check_column(column, true, &ws);
+                    ecs_vector_each(q->sig.terms, ecs_term_t, term, {
+                        needs_merge |= check_column(term, true, &ws);
                     });
                 }
 
@@ -21962,13 +22063,12 @@ void add_pipeline_tags_to_sig(
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
 
     for (i = 0; i < count; i ++) {
-        if (!i) {
-            ecs_sig_add(world, sig, EcsFromAny, EcsOperAnd, EcsIn, entities[i], 
-                0, NULL, NULL, 0, NULL);
-        } else {
-            ecs_sig_add(world, sig, EcsFromAny, EcsOperOr, EcsIn, entities[i], 
-                0, NULL, NULL, 0, NULL);
-        }
+        ecs_sig_add(world, sig, &(ecs_term_t){
+            .from_kind = EcsFromAny,
+            .inout = EcsIn,
+            .oper = i ? EcsOr : EcsAnd,
+            .pred.entity = entities[i]
+        });
     }
 }
 
@@ -21999,12 +22099,24 @@ void EcsOnAddPipeline(
          * pipeline as a XOR column, and ignores systems with EcsInactive and
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
-        ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
-            ecs_id(EcsSystem), 0, NULL, NULL, 0, NULL);
-        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0, 
-            NULL, NULL, 0, NULL);
-        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
-            EcsDisabledIntern, 0, NULL, NULL, 0, NULL);
+        ecs_sig_add(world, &sig, &(ecs_term_t){
+            .from_kind = EcsFromAny,
+            .inout = EcsIn,
+            .oper = EcsAnd,
+            .pred.entity = ecs_id(EcsSystem)});
+
+        ecs_sig_add(world, &sig, &(ecs_term_t){
+            .from_kind = EcsFromAny,
+            .inout = EcsIn,
+            .oper = EcsNot,
+            .pred.entity = EcsInactive});
+        
+        ecs_sig_add(world, &sig, &(ecs_term_t){
+            .from_kind = EcsFromAny,
+            .inout = EcsIn,
+            .oper = EcsNot,
+            .pred.entity = EcsDisabledIntern});
+
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Create the query. Sort the query by system id and phase */
@@ -22016,10 +22128,18 @@ void EcsOnAddPipeline(
          * systems that are inactive, as an inactive system may become active as
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
-        ecs_sig_add(world, &sig, EcsFromAny, EcsOperAnd, EcsIn, 
-            ecs_id(EcsSystem), 0, NULL, NULL, 0, NULL);
-        ecs_sig_add(world, &sig, EcsFromAny, EcsOperNot, EcsIn, 
-            EcsDisabledIntern, 0, NULL, NULL, 0, NULL);
+        ecs_sig_add(world, &sig, &(ecs_term_t){
+            .from_kind = EcsFromAny,
+            .inout = EcsIn,
+            .oper = EcsAnd,
+            .pred.entity = ecs_id(EcsSystem)});
+
+        ecs_sig_add(world, &sig, &(ecs_term_t){
+            .from_kind = EcsFromAny,
+            .inout = EcsIn,
+            .oper = EcsNot,
+            .pred.entity = EcsDisabledIntern});
+
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Use the same sorting functions for the build query */
@@ -22481,13 +22601,13 @@ void activate_in_columns(
     ecs_map_t *component_map,
     bool activate)
 {
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
-    int32_t i, count = ecs_vector_count(query->sig.columns);
+    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    int32_t i, count = ecs_vector_count(query->sig.terms);
 
     for (i = 0; i < count; i ++) {
-        if (columns[i].inout_kind == EcsIn) {
+        if (terms[i].inout == EcsIn) {
             ecs_on_demand_in_t *in = get_in_component(
-                component_map, columns[i].is.component);
+                component_map, terms[i].is.component);
             ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
 
             in->count += activate ? 1 : -1;
@@ -22542,11 +22662,11 @@ void register_out_columns(
     EcsSystem *system_data)
 {
     ecs_query_t *query = system_data->query;
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
-    int32_t i, out_count = 0, count = ecs_vector_count(query->sig.columns);
+    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    int32_t i, out_count = 0, count = ecs_vector_count(query->sig.terms);
 
     for (i = 0; i < count; i ++) {
-        if (columns[i].inout_kind == EcsOut) {
+        if (terms[i].inout == EcsOut) {
             if (!system_data->on_demand) {
                 system_data->on_demand = ecs_os_malloc(sizeof(ecs_on_demand_out_t));
                 ecs_assert(system_data->on_demand != NULL, ECS_OUT_OF_MEMORY, NULL);
@@ -22558,26 +22678,26 @@ void register_out_columns(
             /* If column operator is NOT and the inout kind is [out], the system
              * explicitly states that it will create the component (it is not
              * there, yet it is an out column). In this case it doesn't make
-             * sense to wait until [in] columns get activated (matched with
+             * sense to wait until [in] terms get activated (matched with
              * entities) since the component is not there yet. Therefore add it
              * to the on_enable_components list, so this system will be enabled
              * when a [in] column is enabled, rather than activated */
             ecs_map_t *component_map;
-            if (columns[i].oper_kind == EcsOperNot) {
+            if (terms[i].oper == EcsNot) {
                 component_map = world->on_enable_components;
             } else {
                 component_map = world->on_activate_components;
             }
 
             register_out_column(
-                component_map, columns[i].is.component, 
+                component_map, terms[i].is.component, 
                 system_data->on_demand);
 
             out_count ++;
         }
     }
 
-    /* If there are no out columns in the on-demand system, the system will
+    /* If there are no out terms in the on-demand system, the system will
      * never be enabled */
     ecs_assert(out_count != 0, ECS_NO_OUT_COLUMNS, ecs_get_name(world, system));
 }
@@ -22695,7 +22815,7 @@ void ecs_init_system(
     /* Only run this code when the system is created for the first time */
     if (is_added) {
         /* If tables have been matched with this system it is active, and we
-         * should activate the in-columns, if any. This will ensure that any
+         * should activate the in terms, if any. This will ensure that any
          * OnDemand systems get enabled. */
         if (ecs_vector_count(query->tables)) {
             ecs_system_activate(world, system, true, sptr);
@@ -22715,25 +22835,23 @@ void ecs_init_system(
             ecs_add_id(world, system, EcsDisabledIntern);
         }
 
-        /* If the query has a OnDemand system tag, register its [out] columns */
+        /* If the query has a OnDemand system tag, register its [out] terms */
         if (ecs_has_id(world, system, EcsOnDemand)) {
             register_out_columns(world, system, sptr);
             ecs_assert(sptr->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
 
             /* If there are no systems currently interested in any of the [out]
-             * columns of the on demand system, disable it */
+             * terms of the on demand system, disable it */
             if (!sptr->on_demand->count) {
                 ecs_add_id(world, system, EcsDisabledIntern);
             }        
         }
 
         /* Check if system has out columns */
-        int32_t i, count = ecs_vector_count(query->sig.columns);
-        ecs_sig_column_t *columns = ecs_vector_first(
-                query->sig.columns, ecs_sig_column_t);
-        
+        int32_t i, count = ecs_vector_count(query->sig.terms);
+        ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
         for (i = 0; i < count; i ++) {
-            if (columns[i].inout_kind != EcsIn) {
+            if (terms[i].inout != EcsIn) {
                 break;
             }
         }
@@ -23183,9 +23301,9 @@ void CreateSignature(
         ecs_set_ptr(world, e, EcsSignature, &sig);
 
         /* If sig has FromSystem columns, add components to the entity */
-        ecs_vector_each(sig.signature.columns, ecs_sig_column_t, column, {
-            if (column->from_kind == EcsFromSystem) {
-                ecs_add_id(world, e, column->is.component);
+        ecs_vector_each(sig.signature.terms, ecs_term_t, term, {
+            if (term->from_kind == EcsFromSystem) {
+                ecs_add_id(world, e, term->is.component);
             }
         });    
     }
@@ -23479,24 +23597,24 @@ ecs_type_t ecs_dbg_get_column_type(
         return NULL;
     }
     
-    ecs_sig_column_t *columns = ecs_vector_first(
-        system_data->query->sig.columns, ecs_sig_column_t);
-    int32_t count = ecs_vector_count(system_data->query->sig.columns);
+    ecs_term_t *terms = ecs_vector_first(
+        system_data->query->sig.terms, ecs_term_t);
+    int32_t count = ecs_vector_count(system_data->query->sig.terms);
 
     if (count < column_index) {
         return NULL;
     }
 
-    ecs_sig_column_t *column = &columns[column_index - 1];
-    ecs_sig_oper_kind_t oper_kind = column->oper_kind;
+    ecs_term_t *term = &terms[column_index - 1];
+    ecs_oper_kind_t oper = term->oper;
     ecs_type_t result;
 
-    switch(oper_kind) {
-    case EcsOperOr:
-        result = column->is.type;
+    switch(oper) {
+    case EcsOr:
+        result = term->is.type;
         break;
     default:
-        result = ecs_type_from_id(world, column->is.component);
+        result = ecs_type_from_id(world, term->is.component);
         break;
     }
     
@@ -23513,83 +23631,48 @@ int parse_type_action(
     const char *name,
     const char *sig,
     int64_t column,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t role,
-    const char *entity_id,
-    const char *source_id,
-    const char *pair_id,
-    const char *arg_name,
-    int argc,
-    char **argv,
+    ecs_term_t *term,
     void *data)
 {
     ecs_vector_t **array = data;
-    (void)source_id;
-    (void)inout_kind;
-    
-    if (arg_name) {
+
+    if (term->name) {
         ecs_parser_error(name, sig, column, 
             "column names not supported in type expression");
         return -1;
     }
 
-    if (argc || argv) {
+    if (term->oper != EcsAnd) {
         ecs_parser_error(name, sig, column, 
-            "column arguments not supported in type expression");
+            "operator other than AND not supported in type expression");
         return -1;
-    }    
-
-    if (strcmp(entity_id, "0")) {
-        ecs_entity_t entity = 0;
-
-        if (from_kind != EcsFromOwned) {
-            if (!name) {
-                return -1;
-            }
-
-            ecs_parser_error(name, sig, column, 
-                "source modifiers not supported for type expressions");
-            return -1;
-        }
-
-        entity = ecs_lookup_fullpath(world, entity_id);
-        if (!entity) {
-            if (!name) {
-                return -1;
-            }
-
-            ecs_parser_error(name, sig, column, 
-                "unresolved identifier '%s'", entity_id);
-            return -1;
-        }
-
-        if (pair_id) {
-            ecs_entity_t pair = ecs_lookup_fullpath(world, pair_id);
-            if (!pair) {
-                ecs_parser_error(name, sig, column, 
-                    "unresolved pair identifier '%s'", pair_id);
-                return -1;
-            }
-
-            entity = ecs_entity_t_comb(entity, pair);
-        }        
-
-        if (oper_kind == EcsOperAnd) {
-            ecs_entity_t* e_ptr = ecs_vector_add(array, ecs_entity_t);
-            *e_ptr = entity | role;
-        } else {
-            if (!name) {
-                return -1;
-            }
-
-            /* Only AND and OR operators are supported for type expressions */
-            ecs_parser_error(name, sig, column, 
-                "invalid operator for type expression");
-            return -1;
-        }
     }
+
+    if (ecs_term_resolve(world, name, sig, column, term)) {
+        return -1;
+    }
+
+    ecs_term_set_legacy(term);
+
+    if (term->args[0].entity == 0) {
+        /* Empty term */
+        return 0;
+    }
+
+    if (term->from_kind != EcsFromOwned) {
+        ecs_parser_error(name, sig, column, 
+            "source modifiers not supported for type expressions");
+        return -1;
+    }
+
+    if (term->args[0].entity != EcsThis) {
+        ecs_parser_error(name, sig, column, 
+            "subject other than this not supported in type expression");
+        return -1;
+    }
+
+    ecs_entity_t* elem = ecs_vector_add(array, ecs_entity_t);
+    *elem = term->is.component | term->role;
 
     return 0;
 }

@@ -102,18 +102,18 @@ void* get_term(
 void* ecs_term_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t column)
+    int32_t term)
 {
-    return get_term(it, ecs_from_size_t(size), column, 0);
+    return get_term(it, ecs_from_size_t(size), term, 0);
 }
 
 bool ecs_term_is_owned(
     const ecs_iter_t *it,
-    int32_t column)
+    int32_t term)
 {
     int32_t table_column;
 
-    if (!get_table_column(it, column, &table_column)) {
+    if (!get_table_column(it, term, &table_column)) {
         return true;
     }
 
@@ -122,7 +122,7 @@ bool ecs_term_is_owned(
 
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
-    int32_t column)
+    int32_t term)
 {
     ecs_query_t *query = it->query;
 
@@ -130,10 +130,12 @@ bool ecs_term_is_readonly(
     ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
     (void)query;
 
-    ecs_sig_column_t *column_data = ecs_vector_get(
-        it->query->sig.columns, ecs_sig_column_t, column - 1);
+    ecs_term_t *term_data = ecs_vector_get(
+        it->query->sig.terms, ecs_term_t, term - 1);
 
-    return column_data->inout_kind == EcsIn;
+    return (term_data->inout == EcsIn) || 
+        (term_data->inout == EcsInOutDefault && 
+         term_data->from_kind != EcsFromOwned);
 }
 
 ecs_entity_t ecs_term_source(

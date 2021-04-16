@@ -211,14 +211,14 @@ int32_t ecs_column_index_from_name(
     const ecs_iter_t *it,
     const char *name)
 {
-    ecs_sig_column_t *column = NULL;
+    ecs_term_t *term = NULL;
     if (it->query) {
-        int32_t i, count = ecs_vector_count(it->query->sig.columns);
+        int32_t i, count = ecs_vector_count(it->query->sig.terms);
         for (i = 0; i < count; i ++) {
-            column = ecs_vector_get(
-                it->query->sig.columns, ecs_sig_column_t, i);
-            if (column->name) {
-                if (!strcmp(name, column->name)) {
+            term = ecs_vector_get(
+                it->query->sig.terms, ecs_term_t, i);
+            if (term->name) {
+                if (!strcmp(name, term->name)) {
                     return i + 1;
                 }
             }

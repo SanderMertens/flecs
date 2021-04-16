@@ -322,16 +322,16 @@ void register_on_set(
 
         /* Add system to each matched column. This makes it easy to get the list 
          * of systems when setting a single component. */
-        ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns,
-            ecs_sig_column_t);
-        int32_t i, count = ecs_vector_count(query->sig.columns);
+        ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+        int32_t i, count = ecs_vector_count(query->sig.terms);
+        
         for (i = 0; i < count; i ++) {
-            ecs_sig_column_t *column = &columns[i];
-            ecs_sig_oper_kind_t oper_kind = column->oper_kind;
-            ecs_sig_from_kind_t from_kind = column->from_kind;
+            ecs_term_t *term = &terms[i];
+            ecs_oper_kind_t oper = term->oper;
+            ecs_from_kind_t from_kind = term->from_kind;
 
             if ((from_kind != EcsFromAny && from_kind != EcsFromOwned) ||
-                (oper_kind != EcsOperAnd && oper_kind != EcsOperOptional)) 
+                (oper != EcsAnd && oper != EcsOptional)) 
             {
                 continue;
             }

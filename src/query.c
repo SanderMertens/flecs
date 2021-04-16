@@ -75,8 +75,8 @@ static
 ecs_entity_t get_cascade_component(
     ecs_query_t *query)
 {
-    ecs_sig_column_t *column = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
-    return column[query->cascade_by - 1].is.component;
+    ecs_term_t *term = ecs_vector_first(query->sig.terms, ecs_term_t);
+    return term[query->cascade_by - 1].is.component;
 }
 #endif
 
@@ -248,65 +248,69 @@ void get_comp_and_src(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_type_t table_type,
-    ecs_sig_column_t *column,
-    ecs_sig_oper_kind_t op,
-    ecs_sig_from_kind_t from,
+    ecs_term_t *term,
+    ecs_oper_kind_t op,
+    ecs_from_kind_t from,
     ecs_entity_t *component_out,
     ecs_entity_t *entity_out)
 {
     ecs_entity_t component = 0, entity = 0;
 
-    if (op == EcsOperNot) {
-        entity = column->source;
+    if (op == EcsNot) {
+        entity = term->args[0].entity;
     }
 
     /* Column that retrieves data from self or a fixed entity */
     if (from == EcsFromAny || from == EcsFromEntity || 
         from == EcsFromOwned || from == EcsFromShared) 
     {
-        if (op == EcsOperAnd || op == EcsOperNot || op == EcsOperOptional) {
-            component = column->is.component;
+        if (op == EcsAnd || op == EcsNot || op == EcsOptional) {
+            component = term->is.component;
         } else if (op == EcsOperAll) {
-            component = column->is.component & ECS_COMPONENT_MASK;
-        } else if (op == EcsOperOr) {
+            component = term->is.component & ECS_COMPONENT_MASK;
+        } else if (op == EcsOr) {
             component = ecs_type_contains(
-                world, table_type, column->is.type, 
+                world, table_type, term->is.type, 
                 false, true);
         }
 
         if (from == EcsFromEntity) {
-            entity = column->source;
+            entity = term->args[0].entity;
         }
 
     /* Column that just passes a handle to the system (no data) */
     } else if (from == EcsFromEmpty) {
-        component = column->is.component;
+        component = term->is.component;
 
     /* Column that retrieves data from a dynamic entity */
     } else if (from == EcsFromParent || from == EcsCascade) {
-        if (op == EcsOperAnd ||
-            op == EcsOperOptional)
+        if (op == EcsAnd ||
+            op == EcsOptional)
         {
-            component = column->is.component;
+            component = term->is.component;
             entity = ecs_find_in_type(
                 world, table_type, component, EcsChildOf);
 
-        } else if (op == EcsOperOr) {
+        } else if (op == EcsOr) {
             component = components_contains(
                 world,
                 table_type,
-                column->is.type,
+                term->is.type,
                 &entity,
                 false);
         }
 
     /* Column that retrieves data from a system */
     } else if (from == EcsFromSystem) {
-        if (op == EcsOperAnd) {
-            component = column->is.component;
+        if (op == EcsAnd) {
+            component = term->is.component;
         }
 
         entity = query->system;
+    }
+
+    if (entity == EcsThis) {
+        entity = 0;
     }
 
     *component_out = component;
@@ -357,7 +361,7 @@ int32_t get_component_index(
     ecs_type_t table_type,
     ecs_entity_t *component_out,
     int32_t column_index,
-    ecs_sig_oper_kind_t op,
+    ecs_oper_kind_t op,
     trait_offset_t *trait_offsets,
     int32_t count)
 {
@@ -484,7 +488,7 @@ int32_t get_component_index(
 
     if (op == EcsOperAll) {
         result = 0;
-    } else if (op == EcsOperOptional) {
+    } else if (op == EcsOptional) {
         /* If table doesn't have the field, mark it as no data */
         if (!ecs_type_has_id(world, table_type, component)) {
             result = 0;
@@ -502,7 +506,7 @@ ecs_vector_t* add_ref(
     ecs_vector_t *references,
     ecs_entity_t component,
     ecs_entity_t entity,
-    ecs_sig_from_kind_t from)
+    ecs_from_kind_t from)
 {
     const EcsComponent *c_info = ecs_get(world, component, EcsComponent);
     
@@ -546,14 +550,14 @@ ecs_vector_t* add_ref(
 
 static
 ecs_entity_t is_column_trait(
-    ecs_sig_column_t *column)
+    ecs_term_t *term)
 {
-    ecs_sig_from_kind_t from_kind = column->from_kind;
-    ecs_sig_oper_kind_t oper_kind = column->oper_kind;
+    ecs_from_kind_t from_kind = term->from_kind;
+    ecs_oper_kind_t oper = term->oper;
 
     /* For now traits are only supported on owned columns */
-    if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
-        ecs_entity_t c = column->is.component;
+    if (from_kind == EcsFromOwned && oper == EcsAnd) {
+        ecs_entity_t c = term->is.component;
         if (ECS_HAS_ROLE(c, PAIR)) {
             if (!ECS_PAIR_RELATION(c)) {
                 return c;
@@ -598,12 +602,12 @@ int32_t count_traits(
     const ecs_query_t *query,
     ecs_type_t type)
 {
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
-    int32_t i, count = ecs_vector_count(query->sig.columns);
+    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    int32_t i, count = ecs_vector_count(query->sig.terms);
     int32_t first_count = 0, trait_count = 0;
 
     for (i = 0; i < count; i ++) {
-        ecs_entity_t trait = is_column_trait(&columns[i]);
+        ecs_entity_t trait = is_column_trait(&terms[i]);
         if (trait) {
             trait_count = type_trait_count(type, trait);
             if (!first_count) {
@@ -626,10 +630,10 @@ int32_t count_traits(
 static
 ecs_type_t get_column_type(
     ecs_world_t *world,
-    ecs_sig_oper_kind_t oper_kind,
+    ecs_oper_kind_t oper,
     ecs_entity_t component)
 {
-    if (oper_kind == EcsOperAll) {
+    if (oper == EcsOperAll) {
         const EcsType *type = ecs_get(world, component, EcsType);
         ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
         return type->normalized;
@@ -646,7 +650,7 @@ void add_table(
     ecs_table_t *table)
 {
     ecs_type_t table_type = NULL;
-    int32_t c, column_count = ecs_vector_count(query->sig.columns);
+    int32_t c, term_count = ecs_vector_count(query->sig.terms);
 
     if (table) {
         table_type = table->type;
@@ -663,7 +667,7 @@ void add_table(
     trait_offset_t *trait_offsets = NULL;
     if (trait_count) {
         trait_offsets = ecs_os_calloc(
-            ECS_SIZEOF(trait_offset_t) * column_count);
+            ECS_SIZEOF(trait_offset_t) * term_count);
     }
 
     /* From here we recurse */
@@ -682,39 +686,39 @@ add_trait:
     /* If grouping is enabled for query, assign the group rank to the table */
     group_table(world, query, &table_data);
 
-    if (column_count) {
+    if (term_count) {
         /* Array that contains the system column to table column mapping */
-        table_data.iter_data.columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * column_count);
+        table_data.iter_data.columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * term_count);
         ecs_assert(table_data.iter_data.columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Store the components of the matched table. In the case of OR expressions,
         * components may differ per matched table. */
-        table_data.iter_data.components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * column_count);
+        table_data.iter_data.components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * term_count);
         ecs_assert(table_data.iter_data.components != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Also cache types, so no lookup is needed while iterating */
-        table_data.iter_data.types = ecs_os_malloc(ECS_SIZEOF(ecs_type_t) * column_count);
+        table_data.iter_data.types = ecs_os_malloc(ECS_SIZEOF(ecs_type_t) * term_count);
         ecs_assert(table_data.iter_data.types != NULL, ECS_OUT_OF_MEMORY, NULL);        
     }
 
     /* Walk columns parsed from the system signature */
-    ecs_sig_column_t *columns = ecs_vector_first(
-        query->sig.columns, ecs_sig_column_t);
+    ecs_term_t *terms = ecs_vector_first(
+        query->sig.terms, ecs_term_t);
 
-    for (c = 0; c < column_count; c ++) {
-        ecs_sig_column_t *column = &columns[c];
+    for (c = 0; c < term_count; c ++) {
+        ecs_term_t *term = &terms[c];
         ecs_entity_t entity = 0, component = 0;
-        ecs_sig_oper_kind_t op = column->oper_kind;
-        ecs_sig_from_kind_t from = column->from_kind;
+        ecs_oper_kind_t op = term->oper;
+        ecs_from_kind_t from = term->from_kind;
 
-        if (op == EcsOperNot) {
+        if (op == EcsNot) {
             from = EcsFromEmpty;
         }
 
         table_data.iter_data.columns[c] = 0;
 
         /* Get actual component and component source for current column */
-        get_comp_and_src(world, query, table_type, column, op, from, &component, 
+        get_comp_and_src(world, query, table_type, term, op, from, &component, 
             &entity);
 
         /* This column does not retrieve data from a static entity (either
@@ -724,11 +728,11 @@ add_trait:
                 &component, c, op, trait_offsets, trait_cur + 1);
 
             if (index == -1) {
-                if (from == EcsFromOwned && op == EcsOperOptional) {
+                if (from == EcsFromOwned && op == EcsOptional) {
                     index = 0;
                 }
             } else {
-                if (from == EcsFromShared && op == EcsOperOptional) {
+                if (from == EcsFromShared && op == EcsOptional) {
                     index = 0;
                 }
             }
@@ -872,7 +876,7 @@ static
 bool match_column(
     const ecs_world_t *world,
     ecs_type_t type,
-    ecs_sig_from_kind_t from_kind,
+    ecs_from_kind_t from_kind,
     ecs_entity_t component,
     ecs_entity_t source,
     ecs_match_failure_t *failure_info)
@@ -947,39 +951,39 @@ bool ecs_query_match(
         return false;
     }
 
-    int32_t i, column_count = ecs_vector_count(query->sig.columns);
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
+    int32_t i, column_count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
 
     for (i = 0; i < column_count; i ++) {
-        ecs_sig_column_t *elem = &columns[i];
-        ecs_sig_from_kind_t from_kind = elem->from_kind;
-        ecs_sig_oper_kind_t oper_kind = elem->oper_kind;
+        ecs_term_t *term = &terms[i];
+        ecs_from_kind_t from_kind = term->from_kind;
+        ecs_oper_kind_t oper = term->oper;
 
         failure_info->column = i + 1;
 
-        if (oper_kind == EcsOperAnd) {
+        if (oper == EcsAnd) {
             if (!match_column(
-                world, table_type, from_kind, elem->is.component, 
-                elem->source, failure_info)) 
+                world, table_type, from_kind, term->is.component, 
+                term->args[0].entity, failure_info)) 
             {
                 return false;
             }
 
-        } else if (oper_kind == EcsOperNot) {
+        } else if (oper == EcsNot) {
             if (match_column(
-                world, table_type, from_kind, elem->is.component, 
-                elem->source, failure_info)) 
+                world, table_type, from_kind, term->is.component, 
+                term->args[0].entity, failure_info)) 
             {
                 return false;
             }           
 
-        } else if (oper_kind == EcsOperOr || oper_kind == EcsOperAll) {
-            bool match_all = oper_kind == EcsOperAll;
+        } else if (oper == EcsOr || oper == EcsOperAll) {
+            bool match_all = oper == EcsOperAll;
             if (match_all) {
-                const EcsType *type_ptr = ecs_get(world, elem->is.component, EcsType);
+                const EcsType *type_ptr = ecs_get(world, term->is.component, EcsType);
                 type = type_ptr->normalized;
             } else {
-                type = elem->is.type;
+                type = term->is.type;
             }
 
             if (from_kind == EcsFromAny) {
@@ -1458,13 +1462,13 @@ static
 bool has_refs(
     ecs_sig_t *sig)
 {
-    int32_t i, count = ecs_vector_count(sig->columns);
-    ecs_sig_column_t *columns = ecs_vector_first(sig->columns, ecs_sig_column_t);
+    int32_t i, count = ecs_vector_count(sig->terms);
+    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
 
     for (i = 0; i < count; i ++) {
-        ecs_sig_from_kind_t from_kind = columns[i].from_kind;
+        ecs_from_kind_t from_kind = terms[i].from_kind;
 
-        if (columns[i].oper_kind == EcsOperNot && from_kind == EcsFromEmpty) {
+        if (terms[i].oper == EcsNot && from_kind == EcsFromEmpty) {
             /* Special case: if oper kind is Not and the query contained a
              * shared expression, the expression is translated to FromId to
              * prevent resolving the ref */
@@ -1484,11 +1488,11 @@ static
 bool has_traits(
     ecs_sig_t *sig)
 {
-    int32_t i, count = ecs_vector_count(sig->columns);
-    ecs_sig_column_t *columns = ecs_vector_first(sig->columns, ecs_sig_column_t);
+    int32_t i, count = ecs_vector_count(sig->terms);
+    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
 
     for (i = 0; i < count; i ++) {
-        if (is_column_trait(&columns[i])) {
+        if (is_column_trait(&terms[i])) {
             return true;
         }
     }
@@ -1501,7 +1505,7 @@ void register_monitors(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    ecs_vector_each(query->sig.columns, ecs_sig_column_t, column, {
+    ecs_vector_each(query->sig.terms, ecs_term_t, term, {
         /* If component is requested with CASCADE source register component as a
          * parent monitor. Parent monitors keep track of whether an entity moved
          * in the hierarchy, which potentially requires the query to reorder its
@@ -1509,15 +1513,15 @@ void register_monitors(
          * Also register a regular component monitor for EcsCascade columns.
          * This ensures that when the component used in the CASCADE column
          * is added or removed tables are updated accordingly*/
-        if (column->from_kind == EcsCascade) {
-            if (column->oper_kind != EcsOperOr) {
+        if (term->from_kind == EcsCascade) {
+            if (term->oper != EcsOr) {
                 ecs_component_monitor_register(
-                    &world->parent_monitors, column->is.component, query);
+                    &world->parent_monitors, term->is.component, query);
 
                 ecs_component_monitor_register(
-                    &world->component_monitors, column->is.component, query);
+                    &world->component_monitors, term->is.component, query);
             } else {
-                ecs_vector_each(column->is.type, ecs_entity_t, e_ptr, {
+                ecs_vector_each(term->is.type, ecs_entity_t, e_ptr, {
                     ecs_component_monitor_register(
                         &world->parent_monitors, *e_ptr, query);
 
@@ -1527,18 +1531,18 @@ void register_monitors(
             }
 
         /* FromSelf also requires registering a monitor, as FromSelf columns can
-         * be matched with prefabs. The only column kinds that do not require
+         * be matched with prefabs. The only term kinds that do not require
          * registering a monitor are FromOwned and FromNothing. */
-        } else if (column->from_kind == EcsFromAny || 
-            column->from_kind == EcsFromShared ||
-            column->from_kind == EcsFromEntity ||
-            column->from_kind == EcsFromParent)
+        } else if (term->from_kind == EcsFromAny || 
+            term->from_kind == EcsFromShared ||
+            term->from_kind == EcsFromEntity ||
+            term->from_kind == EcsFromParent)
         {
-            if (column->oper_kind != EcsOperOr) {
+            if (term->oper != EcsOr) {
                 ecs_component_monitor_register(
-                    &world->component_monitors, column->is.component, query);
+                    &world->component_monitors, term->is.component, query);
             } else {
-                ecs_vector_each(column->is.type, ecs_entity_t, e_ptr, {
+                ecs_vector_each(term->is.type, ecs_entity_t, e_ptr, {
                     ecs_component_monitor_register(
                         &world->component_monitors, *e_ptr, query);
                 });
@@ -1552,52 +1556,60 @@ void process_signature(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    int i, count = ecs_vector_count(query->sig.columns);
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
+    int i, count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
 
     for (i = 0; i < count; i ++) {
-        ecs_sig_column_t *column = &columns[i];
-        ecs_sig_oper_kind_t op = column->oper_kind; 
-        ecs_sig_from_kind_t from = column->from_kind; 
-        ecs_sig_inout_kind_t inout = column->inout_kind;
+        ecs_term_t *term = &terms[i];
+        ecs_oper_kind_t op = term->oper; 
+        ecs_from_kind_t from = term->from_kind; 
+        ecs_inout_kind_t inout = term->inout;
+
+        /* Queries do not support variables */
+        ecs_assert(term->pred.var_kind != EcsVarIsVariable, 
+            ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(term->args[0].var_kind != EcsVarIsVariable, 
+            ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(term->args[1].var_kind != EcsVarIsVariable, 
+            ECS_INVALID_PARAMETER, NULL);
 
         if (inout != EcsIn) {
             query->flags |= EcsQueryHasOutColumns;
         }
 
-        if (op == EcsOperOptional) {
+        if (op == EcsOptional) {
             query->flags |= EcsQueryHasOptional;
         }        
 
         if (!(query->flags & EcsQueryMatchDisabled)) {
-            if (op == EcsOperOr) {
+            if (op == EcsOr) {
                 /* If the signature explicitly indicates interest in EcsDisabled,
                  * signal that disabled entities should be matched. By default,
                  * disabled entities are not matched. */
                 if (ecs_type_owns_id(
-                    world, column->is.type, EcsDisabled, true))
+                    world, term->is.type, EcsDisabled, true))
                 {
                     query->flags |= EcsQueryMatchDisabled;
                 }         
-            } else if (op == EcsOperAnd || op == EcsOperOptional) {
-                if (column->is.component == EcsDisabled) {
+            } else if (op == EcsAnd || op == EcsOptional) {
+                if (term->is.component == EcsDisabled) {
                     query->flags |= EcsQueryMatchDisabled;
                 }
             }
         }
 
         if (!(query->flags & EcsQueryMatchPrefab)) {
-            if (op == EcsOperOr) {
+            if (op == EcsOr) {
                 /* If the signature explicitly indicates interest in EcsPrefab,
                 * signal that disabled entities should be matched. By default,
                 * prefab entities are not matched. */
                 if (ecs_type_owns_id(
-                    world, column->is.type, EcsPrefab, true))
+                    world, term->is.type, EcsPrefab, true))
                 {
                     query->flags |= EcsQueryMatchPrefab;
                 }            
-            } else if (op == EcsOperAnd || op == EcsOperOptional) {
-                if (column->is.component == EcsPrefab) {
+            } else if (op == EcsAnd || op == EcsOptional) {
+                if (term->is.component == EcsPrefab) {
                     query->flags |= EcsQueryMatchPrefab;
                 }
             }
@@ -1613,12 +1625,12 @@ void process_signature(
 
         if (from == EcsCascade) {
             query->cascade_by = i + 1;
-            query->rank_on_component = column->is.component;
+            query->rank_on_component = term->is.component;
         }
 
         if (from == EcsFromEntity) {
-            ecs_assert(column->source != 0, ECS_INTERNAL_ERROR, NULL);
-            ecs_set_watch(world, column->source);
+            ecs_assert(term->args[0].entity != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_set_watch(world, term->args[0].entity);
         }
     }
 
@@ -2230,7 +2242,7 @@ ecs_query_t* ecs_query_new_w_sig_intern(
             match_tables(world, result);
         } else {
             /* Add stub table that resolves references (if any) so everything is
-            * preprocessed when the query is evaluated. */
+             * preprocessed when the query is evaluated. */
             add_table(world, result, NULL);
         }
     }
@@ -2392,7 +2404,7 @@ ecs_iter_t ecs_query_iter_page(
     return (ecs_iter_t){
         .world = world,
         .query = query,
-        .column_count = ecs_vector_count(query->sig.columns),
+        .column_count = ecs_vector_count(query->sig.terms),
         .table_count = table_count,
         .inactive_table_count = ecs_vector_count(query->empty_tables),
         .iter.query = it
@@ -2431,7 +2443,7 @@ void ecs_query_set_iter(
 
     it->world = NULL;
     it->query = query;
-    it->column_count = ecs_vector_count(query->sig.columns);
+    it->column_count = ecs_vector_count(query->sig.terms);
     it->table_count = 1;
     it->inactive_table_count = 0;
     it->table_columns = data->columns;
@@ -2792,12 +2804,12 @@ void mark_columns_dirty(
     ecs_table_t *table = table_data->iter_data.table;
 
     if (table && table->dirty_state) {
-        int32_t i, count = ecs_vector_count(query->sig.columns);
-        ecs_sig_column_t *columns = ecs_vector_first(
-            query->sig.columns, ecs_sig_column_t);
+        int32_t i, count = ecs_vector_count(query->sig.terms);
+        ecs_term_t *terms = ecs_vector_first(
+            query->sig.terms, ecs_term_t);
 
         for (i = 0; i < count; i ++) {
-            if (columns[i].inout_kind != EcsIn) {
+            if (terms[i].inout != EcsIn && (terms[i].inout != EcsInOutDefault || terms[i].from_kind == EcsFromOwned)) {
                 int32_t table_column = table_data->iter_data.columns[i];
                 if (table_column > 0) {
                     table->dirty_state[table_column] ++;

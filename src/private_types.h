@@ -48,17 +48,8 @@ typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,                 
     const char *id,
     const char *expr,
-    int64_t column,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t flags,
-    const char *component,
-    const char *source,
-    const char *pair,
-    const char *name,
-    int32_t argc,
-    char **argv,
+    int64_t pos,
+    ecs_term_t *term,
     void *ctx);
 
 /** Component-specific data */
