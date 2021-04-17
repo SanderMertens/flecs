@@ -539,7 +539,6 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
     ecs_fini(world);
 }
 
-
 void System_w_FromContainer_2_column_1_from_container_w_or() {
     ecs_world_t *world = ecs_init();
 

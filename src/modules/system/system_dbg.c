@@ -73,19 +73,8 @@ ecs_type_t ecs_dbg_get_column_type(
     }
 
     ecs_term_t *term = &terms[column_index - 1];
-    ecs_oper_kind_t oper = term->oper;
-    ecs_type_t result;
-
-    switch(oper) {
-    case EcsOr:
-        result = term->is.type;
-        break;
-    default:
-        result = ecs_type_from_id(world, term->is.component);
-        break;
-    }
     
-    return result;
+    return ecs_type_from_id(world, term->id);
 }
 
 #endif

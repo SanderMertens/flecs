@@ -1137,14 +1137,14 @@ void SystemMisc_one_named_column_of_two() {
     test_assert(term->oper == EcsAnd);
     test_assert(term->from_kind == EcsFromOwned);
     test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->is.component == ecs_typeid(Position));
+    test_assert(term->id == ecs_typeid(Position));
     test_str(term->name, "pos");
 
     term = ecs_vector_get(terms, ecs_term_t, 1);
     test_assert(term->oper == EcsAnd);
     test_assert(term->from_kind == EcsFromOwned);
     test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->is.component == ecs_typeid(Velocity));
+    test_assert(term->id == ecs_typeid(Velocity));
     test_str(term->name, NULL);
 
     ecs_sig_deinit(&sig);
@@ -1169,14 +1169,14 @@ void SystemMisc_two_named_columns_of_two() {
     test_assert(term->oper == EcsAnd);
     test_assert(term->from_kind == EcsFromOwned);
     test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->is.component == ecs_typeid(Position));
+    test_assert(term->id == ecs_typeid(Position));
     test_str(term->name, "pos");
 
     term = ecs_vector_get(terms, ecs_term_t, 1);
     test_assert(term->oper == EcsAnd);
     test_assert(term->from_kind == EcsFromOwned);
     test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->is.component == ecs_typeid(Velocity));
+    test_assert(term->id == ecs_typeid(Velocity));
     test_str(term->name, "vel");
 
     ecs_sig_deinit(&sig);

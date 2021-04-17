@@ -280,6 +280,9 @@ struct ecs_query_t {
     /* Signature of query */
     ecs_sig_t sig;
 
+    /* Number of actual columns in query, with OR terms collapsed */
+    int32_t column_count;
+
     /* Reference to world */
     ecs_world_t *world;
 

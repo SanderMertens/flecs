@@ -15,42 +15,47 @@ int parse_type_action(
     if (term->name) {
         ecs_parser_error(name, sig, column, 
             "column names not supported in type expression");
-        return -1;
+        goto error;
     }
 
     if (term->oper != EcsAnd) {
         ecs_parser_error(name, sig, column, 
             "operator other than AND not supported in type expression");
-        return -1;
+        goto error;
     }
 
     if (ecs_term_resolve(world, name, sig, column, term)) {
-        return -1;
+        goto error;
     }
 
     ecs_term_set_legacy(term);
 
     if (term->args[0].entity == 0) {
         /* Empty term */
-        return 0;
+        goto done;
     }
 
     if (term->from_kind != EcsFromOwned) {
         ecs_parser_error(name, sig, column, 
             "source modifiers not supported for type expressions");
-        return -1;
+        goto error;
     }
 
     if (term->args[0].entity != EcsThis) {
         ecs_parser_error(name, sig, column, 
             "subject other than this not supported in type expression");
-        return -1;
+        goto error;
     }
 
     ecs_entity_t* elem = ecs_vector_add(array, ecs_entity_t);
-    *elem = term->is.component | term->role;
+    *elem = term->id | term->role;
 
+done:
+    ecs_term_free(term);
     return 0;
+error:
+    ecs_term_free(term);
+    return -1;
 }
 
 static
@@ -78,7 +83,7 @@ EcsType type_from_vec(
     ecs_table_t *table = table_from_vec(world, vec);
     if (!table) {
         return result;
-    }    
+    }
 
     result.type = table->type;
 

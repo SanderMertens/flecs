@@ -47,15 +47,15 @@ ecs_term_t* sig_columns(ecs_sig_t *sig) {
         if (term->oper != EcsOr) {\
             if (term->args[1].entity) {\
                 if (term->role) {\
-                    test_int(ECS_ROLE_MASK & term->is.component, term->role);\
+                    test_int(ECS_ROLE_MASK & term->id, term->role);\
                 } else {\
-                    test_assert(ECS_HAS_ROLE(term->is.component, PAIR));\
+                    test_assert(ECS_HAS_ROLE(term->id, PAIR));\
                 }\
-                test_int(ECS_PAIR_RELATION(term->is.component), ecs_entity_t_lo(term->pred.entity));\
-                test_int(ECS_PAIR_OBJECT(term->is.component), ecs_entity_t_lo(term->args[1].entity));\
+                test_int(ECS_PAIR_RELATION(term->id), ecs_entity_t_lo(term->pred.entity));\
+                test_int(ECS_PAIR_OBJECT(term->id), ecs_entity_t_lo(term->args[1].entity));\
             } else {\
-                test_int(ECS_COMPONENT_MASK & term->is.component, term->pred.entity);\
-                test_int(ECS_ROLE_MASK & term->is.component, term->role);\
+                test_int(ECS_COMPONENT_MASK & term->id, term->pred.entity);\
+                test_int(ECS_ROLE_MASK & term->id, term->role);\
             }\
         }\
         if (term->from_kind != EcsFromEntity && term->from_kind != EcsFromEmpty) {\
@@ -1598,16 +1598,18 @@ void Parser_2_or_pred_implicit_subj() {
 
     ecs_sig_t sig;
     test_assert(ecs_sig_init(world, NULL, "Pred_1 || Pred_2", &sig) == 0);
-    test_int(sig_count(&sig), 1);
+    test_int(sig_count(&sig), 2);
 
     ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred_1, EcsIsDefault);
     test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOr);
     test_int(columns[0].inout, EcsInOutDefault);
 
-    ecs_entity_t *ids = ecs_vector_first(columns[0].is.type, ecs_entity_t);
-    test_int(ids[0], Pred_1);
-    test_int(ids[1], Pred_2);
+    test_pred(columns[1], Pred_2, EcsIsDefault);
+    test_subj(columns[1], EcsThis, EcsIsDefault);
+    test_int(columns[1].oper, EcsOr);
+    test_int(columns[1].inout, EcsInOutDefault);
 
     test_legacy(sig);
 
@@ -1624,16 +1626,18 @@ void Parser_2_or_pred_explicit_subj() {
 
     ecs_sig_t sig;
     test_assert(ecs_sig_init(world, NULL, "Pred_1(This) || Pred_2(This)", &sig) == 0);
-    test_int(sig_count(&sig), 1);
+    test_int(sig_count(&sig), 2);
 
     ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred_1, EcsIsDefault);
     test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOr);
     test_int(columns[0].inout, EcsInOutDefault);
 
-    ecs_entity_t *ids = ecs_vector_first(columns[0].is.type, ecs_entity_t);
-    test_int(ids[0], Pred_1);
-    test_int(ids[1], Pred_2);
+    test_pred(columns[1], Pred_2, EcsIsDefault);
+    test_subj(columns[1], EcsThis, EcsIsDefault);
+    test_int(columns[1].oper, EcsOr);
+    test_int(columns[1].inout, EcsInOutDefault);
 
     test_legacy(sig);
 
@@ -1652,16 +1656,20 @@ void Parser_2_or_pair_implicit_subj() {
 
     ecs_sig_t sig;
     test_assert(ecs_sig_init(world, NULL, "(Pred_1, Obj_1) || (Pred_2, Obj_2)", &sig) == 0);
-    test_int(sig_count(&sig), 1);
+    test_int(sig_count(&sig), 2);
 
     ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred_1, EcsIsDefault);    
     test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj_1, EcsIsDefault);
     test_int(columns[0].oper, EcsOr);
     test_int(columns[0].inout, EcsInOutDefault);
 
-    ecs_entity_t *ids = ecs_vector_first(columns[0].is.type, ecs_entity_t);
-    test_int(ids[0], ecs_pair(Pred_1, Obj_1));
-    test_int(ids[1], ecs_pair(Pred_2, Obj_2));
+    test_pred(columns[1], Pred_2, EcsIsDefault);    
+    test_subj(columns[1], EcsThis, EcsIsDefault);
+    test_obj(columns[1], Obj_2, EcsIsDefault);
+    test_int(columns[1].oper, EcsOr);
+    test_int(columns[1].inout, EcsInOutDefault);
 
     test_legacy(sig);
 
@@ -1680,16 +1688,20 @@ void Parser_2_or_pair_explicit_subj() {
 
     ecs_sig_t sig;
     test_assert(ecs_sig_init(world, NULL, "Pred_1(This, Obj_1) || Pred_2(This, Obj_2)", &sig) == 0);
-    test_int(sig_count(&sig), 1);
+    test_int(sig_count(&sig), 2);
 
     ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred_1, EcsIsDefault);    
     test_subj(columns[0], EcsThis, EcsIsDefault);
+    test_obj(columns[0], Obj_1, EcsIsDefault);
     test_int(columns[0].oper, EcsOr);
     test_int(columns[0].inout, EcsInOutDefault);
 
-    ecs_entity_t *ids = ecs_vector_first(columns[0].is.type, ecs_entity_t);
-    test_int(ids[0], ecs_pair(Pred_1, Obj_1));
-    test_int(ids[1], ecs_pair(Pred_2, Obj_2));
+    test_pred(columns[1], Pred_2, EcsIsDefault);    
+    test_subj(columns[1], EcsThis, EcsIsDefault);
+    test_obj(columns[1], Obj_2, EcsIsDefault);
+    test_int(columns[1].oper, EcsOr);
+    test_int(columns[1].inout, EcsInOutDefault);
 
     test_legacy(sig);
 
@@ -1706,16 +1718,18 @@ void Parser_2_or_pred_inout() {
 
     ecs_sig_t sig;
     test_assert(ecs_sig_init(world, NULL, "[inout] Pred_1 || Pred_2", &sig) == 0);
-    test_int(sig_count(&sig), 1);
+    test_int(sig_count(&sig), 2);
 
     ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred_1, EcsIsDefault);
     test_subj(columns[0], EcsThis, EcsIsDefault);
     test_int(columns[0].oper, EcsOr);
     test_int(columns[0].inout, EcsInOut);
 
-    ecs_entity_t *ids = ecs_vector_first(columns[0].is.type, ecs_entity_t);
-    test_int(ids[0], Pred_1);
-    test_int(ids[1], Pred_2);
+    test_pred(columns[1], Pred_2, EcsIsDefault);
+    test_subj(columns[1], EcsThis, EcsIsDefault);
+    test_int(columns[1].oper, EcsOr);
+    test_int(columns[1].inout, EcsInOutDefault);
 
     test_legacy(sig);
 

@@ -172,11 +172,6 @@ typedef struct ecs_term_id_t {
 typedef struct ecs_term_t {
     /* Legacy fields -- will soon be removed */
     ecs_from_kind_t from_kind;   /* Element kind (Entity, Component) */
-    union {
-        ecs_vector_t *type;          /* Used for OR operator */
-        ecs_entity_t component;      /* Used for AND operator */
-    } is;
-    char *name;                      /* Name of column */
 
     /* New fields -- currently populated together with legacy fields */
     ecs_inout_kind_t inout;
@@ -184,6 +179,13 @@ typedef struct ecs_term_t {
     ecs_term_id_t args[2];
     ecs_oper_kind_t oper;
     ecs_entity_t role;
+
+    /* Term name */
+    char *name;
+
+    /* Can be used instead of pred, args and role to set component/pair id. Will
+     * be populated from pred, args */
+    ecs_entity_t id;    
 } ecs_term_t;
 
 /** Type that stores a parsed signature */
@@ -204,6 +206,10 @@ int ecs_term_resolve(
 /* Set legacy fields in term */
 void ecs_term_set_legacy(
     ecs_term_t *term);    
+
+/* Free resources associated with term */
+void ecs_term_free(
+    ecs_term_t *term);
 
 /** Parse signature. */
 FLECS_API

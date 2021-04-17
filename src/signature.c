@@ -14,13 +14,16 @@
 #define TOK_TRAIT '>'
 #define TOK_FOR "FOR"
 #define TOK_NAME_SEP '.'
-#define TOK_ANNOTATE_OPEN '['
-#define TOK_ANNOTATE_CLOSE ']'
+#define TOK_BRACKET_OPEN '['
+#define TOK_BRACKET_CLOSE ']'
 #define TOK_WILDCARD '*'
 #define TOK_SINGLETON '$'
 #define TOK_PAREN_OPEN '('
 #define TOK_PAREN_CLOSE ')'
 #define TOK_AS_ENTITY '\\'
+#define TOK_SELF '='
+#define TOK_SUPERSET '-'
+#define TOK_SUBSET '+'
 
 #define TOK_ANY "ANY"
 #define TOK_OWNED "OWNED"
@@ -90,29 +93,6 @@ bool ecs_is_var(
     return true;
 }
 
-static
-int entity_compare(
-    const void *ptr1,
-    const void *ptr2)
-{
-    ecs_entity_t e1 = *(ecs_entity_t*)ptr1;
-    ecs_entity_t e2 = *(ecs_entity_t*)ptr2;
-    return (e1 > e2) - (e1 < e2);
-}
-
-static
-void vec_add_id(
-    ecs_vector_t **vec,
-    ecs_id_t id)
-{
-    ecs_id_t *e = ecs_vector_add(vec, ecs_id_t);
-    *e = id;
-
-    /* Keep array sorted so that we can use it in type compare operations */
-    ecs_vector_sort(*vec, ecs_id_t, entity_compare);
-}
-
-
 /* -- Private functions -- */
 
 static
@@ -120,7 +100,9 @@ bool valid_token_start_char(
     char ch)
 {
     if (ch && (isalpha(ch) || (ch == '.') || (ch == '_') || (ch == '*') ||
-        (ch == '0') || (ch == TOK_AS_ENTITY) || isdigit(ch))) {
+        (ch == '0') || (ch == TOK_AS_ENTITY) || (ch == TOK_SUPERSET) || 
+        (ch == TOK_SUBSET) && (ch == TOK_SELF) || isdigit(ch))) 
+    {
         return true;
     }
 
@@ -302,7 +284,7 @@ const char* parse_annotation(
 
     ptr = skip_space(ptr);
 
-    if (ptr[0] != TOK_ANNOTATE_CLOSE) {
+    if (ptr[0] != TOK_BRACKET_CLOSE) {
         ecs_parser_error(name, sig, column, "expected ]");
         return NULL;
     }
@@ -375,7 +357,7 @@ const char* parse_element(
     ptr = skip_space(ptr);
 
     /* Inout specifiers always come first */
-    if (ptr[0] == TOK_ANNOTATE_OPEN) {
+    if (ptr[0] == TOK_BRACKET_OPEN) {
         ptr = parse_annotation(name, sig, (ptr - sig), ptr + 1, &elem.inout);
         if (!ptr) {
             return NULL;
@@ -659,7 +641,17 @@ parse_name:
     ptr = skip_space(ptr);
 
 parse_done:
-    if (ptr[0] != TOK_AND && ecs_os_strncmp(ptr, TOK_OR, 2) && ptr[0]) {
+    if (!ecs_os_strncmp(ptr, TOK_OR, 2)) {
+        if (elem.oper != EcsAnd) {
+            ecs_parser_error(name, sig, (ptr - sig), 
+                "cannot combine || with other operators");
+            return NULL;
+        }
+
+        elem.oper = EcsOr;
+    }
+
+    if (ptr[0] != TOK_AND && elem.oper != EcsOr && ptr[0]) {
         ecs_parser_error(name, sig, (ptr - sig), 
             "expected end of expression or next element");
         return NULL;
@@ -676,7 +668,9 @@ parse_done:
     }
 
     if (!elem.args[0].name && elem.from_kind != EcsFromEmpty) {
+        ecs_assert(elem.args[0].name == NULL, ECS_INTERNAL_ERROR, NULL);
         elem.args[0].name = ecs_os_strdup(".");
+        elem.args[0].entity = 0;
     }
 
     *elem_out = elem;
@@ -703,36 +697,53 @@ int ecs_parse_expr(
         return 0;
     }
 
-    bool is_or = false;
+    bool prev_or = false;
+    ecs_from_kind_t prev_from = 0;
+
     const char *ptr = sig;
     while ((ptr = parse_element(name, ptr, &elem))) {
-        if (is_or) {
-            ecs_assert(elem.oper == EcsAnd, ECS_INVALID_SIGNATURE, sig);
-            elem.oper = EcsOr;
-        }
-
         if (elem.oper == EcsOr && elem.from_kind == EcsFromEmpty) {
             ecs_parser_error(name, sig, (ptr - sig), 
                 "invalid empty source in OR expression"); 
+            ecs_term_free(&elem);    
             return -1;
+        }
+
+        if (prev_or) {
+            if (elem.from_kind != prev_from) {
+                ecs_parser_error(name, sig, (ptr - sig), 
+                    "cannot combine different sources in OR expression");
+                ecs_term_free(&elem);
+                return -1;
+            }
+
+            prev_or = elem.oper == EcsOr;
+            prev_from = elem.from_kind;
+
+            if (elem.oper != EcsAnd && elem.oper != EcsOr) {
+                ecs_parser_error(name, sig, (ptr - sig), 
+                    "cannot combine || with other operators");
+                ecs_term_free(&elem);
+                return -1;
+            }
+
+            elem.oper = EcsOr;
+        } else {
+            prev_or = elem.oper == EcsOr;
+            prev_from = elem.from_kind;
         }
 
         if (action(world, name, sig, ptr - sig, &elem, ctx)) {
             return -1;
         }
 
-        is_or = false;
-        if (!strncmp(ptr, TOK_OR, 2)) {
-            is_or = true;
-        }
-
         if (ptr[0]) {
             ptr ++;
-            if (is_or) {
+            if (prev_or) {
                 ptr ++;
             }
         }
-        
+
         ptr = skip_space(ptr);
 
         if (!ptr[0]) {
@@ -802,16 +813,22 @@ void ecs_term_set_legacy(
             term->from_kind == EcsFromAny || 
             term->from_kind == EcsFromShared) 
         {
+            ecs_assert(!term->args[0].name || !strcmp(term->args[0].name, "."), 
+                ECS_INTERNAL_ERROR, NULL);
+
+            if (!term->args[0].name) {
+                term->args[0].name = ecs_os_strdup(".");
+            }
+
             term->args[0].entity = EcsThis;
-            term->args[0].name = ecs_os_strdup(".");
         }
     }
 
     if (term->args[1].name) {
-        term->is.component = ecs_pair(
+        term->id = ecs_pair(
             term->pred.entity, term->args[1].entity);
     } else {
-        term->is.component = term->pred.entity;
+        term->id = term->pred.entity;
     }
 
     if (term->role == ECS_AND) {
@@ -819,7 +836,7 @@ void ecs_term_set_legacy(
     } else if (term->role == ECS_OR) {
         term->oper = EcsOr;
     } else {
-        term->is.component |= term->role;
+        term->id |= term->role;
     }
 }
 
@@ -859,6 +876,15 @@ int ecs_term_resolve(
     return 0;
 }
 
+void ecs_term_free(
+    ecs_term_t *term)
+{
+    ecs_os_free(term->pred.name);
+    ecs_os_free(term->args[0].name);
+    ecs_os_free(term->args[1].name);
+    ecs_os_free(term->name);
+}
+
 int ecs_sig_init(
     ecs_world_t *world,
     const char *name,
@@ -885,16 +911,12 @@ int ecs_sig_init(
 void ecs_sig_deinit(
     ecs_sig_t *sig)
 {   
-    ecs_vector_each(sig->terms, ecs_term_t, column, {
-        if (column->oper == EcsOr) {
-            ecs_vector_free(column->is.type);
-        }
-        
-        ecs_os_free(column->pred.name);
-        ecs_os_free(column->args[0].name);
-        ecs_os_free(column->args[1].name);
-        ecs_os_free(column->name);
-    });
+    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
+    int32_t i, count = ecs_vector_count(sig->terms);
+
+    for (i = 0; i < count; i ++) {
+        ecs_term_free(&terms[i]);
+    }
 
     ecs_vector_free(sig->terms);
     ecs_os_free(sig->expr);
@@ -914,57 +936,36 @@ int ecs_sig_add(
     ecs_term_set_legacy(term);
 
     ecs_term_t *elem;
-    if (term->oper != EcsOr) {
-        elem = ecs_vector_add(&sig->terms, ecs_term_t);
-        *elem = *term;
 
     /* If term role is OR, component should be a type */
-    } else if (term->role == ECS_OR) {
-        const EcsType *type = ecs_get(world, term->is.component, EcsType);
+    if (term->role == ECS_OR) {
+        const EcsType *type = ecs_get(world, term->id, EcsType);
         if (!type) {
             ecs_parser_error(sig->name, sig->expr, 0, 
                 "entity used with OR must be a type");
             return -1;
         }
 
-        elem = ecs_vector_add(&sig->terms, ecs_term_t);
-        *elem = *term;
-        elem->is.type = ecs_vector_copy(type->normalized, ecs_entity_t);
+        int32_t i, count = ecs_vector_count(type->normalized);
+        ecs_entity_t *ids = ecs_vector_first(type->normalized, ecs_entity_t);
+
+        for (i = 0; i < count; i ++) {
+            elem = ecs_vector_add(&sig->terms, ecs_term_t);
+            *elem = *term;
+            elem->pred.entity = ids[i];
+            elem->pred.name = NULL;
+            elem->args[0].name = NULL;
+            elem->args[1].name = NULL;
+            elem->oper = EcsOr;
+            elem->id = ids[i];
+            elem->role = 0;
+        }
+
+        ecs_term_free(term);
 
     } else {
-        /* OR follows OR or AND, AND being the first elem of the expression */        
-        elem = ecs_vector_last(sig->terms, ecs_term_t);
-        ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (elem->oper != EcsAnd && elem->oper != EcsOr) {
-            ecs_parser_error(sig->name, sig->expr, 0, 
-                "unexpected || operator in expression");
-            return -1;
-        }
-
-        if (elem->from_kind != term->from_kind) {
-            ecs_parser_error(sig->name, sig->expr, 0, 
-                "cannot mix subjects in OR expression");
-            return -1;
-        }
-
-        if (term->inout == EcsInOutDefault) {
-            term->inout = elem->inout;
-        }
-
-        if (elem->inout != term->inout) {
-            ecs_parser_error(sig->name, sig->expr, 0, 
-                "cannot mix in/out in OR expression");
-            return -1;
-        }
-
-        if (elem->oper == EcsAnd) {
-            ecs_entity_t last_component = elem->is.component;
-            elem->is.type = NULL;
-            vec_add_id(&elem->is.type, last_component);
-            elem->oper = EcsOr;
-        }
-
-        vec_add_id(&elem->is.type, term->is.component);
+        elem = ecs_vector_add(&sig->terms, ecs_term_t);
+        *elem = *term;
     }
 
     return 0;
@@ -1002,19 +1003,27 @@ char* ecs_sig_str(
 
     ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
     int32_t i, count = ecs_vector_count(sig->terms);
+    int32_t or_count = 0;
 
     for (i = 0; i < count; i ++) {
         if (i) {
-            ecs_strbuf_appendstr(&buf, ", ");
+            if (or_count >= 1) {
+                ecs_strbuf_appendstr(&buf, " || ");
+            } else {
+                ecs_strbuf_appendstr(&buf, ", ");
+            }
         }
 
         ecs_term_t *term = &terms[i];
-        if (term->inout == EcsIn) {
-            ecs_strbuf_appendstr(&buf, "[in] ");
-        } else if (term->inout == EcsInOut) {
-            ecs_strbuf_appendstr(&buf, "[inout] ");
-        } else if (term->inout == EcsInOut) {
-            ecs_strbuf_appendstr(&buf, "[out] ");
+
+        if (or_count < 1) {
+            if (term->inout == EcsIn) {
+                ecs_strbuf_appendstr(&buf, "[in] ");
+            } else if (term->inout == EcsInOut) {
+                ecs_strbuf_appendstr(&buf, "[inout] ");
+            } else if (term->inout == EcsInOut) {
+                ecs_strbuf_appendstr(&buf, "[out] ");
+            }
         }
 
         if (term->role) {
@@ -1022,57 +1031,47 @@ char* ecs_sig_str(
             ecs_strbuf_appendstr(&buf, " ");
         }
 
-        ecs_assert(term->oper == term->oper, ECS_INTERNAL_ERROR, NULL);
+        if (term->oper == EcsOr) {
+            or_count ++;
+        } else {
+            or_count = 0;
+        }
 
-        if (term->oper != EcsOr) {
-            if (term->oper == EcsNot) {
-                ecs_strbuf_appendstr(&buf, "!");
-            } else if (term->oper == EcsOptional) {
-                ecs_strbuf_appendstr(&buf, "?");
-            }
+        if (term->oper == EcsNot) {
+            ecs_strbuf_appendstr(&buf, "!");
+        } else if (term->oper == EcsOptional) {
+            ecs_strbuf_appendstr(&buf, "?");
+        }
 
-            if (term->args[0].entity == EcsThis && sig_id_set(&term->args[1])) {
+        if (term->args[0].entity == EcsThis && sig_id_set(&term->args[1])) {
+            ecs_strbuf_appendstr(&buf, "(");
+        }
+
+        if (!sig_id_set(&term->args[1]) && 
+            (term->pred.entity != term->args[0].entity)) 
+        {
+            sig_add_id(world, &buf, &term->pred);
+
+            if (!sig_id_set(&term->args[0])) {
+                ecs_strbuf_appendstr(&buf, "()");
+            } else if (term->args[0].entity != EcsThis) {
                 ecs_strbuf_appendstr(&buf, "(");
+                sig_add_id(world, &buf, &term->args[0]);
             }
 
-            if (!sig_id_set(&term->args[1]) && 
-                (term->pred.entity != term->args[0].entity)) 
-            {
-                sig_add_id(world, &buf, &term->pred);
-
-                if (!sig_id_set(&term->args[0])) {
-                    ecs_strbuf_appendstr(&buf, "()");
-                } else if (term->args[0].entity != EcsThis) {
-                    ecs_strbuf_appendstr(&buf, "(");
-                    sig_add_id(world, &buf, &term->args[0]);
-                }
-
-                if (sig_id_set(&term->args[1])) {
-                    ecs_strbuf_appendstr(&buf, ", ");
-                    sig_add_id(world, &buf, &term->args[1]);
-                    ecs_strbuf_appendstr(&buf, ")");
-                }
-            } else {
-                ecs_strbuf_appendstr(&buf, "$");
-                sig_add_id(world, &buf, &term->pred);
+            if (sig_id_set(&term->args[1])) {
+                ecs_strbuf_appendstr(&buf, ", ");
+                sig_add_id(world, &buf, &term->args[1]);
+                ecs_strbuf_appendstr(&buf, ")");
             }
         } else {
-            int32_t j = 0, id_count = ecs_vector_count(term->is.type);
-            ecs_entity_t *ids = ecs_vector_first(term->is.type, ecs_entity_t);
-            char id_buf[256];
-            for (j = 0; j < id_count; j ++) {
-                ecs_entity_str(world, ids[j], id_buf, 256);
-                ecs_strbuf_appendstr(&buf, id_buf);
-                if (j < (id_count - 1)) {
-                    ecs_strbuf_appendstr(&buf, " || ");
-                }
-            }
+            ecs_strbuf_appendstr(&buf, "$");
+            sig_add_id(world, &buf, &term->pred);
         }
     }
 
     return ecs_strbuf_get(&buf);
 }
-
 
 /* Check if system meets constraints of non-table columns */
 bool ecs_sig_check_constraints(
@@ -1085,7 +1084,7 @@ bool ecs_sig_check_constraints(
 
         if (from_kind == EcsFromEntity) {
             ecs_type_t type = ecs_get_type(world, elem->args[0].entity);
-            if (ecs_type_has_id(world, type, elem->is.component)) {
+            if (ecs_type_has_id(world, type, elem->id)) {
                 if (oper == EcsNot) {
                     return false;
                 }

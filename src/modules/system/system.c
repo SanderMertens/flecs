@@ -46,7 +46,7 @@ void activate_in_columns(
     for (i = 0; i < count; i ++) {
         if (terms[i].inout == EcsIn) {
             ecs_on_demand_in_t *in = get_in_component(
-                component_map, terms[i].is.component);
+                component_map, terms[i].id);
             ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
 
             in->count += activate ? 1 : -1;
@@ -129,7 +129,7 @@ void register_out_columns(
             }
 
             register_out_column(
-                component_map, terms[i].is.component, 
+                component_map, terms[i].id, 
                 system_data->on_demand);
 
             out_count ++;
@@ -742,7 +742,7 @@ void CreateSignature(
         /* If sig has FromSystem columns, add components to the entity */
         ecs_vector_each(sig.signature.terms, ecs_term_t, term, {
             if (term->from_kind == EcsFromSystem) {
-                ecs_add_id(world, e, term->is.component);
+                ecs_add_id(world, e, term->id);
             }
         });    
     }

@@ -207,7 +207,7 @@ bool check_column(
 {
     if (term->oper != EcsOr) {
         return check_column_component(
-            term, is_active, term->is.component, write_state);
+            term, is_active, term->id, write_state);
     }  
 
     return false;
@@ -463,7 +463,7 @@ void add_pipeline_tags_to_sig(
         ecs_sig_add(world, sig, &(ecs_term_t){
             .from_kind = EcsFromAny,
             .inout = EcsIn,
-            .oper = i ? EcsOr : EcsAnd,
+            .oper = EcsOr,
             .pred.entity = entities[i]
         });
     }
