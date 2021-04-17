@@ -5,12 +5,12 @@
 
 #define ECS_ANNOTATION_LENGTH_MAX (16)
 
-#define TOK_SOURCE ':'
+#define TOK_COLON ':'
 #define TOK_AND ','
 #define TOK_OR "||"
 #define TOK_NOT '!'
 #define TOK_OPTIONAL '?'
-#define TOK_ROLE '|'
+#define TOK_BITWISE_OR '|'
 #define TOK_TRAIT '>'
 #define TOK_FOR "FOR"
 #define TOK_NAME_SEP '.'
@@ -21,9 +21,11 @@
 #define TOK_PAREN_OPEN '('
 #define TOK_PAREN_CLOSE ')'
 #define TOK_AS_ENTITY '\\'
-#define TOK_SELF '='
-#define TOK_SUPERSET '-'
-#define TOK_SUBSET '+'
+
+#define TOK_SELF "self"
+#define TOK_SUPERSET "superset"
+#define TOK_SUBSET "subset"
+#define TOK_ALL "all"
 
 #define TOK_ANY "ANY"
 #define TOK_OWNED "OWNED"
@@ -100,8 +102,7 @@ bool valid_token_start_char(
     char ch)
 {
     if (ch && (isalpha(ch) || (ch == '.') || (ch == '_') || (ch == '*') ||
-        (ch == '0') || (ch == TOK_AS_ENTITY) || (ch == TOK_SUPERSET) || 
-        (ch == TOK_SUBSET) && (ch == TOK_SELF) || isdigit(ch))) 
+        (ch == '0') || (ch == TOK_AS_ENTITY) || isdigit(ch))) 
     {
         return true;
     }
@@ -130,6 +131,42 @@ bool valid_operator_char(
 
     return false;
 }
+
+static
+const char* parse_digit(
+    const char *name,
+    const char *sig,
+    int64_t column,
+    const char *ptr,
+    char *token_out)
+{
+    ptr = skip_space(ptr);
+    char *tptr = token_out, ch = ptr[0];
+
+    if (!isdigit(ch)) {
+        ecs_parser_error(name, sig, column, 
+            "invalid start of number '%s'", ptr);
+        return NULL;
+    }
+
+    tptr[0] = ch;
+    tptr ++;
+    ptr ++;
+
+    for (; (ch = *ptr); ptr ++) {
+        if (!isdigit(ch)) {
+            break;
+        }
+
+        tptr[0] = ch;
+        tptr ++;
+    }
+
+    tptr[0] = '\0';
+
+    return skip_space(ptr);
+}
+
 
 static
 const char* parse_token(
@@ -167,23 +204,26 @@ const char* parse_token(
 }
 
 static
-void parse_identifier(
+int parse_identifier(
     const char *token,
     ecs_term_id_t *out)
 {
-    const char *tptr = token;
     char ch = token[0];
+
+    const char *tptr = token;
     if (ch == TOK_AS_ENTITY) {
         tptr ++;
     }
 
     out->name = ecs_os_strdup(tptr);
-    
+
     if (ch == TOK_AS_ENTITY) {
         out->var_kind = EcsVarIsEntity;
     } else if (ecs_is_var(tptr)) {
         out->var_kind = EcsVarIsVariable;
     }
+
+    return 0;
 }
 
 static
@@ -293,7 +333,140 @@ const char* parse_annotation(
 }
 
 static
+uint8_t parse_set_token(
+    const char *token)
+{
+    if (!ecs_os_strcmp(token, TOK_SELF)) {
+        return EcsSelf;
+    } else if (!ecs_os_strcmp(token, TOK_SUPERSET)) {
+        return EcsSuperSet;
+    } else if (!ecs_os_strcmp(token, TOK_SUBSET)) {
+        return EcsSubSet;
+    } else if (!ecs_os_strcmp(token, TOK_ALL)) {
+        return EcsAll;
+    } else {
+        return 0;
+    }
+}
+
+static
+const char* parse_set_expr(
+    ecs_world_t *world,
+    const char *name,
+    const char *sig,
+    int64_t column,
+    const char *ptr,
+    char *token,
+    ecs_term_id_t *id)
+{
+    do {
+        uint8_t tok = parse_set_token(token);
+        if (!tok) {
+            ecs_parser_error(name, sig, column, 
+                "invalid set token '%s'", token);
+            return NULL;
+        }
+
+        if (id->set & tok) {
+            ecs_parser_error(name, sig, column, 
+                "duplicate set token '%s'", token);
+            return NULL;            
+        }
+
+        if ((tok == EcsSubSet && id->set & EcsSuperSet) ||
+            (tok == EcsSuperSet && id->set & EcsSubSet))
+        {
+            ecs_parser_error(name, sig, column, 
+                "cannot mix superset and subset", token);
+            return NULL;            
+        }    
+
+        id->set |= tok;
+
+        if (ptr[0] == TOK_PAREN_OPEN) {
+            ptr ++;
+
+            /* Relationship (overrides IsA default) */
+            if (!isdigit(ptr[0]) && valid_token_start_char(ptr[0])) {
+                ptr = parse_token(name, sig, (ptr - sig), ptr, token);
+                if (!ptr) {
+                    return NULL;
+                }         
+
+                ecs_entity_t rel = ecs_lookup_fullpath(world, token);
+                if (!rel) {
+                    ecs_parser_error(name, sig, column, 
+                        "unresolved identifier '%s'", token);
+                    return NULL;
+                }
+
+                id->relation = rel;
+
+                if (ptr[0] == TOK_AND) {
+                    ptr = skip_space(ptr + 1);
+                } else if (ptr[0] != TOK_PAREN_CLOSE) {
+                    ecs_parser_error(name, sig, column, 
+                        "expected ',' or ')'");
+                    return NULL;
+                }
+            }
+
+            /* Max depth of search */
+            if (isdigit(ptr[0])) {
+                ptr = parse_digit(name, sig, (ptr - sig), ptr, token);
+                if (!ptr) {
+                    return NULL;
+                }
+
+                id->depth = atoi(token);
+                if (id->depth < 0) {
+                    ecs_parser_error(name, sig, column, 
+                        "invalid negative depth");
+                    return NULL;  
+                }
+            }
+
+            if (ptr[0] != TOK_PAREN_CLOSE) {
+                ecs_parser_error(name, sig, column, "expected ')'");
+                return NULL;                
+            } else {
+                ptr = skip_space(ptr + 1);
+                if (ptr[0] != TOK_PAREN_CLOSE && ptr[0] != TOK_AND) { 
+                    ecs_parser_error(name, sig, column, 
+                        "expected end of set expr");
+                    return NULL;
+                }
+            }
+        }
+
+        /* Next token in set expression */
+        if (ptr[0] == TOK_BITWISE_OR) {
+            ptr ++;
+            if (valid_token_start_char(ptr[0])) {
+                ptr = parse_token(name, sig, (ptr - sig), ptr, token);
+                if (!ptr) {
+                    return NULL;
+                }
+            }
+
+        /* End of set expression */
+        } else if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND) {
+            break;
+        }
+    } while (true);
+
+    if (id->set & EcsAll && !(id->set & EcsSuperSet) && !(id->set & EcsSubSet)){
+        ecs_parser_error(name, sig, column, 
+            "invalid 'all' token without superset or subset");
+        return NULL;
+    }
+
+    return ptr;
+}
+
+static
 const char* parse_arguments(
+    ecs_world_t *world,
     const char *name,
     const char *sig,
     int64_t column,
@@ -318,13 +491,30 @@ const char* parse_arguments(
                 return NULL;
             }
 
-            parse_identifier(token, &elem->args[arg]);
+            /* If token is a self, superset or subset token, this is a set
+             * expression */
+            if (!ecs_os_strcmp(token, TOK_ALL) ||
+                !ecs_os_strcmp(token, TOK_SELF) || 
+                !ecs_os_strcmp(token, TOK_SUPERSET) || 
+                !ecs_os_strcmp(token, TOK_SUBSET))
+            {
+                ptr = parse_set_expr(world, name, sig, ptr - sig, ptr, 
+                    token, &elem->args[arg]);
+
+            /* Regular identifier */
+            } else if (parse_identifier(token, &elem->args[arg])) {
+                ecs_parser_error(name, sig, (ptr - sig), 
+                    "invalid identifier '%s'", token);
+                return NULL;
+            }
 
             if (ptr[0] == TOK_AND) {
                 ptr = skip_space(ptr + 1);
+
             } else if (ptr[0] == TOK_PAREN_CLOSE) {
                 ptr = skip_space(ptr + 1);
                 break;
+
             } else {
                 ecs_parser_error(name, sig, (ptr - sig), 
                     "expected ',' or ')'");
@@ -333,7 +523,7 @@ const char* parse_arguments(
 
         } else {
             ecs_parser_error(name, sig, (ptr - sig), 
-                "expected variable identifier");
+                "expected identifier or set expression");
             return NULL;
         }
 
@@ -346,6 +536,7 @@ const char* parse_arguments(
 
 static
 const char* parse_element(
+    ecs_world_t *world,
     const char *name,
     const char *sig,
     ecs_term_t *elem_out)
@@ -379,13 +570,13 @@ const char* parse_element(
         }
         
         /* Is token a source identifier? */
-        if (ptr[0] == TOK_SOURCE) {
+        if (ptr[0] == TOK_COLON) {
             ptr ++;
             goto parse_source;
         }
 
         /* Is token a type role? */
-        if (ptr[0] == TOK_ROLE && ptr[1] != TOK_ROLE) {
+        if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
             ptr ++;
             goto parse_role;
         }
@@ -406,7 +597,7 @@ const char* parse_element(
         goto parse_predicate;
 
     /* If next token is the source token, this is an empty source */
-    } else if (ptr[0] == TOK_SOURCE) {
+    } else if (ptr[0] == TOK_COLON) {
         goto empty_source;
 
     /* If next token is a singleton, assign identifier to pred and subject */
@@ -421,7 +612,7 @@ const char* parse_element(
             goto parse_singleton;
         
         /* Deprecated, but still supported: singleton entity */
-        } else if (ptr[0] == TOK_SOURCE) {
+        } else if (ptr[0] == TOK_COLON) {
             ecs_os_strcpy(token, "$");
             ptr ++;
             goto parse_source;
@@ -462,7 +653,11 @@ empty_source:
 parse_source:
     elem.from_kind = parse_source(token);
     if (elem.from_kind == EcsFromEntity) {
-        parse_identifier(token, &elem.args[0]);
+        if (parse_identifier(token, &elem.args[0])) {
+            ecs_parser_error(name, sig, (ptr - sig), 
+                "invalid identifier '%s'", token); 
+            return NULL;           
+        }
     }
 
     ptr = skip_space(ptr);
@@ -473,7 +668,7 @@ parse_source:
         }
 
         /* Is the next token a role? */
-        if (ptr[0] == TOK_ROLE && ptr[1] != TOK_ROLE) {
+        if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
             ptr++;
             goto parse_role;
         }
@@ -526,7 +721,11 @@ parse_role:
     }
 
 parse_predicate:
-    parse_identifier(token, &elem.pred);
+    if (parse_identifier(token, &elem.pred)) {
+        ecs_parser_error(name, sig, (ptr - sig), 
+            "invalid identifier '%s'", token); 
+        return NULL;        
+    }
 
     ptr = skip_space(ptr);
     
@@ -537,7 +736,8 @@ parse_predicate:
             ptr ++;
             ptr = skip_space(ptr);
         } else {
-            ptr = parse_arguments(name, sig, (ptr - sig), ptr, token, &elem);
+            ptr = parse_arguments(
+                world, name, sig, (ptr - sig), ptr, token, &elem);
         }
 
         goto parse_done;
@@ -569,7 +769,12 @@ parse_pair:
     }
 
 parse_pair_predicate:
-    parse_identifier(token, &elem.pred);
+    if (parse_identifier(token, &elem.pred)) {
+        ecs_parser_error(name, sig, (ptr - sig), 
+            "invalid identifier '%s'", token); 
+        return NULL;            
+    }
+
     ptr = skip_space(ptr);
     if (valid_token_start_char(ptr[0])) {
         ptr = parse_token(name, sig, (ptr - sig), ptr, token);
@@ -591,12 +796,21 @@ parse_pair_predicate:
     }
 
 parse_pair_object:
-    parse_identifier(token, &elem.args[1]);
+    if (parse_identifier(token, &elem.args[1])) {
+        ecs_parser_error(name, sig, (ptr - sig), 
+            "invalid identifier '%s'", token); 
+        return NULL;
+    }
+
     ptr = skip_space(ptr);
     goto parse_done; 
 
 parse_trait:
-    parse_identifier(token, &elem.pred);
+    if (parse_identifier(token, &elem.pred)) {
+        ecs_parser_error(name, sig, (ptr - sig), 
+            "invalid identifier '%s'", token); 
+        return NULL;        
+    }
 
     ptr = skip_space(ptr);
     if (valid_token_start_char(ptr[0])) {
@@ -615,7 +829,11 @@ parse_trait:
 
 parse_trait_target:
     parse_identifier(".", &elem.args[0]);
-    parse_identifier(token, &elem.args[1]);
+    if (parse_identifier(token, &elem.args[1])) {
+        ecs_parser_error(name, sig, (ptr - sig), 
+            "invalid identifier '%s'", token); 
+        return NULL;        
+    }
 
     ptr = skip_space(ptr);
     if (valid_token_start_char(ptr[0])) {
@@ -632,7 +850,12 @@ parse_trait_target:
     }
 
 parse_singleton:
-    parse_identifier(token, &elem.pred);
+    if (parse_identifier(token, &elem.pred)) {
+        ecs_parser_error(name, sig, (ptr - sig), 
+            "invalid identifier '%s'", token); 
+        return NULL;        
+    }
+
     parse_identifier(token, &elem.args[0]);
     goto parse_done;
 
@@ -701,7 +924,7 @@ int ecs_parse_expr(
     ecs_from_kind_t prev_from = 0;
 
     const char *ptr = sig;
-    while ((ptr = parse_element(name, ptr, &elem))) {
+    while ((ptr = parse_element(world, name, ptr, &elem))) {
         if (elem.oper == EcsOr && elem.from_kind == EcsFromEmpty) {
             ecs_parser_error(name, sig, (ptr - sig), 
                 "invalid empty source in OR expression"); 
@@ -821,6 +1044,24 @@ void ecs_term_set_legacy(
             }
 
             term->args[0].entity = EcsThis;
+        }
+    }
+
+    if (term->args[0].set == EcsSelf) {
+        term->from_kind = EcsFromOwned;
+    } else if (!term->args[0].relation || (term->args[0].relation == EcsIsA)) {
+        if (term->args[0].set == EcsSuperSet) {
+            term->from_kind = EcsFromShared;
+        } else if (term->args[0].set & EcsSuperSet && term->args[0].set & EcsSelf) {
+            term->from_kind = EcsFromAny;
+        }
+    } else if (term->args[0].relation == EcsChildOf) {
+        if (term->args[0].set & EcsSuperSet) {
+            if (term->args[0].depth == 1) {
+                term->from_kind = EcsFromParent;
+            } else if (term->args[0].set & EcsAll) {
+                term->from_kind = EcsCascade;
+            }
         }
     }
 

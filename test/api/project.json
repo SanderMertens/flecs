@@ -280,7 +280,23 @@
                 "1_digit_pred_no_subj",
                 "1_digit_pred_explicit_subj",
                 "1_digit_pair_implicit_subj",
-                "1_digit_pair_explicit_subj"
+                "1_digit_pair_explicit_subj",
+                "pred_implicit_subject_self",
+                "pred_implicit_subject_superset",
+                "pred_implicit_subject_subset",
+                "pred_implicit_subject_superset_inclusive",
+                "pred_implicit_subject_subset_inclusive",
+                "pred_implicit_subject_superset_full",
+                "pred_implicit_subject_subset_full",
+                "pred_implicit_subject_superset_inclusive_full",
+                "pred_implicit_subject_subset_inclusive_full",            
+                "pred_implicit_subject_superset_depth_1_digit",
+                "pred_implicit_subject_subset_depth_1_digit",
+                "pred_implicit_subject_superset_depth_2_digits",
+                "pred_implicit_subject_subset_depth_2_digits",
+                "pred_implicit_subject_superset_childof",
+                "pred_implicit_subject_full_superset_childof",
+                "pred_implicit_subject_superset_full_childof"
             ]
         }, {
             "id": "GlobalComponentIds",

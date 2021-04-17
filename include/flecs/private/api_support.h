@@ -156,16 +156,21 @@ typedef enum ecs_oper_kind_t {
     EcsOperLast
 } ecs_oper_kind_t;
 
-#define EcsIsDefault    (0)
-#define EcsIsSelf       (1)
-#define EcsIsSuperSet   (2)
-#define EcsIsSubSet     (4)
+#define EcsDefaultSet (0)   /* Default set, SuperSet|Self for This subject */
+#define EcsSelf       (1)   /* Select self (inclusive) */
+#define EcsSuperSet   (2)   /* Select superset until predicate match */
+#define EcsSubSet     (4)   /* Select subset until predicate match */
+#define EcsAll        (8)   /* Walk full superset/subset, regardless of match */
 
 typedef struct ecs_term_id_t {
-    ecs_entity_t entity;
-    char *name;
-    uint8_t is_a;
-    ecs_var_kind_t var_kind;
+    ecs_entity_t entity;        /* Entity (default = This) */
+    char *name;                 /* Name (default = ".") */
+    ecs_var_kind_t var_kind;    /* Is id a variable (default yes if name is 
+                                 * all caps & entity is 0) */
+
+    ecs_entity_t relation;      /* Relationship to substitute (default = IsA) */
+    uint8_t set;                /* Substitute as self, subset, superset */
+    int32_t depth;              /* Max depth of subset/superset substitution */
 } ecs_term_id_t;
 
 /** Type that describes a single column in the system signature */

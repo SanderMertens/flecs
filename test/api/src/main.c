@@ -263,6 +263,22 @@ void Parser_1_digit_pred_no_subj(void);
 void Parser_1_digit_pred_explicit_subj(void);
 void Parser_1_digit_pair_implicit_subj(void);
 void Parser_1_digit_pair_explicit_subj(void);
+void Parser_pred_implicit_subject_self(void);
+void Parser_pred_implicit_subject_superset(void);
+void Parser_pred_implicit_subject_subset(void);
+void Parser_pred_implicit_subject_superset_inclusive(void);
+void Parser_pred_implicit_subject_subset_inclusive(void);
+void Parser_pred_implicit_subject_superset_full(void);
+void Parser_pred_implicit_subject_subset_full(void);
+void Parser_pred_implicit_subject_superset_inclusive_full(void);
+void Parser_pred_implicit_subject_subset_inclusive_full(void);
+void Parser_pred_implicit_subject_superset_depth_1_digit(void);
+void Parser_pred_implicit_subject_subset_depth_1_digit(void);
+void Parser_pred_implicit_subject_superset_depth_2_digits(void);
+void Parser_pred_implicit_subject_subset_depth_2_digits(void);
+void Parser_pred_implicit_subject_superset_childof(void);
+void Parser_pred_implicit_subject_full_superset_childof(void);
+void Parser_pred_implicit_subject_superset_full_childof(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -2621,6 +2637,70 @@ bake_test_case Parser_testcases[] = {
     {
         "1_digit_pair_explicit_subj",
         Parser_1_digit_pair_explicit_subj
+    },
+    {
+        "pred_implicit_subject_self",
+        Parser_pred_implicit_subject_self
+    },
+    {
+        "pred_implicit_subject_superset",
+        Parser_pred_implicit_subject_superset
+    },
+    {
+        "pred_implicit_subject_subset",
+        Parser_pred_implicit_subject_subset
+    },
+    {
+        "pred_implicit_subject_superset_inclusive",
+        Parser_pred_implicit_subject_superset_inclusive
+    },
+    {
+        "pred_implicit_subject_subset_inclusive",
+        Parser_pred_implicit_subject_subset_inclusive
+    },
+    {
+        "pred_implicit_subject_superset_full",
+        Parser_pred_implicit_subject_superset_full
+    },
+    {
+        "pred_implicit_subject_subset_full",
+        Parser_pred_implicit_subject_subset_full
+    },
+    {
+        "pred_implicit_subject_superset_inclusive_full",
+        Parser_pred_implicit_subject_superset_inclusive_full
+    },
+    {
+        "pred_implicit_subject_subset_inclusive_full",
+        Parser_pred_implicit_subject_subset_inclusive_full
+    },
+    {
+        "pred_implicit_subject_superset_depth_1_digit",
+        Parser_pred_implicit_subject_superset_depth_1_digit
+    },
+    {
+        "pred_implicit_subject_subset_depth_1_digit",
+        Parser_pred_implicit_subject_subset_depth_1_digit
+    },
+    {
+        "pred_implicit_subject_superset_depth_2_digits",
+        Parser_pred_implicit_subject_superset_depth_2_digits
+    },
+    {
+        "pred_implicit_subject_subset_depth_2_digits",
+        Parser_pred_implicit_subject_subset_depth_2_digits
+    },
+    {
+        "pred_implicit_subject_superset_childof",
+        Parser_pred_implicit_subject_superset_childof
+    },
+    {
+        "pred_implicit_subject_full_superset_childof",
+        Parser_pred_implicit_subject_full_superset_childof
+    },
+    {
+        "pred_implicit_subject_superset_full_childof",
+        Parser_pred_implicit_subject_superset_full_childof
     }
 };
 
@@ -7829,7 +7909,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        74,
+        90,
         Parser_testcases
     },
     {
