@@ -913,38 +913,38 @@ add_trait:
 }
 
 static
-bool match_column(
+bool match_term(
     const ecs_world_t *world,
     ecs_type_t type,
-    ecs_from_kind_t from_kind,
-    ecs_entity_t component,
-    ecs_entity_t source,
+    ecs_term_t *term,
     ecs_match_failure_t *failure_info)
 {
-    if (from_kind == EcsFromAny) {
-        failure_info->reason = EcsMatchFromSelf;
-        return ecs_type_has_id(world, type, component);
-        
-    } else if (from_kind == EcsFromOwned) {
-        failure_info->reason = EcsMatchFromOwned;
-        return ecs_type_owns_id(world, type, component, true);
+    (void)failure_info;
+    
+    ecs_from_kind_t from_kind = term->from_kind;
+    uint8_t set = term->args[0].set;
 
-    } else if (from_kind == EcsFromShared) {
-        failure_info->reason = EcsMatchFromShared;
-        return !ecs_type_owns_id(world, type, component, true) &&
-            ecs_type_owns_id(world, type, component, false);
-
-    } else if (from_kind == EcsFromParent) {
-        failure_info->reason = EcsMatchFromContainer;
-        return ecs_find_in_type(world, type, component, EcsChildOf) != 0;
-
-    } else if (from_kind == EcsFromEntity) {
-        failure_info->reason = EcsMatchFromEntity;
-        ecs_type_t source_type = ecs_get_type(world, source);
-        return ecs_type_has_id(world, source_type, component);
-    } else {
+    /* If term has no subject, there's nothing to match */
+    if (!term->args[0].entity || from_kind == EcsFromSystem) {
         return true;
     }
+
+    if (term->args[0].entity != EcsThis) {
+        type = ecs_get_type(world, term->args[0].entity);
+    }
+
+    if (!set) {
+        set = EcsSelf;
+    }
+
+    int32_t min_depth = term->args[0].min_depth;
+    if (!min_depth && !(set & EcsSelf)) {
+        min_depth = 1;
+    }
+
+    return ecs_type_find_id(
+        world, type, term->id, term->args[0].relation, 
+        min_depth, term->args[0].max_depth, NULL);
 }
 
 /* Match table with query */
@@ -1002,18 +1002,12 @@ bool ecs_query_match(
         failure_info->column = i + 1;
 
         if (oper == EcsAnd) {
-            if (!match_column(
-                world, table_type, from_kind, term->id, 
-                term->args[0].entity, failure_info)) 
-            {
+            if (!match_term(world, table_type, term, failure_info)) {
                 return false;
             }
 
         } else if (oper == EcsNot) {
-            if (match_column(
-                world, table_type, from_kind, term->id, 
-                term->args[0].entity, failure_info)) 
-            {
+            if (match_term(world, table_type, term, failure_info)) {
                 return false;
             }
 
@@ -1027,9 +1021,8 @@ bool ecs_query_match(
                     break;
                 }
 
-                if (!match && match_column(
-                    world, table_type, from_kind, term->id, 
-                    term->args[0].entity, failure_info))
+                if (!match && match_term(
+                    world, table_type, term, failure_info))
                 {
                     match = true;
                 }

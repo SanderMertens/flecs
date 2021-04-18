@@ -1108,6 +1108,77 @@ void Parser_pair_explicit_subject_not() {
     ecs_fini(world);
 }
 
+void Parser_component_optional() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_sig_t sig;
+    test_assert(ecs_sig_init(world, NULL, "?Pred", &sig) == 0);
+    test_int(sig_count(&sig), 1);
+
+    ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred, EcsDefaultSet);
+    test_subj(columns[0], EcsThis, EcsDefaultSet);
+    test_int(columns[0].oper, EcsOptional);
+    test_int(columns[0].inout, EcsInOutDefault);
+
+    test_legacy(sig);
+
+    ecs_sig_deinit(&sig);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_optional() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_sig_t sig;
+    test_assert(ecs_sig_init(world, NULL, "?(Pred, Obj)", &sig) == 0);
+    test_int(sig_count(&sig), 1);
+
+    ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred, EcsDefaultSet);
+    test_subj(columns[0], EcsThis, EcsDefaultSet);
+    test_obj(columns[0], Obj, EcsDefaultSet);
+    test_int(columns[0].oper, EcsOptional);
+    test_int(columns[0].inout, EcsInOutDefault);
+
+    test_legacy(sig);
+
+    ecs_sig_deinit(&sig);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_explicit_subject_optional() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+    ECS_TAG(world, Obj);
+
+    ecs_sig_t sig;
+    test_assert(ecs_sig_init(world, NULL, "?Pred(Subj, Obj)", &sig) == 0);
+    test_int(sig_count(&sig), 1);
+
+    ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred, EcsDefaultSet);
+    test_subj(columns[0], Subj, EcsDefaultSet);
+    test_obj(columns[0], Obj, EcsDefaultSet);
+    test_int(columns[0].oper, EcsOptional);
+    test_int(columns[0].inout, EcsInOutDefault);
+
+    test_legacy(sig);
+
+    ecs_sig_deinit(&sig);
+
+    ecs_fini(world);
+}
+
 void Parser_pred_implicit_subject_w_role() {
     ecs_world_t *world = ecs_init();
 
@@ -2062,7 +2133,7 @@ void Parser_pred_implicit_subject_superset_depth_1_digit() {
     test_subj(columns[0], EcsThis, EcsSuperSet);
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);
-    test_int(columns[0].args[0].depth, 2);
+    test_int(columns[0].args[0].max_depth, 2);
 
     test_legacy(sig);
 
@@ -2085,7 +2156,7 @@ void Parser_pred_implicit_subject_subset_depth_1_digit() {
     test_subj(columns[0], EcsThis, EcsSubSet);
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);
-    test_int(columns[0].args[0].depth, 2);
+    test_int(columns[0].args[0].max_depth, 2);
 
     test_legacy(sig);
 
@@ -2108,7 +2179,7 @@ void Parser_pred_implicit_subject_superset_depth_2_digits() {
     test_subj(columns[0], EcsThis, EcsSuperSet);
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);
-    test_int(columns[0].args[0].depth, 20);
+    test_int(columns[0].args[0].max_depth, 20);
 
     test_legacy(sig);
 
@@ -2131,7 +2202,7 @@ void Parser_pred_implicit_subject_subset_depth_2_digits() {
     test_subj(columns[0], EcsThis, EcsSubSet);
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);
-    test_int(columns[0].args[0].depth, 20);
+    test_int(columns[0].args[0].max_depth, 20);
 
     test_legacy(sig);
 
@@ -2139,6 +2210,56 @@ void Parser_pred_implicit_subject_subset_depth_2_digits() {
 
     ecs_fini(world);
 }
+
+void Parser_pred_implicit_superset_min_max_depth() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_sig_t sig;
+    test_assert(ecs_sig_init(world, NULL, "Pred(superset(2, 3))", &sig) == 0);
+    test_int(sig_count(&sig), 1);
+
+    ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred, EcsDefaultSet);
+    test_subj(columns[0], EcsThis, EcsSuperSet);
+    test_int(columns[0].oper, EcsAnd);
+    test_int(columns[0].inout, EcsInOutDefault);
+    test_int(columns[0].args[0].min_depth, 2);
+    test_int(columns[0].args[0].max_depth, 3);
+
+    test_legacy(sig);
+
+    ecs_sig_deinit(&sig);
+
+    ecs_fini(world); 
+}
+
+void Parser_pred_implicit_superset_childof_min_max_depth() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_sig_t sig;
+    test_assert(ecs_sig_init(world, NULL, "Pred(superset(ChildOf, 2, 3))", &sig) == 0);
+    test_int(sig_count(&sig), 1);
+
+    ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred, EcsDefaultSet);
+    test_subj(columns[0], EcsThis, EcsSuperSet);
+    test_int(columns[0].oper, EcsAnd);
+    test_int(columns[0].inout, EcsInOutDefault);
+    test_int(columns[0].args[0].min_depth, 2);
+    test_int(columns[0].args[0].max_depth, 3);
+    test_int(columns[0].args[0].relation, EcsChildOf);
+
+    test_legacy(sig);
+
+    ecs_sig_deinit(&sig);
+
+    ecs_fini(world); 
+}
+
 
 void Parser_pred_implicit_subject_superset_childof() {
     ecs_world_t *world = ecs_init();
@@ -2178,7 +2299,7 @@ void Parser_pred_implicit_subject_full_superset_childof() {
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);  
     test_int(columns[0].args[0].relation, EcsChildOf);
-    test_int(columns[0].from_kind, EcsCascade);
+    test_assert(columns[0].from_kind != EcsCascade);
 
     test_legacy(sig);
 
@@ -2202,11 +2323,35 @@ void Parser_pred_implicit_subject_superset_full_childof() {
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);  
     test_int(columns[0].args[0].relation, EcsChildOf);
-    test_int(columns[0].from_kind, EcsCascade);
+    test_assert(columns[0].from_kind != EcsCascade);
 
     test_legacy(sig);
 
     ecs_sig_deinit(&sig);
 
     ecs_fini(world); 
+}
+
+void Parser_pred_implicit_subject_superset_full_childof_optional() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_sig_t sig;
+    test_assert(ecs_sig_init(world, NULL, "?Pred(superset|all(ChildOf))", &sig) == 0);
+    test_int(sig_count(&sig), 1);
+
+    ecs_term_t *columns = sig_columns(&sig);
+    test_pred(columns[0], Pred, EcsDefaultSet);
+    test_subj(columns[0], EcsThis, EcsSuperSet | EcsAll);
+    test_int(columns[0].oper, EcsOptional);
+    test_int(columns[0].inout, EcsInOutDefault);  
+    test_int(columns[0].args[0].relation, EcsChildOf);
+    test_int(columns[0].from_kind, EcsCascade);
+
+    test_legacy(sig);
+
+    ecs_sig_deinit(&sig);
+
+    ecs_fini(world);
 }

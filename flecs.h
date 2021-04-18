@@ -2724,7 +2724,8 @@ typedef struct ecs_term_id_t {
 
     ecs_entity_t relation;      /* Relationship to substitute (default = IsA) */
     uint8_t set;                /* Substitute as self, subset, superset */
-    int32_t depth;              /* Max depth of subset/superset substitution */
+    int32_t min_depth;          /* Min depth of subset/superset substitution */
+    int32_t max_depth;          /* Max depth of subset/superset substitution */
 } ecs_term_id_t;
 
 /** Type that describes a single column in the system signature */
@@ -3132,6 +3133,16 @@ bool ecs_type_owns_type(
     ecs_type_t type,
     ecs_type_t has,
     bool owned);
+
+FLECS_API
+bool ecs_type_find_id(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t id,
+    ecs_entity_t rel,
+    int32_t min_depth,
+    int32_t max_depth,
+    ecs_entity_t *out);
 
 FLECS_API
 ecs_entity_t ecs_type_get_entity_for_xor(

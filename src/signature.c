@@ -418,8 +418,28 @@ const char* parse_set_expr(
                     return NULL;
                 }
 
-                id->depth = atoi(token);
-                if (id->depth < 0) {
+                id->max_depth = atoi(token);
+                if (id->max_depth < 0) {
+                    ecs_parser_error(name, sig, column, 
+                        "invalid negative depth");
+                    return NULL;  
+                }
+
+                if (ptr[0] == ',') {
+                    ptr = skip_space(ptr + 1);
+                }
+            }
+
+            /* If another digit is found, previous depth was min depth */
+            if (isdigit(ptr[0])) {
+                ptr = parse_digit(name, sig, (ptr - sig), ptr, token);
+                if (!ptr) {
+                    return NULL;
+                }
+
+                id->min_depth = id->max_depth;
+                id->max_depth = atoi(token);
+                if (id->max_depth < 0) {
                     ecs_parser_error(name, sig, column, 
                         "invalid negative depth");
                     return NULL;  
@@ -459,6 +479,12 @@ const char* parse_set_expr(
         ecs_parser_error(name, sig, column, 
             "invalid 'all' token without superset or subset");
         return NULL;
+    }
+
+    if (id->set & EcsSelf && id->min_depth != 0) {
+        ecs_parser_error(name, sig, column, 
+            "min_depth must be zero for set expression with 'self'");
+        return NULL;        
     }
 
     return ptr;
@@ -652,12 +678,34 @@ empty_source:
 
 parse_source:
     elem.from_kind = parse_source(token);
-    if (elem.from_kind == EcsFromEntity) {
+    switch(elem.from_kind) {
+    case EcsFromAny:
+        elem.args[0].set = EcsSelf | EcsSuperSet;
+        break;
+    case EcsFromOwned:
+        elem.args[0].set = EcsSelf;
+        break;
+    case EcsFromShared:
+        elem.args[0].set = EcsSuperSet;
+        break;
+    case EcsFromParent:
+        elem.args[0].set = EcsSuperSet;
+        elem.args[0].relation = EcsChildOf;
+        elem.args[0].max_depth = 1;
+        break;
+    case EcsCascade:
+        elem.args[0].set = EcsSuperSet | EcsAll;
+        elem.args[0].relation = EcsChildOf;
+        break;
+    case EcsFromEntity:
         if (parse_identifier(token, &elem.args[0])) {
             ecs_parser_error(name, sig, (ptr - sig), 
                 "invalid identifier '%s'", token); 
             return NULL;           
         }
+        break;
+    default:
+        break;
     }
 
     ptr = skip_space(ptr);
@@ -1044,6 +1092,26 @@ void ecs_term_set_legacy(
             }
 
             term->args[0].entity = EcsThis;
+
+            if (term->from_kind == EcsFromAny) {
+                term->args[0].set = EcsSelf | EcsSuperSet;
+                term->args[0].relation = EcsIsA;
+            } else if (term->from_kind == EcsFromShared) {
+                term->args[0].set = EcsSuperSet;
+                term->args[0].relation = EcsIsA;
+            } else if (term->from_kind == EcsFromOwned) {
+                term->args[0].set = EcsSelf;
+            }
+        } else {
+            if (term->from_kind == EcsFromParent) {
+                term->args[0].set = EcsSuperSet;
+                term->args[0].relation = EcsChildOf;
+                term->args[0].max_depth = 1;
+            } else if (term->from_kind == EcsCascade) {
+                term->args[0].set = EcsAll | EcsSuperSet;
+                term->args[0].relation = EcsChildOf;
+                term->oper = EcsOptional;
+            }
         }
     }
 
@@ -1057,9 +1125,9 @@ void ecs_term_set_legacy(
         }
     } else if (term->args[0].relation == EcsChildOf) {
         if (term->args[0].set & EcsSuperSet) {
-            if (term->args[0].depth == 1) {
+            if (term->args[0].max_depth == 1) {
                 term->from_kind = EcsFromParent;
-            } else if (term->args[0].set & EcsAll) {
+            } else if (term->args[0].set & EcsAll && term->oper == EcsOptional) {
                 term->from_kind = EcsCascade;
             }
         }

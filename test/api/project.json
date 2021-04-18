@@ -253,6 +253,9 @@
                 "component_not",
                 "pair_implicit_subject_not",
                 "pair_explicit_subject_not",
+                "component_optional",
+                "pair_implicit_subject_optional",
+                "pair_explicit_subject_optional",                
                 "pred_implicit_subject_w_role",
                 "pred_explicit_subject_w_role",
                 "pred_no_subject_w_role",
@@ -294,9 +297,12 @@
                 "pred_implicit_subject_subset_depth_1_digit",
                 "pred_implicit_subject_superset_depth_2_digits",
                 "pred_implicit_subject_subset_depth_2_digits",
+                "pred_implicit_superset_min_max_depth",
+                "pred_implicit_superset_childof_min_max_depth",                
                 "pred_implicit_subject_superset_childof",
                 "pred_implicit_subject_full_superset_childof",
-                "pred_implicit_subject_superset_full_childof"
+                "pred_implicit_subject_superset_full_childof",
+                "pred_implicit_subject_superset_full_childof_optional"
             ]
         }, {
             "id": "GlobalComponentIds",

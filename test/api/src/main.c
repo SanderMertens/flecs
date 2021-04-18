@@ -235,6 +235,9 @@ void Parser_escaped_all_caps_multi_char(void);
 void Parser_component_not(void);
 void Parser_pair_implicit_subject_not(void);
 void Parser_pair_explicit_subject_not(void);
+void Parser_component_optional(void);
+void Parser_pair_implicit_subject_optional(void);
+void Parser_pair_explicit_subject_optional(void);
 void Parser_pred_implicit_subject_w_role(void);
 void Parser_pred_explicit_subject_w_role(void);
 void Parser_pred_no_subject_w_role(void);
@@ -276,9 +279,12 @@ void Parser_pred_implicit_subject_superset_depth_1_digit(void);
 void Parser_pred_implicit_subject_subset_depth_1_digit(void);
 void Parser_pred_implicit_subject_superset_depth_2_digits(void);
 void Parser_pred_implicit_subject_subset_depth_2_digits(void);
+void Parser_pred_implicit_superset_min_max_depth(void);
+void Parser_pred_implicit_superset_childof_min_max_depth(void);
 void Parser_pred_implicit_subject_superset_childof(void);
 void Parser_pred_implicit_subject_full_superset_childof(void);
 void Parser_pred_implicit_subject_superset_full_childof(void);
+void Parser_pred_implicit_subject_superset_full_childof_optional(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -2527,6 +2533,18 @@ bake_test_case Parser_testcases[] = {
         Parser_pair_explicit_subject_not
     },
     {
+        "component_optional",
+        Parser_component_optional
+    },
+    {
+        "pair_implicit_subject_optional",
+        Parser_pair_implicit_subject_optional
+    },
+    {
+        "pair_explicit_subject_optional",
+        Parser_pair_explicit_subject_optional
+    },
+    {
         "pred_implicit_subject_w_role",
         Parser_pred_implicit_subject_w_role
     },
@@ -2691,6 +2709,14 @@ bake_test_case Parser_testcases[] = {
         Parser_pred_implicit_subject_subset_depth_2_digits
     },
     {
+        "pred_implicit_superset_min_max_depth",
+        Parser_pred_implicit_superset_min_max_depth
+    },
+    {
+        "pred_implicit_superset_childof_min_max_depth",
+        Parser_pred_implicit_superset_childof_min_max_depth
+    },
+    {
         "pred_implicit_subject_superset_childof",
         Parser_pred_implicit_subject_superset_childof
     },
@@ -2701,6 +2727,10 @@ bake_test_case Parser_testcases[] = {
     {
         "pred_implicit_subject_superset_full_childof",
         Parser_pred_implicit_subject_superset_full_childof
+    },
+    {
+        "pred_implicit_subject_superset_full_childof_optional",
+        Parser_pred_implicit_subject_superset_full_childof_optional
     }
 };
 
@@ -7909,7 +7939,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        90,
+        96,
         Parser_testcases
     },
     {
