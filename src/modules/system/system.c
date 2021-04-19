@@ -621,7 +621,7 @@ void trigger_set(
     int i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t c = ct[i].component;
-        ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, c);
+        ecs_type_info_t *c_info = ecs_get_or_create_c_info(world, c);
 
         switch(ct[i].kind) {
         case EcsOnAdd:

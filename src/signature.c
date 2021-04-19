@@ -1058,7 +1058,7 @@ int resolve_identifier(
             ecs_entity_t e = ecs_lookup_fullpath(world, identifier->name);
             if (!e) {
                 ecs_parser_error(name, expr, column, 
-                    "unresolved identifier '%s'");
+                    "unresolved identifier '%s'", identifier->name);
                 return -1;
             }
 

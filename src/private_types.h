@@ -52,13 +52,13 @@ typedef int (*ecs_parse_action_t)(
     void *ctx);
 
 /** Component-specific data */
-typedef struct ecs_c_info_t {
+typedef struct ecs_type_info_t {
     ecs_entity_t component;
     ecs_vector_t *on_add;       /* Systems ran after adding this component */
     ecs_vector_t *on_remove;    /* Systems ran after removing this component */
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
     bool lifecycle_set;
-} ecs_c_info_t;
+} ecs_type_info_t;
 
 /* Table event type for notifying tables of world events */
 typedef enum ecs_table_eventkind_t {
@@ -165,7 +165,7 @@ typedef struct ecs_matched_query_t {
  * table is created, it is automatically matched with existing queries */
 struct ecs_table_t {
     ecs_type_t type;                 /**< Identifies table type in type_index */
-    ecs_c_info_t **c_info;           /**< Cached pointers to component info */
+    ecs_type_info_t **c_info;           /**< Cached pointers to component info */
 
     ecs_edge_t *lo_edges;            /**< Edges to other tables */
     ecs_map_t *hi_edges;
@@ -397,16 +397,30 @@ struct ecs_stage_t {
     bool auto_merge;               /* Should this stage automatically merge? */
 };
 
+/* Payload for table index which returns all tables for a given component, with
+ * the column of the component in the table. */
+typedef struct ecs_table_record_t {
+    ecs_table_t *table;
+    int32_t column;
+} ecs_table_record_t;
+
+/* Payload for id index which contains all datastructures for an id. */
+typedef struct ecs_id_record_t {
+    /* All tables that contain the id */
+    ecs_map_t *table_index; /* map<table_id, ecs_table_record_t> */
+} ecs_id_record_t;
+
 typedef struct ecs_store_t {
     /* Entity lookup table for (table, row) */
-    ecs_sparse_t *entity_index; 
+    ecs_sparse_t *entity_index;
 
-    /* Table graph */
+    /* table id -> table */
     ecs_sparse_t *tables;
-    ecs_table_t root;
 
-    /* Lookup map for tables */
-    ecs_map_t *table_map;
+    /* type hash -> table */
+    ecs_map_t *table_map;    
+
+    ecs_table_t root;
 } ecs_store_t;
 
 /** Supporting type to store looked up or derived entity data */
@@ -421,7 +435,7 @@ typedef struct ecs_entity_info_t {
 /** Supporting type to store looked up component data in specific table */
 typedef struct ecs_column_info_t {
     ecs_entity_t id;
-    const ecs_c_info_t *ci;
+    const ecs_type_info_t *ci;
     int32_t column;
 } ecs_column_info_t;
 
@@ -455,10 +469,16 @@ struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
-    ecs_sparse_t *type_info;     /* Component lifecycle info */
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;
+
+
+    /* --  Type metadata -- */
+
+    ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
+    ecs_map_t *id_index;         /* map<id, ecs_id_record_t> */
+
 
     /* --  Data storage -- */
 
@@ -516,7 +536,6 @@ struct ecs_world_t {
 
     /* -- Hierarchy administration -- */
 
-    ecs_map_t *child_tables;        /* Child tables per parent entity */
     const char *name_prefix;        /* Remove prefix from C names in modules */
 
 

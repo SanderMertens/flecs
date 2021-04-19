@@ -217,14 +217,15 @@ ecs_world_t *ecs_mini(void) {
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     world->magic = ECS_WORLD_MAGIC;
-    world->type_info = ecs_sparse_new(ecs_c_info_t);
     world->fini_actions = NULL; 
+
+    world->type_info = ecs_sparse_new(ecs_type_info_t);
+    world->id_index = ecs_map_new(ecs_id_record_t, 8);
 
     world->aliases = NULL;
 
     world->queries = ecs_vector_new(ecs_query_t*, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
-    world->child_tables = NULL;
     world->name_prefix = NULL;
 
     ecs_component_monitor_init(&world->component_monitors);
@@ -415,7 +416,7 @@ void ecs_set_component_actions_w_id(
     ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
 #endif
 
-    ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
+    ecs_type_info_t *c_info = ecs_get_or_create_c_info(world, component);
     ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (c_info->lifecycle_set) {
@@ -455,7 +456,7 @@ bool ecs_component_has_actions(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     world = ecs_get_world(world);
 
-    const ecs_c_info_t *c_info = ecs_get_c_info(world, component);
+    const ecs_type_info_t *c_info = ecs_get_c_info(world, component);
     return (c_info != NULL) && c_info->lifecycle_set;
 }
 
@@ -525,8 +526,8 @@ void fini_component_lifecycle(
 {
     int32_t i, count = ecs_sparse_count(world->type_info);
     for (i = 0; i < count; i ++) {
-        ecs_c_info_t *type_info = ecs_sparse_get(
-            world->type_info, ecs_c_info_t, i);
+        ecs_type_info_t *type_info = ecs_sparse_get(
+            world->type_info, ecs_type_info_t, i);
         ecs_assert(type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_vector_free(type_info->on_add);
@@ -564,18 +565,18 @@ void fini_stages(
     ecs_set_stages(world, 0);
 }
 
-/* Cleanup child table admin */
+/* Cleanup id index */
 static
-void fini_child_tables(
+void fini_id_index(
     ecs_world_t *world)
 {
-    ecs_map_iter_t it = ecs_map_iter(world->child_tables);
-    ecs_vector_t *tables;
-    while ((tables = ecs_map_next_ptr(&it, ecs_vector_t*, NULL))) {
-        ecs_vector_free(tables);
+    ecs_map_iter_t it = ecs_map_iter(world->id_index);
+    ecs_id_record_t *r;
+    while ((r = ecs_map_next(&it, ecs_id_record_t, NULL))) {
+        ecs_map_free(r->table_index);
     }
 
-    ecs_map_free(world->child_tables);
+    ecs_map_free(world->id_index);
 }
 
 /* Cleanup aliases */
@@ -633,7 +634,7 @@ int ecs_fini(
 
     fini_queries(world);
 
-    fini_child_tables(world);
+    fini_id_index(world);
 
     fini_aliases(world);
 
@@ -833,7 +834,7 @@ void ecs_end_wait(
     ecs_os_mutex_unlock(world->thr_sync);
 }
 
-const ecs_c_info_t * ecs_get_c_info(
+const ecs_type_info_t * ecs_get_c_info(
     const ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -843,24 +844,24 @@ const ecs_c_info_t * ecs_get_c_info(
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
 
-    return ecs_sparse_get_sparse(world->type_info, ecs_c_info_t, component);
+    return ecs_sparse_get_sparse(world->type_info, ecs_type_info_t, component);
 }
 
-ecs_c_info_t * ecs_get_or_create_c_info(
+ecs_type_info_t * ecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
 
-    const ecs_c_info_t *c_info = ecs_get_c_info(world, component);
-    ecs_c_info_t *c_info_mut = NULL;
+    const ecs_type_info_t *c_info = ecs_get_c_info(world, component);
+    ecs_type_info_t *c_info_mut = NULL;
     if (!c_info) {
         c_info_mut = ecs_sparse_ensure(
-            world->type_info, ecs_c_info_t, component);
+            world->type_info, ecs_type_info_t, component);
         ecs_assert(c_info_mut != NULL, ECS_INTERNAL_ERROR, NULL);         
     } else {
-        c_info_mut = (ecs_c_info_t*)c_info;
+        c_info_mut = (ecs_type_info_t*)c_info;
     }
 
     return c_info_mut;
@@ -1062,4 +1063,45 @@ void ecs_delete_table(
 
     /* Don't do generations as we want table ids to remain 32 bit */
     ecs_sparse_set_generation(world->store.tables, id);
+}
+
+void ecs_register_table_for_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    int32_t column)
+{
+    ecs_id_record_t *r = ecs_get_id_record(world, id);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!r->table_index) {
+        r->table_index = ecs_map_new(ecs_table_record_t, 1);
+    }
+
+    ecs_table_record_t *tr = ecs_map_ensure(
+        r->table_index, ecs_table_record_t, table->id);
+
+    /* A table can be registered for the same entity multiple times if this is
+     * a trait. In that case make sure the column with the first occurrence is
+     * registered with the index */
+    if (!tr->table || column < tr->column) {
+        tr->table = table;
+        tr->column = column;
+    }
+}
+
+ecs_id_record_t* ecs_get_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    return ecs_map_ensure(world->id_index, ecs_id_record_t, id);
+}
+
+void ecs_clear_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id)    
+{
+    ecs_id_record_t *r = ecs_get_id_record(world, id);
+    ecs_map_free(r->table_index);
+    ecs_map_remove(world->id_index, id);
 }

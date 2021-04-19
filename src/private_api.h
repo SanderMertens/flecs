@@ -80,12 +80,12 @@ const ecs_stage_t* ecs_stage_from_readonly_world(
     const ecs_world_t *world);
 
 /* Get component callbacks */
-const ecs_c_info_t *ecs_get_c_info(
+const ecs_type_info_t *ecs_get_c_info(
     const ecs_world_t *world,
     ecs_entity_t component);
 
 /* Get or create component callbacks */
-ecs_c_info_t * ecs_get_or_create_c_info(
+ecs_type_info_t * ecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component);
 
@@ -109,6 +109,19 @@ void ecs_notify_queries(
     ecs_world_t *world,
     ecs_query_event_t *event);
     
+void ecs_register_table_for_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    int32_t column);
+
+ecs_id_record_t* ecs_get_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
+void ecs_clear_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API

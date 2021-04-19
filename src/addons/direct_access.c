@@ -234,7 +234,7 @@ void ecs_table_delete_column(
     ecs_column_t *c = da_get_or_create_column(world, table, column);
     ecs_vector_assert_size(vector, c->size);
 
-    ecs_c_info_t *c_info = table->c_info[column];
+    ecs_type_info_t *c_info = table->c_info[column];
     ecs_xtor_t dtor;
     if (c_info && (dtor = c_info->lifecycle.dtor)) {
         ecs_entity_t *entities = get_entity_array(table, 0);
@@ -300,7 +300,7 @@ void ecs_record_copy_to(
     void *ptr = ecs_vector_get_t(c->data, size, alignment, row);
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_c_info_t *c_info = table->c_info[column];
+    ecs_type_info_t *c_info = table->c_info[column];
     ecs_copy_t copy;
     if (c_info && (copy = c_info->lifecycle.copy)) {
         ecs_entity_t *entities = get_entity_array(table, row);
@@ -367,7 +367,7 @@ void ecs_record_move_to(
     void *ptr = ecs_vector_get_t(c->data, size, alignment, row);
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_c_info_t *c_info = table->c_info[column];
+    ecs_type_info_t *c_info = table->c_info[column];
     ecs_move_t move;
     if (c_info && (move = c_info->lifecycle.move)) {
         ecs_entity_t *entities = get_entity_array(table, row);

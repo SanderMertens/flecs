@@ -139,29 +139,6 @@ ecs_type_t entities_to_type(
 }
 
 static
-void register_child_table(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_entity_t parent)
-{
-    /* Register child table with parent */
-    ecs_vector_t *child_tables = ecs_map_get_ptr(
-            world->child_tables, ecs_vector_t*, parent);
-    if (!child_tables) {
-        child_tables = ecs_vector_new(ecs_table_t*, 1);
-    }
-    
-    ecs_table_t **el = ecs_vector_add(&child_tables, ecs_table_t*);
-    *el = table;
-
-    if (!world->child_tables) {
-        world->child_tables = ecs_map_new(ecs_vector_t*, 1);
-    }
-
-    ecs_map_set(world->child_tables, parent, &child_tables);
-}
-
-static
 ecs_edge_t* get_edge(
     ecs_table_t *node,
     ecs_entity_t e)
@@ -240,35 +217,54 @@ void init_edges(
             table->flags |= EcsTableHasDisabled;
         }   
 
-        ecs_entity_t parent = 0;
+        ecs_entity_t obj = 0;
 
         if (ECS_HAS_RELATION(e, EcsChildOf)) {
-            parent = ecs_entity_t_lo(e);
-        }
-
-        if (parent) {
-            table->flags |= EcsTableHasParent;
-            register_child_table(world, table, parent);
-            
-            if (parent == EcsFlecs || parent == EcsFlecsCore) {
+            obj = ECS_PAIR_OBJECT(e);
+            if (obj == EcsFlecs || obj == EcsFlecsCore) {
                 table->flags |= EcsTableHasBuiltins;
             }
+
+            e = ecs_pair(EcsChildOf, obj);
+            table->flags |= EcsTableHasParent;
         }
+
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            obj = ECS_PAIR_OBJECT(e);
+            e = ecs_pair(EcsIsA, obj);
+        }        
 
         if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
             ecs_set_watch(world, ecs_pair_object(world, e));
         }
+
+        ecs_register_table_for_id(world, table, e, i);
+
+        if (ECS_HAS_ROLE(e, PAIR)) {
+            ecs_entity_t pred_w_wildcard = ecs_pair(
+                ECS_PAIR_RELATION(e), EcsWildcard);
+            ecs_register_table_for_id(world, table, pred_w_wildcard, i);
+
+            ecs_entity_t obj_w_wildcard = ecs_pair(
+                EcsWildcard, ECS_PAIR_OBJECT(e));
+            ecs_register_table_for_id(world, table, obj_w_wildcard, i);
+
+            ecs_entity_t all_wildcard = ecs_pair(EcsWildcard, EcsWildcard);
+            ecs_register_table_for_id(world, table, all_wildcard, i);
+        } else {
+            ecs_register_table_for_id(world, table, EcsWildcard, i);            
+        }        
     }
+
+    /* Register as root table (temporary ChildOf special) */
+    if (!(table->flags & EcsTableHasParent)) {
+        ecs_register_table_for_id(world, table, ecs_pair(EcsChildOf, 0), 0);
+    }    
 
     /* Register component info flags for all columns */
     ecs_table_notify(world, table, &(ecs_table_event_t){
         .kind = EcsTableComponentInfo
     });
-    
-    /* Register as root table */
-    if (!(table->flags & EcsTableHasParent)) {
-        register_child_table(world, table, 0);
-    }
 }
 
 static

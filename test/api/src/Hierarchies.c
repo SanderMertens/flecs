@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Hierarchies_setup() {
-    ecs_tracing_enable(-3);
+    ecs_tracing_enable(-2);
 }
 
 void Hierarchies_empty_scope() {

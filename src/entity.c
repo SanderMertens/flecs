@@ -151,7 +151,7 @@ bool ecs_get_info(
 }
 
 static
-const ecs_c_info_t *get_c_info(
+const ecs_type_info_t *get_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -581,15 +581,16 @@ void instantiate(
     int32_t count)
 {    
     /* If base is a parent, instantiate children of base for instances */
+    const ecs_id_record_t *r = ecs_get_id_record(
+        world, ecs_pair(EcsChildOf, base));
 
-    ecs_vector_t *child_tables = ecs_map_get_ptr(
-        world->child_tables, ecs_vector_t*, base);
-
-    if (child_tables) {
-        ecs_vector_each(child_tables, ecs_table_t*, child_table_ptr, {
+    if (r && r->table_index) {
+        ecs_table_record_t *tr;
+        ecs_map_iter_t it = ecs_map_iter(r->table_index);
+        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
             instantiate_children(
-                world, base, table, data, row, count, *child_table_ptr);
-        });
+                world, base, table, data, row, count, tr->table);
+        }
     }
 }
 
@@ -628,7 +629,7 @@ bool override_from_base(
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
         component = ecs_get_typeid(world, component);
-        const ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+        const ecs_type_info_t *cdata = ecs_get_c_info(world, component);
         int32_t index;
 
         ecs_copy_t copy = cdata ? cdata->lifecycle.copy : NULL;
@@ -842,7 +843,7 @@ void ecs_components_on_add(
 
     int i;
     for (i = 0; i < component_count; i ++) {
-        const ecs_c_info_t *c_info = component_info[i].ci;
+        const ecs_type_info_t *c_info = component_info[i].ci;
         ecs_vector_t *triggers;
         if (!c_info || !(triggers = c_info->on_add)) {
             continue;
@@ -868,7 +869,7 @@ void ecs_components_on_remove(
 
     int i;
     for (i = 0; i < component_count; i ++) {
-        const ecs_c_info_t *c_info = component_info[i].ci;
+        const ecs_type_info_t *c_info = component_info[i].ci;
         ecs_vector_t *triggers;
         if (!c_info || !(triggers = c_info->on_remove)) {
             continue;
@@ -1140,8 +1141,8 @@ void update_component_monitors(
     /* If this entity is a parent, check if anything changed that could impact
      * its place in the hierarchy. If so, we need to mark all of the parent's
      * entities as dirty. */
-    if (childof_changed && 
-        ecs_map_get(world->child_tables, ecs_vector_t*, entity)) 
+    if (childof_changed && ecs_get_id_record(world, 
+        ecs_pair(EcsChildOf, entity))) 
     {
         ecs_type_t type = ecs_get_type(world, entity);
         ecs_entities_t entities = ecs_type_to_entities(type);
@@ -1329,7 +1330,7 @@ const ecs_entity_t* new_w_data(
                 continue;
             }
 
-            const ecs_c_info_t *cdata = get_c_info(world, c);
+            const ecs_type_info_t *cdata = get_c_info(world, c);
             ecs_copy_t copy;
             if (cdata && (copy = cdata->lifecycle.copy)) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
@@ -1865,16 +1866,16 @@ void ecs_delete_children(
 
     ecs_stage_from_world(&world);
 
-    ecs_vector_t *child_tables = ecs_map_get_ptr(
-        world->child_tables, ecs_vector_t*, parent);
+    const ecs_id_record_t *r = ecs_get_id_record(
+        world, ecs_pair(EcsChildOf, parent));
 
-    if (child_tables) {
-        ecs_table_t **tables = ecs_vector_first(child_tables, ecs_table_t*);
-        int32_t i, count = ecs_vector_count(child_tables);
-        for (i = 0; i < count; i ++) {
-            ecs_table_t *table = tables[i];
+    if (r && r->table_index) {
+        ecs_table_record_t *tr;
+        ecs_map_iter_t it = ecs_map_iter(r->table_index);
+        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+            ecs_table_t *table = tr->table;
 
-            /* Recursively delete entities of children */
+            /* Clear table data */
             ecs_data_t *data = ecs_table_get_data(table);
             if (data) {
                 ecs_entity_t *entities = ecs_vector_first(
@@ -1891,12 +1892,10 @@ void ecs_delete_children(
 
             /* Delete table */
             ecs_delete_table(world, table);
-        };
-
-        ecs_vector_free(child_tables);
+        }
     }
 
-    ecs_map_remove(world->child_tables, parent);
+    ecs_clear_id_record(world, ecs_pair(EcsChildOf, parent));
 }
 
 void ecs_delete(
@@ -2289,7 +2288,7 @@ ecs_entity_t assign_ptr_w_id(
 
     if (ptr) {
         ecs_entity_t real_id = ecs_get_typeid(world, id);
-        const ecs_c_info_t *cdata = get_c_info(world, real_id);
+        const ecs_type_info_t *cdata = get_c_info(world, real_id);
         if (cdata) {
             if (is_move) {
                 ecs_move_t move = cdata->lifecycle.move;
