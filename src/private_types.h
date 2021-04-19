@@ -46,8 +46,7 @@
 /** Callback used by the system signature expression parser. */
 typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,                 
-    const char *id,
-    const char *expr,
+    ecs_sig_t *sig,
     int64_t pos,
     ecs_term_t *term,
     void *ctx);

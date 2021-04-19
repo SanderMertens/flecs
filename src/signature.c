@@ -704,6 +704,9 @@ parse_source:
             return NULL;           
         }
         break;
+    case EcsFromSystem:
+        elem.args[0].name = ecs_os_strdup(name);
+        break;  
     default:
         break;
     }
@@ -951,30 +954,31 @@ parse_done:
 
 int ecs_parse_expr(
     ecs_world_t *world,
-    const char *name,
-    const char *sig,
+    ecs_sig_t *sig,
     ecs_parse_action_t action,
     void *ctx)
 {
     ecs_term_t elem;
+    ecs_assert(sig != NULL, ECS_INVALID_PARAMETER, NULL);
+    const char *expr = sig->expr;
 
-    if (!sig) {
+    /* Don't parse empty expressions */
+    if (!expr) {
         return 0;
     }
 
-    sig = skip_space(sig);
-
-    if (!sig[0]) {
+    expr = skip_space(expr);
+    if (!expr[0]) {
         return 0;
     }
 
     bool prev_or = false;
     ecs_from_kind_t prev_from = 0;
 
-    const char *ptr = sig;
-    while ((ptr = parse_element(world, name, ptr, &elem))) {
+    const char *ptr = expr;
+    while ((ptr = parse_element(world, sig->name, ptr, &elem))) {
         if (elem.oper == EcsOr && elem.from_kind == EcsFromEmpty) {
-            ecs_parser_error(name, sig, (ptr - sig), 
+            ecs_parser_error(sig->name, expr, (ptr - expr), 
                 "invalid empty source in OR expression"); 
             ecs_term_free(&elem);    
             return -1;
@@ -982,7 +986,7 @@ int ecs_parse_expr(
 
         if (prev_or) {
             if (elem.from_kind != prev_from) {
-                ecs_parser_error(name, sig, (ptr - sig), 
+                ecs_parser_error(sig->name, expr, (ptr - expr), 
                     "cannot combine different sources in OR expression");
                 ecs_term_free(&elem);
                 return -1;
@@ -992,7 +996,7 @@ int ecs_parse_expr(
             prev_from = elem.from_kind;
 
             if (elem.oper != EcsAnd && elem.oper != EcsOr) {
-                ecs_parser_error(name, sig, (ptr - sig), 
+                ecs_parser_error(sig->name, expr, (ptr - expr), 
                     "cannot combine || with other operators");
                 ecs_term_free(&elem);
                 return -1;
@@ -1004,7 +1008,7 @@ int ecs_parse_expr(
             prev_from = elem.from_kind;
         }
 
-        if (action(world, name, sig, ptr - sig, &elem, ctx)) {
+        if (action(world, sig, ptr - expr, &elem, ctx)) {
             return -1;
         }
 
@@ -1102,16 +1106,14 @@ void ecs_term_set_legacy(
             } else if (term->from_kind == EcsFromOwned) {
                 term->args[0].set = EcsSelf;
             }
-        } else {
-            if (term->from_kind == EcsFromParent) {
-                term->args[0].set = EcsSuperSet;
-                term->args[0].relation = EcsChildOf;
-                term->args[0].max_depth = 1;
-            } else if (term->from_kind == EcsCascade) {
-                term->args[0].set = EcsAll | EcsSuperSet;
-                term->args[0].relation = EcsChildOf;
-                term->oper = EcsOptional;
-            }
+        } else if (term->from_kind == EcsFromParent) {
+            term->args[0].set = EcsSuperSet;
+            term->args[0].relation = EcsChildOf;
+            term->args[0].max_depth = 1;
+        } else if (term->from_kind == EcsCascade) {
+            term->args[0].set = EcsAll | EcsSuperSet;
+            term->args[0].relation = EcsChildOf;
+            term->oper = EcsOptional;
         }
     }
 
@@ -1153,16 +1155,14 @@ void ecs_term_set_legacy(
 static
 int ecs_parse_signature_action(
     ecs_world_t *world,
-    const char *name,
-    const char *expr,
+    ecs_sig_t *sig,
     int64_t column,
     ecs_term_t *term,
     void *data)
 {
-    (void)name;
-    (void)expr;
     (void)column;
-    return ecs_sig_add(world, data, term);
+    (void)data;
+    return ecs_sig_add(world, sig, term);
 }
 
 int ecs_term_resolve(
@@ -1201,17 +1201,24 @@ int ecs_sig_init(
     ecs_sig_t *sig)
 {
     if (expr && ecs_os_strlen(expr) && strcmp(expr, "0")) {
-        sig->expr = ecs_os_strdup(expr);
+        /* Dispell const, but only temporary. Only strdup the expression if the
+         * signature was successfully parsed */
+        sig->expr = (char*)expr;
     } else {
         sig->expr = NULL;
     }
 
     sig->terms = NULL;
-    sig->name = NULL;
+    sig->name = (char*)name; /* Dispell const- same as above */
 
     if (sig->expr) {
-        return ecs_parse_expr(
-            world, name, sig->expr, ecs_parse_signature_action, sig);
+        int result = ecs_parse_expr(world, sig, ecs_parse_signature_action, NULL);
+        if (!result) {
+            sig->name = ecs_os_strdup(name);
+            sig->expr = ecs_os_strdup(expr);
+        }
+
+        return result;
     } else {
         return 0;
     }

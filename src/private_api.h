@@ -624,8 +624,7 @@ void ecs_set_symbol(
 /* Utility that parses system signature */
 int ecs_parse_expr(
     ecs_world_t *world,
-    const char *name,
-    const char *sig,
+    ecs_sig_t *sig,
     ecs_parse_action_t action,
     void *ctx);
 

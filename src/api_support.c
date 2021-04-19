@@ -4,8 +4,7 @@
 static
 int parse_type_action(
     ecs_world_t *world,
-    const char *name,
-    const char *sig,
+    ecs_sig_t *sig,
     int64_t column,
     ecs_term_t *term,
     void *data)
@@ -13,18 +12,18 @@ int parse_type_action(
     ecs_vector_t **array = data;
 
     if (term->name) {
-        ecs_parser_error(name, sig, column, 
+        ecs_parser_error(sig->name, sig->expr, column, 
             "column names not supported in type expression");
         goto error;
     }
 
     if (term->oper != EcsAnd) {
-        ecs_parser_error(name, sig, column, 
+        ecs_parser_error(sig->name, sig->expr, column, 
             "operator other than AND not supported in type expression");
         goto error;
     }
 
-    if (ecs_term_resolve(world, name, sig, column, term)) {
+    if (ecs_term_resolve(world, sig->name, sig->expr, column, term)) {
         goto error;
     }
 
@@ -36,13 +35,13 @@ int parse_type_action(
     }
 
     if (term->from_kind != EcsFromOwned) {
-        ecs_parser_error(name, sig, column, 
+        ecs_parser_error(sig->name, sig->expr, column, 
             "source modifiers not supported for type expressions");
         goto error;
     }
 
     if (term->args[0].entity != EcsThis) {
-        ecs_parser_error(name, sig, column, 
+        ecs_parser_error(sig->name, sig->expr, column, 
             "subject other than this not supported in type expression");
         goto error;
     }
@@ -133,7 +132,11 @@ EcsType type_from_expr(
 {
     if (expr) {
         ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_parse_expr(world, name, expr, parse_type_action, &vec);
+        ecs_sig_t sig = {
+            .name = (char*)name,
+            .expr = (char*)expr
+        };
+        ecs_parse_expr(world, &sig, parse_type_action, &vec);
         EcsType result = type_from_vec(world, vec);
         ecs_vector_free(vec);
         return result;
@@ -245,7 +248,10 @@ ecs_table_t* ecs_table_from_str(
 {
     if (expr) {
         ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_parse_expr(world, NULL, expr, parse_type_action, &vec);
+        ecs_sig_t sig = {
+            .expr = (char*)expr
+        };        
+        ecs_parse_expr(world, &sig, parse_type_action, &vec);
         ecs_table_t *result = table_from_vec(world, vec);
         ecs_vector_free(vec);
         return result;

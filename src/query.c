@@ -920,12 +920,11 @@ bool match_term(
     ecs_match_failure_t *failure_info)
 {
     (void)failure_info;
-    
-    ecs_from_kind_t from_kind = term->from_kind;
+
     uint8_t set = term->args[0].set;
 
     /* If term has no subject, there's nothing to match */
-    if (!term->args[0].entity || from_kind == EcsFromSystem) {
+    if (!term->args[0].entity) {
         return true;
     }
 
@@ -1610,17 +1609,32 @@ void process_signature(
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
+        ecs_term_id_t *pred = &term->pred;
+        ecs_term_id_t *subj = &term->args[0];
+        ecs_term_id_t *obj = &term->args[1];
         ecs_oper_kind_t op = term->oper; 
-        ecs_from_kind_t from = term->from_kind; 
         ecs_inout_kind_t inout = term->inout;
 
         /* Queries do not support variables */
-        ecs_assert(term->pred.var_kind != EcsVarIsVariable, 
-            ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(term->args[0].var_kind != EcsVarIsVariable, 
-            ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(term->args[1].var_kind != EcsVarIsVariable, 
-            ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(pred->var_kind != EcsVarIsVariable, 
+            ECS_UNSUPPORTED, NULL);
+        ecs_assert(subj->var_kind != EcsVarIsVariable, 
+            ECS_UNSUPPORTED, NULL);
+        ecs_assert(obj->var_kind != EcsVarIsVariable, 
+            ECS_UNSUPPORTED, NULL);
+
+        /* Queries do not support subset substitutions */
+        ecs_assert(!(pred->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
+        ecs_assert(!(subj->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
+        ecs_assert(!(obj->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
+
+        /* Superset/subset substitutions aren't supported for pred/obj */
+        ecs_assert(pred->set == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
+        ecs_assert(obj->set == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
+
+        if (subj->set == EcsDefaultSet) {
+            subj->set = EcsSelf;
+        }
 
         if (inout != EcsIn) {
             query->flags |= EcsQueryHasOutColumns;
@@ -1646,21 +1660,16 @@ void process_signature(
             }
         }
 
-        if (from == EcsFromAny || 
-            from == EcsFromOwned ||
-            from == EcsFromShared ||
-            from == EcsFromParent) 
-        {
+        if (subj->entity == EcsThis) {
             query->flags |= EcsQueryNeedsTables;
         }
 
-        if (from == EcsCascade) {
+        if (subj->set & EcsAll && term->oper == EcsOptional) {
             query->cascade_by = i + 1;
             query->rank_on_component = term->id;
         }
 
-        if (from == EcsFromEntity) {
-            ecs_assert(term->args[0].entity != 0, ECS_INTERNAL_ERROR, NULL);
+        if (subj->entity && subj->entity != EcsThis && subj->set == EcsSelf) {
             ecs_set_watch(world, term->args[0].entity);
         }
     }
@@ -2857,8 +2866,10 @@ void mark_columns_dirty(
             query->sig.terms, ecs_term_t);
 
         for (i = 0; i < count; i ++) {
-            if (terms[i].inout != EcsIn && (terms[i].inout != EcsInOutDefault || 
-                terms[i].from_kind == EcsFromOwned)) 
+            ecs_term_t *term = &terms[i];
+            ecs_term_id_t *subj = &term->args[0];
+            if (term->inout != EcsIn && (term->inout != EcsInOutDefault || 
+                (subj->entity == EcsThis && subj->set == EcsSelf)))
             {
                 int32_t table_column = table_data->iter_data.columns[c];
                 if (table_column > 0) {

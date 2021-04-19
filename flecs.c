@@ -90,8 +90,7 @@ extern "C" {
 /** Callback used by the system signature expression parser. */
 typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,                 
-    const char *id,
-    const char *expr,
+    ecs_sig_t *sig,
     int64_t pos,
     ecs_term_t *term,
     void *ctx);
@@ -1245,8 +1244,7 @@ void ecs_set_symbol(
 /* Utility that parses system signature */
 int ecs_parse_expr(
     ecs_world_t *world,
-    const char *name,
-    const char *sig,
+    ecs_sig_t *sig,
     ecs_parse_action_t action,
     void *ctx);
 
@@ -15000,6 +14998,9 @@ parse_source:
             return NULL;           
         }
         break;
+    case EcsFromSystem:
+        elem.args[0].name = ecs_os_strdup(name);
+        break;  
     default:
         break;
     }
@@ -15247,30 +15248,31 @@ parse_done:
 
 int ecs_parse_expr(
     ecs_world_t *world,
-    const char *name,
-    const char *sig,
+    ecs_sig_t *sig,
     ecs_parse_action_t action,
     void *ctx)
 {
     ecs_term_t elem;
+    ecs_assert(sig != NULL, ECS_INVALID_PARAMETER, NULL);
+    const char *expr = sig->expr;
 
-    if (!sig) {
+    /* Don't parse empty expressions */
+    if (!expr) {
         return 0;
     }
 
-    sig = skip_space(sig);
-
-    if (!sig[0]) {
+    expr = skip_space(expr);
+    if (!expr[0]) {
         return 0;
     }
 
     bool prev_or = false;
     ecs_from_kind_t prev_from = 0;
 
-    const char *ptr = sig;
-    while ((ptr = parse_element(world, name, ptr, &elem))) {
+    const char *ptr = expr;
+    while ((ptr = parse_element(world, sig->name, ptr, &elem))) {
         if (elem.oper == EcsOr && elem.from_kind == EcsFromEmpty) {
-            ecs_parser_error(name, sig, (ptr - sig), 
+            ecs_parser_error(sig->name, expr, (ptr - expr), 
                 "invalid empty source in OR expression"); 
             ecs_term_free(&elem);    
             return -1;
@@ -15278,7 +15280,7 @@ int ecs_parse_expr(
 
         if (prev_or) {
             if (elem.from_kind != prev_from) {
-                ecs_parser_error(name, sig, (ptr - sig), 
+                ecs_parser_error(sig->name, expr, (ptr - expr), 
                     "cannot combine different sources in OR expression");
                 ecs_term_free(&elem);
                 return -1;
@@ -15288,7 +15290,7 @@ int ecs_parse_expr(
             prev_from = elem.from_kind;
 
             if (elem.oper != EcsAnd && elem.oper != EcsOr) {
-                ecs_parser_error(name, sig, (ptr - sig), 
+                ecs_parser_error(sig->name, expr, (ptr - expr), 
                     "cannot combine || with other operators");
                 ecs_term_free(&elem);
                 return -1;
@@ -15300,7 +15302,7 @@ int ecs_parse_expr(
             prev_from = elem.from_kind;
         }
 
-        if (action(world, name, sig, ptr - sig, &elem, ctx)) {
+        if (action(world, sig, ptr - expr, &elem, ctx)) {
             return -1;
         }
 
@@ -15398,16 +15400,14 @@ void ecs_term_set_legacy(
             } else if (term->from_kind == EcsFromOwned) {
                 term->args[0].set = EcsSelf;
             }
-        } else {
-            if (term->from_kind == EcsFromParent) {
-                term->args[0].set = EcsSuperSet;
-                term->args[0].relation = EcsChildOf;
-                term->args[0].max_depth = 1;
-            } else if (term->from_kind == EcsCascade) {
-                term->args[0].set = EcsAll | EcsSuperSet;
-                term->args[0].relation = EcsChildOf;
-                term->oper = EcsOptional;
-            }
+        } else if (term->from_kind == EcsFromParent) {
+            term->args[0].set = EcsSuperSet;
+            term->args[0].relation = EcsChildOf;
+            term->args[0].max_depth = 1;
+        } else if (term->from_kind == EcsCascade) {
+            term->args[0].set = EcsAll | EcsSuperSet;
+            term->args[0].relation = EcsChildOf;
+            term->oper = EcsOptional;
         }
     }
 
@@ -15449,16 +15449,14 @@ void ecs_term_set_legacy(
 static
 int ecs_parse_signature_action(
     ecs_world_t *world,
-    const char *name,
-    const char *expr,
+    ecs_sig_t *sig,
     int64_t column,
     ecs_term_t *term,
     void *data)
 {
-    (void)name;
-    (void)expr;
     (void)column;
-    return ecs_sig_add(world, data, term);
+    (void)data;
+    return ecs_sig_add(world, sig, term);
 }
 
 int ecs_term_resolve(
@@ -15497,17 +15495,24 @@ int ecs_sig_init(
     ecs_sig_t *sig)
 {
     if (expr && ecs_os_strlen(expr) && strcmp(expr, "0")) {
-        sig->expr = ecs_os_strdup(expr);
+        /* Dispell const, but only temporary. Only strdup the expression if the
+         * signature was successfully parsed */
+        sig->expr = (char*)expr;
     } else {
         sig->expr = NULL;
     }
 
     sig->terms = NULL;
-    sig->name = NULL;
+    sig->name = (char*)name; /* Dispell const- same as above */
 
     if (sig->expr) {
-        return ecs_parse_expr(
-            world, name, sig->expr, ecs_parse_signature_action, sig);
+        int result = ecs_parse_expr(world, sig, ecs_parse_signature_action, NULL);
+        if (!result) {
+            sig->name = ecs_os_strdup(name);
+            sig->expr = ecs_os_strdup(expr);
+        }
+
+        return result;
     } else {
         return 0;
     }
@@ -16395,11 +16400,15 @@ void ecs_os_api_free(void *ptr) {
 
 static
 char* ecs_os_api_strdup(const char *str) {
-    int len = ecs_os_strlen(str);
-    char *result = ecs_os_malloc(len + 1);
-    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
-    ecs_os_strcpy(result, str);
-    return result;
+    if (str) {
+        int len = ecs_os_strlen(str);
+        char *result = ecs_os_malloc(len + 1);
+        ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+        ecs_os_strcpy(result, str);
+        return result;
+    } else {
+        return NULL;
+    }
 }
 
 /* Replace dots with underscores */
@@ -17465,12 +17474,11 @@ bool match_term(
     ecs_match_failure_t *failure_info)
 {
     (void)failure_info;
-    
-    ecs_from_kind_t from_kind = term->from_kind;
+
     uint8_t set = term->args[0].set;
 
     /* If term has no subject, there's nothing to match */
-    if (!term->args[0].entity || from_kind == EcsFromSystem) {
+    if (!term->args[0].entity) {
         return true;
     }
 
@@ -18155,17 +18163,32 @@ void process_signature(
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
+        ecs_term_id_t *pred = &term->pred;
+        ecs_term_id_t *subj = &term->args[0];
+        ecs_term_id_t *obj = &term->args[1];
         ecs_oper_kind_t op = term->oper; 
-        ecs_from_kind_t from = term->from_kind; 
         ecs_inout_kind_t inout = term->inout;
 
         /* Queries do not support variables */
-        ecs_assert(term->pred.var_kind != EcsVarIsVariable, 
-            ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(term->args[0].var_kind != EcsVarIsVariable, 
-            ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(term->args[1].var_kind != EcsVarIsVariable, 
-            ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(pred->var_kind != EcsVarIsVariable, 
+            ECS_UNSUPPORTED, NULL);
+        ecs_assert(subj->var_kind != EcsVarIsVariable, 
+            ECS_UNSUPPORTED, NULL);
+        ecs_assert(obj->var_kind != EcsVarIsVariable, 
+            ECS_UNSUPPORTED, NULL);
+
+        /* Queries do not support subset substitutions */
+        ecs_assert(!(pred->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
+        ecs_assert(!(subj->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
+        ecs_assert(!(obj->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
+
+        /* Superset/subset substitutions aren't supported for pred/obj */
+        ecs_assert(pred->set == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
+        ecs_assert(obj->set == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
+
+        if (subj->set == EcsDefaultSet) {
+            subj->set = EcsSelf;
+        }
 
         if (inout != EcsIn) {
             query->flags |= EcsQueryHasOutColumns;
@@ -18191,21 +18214,16 @@ void process_signature(
             }
         }
 
-        if (from == EcsFromAny || 
-            from == EcsFromOwned ||
-            from == EcsFromShared ||
-            from == EcsFromParent) 
-        {
+        if (subj->entity == EcsThis) {
             query->flags |= EcsQueryNeedsTables;
         }
 
-        if (from == EcsCascade) {
+        if (subj->set & EcsAll && term->oper == EcsOptional) {
             query->cascade_by = i + 1;
             query->rank_on_component = term->id;
         }
 
-        if (from == EcsFromEntity) {
-            ecs_assert(term->args[0].entity != 0, ECS_INTERNAL_ERROR, NULL);
+        if (subj->entity && subj->entity != EcsThis && subj->set == EcsSelf) {
             ecs_set_watch(world, term->args[0].entity);
         }
     }
@@ -19402,8 +19420,10 @@ void mark_columns_dirty(
             query->sig.terms, ecs_term_t);
 
         for (i = 0; i < count; i ++) {
-            if (terms[i].inout != EcsIn && (terms[i].inout != EcsInOutDefault || 
-                terms[i].from_kind == EcsFromOwned)) 
+            ecs_term_t *term = &terms[i];
+            ecs_term_id_t *subj = &term->args[0];
+            if (term->inout != EcsIn && (term->inout != EcsInOutDefault || 
+                (subj->entity == EcsThis && subj->set == EcsSelf)))
             {
                 int32_t table_column = table_data->iter_data.columns[c];
                 if (table_column > 0) {
@@ -23706,19 +23726,22 @@ void CreateSignature(
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = entities[i];
-        const char *name = ecs_get_name(world, e);
+        char *path = ecs_get_fullpath(world, e);
 
         /* Parse the signature and add the result to the entity */
         EcsSignature sig = {0};
-        ecs_sig_init(world, name, signature[0].expr, &sig.signature);
+
+        ecs_sig_init(world, path, signature[i].expr, &sig.signature);
         ecs_set_ptr(world, e, EcsSignature, &sig);
 
         /* If sig has FromSystem columns, add components to the entity */
         ecs_vector_each(sig.signature.terms, ecs_term_t, term, {
-            if (term->from_kind == EcsFromSystem) {
+            if (term->args[0].entity == e) {
                 ecs_add_id(world, e, term->id);
             }
-        });    
+        });
+
+        ecs_os_free(path);
     }
 }
 
@@ -24030,8 +24053,7 @@ ecs_type_t ecs_dbg_get_column_type(
 static
 int parse_type_action(
     ecs_world_t *world,
-    const char *name,
-    const char *sig,
+    ecs_sig_t *sig,
     int64_t column,
     ecs_term_t *term,
     void *data)
@@ -24039,18 +24061,18 @@ int parse_type_action(
     ecs_vector_t **array = data;
 
     if (term->name) {
-        ecs_parser_error(name, sig, column, 
+        ecs_parser_error(sig->name, sig->expr, column, 
             "column names not supported in type expression");
         goto error;
     }
 
     if (term->oper != EcsAnd) {
-        ecs_parser_error(name, sig, column, 
+        ecs_parser_error(sig->name, sig->expr, column, 
             "operator other than AND not supported in type expression");
         goto error;
     }
 
-    if (ecs_term_resolve(world, name, sig, column, term)) {
+    if (ecs_term_resolve(world, sig->name, sig->expr, column, term)) {
         goto error;
     }
 
@@ -24062,13 +24084,13 @@ int parse_type_action(
     }
 
     if (term->from_kind != EcsFromOwned) {
-        ecs_parser_error(name, sig, column, 
+        ecs_parser_error(sig->name, sig->expr, column, 
             "source modifiers not supported for type expressions");
         goto error;
     }
 
     if (term->args[0].entity != EcsThis) {
-        ecs_parser_error(name, sig, column, 
+        ecs_parser_error(sig->name, sig->expr, column, 
             "subject other than this not supported in type expression");
         goto error;
     }
@@ -24159,7 +24181,11 @@ EcsType type_from_expr(
 {
     if (expr) {
         ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_parse_expr(world, name, expr, parse_type_action, &vec);
+        ecs_sig_t sig = {
+            .name = (char*)name,
+            .expr = (char*)expr
+        };
+        ecs_parse_expr(world, &sig, parse_type_action, &vec);
         EcsType result = type_from_vec(world, vec);
         ecs_vector_free(vec);
         return result;
@@ -24271,7 +24297,10 @@ ecs_table_t* ecs_table_from_str(
 {
     if (expr) {
         ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_parse_expr(world, NULL, expr, parse_type_action, &vec);
+        ecs_sig_t sig = {
+            .expr = (char*)expr
+        };        
+        ecs_parse_expr(world, &sig, parse_type_action, &vec);
         ecs_table_t *result = table_from_vec(world, vec);
         ecs_vector_free(vec);
         return result;

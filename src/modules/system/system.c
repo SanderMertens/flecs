@@ -732,19 +732,22 @@ void CreateSignature(
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = entities[i];
-        const char *name = ecs_get_name(world, e);
+        char *path = ecs_get_fullpath(world, e);
 
         /* Parse the signature and add the result to the entity */
         EcsSignature sig = {0};
-        ecs_sig_init(world, name, signature[0].expr, &sig.signature);
+
+        ecs_sig_init(world, path, signature[i].expr, &sig.signature);
         ecs_set_ptr(world, e, EcsSignature, &sig);
 
         /* If sig has FromSystem columns, add components to the entity */
         ecs_vector_each(sig.signature.terms, ecs_term_t, term, {
-            if (term->from_kind == EcsFromSystem) {
+            if (term->args[0].entity == e) {
                 ecs_add_id(world, e, term->id);
             }
-        });    
+        });
+
+        ecs_os_free(path);
     }
 }
 

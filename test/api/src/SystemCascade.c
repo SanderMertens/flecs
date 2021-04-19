@@ -360,23 +360,31 @@ void SystemCascade_rematch_w_empty_table() {
 }
 
 void SystemCascade_query_w_only_cascade() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_query_t *q = ecs_query_new(world, "CASCADE:Position");;
+    ecs_query_t *q = ecs_query_new(world, "CASCADE:Name");;
     test_assert(q != NULL);
 
-    ecs_entity_t parent = ecs_new(world, Position);
-    ecs_entity_t child = ecs_new(world, Position);
-    ecs_add_pair(world, child, EcsChildOf, parent);
-    ecs_add(world, child, Velocity);
+    int32_t count = 0;
 
+    /* Should match everything (since everything is a root without further 
+     * qualifications). Since no other entities have been created, all entities
+     * must be builtin ones. */
     ecs_iter_t it = ecs_query_iter(q);
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 0); // Task system, matches nothing
-    test_assert(!ecs_query_next(&it));
+    while (ecs_query_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            ecs_entity_t e = it.entities[i];
+            test_assert(
+                e == EcsFlecs ||
+                ecs_has_pair(world, e, EcsChildOf, EcsFlecs) ||
+                ecs_has_pair(world, e, EcsChildOf, EcsFlecsCore)
+            );
+
+            count ++;
+        }
+    }
+
+    test_assert(count != 0);
 
     ecs_fini(world);
 }
