@@ -457,7 +457,7 @@ ecs_vector_t* add_ref(
     ecs_ref_t *ref = ecs_vector_add(&references, ecs_ref_t);
     ecs_term_id_t *subj = &term->args[0];
 
-    if (!(subj->set & EcsSetAll)) {
+    if (!(subj->set & EcsAll)) {
         ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
     }
     
@@ -691,7 +691,7 @@ add_trait:
             }
         }
 
-        if ((entity || table_data.iter_data.columns[c] == -1 || subj.set & EcsSetAll)) {
+        if ((entity || table_data.iter_data.columns[c] == -1 || subj.set & EcsAll)) {
             references = add_ref(world, query, references, term,
                 component, entity);
             table_data.iter_data.columns[c] = -ecs_vector_count(references);
@@ -1425,7 +1425,7 @@ void register_monitors(
          * Also register a regular component monitor for EcsCascade columns.
          * This ensures that when the component used in the CASCADE column
          * is added or removed tables are updated accordingly*/
-        if (subj->set & EcsSuperSet && subj->set & EcsSetAll && subj->relation != EcsIsA) {
+        if (subj->set & EcsSuperSet && subj->set & EcsAll && subj->relation != EcsIsA) {
             if (term->oper != EcsOr) {
                 if (term->args[0].relation != EcsIsA) {
                     ecs_monitor_register(
@@ -1478,10 +1478,10 @@ void process_signature(
         ecs_assert(!(obj->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
 
         /* Superset/subset substitutions aren't supported for pred/obj */
-        ecs_assert(pred->set == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
-        ecs_assert(obj->set == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
+        ecs_assert(pred->set == EcsSetDefault, ECS_UNSUPPORTED, NULL);
+        ecs_assert(obj->set == EcsSetDefault, ECS_UNSUPPORTED, NULL);
 
-        if (subj->set == EcsDefaultSet) {
+        if (subj->set == EcsSetDefault) {
             subj->set = EcsSelf;
         }
 
@@ -1518,7 +1518,7 @@ void process_signature(
             query->flags |= EcsQueryNeedsTables;
         }
 
-        if (subj->set & EcsSetAll && term->oper == EcsOptional) {
+        if (subj->set & EcsAll && term->oper == EcsOptional) {
             query->cascade_by = i + 1;
             query->rank_on_component = term->id;
         }

@@ -17,7 +17,7 @@ int parse_type_action(
         goto error;
     }
 
-    if (term->oper != EcsAnd) {
+    if (term->oper != EcsAnd && term->oper != EcsOperAll) {
         ecs_parser_error(sig->name, sig->expr, column, 
             "operator other than AND not supported in type expression");
         goto error;
@@ -27,14 +27,12 @@ int parse_type_action(
         goto error;
     }
 
-    ecs_term_set_legacy(term);
-
     if (term->args[0].entity == 0) {
         /* Empty term */
         goto done;
     }
 
-    if (term->args[0].set != EcsDefaultSet) {
+    if (term->args[0].set != EcsSetDefault) {
         ecs_parser_error(sig->name, sig->expr, column, 
             "source modifiers not supported for type expressions");
         goto error;

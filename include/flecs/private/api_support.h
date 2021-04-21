@@ -133,19 +133,6 @@ typedef enum ecs_var_kind_t {
     EcsVarIsEntity
 } ecs_var_kind_t;
 
-/** Type that is used by systems to indicate where to fetch a component from */
-typedef enum ecs_from_kind_t {
-    EcsFromDefault,
-    EcsFromAny,             /* Get component from self (default) */
-    EcsFromOwned,           /* Get owned component from self */
-    EcsFromShared,          /* Get shared component from self */
-    EcsFromParent,          /* Get component from container */
-    EcsFromSystem,          /* Get component from system */
-    EcsFromEmpty,           /* Get entity handle by id */
-    EcsFromEntity,          /* Get component from other entity */
-    EcsCascade              /* Walk component in cascading (hierarchy) order */
-} ecs_from_kind_t;
-
 /** Type describing an operator used in an signature of a system signature */
 typedef enum ecs_oper_kind_t {
     EcsAnd,
@@ -156,17 +143,24 @@ typedef enum ecs_oper_kind_t {
     EcsOperLast
 } ecs_oper_kind_t;
 
-#define EcsDefaultSet (0)   /* Default set, SuperSet|Self for This subject */
+#define EcsSetDefault (0)   /* Default set, SuperSet|Self for This subject */
 #define EcsSelf       (1)   /* Select self (inclusive) */
 #define EcsSuperSet   (2)   /* Select superset until predicate match */
 #define EcsSubSet     (4)   /* Select subset until predicate match */
-#define EcsSetAll        (8)   /* Walk full superset/subset, regardless of match */
+#define EcsAll        (8)   /* Walk full superset/subset, regardless of match */
+#define EcsNothing    (16)  /* Select nothing */
 
+/** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {
     ecs_entity_t entity;        /* Entity (default = This) */
     char *name;                 /* Name (default = ".") */
     ecs_var_kind_t var_kind;    /* Is id a variable (default yes if name is 
                                  * all caps & entity is 0) */
+
+    /* Substitution parameters
+     * These parameters allow for substituting the id with its super- or subsets
+     * for a specified relationship. This enables functionality like selecting
+     * components from a base (IsA) or a parent (ChildOf) in a single term */
 
     ecs_entity_t relation;      /* Relationship to substitute (default = IsA) */
     uint8_t set;                /* Substitute as self, subset, superset */
@@ -176,21 +170,15 @@ typedef struct ecs_term_id_t {
 
 /** Type that describes a single column in the system signature */
 typedef struct ecs_term_t {
-    /* Legacy fields -- will soon be removed */
-    ecs_from_kind_t from_kind;   /* Element kind (Entity, Component) */
-
-    /* New fields -- currently populated together with legacy fields */
-    ecs_inout_kind_t inout;
-    ecs_term_id_t pred;
-    ecs_term_id_t args[2];
-    ecs_oper_kind_t oper;
-    ecs_entity_t role;
-
-    /* Term name */
-    char *name;
+    ecs_inout_kind_t inout;     /* Access to contents matched with term */
+    ecs_term_id_t pred;         /* Predicate of term */
+    ecs_term_id_t args[2];      /* Subject, object of term */
+    ecs_oper_kind_t oper;       /* Operator of term */
+    ecs_entity_t role;          /* Role of term */
+    char *name;                 /* Name of term */
 
     /* Can be used instead of pred, args and role to set component/pair id. Will
-     * be populated from pred, args */
+     * be populated from predicate, object */
     ecs_entity_t id;    
 } ecs_term_t;
 
@@ -208,10 +196,6 @@ int ecs_term_resolve(
     const char *expr,
     int64_t column,
     ecs_term_t *term);
-
-/* Set legacy fields in term */
-void ecs_term_set_legacy(
-    ecs_term_t *term);    
 
 /* Free resources associated with term */
 void ecs_term_free(
