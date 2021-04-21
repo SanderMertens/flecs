@@ -310,7 +310,7 @@ bool search_type(
     }
 
     if (!matched && rel && id != EcsPrefab && id != EcsDisabled) {
-        for (i = count - 1; i >= 0; i --) {
+        for (i = 0; i < count; i ++) {
             ecs_entity_t e = ids[i];
             if (!ECS_HAS_RELATION(e, rel)) {
                 continue;
@@ -329,7 +329,7 @@ bool search_type(
             if (search_type(world, base_type, id, rel, 
                 min_depth, max_depth, depth + 1, out)) 
             {
-                if (out) {
+                if (out && !*out) {
                     *out = base;
                 }
                 return true;
@@ -337,8 +337,8 @@ bool search_type(
             /* If the id could not be found on the base and the relationship is
              * not IsA, try substituting the base with IsA */
             } else if (rel != EcsIsA) {
-                if (search_type(world, base_type, id, EcsIsA, 1, 0, 0, NULL)) {
-                    if (out) {
+                if (search_type(world, base_type, id, EcsIsA, 1, 0, 0, out)) {
+                    if (out && !*out) {
                         *out = base;
                     }
                     return true;
@@ -376,6 +376,9 @@ bool ecs_type_find_id(
     int32_t max_depth,
     ecs_entity_t *out)
 {
+    if (out) {
+        *out = 0;
+    }
     return search_type(world, type, id, rel, min_depth, max_depth, 0, out);
 }
 

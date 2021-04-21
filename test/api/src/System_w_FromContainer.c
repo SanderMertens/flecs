@@ -591,12 +591,12 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     test_int(ctx.s[1][0], parent_2);
     test_int(ctx.c[1][1], ecs_typeid(Position));
     test_int(ctx.s[2][1], 0);
-    test_int(ctx.c[2][0], ecs_typeid(Rotation));
+    test_int(ctx.c[2][0], ecs_typeid(Mass));
     test_int(ctx.s[2][0], parent_3);
     test_int(ctx.c[2][1], ecs_typeid(Position));
     test_int(ctx.s[2][1], 0);
-    test_int(ctx.c[3][0], ecs_typeid(Rotation));
-    test_int(ctx.s[3][0], parent_2);
+    test_int(ctx.c[3][0], ecs_typeid(Mass));
+    test_int(ctx.s[3][0], parent_3);
     test_int(ctx.c[3][1], ecs_typeid(Position));
     test_int(ctx.s[3][1], 0);
 
@@ -612,13 +612,13 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
 
     p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
-    test_int(p->x, 40);
-    test_int(p->y, 80);
+    test_int(p->x, 50);
+    test_int(p->y, 100);
 
     p = ecs_get(world, e5, Position);
     test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 60);
+    test_int(p->x, 50);
+    test_int(p->y, 100);
 
     ecs_fini(world);
 }

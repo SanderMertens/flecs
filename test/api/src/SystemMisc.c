@@ -324,21 +324,6 @@ void SystemMisc_invalid_entity_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_or_from_system() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM:Position || SYSTEM:Velocity);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_invalid_null_string() {
     ecs_world_t *world = ecs_init();
 

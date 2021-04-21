@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Switch_setup() {
-    ecs_tracing_enable(-4);
+    ecs_tracing_enable(-3);
 }
 
 void Switch_get_case_empty() {

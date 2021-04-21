@@ -441,6 +441,24 @@ struct ecs_stage_t {
     bool auto_merge;               /* Should this stage automatically merge? */
 };
 
+/* Component monitor */
+typedef struct ecs_monitor_t {
+    ecs_vector_t *queries;  /* vector<ecs_query_t*> */
+    bool is_dirty;          /* Should queries be rematched? */
+} ecs_monitor_t;
+
+/* Component monitors */
+typedef struct ecs_monitor_set_t {
+    ecs_map_t *monitors; /* map<id, ecs_monitor_t> */
+    bool is_dirty;       /* Should monitors be evaluated? */
+} ecs_monitor_set_t;
+
+/* Relation monitors. TODO: implement generic monitor mechanism */
+typedef struct ecs_relation_monitor_t {
+    ecs_map_t *monitor_sets; /* map<relation_id, ecs_monitor_set_t> */
+    bool is_dirty;          /* Should monitor sets be evaluated? */
+} ecs_relation_monitor_t;
+
 /* Payload for table index which returns all tables for a given component, with
  * the column of the component in the table. */
 typedef struct ecs_table_record_t {
@@ -455,15 +473,16 @@ typedef struct ecs_id_record_t {
 } ecs_id_record_t;
 
 typedef struct ecs_store_t {
-    /* Entity lookup table for (table, row) */
-    ecs_sparse_t *entity_index;
+    /* Entity lookup */
+    ecs_sparse_t *entity_index; /* sparse<entity, ecs_record_t> */
 
-    /* table id -> table */
-    ecs_sparse_t *tables;
+    /* Table lookup by id */
+    ecs_sparse_t *tables; /* sparse<table_id, ecs_table_t> */
 
-    /* type hash -> table */
-    ecs_map_t *table_map;    
+    /* Table lookup by hash */
+    ecs_map_t *table_map; /* map<component_hash, vector<ecs_table_t*>> */  
 
+    /* Root table */
     ecs_table_t root;
 } ecs_store_t;
 
@@ -482,18 +501,6 @@ typedef struct ecs_column_info_t {
     const ecs_type_info_t *ci;
     int32_t column;
 } ecs_column_info_t;
-
-/* Component monitor */
-typedef struct ecs_component_monitor_t {
-    ecs_vector_t *queries;  /* Queries registered for component monitor */
-    bool is_dirty;          /* Should queries be rematched? */
-} ecs_component_monitor_t;
-
-/* Component monitors */
-typedef struct ecs_component_monitors_t {
-    ecs_map_t *monitors; /* map<ecs_component_monitor_t> */
-    bool rematch;        /* should monitors be reevaluated? */
-} ecs_component_monitors_t;
 
 /* fini actions */
 typedef struct ecs_action_elem_t {
@@ -543,16 +550,7 @@ struct ecs_world_t {
      * Queries register themselves as component monitors for specific components
      * and when these components change they are rematched. The component 
      * monitors are evaluated during a merge. */
-    ecs_component_monitors_t component_monitors;
-
-    /* Parent monitors are like normal component monitors except that the
-     * conditions under which a parent component is flagged dirty is different.
-     * Parent component flags are marked dirty when an entity that is a parent
-     * adds or removes a ChildOf relation. In that case, every component of that
-     * parent will be marked dirty. This allows column modifiers like CASCADE
-     * to correctly determine when the depth ranking of a table has changed. */
-    ecs_component_monitors_t parent_monitors; 
-
+    ecs_relation_monitor_t monitors;
 
     /* -- Systems -- */
     
@@ -731,13 +729,15 @@ ecs_type_info_t * ecs_get_or_create_c_info(
 void ecs_eval_component_monitors(
     ecs_world_t *world);
 
-void ecs_component_monitor_mark(
-    ecs_component_monitors_t *mon,
-    ecs_entity_t component);
+void ecs_monitor_mark_dirty(
+    ecs_world_t *world,
+    ecs_entity_t relation,
+    ecs_entity_t id);
 
-void ecs_component_monitor_register(
-    ecs_component_monitors_t *mon,
-    ecs_entity_t component,
+void ecs_monitor_register(
+    ecs_world_t *world,
+    ecs_entity_t relation,
+    ecs_entity_t id,
     ecs_query_t *query);
 
 void ecs_notify_tables(
@@ -2075,12 +2075,16 @@ void register_on_set(
         
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
+            ecs_term_id_t *subj = &term->args[0];
             ecs_oper_kind_t oper = term->oper;
-            ecs_from_kind_t from_kind = term->from_kind;
 
-            if ((from_kind != EcsFromAny && from_kind != EcsFromOwned) ||
-                (oper != EcsAnd && oper != EcsOptional)) 
+            if (!(subj->set & EcsSelf) || !subj->entity ||
+                subj->entity != EcsThis)
             {
+                continue;
+            }
+
+            if (oper != EcsAnd && oper != EcsOptional) {
                 continue;
             }
 
@@ -4988,41 +4992,48 @@ void delete_entity(
  * not scale when there are many tables / queries. Therefore we need to do a bit
  * of bookkeeping that is more intelligent than simply flipping a flag */
 static
-bool update_component_monitor_w_array(
+void update_component_monitor_w_array(
     ecs_world_t *world,
-    ecs_component_monitors_t * mon,
+    ecs_entity_t entity,
+    ecs_entity_t relation,
     ecs_entities_t * entities)
 {
-    bool childof_changed = false;
-
     if (!entities) {
-        return false;
+        return;
     }
 
     int i;
     for (i = 0; i < entities->count; i ++) {
-        ecs_entity_t component = entities->array[i];
-        if (ECS_HAS_RELATION(component, EcsChildOf)) {
-            childof_changed = true;
+        ecs_entity_t id = entities->array[i];
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t rel = ECS_PAIR_RELATION(id);
+            
+            /* If a relationship has changed, check if it could have impacted
+             * the shape of the graph for that relationship. If so, mark the
+             * relationship as dirty */        
+            if (rel != relation && ecs_get_id_record(world, ecs_pair(rel, entity))) {
+                update_component_monitor_w_array(world, entity, rel, entities);
+            }
 
-        } else if (ECS_HAS_RELATION(component, EcsIsA)) {
+        }
+        
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
             /* If an IsA relationship is added to a monitored entity (can
              * be either a parent or a base) component monitors need to be
              * evaluated for the components of the prefab. */
-            ecs_entity_t base = ecs_pair_object(world, component);
+            ecs_entity_t base = ecs_pair_object(world, id);
             ecs_type_t type = ecs_get_type(world, base);
             ecs_entities_t base_entities = ecs_type_to_entities(type);
 
             /* This evaluates the component monitor for all components of the
              * base entity. If the base entity contains IsA relationships
              * these will be evaluated recursively as well. */
-            update_component_monitor_w_array(world, mon, &base_entities);               
+            update_component_monitor_w_array(
+                world, entity, relation, &base_entities);               
         } else {
-            ecs_component_monitor_mark(mon, component);
+            ecs_monitor_mark_dirty(world, relation, id);
         }
     }
-
-    return childof_changed;
 }
 
 static
@@ -5032,23 +5043,8 @@ void update_component_monitors(
     ecs_entities_t * added,
     ecs_entities_t * removed)
 {
-    bool childof_changed = update_component_monitor_w_array(
-        world, &world->component_monitors, added);
-
-    childof_changed |= update_component_monitor_w_array(
-        world, &world->component_monitors, removed);
-
-    /* If this entity is a parent, check if anything changed that could impact
-     * its place in the hierarchy. If so, we need to mark all of the parent's
-     * entities as dirty. */
-    if (childof_changed && ecs_get_id_record(world, 
-        ecs_pair(EcsChildOf, entity))) 
-    {
-        ecs_type_t type = ecs_get_type(world, entity);
-        ecs_entities_t entities = ecs_type_to_entities(type);
-        update_component_monitor_w_array(world, 
-            &world->parent_monitors, &entities);
-    }
+    update_component_monitor_w_array(world, entity, 0, added);
+    update_component_monitor_w_array(world, entity, 0, removed);
 }
 
 static
@@ -12033,83 +12029,122 @@ ecs_stage_t *ecs_stage_from_world(
  * with tables. */
 static
 void eval_component_monitor(
-    ecs_world_t *world,
-    ecs_component_monitors_t *mon)
+    ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    ecs_relation_monitor_t *rm = &world->monitors;
 
-    if (!mon->rematch) {
+    if (!rm->is_dirty) {
         return;
     }
 
-    ecs_map_iter_t it = ecs_map_iter(mon->monitors);
-    ecs_component_monitor_t *m;
+    ecs_map_iter_t it = ecs_map_iter(rm->monitor_sets);
+    ecs_monitor_set_t *ms;
 
-    while ((m = ecs_map_next(&it, ecs_component_monitor_t, NULL))) {
-        if (m->is_dirty) {
-            ecs_vector_each(m->queries, ecs_query_t*, q_ptr, {
-                ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
-                    .kind = EcsQueryTableRematch
-                });
-            });    
-            m->is_dirty = false;        
+    while ((ms = ecs_map_next(&it, ecs_monitor_set_t, NULL))) {
+        if (!ms->is_dirty) {
+            continue;
         }
+
+        if (ms->monitors) {
+            ecs_map_iter_t mit = ecs_map_iter(ms->monitors);
+            ecs_monitor_t *m;
+            while ((m = ecs_map_next(&mit, ecs_monitor_t, NULL))) {
+                if (!m->is_dirty) {
+                    continue;
+                }
+
+                ecs_vector_each(m->queries, ecs_query_t*, q_ptr, {
+                    ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
+                        .kind = EcsQueryTableRematch
+                    });
+                });
+
+                m->is_dirty = false;
+            }
+        }
+
+        ms->is_dirty = false;
     }
 
-    mon->rematch = false;
+    rm->is_dirty = false;
 }
 
-void ecs_component_monitor_mark(
-    ecs_component_monitors_t *mon,
-    ecs_entity_t component)
+void ecs_monitor_mark_dirty(
+    ecs_world_t *world,
+    ecs_entity_t relation,
+    ecs_entity_t id)
 {
+    ecs_assert(world->monitors.monitor_sets != NULL, ECS_INTERNAL_ERROR, NULL);
+
     /* Only flag if there are actually monitors registered, so that we
      * don't waste cycles evaluating monitors if there's no interest */
-    ecs_component_monitor_t *m = ecs_map_get(mon->monitors, 
-        ecs_component_monitor_t, component);
-    if (m) {
-        m->is_dirty = true;
-        mon->rematch = true;
+    ecs_monitor_set_t *ms = ecs_map_get(world->monitors.monitor_sets, 
+        ecs_monitor_set_t, relation);
+    if (ms && ms->monitors) {
+        ecs_monitor_t *m = ecs_map_get(ms->monitors, 
+            ecs_monitor_t, id);
+        if (m) {
+            m->is_dirty = true;
+            ms->is_dirty = true;
+            world->monitors.is_dirty = true;
+        }
     }
 }
 
-void ecs_component_monitor_register(
-    ecs_component_monitors_t *mon,
-    ecs_entity_t component,
+void ecs_monitor_register(
+    ecs_world_t *world,
+    ecs_entity_t relation,
+    ecs_entity_t id,
     ecs_query_t *query)
 {
-    ecs_assert(mon != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(mon->monitors != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->monitors.monitor_sets != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_component_monitor_t *m = ecs_map_ensure(
-        mon->monitors, ecs_component_monitor_t, component);
+    ecs_monitor_set_t *ms = ecs_map_ensure(
+        world->monitors.monitor_sets, ecs_monitor_set_t, relation);
+    ecs_assert(ms != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!ms->monitors) {
+        ms->monitors = ecs_map_new(ecs_monitor_t, 1);
+    }
+
+    ecs_monitor_t *m = ecs_map_ensure(ms->monitors, ecs_monitor_t, id);
+    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);        
 
     ecs_query_t **q = ecs_vector_add(&m->queries, ecs_query_t*);
     *q = query;
 }
 
 static
-void ecs_component_monitor_init(
-    ecs_component_monitors_t *mon)
+void monitors_init(
+    ecs_relation_monitor_t *rm)
 {
-    mon->monitors = ecs_map_new(ecs_component_monitor_t, 0);
+    rm->monitor_sets = ecs_map_new(ecs_monitor_t, 0);
+    rm->is_dirty = false;
 }
 
 static
-void ecs_component_monitor_fini(
-    ecs_component_monitors_t *mon)
+void monitors_fini(
+    ecs_relation_monitor_t *rm)
 {
-    ecs_map_iter_t it = ecs_map_iter(mon->monitors);
-    ecs_component_monitor_t *m;
+    ecs_map_iter_t it = ecs_map_iter(rm->monitor_sets);
+    ecs_monitor_set_t *ms;
 
-    while ((m = ecs_map_next(&it, ecs_component_monitor_t, NULL))) {
-        ecs_vector_free(m->queries);
+    while ((ms = ecs_map_next(&it, ecs_monitor_set_t, NULL))) {
+        if (ms->monitors) {
+            ecs_map_iter_t mit = ecs_map_iter(ms->monitors);
+            ecs_monitor_t *m;
+            while ((m = ecs_map_next(&mit, ecs_monitor_t, NULL))) {
+                ecs_vector_free(m->queries);
+            }
+
+            ecs_map_free(ms->monitors);
+        }
     }
 
-    ecs_map_free(mon->monitors);
+    ecs_map_free(rm->monitor_sets);
 }
 
 static
@@ -12200,8 +12235,7 @@ ecs_world_t *ecs_mini(void) {
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->name_prefix = NULL;
 
-    ecs_component_monitor_init(&world->component_monitors);
-    ecs_component_monitor_init(&world->parent_monitors);
+    monitors_init(&world->monitors);
 
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
     world->on_activate_components = ecs_map_new(ecs_on_demand_in_t, 0);
@@ -12324,7 +12358,7 @@ bool ecs_should_quit(
 }
 
 static
-void on_demand_in_map_deinit(
+void on_demand_in_map_fini(
     ecs_map_t *map)
 {
     ecs_map_iter_t it = ecs_map_iter(map);
@@ -12571,12 +12605,11 @@ static
 void fini_misc(
     ecs_world_t *world)
 {
-    on_demand_in_map_deinit(world->on_activate_components);
-    on_demand_in_map_deinit(world->on_enable_components);
+    on_demand_in_map_fini(world->on_activate_components);
+    on_demand_in_map_fini(world->on_enable_components);
     ecs_map_free(world->type_handles);
     ecs_vector_free(world->fini_tasks);
-    ecs_component_monitor_fini(&world->component_monitors);
-    ecs_component_monitor_fini(&world->parent_monitors);
+    monitors_fini(&world->monitors);
 }
 
 /* The destroyer of worlds */
@@ -12640,8 +12673,7 @@ void ecs_eval_component_monitors(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);    
-    eval_component_monitor(world, &world->component_monitors);
-    eval_component_monitor(world, &world->parent_monitors);
+    eval_component_monitor(world);
 }
 
 void ecs_measure_frame_time(
@@ -14710,7 +14742,7 @@ uint8_t parse_set_token(
     } else if (!ecs_os_strcmp(token, TOK_SUBSET)) {
         return EcsSubSet;
     } else if (!ecs_os_strcmp(token, TOK_ALL)) {
-        return EcsAll;
+        return EcsSetAll;
     } else {
         return 0;
     }
@@ -14842,7 +14874,7 @@ const char* parse_set_expr(
         }
     } while (true);
 
-    if (id->set & EcsAll && !(id->set & EcsSuperSet) && !(id->set & EcsSubSet)){
+    if (id->set & EcsSetAll && !(id->set & EcsSuperSet) && !(id->set & EcsSubSet)){
         ecs_parser_error(name, sig, column, 
             "invalid 'all' token without superset or subset");
         return NULL;
@@ -15061,7 +15093,7 @@ parse_source:
         elem.args[0].max_depth = 1;
         break;
     case EcsCascade:
-        elem.args[0].set = EcsSuperSet | EcsAll;
+        elem.args[0].set = EcsSuperSet | EcsSetAll;
         elem.args[0].relation = EcsChildOf;
         break;
     case EcsFromEntity:
@@ -15478,7 +15510,7 @@ void ecs_term_set_legacy(
             term->args[0].relation = EcsChildOf;
             term->args[0].max_depth = 1;
         } else if (term->from_kind == EcsCascade) {
-            term->args[0].set = EcsAll | EcsSuperSet;
+            term->args[0].set = EcsSetAll | EcsSuperSet;
             term->args[0].relation = EcsChildOf;
             term->oper = EcsOptional;
         }
@@ -15496,7 +15528,7 @@ void ecs_term_set_legacy(
         if (term->args[0].set & EcsSuperSet) {
             if (term->args[0].max_depth == 1) {
                 term->from_kind = EcsFromParent;
-            } else if (term->args[0].set & EcsAll && term->oper == EcsOptional) {
+            } else if (term->args[0].set & EcsSetAll && term->oper == EcsOptional) {
                 term->from_kind = EcsCascade;
             }
         }
@@ -15569,7 +15601,8 @@ int ecs_sig_init(
 {
     if (expr && ecs_os_strlen(expr) && strcmp(expr, "0")) {
         /* Dispell const, but only temporary. Only strdup the expression if the
-         * signature was successfully parsed */
+         * signature was successfully parsed. Setting the expression is 
+         * necessary for the parser. */
         sig->expr = (char*)expr;
     } else {
         sig->expr = NULL;
@@ -15578,17 +15611,19 @@ int ecs_sig_init(
     sig->terms = NULL;
     sig->name = (char*)name; /* Dispell const- same as above */
 
-    if (sig->expr) {
-        int result = ecs_parse_expr(world, sig, ecs_parse_signature_action, NULL);
-        if (!result) {
-            sig->name = ecs_os_strdup(name);
-            sig->expr = ecs_os_strdup(expr);
-        }
+    int result = 0;
 
-        return result;
-    } else {
-        return 0;
+    if (sig->expr) {
+        result = ecs_parse_expr(world, sig, ecs_parse_signature_action, NULL);
     }
+
+    /* If the expression parsed without errors, create copies of strings */
+    if (!result) {
+        sig->name = ecs_os_strdup(name);
+        sig->expr = ecs_os_strdup(expr);
+    }    
+
+    return result;
 }
 
 void ecs_sig_deinit(
@@ -15602,6 +15637,7 @@ void ecs_sig_deinit(
     }
 
     ecs_vector_free(sig->terms);
+    ecs_os_free(sig->name);
     ecs_os_free(sig->expr);
 }
 
@@ -16092,7 +16128,7 @@ bool search_type(
     }
 
     if (!matched && rel && id != EcsPrefab && id != EcsDisabled) {
-        for (i = count - 1; i >= 0; i --) {
+        for (i = 0; i < count; i ++) {
             ecs_entity_t e = ids[i];
             if (!ECS_HAS_RELATION(e, rel)) {
                 continue;
@@ -16111,7 +16147,7 @@ bool search_type(
             if (search_type(world, base_type, id, rel, 
                 min_depth, max_depth, depth + 1, out)) 
             {
-                if (out) {
+                if (out && !*out) {
                     *out = base;
                 }
                 return true;
@@ -16119,8 +16155,8 @@ bool search_type(
             /* If the id could not be found on the base and the relationship is
              * not IsA, try substituting the base with IsA */
             } else if (rel != EcsIsA) {
-                if (search_type(world, base_type, id, EcsIsA, 1, 0, 0, NULL)) {
-                    if (out) {
+                if (search_type(world, base_type, id, EcsIsA, 1, 0, 0, out)) {
+                    if (out && !*out) {
                         *out = base;
                     }
                     return true;
@@ -16158,6 +16194,9 @@ bool ecs_type_find_id(
     int32_t max_depth,
     ecs_entity_t *out)
 {
+    if (out) {
+        *out = 0;
+    }
     return search_type(world, type, id, rel, min_depth, max_depth, 0, out);
 }
 
@@ -16638,62 +16677,6 @@ void activate_table(
     ecs_table_t *table,
     bool active);
 
-static
-ecs_entity_t find_object_with(
-    const ecs_world_t *world,
-    ecs_type_t table_type,
-    ecs_entity_t relation,
-    ecs_entity_t component,
-    ecs_entity_t *entity_out)
-{
-    ecs_vector_each(table_type, ecs_entity_t, c_ptr, {
-        ecs_entity_t entity = *c_ptr;
-
-        if (ECS_HAS_RELATION(entity, relation)) {
-            entity = ECS_PAIR_OBJECT(entity);
-
-            ecs_record_t *record = ecs_eis_get(world, entity);
-            ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
-
-            if (record->table) {
-                if (ecs_type_has_id(world, record->table->type, component)) {
-                    if (entity_out) *entity_out = entity;
-                    return component;
-                }
-            }
-        }
-    });
-
-    return 0;
-}
-
-/* Get actual entity on which specified component is stored */
-static
-ecs_entity_t get_entity_for_component(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_type_t type,
-    ecs_entity_t component)
-{
-    if (entity) {
-        ecs_record_t *record = ecs_eis_get(world, entity);
-        ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (record->table) {
-            type = record->table->type;
-        } else {
-            type = NULL;
-        }
-    }
-
-    ecs_vector_each(type, ecs_entity_t, c_ptr, {
-        if (*c_ptr == component) {
-            return entity;
-        }
-    });
-
-    return ecs_find_entity_in_prefabs(world, entity, type, component, 0);
-}
-
 #ifndef NDEBUG
 static
 ecs_entity_t get_cascade_component(
@@ -16881,97 +16864,78 @@ int get_comp_and_src(
     ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
     int32_t term_count = ecs_vector_count(query->sig.terms);
     ecs_term_t *term = &terms[t];
-    ecs_from_kind_t from = term->from_kind;
+    ecs_term_id_t *subj = &term->args[0];
     ecs_oper_kind_t op = term->oper;
 
     if (op == EcsNot) {
-        entity = term->args[0].entity;
+        entity = subj->entity;
     }
 
-    /* Column that retrieves data from self or a fixed entity */
-    if (from == EcsFromAny || from == EcsFromEntity || 
-        from == EcsFromOwned || from == EcsFromShared) 
-    {
-        if (op == EcsAnd || op == EcsNot || op == EcsOptional) {
-            component = term->id;
-        } else if (op == EcsOperAll) {
-            component = term->id & ECS_COMPONENT_MASK;
-        } else if (op == EcsOr) {
+    if (!subj->entity) {
+        component = term->id;
+    } else {
+        ecs_type_t type = table_type;
+        if (subj->entity != EcsThis) {
+            type = ecs_get_type(world, subj->entity);
+        }
+
+        if (op == EcsOr) {
             for (; t < term_count; t ++) {
                 term = &terms[t];
+
+                /* Keep iterating until the next non-OR expression */
                 if (term->oper != EcsOr) {
                     t --;
                     break;
                 }
 
                 if (!component) {
-                    if (ecs_type_index_of(table_type, 
-                        term->id) != -1) 
-                    {
+                    ecs_entity_t source = 0;
+                    bool result = ecs_type_find_id(world, type, term->id, 
+                        subj->relation, subj->min_depth, subj->max_depth, 
+                        &source);
+
+                    if (result) {
                         component = term->id;
-                    } else {
-                        if (ecs_type_has_id(world, table_type, 
-                            term->id)) 
-                        {
-                            component = term->id;
-                        }
                     }
-                }
-            }
-        }
 
-        if (from == EcsFromEntity) {
-            entity = term->args[0].entity;
-        }
-
-    /* Column that just passes a handle to the system (no data) */
-    } else if (from == EcsFromEmpty) {
-        component = term->id;
-
-    /* Column that retrieves data from a dynamic entity */
-    } else if (from == EcsFromParent || from == EcsCascade) {
-        if (op == EcsAnd ||
-            op == EcsOptional ||
-            op == EcsNot)
-        {
-            component = term->id;
-            entity = ecs_find_in_type(
-                world, table_type, component, EcsChildOf);
-
-        } else if (op == EcsOr) {
-            for (; t < term_count; t ++) {
-                term = &terms[t];
-                if (term->oper != EcsOr) {
-                    t --;
-                    break;
-                }
-
-                ecs_entity_t source, result = find_object_with(
-                    world,
-                    table_type,
-                    EcsChildOf,
-                    term->id,
-                    &source);
-
-                if (result) {
-                    if (!component || (source < entity) || (source == entity && result < component)) {
-                        component = result;
+                    if (source) {
                         entity = source;
-                    }
+                    }                    
                 }
             }
-
-            ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
-        }
-
-    /* Column that retrieves data from a system */
-    } else if (from == EcsFromSystem) {
-        if (op == EcsAnd) {
+        } else {
             component = term->id;
+
+            ecs_entity_t source = 0;
+            bool result = ecs_type_find_id(world, type, component, 
+                subj->relation, subj->min_depth, subj->max_depth, &source);
+
+            if (op == EcsNot) {
+                result = !result;
+            }
+
+            /* Optional terms may not have the component. OperAll terms contain
+             * the id of a type of which the contents must match, but the type
+             * itself does not need to match. */
+            if (op == EcsOptional || op == EcsOperAll) {
+                result = true;
+            }
+
+            /* Table has already been matched, so unless column is optional
+             * any components matched from the table must be available. */
+            if (type == table_type) {
+                ecs_assert(result == true, ECS_INTERNAL_ERROR, NULL);
+            }
+
+            if (source) {
+                entity = source;
+            }
         }
 
-        entity = query->system;
+        if (subj->entity != EcsThis) {
+            entity = subj->entity;
+        }
     }
 
     if (entity == EcsThis) {
@@ -17050,8 +17014,7 @@ int32_t get_component_index(
              * as the trait to match. This will match any instance of the trait
              * on the entity and in a signature looks like "PAIR | MyTrait". */
             if (!ECS_PAIR_RELATION(component)) {
-                ecs_assert(trait_offsets != NULL, 
-                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(trait_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 /* Strip the PAIR role */
                 component &= ECS_COMPONENT_MASK;
@@ -17127,26 +17090,7 @@ int32_t get_component_index(
         * a table is reserved for entity id's */
         if (result != -1) {
             result ++;
-        }
-
-        /* Check if component is a tag. If it is, set table_data to
-        * zero, so that a system won't try to access the data */
-        if (!ECS_HAS_ROLE(component, CASE) && 
-            !ECS_HAS_ROLE(component, SWITCH)) 
-        {            
-            component = ecs_get_typeid(world, component);
-
-            if (component) {
-                const EcsComponent *data = ecs_get(
-                    world, component, EcsComponent);
-
-                if (!data || !data->size) {
-                    result = 0;
-                }
-            } else {
-                result = 0;
-            }
-        }        
+        }     
 
         /* ecs_table_column_offset may return -1 if the component comes
          * from a prefab. If so, the component will be resolved as a
@@ -17160,7 +17104,7 @@ int32_t get_component_index(
         if (!ecs_type_has_id(world, table_type, component)) {
             result = 0;
         }
-    }
+    }  
 
     return result;
 }
@@ -17169,43 +17113,29 @@ static
 ecs_vector_t* add_ref(
     ecs_world_t *world,
     ecs_query_t *query,
-    ecs_type_t table_type,
     ecs_vector_t *references,
+    ecs_term_t *term,
     ecs_entity_t component,
-    ecs_entity_t entity,
-    ecs_from_kind_t from)
+    ecs_entity_t entity)
 {
     const EcsComponent *c_info = ecs_get(world, component, EcsComponent);
     
-    ecs_entity_t e;
     ecs_ref_t *ref = ecs_vector_add(&references, ecs_ref_t);
+    ecs_term_id_t *subj = &term->args[0];
 
-    /* Find the entity for the component */
-    if (from == EcsFromEntity || from == EcsFromEmpty) {
-        e = entity;
-    } else if (from == EcsCascade) {
-        e = entity;
-    } else if (from == EcsFromSystem) {
-        e = entity;
-    } else {
-        e = get_entity_for_component(
-            world, entity, table_type, component);
-    }
-
-    if (from != EcsCascade) {
-        ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+    if (!(subj->set & EcsSetAll)) {
+        ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
     }
     
     *ref = (ecs_ref_t){0};
-    ref->entity = e;
+    ref->entity = entity;
     ref->component = component;
 
-    if (ecs_has(world, component, EcsComponent)) {
-        if (c_info->size && from != EcsFromEmpty) {
-            if (e) {
-                ecs_get_ref_w_id(
-                    world, ref, e, component);
-                ecs_set_watch(world, e);                     
+    if (ecs_has(world, term->id, EcsComponent)) {
+        if (c_info->size && subj->entity != 0) {
+            if (entity) {
+                ecs_get_ref_w_id(world, ref, entity, component);
+                ecs_set_watch(world, entity);
             }
 
             query->flags |= EcsQueryHasRefs;
@@ -17219,12 +17149,8 @@ static
 ecs_entity_t is_column_trait(
     ecs_term_t *term)
 {
-    ecs_from_kind_t from_kind = term->from_kind;
-    ecs_oper_kind_t oper = term->oper;
-
-    /* For now traits are only supported on owned columns */
-    if (from_kind == EcsFromOwned && oper == EcsAnd) {
-        ecs_entity_t c = term->id;
+    ecs_entity_t c = term->id;
+    if (c) {
         if (ECS_HAS_ROLE(c, PAIR)) {
             if (!ECS_PAIR_RELATION(c)) {
                 return c;
@@ -17373,12 +17299,12 @@ add_trait:
     c = 0;
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
+        ecs_term_id_t subj = term->args[0];
         ecs_entity_t entity = 0, component = 0;
         ecs_oper_kind_t op = term->oper;
-        ecs_from_kind_t from = term->from_kind;
 
         if (op == EcsNot) {
-            from = EcsFromEmpty;
+            subj.entity = 0;
         }
 
         table_data.iter_data.columns[c] = 0;
@@ -17386,18 +17312,17 @@ add_trait:
         /* Get actual component and component source for current column */
         t = get_comp_and_src(world, query, t, table_type, &component, &entity);
 
-        /* This column does not retrieve data from a static entity (either
-         * EcsFromSystem or EcsFromParent) and is not just a handle */
-        if (!entity && from != EcsFromEmpty) {
+        /* This column does not retrieve data from a static entity */
+        if (!entity && subj.entity) {
             int32_t index = get_component_index(world, table, table_type, 
                 &component, c, op, trait_offsets, trait_cur + 1);
 
             if (index == -1) {
-                if (from == EcsFromOwned && op == EcsOptional) {
+                if (op == EcsOptional && subj.set == EcsSelf) {
                     index = 0;
                 }
             } else {
-                if (from == EcsFromShared && op == EcsOptional) {
+                if (op == EcsOptional && !(subj.set & EcsSelf)) {
                     index = 0;
                 }
             }
@@ -17432,25 +17357,25 @@ add_trait:
             }
         }
 
-        /* Check if a the component is a reference. If 'entity' is set, the
-         * component must be resolved from another entity, which is the case
-         * for FromEntity and FromContainer. 
-         * 
-         * If no entity is set but the component is not found in the table, it
-         * must come from a prefab. This is guaranteed, as at this point it is
-         * already validated that the table matches with the system.
-         * 
-         * If the column from is Cascade, there may not be an entity in case the
-         * current table contains root entities. In that case, still add a
-         * reference field. The application can, after the table has matched,
-         * change the set of components, so that this column will turn into a
-         * reference. Having the reference already linked to the system table
-         * makes changing this administation easier when the change happens.
-         */
-        if ((entity || table_data.iter_data.columns[c] == -1 || from == EcsCascade)) {
-            references = add_ref(world, query, table_type, references, 
-                component, entity, from);
+        if ((entity || table_data.iter_data.columns[c] == -1 || subj.set & EcsSetAll)) {
+            references = add_ref(world, query, references, term,
+                component, entity);
             table_data.iter_data.columns[c] = -ecs_vector_count(references);
+        }
+
+        ecs_entity_t type_id = ecs_get_typeid(world, component);
+        if (type_id) {
+            const EcsComponent *cptr = ecs_get(world, type_id, EcsComponent);
+            if (!cptr || !cptr->size) {
+                int32_t column = table_data.iter_data.columns[c];
+                if (column > 0) {
+                    table_data.iter_data.columns[c] = 0;
+                } else if (column) {
+                    ecs_ref_t *r = ecs_vector_get(
+                        references, ecs_ref_t, -column - 1);
+                    r->component = 0;
+                }
+            }
         }
 
         table_data.iter_data.components[c] = component;
@@ -17548,29 +17473,25 @@ bool match_term(
 {
     (void)failure_info;
 
-    uint8_t set = term->args[0].set;
+    ecs_term_id_t *subj = &term->args[0];
+    uint8_t set = subj->set;
 
     /* If term has no subject, there's nothing to match */
-    if (!term->args[0].entity) {
+    if (!subj->entity) {
         return true;
     }
 
     if (term->args[0].entity != EcsThis) {
-        type = ecs_get_type(world, term->args[0].entity);
+        type = ecs_get_type(world, subj->entity);
     }
 
     if (!set) {
         set = EcsSelf;
     }
 
-    int32_t min_depth = term->args[0].min_depth;
-    if (!min_depth && !(set & EcsSelf)) {
-        min_depth = 1;
-    }
-
     return ecs_type_find_id(
-        world, type, term->id, term->args[0].relation, 
-        min_depth, term->args[0].max_depth, NULL);
+        world, type, term->id, subj->relation, 
+        subj->min_depth, subj->max_depth, NULL);
 }
 
 /* Match table with query */
@@ -17622,7 +17543,6 @@ bool ecs_query_match(
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
-        ecs_from_kind_t from_kind = term->from_kind;
         ecs_oper_kind_t oper = term->oper;
 
         failure_info->column = i + 1;
@@ -17665,48 +17585,16 @@ bool ecs_query_match(
                 type = type_ptr->normalized;
             }
 
-            if (from_kind == EcsFromAny) {
-                if (!ecs_type_contains(
-                    world, table_type, type, match_all, true))
-                {
-                    failure_info->reason = EcsMatchOrFromSelf;
-                    return false;
-                }
-            } else if (from_kind == EcsFromOwned) {
-                if (!ecs_type_contains(
-                    world, table_type, type, match_all, false))
-                {
-                    failure_info->reason = EcsMatchOrFromOwned;
-                    return false;
-                }
-            } else if (from_kind == EcsFromShared) {
-                if (ecs_type_contains(
-                        world, table_type, type, match_all, false) ||
-                    !ecs_type_contains(
-                        world, table_type, type, match_all, true))
-                {
-                    failure_info->reason = EcsMatchOrFromShared;
-                    return false;
-                }                                
-            } else if (from_kind == EcsFromParent) {
-                if (!(table->flags & EcsTableHasParent)) {
-                    failure_info->reason = EcsMatchOrFromContainer;
-                    return false;
-                }
+            int32_t j, count = ecs_vector_count(type);
+            ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
 
-                int32_t j, count = ecs_vector_count(type);
-                ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
+            for (j = 0; j < count; j ++) {
+                ecs_term_t tmp_term = *term;
+                tmp_term.oper = EcsAnd;
+                tmp_term.id = ids[j];
+                tmp_term.pred.entity = ids[j];
 
-                for (j = 0; j < count; j ++) {
-                    if (find_object_with(world, table_type, EcsChildOf, ids[j], 
-                        NULL)) 
-                    {
-                        break;
-                    }
-                }
-
-                if (j == count) {
-                    failure_info->reason = EcsMatchOrFromContainer;
+                if (!match_term(world, table_type, &tmp_term, failure_info)) {
                     return false;
                 }
             }
@@ -18154,19 +18042,19 @@ bool has_refs(
     ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
 
     for (i = 0; i < count; i ++) {
-        ecs_from_kind_t from_kind = terms[i].from_kind;
+        ecs_term_t *term = &terms[i];
+        ecs_term_id_t *subj = &term->args[0];
 
-        if (terms[i].oper == EcsNot && from_kind == EcsFromEmpty) {
+        if (term->oper == EcsNot && !subj->entity) {
             /* Special case: if oper kind is Not and the query contained a
-             * shared expression, the expression is translated to FromId to
+             * shared expression, the expression is translated to FromEmpty to
              * prevent resolving the ref */
             return true;
-        } else if (from_kind != EcsFromAny && from_kind != EcsFromEmpty) {
-            /* If the component is not from the entity being iterated over, and
-             * the column is not just passing an id, it must be a reference to
-             * another entity. */
+        } else if (subj->entity && (subj->entity != EcsThis || subj->set != EcsSelf)) {
+            /* If entity is not this, or if it can be substituted by other
+             * entities, the query can have references. */
             return true;
-        }
+        } 
     }
 
     return false;
@@ -18194,6 +18082,8 @@ void register_monitors(
     ecs_query_t *query)
 {
     ecs_vector_each(query->sig.terms, ecs_term_t, term, {
+        ecs_term_id_t *subj = &term->args[0];
+
         /* If component is requested with CASCADE source register component as a
          * parent monitor. Parent monitors keep track of whether an entity moved
          * in the hierarchy, which potentially requires the query to reorder its
@@ -18201,26 +18091,21 @@ void register_monitors(
          * Also register a regular component monitor for EcsCascade columns.
          * This ensures that when the component used in the CASCADE column
          * is added or removed tables are updated accordingly*/
-        if (term->from_kind == EcsCascade) {
+        if (subj->set & EcsSuperSet && subj->set & EcsSetAll && subj->relation != EcsIsA) {
             if (term->oper != EcsOr) {
-                ecs_component_monitor_register(
-                    &world->parent_monitors, term->id, query);
-
-                ecs_component_monitor_register(
-                    &world->component_monitors, term->id, query);
+                if (term->args[0].relation != EcsIsA) {
+                    ecs_monitor_register(
+                        world, term->args[0].relation, term->id, query);
+                }
+                ecs_monitor_register(world, 0, term->id, query);
             }
 
-        /* FromSelf also requires registering a monitor, as FromSelf columns can
+        /* FromAny also requires registering a monitor, as FromAny columns can
          * be matched with prefabs. The only term kinds that do not require
-         * registering a monitor are FromOwned and FromNothing. */
-        } else if (term->from_kind == EcsFromAny || 
-            term->from_kind == EcsFromShared ||
-            term->from_kind == EcsFromEntity ||
-            term->from_kind == EcsFromParent)
-        {
+         * registering a monitor are FromOwned and FromEmpty. */
+        } else if ((subj->set & EcsSuperSet) || (subj->entity != EcsThis)) {
             if (term->oper != EcsOr) {
-                ecs_component_monitor_register(
-                    &world->component_monitors, term->id, query);
+                ecs_monitor_register(world, 0, term->id, query);
             }
         }
     });
@@ -18242,6 +18127,9 @@ void process_signature(
         ecs_oper_kind_t op = term->oper; 
         ecs_inout_kind_t inout = term->inout;
 
+        (void)pred;
+        (void)obj;
+
         /* Queries do not support variables */
         ecs_assert(pred->var_kind != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);
@@ -18261,6 +18149,11 @@ void process_signature(
 
         if (subj->set == EcsDefaultSet) {
             subj->set = EcsSelf;
+        }
+
+        /* If self is not included in set, always start from depth 1 */
+        if (!subj->min_depth && !(subj->set & EcsSelf)) {
+            subj->min_depth = 1;
         }
 
         if (inout != EcsIn) {
@@ -18291,7 +18184,7 @@ void process_signature(
             query->flags |= EcsQueryNeedsTables;
         }
 
-        if (subj->set & EcsAll && term->oper == EcsOptional) {
+        if (subj->set & EcsSetAll && term->oper == EcsOptional) {
             query->cascade_by = i + 1;
             query->rank_on_component = term->id;
         }
@@ -21269,6 +21162,11 @@ const void* get_shared_column(
     ecs_assert(refs != NULL, ECS_INTERNAL_ERROR, NULL);
     (void)size;
 
+    ecs_ref_t *ref = &refs[-table_column - 1];
+    if (!ref->component) {
+        return NULL;
+    }
+
 #ifndef NDEBUG
     if (size) {
         ecs_entity_t component_id = ecs_get_typeid(
@@ -21282,8 +21180,6 @@ const void* get_shared_column(
             it->system ? ecs_get_name(it->world, it->system) : NULL);
     }
 #endif
-
-    ecs_ref_t *ref = &refs[-table_column - 1];
 
     return (void*)ecs_get_ref_w_id(
         it->world, ref, ref->entity, ref->component);
@@ -21364,7 +21260,7 @@ bool ecs_term_is_owned(
 
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
-    int32_t term)
+    int32_t term_index)
 {
     ecs_query_t *query = it->query;
 
@@ -21372,12 +21268,26 @@ bool ecs_term_is_readonly(
     ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
     (void)query;
 
-    ecs_term_t *term_data = ecs_vector_get(
-        it->query->sig.terms, ecs_term_t, term - 1);
+    ecs_term_t *term = ecs_vector_get(
+        it->query->sig.terms, ecs_term_t, term_index - 1);
 
-    return (term_data->inout == EcsIn) || 
-        (term_data->inout == EcsInOutDefault && 
-         term_data->from_kind != EcsFromOwned);
+    if (term->inout == EcsIn) {
+        return true;
+    } else {
+        ecs_term_id_t *subj = &term->args[0];
+
+        if (term->inout == EcsInOutDefault) {
+            if (subj->entity != EcsThis) {
+                return true;
+            }
+
+            if ((subj->set != EcsSelf) && (subj->set != EcsDefaultSet)) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
 }
 
 ecs_entity_t ecs_term_source(
@@ -22242,9 +22152,9 @@ bool check_column_component(
 {
     int32_t state = get_write_state(write_state->components, component);
 
-    if ((term->from_kind == EcsFromAny || term->from_kind == EcsFromOwned) 
-      && term->oper != EcsNot) 
-    {
+    ecs_term_id_t *subj = &term->args[0];
+
+    if ((subj->set & EcsSelf) && subj->entity == EcsThis && term->oper != EcsNot) {
         switch(term->inout) {
         case EcsInOutDefault:
         case EcsInOut:
@@ -22258,9 +22168,7 @@ bool check_column_component(
                 set_write_state(write_state, component, WriteToMain);
             }
         };
-    } else if (term->from_kind == EcsFromEmpty || 
-               term->oper == EcsNot) 
-    {
+    } else if (!subj->entity || term->oper == EcsNot) {
         bool needs_merge = false;
 
         switch(term->inout) {
@@ -22282,7 +22190,7 @@ bool check_column_component(
 
         switch(term->inout) {
         case EcsInOutDefault:
-            if (term->from_kind != EcsFromOwned) {
+            if (!(subj->set & EcsSelf) || !subj->entity || subj->entity != EcsThis) {
                 break;
             }
             // fall through
@@ -22566,10 +22474,13 @@ void add_pipeline_tags_to_sig(
 
     for (i = 0; i < count; i ++) {
         ecs_sig_add(world, sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsOr,
-            .pred.entity = entities[i]
+            .pred.entity = entities[i],
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }
         });
     }
 }
@@ -22602,22 +22513,34 @@ void EcsOnAddPipeline(
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
         ecs_sig_add(world, &sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsAnd,
-            .pred.entity = ecs_id(EcsSystem)});
+            .pred.entity = ecs_id(EcsSystem),
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }
+        });
 
         ecs_sig_add(world, &sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsNot,
-            .pred.entity = EcsInactive});
+            .pred.entity = EcsInactive,
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }
+        });
         
         ecs_sig_add(world, &sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsNot,
-            .pred.entity = EcsDisabledIntern});
+            .pred.entity = EcsDisabledIntern,
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }             
+        });
 
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
@@ -22631,16 +22554,24 @@ void EcsOnAddPipeline(
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
         ecs_sig_add(world, &sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsAnd,
-            .pred.entity = ecs_id(EcsSystem)});
+            .pred.entity = ecs_id(EcsSystem),
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }               
+        });
 
         ecs_sig_add(world, &sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsNot,
-            .pred.entity = EcsDisabledIntern});
+            .pred.entity = EcsDisabledIntern,
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }              
+        });
 
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
@@ -23800,8 +23731,9 @@ void CreateSignature(
         /* Parse the signature and add the result to the entity */
         EcsSignature sig = {0};
 
-        ecs_sig_init(world, path, signature[i].expr, &sig.signature);
-        ecs_set_ptr(world, e, EcsSignature, &sig);
+        if (ecs_sig_init(world, path, signature[i].expr, &sig.signature)) {
+            ecs_assert(false, ECS_INVALID_PARAMETER, signature[i].expr);
+        }
 
         /* If sig has FromSystem columns, add components to the entity */
         ecs_vector_each(sig.signature.terms, ecs_term_t, term, {
@@ -23809,6 +23741,8 @@ void CreateSignature(
                 ecs_add_id(world, e, term->id);
             }
         });
+
+        ecs_set_ptr(world, e, EcsSignature, &sig);
 
         ecs_os_free(path);
     }
@@ -24152,7 +24086,7 @@ int parse_type_action(
         goto done;
     }
 
-    if (term->from_kind != EcsFromOwned) {
+    if (term->args[0].set != EcsDefaultSet) {
         ecs_parser_error(sig->name, sig->expr, column, 
             "source modifiers not supported for type expressions");
         goto error;

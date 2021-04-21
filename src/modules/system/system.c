@@ -737,8 +737,9 @@ void CreateSignature(
         /* Parse the signature and add the result to the entity */
         EcsSignature sig = {0};
 
-        ecs_sig_init(world, path, signature[i].expr, &sig.signature);
-        ecs_set_ptr(world, e, EcsSignature, &sig);
+        if (ecs_sig_init(world, path, signature[i].expr, &sig.signature)) {
+            ecs_assert(false, ECS_INVALID_PARAMETER, signature[i].expr);
+        }
 
         /* If sig has FromSystem columns, add components to the entity */
         ecs_vector_each(sig.signature.terms, ecs_term_t, term, {
@@ -746,6 +747,8 @@ void CreateSignature(
                 ecs_add_id(world, e, term->id);
             }
         });
+
+        ecs_set_ptr(world, e, EcsSignature, &sig);
 
         ecs_os_free(path);
     }

@@ -327,12 +327,16 @@ void register_on_set(
         
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
+            ecs_term_id_t *subj = &term->args[0];
             ecs_oper_kind_t oper = term->oper;
-            ecs_from_kind_t from_kind = term->from_kind;
 
-            if ((from_kind != EcsFromAny && from_kind != EcsFromOwned) ||
-                (oper != EcsAnd && oper != EcsOptional)) 
+            if (!(subj->set & EcsSelf) || !subj->entity ||
+                subj->entity != EcsThis)
             {
+                continue;
+            }
+
+            if (oper != EcsAnd && oper != EcsOptional) {
                 continue;
             }
 

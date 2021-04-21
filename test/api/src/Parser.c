@@ -2042,7 +2042,7 @@ void Parser_pred_implicit_subject_superset_full() {
 
     ecs_term_t *columns = sig_columns(&sig);
     test_pred(columns[0], Pred, EcsDefaultSet);
-    test_subj(columns[0], EcsThis, EcsSuperSet | EcsAll);
+    test_subj(columns[0], EcsThis, EcsSuperSet | EcsSetAll);
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);
 
@@ -2064,7 +2064,7 @@ void Parser_pred_implicit_subject_subset_full() {
 
     ecs_term_t *columns = sig_columns(&sig);
     test_pred(columns[0], Pred, EcsDefaultSet);
-    test_subj(columns[0], EcsThis, EcsSubSet | EcsAll);
+    test_subj(columns[0], EcsThis, EcsSubSet | EcsSetAll);
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);  
 
@@ -2086,7 +2086,7 @@ void Parser_pred_implicit_subject_superset_inclusive_full() {
 
     ecs_term_t *columns = sig_columns(&sig);
     test_pred(columns[0], Pred, EcsDefaultSet);
-    test_subj(columns[0], EcsThis, EcsSelf | EcsSuperSet | EcsAll);
+    test_subj(columns[0], EcsThis, EcsSelf | EcsSuperSet | EcsSetAll);
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);  
 
@@ -2108,7 +2108,7 @@ void Parser_pred_implicit_subject_subset_inclusive_full() {
 
     ecs_term_t *columns = sig_columns(&sig);
     test_pred(columns[0], Pred, EcsDefaultSet);
-    test_subj(columns[0], EcsThis, EcsSelf | EcsSubSet | EcsAll);
+    test_subj(columns[0], EcsThis, EcsSelf | EcsSubSet | EcsSetAll);
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);  
 
@@ -2295,7 +2295,7 @@ void Parser_pred_implicit_subject_full_superset_childof() {
 
     ecs_term_t *columns = sig_columns(&sig);
     test_pred(columns[0], Pred, EcsDefaultSet);
-    test_subj(columns[0], EcsThis, EcsSuperSet | EcsAll);
+    test_subj(columns[0], EcsThis, EcsSuperSet | EcsSetAll);
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);  
     test_int(columns[0].args[0].relation, EcsChildOf);
@@ -2319,7 +2319,7 @@ void Parser_pred_implicit_subject_superset_full_childof() {
 
     ecs_term_t *columns = sig_columns(&sig);
     test_pred(columns[0], Pred, EcsDefaultSet);
-    test_subj(columns[0], EcsThis, EcsSuperSet | EcsAll);
+    test_subj(columns[0], EcsThis, EcsSuperSet | EcsSetAll);
     test_int(columns[0].oper, EcsAnd);
     test_int(columns[0].inout, EcsInOutDefault);  
     test_int(columns[0].args[0].relation, EcsChildOf);
@@ -2343,7 +2343,7 @@ void Parser_pred_implicit_subject_superset_full_childof_optional() {
 
     ecs_term_t *columns = sig_columns(&sig);
     test_pred(columns[0], Pred, EcsDefaultSet);
-    test_subj(columns[0], EcsThis, EcsSuperSet | EcsAll);
+    test_subj(columns[0], EcsThis, EcsSuperSet | EcsSetAll);
     test_int(columns[0].oper, EcsOptional);
     test_int(columns[0].inout, EcsInOutDefault);  
     test_int(columns[0].args[0].relation, EcsChildOf);

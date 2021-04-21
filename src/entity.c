@@ -1088,41 +1088,48 @@ void delete_entity(
  * not scale when there are many tables / queries. Therefore we need to do a bit
  * of bookkeeping that is more intelligent than simply flipping a flag */
 static
-bool update_component_monitor_w_array(
+void update_component_monitor_w_array(
     ecs_world_t *world,
-    ecs_component_monitors_t * mon,
+    ecs_entity_t entity,
+    ecs_entity_t relation,
     ecs_entities_t * entities)
 {
-    bool childof_changed = false;
-
     if (!entities) {
-        return false;
+        return;
     }
 
     int i;
     for (i = 0; i < entities->count; i ++) {
-        ecs_entity_t component = entities->array[i];
-        if (ECS_HAS_RELATION(component, EcsChildOf)) {
-            childof_changed = true;
+        ecs_entity_t id = entities->array[i];
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t rel = ECS_PAIR_RELATION(id);
+            
+            /* If a relationship has changed, check if it could have impacted
+             * the shape of the graph for that relationship. If so, mark the
+             * relationship as dirty */        
+            if (rel != relation && ecs_get_id_record(world, ecs_pair(rel, entity))) {
+                update_component_monitor_w_array(world, entity, rel, entities);
+            }
 
-        } else if (ECS_HAS_RELATION(component, EcsIsA)) {
+        }
+        
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
             /* If an IsA relationship is added to a monitored entity (can
              * be either a parent or a base) component monitors need to be
              * evaluated for the components of the prefab. */
-            ecs_entity_t base = ecs_pair_object(world, component);
+            ecs_entity_t base = ecs_pair_object(world, id);
             ecs_type_t type = ecs_get_type(world, base);
             ecs_entities_t base_entities = ecs_type_to_entities(type);
 
             /* This evaluates the component monitor for all components of the
              * base entity. If the base entity contains IsA relationships
              * these will be evaluated recursively as well. */
-            update_component_monitor_w_array(world, mon, &base_entities);               
+            update_component_monitor_w_array(
+                world, entity, relation, &base_entities);               
         } else {
-            ecs_component_monitor_mark(mon, component);
+            ecs_monitor_mark_dirty(world, relation, id);
         }
     }
-
-    return childof_changed;
 }
 
 static
@@ -1132,23 +1139,8 @@ void update_component_monitors(
     ecs_entities_t * added,
     ecs_entities_t * removed)
 {
-    bool childof_changed = update_component_monitor_w_array(
-        world, &world->component_monitors, added);
-
-    childof_changed |= update_component_monitor_w_array(
-        world, &world->component_monitors, removed);
-
-    /* If this entity is a parent, check if anything changed that could impact
-     * its place in the hierarchy. If so, we need to mark all of the parent's
-     * entities as dirty. */
-    if (childof_changed && ecs_get_id_record(world, 
-        ecs_pair(EcsChildOf, entity))) 
-    {
-        ecs_type_t type = ecs_get_type(world, entity);
-        ecs_entities_t entities = ecs_type_to_entities(type);
-        update_component_monitor_w_array(world, 
-            &world->parent_monitors, &entities);
-    }
+    update_component_monitor_w_array(world, entity, 0, added);
+    update_component_monitor_w_array(world, entity, 0, removed);
 }
 
 static

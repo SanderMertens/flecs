@@ -27,6 +27,11 @@ const void* get_shared_column(
     ecs_assert(refs != NULL, ECS_INTERNAL_ERROR, NULL);
     (void)size;
 
+    ecs_ref_t *ref = &refs[-table_column - 1];
+    if (!ref->component) {
+        return NULL;
+    }
+
 #ifndef NDEBUG
     if (size) {
         ecs_entity_t component_id = ecs_get_typeid(
@@ -40,8 +45,6 @@ const void* get_shared_column(
             it->system ? ecs_get_name(it->world, it->system) : NULL);
     }
 #endif
-
-    ecs_ref_t *ref = &refs[-table_column - 1];
 
     return (void*)ecs_get_ref_w_id(
         it->world, ref, ref->entity, ref->component);
@@ -122,7 +125,7 @@ bool ecs_term_is_owned(
 
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
-    int32_t term)
+    int32_t term_index)
 {
     ecs_query_t *query = it->query;
 
@@ -130,12 +133,26 @@ bool ecs_term_is_readonly(
     ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
     (void)query;
 
-    ecs_term_t *term_data = ecs_vector_get(
-        it->query->sig.terms, ecs_term_t, term - 1);
+    ecs_term_t *term = ecs_vector_get(
+        it->query->sig.terms, ecs_term_t, term_index - 1);
 
-    return (term_data->inout == EcsIn) || 
-        (term_data->inout == EcsInOutDefault && 
-         term_data->from_kind != EcsFromOwned);
+    if (term->inout == EcsIn) {
+        return true;
+    } else {
+        ecs_term_id_t *subj = &term->args[0];
+
+        if (term->inout == EcsInOutDefault) {
+            if (subj->entity != EcsThis) {
+                return true;
+            }
+
+            if ((subj->set != EcsSelf) && (subj->set != EcsDefaultSet)) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
 }
 
 ecs_entity_t ecs_term_source(

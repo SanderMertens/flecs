@@ -137,9 +137,9 @@ bool check_column_component(
 {
     int32_t state = get_write_state(write_state->components, component);
 
-    if ((term->from_kind == EcsFromAny || term->from_kind == EcsFromOwned) 
-      && term->oper != EcsNot) 
-    {
+    ecs_term_id_t *subj = &term->args[0];
+
+    if ((subj->set & EcsSelf) && subj->entity == EcsThis && term->oper != EcsNot) {
         switch(term->inout) {
         case EcsInOutDefault:
         case EcsInOut:
@@ -153,9 +153,7 @@ bool check_column_component(
                 set_write_state(write_state, component, WriteToMain);
             }
         };
-    } else if (term->from_kind == EcsFromEmpty || 
-               term->oper == EcsNot) 
-    {
+    } else if (!subj->entity || term->oper == EcsNot) {
         bool needs_merge = false;
 
         switch(term->inout) {
@@ -177,7 +175,7 @@ bool check_column_component(
 
         switch(term->inout) {
         case EcsInOutDefault:
-            if (term->from_kind != EcsFromOwned) {
+            if (!(subj->set & EcsSelf) || !subj->entity || subj->entity != EcsThis) {
                 break;
             }
             // fall through
@@ -461,10 +459,13 @@ void add_pipeline_tags_to_sig(
 
     for (i = 0; i < count; i ++) {
         ecs_sig_add(world, sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsOr,
-            .pred.entity = entities[i]
+            .pred.entity = entities[i],
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }
         });
     }
 }
@@ -497,22 +498,34 @@ void EcsOnAddPipeline(
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
         ecs_sig_add(world, &sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsAnd,
-            .pred.entity = ecs_id(EcsSystem)});
+            .pred.entity = ecs_id(EcsSystem),
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }
+        });
 
         ecs_sig_add(world, &sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsNot,
-            .pred.entity = EcsInactive});
+            .pred.entity = EcsInactive,
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }
+        });
         
         ecs_sig_add(world, &sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsNot,
-            .pred.entity = EcsDisabledIntern});
+            .pred.entity = EcsDisabledIntern,
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }             
+        });
 
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
@@ -526,16 +539,24 @@ void EcsOnAddPipeline(
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
         ecs_sig_add(world, &sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsAnd,
-            .pred.entity = ecs_id(EcsSystem)});
+            .pred.entity = ecs_id(EcsSystem),
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }               
+        });
 
         ecs_sig_add(world, &sig, &(ecs_term_t){
-            .from_kind = EcsFromAny,
             .inout = EcsIn,
             .oper = EcsNot,
-            .pred.entity = EcsDisabledIntern});
+            .pred.entity = EcsDisabledIntern,
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }              
+        });
 
         add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 

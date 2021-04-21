@@ -160,7 +160,7 @@ typedef enum ecs_oper_kind_t {
 #define EcsSelf       (1)   /* Select self (inclusive) */
 #define EcsSuperSet   (2)   /* Select superset until predicate match */
 #define EcsSubSet     (4)   /* Select subset until predicate match */
-#define EcsAll        (8)   /* Walk full superset/subset, regardless of match */
+#define EcsSetAll        (8)   /* Walk full superset/subset, regardless of match */
 
 typedef struct ecs_term_id_t {
     ecs_entity_t entity;        /* Entity (default = This) */
@@ -196,7 +196,7 @@ typedef struct ecs_term_t {
 
 /** Type that stores a parsed signature */
 typedef struct ecs_sig_t {
-    const char *name;           /* Optional name used for debugging */
+    char *name;                 /* Optional name used for debugging */
     char *expr;                 /* Original expression string */
     ecs_vector_t *terms;        /* Terms that contain parsed data */
 } ecs_sig_t;

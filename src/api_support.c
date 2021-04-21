@@ -34,7 +34,7 @@ int parse_type_action(
         goto done;
     }
 
-    if (term->from_kind != EcsFromOwned) {
+    if (term->args[0].set != EcsDefaultSet) {
         ecs_parser_error(sig->name, sig->expr, column, 
             "source modifiers not supported for type expressions");
         goto error;

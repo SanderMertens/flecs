@@ -397,6 +397,24 @@ struct ecs_stage_t {
     bool auto_merge;               /* Should this stage automatically merge? */
 };
 
+/* Component monitor */
+typedef struct ecs_monitor_t {
+    ecs_vector_t *queries;  /* vector<ecs_query_t*> */
+    bool is_dirty;          /* Should queries be rematched? */
+} ecs_monitor_t;
+
+/* Component monitors */
+typedef struct ecs_monitor_set_t {
+    ecs_map_t *monitors; /* map<id, ecs_monitor_t> */
+    bool is_dirty;       /* Should monitors be evaluated? */
+} ecs_monitor_set_t;
+
+/* Relation monitors. TODO: implement generic monitor mechanism */
+typedef struct ecs_relation_monitor_t {
+    ecs_map_t *monitor_sets; /* map<relation_id, ecs_monitor_set_t> */
+    bool is_dirty;          /* Should monitor sets be evaluated? */
+} ecs_relation_monitor_t;
+
 /* Payload for table index which returns all tables for a given component, with
  * the column of the component in the table. */
 typedef struct ecs_table_record_t {
@@ -411,15 +429,16 @@ typedef struct ecs_id_record_t {
 } ecs_id_record_t;
 
 typedef struct ecs_store_t {
-    /* Entity lookup table for (table, row) */
-    ecs_sparse_t *entity_index;
+    /* Entity lookup */
+    ecs_sparse_t *entity_index; /* sparse<entity, ecs_record_t> */
 
-    /* table id -> table */
-    ecs_sparse_t *tables;
+    /* Table lookup by id */
+    ecs_sparse_t *tables; /* sparse<table_id, ecs_table_t> */
 
-    /* type hash -> table */
-    ecs_map_t *table_map;    
+    /* Table lookup by hash */
+    ecs_map_t *table_map; /* map<component_hash, vector<ecs_table_t*>> */  
 
+    /* Root table */
     ecs_table_t root;
 } ecs_store_t;
 
@@ -438,18 +457,6 @@ typedef struct ecs_column_info_t {
     const ecs_type_info_t *ci;
     int32_t column;
 } ecs_column_info_t;
-
-/* Component monitor */
-typedef struct ecs_component_monitor_t {
-    ecs_vector_t *queries;  /* Queries registered for component monitor */
-    bool is_dirty;          /* Should queries be rematched? */
-} ecs_component_monitor_t;
-
-/* Component monitors */
-typedef struct ecs_component_monitors_t {
-    ecs_map_t *monitors; /* map<ecs_component_monitor_t> */
-    bool rematch;        /* should monitors be reevaluated? */
-} ecs_component_monitors_t;
 
 /* fini actions */
 typedef struct ecs_action_elem_t {
@@ -499,16 +506,7 @@ struct ecs_world_t {
      * Queries register themselves as component monitors for specific components
      * and when these components change they are rematched. The component 
      * monitors are evaluated during a merge. */
-    ecs_component_monitors_t component_monitors;
-
-    /* Parent monitors are like normal component monitors except that the
-     * conditions under which a parent component is flagged dirty is different.
-     * Parent component flags are marked dirty when an entity that is a parent
-     * adds or removes a ChildOf relation. In that case, every component of that
-     * parent will be marked dirty. This allows column modifiers like CASCADE
-     * to correctly determine when the depth ranking of a table has changed. */
-    ecs_component_monitors_t parent_monitors; 
-
+    ecs_relation_monitor_t monitors;
 
     /* -- Systems -- */
     

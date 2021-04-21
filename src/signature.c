@@ -343,7 +343,7 @@ uint8_t parse_set_token(
     } else if (!ecs_os_strcmp(token, TOK_SUBSET)) {
         return EcsSubSet;
     } else if (!ecs_os_strcmp(token, TOK_ALL)) {
-        return EcsAll;
+        return EcsSetAll;
     } else {
         return 0;
     }
@@ -475,7 +475,7 @@ const char* parse_set_expr(
         }
     } while (true);
 
-    if (id->set & EcsAll && !(id->set & EcsSuperSet) && !(id->set & EcsSubSet)){
+    if (id->set & EcsSetAll && !(id->set & EcsSuperSet) && !(id->set & EcsSubSet)){
         ecs_parser_error(name, sig, column, 
             "invalid 'all' token without superset or subset");
         return NULL;
@@ -694,7 +694,7 @@ parse_source:
         elem.args[0].max_depth = 1;
         break;
     case EcsCascade:
-        elem.args[0].set = EcsSuperSet | EcsAll;
+        elem.args[0].set = EcsSuperSet | EcsSetAll;
         elem.args[0].relation = EcsChildOf;
         break;
     case EcsFromEntity:
@@ -1111,7 +1111,7 @@ void ecs_term_set_legacy(
             term->args[0].relation = EcsChildOf;
             term->args[0].max_depth = 1;
         } else if (term->from_kind == EcsCascade) {
-            term->args[0].set = EcsAll | EcsSuperSet;
+            term->args[0].set = EcsSetAll | EcsSuperSet;
             term->args[0].relation = EcsChildOf;
             term->oper = EcsOptional;
         }
@@ -1129,7 +1129,7 @@ void ecs_term_set_legacy(
         if (term->args[0].set & EcsSuperSet) {
             if (term->args[0].max_depth == 1) {
                 term->from_kind = EcsFromParent;
-            } else if (term->args[0].set & EcsAll && term->oper == EcsOptional) {
+            } else if (term->args[0].set & EcsSetAll && term->oper == EcsOptional) {
                 term->from_kind = EcsCascade;
             }
         }
@@ -1202,7 +1202,8 @@ int ecs_sig_init(
 {
     if (expr && ecs_os_strlen(expr) && strcmp(expr, "0")) {
         /* Dispell const, but only temporary. Only strdup the expression if the
-         * signature was successfully parsed */
+         * signature was successfully parsed. Setting the expression is 
+         * necessary for the parser. */
         sig->expr = (char*)expr;
     } else {
         sig->expr = NULL;
@@ -1211,17 +1212,19 @@ int ecs_sig_init(
     sig->terms = NULL;
     sig->name = (char*)name; /* Dispell const- same as above */
 
-    if (sig->expr) {
-        int result = ecs_parse_expr(world, sig, ecs_parse_signature_action, NULL);
-        if (!result) {
-            sig->name = ecs_os_strdup(name);
-            sig->expr = ecs_os_strdup(expr);
-        }
+    int result = 0;
 
-        return result;
-    } else {
-        return 0;
+    if (sig->expr) {
+        result = ecs_parse_expr(world, sig, ecs_parse_signature_action, NULL);
     }
+
+    /* If the expression parsed without errors, create copies of strings */
+    if (!result) {
+        sig->name = ecs_os_strdup(name);
+        sig->expr = ecs_os_strdup(expr);
+    }    
+
+    return result;
 }
 
 void ecs_sig_deinit(
@@ -1235,6 +1238,7 @@ void ecs_sig_deinit(
     }
 
     ecs_vector_free(sig->terms);
+    ecs_os_free(sig->name);
     ecs_os_free(sig->expr);
 }
 
