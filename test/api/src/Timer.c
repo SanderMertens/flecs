@@ -393,3 +393,221 @@ void Timer_rate_filter_w_timer_src() {
 
     ecs_fini(world);
 }
+
+void Timer_rate_filter_with_empty_src() {
+   ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, SystemC, EcsOnUpdate, Position);
+
+    ecs_new(world, Position);
+
+    // Not actually a tick source
+    ecs_entity_t filter_a = ecs_new_id(world);
+    test_assert(filter_a != 0);
+
+    ecs_entity_t filter_b = ecs_set_rate_filter(world, SystemC, 6, filter_a);
+    test_assert(filter_b != 0);
+    test_assert(filter_b == SystemC);
+
+    test_bool(system_c_invoked, false);
+
+    int i;
+    for (i = 0; i < 5; i ++) {
+        ecs_progress(world, 1.0);
+        test_bool(system_c_invoked, false);
+    }
+
+    ecs_progress(world, 1.0);
+    test_bool(system_c_invoked, true);
+
+    system_c_invoked = false;
+
+    /* Make sure rate filter triggers repeatedly */
+    for (i = 0; i < 5; i ++) {
+        ecs_progress(world, 1.0);
+        test_bool(system_c_invoked, false);
+    }
+
+    ecs_progress(world, 1.0);
+    test_bool(system_c_invoked, true);
+
+    ecs_fini(world);
+}
+
+void Timer_one_shot_timer_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t timer = ecs_set_timeout(world, 0, 1.0);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        ecs_progress(world, 0.3);
+        const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
+        test_assert(src != NULL);
+        test_bool(src->tick, false);
+    }
+
+    ecs_progress(world, 0.3);
+    const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
+    test_assert(src != NULL);
+    test_bool(src->tick, true);   
+
+    /* Ensure timer doesn't tick again */
+    for (i = 0; i < 12; i ++) {
+        ecs_progress(world, 0.3);
+        test_bool(src->tick, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Timer_interval_timer_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t timer = ecs_set_interval(world, 0, 1.0);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        ecs_progress(world, 0.3);
+        const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
+        test_assert(src != NULL);
+        test_bool(src->tick, false);
+    }
+
+    ecs_progress(world, 0.3);
+    const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
+    test_assert(src != NULL);
+    test_bool(src->tick, true);   
+
+    for (i = 0; i < 2; i ++) {
+        ecs_progress(world, 0.3);
+        test_bool(src->tick, false);
+    }
+
+    /* Timer should tick again */
+    ecs_progress(world, 0.3);
+    test_bool(src->tick, true);
+
+    ecs_fini(world);
+}
+
+void Timer_rate_entity() {
+    ecs_world_t *world = ecs_init();
+
+    /* Specify 0 for source. This applies the rate to the frame ticks */
+    ecs_entity_t rate = ecs_set_rate(world, 0, 4, 0);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        ecs_progress(world, 0);
+        const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
+        test_assert(src != NULL);
+        test_bool(src->tick, false);
+    }
+
+    ecs_progress(world, 0);
+    const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
+    test_assert(src != NULL);
+    test_bool(src->tick, true);   
+
+    for (i = 0; i < 3; i ++) {
+        ecs_progress(world, 0);
+        const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
+        test_assert(src != NULL);
+        test_bool(src->tick, false);
+    }
+
+    /* Filter should tick again */
+    ecs_progress(world, 0);
+    test_bool(src->tick, true);
+
+    ecs_fini(world);
+}
+
+void Timer_nested_rate_entity() {
+    ecs_world_t *world = ecs_init();
+
+    /* Nested rate filter */
+    ecs_entity_t parent = ecs_set_rate(world, 0, 2, 0);
+    ecs_entity_t rate = ecs_set_rate(world, 0, 2, parent);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        ecs_progress(world, 0);
+        const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
+        test_assert(src != NULL);
+        test_bool(src->tick, false);
+    }
+
+    ecs_progress(world, 0);
+    const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
+    test_assert(src != NULL);
+    test_bool(src->tick, true);   
+
+    for (i = 0; i < 3; i ++) {
+        ecs_progress(world, 0);
+        const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
+        test_assert(src != NULL);
+        test_bool(src->tick, false);
+    }
+
+    /* Filter should tick again */
+    ecs_progress(world, 0);
+    test_bool(src->tick, true);
+
+    ecs_fini(world);
+}
+
+void Timer_nested_rate_entity_empty_src() {
+    ecs_world_t *world = ecs_init();
+
+    /* Rate filter with source that is not a tick source */
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t rate = ecs_set_rate(world, 0, 4, parent);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        ecs_progress(world, 0);
+        const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
+        test_assert(src != NULL);
+        test_bool(src->tick, false);
+    }
+
+    ecs_progress(world, 0);
+    const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
+    test_assert(src != NULL);
+    test_bool(src->tick, true);   
+
+    for (i = 0; i < 3; i ++) {
+        ecs_progress(world, 0);
+        const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
+        test_assert(src != NULL);
+        test_bool(src->tick, false);
+    }
+
+    /* Filter should tick again */
+    ecs_progress(world, 0);
+    test_bool(src->tick, true);
+
+    ecs_fini(world);
+}
+
+void Timer_naked_tick_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tick = ecs_set(world, 0, EcsTickSource, {0});
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        ecs_progress(world, 0);
+        const EcsTickSource *src = ecs_get(world, tick, EcsTickSource);
+        test_assert(src != NULL);
+
+        /* Tick should always be true, no filter is applied */
+        test_bool(src->tick, true);
+    }
+
+    ecs_fini(world);
+}

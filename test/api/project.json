@@ -904,7 +904,8 @@
                 "get_typeid_w_recycled_rel",
                 "get_typeid_w_recycled_obj",
                 "id_str_w_recycled_rel",
-                "id_str_w_recycled_obj"
+                "id_str_w_recycled_obj",
+                "set_object_w_zero_sized_rel_comp"
             ]
         }, {
             "id": "TriggerOnAdd",
@@ -1092,7 +1093,14 @@
                 "start_stop_interval",
                 "rate_filter",
                 "rate_filter_w_rate_filter_src",
-                "rate_filter_w_timer_src"
+                "rate_filter_w_timer_src",
+                "rate_filter_with_empty_src",
+                "one_shot_timer_entity",
+                "interval_timer_entity",
+                "rate_entity",
+                "nested_rate_entity",
+                "nested_rate_entity_empty_src",
+                "naked_tick_entity"
             ]
         }, {
             "id": "SystemOnDemand",
@@ -1526,7 +1534,16 @@
                 "discard_child",
                 "discard_child_w_add",
                 "defer_return_value",
-                "defer_get_mut_pair"
+                "defer_get_mut_pair",
+                "async_stage_add",
+                "async_stage_add_twice",
+                "async_stage_remove",
+                "async_stage_clear",
+                "async_stage_delete",
+                "async_stage_new",
+                "async_stage_no_get",
+                "async_stage_readonly",
+                "async_stage_is_async"
             ]
         }, {
             "id": "SingleThreadStaging",

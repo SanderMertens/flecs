@@ -1000,3 +1000,111 @@ void System_readonly_children_iter() {
 
     world.progress();
 }
+
+void System_rate_filter() {
+    flecs::world world;
+
+    int32_t 
+    root_count = 0, root_mult = 1, 
+    l1_a_count = 0, l1_a_mult = 1, 
+    l1_b_count = 0, l1_b_mult = 2, 
+    l1_c_count = 0, l1_c_mult = 3,
+    l2_a_count = 0, l2_a_mult = 2,
+    l2_b_count = 0, l2_b_mult = 4,
+    frame_count = 0;
+
+    auto root = world.system<>("root")
+        .iter([&](flecs::iter& it) {
+            root_count ++;
+        });
+
+    auto l1_a = world.system<>("l1_a")
+        .rate(root, 1)
+        .iter([&](flecs::iter& it) {
+            l1_a_count ++;
+        });  
+
+    auto l1_b = world.system<>("l1_b")
+        .rate(root, 2)
+        .iter([&](flecs::iter& it) {
+            l1_b_count ++;
+        });
+
+    world.system<>("l1_c")
+        .rate(root, 3)
+        .iter([&](flecs::iter& it) {
+            l1_c_count ++;
+        });        
+
+    world.system<>("l2_a")
+        .rate(l1_a, 2)
+        .iter([&](flecs::iter& it) {
+            l2_a_count ++;
+        });
+
+    world.system<>("l2_b")
+        .rate(l1_b, 2)
+        .iter([&](flecs::iter& it) {
+            l2_b_count ++;
+        });
+
+    for (int i = 0; i < 30; i ++) {
+        world.progress(); frame_count ++;
+        test_int(root_count, frame_count / root_mult);
+        test_int(l1_a_count, frame_count / l1_a_mult);
+        test_int(l1_b_count, frame_count / l1_b_mult);
+        test_int(l1_c_count, frame_count / l1_c_mult);
+        test_int(l2_a_count, frame_count / l2_a_mult);
+        test_int(l2_b_count, frame_count / l2_b_mult);
+    }    
+}
+
+void System_update_rate_filter() {
+    flecs::world world;
+
+    int32_t 
+    root_count = 0, root_mult = 1, 
+    l1_count = 0, l1_mult = 2, 
+    l2_count = 0, l2_mult = 6,
+    frame_count = 0;
+
+    auto root = world.system<>("root")
+        .iter([&](flecs::iter& it) {
+            root_count ++;
+        });
+
+    auto l1 = world.system<>("l1")
+        .rate(root, 2)
+        .iter([&](flecs::iter& it) {
+            l1_count ++;
+        });  
+
+    world.system<>("l2")
+        .rate(l1, 3)
+        .iter([&](flecs::iter& it) {
+            l2_count ++;
+        }); 
+
+    for (int i = 0; i < 12; i ++) {
+        world.progress(); frame_count ++;
+        test_int(root_count, frame_count / root_mult);
+        test_int(l1_count, frame_count / l1_mult);
+        test_int(l2_count, frame_count / l2_mult);
+    }
+
+    l1.rate(4); // Run twice as slow
+    l1_mult *= 2;
+    l2_mult *= 2;
+
+    frame_count = 0;
+    l1_count = 0;
+    l2_count = 0;
+    root_count = 0;
+
+    for (int i = 0; i < 32; i ++) {
+        world.progress(); frame_count ++;
+        test_int(root_count, frame_count / root_mult);
+        test_int(l1_count, frame_count / l1_mult);
+        test_int(l2_count, frame_count / l2_mult);
+    }      
+}

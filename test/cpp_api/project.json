@@ -194,7 +194,9 @@
                 "add_from_iter_world_handle",
                 "new_from_iter",
                 "each_w_mut_children_it",
-                "readonly_children_iter"
+                "readonly_children_iter",
+                "rate_filter",
+                "update_rate_filter"
             ]
         }, {
             "id": "Trigger",
@@ -340,7 +342,10 @@
                 "reimport_namespaced_module",
                 "c_interop_module",
                 "c_interop_after_reset",
-                "implicit_register_w_new_world"
+                "implicit_register_w_new_world",
+                "count",
+                "staged_count",
+                "async_stage_add"
             ]
         }, {
             "id": "Singleton",

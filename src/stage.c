@@ -113,6 +113,11 @@ void merge_stages(
     }
 
     world->stats.merge_count_total ++; 
+
+    /* If stage is asynchronous, deferring is always enabled */
+    if (stage->asynchronous) {
+        ecs_defer_begin((ecs_world_t*)stage);
+    }
 }
 
 static
@@ -425,9 +430,11 @@ void ecs_stage_init(
 
     memset(stage, 0, sizeof(ecs_stage_t));
 
+    stage->magic = ECS_STAGE_MAGIC;
     stage->world = world;
     stage->thread_ctx = world;
     stage->auto_merge = true;
+    stage->asynchronous = false;
 }
 
 void ecs_stage_deinit(
@@ -435,6 +442,12 @@ void ecs_stage_deinit(
     ecs_stage_t *stage)
 {
     (void)world;
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure stage has no unmerged data */
+    ecs_assert(ecs_vector_count(stage->defer_queue) == 0, 
+        ECS_INVALID_PARAMETER, NULL);
 
     /* Set magic to 0 so that accessing the stage after deinitializing it will
      * throw an assert. */
@@ -476,7 +489,6 @@ void ecs_set_stages(
             ecs_stage_t *stage = ecs_vector_add(
                 &world->worker_stages, ecs_stage_t);
             ecs_stage_init(world, stage);
-            stage->magic = ECS_STAGE_MAGIC;
             stage->id = 1 + i; /* 0 is reserved for main/temp stage */
 
             /* Set thread_ctx to stage, as this stage might be used in a
@@ -611,6 +623,12 @@ bool ecs_stage_is_readonly(
 {
     const ecs_world_t *world = ecs_get_world(stage);
 
+    if (stage->magic == ECS_STAGE_MAGIC) {
+        if (((ecs_stage_t*)stage)->asynchronous) {
+            return false;
+        }
+    }
+
     if (world->is_readonly) {
         if (stage->magic == ECS_WORLD_MAGIC) {
             return true;
@@ -622,4 +640,42 @@ bool ecs_stage_is_readonly(
     }
 
     return false;
+}
+
+ecs_world_t* ecs_async_stage_new(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage = ecs_os_calloc(sizeof(ecs_stage_t));
+    ecs_stage_init(world, stage);
+
+    stage->id = -1;
+    stage->auto_merge = false;
+    stage->asynchronous = true;
+
+    ecs_defer_begin((ecs_world_t*)stage);
+
+    return (ecs_world_t*)stage;
+}
+
+void ecs_async_stage_free(
+    ecs_world_t *world)
+{
+    ecs_assert(world->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_t *stage = (ecs_stage_t*)world;
+    ecs_assert(stage->asynchronous == true, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_deinit(stage->world, stage);
+}
+
+bool ecs_stage_is_async(
+    ecs_world_t *stage)
+{
+    if (!stage) {
+        return false;
+    }
+    
+    if (stage->magic != ECS_STAGE_MAGIC) {
+        return false;
+    }
+
+    return ((ecs_stage_t*)stage)->asynchronous;
 }

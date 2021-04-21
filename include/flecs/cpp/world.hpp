@@ -57,6 +57,9 @@ public:
     }
     
     ~world() { 
+        if (m_owned && ecs_stage_is_async(m_world)) {
+            ecs_async_stage_free(m_world);
+        } else
         if (m_owned && m_world) {
             ecs_fini(m_world); 
         }
@@ -264,6 +267,27 @@ public:
      */
     flecs::world get_stage(int32_t id) const {
         return flecs::world(ecs_get_stage(m_world, id));
+    }
+
+    /** Create asynchronous stage.
+     * An asynchronous stage can be used to asynchronously queue operations for
+     * later merging with the world. An asynchronous stage is similar to a regular
+     * stage, except that it does not allow reading from the world.
+     *
+     * Asynchronous stages are never merged automatically, and must therefore be
+     * manually merged with the ecs_merge function. It is not necessary to call
+     * defer_begin or defer_end before and after enqueuing commands, as an 
+     * asynchronous stage unconditionally defers operations.
+     *
+     * The application must ensure that no commands are added to the stage while the
+     * stage is being merged.
+     *
+     * An asynchronous stage must be cleaned up by ecs_async_stage_free. 
+     *
+     * @return The stage.
+     */
+    flecs::world async_stage() const {
+        return flecs::world(ecs_async_stage_new(m_world));
     }
 
     /** Get actual world.
@@ -613,8 +637,7 @@ public:
      */
     template <typename T>
     int count() const {
-        return ecs_count_type(
-            m_world, _::cpp_type<T>::type(m_world));
+        return ecs_count_id(m_world, _::cpp_type<T>::id(m_world));
     }
 
     /** Count entities matching a filter.

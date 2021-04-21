@@ -13,7 +13,7 @@ const EcsComponent* ecs_component_from_id(
     }
 
     const EcsComponent *component = ecs_get(world, e, EcsComponent);
-    if (!component && pair) {
+    if ((!component || !component->size) && pair) {
         /* If this is a pair column and the pair is not a component, use
          * the component type of the component the pair is applied to. */
         e = ECS_PAIR_OBJECT(pair);

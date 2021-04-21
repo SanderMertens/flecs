@@ -845,6 +845,7 @@ void Pairs_get_typeid_w_recycled_rel(void);
 void Pairs_get_typeid_w_recycled_obj(void);
 void Pairs_id_str_w_recycled_rel(void);
 void Pairs_id_str_w_recycled_obj(void);
+void Pairs_set_object_w_zero_sized_rel_comp(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -1017,6 +1018,13 @@ void Timer_start_stop_interval(void);
 void Timer_rate_filter(void);
 void Timer_rate_filter_w_rate_filter_src(void);
 void Timer_rate_filter_w_timer_src(void);
+void Timer_rate_filter_with_empty_src(void);
+void Timer_one_shot_timer_entity(void);
+void Timer_interval_timer_entity(void);
+void Timer_rate_entity(void);
+void Timer_nested_rate_entity(void);
+void Timer_nested_rate_entity_empty_src(void);
+void Timer_naked_tick_entity(void);
 
 // Testsuite 'SystemOnDemand'
 void SystemOnDemand_enable_out_after_in(void);
@@ -1423,6 +1431,15 @@ void DeferredActions_discard_child(void);
 void DeferredActions_discard_child_w_add(void);
 void DeferredActions_defer_return_value(void);
 void DeferredActions_defer_get_mut_pair(void);
+void DeferredActions_async_stage_add(void);
+void DeferredActions_async_stage_add_twice(void);
+void DeferredActions_async_stage_remove(void);
+void DeferredActions_async_stage_clear(void);
+void DeferredActions_async_stage_delete(void);
+void DeferredActions_async_stage_new(void);
+void DeferredActions_async_stage_no_get(void);
+void DeferredActions_async_stage_readonly(void);
+void DeferredActions_async_stage_is_async(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -4833,6 +4850,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "id_str_w_recycled_obj",
         Pairs_id_str_w_recycled_obj
+    },
+    {
+        "set_object_w_zero_sized_rel_comp",
+        Pairs_set_object_w_zero_sized_rel_comp
     }
 };
 
@@ -5477,6 +5498,34 @@ bake_test_case Timer_testcases[] = {
     {
         "rate_filter_w_timer_src",
         Timer_rate_filter_w_timer_src
+    },
+    {
+        "rate_filter_with_empty_src",
+        Timer_rate_filter_with_empty_src
+    },
+    {
+        "one_shot_timer_entity",
+        Timer_one_shot_timer_entity
+    },
+    {
+        "interval_timer_entity",
+        Timer_interval_timer_entity
+    },
+    {
+        "rate_entity",
+        Timer_rate_entity
+    },
+    {
+        "nested_rate_entity",
+        Timer_nested_rate_entity
+    },
+    {
+        "nested_rate_entity_empty_src",
+        Timer_nested_rate_entity_empty_src
+    },
+    {
+        "naked_tick_entity",
+        Timer_naked_tick_entity
     }
 };
 
@@ -7003,6 +7052,42 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_get_mut_pair",
         DeferredActions_defer_get_mut_pair
+    },
+    {
+        "async_stage_add",
+        DeferredActions_async_stage_add
+    },
+    {
+        "async_stage_add_twice",
+        DeferredActions_async_stage_add_twice
+    },
+    {
+        "async_stage_remove",
+        DeferredActions_async_stage_remove
+    },
+    {
+        "async_stage_clear",
+        DeferredActions_async_stage_clear
+    },
+    {
+        "async_stage_delete",
+        DeferredActions_async_stage_delete
+    },
+    {
+        "async_stage_new",
+        DeferredActions_async_stage_new
+    },
+    {
+        "async_stage_no_get",
+        DeferredActions_async_stage_no_get
+    },
+    {
+        "async_stage_readonly",
+        DeferredActions_async_stage_readonly
+    },
+    {
+        "async_stage_is_async",
+        DeferredActions_async_stage_is_async
     }
 };
 
@@ -8081,7 +8166,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        29,
+        30,
         Pairs_testcases
     },
     {
@@ -8137,7 +8222,7 @@ static bake_test_suite suites[] = {
         "Timer",
         NULL,
         NULL,
-        9,
+        16,
         Timer_testcases
     },
     {
@@ -8235,7 +8320,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        35,
+        44,
         DeferredActions_testcases
     },
     {

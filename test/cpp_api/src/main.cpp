@@ -177,6 +177,8 @@ void System_add_from_iter_world_handle(void);
 void System_new_from_iter(void);
 void System_each_w_mut_children_it(void);
 void System_readonly_children_iter(void);
+void System_rate_filter(void);
+void System_update_rate_filter(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -305,6 +307,9 @@ void World_reimport_namespaced_module(void);
 void World_c_interop_module(void);
 void World_c_interop_after_reset(void);
 void World_implicit_register_w_new_world(void);
+void World_count(void);
+void World_staged_count(void);
+void World_async_stage_add(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -964,6 +969,14 @@ bake_test_case System_testcases[] = {
     {
         "readonly_children_iter",
         System_readonly_children_iter
+    },
+    {
+        "rate_filter",
+        System_rate_filter
+    },
+    {
+        "update_rate_filter",
+        System_update_rate_filter
     }
 };
 
@@ -1431,6 +1444,18 @@ bake_test_case World_testcases[] = {
     {
         "implicit_register_w_new_world",
         World_implicit_register_w_new_world
+    },
+    {
+        "count",
+        World_count
+    },
+    {
+        "staged_count",
+        World_staged_count
+    },
+    {
+        "async_stage_add",
+        World_async_stage_add
     }
 };
 
@@ -1513,7 +1538,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        35,
+        37,
         System_testcases
     },
     {
@@ -1576,7 +1601,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        17,
+        20,
         World_testcases
     },
     {

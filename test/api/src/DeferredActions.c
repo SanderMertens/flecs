@@ -1321,3 +1321,165 @@ void DeferredActions_defer_get_mut_pair() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_async_stage_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+    ecs_add(async, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    ecs_merge(async);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_async_stage_free(async);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_async_stage_add_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+    ecs_add(async, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    ecs_merge(async);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_add(async, e, Velocity);
+    test_assert(!ecs_has(world, e, Velocity));
+    ecs_merge(async);
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_async_stage_free(async);
+
+    ecs_fini(world);
+}
+
+
+void DeferredActions_async_stage_remove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+    ecs_remove(async, e, Position);
+    test_assert(ecs_has(world, e, Position));
+    ecs_merge(async);
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_async_stage_free(async);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_async_stage_clear() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+    ecs_clear(async, e);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+    ecs_merge(async);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_async_stage_free(async);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_async_stage_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+    ecs_delete(async, e);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+    test_assert(ecs_is_alive(world, e));
+    ecs_merge(async);
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_async_stage_free(async);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_async_stage_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+    ecs_entity_t e = ecs_new(async, 0);
+    ecs_add(async, e, Position);
+    ecs_add(async, e, Velocity);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    ecs_merge(async);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity)); 
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_async_stage_free(async);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_async_stage_no_get() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+    
+    test_expect_abort();
+    ecs_get(async, e, Position);
+}
+
+void DeferredActions_async_stage_readonly() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+    test_assert(!ecs_stage_is_readonly(async));
+
+    ecs_async_stage_free(async);
+    ecs_fini(world);
+}
+
+void DeferredActions_async_stage_is_async() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+    test_assert(ecs_stage_is_async(async));
+
+    ecs_async_stage_free(async);
+    ecs_fini(world);
+}
