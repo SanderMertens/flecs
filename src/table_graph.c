@@ -184,7 +184,7 @@ void init_edges(
          * flags. These allow us to quickly determine if the table contains
          * data that needs to be handled in a special way, like prefabs or 
          * containers */
-        if (e <= EcsLastInternalComponentId) {
+        if (e <= EcsLastInternalComponentId || e == EcsModule) {
             table->flags |= EcsTableHasBuiltins;
         }
 
@@ -220,8 +220,10 @@ void init_edges(
         ecs_entity_t obj = 0;
 
         if (ECS_HAS_RELATION(e, EcsChildOf)) {
-            obj = ECS_PAIR_OBJECT(e);
-            if (obj == EcsFlecs || obj == EcsFlecsCore) {
+            obj = ecs_pair_object(world, e);
+            if (obj == EcsFlecs || obj == EcsFlecsCore || 
+                ecs_has_id(world, obj, EcsModule)) 
+            {
                 table->flags |= EcsTableHasBuiltins;
             }
 
@@ -706,22 +708,6 @@ ecs_table_t* ecs_table_traverse_add(
 }
 
 static
-int ecs_entity_compare(
-    const void *e1,
-    const void *e2)
-{
-    ecs_entity_t v1 = *(ecs_entity_t*)e1;
-    ecs_entity_t v2 = *(ecs_entity_t*)e2;
-    if (v1 < v2) {
-        return -1;
-    } else if (v1 > v2) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-static
 bool ecs_entity_array_is_ordered(
     ecs_entities_t *entities)
 {
@@ -850,7 +836,7 @@ ecs_table_t *find_or_create(
         ordered = ecs_os_alloca(size);
         ecs_os_memcpy(ordered, entities->array, size);
         qsort(
-            ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare);
+            ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare_qsort);
         type_count = ecs_entity_array_dedup(ordered, type_count);
     } else {
         ordered = entities->array;

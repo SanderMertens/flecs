@@ -2171,9 +2171,9 @@ void SystemPeriodic_or_type() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
-    test_int(ctx.c[1][0], ecs_typeid(Velocity));
-    test_int(ctx.c[2][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], MyType);
+    test_int(ctx.c[1][0], MyType);
+    test_int(ctx.c[2][0], MyType);
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);

@@ -472,6 +472,40 @@ ecs_entity_t ecs_set_rate_filter(
     int32_t rate,
     ecs_entity_t source);
 
+ECS_DEPRECATED("use ecs_query_init")
+FLECS_API
+ecs_query_t* ecs_query_new(
+    ecs_world_t *world,
+    const char *sig);
+
+ECS_DEPRECATED("use ecs_query_init")
+FLECS_API
+ecs_query_t* ecs_subquery_new(
+    ecs_world_t *world,
+    ecs_query_t *parent,
+    const char *sig);    
+
+ECS_DEPRECATED("use ecs_query_deinit")
+FLECS_API
+void ecs_query_free(
+    ecs_query_t *query);
+
+ECS_DEPRECATED("use ecs_query_init")
+FLECS_API
+void ecs_query_order_by(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t component,
+    ecs_compare_action_t compare);
+
+ECS_DEPRECATED("use ecs_query_init") 
+FLECS_API
+void ecs_query_group_by(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t component,
+    ecs_rank_type_action_t rank_action);
+
 #ifdef __cplusplus
 }
 #endif

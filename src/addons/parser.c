@@ -1,4 +1,8 @@
-#include "private_api.h"
+#include "flecs.h"
+
+#ifdef FLECS_PARSER
+
+#include "../private_api.h"
 
 /* TODO: after new query parser is working & code is ported to new types for
  *       storing terms, this code needs a big cleanup */
@@ -63,36 +67,6 @@ const char *skip_space(
         ptr ++;
     }
     return ptr;
-}
-
-static
-bool ecs_is_0(
-    const char *id)
-{
-    return id[0] == '0' && !id[1];
-}
-
-static
-bool ecs_is_var(
-    const char *id)
-{
-    if (id[0] == '_') {
-        return true;
-    }
-
-    if (isdigit(id[0])) {
-        return false;
-    }
-
-    const char *ptr;
-    char ch;
-    for (ptr = id; (ch = *ptr); ptr ++) {
-        if (!isupper(ch) && ch != '_' && !isdigit(ch)) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 /* -- Private functions -- */
@@ -219,7 +193,7 @@ int parse_identifier(
 
     if (ch == TOK_AS_ENTITY) {
         out->var_kind = EcsVarIsEntity;
-    } else if (ecs_is_var(tptr)) {
+    } else if (ecs_identifier_is_var(tptr)) {
         out->var_kind = EcsVarIsVariable;
     }
 
@@ -330,7 +304,7 @@ uint8_t parse_set_token(
 
 static
 const char* parse_set_expr(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name,
     const char *expr,
     int64_t column,
@@ -471,7 +445,7 @@ const char* parse_set_expr(
 
 static
 const char* parse_arguments(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name,
     const char *expr,
     int64_t column,
@@ -541,10 +515,10 @@ const char* parse_arguments(
 
 static
 const char* parse_term(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const char *name,
     const char *expr,
-    ecs_term_t *elem_out)
+    ecs_term_t *term_out)
 {
     const char *ptr = expr;
     char token[ECS_MAX_TOKEN_SIZE] = {0};
@@ -890,467 +864,166 @@ parse_name:
     ptr = skip_space(ptr);
 
 parse_done:
-    *elem_out = term;
+    *term_out = term;
 
     return ptr;
 }
 
-int ecs_parse_expr(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    ecs_parse_action_t action,
-    void *ctx)
+char* ecs_parse_term(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    ecs_term_t *term)
 {
-    ecs_term_t term;
-    ecs_term_id_t *subj = &term.args[0];
-    ecs_assert(sig != NULL, ECS_INVALID_PARAMETER, NULL);
-    const char *expr = sig->expr;
-    const char *name = sig->name;
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    /* Don't parse empty expressions */
-    if (!expr) {
-        return 0;
-    }
-
-    expr = skip_space(expr);
-    if (!expr[0]) {
-        return 0;
-    }
+    ecs_term_id_t *subj = &term->args[0];
 
     bool prev_or = false;
-    int32_t prev_set = 0;
-
-    const char *ptr = expr;
-    while ((ptr = parse_term(world, name, ptr, &term))) {
-        /* Post-parse consistency checks */
-
-        /* An OR operator cannot be combined with other operators besides AND */
-        if (!ecs_os_strncmp(ptr, TOK_OR, 2)) {
-            if (term.oper != EcsAnd) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "cannot combine || with other operators");
-                ecs_term_free(&term);
-                return -1;
+    if (ptr != expr) {
+        /* If this is not the start of the expression, scan back to check if
+         * previous token was an OR */
+        const char *bptr = ptr - 1;
+        do {
+            char ch = bptr[0];
+            if (isspace(ch)) {
+                bptr --;
+                continue;
             }
 
-            term.oper = EcsOr;
-        }
+            /* Previous token was not an OR */
+            if (ch == TOK_AND) {
+                break;
+            }
 
-        /* Term must either end in end of expression or AND (,) token */
-        if (ptr[0] != TOK_AND && term.oper != EcsOr && ptr[0]) {
+            /* Previous token was an OR */
+            if (ch == TOK_OR[0]) {
+                prev_or = true;
+                break;
+            }
+
             ecs_parser_error(name, expr, (ptr - expr), 
-                "expected end of expression or next term");
-            ecs_term_free(&term);
-            return -1;
-        }
-
-        /* If the term just contained a 0, the expression has nothing. Ensure
-         * that after the 0 nothing else follows */
-        if (!ecs_os_strcmp(term.pred.name, "0")) {
-            if (ptr[0]) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "unexpected term after 0"); 
-                ecs_term_free(&term);
-                return -1;
-            }
-
-            subj->set = EcsNothing;
-        }
-
-        /* Cannot combine EcsNothing with operators other than AND */
-        if (term.oper != EcsAnd && subj->set == EcsNothing) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "invalid operator for empty source"); 
-            ecs_term_free(&term);    
-            return -1;
-        }
-
-        /* Verify consistency of OR expression */
-        if (prev_or) {
-            /* Set expressions must be the same for all OR terms */
-            if (subj->set != prev_set) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "cannot combine different sources in OR expression");
-                ecs_term_free(&term);
-                return -1;
-            }
-
-            prev_or = term.oper == EcsOr;
-            prev_set = subj->set;
-
-            /* An OR operator must always follow an AND or another Or */
-            if (term.oper != EcsAnd && term.oper != EcsOr) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "cannot combine || with other operators");
-                ecs_term_free(&term);
-                return -1;
-            }
-
-            term.oper = EcsOr;
-        } else {
-            prev_or = term.oper == EcsOr;
-            prev_set = subj->set;
-        }
-
-        /* Automatically assign This if entity is not assigned and the set is
-         * nothing */
-        if (subj->set != EcsNothing) {
-            if (!subj->name) {
-                if (!subj->entity) {
-                    subj->entity = EcsThis;
-                    subj->name = ecs_os_strdup(".");
-                } else {
-                    subj->name = ecs_get_fullpath(world, subj->entity);
-                }
-            }
-        }
-
-        if (subj->name && !ecs_os_strcmp(subj->name, "0")) {
-            subj->entity = 0;
-            subj->set = EcsNothing;
-        }
-
-        /* Process role */
-        if (term.role == ECS_AND) {
-            term.oper = EcsOperAll;
-        } else if (term.role == ECS_OR) {
-            term.oper = EcsOr;
-        }
-
-        if (action(world, sig, ptr - expr, &term, ctx)) {
-            return -1;
-        }
-
-        if (ptr[0]) {
-            ptr ++;
-            if (prev_or) {
-                ptr ++;
-            }
-        }
-
-        ptr = skip_space(ptr);
-
-        if (!ptr[0]) {
-            break;
-        }
+                "invalid preceding token");
+            return NULL;
+        } while (true);
     }
 
+    ptr = skip_space(ptr);
+    if (!ptr[0]) {
+        return (char*)ptr;
+    }
+
+    if (ptr == expr && !strcmp(expr, "0")) {
+        return (char*)&ptr[1];
+    }
+
+    int32_t prev_set = subj->set;
+
+    /* Parse next element */
+    ptr = parse_term(world, name, ptr, term);
     if (!ptr) {
-        return -1;
+        ecs_term_fini(term);
+        return NULL;
     }
 
-    return 0;
-}
+    /* Post-parse consistency checks */
 
-static
-int resolve_identifier(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    int64_t column,    
-    ecs_term_id_t *identifier)
-{
-    if (!identifier->name) {
-        return 0;
-    }
-
-    if (identifier->var_kind == EcsVarDefault) {
-        if (ecs_is_var(identifier->name)) {
-            identifier->var_kind = EcsVarIsVariable;
-        }
-    }
-
-    if (identifier->var_kind != EcsVarIsVariable) {
-        if (ecs_is_0(identifier->name)) {
-            identifier->entity = 0;
-        } else {
-            ecs_entity_t e = ecs_lookup_fullpath(world, identifier->name);
-            if (!e) {
-                ecs_parser_error(name, expr, column, 
-                    "unresolved identifier '%s'", identifier->name);
-                return -1;
-            }
-
-            /* Use OR, as entity may have already been populated with role */
-            identifier->entity = e;
-        }
-    }
-
-    return 0;
-}
-
-/** Parse callback that adds component to the components array for a system */
-static
-int ecs_parse_signature_action(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    int64_t column,
-    ecs_term_t *term,
-    void *data)
-{
-    (void)column;
-    (void)data;
-    return ecs_sig_add(world, sig, term);
-}
-
-int ecs_term_resolve(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    int64_t column,
-    ecs_term_t *term)
-{
-    if (resolve_identifier(world, name, expr, column, &term->pred)) {
-        return -1;
-    }
-    if (resolve_identifier(world, name, expr, column, &term->args[0])) {
-        return -1;
-    }
-    if (resolve_identifier(world, name, expr, column, &term->args[1])) {
-        return -1;
-    }
-
-    if (term->args[1].name) {
-        term->id = ecs_pair(
-            term->pred.entity, term->args[1].entity);
-    } else {
-        term->id = term->pred.entity;
-    } 
-
-    if (term->role != ECS_AND && term->role != ECS_OR) {
-        term->id |= term->role;
-    }
-
-    return 0;
-}
-
-void ecs_term_free(
-    ecs_term_t *term)
-{
-    ecs_os_free(term->pred.name);
-    ecs_os_free(term->args[0].name);
-    ecs_os_free(term->args[1].name);
-    ecs_os_free(term->name);
-}
-
-int ecs_sig_init(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_sig_t *sig)
-{
-    if (expr && ecs_os_strlen(expr) && strcmp(expr, "0")) {
-        /* Dispell const, but only temporary. Only strdup the expression if the
-         * signature was successfully parsed. Setting the expression is 
-         * necessary for the parser. */
-        sig->expr = (char*)expr;
-    } else {
-        sig->expr = NULL;
-    }
-
-    sig->terms = NULL;
-    sig->name = (char*)name; /* Dispell const- same as above */
-
-    int result = 0;
-
-    if (sig->expr) {
-        result = ecs_parse_expr(world, sig, ecs_parse_signature_action, NULL);
-    }
-
-    /* If the expression parsed without errors, create copies of strings */
-    if (!result) {
-        sig->name = ecs_os_strdup(name);
-        sig->expr = ecs_os_strdup(expr);
-    }    
-
-    return result;
-}
-
-void ecs_sig_deinit(
-    ecs_sig_t *sig)
-{   
-    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
-    int32_t i, count = ecs_vector_count(sig->terms);
-
-    for (i = 0; i < count; i ++) {
-        ecs_term_free(&terms[i]);
-    }
-
-    ecs_vector_free(sig->terms);
-    ecs_os_free(sig->name);
-    ecs_os_free(sig->expr);
-}
-
-int ecs_sig_add(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    ecs_term_t *term)
-{
-    /* Resolve identifiers in term */
-    if (ecs_term_resolve(world, sig->name, sig->expr, 0, term)) {
-        return -1;
-    }
-
-    ecs_term_t *elem;
-
-    /* If term role is OR, component should be a type */
-    if (term->role == ECS_OR) {
-        const EcsType *type = ecs_get(world, term->id, EcsType);
-        if (!type) {
-            ecs_parser_error(sig->name, sig->expr, 0, 
-                "entity used with OR must be a type");
-            return -1;
+    /* If next token is OR, term is part of an OR expression */
+    if (!ecs_os_strncmp(ptr, TOK_OR, 2) || prev_or) {
+        /* An OR operator must always follow an AND or another OR */
+        if (term->oper != EcsAnd) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "cannot combine || with other operators");
+            ecs_term_fini(term);
+            return NULL;
         }
 
-        int32_t i, count = ecs_vector_count(type->normalized);
-        ecs_entity_t *ids = ecs_vector_first(type->normalized, ecs_entity_t);
+        term->oper = EcsOr;
+    }
 
-        for (i = 0; i < count; i ++) {
-            elem = ecs_vector_add(&sig->terms, ecs_term_t);
-            *elem = *term;
-            elem->pred.entity = ids[i];
-            elem->pred.name = NULL;
-            elem->args[0].name = NULL;
-            elem->args[1].name = NULL;
-            elem->oper = EcsOr;
-            elem->id = ids[i];
-            elem->role = 0;
+    /* Term must either end in end of expression, AND or OR token */
+    if (ptr[0] != TOK_AND && (ptr[0] != TOK_OR[0]) && ptr[0]) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "expected end of expression or next term");
+        ecs_term_fini(term);
+        return NULL;
+    }
+
+    /* If the term just contained a 0, the expression has nothing. Ensure
+     * that after the 0 nothing else follows */
+    if (!ecs_os_strcmp(term->pred.name, "0")) {
+        if (ptr[0]) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "unexpected term after 0"); 
+            ecs_term_fini(term);
+            return NULL;
         }
 
-        ecs_term_free(term);
-
-    } else {
-        elem = ecs_vector_add(&sig->terms, ecs_term_t);
-        *elem = *term;
+        subj->set = EcsNothing;
     }
 
-    return 0;
-}
-
-static
-bool sig_id_set(
-    ecs_term_id_t *id)
-{
-    return (id->name != NULL) || (id->entity != 0);
-}
-
-static
-void sig_add_id(
-    ecs_world_t *world,
-    ecs_strbuf_t *buf,
-    ecs_term_id_t *id)
-{
-    if (id->name) {
-        ecs_strbuf_appendstr(buf, id->name);
-    } else if (id->entity) {
-        char *path = ecs_get_fullpath(world, id->entity);
-        ecs_strbuf_appendstr(buf, path);
-        ecs_os_free(path);
-    } else {
-        ecs_strbuf_appendstr(buf, "0");
+    /* Cannot combine EcsNothing with operators other than AND */
+    if (term->oper != EcsAnd && subj->set == EcsNothing) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid operator for empty source"); 
+        ecs_term_fini(term);    
+        return NULL;
     }
-}
 
-char* ecs_sig_str(
-    ecs_world_t *world,
-    ecs_sig_t *sig)
-{
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    /* Verify consistency of OR expression */
+    if (prev_or && term->oper == EcsOr) {
+        /* Set expressions must be the same for all OR terms */
+        if (subj->set != prev_set) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "cannot combine different sources in OR expression");
+            ecs_term_fini(term);
+            return NULL;
+        }
 
-    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
-    int32_t i, count = ecs_vector_count(sig->terms);
-    int32_t or_count = 0;
+        term->oper = EcsOr;
+    }
 
-    for (i = 0; i < count; i ++) {
-        if (i) {
-            if (or_count >= 1) {
-                ecs_strbuf_appendstr(&buf, " || ");
-            } else {
-                ecs_strbuf_appendstr(&buf, ", ");
+    /* Automatically assign This if entity is not assigned and the set is
+     * nothing */
+    if (subj->set != EcsNothing) {
+        if (!subj->name) {
+            if (!subj->entity) {
+                subj->entity = EcsThis;
             }
         }
+    }
 
-        ecs_term_t *term = &terms[i];
+    if (subj->name && !ecs_os_strcmp(subj->name, "0")) {
+        subj->entity = 0;
+        subj->set = EcsNothing;
+    }
 
-        if (or_count < 1) {
-            if (term->inout == EcsIn) {
-                ecs_strbuf_appendstr(&buf, "[in] ");
-            } else if (term->inout == EcsInOut) {
-                ecs_strbuf_appendstr(&buf, "[inout] ");
-            } else if (term->inout == EcsInOut) {
-                ecs_strbuf_appendstr(&buf, "[out] ");
-            }
-        }
+    /* Process role */
+    if (term->role == ECS_AND) {
+        term->oper = EcsAndFrom;
+        term->role = 0;
+    } else if (term->role == ECS_OR) {
+        term->oper = EcsOrFrom;
+        term->role = 0;
+    } else if (term->role == ECS_NOT) {
+        term->oper = EcsNotFrom;
+        term->role = 0;
+    }
 
-        if (term->role) {
-            ecs_strbuf_appendstr(&buf, ecs_role_str(term->role));
-            ecs_strbuf_appendstr(&buf, " ");
-        }
-
-        if (term->oper == EcsOr) {
-            or_count ++;
-        } else {
-            or_count = 0;
-        }
-
-        if (term->oper == EcsNot) {
-            ecs_strbuf_appendstr(&buf, "!");
-        } else if (term->oper == EcsOptional) {
-            ecs_strbuf_appendstr(&buf, "?");
-        }
-
-        if (term->args[0].entity == EcsThis && sig_id_set(&term->args[1])) {
-            ecs_strbuf_appendstr(&buf, "(");
-        }
-
-        if (!sig_id_set(&term->args[1]) && 
-            (term->pred.entity != term->args[0].entity)) 
-        {
-            sig_add_id(world, &buf, &term->pred);
-
-            if (!sig_id_set(&term->args[0])) {
-                ecs_strbuf_appendstr(&buf, "()");
-            } else if (term->args[0].entity != EcsThis) {
-                ecs_strbuf_appendstr(&buf, "(");
-                sig_add_id(world, &buf, &term->args[0]);
-            }
-
-            if (sig_id_set(&term->args[1])) {
-                ecs_strbuf_appendstr(&buf, ", ");
-                sig_add_id(world, &buf, &term->args[1]);
-                ecs_strbuf_appendstr(&buf, ")");
-            }
-        } else {
-            ecs_strbuf_appendstr(&buf, "$");
-            sig_add_id(world, &buf, &term->pred);
+    if (ptr[0]) {
+        if (ptr[0] == ',') {
+            ptr ++;
+        } else if (ptr[0] == '|') {
+            ptr += 2;
         }
     }
 
-    return ecs_strbuf_get(&buf);
+    ptr = skip_space(ptr);
+
+    return (char*)ptr;
 }
 
-/* Check if system meets constraints of non-table columns */
-bool ecs_sig_check_constraints(
-    ecs_world_t *world,
-    ecs_sig_t *sig)
-{
-    ecs_vector_each(sig->terms, ecs_term_t, term, {
-        ecs_term_id_t *subj = &term->args[0];
-        ecs_oper_kind_t oper = term->oper;
-
-        if (subj->entity != EcsThis && subj->set & EcsSelf) {
-            ecs_type_t type = ecs_get_type(world, subj->entity);
-            if (ecs_type_has_id(world, type, term->id)) {
-                if (oper == EcsNot) {
-                    return false;
-                }
-            } else {
-                if (oper != EcsNot) {
-                    return false;
-                }
-            }
-        }
-    });
-
-    return true;
-}
+#endif

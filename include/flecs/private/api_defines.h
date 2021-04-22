@@ -114,8 +114,6 @@ typedef int32_t ecs_size_t;
 #define FLECS__EEcsTrigger (4)
 #define FLECS__EEcsSystem (5)
 #define FLECS__EEcsTickSource (7)
-#define FLECS__EEcsSignatureExpr (8)
-#define FLECS__EEcsSignature (9)
 #define FLECS__EEcsQuery (10)
 #define FLECS__EEcsIterAction (11)
 #define FLECS__EEcsContext (12)
@@ -316,7 +314,7 @@ typedef int32_t ecs_size_t;
 #define ECS_NOT (ECS_ROLE | (0x76ull << 56))
 #define ECS_TRAIT ECS_PAIR
 
-#define EcsSingleton   (ECS_HI_COMPONENT_ID + 26)
+#define EcsSingleton   (ECS_HI_COMPONENT_ID + 37)
 
 #ifdef __cplusplus
 }

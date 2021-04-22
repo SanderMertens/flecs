@@ -159,7 +159,7 @@ void FilterIter_iter_snapshot_one_table() {
     ecs_snapshot_t *s = ecs_snapshot_take(world);
     test_assert(s != NULL);
 
-    ecs_filter_t filter = { ecs_type(Position) };
+    ecs_filter_t filter = { .include = ecs_type(Position) };
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
@@ -223,7 +223,7 @@ void FilterIter_iter_snapshot_two_tables() {
     ecs_snapshot_t *s = ecs_snapshot_take(world);
     test_assert(s != NULL);
 
-    ecs_filter_t filter = { ecs_type(Position) };
+    ecs_filter_t filter = { .include = ecs_type(Position) };
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
@@ -281,7 +281,7 @@ void FilterIter_iter_snapshot_two_comps() {
     ecs_snapshot_t *s = ecs_snapshot_take(world);
     test_assert(s != NULL);
 
-    ecs_filter_t filter = { ecs_type(Movable) };
+    ecs_filter_t filter = { .include = ecs_type(Movable) };
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
@@ -356,7 +356,7 @@ void FilterIter_iter_snapshot_filtered_table() {
     ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
     test_assert(s != NULL);
 
-    ecs_filter_t filter = { ecs_type(Position) };
+    ecs_filter_t filter = { .include = ecs_type(Position) };
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */

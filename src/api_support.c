@@ -1,146 +1,175 @@
 #include "private_api.h"
 
-/** Parse callback that adds type to type identifier for ecs_new_type */
 static
-int parse_type_action(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    int64_t column,
-    ecs_term_t *term,
-    void *data)
+bool ids_compare(
+    const ecs_vector_t *ids_1,
+    const ecs_vector_t *ids_2)
 {
-    ecs_vector_t **array = data;
-
-    if (term->name) {
-        ecs_parser_error(sig->name, sig->expr, column, 
-            "column names not supported in type expression");
-        goto error;
+    int32_t i, count = ecs_vector_count(ids_1);
+    if (count != ecs_vector_count(ids_2)) {
+        return false;
     }
 
-    if (term->oper != EcsAnd && term->oper != EcsOperAll) {
-        ecs_parser_error(sig->name, sig->expr, column, 
-            "operator other than AND not supported in type expression");
-        goto error;
-    }
+    ecs_id_t *arr_1 = ecs_vector_first(ids_1, ecs_id_t);
+    ecs_id_t *arr_2 = ecs_vector_first(ids_2, ecs_id_t);
 
-    if (ecs_term_resolve(world, sig->name, sig->expr, column, term)) {
-        goto error;
-    }
-
-    if (term->args[0].entity == 0) {
-        /* Empty term */
-        goto done;
-    }
-
-    if (term->args[0].set != EcsSetDefault) {
-        ecs_parser_error(sig->name, sig->expr, column, 
-            "source modifiers not supported for type expressions");
-        goto error;
-    }
-
-    if (term->args[0].entity != EcsThis) {
-        ecs_parser_error(sig->name, sig->expr, column, 
-            "subject other than this not supported in type expression");
-        goto error;
-    }
-
-    ecs_entity_t* elem = ecs_vector_add(array, ecs_entity_t);
-    *elem = term->id | term->role;
-
-done:
-    ecs_term_free(term);
-    return 0;
-error:
-    ecs_term_free(term);
-    return -1;
-}
-
-static
-ecs_table_t* table_from_vec(
-    ecs_world_t *world,
-    ecs_vector_t *vec)
-{
-    ecs_entity_t *array = ecs_vector_first(vec, ecs_entity_t);
-    int32_t count = ecs_vector_count(vec);
-
-    ecs_entities_t entities = {
-        .array = array,
-        .count = count
-    };
-
-    return ecs_table_find_or_create(world, &entities);
-}
-
-static
-EcsType type_from_vec(
-    ecs_world_t *world,
-    ecs_vector_t *vec)
-{
-    EcsType result = {0, 0};
-    ecs_table_t *table = table_from_vec(world, vec);
-    if (!table) {
-        return result;
-    }
-
-    result.type = table->type;
-
-    /* Create normalized type. A normalized type resolves all elements with an
-     * AND flag and appends them to the resulting type, where the default type
-     * maintains the original type hierarchy. */
-    ecs_vector_t *normalized = NULL;
-
-    ecs_entity_t *array = ecs_vector_first(vec, ecs_entity_t);
-    int32_t i, count = ecs_vector_count(vec);
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = array[i];
-        if (ECS_HAS_ROLE(e, AND)) {
-            ecs_entity_t entity = ECS_PAIR_OBJECT(e);
-            const EcsType *type_ptr = ecs_get(world, entity, EcsType);
-            ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
-                "flag must be applied to type");
-
-            ecs_vector_each(type_ptr->normalized, ecs_entity_t, c_ptr, {
-                ecs_entity_t *el = ecs_vector_add(&normalized, ecs_entity_t);
-                *el = *c_ptr;
-            })
-        }       
+        if (arr_1[i] != arr_2[i]) {
+            return false;
+        }
     }
 
-    /* Only get normalized type if it's different from the type */
-    if (normalized) {
-        ecs_entities_t normalized_array = ecs_type_to_entities(normalized);
-        ecs_table_t *norm_table = ecs_table_traverse_add(
-            world, table, &normalized_array, NULL);
+    return true;
+}
 
-        result.normalized = norm_table->type;
+static
+ecs_vector_t* sort_and_dedup(
+    ecs_vector_t *result)
+{
+    /* Sort vector */
+    ecs_vector_sort(result, ecs_id_t, ecs_entity_compare_qsort);
 
-        ecs_vector_free(normalized);
-    } else {
-        result.normalized = result.type;
+    /* Ensure vector doesn't contain duplicates */
+    ecs_id_t *ids = ecs_vector_first(result, ecs_id_t);
+    int32_t i, offset = 0, count = ecs_vector_count(result);
+
+    for (i = 0; i < count; i ++) {
+        if (i && ids[i] == ids[i - 1]) {
+            offset ++;
+        }
+
+        if (i + offset >= count) {
+            break;
+        }
+
+        ids[i] = ids[i + offset];
     }
+
+    ecs_vector_set_count(&result, ecs_id_t, i - offset);
 
     return result;
 }
 
+/** Parse callback that adds type to type identifier for ecs_new_type */
 static
-EcsType type_from_expr(
+ecs_vector_t* expr_to_ids(
     ecs_world_t *world,
     const char *name,
     const char *expr)
 {
-    if (expr) {
-        ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_sig_t sig = {
-            .name = (char*)name,
-            .expr = (char*)expr
-        };
-        ecs_parse_expr(world, &sig, parse_type_action, &vec);
-        EcsType result = type_from_vec(world, vec);
-        ecs_vector_free(vec);
-        return result;
-    } else {
-        return (EcsType){0, 0};
+#ifdef FLECS_PARSER    
+    ecs_vector_t *result = NULL;
+    const char *ptr = expr;
+    ecs_term_t term = {0};
+
+    if (!ptr) {
+        return NULL;
     }
+
+    while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
+        if (term.name) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "column names not supported in type expression");
+            goto error;
+        }
+
+        if (term.oper != EcsAnd && term.oper != EcsAndFrom) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "operator other than AND not supported in type expression");
+            goto error;
+        }
+
+        if (ecs_term_resolve_ids(world, name, expr, &term)) {
+            goto error;
+        }
+
+        if (term.args[0].entity == 0) {
+            /* Empty term */
+            goto done;
+        }
+
+        if (term.args[0].set != EcsSetDefault) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "source modifiers not supported for type expressions");
+            goto error;
+        }
+
+        if (term.args[0].entity != EcsThis) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "subject other than this not supported in type expression");
+            goto error;
+        }
+
+        if (term.oper == EcsAndFrom) {
+            term.role = ECS_AND;
+        }
+
+        ecs_id_t* elem = ecs_vector_add(&result, ecs_id_t);
+        *elem = term.id | term.role;
+
+        ecs_term_fini(&term);
+    }
+
+    result = sort_and_dedup(result);
+
+done:
+    return result;
+error:
+    ecs_term_fini(&term);
+    ecs_vector_free(result);
+    return NULL;
+#else
+    (void)world;
+    (void)name;
+    (void)expr;
+    ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+    return NULL;
+#endif    
+}
+
+/* Create normalized type. A normalized type resolves all elements with an
+ * AND flag and appends them to the resulting type, where the default type
+ * maintains the original type hierarchy. */
+static
+ecs_vector_t* ids_to_normalized_ids(
+    ecs_world_t *world,
+    ecs_vector_t *ids)
+{
+    ecs_vector_t *result = NULL;
+
+    ecs_entity_t *array = ecs_vector_first(ids, ecs_id_t);
+    int32_t i, count = ecs_vector_count(ids);
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = array[i];
+        if (ECS_HAS_ROLE(e, AND)) {
+            ecs_entity_t entity = ECS_PAIR_OBJECT(e);
+
+            const EcsType *type_ptr = ecs_get(world, entity, EcsType);
+            ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
+                "flag must be applied to type");
+
+            ecs_vector_each(type_ptr->normalized, ecs_id_t, c_ptr, {
+                ecs_entity_t *el = ecs_vector_add(&result, ecs_id_t);
+                *el = *c_ptr;
+            })
+        } else {
+            ecs_entity_t *el = ecs_vector_add(&result, ecs_id_t);
+            *el = e;
+        }   
+    }
+
+    return sort_and_dedup(result);
+}
+
+static
+ecs_table_t* table_from_ids(
+    ecs_world_t *world,
+    ecs_vector_t *ids)
+{
+    ecs_entities_t ids_array = ecs_type_to_entities(ids);
+    ecs_table_t *result = ecs_table_find_or_create(world, &ids_array);
+    return result;
 }
 
 /* If a name prefix is set with ecs_set_name_prefix, check if the entity name
@@ -236,64 +265,93 @@ ecs_type_t ecs_type_from_str(
     ecs_world_t *world,
     const char *expr)
 {
-    EcsType type = type_from_expr(world, NULL, expr);
-    return type.normalized;
+    ecs_vector_t *ids = expr_to_ids(world, NULL, expr);
+    if (!ids) {
+        return NULL;
+    }
+
+    ecs_vector_t *normalized_ids = ids_to_normalized_ids(world, ids);
+    ecs_vector_free(ids);
+
+    ecs_table_t *table = table_from_ids(world, normalized_ids);
+    ecs_vector_free(normalized_ids);
+
+    return table->type;
 }
 
 ecs_table_t* ecs_table_from_str(
     ecs_world_t *world,
     const char *expr)
 {
-    if (expr) {
-        ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_sig_t sig = {
-            .expr = (char*)expr
-        };        
-        ecs_parse_expr(world, &sig, parse_type_action, &vec);
-        ecs_table_t *result = table_from_vec(world, vec);
-        ecs_vector_free(vec);
-        return result;
-    } else {
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+
+    ecs_vector_t *ids = expr_to_ids(world, NULL, expr);
+    if (!ids) {
         return NULL;
     }
+
+    ecs_table_t *result = table_from_ids(world, ids);
+    ecs_vector_free(ids);
+
+    return result;
+}
+
+static
+int add_expr_to_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name,
+    const char *expr)
+{
+    if (!expr || !expr[0] || !strcmp(expr, "0")) {
+        return 0;
+    }
+
+    ecs_vector_t *ids = expr_to_ids(world, name, expr);
+    if (!ids) {
+        return -1;
+    }
+
+    ecs_vector_t *normalized = ids_to_normalized_ids(world, ids);
+    ecs_add_type(world, entity, normalized);
+    
+    ecs_vector_free(ids);
+    ecs_vector_free(normalized);   
+
+    return 0;
 }
 
 ecs_entity_t ecs_new_entity(
     ecs_world_t *world,
-    ecs_entity_t e,
+    ecs_entity_t entity,
     const char *name,
     const char *expr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Function cannot be called from a stage, use regular ecs_new */
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
+    ecs_entity_t result = ecs_lookup_w_id(world, entity, name);
     if (!result) {
         result = ecs_new(world, 0);
         ecs_set_symbol(world, result, name);
     }
-    
-    EcsType type = type_from_expr(world, name, expr);
 
-    ecs_add_type(world, result, type.normalized);
+    if (add_expr_to_entity(world, result, name, expr)) {
+        ecs_delete(world, result);
+        return 0;
+    }
 
     return result;
 }
 
 ecs_entity_t ecs_new_prefab(
     ecs_world_t *world,
-    ecs_entity_t e,
+    ecs_entity_t entity,
     const char *name,
     const char *expr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Function cannot be called from a stage, use regular ecs_new */
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
+    ecs_entity_t result = ecs_lookup_w_id(world, entity, name);
     if (!result) {
         result = ecs_new(world, 0);
         ecs_set_symbol(world, result, name);
@@ -301,8 +359,10 @@ ecs_entity_t ecs_new_prefab(
 
     ecs_add_id(world, result, EcsPrefab);
 
-    EcsType type = type_from_expr(world, name, expr);
-    ecs_add_type(world, result, type.normalized);
+    if (add_expr_to_entity(world, result, name, expr)) {
+        ecs_delete(world, result);
+        return 0;
+    }
 
     return result;
 }
@@ -384,26 +444,33 @@ ecs_entity_t ecs_new_type(
     if (!result) {
         result = ecs_new_entity(world, 0, name, NULL);
     }
-    
-    EcsType type_parsed = type_from_expr(world, name, expr);
+
+    ecs_vector_t *ids = expr_to_ids(world, name, expr);
+    ecs_vector_t *normalized = ids_to_normalized_ids(world, ids);
+    ecs_assert(normalized != NULL, ECS_INTERNAL_ERROR, NULL);
 
     bool added = false;
     EcsType *type = ecs_get_mut(world, result, EcsType, &added);
     if (added) {
-        type->type = type_parsed.type;
-        type->normalized = type_parsed.normalized;
+        ecs_table_t *table_type = table_from_ids(world, ids);
+        ecs_table_t *table_normalized = table_from_ids(world, normalized);
+        type->type = table_type->type;
+        type->normalized = table_normalized->type;
+
+        /* This will allow the type to show up in debug tools */
+        ecs_map_set(world->type_handles, (uintptr_t)table_type->type, &result);        
     } else {
-        if (type->type != type_parsed.type) {
+        if (!ids_compare(type->type, ids)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
 
-        if (type->normalized != type_parsed.normalized) {
+        if (!ids_compare(type->normalized, normalized)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
-    }     
+    }
 
-    /* This will allow the type to show up in debug tools */
-    ecs_map_set(world->type_handles, (uintptr_t)type_parsed.type, &result);
+    ecs_vector_free(ids);
+    ecs_vector_free(normalized);    
 
     return result;
 }

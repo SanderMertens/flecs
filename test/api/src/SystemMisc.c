@@ -1111,14 +1111,17 @@ void SystemMisc_one_named_column_of_two() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_sig_t sig = {0};
-    ecs_sig_init(world, NULL, "Position pos, Velocity", &sig);
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){{
+        { ecs_id(Position), .name = "pos" },
+        { ecs_id(Velocity) }
+    }}));
 
-    ecs_vector_t *terms = sig.terms;
-    test_int(ecs_vector_count(terms), 2);
+    test_int(f.term_count, 2);
+    test_int(f.term_count_actual, 2);
 
     ecs_term_t *
-    term = ecs_vector_get(terms, ecs_term_t, 0);
+    term = &f.terms[0];
     test_assert(term->oper == EcsAnd);
     test_assert(term->args[0].set == EcsSetDefault);
     test_assert(term->args[0].entity == EcsThis);
@@ -1126,7 +1129,7 @@ void SystemMisc_one_named_column_of_two() {
     test_assert(term->id == ecs_typeid(Position));
     test_str(term->name, "pos");
 
-    term = ecs_vector_get(terms, ecs_term_t, 1);
+    term = &f.terms[1];
     test_assert(term->oper == EcsAnd);
     test_assert(term->args[0].set == EcsSetDefault);
     test_assert(term->args[0].entity == EcsThis);
@@ -1134,7 +1137,7 @@ void SystemMisc_one_named_column_of_two() {
     test_assert(term->id == ecs_typeid(Velocity));
     test_str(term->name, NULL);
 
-    ecs_sig_deinit(&sig);
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -1145,14 +1148,17 @@ void SystemMisc_two_named_columns_of_two() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_sig_t sig = {0};
-    ecs_sig_init(world, NULL, "Position pos, Velocity vel", &sig);
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){{
+        { ecs_id(Position), .name = "pos" },
+        { ecs_id(Velocity), .name = "vel" }
+    }}));    
 
-    ecs_vector_t *terms = sig.terms;
-    test_int(ecs_vector_count(terms), 2);
+    test_int(f.term_count, 2);
+    test_int(f.term_count_actual, 2);
 
     ecs_term_t *
-    term = ecs_vector_get(terms, ecs_term_t, 0);
+    term = &f.terms[0];
     test_assert(term->oper == EcsAnd);
     test_assert(term->args[0].set == EcsSetDefault);
     test_assert(term->args[0].entity == EcsThis);
@@ -1160,7 +1166,7 @@ void SystemMisc_two_named_columns_of_two() {
     test_assert(term->id == ecs_typeid(Position));
     test_str(term->name, "pos");
 
-    term = ecs_vector_get(terms, ecs_term_t, 1);
+    term = &f.terms[1];
     test_assert(term->oper == EcsAnd);
     test_assert(term->args[0].set == EcsSetDefault);
     test_assert(term->args[0].entity == EcsThis);
@@ -1168,7 +1174,7 @@ void SystemMisc_two_named_columns_of_two() {
     test_assert(term->id == ecs_typeid(Velocity));
     test_str(term->name, "vel");
 
-    ecs_sig_deinit(&sig);
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }

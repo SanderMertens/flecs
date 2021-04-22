@@ -133,9 +133,8 @@ bool ecs_term_is_readonly(
     ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
     (void)query;
 
-    ecs_term_t *term = ecs_vector_get(
-        it->query->sig.terms, ecs_term_t, term_index - 1);
-
+    ecs_term_t *term = &it->query->filter.terms[term_index - 1];
+    
     if (term->inout == EcsIn) {
         return true;
     } else {

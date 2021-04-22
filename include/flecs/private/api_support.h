@@ -120,122 +120,31 @@ bool ecs_component_has_actions(
 //// Signature API
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef enum ecs_inout_kind_t {
-    EcsInOutDefault,
-    EcsInOut,
-    EcsIn,
-    EcsOut
-} ecs_inout_kind_t;
-
-typedef enum ecs_var_kind_t {
-    EcsVarDefault,
-    EcsVarIsVariable,
-    EcsVarIsEntity
-} ecs_var_kind_t;
-
-/** Type describing an operator used in an signature of a system signature */
-typedef enum ecs_oper_kind_t {
-    EcsAnd,
-    EcsOr,
-    EcsNot,
-    EcsOptional,
-    EcsOperAll,
-    EcsOperLast
-} ecs_oper_kind_t;
-
-#define EcsSetDefault (0)   /* Default set, SuperSet|Self for This subject */
-#define EcsSelf       (1)   /* Select self (inclusive) */
-#define EcsSuperSet   (2)   /* Select superset until predicate match */
-#define EcsSubSet     (4)   /* Select subset until predicate match */
-#define EcsAll        (8)   /* Walk full superset/subset, regardless of match */
-#define EcsNothing    (16)  /* Select nothing */
-
-/** Type that describes a single identifier in a term */
-typedef struct ecs_term_id_t {
-    ecs_entity_t entity;        /* Entity (default = This) */
-    char *name;                 /* Name (default = ".") */
-    ecs_var_kind_t var_kind;    /* Is id a variable (default yes if name is 
-                                 * all caps & entity is 0) */
-
-    /* Substitution parameters
-     * These parameters allow for substituting the id with its super- or subsets
-     * for a specified relationship. This enables functionality like selecting
-     * components from a base (IsA) or a parent (ChildOf) in a single term */
-
-    ecs_entity_t relation;      /* Relationship to substitute (default = IsA) */
-    uint8_t set;                /* Substitute as self, subset, superset */
-    int32_t min_depth;          /* Min depth of subset/superset substitution */
-    int32_t max_depth;          /* Max depth of subset/superset substitution */
-} ecs_term_id_t;
-
-/** Type that describes a single column in the system signature */
-typedef struct ecs_term_t {
-    ecs_inout_kind_t inout;     /* Access to contents matched with term */
-    ecs_term_id_t pred;         /* Predicate of term */
-    ecs_term_id_t args[2];      /* Subject, object of term */
-    ecs_oper_kind_t oper;       /* Operator of term */
-    ecs_entity_t role;          /* Role of term */
-    char *name;                 /* Name of term */
-
-    /* Can be used instead of pred, args and role to set component/pair id. Will
-     * be populated from predicate, object */
-    ecs_entity_t id;    
-} ecs_term_t;
-
-/** Type that stores a parsed signature */
-typedef struct ecs_sig_t {
-    char *name;                 /* Optional name used for debugging */
-    char *expr;                 /* Original expression string */
-    ecs_vector_t *terms;        /* Terms that contain parsed data */
-} ecs_sig_t;
-
 /* Resolve identifiers in term */
-int ecs_term_resolve(
-    ecs_world_t *world,
+int ecs_term_resolve_ids(
+    const ecs_world_t *world,
     const char *name,
     const char *expr,
-    int64_t column,
     ecs_term_t *term);
+
+/* Copy term to another term */
+void ecs_term_copy(
+    ecs_term_t *dst,
+    ecs_term_t *src);
 
 /* Free resources associated with term */
-void ecs_term_free(
+void ecs_term_fini(
     ecs_term_t *term);
 
-/** Parse signature. */
-FLECS_API
-int ecs_sig_init(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_sig_t *sig);
+bool ecs_identifier_is_0(
+    const char *id);
 
-/** Release signature resources */
-FLECS_API
-void ecs_sig_deinit(
-    ecs_sig_t *sig);
+bool ecs_identifier_is_var(
+    const char *id);
 
-/** Add column to signature. */
+/** Get filter from query */
 FLECS_API
-int ecs_sig_add(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    ecs_term_t *term);
-
-/* Convert sig to string */
-char* ecs_sig_str(
-    ecs_world_t *world,
-    ecs_sig_t *sig);
-
-/** Create query based on signature object. */
-FLECS_API
-ecs_query_t* ecs_query_new_w_sig(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_sig_t *sig);
-
-/** Get signature object from query */
-FLECS_API
-ecs_sig_t* ecs_query_get_sig(
+ecs_filter_t* ecs_query_get_filter(
     ecs_query_t *query);
 
 

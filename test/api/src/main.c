@@ -235,7 +235,14 @@ void Parser_escaped_all_caps_multi_char(void);
 void Parser_component_not(void);
 void Parser_pair_implicit_subject_not(void);
 void Parser_pair_explicit_subject_not(void);
+void Parser_2_component_not(void);
+void Parser_2_component_not_no_space(void);
 void Parser_component_optional(void);
+void Parser_2_component_optional(void);
+void Parser_2_component_optional_no_space(void);
+void Parser_from_and(void);
+void Parser_from_or(void);
+void Parser_from_not(void);
 void Parser_pair_implicit_subject_optional(void);
 void Parser_pair_explicit_subject_optional(void);
 void Parser_pred_implicit_subject_w_role(void);
@@ -2549,8 +2556,36 @@ bake_test_case Parser_testcases[] = {
         Parser_pair_explicit_subject_not
     },
     {
+        "2_component_not",
+        Parser_2_component_not
+    },
+    {
+        "2_component_not_no_space",
+        Parser_2_component_not_no_space
+    },
+    {
         "component_optional",
         Parser_component_optional
+    },
+    {
+        "2_component_optional",
+        Parser_2_component_optional
+    },
+    {
+        "2_component_optional_no_space",
+        Parser_2_component_optional_no_space
+    },
+    {
+        "from_and",
+        Parser_from_and
+    },
+    {
+        "from_or",
+        Parser_from_or
+    },
+    {
+        "from_not",
+        Parser_from_not
     },
     {
         "pair_implicit_subject_optional",
@@ -8019,7 +8054,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        96,
+        103,
         Parser_testcases
     },
     {

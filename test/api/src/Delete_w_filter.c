@@ -13,7 +13,7 @@ void Delete_w_filter_delete_1() {
     test_int( ecs_count(world, Mass), 3);
 
     ecs_bulk_delete(world, &(ecs_filter_t){
-        ecs_type(Position)
+        .include = ecs_type(Position)
     });
 
     test_int( ecs_count(world, Position), 0);
@@ -45,7 +45,7 @@ void Delete_w_filter_delete_2() {
     test_int( ecs_count(world, Mass), 3);
 
     ecs_bulk_delete(world, &(ecs_filter_t){
-        ecs_type(Type)
+        .include = ecs_type(Type)
     });
 
     test_int( ecs_count(world, Type), 0);
@@ -82,7 +82,7 @@ void Delete_w_filter_delete_1_2_types() {
 
     /* Delete both entities of Type_1 and Type_2 */
     ecs_bulk_delete(world, &(ecs_filter_t){
-        ecs_type(Type_1)
+        .include = ecs_type(Type_1)
     });
 
     test_int( ecs_count(world, Type_1), 0);
@@ -125,7 +125,7 @@ void Delete_w_filter_delete_2_2_types() {
 
     /* Delete both entities of Type_1 and Type_2 */
     ecs_bulk_delete(world, &(ecs_filter_t){
-        ecs_type(Type_1)
+        .include = ecs_type(Type_1)
     });
 
     test_int( ecs_count(world, Type_1), 0);
@@ -480,7 +480,7 @@ void Delete_w_filter_system_activate_test() {
     test_int( ecs_count(world, Position), 3);
 
     ecs_bulk_delete(world, &(ecs_filter_t){
-        ecs_type(Position)
+        .include = ecs_type(Position)
     });
 
     test_int( ecs_count(world, Position), 0);
@@ -497,7 +497,6 @@ void Delete_w_filter_system_activate_test() {
     ecs_fini(world);
 }
 
-
 void Delete_w_filter_skip_builtin_tables() {
     ecs_world_t *world = ecs_init();
 
@@ -510,6 +509,8 @@ void Delete_w_filter_skip_builtin_tables() {
     test_int( ecs_count(world, Position), 3);
 
     ecs_bulk_delete(world, NULL);
+    test_assert(ecs_is_valid(world, ecs_id(Position)));
+    test_assert(ecs_is_valid(world, Dummy));
 
     test_int( ecs_count(world, Position), 0);
     test_assert(!ecs_is_alive(world, e1));

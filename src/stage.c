@@ -664,6 +664,7 @@ void ecs_async_stage_free(
     ecs_stage_t *stage = (ecs_stage_t*)world;
     ecs_assert(stage->asynchronous == true, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_deinit(stage->world, stage);
+    ecs_os_free(stage);
 }
 
 bool ecs_stage_is_async(

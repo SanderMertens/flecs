@@ -10,9 +10,6 @@ ECS_TYPE_DECL(EcsComponentLifecycle);
 ECS_TYPE_DECL(EcsTrigger);
 ECS_TYPE_DECL(EcsSystem);
 ECS_TYPE_DECL(EcsTickSource);
-ECS_TYPE_DECL(EcsSignatureExpr);
-ECS_TYPE_DECL(EcsSignature);
-ECS_TYPE_DECL(EcsQuery);
 ECS_TYPE_DECL(EcsIterAction);
 ECS_TYPE_DECL(EcsContext);
 
@@ -40,8 +37,8 @@ void activate_in_columns(
     ecs_map_t *component_map,
     bool activate)
 {
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
-    int32_t i, count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
         if (terms[i].inout == EcsIn) {
@@ -101,8 +98,8 @@ void register_out_columns(
     EcsSystem *system_data)
 {
     ecs_query_t *query = system_data->query;
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
-    int32_t i, out_count = 0, count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t out_count = 0, i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
         if (terms[i].inout == EcsOut) {
@@ -222,7 +219,7 @@ void ecs_enable_system(
 }
 
 static
-void ecs_init_system(
+void ecs_system_init(
     ecs_world_t *world,
     ecs_entity_t system,
     ecs_iter_action_t action,
@@ -268,12 +265,6 @@ void ecs_init_system(
         /* If system is enabled, trigger enable components */
         activate_in_columns(world, query, world->on_enable_components, true);
 
-        /* Check if all non-table column constraints are met. If not, disable
-         * system (system will be enabled once constraints are met) */
-        if (!ecs_sig_check_constraints(world, &query->sig)) {
-            ecs_add_id(world, system, EcsDisabledIntern);
-        }
-
         /* If the query has a OnDemand system tag, register its [out] terms */
         if (ecs_has_id(world, system, EcsOnDemand)) {
             register_out_columns(world, system, sptr);
@@ -287,8 +278,8 @@ void ecs_init_system(
         }
 
         /* Check if system has out columns */
-        int32_t i, count = ecs_vector_count(query->sig.terms);
-        ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+        ecs_term_t *terms = query->filter.terms;
+        int32_t i, count = query->filter.term_count;
         for (i = 0; i < count; i ++) {
             if (terms[i].inout != EcsIn) {
                 break;
@@ -297,7 +288,7 @@ void ecs_init_system(
     }
 
     ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
-        ecs_get_name(world, system), query->sig.expr);
+        ecs_get_name(world, system), query->filter.expr);
 }
 
 /* -- Public API -- */
@@ -657,7 +648,6 @@ void OnSetTrigger(
     ecs_iter_t *it)
 {
     EcsTrigger *ct = ecs_term(it, EcsTrigger, 1);
-    
     trigger_set(it->world, it->entities, ct, it->count);
 }
 
@@ -719,63 +709,6 @@ void EnableSystem(
     }
 }
 
-/* Parse a signature expression into the ecs_sig_t data structure */
-static
-void CreateSignature(
-    ecs_iter_t *it) 
-{
-    ecs_world_t *world = it->world;
-    ecs_entity_t *entities = it->entities;
-
-    EcsSignatureExpr *signature = ecs_term(it, EcsSignatureExpr, 1);
-    
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = entities[i];
-        char *path = ecs_get_fullpath(world, e);
-
-        /* Parse the signature and add the result to the entity */
-        EcsSignature sig = {0};
-
-        if (ecs_sig_init(world, path, signature[i].expr, &sig.signature)) {
-            ecs_assert(false, ECS_INVALID_PARAMETER, signature[i].expr);
-        }
-
-        /* If sig has FromSystem columns, add components to the entity */
-        ecs_vector_each(sig.signature.terms, ecs_term_t, term, {
-            if (term->args[0].entity == e) {
-                ecs_add_id(world, e, term->id);
-            }
-        });
-
-        ecs_set_ptr(world, e, EcsSignature, &sig);
-
-        ecs_os_free(path);
-    }
-}
-
-/* Create a query from a signature */
-static
-void CreateQuery(
-    ecs_iter_t *it) 
-{
-    ecs_world_t *world = it->world;
-    ecs_entity_t *entities = it->entities;
-
-    EcsSignature *signature = ecs_term(it, EcsSignature, 1);
-    
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = entities[i];
-
-        if (!ecs_has(world, e, EcsQuery)) {
-            EcsQuery query = {0};
-            query.query = ecs_query_new_w_sig(world, e, &signature[i].signature);
-            ecs_set_ptr(world, e, EcsQuery, &query);
-        }
-    }
-}
-
 /* Create a system from a query and an action */
 static
 void CreateSystem(
@@ -796,7 +729,7 @@ void CreateSystem(
             ctx_ptr = (void*)ctx[i].ctx;
         }
 
-        ecs_init_system(world, e, action[i].action, query[i].query, ctx_ptr);
+        ecs_system_init(world, e, action[i].action, query[i].query, ctx_ptr);
     }
 }
 
@@ -807,12 +740,16 @@ void bootstrap_set_system(
     const char *expr,
     ecs_iter_action_t action)
 {
-    ecs_sig_t sig = {0};
-    ecs_entity_t sys = ecs_set(world, 0, EcsName, {.value = name});
-    ecs_add_id(world, sys, EcsOnSet);
-    ecs_sig_init(world, name, expr, &sig);
-    ecs_query_t *query = ecs_query_new_w_sig(world, sys, &sig);
-    ecs_init_system(world, sys, action, query, NULL);
+    ecs_entity_t system = ecs_set(world, 0, EcsName, {.value = name});
+    ecs_add_id(world, system, EcsOnSet);
+
+    ecs_query_t *query = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.name = name,
+        .filter.expr = expr,
+        .system = system
+    });
+
+    ecs_system_init(world, system, action, query, NULL);
 }
 
 ecs_entity_t ecs_new_system(
@@ -820,7 +757,7 @@ ecs_entity_t ecs_new_system(
     ecs_entity_t e,
     const char *name,
     ecs_entity_t tag,
-    const char *signature,
+    const char *expr,
     ecs_iter_action_t action)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
@@ -831,35 +768,46 @@ ecs_entity_t ecs_new_system(
         result = ecs_new_entity(world, 0, name, NULL);
     }
 
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+
     if (tag) {
         ecs_add_id(world, result, tag);
     }
+    
+    ecs_set(world, result, EcsIterAction, {action});
 
-    bool added = false;
-    EcsSignatureExpr *expr = ecs_get_mut(world, result, EcsSignatureExpr, &added);
-    if (added) {
-        expr->expr = signature;
-    } else {
-        if (!expr->expr || !signature) {
-            if (expr->expr != signature) {
-                if (expr->expr && !strcmp(expr->expr, "0")) {
+    const EcsQuery *q = ecs_get(world, result, EcsQuery);
+    if (q) {
+        const char *query_expr = q->query->filter.expr;
+        if (!query_expr || !expr) {
+            if (query_expr != expr) {
+                if (query_expr && !strcmp(query_expr, "0")) {
                     /* Ok */
-                } else if (signature && !strcmp(signature, "0")) {
+                } else if (expr && !strcmp(expr, "0")) {
                     /* Ok */
                 } else {
                     ecs_abort(ECS_ALREADY_DEFINED, NULL);
                 }
             }
         } else {
-            if (strcmp(expr->expr, signature)) {
+            if (strcmp(query_expr, expr)) {
                 ecs_abort(ECS_ALREADY_DEFINED, name);
             }
         }
+    } else {
+        ecs_query_t *query = ecs_query_init(world, &(ecs_query_desc_t){
+            .filter.name = name,
+            .filter.expr = expr,
+            .system = result
+        });
+
+        if (!query) {
+            ecs_delete(world, result);
+            return 0;
+        }
+
+        ecs_set(world, result, EcsQuery, {query});
     }
-
-    ecs_modified(world, result, EcsSignatureExpr);
-
-    ecs_set(world, result, EcsIterAction, {action});
 
     return result;
 }
@@ -919,9 +867,6 @@ void FlecsSystemImport(
     ecs_bootstrap_component(world, EcsTrigger);
     ecs_bootstrap_component(world, EcsSystem);
     ecs_bootstrap_component(world, EcsTickSource);
-    ecs_bootstrap_component(world, EcsSignatureExpr);
-    ecs_bootstrap_component(world, EcsSignature);
-    ecs_bootstrap_component(world, EcsQuery);
     ecs_bootstrap_component(world, EcsIterAction);
     ecs_bootstrap_component(world, EcsContext);
 
@@ -943,9 +888,6 @@ void FlecsSystemImport(
     ECS_TYPE_IMPL(EcsTrigger);
     ECS_TYPE_IMPL(EcsSystem);
     ECS_TYPE_IMPL(EcsTickSource);
-    ECS_TYPE_IMPL(EcsSignatureExpr);
-    ECS_TYPE_IMPL(EcsSignature);
-    ECS_TYPE_IMPL(EcsQuery);
     ECS_TYPE_IMPL(EcsIterAction);
     ECS_TYPE_IMPL(EcsContext);
 
@@ -956,25 +898,31 @@ void FlecsSystemImport(
             .dtor = ecs_colsystem_dtor
         });
 
-    /* Create systems necessary to create systems */
-    bootstrap_set_system(world, "CreateSignature", "SignatureExpr", CreateSignature);
-    bootstrap_set_system(world, "CreateQuery", "Signature, IterAction", CreateQuery);
-    bootstrap_set_system(world, "CreateSystem", "Query, IterAction, ?Context", CreateSystem);
+    /* Create systems that creates systems */
+    bootstrap_set_system(world,
+        "CreateSystem", "Query, IterAction, ?Context, SYSTEM:Hidden", 
+        CreateSystem);
 
     /* From here we can create systems */
 
     /* Register OnSet system for EcsComponentLifecycle */
-    ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, ComponentLifecycle, SYSTEM:Hidden);
+    ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, 
+        ComponentLifecycle, SYSTEM:Hidden);
 
     /* Register OnSet system for triggers */
-    ECS_SYSTEM(world, OnSetTrigger, EcsOnSet, Trigger, SYSTEM:Hidden);
+    ECS_SYSTEM(world, OnSetTrigger, EcsOnSet, 
+        Trigger, SYSTEM:Hidden);
 
     /* System that sets ctx for a trigger */
-    ECS_SYSTEM(world, OnSetTriggerCtx, EcsOnSet, Trigger, Context, SYSTEM:Hidden);
+    ECS_SYSTEM(world, OnSetTriggerCtx, EcsOnSet, 
+        Trigger, Context, SYSTEM:Hidden);
 
     /* Monitors that trigger when a system is enabled or disabled */
-    ECS_SYSTEM(world, DisableSystem, EcsMonitor, System, Disabled || DisabledIntern, SYSTEM:Hidden);
-    ECS_SYSTEM(world, EnableSystem, EcsMonitor, System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
+    ECS_SYSTEM(world, DisableSystem, EcsMonitor, 
+        System, Disabled || DisabledIntern, SYSTEM:Hidden);
+
+    ECS_SYSTEM(world, EnableSystem, EcsMonitor, 
+        System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
 }
 
 #endif

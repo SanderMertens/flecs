@@ -237,7 +237,7 @@ void add_monitor(
 }
 
 /* This function is called when a query is matched with a table. A table keeps
- * a list of tables that match so that they can be notified when the table
+ * a list of queries that match so that they can be notified when the table
  * becomes empty / non-empty. */
 static
 void register_monitor(
@@ -322,8 +322,8 @@ void register_on_set(
 
         /* Add system to each matched column. This makes it easy to get the list 
          * of systems when setting a single component. */
-        ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
-        int32_t i, count = ecs_vector_count(query->sig.terms);
+        ecs_term_t *terms = query->filter.terms;
+        int32_t i, count = query->filter.term_count;
         
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];

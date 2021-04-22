@@ -43,14 +43,6 @@
 /* Maximum length of an entity name, including 0 terminator */
 #define ECS_MAX_NAME_LENGTH (64)
 
-/** Callback used by the system signature expression parser. */
-typedef int (*ecs_parse_action_t)(
-    ecs_world_t *world,                 
-    ecs_sig_t *sig,
-    int64_t pos,
-    ecs_term_t *term,
-    void *ctx);
-
 /** Component-specific data */
 typedef struct ecs_type_info_t {
     ecs_entity_t component;
@@ -277,10 +269,7 @@ typedef struct ecs_query_event_t {
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
     /* Signature of query */
-    ecs_sig_t sig;
-
-    /* Number of actual columns in query, with OR terms collapsed */
-    int32_t column_count;
+    ecs_filter_t filter;
 
     /* Reference to world */
     ecs_world_t *world;

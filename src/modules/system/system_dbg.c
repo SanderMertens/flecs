@@ -64,9 +64,8 @@ ecs_type_t ecs_dbg_get_column_type(
         return NULL;
     }
     
-    ecs_term_t *terms = ecs_vector_first(
-        system_data->query->sig.terms, ecs_term_t);
-    int32_t count = ecs_vector_count(system_data->query->sig.terms);
+    ecs_term_t *terms = system_data->query->filter.terms;
+    int32_t count = system_data->query->filter.term_count;
 
     if (count < column_index) {
         return NULL;

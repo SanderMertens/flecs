@@ -32,9 +32,6 @@ extern ecs_type_t
     ecs_type(EcsTrigger),
     ecs_type(EcsSystem),
     ecs_type(EcsTickSource),
-    ecs_type(EcsSignatureExpr),
-    ecs_type(EcsSignature),
-    ecs_type(EcsQuery),
     ecs_type(EcsIterAction),
     ecs_type(EcsContext);
 
@@ -43,21 +40,6 @@ typedef struct EcsTickSource {
     bool tick;                 /* True if providing tick */
     FLECS_FLOAT time_elapsed;  /* Time elapsed since last tick */
 } EcsTickSource;
-
-/* Signature expression */
-typedef struct EcsSignatureExpr {
-    const char *expr;
-} EcsSignatureExpr;
-
-/* Parsed signature */
-typedef struct EcsSignature {
-    ecs_sig_t signature;
-} EcsSignature;
-
-/* Query component */
-typedef struct EcsQuery {
-    ecs_query_t *query;
-} EcsQuery;
 
 /* System action */
 typedef struct EcsIterAction {

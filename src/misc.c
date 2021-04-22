@@ -110,6 +110,26 @@ void* ecs_os_memdup(
     return dst;  
 }
 
+int ecs_entity_compare(
+    ecs_entity_t e1, 
+    const void *ptr1, 
+    ecs_entity_t e2, 
+    const void *ptr2) 
+{
+    (void)ptr1;
+    (void)ptr2;
+    return (e1 > e2) - (e1 < e2);
+}
+
+int ecs_entity_compare_qsort(
+    const void *e1,
+    const void *e2)
+{
+    ecs_entity_t v1 = *(ecs_entity_t*)e1;
+    ecs_entity_t v2 = *(ecs_entity_t*)e2;
+    return ecs_entity_compare(v1, NULL, v2, NULL);
+}
+
 /*
     This code was taken from sokol_time.h 
     

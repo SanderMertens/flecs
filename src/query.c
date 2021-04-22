@@ -16,8 +16,7 @@ static
 ecs_entity_t get_cascade_component(
     ecs_query_t *query)
 {
-    ecs_term_t *term = ecs_vector_first(query->sig.terms, ecs_term_t);
-    return term[query->cascade_by - 1].id;
+    return query->filter.terms[query->cascade_by - 1].id;
 }
 #endif
 
@@ -177,8 +176,10 @@ const char* query_name(
 {
     if (q->system) {
         return ecs_get_name(world, q->system);
+    } else if (q->filter.name) {
+        return q->filter.name;
     } else {
-        return q->sig.expr;
+        return q->filter.expr;
     }
 }
 
@@ -195,8 +196,8 @@ int get_comp_and_src(
 {
     ecs_entity_t component = 0, entity = 0;
 
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
-    int32_t term_count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t term_count = query->filter.term_count;
     ecs_term_t *term = &terms[t];
     ecs_term_id_t *subj = &term->args[0];
     ecs_oper_kind_t op = term->oper;
@@ -249,10 +250,12 @@ int get_comp_and_src(
                 result = !result;
             }
 
-            /* Optional terms may not have the component. OperAll terms contain
+            /* Optional terms may not have the component. *From terms contain
              * the id of a type of which the contents must match, but the type
              * itself does not need to match. */
-            if (op == EcsOptional || op == EcsOperAll) {
+            if (op == EcsOptional || op == EcsAndFrom || op == EcsOrFrom || 
+                op == EcsNotFrom) 
+            {
                 result = true;
             }
 
@@ -431,7 +434,7 @@ int32_t get_component_index(
          * reference (see below) */           
     }
 
-    if (op == EcsOperAll) {
+    if (op == EcsAndFrom || op == EcsOrFrom || op == EcsNotFrom) {
         result = 0;
     } else if (op == EcsOptional) {
         /* If table doesn't have the field, mark it as no data */
@@ -529,8 +532,8 @@ int32_t count_traits(
     const ecs_query_t *query,
     ecs_type_t type)
 {
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
-    int32_t i, count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
     int32_t first_count = 0, trait_count = 0;
 
     for (i = 0; i < count; i ++) {
@@ -555,15 +558,20 @@ int32_t count_traits(
 }
 
 static
-ecs_type_t get_column_type(
+ecs_type_t get_term_type(
     ecs_world_t *world,
-    ecs_oper_kind_t oper,
+    ecs_term_t *term,
     ecs_entity_t component)
 {
-    if (oper == EcsOperAll) {
+    ecs_oper_kind_t oper = term->oper;
+
+    if (oper == EcsAndFrom || oper == EcsOrFrom || oper == EcsNotFrom) {
         const EcsType *type = ecs_get(world, component, EcsType);
-        ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
-        return type->normalized;
+        if (type) {
+            return type->normalized;
+        } else {
+            return ecs_get_type(world, component);
+        }
     } else {
         return ecs_type_from_id(world, component);
     }    
@@ -577,8 +585,8 @@ void add_table(
     ecs_table_t *table)
 {
     ecs_type_t table_type = NULL;
-    int32_t t, c, term_count = ecs_vector_count(query->sig.terms);
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t t, c, term_count = query->filter.term_count;
 
     if (table) {
         table_type = table->type;
@@ -616,16 +624,16 @@ add_trait:
 
     if (term_count) {
         /* Array that contains the system column to table column mapping */
-        table_data.iter_data.columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * query->column_count);
+        table_data.iter_data.columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * query->filter.term_count_actual);
         ecs_assert(table_data.iter_data.columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Store the components of the matched table. In the case of OR expressions,
         * components may differ per matched table. */
-        table_data.iter_data.components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * query->column_count);
+        table_data.iter_data.components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * query->filter.term_count_actual);
         ecs_assert(table_data.iter_data.components != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Also cache types, so no lookup is needed while iterating */
-        table_data.iter_data.types = ecs_os_malloc(ECS_SIZEOF(ecs_type_t) * query->column_count);
+        table_data.iter_data.types = ecs_os_malloc(ECS_SIZEOF(ecs_type_t) * query->filter.term_count_actual);
         ecs_assert(table_data.iter_data.types != NULL, ECS_OUT_OF_MEMORY, NULL);        
     }
 
@@ -713,7 +721,7 @@ add_trait:
         }
 
         table_data.iter_data.components[c] = component;
-        table_data.iter_data.types[c] = get_column_type(world, op, component);
+        table_data.iter_data.types[c] = get_term_type(world, term, component);
 
         c ++;
     }
@@ -849,7 +857,7 @@ bool ecs_query_match(
         return false;
     }
 
-    ecs_type_t type, table_type = table->type;
+    ecs_type_t table_type = table->type;
 
     /* Don't match disabled entities */
     if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_owns_id(
@@ -872,8 +880,8 @@ bool ecs_query_match(
         return false;
     }
 
-    int32_t i, term_count = ecs_vector_count(query->sig.terms);
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, term_count = query->filter.term_count;
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -912,14 +920,9 @@ bool ecs_query_match(
                 return false;
             }
  
-        } else if (oper == EcsOperAll) {
-            bool match_all = oper == EcsOperAll;
-            if (match_all) {
-                const EcsType *type_ptr = ecs_get(world, term->id, EcsType);
-                type = type_ptr->normalized;
-            }
-
-            int32_t j, count = ecs_vector_count(type);
+        } else if (oper == EcsAndFrom || oper == EcsOrFrom || oper == EcsNotFrom) {
+            ecs_type_t type = get_term_type((ecs_world_t*)world, term, term->id);
+            int32_t match_count = 0, j, count = ecs_vector_count(type);
             ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
 
             for (j = 0; j < count; j ++) {
@@ -928,9 +931,19 @@ bool ecs_query_match(
                 tmp_term.id = ids[j];
                 tmp_term.pred.entity = ids[j];
 
-                if (!match_term(world, table_type, &tmp_term, failure_info)) {
-                    return false;
+                if (match_term(world, table_type, &tmp_term, failure_info)) {
+                    match_count ++;
                 }
+            }
+
+            if (oper == EcsAndFrom && match_count != count) {
+                return false;
+            }
+            if (oper == EcsOrFrom && match_count == 0) {
+                return false;
+            }
+            if (oper == EcsNotFrom && match_count != 0) {
+                return false;
             }
         }
     }
@@ -1370,10 +1383,10 @@ void sort_tables(
 
 static
 bool has_refs(
-    ecs_sig_t *sig)
+    ecs_query_t *query)
 {
-    int32_t i, count = ecs_vector_count(sig->terms);
-    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -1396,10 +1409,10 @@ bool has_refs(
 
 static
 bool has_traits(
-    ecs_sig_t *sig)
+    ecs_query_t *query)
 {
-    int32_t i, count = ecs_vector_count(sig->terms);
-    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
         if (is_column_trait(&terms[i])) {
@@ -1415,7 +1428,11 @@ void register_monitors(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    ecs_vector_each(query->sig.terms, ecs_term_t, term, {
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
+
+    for (i = 0; i < count; i++) {
+        ecs_term_t *term = &terms[i];
         ecs_term_id_t *subj = &term->args[0];
 
         /* If component is requested with CASCADE source register component as a
@@ -1442,7 +1459,7 @@ void register_monitors(
                 ecs_monitor_register(world, 0, term->id, query);
             }
         }
-    });
+    };
 }
 
 static
@@ -1450,8 +1467,8 @@ void process_signature(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    int i, count = ecs_vector_count(query->sig.terms);
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -1528,28 +1545,11 @@ void process_signature(
         }
     }
 
-    query->flags |= (ecs_flags32_t)(has_refs(&query->sig) * EcsQueryHasRefs);
-    query->flags |= (ecs_flags32_t)(has_traits(&query->sig) * EcsQueryHasTraits);
+    query->flags |= (ecs_flags32_t)(has_refs(query) * EcsQueryHasRefs);
+    query->flags |= (ecs_flags32_t)(has_traits(query) * EcsQueryHasTraits);
 
     if (!(query->flags & EcsQueryIsSubquery)) {
         register_monitors(world, query);
-    }
-
-    /* Count number of columns. OR expressions have multiple terms but are
-     * grouped under the same query column */
-    query->column_count = 0;
-
-    for (i = 0; i < count; i ++) {
-        ecs_term_t *term = &terms[i];
-        query->column_count ++;
-
-        if (term->oper == EcsOr) {
-            do {
-                i ++;
-                term = &terms[i];
-            } while (i < count && term->oper == EcsOr);
-            i --;
-        }
     }
 }
 
@@ -2015,22 +2015,8 @@ void rematch_tables(
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
-    bool satisfied = query->constraints_satisfied = 
-        ecs_sig_check_constraints(world, &query->sig);
-
-    /* Enable/disable system. After constraint checking was added to regular
-     * query iterators this is strictly no longer necessary, but is still there
-     * to not break backwards compatibility, and should be harmless.
-     *
-     * TODO: remove when moving to v3
-     */
-    if (query->system) {
-        if (satisfied) {
-            ecs_remove_id(world, query->system, EcsDisabledIntern);
-        } else {
-            ecs_add_id(world, query->system, EcsDisabledIntern);
-        }
-    }        
+    query->constraints_satisfied = ecs_filter_match_entity(
+        world, &query->filter, 0);      
 }
 
 static
@@ -2101,51 +2087,54 @@ void ecs_query_notify(
     }
 }
 
+
 /* -- Public API -- */
 
-static
-ecs_query_t* ecs_query_new_w_sig_intern(
+ecs_query_t* ecs_query_init(
     ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_sig_t *sig,
-    bool is_subquery)
+    const ecs_query_desc_t *desc)
 {
+    ecs_filter_t f;
+    if (ecs_filter_init(world, &f, &desc->filter)) {
+        return NULL;
+    }
+
     ecs_query_t *result = ecs_os_calloc(sizeof(ecs_query_t));
     result->world = world;
-    result->sig = *sig;
+    result->filter = f;
     result->table_indices = ecs_map_new(ecs_table_indices_t, 0);
     result->tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->empty_tables = ecs_vector_new(ecs_matched_table_t, 0);
-    result->system = system;
+    result->system = desc->system;
     result->prev_match_count = -1;
 
-    if (is_subquery) {
+    if (desc->parent != NULL) {
         result->flags |= EcsQueryIsSubquery;
     }
 
     process_signature(world, result);
 
     ecs_trace_2("query #[green]%s#[reset] created with expression #[red]%s", 
-        query_name(world, result), result->sig.expr);
+        query_name(world, result), result->filter.expr);
 
     ecs_log_push();
 
-    if (!is_subquery) {
+    if (!desc->parent) {
         /* Register query with world */
         ecs_query_t **elem = ecs_vector_add(&world->queries, ecs_query_t*);
         *elem = result;
 
         if (result->flags & EcsQueryNeedsTables) {
-            if (system) {
-                if (ecs_has_id(world, system, EcsMonitor)) {
+            if (desc->system) {
+                if (ecs_has_id(world, desc->system, EcsMonitor)) {
                     result->flags |= EcsQueryMonitor;
                 }
                 
-                if (ecs_has_id(world, system, EcsOnSet)) {
+                if (ecs_has_id(world, desc->system, EcsOnSet)) {
                     result->flags |= EcsQueryOnSet;
                 }
 
-                if (ecs_has_id(world, system, EcsUnSet)) {
+                if (ecs_has_id(world, desc->system, EcsUnSet)) {
                     result->flags |= EcsQueryUnSet;
                 }  
             }      
@@ -2156,60 +2145,52 @@ ecs_query_t* ecs_query_new_w_sig_intern(
              * preprocessed when the query is evaluated. */
             add_table(world, result, NULL);
         }
+    } else {
+        add_subquery(world, desc->parent, result);
+        result->parent = desc->parent;
     }
 
-    result->constraints_satisfied = 
-        ecs_sig_check_constraints(world, &result->sig);
+    result->constraints_satisfied = ecs_filter_match_entity(
+        world, &result->filter, 0);
 
     if (result->cascade_by) {
         result->group_table = rank_by_depth;
     }
 
+    /* If a system is specified, ensure that if there are any subjects in the
+     * filter that refer to the system, the component is added */
+    if (desc->system)  {
+        int32_t t, term_count = result->filter.term_count;
+        ecs_term_t *terms = result->filter.terms;
+
+        for (t = 0; t < term_count; t ++) {
+            ecs_term_t *term = &terms[t];
+            if (term->args[0].entity == desc->system) {
+                ecs_add_id(world, desc->system, term->id);
+            }
+        }        
+    }
+
+    if (desc->order_by) {
+        ecs_query_order_by(world, result, desc->order_by_id, desc->order_by);
+    }
+
+    if (desc->group_by) {
+        ecs_query_group_by(world, result, desc->group_by_id, desc->group_by);
+    }
+
     ecs_log_pop();
 
-    /* Make sure application can't try to free sig resources */
-    *sig = (ecs_sig_t){ 0 };
-
     return result;
 }
 
-ecs_query_t* ecs_query_new_w_sig(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_sig_t *sig)
-{
-    return ecs_query_new_w_sig_intern(world, system, sig, false);
-}
-
-ecs_query_t* ecs_query_new(
-    ecs_world_t *world,
-    const char *expr)
-{
-    ecs_sig_t sig = { 0 };
-    ecs_sig_init(world, NULL, expr, &sig);
-    return ecs_query_new_w_sig(world, 0, &sig);
-}
-
-ecs_query_t* ecs_subquery_new(
-    ecs_world_t *world,
-    ecs_query_t *parent,
-    const char *expr)
-{
-    ecs_sig_t sig = { 0 };
-    ecs_sig_init(world, NULL, expr, &sig);
-    ecs_query_t *result = ecs_query_new_w_sig_intern(world, 0, &sig, true);
-    result->parent = parent;
-    add_subquery(world, parent, result);
-    return result;
-}
-
-ecs_sig_t* ecs_query_get_sig(
+ecs_filter_t* ecs_query_get_filter(
     ecs_query_t *query)
 {
-    return &query->sig;
+    return &query->filter;
 }
 
-void ecs_query_free(
+void ecs_query_fini(
     ecs_query_t *query)
 {
     ecs_world_t *world = query->world;
@@ -2255,7 +2236,7 @@ void ecs_query_free(
     ecs_vector_free(query->tables);
     ecs_vector_free(query->empty_tables);
     ecs_vector_free(query->table_slices);
-    ecs_sig_deinit(&query->sig);
+    ecs_filter_fini(&query->filter);
 
     /* Find query in vector */
     if (!(query->flags & EcsQueryIsSubquery) && world->queries) {
@@ -2315,7 +2296,7 @@ ecs_iter_t ecs_query_iter_page(
     return (ecs_iter_t){
         .world = world,
         .query = query,
-        .column_count = query->column_count,
+        .column_count = query->filter.term_count_actual,
         .table_count = table_count,
         .inactive_table_count = ecs_vector_count(query->empty_tables),
         .iter.query = it
@@ -2354,7 +2335,7 @@ void ecs_query_set_iter(
 
     it->world = NULL;
     it->query = query;
-    it->column_count = query->column_count;
+    it->column_count = query->filter.term_count_actual;
     it->table_count = 1;
     it->inactive_table_count = 0;
     it->table_columns = data->columns;
@@ -2715,10 +2696,8 @@ void mark_columns_dirty(
     ecs_table_t *table = table_data->iter_data.table;
 
     if (table && table->dirty_state) {
-        int32_t i, c = 0, count = ecs_vector_count(query->sig.terms);
-        ecs_term_t *terms = ecs_vector_first(
-            query->sig.terms, ecs_term_t);
-
+        ecs_term_t *terms = query->filter.terms;
+        int32_t c = 0, i, count = query->filter.term_count;
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
             ecs_term_id_t *subj = &term->args[0];

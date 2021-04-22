@@ -87,14 +87,6 @@ extern "C" {
 /* Maximum length of an entity name, including 0 terminator */
 #define ECS_MAX_NAME_LENGTH (64)
 
-/** Callback used by the system signature expression parser. */
-typedef int (*ecs_parse_action_t)(
-    ecs_world_t *world,                 
-    ecs_sig_t *sig,
-    int64_t pos,
-    ecs_term_t *term,
-    void *ctx);
-
 /** Component-specific data */
 typedef struct ecs_type_info_t {
     ecs_entity_t component;
@@ -321,10 +313,7 @@ typedef struct ecs_query_event_t {
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
     /* Signature of query */
-    ecs_sig_t sig;
-
-    /* Number of actual columns in query, with OR terms collapsed */
-    int32_t column_count;
+    ecs_filter_t filter;
 
     /* Reference to world */
     ecs_world_t *world;
@@ -1170,15 +1159,6 @@ void ecs_query_notify(
     ecs_query_t *query,
     ecs_query_event_t *event);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Signature API
-////////////////////////////////////////////////////////////////////////////////
-
-/* Check if all non-table column constraints are met */
-bool ecs_sig_check_constraints(
-    ecs_world_t *world,
-    ecs_sig_t *sig);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Time API
@@ -1270,16 +1250,17 @@ void ecs_set_symbol(
     ecs_entity_t e,
     const char *name);
 
-/* Utility that print a descriptive error string*/
-//void ecs_print_error_string(const char *error_description, const char* signature, const char* system_id, const char* component_id);
-//void ecs_print_error_string(const char* signature, const char *system_id, const char *error_description, const char *component_id);
+/* Compare function for entity ids */
+int ecs_entity_compare(
+    ecs_entity_t e1, 
+    const void *ptr1, 
+    ecs_entity_t e2, 
+    const void *ptr2); 
 
-/* Utility that parses system signature */
-int ecs_parse_expr(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    ecs_parse_action_t action,
-    void *ctx);
+/* Compare function for entity ids which can be used with qsort */
+int ecs_entity_compare_qsort(
+    const void *e1,
+    const void *e2);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(
@@ -1986,7 +1967,7 @@ void add_monitor(
 }
 
 /* This function is called when a query is matched with a table. A table keeps
- * a list of tables that match so that they can be notified when the table
+ * a list of queries that match so that they can be notified when the table
  * becomes empty / non-empty. */
 static
 void register_monitor(
@@ -2071,8 +2052,8 @@ void register_on_set(
 
         /* Add system to each matched column. This makes it easy to get the list 
          * of systems when setting a single component. */
-        ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
-        int32_t i, count = ecs_vector_count(query->sig.terms);
+        ecs_term_t *terms = query->filter.terms;
+        int32_t i, count = query->filter.term_count;
         
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
@@ -7685,6 +7666,7 @@ void ecs_async_stage_free(
     ecs_stage_t *stage = (ecs_stage_t*)world;
     ecs_assert(stage->asynchronous == true, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_deinit(stage->world, stage);
+    ecs_os_free(stage);
 }
 
 bool ecs_stage_is_async(
@@ -9562,12 +9544,12 @@ int32_t ecs_column_index_from_name(
     const ecs_iter_t *it,
     const char *name)
 {
-    ecs_term_t *term = NULL;
     if (it->query) {
-        int32_t i, count = ecs_vector_count(it->query->sig.terms);
+        ecs_term_t *terms = it->query->filter.terms;
+        int32_t i, count = it->query->filter.term_count;
+
         for (i = 0; i < count; i ++) {
-            term = ecs_vector_get(
-                it->query->sig.terms, ecs_term_t, i);
+            ecs_term_t *term = &terms[i];
             if (term->name) {
                 if (!strcmp(name, term->name)) {
                     return i + 1;
@@ -9641,6 +9623,32 @@ size_t ecs_table_column_size(
     int32_t column_index)
 {
     return ecs_iter_column_size(it, column_index);
+}
+
+ecs_query_t* ecs_query_new(
+    ecs_world_t *world,
+    const char *expr)
+{
+    return ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.expr = expr
+    });
+}
+
+void ecs_query_free(
+    ecs_query_t *query)
+{
+    ecs_query_fini(query);
+}
+
+ecs_query_t* ecs_subquery_new(
+    ecs_world_t *world,
+    ecs_query_t *parent,
+    const char *expr)
+{
+    return ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.expr = expr,
+        .parent = parent
+    });
 }
 
 #endif
@@ -11646,6 +11654,1033 @@ void ecs_bulk_remove_entity(
         merge_table(world, dst_table, table, NULL, &removed);
         removed.count = 0;        
     }    
+}
+
+#endif
+
+#ifdef FLECS_PARSER
+
+
+/* TODO: after new query parser is working & code is ported to new types for
+ *       storing terms, this code needs a big cleanup */
+
+#define ECS_ANNOTATION_LENGTH_MAX (16)
+
+#define TOK_COLON ':'
+#define TOK_AND ','
+#define TOK_OR "||"
+#define TOK_NOT '!'
+#define TOK_OPTIONAL '?'
+#define TOK_BITWISE_OR '|'
+#define TOK_TRAIT '>'
+#define TOK_FOR "FOR"
+#define TOK_NAME_SEP '.'
+#define TOK_BRACKET_OPEN '['
+#define TOK_BRACKET_CLOSE ']'
+#define TOK_WILDCARD '*'
+#define TOK_SINGLETON '$'
+#define TOK_PAREN_OPEN '('
+#define TOK_PAREN_CLOSE ')'
+#define TOK_AS_ENTITY '\\'
+
+#define TOK_SELF "self"
+#define TOK_SUPERSET "superset"
+#define TOK_SUBSET "subset"
+#define TOK_ALL "all"
+
+#define TOK_ANY "ANY"
+#define TOK_OWNED "OWNED"
+#define TOK_SHARED "SHARED"
+#define TOK_SYSTEM "SYSTEM"
+#define TOK_PARENT "PARENT"
+#define TOK_CASCADE "CASCADE"
+
+#define TOK_ROLE_CHILDOF "CHILDOF"
+#define TOK_ROLE_INSTANCEOF "INSTANCEOF"
+#define TOK_ROLE_TRAIT "TRAIT"
+#define TOK_ROLE_PAIR "PAIR"
+#define TOK_ROLE_AND "AND"
+#define TOK_ROLE_OR "OR"
+#define TOK_ROLE_XOR "XOR"
+#define TOK_ROLE_NOT "NOT"
+#define TOK_ROLE_SWITCH "SWITCH"
+#define TOK_ROLE_CASE "CASE"
+#define TOK_ROLE_DISABLED "DISABLED"
+
+#define TOK_IN "in"
+#define TOK_OUT "out"
+#define TOK_INOUT "inout"
+
+#define ECS_MAX_TOKEN_SIZE (256)
+
+typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
+
+/** Skip spaces when parsing signature */
+static
+const char *skip_space(
+    const char *ptr)
+{
+    while (isspace(*ptr)) {
+        ptr ++;
+    }
+    return ptr;
+}
+
+/* -- Private functions -- */
+
+static
+bool valid_token_start_char(
+    char ch)
+{
+    if (ch && (isalpha(ch) || (ch == '.') || (ch == '_') || (ch == '*') ||
+        (ch == '0') || (ch == TOK_AS_ENTITY) || isdigit(ch))) 
+    {
+        return true;
+    }
+
+    return false;
+}
+
+static
+bool valid_token_char(
+    char ch)
+{
+    if (ch && (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.')) {
+        return true;
+    }
+
+    return false;
+}
+
+static
+bool valid_operator_char(
+    char ch)
+{
+    if (ch == TOK_OPTIONAL || ch == TOK_NOT) {
+        return true;
+    }
+
+    return false;
+}
+
+static
+const char* parse_digit(
+    const char *name,
+    const char *sig,
+    int64_t column,
+    const char *ptr,
+    char *token_out)
+{
+    ptr = skip_space(ptr);
+    char *tptr = token_out, ch = ptr[0];
+
+    if (!isdigit(ch)) {
+        ecs_parser_error(name, sig, column, 
+            "invalid start of number '%s'", ptr);
+        return NULL;
+    }
+
+    tptr[0] = ch;
+    tptr ++;
+    ptr ++;
+
+    for (; (ch = *ptr); ptr ++) {
+        if (!isdigit(ch)) {
+            break;
+        }
+
+        tptr[0] = ch;
+        tptr ++;
+    }
+
+    tptr[0] = '\0';
+
+    return skip_space(ptr);
+}
+
+
+static
+const char* parse_token(
+    const char *name,
+    const char *sig,
+    int64_t column,
+    const char *ptr,
+    char *token_out)
+{
+    ptr = skip_space(ptr);
+    char *tptr = token_out, ch = ptr[0];
+
+    if (!valid_token_start_char(ch)) {
+        ecs_parser_error(name, sig, column, 
+            "invalid start of identifier '%s'", ptr);
+        return NULL;
+    }
+
+    tptr[0] = ch;
+    tptr ++;
+    ptr ++;
+
+    for (; (ch = *ptr); ptr ++) {
+        if (!valid_token_char(ch)) {
+            break;
+        }
+
+        tptr[0] = ch;
+        tptr ++;
+    }
+
+    tptr[0] = '\0';
+
+    return skip_space(ptr);
+}
+
+static
+int parse_identifier(
+    const char *token,
+    ecs_term_id_t *out)
+{
+    char ch = token[0];
+
+    const char *tptr = token;
+    if (ch == TOK_AS_ENTITY) {
+        tptr ++;
+    }
+
+    out->name = ecs_os_strdup(tptr);
+
+    if (ch == TOK_AS_ENTITY) {
+        out->var_kind = EcsVarIsEntity;
+    } else if (ecs_identifier_is_var(tptr)) {
+        out->var_kind = EcsVarIsVariable;
+    }
+
+    return 0;
+}
+
+static
+ecs_entity_t parse_role(
+    const char *name,
+    const char *sig,
+    int64_t column,
+    const char *token)
+{
+    if        (!ecs_os_strcmp(token, TOK_ROLE_CHILDOF)) {
+        return ECS_CHILDOF;
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_INSTANCEOF)) {
+        return ECS_INSTANCEOF;
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_TRAIT) || 
+               !ecs_os_strcmp(token, TOK_ROLE_PAIR)) 
+    {
+        return ECS_PAIR;            
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_AND)) {
+        return ECS_AND;
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_OR)) {
+        return ECS_OR;
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_XOR)) {
+        return ECS_XOR;
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_NOT)) {
+        return ECS_NOT;
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_SWITCH)) {
+        return ECS_SWITCH;
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_CASE)) {
+        return ECS_CASE;
+    } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
+        return ECS_OWNED;
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_DISABLED)) {
+        return ECS_DISABLED;        
+    } else {
+        ecs_parser_error(name, sig, column, "invalid role '%s'", token);
+        return 0;
+    }
+}
+
+static
+ecs_oper_kind_t parse_operator(
+    char ch)
+{
+    if (ch == TOK_OPTIONAL) {
+        return EcsOptional;
+    } else if (ch == TOK_NOT) {
+        return EcsNot;
+    } else {
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    }
+}
+
+static
+const char* parse_annotation(
+    const char *name,
+    const char *sig,
+    int64_t column,
+    const char *ptr, 
+    ecs_inout_kind_t *inout_kind_out)
+{
+    char token[ECS_MAX_TOKEN_SIZE];
+
+    ptr = parse_token(name, sig, column, ptr, token);
+    if (!ptr) {
+        return NULL;
+    }
+
+    if (!strcmp(token, "in")) {
+        *inout_kind_out = EcsIn;
+    } else
+    if (!strcmp(token, "out")) {
+        *inout_kind_out = EcsOut;
+    } else
+    if (!strcmp(token, "inout")) {
+        *inout_kind_out = EcsInOut;
+    }
+
+    ptr = skip_space(ptr);
+
+    if (ptr[0] != TOK_BRACKET_CLOSE) {
+        ecs_parser_error(name, sig, column, "expected ]");
+        return NULL;
+    }
+
+    return ptr + 1;
+}
+
+static
+uint8_t parse_set_token(
+    const char *token)
+{
+    if (!ecs_os_strcmp(token, TOK_SELF)) {
+        return EcsSelf;
+    } else if (!ecs_os_strcmp(token, TOK_SUPERSET)) {
+        return EcsSuperSet;
+    } else if (!ecs_os_strcmp(token, TOK_SUBSET)) {
+        return EcsSubSet;
+    } else if (!ecs_os_strcmp(token, TOK_ALL)) {
+        return EcsAll;
+    } else {
+        return 0;
+    }
+}
+
+static
+const char* parse_set_expr(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    int64_t column,
+    const char *ptr,
+    char *token,
+    ecs_term_id_t *id)
+{
+    do {
+        uint8_t tok = parse_set_token(token);
+        if (!tok) {
+            ecs_parser_error(name, expr, column, 
+                "invalid set token '%s'", token);
+            return NULL;
+        }
+
+        if (id->set & tok) {
+            ecs_parser_error(name, expr, column, 
+                "duplicate set token '%s'", token);
+            return NULL;            
+        }
+
+        if ((tok == EcsSubSet && id->set & EcsSuperSet) ||
+            (tok == EcsSuperSet && id->set & EcsSubSet))
+        {
+            ecs_parser_error(name, expr, column, 
+                "cannot mix superset and subset", token);
+            return NULL;            
+        }    
+
+        id->set |= tok;
+
+        if (ptr[0] == TOK_PAREN_OPEN) {
+            ptr ++;
+
+            /* Relationship (overrides IsA default) */
+            if (!isdigit(ptr[0]) && valid_token_start_char(ptr[0])) {
+                ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+                if (!ptr) {
+                    return NULL;
+                }         
+
+                ecs_entity_t rel = ecs_lookup_fullpath(world, token);
+                if (!rel) {
+                    ecs_parser_error(name, expr, column, 
+                        "unresolved identifier '%s'", token);
+                    return NULL;
+                }
+
+                id->relation = rel;
+
+                if (ptr[0] == TOK_AND) {
+                    ptr = skip_space(ptr + 1);
+                } else if (ptr[0] != TOK_PAREN_CLOSE) {
+                    ecs_parser_error(name, expr, column, 
+                        "expected ',' or ')'");
+                    return NULL;
+                }
+            }
+
+            /* Max depth of search */
+            if (isdigit(ptr[0])) {
+                ptr = parse_digit(name, expr, (ptr - expr), ptr, token);
+                if (!ptr) {
+                    return NULL;
+                }
+
+                id->max_depth = atoi(token);
+                if (id->max_depth < 0) {
+                    ecs_parser_error(name, expr, column, 
+                        "invalid negative depth");
+                    return NULL;  
+                }
+
+                if (ptr[0] == ',') {
+                    ptr = skip_space(ptr + 1);
+                }
+            }
+
+            /* If another digit is found, previous depth was min depth */
+            if (isdigit(ptr[0])) {
+                ptr = parse_digit(name, expr, (ptr - expr), ptr, token);
+                if (!ptr) {
+                    return NULL;
+                }
+
+                id->min_depth = id->max_depth;
+                id->max_depth = atoi(token);
+                if (id->max_depth < 0) {
+                    ecs_parser_error(name, expr, column, 
+                        "invalid negative depth");
+                    return NULL;  
+                }
+            }
+
+            if (ptr[0] != TOK_PAREN_CLOSE) {
+                ecs_parser_error(name, expr, column, "expected ')'");
+                return NULL;                
+            } else {
+                ptr = skip_space(ptr + 1);
+                if (ptr[0] != TOK_PAREN_CLOSE && ptr[0] != TOK_AND) { 
+                    ecs_parser_error(name, expr, column, 
+                        "expected end of set expr");
+                    return NULL;
+                }
+            }
+        }
+
+        /* Next token in set expression */
+        if (ptr[0] == TOK_BITWISE_OR) {
+            ptr ++;
+            if (valid_token_start_char(ptr[0])) {
+                ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+                if (!ptr) {
+                    return NULL;
+                }
+            }
+
+        /* End of set expression */
+        } else if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND) {
+            break;
+        }
+    } while (true);
+
+    if (id->set & EcsAll && !(id->set & EcsSuperSet) && !(id->set & EcsSubSet)){
+        ecs_parser_error(name, expr, column, 
+            "invalid 'all' token without superset or subset");
+        return NULL;
+    }
+
+    if (id->set & EcsSelf && id->min_depth != 0) {
+        ecs_parser_error(name, expr, column, 
+            "min_depth must be zero for set expression with 'self'");
+        return NULL;        
+    }
+
+    return ptr;
+}
+
+static
+const char* parse_arguments(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    int64_t column,
+    const char *ptr,
+    char *token,
+    ecs_term_t *term)
+{
+    (void)column;
+
+    int32_t arg = 0;
+
+    do {
+        if (valid_token_start_char(ptr[0])) {
+            if (arg == 2) {
+                ecs_parser_error(name, expr, (ptr - expr), 
+                    "too many arguments in term");
+                return NULL;
+            }
+
+            ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+            if (!ptr) {
+                return NULL;
+            }
+
+            /* If token is a self, superset or subset token, this is a set
+             * expression */
+            if (!ecs_os_strcmp(token, TOK_ALL) ||
+                !ecs_os_strcmp(token, TOK_SELF) || 
+                !ecs_os_strcmp(token, TOK_SUPERSET) || 
+                !ecs_os_strcmp(token, TOK_SUBSET))
+            {
+                ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, 
+                    token, &term->args[arg]);
+
+            /* Regular identifier */
+            } else if (parse_identifier(token, &term->args[arg])) {
+                ecs_parser_error(name, expr, (ptr - expr), 
+                    "invalid identifier '%s'", token);
+                return NULL;
+            }
+
+            if (ptr[0] == TOK_AND) {
+                ptr = skip_space(ptr + 1);
+
+            } else if (ptr[0] == TOK_PAREN_CLOSE) {
+                ptr = skip_space(ptr + 1);
+                break;
+
+            } else {
+                ecs_parser_error(name, expr, (ptr - expr), 
+                    "expected ',' or ')'");
+                return NULL;
+            }
+
+        } else {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "expected identifier or set expression");
+            return NULL;
+        }
+
+        arg ++;
+
+    } while (true);
+
+    return ptr;
+}
+
+static
+const char* parse_term(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_term_t *term_out)
+{
+    const char *ptr = expr;
+    char token[ECS_MAX_TOKEN_SIZE] = {0};
+    ecs_term_t term = { 0 };
+
+    ptr = skip_space(ptr);
+
+    /* Inout specifiers always come first */
+    if (ptr[0] == TOK_BRACKET_OPEN) {
+        ptr = parse_annotation(name, expr, (ptr - expr), ptr + 1, &term.inout);
+        if (!ptr) {
+            return NULL;
+        }
+        ptr = skip_space(ptr);
+    }
+
+    if (valid_operator_char(ptr[0])) {
+        term.oper = parse_operator(ptr[0]);
+        ptr = skip_space(ptr + 1);
+    }
+
+    /* If next token is the start of an identifier, it could be either a type
+     * role, source or component identifier */
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+        
+        /* Is token a source identifier? */
+        if (ptr[0] == TOK_COLON) {
+            ptr ++;
+            goto parse_source;
+        }
+
+        /* Is token a type role? */
+        if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
+            ptr ++;
+            goto parse_role;
+        }
+
+        /* Is token a trait? (using shorthand notation) */
+        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
+            term.pred.entity = ECS_PAIR;
+            ptr += 3;
+            goto parse_trait;
+        }
+
+        /* Is token a predicate? */
+        if (ptr[0] == TOK_PAREN_OPEN) {
+            goto parse_predicate;    
+        }
+
+        /* Next token must be a predicate */
+        goto parse_predicate;
+
+    /* If next token is the source token, this is an empty source */
+    } else if (ptr[0] == TOK_COLON) {
+        goto empty_source;
+
+    /* If next token is a singleton, assign identifier to pred and subject */
+    } else if (ptr[0] == TOK_SINGLETON) {
+        ptr ++;
+        if (valid_token_start_char(ptr[0])) {
+            ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+            if (!ptr) {
+                return NULL;
+            }
+
+            goto parse_singleton;
+        
+        /* Deprecated, but still supported: singleton entity */
+        } else if (ptr[0] == TOK_COLON) {
+            ecs_os_strcpy(token, "$");
+            ptr ++;
+            goto parse_source;
+
+        } else {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "expected identifier after singleton operator");
+            return NULL;
+        }
+
+    /* Pair with implicit subject */
+    } else if (ptr[0] == TOK_PAREN_OPEN) {
+        goto parse_pair;
+
+    /* Nothing else expected here */
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "unexpected character '%c'", ptr[0]);
+        return NULL;
+    }
+
+empty_source:
+    term.args[0].set = EcsNothing;
+    ptr = skip_space(ptr + 1);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        goto parse_predicate;
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "expected identifier after source operator");
+        return NULL;
+    }
+
+parse_source:
+    if (!ecs_os_strcmp(token, TOK_PARENT)) {
+        term.args[0].set = EcsSuperSet;
+        term.args[0].relation = EcsChildOf;
+        term.args[0].max_depth = 1;
+    } else if (!ecs_os_strcmp(token, TOK_SYSTEM)) {
+        term.args[0].name = ecs_os_strdup(name);
+    } else if (!ecs_os_strcmp(token, TOK_ANY)) {
+        term.args[0].set = EcsSelf | EcsSuperSet;
+        term.args[0].entity = EcsThis;
+        term.args[0].relation = EcsIsA;
+    } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
+        term.args[0].set = EcsSelf;
+        term.args[0].entity = EcsThis;
+    } else if (!ecs_os_strcmp(token, TOK_SHARED)) {
+        term.args[0].set = EcsSuperSet;
+        term.args[0].entity = EcsThis;
+        term.args[0].relation = EcsIsA;
+    } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
+        term.args[0].set = EcsSuperSet | EcsAll;
+        term.args[0].relation = EcsChildOf;
+        term.args[0].entity = EcsThis;
+        term.oper = EcsOptional;
+    } else {
+         if (parse_identifier(token, &term.args[0])) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "invalid identifier '%s'", token); 
+            return NULL;           
+        }
+    }
+
+    ptr = skip_space(ptr);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        /* Is the next token a role? */
+        if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
+            ptr++;
+            goto parse_role;
+        }
+
+        /* Is token a trait? (using shorthand notation) */
+        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
+            term.pred.entity = ECS_PAIR;
+            ptr += 3;
+            goto parse_trait;
+        }        
+
+        /* If not, it's a predicate */
+        goto parse_predicate;
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "expected identifier after source");
+        return NULL;
+    }
+
+parse_role:
+    term.role = parse_role(name, expr, (ptr - expr), token);
+    if (!term.role) {
+        return NULL;
+    }
+
+    ptr = skip_space(ptr);
+
+    /* If next token is the source token, this is an empty source */
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        /* Is token a trait? */
+        if (ptr[0] == TOK_TRAIT) {
+            ptr ++;
+            goto parse_trait;
+        }
+
+        /* If not, it's a predicate */
+        goto parse_predicate;
+
+    } else if (ptr[0] == TOK_PAREN_OPEN) {
+        goto parse_pair;
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "expected identifier after role");
+        return NULL;
+    }
+
+parse_predicate:
+    if (parse_identifier(token, &term.pred)) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid identifier '%s'", token); 
+        return NULL;        
+    }
+
+    ptr = skip_space(ptr);
+    
+    if (ptr[0] == TOK_PAREN_OPEN) {
+        ptr ++;
+        if (ptr[0] == TOK_PAREN_CLOSE) {
+            term.args[0].set = EcsNothing;
+            ptr ++;
+            ptr = skip_space(ptr);
+        } else {
+            ptr = parse_arguments(
+                world, name, expr, (ptr - expr), ptr, token, &term);
+        }
+
+        goto parse_done;
+
+    } else if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        goto parse_name;
+    }
+
+    goto parse_done;
+
+parse_pair:
+    ptr = parse_token(name, expr, (ptr - expr), ptr + 1, token);
+    if (!ptr) {
+        return NULL;
+    }
+
+    if (ptr[0] == TOK_AND) {
+        ptr ++;
+        term.args[0].entity = EcsThis;
+        goto parse_pair_predicate;
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "unexpected character '%c'", ptr[0]);
+    }
+
+parse_pair_predicate:
+    if (parse_identifier(token, &term.pred)) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid identifier '%s'", token); 
+        return NULL;            
+    }
+
+    ptr = skip_space(ptr);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        if (ptr[0] == TOK_PAREN_CLOSE) {
+            ptr ++;
+            goto parse_pair_object;
+        } else {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "unexpected character '%c'", ptr[0]);
+            return NULL;
+        }
+    } else if (ptr[0] == TOK_PAREN_CLOSE) {
+        /* No object */
+        goto parse_done;
+    }
+
+parse_pair_object:
+    if (parse_identifier(token, &term.args[1])) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid identifier '%s'", token); 
+        return NULL;
+    }
+
+    ptr = skip_space(ptr);
+    goto parse_done; 
+
+parse_trait:
+    if (parse_identifier(token, &term.pred)) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid identifier '%s'", token); 
+        return NULL;        
+    }
+
+    ptr = skip_space(ptr);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        /* Can only be an object */
+        goto parse_trait_target;
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "expected identifier after trait");
+        return NULL;
+    }
+
+parse_trait_target:
+    parse_identifier(".", &term.args[0]);
+    if (parse_identifier(token, &term.args[1])) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid identifier '%s'", token); 
+        return NULL;        
+    }
+
+    ptr = skip_space(ptr);
+    if (valid_token_start_char(ptr[0])) {
+        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        /* Can only be a name */
+        goto parse_name;
+    } else {
+        /* If nothing else, parsing of this element is done */
+        goto parse_done;
+    }
+
+parse_singleton:
+    if (parse_identifier(token, &term.pred)) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid identifier '%s'", token); 
+        return NULL;        
+    }
+
+    parse_identifier(token, &term.args[0]);
+    goto parse_done;
+
+parse_name:
+    term.name = ecs_os_strdup(token);
+    ptr = skip_space(ptr);
+
+parse_done:
+    *term_out = term;
+
+    return ptr;
+}
+
+char* ecs_parse_term(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    ecs_term_t *term)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_term_id_t *subj = &term->args[0];
+
+    bool prev_or = false;
+    if (ptr != expr) {
+        /* If this is not the start of the expression, scan back to check if
+         * previous token was an OR */
+        const char *bptr = ptr - 1;
+        do {
+            char ch = bptr[0];
+            if (isspace(ch)) {
+                bptr --;
+                continue;
+            }
+
+            /* Previous token was not an OR */
+            if (ch == TOK_AND) {
+                break;
+            }
+
+            /* Previous token was an OR */
+            if (ch == TOK_OR[0]) {
+                prev_or = true;
+                break;
+            }
+
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "invalid preceding token");
+            return NULL;
+        } while (true);
+    }
+
+    ptr = skip_space(ptr);
+    if (!ptr[0]) {
+        return (char*)ptr;
+    }
+
+    if (ptr == expr && !strcmp(expr, "0")) {
+        return (char*)&ptr[1];
+    }
+
+    int32_t prev_set = subj->set;
+
+    /* Parse next element */
+    ptr = parse_term(world, name, ptr, term);
+    if (!ptr) {
+        ecs_term_fini(term);
+        return NULL;
+    }
+
+    /* Post-parse consistency checks */
+
+    /* If next token is OR, term is part of an OR expression */
+    if (!ecs_os_strncmp(ptr, TOK_OR, 2) || prev_or) {
+        /* An OR operator must always follow an AND or another OR */
+        if (term->oper != EcsAnd) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "cannot combine || with other operators");
+            ecs_term_fini(term);
+            return NULL;
+        }
+
+        term->oper = EcsOr;
+    }
+
+    /* Term must either end in end of expression, AND or OR token */
+    if (ptr[0] != TOK_AND && (ptr[0] != TOK_OR[0]) && ptr[0]) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "expected end of expression or next term");
+        ecs_term_fini(term);
+        return NULL;
+    }
+
+    /* If the term just contained a 0, the expression has nothing. Ensure
+     * that after the 0 nothing else follows */
+    if (!ecs_os_strcmp(term->pred.name, "0")) {
+        if (ptr[0]) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "unexpected term after 0"); 
+            ecs_term_fini(term);
+            return NULL;
+        }
+
+        subj->set = EcsNothing;
+    }
+
+    /* Cannot combine EcsNothing with operators other than AND */
+    if (term->oper != EcsAnd && subj->set == EcsNothing) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid operator for empty source"); 
+        ecs_term_fini(term);    
+        return NULL;
+    }
+
+    /* Verify consistency of OR expression */
+    if (prev_or && term->oper == EcsOr) {
+        /* Set expressions must be the same for all OR terms */
+        if (subj->set != prev_set) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "cannot combine different sources in OR expression");
+            ecs_term_fini(term);
+            return NULL;
+        }
+
+        term->oper = EcsOr;
+    }
+
+    /* Automatically assign This if entity is not assigned and the set is
+     * nothing */
+    if (subj->set != EcsNothing) {
+        if (!subj->name) {
+            if (!subj->entity) {
+                subj->entity = EcsThis;
+            }
+        }
+    }
+
+    if (subj->name && !ecs_os_strcmp(subj->name, "0")) {
+        subj->entity = 0;
+        subj->set = EcsNothing;
+    }
+
+    /* Process role */
+    if (term->role == ECS_AND) {
+        term->oper = EcsAndFrom;
+        term->role = 0;
+    } else if (term->role == ECS_OR) {
+        term->oper = EcsOrFrom;
+        term->role = 0;
+    } else if (term->role == ECS_NOT) {
+        term->oper = EcsNotFrom;
+        term->role = 0;
+    }
+
+    if (ptr[0]) {
+        if (ptr[0] == ',') {
+            ptr ++;
+        } else if (ptr[0] == '|') {
+            ptr += 2;
+        }
+    }
+
+    ptr = skip_space(ptr);
+
+    return (char*)ptr;
 }
 
 #endif
@@ -13841,6 +14876,435 @@ void ecs_hash(
 }
 
 
+static
+bool term_id_is_set(
+    ecs_term_id_t *id)
+{
+    return id->entity != 0 || id->name != NULL;
+}
+
+static
+bool term_is_set(
+    ecs_term_t *term)
+{
+    return term->id != 0 || term_id_is_set(&term->pred);
+}
+
+static
+int resolve_identifier(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_term_id_t *identifier)
+{
+    if (!identifier->name) {
+        return 0;
+    }
+
+    if (identifier->var_kind == EcsVarDefault) {
+        if (ecs_identifier_is_var(identifier->name)) {
+            identifier->var_kind = EcsVarIsVariable;
+        }
+    }
+
+    if (identifier->var_kind != EcsVarIsVariable) {
+        if (ecs_identifier_is_0(identifier->name)) {
+            identifier->entity = 0;
+        } else {
+            ecs_entity_t e = ecs_lookup_fullpath(world, identifier->name);
+            if (!e) {
+                ecs_parser_error(name, expr, 0,
+                    "unresolved identifier '%s'", identifier->name);
+                return -1;
+            }
+
+            /* Use OR, as entity may have already been populated with role */
+            identifier->entity = e;
+        }
+    }
+
+    return 0;
+}
+
+bool ecs_identifier_is_0(
+    const char *id)
+{
+    return id[0] == '0' && !id[1];
+}
+
+bool ecs_identifier_is_var(
+    const char *id)
+{
+    if (id[0] == '_') {
+        return true;
+    }
+
+    if (isdigit(id[0])) {
+        return false;
+    }
+
+    const char *ptr;
+    char ch;
+    for (ptr = id; (ch = *ptr); ptr ++) {
+        if (!isupper(ch) && ch != '_' && !isdigit(ch)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+int ecs_term_resolve_ids(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_term_t *term)
+{
+    if (resolve_identifier(world, name, expr, &term->pred)) {
+        return -1;
+    }
+    if (resolve_identifier(world, name, expr, &term->args[0])) {
+        return -1;
+    }
+    if (resolve_identifier(world, name, expr, &term->args[1])) {
+        return -1;
+    }
+
+    if (term->args[1].entity) {
+        term->id = ecs_pair(
+            term->pred.entity, term->args[1].entity);
+    } else {
+        term->id = term->pred.entity;
+    }
+
+    term->id |= term->role;
+
+    return 0;
+}
+
+void ecs_term_copy(
+    ecs_term_t *dst,
+    ecs_term_t *src)
+{
+    *dst = *src;
+    dst->name = ecs_os_strdup(src->name);
+    dst->pred.name = ecs_os_strdup(src->pred.name);
+    dst->args[0].name = ecs_os_strdup(src->args[0].name);
+    dst->args[1].name = ecs_os_strdup(src->args[1].name);
+}
+
+void ecs_term_fini(
+    ecs_term_t *term)
+{
+    ecs_os_free(term->pred.name);
+    ecs_os_free(term->args[0].name);
+    ecs_os_free(term->args[1].name);
+    ecs_os_free(term->name);
+}
+
+int ecs_filter_init(
+    const ecs_world_t *world,
+    ecs_filter_t *filter_out,
+    const ecs_filter_desc_t *desc)    
+{
+    int i, term_count = 0;
+    ecs_term_t *terms = desc->terms_buffer;
+    const char *name = desc->name;
+    const char *expr = desc->expr;
+
+    ecs_filter_t f = {
+        /* Temporarily set the fields to the values provided in desc, until the
+         * filter has been validated. */
+        .name = (char*)name,
+        .expr = (char*)expr
+    };
+
+    if (expr) {
+#ifdef FLECS_PARSER
+        /* Cannot set expression and terms at the same time */
+        ecs_assert(terms == NULL, ECS_INVALID_PARAMETER, NULL);
+        
+        /* Parse expression into array of terms */
+        int32_t buffer_count = 0;
+        const char *ptr = desc->expr;
+        ecs_term_t term = {0};
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
+            if (!term_is_set(&term)) {
+                break;
+            }
+            
+            if (term_count == buffer_count) {
+                buffer_count = buffer_count ? buffer_count * 2 : 8;
+                terms = ecs_os_realloc(terms, 
+                    buffer_count * ECS_SIZEOF(ecs_term_t));
+            }
+
+            terms[term_count] = term;
+            term_count ++;
+        }
+
+        f.terms = terms;
+        f.term_count = term_count;
+
+        if (!ptr) {
+            goto error;
+        }
+#else
+        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+#endif
+    } else {
+        if (terms) {
+            terms = desc->terms_buffer;
+            term_count = desc->terms_buffer_count;
+        } else {
+            terms = (ecs_term_t*)desc->terms;
+            for (i = 0; i < ECS_FILTER_DESC_TERM_ARRAY_MAX; i ++) {
+                if (!term_is_set(&terms[i])) {
+                    break;
+                }
+
+                term_count ++;
+            }
+        }
+
+        /* Temporarily set array from desc to filter, until the filter has been
+         * validated. */
+        f.terms = terms;
+        f.term_count = term_count;
+    }
+
+    /* Ensure all fields are consistent and properly filled out */
+    if (ecs_filter_finalize(world, &f)) {
+        goto error;
+    }
+
+    /* Copy term resources. If an expression was provided, the resources in the
+     * terms are already owned by the filter. */
+    if (!f.expr) {
+        if (term_count) {
+            f.terms = ecs_os_malloc(term_count * ECS_SIZEOF(ecs_term_t));
+            for (i = 0; i < term_count; i ++) {
+                ecs_term_copy(&f.terms[i], &terms[i]);
+            }
+        } else {
+            f.terms = NULL;
+        }
+    }
+
+    f.name = ecs_os_strdup(desc->name);
+    f.expr = ecs_os_strdup(desc->expr);
+
+    *filter_out = f;
+
+    return 0;
+error:
+    /* NULL members that point to non-owned resources */
+    if (!f.expr) {
+        f.terms = NULL;
+    }
+
+    f.name = NULL;
+    f.expr = NULL;
+
+    ecs_filter_fini(&f);
+
+    return -1;
+}
+
+int ecs_filter_finalize(
+    const ecs_world_t *world,
+    ecs_filter_t *f)
+{
+    int32_t i, term_count = f->term_count, index = 0;
+    ecs_term_t *terms = f->terms;
+    ecs_oper_kind_t prev_oper = 0;
+
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &terms[i];
+
+        /* If id is set, derive predicate and object */
+        if (term->id) {
+            if (term->args[0].entity && term->args[0].entity != EcsThis) {
+                ecs_parser_error(f->name, f->expr, 0, 
+                    "cannot combine id with subject that is not This");
+                return -1;
+            }
+
+            if (ECS_HAS_ROLE(term->id, PAIR)) {
+                term->pred.entity = ECS_PAIR_RELATION(term->id);
+                term->args[1].entity = ECS_PAIR_OBJECT(term->id);
+            } else {
+                term->pred.entity = term->id & ECS_COMPONENT_MASK;
+            }
+
+            term->args[0].entity = EcsThis;
+            term->role = term->id & ECS_ROLE_MASK;
+        } else {
+            if (ecs_term_resolve_ids(world, f->name, f->expr, term)) {
+                /* One or more identifiers could not be resolved */
+                return -1;
+            }
+        }
+
+        term->index = index;
+
+        /* Fold OR terms */
+        if (prev_oper != EcsOr || term->oper != EcsOr) {
+            index ++;
+        }
+
+        prev_oper = term->oper;
+    }
+
+    f->term_count_actual = index;
+
+    return 0;
+}
+
+static
+void filter_str_add_id(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_term_id_t *id)
+{
+    if (id->name) {
+        ecs_strbuf_appendstr(buf, id->name);
+    } else if (id->entity) {
+        char *path = ecs_get_fullpath(world, id->entity);
+        ecs_strbuf_appendstr(buf, path);
+        ecs_os_free(path);
+    } else {
+        ecs_strbuf_appendstr(buf, "0");
+    }
+}
+
+char* ecs_filter_str(
+    const ecs_world_t *world,
+    ecs_filter_t *filter)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    ecs_term_t *terms = filter->terms;
+    int32_t i, count = filter->term_count;
+    int32_t or_count = 0;
+
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+
+        if (i) {
+            if (terms[i - 1].oper == EcsOr && term->oper == EcsOr) {
+                ecs_strbuf_appendstr(&buf, " || ");
+            } else {
+                ecs_strbuf_appendstr(&buf, ", ");
+            }
+        }
+
+        if (or_count < 1) {
+            if (term->inout == EcsIn) {
+                ecs_strbuf_appendstr(&buf, "[in] ");
+            } else if (term->inout == EcsInOut) {
+                ecs_strbuf_appendstr(&buf, "[inout] ");
+            } else if (term->inout == EcsInOut) {
+                ecs_strbuf_appendstr(&buf, "[out] ");
+            }
+        }
+
+        if (term->role) {
+            ecs_strbuf_appendstr(&buf, ecs_role_str(term->role));
+            ecs_strbuf_appendstr(&buf, " ");
+        }
+
+        if (term->oper == EcsOr) {
+            or_count ++;
+        } else {
+            or_count = 0;
+        }
+
+        if (term->oper == EcsNot) {
+            ecs_strbuf_appendstr(&buf, "!");
+        } else if (term->oper == EcsOptional) {
+            ecs_strbuf_appendstr(&buf, "?");
+        }
+
+        if (term->args[0].entity == EcsThis && term_id_is_set(&term->args[1])) {
+            ecs_strbuf_appendstr(&buf, "(");
+        }
+
+        if (!term_id_is_set(&term->args[1]) && 
+            (term->pred.entity != term->args[0].entity)) 
+        {
+            filter_str_add_id(world, &buf, &term->pred);
+
+            if (!term_id_is_set(&term->args[0])) {
+                ecs_strbuf_appendstr(&buf, "()");
+            } else if (term->args[0].entity != EcsThis) {
+                ecs_strbuf_appendstr(&buf, "(");
+                filter_str_add_id(world, &buf, &term->args[0]);
+            }
+
+            if (term_id_is_set(&term->args[1])) {
+                ecs_strbuf_appendstr(&buf, ", ");
+                filter_str_add_id(world, &buf, &term->args[1]);
+                ecs_strbuf_appendstr(&buf, ")");
+            }
+        } else {
+            ecs_strbuf_appendstr(&buf, "$");
+            filter_str_add_id(world, &buf, &term->pred);
+        }
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
+void ecs_filter_fini(
+    ecs_filter_t *filter) 
+{
+    if (filter->terms) {
+        int i, count = filter->term_count;
+        for (i = 0; i < count; i ++) {
+            ecs_term_fini(&filter->terms[i]);
+        }
+
+        ecs_os_free(filter->terms);
+    }
+
+    ecs_os_free(filter->name);
+    ecs_os_free(filter->expr);
+}
+
+bool ecs_filter_match_entity(
+    const ecs_world_t *world,
+    const ecs_filter_t *filter,
+    ecs_entity_t e)
+{
+    ecs_assert(e == 0, ECS_UNSUPPORTED, NULL);
+    (void)e;
+
+    ecs_term_t *terms = filter->terms;
+    int32_t i, count = filter->term_count;
+
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_term_id_t *subj = &term->args[0];
+        ecs_oper_kind_t oper = term->oper;
+
+        if (subj->entity != EcsThis && subj->set & EcsSelf) {
+            ecs_type_t type = ecs_get_type(world, subj->entity);
+            if (ecs_type_has_id(world, type, term->id)) {
+                if (oper == EcsNot) {
+                    return false;
+                }
+            } else {
+                if (oper != EcsNot) {
+                    return false;
+                }
+            }
+        }        
+    }
+
+    return true;    
+}
+
 ecs_iter_t ecs_filter_iter(
     ecs_world_t *world,
     const ecs_filter_t *filter)
@@ -14458,1361 +15922,6 @@ bool ecs_strbuf_list_appendstr(
 {
     ecs_strbuf_list_next(buffer);
     return ecs_strbuf_appendstr(buffer, str);
-}
-
-/* TODO: after new query parser is working & code is ported to new types for
- *       storing terms, this code needs a big cleanup */
-
-#define ECS_ANNOTATION_LENGTH_MAX (16)
-
-#define TOK_COLON ':'
-#define TOK_AND ','
-#define TOK_OR "||"
-#define TOK_NOT '!'
-#define TOK_OPTIONAL '?'
-#define TOK_BITWISE_OR '|'
-#define TOK_TRAIT '>'
-#define TOK_FOR "FOR"
-#define TOK_NAME_SEP '.'
-#define TOK_BRACKET_OPEN '['
-#define TOK_BRACKET_CLOSE ']'
-#define TOK_WILDCARD '*'
-#define TOK_SINGLETON '$'
-#define TOK_PAREN_OPEN '('
-#define TOK_PAREN_CLOSE ')'
-#define TOK_AS_ENTITY '\\'
-
-#define TOK_SELF "self"
-#define TOK_SUPERSET "superset"
-#define TOK_SUBSET "subset"
-#define TOK_ALL "all"
-
-#define TOK_ANY "ANY"
-#define TOK_OWNED "OWNED"
-#define TOK_SHARED "SHARED"
-#define TOK_SYSTEM "SYSTEM"
-#define TOK_PARENT "PARENT"
-#define TOK_CASCADE "CASCADE"
-
-#define TOK_ROLE_CHILDOF "CHILDOF"
-#define TOK_ROLE_INSTANCEOF "INSTANCEOF"
-#define TOK_ROLE_TRAIT "TRAIT"
-#define TOK_ROLE_PAIR "PAIR"
-#define TOK_ROLE_AND "AND"
-#define TOK_ROLE_OR "OR"
-#define TOK_ROLE_XOR "XOR"
-#define TOK_ROLE_NOT "NOT"
-#define TOK_ROLE_SWITCH "SWITCH"
-#define TOK_ROLE_CASE "CASE"
-#define TOK_ROLE_DISABLED "DISABLED"
-
-#define TOK_IN "in"
-#define TOK_OUT "out"
-#define TOK_INOUT "inout"
-
-#define ECS_MAX_TOKEN_SIZE (256)
-
-typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
-
-/** Skip spaces when parsing signature */
-static
-const char *skip_space(
-    const char *ptr)
-{
-    while (isspace(*ptr)) {
-        ptr ++;
-    }
-    return ptr;
-}
-
-static
-bool ecs_is_0(
-    const char *id)
-{
-    return id[0] == '0' && !id[1];
-}
-
-static
-bool ecs_is_var(
-    const char *id)
-{
-    if (id[0] == '_') {
-        return true;
-    }
-
-    if (isdigit(id[0])) {
-        return false;
-    }
-
-    const char *ptr;
-    char ch;
-    for (ptr = id; (ch = *ptr); ptr ++) {
-        if (!isupper(ch) && ch != '_' && !isdigit(ch)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/* -- Private functions -- */
-
-static
-bool valid_token_start_char(
-    char ch)
-{
-    if (ch && (isalpha(ch) || (ch == '.') || (ch == '_') || (ch == '*') ||
-        (ch == '0') || (ch == TOK_AS_ENTITY) || isdigit(ch))) 
-    {
-        return true;
-    }
-
-    return false;
-}
-
-static
-bool valid_token_char(
-    char ch)
-{
-    if (ch && (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.')) {
-        return true;
-    }
-
-    return false;
-}
-
-static
-bool valid_operator_char(
-    char ch)
-{
-    if (ch == TOK_OPTIONAL || ch == TOK_NOT) {
-        return true;
-    }
-
-    return false;
-}
-
-static
-const char* parse_digit(
-    const char *name,
-    const char *sig,
-    int64_t column,
-    const char *ptr,
-    char *token_out)
-{
-    ptr = skip_space(ptr);
-    char *tptr = token_out, ch = ptr[0];
-
-    if (!isdigit(ch)) {
-        ecs_parser_error(name, sig, column, 
-            "invalid start of number '%s'", ptr);
-        return NULL;
-    }
-
-    tptr[0] = ch;
-    tptr ++;
-    ptr ++;
-
-    for (; (ch = *ptr); ptr ++) {
-        if (!isdigit(ch)) {
-            break;
-        }
-
-        tptr[0] = ch;
-        tptr ++;
-    }
-
-    tptr[0] = '\0';
-
-    return skip_space(ptr);
-}
-
-
-static
-const char* parse_token(
-    const char *name,
-    const char *sig,
-    int64_t column,
-    const char *ptr,
-    char *token_out)
-{
-    ptr = skip_space(ptr);
-    char *tptr = token_out, ch = ptr[0];
-
-    if (!valid_token_start_char(ch)) {
-        ecs_parser_error(name, sig, column, 
-            "invalid start of identifier '%s'", ptr);
-        return NULL;
-    }
-
-    tptr[0] = ch;
-    tptr ++;
-    ptr ++;
-
-    for (; (ch = *ptr); ptr ++) {
-        if (!valid_token_char(ch)) {
-            break;
-        }
-
-        tptr[0] = ch;
-        tptr ++;
-    }
-
-    tptr[0] = '\0';
-
-    return skip_space(ptr);
-}
-
-static
-int parse_identifier(
-    const char *token,
-    ecs_term_id_t *out)
-{
-    char ch = token[0];
-
-    const char *tptr = token;
-    if (ch == TOK_AS_ENTITY) {
-        tptr ++;
-    }
-
-    out->name = ecs_os_strdup(tptr);
-
-    if (ch == TOK_AS_ENTITY) {
-        out->var_kind = EcsVarIsEntity;
-    } else if (ecs_is_var(tptr)) {
-        out->var_kind = EcsVarIsVariable;
-    }
-
-    return 0;
-}
-
-static
-ecs_entity_t parse_role(
-    const char *name,
-    const char *sig,
-    int64_t column,
-    const char *token)
-{
-    if        (!ecs_os_strcmp(token, TOK_ROLE_CHILDOF)) {
-        return ECS_CHILDOF;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_INSTANCEOF)) {
-        return ECS_INSTANCEOF;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_TRAIT) || 
-               !ecs_os_strcmp(token, TOK_ROLE_PAIR)) 
-    {
-        return ECS_PAIR;            
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_AND)) {
-        return ECS_AND;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_OR)) {
-        return ECS_OR;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_XOR)) {
-        return ECS_XOR;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_NOT)) {
-        return ECS_NOT;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_SWITCH)) {
-        return ECS_SWITCH;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_CASE)) {
-        return ECS_CASE;
-    } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
-        return ECS_OWNED;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_DISABLED)) {
-        return ECS_DISABLED;        
-    } else {
-        ecs_parser_error(name, sig, column, "invalid role '%s'", token);
-        return 0;
-    }
-}
-
-static
-ecs_oper_kind_t parse_operator(
-    char ch)
-{
-    if (ch == TOK_OPTIONAL) {
-        return EcsOptional;
-    } else if (ch == TOK_NOT) {
-        return EcsNot;
-    } else {
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-    }
-}
-
-static
-const char* parse_annotation(
-    const char *name,
-    const char *sig,
-    int64_t column,
-    const char *ptr, 
-    ecs_inout_kind_t *inout_kind_out)
-{
-    char token[ECS_MAX_TOKEN_SIZE];
-
-    ptr = parse_token(name, sig, column, ptr, token);
-    if (!ptr) {
-        return NULL;
-    }
-
-    if (!strcmp(token, "in")) {
-        *inout_kind_out = EcsIn;
-    } else
-    if (!strcmp(token, "out")) {
-        *inout_kind_out = EcsOut;
-    } else
-    if (!strcmp(token, "inout")) {
-        *inout_kind_out = EcsInOut;
-    }
-
-    ptr = skip_space(ptr);
-
-    if (ptr[0] != TOK_BRACKET_CLOSE) {
-        ecs_parser_error(name, sig, column, "expected ]");
-        return NULL;
-    }
-
-    return ptr + 1;
-}
-
-static
-uint8_t parse_set_token(
-    const char *token)
-{
-    if (!ecs_os_strcmp(token, TOK_SELF)) {
-        return EcsSelf;
-    } else if (!ecs_os_strcmp(token, TOK_SUPERSET)) {
-        return EcsSuperSet;
-    } else if (!ecs_os_strcmp(token, TOK_SUBSET)) {
-        return EcsSubSet;
-    } else if (!ecs_os_strcmp(token, TOK_ALL)) {
-        return EcsAll;
-    } else {
-        return 0;
-    }
-}
-
-static
-const char* parse_set_expr(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    int64_t column,
-    const char *ptr,
-    char *token,
-    ecs_term_id_t *id)
-{
-    do {
-        uint8_t tok = parse_set_token(token);
-        if (!tok) {
-            ecs_parser_error(name, expr, column, 
-                "invalid set token '%s'", token);
-            return NULL;
-        }
-
-        if (id->set & tok) {
-            ecs_parser_error(name, expr, column, 
-                "duplicate set token '%s'", token);
-            return NULL;            
-        }
-
-        if ((tok == EcsSubSet && id->set & EcsSuperSet) ||
-            (tok == EcsSuperSet && id->set & EcsSubSet))
-        {
-            ecs_parser_error(name, expr, column, 
-                "cannot mix superset and subset", token);
-            return NULL;            
-        }    
-
-        id->set |= tok;
-
-        if (ptr[0] == TOK_PAREN_OPEN) {
-            ptr ++;
-
-            /* Relationship (overrides IsA default) */
-            if (!isdigit(ptr[0]) && valid_token_start_char(ptr[0])) {
-                ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-                if (!ptr) {
-                    return NULL;
-                }         
-
-                ecs_entity_t rel = ecs_lookup_fullpath(world, token);
-                if (!rel) {
-                    ecs_parser_error(name, expr, column, 
-                        "unresolved identifier '%s'", token);
-                    return NULL;
-                }
-
-                id->relation = rel;
-
-                if (ptr[0] == TOK_AND) {
-                    ptr = skip_space(ptr + 1);
-                } else if (ptr[0] != TOK_PAREN_CLOSE) {
-                    ecs_parser_error(name, expr, column, 
-                        "expected ',' or ')'");
-                    return NULL;
-                }
-            }
-
-            /* Max depth of search */
-            if (isdigit(ptr[0])) {
-                ptr = parse_digit(name, expr, (ptr - expr), ptr, token);
-                if (!ptr) {
-                    return NULL;
-                }
-
-                id->max_depth = atoi(token);
-                if (id->max_depth < 0) {
-                    ecs_parser_error(name, expr, column, 
-                        "invalid negative depth");
-                    return NULL;  
-                }
-
-                if (ptr[0] == ',') {
-                    ptr = skip_space(ptr + 1);
-                }
-            }
-
-            /* If another digit is found, previous depth was min depth */
-            if (isdigit(ptr[0])) {
-                ptr = parse_digit(name, expr, (ptr - expr), ptr, token);
-                if (!ptr) {
-                    return NULL;
-                }
-
-                id->min_depth = id->max_depth;
-                id->max_depth = atoi(token);
-                if (id->max_depth < 0) {
-                    ecs_parser_error(name, expr, column, 
-                        "invalid negative depth");
-                    return NULL;  
-                }
-            }
-
-            if (ptr[0] != TOK_PAREN_CLOSE) {
-                ecs_parser_error(name, expr, column, "expected ')'");
-                return NULL;                
-            } else {
-                ptr = skip_space(ptr + 1);
-                if (ptr[0] != TOK_PAREN_CLOSE && ptr[0] != TOK_AND) { 
-                    ecs_parser_error(name, expr, column, 
-                        "expected end of set expr");
-                    return NULL;
-                }
-            }
-        }
-
-        /* Next token in set expression */
-        if (ptr[0] == TOK_BITWISE_OR) {
-            ptr ++;
-            if (valid_token_start_char(ptr[0])) {
-                ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-                if (!ptr) {
-                    return NULL;
-                }
-            }
-
-        /* End of set expression */
-        } else if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND) {
-            break;
-        }
-    } while (true);
-
-    if (id->set & EcsAll && !(id->set & EcsSuperSet) && !(id->set & EcsSubSet)){
-        ecs_parser_error(name, expr, column, 
-            "invalid 'all' token without superset or subset");
-        return NULL;
-    }
-
-    if (id->set & EcsSelf && id->min_depth != 0) {
-        ecs_parser_error(name, expr, column, 
-            "min_depth must be zero for set expression with 'self'");
-        return NULL;        
-    }
-
-    return ptr;
-}
-
-static
-const char* parse_arguments(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    int64_t column,
-    const char *ptr,
-    char *token,
-    ecs_term_t *term)
-{
-    (void)column;
-
-    int32_t arg = 0;
-
-    do {
-        if (valid_token_start_char(ptr[0])) {
-            if (arg == 2) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "too many arguments in term");
-                return NULL;
-            }
-
-            ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-            if (!ptr) {
-                return NULL;
-            }
-
-            /* If token is a self, superset or subset token, this is a set
-             * expression */
-            if (!ecs_os_strcmp(token, TOK_ALL) ||
-                !ecs_os_strcmp(token, TOK_SELF) || 
-                !ecs_os_strcmp(token, TOK_SUPERSET) || 
-                !ecs_os_strcmp(token, TOK_SUBSET))
-            {
-                ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, 
-                    token, &term->args[arg]);
-
-            /* Regular identifier */
-            } else if (parse_identifier(token, &term->args[arg])) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "invalid identifier '%s'", token);
-                return NULL;
-            }
-
-            if (ptr[0] == TOK_AND) {
-                ptr = skip_space(ptr + 1);
-
-            } else if (ptr[0] == TOK_PAREN_CLOSE) {
-                ptr = skip_space(ptr + 1);
-                break;
-
-            } else {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "expected ',' or ')'");
-                return NULL;
-            }
-
-        } else {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "expected identifier or set expression");
-            return NULL;
-        }
-
-        arg ++;
-
-    } while (true);
-
-    return ptr;
-}
-
-static
-const char* parse_term(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_term_t *elem_out)
-{
-    const char *ptr = expr;
-    char token[ECS_MAX_TOKEN_SIZE] = {0};
-    ecs_term_t term = { 0 };
-
-    ptr = skip_space(ptr);
-
-    /* Inout specifiers always come first */
-    if (ptr[0] == TOK_BRACKET_OPEN) {
-        ptr = parse_annotation(name, expr, (ptr - expr), ptr + 1, &term.inout);
-        if (!ptr) {
-            return NULL;
-        }
-        ptr = skip_space(ptr);
-    }
-
-    if (valid_operator_char(ptr[0])) {
-        term.oper = parse_operator(ptr[0]);
-        ptr = skip_space(ptr + 1);
-    }
-
-    /* If next token is the start of an identifier, it could be either a type
-     * role, source or component identifier */
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-        
-        /* Is token a source identifier? */
-        if (ptr[0] == TOK_COLON) {
-            ptr ++;
-            goto parse_source;
-        }
-
-        /* Is token a type role? */
-        if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
-            ptr ++;
-            goto parse_role;
-        }
-
-        /* Is token a trait? (using shorthand notation) */
-        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            term.pred.entity = ECS_PAIR;
-            ptr += 3;
-            goto parse_trait;
-        }
-
-        /* Is token a predicate? */
-        if (ptr[0] == TOK_PAREN_OPEN) {
-            goto parse_predicate;    
-        }
-
-        /* Next token must be a predicate */
-        goto parse_predicate;
-
-    /* If next token is the source token, this is an empty source */
-    } else if (ptr[0] == TOK_COLON) {
-        goto empty_source;
-
-    /* If next token is a singleton, assign identifier to pred and subject */
-    } else if (ptr[0] == TOK_SINGLETON) {
-        ptr ++;
-        if (valid_token_start_char(ptr[0])) {
-            ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-            if (!ptr) {
-                return NULL;
-            }
-
-            goto parse_singleton;
-        
-        /* Deprecated, but still supported: singleton entity */
-        } else if (ptr[0] == TOK_COLON) {
-            ecs_os_strcpy(token, "$");
-            ptr ++;
-            goto parse_source;
-
-        } else {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "expected identifier after singleton operator");
-            return NULL;
-        }
-
-    /* Pair with implicit subject */
-    } else if (ptr[0] == TOK_PAREN_OPEN) {
-        goto parse_pair;
-
-    /* Nothing else expected here */
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "unexpected character '%c'", ptr[0]);
-        return NULL;
-    }
-
-empty_source:
-    term.args[0].set = EcsNothing;
-    ptr = skip_space(ptr + 1);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        goto parse_predicate;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected identifier after source operator");
-        return NULL;
-    }
-
-parse_source:
-    if (!ecs_os_strcmp(token, TOK_PARENT)) {
-        term.args[0].set = EcsSuperSet;
-        term.args[0].relation = EcsChildOf;
-        term.args[0].max_depth = 1;
-    } else if (!ecs_os_strcmp(token, TOK_SYSTEM)) {
-        term.args[0].name = ecs_os_strdup(name);
-    } else if (!ecs_os_strcmp(token, TOK_ANY)) {
-        term.args[0].set = EcsSelf | EcsSuperSet;
-        term.args[0].entity = EcsThis;
-        term.args[0].relation = EcsIsA;
-    } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
-        term.args[0].set = EcsSelf;
-        term.args[0].entity = EcsThis;
-    } else if (!ecs_os_strcmp(token, TOK_SHARED)) {
-        term.args[0].set = EcsSuperSet;
-        term.args[0].entity = EcsThis;
-        term.args[0].relation = EcsIsA;
-    } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
-        term.args[0].set = EcsSuperSet | EcsAll;
-        term.args[0].relation = EcsChildOf;
-        term.args[0].entity = EcsThis;
-        term.oper = EcsOptional;
-    } else {
-         if (parse_identifier(token, &term.args[0])) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "invalid identifier '%s'", token); 
-            return NULL;           
-        }
-    }
-
-    ptr = skip_space(ptr);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        /* Is the next token a role? */
-        if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
-            ptr++;
-            goto parse_role;
-        }
-
-        /* Is token a trait? (using shorthand notation) */
-        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            term.pred.entity = ECS_PAIR;
-            ptr += 3;
-            goto parse_trait;
-        }        
-
-        /* If not, it's a predicate */
-        goto parse_predicate;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected identifier after source");
-        return NULL;
-    }
-
-parse_role:
-    term.role = parse_role(name, expr, (ptr - expr), token);
-    if (!term.role) {
-        return NULL;
-    }
-
-    ptr = skip_space(ptr);
-
-    /* If next token is the source token, this is an empty source */
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        /* Is token a trait? */
-        if (ptr[0] == TOK_TRAIT) {
-            ptr ++;
-            goto parse_trait;
-        }
-
-        /* If not, it's a predicate */
-        goto parse_predicate;
-
-    } else if (ptr[0] == TOK_PAREN_OPEN) {
-        goto parse_pair;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected identifier after role");
-        return NULL;
-    }
-
-parse_predicate:
-    if (parse_identifier(token, &term.pred)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        return NULL;        
-    }
-
-    ptr = skip_space(ptr);
-    
-    if (ptr[0] == TOK_PAREN_OPEN) {
-        ptr ++;
-        if (ptr[0] == TOK_PAREN_CLOSE) {
-            term.args[0].set = EcsNothing;
-            ptr ++;
-            ptr = skip_space(ptr);
-        } else {
-            ptr = parse_arguments(
-                world, name, expr, (ptr - expr), ptr, token, &term);
-        }
-
-        goto parse_done;
-
-    } else if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        goto parse_name;
-    }
-
-    goto parse_done;
-
-parse_pair:
-    ptr = parse_token(name, expr, (ptr - expr), ptr + 1, token);
-    if (!ptr) {
-        return NULL;
-    }
-
-    if (ptr[0] == TOK_AND) {
-        ptr ++;
-        term.args[0].entity = EcsThis;
-        goto parse_pair_predicate;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "unexpected character '%c'", ptr[0]);
-    }
-
-parse_pair_predicate:
-    if (parse_identifier(token, &term.pred)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        return NULL;            
-    }
-
-    ptr = skip_space(ptr);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        if (ptr[0] == TOK_PAREN_CLOSE) {
-            ptr ++;
-            goto parse_pair_object;
-        } else {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "unexpected character '%c'", ptr[0]);
-            return NULL;
-        }
-    } else if (ptr[0] == TOK_PAREN_CLOSE) {
-        /* No object */
-        goto parse_done;
-    }
-
-parse_pair_object:
-    if (parse_identifier(token, &term.args[1])) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        return NULL;
-    }
-
-    ptr = skip_space(ptr);
-    goto parse_done; 
-
-parse_trait:
-    if (parse_identifier(token, &term.pred)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        return NULL;        
-    }
-
-    ptr = skip_space(ptr);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        /* Can only be an object */
-        goto parse_trait_target;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected identifier after trait");
-        return NULL;
-    }
-
-parse_trait_target:
-    parse_identifier(".", &term.args[0]);
-    if (parse_identifier(token, &term.args[1])) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        return NULL;        
-    }
-
-    ptr = skip_space(ptr);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        /* Can only be a name */
-        goto parse_name;
-    } else {
-        /* If nothing else, parsing of this element is done */
-        goto parse_done;
-    }
-
-parse_singleton:
-    if (parse_identifier(token, &term.pred)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        return NULL;        
-    }
-
-    parse_identifier(token, &term.args[0]);
-    goto parse_done;
-
-parse_name:
-    term.name = ecs_os_strdup(token);
-    ptr = skip_space(ptr);
-
-parse_done:
-    *elem_out = term;
-
-    return ptr;
-}
-
-int ecs_parse_expr(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    ecs_parse_action_t action,
-    void *ctx)
-{
-    ecs_term_t term;
-    ecs_term_id_t *subj = &term.args[0];
-    ecs_assert(sig != NULL, ECS_INVALID_PARAMETER, NULL);
-    const char *expr = sig->expr;
-    const char *name = sig->name;
-
-    /* Don't parse empty expressions */
-    if (!expr) {
-        return 0;
-    }
-
-    expr = skip_space(expr);
-    if (!expr[0]) {
-        return 0;
-    }
-
-    bool prev_or = false;
-    int32_t prev_set = 0;
-
-    const char *ptr = expr;
-    while ((ptr = parse_term(world, name, ptr, &term))) {
-        /* Post-parse consistency checks */
-
-        /* An OR operator cannot be combined with other operators besides AND */
-        if (!ecs_os_strncmp(ptr, TOK_OR, 2)) {
-            if (term.oper != EcsAnd) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "cannot combine || with other operators");
-                ecs_term_free(&term);
-                return -1;
-            }
-
-            term.oper = EcsOr;
-        }
-
-        /* Term must either end in end of expression or AND (,) token */
-        if (ptr[0] != TOK_AND && term.oper != EcsOr && ptr[0]) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "expected end of expression or next term");
-            ecs_term_free(&term);
-            return -1;
-        }
-
-        /* If the term just contained a 0, the expression has nothing. Ensure
-         * that after the 0 nothing else follows */
-        if (!ecs_os_strcmp(term.pred.name, "0")) {
-            if (ptr[0]) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "unexpected term after 0"); 
-                ecs_term_free(&term);
-                return -1;
-            }
-
-            subj->set = EcsNothing;
-        }
-
-        /* Cannot combine EcsNothing with operators other than AND */
-        if (term.oper != EcsAnd && subj->set == EcsNothing) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "invalid operator for empty source"); 
-            ecs_term_free(&term);    
-            return -1;
-        }
-
-        /* Verify consistency of OR expression */
-        if (prev_or) {
-            /* Set expressions must be the same for all OR terms */
-            if (subj->set != prev_set) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "cannot combine different sources in OR expression");
-                ecs_term_free(&term);
-                return -1;
-            }
-
-            prev_or = term.oper == EcsOr;
-            prev_set = subj->set;
-
-            /* An OR operator must always follow an AND or another Or */
-            if (term.oper != EcsAnd && term.oper != EcsOr) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "cannot combine || with other operators");
-                ecs_term_free(&term);
-                return -1;
-            }
-
-            term.oper = EcsOr;
-        } else {
-            prev_or = term.oper == EcsOr;
-            prev_set = subj->set;
-        }
-
-        /* Automatically assign This if entity is not assigned and the set is
-         * nothing */
-        if (subj->set != EcsNothing) {
-            if (!subj->name) {
-                if (!subj->entity) {
-                    subj->entity = EcsThis;
-                    subj->name = ecs_os_strdup(".");
-                } else {
-                    subj->name = ecs_get_fullpath(world, subj->entity);
-                }
-            }
-        }
-
-        if (subj->name && !ecs_os_strcmp(subj->name, "0")) {
-            subj->entity = 0;
-            subj->set = EcsNothing;
-        }
-
-        /* Process role */
-        if (term.role == ECS_AND) {
-            term.oper = EcsOperAll;
-        } else if (term.role == ECS_OR) {
-            term.oper = EcsOr;
-        }
-
-        if (action(world, sig, ptr - expr, &term, ctx)) {
-            return -1;
-        }
-
-        if (ptr[0]) {
-            ptr ++;
-            if (prev_or) {
-                ptr ++;
-            }
-        }
-
-        ptr = skip_space(ptr);
-
-        if (!ptr[0]) {
-            break;
-        }
-    }
-
-    if (!ptr) {
-        return -1;
-    }
-
-    return 0;
-}
-
-static
-int resolve_identifier(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    int64_t column,    
-    ecs_term_id_t *identifier)
-{
-    if (!identifier->name) {
-        return 0;
-    }
-
-    if (identifier->var_kind == EcsVarDefault) {
-        if (ecs_is_var(identifier->name)) {
-            identifier->var_kind = EcsVarIsVariable;
-        }
-    }
-
-    if (identifier->var_kind != EcsVarIsVariable) {
-        if (ecs_is_0(identifier->name)) {
-            identifier->entity = 0;
-        } else {
-            ecs_entity_t e = ecs_lookup_fullpath(world, identifier->name);
-            if (!e) {
-                ecs_parser_error(name, expr, column, 
-                    "unresolved identifier '%s'", identifier->name);
-                return -1;
-            }
-
-            /* Use OR, as entity may have already been populated with role */
-            identifier->entity = e;
-        }
-    }
-
-    return 0;
-}
-
-/** Parse callback that adds component to the components array for a system */
-static
-int ecs_parse_signature_action(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    int64_t column,
-    ecs_term_t *term,
-    void *data)
-{
-    (void)column;
-    (void)data;
-    return ecs_sig_add(world, sig, term);
-}
-
-int ecs_term_resolve(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    int64_t column,
-    ecs_term_t *term)
-{
-    if (resolve_identifier(world, name, expr, column, &term->pred)) {
-        return -1;
-    }
-    if (resolve_identifier(world, name, expr, column, &term->args[0])) {
-        return -1;
-    }
-    if (resolve_identifier(world, name, expr, column, &term->args[1])) {
-        return -1;
-    }
-
-    if (term->args[1].name) {
-        term->id = ecs_pair(
-            term->pred.entity, term->args[1].entity);
-    } else {
-        term->id = term->pred.entity;
-    } 
-
-    if (term->role != ECS_AND && term->role != ECS_OR) {
-        term->id |= term->role;
-    }
-
-    return 0;
-}
-
-void ecs_term_free(
-    ecs_term_t *term)
-{
-    ecs_os_free(term->pred.name);
-    ecs_os_free(term->args[0].name);
-    ecs_os_free(term->args[1].name);
-    ecs_os_free(term->name);
-}
-
-int ecs_sig_init(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_sig_t *sig)
-{
-    if (expr && ecs_os_strlen(expr) && strcmp(expr, "0")) {
-        /* Dispell const, but only temporary. Only strdup the expression if the
-         * signature was successfully parsed. Setting the expression is 
-         * necessary for the parser. */
-        sig->expr = (char*)expr;
-    } else {
-        sig->expr = NULL;
-    }
-
-    sig->terms = NULL;
-    sig->name = (char*)name; /* Dispell const- same as above */
-
-    int result = 0;
-
-    if (sig->expr) {
-        result = ecs_parse_expr(world, sig, ecs_parse_signature_action, NULL);
-    }
-
-    /* If the expression parsed without errors, create copies of strings */
-    if (!result) {
-        sig->name = ecs_os_strdup(name);
-        sig->expr = ecs_os_strdup(expr);
-    }    
-
-    return result;
-}
-
-void ecs_sig_deinit(
-    ecs_sig_t *sig)
-{   
-    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
-    int32_t i, count = ecs_vector_count(sig->terms);
-
-    for (i = 0; i < count; i ++) {
-        ecs_term_free(&terms[i]);
-    }
-
-    ecs_vector_free(sig->terms);
-    ecs_os_free(sig->name);
-    ecs_os_free(sig->expr);
-}
-
-int ecs_sig_add(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    ecs_term_t *term)
-{
-    /* Resolve identifiers in term */
-    if (ecs_term_resolve(world, sig->name, sig->expr, 0, term)) {
-        return -1;
-    }
-
-    ecs_term_t *elem;
-
-    /* If term role is OR, component should be a type */
-    if (term->role == ECS_OR) {
-        const EcsType *type = ecs_get(world, term->id, EcsType);
-        if (!type) {
-            ecs_parser_error(sig->name, sig->expr, 0, 
-                "entity used with OR must be a type");
-            return -1;
-        }
-
-        int32_t i, count = ecs_vector_count(type->normalized);
-        ecs_entity_t *ids = ecs_vector_first(type->normalized, ecs_entity_t);
-
-        for (i = 0; i < count; i ++) {
-            elem = ecs_vector_add(&sig->terms, ecs_term_t);
-            *elem = *term;
-            elem->pred.entity = ids[i];
-            elem->pred.name = NULL;
-            elem->args[0].name = NULL;
-            elem->args[1].name = NULL;
-            elem->oper = EcsOr;
-            elem->id = ids[i];
-            elem->role = 0;
-        }
-
-        ecs_term_free(term);
-
-    } else {
-        elem = ecs_vector_add(&sig->terms, ecs_term_t);
-        *elem = *term;
-    }
-
-    return 0;
-}
-
-static
-bool sig_id_set(
-    ecs_term_id_t *id)
-{
-    return (id->name != NULL) || (id->entity != 0);
-}
-
-static
-void sig_add_id(
-    ecs_world_t *world,
-    ecs_strbuf_t *buf,
-    ecs_term_id_t *id)
-{
-    if (id->name) {
-        ecs_strbuf_appendstr(buf, id->name);
-    } else if (id->entity) {
-        char *path = ecs_get_fullpath(world, id->entity);
-        ecs_strbuf_appendstr(buf, path);
-        ecs_os_free(path);
-    } else {
-        ecs_strbuf_appendstr(buf, "0");
-    }
-}
-
-char* ecs_sig_str(
-    ecs_world_t *world,
-    ecs_sig_t *sig)
-{
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-
-    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
-    int32_t i, count = ecs_vector_count(sig->terms);
-    int32_t or_count = 0;
-
-    for (i = 0; i < count; i ++) {
-        if (i) {
-            if (or_count >= 1) {
-                ecs_strbuf_appendstr(&buf, " || ");
-            } else {
-                ecs_strbuf_appendstr(&buf, ", ");
-            }
-        }
-
-        ecs_term_t *term = &terms[i];
-
-        if (or_count < 1) {
-            if (term->inout == EcsIn) {
-                ecs_strbuf_appendstr(&buf, "[in] ");
-            } else if (term->inout == EcsInOut) {
-                ecs_strbuf_appendstr(&buf, "[inout] ");
-            } else if (term->inout == EcsInOut) {
-                ecs_strbuf_appendstr(&buf, "[out] ");
-            }
-        }
-
-        if (term->role) {
-            ecs_strbuf_appendstr(&buf, ecs_role_str(term->role));
-            ecs_strbuf_appendstr(&buf, " ");
-        }
-
-        if (term->oper == EcsOr) {
-            or_count ++;
-        } else {
-            or_count = 0;
-        }
-
-        if (term->oper == EcsNot) {
-            ecs_strbuf_appendstr(&buf, "!");
-        } else if (term->oper == EcsOptional) {
-            ecs_strbuf_appendstr(&buf, "?");
-        }
-
-        if (term->args[0].entity == EcsThis && sig_id_set(&term->args[1])) {
-            ecs_strbuf_appendstr(&buf, "(");
-        }
-
-        if (!sig_id_set(&term->args[1]) && 
-            (term->pred.entity != term->args[0].entity)) 
-        {
-            sig_add_id(world, &buf, &term->pred);
-
-            if (!sig_id_set(&term->args[0])) {
-                ecs_strbuf_appendstr(&buf, "()");
-            } else if (term->args[0].entity != EcsThis) {
-                ecs_strbuf_appendstr(&buf, "(");
-                sig_add_id(world, &buf, &term->args[0]);
-            }
-
-            if (sig_id_set(&term->args[1])) {
-                ecs_strbuf_appendstr(&buf, ", ");
-                sig_add_id(world, &buf, &term->args[1]);
-                ecs_strbuf_appendstr(&buf, ")");
-            }
-        } else {
-            ecs_strbuf_appendstr(&buf, "$");
-            sig_add_id(world, &buf, &term->pred);
-        }
-    }
-
-    return ecs_strbuf_get(&buf);
-}
-
-/* Check if system meets constraints of non-table columns */
-bool ecs_sig_check_constraints(
-    ecs_world_t *world,
-    ecs_sig_t *sig)
-{
-    ecs_vector_each(sig->terms, ecs_term_t, term, {
-        ecs_term_id_t *subj = &term->args[0];
-        ecs_oper_kind_t oper = term->oper;
-
-        if (subj->entity != EcsThis && subj->set & EcsSelf) {
-            ecs_type_t type = ecs_get_type(world, subj->entity);
-            if (ecs_type_has_id(world, type, term->id)) {
-                if (oper == EcsNot) {
-                    return false;
-                }
-            } else {
-                if (oper != EcsNot) {
-                    return false;
-                }
-            }
-        }
-    });
-
-    return true;
 }
 
 ecs_entity_t ecs_find_entity_in_prefabs(
@@ -16679,8 +16788,7 @@ static
 ecs_entity_t get_cascade_component(
     ecs_query_t *query)
 {
-    ecs_term_t *term = ecs_vector_first(query->sig.terms, ecs_term_t);
-    return term[query->cascade_by - 1].id;
+    return query->filter.terms[query->cascade_by - 1].id;
 }
 #endif
 
@@ -16840,8 +16948,10 @@ const char* query_name(
 {
     if (q->system) {
         return ecs_get_name(world, q->system);
+    } else if (q->filter.name) {
+        return q->filter.name;
     } else {
-        return q->sig.expr;
+        return q->filter.expr;
     }
 }
 
@@ -16858,8 +16968,8 @@ int get_comp_and_src(
 {
     ecs_entity_t component = 0, entity = 0;
 
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
-    int32_t term_count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t term_count = query->filter.term_count;
     ecs_term_t *term = &terms[t];
     ecs_term_id_t *subj = &term->args[0];
     ecs_oper_kind_t op = term->oper;
@@ -16912,10 +17022,12 @@ int get_comp_and_src(
                 result = !result;
             }
 
-            /* Optional terms may not have the component. OperAll terms contain
+            /* Optional terms may not have the component. *From terms contain
              * the id of a type of which the contents must match, but the type
              * itself does not need to match. */
-            if (op == EcsOptional || op == EcsOperAll) {
+            if (op == EcsOptional || op == EcsAndFrom || op == EcsOrFrom || 
+                op == EcsNotFrom) 
+            {
                 result = true;
             }
 
@@ -17094,7 +17206,7 @@ int32_t get_component_index(
          * reference (see below) */           
     }
 
-    if (op == EcsOperAll) {
+    if (op == EcsAndFrom || op == EcsOrFrom || op == EcsNotFrom) {
         result = 0;
     } else if (op == EcsOptional) {
         /* If table doesn't have the field, mark it as no data */
@@ -17192,8 +17304,8 @@ int32_t count_traits(
     const ecs_query_t *query,
     ecs_type_t type)
 {
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
-    int32_t i, count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
     int32_t first_count = 0, trait_count = 0;
 
     for (i = 0; i < count; i ++) {
@@ -17218,15 +17330,20 @@ int32_t count_traits(
 }
 
 static
-ecs_type_t get_column_type(
+ecs_type_t get_term_type(
     ecs_world_t *world,
-    ecs_oper_kind_t oper,
+    ecs_term_t *term,
     ecs_entity_t component)
 {
-    if (oper == EcsOperAll) {
+    ecs_oper_kind_t oper = term->oper;
+
+    if (oper == EcsAndFrom || oper == EcsOrFrom || oper == EcsNotFrom) {
         const EcsType *type = ecs_get(world, component, EcsType);
-        ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
-        return type->normalized;
+        if (type) {
+            return type->normalized;
+        } else {
+            return ecs_get_type(world, component);
+        }
     } else {
         return ecs_type_from_id(world, component);
     }    
@@ -17240,8 +17357,8 @@ void add_table(
     ecs_table_t *table)
 {
     ecs_type_t table_type = NULL;
-    int32_t t, c, term_count = ecs_vector_count(query->sig.terms);
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t t, c, term_count = query->filter.term_count;
 
     if (table) {
         table_type = table->type;
@@ -17279,16 +17396,16 @@ add_trait:
 
     if (term_count) {
         /* Array that contains the system column to table column mapping */
-        table_data.iter_data.columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * query->column_count);
+        table_data.iter_data.columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * query->filter.term_count_actual);
         ecs_assert(table_data.iter_data.columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Store the components of the matched table. In the case of OR expressions,
         * components may differ per matched table. */
-        table_data.iter_data.components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * query->column_count);
+        table_data.iter_data.components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * query->filter.term_count_actual);
         ecs_assert(table_data.iter_data.components != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Also cache types, so no lookup is needed while iterating */
-        table_data.iter_data.types = ecs_os_malloc(ECS_SIZEOF(ecs_type_t) * query->column_count);
+        table_data.iter_data.types = ecs_os_malloc(ECS_SIZEOF(ecs_type_t) * query->filter.term_count_actual);
         ecs_assert(table_data.iter_data.types != NULL, ECS_OUT_OF_MEMORY, NULL);        
     }
 
@@ -17376,7 +17493,7 @@ add_trait:
         }
 
         table_data.iter_data.components[c] = component;
-        table_data.iter_data.types[c] = get_column_type(world, op, component);
+        table_data.iter_data.types[c] = get_term_type(world, term, component);
 
         c ++;
     }
@@ -17512,7 +17629,7 @@ bool ecs_query_match(
         return false;
     }
 
-    ecs_type_t type, table_type = table->type;
+    ecs_type_t table_type = table->type;
 
     /* Don't match disabled entities */
     if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_owns_id(
@@ -17535,8 +17652,8 @@ bool ecs_query_match(
         return false;
     }
 
-    int32_t i, term_count = ecs_vector_count(query->sig.terms);
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, term_count = query->filter.term_count;
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -17575,14 +17692,9 @@ bool ecs_query_match(
                 return false;
             }
  
-        } else if (oper == EcsOperAll) {
-            bool match_all = oper == EcsOperAll;
-            if (match_all) {
-                const EcsType *type_ptr = ecs_get(world, term->id, EcsType);
-                type = type_ptr->normalized;
-            }
-
-            int32_t j, count = ecs_vector_count(type);
+        } else if (oper == EcsAndFrom || oper == EcsOrFrom || oper == EcsNotFrom) {
+            ecs_type_t type = get_term_type((ecs_world_t*)world, term, term->id);
+            int32_t match_count = 0, j, count = ecs_vector_count(type);
             ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
 
             for (j = 0; j < count; j ++) {
@@ -17591,9 +17703,19 @@ bool ecs_query_match(
                 tmp_term.id = ids[j];
                 tmp_term.pred.entity = ids[j];
 
-                if (!match_term(world, table_type, &tmp_term, failure_info)) {
-                    return false;
+                if (match_term(world, table_type, &tmp_term, failure_info)) {
+                    match_count ++;
                 }
+            }
+
+            if (oper == EcsAndFrom && match_count != count) {
+                return false;
+            }
+            if (oper == EcsOrFrom && match_count == 0) {
+                return false;
+            }
+            if (oper == EcsNotFrom && match_count != 0) {
+                return false;
             }
         }
     }
@@ -18033,10 +18155,10 @@ void sort_tables(
 
 static
 bool has_refs(
-    ecs_sig_t *sig)
+    ecs_query_t *query)
 {
-    int32_t i, count = ecs_vector_count(sig->terms);
-    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -18059,10 +18181,10 @@ bool has_refs(
 
 static
 bool has_traits(
-    ecs_sig_t *sig)
+    ecs_query_t *query)
 {
-    int32_t i, count = ecs_vector_count(sig->terms);
-    ecs_term_t *terms = ecs_vector_first(sig->terms, ecs_term_t);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
         if (is_column_trait(&terms[i])) {
@@ -18078,7 +18200,11 @@ void register_monitors(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    ecs_vector_each(query->sig.terms, ecs_term_t, term, {
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
+
+    for (i = 0; i < count; i++) {
+        ecs_term_t *term = &terms[i];
         ecs_term_id_t *subj = &term->args[0];
 
         /* If component is requested with CASCADE source register component as a
@@ -18105,7 +18231,7 @@ void register_monitors(
                 ecs_monitor_register(world, 0, term->id, query);
             }
         }
-    });
+    };
 }
 
 static
@@ -18113,8 +18239,8 @@ void process_signature(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    int i, count = ecs_vector_count(query->sig.terms);
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -18191,28 +18317,11 @@ void process_signature(
         }
     }
 
-    query->flags |= (ecs_flags32_t)(has_refs(&query->sig) * EcsQueryHasRefs);
-    query->flags |= (ecs_flags32_t)(has_traits(&query->sig) * EcsQueryHasTraits);
+    query->flags |= (ecs_flags32_t)(has_refs(query) * EcsQueryHasRefs);
+    query->flags |= (ecs_flags32_t)(has_traits(query) * EcsQueryHasTraits);
 
     if (!(query->flags & EcsQueryIsSubquery)) {
         register_monitors(world, query);
-    }
-
-    /* Count number of columns. OR expressions have multiple terms but are
-     * grouped under the same query column */
-    query->column_count = 0;
-
-    for (i = 0; i < count; i ++) {
-        ecs_term_t *term = &terms[i];
-        query->column_count ++;
-
-        if (term->oper == EcsOr) {
-            do {
-                i ++;
-                term = &terms[i];
-            } while (i < count && term->oper == EcsOr);
-            i --;
-        }
     }
 }
 
@@ -18678,22 +18787,8 @@ void rematch_tables(
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
-    bool satisfied = query->constraints_satisfied = 
-        ecs_sig_check_constraints(world, &query->sig);
-
-    /* Enable/disable system. After constraint checking was added to regular
-     * query iterators this is strictly no longer necessary, but is still there
-     * to not break backwards compatibility, and should be harmless.
-     *
-     * TODO: remove when moving to v3
-     */
-    if (query->system) {
-        if (satisfied) {
-            ecs_remove_id(world, query->system, EcsDisabledIntern);
-        } else {
-            ecs_add_id(world, query->system, EcsDisabledIntern);
-        }
-    }        
+    query->constraints_satisfied = ecs_filter_match_entity(
+        world, &query->filter, 0);      
 }
 
 static
@@ -18764,51 +18859,54 @@ void ecs_query_notify(
     }
 }
 
+
 /* -- Public API -- */
 
-static
-ecs_query_t* ecs_query_new_w_sig_intern(
+ecs_query_t* ecs_query_init(
     ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_sig_t *sig,
-    bool is_subquery)
+    const ecs_query_desc_t *desc)
 {
+    ecs_filter_t f;
+    if (ecs_filter_init(world, &f, &desc->filter)) {
+        return NULL;
+    }
+
     ecs_query_t *result = ecs_os_calloc(sizeof(ecs_query_t));
     result->world = world;
-    result->sig = *sig;
+    result->filter = f;
     result->table_indices = ecs_map_new(ecs_table_indices_t, 0);
     result->tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->empty_tables = ecs_vector_new(ecs_matched_table_t, 0);
-    result->system = system;
+    result->system = desc->system;
     result->prev_match_count = -1;
 
-    if (is_subquery) {
+    if (desc->parent != NULL) {
         result->flags |= EcsQueryIsSubquery;
     }
 
     process_signature(world, result);
 
     ecs_trace_2("query #[green]%s#[reset] created with expression #[red]%s", 
-        query_name(world, result), result->sig.expr);
+        query_name(world, result), result->filter.expr);
 
     ecs_log_push();
 
-    if (!is_subquery) {
+    if (!desc->parent) {
         /* Register query with world */
         ecs_query_t **elem = ecs_vector_add(&world->queries, ecs_query_t*);
         *elem = result;
 
         if (result->flags & EcsQueryNeedsTables) {
-            if (system) {
-                if (ecs_has_id(world, system, EcsMonitor)) {
+            if (desc->system) {
+                if (ecs_has_id(world, desc->system, EcsMonitor)) {
                     result->flags |= EcsQueryMonitor;
                 }
                 
-                if (ecs_has_id(world, system, EcsOnSet)) {
+                if (ecs_has_id(world, desc->system, EcsOnSet)) {
                     result->flags |= EcsQueryOnSet;
                 }
 
-                if (ecs_has_id(world, system, EcsUnSet)) {
+                if (ecs_has_id(world, desc->system, EcsUnSet)) {
                     result->flags |= EcsQueryUnSet;
                 }  
             }      
@@ -18819,60 +18917,52 @@ ecs_query_t* ecs_query_new_w_sig_intern(
              * preprocessed when the query is evaluated. */
             add_table(world, result, NULL);
         }
+    } else {
+        add_subquery(world, desc->parent, result);
+        result->parent = desc->parent;
     }
 
-    result->constraints_satisfied = 
-        ecs_sig_check_constraints(world, &result->sig);
+    result->constraints_satisfied = ecs_filter_match_entity(
+        world, &result->filter, 0);
 
     if (result->cascade_by) {
         result->group_table = rank_by_depth;
     }
 
+    /* If a system is specified, ensure that if there are any subjects in the
+     * filter that refer to the system, the component is added */
+    if (desc->system)  {
+        int32_t t, term_count = result->filter.term_count;
+        ecs_term_t *terms = result->filter.terms;
+
+        for (t = 0; t < term_count; t ++) {
+            ecs_term_t *term = &terms[t];
+            if (term->args[0].entity == desc->system) {
+                ecs_add_id(world, desc->system, term->id);
+            }
+        }        
+    }
+
+    if (desc->order_by) {
+        ecs_query_order_by(world, result, desc->order_by_id, desc->order_by);
+    }
+
+    if (desc->group_by) {
+        ecs_query_group_by(world, result, desc->group_by_id, desc->group_by);
+    }
+
     ecs_log_pop();
 
-    /* Make sure application can't try to free sig resources */
-    *sig = (ecs_sig_t){ 0 };
-
     return result;
 }
 
-ecs_query_t* ecs_query_new_w_sig(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_sig_t *sig)
-{
-    return ecs_query_new_w_sig_intern(world, system, sig, false);
-}
-
-ecs_query_t* ecs_query_new(
-    ecs_world_t *world,
-    const char *expr)
-{
-    ecs_sig_t sig = { 0 };
-    ecs_sig_init(world, NULL, expr, &sig);
-    return ecs_query_new_w_sig(world, 0, &sig);
-}
-
-ecs_query_t* ecs_subquery_new(
-    ecs_world_t *world,
-    ecs_query_t *parent,
-    const char *expr)
-{
-    ecs_sig_t sig = { 0 };
-    ecs_sig_init(world, NULL, expr, &sig);
-    ecs_query_t *result = ecs_query_new_w_sig_intern(world, 0, &sig, true);
-    result->parent = parent;
-    add_subquery(world, parent, result);
-    return result;
-}
-
-ecs_sig_t* ecs_query_get_sig(
+ecs_filter_t* ecs_query_get_filter(
     ecs_query_t *query)
 {
-    return &query->sig;
+    return &query->filter;
 }
 
-void ecs_query_free(
+void ecs_query_fini(
     ecs_query_t *query)
 {
     ecs_world_t *world = query->world;
@@ -18918,7 +19008,7 @@ void ecs_query_free(
     ecs_vector_free(query->tables);
     ecs_vector_free(query->empty_tables);
     ecs_vector_free(query->table_slices);
-    ecs_sig_deinit(&query->sig);
+    ecs_filter_fini(&query->filter);
 
     /* Find query in vector */
     if (!(query->flags & EcsQueryIsSubquery) && world->queries) {
@@ -18978,7 +19068,7 @@ ecs_iter_t ecs_query_iter_page(
     return (ecs_iter_t){
         .world = world,
         .query = query,
-        .column_count = query->column_count,
+        .column_count = query->filter.term_count_actual,
         .table_count = table_count,
         .inactive_table_count = ecs_vector_count(query->empty_tables),
         .iter.query = it
@@ -19017,7 +19107,7 @@ void ecs_query_set_iter(
 
     it->world = NULL;
     it->query = query;
-    it->column_count = query->column_count;
+    it->column_count = query->filter.term_count_actual;
     it->table_count = 1;
     it->inactive_table_count = 0;
     it->table_columns = data->columns;
@@ -19378,10 +19468,8 @@ void mark_columns_dirty(
     ecs_table_t *table = table_data->iter_data.table;
 
     if (table && table->dirty_state) {
-        int32_t i, c = 0, count = ecs_vector_count(query->sig.terms);
-        ecs_term_t *terms = ecs_vector_first(
-            query->sig.terms, ecs_term_t);
-
+        ecs_term_t *terms = query->filter.terms;
+        int32_t c = 0, i, count = query->filter.term_count;
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
             ecs_term_id_t *subj = &term->args[0];
@@ -19815,7 +19903,7 @@ void init_edges(
          * flags. These allow us to quickly determine if the table contains
          * data that needs to be handled in a special way, like prefabs or 
          * containers */
-        if (e <= EcsLastInternalComponentId) {
+        if (e <= EcsLastInternalComponentId || e == EcsModule) {
             table->flags |= EcsTableHasBuiltins;
         }
 
@@ -19851,8 +19939,10 @@ void init_edges(
         ecs_entity_t obj = 0;
 
         if (ECS_HAS_RELATION(e, EcsChildOf)) {
-            obj = ECS_PAIR_OBJECT(e);
-            if (obj == EcsFlecs || obj == EcsFlecsCore) {
+            obj = ecs_pair_object(world, e);
+            if (obj == EcsFlecs || obj == EcsFlecsCore || 
+                ecs_has_id(world, obj, EcsModule)) 
+            {
                 table->flags |= EcsTableHasBuiltins;
             }
 
@@ -20337,22 +20427,6 @@ ecs_table_t* ecs_table_traverse_add(
 }
 
 static
-int ecs_entity_compare(
-    const void *e1,
-    const void *e2)
-{
-    ecs_entity_t v1 = *(ecs_entity_t*)e1;
-    ecs_entity_t v2 = *(ecs_entity_t*)e2;
-    if (v1 < v2) {
-        return -1;
-    } else if (v1 > v2) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-static
 bool ecs_entity_array_is_ordered(
     ecs_entities_t *entities)
 {
@@ -20481,7 +20555,7 @@ ecs_table_t *find_or_create(
         ordered = ecs_os_alloca(size);
         ecs_os_memcpy(ordered, entities->array, size);
         qsort(
-            ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare);
+            ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare_qsort);
         type_count = ecs_entity_array_dedup(ordered, type_count);
     } else {
         ordered = entities->array;
@@ -21265,9 +21339,8 @@ bool ecs_term_is_readonly(
     ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
     (void)query;
 
-    ecs_term_t *term = ecs_vector_get(
-        it->query->sig.terms, ecs_term_t, term_index - 1);
-
+    ecs_term_t *term = &it->query->filter.terms[term_index - 1];
+    
     if (term->inout == EcsIn) {
         return true;
     } else {
@@ -21517,6 +21590,26 @@ void* ecs_os_memdup(
     ecs_assert(dst != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_os_memcpy(dst, src, size);  
     return dst;  
+}
+
+int ecs_entity_compare(
+    ecs_entity_t e1, 
+    const void *ptr1, 
+    ecs_entity_t e2, 
+    const void *ptr2) 
+{
+    (void)ptr1;
+    (void)ptr2;
+    return (e1 > e2) - (e1 < e2);
+}
+
+int ecs_entity_compare_qsort(
+    const void *e1,
+    const void *e2)
+{
+    ecs_entity_t v1 = *(ecs_entity_t*)e1;
+    ecs_entity_t v2 = *(ecs_entity_t*)e2;
+    return ecs_entity_compare(v1, NULL, v2, NULL);
 }
 
 /*
@@ -22141,7 +22234,7 @@ int32_t get_any_write_state(
 }
 
 static
-bool check_column_component(
+bool check_term_component(
     ecs_term_t *term,
     bool is_active,
     ecs_entity_t component,
@@ -22210,13 +22303,13 @@ bool check_column_component(
 }
 
 static
-bool check_column(
+bool check_term(
     ecs_term_t *term,
     bool is_active,
     write_state_t *write_state)
 {
     if (term->oper != EcsOr) {
-        return check_column_component(
+        return check_term_component(
             term, is_active, term->id, write_state);
     }  
 
@@ -22271,10 +22364,12 @@ bool build_pipeline(
             bool needs_merge = false;
             bool is_active = !ecs_has_id(
                 world, it.entities[i], EcsInactive);
-
-            ecs_vector_each(q->sig.terms, ecs_term_t, term, {
-                needs_merge |= check_column(term, is_active, &ws);
-            });
+            
+            ecs_term_t *terms = q->filter.terms;
+            int32_t t, term_count = q->filter.term_count;
+            for (t = 0; t < term_count; t ++) {
+                needs_merge |= check_term(&terms[t], is_active, &ws);
+            }
 
             if (needs_merge) {
                 /* After merge all components will be merged, so reset state */
@@ -22286,9 +22381,9 @@ bool build_pipeline(
                  * should not insert unnecessary merges.  */
                 needs_merge = false;
                 if (is_active) {
-                    ecs_vector_each(q->sig.terms, ecs_term_t, term, {
-                        needs_merge |= check_column(term, true, &ws);
-                    });
+                    for (t = 0; t < term_count; t ++) {
+                        needs_merge |= check_term(&terms[t], true, &ws);
+                    }
                 }
 
                 /* The component states were just reset, so if we conclude that
@@ -22370,7 +22465,9 @@ int32_t ecs_pipeline_update(
         ecs_eval_component_monitors(world);
     }
 
-    EcsPipelineQuery *pq = ecs_get_mut(world, pipeline, EcsPipelineQuery, NULL);
+    bool added = false;
+    EcsPipelineQuery *pq = ecs_get_mut(world, pipeline, EcsPipelineQuery, &added);
+    ecs_assert(added == false, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -22461,7 +22558,7 @@ void ecs_pipeline_run(
 static
 void add_pipeline_tags_to_sig(
     ecs_world_t *world,
-    ecs_sig_t *sig,
+    ecs_term_t *terms,
     ecs_type_t type)
 {
     (void)world;
@@ -22470,7 +22567,7 @@ void add_pipeline_tags_to_sig(
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
 
     for (i = 0; i < count; i ++) {
-        ecs_sig_add(world, sig, &(ecs_term_t){
+        terms[i] = (ecs_term_t){
             .inout = EcsIn,
             .oper = EcsOr,
             .pred.entity = entities[i],
@@ -22478,8 +22575,80 @@ void add_pipeline_tags_to_sig(
                 .entity = EcsThis,
                 .set = EcsSelf | EcsSuperSet
             }
-        });
+        };
     }
+}
+
+static
+ecs_query_t* build_pipeline_query(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    const char *name,
+    bool with_inactive)
+{
+    const EcsType *type_ptr = ecs_get(world, pipeline, EcsType);
+    ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t type_count = ecs_vector_count(type_ptr->normalized);
+    int32_t term_count = 2;
+
+    if (with_inactive) {
+        term_count ++;
+    }
+
+    ecs_term_t *terms = ecs_os_malloc(
+        (type_count + term_count) * ECS_SIZEOF(ecs_term_t));
+
+    terms[0] = (ecs_term_t){
+        .inout = EcsIn,
+        .oper = EcsAnd,
+        .pred.entity = ecs_id(EcsSystem),
+        .args[0] = {
+            .entity = EcsThis,
+            .set = EcsSelf | EcsSuperSet
+        }
+    };
+
+    terms[1] = (ecs_term_t){
+        .inout = EcsIn,
+        .oper = EcsNot,
+        .pred.entity = EcsDisabledIntern,
+        .args[0] = {
+            .entity = EcsThis,
+            .set = EcsSelf | EcsSuperSet
+        }
+    };
+
+    if (with_inactive) {
+        terms[2] = (ecs_term_t){
+            .inout = EcsIn,
+            .oper = EcsNot,
+            .pred.entity = EcsInactive,
+            .args[0] = {
+                .entity = EcsThis,
+                .set = EcsSelf | EcsSuperSet
+            }
+        };
+    }
+
+    add_pipeline_tags_to_sig(world, &terms[term_count], type_ptr->normalized);    
+
+    ecs_query_t *result = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter = {
+            .name = name,
+            .terms_buffer = terms,
+            .terms_buffer_count = term_count + type_count
+        },
+        .order_by = compare_entity,
+        .group_by = rank_phase,
+        .group_by_id = pipeline
+    });
+
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_os_free(terms);
+
+    return result;
 }
 
 static 
@@ -22492,90 +22661,28 @@ void EcsOnAddPipeline(
     int32_t i;
     for (i = it->count - 1; i >= 0; i --) {
         ecs_entity_t pipeline = entities[i];
-        ecs_sig_t sig = { 0 };
-
-        const EcsType *type_ptr = ecs_get(world, pipeline, EcsType);
-        ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         
 #ifndef NDEBUG
-        char *str = ecs_type_str(world, type_ptr->normalized);
-        ecs_trace_1("pipeline #[green]%s#[normal] created with #[red][%s]",
-            ecs_get_name(world, pipeline), str);
-        ecs_os_free(str);
+        ecs_trace_1("pipeline #[green]%s#[normal] created",
+            ecs_get_name(world, pipeline));
 #endif
         ecs_log_push();
 
         /* Build signature for pipeline quey that matches EcsSystems, has the
-         * pipeline as a XOR column, and ignores systems with EcsInactive and
-         * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
-         * the regular query matching */
-        ecs_sig_add(world, &sig, &(ecs_term_t){
-            .inout = EcsIn,
-            .oper = EcsAnd,
-            .pred.entity = ecs_id(EcsSystem),
-            .args[0] = {
-                .entity = EcsThis,
-                .set = EcsSelf | EcsSuperSet
-            }
-        });
-
-        ecs_sig_add(world, &sig, &(ecs_term_t){
-            .inout = EcsIn,
-            .oper = EcsNot,
-            .pred.entity = EcsInactive,
-            .args[0] = {
-                .entity = EcsThis,
-                .set = EcsSelf | EcsSuperSet
-            }
-        });
-        
-        ecs_sig_add(world, &sig, &(ecs_term_t){
-            .inout = EcsIn,
-            .oper = EcsNot,
-            .pred.entity = EcsDisabledIntern,
-            .args[0] = {
-                .entity = EcsThis,
-                .set = EcsSelf | EcsSuperSet
-            }             
-        });
-
-        add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
-
-        /* Create the query. Sort the query by system id and phase */
-        ecs_query_t *query = ecs_query_new_w_sig(world, 0, &sig);
-        ecs_query_order_by(world, query, 0, compare_entity);
-        ecs_query_group_by(world, query, pipeline, rank_phase);
+         * pipeline phases as OR columns, and ignores systems with EcsInactive 
+         * and EcsDisabledIntern. Note that EcsDisabled is automatically ignored 
+         * by the regular query matching */
+        ecs_query_t *query = build_pipeline_query(
+            world, pipeline, "BuiltinPipelineQuery", true);
+        ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Build signature for pipeline build query. The build query includes
          * systems that are inactive, as an inactive system may become active as
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
-        ecs_sig_add(world, &sig, &(ecs_term_t){
-            .inout = EcsIn,
-            .oper = EcsAnd,
-            .pred.entity = ecs_id(EcsSystem),
-            .args[0] = {
-                .entity = EcsThis,
-                .set = EcsSelf | EcsSuperSet
-            }               
-        });
-
-        ecs_sig_add(world, &sig, &(ecs_term_t){
-            .inout = EcsIn,
-            .oper = EcsNot,
-            .pred.entity = EcsDisabledIntern,
-            .args[0] = {
-                .entity = EcsThis,
-                .set = EcsSelf | EcsSuperSet
-            }              
-        });
-
-        add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
-
-        /* Use the same sorting functions for the build query */
-        ecs_query_t *build_query = ecs_query_new_w_sig(world, 0, &sig);
-        ecs_query_order_by(world, build_query, 0, compare_entity);
-        ecs_query_group_by(world, build_query, pipeline, rank_phase);       
+        ecs_query_t *build_query = build_pipeline_query(
+            world, pipeline, "BuiltinPipelineBuildQuery", false);
+        ecs_assert(build_query != NULL, ECS_INTERNAL_ERROR, NULL);
 
         EcsPipelineQuery *pq = ecs_get_mut(
             world, pipeline, EcsPipelineQuery, NULL);
@@ -22682,6 +22789,7 @@ ecs_entity_t ecs_new_pipeline(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_new_type(world, e, name, expr);
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_get(world, result, EcsType) != NULL, 
         ECS_INTERNAL_ERROR, NULL);
 
@@ -23028,9 +23136,6 @@ ECS_TYPE_DECL(EcsComponentLifecycle);
 ECS_TYPE_DECL(EcsTrigger);
 ECS_TYPE_DECL(EcsSystem);
 ECS_TYPE_DECL(EcsTickSource);
-ECS_TYPE_DECL(EcsSignatureExpr);
-ECS_TYPE_DECL(EcsSignature);
-ECS_TYPE_DECL(EcsQuery);
 ECS_TYPE_DECL(EcsIterAction);
 ECS_TYPE_DECL(EcsContext);
 
@@ -23058,8 +23163,8 @@ void activate_in_columns(
     ecs_map_t *component_map,
     bool activate)
 {
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
-    int32_t i, count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
         if (terms[i].inout == EcsIn) {
@@ -23119,8 +23224,8 @@ void register_out_columns(
     EcsSystem *system_data)
 {
     ecs_query_t *query = system_data->query;
-    ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
-    int32_t i, out_count = 0, count = ecs_vector_count(query->sig.terms);
+    ecs_term_t *terms = query->filter.terms;
+    int32_t out_count = 0, i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
         if (terms[i].inout == EcsOut) {
@@ -23240,7 +23345,7 @@ void ecs_enable_system(
 }
 
 static
-void ecs_init_system(
+void ecs_system_init(
     ecs_world_t *world,
     ecs_entity_t system,
     ecs_iter_action_t action,
@@ -23286,12 +23391,6 @@ void ecs_init_system(
         /* If system is enabled, trigger enable components */
         activate_in_columns(world, query, world->on_enable_components, true);
 
-        /* Check if all non-table column constraints are met. If not, disable
-         * system (system will be enabled once constraints are met) */
-        if (!ecs_sig_check_constraints(world, &query->sig)) {
-            ecs_add_id(world, system, EcsDisabledIntern);
-        }
-
         /* If the query has a OnDemand system tag, register its [out] terms */
         if (ecs_has_id(world, system, EcsOnDemand)) {
             register_out_columns(world, system, sptr);
@@ -23305,8 +23404,8 @@ void ecs_init_system(
         }
 
         /* Check if system has out columns */
-        int32_t i, count = ecs_vector_count(query->sig.terms);
-        ecs_term_t *terms = ecs_vector_first(query->sig.terms, ecs_term_t);
+        ecs_term_t *terms = query->filter.terms;
+        int32_t i, count = query->filter.term_count;
         for (i = 0; i < count; i ++) {
             if (terms[i].inout != EcsIn) {
                 break;
@@ -23315,7 +23414,7 @@ void ecs_init_system(
     }
 
     ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
-        ecs_get_name(world, system), query->sig.expr);
+        ecs_get_name(world, system), query->filter.expr);
 }
 
 /* -- Public API -- */
@@ -23675,7 +23774,6 @@ void OnSetTrigger(
     ecs_iter_t *it)
 {
     EcsTrigger *ct = ecs_term(it, EcsTrigger, 1);
-    
     trigger_set(it->world, it->entities, ct, it->count);
 }
 
@@ -23737,63 +23835,6 @@ void EnableSystem(
     }
 }
 
-/* Parse a signature expression into the ecs_sig_t data structure */
-static
-void CreateSignature(
-    ecs_iter_t *it) 
-{
-    ecs_world_t *world = it->world;
-    ecs_entity_t *entities = it->entities;
-
-    EcsSignatureExpr *signature = ecs_term(it, EcsSignatureExpr, 1);
-    
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = entities[i];
-        char *path = ecs_get_fullpath(world, e);
-
-        /* Parse the signature and add the result to the entity */
-        EcsSignature sig = {0};
-
-        if (ecs_sig_init(world, path, signature[i].expr, &sig.signature)) {
-            ecs_assert(false, ECS_INVALID_PARAMETER, signature[i].expr);
-        }
-
-        /* If sig has FromSystem columns, add components to the entity */
-        ecs_vector_each(sig.signature.terms, ecs_term_t, term, {
-            if (term->args[0].entity == e) {
-                ecs_add_id(world, e, term->id);
-            }
-        });
-
-        ecs_set_ptr(world, e, EcsSignature, &sig);
-
-        ecs_os_free(path);
-    }
-}
-
-/* Create a query from a signature */
-static
-void CreateQuery(
-    ecs_iter_t *it) 
-{
-    ecs_world_t *world = it->world;
-    ecs_entity_t *entities = it->entities;
-
-    EcsSignature *signature = ecs_term(it, EcsSignature, 1);
-    
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = entities[i];
-
-        if (!ecs_has(world, e, EcsQuery)) {
-            EcsQuery query = {0};
-            query.query = ecs_query_new_w_sig(world, e, &signature[i].signature);
-            ecs_set_ptr(world, e, EcsQuery, &query);
-        }
-    }
-}
-
 /* Create a system from a query and an action */
 static
 void CreateSystem(
@@ -23814,7 +23855,7 @@ void CreateSystem(
             ctx_ptr = (void*)ctx[i].ctx;
         }
 
-        ecs_init_system(world, e, action[i].action, query[i].query, ctx_ptr);
+        ecs_system_init(world, e, action[i].action, query[i].query, ctx_ptr);
     }
 }
 
@@ -23825,12 +23866,16 @@ void bootstrap_set_system(
     const char *expr,
     ecs_iter_action_t action)
 {
-    ecs_sig_t sig = {0};
-    ecs_entity_t sys = ecs_set(world, 0, EcsName, {.value = name});
-    ecs_add_id(world, sys, EcsOnSet);
-    ecs_sig_init(world, name, expr, &sig);
-    ecs_query_t *query = ecs_query_new_w_sig(world, sys, &sig);
-    ecs_init_system(world, sys, action, query, NULL);
+    ecs_entity_t system = ecs_set(world, 0, EcsName, {.value = name});
+    ecs_add_id(world, system, EcsOnSet);
+
+    ecs_query_t *query = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.name = name,
+        .filter.expr = expr,
+        .system = system
+    });
+
+    ecs_system_init(world, system, action, query, NULL);
 }
 
 ecs_entity_t ecs_new_system(
@@ -23838,7 +23883,7 @@ ecs_entity_t ecs_new_system(
     ecs_entity_t e,
     const char *name,
     ecs_entity_t tag,
-    const char *signature,
+    const char *expr,
     ecs_iter_action_t action)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
@@ -23849,35 +23894,46 @@ ecs_entity_t ecs_new_system(
         result = ecs_new_entity(world, 0, name, NULL);
     }
 
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+
     if (tag) {
         ecs_add_id(world, result, tag);
     }
+    
+    ecs_set(world, result, EcsIterAction, {action});
 
-    bool added = false;
-    EcsSignatureExpr *expr = ecs_get_mut(world, result, EcsSignatureExpr, &added);
-    if (added) {
-        expr->expr = signature;
-    } else {
-        if (!expr->expr || !signature) {
-            if (expr->expr != signature) {
-                if (expr->expr && !strcmp(expr->expr, "0")) {
+    const EcsQuery *q = ecs_get(world, result, EcsQuery);
+    if (q) {
+        const char *query_expr = q->query->filter.expr;
+        if (!query_expr || !expr) {
+            if (query_expr != expr) {
+                if (query_expr && !strcmp(query_expr, "0")) {
                     /* Ok */
-                } else if (signature && !strcmp(signature, "0")) {
+                } else if (expr && !strcmp(expr, "0")) {
                     /* Ok */
                 } else {
                     ecs_abort(ECS_ALREADY_DEFINED, NULL);
                 }
             }
         } else {
-            if (strcmp(expr->expr, signature)) {
+            if (strcmp(query_expr, expr)) {
                 ecs_abort(ECS_ALREADY_DEFINED, name);
             }
         }
+    } else {
+        ecs_query_t *query = ecs_query_init(world, &(ecs_query_desc_t){
+            .filter.name = name,
+            .filter.expr = expr,
+            .system = result
+        });
+
+        if (!query) {
+            ecs_delete(world, result);
+            return 0;
+        }
+
+        ecs_set(world, result, EcsQuery, {query});
     }
-
-    ecs_modified(world, result, EcsSignatureExpr);
-
-    ecs_set(world, result, EcsIterAction, {action});
 
     return result;
 }
@@ -23937,9 +23993,6 @@ void FlecsSystemImport(
     ecs_bootstrap_component(world, EcsTrigger);
     ecs_bootstrap_component(world, EcsSystem);
     ecs_bootstrap_component(world, EcsTickSource);
-    ecs_bootstrap_component(world, EcsSignatureExpr);
-    ecs_bootstrap_component(world, EcsSignature);
-    ecs_bootstrap_component(world, EcsQuery);
     ecs_bootstrap_component(world, EcsIterAction);
     ecs_bootstrap_component(world, EcsContext);
 
@@ -23961,9 +24014,6 @@ void FlecsSystemImport(
     ECS_TYPE_IMPL(EcsTrigger);
     ECS_TYPE_IMPL(EcsSystem);
     ECS_TYPE_IMPL(EcsTickSource);
-    ECS_TYPE_IMPL(EcsSignatureExpr);
-    ECS_TYPE_IMPL(EcsSignature);
-    ECS_TYPE_IMPL(EcsQuery);
     ECS_TYPE_IMPL(EcsIterAction);
     ECS_TYPE_IMPL(EcsContext);
 
@@ -23974,25 +24024,31 @@ void FlecsSystemImport(
             .dtor = ecs_colsystem_dtor
         });
 
-    /* Create systems necessary to create systems */
-    bootstrap_set_system(world, "CreateSignature", "SignatureExpr", CreateSignature);
-    bootstrap_set_system(world, "CreateQuery", "Signature, IterAction", CreateQuery);
-    bootstrap_set_system(world, "CreateSystem", "Query, IterAction, ?Context", CreateSystem);
+    /* Create systems that creates systems */
+    bootstrap_set_system(world,
+        "CreateSystem", "Query, IterAction, ?Context, SYSTEM:Hidden", 
+        CreateSystem);
 
     /* From here we can create systems */
 
     /* Register OnSet system for EcsComponentLifecycle */
-    ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, ComponentLifecycle, SYSTEM:Hidden);
+    ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, 
+        ComponentLifecycle, SYSTEM:Hidden);
 
     /* Register OnSet system for triggers */
-    ECS_SYSTEM(world, OnSetTrigger, EcsOnSet, Trigger, SYSTEM:Hidden);
+    ECS_SYSTEM(world, OnSetTrigger, EcsOnSet, 
+        Trigger, SYSTEM:Hidden);
 
     /* System that sets ctx for a trigger */
-    ECS_SYSTEM(world, OnSetTriggerCtx, EcsOnSet, Trigger, Context, SYSTEM:Hidden);
+    ECS_SYSTEM(world, OnSetTriggerCtx, EcsOnSet, 
+        Trigger, Context, SYSTEM:Hidden);
 
     /* Monitors that trigger when a system is enabled or disabled */
-    ECS_SYSTEM(world, DisableSystem, EcsMonitor, System, Disabled || DisabledIntern, SYSTEM:Hidden);
-    ECS_SYSTEM(world, EnableSystem, EcsMonitor, System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
+    ECS_SYSTEM(world, DisableSystem, EcsMonitor, 
+        System, Disabled || DisabledIntern, SYSTEM:Hidden);
+
+    ECS_SYSTEM(world, EnableSystem, EcsMonitor, 
+        System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
 }
 
 #endif
@@ -24060,9 +24116,8 @@ ecs_type_t ecs_dbg_get_column_type(
         return NULL;
     }
     
-    ecs_term_t *terms = ecs_vector_first(
-        system_data->query->sig.terms, ecs_term_t);
-    int32_t count = ecs_vector_count(system_data->query->sig.terms);
+    ecs_term_t *terms = system_data->query->filter.terms;
+    int32_t count = system_data->query->filter.term_count;
 
     if (count < column_index) {
         return NULL;
@@ -24076,147 +24131,176 @@ ecs_type_t ecs_dbg_get_column_type(
 #endif
 #endif
 
-/** Parse callback that adds type to type identifier for ecs_new_type */
 static
-int parse_type_action(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    int64_t column,
-    ecs_term_t *term,
-    void *data)
+bool ids_compare(
+    const ecs_vector_t *ids_1,
+    const ecs_vector_t *ids_2)
 {
-    ecs_vector_t **array = data;
-
-    if (term->name) {
-        ecs_parser_error(sig->name, sig->expr, column, 
-            "column names not supported in type expression");
-        goto error;
+    int32_t i, count = ecs_vector_count(ids_1);
+    if (count != ecs_vector_count(ids_2)) {
+        return false;
     }
 
-    if (term->oper != EcsAnd && term->oper != EcsOperAll) {
-        ecs_parser_error(sig->name, sig->expr, column, 
-            "operator other than AND not supported in type expression");
-        goto error;
-    }
+    ecs_id_t *arr_1 = ecs_vector_first(ids_1, ecs_id_t);
+    ecs_id_t *arr_2 = ecs_vector_first(ids_2, ecs_id_t);
 
-    if (ecs_term_resolve(world, sig->name, sig->expr, column, term)) {
-        goto error;
-    }
-
-    if (term->args[0].entity == 0) {
-        /* Empty term */
-        goto done;
-    }
-
-    if (term->args[0].set != EcsSetDefault) {
-        ecs_parser_error(sig->name, sig->expr, column, 
-            "source modifiers not supported for type expressions");
-        goto error;
-    }
-
-    if (term->args[0].entity != EcsThis) {
-        ecs_parser_error(sig->name, sig->expr, column, 
-            "subject other than this not supported in type expression");
-        goto error;
-    }
-
-    ecs_entity_t* elem = ecs_vector_add(array, ecs_entity_t);
-    *elem = term->id | term->role;
-
-done:
-    ecs_term_free(term);
-    return 0;
-error:
-    ecs_term_free(term);
-    return -1;
-}
-
-static
-ecs_table_t* table_from_vec(
-    ecs_world_t *world,
-    ecs_vector_t *vec)
-{
-    ecs_entity_t *array = ecs_vector_first(vec, ecs_entity_t);
-    int32_t count = ecs_vector_count(vec);
-
-    ecs_entities_t entities = {
-        .array = array,
-        .count = count
-    };
-
-    return ecs_table_find_or_create(world, &entities);
-}
-
-static
-EcsType type_from_vec(
-    ecs_world_t *world,
-    ecs_vector_t *vec)
-{
-    EcsType result = {0, 0};
-    ecs_table_t *table = table_from_vec(world, vec);
-    if (!table) {
-        return result;
-    }
-
-    result.type = table->type;
-
-    /* Create normalized type. A normalized type resolves all elements with an
-     * AND flag and appends them to the resulting type, where the default type
-     * maintains the original type hierarchy. */
-    ecs_vector_t *normalized = NULL;
-
-    ecs_entity_t *array = ecs_vector_first(vec, ecs_entity_t);
-    int32_t i, count = ecs_vector_count(vec);
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = array[i];
-        if (ECS_HAS_ROLE(e, AND)) {
-            ecs_entity_t entity = ECS_PAIR_OBJECT(e);
-            const EcsType *type_ptr = ecs_get(world, entity, EcsType);
-            ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
-                "flag must be applied to type");
-
-            ecs_vector_each(type_ptr->normalized, ecs_entity_t, c_ptr, {
-                ecs_entity_t *el = ecs_vector_add(&normalized, ecs_entity_t);
-                *el = *c_ptr;
-            })
-        }       
+        if (arr_1[i] != arr_2[i]) {
+            return false;
+        }
     }
 
-    /* Only get normalized type if it's different from the type */
-    if (normalized) {
-        ecs_entities_t normalized_array = ecs_type_to_entities(normalized);
-        ecs_table_t *norm_table = ecs_table_traverse_add(
-            world, table, &normalized_array, NULL);
+    return true;
+}
 
-        result.normalized = norm_table->type;
+static
+ecs_vector_t* sort_and_dedup(
+    ecs_vector_t *result)
+{
+    /* Sort vector */
+    ecs_vector_sort(result, ecs_id_t, ecs_entity_compare_qsort);
 
-        ecs_vector_free(normalized);
-    } else {
-        result.normalized = result.type;
+    /* Ensure vector doesn't contain duplicates */
+    ecs_id_t *ids = ecs_vector_first(result, ecs_id_t);
+    int32_t i, offset = 0, count = ecs_vector_count(result);
+
+    for (i = 0; i < count; i ++) {
+        if (i && ids[i] == ids[i - 1]) {
+            offset ++;
+        }
+
+        if (i + offset >= count) {
+            break;
+        }
+
+        ids[i] = ids[i + offset];
     }
+
+    ecs_vector_set_count(&result, ecs_id_t, i - offset);
 
     return result;
 }
 
+/** Parse callback that adds type to type identifier for ecs_new_type */
 static
-EcsType type_from_expr(
+ecs_vector_t* expr_to_ids(
     ecs_world_t *world,
     const char *name,
     const char *expr)
 {
-    if (expr) {
-        ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_sig_t sig = {
-            .name = (char*)name,
-            .expr = (char*)expr
-        };
-        ecs_parse_expr(world, &sig, parse_type_action, &vec);
-        EcsType result = type_from_vec(world, vec);
-        ecs_vector_free(vec);
-        return result;
-    } else {
-        return (EcsType){0, 0};
+#ifdef FLECS_PARSER    
+    ecs_vector_t *result = NULL;
+    const char *ptr = expr;
+    ecs_term_t term = {0};
+
+    if (!ptr) {
+        return NULL;
     }
+
+    while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
+        if (term.name) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "column names not supported in type expression");
+            goto error;
+        }
+
+        if (term.oper != EcsAnd && term.oper != EcsAndFrom) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "operator other than AND not supported in type expression");
+            goto error;
+        }
+
+        if (ecs_term_resolve_ids(world, name, expr, &term)) {
+            goto error;
+        }
+
+        if (term.args[0].entity == 0) {
+            /* Empty term */
+            goto done;
+        }
+
+        if (term.args[0].set != EcsSetDefault) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "source modifiers not supported for type expressions");
+            goto error;
+        }
+
+        if (term.args[0].entity != EcsThis) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "subject other than this not supported in type expression");
+            goto error;
+        }
+
+        if (term.oper == EcsAndFrom) {
+            term.role = ECS_AND;
+        }
+
+        ecs_id_t* elem = ecs_vector_add(&result, ecs_id_t);
+        *elem = term.id | term.role;
+
+        ecs_term_fini(&term);
+    }
+
+    result = sort_and_dedup(result);
+
+done:
+    return result;
+error:
+    ecs_term_fini(&term);
+    ecs_vector_free(result);
+    return NULL;
+#else
+    (void)world;
+    (void)name;
+    (void)expr;
+    ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+    return NULL;
+#endif    
+}
+
+/* Create normalized type. A normalized type resolves all elements with an
+ * AND flag and appends them to the resulting type, where the default type
+ * maintains the original type hierarchy. */
+static
+ecs_vector_t* ids_to_normalized_ids(
+    ecs_world_t *world,
+    ecs_vector_t *ids)
+{
+    ecs_vector_t *result = NULL;
+
+    ecs_entity_t *array = ecs_vector_first(ids, ecs_id_t);
+    int32_t i, count = ecs_vector_count(ids);
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = array[i];
+        if (ECS_HAS_ROLE(e, AND)) {
+            ecs_entity_t entity = ECS_PAIR_OBJECT(e);
+
+            const EcsType *type_ptr = ecs_get(world, entity, EcsType);
+            ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
+                "flag must be applied to type");
+
+            ecs_vector_each(type_ptr->normalized, ecs_id_t, c_ptr, {
+                ecs_entity_t *el = ecs_vector_add(&result, ecs_id_t);
+                *el = *c_ptr;
+            })
+        } else {
+            ecs_entity_t *el = ecs_vector_add(&result, ecs_id_t);
+            *el = e;
+        }   
+    }
+
+    return sort_and_dedup(result);
+}
+
+static
+ecs_table_t* table_from_ids(
+    ecs_world_t *world,
+    ecs_vector_t *ids)
+{
+    ecs_entities_t ids_array = ecs_type_to_entities(ids);
+    ecs_table_t *result = ecs_table_find_or_create(world, &ids_array);
+    return result;
 }
 
 /* If a name prefix is set with ecs_set_name_prefix, check if the entity name
@@ -24312,64 +24396,93 @@ ecs_type_t ecs_type_from_str(
     ecs_world_t *world,
     const char *expr)
 {
-    EcsType type = type_from_expr(world, NULL, expr);
-    return type.normalized;
+    ecs_vector_t *ids = expr_to_ids(world, NULL, expr);
+    if (!ids) {
+        return NULL;
+    }
+
+    ecs_vector_t *normalized_ids = ids_to_normalized_ids(world, ids);
+    ecs_vector_free(ids);
+
+    ecs_table_t *table = table_from_ids(world, normalized_ids);
+    ecs_vector_free(normalized_ids);
+
+    return table->type;
 }
 
 ecs_table_t* ecs_table_from_str(
     ecs_world_t *world,
     const char *expr)
 {
-    if (expr) {
-        ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_sig_t sig = {
-            .expr = (char*)expr
-        };        
-        ecs_parse_expr(world, &sig, parse_type_action, &vec);
-        ecs_table_t *result = table_from_vec(world, vec);
-        ecs_vector_free(vec);
-        return result;
-    } else {
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+
+    ecs_vector_t *ids = expr_to_ids(world, NULL, expr);
+    if (!ids) {
         return NULL;
     }
+
+    ecs_table_t *result = table_from_ids(world, ids);
+    ecs_vector_free(ids);
+
+    return result;
+}
+
+static
+int add_expr_to_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name,
+    const char *expr)
+{
+    if (!expr || !expr[0] || !strcmp(expr, "0")) {
+        return 0;
+    }
+
+    ecs_vector_t *ids = expr_to_ids(world, name, expr);
+    if (!ids) {
+        return -1;
+    }
+
+    ecs_vector_t *normalized = ids_to_normalized_ids(world, ids);
+    ecs_add_type(world, entity, normalized);
+    
+    ecs_vector_free(ids);
+    ecs_vector_free(normalized);   
+
+    return 0;
 }
 
 ecs_entity_t ecs_new_entity(
     ecs_world_t *world,
-    ecs_entity_t e,
+    ecs_entity_t entity,
     const char *name,
     const char *expr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Function cannot be called from a stage, use regular ecs_new */
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
+    ecs_entity_t result = ecs_lookup_w_id(world, entity, name);
     if (!result) {
         result = ecs_new(world, 0);
         ecs_set_symbol(world, result, name);
     }
-    
-    EcsType type = type_from_expr(world, name, expr);
 
-    ecs_add_type(world, result, type.normalized);
+    if (add_expr_to_entity(world, result, name, expr)) {
+        ecs_delete(world, result);
+        return 0;
+    }
 
     return result;
 }
 
 ecs_entity_t ecs_new_prefab(
     ecs_world_t *world,
-    ecs_entity_t e,
+    ecs_entity_t entity,
     const char *name,
     const char *expr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Function cannot be called from a stage, use regular ecs_new */
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
+    ecs_entity_t result = ecs_lookup_w_id(world, entity, name);
     if (!result) {
         result = ecs_new(world, 0);
         ecs_set_symbol(world, result, name);
@@ -24377,8 +24490,10 @@ ecs_entity_t ecs_new_prefab(
 
     ecs_add_id(world, result, EcsPrefab);
 
-    EcsType type = type_from_expr(world, name, expr);
-    ecs_add_type(world, result, type.normalized);
+    if (add_expr_to_entity(world, result, name, expr)) {
+        ecs_delete(world, result);
+        return 0;
+    }
 
     return result;
 }
@@ -24460,26 +24575,33 @@ ecs_entity_t ecs_new_type(
     if (!result) {
         result = ecs_new_entity(world, 0, name, NULL);
     }
-    
-    EcsType type_parsed = type_from_expr(world, name, expr);
+
+    ecs_vector_t *ids = expr_to_ids(world, name, expr);
+    ecs_vector_t *normalized = ids_to_normalized_ids(world, ids);
+    ecs_assert(normalized != NULL, ECS_INTERNAL_ERROR, NULL);
 
     bool added = false;
     EcsType *type = ecs_get_mut(world, result, EcsType, &added);
     if (added) {
-        type->type = type_parsed.type;
-        type->normalized = type_parsed.normalized;
+        ecs_table_t *table_type = table_from_ids(world, ids);
+        ecs_table_t *table_normalized = table_from_ids(world, normalized);
+        type->type = table_type->type;
+        type->normalized = table_normalized->type;
+
+        /* This will allow the type to show up in debug tools */
+        ecs_map_set(world->type_handles, (uintptr_t)table_type->type, &result);        
     } else {
-        if (type->type != type_parsed.type) {
+        if (!ids_compare(type->type, ids)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
 
-        if (type->normalized != type_parsed.normalized) {
+        if (!ids_compare(type->normalized, normalized)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
-    }     
+    }
 
-    /* This will allow the type to show up in debug tools */
-    ecs_map_set(world->type_handles, (uintptr_t)type_parsed.type, &result);
+    ecs_vector_free(ids);
+    ecs_vector_free(normalized);    
 
     return result;
 }
@@ -24488,6 +24610,7 @@ ecs_entity_t ecs_new_type(
 ecs_type_t ecs_type(EcsComponent);
 ecs_type_t ecs_type(EcsType);
 ecs_type_t ecs_type(EcsName);
+ecs_type_t ecs_type(EcsQuery);
 ecs_type_t ecs_type(EcsPrefab);
 
 /* Component lifecycle actions for EcsName */
@@ -24684,6 +24807,7 @@ void ecs_bootstrap(
     bootstrap_component(world, table, EcsName);
     bootstrap_component(world, table, EcsComponent);
     bootstrap_component(world, table, EcsType);
+    bootstrap_component(world, table, EcsQuery);
 
     ecs_set_component_actions(world, EcsName, {
         .ctor = ecs_ctor(EcsName),
