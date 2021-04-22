@@ -11665,7 +11665,7 @@ public:
         ecs_assert(_::cpp_type<Object>::size() != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
-        ecs_set_ptr_w_id(world(), id(),
+        ecs_set_ptr_w_entity(world(), id(),
             ecs_pair(relation.id(), comp_id),
             sizeof(Object), &value);
 

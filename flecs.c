@@ -5572,16 +5572,18 @@ ecs_entity_t ecs_new_w_type(
     ecs_stage_t *stage = ecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new_id(world);
 
+    ecs_entities_t to_add = ecs_type_to_entities(type);
+    if (ecs_defer_new(world, stage, entity, &to_add)) {
+        return entity;
+    }
+
     if (type || world->stage.scope) {
-        ecs_entities_t to_add = ecs_type_to_entities(type);
-        if (ecs_defer_new(world, stage, entity, &to_add)) {
-            return entity;
-        }
         new(world, entity, &to_add);
-        ecs_defer_flush(world, stage);       
     } else {
         ecs_eis_set(world, entity, &(ecs_record_t){ 0 });
     }
+
+    ecs_defer_flush(world, stage);    
 
     return entity;
 }
