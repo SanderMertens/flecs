@@ -5597,16 +5597,16 @@ ecs_entity_t ecs_new_w_id(
     ecs_stage_t *stage = ecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new_id(world);
 
+    ecs_entities_t to_add = {
+        .array = &id,
+        .count = 1
+    };
+
+    if (ecs_defer_new(world, stage, entity, &to_add)) {
+        return entity;
+    } 
+
     if (id || stage->scope) {
-        ecs_entities_t to_add = {
-            .array = &id,
-            .count = 1
-        };
-
-        if (ecs_defer_new(world, stage, entity, &to_add)) {
-            return entity;
-        }  
-
         ecs_entity_t old_scope = 0;
         if (ECS_HAS_RELATION(id, EcsChildOf)) {
             old_scope = ecs_set_scope(world, 0);
@@ -5617,11 +5617,11 @@ ecs_entity_t ecs_new_w_id(
         if (ECS_HAS_RELATION(id, EcsChildOf)) {
             ecs_set_scope(world, old_scope);
         }
-
-        ecs_defer_flush(world, stage);
     } else {
         ecs_eis_set(world, entity, &(ecs_record_t){ 0 });
     }
+
+    ecs_defer_flush(world, stage);
 
     return entity;
 }
@@ -8713,11 +8713,14 @@ void ecs_sparse_set_generation(
 }
 
 bool ecs_sparse_exists(
-    ecs_sparse_t *sparse,
+    const ecs_sparse_t *sparse,
     uint64_t index)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return false;
+    }
     
     strip_generation(&index);
     int32_t offset = OFFSET(index);

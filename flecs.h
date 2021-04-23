@@ -1050,7 +1050,7 @@ FLECS_API void ecs_sparse_set_generation(
 
 /** Check whether an id has ever been issued. */
 FLECS_API bool ecs_sparse_exists(
-    ecs_sparse_t *sparse,
+    const ecs_sparse_t *sparse,
     uint64_t index);
 
 /** Test if id is alive, which requires the generation count tp match. */
