@@ -230,6 +230,10 @@ char* ecs_get_path_w_sep(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
+
+    if (!sep) {
+        sep = ".";
+    }
         
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
@@ -316,6 +320,10 @@ ecs_entity_t ecs_lookup_path_w_sep(
 {
     if (!path) {
         return 0;
+    }
+
+    if (!sep) {
+        sep = ".";
     }
 
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -514,6 +522,10 @@ ecs_entity_t ecs_add_path_w_sep(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (!sep) {
+        sep = ".";
+    }    
+
     if (!path) {
         if (!entity) {
             entity = ecs_new_id(world);
@@ -572,6 +584,10 @@ ecs_entity_t ecs_new_from_path_w_sep(
     const char *sep,
     const char *prefix)
 {
+    if (!sep) {
+        sep = ".";
+    }
+
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 

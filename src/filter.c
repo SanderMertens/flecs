@@ -3,16 +3,9 @@
 
 static
 bool term_id_is_set(
-    ecs_term_id_t *id)
+    const ecs_term_id_t *id)
 {
     return id->entity != 0 || id->name != NULL;
-}
-
-static
-bool term_is_set(
-    ecs_term_t *term)
-{
-    return term->id != 0 || term_id_is_set(&term->pred);
 }
 
 static
@@ -79,7 +72,8 @@ bool ecs_identifier_is_var(
     return true;
 }
 
-int ecs_term_resolve_ids(
+static
+int term_resolve_ids(
     const ecs_world_t *world,
     const char *name,
     const char *expr,
@@ -96,8 +90,7 @@ int ecs_term_resolve_ids(
     }
 
     if (term->args[1].entity) {
-        term->id = ecs_pair(
-            term->pred.entity, term->args[1].entity);
+        term->id = ecs_pair(term->pred.entity, term->args[1].entity);
     } else {
         term->id = term->pred.entity;
     }
@@ -107,9 +100,48 @@ int ecs_term_resolve_ids(
     return 0;
 }
 
+bool ecs_term_is_set(
+    const ecs_term_t *term)
+{
+    return term->id != 0 || term_id_is_set(&term->pred);
+}
+
+int ecs_term_finalize(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_term_t *term)
+{
+    /* If id is set, derive predicate and object */
+    if (term->id) {
+        if (term->args[0].entity && term->args[0].entity != EcsThis) {
+            ecs_parser_error(name, expr, 0, 
+                "cannot combine id with subject that is not This");
+            return -1;
+        }
+
+        if (ECS_HAS_ROLE(term->id, PAIR)) {
+            term->pred.entity = ECS_PAIR_RELATION(term->id);
+            term->args[1].entity = ECS_PAIR_OBJECT(term->id);
+        } else {
+            term->pred.entity = term->id & ECS_COMPONENT_MASK;
+        }
+
+        term->args[0].entity = EcsThis;
+        term->role = term->id & ECS_ROLE_MASK;
+    } else {
+        if (term_resolve_ids(world, name, expr, term)) {
+            /* One or more identifiers could not be resolved */
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 void ecs_term_copy(
     ecs_term_t *dst,
-    ecs_term_t *src)
+    const ecs_term_t *src)
 {
     *dst = *src;
     dst->name = ecs_os_strdup(src->name);
@@ -154,7 +186,7 @@ int ecs_filter_init(
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
-            if (!term_is_set(&term)) {
+            if (!ecs_term_is_set(&term)) {
                 break;
             }
             
@@ -184,7 +216,7 @@ int ecs_filter_init(
         } else {
             terms = (ecs_term_t*)desc->terms;
             for (i = 0; i < ECS_FILTER_DESC_TERM_ARRAY_MAX; i ++) {
-                if (!term_is_set(&terms[i])) {
+                if (!ecs_term_is_set(&terms[i])) {
                     break;
                 }
 
@@ -247,28 +279,8 @@ int ecs_filter_finalize(
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
 
-        /* If id is set, derive predicate and object */
-        if (term->id) {
-            if (term->args[0].entity && term->args[0].entity != EcsThis) {
-                ecs_parser_error(f->name, f->expr, 0, 
-                    "cannot combine id with subject that is not This");
-                return -1;
-            }
-
-            if (ECS_HAS_ROLE(term->id, PAIR)) {
-                term->pred.entity = ECS_PAIR_RELATION(term->id);
-                term->args[1].entity = ECS_PAIR_OBJECT(term->id);
-            } else {
-                term->pred.entity = term->id & ECS_COMPONENT_MASK;
-            }
-
-            term->args[0].entity = EcsThis;
-            term->role = term->id & ECS_ROLE_MASK;
-        } else {
-            if (ecs_term_resolve_ids(world, f->name, f->expr, term)) {
-                /* One or more identifiers could not be resolved */
-                return -1;
-            }
+        if (ecs_term_finalize(world, f->name, f->expr, term)) {
+            return -1;
         }
 
         term->index = index;

@@ -12,7 +12,44 @@
         ]
     },
     "test": {
-        "testsuites": [{
+        "testsuites": [
+            {
+                "id": "Entity",
+                "testcases": [
+                    "init_id",
+                    "init_id_name",
+                    "init_id_path",
+                    "init_id_add_1_comp",
+                    "init_id_add_2_comp",
+                    "init_id_w_scope",
+                    "init_id_name_w_scope",
+                    "init_id_path_w_scope",
+                    "init_id_name_1_comp",
+                    "init_id_name_2_comp",
+                    "init_id_name_2_comp_w_scope",
+                    "id_add_1_comp",
+                    "id_add_2_comp",
+                    "id_remove_1_comp",
+                    "id_remove_2_comp",
+                    "init_id_path_w_sep",
+                    "find_id_name",
+                    "find_id_name_w_scope",
+                    "find_id_path",
+                    "find_id_path_w_scope",
+                    "find_id_name_match",
+                    "find_id_name_match_w_scope",
+                    "find_id_path_match",
+                    "find_id_path_match_w_scope",
+                    "find_id_name_mismatch",
+                    "find_id_name_mismatch_w_scope",
+                    "find_id_path_mismatch",
+                    "find_id_path_mismatch_w_scope",
+                    "find_id_add_1_comp",
+                    "find_id_add_2_comp",
+                    "find_id_remove_1_comp",
+                    "find_id_remove_2_comp"
+                ]
+            }, {
             "id": "New",
             "setup": true,
             "testcases": [

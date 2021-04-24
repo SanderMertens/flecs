@@ -298,12 +298,34 @@ struct ecs_query_t {
     /* The query kind determines how it is registered with tables */
     ecs_flags32_t flags;
 
+    uint64_t id;                /* Id of query in query storage */
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
+
     bool needs_reorder;         /* Whether next iteration should reorder */
     bool constraints_satisfied; /* Are all term constraints satisfied */
 };
+
+/** Event mask */
+#define EcsEventAdd    (1)
+#define EcsEventRemove (2)
+
+/** A trigger invokes a callback on a single-term event */
+struct ecs_trigger_t {
+    ecs_world_t *world;
+    ecs_term_t term;
+    ecs_iter_action_t callback;
+    void *ctx;
+    uint32_t event_mask;
+    uint64_t id;
+};
+
+/** Triggers for a specific id */
+typedef struct ecs_id_trigger_t {
+    ecs_map_t *on_add_triggers;
+    ecs_map_t *on_remove_triggers;
+} ecs_id_trigger_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
  * systems. */
@@ -475,6 +497,7 @@ struct ecs_world_t {
 
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
     ecs_map_t *id_index;         /* map<id, ecs_id_record_t> */
+    ecs_map_t *id_triggers;      /* map<id, ecs_id_trigger_t> */
 
 
     /* --  Data storage -- */
@@ -482,11 +505,11 @@ struct ecs_world_t {
     ecs_store_t store;
 
 
-    /* --  Queries -- */
+    /* --  Storages for opaque API objects -- */
 
-    /* Persistent queries registered with the world. Persistent queries are
-     * stateful and automatically matched with existing and new tables. */
-    ecs_vector_t *queries;
+    ecs_sparse_t *queries; /* sparse<query_id, ecs_query_t> */
+    ecs_sparse_t *triggers; /* sparse<query_id, ecs_query_t> */
+    
 
     /* Keep track of components that were added/removed to/from monitored
      * entities. Monitored entities are entities that a query has matched with

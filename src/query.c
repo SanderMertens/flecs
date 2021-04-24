@@ -2099,7 +2099,7 @@ ecs_query_t* ecs_query_init(
         return NULL;
     }
 
-    ecs_query_t *result = ecs_os_calloc(sizeof(ecs_query_t));
+    ecs_query_t *result = ecs_sparse_add(world->queries, ecs_query_t);
     result->world = world;
     result->filter = f;
     result->table_indices = ecs_map_new(ecs_table_indices_t, 0);
@@ -2107,6 +2107,7 @@ ecs_query_t* ecs_query_init(
     result->empty_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = desc->system;
     result->prev_match_count = -1;
+    result->id = ecs_sparse_last_id(world->queries);
 
     if (desc->parent != NULL) {
         result->flags |= EcsQueryIsSubquery;
@@ -2120,10 +2121,6 @@ ecs_query_t* ecs_query_init(
     ecs_log_push();
 
     if (!desc->parent) {
-        /* Register query with world */
-        ecs_query_t **elem = ecs_vector_add(&world->queries, ecs_query_t*);
-        *elem = result;
-
         if (result->flags & EcsQueryNeedsTables) {
             if (desc->system) {
                 if (ecs_has_id(world, desc->system, EcsMonitor)) {
@@ -2184,16 +2181,11 @@ ecs_query_t* ecs_query_init(
     return result;
 }
 
-ecs_filter_t* ecs_query_get_filter(
-    ecs_query_t *query)
-{
-    return &query->filter;
-}
-
 void ecs_query_fini(
     ecs_query_t *query)
 {
     ecs_world_t *world = query->world;
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if ((query->flags & EcsQueryIsSubquery) &&
         !(query->flags & EcsQueryIsOrphaned))
@@ -2230,28 +2222,22 @@ void ecs_query_fini(
     while ((ti = ecs_map_next(&it, ecs_table_indices_t, NULL))) {
         ecs_os_free(ti->indices);
     }
-    ecs_map_free(query->table_indices);
 
+    ecs_map_free(query->table_indices);
     ecs_vector_free(query->subqueries);
     ecs_vector_free(query->tables);
     ecs_vector_free(query->empty_tables);
     ecs_vector_free(query->table_slices);
     ecs_filter_fini(&query->filter);
+    
+    /* Remove query from storage */
+    ecs_sparse_remove(world->queries, query->id);
+}
 
-    /* Find query in vector */
-    if (!(query->flags & EcsQueryIsSubquery) && world->queries) {
-        int32_t index = -1;
-        ecs_vector_each(world->queries, ecs_query_t*, q_ptr, {
-            if (*q_ptr == query) {
-                index = q_ptr_i;
-            }
-        });
-
-        ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
-        ecs_vector_remove_index(world->queries, ecs_query_t*, index);
-    }
-
-    ecs_os_free(query);
+ecs_filter_t* ecs_query_get_filter(
+    ecs_query_t *query)
+{
+    return &query->filter;
 }
 
 /* Create query iterator */

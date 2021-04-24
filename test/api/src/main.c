@@ -8,6 +8,40 @@
 
 #include <api.h>
 
+// Testsuite 'Entity'
+void Entity_init_id(void);
+void Entity_init_id_name(void);
+void Entity_init_id_path(void);
+void Entity_init_id_add_1_comp(void);
+void Entity_init_id_add_2_comp(void);
+void Entity_init_id_w_scope(void);
+void Entity_init_id_name_w_scope(void);
+void Entity_init_id_path_w_scope(void);
+void Entity_init_id_name_1_comp(void);
+void Entity_init_id_name_2_comp(void);
+void Entity_init_id_name_2_comp_w_scope(void);
+void Entity_id_add_1_comp(void);
+void Entity_id_add_2_comp(void);
+void Entity_id_remove_1_comp(void);
+void Entity_id_remove_2_comp(void);
+void Entity_init_id_path_w_sep(void);
+void Entity_find_id_name(void);
+void Entity_find_id_name_w_scope(void);
+void Entity_find_id_path(void);
+void Entity_find_id_path_w_scope(void);
+void Entity_find_id_name_match(void);
+void Entity_find_id_name_match_w_scope(void);
+void Entity_find_id_path_match(void);
+void Entity_find_id_path_match_w_scope(void);
+void Entity_find_id_name_mismatch(void);
+void Entity_find_id_name_mismatch_w_scope(void);
+void Entity_find_id_path_mismatch(void);
+void Entity_find_id_path_mismatch_w_scope(void);
+void Entity_find_id_add_1_comp(void);
+void Entity_find_id_add_2_comp(void);
+void Entity_find_id_remove_1_comp(void);
+void Entity_find_id_remove_2_comp(void);
+
 // Testsuite 'New'
 void New_setup(void);
 void New_empty(void);
@@ -1687,6 +1721,137 @@ void Error_log_error(void);
 
 // Testsuite 'Deprecated'
 void Deprecated_trait_type_str(void);
+
+bake_test_case Entity_testcases[] = {
+    {
+        "init_id",
+        Entity_init_id
+    },
+    {
+        "init_id_name",
+        Entity_init_id_name
+    },
+    {
+        "init_id_path",
+        Entity_init_id_path
+    },
+    {
+        "init_id_add_1_comp",
+        Entity_init_id_add_1_comp
+    },
+    {
+        "init_id_add_2_comp",
+        Entity_init_id_add_2_comp
+    },
+    {
+        "init_id_w_scope",
+        Entity_init_id_w_scope
+    },
+    {
+        "init_id_name_w_scope",
+        Entity_init_id_name_w_scope
+    },
+    {
+        "init_id_path_w_scope",
+        Entity_init_id_path_w_scope
+    },
+    {
+        "init_id_name_1_comp",
+        Entity_init_id_name_1_comp
+    },
+    {
+        "init_id_name_2_comp",
+        Entity_init_id_name_2_comp
+    },
+    {
+        "init_id_name_2_comp_w_scope",
+        Entity_init_id_name_2_comp_w_scope
+    },
+    {
+        "id_add_1_comp",
+        Entity_id_add_1_comp
+    },
+    {
+        "id_add_2_comp",
+        Entity_id_add_2_comp
+    },
+    {
+        "id_remove_1_comp",
+        Entity_id_remove_1_comp
+    },
+    {
+        "id_remove_2_comp",
+        Entity_id_remove_2_comp
+    },
+    {
+        "init_id_path_w_sep",
+        Entity_init_id_path_w_sep
+    },
+    {
+        "find_id_name",
+        Entity_find_id_name
+    },
+    {
+        "find_id_name_w_scope",
+        Entity_find_id_name_w_scope
+    },
+    {
+        "find_id_path",
+        Entity_find_id_path
+    },
+    {
+        "find_id_path_w_scope",
+        Entity_find_id_path_w_scope
+    },
+    {
+        "find_id_name_match",
+        Entity_find_id_name_match
+    },
+    {
+        "find_id_name_match_w_scope",
+        Entity_find_id_name_match_w_scope
+    },
+    {
+        "find_id_path_match",
+        Entity_find_id_path_match
+    },
+    {
+        "find_id_path_match_w_scope",
+        Entity_find_id_path_match_w_scope
+    },
+    {
+        "find_id_name_mismatch",
+        Entity_find_id_name_mismatch
+    },
+    {
+        "find_id_name_mismatch_w_scope",
+        Entity_find_id_name_mismatch_w_scope
+    },
+    {
+        "find_id_path_mismatch",
+        Entity_find_id_path_mismatch
+    },
+    {
+        "find_id_path_mismatch_w_scope",
+        Entity_find_id_path_mismatch_w_scope
+    },
+    {
+        "find_id_add_1_comp",
+        Entity_find_id_add_1_comp
+    },
+    {
+        "find_id_add_2_comp",
+        Entity_find_id_add_2_comp
+    },
+    {
+        "find_id_remove_1_comp",
+        Entity_find_id_remove_1_comp
+    },
+    {
+        "find_id_remove_2_comp",
+        Entity_find_id_remove_2_comp
+    }
+};
 
 bake_test_case New_testcases[] = {
     {
@@ -8009,6 +8174,13 @@ bake_test_case Deprecated_testcases[] = {
 
 static bake_test_suite suites[] = {
     {
+        "Entity",
+        NULL,
+        NULL,
+        32,
+        Entity_testcases
+    },
+    {
         "New",
         New_setup,
         NULL,
@@ -8439,5 +8611,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 61);
+    return bake_test_run("api", argc, argv, suites, 62);
 }

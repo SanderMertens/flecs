@@ -85,6 +85,9 @@ typedef struct ecs_world_t ecs_world_t;
 /** An ECS world is the container for all ECS data and supporting features. */
 typedef struct ecs_query_t ecs_query_t;
 
+/** An ECS world is the container for all ECS data and supporting features. */
+typedef struct ecs_trigger_t ecs_trigger_t;
+
 /* An iterator lets an application iterate entities across tables. */
 typedef struct ecs_iter_t ecs_iter_t;
 
@@ -132,17 +135,17 @@ typedef void (*ecs_fini_action_t)(
 
 
 /**
- * @defgroup filter_types Types used to describe filters and filter terms
+ * @defgroup filter_types Types used to describe filters, terms and triggers
  * @{
  */
 
 /** Set flags describe if & how a matched entity should be substituted */
-#define EcsSetDefault (0)   /* Default set, SuperSet|Self for This subject */
-#define EcsSelf       (1)   /* Select self (inclusive) */
-#define EcsSuperSet   (2)   /* Select superset until predicate match */
-#define EcsSubSet     (4)   /* Select subset until predicate match */
-#define EcsAll        (8)   /* Walk full superset/subset, regardless of match */
-#define EcsNothing    (16)  /* Select nothing */
+#define EcsSetDefault   (0)  /* Default set, SuperSet|Self for This subject */
+#define EcsSelf         (1)  /* Select self (inclusive) */
+#define EcsSuperSet     (2)  /* Select superset until predicate match */
+#define EcsSubSet       (4)  /* Select subset until predicate match */
+#define EcsAll          (8)  /* Walk full super/subset, regardless of match */
+#define EcsNothing      (16) /* Select nothing */
 
 /** Specify read/write access for term */
 typedef enum ecs_inout_kind_t {
@@ -245,20 +248,30 @@ typedef struct ecs_filter_t {
  * @{
  */
 
-/** Type used for constructing entities */
-#define ECS_ENTITY_DESC_ID_ARRAY_MAX (16)
+/* Maximum number of entities that can be added in a single operation. 
+ * Increasing this value will increase consumption of stack space. */
+#define ECS_MAX_ADD_REMOVE (32)
 
+/** Type used for constructing entities */
 typedef struct ecs_entity_desc_t { 
-    ecs_entity_t entity; /* Existing entity handle. Leave at 0 to create a new
-                          * entity. */
+    ecs_entity_t entity; /* Optional existing entity handle. */
 
     const char *name;    /* Name of the entity. If no entity is provided, an 
                           * entity with this name will be looked up first. When
                           * an entity is provided, the name will be verified
                           * with the existing entity. */
 
+    const char *sep;     /* Optional custom separator for hierarchical names */
+
+    bool use_low_id;     /* When set to true, a low id (typically reserved for
+                          * components) will be used to create the entity, if
+                          * no id is specified. */
+
     /* Array of ids to add to the new or existing entity. */
-    ecs_id_t ids[ECS_ENTITY_DESC_ID_ARRAY_MAX];
+    ecs_id_t add[ECS_MAX_ADD_REMOVE];
+
+    /* Array of ids to remove from the existing entity. */
+    ecs_id_t remove[ECS_MAX_ADD_REMOVE];
 } ecs_entity_desc_t;
 
 
@@ -315,6 +328,31 @@ typedef struct ecs_query_desc_t {
      * this will change in future versions. */
     ecs_entity_t system;
 } ecs_query_desc_t;
+
+/** Type used for constructing filters. */
+#define ECS_FILTER_DESC_EVENT_COUNT_MAX (8)
+
+/** Type used to create triggers (single component/term events). */
+typedef struct ecs_trigger_desc_t {
+    /* Term specifying the id to subscribe for */
+    ecs_term_t term;
+
+    /* Optional name. */
+    const char *name;
+
+    /* Filter expression. May only contain a single term. If this field is set,
+     * the term field is ignored. */
+    const char *expr;
+
+    /* Events to trigger on (OnAdd, OnRemove) */
+    ecs_entity_t events[ECS_FILTER_DESC_EVENT_COUNT_MAX];
+
+    /* Callback to invoke on a trigger */
+    ecs_iter_action_t callback;
+
+    /* User context to pass to callback */
+    void *ctx;
+} ecs_trigger_desc_t;
 
 /** @} */
 
@@ -407,6 +445,7 @@ typedef struct ecs_world_info_t {
 #include "flecs/addons/deprecated.h"
 #endif
 
+
 /**
  * @defgroup type_roles Type Roles
  * @{
@@ -477,10 +516,10 @@ typedef struct ecs_world_info_t {
 /* Event tags */
 #define EcsOnAdd (ECS_HI_COMPONENT_ID + 13)
 #define EcsOnRemove (ECS_HI_COMPONENT_ID + 14)
-#define EcsOnDelete (ECS_HI_COMPONENT_ID + 15)
-#define EcsOnDeleteObject (ECS_HI_COMPONENT_ID + 16)
-#define EcsOnSet (ECS_HI_COMPONENT_ID + 17)
-#define EcsUnSet (ECS_HI_COMPONENT_ID + 18)
+#define EcsOnSet (ECS_HI_COMPONENT_ID + 15)
+#define EcsUnSet (ECS_HI_COMPONENT_ID + 16)
+#define EcsOnDelete (ECS_HI_COMPONENT_ID + 17)
+#define EcsOnDeleteObject (ECS_HI_COMPONENT_ID + 18)
 
 /* Action tags */
 #define EcsRemove  (ECS_HI_COMPONENT_ID + 19)
@@ -2055,7 +2094,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_lookup_path_w_sep(world, parent, path, ".", NULL)
 
 /** Lookup an entity from a full path.
- * Same as ecs_lookup_pat, but  searches from the current scope, or root scope
+ * Same as ecs_lookup_path, but  searches from the current scope, or root scope
  * if no scope is set.
  *
  * @param world The world.
@@ -2334,6 +2373,79 @@ FLECS_API
 const char* ecs_set_name_prefix(
     ecs_world_t *world,
     const char *prefix);    
+
+/** @} */
+
+
+/**
+ * @defgroup terms Terms
+ * @{
+ */
+
+/** Test whether a term is set.
+ * This operation can be used to test whether a term has been initialized with
+ * values or whether it is empty.
+ *
+ * An application generally does not need to invoke this operation. It is useful
+ * when initializing a 0-initialized array of terms (like in ecs_term_desc_t) as
+ * this operation can be used to find the last initialized element.
+ *
+ * @param term The term.
+ * @return True when set, false when not set.
+ */
+FLECS_API
+bool ecs_term_is_set(
+    const ecs_term_t *term);
+
+/** Finalize term.
+ * Ensure that all fields of a term are consistent and filled out. This 
+ * operation should be invoked before using and after assigning members to, or 
+ * parsing a term. When a term contains unresolved identifiers, this operation
+ * will resolve and assign the identifiers. If the term contains any identifiers
+ * that cannot be resolved, the operation will fail.
+ *
+ * An application generally does not need to invoke this operation as the APIs
+ * that use terms (such as filters, queries and triggers) will finalize terms
+ * when they are created.
+ *
+ * The name and expr parameters are optional, and only used for giving more 
+ * descriptive error messages.
+ *
+ * @param world The world.
+ * @param name The name of the entity that uses the term (such as a system).
+ * @param expr The string expression of which the term is a part.
+ * @param term The term to finalize.
+ * @return Zero if success, nonzero if an error occurred.
+ */
+FLECS_API 
+int ecs_term_finalize(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_term_t *term);
+
+/** Copy resources of a term to another term.
+ * This operation copies one term to another term. If the source term contains
+ * allocated resources (such as identifiers), they will be duplicated so that
+ * no memory is shared between the terms.
+ *
+ * @param dst The term to copy to.
+ * @param src The term to copy from.
+ */
+FLECS_API 
+void ecs_term_copy(
+    ecs_term_t *dst,
+    const ecs_term_t *src);
+
+/** Free resources of term.
+ * This operation frees all resources (such as identifiers) of a term. The term
+ * object itself is not freed.
+ *
+ * @param term The term to free.
+ */
+FLECS_API
+void ecs_term_fini(
+    ecs_term_t *term);
 
 /** @} */
 
@@ -2626,6 +2738,22 @@ bool ecs_query_changed(
 FLECS_API
 bool ecs_query_orphaned(
     ecs_query_t *query);
+
+/** @} */
+
+
+/**
+ * @defgroup trigger Triggers
+ */
+
+/** Create trigger */
+ecs_trigger_t* ecs_trigger_init(
+    ecs_world_t *world,
+    const ecs_trigger_desc_t *desc);
+
+/** Delete trigger */
+void ecs_trigger_fini(
+    ecs_trigger_t *trigger);
 
 /** @} */
 

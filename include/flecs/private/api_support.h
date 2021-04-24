@@ -120,22 +120,6 @@ bool ecs_component_has_actions(
 //// Signature API
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Resolve identifiers in term */
-int ecs_term_resolve_ids(
-    const ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_term_t *term);
-
-/* Copy term to another term */
-void ecs_term_copy(
-    ecs_term_t *dst,
-    ecs_term_t *src);
-
-/* Free resources associated with term */
-void ecs_term_fini(
-    ecs_term_t *term);
-
 bool ecs_identifier_is_0(
     const char *id);
 

@@ -260,10 +260,11 @@ ecs_world_t *ecs_mini(void) {
 
     world->type_info = ecs_sparse_new(ecs_type_info_t);
     world->id_index = ecs_map_new(ecs_id_record_t, 8);
+    world->id_triggers = ecs_map_new(ecs_id_trigger_t, 8);
 
     world->aliases = NULL;
 
-    world->queries = ecs_vector_new(ecs_query_t*, 0);
+    world->queries = ecs_sparse_new(ecs_query_t);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->name_prefix = NULL;
 
@@ -580,18 +581,12 @@ static
 void fini_queries(
     ecs_world_t *world)
 {
-    /* Set world->queries to NULL, so ecs_query_free won't attempt to remove
-     * itself from the vector */
-    ecs_vector_t *query_vec = world->queries;
-    world->queries = NULL;
-
-    int32_t i, count = ecs_vector_count(query_vec);
-    ecs_query_t **queries = ecs_vector_first(query_vec, ecs_query_t*);
+    int32_t i, count = ecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
-        ecs_query_free(queries[i]);
+        ecs_query_t *query = ecs_sparse_get(world->queries, ecs_query_t, 0);
+        ecs_query_fini(query);
     }
-
-    ecs_vector_free(query_vec);
+    ecs_sparse_free(world->queries);
 }
 
 /* Cleanup stages */
@@ -615,6 +610,20 @@ void fini_id_index(
     }
 
     ecs_map_free(world->id_index);
+}
+
+static
+void fini_id_triggers(
+    ecs_world_t *world)
+{
+    ecs_map_iter_t it = ecs_map_iter(world->id_triggers);
+    ecs_id_trigger_t *t;
+    while ((t = ecs_map_next(&it, ecs_id_trigger_t, NULL))) {
+        ecs_map_free(t->on_add_triggers);
+        ecs_map_free(t->on_remove_triggers);
+    }
+
+    ecs_map_free(world->id_triggers);
 }
 
 /* Cleanup aliases */
@@ -672,6 +681,8 @@ int ecs_fini(
     fini_queries(world);
 
     fini_id_index(world);
+
+    fini_id_triggers(world);
 
     fini_aliases(world);
 
@@ -1066,11 +1077,10 @@ void ecs_notify_queries(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL); 
 
-    int32_t i, count = ecs_vector_count(world->queries);
-    ecs_query_t **queries = ecs_vector_first(world->queries, ecs_query_t*);
-
+    int32_t i, count = ecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
-        ecs_query_notify(world, queries[i], event);
+        ecs_query_notify(world, 
+            ecs_sparse_get(world->queries, ecs_query_t, i), event);
     }    
 }
 

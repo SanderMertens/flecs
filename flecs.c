@@ -342,12 +342,34 @@ struct ecs_query_t {
     /* The query kind determines how it is registered with tables */
     ecs_flags32_t flags;
 
+    uint64_t id;                /* Id of query in query storage */
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
+
     bool needs_reorder;         /* Whether next iteration should reorder */
     bool constraints_satisfied; /* Are all term constraints satisfied */
 };
+
+/** Event mask */
+#define EcsEventAdd    (1)
+#define EcsEventRemove (2)
+
+/** A trigger invokes a callback on a single-term event */
+struct ecs_trigger_t {
+    ecs_world_t *world;
+    ecs_term_t term;
+    ecs_iter_action_t callback;
+    void *ctx;
+    uint32_t event_mask;
+    uint64_t id;
+};
+
+/** Triggers for a specific id */
+typedef struct ecs_id_trigger_t {
+    ecs_map_t *on_add_triggers;
+    ecs_map_t *on_remove_triggers;
+} ecs_id_trigger_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
  * systems. */
@@ -519,6 +541,7 @@ struct ecs_world_t {
 
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
     ecs_map_t *id_index;         /* map<id, ecs_id_record_t> */
+    ecs_map_t *id_triggers;      /* map<id, ecs_id_trigger_t> */
 
 
     /* --  Data storage -- */
@@ -526,11 +549,11 @@ struct ecs_world_t {
     ecs_store_t store;
 
 
-    /* --  Queries -- */
+    /* --  Storages for opaque API objects -- */
 
-    /* Persistent queries registered with the world. Persistent queries are
-     * stateful and automatically matched with existing and new tables. */
-    ecs_vector_t *queries;
+    ecs_sparse_t *queries; /* sparse<query_id, ecs_query_t> */
+    ecs_sparse_t *triggers; /* sparse<query_id, ecs_query_t> */
+    
 
     /* Keep track of components that were added/removed to/from monitored
      * entities. Monitored entities are entities that a query has matched with
@@ -5646,6 +5669,117 @@ ecs_entity_t ecs_new_w_id(
     return entity;
 }
 
+ecs_entity_t ecs_entity_init(
+    ecs_world_t *world,
+    const ecs_entity_desc_t *desc)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t scope = ecs_get_scope(world);
+
+    const char *name = desc->name;
+    const char *sep = desc->sep;
+
+    bool new_entity = false;
+    bool name_assigned = false;
+
+    /* Find or create entity */
+    ecs_entity_t result = desc->entity;
+    if (!result) {
+        if (name) {
+            result = ecs_lookup_fullpath(world, name);
+            if (result) {
+                name_assigned = true;
+            }
+        }
+
+        if (!result) {
+            if (desc->use_low_id) {
+                result = ecs_new_component_id(world);
+            } else {
+                result = ecs_new_id(world);
+            }
+            new_entity = true;
+        }
+    } else {
+        ecs_assert(ecs_is_valid(world, result), ECS_INVALID_PARAMETER, NULL);
+        
+        if (name) {
+            /* If entity has name, verify that name matches */
+            char *path = ecs_get_path_w_sep(world, scope, result, 0, sep, NULL);
+            if (path) {
+                if (ecs_os_strcmp(path, name)) {
+                    /* Mismatching name */
+                    return 0;
+                }
+                ecs_os_free(path);
+                name_assigned = true;
+            }
+        } else {
+            name_assigned = ecs_has(world, result, EcsName);
+        }
+    }
+
+    /* Find existing table */
+    ecs_entity_info_t info = {0};
+    ecs_table_t *src_table = NULL, *table = NULL;
+    if (!new_entity) {
+        if (ecs_get_info(world, result, &info)) {
+            table = info.table;
+        }
+    }
+
+    ecs_entity_t added_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t added = { .array = added_buffer };
+
+    ecs_entity_t removed_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t removed = { .array = removed_buffer };
+
+    /* Find destination table */
+    if (new_entity && scope && !name && !name_assigned) {
+        ecs_entity_t id = ecs_pair(EcsChildOf, scope);
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    if (name && !name_assigned) {
+        ecs_entity_t id = ecs_id(EcsName);
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
+    }
+
+    int32_t i = 0;
+    ecs_id_t id;
+    const ecs_id_t *ids = desc->add;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    i = 0;
+    ids = desc->remove;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i])) {
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_remove(world, table, &arr, &removed);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+        i ++;
+    }
+
+    if (src_table != table) {
+        commit(world, result, &info, table, &added, &removed);
+    }
+
+    if (name && !name_assigned) {
+        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);
+    }    
+
+    return result;
+}
+
 const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
@@ -10213,7 +10347,7 @@ void ecs_get_world_stats(
 
     record_gauge(&s->entity_count, t, ecs_sparse_count(world->store.entity_index));
     record_gauge(&s->component_count, t, ecs_count_id(world, ecs_id(EcsComponent)));
-    record_gauge(&s->query_count, t, ecs_vector_count(world->queries));
+    record_gauge(&s->query_count, t, ecs_sparse_count(world->queries));
     record_gauge(&s->system_count, t, ecs_count_id(world, ecs_id(EcsSystem)));
 
     record_counter(&s->new_count, t, world->new_count);
@@ -13324,10 +13458,11 @@ ecs_world_t *ecs_mini(void) {
 
     world->type_info = ecs_sparse_new(ecs_type_info_t);
     world->id_index = ecs_map_new(ecs_id_record_t, 8);
+    world->id_triggers = ecs_map_new(ecs_id_trigger_t, 8);
 
     world->aliases = NULL;
 
-    world->queries = ecs_vector_new(ecs_query_t*, 0);
+    world->queries = ecs_sparse_new(ecs_query_t);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->name_prefix = NULL;
 
@@ -13644,18 +13779,12 @@ static
 void fini_queries(
     ecs_world_t *world)
 {
-    /* Set world->queries to NULL, so ecs_query_free won't attempt to remove
-     * itself from the vector */
-    ecs_vector_t *query_vec = world->queries;
-    world->queries = NULL;
-
-    int32_t i, count = ecs_vector_count(query_vec);
-    ecs_query_t **queries = ecs_vector_first(query_vec, ecs_query_t*);
+    int32_t i, count = ecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
-        ecs_query_free(queries[i]);
+        ecs_query_t *query = ecs_sparse_get(world->queries, ecs_query_t, 0);
+        ecs_query_fini(query);
     }
-
-    ecs_vector_free(query_vec);
+    ecs_sparse_free(world->queries);
 }
 
 /* Cleanup stages */
@@ -13679,6 +13808,20 @@ void fini_id_index(
     }
 
     ecs_map_free(world->id_index);
+}
+
+static
+void fini_id_triggers(
+    ecs_world_t *world)
+{
+    ecs_map_iter_t it = ecs_map_iter(world->id_triggers);
+    ecs_id_trigger_t *t;
+    while ((t = ecs_map_next(&it, ecs_id_trigger_t, NULL))) {
+        ecs_map_free(t->on_add_triggers);
+        ecs_map_free(t->on_remove_triggers);
+    }
+
+    ecs_map_free(world->id_triggers);
 }
 
 /* Cleanup aliases */
@@ -13736,6 +13879,8 @@ int ecs_fini(
     fini_queries(world);
 
     fini_id_index(world);
+
+    fini_id_triggers(world);
 
     fini_aliases(world);
 
@@ -14130,11 +14275,10 @@ void ecs_notify_queries(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL); 
 
-    int32_t i, count = ecs_vector_count(world->queries);
-    ecs_query_t **queries = ecs_vector_first(world->queries, ecs_query_t*);
-
+    int32_t i, count = ecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
-        ecs_query_notify(world, queries[i], event);
+        ecs_query_notify(world, 
+            ecs_sparse_get(world->queries, ecs_query_t, i), event);
     }    
 }
 
@@ -14878,16 +15022,9 @@ void ecs_hash(
 
 static
 bool term_id_is_set(
-    ecs_term_id_t *id)
+    const ecs_term_id_t *id)
 {
     return id->entity != 0 || id->name != NULL;
-}
-
-static
-bool term_is_set(
-    ecs_term_t *term)
-{
-    return term->id != 0 || term_id_is_set(&term->pred);
 }
 
 static
@@ -14954,7 +15091,8 @@ bool ecs_identifier_is_var(
     return true;
 }
 
-int ecs_term_resolve_ids(
+static
+int term_resolve_ids(
     const ecs_world_t *world,
     const char *name,
     const char *expr,
@@ -14971,8 +15109,7 @@ int ecs_term_resolve_ids(
     }
 
     if (term->args[1].entity) {
-        term->id = ecs_pair(
-            term->pred.entity, term->args[1].entity);
+        term->id = ecs_pair(term->pred.entity, term->args[1].entity);
     } else {
         term->id = term->pred.entity;
     }
@@ -14982,9 +15119,48 @@ int ecs_term_resolve_ids(
     return 0;
 }
 
+bool ecs_term_is_set(
+    const ecs_term_t *term)
+{
+    return term->id != 0 || term_id_is_set(&term->pred);
+}
+
+int ecs_term_finalize(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_term_t *term)
+{
+    /* If id is set, derive predicate and object */
+    if (term->id) {
+        if (term->args[0].entity && term->args[0].entity != EcsThis) {
+            ecs_parser_error(name, expr, 0, 
+                "cannot combine id with subject that is not This");
+            return -1;
+        }
+
+        if (ECS_HAS_ROLE(term->id, PAIR)) {
+            term->pred.entity = ECS_PAIR_RELATION(term->id);
+            term->args[1].entity = ECS_PAIR_OBJECT(term->id);
+        } else {
+            term->pred.entity = term->id & ECS_COMPONENT_MASK;
+        }
+
+        term->args[0].entity = EcsThis;
+        term->role = term->id & ECS_ROLE_MASK;
+    } else {
+        if (term_resolve_ids(world, name, expr, term)) {
+            /* One or more identifiers could not be resolved */
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 void ecs_term_copy(
     ecs_term_t *dst,
-    ecs_term_t *src)
+    const ecs_term_t *src)
 {
     *dst = *src;
     dst->name = ecs_os_strdup(src->name);
@@ -15029,7 +15205,7 @@ int ecs_filter_init(
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
-            if (!term_is_set(&term)) {
+            if (!ecs_term_is_set(&term)) {
                 break;
             }
             
@@ -15059,7 +15235,7 @@ int ecs_filter_init(
         } else {
             terms = (ecs_term_t*)desc->terms;
             for (i = 0; i < ECS_FILTER_DESC_TERM_ARRAY_MAX; i ++) {
-                if (!term_is_set(&terms[i])) {
+                if (!ecs_term_is_set(&terms[i])) {
                     break;
                 }
 
@@ -15122,28 +15298,8 @@ int ecs_filter_finalize(
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
 
-        /* If id is set, derive predicate and object */
-        if (term->id) {
-            if (term->args[0].entity && term->args[0].entity != EcsThis) {
-                ecs_parser_error(f->name, f->expr, 0, 
-                    "cannot combine id with subject that is not This");
-                return -1;
-            }
-
-            if (ECS_HAS_ROLE(term->id, PAIR)) {
-                term->pred.entity = ECS_PAIR_RELATION(term->id);
-                term->args[1].entity = ECS_PAIR_OBJECT(term->id);
-            } else {
-                term->pred.entity = term->id & ECS_COMPONENT_MASK;
-            }
-
-            term->args[0].entity = EcsThis;
-            term->role = term->id & ECS_ROLE_MASK;
-        } else {
-            if (ecs_term_resolve_ids(world, f->name, f->expr, term)) {
-                /* One or more identifiers could not be resolved */
-                return -1;
-            }
+        if (ecs_term_finalize(world, f->name, f->expr, term)) {
+            return -1;
         }
 
         term->index = index;
@@ -18871,7 +19027,7 @@ ecs_query_t* ecs_query_init(
         return NULL;
     }
 
-    ecs_query_t *result = ecs_os_calloc(sizeof(ecs_query_t));
+    ecs_query_t *result = ecs_sparse_add(world->queries, ecs_query_t);
     result->world = world;
     result->filter = f;
     result->table_indices = ecs_map_new(ecs_table_indices_t, 0);
@@ -18879,6 +19035,7 @@ ecs_query_t* ecs_query_init(
     result->empty_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = desc->system;
     result->prev_match_count = -1;
+    result->id = ecs_sparse_last_id(world->queries);
 
     if (desc->parent != NULL) {
         result->flags |= EcsQueryIsSubquery;
@@ -18892,10 +19049,6 @@ ecs_query_t* ecs_query_init(
     ecs_log_push();
 
     if (!desc->parent) {
-        /* Register query with world */
-        ecs_query_t **elem = ecs_vector_add(&world->queries, ecs_query_t*);
-        *elem = result;
-
         if (result->flags & EcsQueryNeedsTables) {
             if (desc->system) {
                 if (ecs_has_id(world, desc->system, EcsMonitor)) {
@@ -18956,16 +19109,11 @@ ecs_query_t* ecs_query_init(
     return result;
 }
 
-ecs_filter_t* ecs_query_get_filter(
-    ecs_query_t *query)
-{
-    return &query->filter;
-}
-
 void ecs_query_fini(
     ecs_query_t *query)
 {
     ecs_world_t *world = query->world;
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if ((query->flags & EcsQueryIsSubquery) &&
         !(query->flags & EcsQueryIsOrphaned))
@@ -19002,28 +19150,22 @@ void ecs_query_fini(
     while ((ti = ecs_map_next(&it, ecs_table_indices_t, NULL))) {
         ecs_os_free(ti->indices);
     }
-    ecs_map_free(query->table_indices);
 
+    ecs_map_free(query->table_indices);
     ecs_vector_free(query->subqueries);
     ecs_vector_free(query->tables);
     ecs_vector_free(query->empty_tables);
     ecs_vector_free(query->table_slices);
     ecs_filter_fini(&query->filter);
+    
+    /* Remove query from storage */
+    ecs_sparse_remove(world->queries, query->id);
+}
 
-    /* Find query in vector */
-    if (!(query->flags & EcsQueryIsSubquery) && world->queries) {
-        int32_t index = -1;
-        ecs_vector_each(world->queries, ecs_query_t*, q_ptr, {
-            if (*q_ptr == query) {
-                index = q_ptr_i;
-            }
-        });
-
-        ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
-        ecs_vector_remove_index(world->queries, ecs_query_t*, index);
-    }
-
-    ecs_os_free(query);
+ecs_filter_t* ecs_query_get_filter(
+    ecs_query_t *query)
+{
+    return &query->filter;
 }
 
 /* Create query iterator */
@@ -21480,6 +21622,190 @@ void* ecs_element_w_size(
     int32_t row)
 {
     return get_term(it, ecs_from_size_t(size), column, row);
+}
+
+static
+uint32_t get_event_mask(
+    const ecs_entity_t *event_ids)
+{
+    uint32_t result = 0;
+    int32_t i;
+
+    for (i = 0; i < ECS_FILTER_DESC_EVENT_COUNT_MAX; i ++) {
+        if (!event_ids[i]) {
+            break;
+        }
+
+        switch(event_ids[i]) {
+        case EcsOnAdd:
+            result |= EcsEventAdd;
+            break;
+        case EcsOnRemove:
+            result |= EcsEventRemove;
+            break;
+        default:
+            /* Trigger not available for event kind */
+            ecs_abort(ECS_UNSUPPORTED, NULL);
+            break;
+        }
+    }
+
+    return result;
+}
+
+static
+void register_id_trigger(
+    ecs_map_t *set,
+    ecs_trigger_t *trigger)
+{
+    ecs_trigger_t **t = ecs_map_ensure(set, ecs_trigger_t*, trigger->id);
+    ecs_assert(t != NULL, ECS_INTERNAL_ERROR, NULL);
+    *t = trigger;
+}
+
+static
+ecs_map_t* unregister_id_trigger(
+    ecs_map_t *set,
+    ecs_trigger_t *trigger)
+{
+    ecs_map_remove(set, trigger->id);
+
+    if (!ecs_map_count(set)) {
+        ecs_map_free(set);
+        return NULL;
+    }
+
+    return set;
+}
+
+static
+void register_trigger(
+    ecs_world_t *world,
+    ecs_trigger_t *trigger)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(trigger != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_map_t *triggers = world->id_triggers;
+    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_trigger_t *idt = ecs_map_ensure(triggers, 
+        ecs_id_trigger_t, trigger->term.id);
+    ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (trigger->event_mask & EcsEventAdd) {
+        ecs_map_t *set = idt->on_add_triggers;
+        if (!set) {
+            set = idt->on_add_triggers = ecs_map_new(ecs_trigger_t*, 1);
+        }
+        register_id_trigger(set, trigger);
+    }
+
+    if (trigger->event_mask & EcsEventRemove) {
+        ecs_map_t *set = idt->on_remove_triggers;
+        if (!set) {
+            set = idt->on_remove_triggers = ecs_map_new(ecs_trigger_t*, 1);
+        }
+        register_id_trigger(set, trigger);
+    }
+}
+
+static
+void unregister_trigger(
+    ecs_world_t *world,
+    ecs_trigger_t *trigger)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(trigger != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_map_t *triggers = world->id_triggers;
+    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_trigger_t *idt = ecs_map_get(
+        triggers, ecs_id_trigger_t, trigger->id);
+    if (!idt) {
+        return;
+    }
+
+    if (trigger->event_mask & EcsEventAdd) {
+        ecs_map_t *set = idt->on_add_triggers;
+        if (!set) {
+            return;
+        }
+        idt->on_add_triggers = unregister_id_trigger(set, trigger);
+    }
+
+    if (trigger->event_mask & EcsEventRemove) {
+        ecs_map_t *set = idt->on_remove_triggers;
+        if (!set) {
+            return;
+        }
+        idt->on_remove_triggers = unregister_id_trigger(set, trigger);
+    }    
+}
+
+ecs_trigger_t* ecs_trigger_init(
+    ecs_world_t *world,
+    const ecs_trigger_desc_t *desc)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const char *name = desc->name;
+    const char *expr = desc->expr;
+
+    ecs_term_t term;
+    if (expr) {
+#ifdef FLECS_PARSER
+        const char *ptr = ecs_parse_term(world, name, expr, expr, &term);
+        if (!ptr) {
+            return NULL;
+        }
+
+        if (!ecs_term_is_set(&term)) {
+            ecs_parser_error(name, expr, 0, "invalid empty trigger expression");
+            return NULL;
+        }
+
+        if (ptr[0]) {
+            ecs_parser_error(name, expr, 0, 
+                "too many terms in trigger expression (expected 1)");
+            return NULL;
+        }
+#else
+        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+#endif
+    } else {
+        term = desc->term;
+    }
+
+    if (ecs_term_finalize(world, name, expr, &term)) {
+        return NULL;
+    }
+
+    /* Currently triggers are not supported for specific entities */
+    ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
+
+    ecs_trigger_t *trigger = ecs_sparse_add(world->triggers, ecs_trigger_t);
+    trigger->world = world;
+    trigger->term = term;
+    trigger->callback = desc->callback;
+    trigger->ctx = desc->ctx;
+    trigger->event_mask = get_event_mask(desc->events);
+    trigger->id = ecs_sparse_last_id(world->triggers);
+
+    register_trigger(world, trigger);
+
+    return trigger;
+}
+
+void ecs_trigger_fini(
+    ecs_trigger_t *trigger)
+{
+    unregister_trigger(trigger->world, trigger);
+    ecs_term_fini(&trigger->term);
+    ecs_sparse_remove(trigger->world->triggers, trigger->id);
 }
 
 int8_t ecs_to_i8(
@@ -24210,7 +24536,7 @@ ecs_vector_t* expr_to_ids(
             goto error;
         }
 
-        if (ecs_term_resolve_ids(world, name, expr, &term)) {
+        if (ecs_term_finalize(world, name, expr, &term)) {
             goto error;
         }
 
@@ -25093,6 +25419,10 @@ char* ecs_get_path_w_sep(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
+
+    if (!sep) {
+        sep = ".";
+    }
         
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
@@ -25179,6 +25509,10 @@ ecs_entity_t ecs_lookup_path_w_sep(
 {
     if (!path) {
         return 0;
+    }
+
+    if (!sep) {
+        sep = ".";
     }
 
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -25377,6 +25711,10 @@ ecs_entity_t ecs_add_path_w_sep(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (!sep) {
+        sep = ".";
+    }    
+
     if (!path) {
         if (!entity) {
             entity = ecs_new_id(world);
@@ -25435,6 +25773,10 @@ ecs_entity_t ecs_new_from_path_w_sep(
     const char *sep,
     const char *prefix)
 {
+    if (!sep) {
+        sep = ".";
+    }
+
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 

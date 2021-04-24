@@ -1760,6 +1760,117 @@ ecs_entity_t ecs_new_w_id(
     return entity;
 }
 
+ecs_entity_t ecs_entity_init(
+    ecs_world_t *world,
+    const ecs_entity_desc_t *desc)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t scope = ecs_get_scope(world);
+
+    const char *name = desc->name;
+    const char *sep = desc->sep;
+
+    bool new_entity = false;
+    bool name_assigned = false;
+
+    /* Find or create entity */
+    ecs_entity_t result = desc->entity;
+    if (!result) {
+        if (name) {
+            result = ecs_lookup_fullpath(world, name);
+            if (result) {
+                name_assigned = true;
+            }
+        }
+
+        if (!result) {
+            if (desc->use_low_id) {
+                result = ecs_new_component_id(world);
+            } else {
+                result = ecs_new_id(world);
+            }
+            new_entity = true;
+        }
+    } else {
+        ecs_assert(ecs_is_valid(world, result), ECS_INVALID_PARAMETER, NULL);
+        
+        if (name) {
+            /* If entity has name, verify that name matches */
+            char *path = ecs_get_path_w_sep(world, scope, result, 0, sep, NULL);
+            if (path) {
+                if (ecs_os_strcmp(path, name)) {
+                    /* Mismatching name */
+                    return 0;
+                }
+                ecs_os_free(path);
+                name_assigned = true;
+            }
+        } else {
+            name_assigned = ecs_has(world, result, EcsName);
+        }
+    }
+
+    /* Find existing table */
+    ecs_entity_info_t info = {0};
+    ecs_table_t *src_table = NULL, *table = NULL;
+    if (!new_entity) {
+        if (ecs_get_info(world, result, &info)) {
+            table = info.table;
+        }
+    }
+
+    ecs_entity_t added_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t added = { .array = added_buffer };
+
+    ecs_entity_t removed_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t removed = { .array = removed_buffer };
+
+    /* Find destination table */
+    if (new_entity && scope && !name && !name_assigned) {
+        ecs_entity_t id = ecs_pair(EcsChildOf, scope);
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    if (name && !name_assigned) {
+        ecs_entity_t id = ecs_id(EcsName);
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
+    }
+
+    int32_t i = 0;
+    ecs_id_t id;
+    const ecs_id_t *ids = desc->add;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    i = 0;
+    ids = desc->remove;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i])) {
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_remove(world, table, &arr, &removed);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+        i ++;
+    }
+
+    if (src_table != table) {
+        commit(world, result, &info, table, &added, &removed);
+    }
+
+    if (name && !name_assigned) {
+        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);
+    }    
+
+    return result;
+}
+
 const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
