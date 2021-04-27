@@ -888,6 +888,37 @@ void Pairs_id_str_w_recycled_rel(void);
 void Pairs_id_str_w_recycled_obj(void);
 void Pairs_set_object_w_zero_sized_rel_comp(void);
 
+// Testsuite 'Trigger'
+void Trigger_on_add_trigger_before_table(void);
+void Trigger_on_add_trigger_after_table(void);
+void Trigger_on_remove_trigger_before_table(void);
+void Trigger_on_remove_trigger_after_table(void);
+void Trigger_on_add_tag(void);
+void Trigger_on_add_component(void);
+void Trigger_on_add_wildcard(void);
+void Trigger_on_add_pair(void);
+void Trigger_on_add_pair_obj_wildcard(void);
+void Trigger_on_add_pair_pred_wildcard(void);
+void Trigger_on_add_pair_wildcard(void);
+void Trigger_on_remove_tag(void);
+void Trigger_on_remove_component(void);
+void Trigger_on_remove_wildcard(void);
+void Trigger_on_remove_pair(void);
+void Trigger_on_remove_pair_obj_wildcard(void);
+void Trigger_on_remove_pair_pred_wildcard(void);
+void Trigger_on_remove_pair_wildcard(void);
+void Trigger_on_add_remove(void);
+void Trigger_add_twice(void);
+void Trigger_remove_twice(void);
+void Trigger_on_remove_w_clear(void);
+void Trigger_on_remove_w_delete(void);
+void Trigger_on_add_w_clone(void);
+void Trigger_add_in_trigger(void);
+void Trigger_remove_in_trigger(void);
+void Trigger_clear_in_trigger(void);
+void Trigger_delete_in_trigger(void);
+void Trigger_trigger_w_named_entity(void);
+
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -5057,6 +5088,125 @@ bake_test_case Pairs_testcases[] = {
     }
 };
 
+bake_test_case Trigger_testcases[] = {
+    {
+        "on_add_trigger_before_table",
+        Trigger_on_add_trigger_before_table
+    },
+    {
+        "on_add_trigger_after_table",
+        Trigger_on_add_trigger_after_table
+    },
+    {
+        "on_remove_trigger_before_table",
+        Trigger_on_remove_trigger_before_table
+    },
+    {
+        "on_remove_trigger_after_table",
+        Trigger_on_remove_trigger_after_table
+    },
+    {
+        "on_add_tag",
+        Trigger_on_add_tag
+    },
+    {
+        "on_add_component",
+        Trigger_on_add_component
+    },
+    {
+        "on_add_wildcard",
+        Trigger_on_add_wildcard
+    },
+    {
+        "on_add_pair",
+        Trigger_on_add_pair
+    },
+    {
+        "on_add_pair_obj_wildcard",
+        Trigger_on_add_pair_obj_wildcard
+    },
+    {
+        "on_add_pair_pred_wildcard",
+        Trigger_on_add_pair_pred_wildcard
+    },
+    {
+        "on_add_pair_wildcard",
+        Trigger_on_add_pair_wildcard
+    },
+    {
+        "on_remove_tag",
+        Trigger_on_remove_tag
+    },
+    {
+        "on_remove_component",
+        Trigger_on_remove_component
+    },
+    {
+        "on_remove_wildcard",
+        Trigger_on_remove_wildcard
+    },
+    {
+        "on_remove_pair",
+        Trigger_on_remove_pair
+    },
+    {
+        "on_remove_pair_obj_wildcard",
+        Trigger_on_remove_pair_obj_wildcard
+    },
+    {
+        "on_remove_pair_pred_wildcard",
+        Trigger_on_remove_pair_pred_wildcard
+    },
+    {
+        "on_remove_pair_wildcard",
+        Trigger_on_remove_pair_wildcard
+    },
+    {
+        "on_add_remove",
+        Trigger_on_add_remove
+    },
+    {
+        "add_twice",
+        Trigger_add_twice
+    },
+    {
+        "remove_twice",
+        Trigger_remove_twice
+    },
+    {
+        "on_remove_w_clear",
+        Trigger_on_remove_w_clear
+    },
+    {
+        "on_remove_w_delete",
+        Trigger_on_remove_w_delete
+    },
+    {
+        "on_add_w_clone",
+        Trigger_on_add_w_clone
+    },
+    {
+        "add_in_trigger",
+        Trigger_add_in_trigger
+    },
+    {
+        "remove_in_trigger",
+        Trigger_remove_in_trigger
+    },
+    {
+        "clear_in_trigger",
+        Trigger_clear_in_trigger
+    },
+    {
+        "delete_in_trigger",
+        Trigger_delete_in_trigger
+    },
+    {
+        "trigger_w_named_entity",
+        Trigger_trigger_w_named_entity
+    }
+};
+
 bake_test_case TriggerOnAdd_testcases[] = {
     {
         "new_match_1_of_1",
@@ -8377,6 +8527,13 @@ static bake_test_suite suites[] = {
         Pairs_testcases
     },
     {
+        "Trigger",
+        NULL,
+        NULL,
+        29,
+        Trigger_testcases
+    },
+    {
         "TriggerOnAdd",
         TriggerOnAdd_setup,
         NULL,
@@ -8611,5 +8768,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 62);
+    return bake_test_run("api", argc, argv, suites, 63);
 }

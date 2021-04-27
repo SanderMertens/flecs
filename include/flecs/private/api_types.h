@@ -135,6 +135,7 @@ struct ecs_iter_t {
     ecs_world_t *world;           /**< The world */
     ecs_world_t *real_world;      /**< Actual world. This differs from world when using threads.  */
     ecs_entity_t system;          /**< The current system (if applicable) */
+    ecs_entity_t event;           /**< The event (if applicable) */
     ecs_query_iter_kind_t kind;
 
     ecs_iter_table_t *table;      /**< Table related data */

@@ -200,93 +200,6 @@ void ecs_get_column_info(
     }
 }
 
-static
-void run_component_trigger_for_entities(
-    ecs_world_t * world,
-    ecs_vector_t * trigger_vec,
-    ecs_entity_t component,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count,
-    ecs_entity_t *entities)
-{    
-    (void)world;
-    int32_t i, trigger_count = ecs_vector_count(trigger_vec);
-    if (trigger_count) {
-        EcsTrigger *triggers = ecs_vector_first(trigger_vec, EcsTrigger);
-        int32_t index = ecs_type_index_of(table->type, component);
-        ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-        index ++;
-
-        ecs_entity_t components[1] = { component };
-        ecs_type_t types[1] = { ecs_type_from_id(world, component) };
-        int32_t columns[1] = { index };
-
-        /* If this is a tag, don't try to retrieve data */
-        if (table->column_count < index) {
-            columns[0] = 0;
-        } else {
-            ecs_column_t *column = &data->columns[index - 1];
-            if (!column->size) {
-                columns[0] = 0;
-            }            
-        }
-        
-        ecs_iter_table_t table_data = {
-            .table = table,
-            .columns = columns,
-            .components = components,
-            .types = types
-        };
-
-        ecs_iter_t it = {
-            .world = world,
-            .table = &table_data,
-            .table_count = 1,
-            .inactive_table_count = 1,
-            .column_count = 1,
-            .table_columns = data->columns,
-            .entities = entities,
-            .offset = row,
-            .count = count,
-        };
-
-        for (i = 0; i < trigger_count; i ++) {
-            it.system = triggers[i].self;
-            it.param = triggers[i].ctx;
-            triggers[i].action(&it);
-        }
-    }
-}
-
-static
-void ecs_run_component_trigger(
-    ecs_world_t * world,
-    ecs_vector_t * trigger_vec,
-    ecs_entity_t component,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count)
-{
-    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
-
-    if (table->flags & EcsTableIsPrefab) {
-        return;
-    }
-
-    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
-    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert((row + count) <= ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
-
-    entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
-
-    run_component_trigger_for_entities(
-        world, trigger_vec, component, table, data, row, count, entities);
-}
-
 #ifdef FLECS_SYSTEM 
 static
 void run_set_systems_for_entities(
@@ -830,54 +743,22 @@ void ecs_components_switch(
 }
 
 static
-void ecs_components_on_add(
+void notify(
     ecs_world_t * world,
     ecs_table_t * table,
     ecs_data_t * data,
     int32_t row,
     int32_t count,
-    ecs_column_info_t * component_info,
-    int32_t component_count)
+    ecs_entity_t event,
+    ecs_entities_t *ids)
 {
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t *arr = ids->array;
+    int32_t arr_count = ids->count;
 
     int i;
-    for (i = 0; i < component_count; i ++) {
-        const ecs_type_info_t *c_info = component_info[i].ci;
-        ecs_vector_t *triggers;
-        if (!c_info || !(triggers = c_info->on_add)) {
-            continue;
-        }
-
-        ecs_entity_t component = component_info[i].id;
-        ecs_run_component_trigger(
-            world, triggers, component, table, data, row, count);
-    }
-}
-
-static
-void ecs_components_on_remove(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count,
-    ecs_column_info_t * component_info,
-    int32_t component_count)
-{
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int i;
-    for (i = 0; i < component_count; i ++) {
-        const ecs_type_info_t *c_info = component_info[i].ci;
-        ecs_vector_t *triggers;
-        if (!c_info || !(triggers = c_info->on_remove)) {
-            continue;
-        }
-
-        ecs_entity_t component = component_info[i].id;
-        ecs_run_component_trigger(
-            world, triggers, component, table, data, row, count);
+    for (i = 0; i < arr_count; i ++) {
+        ecs_triggers_notify(world, arr[i], event, table, data, row, count);
     }
 }
 
@@ -909,8 +790,7 @@ void ecs_run_add_actions(
     }
 
     if (table->flags & EcsTableHasOnAdd) {
-        ecs_components_on_add(world, table, data, row, count, 
-            cinfo, added_count);
+        notify(world, table, data, row, count, EcsOnAdd, added);
     }
 }
 
@@ -926,13 +806,8 @@ void ecs_run_remove_actions(
     ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(removed->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_column_info_t cinfo[ECS_MAX_ADD_REMOVE];
-    ecs_get_column_info(world, table, removed, cinfo, get_all);
-    int removed_count = removed->count;
-
     if (table->flags & EcsTableHasOnRemove) {
-        ecs_components_on_remove(world, table, data, 
-            row, count, cinfo, removed_count);
+        notify(world, table, data, row, count, EcsOnRemove, removed);
     }   
 }
 
@@ -962,7 +837,7 @@ int32_t new_entity(
 
     ecs_assert(
         ecs_vector_count(new_data[0].entities) > new_row, 
-        ECS_INTERNAL_ERROR, NULL);    
+        ECS_INTERNAL_ERROR, NULL);
 
     if (new_table->flags & EcsTableHasAddActions) {
         ecs_run_add_actions(
@@ -1774,6 +1649,20 @@ ecs_entity_t ecs_entity_init(
 
     bool new_entity = false;
     bool name_assigned = false;
+
+    const char *prefix = world->name_prefix;
+    if (name && prefix) {
+        ecs_size_t len = ecs_os_strlen(prefix);
+        if (!ecs_os_strncmp(name, prefix, len) && 
+           (isupper(name[len]) || name[len] == '_')) 
+        {
+            if (name[len] == '_') {
+                name = name + len + 1;
+            } else {
+                name = name + len;
+            }
+        }
+    }
 
     /* Find or create entity */
     ecs_entity_t result = desc->entity;

@@ -181,6 +181,23 @@ void notify_component_info(
 }
 
 static
+void notify_trigger(
+    ecs_world_t *world, 
+    ecs_table_t *table, 
+    ecs_entity_t event) 
+{
+    (void)world;
+
+    if (!(table->flags & EcsTableIsDisabled)) {
+        if (event == EcsOnAdd) {
+            table->flags |= EcsTableHasOnAdd;
+        } else if (event == EcsOnRemove) {
+            table->flags |= EcsTableHasOnRemove;
+        }
+    }
+}
+
+static
 void run_un_set_handlers(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -2152,6 +2169,9 @@ void ecs_table_notify(
         break;
     case EcsTableComponentInfo:
         notify_component_info(world, table, event->component);
+        break;
+    case EcsTableTriggerMatch:
+        notify_trigger(world, table, event->event);
         break;
     }
 }

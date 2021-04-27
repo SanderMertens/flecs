@@ -1017,6 +1017,7 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
 
 static
 void AddMass(ecs_iter_t *it) {
+    test_assert(it->param != NULL);
     ecs_entity_t ecs_typeid(Mass) = *(ecs_entity_t*)it->param;
 
     int i;

@@ -101,11 +101,17 @@ typedef struct EcsContext {
     (void)name;
 #endif
 
-#define ECS_TRIGGER(world, name, kind, component) \
-    ecs_entity_t __F##name = ecs_new_trigger(world, 0, #name, kind, #component, name);\
-    ecs_entity_t name = __F##name;\
-    (void)__F##name;\
-    (void)name;
+/* Deprecated, use ecs_trigger_init */
+#define ECS_TRIGGER(world, trigger_name, kind, component) \
+    ecs_entity_t __F##trigger_name = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
+        .entity.name = #trigger_name,\
+        .callback = trigger_name,\
+        .expr = #component,\
+        .events = {kind},\
+    });\
+    ecs_entity_t trigger_name = __F##trigger_name;\
+    (void)__F##trigger_name;\
+    (void)trigger_name;
 
 /** Run a specific system manually.
  * This operation runs a single system manually. It is an efficient way to

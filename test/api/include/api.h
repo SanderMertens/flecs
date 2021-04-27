@@ -14,6 +14,7 @@ extern "C" {
 
 typedef struct Probe {
     ecs_entity_t system;
+    ecs_entity_t event;
     int32_t offset;
     int32_t count;
     int32_t invoked;

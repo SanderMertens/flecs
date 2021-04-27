@@ -5,6 +5,7 @@ ecs_type_t ecs_type(EcsComponent);
 ecs_type_t ecs_type(EcsType);
 ecs_type_t ecs_type(EcsName);
 ecs_type_t ecs_type(EcsQuery);
+ecs_type_t ecs_type(EcsTrigger);
 ecs_type_t ecs_type(EcsPrefab);
 
 /* Component lifecycle actions for EcsName */
@@ -202,6 +203,7 @@ void ecs_bootstrap(
     bootstrap_component(world, table, EcsComponent);
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);
+    bootstrap_component(world, table, EcsTrigger);
 
     ecs_set_component_actions(world, EcsName, {
         .ctor = ecs_ctor(EcsName),

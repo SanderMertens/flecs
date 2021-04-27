@@ -2245,6 +2245,24 @@ typedef struct ecs_ref_t ecs_ref_t;
 /** @} */
 
 
+
+/**
+ * @defgroup constants API constants
+ * @{
+ */
+
+/* Maximum number of components to add/remove in a single operation */
+#define ECS_MAX_ADD_REMOVE (32)
+
+/* Maximum number of terms to set in static array of filter descriptor */
+#define ECS_FILTER_DESC_TERM_ARRAY_MAX (16)
+
+/* Maximum number of events to set in static array of trigger descriptor */
+#define ECS_TRIGGER_DESC_EVENT_COUNT_MAX (8)
+
+/** @} */
+
+
 /**
  * @defgroup function_types Function Types
  * @{
@@ -2382,6 +2400,21 @@ typedef struct ecs_filter_t {
     ecs_match_kind_t exclude_kind;
 } ecs_filter_t;
 
+/** A trigger invokes a callback on a single-term event */
+struct ecs_trigger_t {
+    ecs_term_t term;            /* Term describing the trigger condition id */
+
+    /* Trigger condition events */
+    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
+    int32_t event_count;
+
+    ecs_iter_action_t action;   /* Trigger callback */
+    void *ctx;                  /* Trigger callback context */
+    
+    ecs_entity_t entity;        /* Entity associated with trigger */
+
+    uint64_t id;                /* Internal id */
+};
 /** @} */
 
 
@@ -2521,6 +2554,7 @@ struct ecs_iter_t {
     ecs_world_t *world;           /**< The world */
     ecs_world_t *real_world;      /**< Actual world. This differs from world when using threads.  */
     ecs_entity_t system;          /**< The current system (if applicable) */
+    ecs_entity_t event;           /**< The event (if applicable) */
     ecs_query_iter_kind_t kind;
 
     ecs_iter_table_t *table;      /**< Table related data */
@@ -2714,16 +2748,7 @@ ecs_entity_t ecs_new_system(
     ecs_entity_t phase,
     const char *signature,
     ecs_iter_action_t action);
-
-FLECS_API
-ecs_entity_t ecs_new_trigger(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    ecs_entity_t kind,
-    const char *component,
-    ecs_iter_action_t action);
-
+    
 FLECS_API
 ecs_entity_t ecs_new_pipeline(
     ecs_world_t *world,
@@ -3120,10 +3145,6 @@ int32_t ecs_type_pair_index_of(
  * @{
  */
 
-/* Maximum number of entities that can be added in a single operation. 
- * Increasing this value will increase consumption of stack space. */
-#define ECS_MAX_ADD_REMOVE (32)
-
 /** Type used for constructing entities */
 typedef struct ecs_entity_desc_t { 
     ecs_entity_t entity; /* Optional existing entity handle. */
@@ -3148,8 +3169,6 @@ typedef struct ecs_entity_desc_t {
 
 
 /** Type used for constructing filters. */
-#define ECS_FILTER_DESC_TERM_ARRAY_MAX (16)
-
 typedef struct ecs_filter_desc_t {
     /* Terms of the filter. If a filter has more terms than 
      * ECS_FILTER_DESC_TERM_ARRAY_MAX use terms_buffer */
@@ -3201,11 +3220,11 @@ typedef struct ecs_query_desc_t {
     ecs_entity_t system;
 } ecs_query_desc_t;
 
-/** Type used for constructing filters. */
-#define ECS_FILTER_DESC_EVENT_COUNT_MAX (8)
-
-/** Type used to create triggers (single component/term events). */
+/** Type used to create triggers (single component/term observers). */
 typedef struct ecs_trigger_desc_t {
+    /* Optional entity to associate with trigger */
+    ecs_entity_desc_t entity;
+
     /* Term specifying the id to subscribe for */
     ecs_term_t term;
 
@@ -3217,7 +3236,7 @@ typedef struct ecs_trigger_desc_t {
     const char *expr;
 
     /* Events to trigger on (OnAdd, OnRemove) */
-    ecs_entity_t events[ECS_FILTER_DESC_EVENT_COUNT_MAX];
+    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
 
     /* Callback to invoke on a trigger */
     ecs_iter_action_t callback;
@@ -3265,13 +3284,9 @@ typedef struct EcsComponentLifecycle {
     void *ctx;              /**< User defined context */
 } EcsComponentLifecycle;
 
-/** Component used for registering component triggers */
+/** Component that stores reference to trigger */
 typedef struct EcsTrigger {
-    ecs_entity_t kind;
-    ecs_iter_action_t action;
-    ecs_entity_t component;
-    ecs_entity_t self;
-    void *ctx;
+    const ecs_trigger_t *trigger;
 } EcsTrigger;
 
 /** Component for storing a query */
@@ -6133,13 +6148,10 @@ bool ecs_query_orphaned(
  */
 
 /** Create trigger */
-ecs_trigger_t* ecs_trigger_init(
+FLECS_API
+ecs_entity_t ecs_trigger_init(
     ecs_world_t *world,
     const ecs_trigger_desc_t *desc);
-
-/** Delete trigger */
-void ecs_trigger_fini(
-    ecs_trigger_t *trigger);
 
 /** @} */
 
@@ -6960,11 +6972,17 @@ typedef struct EcsContext {
     (void)name;
 #endif
 
-#define ECS_TRIGGER(world, name, kind, component) \
-    ecs_entity_t __F##name = ecs_new_trigger(world, 0, #name, kind, #component, name);\
-    ecs_entity_t name = __F##name;\
-    (void)__F##name;\
-    (void)name;
+/* Deprecated, use ecs_trigger_init */
+#define ECS_TRIGGER(world, trigger_name, kind, component) \
+    ecs_entity_t __F##trigger_name = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
+        .entity.name = #trigger_name,\
+        .callback = trigger_name,\
+        .expr = #component,\
+        .events = {kind},\
+    });\
+    ecs_entity_t trigger_name = __F##trigger_name;\
+    (void)__F##trigger_name;\
+    (void)trigger_name;
 
 /** Run a specific system manually.
  * This operation runs a single system manually. It is an efficient way to
@@ -14610,13 +14628,12 @@ private:
         }
 
         if (is_trigger) {
-            e = ecs_new_trigger(
-                m_world, 
-                m_id,
-                nullptr, 
-                m_kind, 
-                signature.c_str(), 
-                invoker);
+            ecs_trigger_desc_t desc = {};
+            desc.entity.entity = m_id;
+            desc.events[0] = m_kind;
+            desc.expr = signature.c_str(),
+            desc.callback = invoker;
+            e = ecs_trigger_init(m_world, &desc);
         } else {
             e = ecs_new_system(
                 m_world, 

@@ -1228,7 +1228,7 @@ void ComponentLifecycle_ctor_on_add_pair_set_ctor_after_table() {
     });
 
     /* Re-add */
-    ecs_add_pair(world, e, ecs_typeid(Pair), ecs_typeid(Position));    
+    ecs_add_pair(world, e, ecs_typeid(Pair), ecs_typeid(Position));
 
     test_int(ctx.ctor.invoked, 1);
     test_assert(ctx.ctor.world == world);

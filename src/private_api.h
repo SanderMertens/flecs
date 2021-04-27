@@ -105,6 +105,7 @@ void ecs_monitor_register(
 
 void ecs_notify_tables(
     ecs_world_t *world,
+    ecs_id_t id,
     ecs_table_event_t *event);
 
 void ecs_notify_queries(
@@ -124,6 +125,24 @@ ecs_id_record_t* ecs_get_id_record(
 void ecs_clear_id_record(
     const ecs_world_t *world,
     ecs_id_t id);
+
+void ecs_triggers_notify(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_entity_t event,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count);
+
+ecs_map_t* ecs_triggers_get(
+    const ecs_world_t *world,
+    ecs_id_t id,
+    ecs_entity_t event);
+
+void ecs_trigger_fini(
+    ecs_world_t *world,
+    ecs_trigger_t *trigger);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API

@@ -952,6 +952,39 @@
                 "set_object_w_zero_sized_rel_comp"
             ]
         }, {
+           "id": "Trigger",
+           "testcases": [
+               "on_add_trigger_before_table",
+               "on_add_trigger_after_table",
+               "on_remove_trigger_before_table",
+               "on_remove_trigger_after_table",
+               "on_add_tag",
+               "on_add_component",
+               "on_add_wildcard",
+               "on_add_pair",
+               "on_add_pair_obj_wildcard",
+               "on_add_pair_pred_wildcard",
+               "on_add_pair_wildcard",
+               "on_remove_tag",
+               "on_remove_component",
+               "on_remove_wildcard",
+               "on_remove_pair",
+               "on_remove_pair_obj_wildcard",
+               "on_remove_pair_pred_wildcard",
+               "on_remove_pair_wildcard",
+               "on_add_remove",
+               "add_twice",
+               "remove_twice",
+               "on_remove_w_clear",
+               "on_remove_w_delete",
+               "on_add_w_clone",
+               "add_in_trigger",
+               "remove_in_trigger",
+               "clear_in_trigger",
+               "delete_in_trigger",
+               "trigger_w_named_entity"
+           ]
+        }, {
             "id": "TriggerOnAdd",
             "setup": true,
             "testcases": [

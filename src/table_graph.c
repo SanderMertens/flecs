@@ -229,16 +229,25 @@ void init_edges(
 
             e = ecs_pair(EcsChildOf, obj);
             table->flags |= EcsTableHasParent;
-        }
-
-        if (ECS_HAS_RELATION(e, EcsIsA)) {
-            obj = ECS_PAIR_OBJECT(e);
-            e = ecs_pair(EcsIsA, obj);
-        }        
+        }       
 
         if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
             ecs_set_watch(world, ecs_pair_object(world, e));
+        }        
+    }
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = entities[i];    
+
+        /* This check ensures that legacy INSTANCEOF works */
+        if (ECS_HAS_RELATION(e, EcsIsA)) {
+            e = ecs_pair(EcsIsA, ECS_PAIR_OBJECT(e));
         }
+
+        /* This check ensures that legacy CHILDOF works */
+        if (ECS_HAS_RELATION(e, EcsChildOf)) {
+            e = ecs_pair(EcsChildOf, ECS_PAIR_OBJECT(e));
+        } 
 
         ecs_register_table_for_id(world, table, e, i);
 
@@ -255,7 +264,7 @@ void init_edges(
             ecs_register_table_for_id(world, table, all_wildcard, i);
         } else {
             ecs_register_table_for_id(world, table, EcsWildcard, i);            
-        }        
+        }
     }
 
     /* Register as root table (temporary ChildOf special) */

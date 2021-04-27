@@ -56,6 +56,7 @@ typedef struct ecs_type_info_t {
 typedef enum ecs_table_eventkind_t {
     EcsTableQueryMatch,
     EcsTableQueryUnmatch,
+    EcsTableTriggerMatch,
     EcsTableComponentInfo
 } ecs_table_eventkind_t;
 
@@ -68,6 +69,9 @@ typedef struct ecs_table_event_t {
 
     /* Component info event */
     ecs_entity_t component;
+
+    /* Trigger match */
+    ecs_entity_t event;
 
     /* If the nubmer of fields gets out of hand, this can be turned into a union
      * but since events are very temporary objects, this works for now and makes
@@ -310,16 +314,6 @@ struct ecs_query_t {
 /** Event mask */
 #define EcsEventAdd    (1)
 #define EcsEventRemove (2)
-
-/** A trigger invokes a callback on a single-term event */
-struct ecs_trigger_t {
-    ecs_world_t *world;
-    ecs_term_t term;
-    ecs_iter_action_t callback;
-    void *ctx;
-    uint32_t event_mask;
-    uint64_t id;
-};
 
 /** Triggers for a specific id */
 typedef struct ecs_id_trigger_t {

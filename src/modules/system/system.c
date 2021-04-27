@@ -7,7 +7,6 @@
 
 /* Global type variables */
 ECS_TYPE_DECL(EcsComponentLifecycle);
-ECS_TYPE_DECL(EcsTrigger);
 ECS_TYPE_DECL(EcsSystem);
 ECS_TYPE_DECL(EcsTickSource);
 ECS_TYPE_DECL(EcsIterAction);
@@ -512,6 +511,8 @@ void ecs_run_monitor(
         it.entities = entities;
     }
 
+    // printf("Run monitor %s\n", ecs_get_name(world, system));
+
     it.system = system;
     system_data->action(&it);
 }
@@ -584,73 +585,6 @@ void ecs_colsystem_dtor(
     }
 }
 
-/* Register a trigger for a component */
-static
-EcsTrigger* trigger_find_or_create(
-    ecs_vector_t **triggers,
-    ecs_entity_t entity)
-{
-    ecs_vector_each(*triggers, EcsTrigger, trigger, {
-        if (trigger->self == entity) {
-            return trigger;
-        }
-    });
-
-    EcsTrigger *result = ecs_vector_add(triggers, EcsTrigger);
-    return result;
-}
-
-static
-void trigger_set(
-    ecs_world_t *world,
-    const ecs_entity_t *entities,
-    EcsTrigger *ct,
-    int32_t count)
-{
-    EcsTrigger *el = NULL;
-
-    int i;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t c = ct[i].component;
-        ecs_type_info_t *c_info = ecs_get_or_create_c_info(world, c);
-
-        switch(ct[i].kind) {
-        case EcsOnAdd:
-            el = trigger_find_or_create(&c_info->on_add, entities[i]);
-            break;
-        case EcsOnRemove:
-            el = trigger_find_or_create(&c_info->on_remove, entities[i]);
-            break;
-        default:
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
-            break;
-        }
-        
-        ecs_assert(el != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        *el = ct[i];
-        el->self = entities[i];
-
-        ecs_notify_tables(world, &(ecs_table_event_t) {
-            .kind = EcsTableComponentInfo,
-            .component = c
-        });        
-
-        ecs_trace_1("trigger #[green]%s#[normal] created for component #[red]%s",
-            ct[i].kind == EcsOnAdd
-                ? "OnAdd"
-                : "OnRemove", ecs_get_name(world, c));
-    }
-}
-
-static
-void OnSetTrigger(
-    ecs_iter_t *it)
-{
-    EcsTrigger *ct = ecs_term(it, EcsTrigger, 1);
-    trigger_set(it->world, it->entities, ct, it->count);
-}
-
 static
 void OnSetTriggerCtx(
     ecs_iter_t *it)
@@ -660,10 +594,8 @@ void OnSetTriggerCtx(
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
-        ct[i].ctx = (void*)ctx[i].ctx;
-    }
-
-    trigger_set(it->world, it->entities, ct, it->count);    
+        ((ecs_trigger_t*)ct[i].trigger)->ctx = (void*)ctx[i].ctx;
+    }  
 }
 
 /* System that registers component lifecycle callbacks */
@@ -812,50 +744,6 @@ ecs_entity_t ecs_new_system(
     return result;
 }
 
-ecs_entity_t ecs_new_trigger(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    ecs_entity_t kind,
-    const char *component_name,
-    ecs_iter_action_t action)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t component = ecs_lookup_fullpath(world, component_name);
-    ecs_assert(component != 0, ECS_INVALID_COMPONENT_ID, component_name);
-
-    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
-    if (!result) {
-        result = ecs_new_entity(world, 0, name, NULL);
-    }
-
-    bool added = false;
-    EcsTrigger *trigger = ecs_get_mut(world, result, EcsTrigger, &added);
-    if (added) {
-        trigger->kind = kind;
-        trigger->action = action;
-        trigger->component = component;
-        trigger->ctx = NULL;
-    } else {
-        if (trigger->kind != kind) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
-
-        if (trigger->component != component) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
-
-        if (trigger->action != action) {
-            trigger->action = action;
-        }
-    }
-    
-    ecs_modified(world, result, EcsTrigger);
-
-    return result;
-}
-
 void FlecsSystemImport(
     ecs_world_t *world)
 {
@@ -864,7 +752,6 @@ void FlecsSystemImport(
     ecs_set_name_prefix(world, "Ecs");
 
     ecs_bootstrap_component(world, EcsComponentLifecycle);
-    ecs_bootstrap_component(world, EcsTrigger);
     ecs_bootstrap_component(world, EcsSystem);
     ecs_bootstrap_component(world, EcsTickSource);
     ecs_bootstrap_component(world, EcsIterAction);
@@ -885,7 +772,6 @@ void FlecsSystemImport(
     ecs_set_scope(world, old_scope);
 
     ECS_TYPE_IMPL(EcsComponentLifecycle);
-    ECS_TYPE_IMPL(EcsTrigger);
     ECS_TYPE_IMPL(EcsSystem);
     ECS_TYPE_IMPL(EcsTickSource);
     ECS_TYPE_IMPL(EcsIterAction);
@@ -908,10 +794,6 @@ void FlecsSystemImport(
     /* Register OnSet system for EcsComponentLifecycle */
     ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, 
         ComponentLifecycle, SYSTEM:Hidden);
-
-    /* Register OnSet system for triggers */
-    ECS_SYSTEM(world, OnSetTrigger, EcsOnSet, 
-        Trigger, SYSTEM:Hidden);
 
     /* System that sets ctx for a trigger */
     ECS_SYSTEM(world, OnSetTriggerCtx, EcsOnSet, 

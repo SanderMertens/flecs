@@ -265,6 +265,7 @@ ecs_world_t *ecs_mini(void) {
     world->aliases = NULL;
 
     world->queries = ecs_sparse_new(ecs_query_t);
+    world->triggers = ecs_sparse_new(ecs_trigger_t);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->name_prefix = NULL;
 
@@ -423,17 +424,33 @@ void ctor_init_zero(
 
 void ecs_notify_tables(
     ecs_world_t *world,
+    ecs_id_t id,
     ecs_table_event_t *event)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_sparse_t *tables = world->store.tables;
-    int32_t i, count = ecs_sparse_count(tables);
+    /* If no id is specified, broadcast to all tables */
+    if (!id) {
+        ecs_sparse_t *tables = world->store.tables;
+        int32_t i, count = ecs_sparse_count(tables);
+        for (i = 0; i < count; i ++) {
+            ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
+            ecs_table_notify(world, table, event);
+        }
 
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
-        ecs_table_notify(world, table, event);
+    /* If id is specified, only broadcast to tables with id */
+    } else {
+        ecs_id_record_t *r = ecs_get_id_record(world, id);
+        if (!r) {
+            return;
+        }
+
+        ecs_table_record_t *tr;
+        ecs_map_iter_t it = ecs_map_iter(r->table_index);
+        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+            ecs_table_notify(world, tr->table, event);
+        }
     }
 }
 
@@ -481,7 +498,14 @@ void ecs_set_component_actions_w_id(
             c_info->lifecycle.ctor = ctor_init_zero;   
         }
 
-        ecs_notify_tables(world, &(ecs_table_event_t) {
+        /* Broadcast to all tables since we need to register a ctor for every
+         * table that uses the component as itself, as predicate or as object.
+         * The latter is what makes selecting the right set of tables complex,
+         * as it depends on the predicate of a pair whether the object is used
+         * as the component type or not. 
+         * A more selective approach requires a more expressive notification
+         * framework. */
+        ecs_notify_tables(world, 0, &(ecs_table_event_t) {
             .kind = EcsTableComponentInfo,
             .component = component
         });
@@ -624,6 +648,8 @@ void fini_id_triggers(
     }
 
     ecs_map_free(world->id_triggers);
+
+    ecs_sparse_free(world->triggers);
 }
 
 /* Cleanup aliases */
@@ -1134,6 +1160,16 @@ void ecs_register_table_for_id(
         tr->table = table;
         tr->column = column;
     }
+
+    /* Set flags if triggers are registered for table */
+    if (!(table->flags & EcsTableIsDisabled)) {
+        if (ecs_triggers_get(world, id, EcsOnAdd)) {
+            table->flags |= EcsTableHasOnAdd;
+        }
+        if (ecs_triggers_get(world, id, EcsOnRemove)) {
+            table->flags |= EcsTableHasOnRemove;
+        }
+    }    
 }
 
 ecs_id_record_t* ecs_get_id_record(

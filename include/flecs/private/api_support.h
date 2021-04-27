@@ -90,16 +90,7 @@ ecs_entity_t ecs_new_system(
     ecs_entity_t phase,
     const char *signature,
     ecs_iter_action_t action);
-
-FLECS_API
-ecs_entity_t ecs_new_trigger(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    ecs_entity_t kind,
-    const char *component,
-    ecs_iter_action_t action);
-
+    
 FLECS_API
 ecs_entity_t ecs_new_pipeline(
     ecs_world_t *world,
