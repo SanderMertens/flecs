@@ -41,6 +41,8 @@ void Entity_find_id_add_1_comp(void);
 void Entity_find_id_add_2_comp(void);
 void Entity_find_id_remove_1_comp(void);
 void Entity_find_id_remove_2_comp(void);
+void Entity_init_w_scope_name(void);
+void Entity_init_w_core_name(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -1881,6 +1883,14 @@ bake_test_case Entity_testcases[] = {
     {
         "find_id_remove_2_comp",
         Entity_find_id_remove_2_comp
+    },
+    {
+        "init_w_scope_name",
+        Entity_init_w_scope_name
+    },
+    {
+        "init_w_core_name",
+        Entity_init_w_core_name
     }
 };
 
@@ -8327,7 +8337,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        32,
+        34,
         Entity_testcases
     },
     {

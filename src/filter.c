@@ -106,6 +106,32 @@ bool ecs_term_is_set(
     return term->id != 0 || term_id_is_set(&term->pred);
 }
 
+bool ecs_term_is_trivial(
+    ecs_term_t *term)
+{
+    if (term->inout != EcsInOutDefault) {
+        return false;
+    }
+
+    if (term->args[0].entity != EcsThis) {
+        return false;
+    }
+
+    if (term->args[0].set != EcsDefaultSet) {
+        return false;
+    }
+
+    if (term->oper != EcsAnd && term->oper != EcsAndFrom) {
+        return false;
+    }
+
+    if (term->name != NULL) {
+        return false;
+    }
+
+    return true;
+}
+
 int ecs_term_finalize(
     const ecs_world_t *world,
     const char *name,

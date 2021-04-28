@@ -88,7 +88,7 @@ ecs_vector_t* expr_to_ids(
             goto done;
         }
 
-        if (term.args[0].set != EcsSetDefault) {
+        if (term.args[0].set != EcsDefaultSet) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "source modifiers not supported for type expressions");
             goto error;
@@ -334,30 +334,6 @@ ecs_entity_t ecs_new_entity(
         result = ecs_new(world, 0);
         ecs_set_symbol(world, result, name);
     }
-
-    if (add_expr_to_entity(world, result, name, expr)) {
-        ecs_delete(world, result);
-        return 0;
-    }
-
-    return result;
-}
-
-ecs_entity_t ecs_new_prefab(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *name,
-    const char *expr)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_entity_t result = ecs_lookup_w_id(world, entity, name);
-    if (!result) {
-        result = ecs_new(world, 0);
-        ecs_set_symbol(world, result, name);
-    }
-
-    ecs_add_id(world, result, EcsPrefab);
 
     if (add_expr_to_entity(world, result, name, expr)) {
         ecs_delete(world, result);

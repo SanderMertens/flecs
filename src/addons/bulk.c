@@ -64,7 +64,7 @@ void merge_table(
 
             if (to_remove && to_remove->count && src_data) {
                 ecs_run_remove_actions(world, src_table, 
-                    src_data, 0, src_count, to_remove, false);
+                    src_data, 0, src_count, to_remove);
             }
 
             ecs_data_t *dst_data = ecs_table_get_data(dst_table);

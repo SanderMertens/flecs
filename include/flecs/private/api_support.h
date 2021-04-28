@@ -46,13 +46,6 @@ extern ecs_type_t
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_API
-ecs_entity_t ecs_new_entity(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *id,
-    const char *components);
-
-FLECS_API
 ecs_entity_t ecs_new_component(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -76,13 +69,6 @@ ecs_entity_t ecs_new_type(
     const char *components);
 
 FLECS_API
-ecs_entity_t ecs_new_prefab(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *id,
-    const char *sig);
-
-FLECS_API
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -90,7 +76,7 @@ ecs_entity_t ecs_new_system(
     ecs_entity_t phase,
     const char *signature,
     ecs_iter_action_t action);
-    
+
 FLECS_API
 ecs_entity_t ecs_new_pipeline(
     ecs_world_t *world,

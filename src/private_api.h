@@ -305,8 +305,7 @@ void ecs_run_remove_actions(
     ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_entities_t *removed,
-    bool get_all);
+    ecs_entities_t *removed);
 
 void ecs_run_set_systems(
     ecs_world_t *world,

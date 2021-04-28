@@ -1,5 +1,6 @@
 #include "private_api.h"
 
+static
 int32_t count_events(
     const ecs_entity_t *events) 
 {
@@ -317,7 +318,7 @@ ecs_entity_t ecs_trigger_init(
     trigger->action = desc->callback;
     trigger->ctx = desc->ctx;
     trigger->event_count = count_events(desc->events);
-    memcpy(trigger->events, desc->events, 
+    ecs_os_memcpy(trigger->events, desc->events, 
         trigger->event_count * ECS_SIZEOF(ecs_entity_t));
     trigger->id = ecs_sparse_last_id(world->triggers);
     trigger->entity = entity;

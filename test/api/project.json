@@ -47,7 +47,9 @@
                     "find_id_add_1_comp",
                     "find_id_add_2_comp",
                     "find_id_remove_1_comp",
-                    "find_id_remove_2_comp"
+                    "find_id_remove_2_comp",
+                    "init_w_scope_name",
+                    "init_w_core_name"
                 ]
             }, {
             "id": "New",

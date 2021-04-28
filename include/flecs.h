@@ -158,7 +158,7 @@ typedef void (*ecs_fini_action_t)(
  */
 
 /** Set flags describe if & how a matched entity should be substituted */
-#define EcsSetDefault   (0)  /* Default set, SuperSet|Self for This subject */
+#define EcsDefaultSet   (0)  /* Default set, SuperSet|Self for This subject */
 #define EcsSelf         (1)  /* Select self (inclusive) */
 #define EcsSuperSet     (2)  /* Select superset until predicate match */
 #define EcsSubSet       (4)  /* Select subset until predicate match */
@@ -292,6 +292,16 @@ typedef struct ecs_entity_desc_t {
 
     const char *sep;     /* Optional custom separator for hierarchical names */
 
+    const char *symbol;  /* Optional entity symbol. A symbol is an unscoped
+                          * identifier that can be used to lookup an entity. The
+                          * primary use case for this is to associate the entity
+                          * with a language identifier, such as a type or 
+                          * function name, where these identifiers differ from
+                          * the name they are registered with in flecs. For 
+                          * example, C type "EcsPosition" might be registered
+                          * as "flecs.components.transform.Position", with the
+                          * symbol set to "EcsPosition". */
+
     bool use_low_id;     /* When set to true, a low id (typically reserved for
                           * components) will be used to create the entity, if
                           * no id is specified. */
@@ -301,6 +311,12 @@ typedef struct ecs_entity_desc_t {
 
     /* Array of ids to remove from the existing entity. */
     ecs_id_t remove[ECS_MAX_ADD_REMOVE];
+
+    /* String expression with components to add */
+    const char *add_expr;
+
+    /* String expression with components to remove */
+    const char *remove_expr;
 } ecs_entity_desc_t;
 
 
@@ -2093,6 +2109,7 @@ ecs_entity_t ecs_lookup_child(
  * @param path The path to resolve.
  * @param sep The path separator.
  * @param prefix The path prefix.
+ * @param recursive Recursively traverse up the tree until entity is found.
  * @return The entity if found, else 0.
  */
 FLECS_API
@@ -2101,7 +2118,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_entity_t parent,
     const char *path,
     const char *sep,
-    const char *prefix);
+    const char *prefix,
+    bool recursive);
 
 /** Lookup an entity from a path.
  * Same as ecs_lookup_path_w_sep, but with defaults for the separator and
@@ -2114,7 +2132,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
  * @return The entity if found, else 0. 
  */
 #define ecs_lookup_path(world, parent, path)\
-    ecs_lookup_path_w_sep(world, parent, path, ".", NULL)
+    ecs_lookup_path_w_sep(world, parent, path, ".", NULL, true)
 
 /** Lookup an entity from a full path.
  * Same as ecs_lookup_path, but  searches from the current scope, or root scope
@@ -2125,7 +2143,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
  * @return The entity if found, else 0. 
  */
 #define ecs_lookup_fullpath(world, path)\
-    ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
+    ecs_lookup_path_w_sep(world, 0, path, ".", NULL, true)
 
 /** Lookup an entity by its symbol name.
  * This looks up an entity by the symbol name that was provided in EcsName. The
@@ -2419,6 +2437,33 @@ const char* ecs_set_name_prefix(
 FLECS_API
 bool ecs_term_is_set(
     const ecs_term_t *term);
+
+/** Test whether a term is a trivial term.
+ * A trivial term is a term that only contains a type id. Trivial terms must not
+ * have read/write annotations, relation substitutions and subjects other than
+ * 'This'. Examples of trivial terms are:
+ * - 'Position'
+ * - 'Position(This)'
+ * - '(Likes, IceCream)'
+ * - 'Likes(This, IceCream)'
+ * 
+ * Examples of non-trivial terms are:
+ * - '[in] Position'
+ * - 'Position(MyEntity)'
+ * - 'Position(self|superset)'
+ *
+ * Trivial terms are useful in expressions that should just represent a list of
+ * components, such as when parsing the list of components to add to an entity.
+ *
+ * The term passed to this operation must be finalized. Terms returned by the
+ * parser are guaranteed to be finalized.
+ *
+ * @param term The term.
+ * @return True if term is trivial, false if it is not.
+ */
+FLECS_API
+bool ecs_term_is_trivial(
+    ecs_term_t *term);
 
 /** Finalize term.
  * Ensure that all fields of a term are consistent and filled out. This 

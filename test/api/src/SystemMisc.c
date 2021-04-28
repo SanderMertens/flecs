@@ -1123,7 +1123,7 @@ void SystemMisc_one_named_column_of_two() {
     ecs_term_t *
     term = &f.terms[0];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->args[0].set == EcsSetDefault);
+    test_assert(term->args[0].set == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_typeid(Position));
@@ -1131,7 +1131,7 @@ void SystemMisc_one_named_column_of_two() {
 
     term = &f.terms[1];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->args[0].set == EcsSetDefault);
+    test_assert(term->args[0].set == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_typeid(Velocity));
@@ -1160,7 +1160,7 @@ void SystemMisc_two_named_columns_of_two() {
     ecs_term_t *
     term = &f.terms[0];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->args[0].set == EcsSetDefault);
+    test_assert(term->args[0].set == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_typeid(Position));
@@ -1168,7 +1168,7 @@ void SystemMisc_two_named_columns_of_two() {
 
     term = &f.terms[1];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->args[0].set == EcsSetDefault);
+    test_assert(term->args[0].set == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_typeid(Velocity));

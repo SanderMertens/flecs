@@ -894,7 +894,7 @@ void Trigger_trigger_w_named_entity() {
 
     /* Create trigger before table */
     Probe ctx = {0};
-    ecs_entity_t trigger = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .entity.name = "MyTrigger",
         .term.id = TagA,
         .events = {EcsOnAdd},

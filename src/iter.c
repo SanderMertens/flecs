@@ -145,7 +145,7 @@ bool ecs_term_is_readonly(
                 return true;
             }
 
-            if ((subj->set != EcsSelf) && (subj->set != EcsSetDefault)) {
+            if ((subj->set != EcsSelf) && (subj->set != EcsDefaultSet)) {
                 return true;
             }
         }

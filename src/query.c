@@ -1495,10 +1495,10 @@ void process_signature(
         ecs_assert(!(obj->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
 
         /* Superset/subset substitutions aren't supported for pred/obj */
-        ecs_assert(pred->set == EcsSetDefault, ECS_UNSUPPORTED, NULL);
-        ecs_assert(obj->set == EcsSetDefault, ECS_UNSUPPORTED, NULL);
+        ecs_assert(pred->set == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
+        ecs_assert(obj->set == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
 
-        if (subj->set == EcsSetDefault) {
+        if (subj->set == EcsDefaultSet) {
             subj->set = EcsSelf;
         }
 

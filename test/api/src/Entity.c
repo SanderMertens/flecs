@@ -726,3 +726,43 @@ void Entity_find_id_remove_2_comp() {
 
     ecs_fini(world);
 }
+
+void Entity_init_w_scope_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "parent"
+    });
+    ecs_entity_t foo = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "parent.foo"
+    });
+
+    ecs_set_scope(world, foo);
+
+    ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "foo"
+    });
+
+    test_assert(child != 0);
+    test_str(ecs_get_name(world, child), "foo");
+
+    char *path = ecs_get_fullpath(world, child);
+    test_assert(path != NULL);
+    test_str(path, "parent.foo.foo");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Entity_init_w_core_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "Prefab"
+    });
+
+    test_assert(e != 0);
+    test_assert(e != EcsPrefab);
+
+    ecs_fini(world);
+}

@@ -800,8 +800,7 @@ void ecs_run_remove_actions(
     ecs_data_t * data,
     int32_t row,
     int32_t count,
-    ecs_entities_t * removed,
-    bool get_all)
+    ecs_entities_t * removed)
 {
     ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(removed->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
@@ -898,7 +897,7 @@ int32_t move_entity(
                 src_row, 1, dst_table->un_set_all);
 
             ecs_run_remove_actions(
-                world, src_table, src_data, src_row, 1, removed, false);
+                world, src_table, src_data, src_row, 1, removed);
         }
 
         ecs_table_move(world, entity, entity, dst_table, dst_data, dst_row, 
@@ -949,7 +948,7 @@ void delete_entity(
         /* Invoke remove actions before deleting */
         if (src_table->flags & EcsTableHasRemoveActions) {   
             ecs_run_remove_actions(
-                world, src_table, src_data, src_row, 1, removed, true);
+                world, src_table, src_data, src_row, 1, removed);
         } 
     }
 
@@ -1635,6 +1634,75 @@ ecs_entity_t ecs_new_w_id(
     return entity;
 }
 
+static
+ecs_table_t *traverse_from_expr(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    const char *name,
+    const char *expr,
+    ecs_entities_t *modified,
+    bool is_add)
+{
+    const char *ptr = expr;
+    if (ptr) {
+        ecs_term_t term = {0};
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
+            if (!ecs_term_is_set(&term)) {
+                break;
+            }
+
+            if (ecs_term_finalize(world, name, expr, &term)) {
+                return NULL;
+            }
+
+            if (!ecs_term_is_trivial(&term)) {
+                ecs_parser_error(name, expr, (ptr - expr), 
+                    "invalid non-trivial term in add expression");
+                return NULL;
+            }
+
+            if (term.oper == EcsAnd) {
+                /* Regular AND expression */
+                ecs_entities_t arr = { .array = &term.id, .count = 1 };
+                if (is_add) {
+                    table = ecs_table_traverse_add(world, table, &arr, modified);
+                } else {
+                    table = ecs_table_traverse_remove(world, table, &arr, modified);
+                }
+
+                ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+            } else if (term.oper == EcsAndFrom) {
+                /* Add all components from the specified type */
+                const EcsType *t = ecs_get(world, term.id, EcsType);
+                if (!t) {
+                    ecs_parser_error(name, expr, (ptr - expr), 
+                        "expected type for AND role");
+                    return NULL;
+                }
+                
+                ecs_id_t *ids = ecs_vector_first(t->normalized, ecs_id_t);
+                int32_t i, count = ecs_vector_count(t->normalized);
+                for (i = 0; i < count; i ++) {
+                    ecs_entities_t arr = { .array = &ids[i], .count = 1 };
+                    if (is_add) {
+                        table = ecs_table_traverse_add(
+                            world, table, &arr, modified);
+                    } else {
+                        table = ecs_table_traverse_remove(
+                            world, table, &arr, modified);
+                    }
+                    
+                    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+                }
+            }
+
+            ecs_term_fini(&term);
+        }
+    }
+
+    return table;
+}
+
 ecs_entity_t ecs_entity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc)
@@ -1646,10 +1714,20 @@ ecs_entity_t ecs_entity_init(
 
     const char *name = desc->name;
     const char *sep = desc->sep;
+    if (!sep) {
+        sep = ".";
+    }
 
     bool new_entity = false;
     bool name_assigned = false;
 
+    /* Remove optional prefix from name. Entity names can be derived from 
+     * language identifiers, such as components (typenames) and systems
+     * function names). Because C does not have namespaces, such identifiers
+     * often encode the namespace as a prefix.
+     * To ensure interoperability between C and C++ (and potentially other 
+     * languages with namespacing) the entity must be stored without this prefix
+     * and with the proper namespace, which is what the name_prefix is for */
     const char *prefix = world->name_prefix;
     if (name && prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
@@ -1668,7 +1746,7 @@ ecs_entity_t ecs_entity_init(
     ecs_entity_t result = desc->entity;
     if (!result) {
         if (name) {
-            result = ecs_lookup_fullpath(world, name);
+            result = ecs_lookup_path_w_sep(world, 0, name, sep, NULL, false);
             if (result) {
                 name_assigned = true;
             }
@@ -1717,6 +1795,9 @@ ecs_entity_t ecs_entity_init(
     ecs_entities_t removed = { .array = removed_buffer };
 
     /* Find destination table */
+
+    /* If this is a new entity without a name, add the scope. If a name is
+     * provided, the scope will be added by the add_path_w_sep function */
     if (new_entity && scope && !name && !name_assigned) {
         ecs_entity_t id = ecs_pair(EcsChildOf, scope);
         ecs_entities_t arr = { .array = &id, .count = 1 };
@@ -1724,6 +1805,7 @@ ecs_entity_t ecs_entity_init(
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
 
+    /* If a name is provided but not yet assigned, add the Name component */
     if (name && !name_assigned) {
         ecs_entity_t id = ecs_id(EcsName);
         ecs_entities_t arr = { .array = &id, .count = 1 };
@@ -1731,6 +1813,7 @@ ecs_entity_t ecs_entity_init(
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
     }
 
+    /* Add components from the 'add' id array */
     int32_t i = 0;
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
@@ -1740,6 +1823,7 @@ ecs_entity_t ecs_entity_init(
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
 
+    /* Add components from the 'remove' id array */
     i = 0;
     ids = desc->remove;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i])) {
@@ -1749,13 +1833,28 @@ ecs_entity_t ecs_entity_init(
         i ++;
     }
 
+    /* Add components from the 'add_expr' expression */
+    table = traverse_from_expr(
+        world, table, name, desc->add_expr, &added, true);
+
+    /* Remove components from the 'remove_expr' expression */
+    table = traverse_from_expr(
+        world, table, name, desc->remove_expr, &removed, true);
+
+    /* Commit entity to destination table */
     if (src_table != table) {
         commit(world, result, &info, table, &added, &removed);
     }
 
+    /* Set name */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);
-    }    
+        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);   
+        if (desc->symbol) {
+            EcsName *name_ptr = ecs_get_mut(world, result, EcsName, NULL);
+            ecs_os_free(name_ptr->symbol);
+            name_ptr->symbol = ecs_os_strdup(desc->symbol);
+        }
+    }
 
     return result;
 }

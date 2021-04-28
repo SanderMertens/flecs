@@ -316,7 +316,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_entity_t parent,
     const char *path,
     const char *sep,
-    const char *prefix)
+    const char *prefix,
+    bool recursive)
 {
     if (!path) {
         return 0;
@@ -361,7 +362,7 @@ retry:
     }
 
 tail:
-    if (!cur) {
+    if (!cur && recursive) {
         if (!core_searched) {
             if (parent) {
                 parent = ecs_get_object_w_id(world, parent, EcsChildOf, 0);

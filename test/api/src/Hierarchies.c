@@ -470,7 +470,7 @@ void Hierarchies_lookup_custom_sep() {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, CHILDOF | Parent);
 
-    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, "Parent::Child", "::", NULL);
+    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, "Parent::Child", "::", NULL, true);
     test_assert(e == Child);
 
     ecs_fini(world);
@@ -482,7 +482,7 @@ void Hierarchies_lookup_custom_prefix() {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, CHILDOF | Parent);
 
-    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, "::Parent::Child", "::", "::");
+    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, "::Parent::Child", "::", "::", true);
     test_assert(e == Child);
 
     ecs_fini(world);
@@ -494,7 +494,7 @@ void Hierarchies_lookup_custom_prefix_from_root() {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, CHILDOF | Parent);
 
-    ecs_entity_t e = ecs_lookup_path_w_sep(world, Parent, "::Parent::Child", "::", "::");
+    ecs_entity_t e = ecs_lookup_path_w_sep(world, Parent, "::Parent::Child", "::", "::", true);
     test_assert(e == Child);
 
     ecs_fini(world);
