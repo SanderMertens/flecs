@@ -36,6 +36,11 @@ typedef struct ecs_column_t ecs_column_t;
 /** Table data */
 typedef struct ecs_data_t ecs_data_t;
 
+/* Sparse set */
+typedef struct ecs_sparse_t ecs_sparse_t;
+
+/* Switch list */
+typedef struct ecs_switch_t ecs_switch_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
@@ -76,7 +81,7 @@ typedef struct ecs_page_iter_t {
 
 /** Table specific data for iterators */
 typedef struct ecs_iter_table_t {
-    int32_t *columns;        /**< Mapping from query columns to table columns */
+    int32_t *columns;         /**< Mapping from query terms to table columns */
     ecs_table_t *table;       /**< The current table. */
     ecs_data_t *data;         /**< Table component data */
     ecs_entity_t *components; /**< Components in current table */
@@ -87,7 +92,7 @@ typedef struct ecs_iter_table_t {
 /** Scope-iterator specific data */
 typedef struct ecs_scope_iter_t {
     ecs_filter_t filter;
-    ecs_vector_t *tables;
+    ecs_map_iter_t tables;
     int32_t index;
     ecs_iter_table_t table;
 } ecs_scope_iter_t;
@@ -135,6 +140,7 @@ struct ecs_iter_t {
     ecs_world_t *world;           /**< The world */
     ecs_world_t *real_world;      /**< Actual world. This differs from world when using threads.  */
     ecs_entity_t system;          /**< The current system (if applicable) */
+    ecs_entity_t event;           /**< The event (if applicable) */
     ecs_query_iter_kind_t kind;
 
     ecs_iter_table_t *table;      /**< Table related data */

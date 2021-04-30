@@ -34,8 +34,13 @@ void TestInteropModuleImport(ecs_world_t *world) {
     ecs_new_module(world, 0, "TestInteropModule", 
         sizeof(TestInteropModule), alignof(TestInteropModule));
 
-    ecs_new_component(world, 0, "Position", 
-        sizeof(Position), alignof(Position));
+    ecs_component_desc_t desc = {};
+    desc.entity.name = "Position";
+    desc.entity.symbol = "Position";
+    desc.size = sizeof(Position);
+    desc.alignment = alignof(Position);
+
+    ecs_component_init(world, &desc);
 }
 
 namespace test {

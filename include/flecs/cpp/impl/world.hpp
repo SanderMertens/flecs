@@ -86,7 +86,7 @@ inline flecs::entity world::use(const char *alias) {
 }
 
 inline flecs::entity world::use(const char *name, const char *alias) {
-    entity_t id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
+    entity_t id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_use(m_world, id, alias);
@@ -112,7 +112,7 @@ inline flecs::entity world::get_scope() const {
 }
 
 inline entity world::lookup(const char *name) const {
-    auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
+    auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
     return flecs::entity(*this, id);
 }
 

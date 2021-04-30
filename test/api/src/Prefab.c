@@ -1,4 +1,5 @@
 #include <api.h>
+#include <flecs/type.h>
 
 void Prefab_setup() {
     ecs_tracing_enable(-3);

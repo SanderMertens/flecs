@@ -27,6 +27,11 @@ const void* get_shared_column(
     ecs_assert(refs != NULL, ECS_INTERNAL_ERROR, NULL);
     (void)size;
 
+    ecs_ref_t *ref = &refs[-table_column - 1];
+    if (!ref->component) {
+        return NULL;
+    }
+
 #ifndef NDEBUG
     if (size) {
         ecs_entity_t component_id = ecs_get_typeid(
@@ -40,8 +45,6 @@ const void* get_shared_column(
             it->system ? ecs_get_name(it->world, it->system) : NULL);
     }
 #endif
-
-    ecs_ref_t *ref = &refs[-table_column - 1];
 
     return (void*)ecs_get_ref_w_id(
         it->world, ref, ref->entity, ref->component);
@@ -102,18 +105,18 @@ void* get_term(
 void* ecs_term_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t column)
+    int32_t term)
 {
-    return get_term(it, ecs_from_size_t(size), column, 0);
+    return get_term(it, ecs_from_size_t(size), term, 0);
 }
 
 bool ecs_term_is_owned(
     const ecs_iter_t *it,
-    int32_t column)
+    int32_t term)
 {
     int32_t table_column;
 
-    if (!get_table_column(it, column, &table_column)) {
+    if (!get_table_column(it, term, &table_column)) {
         return true;
     }
 
@@ -122,7 +125,7 @@ bool ecs_term_is_owned(
 
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
-    int32_t column)
+    int32_t term_index)
 {
     ecs_query_t *query = it->query;
 
@@ -130,10 +133,25 @@ bool ecs_term_is_readonly(
     ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
     (void)query;
 
-    ecs_sig_column_t *column_data = ecs_vector_get(
-        it->query->sig.columns, ecs_sig_column_t, column - 1);
+    ecs_term_t *term = &it->query->filter.terms[term_index - 1];
+    
+    if (term->inout == EcsIn) {
+        return true;
+    } else {
+        ecs_term_id_t *subj = &term->args[0];
 
-    return column_data->inout_kind == EcsIn;
+        if (term->inout == EcsInOutDefault) {
+            if (subj->entity != EcsThis) {
+                return true;
+            }
+
+            if ((subj->set != EcsSelf) && (subj->set != EcsDefaultSet)) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
 }
 
 ecs_entity_t ecs_term_source(

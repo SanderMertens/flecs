@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Switch_setup() {
-    ecs_tracing_enable(-4);
+    ecs_tracing_enable(-3);
 }
 
 void Switch_get_case_empty() {
@@ -98,48 +98,6 @@ void Switch_get_case_change() {
     ecs_fini(world);
 }
 
-void Switch_new_w_type() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Walking);
-    ECS_TAG(world, Running);
-    ECS_TAG(world, Jumping);
-
-    ECS_TYPE(world, Movement, Walking, Running, Jumping);
-    ECS_TYPE(world, Type, SWITCH | Movement, CASE | Running);
-
-    ecs_entity_t e = ecs_new(world, Type);
-    test_assert(e != 0);
-
-    test_assert( ecs_has_entity(world, e, ECS_CASE | Running));
-    ecs_entity_t case_id = ecs_get_case(world, e, Movement);
-    test_int(case_id, Running);
-
-    ecs_fini(world);
-}
-
-void Switch_add_w_type() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Walking);
-    ECS_TAG(world, Running);
-    ECS_TAG(world, Jumping);
-
-    ECS_TYPE(world, Movement, Walking, Running, Jumping);
-    ECS_TYPE(world, Type, SWITCH | Movement, CASE | Running);
-
-    ecs_entity_t e = ecs_new(world, 0);
-    test_assert(e != 0);
-
-    ecs_add(world, e, Type);
-
-    test_assert( ecs_has_entity(world, e, ECS_CASE | Running));
-    ecs_entity_t case_id = ecs_get_case(world, e, Movement);
-    test_int(case_id, Running);
-
-    ecs_fini(world);
-}
-
 void Switch_remove_case() {
     ecs_world_t *world = ecs_init();
 
@@ -192,31 +150,6 @@ void Switch_remove_last() {
 
     test_assert(ecs_has(world, e1, Tag));
     test_assert(ecs_has_entity(world, e1, ECS_CASE | Walking));
-
-    ecs_fini(world);
-}
-
-void Switch_bulk_new_w_type() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Walking);
-    ECS_TAG(world, Running);
-    ECS_TAG(world, Jumping);
-
-    ECS_TYPE(world, Movement, Walking, Running, Jumping);
-    ECS_TYPE(world, Type, SWITCH | Movement, CASE | Running);
-
-    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 100);
-    test_assert(ids != NULL);
-
-    int i;
-    for (i = 0; i < 100; i ++) {
-        ecs_add(world, ids[i], Type);
-
-        test_assert( ecs_has_entity(world, ids[i], ECS_CASE | Running));
-        ecs_entity_t case_id = ecs_get_case(world, ids[i], Movement);
-        test_int(case_id, Running);        
-    }
 
     ecs_fini(world);
 }

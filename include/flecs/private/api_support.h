@@ -23,6 +23,9 @@ extern "C" {
  * performance at the cost of (significantly) higher memory usage. */
 #define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
 
+/** The maximum number of nested function calls before the core will throw a
+ * cycle detected error */
+#define ECS_MAX_RECURSION (512)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Global type handles
@@ -46,21 +49,6 @@ extern ecs_type_t
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_API
-ecs_entity_t ecs_new_entity(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *id,
-    const char *components);
-
-FLECS_API
-ecs_entity_t ecs_new_component(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *id,
-    size_t size,
-    size_t alignment);
-
-FLECS_API
 ecs_entity_t ecs_new_module(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -69,35 +57,12 @@ ecs_entity_t ecs_new_module(
     size_t alignment);
 
 FLECS_API
-ecs_entity_t ecs_new_type(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *id,
-    const char *components);
-
-FLECS_API
-ecs_entity_t ecs_new_prefab(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *id,
-    const char *sig);
-
-FLECS_API
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *name,
     ecs_entity_t phase,
     const char *signature,
-    ecs_iter_action_t action);
-
-FLECS_API
-ecs_entity_t ecs_new_trigger(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    ecs_entity_t kind,
-    const char *component,
     ecs_iter_action_t action);
 
 FLECS_API
@@ -120,89 +85,15 @@ bool ecs_component_has_actions(
 //// Signature API
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef enum ecs_sig_inout_kind_t {
-    EcsInOut,
-    EcsIn,
-    EcsOut
-} ecs_sig_inout_kind_t;
+bool ecs_identifier_is_0(
+    const char *id);
 
-/** Type that is used by systems to indicate where to fetch a component from */
-typedef enum ecs_sig_from_kind_t {
-    EcsFromAny,            /* Get component from self (default) */
-    EcsFromOwned,           /* Get owned component from self */
-    EcsFromShared,          /* Get shared component from self */
-    EcsFromParent,          /* Get component from container */
-    EcsFromSystem,          /* Get component from system */
-    EcsFromEmpty,           /* Get entity handle by id */
-    EcsFromEntity,          /* Get component from other entity */
-    EcsCascade              /* Walk component in cascading (hierarchy) order */
-} ecs_sig_from_kind_t;
+bool ecs_identifier_is_var(
+    const char *id);
 
-/** Type describing an operator used in an signature of a system signature */
-typedef enum ecs_sig_oper_kind_t {
-    EcsOperAnd = 0,
-    EcsOperOr = 1,
-    EcsOperNot = 2,
-    EcsOperOptional = 3,
-    EcsOperAll = 4,
-    EcsOperLast = 5
-} ecs_sig_oper_kind_t;
-
-/** Type that describes a single column in the system signature */
-typedef struct ecs_sig_column_t {
-    ecs_sig_from_kind_t from_kind;        /* Element kind (Entity, Component) */
-    ecs_sig_oper_kind_t oper_kind;   /* Operator kind (AND, OR, NOT) */
-    ecs_sig_inout_kind_t inout_kind; /* Is component read or written */
-    union {
-        ecs_vector_t *type;          /* Used for OR operator */
-        ecs_entity_t component;      /* Used for AND operator */
-    } is;
-    ecs_entity_t source;             /* Source entity (used with FromEntity) */
-    char *name;                /* Name of column */
-} ecs_sig_column_t;
-
-/** Type that stores a parsed signature */
-typedef struct ecs_sig_t {
-    const char *name;           /* Optional name used for debugging */
-    char *expr;                 /* Original expression string */
-    ecs_vector_t *columns;      /* Columns that contain parsed data */
-} ecs_sig_t;
-
-/** Parse signature. */
+/** Get filter from query */
 FLECS_API
-void ecs_sig_init(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_sig_t *sig);
-
-/** Release signature resources */
-FLECS_API
-void ecs_sig_deinit(
-    ecs_sig_t *sig);
-
-/** Add column to signature. */
-FLECS_API
-int ecs_sig_add(
-    ecs_world_t *world,
-    ecs_sig_t *sig,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t access_kind,
-    ecs_entity_t component,
-    ecs_entity_t source,
-    const char *arg_name);
-
-/** Create query based on signature object. */
-FLECS_API
-ecs_query_t* ecs_query_new_w_sig(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_sig_t *sig);
-
-/** Get signature object from query */
-FLECS_API
-ecs_sig_t* ecs_query_get_sig(
+ecs_filter_t* ecs_query_get_filter(
     ecs_query_t *query);
 
 
@@ -256,6 +147,8 @@ ecs_sig_t* ecs_query_get_sig(
 #define ECS_INCONSISTENT_NAME (48)
 #define ECS_INCONSISTENT_COMPONENT_ACTION (49)
 #define ECS_INVALID_OPERATION (50)
+#define ECS_INVALID_DELETE (51)
+#define ECS_CYCLE_DETECTED (52)
 
 /** Calculate offset from address */
 #ifdef __cplusplus

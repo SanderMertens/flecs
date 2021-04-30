@@ -29,24 +29,26 @@ int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     /* Register components */
-    ecs_entity_t pos_id = ecs_new_component(world, 0, "Position", sizeof(Position), ECS_ALIGNOF(Position));
-    ecs_entity_t vel_id = ecs_new_component(world, 0, "Velocity", sizeof(Velocity), ECS_ALIGNOF(Velocity));
+    ecs_entity_t pos_id = ecs_component_init(world, &(ecs_component_desc_t){
+        .entity.name = "Position",
+        .size = sizeof(Position),
+        .alignment = ECS_ALIGNOF(Position)
+    });
 
+    ecs_entity_t vel_id = ecs_component_init(world, &(ecs_component_desc_t){
+        .entity.name = "Velocity",
+        .size = sizeof(Velocity),
+        .alignment = ECS_ALIGNOF(Velocity)
+    });    
+    
     /* Register system */
     ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position, Velocity", Move);
 
-    /* Create entity */
-    ecs_entity_t MyEntity = ecs_new_w_type(world, 0);
-
-    /* Set entity identifier using builtin component */
-    ecs_set_ptr_w_id(world, MyEntity, FLECS__EEcsName, sizeof(EcsName), &(EcsName){.value = "MyEntity"});
-
-    /* Components are automatically added when doing an ecs_set, but this is for
-     * demonstration purposes. The ecs_add_entity operation accepts the
-     * component identifier. Alternatively applications can use ecs_add_type,
-     * which can add multiple components in one operation. */
-    ecs_add_id(world, MyEntity, pos_id);
-    ecs_add_id(world, MyEntity, vel_id);
+    /* Create entity with name MyEntity and components position & velocity */
+    ecs_entity_t MyEntity = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "MyEntity",
+        .add = {pos_id, vel_id}
+    });
 
     /* Set values for entity. */
     ecs_set_ptr_w_id(world, MyEntity, pos_id, sizeof(Position), &(Position){0, 0});

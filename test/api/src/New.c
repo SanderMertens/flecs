@@ -1,7 +1,7 @@
 #include <api.h>
 
 void New_setup() {
-    ecs_tracing_enable(-3);
+    ecs_tracing_enable(-2);
 }
 
 void New_empty() {

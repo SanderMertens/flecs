@@ -855,11 +855,11 @@ void Entity_set_no_copy() {
     flecs::world world;
 
     auto e = world.entity()
-        .set<POD>({10});
-    test_int(POD::copy_invoked, 0);
+        .set<Pod>({10});
+    test_int(Pod::copy_invoked, 0);
 
-    test_assert(e.has<POD>());
-    const POD *p = e.get<POD>();
+    test_assert(e.has<Pod>());
+    const Pod *p = e.get<Pod>();
     test_assert(p != NULL);
     test_int(p->value, 10);
 }
@@ -867,14 +867,14 @@ void Entity_set_no_copy() {
 void Entity_set_copy() {
     flecs::world world;
 
-    POD val(10);
+    Pod val(10);
 
     auto e = world.entity()
-        .set<POD>(val);
-    test_int(POD::copy_invoked, 1);
+        .set<Pod>(val);
+    test_int(Pod::copy_invoked, 1);
 
-    test_assert(e.has<POD>());
-    const POD *p = e.get<POD>();
+    test_assert(e.has<Pod>());
+    const Pod *p = e.get<Pod>();
     test_assert(p != NULL);
     test_int(p->value, 10);
 }

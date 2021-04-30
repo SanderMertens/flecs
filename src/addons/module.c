@@ -197,7 +197,14 @@ ecs_entity_t ecs_new_module(
         name_ptr->symbol = module_path;
     }
 
-    ecs_entity_t result = ecs_new_component(world, e, NULL, size, alignment);
+    ecs_entity_t result = ecs_component_init(world, &(ecs_component_desc_t){
+        .entity = {
+            .entity = e
+        },
+        .size = size,
+        .alignment = alignment
+    });
+    
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Add module tag */

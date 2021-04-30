@@ -384,7 +384,7 @@ public:
      * @return The found entity, or entity::null if no entity matched.
      */
     flecs::entity_view lookup(const char *path) const {
-        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::");
+        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", true);
         return flecs::entity_view(m_world, id);
     }
 
@@ -1184,7 +1184,7 @@ public:
         : flecs::entity_view()
     { 
         m_world = world.c_ptr();
-        m_id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
+        m_id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
 
         if (!m_id) {
             if (is_component) {

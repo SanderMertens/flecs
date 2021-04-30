@@ -278,10 +278,28 @@ void _ecs_parser_error(
         va_start(valist, fmt);
         char *msg = ecs_vasprintf(fmt, valist);
 
-        ecs_os_err("%s:%d: error: %s", name, column + 1, msg);
-        ecs_os_err("    %s", expr);
-        ecs_os_err("    %*s^", column, "");
+        if (column != -1) {
+            if (name) {
+                ecs_os_err("%s:%d: error: %s", name, column + 1, msg);
+            } else {
+                ecs_os_err("%d: error: %s", column + 1, msg);
+            }
+        } else {
+            if (name) {
+                ecs_os_err("%s: error: %s", name, msg);
+            } else {
+                ecs_os_err("error: %s", msg);
+            }            
+        }
         
+        ecs_os_err("    %s", expr);
+
+        if (column != -1) {
+            ecs_os_err("    %*s^", column, "");
+        } else {
+            ecs_os_err("");
+        }
+
         ecs_os_free(msg);        
     }
 
@@ -435,6 +453,10 @@ const char* ecs_strerror(
         return "registered mismatching component action";
     case ECS_INVALID_OPERATION:
         return "invalid operation";
+    case ECS_INVALID_DELETE:
+        return "invalid delete of entity/pair";
+    case ECS_CYCLE_DETECTED:
+        return "possible cycle detected";
     }
 
     return "unknown error code";

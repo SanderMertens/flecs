@@ -361,13 +361,12 @@ private:
         }
 
         if (is_trigger) {
-            e = ecs_new_trigger(
-                m_world, 
-                m_id,
-                nullptr, 
-                m_kind, 
-                signature.c_str(), 
-                invoker);
+            ecs_trigger_desc_t desc = {};
+            desc.entity.entity = m_id;
+            desc.events[0] = m_kind;
+            desc.expr = signature.c_str(),
+            desc.callback = invoker;
+            e = ecs_trigger_init(m_world, &desc);
         } else {
             e = ecs_new_system(
                 m_world, 

@@ -38,12 +38,8 @@ int main(int argc, char *argv[]) {
             /* Get the id of the term, which contains the pair */
             flecs::entity pair = it.term_id(1);
 
-            std::cout << "WORLD: " << pair.world().c_ptr() << std::endl;
-
             /* Obtain component id, which is the 'object' part of the pair */
             flecs::entity obj = pair.object();
-
-            std::cout << "WORLD: " << obj.world().c_ptr() << std::endl;
 
             for (auto i : it) {
                 /* Increase timer. When it equals expiry time, remove component */

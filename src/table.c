@@ -91,7 +91,7 @@ ecs_data_t* ecs_init_data(
 
 static
 ecs_flags32_t get_component_action_flags(
-    const ecs_c_info_t *c_info) 
+    const ecs_type_info_t *c_info) 
 {
     ecs_flags32_t flags = 0;
 
@@ -153,7 +153,7 @@ void notify_component_info(
         
         if (!table->c_info) {
             table->c_info = ecs_os_calloc(
-                ECS_SIZEOF(ecs_c_info_t*) * column_count);
+                ECS_SIZEOF(ecs_type_info_t*) * column_count);
         }
 
         /* Reset lifecycle flags before recomputing */
@@ -168,15 +168,32 @@ void notify_component_info(
                 continue;
             }
             
-            const ecs_c_info_t *c_info = ecs_get_c_info(world, c);
+            const ecs_type_info_t *c_info = ecs_get_c_info(world, c);
             if (c_info) {
                 ecs_flags32_t flags = get_component_action_flags(c_info);
                 table->flags |= flags;
             }
 
             /* Store pointer to c_info for fast access */
-            table->c_info[i] = (ecs_c_info_t*)c_info;
+            table->c_info[i] = (ecs_type_info_t*)c_info;
         }        
+    }
+}
+
+static
+void notify_trigger(
+    ecs_world_t *world, 
+    ecs_table_t *table, 
+    ecs_entity_t event) 
+{
+    (void)world;
+
+    if (!(table->flags & EcsTableIsDisabled)) {
+        if (event == EcsOnAdd) {
+            table->flags |= EcsTableHasOnAdd;
+        } else if (event == EcsOnRemove) {
+            table->flags |= EcsTableHasOnRemove;
+        }
     }
 }
 
@@ -237,7 +254,7 @@ void add_monitor(
 }
 
 /* This function is called when a query is matched with a table. A table keeps
- * a list of tables that match so that they can be notified when the table
+ * a list of queries that match so that they can be notified when the table
  * becomes empty / non-empty. */
 static
 void register_monitor(
@@ -322,17 +339,21 @@ void register_on_set(
 
         /* Add system to each matched column. This makes it easy to get the list 
          * of systems when setting a single component. */
-        ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns,
-            ecs_sig_column_t);
-        int32_t i, count = ecs_vector_count(query->sig.columns);
+        ecs_term_t *terms = query->filter.terms;
+        int32_t i, count = query->filter.term_count;
+        
         for (i = 0; i < count; i ++) {
-            ecs_sig_column_t *column = &columns[i];
-            ecs_sig_oper_kind_t oper_kind = column->oper_kind;
-            ecs_sig_from_kind_t from_kind = column->from_kind;
+            ecs_term_t *term = &terms[i];
+            ecs_term_id_t *subj = &term->args[0];
+            ecs_oper_kind_t oper = term->oper;
 
-            if ((from_kind != EcsFromAny && from_kind != EcsFromOwned) ||
-                (oper_kind != EcsOperAnd && oper_kind != EcsOperOptional)) 
+            if (!(subj->set & EcsSelf) || !subj->entity ||
+                subj->entity != EcsThis)
             {
+                continue;
+            }
+
+            if (oper != EcsAnd && oper != EcsOptional) {
                 continue;
             }
 
@@ -503,7 +524,7 @@ ecs_data_t* ecs_table_get_or_create_data(
 static
 void ctor_component(
     ecs_world_t *world,
-    ecs_c_info_t * cdata,
+    ecs_type_info_t * cdata,
     ecs_column_t * column,
     ecs_entity_t * entities,
     int32_t row,
@@ -526,7 +547,7 @@ void ctor_component(
 static
 void dtor_component(
     ecs_world_t *world,
-    ecs_c_info_t * cdata,
+    ecs_type_info_t * cdata,
     ecs_column_t * column,
     ecs_entity_t * entities,
     int32_t row,
@@ -707,8 +728,7 @@ void ecs_table_unset(
     }   
 }
 
-/* Free table resources. Do not invoke handlers and do not activate/deactivate
- * table with systems. This function is used when the world is freed. */
+/* Free table resources. */
 void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -721,6 +741,8 @@ void ecs_table_free(
     }
 
     ecs_table_clear_edges(world, table);
+
+    ecs_unregister_table(world, table);
 
     ecs_os_free(table->lo_edges);
     ecs_map_free(table->hi_edges);
@@ -937,7 +959,7 @@ void grow_column(
     ecs_world_t *world,
     ecs_entity_t * entities,
     ecs_column_t * column,
-    ecs_c_info_t * c_info,
+    ecs_type_info_t * c_info,
     int32_t to_add,
     int32_t new_size,
     bool construct)
@@ -1054,7 +1076,7 @@ int32_t grow_data(
     ecs_os_memset(r, 0, ECS_SIZEOF(ecs_record_t*) * to_add);
 
     /* Add elements to each column array */
-    ecs_c_info_t **c_info_array = table->c_info;
+    ecs_type_info_t **c_info_array = table->c_info;
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];
@@ -1062,7 +1084,7 @@ int32_t grow_data(
             continue;
         }
 
-        ecs_c_info_t *c_info = NULL;
+        ecs_type_info_t *c_info = NULL;
         if (c_info_array) {
             c_info = c_info_array[i];
         }
@@ -1171,7 +1193,7 @@ int32_t ecs_table_append(
         return count;
     }
 
-    ecs_c_info_t **c_info_array = table->c_info;
+    ecs_type_info_t **c_info_array = table->c_info;
     ecs_entity_t *entities = ecs_vector_first(
         data->entities, ecs_entity_t);
 
@@ -1188,7 +1210,7 @@ int32_t ecs_table_append(
             continue;
         }
 
-        ecs_c_info_t *c_info = NULL;
+        ecs_type_info_t *c_info = NULL;
         if (c_info_array) {
             c_info = c_info_array[i];
         }
@@ -1270,7 +1292,7 @@ void ecs_table_delete(
     
     ecs_assert(index <= count, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_c_info_t **c_info_array = table->c_info;
+    ecs_type_info_t **c_info_array = table->c_info;
     int32_t column_count = table->column_count;
     int32_t i;
 
@@ -1328,7 +1350,7 @@ void ecs_table_delete(
         int16_t size = column->size;
         int16_t alignment = column->alignment;
         if (size) {
-            ecs_c_info_t *c_info = c_info_array ? c_info_array[i] : NULL;
+            ecs_type_info_t *c_info = c_info_array ? c_info_array[i] : NULL;
             ecs_xtor_t dtor;
 
             void *dst = ecs_vector_get_t(column->data, size, alignment, index);
@@ -1489,7 +1511,7 @@ void ecs_table_move(
                 ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                ecs_c_info_t *cdata = new_table->c_info[i_new];
+                ecs_type_info_t *cdata = new_table->c_info[i_new];
                 if (same_entity) {
                     ecs_move_t move;
                     if (cdata && (move = cdata->lifecycle.move)) {
@@ -1752,7 +1774,7 @@ void merge_column(
     ecs_vector_t *src)
 {
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-    ecs_c_info_t *c_info = table->c_info[column_id];
+    ecs_type_info_t *c_info = table->c_info[column_id];
     ecs_column_t *column = &data->columns[column_id];
     ecs_vector_t *dst = column->data;
     int16_t size = column->size;
@@ -1870,7 +1892,7 @@ void merge_table_data(
                     old_count + new_count);
 
                 /* Construct new values */
-                ecs_c_info_t *c_info;
+                ecs_type_info_t *c_info;
                 ecs_xtor_t ctor;
                 if ((c_info = new_table->c_info[i_new]) && 
                     (ctor = c_info->lifecycle.ctor)) 
@@ -1886,7 +1908,7 @@ void merge_table_data(
                 ecs_column_t *column = &old_columns[i_old];
                 
                 /* Destruct old values */
-                ecs_c_info_t *c_info;
+                ecs_type_info_t *c_info;
                 ecs_xtor_t dtor;
                 if ((c_info = old_table->c_info[i_old]) && 
                     (dtor = c_info->lifecycle.dtor)) 
@@ -1918,7 +1940,7 @@ void merge_table_data(
                 old_count + new_count);
 
             /* Construct new values */
-            ecs_c_info_t *c_info;
+            ecs_type_info_t *c_info;
             ecs_xtor_t ctor;
             if ((c_info = new_table->c_info[i_new]) && 
                 (ctor = c_info->lifecycle.ctor)) 
@@ -1934,7 +1956,7 @@ void merge_table_data(
         ecs_column_t *column = &old_columns[i_old];
                 
         /* Destruct old values */
-        ecs_c_info_t *c_info;
+        ecs_type_info_t *c_info;
         ecs_xtor_t dtor;
         if ((c_info = old_table->c_info[i_old]) && 
             (dtor = c_info->lifecycle.dtor)) 
@@ -2148,6 +2170,9 @@ void ecs_table_notify(
         break;
     case EcsTableComponentInfo:
         notify_component_info(world, table, event->component);
+        break;
+    case EcsTableTriggerMatch:
+        notify_trigger(world, table, event->event);
         break;
     }
 }

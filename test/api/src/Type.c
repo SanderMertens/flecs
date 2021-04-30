@@ -1,4 +1,5 @@
 #include <api.h>
+#include <flecs/type.h>
 
 void Type_setup() {
     ecs_tracing_enable(-3);
@@ -60,9 +61,17 @@ void Type_type_redefine() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t type = ecs_new_type(world, 0, "Type", "Position");
+    ecs_entity_t type = ecs_type_init(world, &(ecs_type_desc_t){
+        .entity.name = "Type",
+        .ids_expr = "Position"
+    });
 
-    test_assert(type == ecs_new_type(world, 0, "Type", "Position"));
+    ecs_entity_t type_2 = ecs_type_init(world, &(ecs_type_desc_t){
+        .entity.name = "Type",
+        .ids_expr = "Position"
+    });    
+
+    test_assert(type == type_2);
 
     ecs_fini(world);
 }

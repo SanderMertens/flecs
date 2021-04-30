@@ -22,8 +22,16 @@ ecs_type_t ecs_bootstrap_type(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-#define ecs_bootstrap_component(world, name)\
-    ecs_new_component(world, ecs_id(name), #name, sizeof(name), ECS_ALIGNOF(name))
+#define ecs_bootstrap_component(world, id)\
+    ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .entity = ecs_id(id),\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });
 
 #define ecs_bootstrap_tag(world, name)\
     ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = (char*)#name});\
@@ -80,35 +88,75 @@ const ecs_stage_t* ecs_stage_from_readonly_world(
     const ecs_world_t *world);
 
 /* Get component callbacks */
-const ecs_c_info_t *ecs_get_c_info(
+const ecs_type_info_t *ecs_get_c_info(
     const ecs_world_t *world,
     ecs_entity_t component);
 
 /* Get or create component callbacks */
-ecs_c_info_t * ecs_get_or_create_c_info(
+ecs_type_info_t * ecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component);
 
 void ecs_eval_component_monitors(
     ecs_world_t *world);
 
-void ecs_component_monitor_mark(
-    ecs_component_monitors_t *mon,
-    ecs_entity_t component);
+void ecs_monitor_mark_dirty(
+    ecs_world_t *world,
+    ecs_entity_t relation,
+    ecs_entity_t id);
 
-void ecs_component_monitor_register(
-    ecs_component_monitors_t *mon,
-    ecs_entity_t component,
+void ecs_monitor_register(
+    ecs_world_t *world,
+    ecs_entity_t relation,
+    ecs_entity_t id,
     ecs_query_t *query);
 
 void ecs_notify_tables(
     ecs_world_t *world,
+    ecs_id_t id,
     ecs_table_event_t *event);
 
 void ecs_notify_queries(
     ecs_world_t *world,
     ecs_query_event_t *event);
-    
+
+void ecs_register_table(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+void ecs_unregister_table(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+ecs_id_record_t* ecs_ensure_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
+ecs_id_record_t* ecs_get_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
+void ecs_clear_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
+void ecs_triggers_notify(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_entity_t event,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count);
+
+ecs_map_t* ecs_triggers_get(
+    const ecs_world_t *world,
+    ecs_id_t id,
+    ecs_entity_t event);
+
+void ecs_trigger_fini(
+    ecs_world_t *world,
+    ecs_trigger_t *trigger);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
@@ -271,8 +319,7 @@ void ecs_run_remove_actions(
     ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_entities_t *removed,
-    bool get_all);
+    ecs_entities_t *removed);
 
 void ecs_run_set_systems(
     ecs_world_t *world,
@@ -517,15 +564,6 @@ void ecs_query_notify(
     ecs_query_t *query,
     ecs_query_event_t *event);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Signature API
-////////////////////////////////////////////////////////////////////////////////
-
-/* Check if all non-table column constraints are met */
-bool ecs_sig_check_constraints(
-    ecs_world_t *world,
-    ecs_sig_t *sig);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Time API
@@ -617,17 +655,17 @@ void ecs_set_symbol(
     ecs_entity_t e,
     const char *name);
 
-/* Utility that print a descriptive error string*/
-//void ecs_print_error_string(const char *error_description, const char* signature, const char* system_id, const char* component_id);
-//void ecs_print_error_string(const char* signature, const char *system_id, const char *error_description, const char *component_id);
+/* Compare function for entity ids */
+int ecs_entity_compare(
+    ecs_entity_t e1, 
+    const void *ptr1, 
+    ecs_entity_t e2, 
+    const void *ptr2); 
 
-/* Utility that parses system signature */
-int ecs_parse_expr(
-    ecs_world_t *world,
-    const char *name,
-    const char *sig,
-    ecs_parse_action_t action,
-    void *ctx);
+/* Compare function for entity ids which can be used with qsort */
+int ecs_entity_compare_qsort(
+    const void *e1,
+    const void *e2);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(

@@ -26,7 +26,11 @@
 #endif
 
 #include "flecs.h"
-#include "flecs/private/entity_index.h"
+#include "entity_index.h"
+#include "flecs/private/bitset.h"
+#include "flecs/private/sparse.h"
+#include "flecs/private/switch_list.h"
+#include "flecs/type.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
@@ -43,35 +47,20 @@
 /* Maximum length of an entity name, including 0 terminator */
 #define ECS_MAX_NAME_LENGTH (64)
 
-/** Callback used by the system signature expression parser. */
-typedef int (*ecs_parse_action_t)(
-    ecs_world_t *world,                 
-    const char *id,
-    const char *expr,
-    int64_t column,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t flags,
-    const char *component,
-    const char *source,
-    const char *pair,
-    const char *name,
-    void *ctx);
-
 /** Component-specific data */
-typedef struct ecs_c_info_t {
+typedef struct ecs_type_info_t {
     ecs_entity_t component;
     ecs_vector_t *on_add;       /* Systems ran after adding this component */
     ecs_vector_t *on_remove;    /* Systems ran after removing this component */
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
     bool lifecycle_set;
-} ecs_c_info_t;
+} ecs_type_info_t;
 
 /* Table event type for notifying tables of world events */
 typedef enum ecs_table_eventkind_t {
     EcsTableQueryMatch,
     EcsTableQueryUnmatch,
+    EcsTableTriggerMatch,
     EcsTableComponentInfo
 } ecs_table_eventkind_t;
 
@@ -84,6 +73,9 @@ typedef struct ecs_table_event_t {
 
     /* Component info event */
     ecs_entity_t component;
+
+    /* Trigger match */
+    ecs_entity_t event;
 
     /* If the nubmer of fields gets out of hand, this can be turned into a union
      * but since events are very temporary objects, this works for now and makes
@@ -173,7 +165,7 @@ typedef struct ecs_matched_query_t {
  * table is created, it is automatically matched with existing queries */
 struct ecs_table_t {
     ecs_type_t type;                 /**< Identifies table type in type_index */
-    ecs_c_info_t **c_info;           /**< Cached pointers to component info */
+    ecs_type_info_t **c_info;           /**< Cached pointers to component info */
 
     ecs_edge_t *lo_edges;            /**< Edges to other tables */
     ecs_map_t *hi_edges;
@@ -189,7 +181,7 @@ struct ecs_table_t {
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
     int32_t alloc_count;             /**< Increases when columns are reallocd */
-    uint32_t id;                     /**< Table id in sparse set */
+    uint64_t id;                     /**< Table id in sparse set */
 
     ecs_flags32_t flags;             /**< Flags for testing table properties */
     
@@ -285,7 +277,7 @@ typedef struct ecs_query_event_t {
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
     /* Signature of query */
-    ecs_sig_t sig;
+    ecs_filter_t filter;
 
     /* Reference to world */
     ecs_world_t *world;
@@ -314,12 +306,24 @@ struct ecs_query_t {
     /* The query kind determines how it is registered with tables */
     ecs_flags32_t flags;
 
+    uint64_t id;                /* Id of query in query storage */
     int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
+
     bool needs_reorder;         /* Whether next iteration should reorder */
     bool constraints_satisfied; /* Are all term constraints satisfied */
 };
+
+/** Event mask */
+#define EcsEventAdd    (1)
+#define EcsEventRemove (2)
+
+/** Triggers for a specific id */
+typedef struct ecs_id_trigger_t {
+    ecs_map_t *on_add_triggers;
+    ecs_map_t *on_remove_triggers;
+} ecs_id_trigger_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
  * systems. */
@@ -403,16 +407,51 @@ struct ecs_stage_t {
     bool asynchronous;             /* Is stage asynchronous? (write only) */
 };
 
+/* Component monitor */
+typedef struct ecs_monitor_t {
+    ecs_vector_t *queries;  /* vector<ecs_query_t*> */
+    bool is_dirty;          /* Should queries be rematched? */
+} ecs_monitor_t;
+
+/* Component monitors */
+typedef struct ecs_monitor_set_t {
+    ecs_map_t *monitors; /* map<id, ecs_monitor_t> */
+    bool is_dirty;       /* Should monitors be evaluated? */
+} ecs_monitor_set_t;
+
+/* Relation monitors. TODO: implement generic monitor mechanism */
+typedef struct ecs_relation_monitor_t {
+    ecs_map_t *monitor_sets; /* map<relation_id, ecs_monitor_set_t> */
+    bool is_dirty;          /* Should monitor sets be evaluated? */
+} ecs_relation_monitor_t;
+
+/* Payload for table index which returns all tables for a given component, with
+ * the column of the component in the table. */
+typedef struct ecs_table_record_t {
+    ecs_table_t *table;
+    int32_t column;
+} ecs_table_record_t;
+
+/* Payload for id index which contains all datastructures for an id. */
+typedef struct ecs_id_record_t {
+    /* All tables that contain the id */
+    ecs_map_t *table_index;         /* map<table_id, ecs_table_record_t> */
+    ecs_entity_t on_delete;         /* Cleanup action for removing id */
+    ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
+} ecs_id_record_t;
+
 typedef struct ecs_store_t {
-    /* Entity lookup table for (table, row) */
-    ecs_sparse_t *entity_index; 
+    /* Entity lookup */
+    ecs_sparse_t *entity_index; /* sparse<entity, ecs_record_t> */
 
-    /* Table graph */
-    ecs_sparse_t *tables;
+    /* Table lookup by id */
+    ecs_sparse_t *tables; /* sparse<table_id, ecs_table_t> */
+
+    /* Table lookup by hash */
+    ecs_map_t *table_map; /* map<component_hash, vector<ecs_table_t*>> */  
+
+    /* Root table */
     ecs_table_t root;
-
-    /* Lookup map for tables */
-    ecs_map_t *table_map;
 } ecs_store_t;
 
 /** Supporting type to store looked up or derived entity data */
@@ -427,21 +466,9 @@ typedef struct ecs_entity_info_t {
 /** Supporting type to store looked up component data in specific table */
 typedef struct ecs_column_info_t {
     ecs_entity_t id;
-    const ecs_c_info_t *ci;
+    const ecs_type_info_t *ci;
     int32_t column;
 } ecs_column_info_t;
-
-/* Component monitor */
-typedef struct ecs_component_monitor_t {
-    ecs_vector_t *queries;  /* Queries registered for component monitor */
-    bool is_dirty;          /* Should queries be rematched? */
-} ecs_component_monitor_t;
-
-/* Component monitors */
-typedef struct ecs_component_monitors_t {
-    ecs_map_t *monitors; /* map<ecs_component_monitor_t> */
-    bool rematch;        /* should monitors be reevaluated? */
-} ecs_component_monitors_t;
 
 /* fini actions */
 typedef struct ecs_action_elem_t {
@@ -461,21 +488,28 @@ struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
-    ecs_sparse_t *type_info;     /* Component lifecycle info */
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;
+
+
+    /* --  Type metadata -- */
+
+    ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
+    ecs_map_t *id_index;         /* map<id, ecs_id_record_t> */
+    ecs_map_t *id_triggers;      /* map<id, ecs_id_trigger_t> */
+
 
     /* --  Data storage -- */
 
     ecs_store_t store;
 
 
-    /* --  Queries -- */
+    /* --  Storages for opaque API objects -- */
 
-    /* Persistent queries registered with the world. Persistent queries are
-     * stateful and automatically matched with existing and new tables. */
-    ecs_vector_t *queries;
+    ecs_sparse_t *queries; /* sparse<query_id, ecs_query_t> */
+    ecs_sparse_t *triggers; /* sparse<query_id, ecs_query_t> */
+    
 
     /* Keep track of components that were added/removed to/from monitored
      * entities. Monitored entities are entities that a query has matched with
@@ -485,16 +519,7 @@ struct ecs_world_t {
      * Queries register themselves as component monitors for specific components
      * and when these components change they are rematched. The component 
      * monitors are evaluated during a merge. */
-    ecs_component_monitors_t component_monitors;
-
-    /* Parent monitors are like normal component monitors except that the
-     * conditions under which a parent component is flagged dirty is different.
-     * Parent component flags are marked dirty when an entity that is a parent
-     * adds or removes a ChildOf relation. In that case, every component of that
-     * parent will be marked dirty. This allows column modifiers like CASCADE
-     * to correctly determine when the depth ranking of a table has changed. */
-    ecs_component_monitors_t parent_monitors; 
-
+    ecs_relation_monitor_t monitors;
 
     /* -- Systems -- */
     
@@ -522,7 +547,6 @@ struct ecs_world_t {
 
     /* -- Hierarchy administration -- */
 
-    ecs_map_t *child_tables;        /* Child tables per parent entity */
     const char *name_prefix;        /* Remove prefix from C names in modules */
 
 

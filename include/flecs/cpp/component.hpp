@@ -403,11 +403,11 @@ public:
             // Now use the resulting identifier to register the component. Note
             // that the name is not passed into this function, as the entity was
             // already created with the correct name.
-            ecs_entity_t entity = ecs_new_component(
-                world, result.id(), nullptr, 
-                size(), 
-                alignment());
-
+            ecs_component_desc_t desc = {};
+            desc.entity.entity = result.id();
+            desc.size = size();
+            desc.alignment = alignment();
+            ecs_entity_t entity = ecs_component_init(world, &desc);
             ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
 
             // Set the symbol in the Name component to the actual C++ name.
@@ -442,10 +442,12 @@ public:
                 name = n;
             }
 
-            ecs_entity_t entity = ecs_new_component(
-                world, s_id, name,
-                size(), 
-                alignment());
+            ecs_component_desc_t desc = {};
+            desc.entity.entity = s_id;
+            desc.entity.name = name;
+            desc.size = size();
+            desc.alignment = alignment();
+            ecs_entity_t entity = ecs_component_init(world, &desc);
                 
             (void)entity;
 
@@ -643,18 +645,18 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         }
 
         /* If a component was already registered with this id but with a 
-         * different size, the ecs_new_component function will fail. */
+         * different size, the ecs_component_init function will fail. */
 
-        /* We need to explicitly call ecs_new_component here again. Even though
+        /* We need to explicitly call ecs_component_init here again. Even though
          * the component was already registered, it may have been registered
          * with a different world. This ensures that the component is registered
          * with the same id for the current world. 
          * If the component was registered already, nothing will change. */
-        ecs_entity_t entity = ecs_new_component(
-            world.c_ptr(), id, nullptr, 
-            _::cpp_type<T>::size(), 
-            _::cpp_type<T>::alignment());
-        
+        ecs_component_desc_t desc = {};
+        desc.entity.entity = id;
+        desc.size = _::cpp_type<T>::size();
+        desc.alignment = _::cpp_type<T>::alignment();
+        ecs_entity_t entity = ecs_component_init(world.c_ptr(), &desc);
         (void)entity;
         
         ecs_assert(entity == id, ECS_INTERNAL_ERROR, NULL);

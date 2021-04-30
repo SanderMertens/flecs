@@ -32,9 +32,6 @@ extern ecs_type_t
     ecs_type(EcsTrigger),
     ecs_type(EcsSystem),
     ecs_type(EcsTickSource),
-    ecs_type(EcsSignatureExpr),
-    ecs_type(EcsSignature),
-    ecs_type(EcsQuery),
     ecs_type(EcsIterAction),
     ecs_type(EcsContext);
 
@@ -43,21 +40,6 @@ typedef struct EcsTickSource {
     bool tick;                 /* True if providing tick */
     FLECS_FLOAT time_elapsed;  /* Time elapsed since last tick */
 } EcsTickSource;
-
-/* Signature expression */
-typedef struct EcsSignatureExpr {
-    const char *expr;
-} EcsSignatureExpr;
-
-/* Parsed signature */
-typedef struct EcsSignature {
-    ecs_sig_t signature;
-} EcsSignature;
-
-/* Query component */
-typedef struct EcsQuery {
-    ecs_query_t *query;
-} EcsQuery;
 
 /* System action */
 typedef struct EcsIterAction {
@@ -119,11 +101,17 @@ typedef struct EcsContext {
     (void)name;
 #endif
 
-#define ECS_TRIGGER(world, name, kind, component) \
-    ecs_entity_t __F##name = ecs_new_trigger(world, 0, #name, kind, #component, name);\
-    ecs_entity_t name = __F##name;\
-    (void)__F##name;\
-    (void)name;
+/* Deprecated, use ecs_trigger_init */
+#define ECS_TRIGGER(world, trigger_name, kind, component) \
+    ecs_entity_t __F##trigger_name = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
+        .entity.name = #trigger_name,\
+        .callback = trigger_name,\
+        .expr = #component,\
+        .events = {kind},\
+    });\
+    ecs_entity_t trigger_name = __F##trigger_name;\
+    (void)__F##trigger_name;\
+    (void)trigger_name;
 
 /** Run a specific system manually.
  * This operation runs a single system manually. It is an efficient way to

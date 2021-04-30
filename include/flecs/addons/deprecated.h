@@ -44,7 +44,11 @@ extern "C" {
     ((component*)ecs_get_w_entity(world, entity, ecs_trait(ecs_typeid(component), trait)))
 
 #define ECS_PREFAB(world, id, ...) \
-    ecs_entity_t id = ecs_new_prefab(world, 0, #id, #__VA_ARGS__);\
+    ecs_entity_t id = ecs_entity_init(world, &(ecs_entity_desc_t){\
+        .name = #id,\
+        .add_expr = #__VA_ARGS__,\
+        .add = {EcsPrefab}\
+    });\
     (void)id
 
 #define ECS_ENTITY_EXTERN(id)\
@@ -54,14 +58,27 @@ extern "C" {
     ecs_entity_t id
 
 #define ECS_ENTITY_DEFINE(world, id, ...)\
-    id = ecs_new_entity(world, id, #id, #__VA_ARGS__)
+    id = ecs_entity_init(world, &(ecs_entity_desc_t){\
+        .name = #id,\
+        .add_expr = #__VA_ARGS__\
+    });\
 
 #define ECS_ENTITY(world, id, ...)\
-    ecs_entity_t id = ecs_new_entity(world, 0, #id, #__VA_ARGS__);\
+    ecs_entity_t id = ecs_entity_init(world, &(ecs_entity_desc_t){\
+        .name = #id,\
+        .add_expr = #__VA_ARGS__\
+    });\
     (void)id
 
 #define ECS_COMPONENT(world, id) \
-    ecs_id_t ecs_id(id) = ecs_new_component(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_id_t ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     (void)ecs_id(id);\
     (void)ecs_type(id)
@@ -75,11 +92,22 @@ extern "C" {
     ecs_type_t ecs_type(id)
 
 #define ECS_COMPONENT_DEFINE(world, id)\
-    ecs_id(id) = ecs_new_component(world, ecs_id(id), #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .entity = ecs_id(id),\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });\
     ecs_type(id) = ecs_type_from_entity(world, ecs_id(id))
 
 #define ECS_TAG(world, id)\
-    ECS_ENTITY(world, id, 0);\
+    ecs_entity_t id = ecs_entity_init(world, &(ecs_entity_desc_t){\
+        .name = #id,\
+        .symbol = #id\
+    });\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
     (void)ecs_type(id)
 
@@ -92,11 +120,17 @@ extern "C" {
     ecs_type_t ecs_type(id)
 
 #define ECS_TAG_DEFINE(world, id)\
-    id = ecs_new_entity(world, id, #id, 0);\
+    id = ecs_entity_init(world, &(ecs_entity_desc_t){\
+        .name = #id,\
+        .symbol = #id\
+    });\
     ecs_type(id) = ecs_type_from_entity(world, id)
 
 #define ECS_TYPE(world, id, ...) \
-    ecs_entity_t id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
+    ecs_entity_t id = ecs_type_init(world, &(ecs_type_desc_t){\
+        .entity.name = #id,\
+        .ids_expr = #__VA_ARGS__\
+    });\
     ecs_type_t ecs_type(id) = ecs_type_from_entity(world, id);\
     (void)id;\
     (void)ecs_type(id)
@@ -110,7 +144,10 @@ extern "C" {
     ecs_type_t ecs_type(id)
 
 #define ECS_TYPE_DEFINE(world, id, ...)\
-    id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
+    id = ecs_type_init(world, &(ecs_type_desc_t){\
+        .entity.name = #id,\
+        .ids_expr = #__VA_ARGS__\
+    });\
     ecs_type(id) = ecs_type_from_entity(world, id);\
 
 #define ECS_COLUMN(it, type, id, column)\
@@ -471,6 +508,40 @@ ecs_entity_t ecs_set_rate_filter(
     ecs_entity_t filter,
     int32_t rate,
     ecs_entity_t source);
+
+ECS_DEPRECATED("use ecs_query_init")
+FLECS_API
+ecs_query_t* ecs_query_new(
+    ecs_world_t *world,
+    const char *sig);
+
+ECS_DEPRECATED("use ecs_query_init")
+FLECS_API
+ecs_query_t* ecs_subquery_new(
+    ecs_world_t *world,
+    ecs_query_t *parent,
+    const char *sig);    
+
+ECS_DEPRECATED("use ecs_query_deinit")
+FLECS_API
+void ecs_query_free(
+    ecs_query_t *query);
+
+ECS_DEPRECATED("use ecs_query_init")
+FLECS_API
+void ecs_query_order_by(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t component,
+    ecs_compare_action_t compare);
+
+ECS_DEPRECATED("use ecs_query_init") 
+FLECS_API
+void ecs_query_group_by(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t component,
+    ecs_rank_type_action_t rank_action);
 
 #ifdef __cplusplus
 }

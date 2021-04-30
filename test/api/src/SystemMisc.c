@@ -88,13 +88,11 @@ void SystemMisc_invalid_entity_without_id() {
 }
 
 void SystemMisc_invalid_empty_without_id() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
-    test_expect_abort();
-
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, .);
+
+    test_assert(true);
 
     ecs_fini(world);
 }
@@ -326,21 +324,6 @@ void SystemMisc_invalid_entity_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_or_from_system() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM:Position || SYSTEM:Velocity);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_invalid_null_string() {
     ecs_world_t *world = ecs_init();
 
@@ -366,13 +349,13 @@ void SystemMisc_invalid_empty_string() {
 }
 
 void SystemMisc_invalid_empty_string_w_space() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
-    test_expect_abort();
-
     ecs_new_system(world, 0, "Dummy", EcsOnUpdate, "  ", Dummy);
+
+    ecs_progress(world, 0);
+
+    test_assert(dummy_invoked == true);    
 
     ecs_fini(world);
 }
@@ -387,7 +370,7 @@ void SystemMisc_invalid_mixed_src_modifier() {
 
     test_expect_abort();
 
-    ecs_new_system(world, 0, "SHARED:Position || Velocity", EcsOnUpdate, "  ", Dummy);
+    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, "SHARED:Position || Velocity", Dummy);
 
     ecs_fini(world);
 }
@@ -1128,28 +1111,33 @@ void SystemMisc_one_named_column_of_two() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_sig_t sig = {0};
-    ecs_sig_init(world, NULL, "Position pos, Velocity", &sig);
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){{
+        { ecs_id(Position), .name = "pos" },
+        { ecs_id(Velocity) }
+    }}));
 
-    ecs_vector_t *columns = sig.columns;
-    test_int(ecs_vector_count(columns), 2);
+    test_int(f.term_count, 2);
+    test_int(f.term_count_actual, 2);
 
-    ecs_sig_column_t *
-    column = ecs_vector_get(columns, ecs_sig_column_t, 0);
-    test_assert(column->oper_kind == EcsOperAnd);
-    test_assert(column->from_kind == EcsFromOwned);
-    test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_typeid(Position));
-    test_str(column->name, "pos");
+    ecs_term_t *
+    term = &f.terms[0];
+    test_assert(term->oper == EcsAnd);
+    test_assert(term->args[0].set == EcsDefaultSet);
+    test_assert(term->args[0].entity == EcsThis);
+    test_assert(term->inout == EcsInOutDefault);
+    test_assert(term->id == ecs_typeid(Position));
+    test_str(term->name, "pos");
 
-    column = ecs_vector_get(columns, ecs_sig_column_t, 1);
-    test_assert(column->oper_kind == EcsOperAnd);
-    test_assert(column->from_kind == EcsFromOwned);
-    test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_typeid(Velocity));
-    test_str(column->name, NULL);
+    term = &f.terms[1];
+    test_assert(term->oper == EcsAnd);
+    test_assert(term->args[0].set == EcsDefaultSet);
+    test_assert(term->args[0].entity == EcsThis);
+    test_assert(term->inout == EcsInOutDefault);
+    test_assert(term->id == ecs_typeid(Velocity));
+    test_str(term->name, NULL);
 
-    ecs_sig_deinit(&sig);
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -1160,28 +1148,33 @@ void SystemMisc_two_named_columns_of_two() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_sig_t sig = {0};
-    ecs_sig_init(world, NULL, "Position pos, Velocity vel", &sig);
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){{
+        { ecs_id(Position), .name = "pos" },
+        { ecs_id(Velocity), .name = "vel" }
+    }}));    
 
-    ecs_vector_t *columns = sig.columns;
-    test_int(ecs_vector_count(columns), 2);
+    test_int(f.term_count, 2);
+    test_int(f.term_count_actual, 2);
 
-    ecs_sig_column_t *
-    column = ecs_vector_get(columns, ecs_sig_column_t, 0);
-    test_assert(column->oper_kind == EcsOperAnd);
-    test_assert(column->from_kind == EcsFromOwned);
-    test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_typeid(Position));
-    test_str(column->name, "pos");
+    ecs_term_t *
+    term = &f.terms[0];
+    test_assert(term->oper == EcsAnd);
+    test_assert(term->args[0].set == EcsDefaultSet);
+    test_assert(term->args[0].entity == EcsThis);
+    test_assert(term->inout == EcsInOutDefault);
+    test_assert(term->id == ecs_typeid(Position));
+    test_str(term->name, "pos");
 
-    column = ecs_vector_get(columns, ecs_sig_column_t, 1);
-    test_assert(column->oper_kind == EcsOperAnd);
-    test_assert(column->from_kind == EcsFromOwned);
-    test_assert(column->inout_kind == EcsInOut);
-    test_assert(column->is.component == ecs_typeid(Velocity));
-    test_str(column->name, "vel");
+    term = &f.terms[1];
+    test_assert(term->oper == EcsAnd);
+    test_assert(term->args[0].set == EcsDefaultSet);
+    test_assert(term->args[0].entity == EcsThis);
+    test_assert(term->inout == EcsInOutDefault);
+    test_assert(term->id == ecs_typeid(Velocity));
+    test_str(term->name, "vel");
 
-    ecs_sig_deinit(&sig);
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -1564,9 +1557,9 @@ void SystemMisc_rw_in_implicit_from_entity() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_ENTITY(world, E, Velocity);
+    ECS_ENTITY(world, f, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, E:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, f:Velocity");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -1642,9 +1635,9 @@ void SystemMisc_rw_out_explicit_from_entity() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_ENTITY(world, E, Velocity);
+    ECS_ENTITY(world, f, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] E:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] f:Velocity");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);

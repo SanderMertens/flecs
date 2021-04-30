@@ -274,7 +274,7 @@ bool ecs_defer_bulk_new(
                 void *data = ecs_os_malloc(size * count);
                 defer_data[c] = data;
 
-                const ecs_c_info_t *cinfo = NULL;
+                const ecs_type_info_t *cinfo = NULL;
                 ecs_entity_t real_id = ecs_get_typeid(world, comp);
                 if (real_id) {
                     cinfo = ecs_get_c_info(world, real_id);
@@ -373,7 +373,7 @@ bool ecs_defer_set(
             }
         }
 
-        const ecs_c_info_t *c_info = NULL;
+        const ecs_type_info_t *c_info = NULL;
         ecs_entity_t real_id = ecs_get_typeid(world, component);
         if (real_id) {
             c_info = ecs_get_c_info(world, real_id);
@@ -664,6 +664,7 @@ void ecs_async_stage_free(
     ecs_stage_t *stage = (ecs_stage_t*)world;
     ecs_assert(stage->asynchronous == true, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_deinit(stage->world, stage);
+    ecs_os_free(stage);
 }
 
 bool ecs_stage_is_async(

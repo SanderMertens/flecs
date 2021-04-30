@@ -16,8 +16,11 @@ namespace flecs
 class type final : public type_deprecated<type> {
 public:
     explicit type(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr)
-        : m_entity(world, ecs_new_type(world.c_ptr(), 0, name, expr))
     { 
+        ecs_type_desc_t desc = {};
+        desc.entity.name = name;
+        desc.ids_expr = expr;
+        m_entity = flecs::entity(world, ecs_type_init(world.c_ptr(), &desc));
         sync_from_flecs();
     }
 

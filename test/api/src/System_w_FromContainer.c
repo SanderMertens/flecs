@@ -503,7 +503,6 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, !PARENT:Mass, Position);
 
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
-
     ecs_add_pair(world, e1, EcsIsA, Prefab);
 
     ecs_add_pair(world, e1, EcsChildOf, parent_1);
@@ -538,7 +537,6 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
 
     ecs_fini(world);
 }
-
 
 void System_w_FromContainer_2_column_1_from_container_w_or() {
     ecs_world_t *world = ecs_init();
@@ -593,12 +591,12 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     test_int(ctx.s[1][0], parent_2);
     test_int(ctx.c[1][1], ecs_typeid(Position));
     test_int(ctx.s[2][1], 0);
-    test_int(ctx.c[2][0], ecs_typeid(Rotation));
+    test_int(ctx.c[2][0], ecs_typeid(Mass));
     test_int(ctx.s[2][0], parent_3);
     test_int(ctx.c[2][1], ecs_typeid(Position));
     test_int(ctx.s[2][1], 0);
-    test_int(ctx.c[3][0], ecs_typeid(Rotation));
-    test_int(ctx.s[3][0], parent_2);
+    test_int(ctx.c[3][0], ecs_typeid(Mass));
+    test_int(ctx.s[3][0], parent_3);
     test_int(ctx.c[3][1], ecs_typeid(Position));
     test_int(ctx.s[3][1], 0);
 
@@ -614,13 +612,13 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
 
     p = ecs_get(world, e3, Position);
     test_assert(p != NULL);
-    test_int(p->x, 40);
-    test_int(p->y, 80);
+    test_int(p->x, 50);
+    test_int(p->y, 100);
 
     p = ecs_get(world, e5, Position);
     test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 60);
+    test_int(p->x, 50);
+    test_int(p->y, 100);
 
     ecs_fini(world);
 }
@@ -1019,6 +1017,7 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
 
 static
 void AddMass(ecs_iter_t *it) {
+    test_assert(it->param != NULL);
     ecs_entity_t ecs_typeid(Mass) = *(ecs_entity_t*)it->param;
 
     int i;

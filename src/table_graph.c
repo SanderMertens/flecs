@@ -139,29 +139,6 @@ ecs_type_t entities_to_type(
 }
 
 static
-void register_child_table(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_entity_t parent)
-{
-    /* Register child table with parent */
-    ecs_vector_t *child_tables = ecs_map_get_ptr(
-            world->child_tables, ecs_vector_t*, parent);
-    if (!child_tables) {
-        child_tables = ecs_vector_new(ecs_table_t*, 1);
-    }
-    
-    ecs_table_t **el = ecs_vector_add(&child_tables, ecs_table_t*);
-    *el = table;
-
-    if (!world->child_tables) {
-        world->child_tables = ecs_map_new(ecs_vector_t*, 1);
-    }
-
-    ecs_map_set(world->child_tables, parent, &child_tables);
-}
-
-static
 ecs_edge_t* get_edge(
     ecs_table_t *node,
     ecs_entity_t e)
@@ -207,7 +184,7 @@ void init_edges(
          * flags. These allow us to quickly determine if the table contains
          * data that needs to be handled in a special way, like prefabs or 
          * containers */
-        if (e <= EcsLastInternalComponentId) {
+        if (e <= EcsLastInternalComponentId || e == EcsModule) {
             table->flags |= EcsTableHasBuiltins;
         }
 
@@ -240,35 +217,31 @@ void init_edges(
             table->flags |= EcsTableHasDisabled;
         }   
 
-        ecs_entity_t parent = 0;
+        ecs_entity_t obj = 0;
 
         if (ECS_HAS_RELATION(e, EcsChildOf)) {
-            parent = ecs_entity_t_lo(e);
-        }
-
-        if (parent) {
-            table->flags |= EcsTableHasParent;
-            register_child_table(world, table, parent);
-            
-            if (parent == EcsFlecs || parent == EcsFlecsCore) {
+            obj = ecs_pair_object(world, e);
+            if (obj == EcsFlecs || obj == EcsFlecsCore || 
+                ecs_has_id(world, obj, EcsModule)) 
+            {
                 table->flags |= EcsTableHasBuiltins;
             }
-        }
+
+            e = ecs_pair(EcsChildOf, obj);
+            table->flags |= EcsTableHasParent;
+        }       
 
         if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
             ecs_set_watch(world, ecs_pair_object(world, e));
-        }
+        }        
     }
+
+    ecs_register_table(world, table);
 
     /* Register component info flags for all columns */
     ecs_table_notify(world, table, &(ecs_table_event_t){
         .kind = EcsTableComponentInfo
     });
-    
-    /* Register as root table */
-    if (!(table->flags & EcsTableHasParent)) {
-        register_child_table(world, table, 0);
-    }
 }
 
 static
@@ -307,7 +280,7 @@ ecs_table_t *create_table(
     uint64_t hash)
 {
     ecs_table_t *result = ecs_sparse_add(world->store.tables, ecs_table_t);
-    result->id = ecs_to_u32(ecs_sparse_last_id(world->store.tables));
+    result->id = ecs_sparse_last_id(world->store.tables);
 
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     init_table(world, result, entities);
@@ -710,22 +683,6 @@ ecs_table_t* ecs_table_traverse_add(
 }
 
 static
-int ecs_entity_compare(
-    const void *e1,
-    const void *e2)
-{
-    ecs_entity_t v1 = *(ecs_entity_t*)e1;
-    ecs_entity_t v2 = *(ecs_entity_t*)e2;
-    if (v1 < v2) {
-        return -1;
-    } else if (v1 > v2) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-static
 bool ecs_entity_array_is_ordered(
     ecs_entities_t *entities)
 {
@@ -854,7 +811,7 @@ ecs_table_t *find_or_create(
         ordered = ecs_os_alloca(size);
         ecs_os_memcpy(ordered, entities->array, size);
         qsort(
-            ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare);
+            ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare_qsort);
         type_count = ecs_entity_array_dedup(ordered, type_count);
     } else {
         ordered = entities->array;

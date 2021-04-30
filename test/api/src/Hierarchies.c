@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Hierarchies_setup() {
-    ecs_tracing_enable(-3);
+    ecs_tracing_enable(-2);
 }
 
 void Hierarchies_empty_scope() {
@@ -125,13 +125,13 @@ void Hierarchies_tree_iter_2_tables() {
     ecs_iter_t it = ecs_scope_iter(world, Parent);
     test_assert( ecs_scope_next(&it) == true);
     test_int( it.count, 2);
-    test_assert(it.entities[0] == Child1);
-    test_assert(it.entities[1] == Child2);
+     test_int(it.entities[0], Child1);
+    test_int(it.entities[1], Child2);
 
     test_assert( ecs_scope_next(&it) == true);
     test_int( it.count, 2);
-    test_assert(it.entities[0] == Child3);
-    test_assert(it.entities[1] == Child4);
+    test_int(it.entities[0], Child3);
+    test_int(it.entities[1], Child4);       
 
     test_assert( !ecs_scope_next(&it));
 
@@ -470,7 +470,7 @@ void Hierarchies_lookup_custom_sep() {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, CHILDOF | Parent);
 
-    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, "Parent::Child", "::", NULL);
+    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, "Parent::Child", "::", NULL, true);
     test_assert(e == Child);
 
     ecs_fini(world);
@@ -482,7 +482,7 @@ void Hierarchies_lookup_custom_prefix() {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, CHILDOF | Parent);
 
-    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, "::Parent::Child", "::", "::");
+    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, "::Parent::Child", "::", "::", true);
     test_assert(e == Child);
 
     ecs_fini(world);
@@ -494,7 +494,7 @@ void Hierarchies_lookup_custom_prefix_from_root() {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, CHILDOF | Parent);
 
-    ecs_entity_t e = ecs_lookup_path_w_sep(world, Parent, "::Parent::Child", "::", "::");
+    ecs_entity_t e = ecs_lookup_path_w_sep(world, Parent, "::Parent::Child", "::", "::", true);
     test_assert(e == Child);
 
     ecs_fini(world);
@@ -1192,8 +1192,6 @@ void Hierarchies_delete_tree_empty_table() {
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, Parent, 0);
-
-    /* Create multiple tables, of which some are empty */
     ECS_ENTITY(world, Child, Position, CHILDOF | Parent);
 
     ecs_delete(world, Parent);

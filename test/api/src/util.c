@@ -10,6 +10,7 @@ void probe_system_w_ctx(
 
     ctx->param = it->param;
     ctx->system = it->system;
+    ctx->event = it->event;
     ctx->offset = 0;
     ctx->column_count = it->column_count;
 

@@ -815,11 +815,10 @@ void SystemOnDemand_on_demand_task_w_not_from_entity() {
     ecs_progress(world, 0);
     test_assert(invoked == true);
 
-    /* When Position is added to MyEntity, the system must be disabled */
+    /* When Position is added to MyEntity, the system should not be ran */
     invoked = false;
     ecs_add(world, MyEntity, Position);
     ecs_progress(world, 0);
-    test_assert(is_enabled(world, OutSystem) == false);
     test_assert(invoked == false);
 
     ecs_fini(world);

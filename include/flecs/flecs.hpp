@@ -66,8 +66,6 @@ using Name = EcsName;
 using Timer = EcsTimer;
 using RateFilter = EcsRateFilter;
 using TickSource = EcsTickSource;
-using SignatureExpr = EcsSignatureExpr;
-using Signature = EcsSignature;
 using Query = EcsQuery;
 using ViewAction = EcsIterAction;
 using Context = EcsContext;
@@ -122,6 +120,13 @@ static const flecs::entity_t Final = EcsFinal;
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
+
+/* Cleanup rules */
+static const flecs::entity_t OnDelete = EcsOnDelete;
+static const flecs::entity_t OnDeleteObject = EcsOnDeleteObject;
+static const flecs::entity_t Remove = EcsRemove;
+static const flecs::entity_t Delete = EcsDelete;
+static const flecs::entity_t Throw = EcsThrow;
 
 }
 

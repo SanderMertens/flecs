@@ -1,5 +1,51 @@
 #include "private_api.h"
 
+/* Builtin roles */
+const ecs_id_t ECS_CASE =  (ECS_ROLE | (0x7Cull << 56));
+const ecs_id_t ECS_SWITCH =  (ECS_ROLE | (0x7Bull << 56));
+const ecs_id_t ECS_PAIR =  (ECS_ROLE | (0x7Aull << 56));
+const ecs_id_t ECS_OWNED =  (ECS_ROLE | (0x75ull << 56));
+const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
+
+/* Builtin entity ids */
+const ecs_entity_t EcsFlecs = (ECS_HI_COMPONENT_ID + 0);
+const ecs_entity_t EcsFlecsCore = (ECS_HI_COMPONENT_ID + 1);
+const ecs_entity_t EcsWorld = (ECS_HI_COMPONENT_ID + 2);
+const ecs_entity_t EcsWildcard = (ECS_HI_COMPONENT_ID + 3);
+const ecs_entity_t EcsThis = (ECS_HI_COMPONENT_ID + 4);
+const ecs_entity_t EcsTransitive = (ECS_HI_COMPONENT_ID + 5);
+const ecs_entity_t EcsFinal = (ECS_HI_COMPONENT_ID + 6);
+const ecs_entity_t EcsChildOf = (ECS_HI_COMPONENT_ID + 7);
+const ecs_entity_t EcsIsA = (ECS_HI_COMPONENT_ID + 8) ;
+const ecs_entity_t EcsModule = (ECS_HI_COMPONENT_ID + 9);
+const ecs_entity_t EcsPrefab = (ECS_HI_COMPONENT_ID + 10);
+const ecs_entity_t EcsDisabled = (ECS_HI_COMPONENT_ID + 11);
+const ecs_entity_t EcsHidden = (ECS_HI_COMPONENT_ID + 12);
+const ecs_entity_t EcsOnAdd = (ECS_HI_COMPONENT_ID + 13);
+const ecs_entity_t EcsOnRemove = (ECS_HI_COMPONENT_ID + 14);
+const ecs_entity_t EcsOnSet = (ECS_HI_COMPONENT_ID + 15);
+const ecs_entity_t EcsUnSet = (ECS_HI_COMPONENT_ID + 16);
+const ecs_entity_t EcsOnDelete = (ECS_HI_COMPONENT_ID + 17);
+const ecs_entity_t EcsOnDeleteObject = (ECS_HI_COMPONENT_ID + 18);
+const ecs_entity_t EcsRemove =  (ECS_HI_COMPONENT_ID + 19);
+const ecs_entity_t EcsDelete =  (ECS_HI_COMPONENT_ID + 20);
+const ecs_entity_t EcsThrow =  (ECS_HI_COMPONENT_ID + 21);
+const ecs_entity_t EcsOnDemand = (ECS_HI_COMPONENT_ID + 22);
+const ecs_entity_t EcsMonitor = (ECS_HI_COMPONENT_ID + 23);
+const ecs_entity_t EcsDisabledIntern = (ECS_HI_COMPONENT_ID + 24);
+const ecs_entity_t EcsInactive = (ECS_HI_COMPONENT_ID + 25);
+const ecs_entity_t EcsPipeline = (ECS_HI_COMPONENT_ID + 26);
+const ecs_entity_t EcsPreFrame = (ECS_HI_COMPONENT_ID + 27);
+const ecs_entity_t EcsOnLoad = (ECS_HI_COMPONENT_ID + 28);
+const ecs_entity_t EcsPostLoad = (ECS_HI_COMPONENT_ID + 29);
+const ecs_entity_t EcsPreUpdate = (ECS_HI_COMPONENT_ID + 30);
+const ecs_entity_t EcsOnUpdate = (ECS_HI_COMPONENT_ID + 31);
+const ecs_entity_t EcsOnValidate = (ECS_HI_COMPONENT_ID + 32);
+const ecs_entity_t EcsPostUpdate = (ECS_HI_COMPONENT_ID + 33);
+const ecs_entity_t EcsPreStore = (ECS_HI_COMPONENT_ID + 34);
+const ecs_entity_t EcsOnStore = (ECS_HI_COMPONENT_ID + 35);
+const ecs_entity_t EcsPostFrame = (ECS_HI_COMPONENT_ID + 36);
+
 /* -- Private functions -- */
 
 const ecs_world_t* ecs_get_world(
@@ -61,83 +107,122 @@ ecs_stage_t *ecs_stage_from_world(
  * with tables. */
 static
 void eval_component_monitor(
-    ecs_world_t *world,
-    ecs_component_monitors_t *mon)
+    ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    ecs_relation_monitor_t *rm = &world->monitors;
 
-    if (!mon->rematch) {
+    if (!rm->is_dirty) {
         return;
     }
 
-    ecs_map_iter_t it = ecs_map_iter(mon->monitors);
-    ecs_component_monitor_t *m;
+    ecs_map_iter_t it = ecs_map_iter(rm->monitor_sets);
+    ecs_monitor_set_t *ms;
 
-    while ((m = ecs_map_next(&it, ecs_component_monitor_t, NULL))) {
-        if (m->is_dirty) {
-            ecs_vector_each(m->queries, ecs_query_t*, q_ptr, {
-                ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
-                    .kind = EcsQueryTableRematch
-                });
-            });    
-            m->is_dirty = false;        
+    while ((ms = ecs_map_next(&it, ecs_monitor_set_t, NULL))) {
+        if (!ms->is_dirty) {
+            continue;
         }
+
+        if (ms->monitors) {
+            ecs_map_iter_t mit = ecs_map_iter(ms->monitors);
+            ecs_monitor_t *m;
+            while ((m = ecs_map_next(&mit, ecs_monitor_t, NULL))) {
+                if (!m->is_dirty) {
+                    continue;
+                }
+
+                ecs_vector_each(m->queries, ecs_query_t*, q_ptr, {
+                    ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
+                        .kind = EcsQueryTableRematch
+                    });
+                });
+
+                m->is_dirty = false;
+            }
+        }
+
+        ms->is_dirty = false;
     }
 
-    mon->rematch = false;
+    rm->is_dirty = false;
 }
 
-void ecs_component_monitor_mark(
-    ecs_component_monitors_t *mon,
-    ecs_entity_t component)
+void ecs_monitor_mark_dirty(
+    ecs_world_t *world,
+    ecs_entity_t relation,
+    ecs_entity_t id)
 {
+    ecs_assert(world->monitors.monitor_sets != NULL, ECS_INTERNAL_ERROR, NULL);
+
     /* Only flag if there are actually monitors registered, so that we
      * don't waste cycles evaluating monitors if there's no interest */
-    ecs_component_monitor_t *m = ecs_map_get(mon->monitors, 
-        ecs_component_monitor_t, component);
-    if (m) {
-        m->is_dirty = true;
-        mon->rematch = true;
+    ecs_monitor_set_t *ms = ecs_map_get(world->monitors.monitor_sets, 
+        ecs_monitor_set_t, relation);
+    if (ms && ms->monitors) {
+        ecs_monitor_t *m = ecs_map_get(ms->monitors, 
+            ecs_monitor_t, id);
+        if (m) {
+            m->is_dirty = true;
+            ms->is_dirty = true;
+            world->monitors.is_dirty = true;
+        }
     }
 }
 
-void ecs_component_monitor_register(
-    ecs_component_monitors_t *mon,
-    ecs_entity_t component,
+void ecs_monitor_register(
+    ecs_world_t *world,
+    ecs_entity_t relation,
+    ecs_entity_t id,
     ecs_query_t *query)
 {
-    ecs_assert(mon != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(mon->monitors != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->monitors.monitor_sets != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_component_monitor_t *m = ecs_map_ensure(
-        mon->monitors, ecs_component_monitor_t, component);
+    ecs_monitor_set_t *ms = ecs_map_ensure(
+        world->monitors.monitor_sets, ecs_monitor_set_t, relation);
+    ecs_assert(ms != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!ms->monitors) {
+        ms->monitors = ecs_map_new(ecs_monitor_t, 1);
+    }
+
+    ecs_monitor_t *m = ecs_map_ensure(ms->monitors, ecs_monitor_t, id);
+    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);        
 
     ecs_query_t **q = ecs_vector_add(&m->queries, ecs_query_t*);
     *q = query;
 }
 
 static
-void ecs_component_monitor_init(
-    ecs_component_monitors_t *mon)
+void monitors_init(
+    ecs_relation_monitor_t *rm)
 {
-    mon->monitors = ecs_map_new(ecs_component_monitor_t, 0);
+    rm->monitor_sets = ecs_map_new(ecs_monitor_t, 0);
+    rm->is_dirty = false;
 }
 
 static
-void ecs_component_monitor_fini(
-    ecs_component_monitors_t *mon)
+void monitors_fini(
+    ecs_relation_monitor_t *rm)
 {
-    ecs_map_iter_t it = ecs_map_iter(mon->monitors);
-    ecs_component_monitor_t *m;
+    ecs_map_iter_t it = ecs_map_iter(rm->monitor_sets);
+    ecs_monitor_set_t *ms;
 
-    while ((m = ecs_map_next(&it, ecs_component_monitor_t, NULL))) {
-        ecs_vector_free(m->queries);
+    while ((ms = ecs_map_next(&it, ecs_monitor_set_t, NULL))) {
+        if (ms->monitors) {
+            ecs_map_iter_t mit = ecs_map_iter(ms->monitors);
+            ecs_monitor_t *m;
+            while ((m = ecs_map_next(&mit, ecs_monitor_t, NULL))) {
+                ecs_vector_free(m->queries);
+            }
+
+            ecs_map_free(ms->monitors);
+        }
     }
 
-    ecs_map_free(mon->monitors);
+    ecs_map_free(rm->monitor_sets);
 }
 
 static
@@ -217,18 +302,20 @@ ecs_world_t *ecs_mini(void) {
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     world->magic = ECS_WORLD_MAGIC;
-    world->type_info = ecs_sparse_new(ecs_c_info_t);
     world->fini_actions = NULL; 
+
+    world->type_info = ecs_sparse_new(ecs_type_info_t);
+    world->id_index = ecs_map_new(ecs_id_record_t, 8);
+    world->id_triggers = ecs_map_new(ecs_id_trigger_t, 8);
 
     world->aliases = NULL;
 
-    world->queries = ecs_vector_new(ecs_query_t*, 0);
+    world->queries = ecs_sparse_new(ecs_query_t);
+    world->triggers = ecs_sparse_new(ecs_trigger_t);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
-    world->child_tables = NULL;
     world->name_prefix = NULL;
 
-    ecs_component_monitor_init(&world->component_monitors);
-    ecs_component_monitor_init(&world->parent_monitors);
+    monitors_init(&world->monitors);
 
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
     world->on_activate_components = ecs_map_new(ecs_on_demand_in_t, 0);
@@ -351,7 +438,7 @@ bool ecs_should_quit(
 }
 
 static
-void on_demand_in_map_deinit(
+void on_demand_in_map_fini(
     ecs_map_t *map)
 {
     ecs_map_iter_t it = ecs_map_iter(map);
@@ -383,17 +470,33 @@ void ctor_init_zero(
 
 void ecs_notify_tables(
     ecs_world_t *world,
+    ecs_id_t id,
     ecs_table_event_t *event)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_sparse_t *tables = world->store.tables;
-    int32_t i, count = ecs_sparse_count(tables);
+    /* If no id is specified, broadcast to all tables */
+    if (!id) {
+        ecs_sparse_t *tables = world->store.tables;
+        int32_t i, count = ecs_sparse_count(tables);
+        for (i = 0; i < count; i ++) {
+            ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
+            ecs_table_notify(world, table, event);
+        }
 
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
-        ecs_table_notify(world, table, event);
+    /* If id is specified, only broadcast to tables with id */
+    } else {
+        ecs_id_record_t *r = ecs_get_id_record(world, id);
+        if (!r) {
+            return;
+        }
+
+        ecs_table_record_t *tr;
+        ecs_map_iter_t it = ecs_map_iter(r->table_index);
+        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+            ecs_table_notify(world, tr->table, event);
+        }
     }
 }
 
@@ -415,7 +518,7 @@ void ecs_set_component_actions_w_id(
     ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
 #endif
 
-    ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
+    ecs_type_info_t *c_info = ecs_get_or_create_c_info(world, component);
     ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (c_info->lifecycle_set) {
@@ -441,7 +544,14 @@ void ecs_set_component_actions_w_id(
             c_info->lifecycle.ctor = ctor_init_zero;   
         }
 
-        ecs_notify_tables(world, &(ecs_table_event_t) {
+        /* Broadcast to all tables since we need to register a ctor for every
+         * table that uses the component as itself, as predicate or as object.
+         * The latter is what makes selecting the right set of tables complex,
+         * as it depends on the predicate of a pair whether the object is used
+         * as the component type or not. 
+         * A more selective approach requires a more expressive notification
+         * framework. */
+        ecs_notify_tables(world, 0, &(ecs_table_event_t) {
             .kind = EcsTableComponentInfo,
             .component = component
         });
@@ -455,7 +565,7 @@ bool ecs_component_has_actions(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     world = ecs_get_world(world);
 
-    const ecs_c_info_t *c_info = ecs_get_c_info(world, component);
+    const ecs_type_info_t *c_info = ecs_get_c_info(world, component);
     return (c_info != NULL) && c_info->lifecycle_set;
 }
 
@@ -525,8 +635,8 @@ void fini_component_lifecycle(
 {
     int32_t i, count = ecs_sparse_count(world->type_info);
     for (i = 0; i < count; i ++) {
-        ecs_c_info_t *type_info = ecs_sparse_get(
-            world->type_info, ecs_c_info_t, i);
+        ecs_type_info_t *type_info = ecs_sparse_get(
+            world->type_info, ecs_type_info_t, i);
         ecs_assert(type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_vector_free(type_info->on_add);
@@ -541,18 +651,12 @@ static
 void fini_queries(
     ecs_world_t *world)
 {
-    /* Set world->queries to NULL, so ecs_query_free won't attempt to remove
-     * itself from the vector */
-    ecs_vector_t *query_vec = world->queries;
-    world->queries = NULL;
-
-    int32_t i, count = ecs_vector_count(query_vec);
-    ecs_query_t **queries = ecs_vector_first(query_vec, ecs_query_t*);
+    int32_t i, count = ecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
-        ecs_query_free(queries[i]);
+        ecs_query_t *query = ecs_sparse_get(world->queries, ecs_query_t, 0);
+        ecs_query_fini(query);
     }
-
-    ecs_vector_free(query_vec);
+    ecs_sparse_free(world->queries);
 }
 
 /* Cleanup stages */
@@ -564,18 +668,34 @@ void fini_stages(
     ecs_set_stages(world, 0);
 }
 
-/* Cleanup child table admin */
+/* Cleanup id index */
 static
-void fini_child_tables(
+void fini_id_index(
     ecs_world_t *world)
 {
-    ecs_map_iter_t it = ecs_map_iter(world->child_tables);
-    ecs_vector_t *tables;
-    while ((tables = ecs_map_next_ptr(&it, ecs_vector_t*, NULL))) {
-        ecs_vector_free(tables);
+    ecs_map_iter_t it = ecs_map_iter(world->id_index);
+    ecs_id_record_t *r;
+    while ((r = ecs_map_next(&it, ecs_id_record_t, NULL))) {
+        ecs_map_free(r->table_index);
     }
 
-    ecs_map_free(world->child_tables);
+    ecs_map_free(world->id_index);
+}
+
+static
+void fini_id_triggers(
+    ecs_world_t *world)
+{
+    ecs_map_iter_t it = ecs_map_iter(world->id_triggers);
+    ecs_id_trigger_t *t;
+    while ((t = ecs_map_next(&it, ecs_id_trigger_t, NULL))) {
+        ecs_map_free(t->on_add_triggers);
+        ecs_map_free(t->on_remove_triggers);
+    }
+
+    ecs_map_free(world->id_triggers);
+
+    ecs_sparse_free(world->triggers);
 }
 
 /* Cleanup aliases */
@@ -598,12 +718,11 @@ static
 void fini_misc(
     ecs_world_t *world)
 {
-    on_demand_in_map_deinit(world->on_activate_components);
-    on_demand_in_map_deinit(world->on_enable_components);
+    on_demand_in_map_fini(world->on_activate_components);
+    on_demand_in_map_fini(world->on_enable_components);
     ecs_map_free(world->type_handles);
     ecs_vector_free(world->fini_tasks);
-    ecs_component_monitor_fini(&world->component_monitors);
-    ecs_component_monitor_fini(&world->parent_monitors);
+    monitors_fini(&world->monitors);
 }
 
 /* The destroyer of worlds */
@@ -633,7 +752,9 @@ int ecs_fini(
 
     fini_queries(world);
 
-    fini_child_tables(world);
+    fini_id_index(world);
+
+    fini_id_triggers(world);
 
     fini_aliases(world);
 
@@ -667,8 +788,7 @@ void ecs_eval_component_monitors(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);    
-    eval_component_monitor(world, &world->component_monitors);
-    eval_component_monitor(world, &world->parent_monitors);
+    eval_component_monitor(world);
 }
 
 void ecs_measure_frame_time(
@@ -833,7 +953,7 @@ void ecs_end_wait(
     ecs_os_mutex_unlock(world->thr_sync);
 }
 
-const ecs_c_info_t * ecs_get_c_info(
+const ecs_type_info_t * ecs_get_c_info(
     const ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -843,24 +963,24 @@ const ecs_c_info_t * ecs_get_c_info(
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
 
-    return ecs_sparse_get_sparse(world->type_info, ecs_c_info_t, component);
+    return ecs_sparse_get_sparse(world->type_info, ecs_type_info_t, component);
 }
 
-ecs_c_info_t * ecs_get_or_create_c_info(
+ecs_type_info_t * ecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
 
-    const ecs_c_info_t *c_info = ecs_get_c_info(world, component);
-    ecs_c_info_t *c_info_mut = NULL;
+    const ecs_type_info_t *c_info = ecs_get_c_info(world, component);
+    ecs_type_info_t *c_info_mut = NULL;
     if (!c_info) {
         c_info_mut = ecs_sparse_ensure(
-            world->type_info, ecs_c_info_t, component);
+            world->type_info, ecs_type_info_t, component);
         ecs_assert(c_info_mut != NULL, ECS_INTERNAL_ERROR, NULL);         
     } else {
-        c_info_mut = (ecs_c_info_t*)c_info;
+        c_info_mut = (ecs_type_info_t*)c_info;
     }
 
     return c_info_mut;
@@ -1029,11 +1149,10 @@ void ecs_notify_queries(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL); 
 
-    int32_t i, count = ecs_vector_count(world->queries);
-    ecs_query_t **queries = ecs_vector_first(world->queries, ecs_query_t*);
-
+    int32_t i, count = ecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
-        ecs_query_notify(world, queries[i], event);
+        ecs_query_notify(world, 
+            ecs_sparse_get(world->queries, ecs_query_t, i), event);
     }    
 }
 
@@ -1051,7 +1170,7 @@ void ecs_delete_table(
             .table = table
         });
 
-    uint32_t id = table->id;
+    uint64_t id = table->id;
 
     /* Free resources associated with table */
     ecs_table_free(world, table);
@@ -1059,7 +1178,169 @@ void ecs_delete_table(
     /* Remove table from sparse set */
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_sparse_remove(world->store.tables, id);
+}
 
-    /* Don't do generations as we want table ids to remain 32 bit */
-    ecs_sparse_set_generation(world->store.tables, id);
+static
+void register_table_for_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    int32_t column)
+{
+    ecs_id_record_t *r = ecs_ensure_id_record(world, id);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!r->table_index) {
+        r->table_index = ecs_map_new(ecs_table_record_t, 1);
+    }
+
+    ecs_table_record_t *tr = ecs_map_ensure(
+        r->table_index, ecs_table_record_t, table->id);
+
+    /* A table can be registered for the same entity multiple times if this is
+     * a trait. In that case make sure the column with the first occurrence is
+     * registered with the index */
+    if (!tr->table || column < tr->column) {
+        tr->table = table;
+        tr->column = column;
+    }
+
+    /* Set flags if triggers are registered for table */
+    if (!(table->flags & EcsTableIsDisabled)) {
+        if (ecs_triggers_get(world, id, EcsOnAdd)) {
+            table->flags |= EcsTableHasOnAdd;
+        }
+        if (ecs_triggers_get(world, id, EcsOnRemove)) {
+            table->flags |= EcsTableHasOnRemove;
+        }
+    }
+}
+
+static
+void unregister_table_for_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_id_record_t *r = ecs_get_id_record(world, id);
+    if (!r || !r->table_index) {
+        return;
+    }
+
+    ecs_map_remove(r->table_index, table->id);
+    if (!ecs_map_count(r->table_index)) {
+        ecs_clear_id_record(world, id);
+    }
+}
+
+static
+void do_register_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    int32_t column,
+    bool unregister)
+{
+    if (unregister) {
+        unregister_table_for_id(world, table, id);
+    } else {
+        register_table_for_id(world, table, id, column);
+    }
+}
+
+static
+void do_register_each_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    bool unregister)
+{
+    int32_t i, count = ecs_vector_count(table->type);
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    bool has_childof = false;
+    
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t id = ids[i];
+
+        /* This check ensures that legacy INSTANCEOF works */
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
+            id = ecs_pair(EcsIsA, ECS_PAIR_OBJECT(id));
+        }
+
+        /* This check ensures that legacy CHILDOF works */
+        if (ECS_HAS_RELATION(id, EcsChildOf)) {
+            id = ecs_pair(EcsChildOf, ECS_PAIR_OBJECT(id));
+            has_childof = true;
+        } 
+
+        do_register_id(world, table, id, i, unregister);
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t pred_w_wildcard = ecs_pair(
+                ECS_PAIR_RELATION(id), EcsWildcard);       
+            do_register_id(world, table, pred_w_wildcard, i, unregister);
+
+            ecs_entity_t obj_w_wildcard = ecs_pair(
+                EcsWildcard, ECS_PAIR_OBJECT(id));
+            do_register_id(world, table, obj_w_wildcard, i, unregister);
+
+            ecs_entity_t all_wildcard = ecs_pair(EcsWildcard, EcsWildcard);
+            do_register_id(world, table, all_wildcard, i, unregister);
+
+            if (!unregister) {
+                ecs_set_watch(world, ecs_pair_relation(world, id));
+                ecs_set_watch(world, ecs_pair_object(world, id));
+            }
+        } else {
+            do_register_id(world, table, EcsWildcard, i, unregister);
+
+            if (!unregister) {
+                ecs_set_watch(world, id);
+            }
+        }
+    }
+
+    if (!has_childof) {
+        do_register_id(world, table, ecs_pair(EcsChildOf, 0), 0, unregister);
+    }
+}
+
+void ecs_register_table(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    do_register_each_id(world, table, false);
+}
+
+void ecs_unregister_table(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    do_register_each_id(world, table, true);
+}
+
+ecs_id_record_t* ecs_ensure_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    return ecs_map_ensure(world->id_index, ecs_id_record_t, id);
+}
+
+ecs_id_record_t* ecs_get_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    return ecs_map_get(world->id_index, ecs_id_record_t, id);
+}
+
+void ecs_clear_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id)    
+{
+    ecs_id_record_t *r = ecs_get_id_record(world, id);
+    if (!r) {
+        return;
+    }
+
+    ecs_map_free(r->table_index);
+    ecs_map_remove(world->id_index, id);
 }

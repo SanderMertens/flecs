@@ -151,7 +151,7 @@ bool ecs_get_info(
 }
 
 static
-const ecs_c_info_t *get_c_info(
+const ecs_type_info_t *get_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -198,93 +198,6 @@ void ecs_get_column_info(
             }
         }
     }
-}
-
-static
-void run_component_trigger_for_entities(
-    ecs_world_t * world,
-    ecs_vector_t * trigger_vec,
-    ecs_entity_t component,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count,
-    ecs_entity_t *entities)
-{    
-    (void)world;
-    int32_t i, trigger_count = ecs_vector_count(trigger_vec);
-    if (trigger_count) {
-        EcsTrigger *triggers = ecs_vector_first(trigger_vec, EcsTrigger);
-        int32_t index = ecs_type_index_of(table->type, component);
-        ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-        index ++;
-
-        ecs_entity_t components[1] = { component };
-        ecs_type_t types[1] = { ecs_type_from_id(world, component) };
-        int32_t columns[1] = { index };
-
-        /* If this is a tag, don't try to retrieve data */
-        if (table->column_count < index) {
-            columns[0] = 0;
-        } else {
-            ecs_column_t *column = &data->columns[index - 1];
-            if (!column->size) {
-                columns[0] = 0;
-            }            
-        }
-        
-        ecs_iter_table_t table_data = {
-            .table = table,
-            .columns = columns,
-            .components = components,
-            .types = types
-        };
-
-        ecs_iter_t it = {
-            .world = world,
-            .table = &table_data,
-            .table_count = 1,
-            .inactive_table_count = 1,
-            .column_count = 1,
-            .table_columns = data->columns,
-            .entities = entities,
-            .offset = row,
-            .count = count,
-        };
-
-        for (i = 0; i < trigger_count; i ++) {
-            it.system = triggers[i].self;
-            it.param = triggers[i].ctx;
-            triggers[i].action(&it);
-        }
-    }
-}
-
-static
-void ecs_run_component_trigger(
-    ecs_world_t * world,
-    ecs_vector_t * trigger_vec,
-    ecs_entity_t component,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count)
-{
-    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
-
-    if (table->flags & EcsTableIsPrefab) {
-        return;
-    }
-
-    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
-    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert((row + count) <= ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
-
-    entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
-
-    run_component_trigger_for_entities(
-        world, trigger_vec, component, table, data, row, count, entities);
 }
 
 #ifdef FLECS_SYSTEM 
@@ -581,15 +494,16 @@ void instantiate(
     int32_t count)
 {    
     /* If base is a parent, instantiate children of base for instances */
+    const ecs_id_record_t *r = ecs_get_id_record(
+        world, ecs_pair(EcsChildOf, base));
 
-    ecs_vector_t *child_tables = ecs_map_get_ptr(
-        world->child_tables, ecs_vector_t*, base);
-
-    if (child_tables) {
-        ecs_vector_each(child_tables, ecs_table_t*, child_table_ptr, {
+    if (r && r->table_index) {
+        ecs_table_record_t *tr;
+        ecs_map_iter_t it = ecs_map_iter(r->table_index);
+        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
             instantiate_children(
-                world, base, table, data, row, count, *child_table_ptr);
-        });
+                world, base, table, data, row, count, tr->table);
+        }
     }
 }
 
@@ -628,7 +542,7 @@ bool override_from_base(
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
         component = ecs_get_typeid(world, component);
-        const ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+        const ecs_type_info_t *cdata = ecs_get_c_info(world, component);
         int32_t index;
 
         ecs_copy_t copy = cdata ? cdata->lifecycle.copy : NULL;
@@ -829,54 +743,22 @@ void ecs_components_switch(
 }
 
 static
-void ecs_components_on_add(
+void notify(
     ecs_world_t * world,
     ecs_table_t * table,
     ecs_data_t * data,
     int32_t row,
     int32_t count,
-    ecs_column_info_t * component_info,
-    int32_t component_count)
+    ecs_entity_t event,
+    ecs_entities_t *ids)
 {
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t *arr = ids->array;
+    int32_t arr_count = ids->count;
 
     int i;
-    for (i = 0; i < component_count; i ++) {
-        const ecs_c_info_t *c_info = component_info[i].ci;
-        ecs_vector_t *triggers;
-        if (!c_info || !(triggers = c_info->on_add)) {
-            continue;
-        }
-
-        ecs_entity_t component = component_info[i].id;
-        ecs_run_component_trigger(
-            world, triggers, component, table, data, row, count);
-    }
-}
-
-static
-void ecs_components_on_remove(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count,
-    ecs_column_info_t * component_info,
-    int32_t component_count)
-{
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int i;
-    for (i = 0; i < component_count; i ++) {
-        const ecs_c_info_t *c_info = component_info[i].ci;
-        ecs_vector_t *triggers;
-        if (!c_info || !(triggers = c_info->on_remove)) {
-            continue;
-        }
-
-        ecs_entity_t component = component_info[i].id;
-        ecs_run_component_trigger(
-            world, triggers, component, table, data, row, count);
+    for (i = 0; i < arr_count; i ++) {
+        ecs_triggers_notify(world, arr[i], event, table, data, row, count);
     }
 }
 
@@ -908,8 +790,7 @@ void ecs_run_add_actions(
     }
 
     if (table->flags & EcsTableHasOnAdd) {
-        ecs_components_on_add(world, table, data, row, count, 
-            cinfo, added_count);
+        notify(world, table, data, row, count, EcsOnAdd, added);
     }
 }
 
@@ -919,19 +800,13 @@ void ecs_run_remove_actions(
     ecs_data_t * data,
     int32_t row,
     int32_t count,
-    ecs_entities_t * removed,
-    bool get_all)
+    ecs_entities_t * removed)
 {
     ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(removed->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_column_info_t cinfo[ECS_MAX_ADD_REMOVE];
-    ecs_get_column_info(world, table, removed, cinfo, get_all);
-    int removed_count = removed->count;
-
     if (table->flags & EcsTableHasOnRemove) {
-        ecs_components_on_remove(world, table, data, 
-            row, count, cinfo, removed_count);
+        notify(world, table, data, row, count, EcsOnRemove, removed);
     }   
 }
 
@@ -961,7 +836,7 @@ int32_t new_entity(
 
     ecs_assert(
         ecs_vector_count(new_data[0].entities) > new_row, 
-        ECS_INTERNAL_ERROR, NULL);    
+        ECS_INTERNAL_ERROR, NULL);
 
     if (new_table->flags & EcsTableHasAddActions) {
         ecs_run_add_actions(
@@ -1022,7 +897,7 @@ int32_t move_entity(
                 src_row, 1, dst_table->un_set_all);
 
             ecs_run_remove_actions(
-                world, src_table, src_data, src_row, 1, removed, false);
+                world, src_table, src_data, src_row, 1, removed);
         }
 
         ecs_table_move(world, entity, entity, dst_table, dst_data, dst_row, 
@@ -1073,7 +948,7 @@ void delete_entity(
         /* Invoke remove actions before deleting */
         if (src_table->flags & EcsTableHasRemoveActions) {   
             ecs_run_remove_actions(
-                world, src_table, src_data, src_row, 1, removed, true);
+                world, src_table, src_data, src_row, 1, removed);
         } 
     }
 
@@ -1087,41 +962,48 @@ void delete_entity(
  * not scale when there are many tables / queries. Therefore we need to do a bit
  * of bookkeeping that is more intelligent than simply flipping a flag */
 static
-bool update_component_monitor_w_array(
+void update_component_monitor_w_array(
     ecs_world_t *world,
-    ecs_component_monitors_t * mon,
+    ecs_entity_t entity,
+    ecs_entity_t relation,
     ecs_entities_t * entities)
 {
-    bool childof_changed = false;
-
     if (!entities) {
-        return false;
+        return;
     }
 
     int i;
     for (i = 0; i < entities->count; i ++) {
-        ecs_entity_t component = entities->array[i];
-        if (ECS_HAS_RELATION(component, EcsChildOf)) {
-            childof_changed = true;
+        ecs_entity_t id = entities->array[i];
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t rel = ECS_PAIR_RELATION(id);
+            
+            /* If a relationship has changed, check if it could have impacted
+             * the shape of the graph for that relationship. If so, mark the
+             * relationship as dirty */        
+            if (rel != relation && ecs_get_id_record(world, ecs_pair(rel, entity))) {
+                update_component_monitor_w_array(world, entity, rel, entities);
+            }
 
-        } else if (ECS_HAS_RELATION(component, EcsIsA)) {
+        }
+        
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
             /* If an IsA relationship is added to a monitored entity (can
              * be either a parent or a base) component monitors need to be
              * evaluated for the components of the prefab. */
-            ecs_entity_t base = ecs_pair_object(world, component);
+            ecs_entity_t base = ecs_pair_object(world, id);
             ecs_type_t type = ecs_get_type(world, base);
             ecs_entities_t base_entities = ecs_type_to_entities(type);
 
             /* This evaluates the component monitor for all components of the
              * base entity. If the base entity contains IsA relationships
              * these will be evaluated recursively as well. */
-            update_component_monitor_w_array(world, mon, &base_entities);               
+            update_component_monitor_w_array(
+                world, entity, relation, &base_entities);               
         } else {
-            ecs_component_monitor_mark(mon, component);
+            ecs_monitor_mark_dirty(world, relation, id);
         }
     }
-
-    return childof_changed;
 }
 
 static
@@ -1131,23 +1013,8 @@ void update_component_monitors(
     ecs_entities_t * added,
     ecs_entities_t * removed)
 {
-    bool childof_changed = update_component_monitor_w_array(
-        world, &world->component_monitors, added);
-
-    childof_changed |= update_component_monitor_w_array(
-        world, &world->component_monitors, removed);
-
-    /* If this entity is a parent, check if anything changed that could impact
-     * its place in the hierarchy. If so, we need to mark all of the parent's
-     * entities as dirty. */
-    if (childof_changed && 
-        ecs_map_get(world->child_tables, ecs_vector_t*, entity)) 
-    {
-        ecs_type_t type = ecs_get_type(world, entity);
-        ecs_entities_t entities = ecs_type_to_entities(type);
-        update_component_monitor_w_array(world, 
-            &world->parent_monitors, &entities);
-    }
+    update_component_monitor_w_array(world, entity, 0, added);
+    update_component_monitor_w_array(world, entity, 0, removed);
 }
 
 static
@@ -1329,7 +1196,7 @@ const ecs_entity_t* new_w_data(
                 continue;
             }
 
-            const ecs_c_info_t *cdata = get_c_info(world, c);
+            const ecs_type_info_t *cdata = get_c_info(world, c);
             ecs_copy_t copy;
             if (cdata && (copy = cdata->lifecycle.copy)) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
@@ -1769,6 +1636,386 @@ ecs_entity_t ecs_new_w_id(
     return entity;
 }
 
+#ifdef FLECS_PARSER
+static
+ecs_table_t *traverse_from_expr(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    const char *name,
+    const char *expr,
+    ecs_entities_t *modified,
+    bool is_add,
+    bool replace_and)
+{
+    const char *ptr = expr;
+    if (ptr) {
+        ecs_term_t term = {0};
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
+            if (!ecs_term_is_set(&term)) {
+                break;
+            }
+
+            if (ecs_term_finalize(world, name, expr, &term)) {
+                return NULL;
+            }
+
+            if (!ecs_term_is_trivial(&term)) {
+                ecs_parser_error(name, expr, (ptr - expr), 
+                    "invalid non-trivial term in add expression");
+                return NULL;
+            }
+
+            if (term.oper == EcsAnd || !replace_and) {
+                /* Regular AND expression */
+                ecs_entities_t arr = { .array = &term.id, .count = 1 };
+                if (is_add) {
+                    table = ecs_table_traverse_add(world, table, &arr, modified);
+                } else {
+                    table = ecs_table_traverse_remove(world, table, &arr, modified);
+                }
+
+                ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+            } else if (term.oper == EcsAndFrom) {
+                /* Add all components from the specified type */
+                const EcsType *t = ecs_get(world, term.id, EcsType);
+                if (!t) {
+                    ecs_parser_error(name, expr, (ptr - expr), 
+                        "expected type for AND role");
+                    return NULL;
+                }
+                
+                ecs_id_t *ids = ecs_vector_first(t->normalized, ecs_id_t);
+                int32_t i, count = ecs_vector_count(t->normalized);
+                for (i = 0; i < count; i ++) {
+                    ecs_entities_t arr = { .array = &ids[i], .count = 1 };
+                    if (is_add) {
+                        table = ecs_table_traverse_add(
+                            world, table, &arr, modified);
+                    } else {
+                        table = ecs_table_traverse_remove(
+                            world, table, &arr, modified);
+                    }
+                    
+                    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+                }
+            }
+
+            ecs_term_fini(&term);
+        }
+    }
+
+    return table;
+}
+#endif
+
+ecs_entity_t ecs_entity_init(
+    ecs_world_t *world,
+    const ecs_entity_desc_t *desc)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t scope = ecs_get_scope(world);
+
+    const char *name = desc->name;
+    const char *sep = desc->sep;
+    if (!sep) {
+        sep = ".";
+    }
+
+    bool new_entity = false;
+    bool name_assigned = false;
+
+    /* Remove optional prefix from name. Entity names can be derived from 
+     * language identifiers, such as components (typenames) and systems
+     * function names). Because C does not have namespaces, such identifiers
+     * often encode the namespace as a prefix.
+     * To ensure interoperability between C and C++ (and potentially other 
+     * languages with namespacing) the entity must be stored without this prefix
+     * and with the proper namespace, which is what the name_prefix is for */
+    const char *prefix = world->name_prefix;
+    if (name && prefix) {
+        ecs_size_t len = ecs_os_strlen(prefix);
+        if (!ecs_os_strncmp(name, prefix, len) && 
+           (isupper(name[len]) || name[len] == '_')) 
+        {
+            if (name[len] == '_') {
+                name = name + len + 1;
+            } else {
+                name = name + len;
+            }
+        }
+    }
+
+    /* Find or create entity */
+    ecs_entity_t result = desc->entity;
+    if (!result) {
+        if (name) {
+            result = ecs_lookup_path_w_sep(world, 0, name, sep, NULL, false);
+            if (result) {
+                name_assigned = true;
+            }
+        }
+
+        if (!result) {
+            if (desc->use_low_id) {
+                result = ecs_new_component_id(world);
+            } else {
+                result = ecs_new_id(world);
+            }
+            new_entity = true;
+        }
+    } else {
+        ecs_assert(ecs_is_valid(world, result), ECS_INVALID_PARAMETER, NULL);
+
+        name_assigned = ecs_has(world, result, EcsName);
+        if (name && name_assigned) {
+            /* If entity has name, verify that name matches */
+            char *path = ecs_get_path_w_sep(world, scope, result, 0, sep, NULL);
+            if (path) {
+                if (ecs_os_strcmp(path, name)) {
+                    /* Mismatching name */
+                    ecs_os_free(path);
+                    return 0;
+                }
+                ecs_os_free(path);
+            }
+        }
+    }
+
+    /* Find existing table */
+    ecs_entity_info_t info = {0};
+    ecs_table_t *src_table = NULL, *table = NULL;
+    if (!new_entity) {
+        if (ecs_get_info(world, result, &info)) {
+            table = info.table;
+        }
+    }
+
+    ecs_entity_t added_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t added = { .array = added_buffer };
+
+    ecs_entity_t removed_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t removed = { .array = removed_buffer };
+
+    /* Find destination table */
+
+    /* If this is a new entity without a name, add the scope. If a name is
+     * provided, the scope will be added by the add_path_w_sep function */
+    if (new_entity && scope && !name && !name_assigned) {
+        ecs_entity_t id = ecs_pair(EcsChildOf, scope);
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    /* If a name is provided but not yet assigned, add the Name component */
+    if (name && !name_assigned) {
+        ecs_entity_t id = ecs_id(EcsName);
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
+    }
+
+    /* Add components from the 'add' id array */
+    int32_t i = 0;
+    ecs_id_t id;
+    const ecs_id_t *ids = desc->add;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    /* Add components from the 'remove' id array */
+    i = 0;
+    ids = desc->remove;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i])) {
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_remove(world, table, &arr, &removed);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+        i ++;
+    }
+
+    /* Add components from the 'add_expr' expression */
+    if (desc->add_expr) {
+#ifdef FLECS_PARSER
+        table = traverse_from_expr(
+            world, table, name, desc->add_expr, &added, true, true);
+#else
+        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+#endif
+    }
+
+    /* Remove components from the 'remove_expr' expression */
+    if (desc->remove_expr) {
+#ifdef FLECS_PARSER
+    table = traverse_from_expr(
+        world, table, name, desc->remove_expr, &removed, false, true);
+#else
+        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+#endif
+    }
+
+    /* Commit entity to destination table */
+    if (src_table != table) {
+        commit(world, result, &info, table, &added, &removed);
+    }
+
+    /* Set name */
+    if (name && !name_assigned) {
+        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);   
+        if (desc->symbol) {
+            EcsName *name_ptr = ecs_get_mut(world, result, EcsName, NULL);
+            ecs_os_free(name_ptr->symbol);
+            name_ptr->symbol = ecs_os_strdup(desc->symbol);
+        }
+    }
+
+    return result;
+}
+
+ecs_entity_t ecs_component_init(
+    ecs_world_t *world,
+    const ecs_component_desc_t *desc)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
+    bool is_readonly = world->is_readonly;
+
+    /* If world is in progress component may be registered, but only when not
+     * in multithreading mode. */
+    if (is_readonly) {
+        ecs_assert(ecs_get_stage_count(world) <= 1, 
+            ECS_INVALID_WHILE_ITERATING, NULL);
+
+        /* Component creation should not be deferred */
+        world->is_readonly = false;
+    }
+
+    ecs_entity_desc_t entity_desc = desc->entity;
+    entity_desc.use_low_id = true;
+    if (!entity_desc.symbol) {
+        entity_desc.symbol = entity_desc.name;
+    }
+
+    ecs_entity_t e = desc->entity.entity;
+    ecs_entity_t result = ecs_entity_init(world, &entity_desc);
+    if (!result) {
+        return 0;
+    }
+
+    bool added = false;
+    EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent, &added);
+
+    if (added) {
+        ptr->size = ecs_from_size_t(desc->size);
+        ptr->alignment = ecs_from_size_t(desc->alignment);
+    } else {
+        if (ptr->size != ecs_from_size_t(desc->size)) {
+            ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
+        }
+        if (ptr->alignment != ecs_from_size_t(desc->alignment)) {
+            ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
+        }
+    }
+
+    ecs_modified(world, result, EcsComponent);
+
+    if (e > world->stats.last_component_id && e < ECS_HI_COMPONENT_ID) {
+        world->stats.last_component_id = e + 1;
+    }
+
+    /* Ensure components cannot be deleted */
+    ecs_add_pair(world, result, EcsOnDelete, EcsThrow);    
+
+    if (is_readonly) {
+        world->is_readonly = true;
+    }
+
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);
+
+    return result;
+}
+
+ecs_entity_t ecs_type_init(
+    ecs_world_t *world,
+    const ecs_type_desc_t *desc)
+{
+    ecs_entity_t result = ecs_entity_init(world, &desc->entity);
+    if (!result) {
+        return 0;
+    }
+
+    ecs_table_t *table = NULL, *normalized = NULL;
+
+    ecs_entity_t added_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t added = { .array = added_buffer };
+
+    /* Find destination table (and type) */
+
+    /* Add components from the 'add' id array */
+    int32_t i = 0;
+    ecs_id_t id;
+    const ecs_id_t *ids = desc->ids;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        normalized = ecs_table_traverse_add(world, normalized, &arr, &added);
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    /* If expression is set, add it to the table */
+    if (desc->ids_expr) {
+#ifdef FLECS_PARSER
+        normalized = traverse_from_expr(
+            world, normalized, desc->entity.name, desc->ids_expr, &added, 
+            true, true);
+
+        table = traverse_from_expr(
+            world, table, desc->entity.name, desc->ids_expr, &added, 
+            true, false);
+#else
+        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+#endif
+    }
+
+    ecs_type_t type = NULL;
+    ecs_type_t normalized_type = NULL;
+    
+    if (table) {
+        type = table->type;
+    }
+    if (normalized) {
+        normalized_type = normalized->type;
+    }
+
+    bool add = false;
+    EcsType *type_ptr = ecs_get_mut(world, result, EcsType, &add);
+    if (add) {
+        type_ptr->type = type;
+        type_ptr->normalized = normalized_type;
+
+        /* This will allow the type to show up in debug tools */
+        if (type) {
+            ecs_map_set(world->type_handles, (uintptr_t)type, &result);
+        }
+
+        ecs_modified(world, result, EcsType);
+    } else {
+        if (type_ptr->type != type) {
+            ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
+        }
+        if (type_ptr->normalized != normalized_type) {
+            ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
+        }        
+    }
+
+    return result;
+}
+
 const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
@@ -1860,47 +2107,227 @@ void ecs_clear(
     ecs_defer_flush(world, stage);
 }
 
+static
+void on_delete_action(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+static
+void throw_invalid_delete(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    char buff[256];
+    ecs_entity_str(world, id, buff, 256);
+    ecs_abort(ECS_INVALID_DELETE, buff);    
+}
+
+static
+void remove_from_table(
+    ecs_world_t *world,
+    ecs_table_t *src_table,
+    ecs_id_t id,
+    int32_t column)
+{
+    ecs_entity_t removed_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t removed = { .array = removed_buffer };    
+    ecs_table_t *dst_table = src_table;
+    bool is_pair = ECS_HAS_ROLE(id, PAIR);
+
+    /* If id is pair, ensure dst_table has no instances of the relation */
+    if (is_pair && ECS_PAIR_RELATION(id) != EcsWildcard) {
+        int32_t i, count = ecs_vector_count(src_table->type);
+        ecs_id_t *ids = ecs_vector_first(src_table->type, ecs_id_t);
+        for (i = column; i < count; i ++) {
+            ecs_id_t e = ids[i];
+            if (ECS_PAIR_RELATION(id) != ECS_PAIR_RELATION(e)) {
+                break;
+            }
+
+            ecs_entities_t to_remove = { .array = &e, .count = 1 };
+            dst_table = ecs_table_traverse_remove(
+                world, dst_table, &to_remove, &removed);
+        }
+    } else {
+        /* If pair has a relationship wildcard, this removes a relationship for
+         * a specific object. Get the relation + object to delete */
+        if (is_pair) {
+            ecs_id_t *ids = ecs_vector_first(src_table->type, ecs_id_t);
+            id = ids[column];
+        }
+        ecs_entities_t to_remove = { .array = &id, .count = 1 };
+        dst_table = ecs_table_traverse_remove(
+            world, dst_table, &to_remove, &removed);
+    }
+
+    ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!dst_table->type) {
+        /* If this removes all components, clear table */
+        ecs_table_clear(world, src_table);
+    } else {
+        /* Otherwise, merge table into dst_table */
+        if (dst_table != src_table) {
+            ecs_data_t *src_data = ecs_table_get_data(src_table);
+            int32_t src_count = ecs_table_count(src_table);
+            if (removed.count && src_data) {
+                ecs_run_remove_actions(world, src_table, 
+                    src_data, 0, src_count, &removed);
+            }
+
+            ecs_data_t *dst_data = ecs_table_get_data(dst_table);
+            dst_data = ecs_table_merge(
+                world, dst_table, src_table, dst_data, src_data);
+        }
+    }
+}
+
+static
+void delete_objects(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_data_t *data = ecs_table_get_data(table);
+    if (data) {
+        ecs_entity_t *entities = ecs_vector_first(
+            data->entities, ecs_entity_t);
+
+        int32_t i, count = ecs_vector_count(data->entities);
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t e = entities[i];
+            ecs_record_t *r = ecs_sparse_get_sparse(
+                world->store.entity_index, ecs_record_t, e);
+            
+            /* If row is negative, it means the entity is being monitored. Only
+             * monitored entities can have delete actions */
+            if (r && r->row < 0) {
+                /* Make row positive which prevents infinite recursion in case
+                 * of cyclic delete actions */
+                r->row = (-r->row) - 1;
+
+                /* Run delete actions for objects */
+                on_delete_action(world, entities[i]);
+            }        
+        }
+
+        /* Clear components from table (invokes destructors, OnRemove) */
+        ecs_table_delete_entities(world, table);            
+    } 
+}
+
+static
+void delete_tables_for_id_record(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_id_record_t *idr)
+{
+    /* Delete tables in id record. Because deleting the table updates the
+     * map, remove the map pointer from the id record. This will prevent the
+     * table from removing itself from the map as it is deleted, which
+     * allows for iterating the map without changing it. */
+    ecs_map_t *table_index = idr->table_index;
+    idr->table_index = NULL;
+    ecs_map_iter_t it = ecs_map_iter(table_index);
+    ecs_table_record_t *tr;
+    while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+        ecs_delete_table(world, tr->table);
+    }
+    ecs_map_free(table_index);
+
+    ecs_clear_id_record(world, id);
+}
+
+static
+void on_delete_object_action(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = ecs_get_id_record(world, id);
+    if (idr) {
+        ecs_map_t *table_index = idr->table_index;
+        ecs_map_iter_t it = ecs_map_iter(table_index);
+        ecs_table_record_t *tr;
+
+        /* Execute the on delete action */
+        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+            ecs_table_t *table = tr->table;
+            if (!ecs_table_count(table)) {
+                continue;
+            }
+
+            ecs_id_t *rel_id = ecs_vector_get(table->type, ecs_id_t, tr->column);
+            ecs_assert(rel_id != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_entity_t rel = ECS_PAIR_RELATION(*rel_id);
+            /* delete_object_action should be invoked for relations */
+            ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
+
+            /* Get the record for the relation, to find the delete action */
+            ecs_id_record_t *idrr = ecs_get_id_record(world, rel);
+            if (idrr) {
+                ecs_entity_t action = idrr->on_delete_object;
+                if (!action || action == EcsRemove) {
+                    remove_from_table(world, table, id, tr->column);
+                } else if (action == EcsDelete) {
+                    delete_objects(world, table);
+                } else if (action == EcsThrow) {
+                    throw_invalid_delete(world, id);
+                }
+            } else {
+                /* If no record was found for the relation, assume the default
+                 * action which is to remove the relationship */
+                remove_from_table(world, table, id, tr->column);
+            }
+        }
+
+        delete_tables_for_id_record(world, id, idr);
+    }
+}
+
+static
+void on_delete_relation_action(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = ecs_get_id_record(world, id);
+    if (idr) {
+        ecs_entity_t on_delete = idr->on_delete;
+        if (on_delete == EcsThrow) {
+            throw_invalid_delete(world, id);
+        }
+
+        ecs_map_t *table_index = idr->table_index;
+        ecs_map_iter_t it = ecs_map_iter(table_index);
+        ecs_table_record_t *tr;
+        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+            ecs_table_t *table = tr->table;
+            ecs_entity_t action = idr->on_delete;
+            if (!action || action == EcsRemove) {
+                remove_from_table(world, table, id, tr->column);
+            } else if (action == EcsDelete) {
+                delete_objects(world, table);
+            }
+        }
+
+        delete_tables_for_id_record(world, id, idr);
+    }
+}
+
+static
+void on_delete_action(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    on_delete_relation_action(world, entity);
+    on_delete_relation_action(world, ecs_pair(entity, EcsWildcard));
+    on_delete_object_action(world, ecs_pair(EcsWildcard, entity));
+}
+
 void ecs_delete_children(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(parent != 0, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_stage_from_world(&world);
-
-    ecs_vector_t *child_tables = ecs_map_get_ptr(
-        world->child_tables, ecs_vector_t*, parent);
-
-    if (child_tables) {
-        ecs_table_t **tables = ecs_vector_first(child_tables, ecs_table_t*);
-        int32_t i, count = ecs_vector_count(child_tables);
-        for (i = 0; i < count; i ++) {
-            ecs_table_t *table = tables[i];
-
-            /* Recursively delete entities of children */
-            ecs_data_t *data = ecs_table_get_data(table);
-            if (data) {
-                ecs_entity_t *entities = ecs_vector_first(
-                    data->entities, ecs_entity_t);
-
-                int32_t child, child_count = ecs_vector_count(data->entities);
-                for (child = 0; child < child_count; child ++) {
-                    ecs_delete_children(world, entities[child]);
-                }
-            }
-
-            /* Clear components from table (invokes destructors, OnRemove) */
-            ecs_table_delete_entities(world, table);
-
-            /* Delete table */
-            ecs_delete_table(world, table);
-        };
-
-        ecs_vector_free(child_tables);
-    }
-
-    ecs_map_remove(world->child_tables, parent);
+    on_delete_action(world, parent);
 }
 
 void ecs_delete(
@@ -1920,8 +2347,21 @@ void ecs_delete(
     if (r) {
         ecs_entity_info_t info = {0};
         set_info_from_record(entity, &info, r);
+
+        ecs_table_t *table = info.table;
+        uint64_t table_id = 0;
+        if (table) {
+            table_id = table->id;
+        }
+
         if (info.is_watched) {
-            ecs_delete_children(world, entity);
+            /* Make row positive which prevents infinite recursion in case
+             * of cyclic delete actions */
+            r->row = (-r->row) - 1;
+
+            /* Ensure that the store contains no dangling references to the
+             * deleted entity (as a component, or as part of a relation) */
+            on_delete_action(world, entity);
 
             if (r->table) {
                 ecs_entities_t to_remove = ecs_type_to_entities(r->table->type);
@@ -1929,14 +2369,15 @@ void ecs_delete(
             }
         }
 
-        /* If entity has components, remove them */
-        ecs_table_t *table = info.table;
-        if (table) {
+        /* If entity has components, remove them. Check if table is still alive,
+         * as delete actions could have deleted the table already. */
+        if (table_id && ecs_sparse_is_alive(world->store.tables, table_id)) {
             ecs_type_t type = table->type;
             ecs_entities_t to_remove = ecs_type_to_entities(type);
             delete_entity(world, table, info.data, info.row, &to_remove);
             r->table = NULL;
         }
+
         r->row = 0;
 
         /* Remove (and invalidate) entity after executing handlers */
@@ -2295,7 +2736,7 @@ ecs_entity_t assign_ptr_w_id(
 
     if (ptr) {
         ecs_entity_t real_id = ecs_get_typeid(world, id);
-        const ecs_c_info_t *cdata = get_c_info(world, real_id);
+        const ecs_type_info_t *cdata = get_c_info(world, real_id);
         if (cdata) {
             if (is_move) {
                 ecs_move_t move = cdata->lifecycle.move;
@@ -2581,6 +3022,13 @@ ecs_id_t ecs_type_to_id(
     }
 
     return *(ecs_vector_first(type, ecs_id_t));
+}
+
+ecs_id_t ecs_make_pair(
+    ecs_entity_t relation,
+    ecs_entity_t object)
+{
+    return ecs_pair(relation, object);
 }
 
 bool ecs_is_valid(

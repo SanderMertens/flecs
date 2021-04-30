@@ -1,4 +1,5 @@
 #include <api.h>
+#include <flecs/type.h>
 
 void Dummy(ecs_iter_t *it) {
     probe_system(it);

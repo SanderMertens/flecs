@@ -64,28 +64,16 @@ ecs_type_t ecs_dbg_get_column_type(
         return NULL;
     }
     
-    ecs_sig_column_t *columns = ecs_vector_first(
-        system_data->query->sig.columns, ecs_sig_column_t);
-    int32_t count = ecs_vector_count(system_data->query->sig.columns);
+    ecs_term_t *terms = system_data->query->filter.terms;
+    int32_t count = system_data->query->filter.term_count;
 
     if (count < column_index) {
         return NULL;
     }
 
-    ecs_sig_column_t *column = &columns[column_index - 1];
-    ecs_sig_oper_kind_t oper_kind = column->oper_kind;
-    ecs_type_t result;
-
-    switch(oper_kind) {
-    case EcsOperOr:
-        result = column->is.type;
-        break;
-    default:
-        result = ecs_type_from_id(world, column->is.component);
-        break;
-    }
+    ecs_term_t *term = &terms[column_index - 1];
     
-    return result;
+    return ecs_type_from_id(world, term->id);
 }
 
 #endif

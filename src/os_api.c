@@ -157,11 +157,15 @@ void ecs_os_api_free(void *ptr) {
 
 static
 char* ecs_os_api_strdup(const char *str) {
-    int len = ecs_os_strlen(str);
-    char *result = ecs_os_malloc(len + 1);
-    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
-    ecs_os_strcpy(result, str);
-    return result;
+    if (str) {
+        int len = ecs_os_strlen(str);
+        char *result = ecs_os_malloc(len + 1);
+        ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+        ecs_os_strcpy(result, str);
+        return result;
+    } else {
+        return NULL;
+    }
 }
 
 /* Replace dots with underscores */
