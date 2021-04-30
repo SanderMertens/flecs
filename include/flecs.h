@@ -54,6 +54,7 @@
 #include "flecs/private/api_defines.h"
 #include "flecs/private/vector.h"        /* Vector datatype */
 #include "flecs/private/map.h"           /* Hashmap */
+#include "flecs/private/strbuf.h"        /* String builder */
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
 
 #ifdef __cplusplus

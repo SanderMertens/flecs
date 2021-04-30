@@ -1,4 +1,5 @@
 #include <collections.h>
+#include <flecs/private/sparse.h>
 
 void Sparse_setup() {
     ecs_os_set_api_defaults();

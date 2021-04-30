@@ -93,44 +93,53 @@ typedef struct ecs_bitset_t {
 } ecs_bitset_t;
 
 /** Initialize bitset. */
+FLECS_DBG_API
 void ecs_bitset_init(
     ecs_bitset_t *bs);
 
 /** Deinialize bitset. */
+FLECS_DBG_API
 void ecs_bitset_deinit(
     ecs_bitset_t *bs);
 
 /** Add n elements to bitset. */
+FLECS_DBG_API
 void ecs_bitset_addn(
     ecs_bitset_t *bs,
     int32_t count);
 
 /** Ensure element exists. */
+FLECS_DBG_API
 void ecs_bitset_ensure(
     ecs_bitset_t *bs,
     int32_t count);
 
 /** Set element. */
+FLECS_DBG_API
 void ecs_bitset_set(
     ecs_bitset_t *bs,
     int32_t elem,
     bool value);
 
 /** Get element. */
+FLECS_DBG_API
 bool ecs_bitset_get(
     const ecs_bitset_t *bs,
     int32_t elem);
 
 /** Return number of elements. */
+FLECS_DBG_API
 int32_t ecs_bitset_count(
     const ecs_bitset_t *bs);
 
 /** Remove from bitset. */
+FLECS_DBG_API
 void ecs_bitset_remove(
     ecs_bitset_t *bs,
     int32_t elem);
 
 /** Swap values in bitset. */
+FLECS_DBG_API
 void ecs_bitset_swap(
     ecs_bitset_t *bs,
     int32_t elem_a,
@@ -185,6 +194,7 @@ extern "C" {
 #endif
 
 /** Create new sparse set */
+FLECS_DBG_API
 ecs_sparse_t* _ecs_sparse_new(
     ecs_size_t elem_size);
 
@@ -193,19 +203,23 @@ ecs_sparse_t* _ecs_sparse_new(
 
 /** Set id source. This allows the sparse set to use an external variable for
  * issuing and increasing new ids. */
+FLECS_DBG_API
 void ecs_sparse_set_id_source(
     ecs_sparse_t *sparse,
     uint64_t *id_source);
 
 /** Free sparse set */
+FLECS_DBG_API
 void ecs_sparse_free(
     ecs_sparse_t *sparse);
 
 /** Remove all elements from sparse set */
+FLECS_DBG_API
 void ecs_sparse_clear(
     ecs_sparse_t *sparse);
 
 /** Add element to sparse set, this generates or recycles an id */
+FLECS_DBG_API
 void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size);
@@ -214,26 +228,31 @@ void* _ecs_sparse_add(
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
 
 /** Get last issued id. */
+FLECS_DBG_API
 uint64_t ecs_sparse_last_id(
     ecs_sparse_t *sparse);
 
 /** Generate or recycle a new id. */
+FLECS_DBG_API
 uint64_t ecs_sparse_new_id(
     ecs_sparse_t *sparse);
 
 /** Generate or recycle new ids in bulk. The returned pointer points directly to
  * the internal dense array vector with sparse ids. Operations on the sparse set
  * can (and likely will) modify the contents of the buffer. */
+FLECS_DBG_API
 const uint64_t* ecs_sparse_new_ids(
     ecs_sparse_t *sparse,
     int32_t count);
 
 /** Remove an element */
+FLECS_DBG_API
 void ecs_sparse_remove(
     ecs_sparse_t *sparse,
     uint64_t index);
 
 /** Remove an element, return pointer to the value in the sparse array */
+FLECS_DBG_API
 void* _ecs_sparse_remove_get(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -243,27 +262,32 @@ void* _ecs_sparse_remove_get(
     ((type*)_ecs_sparse_remove_get(sparse, sizeof(type), index))
 
 /** Override the generation count for a specific id */
+FLECS_DBG_API
 void ecs_sparse_set_generation(
     ecs_sparse_t *sparse,
     uint64_t index);    
 
 /** Check whether an id has ever been issued. */
+FLECS_DBG_API
 bool ecs_sparse_exists(
     ecs_sparse_t *sparse,
     uint64_t index);
 
 /** Test if id is alive, which requires the generation count tp match. */
+FLECS_DBG_API
 bool ecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
     uint64_t index);
 
 /** Return identifier with current generation set. */
+FLECS_DBG_API
 uint64_t ecs_sparse_get_current(
     const ecs_sparse_t *sparse,
     uint64_t index);
 
 /** Get value from sparse set by dense id. This function is useful in 
  * combination with ecs_sparse_count for iterating all values in the set. */
+FLECS_DBG_API
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -273,15 +297,18 @@ void* _ecs_sparse_get(
     ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
 
 /** Get the number of alive elements in the sparse set. */
+FLECS_DBG_API
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
 
 /** Return total number of allocated elements in the dense array */
+FLECS_DBG_API
 int32_t ecs_sparse_size(
     const ecs_sparse_t *sparse);
 
 /** Get element by (sparse) id. The returned pointer is stable for the duration
  * of the sparse set, as it is stored in the sparse array. */
+FLECS_DBG_API
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -291,6 +318,7 @@ void* _ecs_sparse_get_sparse(
     ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
 
 /** Like get_sparse, but don't care whether element is alive or not. */
+FLECS_DBG_API
 void* _ecs_sparse_get_sparse_any(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -300,6 +328,7 @@ void* _ecs_sparse_get_sparse_any(
     ((type*)_ecs_sparse_get_sparse_any(sparse, sizeof(type), index))
 
 /** Get or create element by (sparse) id. */
+FLECS_DBG_API
 void* _ecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -309,6 +338,7 @@ void* _ecs_sparse_ensure(
     ((type*)_ecs_sparse_ensure(sparse, sizeof(type), index))
 
 /** Set value. */
+FLECS_DBG_API
 void* _ecs_sparse_set(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
@@ -319,24 +349,29 @@ void* _ecs_sparse_set(
     ((type*)_ecs_sparse_set(sparse, sizeof(type), index, value))
 
 /** Get pointer to ids (alive and not alive). Use with count() or size(). */
+FLECS_DBG_API
 const uint64_t* ecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
 /** Set size of the dense array. */
+FLECS_DBG_API
 void ecs_sparse_set_size(
     ecs_sparse_t *sparse,
     int32_t elem_count);
 
 /** Copy sparse set into a new sparse set. */
+FLECS_DBG_API
 ecs_sparse_t* ecs_sparse_copy(
     const ecs_sparse_t *src);    
 
 /** Restore sparse set into destination sparse set. */
+FLECS_DBG_API
 void ecs_sparse_restore(
     ecs_sparse_t *dst,
     const ecs_sparse_t *src);
 
 /** Get memory usage of sparse set. */
+FLECS_DBG_API
 void ecs_sparse_memory(
     ecs_sparse_t *sparse,
     int32_t *allocd,
@@ -405,71 +440,85 @@ struct ecs_switch_t {
 };
 
 /** Create new switch. */
+FLECS_DBG_API
 ecs_switch_t* ecs_switch_new(
     uint64_t min, 
     uint64_t max,
     int32_t elements);
 
 /** Free switch. */
+FLECS_DBG_API
 void ecs_switch_free(
     ecs_switch_t *sw);
 
 /** Add element to switch, initialize value to 0 */
+FLECS_DBG_API
 void ecs_switch_add(
     ecs_switch_t *sw);
 
 /** Set number of elements in switch list */
+FLECS_DBG_API
 void ecs_switch_set_count(
     ecs_switch_t *sw,
     int32_t count);
 
 /** Ensure that element exists. */
+FLECS_DBG_API
 void ecs_switch_ensure(
     ecs_switch_t *sw,
     int32_t count);
 
 /** Add n elements. */
+FLECS_DBG_API
 void ecs_switch_addn(
     ecs_switch_t *sw,
     int32_t count);    
 
 /** Set value of element. */
+FLECS_DBG_API
 void ecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
     uint64_t value);
 
 /** Remove element. */
+FLECS_DBG_API
 void ecs_switch_remove(
     ecs_switch_t *sw,
     int32_t element);
 
 /** Get value for element. */
+FLECS_DBG_API
 uint64_t ecs_switch_get(
     const ecs_switch_t *sw,
     int32_t element);
 
 /** Swap element. */
+FLECS_DBG_API
 void ecs_switch_swap(
     ecs_switch_t *sw,
     int32_t elem_1,
     int32_t elem_2);
 
 /** Get vector with all values. Use together with count(). */
+FLECS_DBG_API
 ecs_vector_t* ecs_switch_values(
     const ecs_switch_t *sw);    
 
 /** Return number of different values. */
+FLECS_DBG_API
 int32_t ecs_switch_case_count(
     const ecs_switch_t *sw,
     uint64_t value);
 
 /** Return first element for value. */
+FLECS_DBG_API
 int32_t ecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value);
 
 /** Return next element for value. Use with first(). */
+FLECS_DBG_API
 int32_t ecs_switch_next(
     const ecs_switch_t *sw,
     int32_t elem);
@@ -483,7 +532,6 @@ extern "C" {
 #endif
 
 #endif
-#include "strbuf.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
