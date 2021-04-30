@@ -8,5 +8,10 @@
         "use": [
             "flecs"
         ]
+    },
+    "lang.cpp": {
+        "${os linux}": {
+            "lib": ["pthread"]
+        }
     }
 }
