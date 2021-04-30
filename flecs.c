@@ -483,6 +483,7 @@ extern "C" {
 #endif
 
 #endif
+#include "strbuf.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
@@ -6334,6 +6335,7 @@ ecs_entity_t ecs_type_init(
     const ecs_id_t *ids = desc->ids;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         ecs_entities_t arr = { .array = &id, .count = 1 };
+        normalized = ecs_table_traverse_add(world, normalized, &arr, &added);
         table = ecs_table_traverse_add(world, table, &arr, &added);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
@@ -6372,7 +6374,9 @@ ecs_entity_t ecs_type_init(
         /* This will allow the type to show up in debug tools */
         if (type) {
             ecs_map_set(world->type_handles, (uintptr_t)type, &result);
-        }        
+        }
+
+        ecs_modified(world, result, EcsType);
     } else {
         if (type_ptr->type != type) {
             ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
@@ -24276,31 +24280,6 @@ ecs_entity_t ecs_get_pipeline(
     return world->pipeline;
 }
 
-ecs_entity_t ecs_new_pipeline(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    const char *expr)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t result = ecs_type_init(world, &(ecs_type_desc_t){
-        .entity = {
-            .entity = e,
-            .name = name
-        },
-        .ids_expr = expr
-    });
-
-    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_get(world, result, EcsType) != NULL, 
-        ECS_INTERNAL_ERROR, NULL);
-
-    ecs_add_id(world, result, EcsPipeline);
-
-    return result;
-}
-
 /* -- Module implementation -- */
 
 static
@@ -24348,12 +24327,19 @@ void FlecsPipelineImport(
     });
 
     /* When the Pipeline tag is added a pipeline will be created */
-    ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, Pipeline);
+    ECS_SYSTEM(world, EcsOnAddPipeline, EcsOnSet, Pipeline, Type);
 
     /* Create the builtin pipeline */
-    world->pipeline = ecs_new_pipeline(world, 0, "BuiltinPipeline",
-        "PreFrame, OnLoad, PostLoad, PreUpdate, OnUpdate,"
-        " OnValidate, PostUpdate, PreStore, OnStore, PostFrame");
+    world->pipeline = ecs_type_init(world, &(ecs_type_desc_t){
+        .entity = {
+            .name = "BuiltinPipeline",
+            .add = {EcsPipeline}
+        },
+        .ids = {
+            EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,
+            EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame
+         }
+    });
 
     /* Cleanup thread administration when world is destroyed */
     ecs_atfini(world, FlecsPipelineFini, NULL);

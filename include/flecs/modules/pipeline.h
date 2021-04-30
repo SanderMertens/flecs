@@ -29,8 +29,14 @@ extern "C" {
 #endif
 
 #ifndef FLECS_LEGACY
-#define ECS_PIPELINE(world, name, ...) \
-    ecs_entity_t name = ecs_new_pipeline(world, 0, #name, #__VA_ARGS__);
+#define ECS_PIPELINE(world, id, ...) \
+    ecs_entity_t id = ecs_type_init(world, &(ecs_type_desc_t){\
+        .entity = {\
+            .name = #id,\
+            .add = {EcsPipeline}\
+        },\
+        .ids_expr = #__VA_ARGS__\
+    });
 #endif
 
 /** Set a custom pipeline.

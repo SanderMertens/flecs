@@ -1960,6 +1960,7 @@ ecs_entity_t ecs_type_init(
     const ecs_id_t *ids = desc->ids;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         ecs_entities_t arr = { .array = &id, .count = 1 };
+        normalized = ecs_table_traverse_add(world, normalized, &arr, &added);
         table = ecs_table_traverse_add(world, table, &arr, &added);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
@@ -1998,7 +1999,9 @@ ecs_entity_t ecs_type_init(
         /* This will allow the type to show up in debug tools */
         if (type) {
             ecs_map_set(world->type_handles, (uintptr_t)type, &result);
-        }        
+        }
+
+        ecs_modified(world, result, EcsType);
     } else {
         if (type_ptr->type != type) {
             ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
