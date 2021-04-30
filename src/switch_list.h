@@ -25,7 +25,7 @@
 #ifndef FLECS_SWITCH_LIST_H
 #define FLECS_SWITCH_LIST_H
 
-#include "api_defines.h"
+#include "flecs/private/api_defines.h"
 
 typedef struct ecs_switch_header_t {
     int32_t element;        /* First element for value */
@@ -37,13 +37,13 @@ typedef struct ecs_switch_node_t {
     int32_t prev;           /* Prev node in list */
 } ecs_switch_node_t;
 
-typedef struct ecs_switch_t {
+struct ecs_switch_t {
     uint64_t min;           /* Minimum value the switch can store */
     uint64_t max;           /* Maximum value the switch can store */
     ecs_switch_header_t *headers;   /* Array with headers, indexed by value */
     ecs_vector_t *nodes;    /* Vector with nodes, of type ecs_switch_node_t */
     ecs_vector_t *values;   /* Vector with values, of type uint64_t */
-} ecs_switch_t;
+};
 
 /** Create new switch. */
 ecs_switch_t* ecs_switch_new(

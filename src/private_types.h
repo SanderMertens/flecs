@@ -26,7 +26,12 @@
 #endif
 
 #include "flecs.h"
-#include "flecs/private/entity_index.h"
+#include "entity_index.h"
+#include "bitset.h"
+#include "flecs/private/strbuf.h"
+#include "sparse.h"
+#include "switch_list.h"
+#include "flecs/type.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 

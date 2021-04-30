@@ -1,4 +1,4 @@
-#include "flecs.h"
+#include "private_api.h"
 
 static
 ecs_switch_header_t *get_header(

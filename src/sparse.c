@@ -1,4 +1,4 @@
-#include "flecs.h"
+#include "private_api.h"
 
 /** The number of elements in a single chunk */
 #define CHUNK_COUNT (4096)

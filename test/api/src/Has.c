@@ -1,4 +1,5 @@
 #include <api.h>
+#include <flecs/type.h>
 
 void Has_zero() {
     ecs_world_t *world = ecs_init();

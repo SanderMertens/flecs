@@ -1,5 +1,6 @@
 
 #include <api.h>
+#include <flecs/type.h>
 
 void DirectAccess_get_table_from_str() {
     ecs_world_t *world = ecs_init();

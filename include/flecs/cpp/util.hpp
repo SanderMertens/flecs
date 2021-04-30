@@ -1,4 +1,6 @@
 
+#include <flecs/private/strbuf.h>
+
 // Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
 // Rationale:
 //  - Using macros here instead of a templated function bc clients might override ecs_os_malloc

@@ -2121,18 +2121,13 @@ void on_delete_object_action(
             /* Get the record for the relation, to find the delete action */
             ecs_id_record_t *idrr = ecs_get_id_record(world, rel);
             if (idrr) {
-                switch(idrr->on_delete_object) {
-                case 0:
-                case EcsRemove:
+                ecs_entity_t action = idrr->on_delete_object;
+                if (!action || action == EcsRemove) {
                     remove_from_table(world, table, id, tr->column);
-                    break;
-                case EcsDelete:
+                } else if (action == EcsDelete) {
                     delete_objects(world, table);
-                    break;
-                case EcsThrow: {
+                } else if (action == EcsThrow) {
                     throw_invalid_delete(world, id);
-                    break;
-                }
                 }
             } else {
                 /* If no record was found for the relation, assume the default
@@ -2162,14 +2157,11 @@ void on_delete_relation_action(
         ecs_table_record_t *tr;
         while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
             ecs_table_t *table = tr->table;
-            switch(on_delete) {
-            case 0:
-            case EcsRemove:
+            ecs_entity_t action = idr->on_delete;
+            if (!action || action == EcsRemove) {
                 remove_from_table(world, table, id, tr->column);
-                break;
-            case EcsDelete:
+            } else if (action == EcsDelete) {
                 delete_objects(world, table);
-                break;
             }
         }
 
@@ -2886,6 +2878,13 @@ ecs_id_t ecs_type_to_id(
     }
 
     return *(ecs_vector_first(type, ecs_id_t));
+}
+
+ecs_id_t ecs_make_pair(
+    ecs_entity_t relation,
+    ecs_entity_t object)
+{
+    return ecs_pair(relation, object);
 }
 
 bool ecs_is_valid(

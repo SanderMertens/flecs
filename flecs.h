@@ -943,296 +943,6 @@ private:
 
 #endif
 /**
- * @file sparse.h
- * @brief Sparse set datastructure.
- *
- * This is an implementation of a paged sparse set that stores the payload in
- * the sparse array.
- *
- * A sparse set has a dense and a sparse array. The sparse array is directly
- * indexed by a 64 bit identifier. The sparse element is linked with a dense
- * element, which allows for liveliness checking. The liveliness check itself
- * can be performed by doing (psuedo code):
- *  dense[sparse[sparse_id].dense] == sparse_id
- *
- * To ensure that the sparse array doesn't have to grow to a large size when
- * using large sparse_id's, the sparse set uses paging. This cuts up the array
- * into several pages of 4096 elements. When an element is set, the sparse set
- * ensures that the corresponding page is created. The page associated with an
- * id is determined by shifting a bit 12 bits to the right.
- *
- * The sparse set keeps track of a generation count per id, which is increased
- * each time an id is deleted. The generation is encoded in the returned id.
- *
- * This sparse set implementation stores payload in the sparse array, which is
- * not typical. The reason for this is to guarantee that (in combination with
- * paging) the returned payload pointers are stable. This allows for various
- * optimizations in the parts of the framework that uses the sparse set.
- *
- * The sparse set has been designed so that new ids can be generated in bulk, in
- * an O(1) operation. The way this works is that once a dense-sparse pair is
- * created, it is never unpaired. Instead it is moved to the end of the dense
- * array, and the sparse set stores an additional count to keep track of the
- * last alive id in the sparse set. To generate new ids in bulk, the sparse set
- * only needs to increase this count by the number of requested ids.
- */
-
-#ifndef FLECS_SPARSE_H
-#define FLECS_SPARSE_H
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct ecs_sparse_t ecs_sparse_t;
-
-/** Create new sparse set */
-FLECS_API ecs_sparse_t* _ecs_sparse_new(
-    ecs_size_t elem_size);
-
-#define ecs_sparse_new(type)\
-    _ecs_sparse_new(sizeof(type))
-
-/** Set id source. This allows the sparse set to use an external variable for
- * issuing and increasing new ids. */
-FLECS_API void ecs_sparse_set_id_source(
-    ecs_sparse_t *sparse,
-    uint64_t *id_source);
-
-/** Free sparse set */
-FLECS_API void ecs_sparse_free(
-    ecs_sparse_t *sparse);
-
-/** Remove all elements from sparse set */
-FLECS_API void ecs_sparse_clear(
-    ecs_sparse_t *sparse);
-
-/** Add element to sparse set, this generates or recycles an id */
-FLECS_API void* _ecs_sparse_add(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size);
-
-#define ecs_sparse_add(sparse, type)\
-    ((type*)_ecs_sparse_add(sparse, sizeof(type)))
-
-/** Get last issued id. */
-FLECS_API uint64_t ecs_sparse_last_id(
-    ecs_sparse_t *sparse);
-
-/** Generate or recycle a new id. */
-FLECS_API uint64_t ecs_sparse_new_id(
-    ecs_sparse_t *sparse);
-
-/** Generate or recycle new ids in bulk. The returned pointer points directly to
- * the internal dense array vector with sparse ids. Operations on the sparse set
- * can (and likely will) modify the contents of the buffer. */
-FLECS_API const uint64_t* ecs_sparse_new_ids(
-    ecs_sparse_t *sparse,
-    int32_t count);
-
-/** Remove an element */
-FLECS_API void ecs_sparse_remove(
-    ecs_sparse_t *sparse,
-    uint64_t index);
-
-/** Remove an element, return pointer to the value in the sparse array */
-FLECS_API void* _ecs_sparse_remove_get(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t index);    
-
-#define ecs_sparse_remove_get(sparse, type, index)\
-    ((type*)_ecs_sparse_remove_get(sparse, sizeof(type), index))
-
-/** Override the generation count for a specific id */
-FLECS_API void ecs_sparse_set_generation(
-    ecs_sparse_t *sparse,
-    uint64_t index);    
-
-/** Check whether an id has ever been issued. */
-FLECS_API bool ecs_sparse_exists(
-    ecs_sparse_t *sparse,
-    uint64_t index);
-
-/** Test if id is alive, which requires the generation count tp match. */
-FLECS_API bool ecs_sparse_is_alive(
-    const ecs_sparse_t *sparse,
-    uint64_t index);
-
-/** Return identifier with current generation set. */
-FLECS_API uint64_t ecs_sparse_get_current(
-    const ecs_sparse_t *sparse,
-    uint64_t index);
-
-/** Get value from sparse set by dense id. This function is useful in 
- * combination with ecs_sparse_count for iterating all values in the set. */
-FLECS_API void* _ecs_sparse_get(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index);
-
-#define ecs_sparse_get(sparse, type, index)\
-    ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
-
-/** Get the number of alive elements in the sparse set. */
-FLECS_API int32_t ecs_sparse_count(
-    const ecs_sparse_t *sparse);
-
-/** Return total number of allocated elements in the dense array */
-FLECS_API int32_t ecs_sparse_size(
-    const ecs_sparse_t *sparse);
-
-/** Get element by (sparse) id. The returned pointer is stable for the duration
- * of the sparse set, as it is stored in the sparse array. */
-FLECS_API void* _ecs_sparse_get_sparse(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t index);
-
-#define ecs_sparse_get_sparse(sparse, type, index)\
-    ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
-
-/** Like get_sparse, but don't care whether element is alive or not. */
-FLECS_API void* _ecs_sparse_get_sparse_any(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t index);
-
-#define ecs_sparse_get_sparse_any(sparse, type, index)\
-    ((type*)_ecs_sparse_get_sparse_any(sparse, sizeof(type), index))
-
-/** Get or create element by (sparse) id. */
-FLECS_API void* _ecs_sparse_ensure(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t index);
-
-#define ecs_sparse_ensure(sparse, type, index)\
-    ((type*)_ecs_sparse_ensure(sparse, sizeof(type), index))
-
-/** Set value. */
-FLECS_API void* _ecs_sparse_set(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t index,
-    void *value);
-
-#define ecs_sparse_set(sparse, type, index, value)\
-    ((type*)_ecs_sparse_set(sparse, sizeof(type), index, value))
-
-/** Get pointer to ids (alive and not alive). Use with count() or size(). */
-FLECS_API const uint64_t* ecs_sparse_ids(
-    const ecs_sparse_t *sparse);
-
-/** Set size of the dense array. */
-FLECS_API void ecs_sparse_set_size(
-    ecs_sparse_t *sparse,
-    int32_t elem_count);
-
-/** Copy sparse set into a new sparse set. */
-FLECS_API ecs_sparse_t* ecs_sparse_copy(
-    const ecs_sparse_t *src);    
-
-/** Restore sparse set into destination sparse set. */
-FLECS_API void ecs_sparse_restore(
-    ecs_sparse_t *dst,
-    const ecs_sparse_t *src);
-
-/** Get memory usage of sparse set. */
-FLECS_API void ecs_sparse_memory(
-    ecs_sparse_t *sparse,
-    int32_t *allocd,
-    int32_t *used);
-
-#ifndef FLECS_LEGACY
-#define ecs_sparse_each(sparse, T, var, ...)\
-    {\
-        int var##_i, var##_count = ecs_sparse_count(sparse);\
-        for (var##_i = 0; var##_i < var##_count; var##_i ++) {\
-            T* var = ecs_sparse_get(sparse, T, var##_i);\
-            __VA_ARGS__\
-        }\
-    }
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-/**
- * @file bitset.h
- * @brief Bitset datastructure.
- *
- * Simple bitset implementation. The bitset allows for storage of arbitrary
- * numbers of bits.
- */
-
-#ifndef FLECS_BITSET_H
-#define FLECS_BITSET_H
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct ecs_bitset_t {
-    uint64_t *data;
-    int32_t count;
-    ecs_size_t size;
-} ecs_bitset_t;
-
-/** Initialize bitset. */
-void ecs_bitset_init(
-    ecs_bitset_t *bs);
-
-/** Deinialize bitset. */
-void ecs_bitset_deinit(
-    ecs_bitset_t *bs);
-
-/** Add n elements to bitset. */
-void ecs_bitset_addn(
-    ecs_bitset_t *bs,
-    int32_t count);
-
-/** Ensure element exists. */
-void ecs_bitset_ensure(
-    ecs_bitset_t *bs,
-    int32_t count);
-
-/** Set element. */
-void ecs_bitset_set(
-    ecs_bitset_t *bs,
-    int32_t elem,
-    bool value);
-
-/** Get element. */
-bool ecs_bitset_get(
-    const ecs_bitset_t *bs,
-    int32_t elem);
-
-/** Return number of elements. */
-int32_t ecs_bitset_count(
-    const ecs_bitset_t *bs);
-
-/** Remove from bitset. */
-void ecs_bitset_remove(
-    ecs_bitset_t *bs,
-    int32_t elem);
-
-/** Swap values in bitset. */
-void ecs_bitset_swap(
-    ecs_bitset_t *bs,
-    int32_t elem_a,
-    int32_t elem_b);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-/**
  * @file map.h
  * @brief Map datastructure.
  *
@@ -1472,304 +1182,6 @@ private:
 }
 
 #endif
-#endif
-
-#endif
-/**
- * @file switch_list.h
- * @brief Interleaved linked list for storing mutually exclusive values.
- *
- * Datastructure that stores N interleaved linked lists in an array. 
- * This allows for efficient storage of elements with mutually exclusive values.
- * Each linked list has a header element which points to the index in the array
- * that stores the first node of the list. Each list node points to the next
- * array element.
- *
- * The datastructure needs to be created with min and max values, so that it can
- * allocate an array of headers that can be directly indexed by the value. The
- * values are stored in a contiguous array, which allows for the values to be
- * iterated without having to follow the linked list nodes.
- *
- * The datastructure allows for efficient storage and retrieval for values with
- * mutually exclusive values, such as enumeration values. The linked list allows
- * an application to obtain all elements for a given (enumeration) value without
- * having to search.
- *
- * While the list accepts 64 bit values, it only uses the lower 32bits of the
- * value for selecting the correct linked list.
- */
-
-#ifndef FLECS_SWITCH_LIST_H
-#define FLECS_SWITCH_LIST_H
-
-
-typedef struct ecs_switch_header_t {
-    int32_t element;        /* First element for value */
-    int32_t count;          /* Number of elements for value */
-} ecs_switch_header_t;
-
-typedef struct ecs_switch_node_t {
-    int32_t next;           /* Next node in list */
-    int32_t prev;           /* Prev node in list */
-} ecs_switch_node_t;
-
-typedef struct ecs_switch_t {
-    uint64_t min;           /* Minimum value the switch can store */
-    uint64_t max;           /* Maximum value the switch can store */
-    ecs_switch_header_t *headers;   /* Array with headers, indexed by value */
-    ecs_vector_t *nodes;    /* Vector with nodes, of type ecs_switch_node_t */
-    ecs_vector_t *values;   /* Vector with values, of type uint64_t */
-} ecs_switch_t;
-
-/** Create new switch. */
-ecs_switch_t* ecs_switch_new(
-    uint64_t min, 
-    uint64_t max,
-    int32_t elements);
-
-/** Free switch. */
-void ecs_switch_free(
-    ecs_switch_t *sw);
-
-/** Add element to switch, initialize value to 0 */
-void ecs_switch_add(
-    ecs_switch_t *sw);
-
-/** Set number of elements in switch list */
-void ecs_switch_set_count(
-    ecs_switch_t *sw,
-    int32_t count);
-
-/** Ensure that element exists. */
-void ecs_switch_ensure(
-    ecs_switch_t *sw,
-    int32_t count);
-
-/** Add n elements. */
-void ecs_switch_addn(
-    ecs_switch_t *sw,
-    int32_t count);    
-
-/** Set value of element. */
-void ecs_switch_set(
-    ecs_switch_t *sw,
-    int32_t element,
-    uint64_t value);
-
-/** Remove element. */
-void ecs_switch_remove(
-    ecs_switch_t *sw,
-    int32_t element);
-
-/** Get value for element. */
-uint64_t ecs_switch_get(
-    const ecs_switch_t *sw,
-    int32_t element);
-
-/** Swap element. */
-void ecs_switch_swap(
-    ecs_switch_t *sw,
-    int32_t elem_1,
-    int32_t elem_2);
-
-/** Get vector with all values. Use together with count(). */
-ecs_vector_t* ecs_switch_values(
-    const ecs_switch_t *sw);    
-
-/** Return number of different values. */
-int32_t ecs_switch_case_count(
-    const ecs_switch_t *sw,
-    uint64_t value);
-
-/** Return first element for value. */
-int32_t ecs_switch_first(
-    const ecs_switch_t *sw,
-    uint64_t value);
-
-/** Return next element for value. Use with first(). */
-int32_t ecs_switch_next(
-    const ecs_switch_t *sw,
-    int32_t elem);
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-/**
- * @file strbuf.h
- * @brief Utility for constructing strings.
- *
- * A buffer builds up a list of elements which individually can be up to N bytes
- * large. While appending, data is added to these elements. More elements are
- * added on the fly when needed. When an application calls ecs_strbuf_get, all
- * elements are combined in one string and the element administration is freed.
- *
- * This approach prevents reallocs of large blocks of memory, and therefore
- * copying large blocks of memory when appending to a large buffer. A buffer
- * preallocates some memory for the element overhead so that for small strings
- * there is hardly any overhead, while for large strings the overhead is offset
- * by the reduced time spent on copying memory.
- */
-
-#ifndef FLECS_STRBUF_H_
-#define FLECS_STRBUF_H_
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define ECS_STRBUF_INIT (ecs_strbuf_t){0}
-#define ECS_STRBUF_ELEMENT_SIZE (511)
-#define ECS_STRBUF_MAX_LIST_DEPTH (32)
-
-typedef struct ecs_strbuf_element {
-    bool buffer_embedded;
-    int32_t pos;
-    char *buf;
-    struct ecs_strbuf_element *next;
-} ecs_strbuf_element;
-
-typedef struct ecs_strbuf_element_embedded {
-    ecs_strbuf_element super;
-    char buf[ECS_STRBUF_ELEMENT_SIZE + 1];
-} ecs_strbuf_element_embedded;
-
-typedef struct ecs_strbuf_element_str {
-    ecs_strbuf_element super;
-    char *alloc_str;
-} ecs_strbuf_element_str;
-
-typedef struct ecs_strbuf_list_elem {
-    int32_t count;
-    const char *separator;
-} ecs_strbuf_list_elem;
-
-typedef struct ecs_strbuf_t {
-    /* When set by an application, append will write to this buffer */
-    char *buf;
-
-    /* The maximum number of characters that may be printed */
-    int32_t max;
-
-    /* Size of elements minus current element */
-    int32_t size;
-
-    /* The number of elements in use */
-    int32_t elementCount;
-
-    /* Always allocate at least one element */
-    ecs_strbuf_element_embedded firstElement;
-
-    /* The current element being appended to */
-    ecs_strbuf_element *current;
-
-    /* Stack that keeps track of number of list elements, used for conditionally
-     * inserting a separator */
-    ecs_strbuf_list_elem list_stack[ECS_STRBUF_MAX_LIST_DEPTH];
-    int32_t list_sp;
-} ecs_strbuf_t;
-
-/* Append format string to a buffer.
- * Returns false when max is reached, true when there is still space */
-FLECS_API
-bool ecs_strbuf_append(
-    ecs_strbuf_t *buffer,
-    const char *fmt,
-    ...);
-
-/* Append format string with argument list to a buffer.
- * Returns false when max is reached, true when there is still space */
-FLECS_API
-bool ecs_strbuf_vappend(
-    ecs_strbuf_t *buffer,
-    const char *fmt,
-    va_list args);
-
-/* Append string to buffer.
- * Returns false when max is reached, true when there is still space */
-FLECS_API
-bool ecs_strbuf_appendstr(
-    ecs_strbuf_t *buffer,
-    const char *str);
-
-/* Append source buffer to destination buffer.
- * Returns false when max is reached, true when there is still space */
-FLECS_API
-bool ecs_strbuf_mergebuff(
-    ecs_strbuf_t *dst_buffer,
-    ecs_strbuf_t *src_buffer);
-
-/* Append string to buffer, transfer ownership to buffer.
- * Returns false when max is reached, true when there is still space */
-FLECS_API
-bool ecs_strbuf_appendstr_zerocpy(
-    ecs_strbuf_t *buffer,
-    char *str);
-
-/* Append string to buffer, do not free/modify string.
- * Returns false when max is reached, true when there is still space */
-FLECS_API
-bool ecs_strbuf_appendstr_zerocpy_const(
-    ecs_strbuf_t *buffer,
-    const char *str);
-
-/* Append n characters to buffer.
- * Returns false when max is reached, true when there is still space */
-FLECS_API
-bool ecs_strbuf_appendstrn(
-    ecs_strbuf_t *buffer,
-    const char *str,
-    int32_t n);
-
-/* Return result string (also resets buffer) */
-FLECS_API
-char *ecs_strbuf_get(
-    ecs_strbuf_t *buffer);
-
-/* Reset buffer without returning a string */
-FLECS_API
-void ecs_strbuf_reset(
-    ecs_strbuf_t *buffer);
-
-/* Push a list */
-FLECS_API
-void ecs_strbuf_list_push(
-    ecs_strbuf_t *buffer,
-    const char *list_open,
-    const char *separator);
-
-/* Pop a new list */
-FLECS_API
-void ecs_strbuf_list_pop(
-    ecs_strbuf_t *buffer,
-    const char *list_close);
-
-/* Insert a new element in list */
-FLECS_API
-void ecs_strbuf_list_next(
-    ecs_strbuf_t *buffer);
-
-/* Append formatted string as a new element in list */
-FLECS_API
-bool ecs_strbuf_list_append(
-    ecs_strbuf_t *buffer,
-    const char *fmt,
-    ...);
-
-/* Append string as a new element in list */
-FLECS_API
-bool ecs_strbuf_list_appendstr(
-    ecs_strbuf_t *buffer,
-    const char *str);
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif
@@ -2220,12 +1632,12 @@ extern "C" {
  * @{
  */
 
-/** An entity identifier. */
-typedef uint64_t ecs_entity_t;
-
 /** An id. Ids are the things that can be added to an entity. An id can be an
  * entity or pair, and can have an optional role. */
 typedef uint64_t ecs_id_t;
+
+/** An entity identifier. */
+typedef ecs_id_t ecs_entity_t;
 
 /** A vector containing component identifiers used to describe a type. */
 typedef const ecs_vector_t* ecs_type_t;
@@ -2458,6 +1870,11 @@ typedef struct ecs_column_t ecs_column_t;
 /** Table data */
 typedef struct ecs_data_t ecs_data_t;
 
+/* Sparse set */
+typedef struct ecs_sparse_t ecs_sparse_t;
+
+/* Switch list */
+typedef struct ecs_switch_t ecs_switch_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
@@ -3014,124 +2431,6 @@ void _ecs_parser_error(
 #endif
 
 #endif
-/**
- * @file type.h
- * @brief Type API.
- *
- * This API contains utilities for working with types. Types are vectors of
- * component ids, and are used most prominently in the API to construct filters.
- */
-
-#ifndef FLECS_TYPE_H
-#define FLECS_TYPE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-FLECS_API
-ecs_type_t ecs_type_from_id(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-FLECS_API
-ecs_entity_t ecs_type_to_id(
-    const ecs_world_t *world,
-    ecs_type_t type);
-
-FLECS_API
-char* ecs_type_str(
-    const ecs_world_t *world,
-    ecs_type_t type);  
-
-FLECS_API
-ecs_type_t ecs_type_from_str(
-    ecs_world_t *world,
-    const char *expr);    
-
-FLECS_API
-ecs_type_t ecs_type_find(
-    ecs_world_t *world,
-    ecs_entity_t *array,
-    int32_t count);
-
-FLECS_API
-ecs_type_t ecs_type_merge(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t type_add,
-    ecs_type_t type_remove);
-
-FLECS_API
-ecs_type_t ecs_type_add(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity);
-
-FLECS_API
-ecs_type_t ecs_type_remove(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity);
-
-FLECS_API
-bool ecs_type_has_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity);
-
-FLECS_API
-bool ecs_type_has_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t has);
-
-FLECS_API
-bool ecs_type_owns_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity,
-    bool owned);
-
-FLECS_API
-bool ecs_type_owns_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t has,
-    bool owned);
-
-FLECS_API
-bool ecs_type_find_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t id,
-    ecs_entity_t rel,
-    int32_t min_depth,
-    int32_t max_depth,
-    ecs_entity_t *out);
-
-FLECS_API
-ecs_entity_t ecs_type_get_entity_for_xor(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t xor_tag);
-
-FLECS_API
-int32_t ecs_type_index_of(
-    ecs_type_t type,
-    ecs_entity_t component);
-
-FLECS_API
-int32_t ecs_type_pair_index_of(
-    ecs_type_t type, 
-    int32_t start_index, 
-    ecs_entity_t pair);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
 
 
 /**
@@ -3229,6 +2528,7 @@ typedef struct ecs_query_desc_t {
      * this will change in future versions. */
     ecs_entity_t system;
 } ecs_query_desc_t;
+
 
 /** Type used to create triggers (single component/term observers). */
 typedef struct ecs_trigger_desc_t {
@@ -3895,19 +3195,19 @@ void ecs_query_group_by(
 #define ECS_ROLE (1ull << 63)
 
 /** Cases are used to switch between mutually exclusive components */
-#define ECS_CASE (ECS_ROLE | (0x7Cull << 56))
+FLECS_API extern const ecs_id_t ECS_CASE;
 
 /** Switches allow for fast switching between mutually exclusive components */
-#define ECS_SWITCH (ECS_ROLE | (0x7Bull << 56))
+FLECS_API extern const ecs_id_t ECS_SWITCH;
 
 /** The PAIR role indicates that the entity is a pair identifier. */
-#define ECS_PAIR (ECS_ROLE | (0x7Aull << 56))
+FLECS_API extern const ecs_id_t ECS_PAIR;
 
 /** Enforce ownership of a component */
-#define ECS_OWNED (ECS_ROLE | (0x75ull << 56))
+FLECS_API extern const ecs_id_t ECS_OWNED;
 
 /** Track whether component is enabled or not */
-#define ECS_DISABLED (ECS_ROLE | (0x74ull << 56))
+FLECS_API extern const ecs_id_t ECS_DISABLED;
 
 /** @} */
 
@@ -3918,31 +3218,31 @@ void ecs_query_group_by(
  */
 
 /** Root scope for builtin flecs entities */
-#define EcsFlecs (ECS_HI_COMPONENT_ID + 0)
+FLECS_API extern const ecs_entity_t EcsFlecs;
 
 /* Core module scope */
-#define EcsFlecsCore (ECS_HI_COMPONENT_ID + 1)
+FLECS_API extern const ecs_entity_t EcsFlecsCore;
 
 /* Entity associated with world (used for "attaching" components to world) */
-#define EcsWorld (ECS_HI_COMPONENT_ID + 2)
+FLECS_API extern const ecs_entity_t EcsWorld;
 
 /* Wildcard entity ("*"), Used in expressions to indicate wildcard matching */
-#define EcsWildcard (ECS_HI_COMPONENT_ID + 3)
+FLECS_API extern const ecs_entity_t EcsWildcard;
 
 /* This entity (".", "This"). Used in expressions to indicate This entity */
-#define EcsThis (ECS_HI_COMPONENT_ID + 4)
+FLECS_API extern const ecs_entity_t EcsThis;
 
 /* Can be added to relation to indicate it is transitive. */
-#define EcsTransitive (ECS_HI_COMPONENT_ID + 5)
+FLECS_API extern const ecs_entity_t EcsTransitive;
 
 /* Can be added to component/relation to indicate it is final. Final components/
  * relations cannot be derived from using an IsA relationship. Queries will not
  * attempt to substitute a component/relationship with IsA subsets if they are
  * final. */
-#define EcsFinal (ECS_HI_COMPONENT_ID + 6)
+FLECS_API extern const ecs_entity_t EcsFinal;
 
 /* Used to express parent-child relations. */
-#define EcsChildOf (ECS_HI_COMPONENT_ID + 7)
+FLECS_API extern const ecs_entity_t EcsChildOf;
 
 /* Used to express is-a relations. An IsA relation indicates that the subject is
  * a subset of the relation object. For example:
@@ -3963,34 +3263,34 @@ void ecs_query_group_by(
  * with their IsA super/subsets. This behavior can be controlled by the "set" 
  * member of a query term.
  */
-#define EcsIsA (ECS_HI_COMPONENT_ID + 8) 
+FLECS_API extern const ecs_entity_t EcsIsA;
 
 /* Tag added to module entities */
-#define EcsModule (ECS_HI_COMPONENT_ID + 9)
+FLECS_API extern const ecs_entity_t EcsModule;
 
 /* Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by filters/queries, unless EcsPrefab is explicitly added. */
-#define EcsPrefab (ECS_HI_COMPONENT_ID + 10)
+FLECS_API extern const ecs_entity_t EcsPrefab;
 
 /* When this tag is added to an entity it is skipped by all queries/filters */
-#define EcsDisabled (ECS_HI_COMPONENT_ID + 11)
+FLECS_API extern const ecs_entity_t EcsDisabled;
 
 /* Tag added to builtin/framework entites. This tag can be used to automatically
  * hide components/systems that are part of infrastructure code vs. application
  * code. The tag has no functional implications. */
-#define EcsHidden (ECS_HI_COMPONENT_ID + 12)
+FLECS_API extern const ecs_entity_t EcsHidden;
 
 /* Used to create triggers that subscribe on add events */
-#define EcsOnAdd (ECS_HI_COMPONENT_ID + 13)
+FLECS_API extern const ecs_entity_t EcsOnAdd;
 
 /* Used to create triggers that subscribe on remove events */
-#define EcsOnRemove (ECS_HI_COMPONENT_ID + 14)
+FLECS_API extern const ecs_entity_t EcsOnRemove;
 
 /* Used to create systems that subscribe on set events */
-#define EcsOnSet (ECS_HI_COMPONENT_ID + 15)
+FLECS_API extern const ecs_entity_t EcsOnSet;
 
 /* Used to create systems that subscribe on unset events */
-#define EcsUnSet (ECS_HI_COMPONENT_ID + 16)
+FLECS_API extern const ecs_entity_t EcsUnSet;
 
 /* Relationship used to define what should happen when an entity is deleted that
  * is added to other entities. For example, if an entity is used as a tag, and
@@ -4002,7 +3302,7 @@ void ecs_query_group_by(
  *
  * This would throw an error when attempting to delete Position, if Position is
  * added to any entities at the time of deletion. */
-#define EcsOnDelete (ECS_HI_COMPONENT_ID + 17)
+FLECS_API extern const ecs_entity_t EcsOnDelete;
 
 /* Relationship with similar functionality to EcsDelete, except that it allows
  * for specifying behavior when an object of a relation is removed. For example:
@@ -4011,40 +3311,40 @@ void ecs_query_group_by(
  * This specifies that whenever an object of a ChildOf relation (the parent) is 
  * removed, the entities with a relation to that object (the children) should be
  * deleted. */
-#define EcsOnDeleteObject (ECS_HI_COMPONENT_ID + 18)
+FLECS_API extern const ecs_entity_t EcsOnDeleteObject;
 
 /* Specifies that a component/relation/object of relation should be removed when
  * it is deleted. Must be combined with EcsOnDelete or EcsOnDeleteObject. */
-#define EcsRemove  (ECS_HI_COMPONENT_ID + 19)
+FLECS_API extern const ecs_entity_t EcsRemove;
 
 /* Specifies that entities with a component/relation/object of relation should 
  * be deleted when the component/relation/object of relation is deleted. Must be 
  * combined with EcsOnDelete or EcsOnDeleteObject. */
-#define EcsDelete  (ECS_HI_COMPONENT_ID + 20)
+FLECS_API extern const ecs_entity_t EcsDelete;
 
 /* Specifies that whenever a component/relation/object of relation is deleted an
  * error should be thrown. Must be combined with EcsOnDelete or 
  * EcsOnDeleteObject. */
-#define EcsThrow  (ECS_HI_COMPONENT_ID + 21)
+FLECS_API extern const ecs_entity_t EcsThrow;
 
 /* System module tags */
-#define EcsOnDemand (ECS_HI_COMPONENT_ID + 22)
-#define EcsMonitor (ECS_HI_COMPONENT_ID + 23)
-#define EcsDisabledIntern (ECS_HI_COMPONENT_ID + 24)
-#define EcsInactive (ECS_HI_COMPONENT_ID + 25)
+FLECS_API extern const ecs_entity_t EcsOnDemand;
+FLECS_API extern const ecs_entity_t EcsMonitor;
+FLECS_API extern const ecs_entity_t EcsDisabledIntern;
+FLECS_API extern const ecs_entity_t EcsInactive;
 
 /* Pipeline module tags */
-#define EcsPipeline (ECS_HI_COMPONENT_ID + 26)
-#define EcsPreFrame (ECS_HI_COMPONENT_ID + 27)
-#define EcsOnLoad (ECS_HI_COMPONENT_ID + 28)
-#define EcsPostLoad (ECS_HI_COMPONENT_ID + 29)
-#define EcsPreUpdate (ECS_HI_COMPONENT_ID + 30)
-#define EcsOnUpdate (ECS_HI_COMPONENT_ID + 31)
-#define EcsOnValidate (ECS_HI_COMPONENT_ID + 32)
-#define EcsPostUpdate (ECS_HI_COMPONENT_ID + 33)
-#define EcsPreStore (ECS_HI_COMPONENT_ID + 34)
-#define EcsOnStore (ECS_HI_COMPONENT_ID + 35)
-#define EcsPostFrame (ECS_HI_COMPONENT_ID + 36)
+FLECS_API extern const ecs_entity_t EcsPipeline;
+FLECS_API extern const ecs_entity_t EcsPreFrame;
+FLECS_API extern const ecs_entity_t EcsOnLoad;
+FLECS_API extern const ecs_entity_t EcsPostLoad;
+FLECS_API extern const ecs_entity_t EcsPreUpdate;
+FLECS_API extern const ecs_entity_t EcsOnUpdate;
+FLECS_API extern const ecs_entity_t EcsOnValidate;
+FLECS_API extern const ecs_entity_t EcsPostUpdate;
+FLECS_API extern const ecs_entity_t EcsPreStore;
+FLECS_API extern const ecs_entity_t EcsOnStore;
+FLECS_API extern const ecs_entity_t EcsPostFrame;
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
@@ -4783,15 +4083,20 @@ bool ecs_is_component_enabled_w_id(
  * @defgroup pairs Pairs
  * @{
  */
+ 
+/** Make a pair identifier.
+ * This function is equivalent to using the ecs_pair macro, and is added for
+ * convenience to make it easier for non C/C++ bindings to work with pairs.
+ *
+ * @param relation The relation of the pair.
+ * @param object The object of the pair.
+ */
+FLECS_API
+ecs_id_t ecs_make_pair(
+    ecs_entity_t relation,
+    ecs_entity_t object);
 
-/** Create entity with pair.
- * This operation creates a new entity with a pair. A pair is a combination of a 
- * relation and an object, can can be used to store relationships between
- * entities. Example:
- *
- * subject = Alice, relation = Likes, object = Bob
- *
- * This operation accepts regular entities. For passing in component identifiers
+/** This operation accepts regular entities. For passing in component identifiers
  * use ecs_typeid, like this:
  *
  * ecs_new_w_pair(world, ecs_id(relation), object) 
@@ -9115,6 +8420,298 @@ static const flecs::entity_t Throw = EcsThrow;
 
 }
 
+/**
+ * @file type.h
+ * @brief Type API.
+ *
+ * This API contains utilities for working with types. Types are vectors of
+ * component ids, and are used most prominently in the API to construct filters.
+ */
+
+#ifndef FLECS_TYPE_H
+#define FLECS_TYPE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+FLECS_API
+ecs_type_t ecs_type_from_id(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+FLECS_API
+ecs_entity_t ecs_type_to_id(
+    const ecs_world_t *world,
+    ecs_type_t type);
+
+FLECS_API
+char* ecs_type_str(
+    const ecs_world_t *world,
+    ecs_type_t type);  
+
+FLECS_API
+ecs_type_t ecs_type_from_str(
+    ecs_world_t *world,
+    const char *expr);    
+
+FLECS_API
+ecs_type_t ecs_type_find(
+    ecs_world_t *world,
+    ecs_entity_t *array,
+    int32_t count);
+
+FLECS_API
+ecs_type_t ecs_type_merge(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_type_t type_add,
+    ecs_type_t type_remove);
+
+FLECS_API
+ecs_type_t ecs_type_add(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity);
+
+FLECS_API
+ecs_type_t ecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity);
+
+FLECS_API
+bool ecs_type_has_id(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity);
+
+FLECS_API
+bool ecs_type_has_type(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_type_t has);
+
+FLECS_API
+bool ecs_type_owns_id(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity,
+    bool owned);
+
+FLECS_API
+bool ecs_type_owns_type(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_type_t has,
+    bool owned);
+
+FLECS_API
+bool ecs_type_find_id(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t id,
+    ecs_entity_t rel,
+    int32_t min_depth,
+    int32_t max_depth,
+    ecs_entity_t *out);
+
+FLECS_API
+ecs_entity_t ecs_type_get_entity_for_xor(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t xor_tag);
+
+FLECS_API
+int32_t ecs_type_index_of(
+    ecs_type_t type,
+    ecs_entity_t component);
+
+FLECS_API
+int32_t ecs_type_pair_index_of(
+    ecs_type_t type, 
+    int32_t start_index, 
+    ecs_entity_t pair);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+/**
+ * @file strbuf.h
+ * @brief Utility for constructing strings.
+ *
+ * A buffer builds up a list of elements which individually can be up to N bytes
+ * large. While appending, data is added to these elements. More elements are
+ * added on the fly when needed. When an application calls ecs_strbuf_get, all
+ * elements are combined in one string and the element administration is freed.
+ *
+ * This approach prevents reallocs of large blocks of memory, and therefore
+ * copying large blocks of memory when appending to a large buffer. A buffer
+ * preallocates some memory for the element overhead so that for small strings
+ * there is hardly any overhead, while for large strings the overhead is offset
+ * by the reduced time spent on copying memory.
+ */
+
+#ifndef FLECS_STRBUF_H_
+#define FLECS_STRBUF_H_
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define ECS_STRBUF_INIT (ecs_strbuf_t){0}
+#define ECS_STRBUF_ELEMENT_SIZE (511)
+#define ECS_STRBUF_MAX_LIST_DEPTH (32)
+
+typedef struct ecs_strbuf_element {
+    bool buffer_embedded;
+    int32_t pos;
+    char *buf;
+    struct ecs_strbuf_element *next;
+} ecs_strbuf_element;
+
+typedef struct ecs_strbuf_element_embedded {
+    ecs_strbuf_element super;
+    char buf[ECS_STRBUF_ELEMENT_SIZE + 1];
+} ecs_strbuf_element_embedded;
+
+typedef struct ecs_strbuf_element_str {
+    ecs_strbuf_element super;
+    char *alloc_str;
+} ecs_strbuf_element_str;
+
+typedef struct ecs_strbuf_list_elem {
+    int32_t count;
+    const char *separator;
+} ecs_strbuf_list_elem;
+
+typedef struct ecs_strbuf_t {
+    /* When set by an application, append will write to this buffer */
+    char *buf;
+
+    /* The maximum number of characters that may be printed */
+    int32_t max;
+
+    /* Size of elements minus current element */
+    int32_t size;
+
+    /* The number of elements in use */
+    int32_t elementCount;
+
+    /* Always allocate at least one element */
+    ecs_strbuf_element_embedded firstElement;
+
+    /* The current element being appended to */
+    ecs_strbuf_element *current;
+
+    /* Stack that keeps track of number of list elements, used for conditionally
+     * inserting a separator */
+    ecs_strbuf_list_elem list_stack[ECS_STRBUF_MAX_LIST_DEPTH];
+    int32_t list_sp;
+} ecs_strbuf_t;
+
+/* Append format string to a buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_append(
+    ecs_strbuf_t *buffer,
+    const char *fmt,
+    ...);
+
+/* Append format string with argument list to a buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_vappend(
+    ecs_strbuf_t *buffer,
+    const char *fmt,
+    va_list args);
+
+/* Append string to buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_appendstr(
+    ecs_strbuf_t *buffer,
+    const char *str);
+
+/* Append source buffer to destination buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_mergebuff(
+    ecs_strbuf_t *dst_buffer,
+    ecs_strbuf_t *src_buffer);
+
+/* Append string to buffer, transfer ownership to buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_appendstr_zerocpy(
+    ecs_strbuf_t *buffer,
+    char *str);
+
+/* Append string to buffer, do not free/modify string.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_appendstr_zerocpy_const(
+    ecs_strbuf_t *buffer,
+    const char *str);
+
+/* Append n characters to buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_appendstrn(
+    ecs_strbuf_t *buffer,
+    const char *str,
+    int32_t n);
+
+/* Return result string (also resets buffer) */
+FLECS_API
+char *ecs_strbuf_get(
+    ecs_strbuf_t *buffer);
+
+/* Reset buffer without returning a string */
+FLECS_API
+void ecs_strbuf_reset(
+    ecs_strbuf_t *buffer);
+
+/* Push a list */
+FLECS_API
+void ecs_strbuf_list_push(
+    ecs_strbuf_t *buffer,
+    const char *list_open,
+    const char *separator);
+
+/* Pop a new list */
+FLECS_API
+void ecs_strbuf_list_pop(
+    ecs_strbuf_t *buffer,
+    const char *list_close);
+
+/* Insert a new element in list */
+FLECS_API
+void ecs_strbuf_list_next(
+    ecs_strbuf_t *buffer);
+
+/* Append formatted string as a new element in list */
+FLECS_API
+bool ecs_strbuf_list_append(
+    ecs_strbuf_t *buffer,
+    const char *fmt,
+    ...);
+
+/* Append string as a new element in list */
+FLECS_API
+bool ecs_strbuf_list_appendstr(
+    ecs_strbuf_t *buffer,
+    const char *str);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
 
 // Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
 // Rationale:

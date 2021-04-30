@@ -1,4 +1,5 @@
 #include <api.h>
+#include <flecs/type.h>
 
 void Deprecated_trait_type_str() {
     ecs_world_t *world = ecs_init();

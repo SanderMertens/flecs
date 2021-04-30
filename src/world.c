@@ -1,5 +1,51 @@
 #include "private_api.h"
 
+/* Builtin roles */
+const ecs_id_t ECS_CASE =  (ECS_ROLE | (0x7Cull << 56));
+const ecs_id_t ECS_SWITCH =  (ECS_ROLE | (0x7Bull << 56));
+const ecs_id_t ECS_PAIR =  (ECS_ROLE | (0x7Aull << 56));
+const ecs_id_t ECS_OWNED =  (ECS_ROLE | (0x75ull << 56));
+const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
+
+/* Builtin entity ids */
+const ecs_entity_t EcsFlecs = (ECS_HI_COMPONENT_ID + 0);
+const ecs_entity_t EcsFlecsCore = (ECS_HI_COMPONENT_ID + 1);
+const ecs_entity_t EcsWorld = (ECS_HI_COMPONENT_ID + 2);
+const ecs_entity_t EcsWildcard = (ECS_HI_COMPONENT_ID + 3);
+const ecs_entity_t EcsThis = (ECS_HI_COMPONENT_ID + 4);
+const ecs_entity_t EcsTransitive = (ECS_HI_COMPONENT_ID + 5);
+const ecs_entity_t EcsFinal = (ECS_HI_COMPONENT_ID + 6);
+const ecs_entity_t EcsChildOf = (ECS_HI_COMPONENT_ID + 7);
+const ecs_entity_t EcsIsA = (ECS_HI_COMPONENT_ID + 8) ;
+const ecs_entity_t EcsModule = (ECS_HI_COMPONENT_ID + 9);
+const ecs_entity_t EcsPrefab = (ECS_HI_COMPONENT_ID + 10);
+const ecs_entity_t EcsDisabled = (ECS_HI_COMPONENT_ID + 11);
+const ecs_entity_t EcsHidden = (ECS_HI_COMPONENT_ID + 12);
+const ecs_entity_t EcsOnAdd = (ECS_HI_COMPONENT_ID + 13);
+const ecs_entity_t EcsOnRemove = (ECS_HI_COMPONENT_ID + 14);
+const ecs_entity_t EcsOnSet = (ECS_HI_COMPONENT_ID + 15);
+const ecs_entity_t EcsUnSet = (ECS_HI_COMPONENT_ID + 16);
+const ecs_entity_t EcsOnDelete = (ECS_HI_COMPONENT_ID + 17);
+const ecs_entity_t EcsOnDeleteObject = (ECS_HI_COMPONENT_ID + 18);
+const ecs_entity_t EcsRemove =  (ECS_HI_COMPONENT_ID + 19);
+const ecs_entity_t EcsDelete =  (ECS_HI_COMPONENT_ID + 20);
+const ecs_entity_t EcsThrow =  (ECS_HI_COMPONENT_ID + 21);
+const ecs_entity_t EcsOnDemand = (ECS_HI_COMPONENT_ID + 22);
+const ecs_entity_t EcsMonitor = (ECS_HI_COMPONENT_ID + 23);
+const ecs_entity_t EcsDisabledIntern = (ECS_HI_COMPONENT_ID + 24);
+const ecs_entity_t EcsInactive = (ECS_HI_COMPONENT_ID + 25);
+const ecs_entity_t EcsPipeline = (ECS_HI_COMPONENT_ID + 26);
+const ecs_entity_t EcsPreFrame = (ECS_HI_COMPONENT_ID + 27);
+const ecs_entity_t EcsOnLoad = (ECS_HI_COMPONENT_ID + 28);
+const ecs_entity_t EcsPostLoad = (ECS_HI_COMPONENT_ID + 29);
+const ecs_entity_t EcsPreUpdate = (ECS_HI_COMPONENT_ID + 30);
+const ecs_entity_t EcsOnUpdate = (ECS_HI_COMPONENT_ID + 31);
+const ecs_entity_t EcsOnValidate = (ECS_HI_COMPONENT_ID + 32);
+const ecs_entity_t EcsPostUpdate = (ECS_HI_COMPONENT_ID + 33);
+const ecs_entity_t EcsPreStore = (ECS_HI_COMPONENT_ID + 34);
+const ecs_entity_t EcsOnStore = (ECS_HI_COMPONENT_ID + 35);
+const ecs_entity_t EcsPostFrame = (ECS_HI_COMPONENT_ID + 36);
+
 /* -- Private functions -- */
 
 const ecs_world_t* ecs_get_world(

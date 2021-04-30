@@ -140,17 +140,14 @@ ecs_map_t* ecs_triggers_get(
         return NULL;
     }
 
-    switch(event) {
-    case EcsOnAdd:
+    if (event == EcsOnAdd) {
         if (idt->on_add_triggers && ecs_map_count(idt->on_add_triggers)) {
             return idt->on_add_triggers;
         }
-        break;
-    case EcsOnRemove:
+    } else if (event == EcsOnRemove) {
         if (idt->on_remove_triggers && ecs_map_count(idt->on_remove_triggers)) {
             return idt->on_remove_triggers;
         }
-        break;
     }
 
     return NULL;

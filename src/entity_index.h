@@ -10,8 +10,6 @@
 #ifndef FLECS_ENTITY_INDEX_H
 #define FLECS_ENTITY_INDEX_H
 
-#include "api_defines.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

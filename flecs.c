@@ -43,7 +43,6 @@
 #ifndef FLECS_ENTITY_INDEX_H
 #define FLECS_ENTITY_INDEX_H
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -65,6 +64,419 @@ extern "C" {
 #define ecs_eis_copy(world) ecs_sparse_copy((world->store).entity_index)
 #define ecs_eis_free(world) ecs_sparse_free((world->store).entity_index)
 #define ecs_eis_memory(world, allocd, used) ecs_sparse_memory((world->store).entity_index, allocd, used)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+/**
+ * @file bitset.h
+ * @brief Bitset datastructure.
+ *
+ * Simple bitset implementation. The bitset allows for storage of arbitrary
+ * numbers of bits.
+ */
+
+#ifndef FLECS_BITSET_H
+#define FLECS_BITSET_H
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct ecs_bitset_t {
+    uint64_t *data;
+    int32_t count;
+    ecs_size_t size;
+} ecs_bitset_t;
+
+/** Initialize bitset. */
+void ecs_bitset_init(
+    ecs_bitset_t *bs);
+
+/** Deinialize bitset. */
+void ecs_bitset_deinit(
+    ecs_bitset_t *bs);
+
+/** Add n elements to bitset. */
+void ecs_bitset_addn(
+    ecs_bitset_t *bs,
+    int32_t count);
+
+/** Ensure element exists. */
+void ecs_bitset_ensure(
+    ecs_bitset_t *bs,
+    int32_t count);
+
+/** Set element. */
+void ecs_bitset_set(
+    ecs_bitset_t *bs,
+    int32_t elem,
+    bool value);
+
+/** Get element. */
+bool ecs_bitset_get(
+    const ecs_bitset_t *bs,
+    int32_t elem);
+
+/** Return number of elements. */
+int32_t ecs_bitset_count(
+    const ecs_bitset_t *bs);
+
+/** Remove from bitset. */
+void ecs_bitset_remove(
+    ecs_bitset_t *bs,
+    int32_t elem);
+
+/** Swap values in bitset. */
+void ecs_bitset_swap(
+    ecs_bitset_t *bs,
+    int32_t elem_a,
+    int32_t elem_b);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+/**
+ * @file sparse.h
+ * @brief Sparse set datastructure.
+ *
+ * This is an implementation of a paged sparse set that stores the payload in
+ * the sparse array.
+ *
+ * A sparse set has a dense and a sparse array. The sparse array is directly
+ * indexed by a 64 bit identifier. The sparse element is linked with a dense
+ * element, which allows for liveliness checking. The liveliness check itself
+ * can be performed by doing (psuedo code):
+ *  dense[sparse[sparse_id].dense] == sparse_id
+ *
+ * To ensure that the sparse array doesn't have to grow to a large size when
+ * using large sparse_id's, the sparse set uses paging. This cuts up the array
+ * into several pages of 4096 elements. When an element is set, the sparse set
+ * ensures that the corresponding page is created. The page associated with an
+ * id is determined by shifting a bit 12 bits to the right.
+ *
+ * The sparse set keeps track of a generation count per id, which is increased
+ * each time an id is deleted. The generation is encoded in the returned id.
+ *
+ * This sparse set implementation stores payload in the sparse array, which is
+ * not typical. The reason for this is to guarantee that (in combination with
+ * paging) the returned payload pointers are stable. This allows for various
+ * optimizations in the parts of the framework that uses the sparse set.
+ *
+ * The sparse set has been designed so that new ids can be generated in bulk, in
+ * an O(1) operation. The way this works is that once a dense-sparse pair is
+ * created, it is never unpaired. Instead it is moved to the end of the dense
+ * array, and the sparse set stores an additional count to keep track of the
+ * last alive id in the sparse set. To generate new ids in bulk, the sparse set
+ * only needs to increase this count by the number of requested ids.
+ */
+
+#ifndef FLECS_SPARSE_H
+#define FLECS_SPARSE_H
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Create new sparse set */
+ecs_sparse_t* _ecs_sparse_new(
+    ecs_size_t elem_size);
+
+#define ecs_sparse_new(type)\
+    _ecs_sparse_new(sizeof(type))
+
+/** Set id source. This allows the sparse set to use an external variable for
+ * issuing and increasing new ids. */
+void ecs_sparse_set_id_source(
+    ecs_sparse_t *sparse,
+    uint64_t *id_source);
+
+/** Free sparse set */
+void ecs_sparse_free(
+    ecs_sparse_t *sparse);
+
+/** Remove all elements from sparse set */
+void ecs_sparse_clear(
+    ecs_sparse_t *sparse);
+
+/** Add element to sparse set, this generates or recycles an id */
+void* _ecs_sparse_add(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size);
+
+#define ecs_sparse_add(sparse, type)\
+    ((type*)_ecs_sparse_add(sparse, sizeof(type)))
+
+/** Get last issued id. */
+uint64_t ecs_sparse_last_id(
+    ecs_sparse_t *sparse);
+
+/** Generate or recycle a new id. */
+uint64_t ecs_sparse_new_id(
+    ecs_sparse_t *sparse);
+
+/** Generate or recycle new ids in bulk. The returned pointer points directly to
+ * the internal dense array vector with sparse ids. Operations on the sparse set
+ * can (and likely will) modify the contents of the buffer. */
+const uint64_t* ecs_sparse_new_ids(
+    ecs_sparse_t *sparse,
+    int32_t count);
+
+/** Remove an element */
+void ecs_sparse_remove(
+    ecs_sparse_t *sparse,
+    uint64_t index);
+
+/** Remove an element, return pointer to the value in the sparse array */
+void* _ecs_sparse_remove_get(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index);    
+
+#define ecs_sparse_remove_get(sparse, type, index)\
+    ((type*)_ecs_sparse_remove_get(sparse, sizeof(type), index))
+
+/** Override the generation count for a specific id */
+void ecs_sparse_set_generation(
+    ecs_sparse_t *sparse,
+    uint64_t index);    
+
+/** Check whether an id has ever been issued. */
+bool ecs_sparse_exists(
+    ecs_sparse_t *sparse,
+    uint64_t index);
+
+/** Test if id is alive, which requires the generation count tp match. */
+bool ecs_sparse_is_alive(
+    const ecs_sparse_t *sparse,
+    uint64_t index);
+
+/** Return identifier with current generation set. */
+uint64_t ecs_sparse_get_current(
+    const ecs_sparse_t *sparse,
+    uint64_t index);
+
+/** Get value from sparse set by dense id. This function is useful in 
+ * combination with ecs_sparse_count for iterating all values in the set. */
+void* _ecs_sparse_get(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    int32_t index);
+
+#define ecs_sparse_get(sparse, type, index)\
+    ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
+
+/** Get the number of alive elements in the sparse set. */
+int32_t ecs_sparse_count(
+    const ecs_sparse_t *sparse);
+
+/** Return total number of allocated elements in the dense array */
+int32_t ecs_sparse_size(
+    const ecs_sparse_t *sparse);
+
+/** Get element by (sparse) id. The returned pointer is stable for the duration
+ * of the sparse set, as it is stored in the sparse array. */
+void* _ecs_sparse_get_sparse(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index);
+
+#define ecs_sparse_get_sparse(sparse, type, index)\
+    ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
+
+/** Like get_sparse, but don't care whether element is alive or not. */
+void* _ecs_sparse_get_sparse_any(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index);
+
+#define ecs_sparse_get_sparse_any(sparse, type, index)\
+    ((type*)_ecs_sparse_get_sparse_any(sparse, sizeof(type), index))
+
+/** Get or create element by (sparse) id. */
+void* _ecs_sparse_ensure(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index);
+
+#define ecs_sparse_ensure(sparse, type, index)\
+    ((type*)_ecs_sparse_ensure(sparse, sizeof(type), index))
+
+/** Set value. */
+void* _ecs_sparse_set(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t index,
+    void *value);
+
+#define ecs_sparse_set(sparse, type, index, value)\
+    ((type*)_ecs_sparse_set(sparse, sizeof(type), index, value))
+
+/** Get pointer to ids (alive and not alive). Use with count() or size(). */
+const uint64_t* ecs_sparse_ids(
+    const ecs_sparse_t *sparse);
+
+/** Set size of the dense array. */
+void ecs_sparse_set_size(
+    ecs_sparse_t *sparse,
+    int32_t elem_count);
+
+/** Copy sparse set into a new sparse set. */
+ecs_sparse_t* ecs_sparse_copy(
+    const ecs_sparse_t *src);    
+
+/** Restore sparse set into destination sparse set. */
+void ecs_sparse_restore(
+    ecs_sparse_t *dst,
+    const ecs_sparse_t *src);
+
+/** Get memory usage of sparse set. */
+void ecs_sparse_memory(
+    ecs_sparse_t *sparse,
+    int32_t *allocd,
+    int32_t *used);
+
+#ifndef FLECS_LEGACY
+#define ecs_sparse_each(sparse, T, var, ...)\
+    {\
+        int var##_i, var##_count = ecs_sparse_count(sparse);\
+        for (var##_i = 0; var##_i < var##_count; var##_i ++) {\
+            T* var = ecs_sparse_get(sparse, T, var##_i);\
+            __VA_ARGS__\
+        }\
+    }
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+/**
+ * @file switch_list.h
+ * @brief Interleaved linked list for storing mutually exclusive values.
+ *
+ * Datastructure that stores N interleaved linked lists in an array. 
+ * This allows for efficient storage of elements with mutually exclusive values.
+ * Each linked list has a header element which points to the index in the array
+ * that stores the first node of the list. Each list node points to the next
+ * array element.
+ *
+ * The datastructure needs to be created with min and max values, so that it can
+ * allocate an array of headers that can be directly indexed by the value. The
+ * values are stored in a contiguous array, which allows for the values to be
+ * iterated without having to follow the linked list nodes.
+ *
+ * The datastructure allows for efficient storage and retrieval for values with
+ * mutually exclusive values, such as enumeration values. The linked list allows
+ * an application to obtain all elements for a given (enumeration) value without
+ * having to search.
+ *
+ * While the list accepts 64 bit values, it only uses the lower 32bits of the
+ * value for selecting the correct linked list.
+ */
+
+#ifndef FLECS_SWITCH_LIST_H
+#define FLECS_SWITCH_LIST_H
+
+
+typedef struct ecs_switch_header_t {
+    int32_t element;        /* First element for value */
+    int32_t count;          /* Number of elements for value */
+} ecs_switch_header_t;
+
+typedef struct ecs_switch_node_t {
+    int32_t next;           /* Next node in list */
+    int32_t prev;           /* Prev node in list */
+} ecs_switch_node_t;
+
+struct ecs_switch_t {
+    uint64_t min;           /* Minimum value the switch can store */
+    uint64_t max;           /* Maximum value the switch can store */
+    ecs_switch_header_t *headers;   /* Array with headers, indexed by value */
+    ecs_vector_t *nodes;    /* Vector with nodes, of type ecs_switch_node_t */
+    ecs_vector_t *values;   /* Vector with values, of type uint64_t */
+};
+
+/** Create new switch. */
+ecs_switch_t* ecs_switch_new(
+    uint64_t min, 
+    uint64_t max,
+    int32_t elements);
+
+/** Free switch. */
+void ecs_switch_free(
+    ecs_switch_t *sw);
+
+/** Add element to switch, initialize value to 0 */
+void ecs_switch_add(
+    ecs_switch_t *sw);
+
+/** Set number of elements in switch list */
+void ecs_switch_set_count(
+    ecs_switch_t *sw,
+    int32_t count);
+
+/** Ensure that element exists. */
+void ecs_switch_ensure(
+    ecs_switch_t *sw,
+    int32_t count);
+
+/** Add n elements. */
+void ecs_switch_addn(
+    ecs_switch_t *sw,
+    int32_t count);    
+
+/** Set value of element. */
+void ecs_switch_set(
+    ecs_switch_t *sw,
+    int32_t element,
+    uint64_t value);
+
+/** Remove element. */
+void ecs_switch_remove(
+    ecs_switch_t *sw,
+    int32_t element);
+
+/** Get value for element. */
+uint64_t ecs_switch_get(
+    const ecs_switch_t *sw,
+    int32_t element);
+
+/** Swap element. */
+void ecs_switch_swap(
+    ecs_switch_t *sw,
+    int32_t elem_1,
+    int32_t elem_2);
+
+/** Get vector with all values. Use together with count(). */
+ecs_vector_t* ecs_switch_values(
+    const ecs_switch_t *sw);    
+
+/** Return number of different values. */
+int32_t ecs_switch_case_count(
+    const ecs_switch_t *sw,
+    uint64_t value);
+
+/** Return first element for value. */
+int32_t ecs_switch_first(
+    const ecs_switch_t *sw,
+    uint64_t value);
+
+/** Return next element for value. Use with first(). */
+int32_t ecs_switch_next(
+    const ecs_switch_t *sw,
+    int32_t elem);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef __cplusplus
 }
@@ -6075,18 +6487,13 @@ void on_delete_object_action(
             /* Get the record for the relation, to find the delete action */
             ecs_id_record_t *idrr = ecs_get_id_record(world, rel);
             if (idrr) {
-                switch(idrr->on_delete_object) {
-                case 0:
-                case EcsRemove:
+                ecs_entity_t action = idrr->on_delete_object;
+                if (!action || action == EcsRemove) {
                     remove_from_table(world, table, id, tr->column);
-                    break;
-                case EcsDelete:
+                } else if (action == EcsDelete) {
                     delete_objects(world, table);
-                    break;
-                case EcsThrow: {
+                } else if (action == EcsThrow) {
                     throw_invalid_delete(world, id);
-                    break;
-                }
                 }
             } else {
                 /* If no record was found for the relation, assume the default
@@ -6116,14 +6523,11 @@ void on_delete_relation_action(
         ecs_table_record_t *tr;
         while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
             ecs_table_t *table = tr->table;
-            switch(on_delete) {
-            case 0:
-            case EcsRemove:
+            ecs_entity_t action = idr->on_delete;
+            if (!action || action == EcsRemove) {
                 remove_from_table(world, table, id, tr->column);
-                break;
-            case EcsDelete:
+            } else if (action == EcsDelete) {
                 delete_objects(world, table);
-                break;
             }
         }
 
@@ -6840,6 +7244,13 @@ ecs_id_t ecs_type_to_id(
     }
 
     return *(ecs_vector_first(type, ecs_id_t));
+}
+
+ecs_id_t ecs_make_pair(
+    ecs_entity_t relation,
+    ecs_entity_t object)
+{
+    return ecs_pair(relation, object);
 }
 
 bool ecs_is_valid(
@@ -13447,6 +13858,52 @@ void ecs_record_move_to(
 }
 
 #endif
+
+/* Builtin roles */
+const ecs_id_t ECS_CASE =  (ECS_ROLE | (0x7Cull << 56));
+const ecs_id_t ECS_SWITCH =  (ECS_ROLE | (0x7Bull << 56));
+const ecs_id_t ECS_PAIR =  (ECS_ROLE | (0x7Aull << 56));
+const ecs_id_t ECS_OWNED =  (ECS_ROLE | (0x75ull << 56));
+const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
+
+/* Builtin entity ids */
+const ecs_entity_t EcsFlecs = (ECS_HI_COMPONENT_ID + 0);
+const ecs_entity_t EcsFlecsCore = (ECS_HI_COMPONENT_ID + 1);
+const ecs_entity_t EcsWorld = (ECS_HI_COMPONENT_ID + 2);
+const ecs_entity_t EcsWildcard = (ECS_HI_COMPONENT_ID + 3);
+const ecs_entity_t EcsThis = (ECS_HI_COMPONENT_ID + 4);
+const ecs_entity_t EcsTransitive = (ECS_HI_COMPONENT_ID + 5);
+const ecs_entity_t EcsFinal = (ECS_HI_COMPONENT_ID + 6);
+const ecs_entity_t EcsChildOf = (ECS_HI_COMPONENT_ID + 7);
+const ecs_entity_t EcsIsA = (ECS_HI_COMPONENT_ID + 8) ;
+const ecs_entity_t EcsModule = (ECS_HI_COMPONENT_ID + 9);
+const ecs_entity_t EcsPrefab = (ECS_HI_COMPONENT_ID + 10);
+const ecs_entity_t EcsDisabled = (ECS_HI_COMPONENT_ID + 11);
+const ecs_entity_t EcsHidden = (ECS_HI_COMPONENT_ID + 12);
+const ecs_entity_t EcsOnAdd = (ECS_HI_COMPONENT_ID + 13);
+const ecs_entity_t EcsOnRemove = (ECS_HI_COMPONENT_ID + 14);
+const ecs_entity_t EcsOnSet = (ECS_HI_COMPONENT_ID + 15);
+const ecs_entity_t EcsUnSet = (ECS_HI_COMPONENT_ID + 16);
+const ecs_entity_t EcsOnDelete = (ECS_HI_COMPONENT_ID + 17);
+const ecs_entity_t EcsOnDeleteObject = (ECS_HI_COMPONENT_ID + 18);
+const ecs_entity_t EcsRemove =  (ECS_HI_COMPONENT_ID + 19);
+const ecs_entity_t EcsDelete =  (ECS_HI_COMPONENT_ID + 20);
+const ecs_entity_t EcsThrow =  (ECS_HI_COMPONENT_ID + 21);
+const ecs_entity_t EcsOnDemand = (ECS_HI_COMPONENT_ID + 22);
+const ecs_entity_t EcsMonitor = (ECS_HI_COMPONENT_ID + 23);
+const ecs_entity_t EcsDisabledIntern = (ECS_HI_COMPONENT_ID + 24);
+const ecs_entity_t EcsInactive = (ECS_HI_COMPONENT_ID + 25);
+const ecs_entity_t EcsPipeline = (ECS_HI_COMPONENT_ID + 26);
+const ecs_entity_t EcsPreFrame = (ECS_HI_COMPONENT_ID + 27);
+const ecs_entity_t EcsOnLoad = (ECS_HI_COMPONENT_ID + 28);
+const ecs_entity_t EcsPostLoad = (ECS_HI_COMPONENT_ID + 29);
+const ecs_entity_t EcsPreUpdate = (ECS_HI_COMPONENT_ID + 30);
+const ecs_entity_t EcsOnUpdate = (ECS_HI_COMPONENT_ID + 31);
+const ecs_entity_t EcsOnValidate = (ECS_HI_COMPONENT_ID + 32);
+const ecs_entity_t EcsPostUpdate = (ECS_HI_COMPONENT_ID + 33);
+const ecs_entity_t EcsPreStore = (ECS_HI_COMPONENT_ID + 34);
+const ecs_entity_t EcsOnStore = (ECS_HI_COMPONENT_ID + 35);
+const ecs_entity_t EcsPostFrame = (ECS_HI_COMPONENT_ID + 36);
 
 /* -- Private functions -- */
 
@@ -22162,17 +22619,14 @@ ecs_map_t* ecs_triggers_get(
         return NULL;
     }
 
-    switch(event) {
-    case EcsOnAdd:
+    if (event == EcsOnAdd) {
         if (idt->on_add_triggers && ecs_map_count(idt->on_add_triggers)) {
             return idt->on_add_triggers;
         }
-        break;
-    case EcsOnRemove:
+    } else if (event == EcsOnRemove) {
         if (idt->on_remove_triggers && ecs_map_count(idt->on_remove_triggers)) {
             return idt->on_remove_triggers;
         }
-        break;
     }
 
     return NULL;

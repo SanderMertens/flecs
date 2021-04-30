@@ -53,11 +53,7 @@
 
 #include "flecs/private/api_defines.h"
 #include "flecs/private/vector.h"        /* Vector datatype */
-#include "flecs/private/sparse.h"        /* Sparse set */
-#include "flecs/private/bitset.h"        /* Bitset */
 #include "flecs/private/map.h"           /* Hashmap */
-#include "flecs/private/switch_list.h"   /* Switch list */
-#include "flecs/private/strbuf.h"        /* Efficient string builder */
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
 
 #ifdef __cplusplus
@@ -69,12 +65,12 @@ extern "C" {
  * @{
  */
 
-/** An entity identifier. */
-typedef uint64_t ecs_entity_t;
-
 /** An id. Ids are the things that can be added to an entity. An id can be an
  * entity or pair, and can have an optional role. */
 typedef uint64_t ecs_id_t;
+
+/** An entity identifier. */
+typedef ecs_id_t ecs_entity_t;
 
 /** A vector containing component identifiers used to describe a type. */
 typedef const ecs_vector_t* ecs_type_t;
@@ -273,7 +269,6 @@ struct ecs_trigger_t {
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
 #include "flecs/private/log.h"              /* Logging API */
-#include "flecs/type.h"                     /* Type API */
 
 
 /**
@@ -371,6 +366,7 @@ typedef struct ecs_query_desc_t {
      * this will change in future versions. */
     ecs_entity_t system;
 } ecs_query_desc_t;
+
 
 /** Type used to create triggers (single component/term observers). */
 typedef struct ecs_trigger_desc_t {
@@ -507,19 +503,19 @@ typedef struct ecs_world_info_t {
 #define ECS_ROLE (1ull << 63)
 
 /** Cases are used to switch between mutually exclusive components */
-#define ECS_CASE (ECS_ROLE | (0x7Cull << 56))
+FLECS_API extern const ecs_id_t ECS_CASE;
 
 /** Switches allow for fast switching between mutually exclusive components */
-#define ECS_SWITCH (ECS_ROLE | (0x7Bull << 56))
+FLECS_API extern const ecs_id_t ECS_SWITCH;
 
 /** The PAIR role indicates that the entity is a pair identifier. */
-#define ECS_PAIR (ECS_ROLE | (0x7Aull << 56))
+FLECS_API extern const ecs_id_t ECS_PAIR;
 
 /** Enforce ownership of a component */
-#define ECS_OWNED (ECS_ROLE | (0x75ull << 56))
+FLECS_API extern const ecs_id_t ECS_OWNED;
 
 /** Track whether component is enabled or not */
-#define ECS_DISABLED (ECS_ROLE | (0x74ull << 56))
+FLECS_API extern const ecs_id_t ECS_DISABLED;
 
 /** @} */
 
@@ -530,31 +526,31 @@ typedef struct ecs_world_info_t {
  */
 
 /** Root scope for builtin flecs entities */
-#define EcsFlecs (ECS_HI_COMPONENT_ID + 0)
+FLECS_API extern const ecs_entity_t EcsFlecs;
 
 /* Core module scope */
-#define EcsFlecsCore (ECS_HI_COMPONENT_ID + 1)
+FLECS_API extern const ecs_entity_t EcsFlecsCore;
 
 /* Entity associated with world (used for "attaching" components to world) */
-#define EcsWorld (ECS_HI_COMPONENT_ID + 2)
+FLECS_API extern const ecs_entity_t EcsWorld;
 
 /* Wildcard entity ("*"), Used in expressions to indicate wildcard matching */
-#define EcsWildcard (ECS_HI_COMPONENT_ID + 3)
+FLECS_API extern const ecs_entity_t EcsWildcard;
 
 /* This entity (".", "This"). Used in expressions to indicate This entity */
-#define EcsThis (ECS_HI_COMPONENT_ID + 4)
+FLECS_API extern const ecs_entity_t EcsThis;
 
 /* Can be added to relation to indicate it is transitive. */
-#define EcsTransitive (ECS_HI_COMPONENT_ID + 5)
+FLECS_API extern const ecs_entity_t EcsTransitive;
 
 /* Can be added to component/relation to indicate it is final. Final components/
  * relations cannot be derived from using an IsA relationship. Queries will not
  * attempt to substitute a component/relationship with IsA subsets if they are
  * final. */
-#define EcsFinal (ECS_HI_COMPONENT_ID + 6)
+FLECS_API extern const ecs_entity_t EcsFinal;
 
 /* Used to express parent-child relations. */
-#define EcsChildOf (ECS_HI_COMPONENT_ID + 7)
+FLECS_API extern const ecs_entity_t EcsChildOf;
 
 /* Used to express is-a relations. An IsA relation indicates that the subject is
  * a subset of the relation object. For example:
@@ -575,34 +571,34 @@ typedef struct ecs_world_info_t {
  * with their IsA super/subsets. This behavior can be controlled by the "set" 
  * member of a query term.
  */
-#define EcsIsA (ECS_HI_COMPONENT_ID + 8) 
+FLECS_API extern const ecs_entity_t EcsIsA;
 
 /* Tag added to module entities */
-#define EcsModule (ECS_HI_COMPONENT_ID + 9)
+FLECS_API extern const ecs_entity_t EcsModule;
 
 /* Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by filters/queries, unless EcsPrefab is explicitly added. */
-#define EcsPrefab (ECS_HI_COMPONENT_ID + 10)
+FLECS_API extern const ecs_entity_t EcsPrefab;
 
 /* When this tag is added to an entity it is skipped by all queries/filters */
-#define EcsDisabled (ECS_HI_COMPONENT_ID + 11)
+FLECS_API extern const ecs_entity_t EcsDisabled;
 
 /* Tag added to builtin/framework entites. This tag can be used to automatically
  * hide components/systems that are part of infrastructure code vs. application
  * code. The tag has no functional implications. */
-#define EcsHidden (ECS_HI_COMPONENT_ID + 12)
+FLECS_API extern const ecs_entity_t EcsHidden;
 
 /* Used to create triggers that subscribe on add events */
-#define EcsOnAdd (ECS_HI_COMPONENT_ID + 13)
+FLECS_API extern const ecs_entity_t EcsOnAdd;
 
 /* Used to create triggers that subscribe on remove events */
-#define EcsOnRemove (ECS_HI_COMPONENT_ID + 14)
+FLECS_API extern const ecs_entity_t EcsOnRemove;
 
 /* Used to create systems that subscribe on set events */
-#define EcsOnSet (ECS_HI_COMPONENT_ID + 15)
+FLECS_API extern const ecs_entity_t EcsOnSet;
 
 /* Used to create systems that subscribe on unset events */
-#define EcsUnSet (ECS_HI_COMPONENT_ID + 16)
+FLECS_API extern const ecs_entity_t EcsUnSet;
 
 /* Relationship used to define what should happen when an entity is deleted that
  * is added to other entities. For example, if an entity is used as a tag, and
@@ -614,7 +610,7 @@ typedef struct ecs_world_info_t {
  *
  * This would throw an error when attempting to delete Position, if Position is
  * added to any entities at the time of deletion. */
-#define EcsOnDelete (ECS_HI_COMPONENT_ID + 17)
+FLECS_API extern const ecs_entity_t EcsOnDelete;
 
 /* Relationship with similar functionality to EcsDelete, except that it allows
  * for specifying behavior when an object of a relation is removed. For example:
@@ -623,40 +619,40 @@ typedef struct ecs_world_info_t {
  * This specifies that whenever an object of a ChildOf relation (the parent) is 
  * removed, the entities with a relation to that object (the children) should be
  * deleted. */
-#define EcsOnDeleteObject (ECS_HI_COMPONENT_ID + 18)
+FLECS_API extern const ecs_entity_t EcsOnDeleteObject;
 
 /* Specifies that a component/relation/object of relation should be removed when
  * it is deleted. Must be combined with EcsOnDelete or EcsOnDeleteObject. */
-#define EcsRemove  (ECS_HI_COMPONENT_ID + 19)
+FLECS_API extern const ecs_entity_t EcsRemove;
 
 /* Specifies that entities with a component/relation/object of relation should 
  * be deleted when the component/relation/object of relation is deleted. Must be 
  * combined with EcsOnDelete or EcsOnDeleteObject. */
-#define EcsDelete  (ECS_HI_COMPONENT_ID + 20)
+FLECS_API extern const ecs_entity_t EcsDelete;
 
 /* Specifies that whenever a component/relation/object of relation is deleted an
  * error should be thrown. Must be combined with EcsOnDelete or 
  * EcsOnDeleteObject. */
-#define EcsThrow  (ECS_HI_COMPONENT_ID + 21)
+FLECS_API extern const ecs_entity_t EcsThrow;
 
 /* System module tags */
-#define EcsOnDemand (ECS_HI_COMPONENT_ID + 22)
-#define EcsMonitor (ECS_HI_COMPONENT_ID + 23)
-#define EcsDisabledIntern (ECS_HI_COMPONENT_ID + 24)
-#define EcsInactive (ECS_HI_COMPONENT_ID + 25)
+FLECS_API extern const ecs_entity_t EcsOnDemand;
+FLECS_API extern const ecs_entity_t EcsMonitor;
+FLECS_API extern const ecs_entity_t EcsDisabledIntern;
+FLECS_API extern const ecs_entity_t EcsInactive;
 
 /* Pipeline module tags */
-#define EcsPipeline (ECS_HI_COMPONENT_ID + 26)
-#define EcsPreFrame (ECS_HI_COMPONENT_ID + 27)
-#define EcsOnLoad (ECS_HI_COMPONENT_ID + 28)
-#define EcsPostLoad (ECS_HI_COMPONENT_ID + 29)
-#define EcsPreUpdate (ECS_HI_COMPONENT_ID + 30)
-#define EcsOnUpdate (ECS_HI_COMPONENT_ID + 31)
-#define EcsOnValidate (ECS_HI_COMPONENT_ID + 32)
-#define EcsPostUpdate (ECS_HI_COMPONENT_ID + 33)
-#define EcsPreStore (ECS_HI_COMPONENT_ID + 34)
-#define EcsOnStore (ECS_HI_COMPONENT_ID + 35)
-#define EcsPostFrame (ECS_HI_COMPONENT_ID + 36)
+FLECS_API extern const ecs_entity_t EcsPipeline;
+FLECS_API extern const ecs_entity_t EcsPreFrame;
+FLECS_API extern const ecs_entity_t EcsOnLoad;
+FLECS_API extern const ecs_entity_t EcsPostLoad;
+FLECS_API extern const ecs_entity_t EcsPreUpdate;
+FLECS_API extern const ecs_entity_t EcsOnUpdate;
+FLECS_API extern const ecs_entity_t EcsOnValidate;
+FLECS_API extern const ecs_entity_t EcsPostUpdate;
+FLECS_API extern const ecs_entity_t EcsPreStore;
+FLECS_API extern const ecs_entity_t EcsOnStore;
+FLECS_API extern const ecs_entity_t EcsPostFrame;
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
@@ -1395,15 +1391,20 @@ bool ecs_is_component_enabled_w_id(
  * @defgroup pairs Pairs
  * @{
  */
+ 
+/** Make a pair identifier.
+ * This function is equivalent to using the ecs_pair macro, and is added for
+ * convenience to make it easier for non C/C++ bindings to work with pairs.
+ *
+ * @param relation The relation of the pair.
+ * @param object The object of the pair.
+ */
+FLECS_API
+ecs_id_t ecs_make_pair(
+    ecs_entity_t relation,
+    ecs_entity_t object);
 
-/** Create entity with pair.
- * This operation creates a new entity with a pair. A pair is a combination of a 
- * relation and an object, can can be used to store relationships between
- * entities. Example:
- *
- * subject = Alice, relation = Likes, object = Bob
- *
- * This operation accepts regular entities. For passing in component identifiers
+/** This operation accepts regular entities. For passing in component identifiers
  * use ecs_typeid, like this:
  *
  * ecs_new_w_pair(world, ecs_id(relation), object) 
