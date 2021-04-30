@@ -1642,7 +1642,8 @@ ecs_table_t *traverse_from_expr(
     const char *name,
     const char *expr,
     ecs_entities_t *modified,
-    bool is_add)
+    bool is_add,
+    bool replace_and)
 {
     const char *ptr = expr;
     if (ptr) {
@@ -1662,7 +1663,7 @@ ecs_table_t *traverse_from_expr(
                 return NULL;
             }
 
-            if (term.oper == EcsAnd) {
+            if (term.oper == EcsAnd || !replace_and) {
                 /* Regular AND expression */
                 ecs_entities_t arr = { .array = &term.id, .count = 1 };
                 if (is_add) {
@@ -1838,7 +1839,7 @@ ecs_entity_t ecs_entity_init(
     if (desc->add_expr) {
 #ifdef FLECS_PARSER
         table = traverse_from_expr(
-            world, table, name, desc->add_expr, &added, true);
+            world, table, name, desc->add_expr, &added, true, true);
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
@@ -1848,7 +1849,7 @@ ecs_entity_t ecs_entity_init(
     if (desc->remove_expr) {
 #ifdef FLECS_PARSER
     table = traverse_from_expr(
-        world, table, name, desc->remove_expr, &removed, true);
+        world, table, name, desc->remove_expr, &removed, false, true);
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
@@ -1933,6 +1934,79 @@ ecs_entity_t ecs_component_init(
 
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);
+
+    return result;
+}
+
+ecs_entity_t ecs_type_init(
+    ecs_world_t *world,
+    const ecs_type_desc_t *desc)
+{
+    ecs_entity_t result = ecs_entity_init(world, &desc->entity);
+    if (!result) {
+        return 0;
+    }
+
+    ecs_table_t *table = NULL, *normalized = NULL;
+
+    ecs_entity_t added_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t added = { .array = added_buffer };
+
+    /* Find destination table (and type) */
+
+    /* Add components from the 'add' id array */
+    int32_t i = 0;
+    ecs_id_t id;
+    const ecs_id_t *ids = desc->ids;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    /* If expression is set, add it to the table */
+    if (desc->ids_expr) {
+#ifdef FLECS_PARSER
+        normalized = traverse_from_expr(
+            world, normalized, desc->entity.name, desc->ids_expr, &added, 
+            true, true);
+
+        table = traverse_from_expr(
+            world, table, desc->entity.name, desc->ids_expr, &added, 
+            true, false);
+#else
+        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+#endif
+    }
+
+    ecs_type_t type = NULL;
+    ecs_type_t normalized_type = NULL;
+    
+    if (table) {
+        type = table->type;
+    }
+    if (normalized) {
+        normalized_type = normalized->type;
+    }
+
+    bool add = false;
+    EcsType *type_ptr = ecs_get_mut(world, result, EcsType, &add);
+    if (add) {
+        type_ptr->type = type;
+        type_ptr->normalized = normalized_type;
+
+        /* This will allow the type to show up in debug tools */
+        if (type) {
+            ecs_map_set(world->type_handles, (uintptr_t)type, &result);
+        }        
+    } else {
+        if (type_ptr->type != type) {
+            ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
+        }
+        if (type_ptr->normalized != normalized_type) {
+            ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
+        }        
+    }
 
     return result;
 }

@@ -683,7 +683,14 @@ ecs_entity_t ecs_new_pipeline(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entity_t result = ecs_new_type(world, e, name, expr);
+    ecs_entity_t result = ecs_type_init(world, &(ecs_type_desc_t){
+        .entity = {
+            .entity = e,
+            .name = name
+        },
+        .ids_expr = expr
+    });
+
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_get(world, result, EcsType) != NULL, 
         ECS_INTERNAL_ERROR, NULL);

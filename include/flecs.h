@@ -317,10 +317,18 @@ typedef struct ecs_entity_desc_t {
 
 /** Type used for constructing components. */
 typedef struct ecs_component_desc_t {
-    ecs_entity_desc_t entity;
-    size_t size;
-    size_t alignment;
+    ecs_entity_desc_t entity;           /* Parameters for component entity */
+    size_t size;                        /* Component size */
+    size_t alignment;                   /* Component alignment */
 } ecs_component_desc_t;
+
+
+/** Type used for constructing type entities (entities with EcsType). */
+typedef struct ecs_type_desc_t {
+    ecs_entity_desc_t entity;           /* Parameters for type entity */
+    ecs_id_t ids[ECS_MAX_ADD_REMOVE];   /* Ids to include in type */
+    const char *ids_expr;               /* Id expression to include in type */
+} ecs_type_desc_t;
 
 
 /** Type used for constructing filters. */
@@ -1225,6 +1233,12 @@ FLECS_API
 ecs_entity_t ecs_component_init(
     ecs_world_t *world,
     const ecs_component_desc_t *desc);
+
+/** Create a new type entity. */
+FLECS_API
+ecs_entity_t ecs_type_init(
+    ecs_world_t *world,
+    const ecs_type_desc_t *desc);    
 
 /** Create N new entities.
  * This operation is the same as ecs_new_w_id, but creates N entities

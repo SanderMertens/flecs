@@ -127,7 +127,10 @@ extern "C" {
     ecs_type(id) = ecs_type_from_entity(world, id)
 
 #define ECS_TYPE(world, id, ...) \
-    ecs_entity_t id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
+    ecs_entity_t id = ecs_type_init(world, &(ecs_type_desc_t){\
+        .entity.name = #id,\
+        .ids_expr = #__VA_ARGS__\
+    });\
     ecs_type_t ecs_type(id) = ecs_type_from_entity(world, id);\
     (void)id;\
     (void)ecs_type(id)
@@ -141,7 +144,10 @@ extern "C" {
     ecs_type_t ecs_type(id)
 
 #define ECS_TYPE_DEFINE(world, id, ...)\
-    id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
+    id = ecs_type_init(world, &(ecs_type_desc_t){\
+        .entity.name = #id,\
+        .ids_expr = #__VA_ARGS__\
+    });\
     ecs_type(id) = ecs_type_from_entity(world, id);\
 
 #define ECS_COLUMN(it, type, id, column)\

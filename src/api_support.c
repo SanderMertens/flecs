@@ -1,28 +1,6 @@
 #include "private_api.h"
 
 static
-bool ids_compare(
-    const ecs_vector_t *ids_1,
-    const ecs_vector_t *ids_2)
-{
-    int32_t i, count = ecs_vector_count(ids_1);
-    if (count != ecs_vector_count(ids_2)) {
-        return false;
-    }
-
-    ecs_id_t *arr_1 = ecs_vector_first(ids_1, ecs_id_t);
-    ecs_id_t *arr_2 = ecs_vector_first(ids_2, ecs_id_t);
-
-    for (i = 0; i < count; i ++) {
-        if (arr_1[i] != arr_2[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-static
 ecs_vector_t* sort_and_dedup(
     ecs_vector_t *result)
 {
@@ -50,7 +28,7 @@ ecs_vector_t* sort_and_dedup(
     return result;
 }
 
-/** Parse callback that adds type to type identifier for ecs_new_type */
+/** Parse callback that adds type to type identifier */
 static
 ecs_vector_t* expr_to_ids(
     ecs_world_t *world,
@@ -292,50 +270,6 @@ ecs_table_t* ecs_table_from_str(
 
     ecs_table_t *result = table_from_ids(world, ids);
     ecs_vector_free(ids);
-
-    return result;
-}
-
-ecs_entity_t ecs_new_type(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    const char *expr)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_stage_from_world(&world);
-
-    ecs_entity_t result = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
-        .name = name
-    });
-
-    ecs_vector_t *ids = expr_to_ids(world, name, expr);
-    ecs_vector_t *normalized = ids_to_normalized_ids(world, ids);
-    ecs_assert(normalized != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    bool added = false;
-    EcsType *type = ecs_get_mut(world, result, EcsType, &added);
-    if (added) {
-        ecs_table_t *table_type = table_from_ids(world, ids);
-        ecs_table_t *table_normalized = table_from_ids(world, normalized);
-        type->type = table_type->type;
-        type->normalized = table_normalized->type;
-
-        /* This will allow the type to show up in debug tools */
-        ecs_map_set(world->type_handles, (uintptr_t)table_type->type, &result);        
-    } else {
-        if (!ids_compare(type->type, ids)) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
-
-        if (!ids_compare(type->normalized, normalized)) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
-    }
-
-    ecs_vector_free(ids);
-    ecs_vector_free(normalized);    
 
     return result;
 }

@@ -2135,13 +2135,6 @@ ecs_entity_t ecs_new_module(
     size_t alignment);
 
 FLECS_API
-ecs_entity_t ecs_new_type(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *id,
-    const char *components);
-
-FLECS_API
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -2588,10 +2581,18 @@ typedef struct ecs_entity_desc_t {
 
 /** Type used for constructing components. */
 typedef struct ecs_component_desc_t {
-    ecs_entity_desc_t entity;
-    size_t size;
-    size_t alignment;
+    ecs_entity_desc_t entity;           /* Parameters for component entity */
+    size_t size;                        /* Component size */
+    size_t alignment;                   /* Component alignment */
 } ecs_component_desc_t;
+
+
+/** Type used for constructing type entities (entities with EcsType). */
+typedef struct ecs_type_desc_t {
+    ecs_entity_desc_t entity;           /* Parameters for type entity */
+    ecs_id_t ids[ECS_MAX_ADD_REMOVE];   /* Ids to include in type */
+    const char *ids_expr;               /* Id expression to include in type */
+} ecs_type_desc_t;
 
 
 /** Type used for constructing filters. */
@@ -2885,7 +2886,10 @@ extern "C" {
     ecs_type(id) = ecs_type_from_entity(world, id)
 
 #define ECS_TYPE(world, id, ...) \
-    ecs_entity_t id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
+    ecs_entity_t id = ecs_type_init(world, &(ecs_type_desc_t){\
+        .entity.name = #id,\
+        .ids_expr = #__VA_ARGS__\
+    });\
     ecs_type_t ecs_type(id) = ecs_type_from_entity(world, id);\
     (void)id;\
     (void)ecs_type(id)
@@ -2899,7 +2903,10 @@ extern "C" {
     ecs_type_t ecs_type(id)
 
 #define ECS_TYPE_DEFINE(world, id, ...)\
-    id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
+    id = ecs_type_init(world, &(ecs_type_desc_t){\
+        .entity.name = #id,\
+        .ids_expr = #__VA_ARGS__\
+    });\
     ecs_type(id) = ecs_type_from_entity(world, id);\
 
 #define ECS_COLUMN(it, type, id, column)\
@@ -4041,6 +4048,12 @@ FLECS_API
 ecs_entity_t ecs_component_init(
     ecs_world_t *world,
     const ecs_component_desc_t *desc);
+
+/** Create a new type entity. */
+FLECS_API
+ecs_entity_t ecs_type_init(
+    ecs_world_t *world,
+    const ecs_type_desc_t *desc);    
 
 /** Create N new entities.
  * This operation is the same as ecs_new_w_id, but creates N entities
@@ -12247,8 +12260,11 @@ namespace flecs
 class type final : public type_deprecated<type> {
 public:
     explicit type(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr)
-        : m_entity(world, ecs_new_type(world.c_ptr(), 0, name, expr))
     { 
+        ecs_type_desc_t desc = {};
+        desc.entity.name = name;
+        desc.ids_expr = expr;
+        m_entity = ecs_type_init(world.c_ptr(), &desc);
         sync_from_flecs();
     }
 

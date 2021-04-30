@@ -57,13 +57,6 @@ ecs_entity_t ecs_new_module(
     size_t alignment);
 
 FLECS_API
-ecs_entity_t ecs_new_type(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *id,
-    const char *components);
-
-FLECS_API
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
     ecs_entity_t e,
