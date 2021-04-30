@@ -111,12 +111,18 @@ void ecs_notify_tables(
 void ecs_notify_queries(
     ecs_world_t *world,
     ecs_query_event_t *event);
-    
-void ecs_register_table_for_id(
+
+void ecs_register_table(
     ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    int32_t column);
+    ecs_table_t *table);
+
+void ecs_unregister_table(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+ecs_id_record_t* ecs_ensure_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id);
 
 ecs_id_record_t* ecs_get_id_record(
     const ecs_world_t *world,

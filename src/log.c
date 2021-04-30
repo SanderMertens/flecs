@@ -453,6 +453,10 @@ const char* ecs_strerror(
         return "registered mismatching component action";
     case ECS_INVALID_OPERATION:
         return "invalid operation";
+    case ECS_INVALID_DELETE:
+        return "invalid delete of entity/pair";
+    case ECS_CYCLE_DETECTED:
+        return "possible cycle detected";
     }
 
     return "unknown error code";

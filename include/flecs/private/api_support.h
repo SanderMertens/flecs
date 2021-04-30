@@ -23,6 +23,9 @@ extern "C" {
  * performance at the cost of (significantly) higher memory usage. */
 #define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
 
+/** The maximum number of nested function calls before the core will throw a
+ * cycle detected error */
+#define ECS_MAX_RECURSION (512)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Global type handles
@@ -159,6 +162,8 @@ ecs_filter_t* ecs_query_get_filter(
 #define ECS_INCONSISTENT_NAME (48)
 #define ECS_INCONSISTENT_COMPONENT_ACTION (49)
 #define ECS_INVALID_OPERATION (50)
+#define ECS_INVALID_DELETE (51)
+#define ECS_CYCLE_DETECTED (52)
 
 /** Calculate offset from address */
 #ifdef __cplusplus

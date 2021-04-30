@@ -236,41 +236,7 @@ void init_edges(
         }        
     }
 
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];    
-
-        /* This check ensures that legacy INSTANCEOF works */
-        if (ECS_HAS_RELATION(e, EcsIsA)) {
-            e = ecs_pair(EcsIsA, ECS_PAIR_OBJECT(e));
-        }
-
-        /* This check ensures that legacy CHILDOF works */
-        if (ECS_HAS_RELATION(e, EcsChildOf)) {
-            e = ecs_pair(EcsChildOf, ECS_PAIR_OBJECT(e));
-        } 
-
-        ecs_register_table_for_id(world, table, e, i);
-
-        if (ECS_HAS_ROLE(e, PAIR)) {
-            ecs_entity_t pred_w_wildcard = ecs_pair(
-                ECS_PAIR_RELATION(e), EcsWildcard);
-            ecs_register_table_for_id(world, table, pred_w_wildcard, i);
-
-            ecs_entity_t obj_w_wildcard = ecs_pair(
-                EcsWildcard, ECS_PAIR_OBJECT(e));
-            ecs_register_table_for_id(world, table, obj_w_wildcard, i);
-
-            ecs_entity_t all_wildcard = ecs_pair(EcsWildcard, EcsWildcard);
-            ecs_register_table_for_id(world, table, all_wildcard, i);
-        } else {
-            ecs_register_table_for_id(world, table, EcsWildcard, i);            
-        }
-    }
-
-    /* Register as root table (temporary ChildOf special) */
-    if (!(table->flags & EcsTableHasParent)) {
-        ecs_register_table_for_id(world, table, ecs_pair(EcsChildOf, 0), 0);
-    }    
+    ecs_register_table(world, table);
 
     /* Register component info flags for all columns */
     ecs_table_notify(world, table, &(ecs_table_event_t){
@@ -314,7 +280,7 @@ ecs_table_t *create_table(
     uint64_t hash)
 {
     ecs_table_t *result = ecs_sparse_add(world->store.tables, ecs_table_t);
-    result->id = ecs_to_u32(ecs_sparse_last_id(world->store.tables));
+    result->id = ecs_sparse_last_id(world->store.tables);
 
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     init_table(world, result, entities);

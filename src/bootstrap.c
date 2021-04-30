@@ -64,6 +64,38 @@ static ECS_MOVE(EcsName, dst, src, {
     src->symbol = NULL;
 })
 
+static
+void register_on_delete(ecs_iter_t *it) {
+    ecs_id_t id = ecs_term_id(it, 1);
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_id_record_t *r = ecs_ensure_id_record(it->world, e);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        r->on_delete = ECS_PAIR_OBJECT(id);
+
+        r = ecs_ensure_id_record(it->world, ecs_pair(e, EcsWildcard));
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        r->on_delete = ECS_PAIR_OBJECT(id);
+
+        ecs_set_watch(it->world, e);
+    }
+}
+
+static
+void register_on_delete_object(ecs_iter_t *it) {
+    ecs_id_t id = ecs_term_id(it, 1);
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_id_record_t *r = ecs_ensure_id_record(it->world, e);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        r->on_delete_object = ECS_PAIR_OBJECT(id);
+
+        ecs_set_watch(it->world, e);
+    }    
+}
+
 /* -- Bootstrapping -- */
 
 #define bootstrap_component(world, table, name)\
@@ -242,6 +274,11 @@ void ecs_bootstrap(
     bootstrap_entity(world, EcsFinal, "Final", EcsFlecsCore);
     bootstrap_entity(world, EcsIsA, "IsA", EcsFlecsCore);
     bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
+    bootstrap_entity(world, EcsOnDelete, "OnDelete", EcsFlecsCore);
+    bootstrap_entity(world, EcsOnDeleteObject, "OnDeleteObject", EcsFlecsCore);
+    bootstrap_entity(world, EcsRemove, "Remove", EcsFlecsCore);
+    bootstrap_entity(world, EcsDelete, "Delete", EcsFlecsCore);
+    bootstrap_entity(world, EcsThrow, "Throw", EcsFlecsCore);
 
     /* Mark entities as transitive */
     ecs_add_id(world, EcsIsA, EcsTransitive);
@@ -252,9 +289,26 @@ void ecs_bootstrap(
     ecs_add_id(world, EcsTransitive, EcsFinal);
     ecs_add_id(world, EcsFinal, EcsFinal);
     ecs_add_id(world, EcsIsA, EcsFinal);
+    ecs_add_id(world, EcsOnDelete, EcsFinal);
+    ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
+
+    /* Define triggers for when relationship cleanup rules are assigned */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_pair(EcsOnDelete, EcsWildcard)},
+        .callback = register_on_delete,
+        .events = {EcsOnAdd}
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
+        .callback = register_on_delete_object,
+        .events = {EcsOnAdd}
+    });  
+
+    /* Removal of ChildOf objects (parents) deletes the subject (child) */
+    ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);  
 
     ecs_set_scope(world, 0);
 
     ecs_log_pop();
 }
-

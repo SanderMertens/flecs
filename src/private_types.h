@@ -177,7 +177,7 @@ struct ecs_table_t {
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
     int32_t alloc_count;             /**< Increases when columns are reallocd */
-    uint32_t id;                     /**< Table id in sparse set */
+    uint64_t id;                     /**< Table id in sparse set */
 
     ecs_flags32_t flags;             /**< Flags for testing table properties */
     
@@ -431,7 +431,9 @@ typedef struct ecs_table_record_t {
 /* Payload for id index which contains all datastructures for an id. */
 typedef struct ecs_id_record_t {
     /* All tables that contain the id */
-    ecs_map_t *table_index; /* map<table_id, ecs_table_record_t> */
+    ecs_map_t *table_index;         /* map<table_id, ecs_table_record_t> */
+    ecs_entity_t on_delete;         /* Cleanup action for removing id */
+    ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
 } ecs_id_record_t;
 
 typedef struct ecs_store_t {

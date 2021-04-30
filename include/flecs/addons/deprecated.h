@@ -58,7 +58,10 @@ extern "C" {
     ecs_entity_t id
 
 #define ECS_ENTITY_DEFINE(world, id, ...)\
-    id = ecs_new_entity(world, id, #id, #__VA_ARGS__)
+    id = ecs_entity_init(world, &(ecs_entity_desc_t){\
+        .name = #id,\
+        .add_expr = #__VA_ARGS__\
+    });\
 
 #define ECS_ENTITY(world, id, ...)\
     ecs_entity_t id = ecs_entity_init(world, &(ecs_entity_desc_t){\
@@ -102,7 +105,10 @@ extern "C" {
     ecs_type_t ecs_type(id)
 
 #define ECS_TAG_DEFINE(world, id)\
-    id = ecs_new_entity(world, id, #id, 0);\
+    id = ecs_entity_init(world, &(ecs_entity_desc_t){\
+        .name = #id,\
+        .symbol = #id\
+    });\
     ecs_type(id) = ecs_type_from_entity(world, id)
 
 #define ECS_TYPE(world, id, ...) \

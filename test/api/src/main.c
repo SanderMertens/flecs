@@ -26,6 +26,7 @@ void Entity_id_remove_1_comp(void);
 void Entity_id_remove_2_comp(void);
 void Entity_init_id_path_w_sep(void);
 void Entity_find_id_name(void);
+void Entity_find_w_existing_id_name(void);
 void Entity_find_id_name_w_scope(void);
 void Entity_find_id_path(void);
 void Entity_find_id_path_w_scope(void);
@@ -538,6 +539,50 @@ void Delete_get_alive_w_generation_for_recycled_alive(void);
 void Delete_get_alive_w_generation_for_recycled_not_alive(void);
 void Delete_get_alive_for_0(void);
 void Delete_get_alive_for_nonexistent(void);
+
+// Testsuite 'OnDelete'
+void OnDelete_on_delete_id_default(void);
+void OnDelete_on_delete_id_remove(void);
+void OnDelete_on_delete_id_delete(void);
+void OnDelete_on_delete_relation_default(void);
+void OnDelete_on_delete_relation_remove(void);
+void OnDelete_on_delete_relation_delete(void);
+void OnDelete_on_delete_object_default(void);
+void OnDelete_on_delete_object_remove(void);
+void OnDelete_on_delete_object_delete(void);
+void OnDelete_on_delete_id_throw(void);
+void OnDelete_on_delete_relation_throw(void);
+void OnDelete_on_delete_object_throw(void);
+void OnDelete_on_delete_id_remove_no_instances(void);
+void OnDelete_on_delete_id_delete_no_instances(void);
+void OnDelete_on_delete_id_throw_no_instances(void);
+void OnDelete_on_delete_cyclic_id_default(void);
+void OnDelete_on_delete_cyclic_id_remove(void);
+void OnDelete_on_delete_cyclic_id_remove_both(void);
+void OnDelete_on_delete_cyclic_id_delete(void);
+void OnDelete_on_delete_cyclic_id_delete_both(void);
+void OnDelete_on_delete_cyclic_relation_default(void);
+void OnDelete_on_delete_cyclic_relation_remove(void);
+void OnDelete_on_delete_cyclic_relation_remove_both(void);
+void OnDelete_on_delete_cyclic_relation_delete(void);
+void OnDelete_on_delete_cyclic_object_default(void);
+void OnDelete_on_delete_cyclic_object_remove(void);
+void OnDelete_on_delete_cyclic_object_delete(void);
+void OnDelete_on_delete_remove_2_comps(void);
+void OnDelete_on_delete_remove_2_comps_to_existing_table(void);
+void OnDelete_on_delete_delete_recursive(void);
+void OnDelete_on_delete_component_throw(void);
+void OnDelete_on_delete_remove_2_relations(void);
+void OnDelete_on_delete_remove_object_w_2_relations(void);
+void OnDelete_remove_id_from_2_tables(void);
+void OnDelete_remove_relation_from_2_tables(void);
+void OnDelete_remove_object_from_2_tables(void);
+void OnDelete_remove_id_and_relation(void);
+void OnDelete_remove_id_and_relation_from_2_tables(void);
+void OnDelete_stresstest_many_objects(void);
+void OnDelete_stresstest_many_relations(void);
+void OnDelete_stresstest_many_objects_on_delete(void);
+void OnDelete_stresstest_many_relations_on_delete(void);
 
 // Testsuite 'Delete_w_filter'
 void Delete_w_filter_delete_1(void);
@@ -1823,6 +1868,10 @@ bake_test_case Entity_testcases[] = {
     {
         "find_id_name",
         Entity_find_id_name
+    },
+    {
+        "find_w_existing_id_name",
+        Entity_find_w_existing_id_name
     },
     {
         "find_id_name_w_scope",
@@ -3762,6 +3811,177 @@ bake_test_case Delete_testcases[] = {
     {
         "get_alive_for_nonexistent",
         Delete_get_alive_for_nonexistent
+    }
+};
+
+bake_test_case OnDelete_testcases[] = {
+    {
+        "on_delete_id_default",
+        OnDelete_on_delete_id_default
+    },
+    {
+        "on_delete_id_remove",
+        OnDelete_on_delete_id_remove
+    },
+    {
+        "on_delete_id_delete",
+        OnDelete_on_delete_id_delete
+    },
+    {
+        "on_delete_relation_default",
+        OnDelete_on_delete_relation_default
+    },
+    {
+        "on_delete_relation_remove",
+        OnDelete_on_delete_relation_remove
+    },
+    {
+        "on_delete_relation_delete",
+        OnDelete_on_delete_relation_delete
+    },
+    {
+        "on_delete_object_default",
+        OnDelete_on_delete_object_default
+    },
+    {
+        "on_delete_object_remove",
+        OnDelete_on_delete_object_remove
+    },
+    {
+        "on_delete_object_delete",
+        OnDelete_on_delete_object_delete
+    },
+    {
+        "on_delete_id_throw",
+        OnDelete_on_delete_id_throw
+    },
+    {
+        "on_delete_relation_throw",
+        OnDelete_on_delete_relation_throw
+    },
+    {
+        "on_delete_object_throw",
+        OnDelete_on_delete_object_throw
+    },
+    {
+        "on_delete_id_remove_no_instances",
+        OnDelete_on_delete_id_remove_no_instances
+    },
+    {
+        "on_delete_id_delete_no_instances",
+        OnDelete_on_delete_id_delete_no_instances
+    },
+    {
+        "on_delete_id_throw_no_instances",
+        OnDelete_on_delete_id_throw_no_instances
+    },
+    {
+        "on_delete_cyclic_id_default",
+        OnDelete_on_delete_cyclic_id_default
+    },
+    {
+        "on_delete_cyclic_id_remove",
+        OnDelete_on_delete_cyclic_id_remove
+    },
+    {
+        "on_delete_cyclic_id_remove_both",
+        OnDelete_on_delete_cyclic_id_remove_both
+    },
+    {
+        "on_delete_cyclic_id_delete",
+        OnDelete_on_delete_cyclic_id_delete
+    },
+    {
+        "on_delete_cyclic_id_delete_both",
+        OnDelete_on_delete_cyclic_id_delete_both
+    },
+    {
+        "on_delete_cyclic_relation_default",
+        OnDelete_on_delete_cyclic_relation_default
+    },
+    {
+        "on_delete_cyclic_relation_remove",
+        OnDelete_on_delete_cyclic_relation_remove
+    },
+    {
+        "on_delete_cyclic_relation_remove_both",
+        OnDelete_on_delete_cyclic_relation_remove_both
+    },
+    {
+        "on_delete_cyclic_relation_delete",
+        OnDelete_on_delete_cyclic_relation_delete
+    },
+    {
+        "on_delete_cyclic_object_default",
+        OnDelete_on_delete_cyclic_object_default
+    },
+    {
+        "on_delete_cyclic_object_remove",
+        OnDelete_on_delete_cyclic_object_remove
+    },
+    {
+        "on_delete_cyclic_object_delete",
+        OnDelete_on_delete_cyclic_object_delete
+    },
+    {
+        "on_delete_remove_2_comps",
+        OnDelete_on_delete_remove_2_comps
+    },
+    {
+        "on_delete_remove_2_comps_to_existing_table",
+        OnDelete_on_delete_remove_2_comps_to_existing_table
+    },
+    {
+        "on_delete_delete_recursive",
+        OnDelete_on_delete_delete_recursive
+    },
+    {
+        "on_delete_component_throw",
+        OnDelete_on_delete_component_throw
+    },
+    {
+        "on_delete_remove_2_relations",
+        OnDelete_on_delete_remove_2_relations
+    },
+    {
+        "on_delete_remove_object_w_2_relations",
+        OnDelete_on_delete_remove_object_w_2_relations
+    },
+    {
+        "remove_id_from_2_tables",
+        OnDelete_remove_id_from_2_tables
+    },
+    {
+        "remove_relation_from_2_tables",
+        OnDelete_remove_relation_from_2_tables
+    },
+    {
+        "remove_object_from_2_tables",
+        OnDelete_remove_object_from_2_tables
+    },
+    {
+        "remove_id_and_relation",
+        OnDelete_remove_id_and_relation
+    },
+    {
+        "remove_id_and_relation_from_2_tables",
+        OnDelete_remove_id_and_relation_from_2_tables
+    },
+    {
+        "stresstest_many_objects",
+        OnDelete_stresstest_many_objects
+    },
+    {
+        "stresstest_many_relations",
+        OnDelete_stresstest_many_relations
+    },
+    {
+        "stresstest_many_objects_on_delete",
+        OnDelete_stresstest_many_objects_on_delete
+    },
+    {
+        "stresstest_many_relations_on_delete",
+        OnDelete_stresstest_many_relations_on_delete
     }
 };
 
@@ -8337,7 +8557,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        34,
+        35,
         Entity_testcases
     },
     {
@@ -8458,6 +8678,13 @@ static bake_test_suite suites[] = {
         NULL,
         26,
         Delete_testcases
+    },
+    {
+        "OnDelete",
+        NULL,
+        NULL,
+        42,
+        OnDelete_testcases
     },
     {
         "Delete_w_filter",
@@ -8778,5 +9005,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 63);
+    return bake_test_run("api", argc, argv, suites, 64);
 }

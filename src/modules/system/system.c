@@ -695,16 +695,13 @@ ecs_entity_t ecs_new_system(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
-    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
-    if (!result) {
-        result = ecs_new_entity(world, 0, name, NULL);
-    }
+    ecs_entity_t result = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .entity = e,
+        .name = name,
+        .add = {tag}
+    });
 
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
-
-    if (tag) {
-        ecs_add_id(world, result, tag);
-    }
     
     ecs_set(world, result, EcsIterAction, {action});
 

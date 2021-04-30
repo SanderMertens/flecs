@@ -296,53 +296,6 @@ ecs_table_t* ecs_table_from_str(
     return result;
 }
 
-static
-int add_expr_to_entity(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *name,
-    const char *expr)
-{
-    if (!expr || !expr[0] || !strcmp(expr, "0")) {
-        return 0;
-    }
-
-    ecs_vector_t *ids = expr_to_ids(world, name, expr);
-    if (!ids) {
-        return -1;
-    }
-
-    ecs_vector_t *normalized = ids_to_normalized_ids(world, ids);
-    ecs_add_type(world, entity, normalized);
-    
-    ecs_vector_free(ids);
-    ecs_vector_free(normalized);   
-
-    return 0;
-}
-
-ecs_entity_t ecs_new_entity(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *name,
-    const char *expr)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_entity_t result = ecs_lookup_w_id(world, entity, name);
-    if (!result) {
-        result = ecs_new(world, 0);
-        ecs_set_symbol(world, result, name);
-    }
-
-    if (add_expr_to_entity(world, result, name, expr)) {
-        ecs_delete(world, result);
-        return 0;
-    }
-
-    return result;
-}
-
 ecs_entity_t ecs_new_component(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -397,6 +350,9 @@ ecs_entity_t ecs_new_component(
         world->stats.last_component_id = e + 1;
     }
 
+    /* Ensure components cannot be deleted */
+    ecs_add_pair(world, result, EcsOnDelete, EcsThrow);    
+
     if (is_readonly) {
         world->is_readonly = true;
     }
@@ -416,10 +372,10 @@ ecs_entity_t ecs_new_type(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_stage_from_world(&world);
 
-    ecs_entity_t result = ecs_lookup_w_id(world, e, name);
-    if (!result) {
-        result = ecs_new_entity(world, 0, name, NULL);
-    }
+    ecs_entity_t result = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .entity = e,
+        .name = name
+    });
 
     ecs_vector_t *ids = expr_to_ids(world, name, expr);
     ecs_vector_t *normalized = ids_to_normalized_ids(world, ids);

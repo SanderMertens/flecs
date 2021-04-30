@@ -328,24 +328,6 @@ void Entity_find_id_name() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .name = "parent::child",
-        .sep = "::"
-    });
-    test_assert(e != 0);
-    test_str(ecs_get_name(world, e), "child");
-
-    char *path = ecs_get_fullpath(world, e);
-    test_assert(path != NULL);
-    test_str(path, "parent.child");
-    ecs_os_free(path);
-
-    ecs_fini(world);
-}
-
-void Entity_find_id_name_w_scope() {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "foo"
     });
     test_assert(e != 0);
@@ -353,6 +335,60 @@ void Entity_find_id_name_w_scope() {
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "foo"
+    });
+    test_assert(r != 0);
+    test_assert(r == e);
+
+    ecs_fini(world);
+}
+
+void Entity_find_w_existing_id_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t id = ecs_new_id(world);
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .entity = id,
+        .name = "foo"
+    });
+    test_assert(e != 0);
+    test_assert(e == id);
+    test_str(ecs_get_name(world, e), "foo");
+
+    ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "foo"
+    });
+    test_assert(r != 0);
+    test_assert(r == e);
+
+    ecs_fini(world);
+}
+
+void Entity_find_id_name_w_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "parent"
+    });
+    test_assert(scope != 0);
+    test_str(ecs_get_name(world, scope), "parent");
+
+    ecs_set_scope(world, scope);
+    test_int(ecs_get_scope(world), scope);
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "child"
+    });
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "child");
+
+    char *path = ecs_get_fullpath(world, e);
+    test_assert(path != NULL);
+    test_str(path, "parent.child");
+    ecs_os_free(path);   
+
+    ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "child"
     });
     test_assert(r != 0);
     test_assert(r == e);

@@ -125,13 +125,13 @@ void Hierarchies_tree_iter_2_tables() {
     ecs_iter_t it = ecs_scope_iter(world, Parent);
     test_assert( ecs_scope_next(&it) == true);
     test_int( it.count, 2);
-    test_int(it.entities[0], Child1);
+     test_int(it.entities[0], Child1);
     test_int(it.entities[1], Child2);
 
     test_assert( ecs_scope_next(&it) == true);
     test_int( it.count, 2);
     test_int(it.entities[0], Child3);
-    test_int(it.entities[1], Child4);
+    test_int(it.entities[1], Child4);       
 
     test_assert( !ecs_scope_next(&it));
 
@@ -1192,8 +1192,6 @@ void Hierarchies_delete_tree_empty_table() {
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, Parent, 0);
-
-    /* Create multiple tables, of which some are empty */
     ECS_ENTITY(world, Child, Position, CHILDOF | Parent);
 
     ecs_delete(world, Parent);

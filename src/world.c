@@ -1124,7 +1124,7 @@ void ecs_delete_table(
             .table = table
         });
 
-    uint32_t id = table->id;
+    uint64_t id = table->id;
 
     /* Free resources associated with table */
     ecs_table_free(world, table);
@@ -1132,18 +1132,16 @@ void ecs_delete_table(
     /* Remove table from sparse set */
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_sparse_remove(world->store.tables, id);
-
-    /* Don't do generations as we want table ids to remain 32 bit */
-    ecs_sparse_set_generation(world->store.tables, id);
 }
 
-void ecs_register_table_for_id(
+static
+void register_table_for_id(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
     int32_t column)
 {
-    ecs_id_record_t *r = ecs_get_id_record(world, id);
+    ecs_id_record_t *r = ecs_ensure_id_record(world, id);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!r->table_index) {
@@ -1169,14 +1167,123 @@ void ecs_register_table_for_id(
         if (ecs_triggers_get(world, id, EcsOnRemove)) {
             table->flags |= EcsTableHasOnRemove;
         }
-    }    
+    }
+}
+
+static
+void unregister_table_for_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_id_record_t *r = ecs_get_id_record(world, id);
+    if (!r || !r->table_index) {
+        return;
+    }
+
+    ecs_map_remove(r->table_index, table->id);
+    if (!ecs_map_count(r->table_index)) {
+        ecs_clear_id_record(world, id);
+    }
+}
+
+static
+void do_register_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    int32_t column,
+    bool unregister)
+{
+    if (unregister) {
+        unregister_table_for_id(world, table, id);
+    } else {
+        register_table_for_id(world, table, id, column);
+    }
+}
+
+static
+void do_register_each_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    bool unregister)
+{
+    int32_t i, count = ecs_vector_count(table->type);
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    bool has_childof = false;
+    
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t id = ids[i];
+
+        /* This check ensures that legacy INSTANCEOF works */
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
+            id = ecs_pair(EcsIsA, ECS_PAIR_OBJECT(id));
+        }
+
+        /* This check ensures that legacy CHILDOF works */
+        if (ECS_HAS_RELATION(id, EcsChildOf)) {
+            id = ecs_pair(EcsChildOf, ECS_PAIR_OBJECT(id));
+            has_childof = true;
+        } 
+
+        do_register_id(world, table, id, i, unregister);
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t pred_w_wildcard = ecs_pair(
+                ECS_PAIR_RELATION(id), EcsWildcard);       
+            do_register_id(world, table, pred_w_wildcard, i, unregister);
+
+            ecs_entity_t obj_w_wildcard = ecs_pair(
+                EcsWildcard, ECS_PAIR_OBJECT(id));
+            do_register_id(world, table, obj_w_wildcard, i, unregister);
+
+            ecs_entity_t all_wildcard = ecs_pair(EcsWildcard, EcsWildcard);
+            do_register_id(world, table, all_wildcard, i, unregister);
+
+            if (!unregister) {
+                ecs_set_watch(world, ecs_pair_relation(world, id));
+                ecs_set_watch(world, ecs_pair_object(world, id));
+            }
+        } else {
+            do_register_id(world, table, EcsWildcard, i, unregister);
+
+            if (!unregister) {
+                ecs_set_watch(world, id);
+            }
+        }
+    }
+
+    if (!has_childof) {
+        do_register_id(world, table, ecs_pair(EcsChildOf, 0), 0, unregister);
+    }
+}
+
+void ecs_register_table(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    do_register_each_id(world, table, false);
+}
+
+void ecs_unregister_table(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    do_register_each_id(world, table, true);
+}
+
+ecs_id_record_t* ecs_ensure_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    return ecs_map_ensure(world->id_index, ecs_id_record_t, id);
 }
 
 ecs_id_record_t* ecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    return ecs_map_ensure(world->id_index, ecs_id_record_t, id);
+    return ecs_map_get(world->id_index, ecs_id_record_t, id);
 }
 
 void ecs_clear_id_record(
@@ -1184,6 +1291,10 @@ void ecs_clear_id_record(
     ecs_id_t id)    
 {
     ecs_id_record_t *r = ecs_get_id_record(world, id);
+    if (!r) {
+        return;
+    }
+
     ecs_map_free(r->table_index);
     ecs_map_remove(world->id_index, id);
 }

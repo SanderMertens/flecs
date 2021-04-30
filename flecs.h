@@ -229,7 +229,9 @@ typedef int32_t ecs_size_t;
 #define ECS_GENERATION_INC(e) ((e & ~ECS_GENERATION_MASK) | ((ECS_GENERATION(e) + 1) << 32))
 #define ECS_COMPONENT_MASK    (~ECS_ROLE_MASK)
 #define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
-#define ECS_PAIR_RELATION(e)  (ECS_HAS_ROLE(e, PAIR) ? ecs_entity_t_hi(e & ECS_COMPONENT_MASK) : (e & ECS_ROLE_MASK))
+#define ECS_PAIR_RELATION(e)  (ECS_HAS_ROLE(e, PAIR) ? ecs_entity_t_hi(e & ECS_COMPONENT_MASK) :\
+    (((e & ECS_ROLE_MASK) == ECS_CHILDOF) ? EcsChildOf :\
+        ((e & ECS_ROLE_MASK) == ECS_INSTANCEOF) ? EcsIsA : (e & ECS_ROLE_MASK)))
 #define ECS_PAIR_OBJECT(e)    (ecs_entity_t_lo(e))
 #define ECS_HAS_PAIR(e, rel)  (ECS_HAS_ROLE(e, PAIR) && (ECS_PAIR_RELATION(e) == rel))
 
@@ -285,6 +287,7 @@ typedef int32_t ecs_size_t;
 #define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
 
 /* Get object from pair with the correct (current) generation count */
+#define ecs_pair_relation(world, pair) ecs_get_alive(world, ECS_PAIR_RELATION(pair))
 #define ecs_pair_object(world, pair) ecs_get_alive(world, ECS_PAIR_OBJECT(pair))
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2681,6 +2684,9 @@ extern "C" {
  * performance at the cost of (significantly) higher memory usage. */
 #define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
 
+/** The maximum number of nested function calls before the core will throw a
+ * cycle detected error */
+#define ECS_MAX_RECURSION (512)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Global type handles
@@ -2702,13 +2708,6 @@ extern ecs_type_t
 ////////////////////////////////////////////////////////////////////////////////
 //// Functions used in declarative (macro) API
 ////////////////////////////////////////////////////////////////////////////////
-
-FLECS_API
-ecs_entity_t ecs_new_entity(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *id,
-    const char *components);
 
 FLECS_API
 ecs_entity_t ecs_new_component(
@@ -2741,7 +2740,7 @@ ecs_entity_t ecs_new_system(
     ecs_entity_t phase,
     const char *signature,
     ecs_iter_action_t action);
-    
+
 FLECS_API
 ecs_entity_t ecs_new_pipeline(
     ecs_world_t *world,
@@ -2824,6 +2823,8 @@ ecs_filter_t* ecs_query_get_filter(
 #define ECS_INCONSISTENT_NAME (48)
 #define ECS_INCONSISTENT_COMPONENT_ACTION (49)
 #define ECS_INVALID_OPERATION (50)
+#define ECS_INVALID_DELETE (51)
+#define ECS_CYCLE_DETECTED (52)
 
 /** Calculate offset from address */
 #ifdef __cplusplus
@@ -3398,7 +3399,10 @@ extern "C" {
     ecs_entity_t id
 
 #define ECS_ENTITY_DEFINE(world, id, ...)\
-    id = ecs_new_entity(world, id, #id, #__VA_ARGS__)
+    id = ecs_entity_init(world, &(ecs_entity_desc_t){\
+        .name = #id,\
+        .add_expr = #__VA_ARGS__\
+    });\
 
 #define ECS_ENTITY(world, id, ...)\
     ecs_entity_t id = ecs_entity_init(world, &(ecs_entity_desc_t){\
@@ -3442,7 +3446,10 @@ extern "C" {
     ecs_type_t ecs_type(id)
 
 #define ECS_TAG_DEFINE(world, id)\
-    id = ecs_new_entity(world, id, #id, 0);\
+    id = ecs_entity_init(world, &(ecs_entity_desc_t){\
+        .name = #id,\
+        .symbol = #id\
+    });\
     ecs_type(id) = ecs_type_from_entity(world, id)
 
 #define ECS_TYPE(world, id, ...) \
@@ -3910,49 +3917,123 @@ void ecs_query_group_by(
  * @{
  */
 
-/** Builtin entity ids */
+/** Root scope for builtin flecs entities */
 #define EcsFlecs (ECS_HI_COMPONENT_ID + 0)
+
+/* Core module scope */
 #define EcsFlecsCore (ECS_HI_COMPONENT_ID + 1)
+
+/* Entity associated with world (used for "attaching" components to world) */
 #define EcsWorld (ECS_HI_COMPONENT_ID + 2)
 
-/* Ids used in expressions */
+/* Wildcard entity ("*"), Used in expressions to indicate wildcard matching */
 #define EcsWildcard (ECS_HI_COMPONENT_ID + 3)
+
+/* This entity (".", "This"). Used in expressions to indicate This entity */
 #define EcsThis (ECS_HI_COMPONENT_ID + 4)
 
-/* Ids used to annotate components and relations */
+/* Can be added to relation to indicate it is transitive. */
 #define EcsTransitive (ECS_HI_COMPONENT_ID + 5)
+
+/* Can be added to component/relation to indicate it is final. Final components/
+ * relations cannot be derived from using an IsA relationship. Queries will not
+ * attempt to substitute a component/relationship with IsA subsets if they are
+ * final. */
 #define EcsFinal (ECS_HI_COMPONENT_ID + 6)
 
-/* Builtin relationships */
+/* Used to express parent-child relations. */
 #define EcsChildOf (ECS_HI_COMPONENT_ID + 7)
+
+/* Used to express is-a relations. An IsA relation indicates that the subject is
+ * a subset of the relation object. For example:
+ *   ecs_add_pair(world, Freighter, EcsIsA, SpaceShip);
+ *
+ * Here the Freighter is considered a subset of SpaceShip, meaning that every
+ * entity that has Freighter also implicitly has SpaceShip.
+ *
+ * The subject of the relation (Freighter) inherits all components from any IsA
+ * object (SpaceShip). If SpaceShip has a component "MaxSpeed", this component
+ * will also appear on Freighter after adding (IsA, SpaceShip) to Freighter.
+ *
+ * The IsA relation is transitive. This means that if SpaceShip IsA Machine, 
+ * then Freigther is also a Machine. As a result, Freighter also inherits all
+ * components from Machine, just as it does from SpaceShip.
+ *
+ * Queries/filters may implicitly substitute predicates, subjects and objects 
+ * with their IsA super/subsets. This behavior can be controlled by the "set" 
+ * member of a query term.
+ */
 #define EcsIsA (ECS_HI_COMPONENT_ID + 8) 
 
-/* Builtin tag ids */
+/* Tag added to module entities */
 #define EcsModule (ECS_HI_COMPONENT_ID + 9)
-#define EcsPrefab (ECS_HI_COMPONENT_ID + 10)
-#define EcsHidden (ECS_HI_COMPONENT_ID + 11)
-#define EcsDisabled (ECS_HI_COMPONENT_ID + 12)
 
-/* Event tags */
+/* Tag added to prefab entities. Any entity with this tag is automatically
+ * ignored by filters/queries, unless EcsPrefab is explicitly added. */
+#define EcsPrefab (ECS_HI_COMPONENT_ID + 10)
+
+/* When this tag is added to an entity it is skipped by all queries/filters */
+#define EcsDisabled (ECS_HI_COMPONENT_ID + 11)
+
+/* Tag added to builtin/framework entites. This tag can be used to automatically
+ * hide components/systems that are part of infrastructure code vs. application
+ * code. The tag has no functional implications. */
+#define EcsHidden (ECS_HI_COMPONENT_ID + 12)
+
+/* Used to create triggers that subscribe on add events */
 #define EcsOnAdd (ECS_HI_COMPONENT_ID + 13)
+
+/* Used to create triggers that subscribe on remove events */
 #define EcsOnRemove (ECS_HI_COMPONENT_ID + 14)
+
+/* Used to create systems that subscribe on set events */
 #define EcsOnSet (ECS_HI_COMPONENT_ID + 15)
+
+/* Used to create systems that subscribe on unset events */
 #define EcsUnSet (ECS_HI_COMPONENT_ID + 16)
+
+/* Relationship used to define what should happen when an entity is deleted that
+ * is added to other entities. For example, if an entity is used as a tag, and
+ * this entity is deleted, this would leave dangling references (ids) to this
+ * entity in the storage.
+ * This relation, when combined with EcsRemove, EcsDelete or EcsThrow, can be
+ * used to customize the deletion behavior. For example:
+ *   ecs_add_pair(world, Position, EcsOnDelete, EcsThrow);
+ *
+ * This would throw an error when attempting to delete Position, if Position is
+ * added to any entities at the time of deletion. */
 #define EcsOnDelete (ECS_HI_COMPONENT_ID + 17)
+
+/* Relationship with similar functionality to EcsDelete, except that it allows
+ * for specifying behavior when an object of a relation is removed. For example:
+ *   ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);
+ *
+ * This specifies that whenever an object of a ChildOf relation (the parent) is 
+ * removed, the entities with a relation to that object (the children) should be
+ * deleted. */
 #define EcsOnDeleteObject (ECS_HI_COMPONENT_ID + 18)
 
-/* Action tags */
+/* Specifies that a component/relation/object of relation should be removed when
+ * it is deleted. Must be combined with EcsOnDelete or EcsOnDeleteObject. */
 #define EcsRemove  (ECS_HI_COMPONENT_ID + 19)
+
+/* Specifies that entities with a component/relation/object of relation should 
+ * be deleted when the component/relation/object of relation is deleted. Must be 
+ * combined with EcsOnDelete or EcsOnDeleteObject. */
 #define EcsDelete  (ECS_HI_COMPONENT_ID + 20)
+
+/* Specifies that whenever a component/relation/object of relation is deleted an
+ * error should be thrown. Must be combined with EcsOnDelete or 
+ * EcsOnDeleteObject. */
 #define EcsThrow  (ECS_HI_COMPONENT_ID + 21)
 
-/* System tags */
-#define EcsDisabledIntern (ECS_HI_COMPONENT_ID + 22)
-#define EcsInactive (ECS_HI_COMPONENT_ID + 23)
-#define EcsOnDemand (ECS_HI_COMPONENT_ID + 24)
-#define EcsMonitor (ECS_HI_COMPONENT_ID + 25)
+/* System module tags */
+#define EcsOnDemand (ECS_HI_COMPONENT_ID + 22)
+#define EcsMonitor (ECS_HI_COMPONENT_ID + 23)
+#define EcsDisabledIntern (ECS_HI_COMPONENT_ID + 24)
+#define EcsInactive (ECS_HI_COMPONENT_ID + 25)
 
-/* Pipeline tags */
+/* Pipeline module tags */
 #define EcsPipeline (ECS_HI_COMPONENT_ID + 26)
 #define EcsPreFrame (ECS_HI_COMPONENT_ID + 27)
 #define EcsOnLoad (ECS_HI_COMPONENT_ID + 28)
@@ -4075,7 +4156,9 @@ void ecs_query_group_by(
  */
 #ifndef ECS_TAG_DEFINE  
 #define ECS_TAG_DEFINE(world, id)\
-    id = ecs_new_entity(world, id, #id, 0);
+    id = ecs_entity_init(world, &(ecs_entity_desc_t){\
+        .name = #id\
+    });
 #endif
 
 /** Declare a constructor.
@@ -9023,6 +9106,13 @@ static const flecs::entity_t Final = EcsFinal;
 static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
 
+/* Cleanup rules */
+static const flecs::entity_t OnDelete = EcsOnDelete;
+static const flecs::entity_t OnDeleteObject = EcsOnDeleteObject;
+static const flecs::entity_t Remove = EcsRemove;
+static const flecs::entity_t Delete = EcsDelete;
+static const flecs::entity_t Throw = EcsThrow;
+
 }
 
 
@@ -11397,7 +11487,7 @@ public:
      * @return The found entity, or entity::null if no entity matched.
      */
     flecs::entity_view lookup(const char *path) const {
-        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::");
+        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", true);
         return flecs::entity_view(m_world, id);
     }
 
@@ -12197,7 +12287,7 @@ public:
         : flecs::entity_view()
     { 
         m_world = world.c_ptr();
-        m_id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
+        m_id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
 
         if (!m_id) {
             if (is_component) {
@@ -15203,7 +15293,7 @@ inline flecs::entity world::use(const char *alias) {
 }
 
 inline flecs::entity world::use(const char *name, const char *alias) {
-    entity_t id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
+    entity_t id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_use(m_world, id, alias);
@@ -15229,7 +15319,7 @@ inline flecs::entity world::get_scope() const {
 }
 
 inline entity world::lookup(const char *name) const {
-    auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::");
+    auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
     return flecs::entity(*this, id);
 }
 

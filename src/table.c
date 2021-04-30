@@ -728,8 +728,7 @@ void ecs_table_unset(
     }   
 }
 
-/* Free table resources. Do not invoke handlers and do not activate/deactivate
- * table with systems. This function is used when the world is freed. */
+/* Free table resources. */
 void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -742,6 +741,8 @@ void ecs_table_free(
     }
 
     ecs_table_clear_edges(world, table);
+
+    ecs_unregister_table(world, table);
 
     ecs_os_free(table->lo_edges);
     ecs_map_free(table->hi_edges);
