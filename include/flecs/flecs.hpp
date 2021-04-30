@@ -130,7 +130,6 @@ static const flecs::entity_t Throw = EcsThrow;
 
 }
 
-#include <flecs/type.h>
 #include <flecs/cpp/util.hpp>
 #include <flecs/cpp/column.hpp>
 #include <flecs/cpp/world.hpp>

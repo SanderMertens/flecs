@@ -22,8 +22,16 @@ ecs_type_t ecs_bootstrap_type(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-#define ecs_bootstrap_component(world, name)\
-    ecs_new_component(world, ecs_id(name), #name, sizeof(name), ECS_ALIGNOF(name))
+#define ecs_bootstrap_component(world, id)\
+    ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .entity = ecs_id(id),\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });
 
 #define ecs_bootstrap_tag(world, name)\
     ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = (char*)#name});\

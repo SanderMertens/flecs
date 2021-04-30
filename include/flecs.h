@@ -269,7 +269,7 @@ struct ecs_trigger_t {
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
 #include "flecs/private/log.h"              /* Logging API */
-
+#include "flecs/type.h"                     /* Type API */
 
 /**
  * @defgroup desc_types Types used for creating API constructs
@@ -313,6 +313,14 @@ typedef struct ecs_entity_desc_t {
     /* String expression with components to remove */
     const char *remove_expr;
 } ecs_entity_desc_t;
+
+
+/** Type used for constructing components. */
+typedef struct ecs_component_desc_t {
+    ecs_entity_desc_t entity;
+    size_t size;
+    size_t alignment;
+} ecs_component_desc_t;
 
 
 /** Type used for constructing filters. */
@@ -682,7 +690,14 @@ FLECS_API extern const ecs_entity_t EcsPostFrame;
  */
 #ifndef ECS_COMPONENT
 #define ECS_COMPONENT(world, id) \
-    ecs_id_t ecs_id(id) = ecs_new_component(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_id_t ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });\
     (void)ecs_id(id);
 #endif
 
@@ -719,7 +734,15 @@ FLECS_API extern const ecs_entity_t EcsPostFrame;
  */
 #ifndef ECS_COMPONENT_DEFINE 
 #define ECS_COMPONENT_DEFINE(world, id)\
-    ecs_id(id) = ecs_new_component(world, ecs_id(id), #id, sizeof(id), ECS_ALIGNOF(id));
+    ecs_id(id)= ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .entity = ecs_id(id),\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });
 #endif
 
 /** Declare a tag.
@@ -1196,6 +1219,12 @@ FLECS_API
 ecs_entity_t ecs_entity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc);
+
+/** Create a new component. */
+FLECS_API
+ecs_entity_t ecs_component_init(
+    ecs_world_t *world,
+    const ecs_component_desc_t *desc);
 
 /** Create N new entities.
  * This operation is the same as ecs_new_w_id, but creates N entities

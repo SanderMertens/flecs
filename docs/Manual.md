@@ -297,7 +297,11 @@ From a readability perspective this code looks fine as we can easily tell what i
 Let's first remove the `ECS_COMPONENT` macro and replace it with equivalent code (details are omitted for brevity):
 
 ```c
-ecs_entity_t ecs_typeid(Position) = ecs_new_component(world, "Position", sizeof(Position));
+ecs_entity_t ecs_typeid(Position) = ecs_component_init(world, &(ecs_component_desc_t){
+    .entity.name = "Position", 
+    .size = sizeof(Position),
+    .alignment = ECS_ALIGNOF(Position)
+});
 ecs_type_t ecs_type(Position) = ecs_type_from_entity(world, ecs_typeid(Position));
 ```
 

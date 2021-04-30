@@ -2127,14 +2127,6 @@ extern ecs_type_t
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_API
-ecs_entity_t ecs_new_component(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *id,
-    size_t size,
-    size_t alignment);
-
-FLECS_API
 ecs_entity_t ecs_new_module(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -2431,7 +2423,124 @@ void _ecs_parser_error(
 #endif
 
 #endif
+/**
+ * @file type.h
+ * @brief Type API.
+ *
+ * This API contains utilities for working with types. Types are vectors of
+ * component ids, and are used most prominently in the API to construct filters.
+ */
 
+#ifndef FLECS_TYPE_H
+#define FLECS_TYPE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+FLECS_API
+ecs_type_t ecs_type_from_id(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+FLECS_API
+ecs_entity_t ecs_type_to_id(
+    const ecs_world_t *world,
+    ecs_type_t type);
+
+FLECS_API
+char* ecs_type_str(
+    const ecs_world_t *world,
+    ecs_type_t type);  
+
+FLECS_API
+ecs_type_t ecs_type_from_str(
+    ecs_world_t *world,
+    const char *expr);    
+
+FLECS_API
+ecs_type_t ecs_type_find(
+    ecs_world_t *world,
+    ecs_entity_t *array,
+    int32_t count);
+
+FLECS_API
+ecs_type_t ecs_type_merge(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_type_t type_add,
+    ecs_type_t type_remove);
+
+FLECS_API
+ecs_type_t ecs_type_add(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity);
+
+FLECS_API
+ecs_type_t ecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity);
+
+FLECS_API
+bool ecs_type_has_id(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity);
+
+FLECS_API
+bool ecs_type_has_type(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_type_t has);
+
+FLECS_API
+bool ecs_type_owns_id(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity,
+    bool owned);
+
+FLECS_API
+bool ecs_type_owns_type(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_type_t has,
+    bool owned);
+
+FLECS_API
+bool ecs_type_find_id(
+    const ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t id,
+    ecs_entity_t rel,
+    int32_t min_depth,
+    int32_t max_depth,
+    ecs_entity_t *out);
+
+FLECS_API
+ecs_entity_t ecs_type_get_entity_for_xor(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t xor_tag);
+
+FLECS_API
+int32_t ecs_type_index_of(
+    ecs_type_t type,
+    ecs_entity_t component);
+
+FLECS_API
+int32_t ecs_type_pair_index_of(
+    ecs_type_t type, 
+    int32_t start_index, 
+    ecs_entity_t pair);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
 
 /**
  * @defgroup desc_types Types used for creating API constructs
@@ -2475,6 +2584,14 @@ typedef struct ecs_entity_desc_t {
     /* String expression with components to remove */
     const char *remove_expr;
 } ecs_entity_desc_t;
+
+
+/** Type used for constructing components. */
+typedef struct ecs_component_desc_t {
+    ecs_entity_desc_t entity;
+    size_t size;
+    size_t alignment;
+} ecs_component_desc_t;
 
 
 /** Type used for constructing filters. */
@@ -2712,7 +2829,14 @@ extern "C" {
     (void)id
 
 #define ECS_COMPONENT(world, id) \
-    ecs_id_t ecs_id(id) = ecs_new_component(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_id_t ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     (void)ecs_id(id);\
     (void)ecs_type(id)
@@ -2726,7 +2850,15 @@ extern "C" {
     ecs_type_t ecs_type(id)
 
 #define ECS_COMPONENT_DEFINE(world, id)\
-    ecs_id(id) = ecs_new_component(world, ecs_id(id), #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .entity = ecs_id(id),\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });\
     ecs_type(id) = ecs_type_from_entity(world, ecs_id(id))
 
 #define ECS_TAG(world, id)\
@@ -3374,7 +3506,14 @@ FLECS_API extern const ecs_entity_t EcsPostFrame;
  */
 #ifndef ECS_COMPONENT
 #define ECS_COMPONENT(world, id) \
-    ecs_id_t ecs_id(id) = ecs_new_component(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_id_t ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });\
     (void)ecs_id(id);
 #endif
 
@@ -3411,7 +3550,15 @@ FLECS_API extern const ecs_entity_t EcsPostFrame;
  */
 #ifndef ECS_COMPONENT_DEFINE 
 #define ECS_COMPONENT_DEFINE(world, id)\
-    ecs_id(id) = ecs_new_component(world, ecs_id(id), #id, sizeof(id), ECS_ALIGNOF(id));
+    ecs_id(id)= ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .entity = ecs_id(id),\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });
 #endif
 
 /** Declare a tag.
@@ -3888,6 +4035,12 @@ FLECS_API
 ecs_entity_t ecs_entity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc);
+
+/** Create a new component. */
+FLECS_API
+ecs_entity_t ecs_component_init(
+    ecs_world_t *world,
+    const ecs_component_desc_t *desc);
 
 /** Create N new entities.
  * This operation is the same as ecs_new_w_id, but creates N entities
@@ -8420,124 +8573,6 @@ static const flecs::entity_t Throw = EcsThrow;
 
 }
 
-/**
- * @file type.h
- * @brief Type API.
- *
- * This API contains utilities for working with types. Types are vectors of
- * component ids, and are used most prominently in the API to construct filters.
- */
-
-#ifndef FLECS_TYPE_H
-#define FLECS_TYPE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-FLECS_API
-ecs_type_t ecs_type_from_id(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-FLECS_API
-ecs_entity_t ecs_type_to_id(
-    const ecs_world_t *world,
-    ecs_type_t type);
-
-FLECS_API
-char* ecs_type_str(
-    const ecs_world_t *world,
-    ecs_type_t type);  
-
-FLECS_API
-ecs_type_t ecs_type_from_str(
-    ecs_world_t *world,
-    const char *expr);    
-
-FLECS_API
-ecs_type_t ecs_type_find(
-    ecs_world_t *world,
-    ecs_entity_t *array,
-    int32_t count);
-
-FLECS_API
-ecs_type_t ecs_type_merge(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t type_add,
-    ecs_type_t type_remove);
-
-FLECS_API
-ecs_type_t ecs_type_add(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity);
-
-FLECS_API
-ecs_type_t ecs_type_remove(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity);
-
-FLECS_API
-bool ecs_type_has_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity);
-
-FLECS_API
-bool ecs_type_has_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t has);
-
-FLECS_API
-bool ecs_type_owns_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity,
-    bool owned);
-
-FLECS_API
-bool ecs_type_owns_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t has,
-    bool owned);
-
-FLECS_API
-bool ecs_type_find_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t id,
-    ecs_entity_t rel,
-    int32_t min_depth,
-    int32_t max_depth,
-    ecs_entity_t *out);
-
-FLECS_API
-ecs_entity_t ecs_type_get_entity_for_xor(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t xor_tag);
-
-FLECS_API
-int32_t ecs_type_index_of(
-    ecs_type_t type,
-    ecs_entity_t component);
-
-FLECS_API
-int32_t ecs_type_pair_index_of(
-    ecs_type_t type, 
-    int32_t start_index, 
-    ecs_entity_t pair);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
 
 /**
  * @file strbuf.h
@@ -12734,11 +12769,11 @@ public:
             // Now use the resulting identifier to register the component. Note
             // that the name is not passed into this function, as the entity was
             // already created with the correct name.
-            ecs_entity_t entity = ecs_new_component(
-                world, result.id(), nullptr, 
-                size(), 
-                alignment());
-
+            ecs_component_desc_t desc = {};
+            desc.entity.entity = result.id();
+            desc.size = size();
+            desc.alignment = alignment();
+            ecs_entity_t entity = ecs_component_init(world, &desc);
             ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
 
             // Set the symbol in the Name component to the actual C++ name.
@@ -12773,10 +12808,12 @@ public:
                 name = n;
             }
 
-            ecs_entity_t entity = ecs_new_component(
-                world, s_id, name,
-                size(), 
-                alignment());
+            ecs_component_desc_t desc = {};
+            desc.entity.entity = s_id;
+            desc.entity.name = name;
+            desc.size = size();
+            desc.alignment = alignment();
+            ecs_entity_t entity = ecs_component_init(world, &desc);
                 
             (void)entity;
 
@@ -12974,18 +13011,18 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         }
 
         /* If a component was already registered with this id but with a 
-         * different size, the ecs_new_component function will fail. */
+         * different size, the ecs_component_init function will fail. */
 
-        /* We need to explicitly call ecs_new_component here again. Even though
+        /* We need to explicitly call ecs_component_init here again. Even though
          * the component was already registered, it may have been registered
          * with a different world. This ensures that the component is registered
          * with the same id for the current world. 
          * If the component was registered already, nothing will change. */
-        ecs_entity_t entity = ecs_new_component(
-            world.c_ptr(), id, nullptr, 
-            _::cpp_type<T>::size(), 
-            _::cpp_type<T>::alignment());
-        
+        ecs_component_desc_t desc = {};
+        desc.entity.entity = id;
+        desc.size = _::cpp_type<T>::size();
+        desc.alignment = _::cpp_type<T>::alignment();
+        ecs_entity_t entity = ecs_component_init(world.c_ptr(), &desc);
         (void)entity;
         
         ecs_assert(entity == id, ECS_INTERNAL_ERROR, NULL);

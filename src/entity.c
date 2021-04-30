@@ -1872,6 +1872,71 @@ ecs_entity_t ecs_entity_init(
     return result;
 }
 
+ecs_entity_t ecs_component_init(
+    ecs_world_t *world,
+    const ecs_component_desc_t *desc)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_from_world(&world);
+
+    bool is_readonly = world->is_readonly;
+
+    /* If world is in progress component may be registered, but only when not
+     * in multithreading mode. */
+    if (is_readonly) {
+        ecs_assert(ecs_get_stage_count(world) <= 1, 
+            ECS_INVALID_WHILE_ITERATING, NULL);
+
+        /* Component creation should not be deferred */
+        world->is_readonly = false;
+    }
+
+    ecs_entity_desc_t entity_desc = desc->entity;
+    entity_desc.use_low_id = true;
+    if (!entity_desc.symbol) {
+        entity_desc.symbol = entity_desc.name;
+    }
+
+    ecs_entity_t e = desc->entity.entity;
+    ecs_entity_t result = ecs_entity_init(world, &entity_desc);
+    if (!result) {
+        return 0;
+    }
+
+    bool added = false;
+    EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent, &added);
+
+    if (added) {
+        ptr->size = ecs_from_size_t(desc->size);
+        ptr->alignment = ecs_from_size_t(desc->alignment);
+    } else {
+        if (ptr->size != ecs_from_size_t(desc->size)) {
+            ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
+        }
+        if (ptr->alignment != ecs_from_size_t(desc->alignment)) {
+            ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
+        }
+    }
+
+    ecs_modified(world, result, EcsComponent);
+
+    if (e > world->stats.last_component_id && e < ECS_HI_COMPONENT_ID) {
+        world->stats.last_component_id = e + 1;
+    }
+
+    /* Ensure components cannot be deleted */
+    ecs_add_pair(world, result, EcsOnDelete, EcsThrow);    
+
+    if (is_readonly) {
+        world->is_readonly = true;
+    }
+
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);
+
+    return result;
+}
+
 const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,

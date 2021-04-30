@@ -71,7 +71,14 @@ extern "C" {
     (void)id
 
 #define ECS_COMPONENT(world, id) \
-    ecs_id_t ecs_id(id) = ecs_new_component(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_id_t ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     (void)ecs_id(id);\
     (void)ecs_type(id)
@@ -85,7 +92,15 @@ extern "C" {
     ecs_type_t ecs_type(id)
 
 #define ECS_COMPONENT_DEFINE(world, id)\
-    ecs_id(id) = ecs_new_component(world, ecs_id(id), #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .entity = ecs_id(id),\
+            .name = #id,\
+            .symbol = #id\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });\
     ecs_type(id) = ecs_type_from_entity(world, ecs_id(id))
 
 #define ECS_TAG(world, id)\
