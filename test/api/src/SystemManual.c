@@ -121,15 +121,20 @@ void SystemManual_activate_status() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, NormalSystem, 0, Position);
-
-    ecs_set_system_status_action(world, NormalSystem, status_action, NULL);
+    ecs_entity_t normal_system = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {
+            .name = "NormalSystem"
+        },
+        .query.filter.terms = {{ecs_id(Position)}},
+        .callback = NormalSystem,
+        .status_callback = status_action
+    });
 
     test_bool(system_status_action_invoked, true);
     test_assert(enable_status == EcsSystemEnabled);
     test_assert(active_status == EcsSystemStatusNone);
 
-    ecs_run(world, NormalSystem, 0, NULL);
+    ecs_run(world, normal_system, 0, NULL);
     test_int(normal_count, 0);
 
     reset_status();
@@ -139,7 +144,7 @@ void SystemManual_activate_status() {
     test_assert(enable_status == EcsSystemStatusNone);
     test_assert(active_status == EcsSystemActivated);
 
-    ecs_run(world, NormalSystem, 0, NULL);
+    ecs_run(world, normal_system, 0, NULL);
     test_int(normal_count, 1);
 
     reset_status();

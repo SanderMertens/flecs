@@ -188,6 +188,11 @@ inline flecs::query<Comps...> world::query(Args &&... args) const {
     return flecs::query<Comps...>(*this, std::forward<Args>(args)...);
 }
 
+template <typename... Comps, typename... Args>
+inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
+    return flecs::query_builder<Comps...>(*this, std::forward<Args>(args)...);
+}
+
 template <typename Module, typename... Args>
 inline flecs::entity world::module(Args &&... args) const {
     return flecs::module<Module>(*this, std::forward<Args>(args)...);

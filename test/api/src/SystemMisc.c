@@ -327,7 +327,10 @@ void SystemMisc_invalid_entity_id() {
 void SystemMisc_invalid_null_string() {
     ecs_world_t *world = ecs_init();
 
-    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, NULL, Dummy);
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "Dummy", .add = {EcsOnUpdate} },
+        .callback = Dummy
+    });
 
     ecs_progress(world, 0);
 
@@ -339,7 +342,11 @@ void SystemMisc_invalid_null_string() {
 void SystemMisc_invalid_empty_string() {
     ecs_world_t *world = ecs_init();
 
-    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, "", Dummy);
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "Dummy", .add = {EcsOnUpdate} },
+        .query.filter.expr = "",
+        .callback = Dummy
+    });
 
     ecs_progress(world, 0);
 
@@ -351,7 +358,11 @@ void SystemMisc_invalid_empty_string() {
 void SystemMisc_invalid_empty_string_w_space() {
     ecs_world_t *world = ecs_init();
 
-    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, "  ", Dummy);
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "Dummy", .add = {EcsOnUpdate} },
+        .query.filter.expr = "  ",
+        .callback = Dummy
+    });
 
     ecs_progress(world, 0);
 
@@ -370,7 +381,11 @@ void SystemMisc_invalid_mixed_src_modifier() {
 
     test_expect_abort();
 
-    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, "SHARED:Position || Velocity", Dummy);
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "Dummy", .add = {EcsOnUpdate} },
+        .query.filter.expr = "SHARED:Position || Velocity",
+        .callback = Dummy
+    });
 
     ecs_fini(world);
 }
@@ -528,9 +543,16 @@ void SystemMisc_status_enable_after_new() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+    ecs_entity_t dummy = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {
+            .name = "Dummy",
+            .add = {EcsOnUpdate}
+        },
+        .query.filter.terms = {{ecs_id(Position)}},
+        .callback = Dummy,
+        .status_callback = status_action
+    });
 
     /* Setting the status action should have triggered the enabled status since
      * the system is already enabled. There are no entities, so the system
@@ -541,7 +563,7 @@ void SystemMisc_status_enable_after_new() {
 
     /* Enable enabled system. Should not trigger status. */
     reset_status();
-    ecs_enable(world, Dummy, true);
+    ecs_enable(world, dummy, true);
     test_assert(system_status_action_invoked == false);
     test_assert(enable_status == EcsSystemStatusNone);
     test_assert(active_status == EcsSystemStatusNone); 
@@ -560,9 +582,16 @@ void SystemMisc_status_enable_after_disable() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+    ecs_entity_t dummy = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {
+            .name = "Dummy",
+            .add = {EcsOnUpdate}
+        },
+        .query.filter.terms = {{ecs_id(Position)}},
+        .callback = Dummy,
+        .status_callback = status_action
+    });
 
     /* Setting the status action should have triggered the enabled status since
      * the system is already enabled. There are no entities, so the system
@@ -573,14 +602,14 @@ void SystemMisc_status_enable_after_disable() {
 
     /* Disable system, should trigger status */
     reset_status();
-    ecs_enable(world, Dummy, false);
+    ecs_enable(world, dummy, false);
     test_assert(system_status_action_invoked == true);
     test_assert(enable_status == EcsSystemDisabled);
     test_assert(active_status == EcsSystemStatusNone);
 
     /* Enable enabled system. Should trigger status. */
     reset_status();
-    ecs_enable(world, Dummy, true);
+    ecs_enable(world, dummy, true);
     test_assert(system_status_action_invoked == true);
     test_assert(enable_status == EcsSystemEnabled);
     test_assert(active_status == EcsSystemStatusNone);
@@ -599,9 +628,16 @@ void SystemMisc_status_disable_after_new() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+    ecs_entity_t dummy = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {
+            .name = "Dummy",
+            .add = {EcsOnUpdate}
+        },
+        .query.filter.terms = {{ecs_id(Position)}},
+        .callback = Dummy,
+        .status_callback = status_action
+    });
 
     /* Setting the status action should have triggered the enabled status since
      * the system is already enabled. There are no entities, so the system
@@ -612,7 +648,7 @@ void SystemMisc_status_disable_after_new() {
 
     /* Disable system, should trigger status action */
     reset_status();
-    ecs_enable(world, Dummy, false);
+    ecs_enable(world, dummy, false);
     test_assert(system_status_action_invoked == true);
     test_assert(enable_status == EcsSystemDisabled);
     test_assert(active_status == EcsSystemStatusNone);
@@ -630,9 +666,16 @@ void SystemMisc_status_disable_after_disable() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+    ecs_entity_t dummy = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {
+            .name = "Dummy",
+            .add = {EcsOnUpdate}
+        },
+        .query.filter.terms = {{ecs_id(Position)}},
+        .callback = Dummy,
+        .status_callback = status_action
+    });
 
     /* Setting the status action should have triggered the enabled status since
      * the system is already enabled. There are no entities, so the system
@@ -643,14 +686,14 @@ void SystemMisc_status_disable_after_disable() {
 
     /* Disable system, should trigger status action */
     reset_status();
-    ecs_enable(world, Dummy, false);
+    ecs_enable(world, dummy, false);
     test_assert(system_status_action_invoked == true);
     test_assert(enable_status == EcsSystemDisabled);
     test_assert(active_status == EcsSystemStatusNone);
 
     /* Disable system again, should not trigger status action */
     reset_status();
-    ecs_enable(world, Dummy, false);
+    ecs_enable(world, dummy, false);
     test_assert(system_status_action_invoked == false);
     test_assert(enable_status == EcsSystemStatusNone);
     test_assert(active_status == EcsSystemStatusNone);    
@@ -667,9 +710,16 @@ void SystemMisc_status_activate_after_new() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {
+            .name = "Dummy",
+            .add = {EcsOnUpdate}
+        },
+        .query.filter.terms = {{ecs_id(Position)}},
+        .callback = Dummy,
+        .status_callback = status_action
+    });
 
     /* Setting the status action should have triggered the enabled status since
      * the system is already enabled. There are no entities, so the system
@@ -699,11 +749,18 @@ void SystemMisc_status_deactivate_after_delete() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {
+            .name = "Dummy",
+            .add = {EcsOnUpdate}
+        },
+        .query.filter.terms = {{ecs_id(Position)}},
+        .callback = Dummy,
+        .status_callback = status_action
+    });
 
     ecs_entity_t e = ecs_new(world, Position);
-
-    ecs_set_system_status_action(world, Dummy, status_action, NULL);
 
     /* Setting the status action should have triggered the enabled status since
      * the system is already enabled. The system should be active since it has
@@ -929,8 +986,11 @@ void SystemMisc_change_system_action() {
     
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t sys = ecs_new_system(
-        world, 0, "Sys", EcsOnUpdate, "Position", ActionA);
+    ecs_entity_t sys = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "Sys", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = ActionA
+    });
 
     ecs_new(world, Position);
 
@@ -1080,11 +1140,17 @@ void Action(ecs_iter_t *it) { }
 void SystemMisc_redefine_null_signature() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t s_1 = ecs_new_system(
-        world, 0, "System", EcsOnUpdate, NULL, Action);
+    ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "System", .add = {EcsOnUpdate} },
+        .query.filter.expr = NULL,
+        .callback = Action
+    });
 
-    ecs_entity_t s_2 = ecs_new_system(
-        world, 0, "System", EcsOnUpdate, NULL, Action);        
+    ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "System", .add = {EcsOnUpdate} },
+        .query.filter.expr = NULL,
+        .callback = Action
+    });      
 
     test_assert(s_1 == s_2);
 
@@ -1094,11 +1160,17 @@ void SystemMisc_redefine_null_signature() {
 void SystemMisc_redefine_0_signature() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t s_1 = ecs_new_system(
-        world, 0, "System", EcsOnUpdate, "0", Action);
+    ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "System", .add = {EcsOnUpdate} },
+        .query.filter.expr = "0",
+        .callback = Action
+    });
 
-    ecs_entity_t s_2 = ecs_new_system(
-        world, 0, "System", EcsOnUpdate, "0", Action);
+    ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "System", .add = {EcsOnUpdate} },
+        .query.filter.expr = "0",
+        .callback = Action
+    }); 
 
     test_assert(s_1 == s_2);
 

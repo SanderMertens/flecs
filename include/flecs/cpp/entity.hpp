@@ -124,7 +124,11 @@ public:
     static 
     flecs::entity comb(entity_view lo, entity_view hi);
 
-    flecs::id_t raw_id() {
+    flecs::id_t raw_id() const {
+        return m_id;
+    }
+
+    operator flecs::id_t() const {
         return m_id;
     }
 
@@ -170,15 +174,6 @@ public:
     /** Equality operator. */
     bool operator==(const entity_view& e) {
         return this->id() == e.id();
-    }  
-
-    /** Inequality operator. */
-    bool operator!=(const entity_view& e) {
-        return this->id() != e.id();
-    }            
-
-    explicit operator bool() {
-        return m_id != 0;
     }
 
     /** Entity id 0.

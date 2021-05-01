@@ -2142,7 +2142,7 @@ const char* ecs_strerror(
     case ECS_INVALID_ENTITY:
         return "invalid entity";
     case ECS_INVALID_PARAMETER:
-        return "invalid parameters";
+        return "invalid parameter";
     case ECS_INVALID_COMPONENT_ID:
         return "invalid component id";
     case ECS_INVALID_TYPE_EXPRESSION:
@@ -16286,13 +16286,38 @@ int ecs_filter_init(
         .expr = (char*)expr
     };
 
+    if (terms) {
+        terms = desc->terms_buffer;
+        term_count = desc->terms_buffer_count;
+    } else {
+        terms = (ecs_term_t*)desc->terms;
+        for (i = 0; i < ECS_FILTER_DESC_TERM_ARRAY_MAX; i ++) {
+            if (!ecs_term_is_set(&terms[i])) {
+                break;
+            }
+
+            term_count ++;
+        }
+    }
+
+    /* Temporarily set array from desc to filter, until the filter has been
+     * validated. */
+    f.terms = terms;
+    f.term_count = term_count;
+
     if (expr) {
 #ifdef FLECS_PARSER
-        /* Cannot set expression and terms at the same time */
-        ecs_assert(terms == NULL, ECS_INVALID_PARAMETER, NULL);
-        
-        /* Parse expression into array of terms */
         int32_t buffer_count = 0;
+
+        /* If terms have already been set, copy buffer to allocated one */
+        if (terms && term_count) {
+            terms = ecs_os_memdup(terms, term_count * ECS_SIZEOF(ecs_term_t));
+            buffer_count = term_count;
+        } else {
+            terms = NULL;
+        }
+
+        /* Parse expression into array of terms */
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
@@ -16319,25 +16344,16 @@ int ecs_filter_init(
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
-    } else {
-        if (terms) {
-            terms = desc->terms_buffer;
-            term_count = desc->terms_buffer_count;
-        } else {
-            terms = (ecs_term_t*)desc->terms;
-            for (i = 0; i < ECS_FILTER_DESC_TERM_ARRAY_MAX; i ++) {
-                if (!ecs_term_is_set(&terms[i])) {
-                    break;
-                }
+    }
 
-                term_count ++;
-            }
+    /* If default substitution is enabled, replace DefaultSet with SuperSet */
+    if (desc->substitute_default) {
+        for (i = 0; i < term_count; i ++) {
+            if (terms[i].args[0].set == EcsDefaultSet) {
+                terms[i].args[0].set = EcsSuperSet | EcsSelf;
+                terms[i].args[0].relation = EcsIsA;
+            }            
         }
-
-        /* Temporarily set array from desc to filter, until the filter has been
-         * validated. */
-        f.terms = terms;
-        f.term_count = term_count;
     }
 
     /* Ensure all fields are consistent and properly filled out */
@@ -22548,6 +22564,7 @@ bool ecs_term_is_readonly(
     (void)query;
 
     ecs_term_t *term = &it->query->filter.terms[term_index - 1];
+    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
     
     if (term->inout == EcsIn) {
         return true;
@@ -22556,10 +22573,12 @@ bool ecs_term_is_readonly(
 
         if (term->inout == EcsInOutDefault) {
             if (subj->entity != EcsThis) {
+                printf("default & not this\n");
                 return true;
             }
 
             if ((subj->set != EcsSelf) && (subj->set != EcsDefaultSet)) {
+                printf("not owned\n");
                 return true;
             }
         }
@@ -24885,79 +24904,6 @@ void ecs_enable_system(
         enabled ? EcsSystemEnabled : EcsSystemDisabled);
 }
 
-static
-void ecs_system_init(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_iter_action_t action,
-    ecs_query_t *query,
-    void *ctx)
-{
-    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
-
-    /* Add & initialize the EcsSystem component */
-    bool is_added = false;
-    EcsSystem *sptr = ecs_get_mut(world, system, EcsSystem, &is_added);
-    ecs_assert(sptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (!is_added) {
-        ecs_assert(sptr->query == query, ECS_INVALID_PARAMETER, NULL);
-    } else {
-        memset(sptr, 0, sizeof(EcsSystem));
-        sptr->query = query;
-        sptr->entity = system;
-        sptr->tick_source = 0;
-        sptr->time_spent = 0;
-    }
-
-    /* Sanity check to make sure creating the query didn't add any additional
-     * tags or components to the system */
-    sptr->action = action;
-    sptr->ctx = ctx;
-
-    /* Only run this code when the system is created for the first time */
-    if (is_added) {
-        /* If tables have been matched with this system it is active, and we
-         * should activate the in terms, if any. This will ensure that any
-         * OnDemand systems get enabled. */
-        if (ecs_vector_count(query->tables)) {
-            ecs_system_activate(world, system, true, sptr);
-        } else {
-            /* If system isn't matched with any tables, mark it as inactive. This
-             * causes it to be ignored by the main loop. When the system matches
-             * with a table it will be activated. */
-            ecs_add_id(world, system, EcsInactive);
-        }
-
-        /* If system is enabled, trigger enable components */
-        activate_in_columns(world, query, world->on_enable_components, true);
-
-        /* If the query has a OnDemand system tag, register its [out] terms */
-        if (ecs_has_id(world, system, EcsOnDemand)) {
-            register_out_columns(world, system, sptr);
-            ecs_assert(sptr->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            /* If there are no systems currently interested in any of the [out]
-             * terms of the on demand system, disable it */
-            if (!sptr->on_demand->count) {
-                ecs_add_id(world, system, EcsDisabledIntern);
-            }        
-        }
-
-        /* Check if system has out columns */
-        ecs_term_t *terms = query->filter.terms;
-        int32_t i, count = query->filter.term_count;
-        for (i = 0; i < count; i ++) {
-            if (terms[i].inout != EcsIn) {
-                break;
-            }
-        }
-    }
-
-    ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
-        ecs_get_name(world, system), query->filter.expr);
-}
-
 /* -- Public API -- */
 
 void ecs_enable(
@@ -24978,33 +24924,6 @@ void ecs_enable(
             ecs_remove_id(world, entity, EcsDisabled);
         } else {
             ecs_add_id(world, entity, EcsDisabled);
-        }
-    }
-}
-
-void ecs_set_system_status_action(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_system_status_action_t action,
-    const void *ctx)
-{
-    EcsSystem *system_data = ecs_get_mut(world, system, EcsSystem, NULL);
-    ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    system_data->status_action = action;
-    system_data->status_ctx = (void*)ctx;
-
-    if (!ecs_has_id(world, system, EcsDisabled)) {
-        /* If system is already enabled, generate enable status. The API 
-         * should guarantee that it exactly matches enable-disable 
-         * notifications and activate-deactivate notifications. */
-        invoke_status_action(world, system, system_data, EcsSystemEnabled);
-
-        /* If column system has active (non-empty) tables, also generate the
-         * activate status. */
-        if (ecs_vector_count(system_data->query->tables)) {
-            invoke_status_action(
-                world, system, system_data, EcsSystemActivated);
         }
     }
 }
@@ -25179,8 +25098,6 @@ void ecs_run_monitor(
         it.entities = entities;
     }
 
-    // printf("Run monitor %s\n", ecs_get_name(world, system));
-
     it.system = system;
     system_data->action(&it);
 }
@@ -25193,7 +25110,12 @@ ecs_query_t* ecs_get_query(
     if (q) {
         return q->query;
     } else {
-        return NULL;
+        const EcsSystem *s = ecs_get(world, system, EcsSystem);
+        if (s) {
+            return s->query;
+        } else {
+            return NULL;
+        }
     }
 }
 
@@ -25309,101 +25231,110 @@ void EnableSystem(
     }
 }
 
-/* Create a system from a query and an action */
-static
-void CreateSystem(
-    ecs_iter_t *it)
-{
-    ecs_world_t *world = it->world;
-    ecs_entity_t *entities = it->entities;
-
-    EcsQuery *query = ecs_term(it, EcsQuery, 1);
-    EcsIterAction *action = ecs_term(it, EcsIterAction, 2);
-    EcsContext *ctx = ecs_term(it, EcsContext, 3);
-    
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = entities[i];
-        void *ctx_ptr = NULL;
-        if (ctx) {
-            ctx_ptr = (void*)ctx[i].ctx;
-        }
-
-        ecs_system_init(world, e, action[i].action, query[i].query, ctx_ptr);
-    }
-}
-
-static
-void bootstrap_set_system(
+ecs_entity_t ecs_system_init(
     ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_iter_action_t action)
-{
-    ecs_entity_t system = ecs_set(world, 0, EcsName, {.value = name});
-    ecs_add_id(world, system, EcsOnSet);
-
-    ecs_query_t *query = ecs_query_init(world, &(ecs_query_desc_t){
-        .filter.name = name,
-        .filter.expr = expr,
-        .system = system
-    });
-
-    ecs_system_init(world, system, action, query, NULL);
-}
-
-ecs_entity_t ecs_new_system(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    ecs_entity_t tag,
-    const char *expr,
-    ecs_iter_action_t action)
+    const ecs_system_desc_t *desc)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entity_t result = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
-        .name = name,
-        .add = {tag}
-    });
+    ecs_entity_t result = ecs_entity_init(world, &desc->entity);
+    if (!result) {
+        return 0;
+    }
 
-    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
-    
-    ecs_set(world, result, EcsIterAction, {action});
+    bool added = false;
+    EcsSystem *system = ecs_get_mut(world, result, EcsSystem, &added);
+    if (added) {
+        memset(system, 0, sizeof(EcsSystem));
 
-    const EcsQuery *q = ecs_get(world, result, EcsQuery);
-    if (q) {
-        const char *query_expr = q->query->filter.expr;
-        if (!query_expr || !expr) {
-            if (query_expr != expr) {
-                if (query_expr && !strcmp(query_expr, "0")) {
-                    /* Ok */
-                } else if (expr && !strcmp(expr, "0")) {
-                    /* Ok */
-                } else {
-                    ecs_abort(ECS_ALREADY_DEFINED, NULL);
-                }
-            }
-        } else {
-            if (strcmp(query_expr, expr)) {
-                ecs_abort(ECS_ALREADY_DEFINED, name);
-            }
-        }
-    } else {
-        ecs_query_t *query = ecs_query_init(world, &(ecs_query_desc_t){
-            .filter.name = name,
-            .filter.expr = expr,
-            .system = result
-        });
+        ecs_query_desc_t query_desc = desc->query;
+        query_desc.system = result;
 
+        ecs_query_t *query = ecs_query_init(world, &query_desc);
         if (!query) {
             ecs_delete(world, result);
-            return 0;
         }
 
-        ecs_set(world, result, EcsQuery, {query});
+        system->entity = result;
+        system->query = query;
+
+        system->action = desc->callback;
+        system->ctx = desc->ctx;
+
+        system->status_action = desc->status_callback;
+        system->status_ctx = desc->status_ctx;
+
+        system->tick_source = desc->tick_source;
+
+        /* If tables have been matched with this system it is active, and we
+         * should activate the in terms, if any. This will ensure that any
+         * OnDemand systems get enabled. */
+        if (ecs_vector_count(query->tables)) {
+            ecs_system_activate(world, result, true, system);
+        } else {
+            /* If system isn't matched with any tables, mark it as inactive. This
+             * causes it to be ignored by the main loop. When the system matches
+             * with a table it will be activated. */
+            ecs_add_id(world, result, EcsInactive);
+        }
+
+        /* If system is enabled, trigger enable components */
+        activate_in_columns(world, query, world->on_enable_components, true);
+
+        /* If the query has a OnDemand system tag, register its [out] terms */
+        if (ecs_has_id(world, result, EcsOnDemand)) {
+            register_out_columns(world, result, system);
+            ecs_assert(system->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            /* If there are no systems currently interested in any of the [out]
+             * terms of the on demand system, disable it */
+            if (!system->on_demand->count) {
+                ecs_add_id(world, result, EcsDisabledIntern);
+            }        
+        }
+
+        if (!ecs_has_id(world, result, EcsDisabled)) {
+            /* If system is already enabled, generate enable status. The API 
+            * should guarantee that it exactly matches enable-disable 
+            * notifications and activate-deactivate notifications. */
+            invoke_status_action(world, result, system, EcsSystemEnabled);
+
+            /* If column system has active (non-empty) tables, also generate the
+            * activate status. */
+            if (ecs_vector_count(system->query->tables)) {
+                invoke_status_action(world, result, system, EcsSystemActivated);
+            }
+        }
+
+        if (desc->interval || desc->rate || desc->tick_source) {
+#ifdef FLECS_TIMER
+            if (desc->interval) {
+                ecs_set_interval(world, result, desc->interval);
+            }
+
+            if (desc->rate) {
+                ecs_set_rate(world, result, desc->rate, desc->tick_source);
+            } else if (desc->tick_source) {
+                ecs_set_tick_source(world, result, desc->tick_source);
+            }
+#else
+            ecs_abort(ECS_UNSUPPORTED, "timer module not available");
+#endif
+        }
+
+        /* Check if system has out columns */
+        ecs_term_t *terms = query->filter.terms;
+        int32_t i, count = query->filter.term_count;
+        for (i = 0; i < count; i ++) {
+            if (terms[i].inout != EcsIn) {
+                break;
+            }
+        }
+
+        ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
+            ecs_get_name(world, result), query->filter.expr);
     }
 
     return result;
@@ -25448,13 +25379,6 @@ void FlecsSystemImport(
             .ctor = sys_ctor_init_zero,
             .dtor = ecs_colsystem_dtor
         });
-
-    /* Create systems that creates systems */
-    bootstrap_set_system(world,
-        "CreateSystem", "Query, IterAction, ?Context, SYSTEM:Hidden", 
-        CreateSystem);
-
-    /* From here we can create systems */
 
     /* Register OnSet system for EcsComponentLifecycle */
     ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, 

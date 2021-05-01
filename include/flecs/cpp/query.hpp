@@ -9,10 +9,12 @@ namespace flecs
 class query_base {
 public:
     query_base()
-        : m_world(nullptr), m_query(nullptr) { }    
+        : m_world(nullptr)
+        , m_query(nullptr) { }    
     
-    query_base(world_t *world, query_t *query)
-        : m_world(world), m_query(query) { }
+    query_base(world_t *world, query_t *query = nullptr)
+        : m_world(world)
+        , m_query(query) { }
 
     /** Get pointer to C query object.
      */
@@ -135,58 +137,43 @@ protected:
     query_t *m_query;
 };
 
+
 template<typename ... Components>
 class query : public query_base {
     using Columns = typename _::column_args<Components...>::Columns;
 
 public:
-    query() : query_base(nullptr, nullptr) { }
+    query() { }
 
-    explicit query(const world& world) {
-        flecs::stringstream str;
-        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+    query(world_t *world, query_t *query)
+        : query_base(world, query) { }
+
+    explicit query(const world& world, const char *expr = nullptr) 
+        : query_base(world.c_ptr())
+    {
+        auto qb = world.query_builder<Components ...>()
+            .expr(expr);
+
+        if (!expr) {
+            qb.substitute_default();
         }
 
-        m_world = world.c_ptr();
-        m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
+        m_query = qb;
     }
 
-    explicit query(const world& world, query_base& parent) {
-        flecs::stringstream str;
-        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+    explicit query(const world& world, query_base& parent, const char *expr = nullptr) 
+        : query_base(world.c_ptr())    
+    {
+        auto qb = world.query_builder<Components ...>()
+            .parent(parent)
+            .expr(expr);
+
+        if (!expr) {
+            qb.substitute_default();
         }
 
-        m_world = world.c_ptr();
-        m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
+        m_query = qb;
     }
-
-    explicit query(const world& world, const char *expr) {
-        flecs::stringstream str;
-        m_world = world.c_ptr();
-        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
-            m_query = ecs_query_new(world.c_ptr(), expr);
-        } else {
-            str << "," << expr;
-            m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
-        }
-    }
-
-    explicit query(const world& world, query_base& parent, const char *expr) {
-        flecs::stringstream str;
-        m_world = world.c_ptr();
-        if (!_::pack_args_to_string<Components...>(world.c_ptr(), str, true)) {
-            m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), expr);
-        } else {
-            str << "," << expr;
-            m_query = ecs_subquery_new(world.c_ptr(), parent.c_ptr(), str.str().c_str());
-        }
-    }
-
-    query_iterator<Components...> begin() const;
-
-    query_iterator<Components...> end() const;
 
     template <typename Func>
     void each(Func&& func) const {
@@ -264,51 +251,5 @@ public:
         }
     }      
 };
-
-////////////////////////////////////////////////////////////////////////////////
-//// Persistent queries
-////////////////////////////////////////////////////////////////////////////////
-
-template<typename ... Components>
-class query_iterator
-{
-public:
-    query_iterator()
-        : m_has_next(false)
-        , m_iter{ } { }
-
-    query_iterator(const query<Components...>& query) 
-        : m_iter( ecs_query_iter(query.c_ptr()) )
-    {
-        m_has_next = ecs_query_next(&m_iter);
-    }
-
-    bool operator!=(query_iterator const& other) const {
-        return m_has_next != other.m_has_next;
-    }
-
-    flecs::iter const operator*() const {
-        return flecs::iter(&m_iter);
-    }
-
-    query_iterator& operator++() {
-        m_has_next = ecs_query_next(&m_iter);
-        return *this;
-    }
-
-private:
-    bool m_has_next;
-    ecs_iter_t m_iter;
-};
-
-template<typename ... Components>
-inline query_iterator<Components...> query<Components...>::begin() const {
-    return query_iterator<Components...>(*this);
-}
-
-template<typename ... Components>
-inline query_iterator<Components...> query<Components...>::end() const {
-    return query_iterator<Components...>();
-}
 
 } // namespace flecs

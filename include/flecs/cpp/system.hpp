@@ -74,46 +74,74 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename ... Components>
-class system final : public entity {
+class system final : public entity, public system_builder_i<system<Components ...>, Components ...> {
+    using Class = system<Components ...>;
 public:
     explicit system(const flecs::world& world, const char *name = nullptr, const char *signature = nullptr) 
         : entity(world, name)
-        , m_kind(static_cast<ecs_entity_t>(OnUpdate)) 
-        , m_signature(signature)
-        , m_interval(0.0)
-        , m_rate(0)
-        , m_on_demand(false)
-        , m_hidden(false)
-        , m_finalized(false) { 
+        , system_builder_i<Class, Components ...>(world.c_ptr(), &m_desc)
+        , m_desc({})
+        , m_finalized(false)
+        { 
             ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
+            m_desc.entity.entity = m_id;
+            m_desc.entity.add[0] = flecs::OnUpdate;
+            system_builder_i<Class, Components ...>::populate_filter_from_pack();
+            system_builder_i<Class, Components ...>::expr(signature);
         }
 
     explicit system(const flecs::world& world, flecs::entity id) 
         : entity(world, id.id())
+        , m_desc({})
         , m_finalized(true) { }
 
-    system& signature(const char *signature) {
-        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(!m_signature, ECS_INVALID_PARAMETER, NULL);
-        m_signature = signature;
-        return *this;
+    system(const system& obj) 
+        : entity(obj.entity::m_world, obj.m_id)
+        , system_builder_i<system<Components...>, Components ...>(obj.entity::m_world, &m_desc)
+    {
+        m_desc = obj.m_desc;
+        m_finalized = obj.m_finalized;
     }
 
-    /** Specify when the system should be ran.
-     * Use this function to set in which phase the system should run or whether
-     * the system is reactive. Valid values for reactive systems are:
-     *
-     * flecs::OnAdd
-     * flecs::OnRemove
-     * flecs::OnSet
-     * flecs::UnSet
-     *
-     * @param kind The kind that specifies when the system should be ran.
-     */
-    system& kind(entity_t kind) {
-        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        m_kind = static_cast<ecs_entity_t>(kind);
-        return *this;
+    system(system&& obj) 
+        : entity(obj.entity::m_world, obj.m_id)
+        , system_builder_i<system<Components...>, Components ...>(obj.entity::m_world, &m_desc)
+    {
+        m_desc = obj.m_desc;
+        m_finalized = obj.m_finalized;
+    }
+
+    template <typename T>
+    system& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
+        return this->order_by(flecs::_::cpp_type<T>::id(m_world),
+            reinterpret_cast<ecs_compare_action_t>(compare));
+    }
+
+    system& order_by(flecs::entity component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
+        if (m_finalized) {
+            ecs_query_t *q = query().c_ptr();
+            ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
+            ecs_query_order_by(m_world, q, component.id(), compare);
+            return *this;
+        } else {
+            return system_builder_i<Class, Components ...>::order_by(component, compare);
+        }
+    }    
+
+    template <typename T>
+    system& group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+        return this->group_by(flecs::_::cpp_type<T>::id(m_world), rank);
+    }
+
+    system& group_by(flecs::entity component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+        if (m_finalized) {
+            ecs_query_t *q = query().c_ptr();
+            ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
+            ecs_query_group_by(m_world, q, component.id(), rank);
+            return *this;
+        } else {
+            return system_builder_i<Class, Components ...>::group_by(component, rank);
+        }
     }
 
     /** Set system interval.
@@ -124,12 +152,12 @@ public:
      * @param interval The interval value.
      */
     system& interval(FLECS_FLOAT interval) {
-        if (!m_finalized) {
-            m_interval = interval;
-        } else {
+        if (m_finalized) {
             ecs_set_interval(m_world, m_id, interval);
+            return *this;
+        } else {
+            return system_builder_i<Class, Components ...>::interval(interval);
         }
-        return *this;
     }
 
     /** Set system rate.
@@ -141,13 +169,12 @@ public:
      * @param rate The multiple at which to run the system.
      */
     system& rate(const flecs::entity& tick_source, int32_t rate) {
-        if (!m_finalized) {
-            m_rate = rate;
-            m_tick_source = tick_source;
-        } else {
+        if (m_finalized) {
             ecs_set_rate(m_world, m_id, rate, tick_source.id());
+            return *this;
+        } else {
+            return system_builder_i<Class, Components ...>::rate(tick_source, rate);
         }
-        return *this;
     }
 
     /** Set system rate.
@@ -158,12 +185,12 @@ public:
      * @param rate The multiple at which to run the system.
      */
     system& rate(int32_t rate) {
-        if (!m_finalized) {
-            m_rate = rate;
+        if (m_finalized) {
+            ecs_set_rate(m_world, m_id, rate, m_desc.tick_source);
+            return *this;
         } else {
-            ecs_set_rate(m_world, m_id, rate, m_tick_source.id());
+            return system_builder_i<Class, Components ...>::rate(rate);
         }
-        return *this;
     }    
 
     /** Get interval.
@@ -172,94 +199,35 @@ public:
      * @return The timer entity.
      */
     FLECS_FLOAT interval() {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
         return ecs_get_interval(m_world, m_id);
     }
 
-    ECS_DEPRECATED("use interval")
-    system& period(FLECS_FLOAT period) {
-        return this->interval(period);
-    }
-
-    system& on_demand() {
-        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        m_on_demand = true;
-        return *this;
-    }
-
-    system& hidden() {
-        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        m_hidden = true;
-        return *this;
-    }
-
-    /** Same as query::order_by */
-    template <typename T>
-    system& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
-        ecs_compare_action_t cmp = reinterpret_cast<ecs_compare_action_t>(compare);
-        return this->order_by(
-            flecs::entity(m_world, _::cpp_type<T>::id(m_world)), cmp);
-    }
-
-    /** Same as query::order_by */
-    system& order_by(flecs::entity component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
-        if (!m_finalized) {
-            m_order_by = reinterpret_cast<ecs_compare_action_t>(compare);
-            m_order_by_component = component;
-        } else {
-            const EcsQuery *q = static_cast<const EcsQuery*>(
-                ecs_get_w_id(m_world, m_id, ecs_id(EcsQuery)));
-
-            ecs_assert(q != NULL, ECS_INVALID_OPERATION, NULL);
-            ecs_query_order_by(m_world, q->query, 
-                component.id(), reinterpret_cast<ecs_compare_action_t>(compare));
-        }
-        return *this;
-    }
-
-    /** Same as query::group_by */
-    template <typename T>
-    system& group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
-        ecs_rank_type_action_t rnk = reinterpret_cast<ecs_rank_type_action_t>(rank);
-        return this->group_by(
-            flecs::entity(m_world, _::cpp_type<T>::id(m_world)), rnk);
-    }
-
-    /** Same as query::group_by */
-    system& group_by(flecs::entity component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
-        if (!m_finalized) {
-            m_group_by = reinterpret_cast<ecs_rank_type_action_t>(rank);
-            m_group_by_component = component;
-        } else {
-            const EcsQuery *q = static_cast<const EcsQuery*>(
-                ecs_get_w_id(m_world, m_id, ecs_id(EcsQuery)));
-            ecs_assert(q != NULL, ECS_INVALID_OPERATION, NULL);
-            ecs_query_group_by(m_world, q->query, component.id(),
-                reinterpret_cast<ecs_rank_type_action_t>(rank));
-        }
-        return *this;
-    }    
-
     void enable() {
-        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
         ecs_enable(m_world, m_id, true);
     }
 
     void disable() {
-        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
         ecs_enable(m_world, m_id, false);
     }
 
+    ECS_DEPRECATED("use interval")
+    void period(FLECS_FLOAT period) {
+        this->interval(period);
+    }
+
+    ECS_DEPRECATED("use interval")
     void set_period(FLECS_FLOAT period) const {
-        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
         ecs_set_interval(m_world, m_id, period);
     }
 
-    void set_context(void *ctx) {
-        if (!m_finalized) {
-            m_ctx = ctx;
-        } else {
+    system& set_context(void *ctx) {
+        if (m_finalized) {
             EcsContext ctx_value = { ctx };
             ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+            return *this;
+        } else {
+            return system_builder_i<Class, Components ...>::set_context(ctx);
         }
     }
 
@@ -276,12 +244,12 @@ public:
     }
 
     query_base query() const {
-        const EcsQuery *q = static_cast<const EcsQuery*>(
-            ecs_get_w_id(m_world, m_id, ecs_id(EcsQuery)));
-        return query_base(m_world, q->query);
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        return query_base(m_world, ecs_get_query(m_world, m_id));
     }
 
     system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
         return system_runner_fluent(m_world, m_id, 0, 0, delta_time, param);
     }
 
@@ -291,6 +259,7 @@ public:
         FLECS_FLOAT delta_time = 0.0f, 
         void *param = nullptr) const 
     {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
         return system_runner_fluent(m_world, m_id, stage_current, stage_count, delta_time, param);
     }    
 
@@ -318,6 +287,7 @@ public:
     template <typename Func>
     system& iter(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+
         using invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
         auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
         this->set<_::SystemCppContext>({ctx});
@@ -325,7 +295,7 @@ public:
         create_system(invoker_t::run, false);
 
         return *this;
-    }    
+    }
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
@@ -346,116 +316,39 @@ private:
     entity_t create_system(Invoker invoker, bool is_each) {
         ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
 
-        entity_t e;
-        bool is_trigger = m_kind == flecs::OnAdd || m_kind == flecs::OnRemove;
-
-        if (is_trigger) {
-            // Don't add ANY source to each function if this is a trigger
-            is_each = false;
-        }
-
-        flecs::string signature = build_signature(is_each);
-
-        if (!signature.length()) {
-            signature = flecs::string_view("0");
-        }
+        entity_t e, kind = m_desc.entity.add[0];
+        bool is_trigger = kind == flecs::OnAdd || kind == flecs::OnRemove;
 
         if (is_trigger) {
             ecs_trigger_desc_t desc = {};
-            desc.entity.entity = m_id;
-            desc.events[0] = m_kind;
-            desc.expr = signature.c_str(),
+            ecs_term_t *term = &m_desc.query.filter.terms[0];
+
+            if (ecs_term_is_set(term)) {
+                desc.term = *term;
+            } else {
+                desc.expr = m_desc.query.filter.expr;
+            }
+
+            desc.entity.entity = m_desc.entity.entity;
+            desc.events[0] = kind;
             desc.callback = invoker;
+            desc.ctx = m_desc.ctx;
             e = ecs_trigger_init(m_world, &desc);
         } else {
-            e = ecs_new_system(
-                m_world, 
-                m_id,
-                nullptr, 
-                m_kind, 
-                signature.c_str(), 
-                invoker);
+            m_desc.callback = invoker;
+            m_desc.query.filter.substitute_default = is_each;
+            e = ecs_system_init(m_world, &m_desc);
         }
 
         ecs_assert(e == m_id, ECS_INTERNAL_ERROR, NULL);
 
-        if (m_interval != 0) {
-            ecs_set_interval(m_world, e, m_interval);
-        }
-
-        if (m_rate != 0) {
-            ecs_set_rate(m_world, m_id, m_rate, m_tick_source.id());
-        }
-
         m_finalized = true;
-
-        if (m_ctx) {
-            this->set_context(m_ctx);
-        }
-
-        if (m_order_by) {
-            this->order_by(m_order_by_component, m_order_by);
-        }
-
-        if (m_group_by) {
-            this->group_by(m_group_by_component, m_group_by);
-        }
 
         return e;
     }
 
-    flecs::string build_signature(bool is_each) {
-        bool is_set = false;
-
-        flecs::stringstream str;
-        if (_::pack_args_to_string<Components ...>(m_world, str, is_each)) {
-            is_set = true;
-        }
-
-        if (m_signature) {
-            if (is_set) {
-                str << ",";
-            }
-            str << m_signature;
-            is_set = true;
-        }
-
-        if (m_hidden) {
-            if (is_set) {
-                str << ",";
-            }            
-            str << "SYSTEM:Hidden";
-            is_set = true;
-        }    
-
-        if (m_on_demand) {
-            if (is_set) {
-                str << ",";
-            }            
-            str << "SYSTEM:EcsOnDemand";
-            is_set = true;
-        } 
-
-        return str.str();       
-    }
-
-    ecs_entity_t m_kind;
-    const char *m_signature = nullptr;
-    void *m_ctx = nullptr;
-
-    ecs_compare_action_t m_order_by = nullptr;
-    flecs::entity m_order_by_component;
-
-    ecs_rank_type_action_t m_group_by = nullptr;
-    flecs::entity m_group_by_component;
-
-    FLECS_FLOAT m_interval;
-    int32_t m_rate;
-    flecs::entity m_tick_source;
-
-    bool m_on_demand;
-    bool m_hidden;
-    bool m_finalized; // After set to true, system is created & sig is fixed
+    ecs_system_desc_t m_desc;
+    bool m_finalized;
 };
 
 } // namespace flecs

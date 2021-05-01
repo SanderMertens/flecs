@@ -66,13 +66,6 @@ ecs_entity_t ecs_new_system(
     ecs_iter_action_t action);
 
 FLECS_API
-ecs_entity_t ecs_new_pipeline(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    const char *expr);
-
-FLECS_API
 char* ecs_module_path_from_c(
     const char *c_name);
 

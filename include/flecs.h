@@ -277,7 +277,7 @@ struct ecs_trigger_t {
  * @{
  */
 
-/** Type used for constructing entities */
+/** Used with ecs_entity_init */
 typedef struct ecs_entity_desc_t { 
     ecs_entity_t entity; /* Optional existing entity handle. */
 
@@ -316,7 +316,7 @@ typedef struct ecs_entity_desc_t {
 } ecs_entity_desc_t;
 
 
-/** Type used for constructing components. */
+/** Used with ecs_component_init. */
 typedef struct ecs_component_desc_t {
     ecs_entity_desc_t entity;           /* Parameters for component entity */
     size_t size;                        /* Component size */
@@ -324,7 +324,7 @@ typedef struct ecs_component_desc_t {
 } ecs_component_desc_t;
 
 
-/** Type used for constructing type entities (entities with EcsType). */
+/** Used with ecs_type_init. */
 typedef struct ecs_type_desc_t {
     ecs_entity_desc_t entity;           /* Parameters for type entity */
     ecs_id_t ids[ECS_MAX_ADD_REMOVE];   /* Ids to include in type */
@@ -332,7 +332,7 @@ typedef struct ecs_type_desc_t {
 } ecs_type_desc_t;
 
 
-/** Type used for constructing filters. */
+/** Used with ecs_filter_init. */
 typedef struct ecs_filter_desc_t {
     /* Terms of the filter. If a filter has more terms than 
      * ECS_FILTER_DESC_TERM_ARRAY_MAX use terms_buffer */
@@ -341,6 +341,10 @@ typedef struct ecs_filter_desc_t {
     /* For filters with lots of terms an outside array can be provided. */
     ecs_term_t *terms_buffer;
     int32_t terms_buffer_count;
+
+    /* Substitute IsA relationships by default. If true, any term with 'set' 
+     * assigned to DefaultSet will be modified to Self|SuperSet(IsA). */
+    bool substitute_default;
 
     /* Filter expression. Should not be set at the same time as terms array */
     const char *expr;
@@ -351,7 +355,7 @@ typedef struct ecs_filter_desc_t {
 } ecs_filter_desc_t;
 
 
-/** Type used for constructing queries. */
+/** Used with ecs_query_init. */
 typedef struct ecs_query_desc_t {
     /* Filter for the query */
     ecs_filter_desc_t filter;
@@ -385,9 +389,9 @@ typedef struct ecs_query_desc_t {
 } ecs_query_desc_t;
 
 
-/** Type used to create triggers (single component/term observers). */
+/** Used with ecs_trigger_init. */
 typedef struct ecs_trigger_desc_t {
-    /* Optional entity to associate with trigger */
+    /* Entity to associate with trigger */
     ecs_entity_desc_t entity;
 
     /* Term specifying the id to subscribe for */
@@ -2796,6 +2800,7 @@ bool ecs_filter_next(
  * @param desc A structure describing the query properties.
  * @return The new query.
  */
+FLECS_API
 ecs_query_t* ecs_query_init(
     ecs_world_t *world, 
     const ecs_query_desc_t *desc);
@@ -2807,6 +2812,7 @@ ecs_query_t* ecs_query_init(
  *
  * @param query The query.
  */
+FLECS_API
 void ecs_query_fini(
     ecs_query_t *query);
 

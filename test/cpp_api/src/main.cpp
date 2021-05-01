@@ -209,6 +209,23 @@ void Query_sort_by(void);
 void Query_changed(void);
 void Query_orphaned(void);
 
+// Testsuite 'QueryBuilder'
+void QueryBuilder_builder_assign(void);
+void QueryBuilder_builder_build(void);
+void QueryBuilder_1_type(void);
+void QueryBuilder_2_types(void);
+void QueryBuilder_add_1_type(void);
+void QueryBuilder_add_2_types(void);
+void QueryBuilder_add_1_type_w_1_type(void);
+void QueryBuilder_add_2_types_w_1_type(void);
+void QueryBuilder_add_pair(void);
+void QueryBuilder_add_not(void);
+void QueryBuilder_add_or(void);
+void QueryBuilder_add_optional(void);
+void QueryBuilder_add_in(void);
+void QueryBuilder_add_out(void);
+void QueryBuilder_add_inout(void);
+
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_dtor_on_remove(void);
@@ -1086,6 +1103,69 @@ bake_test_case Query_testcases[] = {
     }
 };
 
+bake_test_case QueryBuilder_testcases[] = {
+    {
+        "builder_assign",
+        QueryBuilder_builder_assign
+    },
+    {
+        "builder_build",
+        QueryBuilder_builder_build
+    },
+    {
+        "1_type",
+        QueryBuilder_1_type
+    },
+    {
+        "2_types",
+        QueryBuilder_2_types
+    },
+    {
+        "add_1_type",
+        QueryBuilder_add_1_type
+    },
+    {
+        "add_2_types",
+        QueryBuilder_add_2_types
+    },
+    {
+        "add_1_type_w_1_type",
+        QueryBuilder_add_1_type_w_1_type
+    },
+    {
+        "add_2_types_w_1_type",
+        QueryBuilder_add_2_types_w_1_type
+    },
+    {
+        "add_pair",
+        QueryBuilder_add_pair
+    },
+    {
+        "add_not",
+        QueryBuilder_add_not
+    },
+    {
+        "add_or",
+        QueryBuilder_add_or
+    },
+    {
+        "add_optional",
+        QueryBuilder_add_optional
+    },
+    {
+        "add_in",
+        QueryBuilder_add_in
+    },
+    {
+        "add_out",
+        QueryBuilder_add_out
+    },
+    {
+        "add_inout",
+        QueryBuilder_add_inout
+    }
+};
+
 bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_on_add",
@@ -1556,6 +1636,13 @@ static bake_test_suite suites[] = {
         Query_testcases
     },
     {
+        "QueryBuilder",
+        NULL,
+        NULL,
+        15,
+        QueryBuilder_testcases
+    },
+    {
         "ComponentLifecycle",
         NULL,
         NULL,
@@ -1615,5 +1702,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 16);
+    return bake_test_run("cpp_api", argc, argv, suites, 17);
 }

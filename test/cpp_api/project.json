@@ -232,6 +232,25 @@
                 "orphaned"
             ]
         }, {
+            "id": "QueryBuilder",
+            "testcases": [
+                "builder_assign",
+                "builder_build",
+                "1_type",
+                "2_types",
+                "add_1_type",
+                "add_2_types",
+                "add_1_type_w_1_type",
+                "add_2_types_w_1_type",
+                "add_pair",
+                "add_not",
+                "add_or",
+                "add_optional",
+                "add_in",
+                "add_out",
+                "add_inout"
+            ]         
+        }, {
             "id": "ComponentLifecycle",
             "testcases": [
                 "ctor_on_add",

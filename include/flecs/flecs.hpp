@@ -26,6 +26,25 @@ using query_t = ecs_query_t;
 using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
 
+enum inout_kind_t {
+    InOutDefault = EcsInOutDefault,
+    InOut = EcsInOut,
+    In = EcsIn,
+    Out = EcsOut
+};
+
+enum oper_kind_t {
+    And = EcsAnd,
+    Or = EcsOr,
+    Not = EcsNot,
+    Optional = EcsOptional,
+    AndFrom = EcsAndFrom,
+    OrFrom = EcsOrFrom,
+    NotFrom = EcsNotFrom
+};
+
+using var_kind_t = ecs_var_kind_t;
+
 class world;
 class snapshot;
 class entity;
@@ -37,6 +56,10 @@ class filter_iterator;
 class child_iterator;
 class world_filter;
 class snapshot_filter;
+class query_base;
+
+template <typename ... Components>
+class query_builder;
 
 template<typename ... Components>
 class query_iterator;
@@ -69,6 +92,14 @@ using TickSource = EcsTickSource;
 using Query = EcsQuery;
 using ViewAction = EcsIterAction;
 using Context = EcsContext;
+
+/* Builtin set constants */
+static const uint8_t DefaultSet = EcsDefaultSet;
+static const uint8_t Self = EcsSelf;
+static const uint8_t SuperSet = EcsSuperSet;
+static const uint8_t SubSet = EcsSubSet;
+static const uint8_t All = EcsAll;
+static const uint8_t Nothing = EcsNothing;
 
 /* Builtin tag ids */
 static const flecs::entity_t Module = EcsModule;
@@ -141,6 +172,7 @@ static const flecs::entity_t Throw = EcsThrow;
 #include <flecs/cpp/snapshot.hpp>
 #include <flecs/cpp/filter_iterator.hpp>
 #include <flecs/cpp/iter.hpp>
+#include <flecs/cpp/builder.hpp>
 #include <flecs/cpp/query.hpp>
 #include <flecs/cpp/system.hpp>
 #include <flecs/cpp/reader_writer.hpp>
