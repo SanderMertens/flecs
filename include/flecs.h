@@ -2796,6 +2796,7 @@ bool ecs_filter_next(
  * @param desc A structure describing the query properties.
  * @return The new query.
  */
+FLECS_API
 ecs_query_t* ecs_query_init(
     ecs_world_t *world, 
     const ecs_query_desc_t *desc);
@@ -2807,6 +2808,7 @@ ecs_query_t* ecs_query_init(
  *
  * @param query The query.
  */
+FLECS_API
 void ecs_query_fini(
     ecs_query_t *query);
 
