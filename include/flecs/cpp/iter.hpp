@@ -14,15 +14,15 @@ template <typename T, typename = void>
 struct each_column { };
 
 struct each_column_base {
-    each_column_base(const _::TermPtr& term, int32_t row) : m_term(term), m_row(row) { }
+    each_column_base(const _::TermPtr& term, size_t row) : m_term(term), m_row(row) { }
 protected:
     const _::TermPtr& m_term;
-    int32_t m_row;    
+    size_t m_row;    
 };
 
 template <typename T>
 struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == false>::type> : public each_column_base {
-    each_column(const _::TermPtr& term, int32_t row) : each_column_base(term, row) { }
+    each_column(const _::TermPtr& term, size_t row) : each_column_base(term, row) { }
     T& get_row() {
         return static_cast<T*>(this->m_term.ptr)[this->m_row];
     }
@@ -30,7 +30,7 @@ struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == false
 
 template <typename T>
 struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == true>::type> : public each_column_base {
-    each_column(const _::TermPtr& term, int32_t row) : each_column_base(term, row) { }
+    each_column(const _::TermPtr& term, size_t row) : each_column_base(term, row) { }
     T get_row() {
         if (this->m_term.ptr) {
             return &static_cast<T>(this->m_term.ptr)[this->m_row];
@@ -42,7 +42,7 @@ struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == true>
 
 template <typename T, typename = void>
 struct each_ref_column : public each_column<T> {
-    each_ref_column(const _::TermPtr& term, int32_t row) : each_column<T>(term, row) {
+    each_ref_column(const _::TermPtr& term, size_t row) : each_column<T>(term, row) {
         if (term.is_ref) {
             this->m_row = 0;
         }
@@ -131,7 +131,7 @@ public:
 private:
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, int index, Terms& columns, Targs... comps) {
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
         (void)index;
         (void)columns;
         flecs::iter iter_wrapper(iter);
@@ -144,7 +144,7 @@ private:
 
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, int index, Terms& columns, Targs... comps) {
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
         invoke_callback(iter, func, index + 1, columns, comps..., columns[index]);
     }
 

@@ -143,8 +143,8 @@ class query : public query_base {
 public:
     query() { }
 
-    query(world_t *world, query_t *query)
-        : query_base(world, query) { }
+    query(world_t *world, query_t *q)
+        : query_base(world, q) { }
 
     explicit query(const world& world, const char *expr = nullptr) 
         : query_base(world.c_ptr())

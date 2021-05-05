@@ -6800,7 +6800,7 @@ typedef struct ecs_system_desc_t {
     FLECS_FLOAT interval;
 
     /* Rate at which the system should run */
-    FLECS_FLOAT rate;    
+    int32_t rate;
 
     /* External tick soutce that determines when system ticks */
     ecs_entity_t tick_source;     
@@ -12267,15 +12267,15 @@ template <typename T, typename = void>
 struct each_column { };
 
 struct each_column_base {
-    each_column_base(const _::TermPtr& term, int32_t row) : m_term(term), m_row(row) { }
+    each_column_base(const _::TermPtr& term, size_t row) : m_term(term), m_row(row) { }
 protected:
     const _::TermPtr& m_term;
-    int32_t m_row;    
+    size_t m_row;    
 };
 
 template <typename T>
 struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == false>::type> : public each_column_base {
-    each_column(const _::TermPtr& term, int32_t row) : each_column_base(term, row) { }
+    each_column(const _::TermPtr& term, size_t row) : each_column_base(term, row) { }
     T& get_row() {
         return static_cast<T*>(this->m_term.ptr)[this->m_row];
     }
@@ -12283,7 +12283,7 @@ struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == false
 
 template <typename T>
 struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == true>::type> : public each_column_base {
-    each_column(const _::TermPtr& term, int32_t row) : each_column_base(term, row) { }
+    each_column(const _::TermPtr& term, size_t row) : each_column_base(term, row) { }
     T get_row() {
         if (this->m_term.ptr) {
             return &static_cast<T>(this->m_term.ptr)[this->m_row];
@@ -12295,7 +12295,7 @@ struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == true>
 
 template <typename T, typename = void>
 struct each_ref_column : public each_column<T> {
-    each_ref_column(const _::TermPtr& term, int32_t row) : each_column<T>(term, row) {
+    each_ref_column(const _::TermPtr& term, size_t row) : each_column<T>(term, row) {
         if (term.is_ref) {
             this->m_row = 0;
         }
@@ -12384,7 +12384,7 @@ public:
 private:
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, int index, Terms& columns, Targs... comps) {
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
         (void)index;
         (void)columns;
         flecs::iter iter_wrapper(iter);
@@ -12397,7 +12397,7 @@ private:
 
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, int index, Terms& columns, Targs... comps) {
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
         invoke_callback(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
@@ -12918,7 +12918,7 @@ private:
 
 // Query builder
 template<typename ... Components>
-class query_builder_base 
+class query_builder_base
     : public query_builder_i<query_builder_base<Components...>, Components ...>
     , public world_base<query_builder_base<Components...>> 
 {
@@ -12959,7 +12959,7 @@ public:
 };
 
 template<typename ... Components>
-class query_builder : public query_builder_base<Components...> {
+class query_builder final : public query_builder_base<Components...> {
 public:
     query_builder(const world& world)
         : query_builder_base<Components ...>(world) { }
@@ -12968,7 +12968,7 @@ public:
 };
 
 template<typename ... Components>
-class system_builder 
+class system_builder final
     : public system_builder_i<system_builder<Components ...>, Components ...>
     , public world_base<system_builder<Components...>>  
 {
@@ -12994,24 +12994,24 @@ public:
 
     template <typename Func>
     ECS_DEPRECATED("use each or iter")
-    system<Components...> action(Func&& func);
+    system<Components...> action(Func&& func) const;
 
     /* Iter (or each) is mandatory and always the last thing that 
      * is added in the fluent method chain. Create system signature from both 
      * template parameters and anything provided by the signature method. */
     template <typename Func>
-    system<Components...> iter(Func&& func);
+    system<Components...> iter(Func&& func) const;
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
-    system<Components...> each(Func&& func);
+    system<Components...> each(Func&& func) const;
 
     flecs::world_t *m_world;
 
 private:
     template <typename Invoker, typename Func>
-    entity_t build(Func&& func, bool is_each) {
+    entity_t build(Func&& func, bool is_each) const {
         auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
 
         entity_t e, kind = m_desc.entity.add[0];
@@ -13019,10 +13019,9 @@ private:
 
         if (is_trigger) {
             ecs_trigger_desc_t desc = {};
-            ecs_term_t *term = &m_desc.query.filter.terms[0];
-
-            if (ecs_term_is_set(term)) {
-                desc.term = *term;
+            ecs_term_t term = m_desc.query.filter.terms[0];
+            if (ecs_term_is_set(&term)) {
+                desc.term = term;
             } else {
                 desc.expr = m_desc.query.filter.expr;
             }
@@ -13037,13 +13036,14 @@ private:
 
             e = ecs_trigger_init(m_world, &desc);
         } else {
-            m_desc.callback = Invoker::run;
-            m_desc.query.filter.substitute_default = is_each;
-            m_desc.binding_ctx = ctx;
-            m_desc.binding_ctx_free = reinterpret_cast<
+            ecs_system_desc_t desc = m_desc;
+            desc.callback = Invoker::run;
+            desc.query.filter.substitute_default = is_each;
+            desc.binding_ctx = ctx;
+            desc.binding_ctx_free = reinterpret_cast<
                 ecs_ctx_free_t>(_::free_obj<Invoker>);
 
-            e = ecs_system_init(m_world, &m_desc);
+            e = ecs_system_init(m_world, &desc);
         }
 
         return e;
@@ -14559,8 +14559,8 @@ class query : public query_base {
 public:
     query() { }
 
-    query(world_t *world, query_t *query)
-        : query_base(world, query) { }
+    query(world_t *world, query_t *q)
+        : query_base(world, q) { }
 
     explicit query(const world& world, const char *expr = nullptr) 
         : query_base(world.c_ptr())
@@ -15443,14 +15443,14 @@ inline Base& query_builder_i<Base, Components ...>::parent(const query_base& par
 
 template <typename ... Components>    
 template <typename Func>
-inline system<Components ...> system_builder<Components...>::action(Func&& func) {
+inline system<Components ...> system_builder<Components...>::action(Func&& func) const {
     flecs::entity_t system = build<action_invoker_t<Func>>(std::forward<Func>(func), false);
     return flecs::system<Components...>(m_world, system);
 }
 
 template <typename ... Components>    
 template <typename Func>
-inline system<Components ...> system_builder<Components...>::iter(Func&& func) {
+inline system<Components ...> system_builder<Components...>::iter(Func&& func) const {
     using Invoker = typename _::iter_invoker<
         typename std::decay<Func>::type, Components...>;
     flecs::entity_t system = build<Invoker>(std::forward<Func>(func), false);
@@ -15459,7 +15459,7 @@ inline system<Components ...> system_builder<Components...>::iter(Func&& func) {
 
 template <typename ... Components>    
 template <typename Func>
-inline system<Components ...> system_builder<Components...>::each(Func&& func) {
+inline system<Components ...> system_builder<Components...>::each(Func&& func) const {
     using Invoker = typename _::each_invoker<
         typename std::decay<Func>::type, Components...>;
     flecs::entity_t system = build<Invoker>(std::forward<Func>(func), true);

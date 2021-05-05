@@ -216,7 +216,6 @@ void QueryBuilder_builder_assign_to_empty(void);
 void QueryBuilder_builder_build(void);
 void QueryBuilder_builder_build_to_auto(void);
 void QueryBuilder_1_type(void);
-void QueryBuilder_2_types(void);
 void QueryBuilder_add_1_type(void);
 void QueryBuilder_add_2_types(void);
 void QueryBuilder_add_1_type_w_1_type(void);
@@ -225,9 +224,24 @@ void QueryBuilder_add_pair(void);
 void QueryBuilder_add_not(void);
 void QueryBuilder_add_or(void);
 void QueryBuilder_add_optional(void);
-void QueryBuilder_add_in(void);
-void QueryBuilder_add_out(void);
-void QueryBuilder_add_inout(void);
+void QueryBuilder_ptr_type(void);
+void QueryBuilder_const_type(void);
+
+// Testsuite 'SystemBuilder'
+void SystemBuilder_builder_assign_same_type(void);
+void SystemBuilder_builder_assign_from_empty(void);
+void SystemBuilder_builder_build_to_auto(void);
+void SystemBuilder_1_type(void);
+void SystemBuilder_add_1_type(void);
+void SystemBuilder_add_2_types(void);
+void SystemBuilder_add_1_type_w_1_type(void);
+void SystemBuilder_add_2_types_w_1_type(void);
+void SystemBuilder_add_pair(void);
+void SystemBuilder_add_not(void);
+void SystemBuilder_add_or(void);
+void SystemBuilder_add_optional(void);
+void SystemBuilder_ptr_type(void);
+void SystemBuilder_const_type(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -1132,10 +1146,6 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_1_type
     },
     {
-        "2_types",
-        QueryBuilder_2_types
-    },
-    {
         "add_1_type",
         QueryBuilder_add_1_type
     },
@@ -1168,16 +1178,71 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_add_optional
     },
     {
-        "add_in",
-        QueryBuilder_add_in
+        "ptr_type",
+        QueryBuilder_ptr_type
     },
     {
-        "add_out",
-        QueryBuilder_add_out
+        "const_type",
+        QueryBuilder_const_type
+    }
+};
+
+bake_test_case SystemBuilder_testcases[] = {
+    {
+        "builder_assign_same_type",
+        SystemBuilder_builder_assign_same_type
     },
     {
-        "add_inout",
-        QueryBuilder_add_inout
+        "builder_assign_from_empty",
+        SystemBuilder_builder_assign_from_empty
+    },
+    {
+        "builder_build_to_auto",
+        SystemBuilder_builder_build_to_auto
+    },
+    {
+        "1_type",
+        SystemBuilder_1_type
+    },
+    {
+        "add_1_type",
+        SystemBuilder_add_1_type
+    },
+    {
+        "add_2_types",
+        SystemBuilder_add_2_types
+    },
+    {
+        "add_1_type_w_1_type",
+        SystemBuilder_add_1_type_w_1_type
+    },
+    {
+        "add_2_types_w_1_type",
+        SystemBuilder_add_2_types_w_1_type
+    },
+    {
+        "add_pair",
+        SystemBuilder_add_pair
+    },
+    {
+        "add_not",
+        SystemBuilder_add_not
+    },
+    {
+        "add_or",
+        SystemBuilder_add_or
+    },
+    {
+        "add_optional",
+        SystemBuilder_add_optional
+    },
+    {
+        "ptr_type",
+        SystemBuilder_ptr_type
+    },
+    {
+        "const_type",
+        SystemBuilder_const_type
     }
 };
 
@@ -1654,8 +1719,15 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        18,
+        16,
         QueryBuilder_testcases
+    },
+    {
+        "SystemBuilder",
+        NULL,
+        NULL,
+        14,
+        SystemBuilder_testcases
     },
     {
         "ComponentLifecycle",
@@ -1717,5 +1789,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 17);
+    return bake_test_run("cpp_api", argc, argv, suites, 18);
 }

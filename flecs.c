@@ -25337,9 +25337,9 @@ ecs_entity_t ecs_system_init(
             }
         }
 
-        if (desc->interval || desc->rate || desc->tick_source) {
+        if (desc->interval != 0 || desc->rate != 0 || desc->tick_source != 0) {
 #ifdef FLECS_TIMER
-            if (desc->interval) {
+            if (desc->interval != 0) {
                 ecs_set_interval(world, result, desc->interval);
             }
 

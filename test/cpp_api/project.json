@@ -240,7 +240,6 @@
                 "builder_build",
                 "builder_build_to_auto",
                 "1_type",
-                "2_types",
                 "add_1_type",
                 "add_2_types",
                 "add_1_type_w_1_type",
@@ -249,9 +248,26 @@
                 "add_not",
                 "add_or",
                 "add_optional",
-                "add_in",
-                "add_out",
-                "add_inout"
+                "ptr_type",
+                "const_type"
+            ]         
+        }, {
+            "id": "SystemBuilder",
+            "testcases": [
+                "builder_assign_same_type",
+                "builder_assign_from_empty",
+                "builder_build_to_auto",
+                "1_type",
+                "add_1_type",
+                "add_2_types",
+                "add_1_type_w_1_type",
+                "add_2_types_w_1_type",
+                "add_pair",
+                "add_not",
+                "add_or",
+                "add_optional",
+                "ptr_type",
+                "const_type"
             ]         
         }, {
             "id": "ComponentLifecycle",

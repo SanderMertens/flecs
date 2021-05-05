@@ -128,7 +128,7 @@ typedef struct ecs_system_desc_t {
     FLECS_FLOAT interval;
 
     /* Rate at which the system should run */
-    FLECS_FLOAT rate;    
+    int32_t rate;
 
     /* External tick soutce that determines when system ticks */
     ecs_entity_t tick_source;     

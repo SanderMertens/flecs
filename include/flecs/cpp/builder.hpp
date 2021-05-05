@@ -460,7 +460,7 @@ private:
 
 // Query builder
 template<typename ... Components>
-class query_builder_base 
+class query_builder_base
     : public query_builder_i<query_builder_base<Components...>, Components ...>
     , public world_base<query_builder_base<Components...>> 
 {
@@ -501,7 +501,7 @@ public:
 };
 
 template<typename ... Components>
-class query_builder : public query_builder_base<Components...> {
+class query_builder final : public query_builder_base<Components...> {
 public:
     query_builder(const world& world)
         : query_builder_base<Components ...>(world) { }
@@ -510,7 +510,7 @@ public:
 };
 
 template<typename ... Components>
-class system_builder 
+class system_builder final
     : public system_builder_i<system_builder<Components ...>, Components ...>
     , public world_base<system_builder<Components...>>  
 {
@@ -536,24 +536,24 @@ public:
 
     template <typename Func>
     ECS_DEPRECATED("use each or iter")
-    system<Components...> action(Func&& func);
+    system<Components...> action(Func&& func) const;
 
     /* Iter (or each) is mandatory and always the last thing that 
      * is added in the fluent method chain. Create system signature from both 
      * template parameters and anything provided by the signature method. */
     template <typename Func>
-    system<Components...> iter(Func&& func);
+    system<Components...> iter(Func&& func) const;
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
-    system<Components...> each(Func&& func);
+    system<Components...> each(Func&& func) const;
 
     flecs::world_t *m_world;
 
 private:
     template <typename Invoker, typename Func>
-    entity_t build(Func&& func, bool is_each) {
+    entity_t build(Func&& func, bool is_each) const {
         auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
 
         entity_t e, kind = m_desc.entity.add[0];
@@ -561,10 +561,9 @@ private:
 
         if (is_trigger) {
             ecs_trigger_desc_t desc = {};
-            ecs_term_t *term = &m_desc.query.filter.terms[0];
-
-            if (ecs_term_is_set(term)) {
-                desc.term = *term;
+            ecs_term_t term = m_desc.query.filter.terms[0];
+            if (ecs_term_is_set(&term)) {
+                desc.term = term;
             } else {
                 desc.expr = m_desc.query.filter.expr;
             }
@@ -579,13 +578,14 @@ private:
 
             e = ecs_trigger_init(m_world, &desc);
         } else {
-            m_desc.callback = Invoker::run;
-            m_desc.query.filter.substitute_default = is_each;
-            m_desc.binding_ctx = ctx;
-            m_desc.binding_ctx_free = reinterpret_cast<
+            ecs_system_desc_t desc = m_desc;
+            desc.callback = Invoker::run;
+            desc.query.filter.substitute_default = is_each;
+            desc.binding_ctx = ctx;
+            desc.binding_ctx_free = reinterpret_cast<
                 ecs_ctx_free_t>(_::free_obj<Invoker>);
 
-            e = ecs_system_init(m_world, &m_desc);
+            e = ecs_system_init(m_world, &desc);
         }
 
         return e;
