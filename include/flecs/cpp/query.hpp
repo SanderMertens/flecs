@@ -125,10 +125,8 @@ public:
     template <typename Func>
     void iter(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
-
         while (ecs_query_next(&it)) {
-            _::column_args<> columns(&it);
-            _::iter_invoker<Func>::call_system(&it, func, 0, columns.m_columns);
+            _::iter_invoker<Func>(func).invoke(&it);
         }
     }  
 
@@ -140,7 +138,7 @@ protected:
 
 template<typename ... Components>
 class query : public query_base {
-    using Columns = typename _::column_args<Components...>::Columns;
+    using Terms = typename _::term_ptrs<Components...>::Terms;
 
 public:
     query() { }
@@ -177,79 +175,54 @@ public:
 
     template <typename Func>
     void each(Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
-
-        while (ecs_query_next(&it)) {
-            _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(
-                &it, func, 0, columns.m_columns);
-        }
+        iterate<_::each_invoker>(std::forward<Func>(func), ecs_query_next);
     } 
 
     template <typename Func>
     void each(const flecs::filter& filter, Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
         const filter_t* filter_ptr = filter.c_ptr();
-
-        while (ecs_query_next_w_filter(&it, filter_ptr)) {
-            _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(
-                &it, func, 0, columns.m_columns);
-        }
+        iterate<_::each_invoker>(std::forward<Func>(func), 
+            ecs_query_next_w_filter, filter_ptr);
     }
 
     template <typename Func>
     void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
+        iterate<_::each_invoker>(std::forward<Func>(func), 
+            ecs_query_next_worker, stage_current, stage_count);
+    }
 
-        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
-            _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(
-                &it, func, 0, columns.m_columns);
-        }
+    template <typename Func>
+    void iter(Func&& func) const { 
+        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
+    }
+
+    template <typename Func>
+    void iter(const flecs::filter& filter, Func&& func) const {
+        const filter_t* filter_ptr = filter.c_ptr();
+        iterate<_::iter_invoker>(std::forward<Func>(func), 
+            ecs_query_next_w_filter, filter_ptr);
+    }
+
+    template <typename Func>
+    void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
+        iterate<_::iter_invoker>(std::forward<Func>(func), 
+            ecs_query_next_worker, stage_current, stage_count);
     }
 
     template <typename Func>
     ECS_DEPRECATED("use each or iter")
     void action(Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
-
-        while (ecs_query_next(&it)) {
-            _::column_args<Components...> columns(&it);
-            _::action_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
-        }
+        iterate<_::action_invoker>(std::forward<Func>(func), ecs_query_next);
     }
 
-    template <typename Func>
-    void iter(Func&& func) const {
+private:
+    template < template<typename Func, typename ... Comps> typename Invoker, typename Func, typename NextFunc, typename ... Args>
+    void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_query_iter(m_query);
-
-        while (ecs_query_next(&it)) {
-            _::column_args<Components...> columns(&it);
-            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
-        }
-    }  
-
-    template <typename Func>
-    void iter(const flecs::filter& filter, Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);        
-        const filter_t* filter_ptr = filter.c_ptr();
-
-        while (ecs_query_next_w_filter(&it, filter_ptr)) {
-            _::column_args<Components...> columns(&it);
-            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        while (next(&it, std::forward<Args>(args)...)) {
+            Invoker<Func, Components...>(func).invoke(&it);
         }
     }
-
-    template <typename Func>
-    void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
-
-        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
-            _::column_args<Components...> columns(&it);
-            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
-        }
-    }      
 };
 
 } // namespace flecs

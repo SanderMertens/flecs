@@ -146,6 +146,10 @@ typedef void (*ecs_fini_action_t)(
     ecs_world_t *world,
     void *ctx);
 
+/** Function to cleanup context data */
+typedef void (*ecs_ctx_free_t)(
+    void *ctx);
+
 /** @} */
 
 
@@ -258,7 +262,12 @@ struct ecs_trigger_t {
     int32_t event_count;
 
     ecs_iter_action_t action;   /* Trigger callback */
+
     void *ctx;                  /* Trigger callback context */
+    void *binding_ctx;          /* Binding context (for language bindings) */
+
+    ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
     
     ecs_entity_t entity;        /* Entity associated with trigger */
 
@@ -412,6 +421,15 @@ typedef struct ecs_trigger_desc_t {
 
     /* User context to pass to callback */
     void *ctx;
+
+    /* Context to be used for language bindings */
+    void *binding_ctx;
+    
+    /* Callback to free ctx */
+    ecs_ctx_free_t ctx_free;
+
+    /* Callback to free binding_ctx */     
+    ecs_ctx_free_t binding_ctx_free;
 } ecs_trigger_desc_t;
 
 /** @} */
@@ -3057,7 +3075,7 @@ bool ecs_term_is_readonly(
 FLECS_API
 bool ecs_term_is_owned(
     const ecs_iter_t *it,
-    int32_t index);   
+    int32_t index);
 
 /** Get the type of the currently entity/entities.
  * This operation returns the type of the current iterated entity/entities. A

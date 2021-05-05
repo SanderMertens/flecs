@@ -210,7 +210,9 @@ void Query_changed(void);
 void Query_orphaned(void);
 
 // Testsuite 'QueryBuilder'
-void QueryBuilder_builder_assign(void);
+void QueryBuilder_builder_assign_same_type(void);
+void QueryBuilder_builder_assign_from_empty(void);
+void QueryBuilder_builder_assign_to_empty(void);
 void QueryBuilder_builder_build(void);
 void QueryBuilder_1_type(void);
 void QueryBuilder_2_types(void);
@@ -1105,8 +1107,16 @@ bake_test_case Query_testcases[] = {
 
 bake_test_case QueryBuilder_testcases[] = {
     {
-        "builder_assign",
-        QueryBuilder_builder_assign
+        "builder_assign_same_type",
+        QueryBuilder_builder_assign_same_type
+    },
+    {
+        "builder_assign_from_empty",
+        QueryBuilder_builder_assign_from_empty
+    },
+    {
+        "builder_assign_to_empty",
+        QueryBuilder_builder_assign_to_empty
     },
     {
         "builder_build",
@@ -1639,7 +1649,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        15,
+        17,
         QueryBuilder_testcases
     },
     {

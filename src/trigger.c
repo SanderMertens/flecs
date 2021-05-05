@@ -213,14 +213,15 @@ void notify_trigger_set(
         .table_columns = data->columns,
         .entities = entities,
         .offset = row,
-        .count = count,
+        .count = count
     }; 
 
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
         it.system = t->entity;
-        it.param = t->ctx;
+        it.ctx = t->ctx;
+        it.binding_ctx = t->binding_ctx;
         t->action(&it);                   
     }
 }
@@ -314,6 +315,9 @@ ecs_entity_t ecs_trigger_init(
     trigger->term = term;
     trigger->action = desc->callback;
     trigger->ctx = desc->ctx;
+    trigger->binding_ctx = desc->binding_ctx;
+    trigger->ctx_free = desc->ctx_free;
+    trigger->binding_ctx_free = desc->binding_ctx_free;
     trigger->event_count = count_events(desc->events);
     ecs_os_memcpy(trigger->events, desc->events, 
         trigger->event_count * ECS_SIZEOF(ecs_entity_t));
@@ -342,5 +346,14 @@ void ecs_trigger_fini(
 {
     unregister_trigger(world, trigger);
     ecs_term_fini(&trigger->term);
+
+    if (trigger->ctx_free) {
+        trigger->ctx_free(trigger->ctx);
+    }
+
+    if (trigger->binding_ctx_free) {
+        trigger->binding_ctx_free(trigger->binding_ctx);
+    }
+
     ecs_sparse_remove(world->triggers, trigger->id);
 }

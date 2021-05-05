@@ -10983,18 +10983,24 @@ int32_t ecs_queue_count(
 
 typedef struct EcsSystem {
     ecs_iter_action_t action;       /* Callback to be invoked for matching it */
-    void *ctx;                      /* Userdata for system */
 
-    ecs_entity_t entity;                  /* Entity id of system, used for ordering */
-    ecs_query_t *query;                   /* System query */
-    ecs_on_demand_out_t *on_demand;       /* Keep track of [out] column refs */
-    ecs_system_status_action_t status_action; /* Status action */
-    void *status_ctx;                     /* User data for status action */    
-    ecs_entity_t tick_source;             /* Tick source associated with system */
+    ecs_entity_t entity;            /* Entity id of system, used for ordering */
+    ecs_query_t *query;             /* System query */
+    ecs_on_demand_out_t *on_demand; /* Keep track of [out] column refs */
+    ecs_system_status_action_t status_action; /* Status action */   
+    ecs_entity_t tick_source;       /* Tick source associated with system */
     
-    int32_t invoke_count;                 /* Number of times system is invoked */
-    FLECS_FLOAT time_spent;               /* Time spent on running system */
-    FLECS_FLOAT time_passed;              /* Time passed since last invocation */
+    int32_t invoke_count;           /* Number of times system is invoked */
+    FLECS_FLOAT time_spent;         /* Time spent on running system */
+    FLECS_FLOAT time_passed;        /* Time passed since last invocation */
+
+    void *ctx;                      /* Userdata for system */
+    void *status_ctx;               /* User data for status action */ 
+    void *binding_ctx;              /* Optional language binding context */
+
+    ecs_ctx_free_t ctx_free;
+    ecs_ctx_free_t status_ctx_free;
+    ecs_ctx_free_t binding_ctx_free;      
 } EcsSystem;
 
 /* Invoked when system becomes active / inactive */
@@ -22922,14 +22928,15 @@ void notify_trigger_set(
         .table_columns = data->columns,
         .entities = entities,
         .offset = row,
-        .count = count,
+        .count = count
     }; 
 
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
         it.system = t->entity;
-        it.param = t->ctx;
+        it.ctx = t->ctx;
+        it.binding_ctx = t->binding_ctx;
         t->action(&it);                   
     }
 }
@@ -23023,6 +23030,9 @@ ecs_entity_t ecs_trigger_init(
     trigger->term = term;
     trigger->action = desc->callback;
     trigger->ctx = desc->ctx;
+    trigger->binding_ctx = desc->binding_ctx;
+    trigger->ctx_free = desc->ctx_free;
+    trigger->binding_ctx_free = desc->binding_ctx_free;
     trigger->event_count = count_events(desc->events);
     ecs_os_memcpy(trigger->events, desc->events, 
         trigger->event_count * ECS_SIZEOF(ecs_entity_t));
@@ -23051,6 +23061,15 @@ void ecs_trigger_fini(
 {
     unregister_trigger(world, trigger);
     ecs_term_fini(&trigger->term);
+
+    if (trigger->ctx_free) {
+        trigger->ctx_free(trigger->ctx);
+    }
+
+    if (trigger->binding_ctx_free) {
+        trigger->binding_ctx_free(trigger->binding_ctx);
+    }
+
     ecs_sparse_remove(world->triggers, trigger->id);
 }
 
@@ -24941,10 +24960,6 @@ ecs_entity_t ecs_run_intern(
     const ecs_filter_t *filter,
     void *param) 
 {
-    if (!param) {
-        param = system_data->ctx;
-    }
-
     FLECS_FLOAT time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
@@ -24985,13 +25000,9 @@ ecs_entity_t ecs_run_intern(
     it.delta_system_time = time_elapsed;
     it.world_time = world->stats.world_time_total;
     it.frame_offset = offset;
-    
-    /* Set param if provided, otherwise use system context */
-    if (param) {
-        it.param = param;
-    } else {
-        it.param = system_data->ctx;
-    }
+    it.param = param;
+    it.ctx = system_data->ctx;
+    it.binding_ctx = system_data->binding_ctx;
 
     ecs_iter_action_t action = system_data->action;
 
@@ -25092,7 +25103,8 @@ void ecs_run_monitor(
 
     it.world = world;
     it.triggered_by = components;
-    it.param = system_data->ctx;
+    it.ctx = system_data->ctx;
+    it.binding_ctx = system_data->binding_ctx;
 
     if (entities) {
         it.entities = entities;
@@ -25156,11 +25168,11 @@ void ecs_colsystem_dtor(
 
     int i;
     for (i = 0; i < count; i ++) {
-        EcsSystem *cur = &system_data[i];
+        EcsSystem *system = &system_data[i];
         ecs_entity_t e = entities[i];
 
         /* Invoke Deactivated action for active systems */
-        if (cur->query && ecs_vector_count(cur->query->tables)) {
+        if (system->query && ecs_vector_count(system->query->tables)) {
             invoke_status_action(world, e, ptr, EcsSystemDeactivated);
         }
 
@@ -25171,7 +25183,19 @@ void ecs_colsystem_dtor(
             invoke_status_action(world, e, ptr, EcsSystemDisabled);
         }           
 
-        ecs_os_free(cur->on_demand);
+        ecs_os_free(system->on_demand);
+
+        if (system->ctx_free) {
+            system->ctx_free(system->ctx);
+        }
+
+        if (system->status_ctx_free) {
+            system->status_ctx_free(system->status_ctx);
+        }
+
+        if (system->binding_ctx_free) {
+            system->binding_ctx_free(system->binding_ctx);
+        }                
     }
 }
 
@@ -25261,10 +25285,15 @@ ecs_entity_t ecs_system_init(
         system->query = query;
 
         system->action = desc->callback;
-        system->ctx = desc->ctx;
-
         system->status_action = desc->status_callback;
+
+        system->ctx = desc->ctx;
         system->status_ctx = desc->status_ctx;
+        system->binding_ctx = desc->binding_ctx;
+
+        system->ctx_free = desc->ctx_free;
+        system->status_ctx_free = desc->status_ctx_free;
+        system->binding_ctx_free = desc->binding_ctx_free;
 
         system->tick_source = desc->tick_source;
 

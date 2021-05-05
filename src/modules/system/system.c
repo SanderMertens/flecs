@@ -254,10 +254,6 @@ ecs_entity_t ecs_run_intern(
     const ecs_filter_t *filter,
     void *param) 
 {
-    if (!param) {
-        param = system_data->ctx;
-    }
-
     FLECS_FLOAT time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
@@ -298,13 +294,9 @@ ecs_entity_t ecs_run_intern(
     it.delta_system_time = time_elapsed;
     it.world_time = world->stats.world_time_total;
     it.frame_offset = offset;
-    
-    /* Set param if provided, otherwise use system context */
-    if (param) {
-        it.param = param;
-    } else {
-        it.param = system_data->ctx;
-    }
+    it.param = param;
+    it.ctx = system_data->ctx;
+    it.binding_ctx = system_data->binding_ctx;
 
     ecs_iter_action_t action = system_data->action;
 
@@ -405,7 +397,8 @@ void ecs_run_monitor(
 
     it.world = world;
     it.triggered_by = components;
-    it.param = system_data->ctx;
+    it.ctx = system_data->ctx;
+    it.binding_ctx = system_data->binding_ctx;
 
     if (entities) {
         it.entities = entities;
@@ -469,11 +462,11 @@ void ecs_colsystem_dtor(
 
     int i;
     for (i = 0; i < count; i ++) {
-        EcsSystem *cur = &system_data[i];
+        EcsSystem *system = &system_data[i];
         ecs_entity_t e = entities[i];
 
         /* Invoke Deactivated action for active systems */
-        if (cur->query && ecs_vector_count(cur->query->tables)) {
+        if (system->query && ecs_vector_count(system->query->tables)) {
             invoke_status_action(world, e, ptr, EcsSystemDeactivated);
         }
 
@@ -484,7 +477,19 @@ void ecs_colsystem_dtor(
             invoke_status_action(world, e, ptr, EcsSystemDisabled);
         }           
 
-        ecs_os_free(cur->on_demand);
+        ecs_os_free(system->on_demand);
+
+        if (system->ctx_free) {
+            system->ctx_free(system->ctx);
+        }
+
+        if (system->status_ctx_free) {
+            system->status_ctx_free(system->status_ctx);
+        }
+
+        if (system->binding_ctx_free) {
+            system->binding_ctx_free(system->binding_ctx);
+        }                
     }
 }
 
@@ -574,10 +579,15 @@ ecs_entity_t ecs_system_init(
         system->query = query;
 
         system->action = desc->callback;
-        system->ctx = desc->ctx;
-
         system->status_action = desc->status_callback;
+
+        system->ctx = desc->ctx;
         system->status_ctx = desc->status_ctx;
+        system->binding_ctx = desc->binding_ctx;
+
+        system->ctx_free = desc->ctx_free;
+        system->status_ctx_free = desc->status_ctx_free;
+        system->binding_ctx_free = desc->binding_ctx_free;
 
         system->tick_source = desc->tick_source;
 

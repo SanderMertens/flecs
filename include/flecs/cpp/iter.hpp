@@ -1,6 +1,4 @@
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility class to invoke a system each
 ////////////////////////////////////////////////////////////////////////////////
@@ -12,79 +10,93 @@ namespace _
 {
 class invoker { };
 
-struct SystemCppContext {
-public:
-    SystemCppContext() : m_ctx(nullptr) { }
+template <typename T, typename = void>
+struct each_column { };
 
-    SystemCppContext(invoker *ctx) : m_ctx(ctx) { }    
+struct each_column_base {
+    each_column_base(const _::TermPtr& term, int32_t row) : m_term(term), m_row(row) { }
+protected:
+    const _::TermPtr& m_term;
+    int32_t m_row;    
+};
 
-    ~SystemCppContext() {
-        FLECS_DELETE(m_ctx);
+template <typename T>
+struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == false>::type> : public each_column_base {
+    each_column(const _::TermPtr& term, int32_t row) : each_column_base(term, row) { }
+    T& get_row() {
+        return static_cast<T*>(this->m_term.ptr)[this->m_row];
     }
+};
 
-    SystemCppContext& operator=(const SystemCppContext& obj) {
-        ecs_os_abort(); // should never be copied
-        this->m_ctx = obj.m_ctx;
-        return *this;
+template <typename T>
+struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == true>::type> : public each_column_base {
+    each_column(const _::TermPtr& term, int32_t row) : each_column_base(term, row) { }
+    T get_row() {
+        if (this->m_term.ptr) {
+            return &static_cast<T>(this->m_term.ptr)[this->m_row];
+        } else {
+            return nullptr;
+        }
     }
+};
 
-    SystemCppContext& operator=(SystemCppContext&& obj) {
-        this->m_ctx = obj.m_ctx;
-        obj.m_ctx = nullptr;
-        return *this;
+template <typename T, typename = void>
+struct each_ref_column : public each_column<T> {
+    each_ref_column(const _::TermPtr& term, int32_t row) : each_column<T>(term, row) {
+        if (term.is_ref) {
+            this->m_row = 0;
+        }
     }
-
-    invoker* ctx() const {
-        return m_ctx;
-    }
-
-private:
-    invoker *m_ctx;
 };
 
 template <typename Func, typename ... Components>
 class each_invoker : public invoker {
-    using Columns = typename column_args<Components ...>::Columns;
+    using Terms = typename term_ptrs<Components ...>::Terms;
 
 public:
     explicit each_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
     explicit each_invoker(const Func& func) noexcept : m_func(func) { }
 
-    // Invoke system
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
-        flecs::iter iter_wrapper(iter);
-        (void)index;
-        (void)columns;
+    // Invoke object directly. This operation is useful when the calling
+    // function has just constructed the invoker, such as what happens when
+    // iterating a query.
+    void invoke(ecs_iter_t *iter) const {
+        term_ptrs<Components...> terms;
 
-        // Use any_column so we can transparently use shared components
-        for (auto row : iter_wrapper) {
-            func(iter_wrapper.entity(row), (_::any_column<typename std::remove_reference<Components>::type>(
-                 static_cast<typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
-                    static_cast<size_t>(iter->count), comps.is_shared))[row]...);
-        }
+        if (terms.populate_w_refs(iter)) {
+            invoke_callback<each_ref_column>(iter, m_func, 0, terms.m_terms);
+        } else {
+            invoke_callback<each_column>(iter, m_func, 0, terms.m_terms);
+        }   
     }
 
-    // Add components one by one to parameter pack
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
-        each_invoker::call_system(iter, func, index + 1, columns, comps..., columns[index]);
-    }
-
-    // Callback provided to flecs system
+    // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        const SystemCppContext *ctx = static_cast<const SystemCppContext*>(
-            ecs_get_w_id(iter->world, iter->system, 
-                _::cpp_type<SystemCppContext>().id()));
-                
-        const each_invoker *self = static_cast<const each_invoker*>(ctx->ctx());
-        column_args<Components...> columns(iter);
-        call_system(iter, self->m_func, 0, columns.m_columns);
+        auto self = static_cast<const each_invoker*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->invoke(iter);
     }
 
 private:
+    template <template<typename Ta, typename = void> typename ColumnType, typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+        flecs::iter it(iter);
+        for (auto row : it) {
+            func(it.entity(row), 
+                (ColumnType<typename std::remove_reference<Components>::type>(comps, row)
+                    .get_row())...);
+        }
+    }
+
+    template <template<typename Ta, typename = void> typename ColumnType, typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
+        each_invoker::invoke_callback<ColumnType>(iter, func, index + 1, columns, comps..., columns[index]);
+    }    
+
     Func m_func;
 };
 
@@ -95,46 +107,47 @@ private:
 
 template <typename Func, typename ... Components>
 class action_invoker : public invoker {
-    using Columns = typename column_args<Components ...>::Columns;
-
+    using Terms = typename term_ptrs<Components ...>::Terms;
 public:
     explicit action_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
     explicit action_invoker(const Func& func) noexcept : m_func(func) { }
 
-    /* Invoke system */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
-        (void)index;
-        (void)columns;
-
-        flecs::iter iter_wrapper(iter);
-        
-        func(iter_wrapper, (column<typename std::remove_reference< typename std::remove_pointer<Components>::type >::type>(
-            static_cast<typename std::remove_reference< 
-                typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
-                    iter->count, comps.is_shared))...);
+    // Invoke object directly. This operation is useful when the calling
+    // function has just constructed the invoker, such as what happens when
+    // iterating a query.
+    void invoke(ecs_iter_t *iter) const {
+        term_ptrs<Components...> terms;
+        terms.populate_w_refs(iter);
+        invoke_callback(iter, m_func, 0, terms.m_terms);
     }
 
-    /** Add components one by one to parameter pack */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
-        call_system(iter, func, index + 1, columns, comps..., columns[index]);
-    }
-
-    /** Callback provided to flecs */
+    // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        const SystemCppContext *ctx = static_cast<const SystemCppContext*>(
-            ecs_get_w_id(iter->world, iter->system, 
-                _::cpp_type<SystemCppContext>().id()));
-                
-        const action_invoker *self = static_cast<const action_invoker*>(ctx->ctx());
-        column_args<Components...> columns(iter);
-        call_system(iter, self->m_func, 0, columns.m_columns);
+        auto self = static_cast<const action_invoker*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->invoke(iter);
     }
 
 private:
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, int index, Terms& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+        flecs::iter iter_wrapper(iter);
+        func(iter_wrapper, (column<typename std::remove_reference<
+            typename std::remove_pointer<Components>::type >::type>(
+                static_cast<typename std::remove_reference< 
+                    typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
+                        iter->count, comps.is_ref))...);
+    }
+
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, int index, Terms& columns, Targs... comps) {
+        invoke_callback(iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
     Func m_func;
 };
 
@@ -144,16 +157,32 @@ private:
 
 template <typename Func, typename ... Components>
 class iter_invoker : public invoker {
-    using Columns = typename column_args<Components ...>::Columns;
+    using Terms = typename term_ptrs<Components ...>::Terms;
 
 public:
     explicit iter_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
     explicit iter_invoker(const Func& func) noexcept : m_func(func) { }
 
-    /* Invoke system */
+    // Invoke object directly. This operation is useful when the calling
+    // function has just constructed the invoker, such as what happens when
+    // iterating a query.
+    void invoke(ecs_iter_t *iter) const {
+        term_ptrs<Components...> terms;
+        terms.populate(iter);
+        invoke_callback(iter, m_func, 0, terms.m_terms);
+    }
+
+    // Static function that can be used as callback for systems/triggers
+    static void run(ecs_iter_t *iter) {
+        auto self = static_cast<const iter_invoker*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->invoke(iter);
+    }
+
+private:
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
         (void)index;
         (void)columns;
         flecs::iter iter_wrapper(iter);
@@ -162,25 +191,12 @@ public:
                 typename std::remove_pointer<Components>::type >::type*>(comps.ptr))...);
     }
 
-    /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
-        call_system(iter, func, index + 1, columns, comps..., columns[index]);
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
+        invoke_callback(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
-    /** Callback provided to flecs */
-    static void run(ecs_iter_t *iter) {
-        const SystemCppContext *ctx = static_cast<const SystemCppContext*>(
-            ecs_get_w_id(iter->world, iter->system, 
-                _::cpp_type<SystemCppContext>().id()));
-
-        const iter_invoker *self = static_cast<const iter_invoker*>(ctx->ctx());
-        column_args<Components...> columns(iter);
-        call_system(iter, self->m_func, 0, columns.m_columns);
-    }
-
-private:
     Func m_func;
 };
 

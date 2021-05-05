@@ -152,7 +152,9 @@ struct ecs_iter_t {
     void *table_columns;          /**< Table component data */
     ecs_entity_t *entities;       /**< Entity identifiers */
 
-    void *param;                  /**< User data (EcsContext or param argument) */
+    void *param;                  /**< Param passed to ecs_run */
+    void *ctx;                    /**< System context */
+    void *binding_ctx;            /**< Binding context */
     FLECS_FLOAT delta_time;       /**< Time elapsed since last frame */
     FLECS_FLOAT delta_system_time;/**< Time elapsed since last system invocation */
     FLECS_FLOAT world_time;       /**< Time elapsed since start of simulation */

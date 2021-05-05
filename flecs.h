@@ -1892,6 +1892,10 @@ typedef void (*ecs_fini_action_t)(
     ecs_world_t *world,
     void *ctx);
 
+/** Function to cleanup context data */
+typedef void (*ecs_ctx_free_t)(
+    void *ctx);
+
 /** @} */
 
 
@@ -2004,7 +2008,12 @@ struct ecs_trigger_t {
     int32_t event_count;
 
     ecs_iter_action_t action;   /* Trigger callback */
+
     void *ctx;                  /* Trigger callback context */
+    void *binding_ctx;          /* Binding context (for language bindings) */
+
+    ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
     
     ecs_entity_t entity;        /* Entity associated with trigger */
 
@@ -2166,7 +2175,9 @@ struct ecs_iter_t {
     void *table_columns;          /**< Table component data */
     ecs_entity_t *entities;       /**< Entity identifiers */
 
-    void *param;                  /**< User data (EcsContext or param argument) */
+    void *param;                  /**< Param passed to ecs_run */
+    void *ctx;                    /**< System context */
+    void *binding_ctx;            /**< Binding context */
     FLECS_FLOAT delta_time;       /**< Time elapsed since last frame */
     FLECS_FLOAT delta_system_time;/**< Time elapsed since last system invocation */
     FLECS_FLOAT world_time;       /**< Time elapsed since start of simulation */
@@ -2848,6 +2859,15 @@ typedef struct ecs_trigger_desc_t {
 
     /* User context to pass to callback */
     void *ctx;
+
+    /* Context to be used for language bindings */
+    void *binding_ctx;
+    
+    /* Callback to free ctx */
+    ecs_ctx_free_t ctx_free;
+
+    /* Callback to free binding_ctx */     
+    ecs_ctx_free_t binding_ctx_free;
 } ecs_trigger_desc_t;
 
 /** @} */
@@ -6044,7 +6064,7 @@ bool ecs_term_is_readonly(
 FLECS_API
 bool ecs_term_is_owned(
     const ecs_iter_t *it,
-    int32_t index);   
+    int32_t index);
 
 /** Get the type of the currently entity/entities.
  * This operation returns the type of the current iterated entity/entities. A
@@ -6757,14 +6777,24 @@ typedef struct ecs_system_desc_t {
     /* System callback, invoked when system is ran */
     ecs_iter_action_t callback;
 
-    /* Context to be passed to callback (as ecs_iter_t::param) */
-    void *ctx;
-
     /* System status callback, invoked when system status changes */
     ecs_system_status_action_t status_callback;
 
+    /* Context to be passed to callback (as ecs_iter_t::param) */
+    void *ctx;
+
     /* Context to be passed to system status callback */
     void *status_ctx;
+
+    /* Binding context, for when system is implemented in other language */
+    void *binding_ctx;
+
+    /* Functions that are invoked during system cleanup to free context data.
+     * When set, functions are called unconditionally, even when the ctx
+     * pointers are NULL. */
+    ecs_ctx_free_t ctx_free;
+    ecs_ctx_free_t status_ctx_free;
+    ecs_ctx_free_t binding_ctx_free;   
 
     /* Interval in seconds at which the system should run */
     FLECS_FLOAT interval;
@@ -6773,7 +6803,7 @@ typedef struct ecs_system_desc_t {
     FLECS_FLOAT rate;    
 
     /* External tick soutce that determines when system ticks */
-    ecs_entity_t tick_source;
+    ecs_entity_t tick_source;     
 } ecs_system_desc_t;
 
 /* Create a system */
@@ -8832,6 +8862,12 @@ namespace _
 struct placement_new_tag_t{};
 constexpr placement_new_tag_t placement_new_tag{};
 template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
+template<class Ty> inline void free_obj(Ty* _ptr) { 
+    if (_ptr) {
+        destruct_obj(_ptr); 
+        ecs_os_free(_ptr); 
+    }
+}
 
 } // namespace _
 
@@ -9058,52 +9094,79 @@ public:
     array_iterator<T> end() { return array_iterator<T>(nullptr, 0); }
 };
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utility to convert template argument pack to array of columns
-////////////////////////////////////////////////////////////////////////////////
-    // Utility to get actual type
-    template<typename Type>
-    struct base_type {
-        typedef typename std::remove_pointer<
-            typename std::decay<Type>::type>::type type;
-    };
+// Utility to get actual component type
+template<typename Type>
+struct base_type {
+    typedef typename std::remove_pointer<
+        typename std::decay<Type>::type>::type type;
+};
 
 namespace _ 
 {
 
+////////////////////////////////////////////////////////////////////////////////
+//// Utility to convert template argument pack to array of term ptrs
+////////////////////////////////////////////////////////////////////////////////
+
+struct TermPtr {
+    void *ptr;
+    bool is_ref;
+};
+
 template <typename ... Components>
-class column_args {
-public:    
-    struct Column {
-        void *ptr;
-        bool is_shared;
-    };
+class term_ptrs {
+public:
+    using Terms = flecs::array<_::TermPtr, sizeof...(Components)>;
 
-    using Columns = flecs::array<Column, sizeof...(Components)>;
-
-    column_args(ecs_iter_t* iter) {
-        populate_columns(iter, 0, static_cast<typename std::remove_reference<typename std::remove_pointer<Components>::type>::type*>(nullptr)...);
+    void populate(const ecs_iter_t *iter) {
+        populate(iter, 0, static_cast<typename std::remove_reference<
+            typename std::remove_pointer<Components>
+                ::type>::type*>(nullptr)...);
     }
 
-    Columns m_columns;
+    bool populate_w_refs(const ecs_iter_t *iter) {
+        if (iter->table->references) {
+            populate_w_refs(iter, 0, static_cast<typename std::remove_reference<
+                typename std::remove_pointer<Components>
+                    ::type>::type*>(nullptr)...);
+            return true;
+        } else {
+            this->populate(iter);
+            return false;
+        }
+    }
+
+    Terms m_terms;
 
 private:
-    /* Dummy function when last component has been added */
-    void populate_columns(ecs_iter_t *iter, size_t index) { 
+    /* Populate terms array without checking for references */
+    void populate(const ecs_iter_t *iter, size_t index) { 
         (void)iter;
         (void)index;
     }
 
-    /* Populate columns array recursively */
     template <typename T, typename... Targs>
-    void populate_columns(ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
-        int32_t column = static_cast<int32_t>(index + 1);
-        void *ptr = ecs_column_w_size(iter, sizeof(*comp), column);
-        m_columns[index].ptr = ptr;
-        m_columns[index].is_shared = !ecs_is_owned(iter, column) && ptr != nullptr;
-        populate_columns(iter, index + 1, comps ...);
+    void populate(const ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
+        int32_t term = static_cast<int32_t>(index + 1);
+        void *ptr = ecs_term_w_size(iter, sizeof(*comp), term);
+        m_terms[index].ptr = ptr;
+        populate(iter, index + 1, comps ...);
+    } 
+
+    /* Populate terms array, check for references */
+    void populate_w_refs(const ecs_iter_t *iter, size_t index) { 
+        (void)iter;
+        (void)index;
     }
+
+    template <typename T, typename... Targs>
+    void populate_w_refs(const ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
+        int32_t term = static_cast<int32_t>(index + 1);
+        void *ptr = ecs_term_w_size(iter, sizeof(*comp), term);
+        m_terms[index].ptr = ptr;
+        m_terms[index].is_ref = !ecs_term_is_owned(iter, term) && ptr != nullptr;
+        populate_w_refs(iter, index + 1, comps ...);
+    }   
 };
 
 
@@ -9309,49 +9372,6 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace _ {
-
-/** Similar to flecs::column, but abstracts away from shared / owned columns.
- * 
- * @tparam T component type of the column.
- */
-template <typename T, typename = void>
-class any_column { };
-
-template <typename T>
-class any_column<T, typename std::enable_if<std::is_pointer<T>::value == true>::type > final : public column<typename std::remove_pointer<T>::type> {
-public:
-    any_column(T array, std::size_t count, bool is_shared = false)
-        : column<typename std::remove_pointer<T>::type>(array, count, is_shared) { }
-
-    T operator[](size_t index) {
-        if (!this->m_is_shared) {
-            ecs_assert(index < this->m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-            if (this->m_array) {
-                return &this->m_array[index];
-            } else {
-                return nullptr;
-            }
-        } else {
-            return &this->m_array[0];
-        }
-    }   
-};
-
-template <typename T>
-class any_column<T, typename std::enable_if<std::is_pointer<T>::value == false>::type> final : public column<T> {
-public:
-    any_column(T* array, std::size_t count, bool is_shared = false)
-        : column<T>(array, count, is_shared) { }
-
-    T& operator[](size_t index) {
-        if (!this->m_is_shared) {
-            ecs_assert(index < this->m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-            return this->m_array[index];
-        } else {
-            return this->m_array[0];
-        }
-    }   
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -13593,8 +13613,6 @@ inline filter_iterator snapshot::end() {
 
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility class to invoke a system each
 ////////////////////////////////////////////////////////////////////////////////
@@ -13606,79 +13624,93 @@ namespace _
 {
 class invoker { };
 
-struct SystemCppContext {
-public:
-    SystemCppContext() : m_ctx(nullptr) { }
+template <typename T, typename = void>
+struct each_column { };
 
-    SystemCppContext(invoker *ctx) : m_ctx(ctx) { }    
+struct each_column_base {
+    each_column_base(const _::TermPtr& term, int32_t row) : m_term(term), m_row(row) { }
+protected:
+    const _::TermPtr& m_term;
+    int32_t m_row;    
+};
 
-    ~SystemCppContext() {
-        FLECS_DELETE(m_ctx);
+template <typename T>
+struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == false>::type> : public each_column_base {
+    each_column(const _::TermPtr& term, int32_t row) : each_column_base(term, row) { }
+    T& get_row() {
+        return static_cast<T*>(this->m_term.ptr)[this->m_row];
     }
+};
 
-    SystemCppContext& operator=(const SystemCppContext& obj) {
-        ecs_os_abort(); // should never be copied
-        this->m_ctx = obj.m_ctx;
-        return *this;
+template <typename T>
+struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == true>::type> : public each_column_base {
+    each_column(const _::TermPtr& term, int32_t row) : each_column_base(term, row) { }
+    T get_row() {
+        if (this->m_term.ptr) {
+            return &static_cast<T>(this->m_term.ptr)[this->m_row];
+        } else {
+            return nullptr;
+        }
     }
+};
 
-    SystemCppContext& operator=(SystemCppContext&& obj) {
-        this->m_ctx = obj.m_ctx;
-        obj.m_ctx = nullptr;
-        return *this;
+template <typename T, typename = void>
+struct each_ref_column : public each_column<T> {
+    each_ref_column(const _::TermPtr& term, int32_t row) : each_column<T>(term, row) {
+        if (term.is_ref) {
+            this->m_row = 0;
+        }
     }
-
-    invoker* ctx() const {
-        return m_ctx;
-    }
-
-private:
-    invoker *m_ctx;
 };
 
 template <typename Func, typename ... Components>
 class each_invoker : public invoker {
-    using Columns = typename column_args<Components ...>::Columns;
+    using Terms = typename term_ptrs<Components ...>::Terms;
 
 public:
     explicit each_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
     explicit each_invoker(const Func& func) noexcept : m_func(func) { }
 
-    // Invoke system
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
-        flecs::iter iter_wrapper(iter);
-        (void)index;
-        (void)columns;
+    // Invoke object directly. This operation is useful when the calling
+    // function has just constructed the invoker, such as what happens when
+    // iterating a query.
+    void invoke(ecs_iter_t *iter) const {
+        term_ptrs<Components...> terms;
 
-        // Use any_column so we can transparently use shared components
-        for (auto row : iter_wrapper) {
-            func(iter_wrapper.entity(row), (_::any_column<typename std::remove_reference<Components>::type>(
-                 static_cast<typename std::remove_reference< typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
-                    static_cast<size_t>(iter->count), comps.is_shared))[row]...);
-        }
+        if (terms.populate_w_refs(iter)) {
+            invoke_callback<each_ref_column>(iter, m_func, 0, terms.m_terms);
+        } else {
+            invoke_callback<each_column>(iter, m_func, 0, terms.m_terms);
+        }   
     }
 
-    // Add components one by one to parameter pack
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
-        each_invoker::call_system(iter, func, index + 1, columns, comps..., columns[index]);
-    }
-
-    // Callback provided to flecs system
+    // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        const SystemCppContext *ctx = static_cast<const SystemCppContext*>(
-            ecs_get_w_id(iter->world, iter->system, 
-                _::cpp_type<SystemCppContext>().id()));
-                
-        const each_invoker *self = static_cast<const each_invoker*>(ctx->ctx());
-        column_args<Components...> columns(iter);
-        call_system(iter, self->m_func, 0, columns.m_columns);
+        auto self = static_cast<const each_invoker*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->invoke(iter);
     }
 
 private:
+    template <template<typename Ta, typename = void> typename ColumnType, typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+        flecs::iter it(iter);
+        for (auto row : it) {
+            func(it.entity(row), 
+                (ColumnType<typename std::remove_reference<Components>::type>(comps, row)
+                    .get_row())...);
+        }
+    }
+
+    template <template<typename Ta, typename = void> typename ColumnType, typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
+        each_invoker::invoke_callback<ColumnType>(iter, func, index + 1, columns, comps..., columns[index]);
+    }    
+
     Func m_func;
 };
 
@@ -13689,46 +13721,47 @@ private:
 
 template <typename Func, typename ... Components>
 class action_invoker : public invoker {
-    using Columns = typename column_args<Components ...>::Columns;
-
+    using Terms = typename term_ptrs<Components ...>::Terms;
 public:
     explicit action_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
     explicit action_invoker(const Func& func) noexcept : m_func(func) { }
 
-    /* Invoke system */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
-        (void)index;
-        (void)columns;
-
-        flecs::iter iter_wrapper(iter);
-        
-        func(iter_wrapper, (column<typename std::remove_reference< typename std::remove_pointer<Components>::type >::type>(
-            static_cast<typename std::remove_reference< 
-                typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
-                    iter->count, comps.is_shared))...);
+    // Invoke object directly. This operation is useful when the calling
+    // function has just constructed the invoker, such as what happens when
+    // iterating a query.
+    void invoke(ecs_iter_t *iter) const {
+        term_ptrs<Components...> terms;
+        terms.populate_w_refs(iter);
+        invoke_callback(iter, m_func, 0, terms.m_terms);
     }
 
-    /** Add components one by one to parameter pack */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, int index, Columns& columns, Targs... comps) {
-        call_system(iter, func, index + 1, columns, comps..., columns[index]);
-    }
-
-    /** Callback provided to flecs */
+    // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        const SystemCppContext *ctx = static_cast<const SystemCppContext*>(
-            ecs_get_w_id(iter->world, iter->system, 
-                _::cpp_type<SystemCppContext>().id()));
-                
-        const action_invoker *self = static_cast<const action_invoker*>(ctx->ctx());
-        column_args<Components...> columns(iter);
-        call_system(iter, self->m_func, 0, columns.m_columns);
+        auto self = static_cast<const action_invoker*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->invoke(iter);
     }
 
 private:
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, int index, Terms& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+        flecs::iter iter_wrapper(iter);
+        func(iter_wrapper, (column<typename std::remove_reference<
+            typename std::remove_pointer<Components>::type >::type>(
+                static_cast<typename std::remove_reference< 
+                    typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
+                        iter->count, comps.is_ref))...);
+    }
+
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, int index, Terms& columns, Targs... comps) {
+        invoke_callback(iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
     Func m_func;
 };
 
@@ -13738,16 +13771,32 @@ private:
 
 template <typename Func, typename ... Components>
 class iter_invoker : public invoker {
-    using Columns = typename column_args<Components ...>::Columns;
+    using Terms = typename term_ptrs<Components ...>::Terms;
 
 public:
     explicit iter_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
     explicit iter_invoker(const Func& func) noexcept : m_func(func) { }
 
-    /* Invoke system */
+    // Invoke object directly. This operation is useful when the calling
+    // function has just constructed the invoker, such as what happens when
+    // iterating a query.
+    void invoke(ecs_iter_t *iter) const {
+        term_ptrs<Components...> terms;
+        terms.populate(iter);
+        invoke_callback(iter, m_func, 0, terms.m_terms);
+    }
+
+    // Static function that can be used as callback for systems/triggers
+    static void run(ecs_iter_t *iter) {
+        auto self = static_cast<const iter_invoker*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->invoke(iter);
+    }
+
+private:
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
         (void)index;
         (void)columns;
         flecs::iter iter_wrapper(iter);
@@ -13756,25 +13805,12 @@ public:
                 typename std::remove_pointer<Components>::type >::type*>(comps.ptr))...);
     }
 
-    /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_iter_t *iter, const Func& func, size_t index, Columns& columns, Targs... comps) {
-        call_system(iter, func, index + 1, columns, comps..., columns[index]);
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
+        invoke_callback(iter, func, index + 1, columns, comps..., columns[index]);
     }
 
-    /** Callback provided to flecs */
-    static void run(ecs_iter_t *iter) {
-        const SystemCppContext *ctx = static_cast<const SystemCppContext*>(
-            ecs_get_w_id(iter->world, iter->system, 
-                _::cpp_type<SystemCppContext>().id()));
-
-        const iter_invoker *self = static_cast<const iter_invoker*>(ctx->ctx());
-        column_args<Components...> columns(iter);
-        call_system(iter, self->m_func, 0, columns.m_columns);
-    }
-
-private:
     Func m_func;
 };
 
@@ -14023,31 +14059,31 @@ protected:
 private:
     template <typename T,
         typename std::enable_if< std::is_const<T>::value == true, void>::type* = nullptr>
-    constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() const {
         return flecs::In;
     }
 
     template <typename T,
         typename std::enable_if< std::is_reference<T>::value == true, void>::type* = nullptr>
-    constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() const {
         return flecs::Out;
     }
 
     template <typename T,
         typename std::enable_if<std::is_const<T>::value == false && std::is_reference<T>::value == false, void>::type* = nullptr>
-    constexpr flecs::inout_kind_t type_to_inout() {
-        return flecs::InOut;
+    constexpr flecs::inout_kind_t type_to_inout() const {
+        return flecs::InOutDefault;
     }
 
     template <typename T,
         typename std::enable_if< std::is_pointer<T>::value == true, void>::type* = nullptr>
-    constexpr flecs::oper_kind_t type_to_oper() {
+    constexpr flecs::oper_kind_t type_to_oper() const {
         return flecs::Optional;
     }
 
     template <typename T,
         typename std::enable_if< std::is_pointer<T>::value == false, void>::type* = nullptr>
-    constexpr flecs::oper_kind_t type_to_oper() {
+    constexpr flecs::oper_kind_t type_to_oper() const {
         return flecs::And;
     }
 
@@ -14271,6 +14307,13 @@ public:
         m_desc = obj.m_desc;
     }
 
+    query_builder(query_builder&& obj) 
+        : query_builder_i<query_builder<Components...>, Components ...>(obj.m_world, &m_desc)
+    {
+        m_world = obj.m_world;
+        m_desc = obj.m_desc;
+    }
+
     operator ecs_query_t*() const {
         return ecs_query_init(m_world, &m_desc);
     }
@@ -14412,10 +14455,8 @@ public:
     template <typename Func>
     void iter(Func&& func) const {
         ecs_iter_t it = ecs_query_iter(m_query);
-
         while (ecs_query_next(&it)) {
-            _::column_args<> columns(&it);
-            _::iter_invoker<Func>::call_system(&it, func, 0, columns.m_columns);
+            _::iter_invoker<Func>(func).invoke(&it);
         }
     }  
 
@@ -14427,7 +14468,7 @@ protected:
 
 template<typename ... Components>
 class query : public query_base {
-    using Columns = typename _::column_args<Components...>::Columns;
+    using Terms = typename _::term_ptrs<Components...>::Terms;
 
 public:
     query() { }
@@ -14464,79 +14505,54 @@ public:
 
     template <typename Func>
     void each(Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
-
-        while (ecs_query_next(&it)) {
-            _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(
-                &it, func, 0, columns.m_columns);
-        }
+        iterate<_::each_invoker>(std::forward<Func>(func), ecs_query_next);
     } 
 
     template <typename Func>
     void each(const flecs::filter& filter, Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
         const filter_t* filter_ptr = filter.c_ptr();
-
-        while (ecs_query_next_w_filter(&it, filter_ptr)) {
-            _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(
-                &it, func, 0, columns.m_columns);
-        }
+        iterate<_::each_invoker>(std::forward<Func>(func), 
+            ecs_query_next_w_filter, filter_ptr);
     }
 
     template <typename Func>
     void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
+        iterate<_::each_invoker>(std::forward<Func>(func), 
+            ecs_query_next_worker, stage_current, stage_count);
+    }
 
-        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
-            _::column_args<Components...> columns(&it);
-            _::each_invoker<Func, Components...>::call_system(
-                &it, func, 0, columns.m_columns);
-        }
+    template <typename Func>
+    void iter(Func&& func) const { 
+        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
+    }
+
+    template <typename Func>
+    void iter(const flecs::filter& filter, Func&& func) const {
+        const filter_t* filter_ptr = filter.c_ptr();
+        iterate<_::iter_invoker>(std::forward<Func>(func), 
+            ecs_query_next_w_filter, filter_ptr);
+    }
+
+    template <typename Func>
+    void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
+        iterate<_::iter_invoker>(std::forward<Func>(func), 
+            ecs_query_next_worker, stage_current, stage_count);
     }
 
     template <typename Func>
     ECS_DEPRECATED("use each or iter")
     void action(Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
-
-        while (ecs_query_next(&it)) {
-            _::column_args<Components...> columns(&it);
-            _::action_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
-        }
+        iterate<_::action_invoker>(std::forward<Func>(func), ecs_query_next);
     }
 
-    template <typename Func>
-    void iter(Func&& func) const {
+private:
+    template < template<typename Func, typename ... Comps> typename Invoker, typename Func, typename ... Args>
+    void iterate(Func&& func, ecs_iter_next_action_t next, Args &&... args) const {
         ecs_iter_t it = ecs_query_iter(m_query);
-
-        while (ecs_query_next(&it)) {
-            _::column_args<Components...> columns(&it);
-            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
-        }
-    }  
-
-    template <typename Func>
-    void iter(const flecs::filter& filter, Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);        
-        const filter_t* filter_ptr = filter.c_ptr();
-
-        while (ecs_query_next_w_filter(&it, filter_ptr)) {
-            _::column_args<Components...> columns(&it);
-            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
+        while (next(&it, std::forward<Args>(args)...)) {
+            Invoker<Func, Components...>(func).invoke(&it);
         }
     }
-
-    template <typename Func>
-    void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
-
-        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
-            _::column_args<Components...> columns(&it);
-            _::iter_invoker<Func, Components...>::call_system(&it, func, 0, columns.m_columns);
-        }
-    }      
 };
 
 } // namespace flecs
@@ -14637,6 +14653,54 @@ public:
         , m_desc({})
         , m_finalized(true) { }
 
+    system(const system& obj) 
+        : entity(obj.entity::m_world, obj.m_id)
+        , system_builder_i<system<Components...>, Components ...>(obj.entity::m_world, &m_desc)
+    {
+        m_desc = obj.m_desc;
+        m_finalized = obj.m_finalized;
+    }
+
+    system(system&& obj) 
+        : entity(obj.entity::m_world, obj.m_id)
+        , system_builder_i<system<Components...>, Components ...>(obj.entity::m_world, &m_desc)
+    {
+        m_desc = obj.m_desc;
+        m_finalized = obj.m_finalized;
+    }
+
+    template <typename T>
+    system& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
+        return this->order_by(flecs::_::cpp_type<T>::id(m_world),
+            reinterpret_cast<ecs_compare_action_t>(compare));
+    }
+
+    system& order_by(flecs::entity component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
+        if (m_finalized) {
+            ecs_query_t *q = query().c_ptr();
+            ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
+            ecs_query_order_by(m_world, q, component.id(), compare);
+            return *this;
+        } else {
+            return system_builder_i<Class, Components ...>::order_by(component, compare);
+        }
+    }    
+
+    template <typename T>
+    system& group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+        return this->group_by(flecs::_::cpp_type<T>::id(m_world), rank);
+    }
+
+    system& group_by(flecs::entity component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+        if (m_finalized) {
+            ecs_query_t *q = query().c_ptr();
+            ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
+            ecs_query_group_by(m_world, q, component.id(), rank);
+            return *this;
+        } else {
+            return system_builder_i<Class, Components ...>::group_by(component, rank);
+        }
+    }
 
     /** Set system interval.
      * This operation will cause the system to be ran at the specified interval.
@@ -14645,7 +14709,7 @@ public:
      *
      * @param interval The interval value.
      */
-    system interval(FLECS_FLOAT interval) {
+    system& interval(FLECS_FLOAT interval) {
         if (m_finalized) {
             ecs_set_interval(m_world, m_id, interval);
             return *this;
@@ -14662,7 +14726,7 @@ public:
      * @param tick_source The tick source.
      * @param rate The multiple at which to run the system.
      */
-    system rate(const flecs::entity& tick_source, int32_t rate) {
+    system& rate(const flecs::entity& tick_source, int32_t rate) {
         if (m_finalized) {
             ecs_set_rate(m_world, m_id, rate, tick_source.id());
             return *this;
@@ -14678,7 +14742,7 @@ public:
      *
      * @param rate The multiple at which to run the system.
      */
-    system rate(int32_t rate) {
+    system& rate(int32_t rate) {
         if (m_finalized) {
             ecs_set_rate(m_world, m_id, rate, m_desc.tick_source);
             return *this;
@@ -14715,7 +14779,7 @@ public:
         ecs_set_interval(m_world, m_id, period);
     }
 
-    system set_context(void *ctx) {
+    system& set_context(void *ctx) {
         if (m_finalized) {
             EcsContext ctx_value = { ctx };
             ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
@@ -14760,55 +14824,46 @@ public:
     // put using outside of action so we can still use it without it being
     // flagged as deprecated.
     template <typename Func>
-    using action_invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
+    using action_invoker_t = typename _::iter_invoker<
+        typename std::decay<Func>::type, Components...>;
 
     template <typename Func>
     ECS_DEPRECATED("use each or iter")
-    system action(Func&& func) {
-        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-
-        auto ctx = FLECS_NEW(action_invoker_t<Func>)(std::forward<Func>(func));
-        this->set<_::SystemCppContext>({ctx});
-
-        create_system(action_invoker_t<Func>::run, false);
-
+    system& action(Func&& func) {
+        create_system<action_invoker_t<Func>>(std::forward<Func>(func), false);
         return *this;
     }
 
-     /* Iter (or each) is mandatory and always the last thing that 
-      * is added in the fluent method chain. Create system signature from both 
-      * template parameters and anything provided by the signature method. */
+    /* Iter (or each) is mandatory and always the last thing that 
+     * is added in the fluent method chain. Create system signature from both 
+     * template parameters and anything provided by the signature method. */
     template <typename Func>
-    system iter(Func&& func) {
+    system& iter(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-
-        using invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
-        this->set<_::SystemCppContext>({ctx});
-
-        create_system(invoker_t::run, false);
-
+        using Invoker = typename _::iter_invoker<
+            typename std::decay<Func>::type, Components...>;
+        create_system<Invoker>(std::forward<Func>(func), false);
         return *this;
     }
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
-    system each(Func&& func) {
-        using invoker_t = typename _::each_invoker<typename std::decay<Func>::type, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
-        this->set<_::SystemCppContext>({ctx});
-
-        create_system(invoker_t::run, true);
-
+    system& each(Func&& func) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        using Invoker = typename _::each_invoker<
+            typename std::decay<Func>::type, Components...>;
+        create_system<Invoker>(std::forward<Func>(func), true);
         return *this;
     }
 
     ~system() = default;
 private:
-    template <typename Invoker>
-    entity_t create_system(Invoker invoker, bool is_each) {
+    template <typename Invoker, typename Func>
+    entity_t create_system(Func&& func, bool is_each) {
         ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
+
+        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
 
         entity_t e, kind = m_desc.entity.add[0];
         bool is_trigger = kind == flecs::OnAdd || kind == flecs::OnRemove;
@@ -14825,12 +14880,20 @@ private:
 
             desc.entity.entity = m_desc.entity.entity;
             desc.events[0] = kind;
-            desc.callback = invoker;
+            desc.callback = Invoker::run;
             desc.ctx = m_desc.ctx;
+            desc.binding_ctx = ctx;
+            desc.binding_ctx_free = reinterpret_cast<
+                ecs_ctx_free_t>(_::free_obj<Invoker>);
+
             e = ecs_trigger_init(m_world, &desc);
         } else {
-            m_desc.callback = invoker;
+            m_desc.callback = Invoker::run;
             m_desc.query.filter.substitute_default = is_each;
+            m_desc.binding_ctx = ctx;
+            m_desc.binding_ctx_free = reinterpret_cast<
+                ecs_ctx_free_t>(_::free_obj<Invoker>);
+
             e = ecs_system_init(m_world, &m_desc);
         }
 
@@ -15259,7 +15322,6 @@ inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");
     pod_component<Type>("flecs::core::Type");
     pod_component<Name>("flecs::core::Name");
-    component<flecs::_::SystemCppContext>();
 }
 
 template <typename T>

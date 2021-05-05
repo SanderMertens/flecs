@@ -105,14 +105,24 @@ typedef struct ecs_system_desc_t {
     /* System callback, invoked when system is ran */
     ecs_iter_action_t callback;
 
-    /* Context to be passed to callback (as ecs_iter_t::param) */
-    void *ctx;
-
     /* System status callback, invoked when system status changes */
     ecs_system_status_action_t status_callback;
 
+    /* Context to be passed to callback (as ecs_iter_t::param) */
+    void *ctx;
+
     /* Context to be passed to system status callback */
     void *status_ctx;
+
+    /* Binding context, for when system is implemented in other language */
+    void *binding_ctx;
+
+    /* Functions that are invoked during system cleanup to free context data.
+     * When set, functions are called unconditionally, even when the ctx
+     * pointers are NULL. */
+    ecs_ctx_free_t ctx_free;
+    ecs_ctx_free_t status_ctx_free;
+    ecs_ctx_free_t binding_ctx_free;   
 
     /* Interval in seconds at which the system should run */
     FLECS_FLOAT interval;
@@ -121,7 +131,7 @@ typedef struct ecs_system_desc_t {
     FLECS_FLOAT rate;    
 
     /* External tick soutce that determines when system ticks */
-    ecs_entity_t tick_source;
+    ecs_entity_t tick_source;     
 } ecs_system_desc_t;
 
 /* Create a system */

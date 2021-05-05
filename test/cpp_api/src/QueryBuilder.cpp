@@ -1,6 +1,14 @@
 #include <cpp_api.h>
 
-void QueryBuilder_builder_assign() {
+void QueryBuilder_builder_assign_same_type() {
+    // Implement testcase
+}
+
+void QueryBuilder_builder_assign_from_empty() {
+    // Implement testcase
+}
+
+void QueryBuilder_builder_assign_to_empty() {
     // Implement testcase
 }
 

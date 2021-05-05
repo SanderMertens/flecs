@@ -234,7 +234,9 @@
         }, {
             "id": "QueryBuilder",
             "testcases": [
-                "builder_assign",
+                "builder_assign_same_type",
+                "builder_assign_from_empty",
+                "builder_assign_to_empty",
                 "builder_build",
                 "1_type",
                 "2_types",

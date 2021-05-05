@@ -240,31 +240,31 @@ protected:
 private:
     template <typename T,
         typename std::enable_if< std::is_const<T>::value == true, void>::type* = nullptr>
-    constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() const {
         return flecs::In;
     }
 
     template <typename T,
         typename std::enable_if< std::is_reference<T>::value == true, void>::type* = nullptr>
-    constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() const {
         return flecs::Out;
     }
 
     template <typename T,
         typename std::enable_if<std::is_const<T>::value == false && std::is_reference<T>::value == false, void>::type* = nullptr>
-    constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() const {
         return flecs::InOutDefault;
     }
 
     template <typename T,
         typename std::enable_if< std::is_pointer<T>::value == true, void>::type* = nullptr>
-    constexpr flecs::oper_kind_t type_to_oper() {
+    constexpr flecs::oper_kind_t type_to_oper() const {
         return flecs::Optional;
     }
 
     template <typename T,
         typename std::enable_if< std::is_pointer<T>::value == false, void>::type* = nullptr>
-    constexpr flecs::oper_kind_t type_to_oper() {
+    constexpr flecs::oper_kind_t type_to_oper() const {
         return flecs::And;
     }
 

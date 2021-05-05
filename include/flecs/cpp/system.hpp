@@ -266,34 +266,25 @@ public:
     // put using outside of action so we can still use it without it being
     // flagged as deprecated.
     template <typename Func>
-    using action_invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
+    using action_invoker_t = typename _::iter_invoker<
+        typename std::decay<Func>::type, Components...>;
 
     template <typename Func>
     ECS_DEPRECATED("use each or iter")
     system& action(Func&& func) {
-        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-
-        auto ctx = FLECS_NEW(action_invoker_t<Func>)(std::forward<Func>(func));
-        this->set<_::SystemCppContext>({ctx});
-
-        create_system(action_invoker_t<Func>::run, false);
-
+        create_system<action_invoker_t<Func>>(std::forward<Func>(func), false);
         return *this;
     }
 
-     /* Iter (or each) is mandatory and always the last thing that 
-      * is added in the fluent method chain. Create system signature from both 
-      * template parameters and anything provided by the signature method. */
+    /* Iter (or each) is mandatory and always the last thing that 
+     * is added in the fluent method chain. Create system signature from both 
+     * template parameters and anything provided by the signature method. */
     template <typename Func>
     system& iter(Func&& func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-
-        using invoker_t = typename _::iter_invoker<typename std::decay<Func>::type, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
-        this->set<_::SystemCppContext>({ctx});
-
-        create_system(invoker_t::run, false);
-
+        using Invoker = typename _::iter_invoker<
+            typename std::decay<Func>::type, Components...>;
+        create_system<Invoker>(std::forward<Func>(func), false);
         return *this;
     }
 
@@ -301,20 +292,20 @@ public:
      * single entity */
     template <typename Func>
     system& each(Func&& func) {
-        using invoker_t = typename _::each_invoker<typename std::decay<Func>::type, Components...>;
-        auto ctx = FLECS_NEW(invoker_t)(std::forward<Func>(func));
-        this->set<_::SystemCppContext>({ctx});
-
-        create_system(invoker_t::run, true);
-
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        using Invoker = typename _::each_invoker<
+            typename std::decay<Func>::type, Components...>;
+        create_system<Invoker>(std::forward<Func>(func), true);
         return *this;
     }
 
     ~system() = default;
 private:
-    template <typename Invoker>
-    entity_t create_system(Invoker invoker, bool is_each) {
+    template <typename Invoker, typename Func>
+    entity_t create_system(Func&& func, bool is_each) {
         ecs_assert(m_id != 0, ECS_INTERNAL_ERROR, NULL);
+
+        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
 
         entity_t e, kind = m_desc.entity.add[0];
         bool is_trigger = kind == flecs::OnAdd || kind == flecs::OnRemove;
@@ -331,12 +322,20 @@ private:
 
             desc.entity.entity = m_desc.entity.entity;
             desc.events[0] = kind;
-            desc.callback = invoker;
+            desc.callback = Invoker::run;
             desc.ctx = m_desc.ctx;
+            desc.binding_ctx = ctx;
+            desc.binding_ctx_free = reinterpret_cast<
+                ecs_ctx_free_t>(_::free_obj<Invoker>);
+
             e = ecs_trigger_init(m_world, &desc);
         } else {
-            m_desc.callback = invoker;
+            m_desc.callback = Invoker::run;
             m_desc.query.filter.substitute_default = is_each;
+            m_desc.binding_ctx = ctx;
+            m_desc.binding_ctx_free = reinterpret_cast<
+                ecs_ctx_free_t>(_::free_obj<Invoker>);
+
             e = ecs_system_init(m_world, &m_desc);
         }
 
