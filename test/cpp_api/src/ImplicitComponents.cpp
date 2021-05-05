@@ -96,7 +96,7 @@ void ImplicitComponents_remove_pair() {
 void ImplicitComponents_module() {
     flecs::world world;
 
-    flecs::module<Position>(world);
+    world.module<Position>();
 
     auto position = world.lookup("Position");
     test_assert(position.id() != 0);
@@ -105,7 +105,7 @@ void ImplicitComponents_module() {
 void ImplicitComponents_system() {
     flecs::world world;
 
-    flecs::system<Position, Velocity>(world)
+    world.system<Position, Velocity>()
         .each([](flecs::entity e, Position& p, Velocity& v) {
         });
 
@@ -122,7 +122,7 @@ void ImplicitComponents_system_optional() {
     int rotation_count = 0;
     int mass_count = 0;
 
-    flecs::system<Rotation*, Mass*>(world)
+    world.system<Rotation*, Mass*>()
         .each([&](flecs::entity e, Rotation* r, Mass* m) {
             if (r) {
                 rotation_count ++;
@@ -145,10 +145,10 @@ void ImplicitComponents_system_optional() {
     auto mass = world.lookup("Mass");
     test_assert(mass.id() != 0);  
 
-    auto rcomp = flecs::component<Rotation>(world);
+    auto rcomp = world.component<Rotation>();
     test_assert(rcomp == rotation);
 
-    auto mcomp = flecs::component<Mass>(world);
+    auto mcomp = world.component<Mass>();
     test_assert(mcomp == mass);    
 
     world.progress();
@@ -161,7 +161,7 @@ void ImplicitComponents_system_const() {
     flecs::world world;
 
     int count = 0;
-    flecs::system<Position, const Velocity>(world)
+    world.system<Position, const Velocity>()
         .each([&](flecs::entity e, Position& p, const Velocity& v) {
             p.x += v.x;
             p.y += v.y;
@@ -178,10 +178,10 @@ void ImplicitComponents_system_const() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    auto pcomp = flecs::component<Position>(world);
+    auto pcomp = world.component<Position>();
     test_assert(pcomp == position);
 
-    auto vcomp = flecs::component<Velocity>(world);
+    auto vcomp = world.component<Velocity>();
     test_assert(vcomp == velocity);    
 
     world.progress();
@@ -196,7 +196,7 @@ void ImplicitComponents_system_const() {
 void ImplicitComponents_query() {
     flecs::world world;
 
-    auto q = flecs::query<Position, Velocity>(world);
+    auto q = world.query<Position, Velocity>();
 
     q.each([](flecs::entity e, Position& p, Velocity &v) { });
 
@@ -210,7 +210,7 @@ void ImplicitComponents_query() {
 void ImplicitComponents_implicit_name() {
     flecs::world world;
 
-    auto pcomp = flecs::component<Position>(world);
+    auto pcomp = world.component<Position>();
 
     auto position = world.lookup("Position");
     test_assert(position.id() != 0);

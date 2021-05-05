@@ -238,6 +238,7 @@
                 "builder_assign_from_empty",
                 "builder_assign_to_empty",
                 "builder_build",
+                "builder_build_to_auto",
                 "1_type",
                 "2_types",
                 "add_1_type",

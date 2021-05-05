@@ -20,7 +20,7 @@ public:
         ecs_type_desc_t desc = {};
         desc.entity.name = name;
         desc.ids_expr = expr;
-        m_entity = flecs::entity(world, ecs_type_init(world.c_ptr(), &desc));
+        m_entity = flecs::entity_view(world, ecs_type_init(world.c_ptr(), &desc));
         sync_from_flecs();
     }
 
@@ -130,7 +130,7 @@ private:
         }
     }   
 
-    flecs::entity m_entity;
+    flecs::entity_view m_entity;
     type_t m_type;
     type_t m_normalized;
 };

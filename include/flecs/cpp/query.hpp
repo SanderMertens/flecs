@@ -216,7 +216,7 @@ public:
     }
 
 private:
-    template < template<typename Func, typename ... Comps> typename Invoker, typename Func, typename NextFunc, typename ... Args>
+    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_query_iter(m_query);
         while (next(&it, std::forward<Args>(args)...)) {

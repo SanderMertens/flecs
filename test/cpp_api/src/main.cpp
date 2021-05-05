@@ -214,6 +214,7 @@ void QueryBuilder_builder_assign_same_type(void);
 void QueryBuilder_builder_assign_from_empty(void);
 void QueryBuilder_builder_assign_to_empty(void);
 void QueryBuilder_builder_build(void);
+void QueryBuilder_builder_build_to_auto(void);
 void QueryBuilder_1_type(void);
 void QueryBuilder_2_types(void);
 void QueryBuilder_add_1_type(void);
@@ -1123,6 +1124,10 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_builder_build
     },
     {
+        "builder_build_to_auto",
+        QueryBuilder_builder_build_to_auto
+    },
+    {
         "1_type",
         QueryBuilder_1_type
     },
@@ -1649,7 +1654,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        17,
+        18,
         QueryBuilder_testcases
     },
     {

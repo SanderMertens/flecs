@@ -17,8 +17,8 @@ public:
         return m_base;
     }
 
-    Base& entity(const flecs::id& id) {
-        m_term_id->entity = id.raw_id();
+    Base& entity(const flecs::id_t id) {
+        m_term_id->entity = id;
         return m_base;
     }
 
@@ -29,11 +29,11 @@ public:
         return m_base;
     }
 
-    Base& set(uint8_t set_mask, const id relation = flecs::id(flecs::IsA), 
+    Base& set(uint8_t set_mask, const flecs::id_t relation = flecs::IsA, 
         int32_t min_depth = 0, int32_t max_depth = 0)
     {
         m_term_id->set = set_mask;
-        m_term_id->relation = relation.raw_id();
+        m_term_id->relation = relation;
         m_term_id->min_depth = min_depth;
         m_term_id->max_depth = max_depth;
         return m_base;
@@ -101,14 +101,12 @@ private:
     ecs_term_t m_term;
 };
 
-
 // Filter builder interface
 template<typename Base, typename ... Components>
 class filter_builder_i {
 public:
-    filter_builder_i(flecs::world_t *world, ecs_filter_desc_t *desc) 
-        : m_world(world)
-        , m_desc(desc)
+    filter_builder_i(ecs_filter_desc_t *desc) 
+        : m_desc(desc)
         , m_term(0) { }
 
     Base& expr(const char *expr) {
@@ -128,24 +126,24 @@ public:
 
     template<typename T>
     Base& term() {
-        m_desc->terms[m_term] = flecs::term(m_world).id<T>();
+        m_desc->terms[m_term] = flecs::term(Base::world(this)).id<T>();
         m_term ++;
         return *static_cast<Base*>(this);
     }
 
     template<typename R, typename O>
     Base& term() {
-        m_desc->terms[m_term ++] = flecs::term(m_world).id<R, O>();
+        m_desc->terms[m_term ++] = flecs::term(Base::world(this)).id<R, O>();
         return *static_cast<Base*>(this);
     }    
 
     Base& term(const id_t id) {
-        m_desc->terms[m_term ++] = flecs::term(m_world).id(id);
+        m_desc->terms[m_term ++] = flecs::term(Base::world(this)).id(id);
         return *static_cast<Base*>(this);
     }
 
     Base& term(const id_t r, const id_t o) {
-        m_desc->terms[m_term ++] = flecs::term(m_world).id(r, o);
+        m_desc->terms[m_term ++] = flecs::term(Base::world(this)).id(r, o);
         return *static_cast<Base*>(this);
     }    
 
@@ -218,7 +216,7 @@ public:
 
     void populate_filter_from_pack() {
         flecs::array<flecs::id_t, sizeof...(Components)> ids ({
-            (_::cpp_type<Components>::id(m_world))...
+            (_::cpp_type<Components>::id(Base::world(this)))...
         });
 
         flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout_kinds ({
@@ -233,9 +231,6 @@ public:
             term(ids[i]).inout(inout_kinds[i]).oper(oper_kinds[i]);
         }
     }
-
-protected:
-    flecs::world_t *m_world;
 
 private:
     template <typename T,
@@ -277,11 +272,11 @@ template<typename Base, typename ... Components>
 class query_builder_i : public filter_builder_i<Base, Components ...> {
 public:
     query_builder_i()
-        : filter_builder_i<Base, Components ...>(nullptr, nullptr)
+        : filter_builder_i<Base, Components ...>(nullptr)
         , m_desc(nullptr) { }
 
-    query_builder_i(flecs::world_t *world, ecs_query_desc_t *desc) 
-        : filter_builder_i<Base, Components ...>(world, &desc->filter)
+    query_builder_i(ecs_query_desc_t *desc) 
+        : filter_builder_i<Base, Components ...>(&desc->filter)
         , m_desc(desc) { }
 
     /** Sort the output of a query.
@@ -305,8 +300,8 @@ public:
     template <typename T>
     Base& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
         ecs_compare_action_t cmp = reinterpret_cast<ecs_compare_action_t>(compare);
-        return this->order_by(
-            flecs::entity(this->m_world, _::cpp_type<T>::id(this->m_world)), cmp);
+        auto world = Base::world(this);
+        return this->order_by(_::cpp_type<T>::id(world), cmp);
     }
 
     /** Sort the output of a query.
@@ -315,7 +310,7 @@ public:
      * @param component The component used to sort.
      * @param compare The compare function used to sort the components.
      */    
-    Base& order_by(flecs::entity component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
+    Base& order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
         m_desc->order_by = reinterpret_cast<ecs_compare_action_t>(compare);
         m_desc->order_by_id = component;
         return *static_cast<Base*>(this);
@@ -341,8 +336,7 @@ public:
     template <typename T>
     Base& group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
         ecs_rank_type_action_t rnk = reinterpret_cast<ecs_rank_type_action_t>(rank);
-        return this->group_by(
-            flecs::entity(this->m_world, _::cpp_type<T>::id(this->m_world)), rnk);
+        return this->group_by(_::cpp_type<T>::id(this->m_world), rnk);
     }
 
     /** Group and sort matched tables.
@@ -351,7 +345,7 @@ public:
      * @param component The component used to determine the group rank.
      * @param rank The rank action.
      */
-    Base& group_by(flecs::entity component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+    Base& group_by(flecs::entity_t component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
         m_desc->group_by = reinterpret_cast<ecs_rank_type_action_t>(rank);
         m_desc->group_by_id = component;
         return *static_cast<Base*>(this);
@@ -369,12 +363,12 @@ template<typename Base, typename ... Components>
 class system_builder_i : public query_builder_i<Base, Components ...> {
 public:
     system_builder_i()
-        : query_builder_i<Base, Components ...>(nullptr, nullptr)
+        : query_builder_i<Base, Components ...>(nullptr)
         , m_desc(nullptr)
         , m_add_count(0) { }
 
-    system_builder_i(flecs::world_t *world, ecs_system_desc_t *desc) 
-        : query_builder_i<Base, Components ...>(world, &desc->query)
+    system_builder_i(ecs_system_desc_t *desc) 
+        : query_builder_i<Base, Components ...>(&desc->query)
         , m_desc(desc)
         , m_add_count(0) { }
 
@@ -466,46 +460,138 @@ private:
 
 // Query builder
 template<typename ... Components>
-class query_builder : public query_builder_i<query_builder<Components...>, Components ...> {
+class query_builder_base 
+    : public query_builder_i<query_builder_base<Components...>, Components ...>
+    , public world_base<query_builder_base<Components...>> 
+{
     friend class query_base;
 public:
-    query_builder()
-        : m_world(nullptr)
-        , m_desc({}) { }
-
-    query_builder(const world& world) 
-        : query_builder_i<query_builder<Components...>, Components ...>(world.c_ptr(), &m_desc)
+    query_builder_base(const world& world) 
+        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc)
         , m_world(world.c_ptr())
-        , m_desc({}) 
+        , m_desc({})
     { 
         this->populate_filter_from_pack();
     }
 
-    query_builder(const query_builder& obj) 
-        : query_builder_i<query_builder<Components...>, Components ...>(obj.m_world, &m_desc)
+    query_builder_base(const query_builder_base& obj) 
+        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc)
     {
         m_world = obj.m_world;
         m_desc = obj.m_desc;
     }
 
-    query_builder(query_builder&& obj) 
-        : query_builder_i<query_builder<Components...>, Components ...>(obj.m_world, &m_desc)
+    query_builder_base(query_builder_base&& obj) 
+        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc)
     {
         m_world = obj.m_world;
         m_desc = obj.m_desc;
-    }
-
-    operator ecs_query_t*() const {
-        return ecs_query_init(m_world, &m_desc);
     }
 
     operator query<Components ...>() const;
 
+    operator ecs_query_t*() const {
+        return ecs_query_init(this->m_world, &this->m_desc);
+    }    
+
     query<Components ...> build() const;
 
-private:
     flecs::world_t *m_world;
-    ecs_query_desc_t m_desc;
+    ecs_query_desc_t m_desc;    
+};
+
+template<typename ... Components>
+class query_builder : public query_builder_base<Components...> {
+public:
+    query_builder(const world& world)
+        : query_builder_base<Components ...>(world) { }
+
+    operator query<>() const;
+};
+
+template<typename ... Components>
+class system_builder 
+    : public system_builder_i<system_builder<Components ...>, Components ...>
+    , public world_base<system_builder<Components...>>  
+{
+    using Class = system_builder<Components ...>;
+public:
+    explicit system_builder(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr) 
+        : system_builder_i<Class, Components ...>(&m_desc)
+        , m_world(world.c_ptr())
+        , m_desc({})
+        { 
+            m_desc.entity.name = name;
+            m_desc.entity.sep = "::";
+            m_desc.entity.add[0] = flecs::OnUpdate;
+            m_desc.query.filter.expr = expr;
+            this->populate_filter_from_pack();
+        }
+
+    // put using outside of action so we can still use it without it being
+    // flagged as deprecated.
+    template <typename Func>
+    using action_invoker_t = typename _::iter_invoker<
+        typename std::decay<Func>::type, Components...>;
+
+    template <typename Func>
+    ECS_DEPRECATED("use each or iter")
+    system<Components...> action(Func&& func);
+
+    /* Iter (or each) is mandatory and always the last thing that 
+     * is added in the fluent method chain. Create system signature from both 
+     * template parameters and anything provided by the signature method. */
+    template <typename Func>
+    system<Components...> iter(Func&& func);
+
+    /* Each is similar to action, but accepts a function that operates on a
+     * single entity */
+    template <typename Func>
+    system<Components...> each(Func&& func);
+
+    flecs::world_t *m_world;
+
+private:
+    template <typename Invoker, typename Func>
+    entity_t build(Func&& func, bool is_each) {
+        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
+
+        entity_t e, kind = m_desc.entity.add[0];
+        bool is_trigger = kind == flecs::OnAdd || kind == flecs::OnRemove;
+
+        if (is_trigger) {
+            ecs_trigger_desc_t desc = {};
+            ecs_term_t *term = &m_desc.query.filter.terms[0];
+
+            if (ecs_term_is_set(term)) {
+                desc.term = *term;
+            } else {
+                desc.expr = m_desc.query.filter.expr;
+            }
+
+            desc.entity.entity = m_desc.entity.entity;
+            desc.events[0] = kind;
+            desc.callback = Invoker::run;
+            desc.ctx = m_desc.ctx;
+            desc.binding_ctx = ctx;
+            desc.binding_ctx_free = reinterpret_cast<
+                ecs_ctx_free_t>(_::free_obj<Invoker>);
+
+            e = ecs_trigger_init(m_world, &desc);
+        } else {
+            m_desc.callback = Invoker::run;
+            m_desc.query.filter.substitute_default = is_each;
+            m_desc.binding_ctx = ctx;
+            m_desc.binding_ctx_free = reinterpret_cast<
+                ecs_ctx_free_t>(_::free_obj<Invoker>);
+
+            e = ecs_system_init(m_world, &m_desc);
+        }
+
+        return e;
+    }
+
+    ecs_system_desc_t m_desc;
 };
 
 }

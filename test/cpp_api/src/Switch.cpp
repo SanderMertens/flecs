@@ -60,7 +60,7 @@ void Switch_system_w_case() {
         .add_case(Standing);    
 
     int count = 0, invoke_count = 0;  
-    flecs::system<>(world, nullptr, "CASE | Walking")
+    world.system<>(nullptr, "CASE | Walking")
         .iter([&](flecs::iter it) {
             auto movement = it.term<flecs::entity_t>(1);
 
@@ -98,7 +98,7 @@ void Switch_system_w_switch() {
         .add_case(Standing);    
 
     int count = 0, invoke_count = 0;  
-    flecs::system<>(world, nullptr, "SWITCH | Movement")
+    world.system<>(nullptr, "SWITCH | Movement")
         .iter([&](flecs::iter it) {
             flecs::column<flecs::entity_t> movement(it, 1);
 

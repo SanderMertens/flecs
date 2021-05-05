@@ -58,17 +58,17 @@ class world_filter;
 class snapshot_filter;
 class query_base;
 
-template <typename ... Components>
-class query_builder;
-
-template<typename ... Components>
-class query_iterator;
-
 template<typename ... Components>
 class query;
 
 template<typename ... Components>
 class system;
+
+template <typename ... Components>
+class query_builder;
+
+template <typename ... Components>
+class system_builder;
 
 namespace _
 {
@@ -165,14 +165,14 @@ static const flecs::entity_t Throw = EcsThrow;
 #include <flecs/cpp/column.hpp>
 #include <flecs/cpp/world.hpp>
 #include <flecs/cpp/entity.hpp>
+#include <flecs/cpp/iter.hpp>
+#include <flecs/cpp/builder.hpp>
 #include <flecs/cpp/type.hpp>
 #include <flecs/cpp/component.hpp>
 #include <flecs/cpp/module.hpp>
 #include <flecs/cpp/filter.hpp>
 #include <flecs/cpp/snapshot.hpp>
 #include <flecs/cpp/filter_iterator.hpp>
-#include <flecs/cpp/iter.hpp>
-#include <flecs/cpp/builder.hpp>
 #include <flecs/cpp/query.hpp>
 #include <flecs/cpp/system.hpp>
 #include <flecs/cpp/reader_writer.hpp>

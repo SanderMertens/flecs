@@ -78,20 +78,20 @@ public:
     }
 
 private:
-    template <template<typename Ta, typename = void> typename ColumnType, typename... Targs,
+    template <template<typename Ta, typename = void> class ColumnType, typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
     static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
         (void)index;
         (void)columns;
         flecs::iter it(iter);
         for (auto row : it) {
-            func(it.entity(row), 
+            func(it.entity(row),
                 (ColumnType<typename std::remove_reference<Components>::type>(comps, row)
                     .get_row())...);
         }
     }
 
-    template <template<typename Ta, typename = void> typename ColumnType, typename... Targs,
+    template <template<typename Ta, typename = void> class ColumnType, typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
     static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
         each_invoker::invoke_callback<ColumnType>(iter, func, index + 1, columns, comps..., columns[index]);

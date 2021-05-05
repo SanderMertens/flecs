@@ -3,14 +3,14 @@
 void System_action() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<Position, Velocity>(world)
+    world.system<Position, Velocity>()
         .iter([](flecs::iter&it, Position *p, Velocity *v) {
             for (auto i : it) {
                 p[i].x += v[i].x;
@@ -32,14 +32,14 @@ void System_action() {
 void System_action_const() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<Position, const Velocity>(world)
+    world.system<Position, const Velocity>()
         .iter([](flecs::iter&it, Position *p, const Velocity* v) {
             for (auto i : it) {
                 p[i].x += v[i].x;
@@ -61,21 +61,21 @@ void System_action_const() {
 void System_action_shared() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
 
-    auto base = flecs::entity(world)
+    auto base = world.entity()
         .set<Velocity>({1, 2});
 
-    auto e1 = flecs::entity(world)
+    auto e1 = world.entity()
         .set<Position>({10, 20})
         .add(flecs::IsA, base);
 
-    auto e2 = flecs::entity(world)
+    auto e2 = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::system<Position>(world).signature("ANY:Velocity")
+    world.system<Position>().signature("ANY:Velocity")
         .iter([](flecs::iter&it, Position *p) {
             auto v = it.term<const Velocity>(2);
 
@@ -106,27 +106,27 @@ void System_action_shared() {
 void System_action_optional() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
     flecs::component<Mass>(world, "Mass");
 
-    auto e1 = flecs::entity(world)
+    auto e1 = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2})
         .set<Mass>({1});
 
-    auto e2 = flecs::entity(world)
+    auto e2 = world.entity()
         .set<Position>({30, 40})
         .set<Velocity>({3, 4})
         .set<Mass>({1});        
 
-    auto e3 = flecs::entity(world)
+    auto e3 = world.entity()
         .set<Position>({50, 60});
 
-    auto e4 = flecs::entity(world)
+    auto e4 = world.entity()
         .set<Position>({70, 80});
 
-    flecs::system<Position, Velocity*, Mass*>(world)
+    world.system<Position, Velocity*, Mass*>()
         .iter([](flecs::iter& it, Position *p, Velocity *v, Mass *m) {
         if (it.is_set(2) && it.is_set(3)) {
             for (auto i : it) {
@@ -163,14 +163,14 @@ void System_action_optional() {
 void System_each() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<Position, Velocity>(world)
+    world.system<Position, Velocity>()
         .each([](flecs::entity e, Position& p, Velocity& v) {
             p.x += v.x;
             p.y += v.y;
@@ -186,14 +186,14 @@ void System_each() {
 void System_each_const() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<Position, const Velocity>(world)
+    world.system<Position, const Velocity>()
         .each([](flecs::entity e, Position& p, const Velocity& v) {
             p.x += v.x;
             p.y += v.y;
@@ -209,21 +209,21 @@ void System_each_const() {
 void System_each_shared() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
 
-    auto base = flecs::entity(world)
+    auto base = world.entity()
         .set<Velocity>({1, 2});
 
-    auto e1 = flecs::entity(world)
+    auto e1 = world.entity()
         .set<Position>({10, 20})
         .add(flecs::IsA, base);
 
-    auto e2 = flecs::entity(world)
+    auto e2 = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::system<Position, const Velocity>(world)
+    world.system<Position, const Velocity>()
         .each([](flecs::entity e, Position& p, const Velocity& v) {
             p.x += v.x;
             p.y += v.y;
@@ -243,27 +243,27 @@ void System_each_shared() {
 void System_each_optional() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
     flecs::component<Mass>(world, "Mass");
 
-    auto e1 = flecs::entity(world)
+    auto e1 = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2})
         .set<Mass>({1});
 
-    auto e2 = flecs::entity(world)
+    auto e2 = world.entity()
         .set<Position>({30, 40})
         .set<Velocity>({3, 4})
         .set<Mass>({1});        
 
-    auto e3 = flecs::entity(world)
+    auto e3 = world.entity()
         .set<Position>({50, 60});
 
-    auto e4 = flecs::entity(world)
+    auto e4 = world.entity()
         .set<Position>({70, 80});
 
-    flecs::system<Position, Velocity*, Mass*>(world)
+    world.system<Position, Velocity*, Mass*>()
         .each([](flecs::entity e, Position& p, Velocity* v, Mass *m) {
         if (v && m) {
             p.x += v->x * m->value;
@@ -297,14 +297,14 @@ void System_each_optional() {
 void System_signature() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<>(world).signature("Position, Velocity")
+    world.system<>().signature("Position, Velocity")
         .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<Velocity> v(it, 2);
@@ -329,14 +329,14 @@ void System_signature() {
 void System_signature_const() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
 
-    auto entity = flecs::entity(world)
+    auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::system<>(world).signature("Position, [in] Velocity")
+    world.system<>().signature("Position, [in] Velocity")
         .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<const Velocity> v(it, 2);
@@ -361,21 +361,21 @@ void System_signature_const() {
 void System_signature_shared() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
 
-    auto base = flecs::entity(world)
+    auto base = world.entity()
         .set<Velocity>({1, 2});
 
-    auto e1 = flecs::entity(world)
+    auto e1 = world.entity()
         .set<Position>({10, 20})
         .add(flecs::IsA, base);
 
-    auto e2 = flecs::entity(world)
+    auto e2 = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::system<>(world).signature("Position, [in] ANY:Velocity")
+    world.system<>().signature("Position, [in] ANY:Velocity")
         .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<const Velocity> v(it, 2);
@@ -407,27 +407,27 @@ void System_signature_shared() {
 void System_signature_optional() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>("Position");
+    world.component<Velocity>("Velocity");
     flecs::component<Mass>(world, "Mass");
 
-    auto e1 = flecs::entity(world)
+    auto e1 = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2})
         .set<Mass>({1});
 
-    auto e2 = flecs::entity(world)
+    auto e2 = world.entity()
         .set<Position>({30, 40})
         .set<Velocity>({3, 4})
         .set<Mass>({1});        
 
-    auto e3 = flecs::entity(world)
+    auto e3 = world.entity()
         .set<Position>({50, 60});
 
-    auto e4 = flecs::entity(world)
+    auto e4 = world.entity()
         .set<Position>({70, 80});
 
-    flecs::system<>(world).signature("Position, ?Velocity, ?Mass")
+    world.system<>().signature("Position, ?Velocity, ?Mass")
         .iter([](flecs::iter& it) {
             flecs::column<Position> p(it, 1);
             flecs::column<Velocity> v(it, 2);
@@ -472,11 +472,11 @@ void System_copy_name_on_create() {
     char name[6];
     strcpy(name, "Hello");
 
-    auto system_1 = flecs::system<Position>(world, name)
+    auto system_1 = world.system<Position>(name)
         .iter([](flecs::iter&it, Position *p) {});
 
     strcpy(name, "World");
-    auto system_2 = flecs::system<Position>(world, name)
+    auto system_2 = world.system<Position>(name)
         .iter([](flecs::iter&it, Position *p) {});
 
     test_assert(system_1.id() != system_2.id());
@@ -485,7 +485,7 @@ void System_copy_name_on_create() {
 void System_nested_system() {
     flecs::world world;
 
-    auto system_1 = flecs::system<Position>(world, "foo::bar")
+    auto system_1 = world.system<Position>("foo::bar")
         .iter([](flecs::iter&it, Position *p) {});
 
     test_str(system_1.name().c_str(), "bar");
@@ -504,7 +504,7 @@ void System_empty_signature() {
 
     int count = 0;
 
-    flecs::system<>(world)
+    world.system<>()
         .iter([&](flecs::iter it) {
             count ++;
         });
@@ -580,7 +580,7 @@ void System_system_from_id() {
             invoked ++;
         });
 
-    auto sys_from_id = world.system<>(sys);
+    auto sys_from_id = world.system(sys);
 
     sys_from_id.run();
     test_int(invoked, 1);
