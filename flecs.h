@@ -1938,22 +1938,24 @@ typedef enum ecs_oper_kind_t {
     EcsNotFrom      /* Term must match none of the components from term id */
 } ecs_oper_kind_t;
 
+/** Substitution with set parameters.
+ * These parameters allow for substituting a term id with its super- or subsets
+ * for a specified relationship. This enables functionality such as selecting
+ * components from a base (IsA) or a parent (ChildOf) in a single term */
+typedef struct ecs_term_set_t {
+    ecs_entity_t relation;      /* Relationship to substitute (default = IsA) */
+    uint8_t mask;               /* Substitute as self, subset, superset */
+    int32_t min_depth;          /* Min depth of subset/superset substitution */
+    int32_t max_depth;          /* Max depth of subset/superset substitution */
+} ecs_term_set_t;
+
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {
     ecs_entity_t entity;        /* Entity (default = This) */
     char *name;                 /* Name (default = ".") */
-    ecs_var_kind_t var_kind;    /* Is id a variable (default yes if name is 
+    ecs_var_kind_t var;         /* Is id a variable (default yes if name is 
                                  * all caps & entity is 0) */
-
-    /* Substitution parameters
-     * These parameters allow for substituting the id with its super- or subsets
-     * for a specified relationship. This enables functionality like selecting
-     * components from a base (IsA) or a parent (ChildOf) in a single term */
-
-    ecs_entity_t relation;      /* Relationship to substitute (default = IsA) */
-    uint8_t set;                /* Substitute as self, subset, superset */
-    int32_t min_depth;          /* Min depth of subset/superset substitution */
-    int32_t max_depth;          /* Max depth of subset/superset substitution */
+    ecs_term_set_t set;         /* Set substitution parameters */
 } ecs_term_id_t;
 
 /** Type that describes a single column in the system signature */
@@ -2324,15 +2326,6 @@ ecs_entity_t ecs_new_module(
     const char *name,
     size_t size,
     size_t alignment);
-
-FLECS_API
-ecs_entity_t ecs_new_system(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    ecs_entity_t phase,
-    const char *signature,
-    ecs_iter_action_t action);
 
 FLECS_API
 char* ecs_module_path_from_c(
@@ -6816,13 +6809,11 @@ ecs_entity_t ecs_system_init(
 #define ECS_SYSTEM(world, id, kind, ...) \
     ecs_iter_action_t ecs_iter_action(id) = id;\
     ecs_entity_t id = ecs_system_init(world, &(ecs_system_desc_t){\
-        .entity = {\
-            .name = #id,\
-            .add = {kind}\
-        },\
+        .entity = { .name = #id, .add = {kind} },\
         .query.filter.expr = #__VA_ARGS__,\
         .callback = ecs_iter_action(id)\
     });\
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
     (void)ecs_iter_action(id);\
     (void)id;
 #endif
@@ -6836,6 +6827,7 @@ ecs_entity_t ecs_system_init(
         .events = {kind},\
     });\
     ecs_entity_t trigger_name = __F##trigger_name;\
+    ecs_assert(trigger_name != 0, ECS_INVALID_PARAMETER, NULL);\
     (void)__F##trigger_name;\
     (void)trigger_name;
 
@@ -12487,13 +12479,13 @@ public:
         return m_base;
     }
 
-    Base& set(uint8_t set_mask, const flecs::id_t relation = flecs::IsA, 
+    Base& set(uint8_t mask, const flecs::id_t relation = flecs::IsA, 
         int32_t min_depth = 0, int32_t max_depth = 0)
     {
-        m_term_id->set = set_mask;
-        m_term_id->relation = relation;
-        m_term_id->min_depth = min_depth;
-        m_term_id->max_depth = max_depth;
+        m_term_id->set.mask = mask;
+        m_term_id->set.relation = relation;
+        m_term_id->set.min_depth = min_depth;
+        m_term_id->set.max_depth = max_depth;
         return m_base;
     }
     
@@ -12627,50 +12619,44 @@ public:
         return *static_cast<Base*>(this);
     }
 
-    Base& predicate(entity_t entity, const char *name = nullptr, 
-        uint8_t set_mask = 0, entity_t relation = 0, int32_t min_depth = 0, 
-        int32_t max_depth = 0)
+    Base& predicate(entity_t entity = 0, const char *name = nullptr)
     {
         ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
         ecs_term_t *t = &m_desc->terms[m_term - 1];
         t->pred.entity = entity;
         t->pred.name = const_cast<char*>(name);
-        t->pred.set = set_mask,
-        t->pred.relation = relation;
-        t->pred.min_depth = min_depth;
-        t->pred.max_depth = max_depth;
+        m_term_id = &t->pred;
         return *static_cast<Base*>(this);
     }
 
-    Base& subject(entity_t entity, const char *name = nullptr, 
-        uint8_t set_mask = 0, entity_t relation = 0, int32_t min_depth = 0, 
-        int32_t max_depth = 0)
+    Base& subject(entity_t entity = 0, const char *name = nullptr)
     {
         ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
         ecs_term_t *t = &m_desc->terms[m_term - 1];
         t->args[0].entity = entity;
         t->args[0].name = const_cast<char*>(name);
-        t->args[0].set = set_mask,
-        t->args[0].relation = relation;
-        t->args[0].min_depth = min_depth;
-        t->args[0].max_depth = max_depth;
+        m_term_id = &t->args[0];
         return *static_cast<Base*>(this);
     }
 
-    Base& object(entity_t entity, const char *name = nullptr, 
-        uint8_t set_mask = 0, entity_t relation = 0, int32_t min_depth = 0, 
-        int32_t max_depth = 0)
+    Base& object(entity_t entity = 0, const char *name = nullptr)
     {
         ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
         ecs_term_t *t = &m_desc->terms[m_term - 1];
         t->args[1].entity = entity;
         t->args[1].name = const_cast<char*>(name);
-        t->args[1].set = set_mask,
-        t->args[1].relation = relation;
-        t->args[1].min_depth = min_depth;
-        t->args[1].max_depth = max_depth;
+        m_term_id = &t->args[1];
         return *static_cast<Base*>(this);
     }
+
+    Base& set(uint8_t set_mask, entity_t relation = 0, 
+        int32_t min_depth = 0, int32_t max_depth = 0)
+    {
+        m_term_id->set.mask = set_mask,
+        m_term_id->set.relation = relation;
+        m_term_id->set.min_depth = min_depth;
+        m_term_id->set.max_depth = max_depth;
+    }    
 
     void populate_filter_from_pack() {
         flecs::array<flecs::id_t, sizeof...(Components)> ids ({
@@ -12722,6 +12708,7 @@ private:
     }
 
     ecs_filter_desc_t *m_desc;
+    ecs_term_id_t *m_term_id;
     int32_t m_term;
 };
 
@@ -13159,7 +13146,7 @@ public:
         m_normalized = ecs_type_add(world().c_ptr(), m_normalized, e.id());
         sync_from_me();
         return *this;
-    }    
+    }
 
     template <typename T>
     type& add() {

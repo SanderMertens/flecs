@@ -139,7 +139,7 @@ bool check_term_component(
 
     ecs_term_id_t *subj = &term->args[0];
 
-    if ((subj->set & EcsSelf) && subj->entity == EcsThis && term->oper != EcsNot) {
+    if ((subj->set.mask & EcsSelf) && subj->entity == EcsThis && term->oper != EcsNot) {
         switch(term->inout) {
         case EcsInOutDefault:
         case EcsInOut:
@@ -175,7 +175,9 @@ bool check_term_component(
 
         switch(term->inout) {
         case EcsInOutDefault:
-            if (!(subj->set & EcsSelf) || !subj->entity || subj->entity != EcsThis) {
+            if (!(subj->set.mask & EcsSelf) || !subj->entity || 
+                subj->entity != EcsThis) 
+            {
                 break;
             }
             // fall through
@@ -468,7 +470,7 @@ void add_pipeline_tags_to_sig(
             .pred.entity = entities[i],
             .args[0] = {
                 .entity = EcsThis,
-                .set = EcsSelf | EcsSuperSet
+                .set.mask = EcsSelf | EcsSuperSet
             }
         };
     }
@@ -500,7 +502,7 @@ ecs_query_t* build_pipeline_query(
         .pred.entity = ecs_id(EcsSystem),
         .args[0] = {
             .entity = EcsThis,
-            .set = EcsSelf | EcsSuperSet
+            .set.mask = EcsSelf | EcsSuperSet
         }
     };
 
@@ -510,7 +512,7 @@ ecs_query_t* build_pipeline_query(
         .pred.entity = EcsDisabledIntern,
         .args[0] = {
             .entity = EcsThis,
-            .set = EcsSelf | EcsSuperSet
+            .set.mask = EcsSelf | EcsSuperSet
         }
     };
 
@@ -521,7 +523,7 @@ ecs_query_t* build_pipeline_query(
             .pred.entity = EcsInactive,
             .args[0] = {
                 .entity = EcsThis,
-                .set = EcsSelf | EcsSuperSet
+                .set.mask = EcsSelf | EcsSuperSet
             }
         };
     }

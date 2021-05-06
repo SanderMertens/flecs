@@ -494,15 +494,28 @@ void ecs_colsystem_dtor(
 }
 
 static
-void OnSetTriggerCtx(
+void OnSetSystemCtx(
     ecs_iter_t *it)
 {
-    EcsTrigger *ct = ecs_term(it, EcsTrigger, 1);
+    EcsSystem *s = ecs_term(it, EcsSystem, 1);
     EcsContext *ctx = ecs_term(it, EcsContext, 2);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
-        ((ecs_trigger_t*)ct[i].trigger)->ctx = (void*)ctx[i].ctx;
+        s[i].ctx = (void*)ctx[i].ctx;
+    }  
+}
+
+static
+void OnSetTriggerCtx(
+    ecs_iter_t *it)
+{
+    EcsTrigger *t = ecs_term(it, EcsTrigger, 1);
+    EcsContext *ctx = ecs_term(it, EcsContext, 2);
+
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ((ecs_trigger_t*)t[i].trigger)->ctx = (void*)ctx[i].ctx;
     }  
 }
 
@@ -568,12 +581,17 @@ ecs_entity_t ecs_system_init(
         memset(system, 0, sizeof(EcsSystem));
 
         ecs_query_desc_t query_desc = desc->query;
+        query_desc.filter.name = desc->entity.name;
         query_desc.system = result;
 
         ecs_query_t *query = ecs_query_init(world, &query_desc);
         if (!query) {
             ecs_delete(world, result);
         }
+
+        /* Re-obtain pointer, as query may have added components */
+        system = ecs_get_mut(world, result, EcsSystem, &added);
+        ecs_assert(added == false, ECS_INTERNAL_ERROR, NULL);
 
         system->entity = result;
         system->query = query;
@@ -656,6 +674,8 @@ ecs_entity_t ecs_system_init(
             }
         }
 
+        ecs_modified(world, result, EcsSystem);
+
         ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
             ecs_get_name(world, result), query->filter.expr);
     }
@@ -706,6 +726,10 @@ void FlecsSystemImport(
     /* Register OnSet system for EcsComponentLifecycle */
     ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, 
         ComponentLifecycle, SYSTEM:Hidden);
+
+    /* System that sets ctx for a system */
+    ECS_SYSTEM(world, OnSetSystemCtx, EcsOnSet, 
+        System, Context, SYSTEM:Hidden);
 
     /* System that sets ctx for a trigger */
     ECS_SYSTEM(world, OnSetTriggerCtx, EcsOnSet, 

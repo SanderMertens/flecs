@@ -210,7 +210,7 @@ void run_set_systems_for_entities(
     int32_t count,
     ecs_entity_t * entities,
     bool set_all)
-{   
+{
     if (set_all) {
         /* Run OnSet systems for all components of the entity. This usually
          * happens when an entity is created directly in its target table. */

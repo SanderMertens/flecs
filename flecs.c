@@ -2593,7 +2593,7 @@ void register_on_set(
             ecs_term_id_t *subj = &term->args[0];
             ecs_oper_kind_t oper = term->oper;
 
-            if (!(subj->set & EcsSelf) || !subj->entity ||
+            if (!(subj->set.mask & EcsSelf) || !subj->entity ||
                 subj->entity != EcsThis)
             {
                 continue;
@@ -4633,7 +4633,7 @@ void run_set_systems_for_entities(
     int32_t count,
     ecs_entity_t * entities,
     bool set_all)
-{   
+{
     if (set_all) {
         /* Run OnSet systems for all components of the entity. This usually
          * happens when an entity is created directly in its target table. */
@@ -12861,9 +12861,9 @@ int parse_identifier(
     out->name = ecs_os_strdup(tptr);
 
     if (ch == TOK_AS_ENTITY) {
-        out->var_kind = EcsVarIsEntity;
+        out->var = EcsVarIsEntity;
     } else if (ecs_identifier_is_var(tptr)) {
-        out->var_kind = EcsVarIsVariable;
+        out->var = EcsVarIsVariable;
     }
 
     return 0;
@@ -12989,21 +12989,21 @@ const char* parse_set_expr(
             return NULL;
         }
 
-        if (id->set & tok) {
+        if (id->set.mask & tok) {
             ecs_parser_error(name, expr, column, 
                 "duplicate set token '%s'", token);
             return NULL;            
         }
 
-        if ((tok == EcsSubSet && id->set & EcsSuperSet) ||
-            (tok == EcsSuperSet && id->set & EcsSubSet))
+        if ((tok == EcsSubSet && id->set.mask & EcsSuperSet) ||
+            (tok == EcsSuperSet && id->set.mask & EcsSubSet))
         {
             ecs_parser_error(name, expr, column, 
                 "cannot mix superset and subset", token);
             return NULL;            
         }    
 
-        id->set |= tok;
+        id->set.mask |= tok;
 
         if (ptr[0] == TOK_PAREN_OPEN) {
             ptr ++;
@@ -13022,7 +13022,7 @@ const char* parse_set_expr(
                     return NULL;
                 }
 
-                id->relation = rel;
+                id->set.relation = rel;
 
                 if (ptr[0] == TOK_AND) {
                     ptr = skip_space(ptr + 1);
@@ -13040,8 +13040,8 @@ const char* parse_set_expr(
                     return NULL;
                 }
 
-                id->max_depth = atoi(token);
-                if (id->max_depth < 0) {
+                id->set.max_depth = atoi(token);
+                if (id->set.max_depth < 0) {
                     ecs_parser_error(name, expr, column, 
                         "invalid negative depth");
                     return NULL;  
@@ -13059,9 +13059,9 @@ const char* parse_set_expr(
                     return NULL;
                 }
 
-                id->min_depth = id->max_depth;
-                id->max_depth = atoi(token);
-                if (id->max_depth < 0) {
+                id->set.min_depth = id->set.max_depth;
+                id->set.max_depth = atoi(token);
+                if (id->set.max_depth < 0) {
                     ecs_parser_error(name, expr, column, 
                         "invalid negative depth");
                     return NULL;  
@@ -13097,13 +13097,13 @@ const char* parse_set_expr(
         }
     } while (true);
 
-    if (id->set & EcsAll && !(id->set & EcsSuperSet) && !(id->set & EcsSubSet)){
+    if (id->set.mask & EcsAll && !(id->set.mask & EcsSuperSet) && !(id->set.mask & EcsSubSet)){
         ecs_parser_error(name, expr, column, 
             "invalid 'all' token without superset or subset");
         return NULL;
     }
 
-    if (id->set & EcsSelf && id->min_depth != 0) {
+    if (id->set.mask & EcsSelf && id->set.min_depth != 0) {
         ecs_parser_error(name, expr, column, 
             "min_depth must be zero for set expression with 'self'");
         return NULL;        
@@ -13283,7 +13283,7 @@ const char* parse_term(
     }
 
 empty_source:
-    term.args[0].set = EcsNothing;
+    term.args[0].set.mask = EcsNothing;
     ptr = skip_space(ptr + 1);
     if (valid_token_start_char(ptr[0])) {
         ptr = parse_token(name, expr, (ptr - expr), ptr, token);
@@ -13300,25 +13300,25 @@ empty_source:
 
 parse_source:
     if (!ecs_os_strcmp(token, TOK_PARENT)) {
-        term.args[0].set = EcsSuperSet;
-        term.args[0].relation = EcsChildOf;
-        term.args[0].max_depth = 1;
+        term.args[0].set.mask = EcsSuperSet;
+        term.args[0].set.relation = EcsChildOf;
+        term.args[0].set.max_depth = 1;
     } else if (!ecs_os_strcmp(token, TOK_SYSTEM)) {
         term.args[0].name = ecs_os_strdup(name);
     } else if (!ecs_os_strcmp(token, TOK_ANY)) {
-        term.args[0].set = EcsSelf | EcsSuperSet;
+        term.args[0].set.mask = EcsSelf | EcsSuperSet;
+        term.args[0].set.relation = EcsIsA;
         term.args[0].entity = EcsThis;
-        term.args[0].relation = EcsIsA;
     } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
-        term.args[0].set = EcsSelf;
+        term.args[0].set.mask = EcsSelf;
         term.args[0].entity = EcsThis;
     } else if (!ecs_os_strcmp(token, TOK_SHARED)) {
-        term.args[0].set = EcsSuperSet;
+        term.args[0].set.mask = EcsSuperSet;
+        term.args[0].set.relation = EcsIsA;
         term.args[0].entity = EcsThis;
-        term.args[0].relation = EcsIsA;
     } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
-        term.args[0].set = EcsSuperSet | EcsAll;
-        term.args[0].relation = EcsChildOf;
+        term.args[0].set.mask = EcsSuperSet | EcsAll;
+        term.args[0].set.relation = EcsChildOf;
         term.args[0].entity = EcsThis;
         term.oper = EcsOptional;
     } else {
@@ -13401,7 +13401,7 @@ parse_predicate:
     if (ptr[0] == TOK_PAREN_OPEN) {
         ptr ++;
         if (ptr[0] == TOK_PAREN_CLOSE) {
-            term.args[0].set = EcsNothing;
+            term.args[0].set.mask = EcsNothing;
             ptr ++;
             ptr = skip_space(ptr);
         } else {
@@ -13589,7 +13589,7 @@ char* ecs_parse_term(
         return (char*)&ptr[1];
     }
 
-    int32_t prev_set = subj->set;
+    int32_t prev_set = subj->set.mask;
 
     /* Parse next element */
     ptr = parse_term(world, name, ptr, term);
@@ -13631,11 +13631,11 @@ char* ecs_parse_term(
             return NULL;
         }
 
-        subj->set = EcsNothing;
+        subj->set.mask = EcsNothing;
     }
 
     /* Cannot combine EcsNothing with operators other than AND */
-    if (term->oper != EcsAnd && subj->set == EcsNothing) {
+    if (term->oper != EcsAnd && subj->set.mask == EcsNothing) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid operator for empty source"); 
         ecs_term_fini(term);    
@@ -13645,7 +13645,7 @@ char* ecs_parse_term(
     /* Verify consistency of OR expression */
     if (prev_or && term->oper == EcsOr) {
         /* Set expressions must be the same for all OR terms */
-        if (subj->set != prev_set) {
+        if (subj->set.mask != prev_set) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "cannot combine different sources in OR expression");
             ecs_term_fini(term);
@@ -13657,7 +13657,7 @@ char* ecs_parse_term(
 
     /* Automatically assign This if entity is not assigned and the set is
      * nothing */
-    if (subj->set != EcsNothing) {
+    if (subj->set.mask != EcsNothing) {
         if (!subj->name) {
             if (!subj->entity) {
                 subj->entity = EcsThis;
@@ -13667,7 +13667,7 @@ char* ecs_parse_term(
 
     if (subj->name && !ecs_os_strcmp(subj->name, "0")) {
         subj->entity = 0;
-        subj->set = EcsNothing;
+        subj->set.mask = EcsNothing;
     }
 
     /* Process role */
@@ -16109,13 +16109,13 @@ int resolve_identifier(
         return 0;
     }
 
-    if (identifier->var_kind == EcsVarDefault) {
+    if (identifier->var == EcsVarDefault) {
         if (ecs_identifier_is_var(identifier->name)) {
-            identifier->var_kind = EcsVarIsVariable;
+            identifier->var = EcsVarIsVariable;
         }
     }
 
-    if (identifier->var_kind != EcsVarIsVariable) {
+    if (identifier->var != EcsVarIsVariable) {
         if (ecs_identifier_is_0(identifier->name)) {
             identifier->entity = 0;
         } else {
@@ -16207,7 +16207,7 @@ bool ecs_term_is_trivial(
         return false;
     }
 
-    if (term->args[0].set != EcsDefaultSet) {
+    if (term->args[0].set.mask != EcsDefaultSet) {
         return false;
     }
 
@@ -16355,9 +16355,9 @@ int ecs_filter_init(
     /* If default substitution is enabled, replace DefaultSet with SuperSet */
     if (desc->substitute_default) {
         for (i = 0; i < term_count; i ++) {
-            if (terms[i].args[0].set == EcsDefaultSet) {
-                terms[i].args[0].set = EcsSuperSet | EcsSelf;
-                terms[i].args[0].relation = EcsIsA;
+            if (terms[i].args[0].set.mask == EcsDefaultSet) {
+                terms[i].args[0].set.mask = EcsSuperSet | EcsSelf;
+                terms[i].args[0].set.relation = EcsIsA;
             }            
         }
     }
@@ -16557,7 +16557,7 @@ bool ecs_filter_match_entity(
         ecs_term_id_t *subj = &term->args[0];
         ecs_oper_kind_t oper = term->oper;
 
-        if (subj->entity != EcsThis && subj->set & EcsSelf) {
+        if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
             ecs_type_t type = ecs_get_type(world, subj->entity);
             if (ecs_type_has_id(world, type, term->id)) {
                 if (oper == EcsNot) {
@@ -18268,7 +18268,8 @@ int get_comp_and_src(
                 if (!component) {
                     ecs_entity_t source = 0;
                     bool result = ecs_type_find_id(world, type, term->id, 
-                        subj->relation, subj->min_depth, subj->max_depth, 
+                        subj->set.relation, subj->set.min_depth, 
+                        subj->set.max_depth, 
                         &source);
 
                     if (result) {
@@ -18285,7 +18286,8 @@ int get_comp_and_src(
 
             ecs_entity_t source = 0;
             bool result = ecs_type_find_id(world, type, component, 
-                subj->relation, subj->min_depth, subj->max_depth, &source);
+                subj->set.relation, subj->set.min_depth, subj->set.max_depth, 
+                &source);
 
             if (op == EcsNot) {
                 result = !result;
@@ -18501,7 +18503,7 @@ ecs_vector_t* add_ref(
     ecs_ref_t *ref = ecs_vector_add(&references, ecs_ref_t);
     ecs_term_id_t *subj = &term->args[0];
 
-    if (!(subj->set & EcsAll)) {
+    if (!(subj->set.mask & EcsAll)) {
         ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
     }
     
@@ -18701,11 +18703,11 @@ add_trait:
                 &component, c, op, trait_offsets, trait_cur + 1);
 
             if (index == -1) {
-                if (op == EcsOptional && subj.set == EcsSelf) {
+                if (op == EcsOptional && subj.set.mask == EcsSelf) {
                     index = 0;
                 }
             } else {
-                if (op == EcsOptional && !(subj.set & EcsSelf)) {
+                if (op == EcsOptional && !(subj.set.mask & EcsSelf)) {
                     index = 0;
                 }
             }
@@ -18740,7 +18742,7 @@ add_trait:
             }
         }
 
-        if ((entity || table_data.iter_data.columns[c] == -1 || subj.set & EcsAll)) {
+        if ((entity || table_data.iter_data.columns[c] == -1 || subj.set.mask & EcsAll)) {
             references = add_ref(world, query, references, term,
                 component, entity);
             table_data.iter_data.columns[c] = -ecs_vector_count(references);
@@ -18857,7 +18859,7 @@ bool match_term(
     (void)failure_info;
 
     ecs_term_id_t *subj = &term->args[0];
-    uint8_t set = subj->set;
+    uint8_t set = subj->set.mask;
 
     /* If term has no subject, there's nothing to match */
     if (!subj->entity) {
@@ -18873,8 +18875,8 @@ bool match_term(
     }
 
     return ecs_type_find_id(
-        world, type, term->id, subj->relation, 
-        subj->min_depth, subj->max_depth, NULL);
+        world, type, term->id, subj->set.relation, 
+        subj->set.min_depth, subj->set.max_depth, NULL);
 }
 
 /* Match table with query */
@@ -19438,7 +19440,7 @@ bool has_refs(
              * shared expression, the expression is translated to FromEmpty to
              * prevent resolving the ref */
             return true;
-        } else if (subj->entity && (subj->entity != EcsThis || subj->set != EcsSelf)) {
+        } else if (subj->entity && (subj->entity != EcsThis || subj->set.mask != EcsSelf)) {
             /* If entity is not this, or if it can be substituted by other
              * entities, the query can have references. */
             return true;
@@ -19483,11 +19485,13 @@ void register_monitors(
          * Also register a regular component monitor for EcsCascade columns.
          * This ensures that when the component used in the CASCADE column
          * is added or removed tables are updated accordingly*/
-        if (subj->set & EcsSuperSet && subj->set & EcsAll && subj->relation != EcsIsA) {
+        if (subj->set.mask & EcsSuperSet && subj->set.mask & EcsAll && 
+            subj->set.relation != EcsIsA) 
+        {
             if (term->oper != EcsOr) {
-                if (term->args[0].relation != EcsIsA) {
+                if (term->args[0].set.relation != EcsIsA) {
                     ecs_monitor_register(
-                        world, term->args[0].relation, term->id, query);
+                        world, term->args[0].set.relation, term->id, query);
                 }
                 ecs_monitor_register(world, 0, term->id, query);
             }
@@ -19495,7 +19499,7 @@ void register_monitors(
         /* FromAny also requires registering a monitor, as FromAny columns can
          * be matched with prefabs. The only term kinds that do not require
          * registering a monitor are FromOwned and FromEmpty. */
-        } else if ((subj->set & EcsSuperSet) || (subj->entity != EcsThis)) {
+        } else if ((subj->set.mask & EcsSuperSet) || (subj->entity != EcsThis)){
             if (term->oper != EcsOr) {
                 ecs_monitor_register(world, 0, term->id, query);
             }
@@ -19523,29 +19527,29 @@ void process_signature(
         (void)obj;
 
         /* Queries do not support variables */
-        ecs_assert(pred->var_kind != EcsVarIsVariable, 
+        ecs_assert(pred->var != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);
-        ecs_assert(subj->var_kind != EcsVarIsVariable, 
+        ecs_assert(subj->var != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);
-        ecs_assert(obj->var_kind != EcsVarIsVariable, 
+        ecs_assert(obj->var != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);
 
         /* Queries do not support subset substitutions */
-        ecs_assert(!(pred->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
-        ecs_assert(!(subj->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
-        ecs_assert(!(obj->set & EcsSubSet), ECS_UNSUPPORTED, NULL);
+        ecs_assert(!(pred->set.mask & EcsSubSet), ECS_UNSUPPORTED, NULL);
+        ecs_assert(!(subj->set.mask & EcsSubSet), ECS_UNSUPPORTED, NULL);
+        ecs_assert(!(obj->set.mask & EcsSubSet), ECS_UNSUPPORTED, NULL);
 
         /* Superset/subset substitutions aren't supported for pred/obj */
-        ecs_assert(pred->set == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
-        ecs_assert(obj->set == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
+        ecs_assert(pred->set.mask == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
+        ecs_assert(obj->set.mask == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
 
-        if (subj->set == EcsDefaultSet) {
-            subj->set = EcsSelf;
+        if (subj->set.mask == EcsDefaultSet) {
+            subj->set.mask = EcsSelf;
         }
 
         /* If self is not included in set, always start from depth 1 */
-        if (!subj->min_depth && !(subj->set & EcsSelf)) {
-            subj->min_depth = 1;
+        if (!subj->set.min_depth && !(subj->set.mask & EcsSelf)) {
+            subj->set.min_depth = 1;
         }
 
         if (inout != EcsIn) {
@@ -19576,12 +19580,14 @@ void process_signature(
             query->flags |= EcsQueryNeedsTables;
         }
 
-        if (subj->set & EcsAll && term->oper == EcsOptional) {
+        if (subj->set.mask & EcsAll && term->oper == EcsOptional) {
             query->cascade_by = i + 1;
             query->rank_on_component = term->id;
         }
 
-        if (subj->entity && subj->entity != EcsThis && subj->set == EcsSelf) {
+        if (subj->entity && subj->entity != EcsThis && 
+            subj->set.mask == EcsSelf) 
+        {
             ecs_set_watch(world, term->args[0].entity);
         }
     }
@@ -20154,6 +20160,20 @@ ecs_query_t* ecs_query_init(
         result->flags |= EcsQueryIsSubquery;
     }
 
+    /* If a system is specified, ensure that if there are any subjects in the
+     * filter that refer to the system, the component is added */
+    if (desc->system)  {
+        int32_t t, term_count = result->filter.term_count;
+        ecs_term_t *terms = result->filter.terms;
+
+        for (t = 0; t < term_count; t ++) {
+            ecs_term_t *term = &terms[t];
+            if (term->args[0].entity == desc->system) {
+                ecs_add_id(world, desc->system, term->id);
+            }
+        }        
+    }
+
     process_signature(world, result);
 
     ecs_trace_2("query #[green]%s#[reset] created with expression #[red]%s", 
@@ -20193,20 +20213,6 @@ ecs_query_t* ecs_query_init(
 
     if (result->cascade_by) {
         result->group_table = rank_by_depth;
-    }
-
-    /* If a system is specified, ensure that if there are any subjects in the
-     * filter that refer to the system, the component is added */
-    if (desc->system)  {
-        int32_t t, term_count = result->filter.term_count;
-        ecs_term_t *terms = result->filter.terms;
-
-        for (t = 0; t < term_count; t ++) {
-            ecs_term_t *term = &terms[t];
-            if (term->args[0].entity == desc->system) {
-                ecs_add_id(world, desc->system, term->id);
-            }
-        }        
     }
 
     if (desc->order_by) {
@@ -20729,7 +20735,7 @@ void mark_columns_dirty(
             ecs_term_t *term = &terms[i];
             ecs_term_id_t *subj = &term->args[0];
             if (term->inout != EcsIn && (term->inout != EcsInOutDefault || 
-                (subj->entity == EcsThis && subj->set == EcsSelf)))
+                (subj->entity == EcsThis && subj->set.mask == EcsSelf)))
             {
                 int32_t table_column = table_data->iter_data.columns[c];
                 if (table_column > 0) {
@@ -22583,7 +22589,9 @@ bool ecs_term_is_readonly(
                 return true;
             }
 
-            if ((subj->set != EcsSelf) && (subj->set != EcsDefaultSet)) {
+            if ((subj->set.mask != EcsSelf) && 
+                (subj->set.mask != EcsDefaultSet)) 
+            {
                 printf("not owned\n");
                 return true;
             }
@@ -23835,7 +23843,7 @@ bool check_term_component(
 
     ecs_term_id_t *subj = &term->args[0];
 
-    if ((subj->set & EcsSelf) && subj->entity == EcsThis && term->oper != EcsNot) {
+    if ((subj->set.mask & EcsSelf) && subj->entity == EcsThis && term->oper != EcsNot) {
         switch(term->inout) {
         case EcsInOutDefault:
         case EcsInOut:
@@ -23871,7 +23879,9 @@ bool check_term_component(
 
         switch(term->inout) {
         case EcsInOutDefault:
-            if (!(subj->set & EcsSelf) || !subj->entity || subj->entity != EcsThis) {
+            if (!(subj->set.mask & EcsSelf) || !subj->entity || 
+                subj->entity != EcsThis) 
+            {
                 break;
             }
             // fall through
@@ -24164,7 +24174,7 @@ void add_pipeline_tags_to_sig(
             .pred.entity = entities[i],
             .args[0] = {
                 .entity = EcsThis,
-                .set = EcsSelf | EcsSuperSet
+                .set.mask = EcsSelf | EcsSuperSet
             }
         };
     }
@@ -24196,7 +24206,7 @@ ecs_query_t* build_pipeline_query(
         .pred.entity = ecs_id(EcsSystem),
         .args[0] = {
             .entity = EcsThis,
-            .set = EcsSelf | EcsSuperSet
+            .set.mask = EcsSelf | EcsSuperSet
         }
     };
 
@@ -24206,7 +24216,7 @@ ecs_query_t* build_pipeline_query(
         .pred.entity = EcsDisabledIntern,
         .args[0] = {
             .entity = EcsThis,
-            .set = EcsSelf | EcsSuperSet
+            .set.mask = EcsSelf | EcsSuperSet
         }
     };
 
@@ -24217,7 +24227,7 @@ ecs_query_t* build_pipeline_query(
             .pred.entity = EcsInactive,
             .args[0] = {
                 .entity = EcsThis,
-                .set = EcsSelf | EcsSuperSet
+                .set.mask = EcsSelf | EcsSuperSet
             }
         };
     }
@@ -25200,15 +25210,28 @@ void ecs_colsystem_dtor(
 }
 
 static
-void OnSetTriggerCtx(
+void OnSetSystemCtx(
     ecs_iter_t *it)
 {
-    EcsTrigger *ct = ecs_term(it, EcsTrigger, 1);
+    EcsSystem *s = ecs_term(it, EcsSystem, 1);
     EcsContext *ctx = ecs_term(it, EcsContext, 2);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
-        ((ecs_trigger_t*)ct[i].trigger)->ctx = (void*)ctx[i].ctx;
+        s[i].ctx = (void*)ctx[i].ctx;
+    }  
+}
+
+static
+void OnSetTriggerCtx(
+    ecs_iter_t *it)
+{
+    EcsTrigger *t = ecs_term(it, EcsTrigger, 1);
+    EcsContext *ctx = ecs_term(it, EcsContext, 2);
+
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ((ecs_trigger_t*)t[i].trigger)->ctx = (void*)ctx[i].ctx;
     }  
 }
 
@@ -25274,12 +25297,17 @@ ecs_entity_t ecs_system_init(
         memset(system, 0, sizeof(EcsSystem));
 
         ecs_query_desc_t query_desc = desc->query;
+        query_desc.filter.name = desc->entity.name;
         query_desc.system = result;
 
         ecs_query_t *query = ecs_query_init(world, &query_desc);
         if (!query) {
             ecs_delete(world, result);
         }
+
+        /* Re-obtain pointer, as query may have added components */
+        system = ecs_get_mut(world, result, EcsSystem, &added);
+        ecs_assert(added == false, ECS_INTERNAL_ERROR, NULL);
 
         system->entity = result;
         system->query = query;
@@ -25362,6 +25390,8 @@ ecs_entity_t ecs_system_init(
             }
         }
 
+        ecs_modified(world, result, EcsSystem);
+
         ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
             ecs_get_name(world, result), query->filter.expr);
     }
@@ -25412,6 +25442,10 @@ void FlecsSystemImport(
     /* Register OnSet system for EcsComponentLifecycle */
     ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, 
         ComponentLifecycle, SYSTEM:Hidden);
+
+    /* System that sets ctx for a system */
+    ECS_SYSTEM(world, OnSetSystemCtx, EcsOnSet, 
+        System, Context, SYSTEM:Hidden);
 
     /* System that sets ctx for a trigger */
     ECS_SYSTEM(world, OnSetTriggerCtx, EcsOnSet, 
@@ -25571,7 +25605,7 @@ ecs_vector_t* expr_to_ids(
             goto done;
         }
 
-        if (term.args[0].set != EcsDefaultSet) {
+        if (term.args[0].set.mask != EcsDefaultSet) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "source modifiers not supported for type expressions");
             goto error;

@@ -1195,7 +1195,7 @@ void SystemMisc_one_named_column_of_two() {
     ecs_term_t *
     term = &f.terms[0];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->args[0].set == EcsDefaultSet);
+    test_assert(term->args[0].set.mask == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_typeid(Position));
@@ -1203,7 +1203,7 @@ void SystemMisc_one_named_column_of_two() {
 
     term = &f.terms[1];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->args[0].set == EcsDefaultSet);
+    test_assert(term->args[0].set.mask == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_typeid(Velocity));
@@ -1232,7 +1232,7 @@ void SystemMisc_two_named_columns_of_two() {
     ecs_term_t *
     term = &f.terms[0];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->args[0].set == EcsDefaultSet);
+    test_assert(term->args[0].set.mask == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_typeid(Position));
@@ -1240,7 +1240,7 @@ void SystemMisc_two_named_columns_of_two() {
 
     term = &f.terms[1];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->args[0].set == EcsDefaultSet);
+    test_assert(term->args[0].set.mask == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_typeid(Velocity));
@@ -1330,11 +1330,17 @@ void SystemMisc_redeclare_system_same_expr() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t s1 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, "Position, Velocity", Dummy);
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
 
-    ecs_entity_t s2 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, "Position, Velocity", Dummy);        
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
 
     test_assert(s1 == s2);
 
@@ -1347,11 +1353,17 @@ void SystemMisc_redeclare_system_null_expr() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t s1 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, NULL, Dummy);
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = NULL, 
+        .callback = Dummy
+    });
 
-    ecs_entity_t s2 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, NULL, Dummy);
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = NULL, 
+        .callback = Dummy
+    });
 
     test_assert(s1 == s2);
 
@@ -1364,11 +1376,17 @@ void SystemMisc_redeclare_system_0_expr() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t s1 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, "0", Dummy);
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "0", 
+        .callback = Dummy
+    });
 
-    ecs_entity_t s2 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, "0", Dummy);
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "0", 
+        .callback = Dummy
+    });
 
     test_assert(s1 == s2);
 
@@ -1376,17 +1394,25 @@ void SystemMisc_redeclare_system_0_expr() {
 }
 
 void SystemMisc_redeclare_system_different_expr() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    test_expect_abort();
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
+    ecs_entity_t e = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "Position", 
+        .callback = Dummy
+    });
 
-    ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position, Velocity", Dummy);
-    ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position", Dummy);        
+    test_assert(e == 0);
+
+    ecs_fini(world);
 }
 
 void SystemMisc_redeclare_system_null_and_expr() {
@@ -1399,8 +1425,16 @@ void SystemMisc_redeclare_system_null_and_expr() {
 
     test_expect_abort();
 
-    ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position, Velocity", Dummy);
-    ecs_new_system(world, 0, "Move", EcsOnUpdate, NULL, Dummy); 
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = NULL, 
+        .callback = Dummy
+    }); 
 }
 
 void SystemMisc_redeclare_system_expr_and_null() {
@@ -1413,8 +1447,16 @@ void SystemMisc_redeclare_system_expr_and_null() {
 
     test_expect_abort();
 
-    ecs_new_system(world, 0, "Move", EcsOnUpdate, NULL, Dummy); 
-    ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position, Velocity", Dummy);
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = NULL, 
+        .callback = Dummy
+    }); 
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
 }
 
 void SystemMisc_redeclare_system_expr_and_0() {
@@ -1427,8 +1469,16 @@ void SystemMisc_redeclare_system_expr_and_0() {
 
     test_expect_abort();
 
-    ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position, Velocity", Dummy);
-    ecs_new_system(world, 0, "Move", EcsOnUpdate, "0", Dummy); 
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "0", 
+        .callback = Dummy
+    }); 
 }
 
 void SystemMisc_redeclare_system_0_and_expr() {
@@ -1441,8 +1491,16 @@ void SystemMisc_redeclare_system_0_and_expr() {
 
     test_expect_abort();
 
-    ecs_new_system(world, 0, "Move", EcsOnUpdate, "0", Dummy); 
-    ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position, Velocity", Dummy);
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "0", 
+        .callback = Dummy
+    }); 
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
 }
 
 void SystemMisc_redeclare_system_0_and_null() {
@@ -1451,10 +1509,16 @@ void SystemMisc_redeclare_system_0_and_null() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t s1 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, "0", Dummy);
-    ecs_entity_t s2 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, NULL, Dummy);
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "0", 
+        .callback = Dummy
+    });
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = NULL, 
+        .callback = Dummy
+    });
 
     test_assert(s1 == s2);
 
@@ -1467,10 +1531,16 @@ void SystemMisc_redeclare_system_null_and_0() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t s1 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, NULL, Dummy);
-    ecs_entity_t s2 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, "0", Dummy);
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = NULL, 
+        .callback = Dummy
+    });
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "0", 
+        .callback = Dummy
+    });
 
     test_assert(s1 == s2);
 
@@ -1483,11 +1553,17 @@ void SystemMisc_redeclare_system_explicit_id() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t s1 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, "Position, Velocity", Dummy);
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
 
-    ecs_entity_t s2 = ecs_new_system(
-        world, s1, "Move", EcsOnUpdate, "Position, Velocity", Dummy);
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.entity = s1, .name = "Move", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
 
     test_assert(s1 == s2);
 
@@ -1500,11 +1576,17 @@ void SystemMisc_redeclare_system_explicit_id_null_expr() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t s1 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, NULL, Dummy);
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = NULL, 
+        .callback = Dummy
+    });
 
-    ecs_entity_t s2 = ecs_new_system(
-        world, s1, "Move", EcsOnUpdate, NULL, Dummy);
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.entity = s1, .name = "Move", .add = {EcsOnUpdate} },
+        .query.filter.expr = NULL, 
+        .callback = Dummy
+    });
 
     test_assert(s1 == s2);
 
@@ -1517,11 +1599,17 @@ void SystemMisc_redeclare_system_explicit_id_no_name() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t s1 = ecs_new_system(
-        world, 0, "Move", EcsOnUpdate, "Position, Velocity", Dummy);
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
 
-    ecs_entity_t s2 = ecs_new_system(
-        world, s1, NULL, EcsOnUpdate, "Position, Velocity", Dummy);
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.entity = s1, .name = NULL, .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position, Velocity", 
+        .callback = Dummy
+    });
 
     test_assert(s1 == s2);
     test_str(ecs_get_name(world, s1), "Move");
@@ -1535,10 +1623,18 @@ void SystemMisc_declare_different_id_same_name() {
     ecs_entity_t e1 = ecs_new(world, 0);
     ecs_entity_t e2 = ecs_new(world, 0);
 
-    ecs_entity_t s_1 = ecs_new_system(world, e1, "Move", EcsOnUpdate, "0", Dummy);
+    ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.entity = e1, .name = "Move", .add = {EcsOnUpdate} },
+        .query.filter.expr = "0", 
+        .callback = Dummy
+    });
     test_assert(e1 == s_1);
 
-    ecs_entity_t s_2 = ecs_new_system(world, e2, "Move", EcsOnUpdate, "0", Dummy);
+    ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.entity = e2, .name = "Move", .add = {EcsOnUpdate} },
+        .query.filter.expr = "0", 
+        .callback = Dummy
+    });
     test_assert(e2 == s_2);
 
     test_assert(e1 != e2);
@@ -1555,10 +1651,18 @@ void SystemMisc_declare_different_id_same_name_w_scope() {
     ecs_entity_t e1 = ecs_new(world, 0);
     ecs_entity_t e2 = ecs_new(world, 0);
 
-    ecs_entity_t s_1 = ecs_new_system(world, e1, "Move", EcsOnUpdate, "0", Dummy);
+    ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.entity = e1, .name = "Move", .add = {EcsOnUpdate} },
+        .query.filter.expr = "0", 
+        .callback = Dummy
+    });
     test_assert(e1 == s_1);
 
-    ecs_entity_t s_2 = ecs_new_system(world, e2, "Move", EcsOnUpdate, "0", Dummy);
+    ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.entity = e2, .name = "Move", .add = {EcsOnUpdate} },
+        .query.filter.expr = "0", 
+        .callback = Dummy
+    });
     test_assert(e2 == s_2);
 
     test_assert(e1 != e2);

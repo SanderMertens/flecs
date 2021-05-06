@@ -29,13 +29,13 @@ public:
         return m_base;
     }
 
-    Base& set(uint8_t set_mask, const flecs::id_t relation = flecs::IsA, 
+    Base& set(uint8_t mask, const flecs::id_t relation = flecs::IsA, 
         int32_t min_depth = 0, int32_t max_depth = 0)
     {
-        m_term_id->set = set_mask;
-        m_term_id->relation = relation;
-        m_term_id->min_depth = min_depth;
-        m_term_id->max_depth = max_depth;
+        m_term_id->set.mask = mask;
+        m_term_id->set.relation = relation;
+        m_term_id->set.min_depth = min_depth;
+        m_term_id->set.max_depth = max_depth;
         return m_base;
     }
     
@@ -169,50 +169,44 @@ public:
         return *static_cast<Base*>(this);
     }
 
-    Base& predicate(entity_t entity, const char *name = nullptr, 
-        uint8_t set_mask = 0, entity_t relation = 0, int32_t min_depth = 0, 
-        int32_t max_depth = 0)
+    Base& predicate(entity_t entity = 0, const char *name = nullptr)
     {
         ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
         ecs_term_t *t = &m_desc->terms[m_term - 1];
         t->pred.entity = entity;
         t->pred.name = const_cast<char*>(name);
-        t->pred.set = set_mask,
-        t->pred.relation = relation;
-        t->pred.min_depth = min_depth;
-        t->pred.max_depth = max_depth;
+        m_term_id = &t->pred;
         return *static_cast<Base*>(this);
     }
 
-    Base& subject(entity_t entity, const char *name = nullptr, 
-        uint8_t set_mask = 0, entity_t relation = 0, int32_t min_depth = 0, 
-        int32_t max_depth = 0)
+    Base& subject(entity_t entity = 0, const char *name = nullptr)
     {
         ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
         ecs_term_t *t = &m_desc->terms[m_term - 1];
         t->args[0].entity = entity;
         t->args[0].name = const_cast<char*>(name);
-        t->args[0].set = set_mask,
-        t->args[0].relation = relation;
-        t->args[0].min_depth = min_depth;
-        t->args[0].max_depth = max_depth;
+        m_term_id = &t->args[0];
         return *static_cast<Base*>(this);
     }
 
-    Base& object(entity_t entity, const char *name = nullptr, 
-        uint8_t set_mask = 0, entity_t relation = 0, int32_t min_depth = 0, 
-        int32_t max_depth = 0)
+    Base& object(entity_t entity = 0, const char *name = nullptr)
     {
         ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
         ecs_term_t *t = &m_desc->terms[m_term - 1];
         t->args[1].entity = entity;
         t->args[1].name = const_cast<char*>(name);
-        t->args[1].set = set_mask,
-        t->args[1].relation = relation;
-        t->args[1].min_depth = min_depth;
-        t->args[1].max_depth = max_depth;
+        m_term_id = &t->args[1];
         return *static_cast<Base*>(this);
     }
+
+    Base& set(uint8_t set_mask, entity_t relation = 0, 
+        int32_t min_depth = 0, int32_t max_depth = 0)
+    {
+        m_term_id->set.mask = set_mask,
+        m_term_id->set.relation = relation;
+        m_term_id->set.min_depth = min_depth;
+        m_term_id->set.max_depth = max_depth;
+    }    
 
     void populate_filter_from_pack() {
         flecs::array<flecs::id_t, sizeof...(Components)> ids ({
@@ -264,6 +258,7 @@ private:
     }
 
     ecs_filter_desc_t *m_desc;
+    ecs_term_id_t *m_term_id;
     int32_t m_term;
 };
 

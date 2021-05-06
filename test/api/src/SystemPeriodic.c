@@ -1966,9 +1966,9 @@ void SystemPeriodic_not_from_entity() {
 static
 void TestContext(ecs_iter_t *it) {
     void *world_ctx = ecs_get_context(it->world);
-    test_assert(world_ctx == it->param);
-    int32_t *param = it->param;
-    (*param) ++;
+    test_assert(world_ctx == it->ctx);
+    int32_t *ctx = it->ctx;
+    (*ctx) ++;
 }
 
 void SystemPeriodic_sys_context() {

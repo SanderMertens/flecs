@@ -192,22 +192,24 @@ typedef enum ecs_oper_kind_t {
     EcsNotFrom      /* Term must match none of the components from term id */
 } ecs_oper_kind_t;
 
+/** Substitution with set parameters.
+ * These parameters allow for substituting a term id with its super- or subsets
+ * for a specified relationship. This enables functionality such as selecting
+ * components from a base (IsA) or a parent (ChildOf) in a single term */
+typedef struct ecs_term_set_t {
+    ecs_entity_t relation;      /* Relationship to substitute (default = IsA) */
+    uint8_t mask;               /* Substitute as self, subset, superset */
+    int32_t min_depth;          /* Min depth of subset/superset substitution */
+    int32_t max_depth;          /* Max depth of subset/superset substitution */
+} ecs_term_set_t;
+
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {
     ecs_entity_t entity;        /* Entity (default = This) */
     char *name;                 /* Name (default = ".") */
-    ecs_var_kind_t var_kind;    /* Is id a variable (default yes if name is 
+    ecs_var_kind_t var;         /* Is id a variable (default yes if name is 
                                  * all caps & entity is 0) */
-
-    /* Substitution parameters
-     * These parameters allow for substituting the id with its super- or subsets
-     * for a specified relationship. This enables functionality like selecting
-     * components from a base (IsA) or a parent (ChildOf) in a single term */
-
-    ecs_entity_t relation;      /* Relationship to substitute (default = IsA) */
-    uint8_t set;                /* Substitute as self, subset, superset */
-    int32_t min_depth;          /* Min depth of subset/superset substitution */
-    int32_t max_depth;          /* Max depth of subset/superset substitution */
+    ecs_term_set_t set;         /* Set substitution parameters */
 } ecs_term_id_t;
 
 /** Type that describes a single column in the system signature */

@@ -347,7 +347,7 @@ void register_on_set(
             ecs_term_id_t *subj = &term->args[0];
             ecs_oper_kind_t oper = term->oper;
 
-            if (!(subj->set & EcsSelf) || !subj->entity ||
+            if (!(subj->set.mask & EcsSelf) || !subj->entity ||
                 subj->entity != EcsThis)
             {
                 continue;

@@ -1,11 +1,11 @@
 #include <api.h>
 
 void Trigger(ecs_iter_t *it) {
-    probe_system_w_ctx(it, it->param);
+    probe_system_w_ctx(it, it->ctx);
 }
 
 void TriggerAdd(ecs_iter_t *it) {
-    ecs_id_t id = *(ecs_id_t*)it->param;
+    ecs_id_t id = *(ecs_id_t*)it->ctx;
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -14,7 +14,7 @@ void TriggerAdd(ecs_iter_t *it) {
 }
 
 void TriggerRemove(ecs_iter_t *it) {
-    ecs_id_t id = *(ecs_id_t*)it->param;
+    ecs_id_t id = *(ecs_id_t*)it->ctx;
 
     int i;
     for (i = 0; i < it->count; i ++) {

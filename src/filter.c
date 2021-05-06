@@ -19,13 +19,13 @@ int resolve_identifier(
         return 0;
     }
 
-    if (identifier->var_kind == EcsVarDefault) {
+    if (identifier->var == EcsVarDefault) {
         if (ecs_identifier_is_var(identifier->name)) {
-            identifier->var_kind = EcsVarIsVariable;
+            identifier->var = EcsVarIsVariable;
         }
     }
 
-    if (identifier->var_kind != EcsVarIsVariable) {
+    if (identifier->var != EcsVarIsVariable) {
         if (ecs_identifier_is_0(identifier->name)) {
             identifier->entity = 0;
         } else {
@@ -117,7 +117,7 @@ bool ecs_term_is_trivial(
         return false;
     }
 
-    if (term->args[0].set != EcsDefaultSet) {
+    if (term->args[0].set.mask != EcsDefaultSet) {
         return false;
     }
 
@@ -265,9 +265,9 @@ int ecs_filter_init(
     /* If default substitution is enabled, replace DefaultSet with SuperSet */
     if (desc->substitute_default) {
         for (i = 0; i < term_count; i ++) {
-            if (terms[i].args[0].set == EcsDefaultSet) {
-                terms[i].args[0].set = EcsSuperSet | EcsSelf;
-                terms[i].args[0].relation = EcsIsA;
+            if (terms[i].args[0].set.mask == EcsDefaultSet) {
+                terms[i].args[0].set.mask = EcsSuperSet | EcsSelf;
+                terms[i].args[0].set.relation = EcsIsA;
             }            
         }
     }
@@ -467,7 +467,7 @@ bool ecs_filter_match_entity(
         ecs_term_id_t *subj = &term->args[0];
         ecs_oper_kind_t oper = term->oper;
 
-        if (subj->entity != EcsThis && subj->set & EcsSelf) {
+        if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
             ecs_type_t type = ecs_get_type(world, subj->entity);
             if (ecs_type_has_id(world, type, term->id)) {
                 if (oper == EcsNot) {

@@ -51,7 +51,7 @@ public:
         m_normalized = ecs_type_add(world().c_ptr(), m_normalized, e.id());
         sync_from_me();
         return *this;
-    }    
+    }
 
     template <typename T>
     type& add() {

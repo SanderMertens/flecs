@@ -144,13 +144,11 @@ ecs_entity_t ecs_system_init(
 #define ECS_SYSTEM(world, id, kind, ...) \
     ecs_iter_action_t ecs_iter_action(id) = id;\
     ecs_entity_t id = ecs_system_init(world, &(ecs_system_desc_t){\
-        .entity = {\
-            .name = #id,\
-            .add = {kind}\
-        },\
+        .entity = { .name = #id, .add = {kind} },\
         .query.filter.expr = #__VA_ARGS__,\
         .callback = ecs_iter_action(id)\
     });\
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
     (void)ecs_iter_action(id);\
     (void)id;
 #endif
@@ -164,6 +162,7 @@ ecs_entity_t ecs_system_init(
         .events = {kind},\
     });\
     ecs_entity_t trigger_name = __F##trigger_name;\
+    ecs_assert(trigger_name != 0, ECS_INVALID_PARAMETER, NULL);\
     (void)__F##trigger_name;\
     (void)trigger_name;
 

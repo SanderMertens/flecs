@@ -468,7 +468,7 @@ void TriggerOnAdd_new_w_count_match_1_of_1() {
 static
 void AddVelocity(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
-    ecs_type_t v = it->param;
+    ecs_type_t v = it->ctx;
     if (!v) {
         v = ecs_column_type(it, 2);
     }
@@ -703,8 +703,8 @@ void TriggerOnAdd_2_systems_w_table_creation_in_progress() {
 static
 void TestContext(ecs_iter_t *it) {
     void *world_ctx = ecs_get_context(it->world);
-    test_assert(world_ctx == it->param);
-    int32_t *param = it->param;
+    test_assert(world_ctx == it->ctx);
+    int32_t *param = it->ctx;
     (*param) ++;
 }
 

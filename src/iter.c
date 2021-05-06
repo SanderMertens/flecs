@@ -143,12 +143,12 @@ bool ecs_term_is_readonly(
 
         if (term->inout == EcsInOutDefault) {
             if (subj->entity != EcsThis) {
-                printf("default & not this\n");
                 return true;
             }
 
-            if ((subj->set != EcsSelf) && (subj->set != EcsDefaultSet)) {
-                printf("not owned\n");
+            if ((subj->set.mask != EcsSelf) && 
+                (subj->set.mask != EcsDefaultSet)) 
+            {
                 return true;
             }
         }
