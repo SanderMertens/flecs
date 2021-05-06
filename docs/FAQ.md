@@ -128,36 +128,49 @@ q.iter([](flecs::iter& it) {
 So in short, for simple queries, use template parameters. For complex queries, use strings.
 
 ### How do I attach resources to a system?
-If you want to attach data to a system, you can add the `EcsContext` component to the system entity. For example:
+If you want to attach data to a system, you can specify a `ctx` parameter in the
+`ecs_system_desc_t` struct parameter passed to the `ecs_system_init` function:
+
+```c
+ecs_system_init(world, &(ecs_system_init_t){
+    .entity = {.name = "MySystem"},
+    .callback = MySystemCallback,
+    .ctx = my_context_ptr
+});
+```
+
+Alternatively, if you use the ECS_SYSTEM macro you can use `ecs_system_init`
+with the handle to the existing system to set the context:
 
 ```c
 ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, Velocity);
 
-int my_context_var = 10;
-ecs_set(world, MySystem, EcsContext, {&my_context_var});
+ecs_system_init(world, &(ecs_system_init_t) {
+    .entity = {MySystem},
+    .ctx = my_context_ptr
+})
 ```
 
-This variable will now be accessible through the `param` member of the system iterator:
+This variable will now be accessible through the `ctx` member of the system 
+iterator:
 
 ```c
 void MySystem(ecs_iter_t *it) {
-    int *my_context_var = it->param;
+    int *my_context_ptr = it->ctx;
     // ...
 }
 ```
 
-In C++ you can do the same thing:
+Systems in C++ can use the `ctx` method:
 
 ```cpp
-auto MySystem = world.system<Position, Velocity>().iter(
-    [](flecs::iter& it, Position *p, Velocity *v) 
-{
-    int *my_context_var = static_cast<int*>(it->param());
-    // ...
-});
+auto sys = world.system<Position, Velocity>()
+    .ctx(my_context_ptr)
+    .iter([](flecs::iter& it, Position *p, Velocity *v) {
+        int *my_context_ptr = it->ctx();
+    });
 
-int my_context_var = 10;
-MySystem.set<flecs::Context>({&my_context_var});
+sys.ctx(another_ptr);
 ```
 
 ### Why is my system (or query) unable to find a component from a module?

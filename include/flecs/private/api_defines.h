@@ -122,8 +122,6 @@ typedef int32_t ecs_size_t;
 #define FLECS__EEcsSystem (5)
 #define FLECS__EEcsTickSource (7)
 #define FLECS__EEcsQuery (10)
-#define FLECS__EEcsIterAction (11)
-#define FLECS__EEcsContext (12)
 
 /** Pipeline module component ids */
 #define FLECS__EEcsPipelineQuery (13)

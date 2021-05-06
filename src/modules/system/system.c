@@ -9,8 +9,6 @@
 ECS_TYPE_DECL(EcsComponentLifecycle);
 ECS_TYPE_DECL(EcsSystem);
 ECS_TYPE_DECL(EcsTickSource);
-ECS_TYPE_DECL(EcsIterAction);
-ECS_TYPE_DECL(EcsContext);
 
 static
 ecs_on_demand_in_t* get_in_component(
@@ -257,6 +255,11 @@ ecs_entity_t ecs_run_intern(
     FLECS_FLOAT time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
+    /* Support legacy behavior */
+    if (!param) {
+        param = system_data->ctx;
+    }
+
     if (tick_source) {
         const EcsTickSource *tick = ecs_get(
             world, tick_source, EcsTickSource);
@@ -425,6 +428,18 @@ ecs_query_t* ecs_get_query(
     }
 }
 
+void* ecs_get_system_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t system)
+{
+    const EcsSystem *s = ecs_get(world, system, EcsSystem);
+    if (s) {
+        return s->ctx;
+    } else {
+        return NULL;
+    }   
+}
+
 /* Generic constructor to initialize a component to 0 */
 static
 void sys_ctor_init_zero(
@@ -493,32 +508,6 @@ void ecs_colsystem_dtor(
     }
 }
 
-static
-void OnSetSystemCtx(
-    ecs_iter_t *it)
-{
-    EcsSystem *s = ecs_term(it, EcsSystem, 1);
-    EcsContext *ctx = ecs_term(it, EcsContext, 2);
-
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        s[i].ctx = (void*)ctx[i].ctx;
-    }  
-}
-
-static
-void OnSetTriggerCtx(
-    ecs_iter_t *it)
-{
-    EcsTrigger *t = ecs_term(it, EcsTrigger, 1);
-    EcsContext *ctx = ecs_term(it, EcsContext, 2);
-
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        ((ecs_trigger_t*)t[i].trigger)->ctx = (void*)ctx[i].ctx;
-    }  
-}
-
 /* System that registers component lifecycle callbacks */
 static
 void OnSetComponentLifecycle(
@@ -568,8 +557,8 @@ ecs_entity_t ecs_system_init(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
-    ecs_assert(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    ecs_entity_t existing = desc->entity.entity;
     ecs_entity_t result = ecs_entity_init(world, &desc->entity);
     if (!result) {
         return 0;
@@ -578,6 +567,8 @@ ecs_entity_t ecs_system_init(
     bool added = false;
     EcsSystem *system = ecs_get_mut(world, result, EcsSystem, &added);
     if (added) {
+        ecs_assert(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+
         memset(system, 0, sizeof(EcsSystem));
 
         ecs_query_desc_t query_desc = desc->query;
@@ -665,19 +656,47 @@ ecs_entity_t ecs_system_init(
 #endif
         }
 
-        /* Check if system has out columns */
-        ecs_term_t *terms = query->filter.terms;
-        int32_t i, count = query->filter.term_count;
-        for (i = 0; i < count; i ++) {
-            if (terms[i].inout != EcsIn) {
-                break;
-            }
-        }
-
         ecs_modified(world, result, EcsSystem);
 
         ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
             ecs_get_name(world, result), query->filter.expr);
+    } else {
+        const char *expr_desc = desc->query.filter.expr;
+        const char *expr_sys = system->query->filter.expr;
+
+        /* Only check expression if it's set */
+        if (expr_desc) {
+            if (expr_sys && !strcmp(expr_sys, "0")) expr_sys = NULL;
+            if (expr_desc && !strcmp(expr_desc, "0")) expr_desc = NULL;
+
+            if (expr_sys && expr_desc) {
+                if (strcmp(expr_sys, expr_desc)) {
+                    ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
+                }
+            } else {
+                if (expr_sys != expr_desc) {
+                    ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
+                }
+            }
+
+        /* If expr_desc is not set, and this is an existing system, don't throw
+         * an error because we could be updating existing parameters of the
+         * system such as the context or system callback. However, if no
+         * entity handle was provided, we have to assume that the application is
+         * trying to redeclare the system. */
+        } else if (!existing) {
+            if (expr_sys) {
+                ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
+            }
+        }
+
+        /* Override the existing callback or context */
+        if (desc->callback) {
+            system->action = desc->callback;
+        }
+        if (desc->ctx) {
+            system->ctx = desc->ctx;
+        }
     }
 
     return result;
@@ -693,8 +712,6 @@ void FlecsSystemImport(
     ecs_bootstrap_component(world, EcsComponentLifecycle);
     ecs_bootstrap_component(world, EcsSystem);
     ecs_bootstrap_component(world, EcsTickSource);
-    ecs_bootstrap_component(world, EcsIterAction);
-    ecs_bootstrap_component(world, EcsContext);
 
     ecs_bootstrap_tag(world, EcsOnAdd);
     ecs_bootstrap_tag(world, EcsOnRemove);
@@ -713,8 +730,6 @@ void FlecsSystemImport(
     ECS_TYPE_IMPL(EcsComponentLifecycle);
     ECS_TYPE_IMPL(EcsSystem);
     ECS_TYPE_IMPL(EcsTickSource);
-    ECS_TYPE_IMPL(EcsIterAction);
-    ECS_TYPE_IMPL(EcsContext);
 
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_set_component_actions_w_id(world, ecs_id(EcsSystem), 
@@ -726,14 +741,6 @@ void FlecsSystemImport(
     /* Register OnSet system for EcsComponentLifecycle */
     ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, 
         ComponentLifecycle, SYSTEM:Hidden);
-
-    /* System that sets ctx for a system */
-    ECS_SYSTEM(world, OnSetSystemCtx, EcsOnSet, 
-        System, Context, SYSTEM:Hidden);
-
-    /* System that sets ctx for a trigger */
-    ECS_SYSTEM(world, OnSetTriggerCtx, EcsOnSet, 
-        Trigger, Context, SYSTEM:Hidden);
 
     /* Monitors that trigger when a system is enabled or disabled */
     ECS_SYSTEM(world, DisableSystem, EcsMonitor, 

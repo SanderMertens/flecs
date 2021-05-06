@@ -1004,7 +1004,10 @@ void SystemMisc_change_system_action() {
 
     action_a_invoked = false;
 
-    ecs_set(world, sys, EcsIterAction, {ActionB});
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {sys},
+        .callback = ActionB
+    });
 
     ecs_progress(world, 0);
 
@@ -1394,23 +1397,25 @@ void SystemMisc_redeclare_system_0_expr() {
 }
 
 void SystemMisc_redeclare_system_different_expr() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    test_expect_abort();
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
         .query.filter.expr = "Position, Velocity", 
         .callback = Dummy
     });
-    ecs_entity_t e = ecs_system_init(world, &(ecs_system_desc_t){
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
         .query.filter.expr = "Position", 
         .callback = Dummy
     });
-
-    test_assert(e == 0);
 
     ecs_fini(world);
 }
@@ -1504,25 +1509,26 @@ void SystemMisc_redeclare_system_0_and_expr() {
 }
 
 void SystemMisc_redeclare_system_0_and_null() {
+    install_test_abort();
+    
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
         .query.filter.expr = "0", 
         .callback = Dummy
     });
-    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+
+    test_expect_abort();
+
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = {.name = "Move", .add = {EcsOnUpdate} }, 
         .query.filter.expr = NULL, 
         .callback = Dummy
     });
-
-    test_assert(s1 == s2);
-
-    ecs_fini(world);
 }
 
 void SystemMisc_redeclare_system_null_and_0() {

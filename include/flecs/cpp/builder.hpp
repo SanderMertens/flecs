@@ -439,13 +439,20 @@ public:
         return *static_cast<Base*>(this);
     }
 
+    /** Set system context */
+    Base& ctx(void *ptr) {
+        m_desc->ctx = ctx;
+        return *static_cast<Base*>(this);
+    }    
+
     ECS_DEPRECATED("use interval")
     Base& period(FLECS_FLOAT period) {
         return this->interval(period);
     }   
 
-    void set_context(void *ctx) {
-        m_desc->ctx = ctx;
+    ECS_DEPRECATED("use ctx")
+    Base& set_context(void *ptr) {
+        ctx(ptr);
     }     
 
 private:

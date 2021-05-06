@@ -154,6 +154,28 @@ public:
         ecs_enable(m_world, m_id, false);
     }
 
+    void ctx(void *ctx) {
+        if (ecs_has(m_world, m_id, EcsSystem)) {
+            ecs_system_desc_t desc = {};
+            desc.entity.entity = m_id;
+            desc.ctx = ctx;
+            ecs_system_init(m_world, &desc);
+        } else {
+            ecs_trigger_desc_t desc = {};
+            desc.entity.entity = m_id;
+            desc.ctx = ctx;
+            ecs_trigger_init(m_world, &desc);
+        }
+    }
+
+    void* ctx() const {
+        if (ecs_has(m_world, m_id, EcsSystem)) {
+            return ecs_get_system_ctx(m_world, m_id);
+        } else {
+            return ecs_get_trigger_ctx(m_world, m_id);
+        }
+    }    
+
     ECS_DEPRECATED("use interval")
     void period(FLECS_FLOAT period) {
         this->interval(period);
@@ -161,22 +183,17 @@ public:
 
     ECS_DEPRECATED("use interval")
     void set_period(FLECS_FLOAT period) const {
-        ecs_set_interval(m_world, m_id, period);
+        this->interval(period);
     }
 
-    void set_context(void *ctx) {
-        EcsContext ctx_value = { ctx };
-        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+    ECS_DEPRECATED("use ctx(void*)")
+    void set_context(void *ptr) {
+        ctx(ptr);
     }
 
+    ECS_DEPRECATED("use void* ctx()")
     void* get_context() const {
-        const EcsContext *ctx = static_cast<const EcsContext*>(
-            ecs_get_w_id(m_world, m_id, ecs_id(EcsContext)));
-        if (ctx) {
-            return const_cast<void*>(ctx->ctx);
-        } else {
-            return NULL;
-        }
+        return ctx();
     }
 
     query_base query() const {

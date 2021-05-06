@@ -83,15 +83,13 @@ class cpp_type;
 /* Builtin components */
 using Component = EcsComponent;
 using ComponentLifecycle = EcsComponentLifecycle;
-using Trigger = EcsTrigger;
 using Type = EcsType;
 using Name = EcsName;
 using Timer = EcsTimer;
 using RateFilter = EcsRateFilter;
 using TickSource = EcsTickSource;
 using Query = EcsQuery;
-using ViewAction = EcsIterAction;
-using Context = EcsContext;
+using Trigger = EcsTrigger;
 
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;

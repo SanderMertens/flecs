@@ -2967,6 +2967,19 @@ ecs_entity_t ecs_trigger_init(
     ecs_world_t *world,
     const ecs_trigger_desc_t *desc);
 
+/** Get trigger context.
+ * This operation returns the context pointer set for the trigger. If
+ * the provided entity is not a trigger, the function will return NULL.
+ *
+ * @param world The world.
+ * @param trigger The trigger from which to obtain the context.
+ * @return The context.
+ */
+FLECS_API
+void* ecs_get_trigger_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t trigger);
+
 /** @} */
 
 

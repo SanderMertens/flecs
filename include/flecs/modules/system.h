@@ -29,28 +29,14 @@ extern "C" {
 
 FLECS_API
 extern ecs_type_t
-    ecs_type(EcsTrigger),
     ecs_type(EcsSystem),
-    ecs_type(EcsTickSource),
-    ecs_type(EcsIterAction),
-    ecs_type(EcsContext);
+    ecs_type(EcsTickSource);
 
 /* Component used to provide a tick source to systems */
 typedef struct EcsTickSource {
     bool tick;                 /* True if providing tick */
     FLECS_FLOAT time_elapsed;  /* Time elapsed since last tick */
 } EcsTickSource;
-
-/* System action */
-typedef struct EcsIterAction {
-    ecs_iter_action_t action;
-} EcsIterAction;
-
-/* System context */
-typedef struct EcsContext {
-    const void *ctx;
-} EcsContext;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Systems API
@@ -264,6 +250,18 @@ ecs_query_t* ecs_get_query(
     const ecs_world_t *world,
     ecs_entity_t system);
 
+/** Get system context.
+ * This operation returns the context pointer set for the system. If
+ * the provided entity is not a system, the function will return NULL.
+ *
+ * @param world The world.
+ * @param system The system from which to obtain the context.
+ * @return The context.
+ */
+FLECS_API
+void* ecs_get_system_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t system);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// System debug API

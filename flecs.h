@@ -214,8 +214,6 @@ typedef int32_t ecs_size_t;
 #define FLECS__EEcsSystem (5)
 #define FLECS__EEcsTickSource (7)
 #define FLECS__EEcsQuery (10)
-#define FLECS__EEcsIterAction (11)
-#define FLECS__EEcsContext (12)
 
 /** Pipeline module component ids */
 #define FLECS__EEcsPipelineQuery (13)
@@ -5947,6 +5945,19 @@ ecs_entity_t ecs_trigger_init(
     ecs_world_t *world,
     const ecs_trigger_desc_t *desc);
 
+/** Get trigger context.
+ * This operation returns the context pointer set for the trigger. If
+ * the provided entity is not a trigger, the function will return NULL.
+ *
+ * @param world The world.
+ * @param trigger The trigger from which to obtain the context.
+ * @return The context.
+ */
+FLECS_API
+void* ecs_get_trigger_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t trigger);
+
 /** @} */
 
 
@@ -6694,28 +6705,14 @@ extern "C" {
 
 FLECS_API
 extern ecs_type_t
-    ecs_type(EcsTrigger),
     ecs_type(EcsSystem),
-    ecs_type(EcsTickSource),
-    ecs_type(EcsIterAction),
-    ecs_type(EcsContext);
+    ecs_type(EcsTickSource);
 
 /* Component used to provide a tick source to systems */
 typedef struct EcsTickSource {
     bool tick;                 /* True if providing tick */
     FLECS_FLOAT time_elapsed;  /* Time elapsed since last tick */
 } EcsTickSource;
-
-/* System action */
-typedef struct EcsIterAction {
-    ecs_iter_action_t action;
-} EcsIterAction;
-
-/* System context */
-typedef struct EcsContext {
-    const void *ctx;
-} EcsContext;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Systems API
@@ -6929,6 +6926,18 @@ ecs_query_t* ecs_get_query(
     const ecs_world_t *world,
     ecs_entity_t system);
 
+/** Get system context.
+ * This operation returns the context pointer set for the system. If
+ * the provided entity is not a system, the function will return NULL.
+ *
+ * @param world The world.
+ * @param system The system from which to obtain the context.
+ * @return The context.
+ */
+FLECS_API
+void* ecs_get_system_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t system);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// System debug API
@@ -8746,15 +8755,13 @@ class cpp_type;
 /* Builtin components */
 using Component = EcsComponent;
 using ComponentLifecycle = EcsComponentLifecycle;
-using Trigger = EcsTrigger;
 using Type = EcsType;
 using Name = EcsName;
 using Timer = EcsTimer;
 using RateFilter = EcsRateFilter;
 using TickSource = EcsTickSource;
 using Query = EcsQuery;
-using ViewAction = EcsIterAction;
-using Context = EcsContext;
+using Trigger = EcsTrigger;
 
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;
@@ -9573,9 +9580,15 @@ public:
      */
     flecs::type type() const;
 
-    /** Access param field. 
-     * The param field contains the value assigned to flecs::Context, or the
-     * value passed to the `param` argument when invoking system::run.
+    /** Access ctx. 
+     * ctx contains the context pointer assigned to a system.
+     */
+    void* ctx() {
+        return m_iter->ctx;
+    }
+
+    /** Access param. 
+     * param contains the pointer passed to the param argument of system::run
      */
     void* param() {
         return m_iter->param;
@@ -12889,13 +12902,20 @@ public:
         return *static_cast<Base*>(this);
     }
 
+    /** Set system context */
+    Base& ctx(void *ptr) {
+        m_desc->ctx = ctx;
+        return *static_cast<Base*>(this);
+    }    
+
     ECS_DEPRECATED("use interval")
     Base& period(FLECS_FLOAT period) {
         return this->interval(period);
     }   
 
-    void set_context(void *ctx) {
-        m_desc->ctx = ctx;
+    ECS_DEPRECATED("use ctx")
+    Base& set_context(void *ptr) {
+        ctx(ptr);
     }     
 
 private:
@@ -14785,6 +14805,28 @@ public:
         ecs_enable(m_world, m_id, false);
     }
 
+    void ctx(void *ctx) {
+        if (ecs_has(m_world, m_id, EcsSystem)) {
+            ecs_system_desc_t desc = {};
+            desc.entity.entity = m_id;
+            desc.ctx = ctx;
+            ecs_system_init(m_world, &desc);
+        } else {
+            ecs_trigger_desc_t desc = {};
+            desc.entity.entity = m_id;
+            desc.ctx = ctx;
+            ecs_trigger_init(m_world, &desc);
+        }
+    }
+
+    void* ctx() const {
+        if (ecs_has(m_world, m_id, EcsSystem)) {
+            return ecs_get_system_ctx(m_world, m_id);
+        } else {
+            return ecs_get_trigger_ctx(m_world, m_id);
+        }
+    }    
+
     ECS_DEPRECATED("use interval")
     void period(FLECS_FLOAT period) {
         this->interval(period);
@@ -14792,22 +14834,17 @@ public:
 
     ECS_DEPRECATED("use interval")
     void set_period(FLECS_FLOAT period) const {
-        ecs_set_interval(m_world, m_id, period);
+        this->interval(period);
     }
 
-    void set_context(void *ctx) {
-        EcsContext ctx_value = { ctx };
-        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
+    ECS_DEPRECATED("use ctx(void*)")
+    void set_context(void *ptr) {
+        ctx(ptr);
     }
 
+    ECS_DEPRECATED("use void* ctx()")
     void* get_context() const {
-        const EcsContext *ctx = static_cast<const EcsContext*>(
-            ecs_get_w_id(m_world, m_id, ecs_id(EcsContext)));
-        if (ctx) {
-            return const_cast<void*>(ctx->ctx);
-        } else {
-            return NULL;
-        }
+        return ctx();
     }
 
     query_base query() const {

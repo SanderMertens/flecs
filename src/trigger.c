@@ -267,77 +267,108 @@ ecs_entity_t ecs_trigger_init(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
 
     char *name = NULL;
     const char *expr = desc->expr;
 
     /* If entity is provided, create it */
+    ecs_entity_t existing = desc->entity.entity;
     ecs_entity_t entity = ecs_entity_init(world, &desc->entity);
 
-    /* Something went wrong with the construction of the entity */
-    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
-    name = ecs_get_fullpath(world, entity);
+    bool added = false;
+    EcsTrigger *comp = ecs_get_mut(world, entity, EcsTrigger, &added);
+    if (added) {
+        ecs_assert(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+        
+        /* Something went wrong with the construction of the entity */
+        ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+        name = ecs_get_fullpath(world, entity);
 
-    ecs_term_t term;
-    if (expr) {
-#ifdef FLECS_PARSER
-        const char *ptr = ecs_parse_term(world, name, expr, expr, &term);
-        if (!ptr) {
+        ecs_term_t term;
+        if (expr) {
+    #ifdef FLECS_PARSER
+            const char *ptr = ecs_parse_term(world, name, expr, expr, &term);
+            if (!ptr) {
+                goto error;
+            }
+
+            if (!ecs_term_is_set(&term)) {
+                ecs_parser_error(
+                    name, expr, 0, "invalid empty trigger expression");
+                goto error;
+            }
+
+            if (ptr[0]) {
+                ecs_parser_error(name, expr, 0, 
+                    "too many terms in trigger expression (expected 1)");
+                goto error;
+            }
+    #else
+            ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+    #endif
+        } else {
+            term = desc->term;
+        }
+
+        if (ecs_term_finalize(world, name, expr, &term)) {
             goto error;
         }
 
-        if (!ecs_term_is_set(&term)) {
-            ecs_parser_error(name, expr, 0, "invalid empty trigger expression");
-            goto error;
-        }
+        /* Currently triggers are not supported for specific entities */
+        ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
 
-        if (ptr[0]) {
-            ecs_parser_error(name, expr, 0, 
-                "too many terms in trigger expression (expected 1)");
-            goto error;
-        }
-#else
-        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
-#endif
+        ecs_trigger_t *trigger = ecs_sparse_add(world->triggers, ecs_trigger_t);
+        trigger->term = term;
+        trigger->action = desc->callback;
+        trigger->ctx = desc->ctx;
+        trigger->binding_ctx = desc->binding_ctx;
+        trigger->ctx_free = desc->ctx_free;
+        trigger->binding_ctx_free = desc->binding_ctx_free;
+        trigger->event_count = count_events(desc->events);
+        ecs_os_memcpy(trigger->events, desc->events, 
+            trigger->event_count * ECS_SIZEOF(ecs_entity_t));
+        trigger->id = ecs_sparse_last_id(world->triggers);
+        trigger->entity = entity;
+
+        comp->trigger = trigger;
+
+        /* Trigger must have at least one event */
+        ecs_assert(trigger->event_count != 0, ECS_INVALID_PARAMETER, NULL);
+
+        register_trigger(world, trigger->term.id, trigger);
+
+        ecs_term_fini(&term);        
     } else {
-        term = desc->term;
+        ecs_assert(comp->trigger != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* If existing entity handle was provided, override existing params */
+        if (existing) {
+            if (desc->callback) {
+                ((ecs_trigger_t*)comp->trigger)->action = desc->callback;
+            }
+            if (desc->ctx) {
+                ((ecs_trigger_t*)comp->trigger)->ctx = desc->ctx;
+            }
+        }
     }
-
-    if (ecs_term_finalize(world, name, expr, &term)) {
-        goto error;
-    }
-
-    /* Currently triggers are not supported for specific entities */
-    ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
-
-    ecs_trigger_t *trigger = ecs_sparse_add(world->triggers, ecs_trigger_t);
-    trigger->term = term;
-    trigger->action = desc->callback;
-    trigger->ctx = desc->ctx;
-    trigger->binding_ctx = desc->binding_ctx;
-    trigger->ctx_free = desc->ctx_free;
-    trigger->binding_ctx_free = desc->binding_ctx_free;
-    trigger->event_count = count_events(desc->events);
-    ecs_os_memcpy(trigger->events, desc->events, 
-        trigger->event_count * ECS_SIZEOF(ecs_entity_t));
-    trigger->id = ecs_sparse_last_id(world->triggers);
-    trigger->entity = entity;
-
-    ecs_set(world, entity, EcsTrigger, {trigger});
-
-    /* Trigger must have at least one event */
-    ecs_assert(trigger->event_count != 0, ECS_INVALID_PARAMETER, NULL);
-
-    register_trigger(world, trigger->term.id, trigger);
-
-    ecs_term_fini(&term);
 
     ecs_os_free(name);
     return entity;
 error:
     ecs_os_free(name);
     return 0;
+}
+
+void* ecs_get_trigger_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t trigger)
+{
+    const EcsTrigger *t = ecs_get(world, trigger, EcsTrigger);
+    if (t) {
+        return t->trigger->ctx;
+    } else {
+        return NULL;
+    }     
 }
 
 void ecs_trigger_fini(

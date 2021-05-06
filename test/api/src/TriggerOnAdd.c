@@ -494,7 +494,9 @@ void TriggerOnAdd_override_after_add_in_on_add() {
 
     ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Position);
 
-    ecs_set(world, AddVelocity, EcsContext, {ecs_type(Velocity)});
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity = {AddVelocity}, .ctx = (void*)ecs_type(Velocity)
+    });
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -544,7 +546,9 @@ void TriggerOnAdd_set_after_add_in_on_add() {
     ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Position);
     ECS_SYSTEM(world, OnSetPosition, EcsOnSet, Position);
 
-    ecs_set(world, AddVelocity, EcsContext, {ecs_type(Velocity)});
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity = {AddVelocity}, .ctx = (void*)ecs_type(Velocity)
+    });
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -716,11 +720,11 @@ void TriggerOnAdd_sys_context() {
 
     ECS_TRIGGER(world, TestContext, EcsOnAdd, Position);
 
-    ecs_set(world, TestContext, EcsContext, {&param});
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity = {TestContext}, .ctx = &param
+    });
 
-    const EcsContext *ctx = ecs_get(world, TestContext, EcsContext);
-    test_assert(ctx != NULL);
-    test_assert(ctx->ctx == &param);
+    test_assert(ecs_get_trigger_ctx(world, TestContext) == &param);
 
     ecs_fini(world);
 }
@@ -733,11 +737,12 @@ void TriggerOnAdd_get_sys_context_from_param() {
 
     ECS_TRIGGER(world, TestContext, EcsOnAdd, Position);
 
-    ecs_set(world, TestContext, EcsContext, {&param});
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity = {TestContext}, .ctx = &param
+    });
 
     /* Set world context so system can compare if pointer is correct */
     ecs_set_context(world, &param);
-    ecs_set(world, TestContext, EcsContext, {&param});
 
     /* Trigger system */
     ecs_new(world, Position);
