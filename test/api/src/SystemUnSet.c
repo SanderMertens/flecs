@@ -481,7 +481,7 @@ void UnSet_TestComp(ecs_iter_t *it) {
 
     test_int(it->count, 1);
 
-    Position *p = ecs_column(it, Position, 1);
+    Position *p = ecs_term(it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -543,10 +543,10 @@ void UnSet_WriteComp(ecs_iter_t *it) {
 
     test_int(it->count, 1);
 
-    Position *p = ecs_column(it, Position, 1);
+    Position *p = ecs_term(it, Position, 1);
     test_assert(p != NULL);
 
-    Velocity *v = ecs_column(it, Velocity, 2);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     test_int(p->x, 10);
     test_int(p->y, 20);

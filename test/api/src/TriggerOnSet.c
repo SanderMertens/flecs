@@ -6,7 +6,7 @@ void OnSet(ecs_iter_t *it) {
 
     Velocity *v = NULL;
     if (it->column_count >= 2) {
-        v = ecs_column(it, Velocity, 2);
+        v = ecs_term(it, Velocity, 2);
     }
 
     probe_system(it);
@@ -295,7 +295,7 @@ void OnSetShared(ecs_iter_t *it) {
 
     Velocity *v = NULL;
     if (it->column_count >= 2) {
-        v = ecs_column(it, Velocity, 2);
+        v = ecs_term(it, Velocity, 2);
     }
 
     probe_system(it);

@@ -17,11 +17,11 @@ void Iter(ecs_iter_t *it) {
     Velocity *v = NULL;
 
     if (it->column_count >= 2) {
-        p = ecs_column(it, Position, 2);
+        p = ecs_term(it, Position, 2);
     }
 
     if (it->column_count >= 3) {
-        v = ecs_column(it, Velocity, 3);
+        v = ecs_term(it, Velocity, 3);
     }
 
     probe_system(it);
@@ -184,15 +184,15 @@ void Iter_2_shared(ecs_iter_t *it) {
     Velocity *v = NULL;
 
     if (it->column_count >= 2) {
-        r_ptr = ecs_column(it, Rotation, 2);
+        r_ptr = ecs_term(it, Rotation, 2);
     }
 
     if (it->column_count >= 3) {
-        p = ecs_column(it, Position, 3);
+        p = ecs_term(it, Position, 3);
     }
 
     if (it->column_count >= 4) {
-        v = ecs_column(it, Velocity, 4);
+        v = ecs_term(it, Velocity, 4);
     }    
 
     probe_system(it);
@@ -1180,7 +1180,7 @@ void System_w_FromContainer_new_child_after_match() {
 
 void IterSame(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p_parent, 1);
-    Position *p = ecs_column(it, Position, 2);
+    Position *p = ecs_term(it, Position, 2);
 
     test_assert(!ecs_is_owned(it, 1));
 

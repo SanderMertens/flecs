@@ -11,11 +11,11 @@ void Iter(ecs_iter_t *it) {
     Mass *m = NULL;
         
     if (it->column_count >= 2) {
-        v = ecs_column(it, Velocity, 2);
+        v = ecs_term(it, Velocity, 2);
     }
 
     if (it->column_count >= 3) {
-        m = ecs_column(it, Mass, 3);
+        m = ecs_term(it, Mass, 3);
     }
 
     probe_system(it);

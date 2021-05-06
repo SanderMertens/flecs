@@ -441,7 +441,7 @@ public:
 
     /** Set system context */
     Base& ctx(void *ptr) {
-        m_desc->ctx = ctx;
+        m_desc->ctx = ptr;
         return *static_cast<Base*>(this);
     }    
 

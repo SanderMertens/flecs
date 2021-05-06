@@ -149,8 +149,8 @@ typedef struct Velocity {
 // System names ('Move') use PascalCase. API types use snake_case_t
 void Move(ecs_iter_t *it) {
     // Functions use snake_case
-    Position *p = ecs_column(it, Position, 1);
-    Velocity *v = ecs_column(it, Velocity, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
     
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
@@ -1021,8 +1021,8 @@ ecs_iter_t it = ecs_query_iter(query);
 // Iterate all the matching archetypes
 while (ecs_query_next(&it)) {
     // Get the component arrays
-    Position *p = ecs_column(&it, Position, 1);
-    Velocity *v = ecs_column(&it, Velocity, 2);
+    Position *p = ecs_term(&it, Position, 1);
+    Velocity *v = ecs_term(&it, Velocity, 2);
 
     // Iterate the entities in the archetype
     for (int i = 0; i < it.count, i ++) {
@@ -1032,7 +1032,7 @@ while (ecs_query_next(&it)) {
 }
 ```
 
-When an application is iterating the query, it can obtain pointers to the component arrays using the `ecs_column` function, which accepts the iterator, component name and the index of the component in the signature, which is offset by one. In the above example, `1` points to `Position`, which is the first component in the signature. and `2` points to `Velocity` which is the second.
+When an application is iterating the query, it can obtain pointers to the component arrays using the `ecs_term` function, which accepts the iterator, component name and the index of the component in the signature, which is offset by one. In the above example, `1` points to `Position`, which is the first component in the signature. and `2` points to `Velocity` which is the second.
 
 Each time the `ecs_query_next` function returns true, the iterator contains entities that all have the same set of components, or belong to the same archetype, or table. The `count` member of the iterator contains the number of entities in the current table. An application can access the entity identifiers being iterated over with the `entities` member of the iterator:
 
@@ -1135,7 +1135,7 @@ OWNED:Position, OWNED:Velocity
 #### SHARED
 The `SHARED` modifier only matches shared components. A shared component is a component that the entity inherits from a base entity, through an `INSTANCEOF` relationship (see the examples in `OWNED`).
 
-When a query or system matches with a `SHARED` component, the `ecs_column` function does not provide an array. Instead it provides a pointer to the shared component which is shared with the entities in the table being iterated over:
+When a query or system matches with a `SHARED` component, the `ecs_term` function does not provide an array. Instead it provides a pointer to the shared component which is shared with the entities in the table being iterated over:
 
 ```c
 // Request Position, Velocity where Velocity must be shared
@@ -1145,8 +1145,8 @@ ecs_iter_t it = ecs_query_iter(query);
 
 while (ecs_query_next(&it)) {
     // Pointer is an array, Velocity is a pointer
-    Position *p = ecs_column(&it, Position, 1);
-    Velocity *v = ecs_column(&it, Velocity, 2);
+    Position *p = ecs_term(&it, Position, 1);
+    Velocity *v = ecs_term(&it, Velocity, 2);
 
     for (int i = 0; i < it.count, i ++) {
         // Access velocity as pointer, not as array
@@ -1166,8 +1166,8 @@ ecs_query_t *query = ecs_query_new(world, "Position, ANY:Velocity");
 ecs_iter_t it = ecs_query_iter(query);
 
 while (ecs_query_next(&it)) {
-    Position *p = ecs_column(&it, Position, 1);
-    Velocity *v = ecs_column(&it, Velocity, 2);
+    Position *p = ecs_term(&it, Position, 1);
+    Velocity *v = ecs_term(&it, Velocity, 2);
 
     // Test outside of loop for better performance
     if (ecs_is_owned(it, 2)) {
@@ -1205,8 +1205,8 @@ ecs_iter_t it = ecs_query_iter(query);
 
 while (ecs_query_next(&it)) {
     // 1st Position is array, 2nd one is pointer
-    Position *p = ecs_column(&it, Position, 1);
-    Position *p_parent = ecs_column(&it, Position, 2);
+    Position *p = ecs_term(&it, Position, 1);
+    Position *p_parent = ecs_term(&it, Position, 2);
 
     for (int i = 0; i < it.count, i ++) {
         p[i].x += p_parent->x;
@@ -1226,8 +1226,8 @@ ecs_query_t *query = ecs_query_new(world, "Position, CASCADE:Position");
 ecs_iter_t it = ecs_query_iter(query);
 
 while (ecs_query_next(&it)) {
-    Position *p = ecs_column(&it, Position, 1);
-    Position *p_parent = ecs_column(&it, Position, 2);
+    Position *p = ecs_term(&it, Position, 1);
+    Position *p_parent = ecs_term(&it, Position, 2);
 
     if (p_parent) {
         for (int i = 0; i < it.count, i ++) {
@@ -1263,8 +1263,8 @@ When iterating the system, the component can be retrieved just like other compon
 
 ```c
 void MySystem(ecs_iter_t *it) {
-   Position *p = ecs_column(it, Position, 1);
-   MySystemContext *ctx = ecs_column(it, MySystemContext, 2);
+   Position *p = ecs_term(it, Position, 1);
+   MySystemContext *ctx = ecs_term(it, MySystemContext, 2);
    
    for (int i = 0; i < it.count; i ++) {
      p[i].x += ctx->value; // Note that this is a pointer, not an array
@@ -1285,8 +1285,8 @@ ecs_query_t *q = ecs_query_new(world, "Position, MyEntity:Velocity");
 ecs_iter_t it = ecs_query_iter(query);
 
 while (ecs_query_next(&it)) {
-    Position *p = ecs_column(&it, Position, 1);
-    Velocity *v = ecs_column(&it, Velocity, 2);
+    Position *p = ecs_term(&it, Position, 1);
+    Velocity *v = ecs_term(&it, Velocity, 2);
 
     for (int i = 0; i < it.count; i ++) {
       p[i].x += v->x;
@@ -1318,8 +1318,8 @@ ecs_query_t *query = ecs_query_new(world, "Position, $Game");
 ecs_iter_t it = ecs_query_iter(query);
 
 while (ecs_query_next(&it)) {
-    Position *p = ecs_column(&it, Position, 1);
-    Game *g = ecs_column(&it, Game, 2);
+    Position *p = ecs_term(&it, Position, 1);
+    Game *g = ecs_term(&it, Game, 2);
 
     for (int i = 0; i < it.count; i ++) {
       p[i].x += g->max_speed;
@@ -1338,10 +1338,10 @@ ecs_query_t *query = ecs_query_new(world, "Position, :Velocity");
 ecs_iter_t it = ecs_query_iter(query);
 
 while (ecs_query_next(&it)) {
-    Position *p = ecs_column(&it, Position, 1);
+    Position *p = ecs_term(&it, Position, 1);
 
     // Get component identifier from column
-    ecs_entity_t vel_id = ecs_column_entity(&it, 2);
+    ecs_entity_t vel_id = ecs_term_id(&it, 2);
 }
 ```
 
@@ -1388,7 +1388,7 @@ Not expressions allow a signature to exclude entities that have a component. An 
 Position, !Velocity
 ```
 
-This signature matches all entities that have `Position`, but not have `Velocity`. An expression with a `NOT` column does not pass any data into a system, which means that the `ecs_column` function is guaranteed to return `NULL` for a column.
+This signature matches all entities that have `Position`, but not have `Velocity`. An expression with a `NOT` column does not pass any data into a system, which means that the `ecs_term` function is guaranteed to return `NULL` for a column.
 
 #### Optional
 The optional operator allows a signature to both match entities with and without a specific component. An exampole with an optional operator is:
@@ -1405,8 +1405,8 @@ ecs_query_t *query = ecs_query_new(world, "Position, CASCADE:Position");
 ecs_iter_t it = ecs_query_iter(query);
 
 while (ecs_query_next(&it)) {
-    Position *p = ecs_column(&it, Position, 1);
-    Velocity *v = ecs_column(&it, Velocity, 2);
+    Position *p = ecs_term(&it, Position, 1);
+    Velocity *v = ecs_term(&it, Velocity, 2);
 
     if (v) {
         for (int i = 0; i < it.count, i ++) {
@@ -1470,7 +1470,7 @@ Applications iterate a sorted query in the same way they would iterate a regular
 
 ```c
 while (ecs_query_next(&it)) {
-    Position *p = ecs_column(&it, Position, 1);
+    Position *p = ecs_term(&it, Position, 1);
 
     for (int i = 0; i < it.count; i ++) {
         printf("{%f, %f}\n", p[i].x, p[i].y); // Values printed will be in order
@@ -1582,8 +1582,8 @@ void Move(ecs_iter_t *it) { }
 The implementation of a system is a regular query iteration:
 
 ```c
-Position *p = ecs_column(it, Position, 1);
-Velocity *v = ecs_column(it, Velocity, 2);
+Position *p = ecs_term(it, Position, 1);
+Velocity *v = ecs_term(it, Velocity, 2);
 
 for (int i = 0; i < it->count, i ++) {
     p[i].x += v[i].x;
@@ -1595,8 +1595,8 @@ for (int i = 0; i < it->count, i ++) {
 A system provides a `delta_time` which contains the time passed since the last frame:
 
 ```c
-Position *p = ecs_column(it, Position, 1);
-Velocity *v = ecs_column(it, Velocity, 2);
+Position *p = ecs_term(it, Position, 1);
+Velocity *v = ecs_term(it, Velocity, 2);
 
 for (int i = 0; i < it->count, i ++) {
     p[i].x += v[i].x * it->delta_time;
@@ -1658,8 +1658,8 @@ An monitor is implemented the same way as a regular system:
 
 ```c
 void OnPV(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
-    Velocity *v = ecs_column(it, Velocity, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
         /* Monitor code. Note that components may not have
@@ -1697,8 +1697,8 @@ An OnSet system is implemented the same way as a regular system:
 
 ```c
 void OnSetPV(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
-    Velocity *v = ecs_column(it, Velocity, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
         /* Trigger code */
@@ -1737,7 +1737,7 @@ The implementation of the trigger looks similar to a system:
 
 ```c
 void AddPosition(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x = 10;
@@ -2297,11 +2297,11 @@ This will iterate all entities with the ExpiryTimer trait, for each instance of 
 ```c
 void ExpireComponents(ecs_iter_t *it) {
     /* Obtain the array containing the trait component */
-    ExpiryTimer *et = ecs_column(it, ExpiryTimer, 1);
+    ExpiryTimer *et = ecs_term(it, ExpiryTimer, 1);
 
     /* Get the handle to the trait. This will tell us on which component the
      * trait is applied */
-    ecs_entity_t trait = ecs_column_entity(it, 1);
+    ecs_entity_t trait = ecs_term_id(it, 1);
 
     /* Obtain the component to which the trait is applied */
     ecs_entity_t comp = ecs_entity_t_lo(trait);
@@ -2462,7 +2462,7 @@ With the following implementation for `SetVelocity`:
 
 ```c
 void SetVelocity(ecs_iter_t *it) {
-    ecs_entity_t ecs_typeid(Velocity) = ecs_column_entity(it, 2);
+    ecs_entity_t ecs_typeid(Velocity) = ecs_term_id(it, 2);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_set(world, it->entities[i], Velocity, {1, 2});

@@ -4225,19 +4225,65 @@ ecs_entity_t ecs_new_w_id(
 #define ecs_new(world, type) ecs_new_w_id(world, ecs_id(type))
 #endif
 
-/** Create a new entity. */
+/** Find or create an entity. 
+ * This operation creates a new entity, or modifies an existing one. When a name
+ * is set in the ecs_entity_desc_t::name field and ecs_entity_desc_t::entity is
+ * not set, the operation will first attempt to find an existing entity by that
+ * name. If no entity with that name can be found, it will be created.
+ *
+ * If both a name and entity handle are provided, the operation will check if
+ * the entity name matches with the provided name. If the names do not match,
+ * the function will fail and return 0.
+ *
+ * If an id to a non-existing entity is provided, that entity id become alive.
+ * 
+ * See the documentation of ecs_entity_desc_t for more details. 
+ *
+ * @param world The world.
+ * @param desc Entity init parameters.
+ * @return A handle to the new or existing entity, or 0 if failed.
+ */
 FLECS_API
 ecs_entity_t ecs_entity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc);
 
-/** Create a new component. */
+/** Find or create a component. 
+ * This operation creates a new component, or finds an existing one. The find or
+ * create behavior is the same as ecs_entity_init.
+ *
+ * When an existing component is found, the size and alignment are verified with
+ * the provided values. If the values do not match, the operation will fail.
+ *
+ * See the documentation of ecs_component_desc_t for more details. 
+ *
+ * @param world The world.
+ * @param desc Component init parameters.
+ * @return A handle to the new or existing component, or 0 if failed.
+ */
 FLECS_API
 ecs_entity_t ecs_component_init(
     ecs_world_t *world,
     const ecs_component_desc_t *desc);
 
-/** Create a new type entity. */
+/** Create a new type entity. 
+ * This operation creates a new type entity, or finds an existing one. The find 
+ * or create behavior is the same as ecs_entity_init.
+ *
+ * A type entity is an entity with the EcsType component. This component
+ * a pointer to an ecs_type_t, which allows for the creation of named types.
+ * Named types are used in a few places, such as for pipelines and filter terms
+ * with the EcsAndFrom or EcsOrFrom operators.
+ *
+ * When an existing type entity is found, its types are verified with the
+ * provided values. If the values do not match, the operation will fail.
+ *
+ * See the documentation of ecs_type_desc_t for more details.
+ *
+ * @param world The world.
+ * @param desc Type entity init parameters.
+ * @return A handle to the new or existing type, or 0 if failed.
+*/
 FLECS_API
 ecs_entity_t ecs_type_init(
     ecs_world_t *world,
@@ -5939,7 +5985,20 @@ bool ecs_query_orphaned(
  * @defgroup trigger Triggers
  */
 
-/** Create trigger */
+/** Create trigger.
+ * Triggers notify the application when certain events happen such as adding or
+ * removing components.
+ * 
+ * An application can change the trigger callback or context pointer by calling
+ * ecs_trigger_init for an existing trigger entity, by setting the
+ * ecs_trigger_desc_t::entity.entity field in combination with callback and/or
+ * ctx.
+ *
+ * See the documentation for ecs_trigger_desc_t for more details.
+ *
+ * @param world The world.
+ * @param decs The trigger creation parameters.
+ */
 FLECS_API
 ecs_entity_t ecs_trigger_init(
     ecs_world_t *world,
@@ -9722,7 +9781,7 @@ public:
     template <typename T>
     const T& term_shared(int32_t index) const {
         ecs_assert(
-            ecs_column_entity(m_iter, index) == 
+            ecs_term_id(m_iter, index) == 
                 _::cpp_type<T>::id(m_iter->world), 
                     ECS_COLUMN_TYPE_MISMATCH, NULL);
 
@@ -9796,7 +9855,7 @@ private:
 
     flecs::unsafe_column get_unsafe_term(int32_t index) const {
         size_t count;
-        size_t size = ecs_column_size(m_iter, index);
+        size_t size = ecs_term_size(m_iter, index);
         bool is_shared = !ecs_term_is_owned(m_iter, index);
 
         /* If a shared column is retrieved with 'column', there will only be a
@@ -9811,7 +9870,7 @@ private:
         }
 
         return flecs::unsafe_column(
-            ecs_column_w_size(m_iter, 0, index), size, count, is_shared);
+            ecs_term_w_size(m_iter, 0, index), size, count, is_shared);
     }       
 
     /* Get single field, check if correct type is used */
@@ -12904,7 +12963,7 @@ public:
 
     /** Set system context */
     Base& ctx(void *ptr) {
-        m_desc->ctx = ctx;
+        m_desc->ctx = ptr;
         return *static_cast<Base*>(this);
     }    
 

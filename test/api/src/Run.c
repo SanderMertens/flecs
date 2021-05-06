@@ -11,11 +11,11 @@ void Iter(ecs_iter_t *it) {
     Mass *m = NULL;
 
     if (it->column_count >= 2) {
-        v = ecs_column(it, Velocity, 2);
+        v = ecs_term(it, Velocity, 2);
     }
 
     if (it->column_count >= 3) {
-        m = ecs_column(it, Mass, 3);
+        m = ecs_term(it, Mass, 3);
     }
 
     int *param = it->param;
@@ -1149,7 +1149,7 @@ static
 void TestAll(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t TestSubset = ecs_column_entity(it, 2);
+    ecs_entity_t TestSubset = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {

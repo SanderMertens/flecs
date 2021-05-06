@@ -651,7 +651,7 @@ void Pipeline_3_systems_3_types() {
 
 static
 void RandomWrite(ecs_iter_t *it) {
-    ecs_entity_t ecs_typeid(Position) = ecs_column_entity(it, 2);
+    ecs_entity_t ecs_typeid(Position) = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -702,7 +702,7 @@ void RandomReadAfterRW(ecs_iter_t *it) {
 
 static
 void RandomRead_Not(ecs_iter_t *it) {
-    ecs_entity_t ecs_typeid(Position) = ecs_column_entity(it, 2);
+    ecs_entity_t ecs_typeid(Position) = ecs_term_id(it, 2);
     ecs_type_t ecs_type(Position) = ecs_column_type(it, 2);
 
     int i;

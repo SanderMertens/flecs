@@ -179,8 +179,8 @@ The implementation of this system could look like this:
 
 ```c
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_column(it, Position, 1);
-    Velocity *v = ecs_column(it, Velocity, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     for (int i = 0; i < it->count, i ++) {
         p[i].x += v[i].x;
@@ -197,7 +197,7 @@ void Move(flecs::iter& it, Position *p, Velocity *v) {
 }
 ```
 
-The `it` argument contains all the information the system needs to iterate the components. The `ecs_column` function (in C) returns a C array for the subscribed for component. The numbers `1` and `2` indicate where in the system signature the components can be found.
+The `it` argument contains all the information the system needs to iterate the components. The `ecs_term` function (in C) returns a C array for the subscribed for component. The numbers `1` and `2` indicate where in the system signature the components can be found.
 
 The system will be invoked by `ecs_progress`, which runs the main loop:
 
@@ -226,8 +226,8 @@ ecs_iter_t it = ecs_query_iter(query);
 // Iterate all the matching archetypes
 while (ecs_query_next(&it)) {
     // Get the component arrays
-    Position *p = ecs_column(it, Position, 1);
-    Velocity *v = ecs_column(it, Velocity, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     // Iterate the entities in the archetype
     for (int i = 0; i < it->count, i ++) {
@@ -305,10 +305,10 @@ Note that the `ExpiryTimer` has the `PAIR` role. This lets the system know it sh
 ```c
 void ExpireComponents(ecs_iter_t *it) {
     /* Get the trait component just like a normal component */
-    ExpiryTimer *et = ecs_column(it, ExpiryTimer, 1);
+    ExpiryTimer *et = ecs_term(it, ExpiryTimer, 1);
 
     /* Get the trait handle */
-    ecs_entity_t trait = ecs_column_entity(it, 1);
+    ecs_entity_t trait = ecs_term_id(it, 1);
 
     /* Obtain the component handlem, which is the lower 32 bits
      * of the trait handle, which can be obtained with the 

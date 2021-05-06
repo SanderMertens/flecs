@@ -17,18 +17,18 @@ void probe_system_w_ctx(
     int i;
     for (i = 0; i < ctx->column_count; i ++) {
         ctx->c[ctx->invoked][i] = it->table->components[i];
-        ctx->s[ctx->invoked][i] = ecs_column_source(it, i + 1);
+        ctx->s[ctx->invoked][i] = ecs_term_source(it, i + 1);
 
-        /* Make sure ecs_column functions work */
+        /* Make sure ecs_term functions work */
         ecs_type_t t = ecs_column_type(it, i + 1);
         test_assert(t != 0);
 
-        ecs_entity_t e = ecs_column_entity(it, i + 1);
+        ecs_entity_t e = ecs_term_id(it, i + 1);
         test_assert(e != 0);
     }
 
     if (it->entities) {
-        ecs_entity_t *e = ecs_column(it, ecs_entity_t, 0);
+        ecs_entity_t *e = ecs_term(it, ecs_entity_t, 0);
         if (e) {
             test_assert(e != NULL);
             test_assert(it->entities != NULL);

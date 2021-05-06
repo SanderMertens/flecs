@@ -3,7 +3,7 @@
 static
 void Iter(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
-    Position *p_parent = ecs_column(it, Position, 2);
+    Position *p_parent = ecs_term(it, Position, 2);
 
     test_assert(!p_parent || !ecs_is_owned(it, 2));
 
@@ -163,7 +163,7 @@ void SystemCascade_cascade_depth_2() {
 static
 void AddParent(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
-    Position *p_parent = ecs_column(it, Position, 2);
+    Position *p_parent = ecs_term(it, Position, 2);
 
     test_assert(!p_parent || !ecs_is_owned(it, 2));
 

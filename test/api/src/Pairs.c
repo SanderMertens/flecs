@@ -13,7 +13,7 @@ typedef struct RelB {
 } RelB;
 
 void ProcessTraits(ecs_iter_t *it) {
-    Rel *tr = ecs_column(it, Rel, 1);
+    Rel *tr = ecs_term(it, Rel, 1);
 
     probe_system(it);
 
@@ -267,7 +267,7 @@ void Pairs_add_tag_pair_for_tag() {
 void ProcessValueTraits(ecs_iter_t *it) {
     /* Strictly speaking this can be either Position or Velocity, but they have
      * the same layout. */
-    Position *p = ecs_column(it, Position, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     probe_system(it);
 
@@ -344,8 +344,8 @@ void Pairs_add_tag_pair_for_component() {
 }
 
 void ProcessTwoTraits(ecs_iter_t *it) {
-    RelA *tr_a = ecs_column(it, RelA, 1);
-    RelB *tr_b = ecs_column(it, RelB, 2);
+    RelA *tr_a = ecs_term(it, RelA, 1);
+    RelB *tr_b = ecs_term(it, RelB, 2);
 
     probe_system(it);
 
@@ -1015,7 +1015,7 @@ void Pairs_pair_from_shared() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        Rel *t = ecs_column(&it, Rel, 1);
+        Rel *t = ecs_term(&it, Rel, 1);
         test_assert(t != NULL);
 
         int i;
@@ -1070,7 +1070,7 @@ void Pairs_pair_w_component_query() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        Rel *t = ecs_column(&it, Rel, 1);
+        Rel *t = ecs_term(&it, Rel, 1);
         test_assert(t != NULL);
 
         int i;
@@ -1100,7 +1100,7 @@ void Pairs_query_pair_or_component() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        Position *t = ecs_column(&it, Position, 1);
+        Position *t = ecs_term(&it, Position, 1);
         test_assert(t != NULL);
 
         int i;
@@ -1132,7 +1132,7 @@ void Pairs_query_pair_or_pair() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        Position *t = ecs_column(&it, Position, 1);
+        Position *t = ecs_term(&it, Position, 1);
         test_assert(t != NULL);
 
         int i;
@@ -1162,9 +1162,9 @@ void Pairs_query_not_pair() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        Position *t = ecs_column(&it, Position, 1);
+        Position *t = ecs_term(&it, Position, 1);
         test_assert(t == NULL);
-        Position *p = ecs_column(&it, Position, 2);
+        Position *p = ecs_term(&it, Position, 2);
         test_assert(p != NULL);
 
         int i;

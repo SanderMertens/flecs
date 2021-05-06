@@ -8,11 +8,11 @@ void Iter(ecs_iter_t *it) {
     Velocity *v = NULL;
 
     if (it->column_count >= 2) {
-        p = ecs_column(it, Position, 2);
+        p = ecs_term(it, Position, 2);
     }
 
     if (it->column_count >= 3) {
-        v = ecs_column(it, Velocity, 3);
+        v = ecs_term(it, Velocity, 3);
     }
 
     test_assert(!m_ptr || !ecs_is_owned(it, 1));
@@ -88,8 +88,8 @@ void dummy_reset() {
 static
 void Dummy(ecs_iter_t *it) {
     dummy_invoked = 1;
-    dummy_component = ecs_column_entity(it, 1);
-    dummy_source = ecs_column_source(it, 1);
+    dummy_component = ecs_term_id(it, 1);
+    dummy_source = ecs_term_source(it, 1);
 }
 
 void System_w_FromEntity_task_from_entity() {

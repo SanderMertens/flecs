@@ -1882,7 +1882,7 @@ void SystemMisc_get_query() {
 
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        Position *p = ecs_column(&it, Position, 1);
+        Position *p = ecs_term(&it, Position, 1);
         test_assert(p != NULL);
 
         int i;

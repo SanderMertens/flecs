@@ -118,7 +118,7 @@ Thanks to the new Flecs sponsors ❤️ :
 
 ## Bugfixes
 - Fixed issues with subqueries and query rematching
-- Corrected wrong return type of ecs_column_size (was ecs_entity_t, is now size_t)
+- Corrected wrong return type of ecs_term_size (was ecs_entity_t, is now size_t)
 - Add missing \0 when appending to application buffer with strbuf datastructure
 - Fixed crash when instantiating an empty prefab
 - Fixed issue with shared tags and queries using each() in the C++ API
