@@ -12856,7 +12856,7 @@ public:
         return *this;
     }
     
-    Base& select(int32_t term_index) {
+    Base& arg(int32_t term_index) {
         ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_term_index <= term_index, ECS_INVALID_PARAMETER, NULL);
         m_term_index = term_index - 1;
