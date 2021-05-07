@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
             .set<Position>({30, 40});
 
     auto e = ecs.entity()
-        .add(flecs::IsA, Root);
+        .is_a(Root);
 
     /* Lookup child in the instance we just created. This child will have e in
      * its type with a CHILDOF mask, and the prefab Child in its type with an

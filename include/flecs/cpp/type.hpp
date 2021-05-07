@@ -67,6 +67,10 @@ public:
         return this->add<Relation>(_::cpp_type<Object>::id(world().c_ptr()));
     }
 
+    type& is_a(const flecs::entity& object) {
+        return this->add(flecs::IsA, object);
+    }
+
     template <typename Relation>
     type& add(const flecs::entity& object) {
         return this->add(_::cpp_type<Relation>::id(world().c_ptr()),

@@ -12668,6 +12668,8 @@ public:
         return *this;
     }
 
+    Base& id(const flecs::type& type);  
+
     Base& id(const flecs::id_t r, const flecs::id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->id = ecs_pair(r, o);
@@ -12889,11 +12891,17 @@ public:
         return *this;
     }
 
+    Base& term(const flecs::type& type) {
+        this->term();
+        *this->m_term = flecs::term(world()).id(type);
+        return *this;
+    }
+
     Base& term(const char *expr) {
         this->term();
         *this->m_term = flecs::term(world()).expr(expr);
         return *this;
-    }    
+    }
 
     Base& term(const flecs::term& term) {
         this->term();
@@ -13437,6 +13445,10 @@ public:
     template <typename Relation, typename Object>
     type& add() {
         return this->add<Relation>(_::cpp_type<Object>::id(world().c_ptr()));
+    }
+
+    type& is_a(const flecs::entity& object) {
+        return this->add(flecs::IsA, object);
     }
 
     template <typename Relation>
@@ -15697,6 +15709,13 @@ inline flecs::snapshot world::snapshot(Args &&... args) const {
 
 namespace flecs 
 {
+
+template<typename Base>
+inline Base& term_builder_i<Base>::id(const flecs::type& type) {
+    ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+    m_term->id = type.id();
+    return *this;
+}      
 
 template <typename ... Components>
 inline query_builder_base<Components...>::operator query<Components ...>() const {

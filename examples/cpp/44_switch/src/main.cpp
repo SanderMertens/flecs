@@ -34,7 +34,9 @@ int main(int argc, char *argv[]) {
 
     /* Create a system that subscribes for all entities that have a Direction
      * and that are walking */
-    ecs.system<>("Walk", "CASE | Walking, SWITCH | Direction")
+    ecs.system<>("Walk")
+        .term(Walking).role(flecs::Case)
+        .term(Direction).role(flecs::Switch)
         .iter([](const flecs::iter& it) {
             /* Get the column with direction states. This is stored as an array
              * with identifiers to the individual states */

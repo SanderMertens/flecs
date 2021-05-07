@@ -19,8 +19,11 @@ int main(int, char *[]) {
     const Game *g = ecs.get<Game>();
     std::cout << "Score: " << g->score << std::endl;
 
-    // Systems can request a singleton component by prefixing the name with $
-    ecs.system<Position>(nullptr, "$Game")
+    // Systems can request a singleton components. Note that we need to mark the
+    // component as InOut, as any component that is not stored on the entity
+    // itself is readonly by default.
+    ecs.system<Position>()
+        .term<Game>().inout(flecs::InOut).singleton()
         .iter([](flecs::iter it, Position* p) {
             // The singleton component can be retrieved as a regular column
             auto game = it.term<Game>(2); // 2, because Position is 1

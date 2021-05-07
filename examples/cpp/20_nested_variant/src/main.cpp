@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 
     /* Create instance of Root */
     auto e = ecs.entity()
-        .add(flecs::IsA, Root);
+        .is_a(Root);
 
     /* Print types of child1 and child2 */
     auto child1 = e.lookup("Child1");

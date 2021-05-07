@@ -528,7 +528,7 @@ void QueryBuilder_isa_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).subject().set(flecs::SuperSet)
+        .arg(2).subject().set(flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -553,7 +553,7 @@ void QueryBuilder_isa_self_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).subject().set(flecs::Self | flecs::SuperSet)
+        .arg(2).subject().set(flecs::Self | flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -580,7 +580,7 @@ void QueryBuilder_childof_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).subject().set(flecs::SuperSet, flecs::ChildOf)
+        .arg(2).subject().set(flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -605,7 +605,7 @@ void QueryBuilder_childof_self_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).subject().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .arg(2).subject().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -632,7 +632,7 @@ void QueryBuilder_isa_superset_shortcut() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).superset()
+        .arg(2).superset()
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -657,7 +657,7 @@ void QueryBuilder_isa_superset_shortcut_w_self() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).superset(flecs::IsA, flecs::Self)
+        .arg(2).superset(flecs::IsA, flecs::Self)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -684,7 +684,7 @@ void QueryBuilder_childof_superset_shortcut() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).superset(flecs::ChildOf)
+        .arg(2).superset(flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -709,7 +709,7 @@ void QueryBuilder_childof_superset_shortcut_w_self() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).superset(flecs::ChildOf, flecs::Self)
+        .arg(2).superset(flecs::ChildOf, flecs::Self)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -736,7 +736,7 @@ void QueryBuilder_isa_supetset_max_depth_1() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).superset().max_depth(1)
+        .arg(2).superset().max_depth(1)
         .build();
 
     auto base_1 = ecs.entity().set<Other>({10});
@@ -772,7 +772,7 @@ void QueryBuilder_isa_supetset_max_depth_2() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).superset().max_depth(2)
+        .arg(2).superset().max_depth(2)
         .build();
 
     auto base_1 = ecs.entity().set<Other>({10});
@@ -808,7 +808,7 @@ void QueryBuilder_isa_supetset_min_depth_2() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).superset().min_depth(2)
+        .arg(2).superset().min_depth(2)
         .build();
 
     auto base_1 = ecs.entity().set<Other>({10});
@@ -844,7 +844,7 @@ void QueryBuilder_isa_supetset_min_depth_2_max_depth_3() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .select(2).superset().min_depth(2).max_depth(3)
+        .arg(2).superset().min_depth(2).max_depth(3)
         .build();
 
     auto base_1 = ecs.entity().set<Other>({10});

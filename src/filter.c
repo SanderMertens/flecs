@@ -151,7 +151,13 @@ int ecs_term_finalize(
             term->args[0].entity = EcsThis;
         }
 
-        term->role = term->id & ECS_ROLE_MASK;
+        if (!term->role) {
+            term->role = term->id & ECS_ROLE_MASK;
+        } else {
+            ecs_assert(!(term->id & ECS_ROLE_MASK), 
+                ECS_INVALID_PARAMETER, NULL);
+            term->id |= term->role;
+        }
     } else {
         if (term_resolve_ids(world, name, expr, term)) {
             /* One or more identifiers could not be resolved */

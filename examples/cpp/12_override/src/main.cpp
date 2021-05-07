@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     auto base = ecs.entity().set<Mass>({10});
 
     /* Create instances which share the Mass component from a base */
-    auto instance = ecs.entity().add(flecs::IsA, base);
+    auto instance = ecs.entity().is_a(base);
 
     /* Print value before overriding Mass. The component is not owned, as it is
      * shared with the base entity. */

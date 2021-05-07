@@ -114,6 +114,8 @@ public:
         return *this;
     }
 
+    Base& id(const flecs::type& type);  
+
     Base& id(const flecs::id_t r, const flecs::id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->id = ecs_pair(r, o);
@@ -300,7 +302,7 @@ public:
         return *this;
     }
     
-    Base& select(int32_t term_index) {
+    Base& arg(int32_t term_index) {
         ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_term_index <= term_index, ECS_INVALID_PARAMETER, NULL);
         m_term_index = term_index - 1;
@@ -335,11 +337,17 @@ public:
         return *this;
     }
 
+    Base& term(const flecs::type& type) {
+        this->term();
+        *this->m_term = flecs::term(world()).id(type);
+        return *this;
+    }
+
     Base& term(const char *expr) {
         this->term();
         *this->m_term = flecs::term(world()).expr(expr);
         return *this;
-    }    
+    }
 
     Base& term(const flecs::term& term) {
         this->term();

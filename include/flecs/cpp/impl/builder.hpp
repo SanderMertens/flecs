@@ -2,6 +2,13 @@
 namespace flecs 
 {
 
+template<typename Base>
+inline Base& term_builder_i<Base>::id(const flecs::type& type) {
+    ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+    m_term->id = type.id();
+    return *this;
+}      
+
 template <typename ... Components>
 inline query_builder_base<Components...>::operator query<Components ...>() const {
     ecs_query_t *query = *this;

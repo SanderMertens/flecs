@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
      * values with the values of the Base entity. This is a common approach to
      * creating entities with an initialized set of components. */
     auto Movable = ecs.type("Movable")
-        .add(flecs::IsA, Base)
+        .is_a(Base)
         .add<Position>()
         .add<Velocity>();
 

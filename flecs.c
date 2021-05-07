@@ -16253,7 +16253,13 @@ int ecs_term_finalize(
             term->args[0].entity = EcsThis;
         }
 
-        term->role = term->id & ECS_ROLE_MASK;
+        if (!term->role) {
+            term->role = term->id & ECS_ROLE_MASK;
+        } else {
+            ecs_assert(!(term->id & ECS_ROLE_MASK), 
+                ECS_INVALID_PARAMETER, NULL);
+            term->id |= term->role;
+        }
     } else {
         if (term_resolve_ids(world, name, expr, term)) {
             /* One or more identifiers could not be resolved */
@@ -19487,12 +19493,12 @@ void register_monitors(
         ecs_term_t *term = &terms[i];
         ecs_term_id_t *subj = &term->args[0];
 
-        /* If component is requested with CASCADE source register component as a
+        /* If component is requested with EcsCascade register component as a
          * parent monitor. Parent monitors keep track of whether an entity moved
          * in the hierarchy, which potentially requires the query to reorder its
          * tables. 
          * Also register a regular component monitor for EcsCascade columns.
-         * This ensures that when the component used in the CASCADE column
+         * This ensures that when the component used in the EcsCascade column
          * is added or removed tables are updated accordingly*/
         if (subj->set.mask & EcsSuperSet && subj->set.mask & EcsCascade && 
             subj->set.relation != EcsIsA) 

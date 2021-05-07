@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
      * values with the values of the Base entity. This is a common approach to
      * creating entities with an initialized set of components. */
     auto Base = ecs.type("Base")
-        .add(flecs::IsA, BasePrefab)
+        .is_a(BasePrefab)
         .add<Position>()
         .add<Velocity>();
 

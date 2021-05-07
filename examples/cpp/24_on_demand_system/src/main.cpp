@@ -22,7 +22,9 @@ int main(int argc, char *argv[]) {
     /* The 'Move' is marked as on_demand which means Flecs will only
      * run this system if there is interest in any of its [out] columns. In this
      * case the system will only be ran if there is interest in Position. */
-    ecs.system<>(nullptr, "[out] Position, [in] Velocity").on_demand()
+    ecs.system<>().on_demand()
+        .term<Position>().inout(flecs::Out)
+        .term<Velocity>().inout(flecs::In)
         .iter([](flecs::iter& it){
             auto p = it.term<Position>(1);
             auto v = it.term<const Velocity>(2);
