@@ -141,7 +141,7 @@ public:
         auto comp_id = _::cpp_type<T>::id(this->base_world());
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-        return static_cast<const T*>(ecs_get_w_entity(this->base_world(), this->base_id(), ecs_trait(
+        return static_cast<const T*>(ecs_get_id(this->base_world(), this->base_id(), ecs_trait(
             _::cpp_type<C>::id(this->base_world()), comp_id)));
     }
 
@@ -151,7 +151,7 @@ public:
         auto comp_id = _::cpp_type<T>::id(this->base_world());
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-        return static_cast<const T*>(ecs_get_w_entity(this->base_world(), this->base_id(), ecs_trait(
+        return static_cast<const T*>(ecs_get_id(this->base_world(), this->base_id(), ecs_trait(
             c.id(), comp_id)));
     }       
 
@@ -161,13 +161,13 @@ public:
         auto comp_id = _::cpp_type<C>::id(this->base_world());
         ecs_assert(_::cpp_type<C>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-        return static_cast<const C*>(ecs_get_w_entity(this->base_world(), this->base_id(), ecs_trait(
+        return static_cast<const C*>(ecs_get_id(this->base_world(), this->base_id(), ecs_trait(
             comp_id, t.id())));
     }
 
     ECS_DEPRECATED("use get(const entity&, const entity&)")
     const void* get_trait(const Base& t, const Base& c) const{
-        return ecs_get_w_entity(this->base_world(), this->base_id(), ecs_trait(c.id(), t.id()));
+        return ecs_get_id(this->base_world(), this->base_id(), ecs_trait(c.id(), t.id()));
     }
 
     template <typename T, typename C>

@@ -212,7 +212,7 @@ ecs_entity_t ecs_new_module(
 
     /* Add module to itself. This way we have all the module information stored
      * in a single contained entity that we can use for namespacing */
-    ecs_set_ptr_w_id(world, result, result, size, NULL);
+    ecs_set_id(world, result, result, size, NULL);
 
     /* Set the current scope to the module */
     ecs_set_scope(world, result);

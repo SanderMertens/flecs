@@ -58,12 +58,20 @@ bool ecs_is_component_enabled_w_entity(
     return ecs_is_component_enabled_w_id(world, entity, id);
 }
 
+const void* ecs_get_w_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    return ecs_get_id(world, entity, id);
+}
+
 const void* ecs_get_w_entity(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    return ecs_get_w_id(world, entity, id);
+    return ecs_get_id(world, entity, id);
 }
 
 const void* ecs_get_ref_w_entity(
@@ -99,7 +107,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
     size_t size,
     const void *ptr)
 {
-    return ecs_set_ptr_w_id(world, entity, id, size, ptr);
+    return ecs_set_id(world, entity, id, size, ptr);
 }
 
 bool ecs_has_entity(

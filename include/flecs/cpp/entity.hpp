@@ -230,7 +230,7 @@ public:
      */
     flecs::string_view name() const {
         const EcsName *name = static_cast<const EcsName*>(
-            ecs_get_w_entity(m_world, m_id, static_cast<ecs_entity_t>(ecs_id(EcsName))));
+            ecs_get_id(m_world, m_id, static_cast<ecs_entity_t>(ecs_id(EcsName))));
         return flecs::string_view(name ? name->value : nullptr);
     }
 
@@ -288,7 +288,7 @@ public:
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const T*>(
-            ecs_get_w_entity(m_world, m_id, comp_id));
+            ecs_get_id(m_world, m_id, comp_id));
     }
 
     /** Get component value (untyped).
@@ -298,7 +298,7 @@ public:
      *         have the component.
      */
     const void* get(const flecs::entity_view& component) const {
-        return ecs_get_w_entity(m_world, m_id, component.id());
+        return ecs_get_id(m_world, m_id, component.id());
     }
 
     /** Get a pair.
@@ -323,7 +323,7 @@ public:
         auto comp_id = _::cpp_type<Relation>::id(m_world);
         ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const Relation*>(
-            ecs_get_w_entity(m_world, m_id, ecs_pair(comp_id, object.id())));
+            ecs_get_id(m_world, m_id, ecs_pair(comp_id, object.id())));
     }
 
     /** Get a pair (untyped).
@@ -335,7 +335,7 @@ public:
      * @param object the object.
      */
     const void* get(const flecs::entity_view& relation, const flecs::entity_view& object) const {
-        return ecs_get_w_entity(m_world, m_id, ecs_pair(relation.id(), object.id()));
+        return ecs_get_id(m_world, m_id, ecs_pair(relation.id(), object.id()));
     }
 
     /** Get the object part from a pair.
@@ -350,7 +350,7 @@ public:
         auto comp_id = _::cpp_type<Object>::id(m_world);
         ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const Object*>(
-            ecs_get_w_entity(m_world, m_id, ecs_pair(relation.id(), comp_id)));
+            ecs_get_id(m_world, m_id, ecs_pair(relation.id(), comp_id)));
     }
 
     /** Get parent from an entity.

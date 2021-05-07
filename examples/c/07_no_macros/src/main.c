@@ -49,14 +49,14 @@ int main(int argc, char *argv[]) {
     });
 
     /* Create entity with name MyEntity and components position & velocity */
-    ecs_entity_t my_entity = ecs_entity_init(world, &(ecs_entity_desc_t){
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "MyEntity",
         .add = {pos, vel}
     });
 
     /* Set values for entity. */
-    ecs_set_ptr_w_id(world, my_entity, pos, sizeof(Position), &(Position){0, 0});
-    ecs_set_ptr_w_id(world, my_entity, vel, sizeof(Velocity), &(Velocity){1, 1});
+    ecs_set_id(world, e, pos, sizeof(Position), &(Position){0, 0});
+    ecs_set_id(world, e, vel, sizeof(Velocity), &(Velocity){1, 1});
 
     /* Set target FPS for main loop to 1 frame per second */
     ecs_set_target_fps(world, 1);

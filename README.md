@@ -52,7 +52,7 @@ Here is some awesome content provided by the community (thanks everyone! :heart:
 - [Flecs + SDL + Web ASM example](https://github.com/HeatXD/flecs_web_demo) ([live demo](https://heatxd.github.io/flecs_web_demo/))
 - [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/18_flecs/source/main.c)
 
-## Example
+## Examples
 This is a simple flecs example in the C99 API:
 
 ```c
@@ -65,7 +65,7 @@ void Move(ecs_iter_t *it) {
   Position *p = ecs_term(it, Position, 1);
   Velocity *v = ecs_term(it, Velocity, 2);
   
-  for (int i = 0; i < it.count; i ++) {
+  for (int i = 0; i < it->count; i ++) {
     p[i].x += v[i].x * it->delta_time;
     p[i].y += v[i].y * it->delta_time;
     printf("Entity %s moved!\n", ecs_get_name(it->world, it->entities[i]));
@@ -74,13 +74,57 @@ void Move(ecs_iter_t *it) {
 
 int main(int argc, char *argv[]) {
   ecs_world_t *ecs = ecs_init();
-    
+
+  // Register the Position component
+  ecs_entity_t pos = ecs_component_init(ecs, &(ecs_component_desc_t){
+    .entity.name = "Position",
+    .size = sizeof(Position), .alignment = ECS_ALIGNOF(Position)
+  });
+
+  // Register the Velocity component
+  ecs_entity_t vel = ecs_component_init(ecs, &(ecs_component_desc_t){
+    .entity.name = "Velocity",
+    .size = sizeof(Velocity), .alignment = ECS_ALIGNOF(Velocity)
+  });
+
+  // Create the Move system
+  ecs_system_init(ecs, &(ecs_system_desc_t){
+    .entity = { .name = "Move", .add = {EcsOnUpdate} },
+    .query.filter.terms = {{pos}, {vel, .inout = EcsIn}},
+    .callback = Move,
+  });
+
+  // Create a named entity
+  ecs_entity_t e = ecs_entity_init(ecs, &(ecs_entity_desc_t){
+    .name = "MyEntity"
+  });
+
+  // Set components
+  ecs_set_id(ecs, e, pos, sizeof(Position), &(Position){0, 0});
+  ecs_set_id(ecs, e, vel, sizeof(Velocity), &(Velocity){1, 1});
+
+  // Run the main loop
+  while (ecs_progress(ecs, 0)) { }
+}
+```
+
+Because C99 lacks generics, the API provides a number of convenience macro's 
+that reduce boilerplate & improve type safety. This is the same example
+with macro's (system implementation ommitted since it doesn't change):
+
+```c
+int main(int argc, char *argv[]) {
+  ecs_world_t *ecs = ecs_init();
+
   ECS_COMPONENT(ecs, Position);
   ECS_COMPONENT(ecs, Velocity);
-    
+
   ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, [in] Velocity);
-    
-  ecs_entity_t e = ecs_set(ecs, 0, EcsName, {"MyEntity"});
+
+  ecs_entity_t e = ecs_entity_init(ecs, &(ecs_entity_desc_t){
+    .name = "MyEntity"
+  });
+
   ecs_set(ecs, e, Position, {0, 0});
   ecs_set(ecs, e, Velocity, {1, 1});
 
@@ -88,7 +132,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-Here is the same example but in the C++11 API:
+This is the same example in the C++11 API:
 
 ```c++
 struct Position {

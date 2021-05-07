@@ -2985,10 +2985,10 @@ extern "C" {
 #endif
 
 #define ecs_get_trait(world, entity, component, trait)\
-    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_typeid(component), ecs_typeid(trait))))
+    ((trait*)ecs_get_id(world, entity, ecs_trait(ecs_typeid(component), ecs_typeid(trait))))
 
 #define ecs_get_trait_tag(world, entity, trait, component)\
-    ((component*)ecs_get_w_entity(world, entity, ecs_trait(ecs_typeid(component), trait)))
+    ((component*)ecs_get_id(world, entity, ecs_trait(ecs_typeid(component), trait)))
 
 #define ECS_PREFAB(world, id, ...) \
     ecs_entity_t id = ecs_entity_init(world, &(ecs_entity_desc_t){\
@@ -3144,6 +3144,9 @@ extern "C" {
 #define ecs_owns(world, entity, type, owned)\
     ecs_type_owns_type(world, ecs_get_type(world, entity), ecs_type(type), owned)
 
+#define ecs_set_ptr_w_id(world, entity, size, ptr)\
+    ecs_set_id(world, entity, size, ptr)
+
 #define ecs_owns_entity(world, entity, id, owned)\
     ecs_type_owns_id(world, ecs_get_type(world, entity), id, owned)
 
@@ -3249,7 +3252,14 @@ bool ecs_is_component_enabled_w_entity(
     ecs_entity_t entity,
     ecs_id_t id);
 
-ECS_DEPRECATED("use ecs_get_w_id")
+ECS_DEPRECATED("use ecs_get_id")
+FLECS_API
+const void* ecs_get_w_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+ECS_DEPRECATED("use ecs_get_id")
 FLECS_API
 const void* ecs_get_w_entity(
     const ecs_world_t *world,
@@ -3279,7 +3289,7 @@ void ecs_modified_w_entity(
     ecs_entity_t entity,
     ecs_id_t id);
 
-ECS_DEPRECATED("use ecs_set_ptr_w_id")
+ECS_DEPRECATED("use ecs_set_id")
 FLECS_API
 ecs_entity_t ecs_set_ptr_w_entity(
     ecs_world_t *world,
@@ -4586,7 +4596,7 @@ ecs_id_t ecs_make_pair(
  * @param object The object part of the pair.
  */
 #define ecs_set_pair(world, subject, relation, object, ...)\
-    ecs_set_ptr_w_id(world, subject,\
+    ecs_set_id(world, subject,\
         ecs_pair(ecs_id(relation), object),\
         sizeof(relation), &(relation)__VA_ARGS__)
 
@@ -4611,7 +4621,7 @@ ecs_id_t ecs_make_pair(
  * @param object The object part of the pair. This must be a component.
  */
 #define ecs_set_pair_object(world, subject, relation, object, ...)\
-    ecs_set_ptr_w_id(world, subject,\
+    ecs_set_id(world, subject,\
         ecs_pair(relation, ecs_id(object)),\
         sizeof(object), &(object)__VA_ARGS__)
 
@@ -4648,7 +4658,7 @@ ecs_id_t ecs_make_pair(
  * @param object The object part of the pair.
  */
 #define ecs_get_pair(world, subject, relation, object)\
-    ((relation*)ecs_get_w_id(world, subject,\
+    ((relation*)ecs_get_id(world, subject,\
         ecs_pair(ecs_id(relation), object)))
 
 /** Get object of pair. 
@@ -4671,7 +4681,7 @@ ecs_id_t ecs_make_pair(
  * @param object The object part of the pair.
  */
 #define ecs_get_pair_object(world, subject, relation, object)\
-    ((object*)ecs_get_w_id(world, subject,\
+    ((object*)ecs_get_id(world, subject,\
         ecs_pair(relation, ecs_id(object))))
 
 /** @} */
@@ -4740,13 +4750,13 @@ void ecs_delete_children(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
-const void* ecs_get_w_id(
+const void* ecs_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
 
 /** Get an immutable pointer to a component.
- * Same as ecs_get_w_id, but accepts the typename of a component.
+ * Same as ecs_get_id, but accepts the typename of a component.
  *
  * @param world The world.
  * @param entity The entity.
@@ -4754,12 +4764,12 @@ const void* ecs_get_w_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 #define ecs_get(world, entity, component)\
-    ((const component*)ecs_get_w_id(world, entity, ecs_id(component)))
+    ((const component*)ecs_get_id(world, entity, ecs_id(component)))
 
 /* -- Get cached pointer -- */
 
 /** Get an immutable reference to a component.
- * This operation is similar to ecs_get_w_id but it stores temporary
+ * This operation is similar to ecs_get_id but it stores temporary
  * information in a `ecs_ref_t` value which allows subsequent lookups to be
  * faster.
  *
@@ -4812,7 +4822,7 @@ ecs_entity_t ecs_get_case(
  */
 
 /** Get a mutable pointer to a component.
- * This operation is similar to ecs_get_w_id but it returns a mutable 
+ * This operation is similar to ecs_get_id but it returns a mutable 
  * pointer. If this operation is invoked from inside a system, the entity will
  * be staged and a pointer to the staged component will be returned.
  *
@@ -4884,7 +4894,7 @@ void ecs_modified_w_id(
  * @return The entity. A new entity if no entity was provided.
  */
 FLECS_API
-ecs_entity_t ecs_set_ptr_w_id(
+ecs_entity_t ecs_set_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -4892,7 +4902,7 @@ ecs_entity_t ecs_set_ptr_w_id(
     const void *ptr);
 
 /** Set the value of a component.
- * Same as ecs_set_ptr_w_id, but accepts a component typename and 
+ * Same as ecs_set_id, but accepts a component typename and 
  * automatically determines the type size.
  *
  * @param world The world.
@@ -4902,7 +4912,7 @@ ecs_entity_t ecs_set_ptr_w_id(
  * @return The entity. A new entity if no entity was provided.
  */
 #define ecs_set_ptr(world, entity, component, ptr)\
-    ecs_set_ptr_w_id(world, entity, ecs_id(component), sizeof(component), ptr)
+    ecs_set_id(world, entity, ecs_id(component), sizeof(component), ptr)
 
 /* Conditionally skip macro's as compound literals and variadic arguments are 
  * not supported in C89 */
@@ -4918,7 +4928,7 @@ ecs_entity_t ecs_set_ptr_w_id(
  * @return The entity. A new entity if no entity was provided.
  */
 #define ecs_set(world, entity, component, ...)\
-    ecs_set_ptr_w_id(world, entity, ecs_id(component), sizeof(component), &(component)__VA_ARGS__)
+    ecs_set_id(world, entity, ecs_id(component), sizeof(component), &(component)__VA_ARGS__)
 
 #endif
 
@@ -10803,7 +10813,7 @@ public:
         auto comp_id = _::cpp_type<T>::id(this->base_world());
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-        return static_cast<const T*>(ecs_get_w_entity(this->base_world(), this->base_id(), ecs_trait(
+        return static_cast<const T*>(ecs_get_id(this->base_world(), this->base_id(), ecs_trait(
             _::cpp_type<C>::id(this->base_world()), comp_id)));
     }
 
@@ -10813,7 +10823,7 @@ public:
         auto comp_id = _::cpp_type<T>::id(this->base_world());
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-        return static_cast<const T*>(ecs_get_w_entity(this->base_world(), this->base_id(), ecs_trait(
+        return static_cast<const T*>(ecs_get_id(this->base_world(), this->base_id(), ecs_trait(
             c.id(), comp_id)));
     }       
 
@@ -10823,13 +10833,13 @@ public:
         auto comp_id = _::cpp_type<C>::id(this->base_world());
         ecs_assert(_::cpp_type<C>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-        return static_cast<const C*>(ecs_get_w_entity(this->base_world(), this->base_id(), ecs_trait(
+        return static_cast<const C*>(ecs_get_id(this->base_world(), this->base_id(), ecs_trait(
             comp_id, t.id())));
     }
 
     ECS_DEPRECATED("use get(const entity&, const entity&)")
     const void* get_trait(const Base& t, const Base& c) const{
-        return ecs_get_w_entity(this->base_world(), this->base_id(), ecs_trait(c.id(), t.id()));
+        return ecs_get_id(this->base_world(), this->base_id(), ecs_trait(c.id(), t.id()));
     }
 
     template <typename T, typename C>
@@ -11120,7 +11130,7 @@ public:
      */
     flecs::string_view name() const {
         const EcsName *name = static_cast<const EcsName*>(
-            ecs_get_w_entity(m_world, m_id, static_cast<ecs_entity_t>(ecs_id(EcsName))));
+            ecs_get_id(m_world, m_id, static_cast<ecs_entity_t>(ecs_id(EcsName))));
         return flecs::string_view(name ? name->value : nullptr);
     }
 
@@ -11178,7 +11188,7 @@ public:
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const T*>(
-            ecs_get_w_entity(m_world, m_id, comp_id));
+            ecs_get_id(m_world, m_id, comp_id));
     }
 
     /** Get component value (untyped).
@@ -11188,7 +11198,7 @@ public:
      *         have the component.
      */
     const void* get(const flecs::entity_view& component) const {
-        return ecs_get_w_entity(m_world, m_id, component.id());
+        return ecs_get_id(m_world, m_id, component.id());
     }
 
     /** Get a pair.
@@ -11213,7 +11223,7 @@ public:
         auto comp_id = _::cpp_type<Relation>::id(m_world);
         ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const Relation*>(
-            ecs_get_w_entity(m_world, m_id, ecs_pair(comp_id, object.id())));
+            ecs_get_id(m_world, m_id, ecs_pair(comp_id, object.id())));
     }
 
     /** Get a pair (untyped).
@@ -11225,7 +11235,7 @@ public:
      * @param object the object.
      */
     const void* get(const flecs::entity_view& relation, const flecs::entity_view& object) const {
-        return ecs_get_w_entity(m_world, m_id, ecs_pair(relation.id(), object.id()));
+        return ecs_get_id(m_world, m_id, ecs_pair(relation.id(), object.id()));
     }
 
     /** Get the object part from a pair.
@@ -11240,7 +11250,7 @@ public:
         auto comp_id = _::cpp_type<Object>::id(m_world);
         ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const Object*>(
-            ecs_get_w_entity(m_world, m_id, ecs_pair(relation.id(), comp_id)));
+            ecs_get_id(m_world, m_id, ecs_pair(relation.id(), comp_id)));
     }
 
     /** Get parent from an entity.

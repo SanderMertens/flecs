@@ -38,10 +38,10 @@ extern "C" {
 #endif
 
 #define ecs_get_trait(world, entity, component, trait)\
-    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_typeid(component), ecs_typeid(trait))))
+    ((trait*)ecs_get_id(world, entity, ecs_trait(ecs_typeid(component), ecs_typeid(trait))))
 
 #define ecs_get_trait_tag(world, entity, trait, component)\
-    ((component*)ecs_get_w_entity(world, entity, ecs_trait(ecs_typeid(component), trait)))
+    ((component*)ecs_get_id(world, entity, ecs_trait(ecs_typeid(component), trait)))
 
 #define ECS_PREFAB(world, id, ...) \
     ecs_entity_t id = ecs_entity_init(world, &(ecs_entity_desc_t){\
@@ -197,6 +197,9 @@ extern "C" {
 #define ecs_owns(world, entity, type, owned)\
     ecs_type_owns_type(world, ecs_get_type(world, entity), ecs_type(type), owned)
 
+#define ecs_set_ptr_w_id(world, entity, size, ptr)\
+    ecs_set_id(world, entity, size, ptr)
+
 #define ecs_owns_entity(world, entity, id, owned)\
     ecs_type_owns_id(world, ecs_get_type(world, entity), id, owned)
 
@@ -302,7 +305,14 @@ bool ecs_is_component_enabled_w_entity(
     ecs_entity_t entity,
     ecs_id_t id);
 
-ECS_DEPRECATED("use ecs_get_w_id")
+ECS_DEPRECATED("use ecs_get_id")
+FLECS_API
+const void* ecs_get_w_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+ECS_DEPRECATED("use ecs_get_id")
 FLECS_API
 const void* ecs_get_w_entity(
     const ecs_world_t *world,
@@ -332,7 +342,7 @@ void ecs_modified_w_entity(
     ecs_entity_t entity,
     ecs_id_t id);
 
-ECS_DEPRECATED("use ecs_set_ptr_w_id")
+ECS_DEPRECATED("use ecs_set_id")
 FLECS_API
 ecs_entity_t ecs_set_ptr_w_entity(
     ecs_world_t *world,

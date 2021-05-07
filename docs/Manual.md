@@ -328,7 +328,7 @@ Position *p = ecs_get(world, e, Position);
 Translates into:
 
 ```c
-Position *p = (Position*)ecs_get_w_entity(world, e, ecs_typeid(Position));
+Position *p = (Position*)ecs_get_id(world, e, ecs_typeid(Position));
 ```
 
 As you can see, the `ecs_get` macro casts the result of the function to the correct type, so a compiler will throw a warning when an application tries to assign the result of the operation to a variable of the wrong type.
@@ -840,7 +840,7 @@ int main() {
 }
 ```
 
-The `ecs_set`, `ecs_get` (not exhaustive) functions are wrapper macro's arround functions functions that accept a type. The following code shows how to use the underlying function for `ecs_get`, `ecs_get_w_entity`:
+The `ecs_set`, `ecs_get` (not exhaustive) functions are wrapper macro's arround functions functions that accept a type. The following code shows how to use the underlying function for `ecs_get`, `ecs_get_id`:
 
 ```c
 typedef struct Position {
@@ -848,7 +848,7 @@ typedef struct Position {
 } Position;
 
 const Position* get_position(ecs_world_t *t, ecs_entity_t e, ecs_entity_t p_handle) {
-    return ecs_get_w_entity(world, e, p_handle);
+    return ecs_get_id(world, e, p_handle);
 }
 
 int main() {

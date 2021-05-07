@@ -689,7 +689,7 @@ void Prefab_get_ptr_prefab() {
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, Prefab);
     test_assert(e1 != 0);
     test_assert( ecs_has_pair(world, e1, EcsIsA, Prefab));
-    test_assert( ecs_get_w_entity(world, e1, Prefab) == NULL);
+    test_assert( ecs_get_id(world, e1, Prefab) == NULL);
 
     ecs_fini(world);
 }

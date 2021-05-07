@@ -6941,7 +6941,7 @@ ecs_entity_t ecs_clone(
     return dst;
 }
 
-const void* ecs_get_w_id(
+const void* ecs_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -7197,7 +7197,7 @@ ecs_entity_t assign_ptr_w_id(
     return entity;
 }
 
-ecs_entity_t ecs_set_ptr_w_id(
+ecs_entity_t ecs_set_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -8365,7 +8365,7 @@ bool ecs_defer_set(
         op->is._1.value = ecs_os_malloc(size);
 
         if (!value) {
-            value = ecs_get_w_id(world, entity, component);
+            value = ecs_get_id(world, entity, component);
             if (is_added) {
                 *is_added = value == NULL;
             }
@@ -10390,12 +10390,20 @@ bool ecs_is_component_enabled_w_entity(
     return ecs_is_component_enabled_w_id(world, entity, id);
 }
 
+const void* ecs_get_w_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    return ecs_get_id(world, entity, id);
+}
+
 const void* ecs_get_w_entity(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    return ecs_get_w_id(world, entity, id);
+    return ecs_get_id(world, entity, id);
 }
 
 const void* ecs_get_ref_w_entity(
@@ -10431,7 +10439,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
     size_t size,
     const void *ptr)
 {
-    return ecs_set_ptr_w_id(world, entity, id, size, ptr);
+    return ecs_set_id(world, entity, id, size, ptr);
 }
 
 bool ecs_has_entity(
@@ -10863,7 +10871,7 @@ ecs_entity_t ecs_new_module(
 
     /* Add module to itself. This way we have all the module information stored
      * in a single contained entity that we can use for namespacing */
-    ecs_set_ptr_w_id(world, result, result, size, NULL);
+    ecs_set_id(world, result, result, size, NULL);
 
     /* Set the current scope to the module */
     ecs_set_scope(world, result);
@@ -19199,7 +19207,7 @@ void build_sorted_table_range(
             const EcsComponent *cptr = ecs_get(world, component, EcsComponent);
             ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            helper[to_sort].ptr = ecs_get_w_id(world, base, component);
+            helper[to_sort].ptr = ecs_get_id(world, base, component);
             helper[to_sort].elem_size = cptr->size;
             helper[to_sort].shared = true;
         } else {
