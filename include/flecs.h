@@ -163,8 +163,9 @@ typedef void (*ecs_ctx_free_t)(
 #define EcsSelf         (1)  /* Select self (inclusive) */
 #define EcsSuperSet     (2)  /* Select superset until predicate match */
 #define EcsSubSet       (4)  /* Select subset until predicate match */
-#define EcsAll          (8)  /* Walk full super/subset, regardless of match */
-#define EcsNothing      (16) /* Select nothing */
+#define EcsCascade      (8)  /* Use breadth-first ordering of relations */
+#define EcsAll          (16) /* Walk full super/subset, regardless of match */
+#define EcsNothing      (32) /* Select from nothing */
 
 /** Specify read/write access for term */
 typedef enum ecs_inout_kind_t {
@@ -2692,8 +2693,7 @@ int ecs_term_finalize(
  * @param src The term to copy from.
  */
 FLECS_API 
-void ecs_term_copy(
-    ecs_term_t *dst,
+ecs_term_t ecs_term_copy(
     const ecs_term_t *src);
 
 /** Free resources of term.

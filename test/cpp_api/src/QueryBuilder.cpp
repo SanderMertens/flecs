@@ -1,5 +1,13 @@
 #include <cpp_api.h>
 
+struct Self {
+    flecs::entity_view value;
+};
+
+struct Other {
+    int32_t value;
+};
+
 void QueryBuilder_builder_assign_same_type() {
     flecs::world ecs;
 
@@ -82,6 +90,26 @@ void QueryBuilder_builder_build_to_auto() {
 
     int32_t count = 0;
     q.each([&](flecs::entity e, Position& p, Velocity& v) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void QueryBuilder_builder_build_n_statements() {
+    flecs::world ecs;
+
+    auto qb = ecs.query_builder<>();
+    qb.term<Position>();
+    qb.term<Velocity>();
+    auto q = qb.build();
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
         count ++;
         test_assert(e == e1);
     });
@@ -301,4 +329,549 @@ void QueryBuilder_const_type() {
     });
     
     test_int(count, 1);
+}
+
+void QueryBuilder_string_term() {
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    auto q = ecs.query_builder<>()
+        .term("Position")
+        .build();
+
+    auto e1 = ecs.entity().add<Position>();
+    ecs.entity().add<Velocity>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void QueryBuilder_singleton_term() {
+    flecs::world ecs;
+
+    ecs.set<Other>({10});
+
+    auto q = ecs.query_builder<Self>()
+        .term<Other>().singleton()
+        .build();
+
+    auto 
+    e = ecs.entity(); e.set<Self>({e});
+    e = ecs.entity(); e.set<Self>({e});
+    e = ecs.entity(); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.iter([&](flecs::iter& it, Self *s) {
+        auto o = it.term<const Other>(2);
+        test_assert(!o.is_owned());
+        test_int(o->value, 10);
+
+        for (auto i : it) {
+            test_assert(it.entity(i) == s[i].value);
+            count ++;
+        }
+    });
+    
+    test_int(count, 3);
+}
+
+void QueryBuilder_isa_superset_term() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self>()
+        .term<Other>().subject().set(flecs::SuperSet)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.iter([&](flecs::iter& it, Self *s) {
+        auto o = it.term<const Other>(2);
+        test_assert(!o.is_owned());
+        test_int(o->value, 10);
+
+        for (auto i : it) {
+            test_assert(it.entity(i) == s[i].value);
+            count ++;
+        }
+    });
+    
+    test_int(count, 3);
+}
+
+void QueryBuilder_isa_self_superset_term() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self>()
+        .term<Other>().subject().set(flecs::Self | flecs::SuperSet)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+    e = ecs.entity().set<Other>({20}); e.set<Self>({e});
+    e = ecs.entity().set<Other>({20}); e.set<Self>({e});
+
+    int32_t count = 0;
+    int32_t owned_count = 0;
+
+    q.iter([&](flecs::iter& it, Self *s) {
+        auto o = it.term<const Other>(2);
+
+        if (!o.is_owned()) {
+            test_int(o->value, 10);
+        } else {
+            for (auto i : it) {
+                test_int(o[i].value, 20);
+                owned_count ++;
+            }
+        }
+
+        for (auto i : it) {
+            test_assert(it.entity(i) == s[i].value);
+            count ++;
+        }
+    });
+    
+    test_int(count, 5);
+    test_int(owned_count, 2);
+}
+
+void QueryBuilder_childof_superset_term() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self>()
+        .term<Other>().subject().set(flecs::SuperSet, flecs::ChildOf)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.iter([&](flecs::iter& it, Self *s) {
+        auto o = it.term<const Other>(2);
+        test_assert(!o.is_owned());
+        test_int(o->value, 10);
+
+        for (auto i : it) {
+            test_assert(it.entity(i) == s[i].value);
+            count ++;
+        }
+    });
+    
+    test_int(count, 3);
+}
+
+void QueryBuilder_childof_self_superset_term() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self>()
+        .term<Other>().subject().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().set<Other>({20}); e.set<Self>({e});
+    e = ecs.entity().set<Other>({20}); e.set<Self>({e});
+
+    int32_t count = 0;
+    int32_t owned_count = 0;
+
+    q.iter([&](flecs::iter& it, Self *s) {
+        auto o = it.term<const Other>(2);
+
+        if (!o.is_owned()) {
+            test_int(o->value, 10);
+        } else {
+            for (auto i : it) {
+                test_int(o[i].value, 20);
+                owned_count ++;
+            }
+        }
+
+        for (auto i : it) {
+            test_assert(it.entity(i) == s[i].value);
+            count ++;
+        }
+    });
+    
+    test_int(count, 5);
+    test_int(owned_count, 2);
+}
+
+void QueryBuilder_isa_superset_term_w_each() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).subject().set(flecs::SuperSet)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 3);
+}
+
+void QueryBuilder_isa_self_superset_term_w_each() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).subject().set(flecs::Self | flecs::SuperSet)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::IsA, base); e.set<Self>({e});
+    e = ecs.entity().set<Other>({10}); e.set<Self>({e});
+    e = ecs.entity().set<Other>({10}); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 5);
+}
+
+void QueryBuilder_childof_superset_term_w_each() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).subject().set(flecs::SuperSet, flecs::ChildOf)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 3);
+}
+
+void QueryBuilder_childof_self_superset_term_w_each() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).subject().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().set<Other>({10}); e.set<Self>({e});
+    e = ecs.entity().set<Other>({10}); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 5);
+}
+
+void QueryBuilder_isa_superset_shortcut() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).superset()
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().is_a(base); e.set<Self>({e});
+    e = ecs.entity().is_a(base); e.set<Self>({e});
+    e = ecs.entity().is_a(base); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 3);
+}
+
+void QueryBuilder_isa_superset_shortcut_w_self() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).superset(flecs::IsA, flecs::Self)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().is_a(base); e.set<Self>({e});
+    e = ecs.entity().is_a(base); e.set<Self>({e});
+    e = ecs.entity().is_a(base); e.set<Self>({e});
+    e = ecs.entity().set<Other>({10}); e.set<Self>({e});
+    e = ecs.entity().set<Other>({10}); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 5);
+}
+
+void QueryBuilder_childof_superset_shortcut() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).superset(flecs::ChildOf)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 3);
+}
+
+void QueryBuilder_childof_superset_shortcut_w_self() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).superset(flecs::ChildOf, flecs::Self)
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().set<Other>({10}); e.set<Self>({e});
+    e = ecs.entity().set<Other>({10}); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 5);
+}
+
+void QueryBuilder_isa_supetset_max_depth_1() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).superset().max_depth(1)
+        .build();
+
+    auto base_1 = ecs.entity().set<Other>({10});
+    auto base_2 = ecs.entity().is_a(base_1);
+    auto base_3 = ecs.entity().is_a(base_2);
+    auto base_4 = ecs.entity().is_a(base_3);
+
+    auto 
+    e = ecs.entity().is_a(base_1); e.set<Self>({e});
+    e = ecs.entity().is_a(base_1); e.set<Self>({e});
+
+    e = ecs.entity().is_a(base_2); e.set<Self>({0});
+    e = ecs.entity().is_a(base_2); e.set<Self>({0});
+
+    e = ecs.entity().is_a(base_3); e.set<Self>({0});
+    e = ecs.entity().is_a(base_3); e.set<Self>({0});
+
+    e = ecs.entity().is_a(base_4); e.set<Self>({0});
+    e = ecs.entity().is_a(base_4); e.set<Self>({0});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 2);
+}
+
+void QueryBuilder_isa_supetset_max_depth_2() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).superset().max_depth(2)
+        .build();
+
+    auto base_1 = ecs.entity().set<Other>({10});
+    auto base_2 = ecs.entity().is_a(base_1);
+    auto base_3 = ecs.entity().is_a(base_2);
+    auto base_4 = ecs.entity().is_a(base_3);
+
+    auto 
+    e = ecs.entity().is_a(base_1); e.set<Self>({e});
+    e = ecs.entity().is_a(base_1); e.set<Self>({e});
+
+    e = ecs.entity().is_a(base_2); e.set<Self>({e});
+    e = ecs.entity().is_a(base_2); e.set<Self>({e});
+
+    e = ecs.entity().is_a(base_3); e.set<Self>({0});
+    e = ecs.entity().is_a(base_3); e.set<Self>({0});
+
+    e = ecs.entity().is_a(base_4); e.set<Self>({0});
+    e = ecs.entity().is_a(base_4); e.set<Self>({0});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 4);
+}
+
+void QueryBuilder_isa_supetset_min_depth_2() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).superset().min_depth(2)
+        .build();
+
+    auto base_1 = ecs.entity().set<Other>({10});
+    auto base_2 = ecs.entity().is_a(base_1);
+    auto base_3 = ecs.entity().is_a(base_2);
+    auto base_4 = ecs.entity().is_a(base_3);
+
+    auto 
+    e = ecs.entity().is_a(base_1); e.set<Self>({0});
+    e = ecs.entity().is_a(base_1); e.set<Self>({0});
+
+    e = ecs.entity().is_a(base_2); e.set<Self>({e});
+    e = ecs.entity().is_a(base_2); e.set<Self>({e});
+
+    e = ecs.entity().is_a(base_3); e.set<Self>({e});
+    e = ecs.entity().is_a(base_3); e.set<Self>({e});
+
+    e = ecs.entity().is_a(base_4); e.set<Self>({e});
+    e = ecs.entity().is_a(base_4); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 6);
+}
+
+void QueryBuilder_isa_supetset_min_depth_2_max_depth_3() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Self, Other>()
+        .select(2).superset().min_depth(2).max_depth(3)
+        .build();
+
+    auto base_1 = ecs.entity().set<Other>({10});
+    auto base_2 = ecs.entity().is_a(base_1);
+    auto base_3 = ecs.entity().is_a(base_2);
+    auto base_4 = ecs.entity().is_a(base_3);
+
+    auto 
+    e = ecs.entity().is_a(base_1); e.set<Self>({0});
+    e = ecs.entity().is_a(base_1); e.set<Self>({0});
+
+    e = ecs.entity().is_a(base_2); e.set<Self>({e});
+    e = ecs.entity().is_a(base_2); e.set<Self>({e});
+
+    e = ecs.entity().is_a(base_3); e.set<Self>({e});
+    e = ecs.entity().is_a(base_3); e.set<Self>({e});
+
+    e = ecs.entity().is_a(base_4); e.set<Self>({0});
+    e = ecs.entity().is_a(base_4); e.set<Self>({0});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s, Other& o) {
+        test_assert(e == s.value);
+        test_int(o.value, 10);
+        count ++;
+    });
+    
+    test_int(count, 4);
 }

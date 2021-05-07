@@ -43,7 +43,11 @@ enum oper_kind_t {
     NotFrom = EcsNotFrom
 };
 
-using var_kind_t = ecs_var_kind_t;
+enum var_kind_t {
+    VarDefault = EcsVarDefault,
+    VarIsEntity = EcsVarIsEntity,
+    VarIsVariable = EcsVarIsVariable
+};
 
 class world;
 class snapshot;
@@ -96,6 +100,7 @@ static const uint8_t DefaultSet = EcsDefaultSet;
 static const uint8_t Self = EcsSelf;
 static const uint8_t SuperSet = EcsSuperSet;
 static const uint8_t SubSet = EcsSubSet;
+static const uint8_t Cascade = EcsCascade;
 static const uint8_t All = EcsAll;
 static const uint8_t Nothing = EcsNothing;
 

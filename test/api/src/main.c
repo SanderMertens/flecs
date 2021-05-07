@@ -312,10 +312,10 @@ void Parser_pred_implicit_subject_superset(void);
 void Parser_pred_implicit_subject_subset(void);
 void Parser_pred_implicit_subject_superset_inclusive(void);
 void Parser_pred_implicit_subject_subset_inclusive(void);
-void Parser_pred_implicit_subject_superset_full(void);
-void Parser_pred_implicit_subject_subset_full(void);
-void Parser_pred_implicit_subject_superset_inclusive_full(void);
-void Parser_pred_implicit_subject_subset_inclusive_full(void);
+void Parser_pred_implicit_subject_superset_cascade(void);
+void Parser_pred_implicit_subject_subset_cascade(void);
+void Parser_pred_implicit_subject_superset_inclusive_cascade(void);
+void Parser_pred_implicit_subject_subset_inclusive_cascade(void);
 void Parser_pred_implicit_subject_superset_depth_1_digit(void);
 void Parser_pred_implicit_subject_subset_depth_1_digit(void);
 void Parser_pred_implicit_subject_superset_depth_2_digits(void);
@@ -323,9 +323,9 @@ void Parser_pred_implicit_subject_subset_depth_2_digits(void);
 void Parser_pred_implicit_superset_min_max_depth(void);
 void Parser_pred_implicit_superset_childof_min_max_depth(void);
 void Parser_pred_implicit_subject_superset_childof(void);
-void Parser_pred_implicit_subject_full_superset_childof(void);
-void Parser_pred_implicit_subject_superset_full_childof(void);
-void Parser_pred_implicit_subject_superset_full_childof_optional(void);
+void Parser_pred_implicit_subject_cascade_superset_childof(void);
+void Parser_pred_implicit_subject_superset_cascade_childof(void);
+void Parser_pred_implicit_subject_superset_cascade_childof_optional(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -2968,20 +2968,20 @@ bake_test_case Parser_testcases[] = {
         Parser_pred_implicit_subject_subset_inclusive
     },
     {
-        "pred_implicit_subject_superset_full",
-        Parser_pred_implicit_subject_superset_full
+        "pred_implicit_subject_superset_cascade",
+        Parser_pred_implicit_subject_superset_cascade
     },
     {
-        "pred_implicit_subject_subset_full",
-        Parser_pred_implicit_subject_subset_full
+        "pred_implicit_subject_subset_cascade",
+        Parser_pred_implicit_subject_subset_cascade
     },
     {
-        "pred_implicit_subject_superset_inclusive_full",
-        Parser_pred_implicit_subject_superset_inclusive_full
+        "pred_implicit_subject_superset_inclusive_cascade",
+        Parser_pred_implicit_subject_superset_inclusive_cascade
     },
     {
-        "pred_implicit_subject_subset_inclusive_full",
-        Parser_pred_implicit_subject_subset_inclusive_full
+        "pred_implicit_subject_subset_inclusive_cascade",
+        Parser_pred_implicit_subject_subset_inclusive_cascade
     },
     {
         "pred_implicit_subject_superset_depth_1_digit",
@@ -3012,16 +3012,16 @@ bake_test_case Parser_testcases[] = {
         Parser_pred_implicit_subject_superset_childof
     },
     {
-        "pred_implicit_subject_full_superset_childof",
-        Parser_pred_implicit_subject_full_superset_childof
+        "pred_implicit_subject_cascade_superset_childof",
+        Parser_pred_implicit_subject_cascade_superset_childof
     },
     {
-        "pred_implicit_subject_superset_full_childof",
-        Parser_pred_implicit_subject_superset_full_childof
+        "pred_implicit_subject_superset_cascade_childof",
+        Parser_pred_implicit_subject_superset_cascade_childof
     },
     {
-        "pred_implicit_subject_superset_full_childof_optional",
-        Parser_pred_implicit_subject_superset_full_childof_optional
+        "pred_implicit_subject_superset_cascade_childof_optional",
+        Parser_pred_implicit_subject_superset_cascade_childof_optional
     }
 };
 

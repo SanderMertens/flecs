@@ -140,12 +140,6 @@ int ecs_term_finalize(
 {
     /* If id is set, derive predicate and object */
     if (term->id) {
-        if (term->args[0].entity && term->args[0].entity != EcsThis) {
-            ecs_parser_error(name, expr, 0, 
-                "cannot combine id with subject that is not This");
-            return -1;
-        }
-
         if (ECS_HAS_ROLE(term->id, PAIR)) {
             term->pred.entity = ECS_PAIR_RELATION(term->id);
             term->args[1].entity = ECS_PAIR_OBJECT(term->id);
@@ -153,7 +147,10 @@ int ecs_term_finalize(
             term->pred.entity = term->id & ECS_COMPONENT_MASK;
         }
 
-        term->args[0].entity = EcsThis;
+        if (!term->args[0].entity) {
+            term->args[0].entity = EcsThis;
+        }
+
         term->role = term->id & ECS_ROLE_MASK;
     } else {
         if (term_resolve_ids(world, name, expr, term)) {
@@ -165,15 +162,15 @@ int ecs_term_finalize(
     return 0;
 }
 
-void ecs_term_copy(
-    ecs_term_t *dst,
+ecs_term_t ecs_term_copy(
     const ecs_term_t *src)
 {
-    *dst = *src;
-    dst->name = ecs_os_strdup(src->name);
-    dst->pred.name = ecs_os_strdup(src->pred.name);
-    dst->args[0].name = ecs_os_strdup(src->args[0].name);
-    dst->args[1].name = ecs_os_strdup(src->args[1].name);
+    ecs_term_t dst = *src;
+    dst.name = ecs_os_strdup(src->name);
+    dst.pred.name = ecs_os_strdup(src->pred.name);
+    dst.args[0].name = ecs_os_strdup(src->args[0].name);
+    dst.args[1].name = ecs_os_strdup(src->args[1].name);
+    return dst;
 }
 
 void ecs_term_fini(
@@ -283,7 +280,7 @@ int ecs_filter_init(
         if (term_count) {
             f.terms = ecs_os_malloc(term_count * ECS_SIZEOF(ecs_term_t));
             for (i = 0; i < term_count; i ++) {
-                ecs_term_copy(&f.terms[i], &terms[i]);
+                f.terms[i] = ecs_term_copy(&terms[i]);
             }
         } else {
             f.terms = NULL;

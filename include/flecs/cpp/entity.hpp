@@ -690,7 +690,15 @@ public:
     template<typename Relation>
     const Base& add(const entity_view& object) const {
         return this->add(_::cpp_type<Relation>::id(this->base_world()), object.id());
-    }    
+    }
+
+    /** Shortcut for add(IsA. obj).
+     *
+     * @param object the object id.
+     */
+    const Base& is_a(const entity_view& object) const {
+        return this->add(flecs::IsA, object);
+    }
 
     /** Add a pair with object type.
      * This operation adds a pair to the entity. The relation part of the pair

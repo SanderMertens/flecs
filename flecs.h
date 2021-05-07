@@ -1907,8 +1907,9 @@ typedef void (*ecs_ctx_free_t)(
 #define EcsSelf         (1)  /* Select self (inclusive) */
 #define EcsSuperSet     (2)  /* Select superset until predicate match */
 #define EcsSubSet       (4)  /* Select subset until predicate match */
-#define EcsAll          (8)  /* Walk full super/subset, regardless of match */
-#define EcsNothing      (16) /* Select nothing */
+#define EcsCascade      (8)  /* Use breadth-first ordering of relations */
+#define EcsAll          (16) /* Walk full super/subset, regardless of match */
+#define EcsNothing      (32) /* Select from nothing */
 
 /** Specify read/write access for term */
 typedef enum ecs_inout_kind_t {
@@ -5680,8 +5681,7 @@ int ecs_term_finalize(
  * @param src The term to copy from.
  */
 FLECS_API 
-void ecs_term_copy(
-    ecs_term_t *dst,
+ecs_term_t ecs_term_copy(
     const ecs_term_t *src);
 
 /** Free resources of term.
@@ -8784,7 +8784,11 @@ enum oper_kind_t {
     NotFrom = EcsNotFrom
 };
 
-using var_kind_t = ecs_var_kind_t;
+enum var_kind_t {
+    VarDefault = EcsVarDefault,
+    VarIsEntity = EcsVarIsEntity,
+    VarIsVariable = EcsVarIsVariable
+};
 
 class world;
 class snapshot;
@@ -8837,6 +8841,7 @@ static const uint8_t DefaultSet = EcsDefaultSet;
 static const uint8_t Self = EcsSelf;
 static const uint8_t SuperSet = EcsSuperSet;
 static const uint8_t SubSet = EcsSubSet;
+static const uint8_t Cascade = EcsCascade;
 static const uint8_t All = EcsAll;
 static const uint8_t Nothing = EcsNothing;
 
@@ -9429,6 +9434,15 @@ public:
     bool is_shared() const {
         return m_is_shared;
     }
+
+    /** Return whether component is owned.
+     * If the column is shared, this method returns true.
+     * 
+     * @return True if component is shared, false if component is owned.
+     */
+    bool is_owned() const {
+        return !m_is_shared;
+    }    
 
 protected:
     T* m_array;
@@ -11590,7 +11604,15 @@ public:
     template<typename Relation>
     const Base& add(const entity_view& object) const {
         return this->add(_::cpp_type<Relation>::id(this->base_world()), object.id());
-    }    
+    }
+
+    /** Shortcut for add(IsA. obj).
+     *
+     * @param object the object id.
+     */
+    const Base& is_a(const entity_view& object) const {
+        return this->add(flecs::IsA, object);
+    }
 
     /** Add a pair with object type.
      * This operation adds a pair to the entity. The relation part of the pair
@@ -12533,216 +12555,355 @@ private:
 
 namespace flecs {
 
-template <typename Base>
-class term_id {
+template<typename Base>
+class term_id_builder_i {
 public:
-    term_id() : m_term_id(nullptr) { }
+    term_id_builder_i() : m_term_id(nullptr) { }
 
-    term_id(flecs::world_t *world, ecs_term_id_t *tid, Base& base) 
-        : m_world(world)
-        , m_term_id(tid)
-        , m_base(base) { }
+    virtual ~term_id_builder_i() { }
 
     template<typename T>
     Base& entity() {
-        m_term_id->entity = _::cpp_type<T>::id(m_world);
-        return m_base;
+        ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, NULL);
+        m_term_id->entity = _::cpp_type<T>::id(world());
+        return *this;
     }
 
-    Base& entity(const flecs::id_t id) {
+    Base& entity(flecs::id_t id) {
+        ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, NULL);
         m_term_id->entity = id;
-        return m_base;
+        return *this;
     }
 
     Base& name(const char *name) {
-        /* Const cast is safe, when the value is actually used to construct a
-         * query, it will be duplicated. */
+        ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, NULL);
+        // Const cast is safe, when the value is actually used to construct a
+        // query, it will be duplicated.
         m_term_id->name = const_cast<char*>(name);
-        return m_base;
+        return *this;
     }
 
-    Base& set(uint8_t mask, const flecs::id_t relation = flecs::IsA, 
-        int32_t min_depth = 0, int32_t max_depth = 0)
+    Base& var(flecs::var_kind_t var = flecs::VarIsVariable) {
+        m_term_id->var = static_cast<ecs_var_kind_t>(var);
+        return *this;
+    }
+
+    Base& var(const char *name) {
+        ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, NULL);
+        // Const cast is safe, when the value is actually used to construct a
+        // query, it will be duplicated.
+        m_term_id->name = const_cast<char*>(name);
+        return var(); // Default to VarIsVariable
+    }
+
+    Base& set(uint8_t mask, const flecs::id_t relation = flecs::IsA)
     {
+        ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, NULL);
         m_term_id->set.mask = mask;
         m_term_id->set.relation = relation;
-        m_term_id->set.min_depth = min_depth;
-        m_term_id->set.max_depth = max_depth;
-        return m_base;
+        return *this;
     }
-    
-private:
-    flecs::world_t *m_world;
+
+    Base& superset(const flecs::id_t relation = flecs::IsA, uint8_t mask = 0)
+    {
+        ecs_assert(!(mask & flecs::SubSet), ECS_INVALID_PARAMETER, NULL);
+        return set(flecs::SuperSet | mask, relation);
+    }
+
+    Base& subset(const flecs::id_t relation = flecs::IsA, uint8_t mask = 0)
+    {
+        ecs_assert(!(mask & flecs::SuperSet), ECS_INVALID_PARAMETER, NULL);
+        return set(flecs::SubSet | mask, relation);
+    }
+
+    Base& min_depth(int32_t min_depth) {
+        m_term_id->set.min_depth = min_depth;
+        return *this;
+    }
+
+    Base& max_depth(int32_t max_depth) {
+        m_term_id->set.max_depth = max_depth;
+        return *this;
+    }    
+
     ecs_term_id_t *m_term_id;
-    Base& m_base;
+    
+protected:
+    virtual flecs::world_t* world() = 0;
+
+private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
 };
 
-// Class that describes a term
-class term {
+template<typename Base>
+class term_builder_i : public term_id_builder_i<Base> {
 public:
-    term(const world& world) 
-        : m_world(world.c_ptr())
-        , m_term({}) { }
+    term_builder_i() : m_term(nullptr) { }
 
-    term(flecs::world_t *world) 
-        : m_world(world)
-        , m_term({}) { }
+    term_builder_i(ecs_term_t *term_ptr) { 
+        set_term(term_ptr);
+    }
 
     template<typename T>
-    term& id() {
-        m_term.id = _::cpp_type<T>::id(m_world);
+    Base& id() {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->id = _::cpp_type<T>::id(world());
         return *this;
     }
 
     template<typename R, typename O>
-    term& id() {
-        m_term.id = ecs_pair(
-            _::cpp_type<R>::id(m_world),
-            _::cpp_type<O>::id(m_world));
+    Base& id() {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->id = ecs_pair(
+            _::cpp_type<R>::id(world()),
+            _::cpp_type<O>::id(world()));
+        return *this;
+    }
+
+    Base& id(const flecs::id_t id) {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->id = id;
+        return *this;
+    }
+
+    Base& id(const flecs::id_t r, const flecs::id_t o) {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->id = ecs_pair(r, o);
+        return *this;
+    }
+
+    Base& expr(const char *expr) {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        const char *ptr;
+        if ((ptr = ecs_parse_term(world(), nullptr, expr, expr, m_term)) == nullptr) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        // Should not have more than one term
+        ecs_assert(ptr[0] == 0, ECS_INVALID_PARAMETER, NULL);
+        return *this;
+    }
+
+    Base& predicate() {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        this->m_term_id = &m_term->pred;
+        return *this;
+    }
+
+    Base& subject() {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        this->m_term_id = &m_term->args[0];
+        return *this;
+    }
+
+    Base& object() {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        this->m_term_id = &m_term->args[1];
+        return *this;
+    }
+
+    Base& role(id_t role) {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->role = role;
+        return *this;
+    }
+
+    Base& inout(flecs::inout_kind_t inout) {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->inout = static_cast<ecs_inout_kind_t>(inout);
+        return *this;
+    }
+
+    Base& oper(flecs::oper_kind_t oper) {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->oper = static_cast<ecs_oper_kind_t>(oper);
+        return *this;
+    }
+
+    Base& singleton() {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_term->id || m_term->pred.entity, ECS_INVALID_PARAMETER, NULL);
+        
+        flecs::id_t pred = m_term->id;
+        if (!pred) {
+            pred = m_term->pred.entity;
+        }
+
+        ecs_assert(pred != 0, ECS_INVALID_PARAMETER, NULL);
+
+        m_term->args[0].entity = pred;
+
         return *this;
     }    
 
-    term& id(const flecs::id_t id) {
-        m_term.id = id;
-        return *this;
-    }
+    ecs_term_t *m_term;
 
-    term& id(const flecs::id_t r, const flecs::id_t o) {
-        m_term.id = ecs_pair(r, o);
-        return *this;
-    }    
+protected:
+    virtual flecs::world_t* world() = 0;
 
-    term_id<term> predicate() {
-        return term_id<term>(m_world, &m_term.pred, *this);
-    }
-
-    term_id<term> subject() {
-        return term_id<term>(m_world, &m_term.args[0], *this);
-    }
-
-    term_id<term> object() {
-        return term_id<term>(m_world, &m_term.args[1], *this);
-    }
-
-    operator ecs_term_t() const {
-        return m_term;
+    void set_term(ecs_term_t *term) {
+        m_term = term;
+        if (term) {
+            this->m_term_id = &m_term->args[0]; // default to subject
+        } else {
+            this->m_term_id = nullptr;
+        }
     }
 
 private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+};
+
+// Class that describes a term
+class term final : public term_builder_i<term> {
+public:
+    term(flecs::world_t *world_ptr) 
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(world_ptr) { }
+
+    term(const term& obj) : term_builder_i<term>(&value) {
+        m_world = obj.m_world;
+        value = ecs_term_copy(&obj.value);
+    }
+
+    term(term&& obj) : term_builder_i<term>(&value) {
+        m_world = obj.m_world;
+        value = obj.value;
+        obj.reset();
+    }
+
+    term& operator=(const term& obj) {
+        ecs_assert(m_world == obj.m_world, ECS_INVALID_PARAMETER, NULL);
+        ecs_term_fini(&value);
+        value = ecs_term_copy(&obj.value);
+        m_term = nullptr;
+        return *this;
+    }
+
+    term& operator=(term&& obj) {
+        ecs_assert(m_world == obj.m_world, ECS_INVALID_PARAMETER, NULL);
+        ecs_term_fini(&value);
+        value = obj.value;
+        m_term = nullptr;
+        obj.reset();
+        return *this;
+    }
+
+    ~term() {
+        ecs_term_fini(&value);
+    }
+
+    void reset() {
+        value = {};
+        this->set_term(nullptr);
+    }
+
+    int finalize() {
+        return ecs_term_finalize(m_world, nullptr, nullptr, &value);
+    }
+
+    bool is_set() {
+        return ecs_term_is_set(&value);
+    }
+
+    bool is_trivial() {
+        return ecs_term_is_trivial(&value);
+    }
+
+    operator ecs_term_t() {
+        return ecs_term_copy(&value);
+    }
+
+    ecs_term_t value;
+
+protected:
+    flecs::world_t* world() override { return m_world; }
+
+private:
     flecs::world_t *m_world;
-    ecs_term_t m_term;
 };
 
 // Filter builder interface
 template<typename Base, typename ... Components>
-class filter_builder_i {
+class filter_builder_i : public term_builder_i<Base> {
 public:
     filter_builder_i(ecs_filter_desc_t *desc) 
         : m_desc(desc)
-        , m_term(0) { }
+        , m_term_index(0) { }
 
     Base& expr(const char *expr) {
         m_desc->expr = expr;
-        return *static_cast<Base*>(this);
+        return *this;
     }
 
     Base& substitute_default(bool value = true) {
         m_desc->substitute_default = value;
-        return *static_cast<Base*>(this);
+        return *this;
     }
 
     Base& term() {
-        m_term++;
-        return *static_cast<Base*>(this);
+        ecs_assert(m_term_index < ECS_FILTER_DESC_TERM_ARRAY_MAX, 
+            ECS_INVALID_PARAMETER, NULL);
+        this->set_term(&m_desc->terms[m_term_index]);
+        m_term_index ++;
+        return *this;
     }
+    
+    Base& select(int32_t term_index) {
+        ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_term_index <= term_index, ECS_INVALID_PARAMETER, NULL);
+        m_term_index = term_index - 1;
+        this->term();
+        ecs_assert(ecs_term_is_set(this->m_term), ECS_INVALID_PARAMETER, NULL);
+        return *this;
+    }    
 
     template<typename T>
     Base& term() {
-        m_desc->terms[m_term] = flecs::term(Base::world(this)).id<T>();
-        m_term ++;
-        return *static_cast<Base*>(this);
+        this->term();
+        *this->m_term = flecs::term(world()).id<T>();
+        return *this;
     }
 
     template<typename R, typename O>
     Base& term() {
-        m_desc->terms[m_term ++] = flecs::term(Base::world(this)).id<R, O>();
-        return *static_cast<Base*>(this);
+        this->term();
+        *this->m_term = flecs::term(world()).id<R, O>();
+        return *this;
     }    
 
-    Base& term(const id_t id) {
-        m_desc->terms[m_term ++] = flecs::term(Base::world(this)).id(id);
-        return *static_cast<Base*>(this);
+    Base& term(id_t id) {
+        this->term();
+        *this->m_term = flecs::term(world()).id(id);
+        return *this;
     }
 
-    Base& term(const id_t r, const id_t o) {
-        m_desc->terms[m_term ++] = flecs::term(Base::world(this)).id(r, o);
-        return *static_cast<Base*>(this);
+    Base& term(id_t r, id_t o) {
+        this->term();
+        *this->m_term = flecs::term(world()).id(r, o);
+        return *this;
+    }
+
+    Base& term(const char *expr) {
+        this->term();
+        *this->m_term = flecs::term(world()).expr(expr);
+        return *this;
     }    
 
     Base& term(const flecs::term& term) {
-        m_desc->terms[m_term ++] = term;
-        return *static_cast<Base*>(this);
+        this->term();
+        *this->m_term = term;
+        return *this;
     }
-
-    Base& role(const id_t role) {
-        ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
-        m_desc->terms[m_term - 1].role = role;
-    }
-
-    Base& inout(flecs::inout_kind_t inout) {
-        ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
-        m_desc->terms[m_term - 1].inout = static_cast<ecs_inout_kind_t>(inout);
-        return *static_cast<Base*>(this);
-    }
-
-    Base& oper(flecs::oper_kind_t oper) {
-        ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
-        m_desc->terms[m_term - 1].oper = static_cast<ecs_oper_kind_t>(oper);
-        return *static_cast<Base*>(this);
-    }
-
-    Base& predicate(entity_t entity = 0, const char *name = nullptr)
-    {
-        ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_term_t *t = &m_desc->terms[m_term - 1];
-        t->pred.entity = entity;
-        t->pred.name = const_cast<char*>(name);
-        m_term_id = &t->pred;
-        return *static_cast<Base*>(this);
-    }
-
-    Base& subject(entity_t entity = 0, const char *name = nullptr)
-    {
-        ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_term_t *t = &m_desc->terms[m_term - 1];
-        t->args[0].entity = entity;
-        t->args[0].name = const_cast<char*>(name);
-        m_term_id = &t->args[0];
-        return *static_cast<Base*>(this);
-    }
-
-    Base& object(entity_t entity = 0, const char *name = nullptr)
-    {
-        ecs_assert(m_term > 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_term_t *t = &m_desc->terms[m_term - 1];
-        t->args[1].entity = entity;
-        t->args[1].name = const_cast<char*>(name);
-        m_term_id = &t->args[1];
-        return *static_cast<Base*>(this);
-    }
-
-    Base& set(uint8_t set_mask, entity_t relation = 0, 
-        int32_t min_depth = 0, int32_t max_depth = 0)
-    {
-        m_term_id->set.mask = set_mask,
-        m_term_id->set.relation = relation;
-        m_term_id->set.min_depth = min_depth;
-        m_term_id->set.max_depth = max_depth;
-    }    
 
     void populate_filter_from_pack() {
         flecs::array<flecs::id_t, sizeof...(Components)> ids ({
-            (_::cpp_type<Components>::id(Base::world(this)))...
+            (_::cpp_type<Components>::id(world()))...
         });
 
         flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout_kinds ({
@@ -12753,12 +12914,21 @@ public:
             (type_to_oper<Components>())...
         });
 
-        for (size_t i = 0; i < sizeof...(Components); i ++) {
-            term(ids[i]).inout(inout_kinds[i]).oper(oper_kinds[i]);
+        size_t i = 0;
+        for (auto id : ids) {
+            this->term(id).inout(inout_kinds[i]).oper(oper_kinds[i]);
+            i ++;
         }
     }
 
+protected:
+    virtual flecs::world_t* world() = 0;
+
 private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+
     template <typename T,
         typename std::enable_if< std::is_const<T>::value == true, void>::type* = nullptr>
     constexpr flecs::inout_kind_t type_to_inout() const {
@@ -12790,20 +12960,20 @@ private:
     }
 
     ecs_filter_desc_t *m_desc;
-    ecs_term_id_t *m_term_id;
-    int32_t m_term;
+    int32_t m_term_index;
 };
 
 // Query builder interface
 template<typename Base, typename ... Components>
 class query_builder_i : public filter_builder_i<Base, Components ...> {
+    using BaseClass = filter_builder_i<Base, Components ...>;
 public:
     query_builder_i()
-        : filter_builder_i<Base, Components ...>(nullptr)
+        : BaseClass(nullptr)
         , m_desc(nullptr) { }
 
     query_builder_i(ecs_query_desc_t *desc) 
-        : filter_builder_i<Base, Components ...>(&desc->filter)
+        : BaseClass(&desc->filter)
         , m_desc(desc) { }
 
     /** Sort the output of a query.
@@ -12827,8 +12997,7 @@ public:
     template <typename T>
     Base& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
         ecs_compare_action_t cmp = reinterpret_cast<ecs_compare_action_t>(compare);
-        auto world = Base::world(this);
-        return this->order_by(_::cpp_type<T>::id(world), cmp);
+        return this->order_by(_::cpp_type<T>::id(world()), cmp);
     }
 
     /** Sort the output of a query.
@@ -12840,7 +13009,7 @@ public:
     Base& order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
         m_desc->order_by = reinterpret_cast<ecs_compare_action_t>(compare);
         m_desc->order_by_id = component;
-        return *static_cast<Base*>(this);
+        return *this;
     }
 
     /** Group and sort matched tables.
@@ -12875,34 +13044,42 @@ public:
     Base& group_by(flecs::entity_t component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
         m_desc->group_by = reinterpret_cast<ecs_rank_type_action_t>(rank);
         m_desc->group_by_id = component;
-        return *static_cast<Base*>(this);
+        return *this;
     } 
 
     /** Specify parent query (creates subquery) */
     Base& parent(const query_base& parent);
+    
+protected:
+    virtual flecs::world_t* world() = 0;
 
 private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+
     ecs_query_desc_t *m_desc;
 };
 
 // System builder interface
 template<typename Base, typename ... Components>
 class system_builder_i : public query_builder_i<Base, Components ...> {
+    using BaseClass = query_builder_i<Base, Components ...>;
 public:
     system_builder_i()
-        : query_builder_i<Base, Components ...>(nullptr)
+        : BaseClass(nullptr)
         , m_desc(nullptr)
         , m_add_count(0) { }
 
     system_builder_i(ecs_system_desc_t *desc) 
-        : query_builder_i<Base, Components ...>(&desc->query)
+        : BaseClass(&desc->query)
         , m_desc(desc)
         , m_add_count(0) { }
 
     /** Specify string-based signature. */
     Base& signature(const char *signature) {
         m_desc->query.filter.expr = signature;
-        return *static_cast<Base*>(this);
+        return *this;
     }
 
     /** Specify when the system should be ran.
@@ -12918,7 +13095,7 @@ public:
      */
     Base& kind(entity_t kind) {
         m_desc->entity.add[0] = kind;
-        return *static_cast<Base*>(this);
+        return *this;
     }
 
     /** Set system interval.
@@ -12930,7 +13107,7 @@ public:
      */
     Base& interval(FLECS_FLOAT interval) {
         m_desc->interval = interval;
-        return *static_cast<Base*>(this);
+        return *this;
     }
 
     /** Set system rate.
@@ -12944,7 +13121,7 @@ public:
     Base& rate(const entity_t tick_source, int32_t rate) {
         m_desc->rate = rate;
         m_desc->tick_source = tick_source;
-        return *static_cast<Base*>(this);
+        return *this;
     }
 
     /** Set system rate.
@@ -12956,25 +13133,25 @@ public:
      */
     Base& rate(int32_t rate) {
         m_desc->rate = rate;
-        return *static_cast<Base*>(this);
+        return *this;
     }
 
     /** System is an on demand system */
     Base& on_demand() {
         m_desc->entity.add[m_add_count ++] = flecs::OnDemand;
-        return *static_cast<Base*>(this);
+        return *this;
     }
 
     /** System is a hidden system */
     Base& hidden() {
         m_desc->entity.add[m_add_count ++] = flecs::Hidden;
-        return *static_cast<Base*>(this);
+        return *this;
     }
 
     /** Set system context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;
-        return *static_cast<Base*>(this);
+        return *this;
     }    
 
     ECS_DEPRECATED("use interval")
@@ -12985,9 +13162,17 @@ public:
     ECS_DEPRECATED("use ctx")
     Base& set_context(void *ptr) {
         ctx(ptr);
+        return *this;
     }     
 
+protected:
+    virtual flecs::world_t* world() = 0;
+
 private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+
     ecs_system_desc_t *m_desc;
     int32_t m_add_count;
 };
@@ -12996,14 +13181,12 @@ private:
 template<typename ... Components>
 class query_builder_base
     : public query_builder_i<query_builder_base<Components...>, Components ...>
-    , public world_base<query_builder_base<Components...>> 
 {
-    friend class query_base;
 public:
-    query_builder_base(const world& world) 
+    query_builder_base(flecs::world_t *world) 
         : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc)
-        , m_world(world.c_ptr())
         , m_desc({})
+        , m_world(world)
     { 
         this->populate_filter_from_pack();
     }
@@ -13030,14 +13213,18 @@ public:
 
     query<Components ...> build() const;
 
+    ecs_query_desc_t m_desc;
+
+    flecs::world_t* world() override { return m_world; }
+
+protected:
     flecs::world_t *m_world;
-    ecs_query_desc_t m_desc;    
 };
 
 template<typename ... Components>
 class query_builder final : public query_builder_base<Components...> {
 public:
-    query_builder(const world& world)
+    query_builder(flecs::world_t *world)
         : query_builder_base<Components ...>(world) { }
 
     operator query<>() const;
@@ -13046,14 +13233,13 @@ public:
 template<typename ... Components>
 class system_builder final
     : public system_builder_i<system_builder<Components ...>, Components ...>
-    , public world_base<system_builder<Components...>>  
 {
     using Class = system_builder<Components ...>;
 public:
-    explicit system_builder(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr) 
+    explicit system_builder(flecs::world_t* world, const char *name = nullptr, const char *expr = nullptr) 
         : system_builder_i<Class, Components ...>(&m_desc)
-        , m_world(world.c_ptr())
         , m_desc({})
+        , m_world(world)
         { 
             m_desc.entity.name = name;
             m_desc.entity.sep = "::";
@@ -13083,6 +13269,10 @@ public:
     template <typename Func>
     system<Components...> each(Func&& func) const;
 
+    ecs_system_desc_t m_desc;
+
+protected:
+    flecs::world_t* world() override { return m_world; }
     flecs::world_t *m_world;
 
 private:
@@ -13124,8 +13314,6 @@ private:
 
         return e;
     }
-
-    ecs_system_desc_t m_desc;
 };
 
 }

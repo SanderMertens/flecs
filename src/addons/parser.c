@@ -29,6 +29,7 @@
 #define TOK_SELF "self"
 #define TOK_SUPERSET "superset"
 #define TOK_SUBSET "subset"
+#define TOK_CASCADE_SET "cascade"
 #define TOK_ALL "all"
 
 #define TOK_ANY "ANY"
@@ -295,6 +296,8 @@ uint8_t parse_set_token(
         return EcsSuperSet;
     } else if (!ecs_os_strcmp(token, TOK_SUBSET)) {
         return EcsSubSet;
+    } else if (!ecs_os_strcmp(token, TOK_CASCADE_SET)) {
+        return EcsCascade;
     } else if (!ecs_os_strcmp(token, TOK_ALL)) {
         return EcsAll;
     } else {
@@ -428,7 +431,7 @@ const char* parse_set_expr(
         }
     } while (true);
 
-    if (id->set.mask & EcsAll && !(id->set.mask & EcsSuperSet) && !(id->set.mask & EcsSubSet)){
+    if (id->set.mask & EcsCascade && !(id->set.mask & EcsSuperSet) && !(id->set.mask & EcsSubSet)){
         ecs_parser_error(name, expr, column, 
             "invalid 'all' token without superset or subset");
         return NULL;
@@ -473,6 +476,7 @@ const char* parse_arguments(
             /* If token is a self, superset or subset token, this is a set
              * expression */
             if (!ecs_os_strcmp(token, TOK_ALL) ||
+                !ecs_os_strcmp(token, TOK_CASCADE_SET) ||
                 !ecs_os_strcmp(token, TOK_SELF) || 
                 !ecs_os_strcmp(token, TOK_SUPERSET) || 
                 !ecs_os_strcmp(token, TOK_SUBSET))
@@ -648,7 +652,7 @@ parse_source:
         term.args[0].set.relation = EcsIsA;
         term.args[0].entity = EcsThis;
     } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
-        term.args[0].set.mask = EcsSuperSet | EcsAll;
+        term.args[0].set.mask = EcsSuperSet | EcsCascade;
         term.args[0].set.relation = EcsChildOf;
         term.args[0].entity = EcsThis;
         term.oper = EcsOptional;

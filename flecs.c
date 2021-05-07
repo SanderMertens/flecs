@@ -12706,6 +12706,7 @@ void ecs_bulk_remove_entity(
 #define TOK_SELF "self"
 #define TOK_SUPERSET "superset"
 #define TOK_SUBSET "subset"
+#define TOK_CASCADE_SET "cascade"
 #define TOK_ALL "all"
 
 #define TOK_ANY "ANY"
@@ -12972,6 +12973,8 @@ uint8_t parse_set_token(
         return EcsSuperSet;
     } else if (!ecs_os_strcmp(token, TOK_SUBSET)) {
         return EcsSubSet;
+    } else if (!ecs_os_strcmp(token, TOK_CASCADE_SET)) {
+        return EcsCascade;
     } else if (!ecs_os_strcmp(token, TOK_ALL)) {
         return EcsAll;
     } else {
@@ -13105,7 +13108,7 @@ const char* parse_set_expr(
         }
     } while (true);
 
-    if (id->set.mask & EcsAll && !(id->set.mask & EcsSuperSet) && !(id->set.mask & EcsSubSet)){
+    if (id->set.mask & EcsCascade && !(id->set.mask & EcsSuperSet) && !(id->set.mask & EcsSubSet)){
         ecs_parser_error(name, expr, column, 
             "invalid 'all' token without superset or subset");
         return NULL;
@@ -13150,6 +13153,7 @@ const char* parse_arguments(
             /* If token is a self, superset or subset token, this is a set
              * expression */
             if (!ecs_os_strcmp(token, TOK_ALL) ||
+                !ecs_os_strcmp(token, TOK_CASCADE_SET) ||
                 !ecs_os_strcmp(token, TOK_SELF) || 
                 !ecs_os_strcmp(token, TOK_SUPERSET) || 
                 !ecs_os_strcmp(token, TOK_SUBSET))
@@ -13325,7 +13329,7 @@ parse_source:
         term.args[0].set.relation = EcsIsA;
         term.args[0].entity = EcsThis;
     } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
-        term.args[0].set.mask = EcsSuperSet | EcsAll;
+        term.args[0].set.mask = EcsSuperSet | EcsCascade;
         term.args[0].set.relation = EcsChildOf;
         term.args[0].entity = EcsThis;
         term.oper = EcsOptional;
@@ -16238,12 +16242,6 @@ int ecs_term_finalize(
 {
     /* If id is set, derive predicate and object */
     if (term->id) {
-        if (term->args[0].entity && term->args[0].entity != EcsThis) {
-            ecs_parser_error(name, expr, 0, 
-                "cannot combine id with subject that is not This");
-            return -1;
-        }
-
         if (ECS_HAS_ROLE(term->id, PAIR)) {
             term->pred.entity = ECS_PAIR_RELATION(term->id);
             term->args[1].entity = ECS_PAIR_OBJECT(term->id);
@@ -16251,7 +16249,10 @@ int ecs_term_finalize(
             term->pred.entity = term->id & ECS_COMPONENT_MASK;
         }
 
-        term->args[0].entity = EcsThis;
+        if (!term->args[0].entity) {
+            term->args[0].entity = EcsThis;
+        }
+
         term->role = term->id & ECS_ROLE_MASK;
     } else {
         if (term_resolve_ids(world, name, expr, term)) {
@@ -16263,15 +16264,15 @@ int ecs_term_finalize(
     return 0;
 }
 
-void ecs_term_copy(
-    ecs_term_t *dst,
+ecs_term_t ecs_term_copy(
     const ecs_term_t *src)
 {
-    *dst = *src;
-    dst->name = ecs_os_strdup(src->name);
-    dst->pred.name = ecs_os_strdup(src->pred.name);
-    dst->args[0].name = ecs_os_strdup(src->args[0].name);
-    dst->args[1].name = ecs_os_strdup(src->args[1].name);
+    ecs_term_t dst = *src;
+    dst.name = ecs_os_strdup(src->name);
+    dst.pred.name = ecs_os_strdup(src->pred.name);
+    dst.args[0].name = ecs_os_strdup(src->args[0].name);
+    dst.args[1].name = ecs_os_strdup(src->args[1].name);
+    return dst;
 }
 
 void ecs_term_fini(
@@ -16381,7 +16382,7 @@ int ecs_filter_init(
         if (term_count) {
             f.terms = ecs_os_malloc(term_count * ECS_SIZEOF(ecs_term_t));
             for (i = 0; i < term_count; i ++) {
-                ecs_term_copy(&f.terms[i], &terms[i]);
+                f.terms[i] = ecs_term_copy(&terms[i]);
             }
         } else {
             f.terms = NULL;
@@ -18511,7 +18512,7 @@ ecs_vector_t* add_ref(
     ecs_ref_t *ref = ecs_vector_add(&references, ecs_ref_t);
     ecs_term_id_t *subj = &term->args[0];
 
-    if (!(subj->set.mask & EcsAll)) {
+    if (!(subj->set.mask & EcsCascade)) {
         ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
     }
     
@@ -18750,7 +18751,7 @@ add_trait:
             }
         }
 
-        if ((entity || table_data.iter_data.columns[c] == -1 || subj.set.mask & EcsAll)) {
+        if ((entity || table_data.iter_data.columns[c] == -1 || subj.set.mask & EcsCascade)) {
             references = add_ref(world, query, references, term,
                 component, entity);
             table_data.iter_data.columns[c] = -ecs_vector_count(references);
@@ -19493,7 +19494,7 @@ void register_monitors(
          * Also register a regular component monitor for EcsCascade columns.
          * This ensures that when the component used in the CASCADE column
          * is added or removed tables are updated accordingly*/
-        if (subj->set.mask & EcsSuperSet && subj->set.mask & EcsAll && 
+        if (subj->set.mask & EcsSuperSet && subj->set.mask & EcsCascade && 
             subj->set.relation != EcsIsA) 
         {
             if (term->oper != EcsOr) {
@@ -19588,7 +19589,7 @@ void process_signature(
             query->flags |= EcsQueryNeedsTables;
         }
 
-        if (subj->set.mask & EcsAll && term->oper == EcsOptional) {
+        if (subj->set.mask & EcsCascade && term->oper == EcsOptional) {
             query->cascade_by = i + 1;
             query->rank_on_component = term->id;
         }

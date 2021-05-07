@@ -117,6 +117,15 @@ public:
         return m_is_shared;
     }
 
+    /** Return whether component is owned.
+     * If the column is shared, this method returns true.
+     * 
+     * @return True if component is shared, false if component is owned.
+     */
+    bool is_owned() const {
+        return !m_is_shared;
+    }    
+
 protected:
     T* m_array;
     size_t m_count;

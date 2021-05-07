@@ -462,7 +462,7 @@ ecs_vector_t* add_ref(
     ecs_ref_t *ref = ecs_vector_add(&references, ecs_ref_t);
     ecs_term_id_t *subj = &term->args[0];
 
-    if (!(subj->set.mask & EcsAll)) {
+    if (!(subj->set.mask & EcsCascade)) {
         ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
     }
     
@@ -701,7 +701,7 @@ add_trait:
             }
         }
 
-        if ((entity || table_data.iter_data.columns[c] == -1 || subj.set.mask & EcsAll)) {
+        if ((entity || table_data.iter_data.columns[c] == -1 || subj.set.mask & EcsCascade)) {
             references = add_ref(world, query, references, term,
                 component, entity);
             table_data.iter_data.columns[c] = -ecs_vector_count(references);
@@ -1437,14 +1437,14 @@ void register_monitors(
         ecs_term_t *term = &terms[i];
         ecs_term_id_t *subj = &term->args[0];
 
-        /* If component is requested with CASCADE source register component as a
+        /* If component is requested with EcsCascade register component as a
          * parent monitor. Parent monitors keep track of whether an entity moved
          * in the hierarchy, which potentially requires the query to reorder its
          * tables. 
          * Also register a regular component monitor for EcsCascade columns.
-         * This ensures that when the component used in the CASCADE column
+         * This ensures that when the component used in the EcsCascade column
          * is added or removed tables are updated accordingly*/
-        if (subj->set.mask & EcsSuperSet && subj->set.mask & EcsAll && 
+        if (subj->set.mask & EcsSuperSet && subj->set.mask & EcsCascade && 
             subj->set.relation != EcsIsA) 
         {
             if (term->oper != EcsOr) {
@@ -1539,7 +1539,7 @@ void process_signature(
             query->flags |= EcsQueryNeedsTables;
         }
 
-        if (subj->set.mask & EcsAll && term->oper == EcsOptional) {
+        if (subj->set.mask & EcsCascade && term->oper == EcsOptional) {
             query->cascade_by = i + 1;
             query->rank_on_component = term->id;
         }
