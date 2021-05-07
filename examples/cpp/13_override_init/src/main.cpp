@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     auto base = ecs.entity().set<Mass>({10});
 
     /* Create instances which share the Mass component from a base */
-    auto instance = ecs.entity().add(flecs::IsA, base);
+    auto instance = ecs.entity().is_a(base);
 
     /* Add component without setting it. This will initialize the new component
      * with the value from the base, which is a common approach to initializing

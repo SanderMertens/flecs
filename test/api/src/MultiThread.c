@@ -630,7 +630,7 @@ static
 void TestAll(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t TestSubset = ecs_column_entity(it, 2);
+    ecs_entity_t TestSubset = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {

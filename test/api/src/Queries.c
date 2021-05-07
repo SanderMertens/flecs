@@ -748,8 +748,8 @@ void Queries_query_optional_owned() {
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
-        Position *p = ecs_column(&it, Position, 1);
-        Velocity *v = ecs_column(&it, Velocity, 2);
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
@@ -793,8 +793,8 @@ void Queries_query_optional_shared() {
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
-        Position *p = ecs_column(&it, Position, 1);
-        Velocity *v = ecs_column(&it, Velocity, 2);
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
@@ -840,8 +840,8 @@ void Queries_query_optional_shared_nested() {
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
-        Position *p = ecs_column(&it, Position, 1);
-        Velocity *v = ecs_column(&it, Velocity, 2);
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
@@ -885,8 +885,8 @@ void Queries_query_optional_any() {
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
-        Position *p = ecs_column(&it, Position, 1);
-        Velocity *v = ecs_column(&it, Velocity, 2);
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
@@ -932,8 +932,8 @@ void Queries_query_rematch_optional_after_add() {
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
-        Position *p = ecs_column(&it, Position, 1);
-        Velocity *v = ecs_column(&it, Velocity, 2);
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
@@ -963,8 +963,8 @@ void Queries_query_rematch_optional_after_add() {
     count = 0;
     
     while (ecs_query_next(&it)) {
-        Position *p = ecs_column(&it, Position, 1);
-        Velocity *v = ecs_column(&it, Velocity, 2);
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
@@ -996,7 +996,7 @@ void Queries_get_owned_tag() {
     int count = 0;
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        test_assert(ecs_column_w_size(&it, 0, 1) == NULL);
+        test_assert(ecs_term_w_size(&it, 0, 1) == NULL);
         test_int(it.count, 1);
         test_int(it.entities[0], e);
         count += it.count;
@@ -1020,7 +1020,7 @@ void Queries_get_shared_tag() {
     int count = 0;
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        test_assert(ecs_column_w_size(&it, 0, 1) == NULL);
+        test_assert(ecs_term_w_size(&it, 0, 1) == NULL);
         test_int(it.count, 1);
         test_int(it.entities[0], instance);
         count += it.count;
@@ -1057,7 +1057,7 @@ void Queries_get_column_size() {
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it));
-    test_int(ecs_column_size(&it, 1), sizeof(Position));
+    test_int(ecs_term_size(&it, 1), sizeof(Position));
 
     ecs_fini(world);    
 }

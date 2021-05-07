@@ -189,15 +189,15 @@ void DeferredActions_defer_bulk_new_w_data_pair() {
     test_assert(ecs_has_entity(world, ids[2], pair_id));
 
     const Position *
-    p = ecs_get_w_entity(world, ids[0], pair_id);
+    p = ecs_get_id(world, ids[0], pair_id);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_w_entity(world, ids[1], pair_id);
+    p = ecs_get_id(world, ids[1], pair_id);
     test_int(p->x, 30);
     test_int(p->y, 40);
 
-    p = ecs_get_w_entity(world, ids[2], pair_id);
+    p = ecs_get_id(world, ids[2], pair_id);
     test_int(p->x, 50);
     test_int(p->y, 60);
 

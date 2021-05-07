@@ -70,7 +70,6 @@ inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");
     pod_component<Type>("flecs::core::Type");
     pod_component<Name>("flecs::core::Name");
-    component<flecs::_::SystemCppContext>();
 }
 
 template <typename T>
@@ -178,14 +177,23 @@ inline flecs::type world::type(Args &&... args) const {
     return flecs::type(*this, std::forward<Args>(args)...);
 }
 
+inline flecs::system<> world::system(flecs::entity id) const {
+    return flecs::system<>(m_world, id);
+}
+
 template <typename... Comps, typename... Args>
-inline flecs::system<Comps...> world::system(Args &&... args) const {
-    return flecs::system<Comps...>(*this, std::forward<Args>(args)...);
+inline flecs::system_builder<Comps...> world::system(Args &&... args) const {
+    return flecs::system_builder<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Comps, typename... Args>
 inline flecs::query<Comps...> world::query(Args &&... args) const {
     return flecs::query<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
+    return flecs::query_builder<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename Module, typename... Args>

@@ -25,12 +25,12 @@ void Iter(ecs_iter_t *it) {
     Mass *m = NULL;
 
     if (it->column_count >= 2) {
-        v = ecs_column(it, Velocity, 2);
+        v = ecs_term(it, Velocity, 2);
         test_assert(!ecs_is_owned(it, 2));
     }
 
     if (it->column_count >= 3) {
-        m = ecs_column(it, Mass, 3);
+        m = ecs_term(it, Mass, 3);
         test_assert(!m || !ecs_is_owned(it, 3));
     }
 
@@ -158,7 +158,7 @@ void Iter_reactive(ecs_iter_t *it) {
     Mass *m = NULL;
 
     if (it->column_count >= 2) {
-        v = ecs_column(it, Velocity, 2);
+        v = ecs_term(it, Velocity, 2);
         test_assert(!ecs_is_owned(it, 2));
     }
 

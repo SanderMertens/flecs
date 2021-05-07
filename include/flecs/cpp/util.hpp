@@ -28,6 +28,12 @@ namespace _
 struct placement_new_tag_t{};
 constexpr placement_new_tag_t placement_new_tag{};
 template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
+template<class Ty> inline void free_obj(Ty* _ptr) { 
+    if (_ptr) {
+        destruct_obj(_ptr); 
+        ecs_os_free(_ptr); 
+    }
+}
 
 } // namespace _
 
@@ -254,52 +260,79 @@ public:
     array_iterator<T> end() { return array_iterator<T>(nullptr, 0); }
 };
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utility to convert template argument pack to array of columns
-////////////////////////////////////////////////////////////////////////////////
-    // Utility to get actual type
-    template<typename Type>
-    struct base_type {
-        typedef typename std::remove_pointer<
-            typename std::decay<Type>::type>::type type;
-    };
+// Utility to get actual component type
+template<typename Type>
+struct base_type {
+    typedef typename std::remove_pointer<
+        typename std::decay<Type>::type>::type type;
+};
 
 namespace _ 
 {
 
+////////////////////////////////////////////////////////////////////////////////
+//// Utility to convert template argument pack to array of term ptrs
+////////////////////////////////////////////////////////////////////////////////
+
+struct TermPtr {
+    void *ptr;
+    bool is_ref;
+};
+
 template <typename ... Components>
-class column_args {
-public:    
-    struct Column {
-        void *ptr;
-        bool is_shared;
-    };
+class term_ptrs {
+public:
+    using Terms = flecs::array<_::TermPtr, sizeof...(Components)>;
 
-    using Columns = flecs::array<Column, sizeof...(Components)>;
-
-    column_args(ecs_iter_t* iter) {
-        populate_columns(iter, 0, static_cast<typename std::remove_reference<typename std::remove_pointer<Components>::type>::type*>(nullptr)...);
+    void populate(const ecs_iter_t *iter) {
+        populate(iter, 0, static_cast<typename std::remove_reference<
+            typename std::remove_pointer<Components>
+                ::type>::type*>(nullptr)...);
     }
 
-    Columns m_columns;
+    bool populate_w_refs(const ecs_iter_t *iter) {
+        if (iter->table->references) {
+            populate_w_refs(iter, 0, static_cast<typename std::remove_reference<
+                typename std::remove_pointer<Components>
+                    ::type>::type*>(nullptr)...);
+            return true;
+        } else {
+            this->populate(iter);
+            return false;
+        }
+    }
+
+    Terms m_terms;
 
 private:
-    /* Dummy function when last component has been added */
-    void populate_columns(ecs_iter_t *iter, size_t index) { 
+    /* Populate terms array without checking for references */
+    void populate(const ecs_iter_t *iter, size_t index) { 
         (void)iter;
         (void)index;
     }
 
-    /* Populate columns array recursively */
     template <typename T, typename... Targs>
-    void populate_columns(ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
-        int32_t column = static_cast<int32_t>(index + 1);
-        void *ptr = ecs_column_w_size(iter, sizeof(*comp), column);
-        m_columns[index].ptr = ptr;
-        m_columns[index].is_shared = !ecs_is_owned(iter, column) && ptr != nullptr;
-        populate_columns(iter, index + 1, comps ...);
+    void populate(const ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
+        int32_t term = static_cast<int32_t>(index + 1);
+        void *ptr = ecs_term_w_size(iter, sizeof(*comp), term);
+        m_terms[index].ptr = ptr;
+        populate(iter, index + 1, comps ...);
+    } 
+
+    /* Populate terms array, check for references */
+    void populate_w_refs(const ecs_iter_t *iter, size_t index) { 
+        (void)iter;
+        (void)index;
     }
+
+    template <typename T, typename... Targs>
+    void populate_w_refs(const ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
+        int32_t term = static_cast<int32_t>(index + 1);
+        void *ptr = ecs_term_w_size(iter, sizeof(*comp), term);
+        m_terms[index].ptr = ptr;
+        m_terms[index].is_ref = !ecs_term_is_owned(iter, term) && ptr != nullptr;
+        populate_w_refs(iter, index + 1, comps ...);
+    }   
 };
 
 

@@ -29,6 +29,7 @@
 #define TOK_SELF "self"
 #define TOK_SUPERSET "superset"
 #define TOK_SUBSET "subset"
+#define TOK_CASCADE_SET "cascade"
 #define TOK_ALL "all"
 
 #define TOK_ANY "ANY"
@@ -192,9 +193,9 @@ int parse_identifier(
     out->name = ecs_os_strdup(tptr);
 
     if (ch == TOK_AS_ENTITY) {
-        out->var_kind = EcsVarIsEntity;
+        out->var = EcsVarIsEntity;
     } else if (ecs_identifier_is_var(tptr)) {
-        out->var_kind = EcsVarIsVariable;
+        out->var = EcsVarIsVariable;
     }
 
     return 0;
@@ -295,6 +296,8 @@ uint8_t parse_set_token(
         return EcsSuperSet;
     } else if (!ecs_os_strcmp(token, TOK_SUBSET)) {
         return EcsSubSet;
+    } else if (!ecs_os_strcmp(token, TOK_CASCADE_SET)) {
+        return EcsCascade;
     } else if (!ecs_os_strcmp(token, TOK_ALL)) {
         return EcsAll;
     } else {
@@ -320,21 +323,21 @@ const char* parse_set_expr(
             return NULL;
         }
 
-        if (id->set & tok) {
+        if (id->set.mask & tok) {
             ecs_parser_error(name, expr, column, 
                 "duplicate set token '%s'", token);
             return NULL;            
         }
 
-        if ((tok == EcsSubSet && id->set & EcsSuperSet) ||
-            (tok == EcsSuperSet && id->set & EcsSubSet))
+        if ((tok == EcsSubSet && id->set.mask & EcsSuperSet) ||
+            (tok == EcsSuperSet && id->set.mask & EcsSubSet))
         {
             ecs_parser_error(name, expr, column, 
                 "cannot mix superset and subset", token);
             return NULL;            
         }    
 
-        id->set |= tok;
+        id->set.mask |= tok;
 
         if (ptr[0] == TOK_PAREN_OPEN) {
             ptr ++;
@@ -353,7 +356,7 @@ const char* parse_set_expr(
                     return NULL;
                 }
 
-                id->relation = rel;
+                id->set.relation = rel;
 
                 if (ptr[0] == TOK_AND) {
                     ptr = skip_space(ptr + 1);
@@ -371,8 +374,8 @@ const char* parse_set_expr(
                     return NULL;
                 }
 
-                id->max_depth = atoi(token);
-                if (id->max_depth < 0) {
+                id->set.max_depth = atoi(token);
+                if (id->set.max_depth < 0) {
                     ecs_parser_error(name, expr, column, 
                         "invalid negative depth");
                     return NULL;  
@@ -390,9 +393,9 @@ const char* parse_set_expr(
                     return NULL;
                 }
 
-                id->min_depth = id->max_depth;
-                id->max_depth = atoi(token);
-                if (id->max_depth < 0) {
+                id->set.min_depth = id->set.max_depth;
+                id->set.max_depth = atoi(token);
+                if (id->set.max_depth < 0) {
                     ecs_parser_error(name, expr, column, 
                         "invalid negative depth");
                     return NULL;  
@@ -428,13 +431,13 @@ const char* parse_set_expr(
         }
     } while (true);
 
-    if (id->set & EcsAll && !(id->set & EcsSuperSet) && !(id->set & EcsSubSet)){
+    if (id->set.mask & EcsCascade && !(id->set.mask & EcsSuperSet) && !(id->set.mask & EcsSubSet)){
         ecs_parser_error(name, expr, column, 
             "invalid 'all' token without superset or subset");
         return NULL;
     }
 
-    if (id->set & EcsSelf && id->min_depth != 0) {
+    if (id->set.mask & EcsSelf && id->set.min_depth != 0) {
         ecs_parser_error(name, expr, column, 
             "min_depth must be zero for set expression with 'self'");
         return NULL;        
@@ -473,6 +476,7 @@ const char* parse_arguments(
             /* If token is a self, superset or subset token, this is a set
              * expression */
             if (!ecs_os_strcmp(token, TOK_ALL) ||
+                !ecs_os_strcmp(token, TOK_CASCADE_SET) ||
                 !ecs_os_strcmp(token, TOK_SELF) || 
                 !ecs_os_strcmp(token, TOK_SUPERSET) || 
                 !ecs_os_strcmp(token, TOK_SUBSET))
@@ -614,7 +618,7 @@ const char* parse_term(
     }
 
 empty_source:
-    term.args[0].set = EcsNothing;
+    term.args[0].set.mask = EcsNothing;
     ptr = skip_space(ptr + 1);
     if (valid_token_start_char(ptr[0])) {
         ptr = parse_token(name, expr, (ptr - expr), ptr, token);
@@ -631,25 +635,25 @@ empty_source:
 
 parse_source:
     if (!ecs_os_strcmp(token, TOK_PARENT)) {
-        term.args[0].set = EcsSuperSet;
-        term.args[0].relation = EcsChildOf;
-        term.args[0].max_depth = 1;
+        term.args[0].set.mask = EcsSuperSet;
+        term.args[0].set.relation = EcsChildOf;
+        term.args[0].set.max_depth = 1;
     } else if (!ecs_os_strcmp(token, TOK_SYSTEM)) {
         term.args[0].name = ecs_os_strdup(name);
     } else if (!ecs_os_strcmp(token, TOK_ANY)) {
-        term.args[0].set = EcsSelf | EcsSuperSet;
+        term.args[0].set.mask = EcsSelf | EcsSuperSet;
+        term.args[0].set.relation = EcsIsA;
         term.args[0].entity = EcsThis;
-        term.args[0].relation = EcsIsA;
     } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
-        term.args[0].set = EcsSelf;
+        term.args[0].set.mask = EcsSelf;
         term.args[0].entity = EcsThis;
     } else if (!ecs_os_strcmp(token, TOK_SHARED)) {
-        term.args[0].set = EcsSuperSet;
+        term.args[0].set.mask = EcsSuperSet;
+        term.args[0].set.relation = EcsIsA;
         term.args[0].entity = EcsThis;
-        term.args[0].relation = EcsIsA;
     } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
-        term.args[0].set = EcsSuperSet | EcsAll;
-        term.args[0].relation = EcsChildOf;
+        term.args[0].set.mask = EcsSuperSet | EcsCascade;
+        term.args[0].set.relation = EcsChildOf;
         term.args[0].entity = EcsThis;
         term.oper = EcsOptional;
     } else {
@@ -732,7 +736,7 @@ parse_predicate:
     if (ptr[0] == TOK_PAREN_OPEN) {
         ptr ++;
         if (ptr[0] == TOK_PAREN_CLOSE) {
-            term.args[0].set = EcsNothing;
+            term.args[0].set.mask = EcsNothing;
             ptr ++;
             ptr = skip_space(ptr);
         } else {
@@ -920,7 +924,7 @@ char* ecs_parse_term(
         return (char*)&ptr[1];
     }
 
-    int32_t prev_set = subj->set;
+    int32_t prev_set = subj->set.mask;
 
     /* Parse next element */
     ptr = parse_term(world, name, ptr, term);
@@ -962,11 +966,11 @@ char* ecs_parse_term(
             return NULL;
         }
 
-        subj->set = EcsNothing;
+        subj->set.mask = EcsNothing;
     }
 
     /* Cannot combine EcsNothing with operators other than AND */
-    if (term->oper != EcsAnd && subj->set == EcsNothing) {
+    if (term->oper != EcsAnd && subj->set.mask == EcsNothing) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid operator for empty source"); 
         ecs_term_fini(term);    
@@ -976,7 +980,7 @@ char* ecs_parse_term(
     /* Verify consistency of OR expression */
     if (prev_or && term->oper == EcsOr) {
         /* Set expressions must be the same for all OR terms */
-        if (subj->set != prev_set) {
+        if (subj->set.mask != prev_set) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "cannot combine different sources in OR expression");
             ecs_term_fini(term);
@@ -988,7 +992,7 @@ char* ecs_parse_term(
 
     /* Automatically assign This if entity is not assigned and the set is
      * nothing */
-    if (subj->set != EcsNothing) {
+    if (subj->set.mask != EcsNothing) {
         if (!subj->name) {
             if (!subj->entity) {
                 subj->entity = EcsThis;
@@ -998,7 +1002,7 @@ char* ecs_parse_term(
 
     if (subj->name && !ecs_os_strcmp(subj->name, "0")) {
         subj->entity = 0;
-        subj->set = EcsNothing;
+        subj->set.mask = EcsNothing;
     }
 
     /* Process role */

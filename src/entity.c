@@ -210,7 +210,7 @@ void run_set_systems_for_entities(
     int32_t count,
     ecs_entity_t * entities,
     bool set_all)
-{   
+{
     if (set_all) {
         /* Run OnSet systems for all components of the entity. This usually
          * happens when an entity is created directly in its target table. */
@@ -2518,7 +2518,7 @@ ecs_entity_t ecs_clone(
     return dst;
 }
 
-const void* ecs_get_w_id(
+const void* ecs_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -2774,7 +2774,7 @@ ecs_entity_t assign_ptr_w_id(
     return entity;
 }
 
-ecs_entity_t ecs_set_ptr_w_id(
+ecs_entity_t ecs_set_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,

@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     /* Iterate it, progress entities in snapshot */
     while (ecs_snapshot_next(&it)) {
         /* Even though we have a it ptr, we can't use it as we normally would
-         * in a system with ecs_column. This is because a filter has no well
+         * in a system with ecs_term. This is because a filter has no well
          * defined indices for the components being matched with. To obtain the
          * component data when using a filter, we have to retrieve the component
          * arrays directly from the table. */

@@ -73,7 +73,7 @@ void Entity_new_nested_named_from_nested_scope() {
 void Entity_new_add() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
+    world.component<Position>();
 
     auto entity = world.entity()
         .add<Position>();
@@ -85,8 +85,8 @@ void Entity_new_add() {
 void Entity_new_add_2() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = world.entity()
         .add<Position>()
@@ -100,7 +100,7 @@ void Entity_new_add_2() {
 void Entity_new_set() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
+    world.component<Position>();
 
     auto entity = world.entity()
         .set<Position>({10, 20});
@@ -116,8 +116,8 @@ void Entity_new_set() {
 void Entity_new_set_2() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = world.entity()
         .set<Position>({10, 20})
@@ -139,7 +139,7 @@ void Entity_new_set_2() {
 void Entity_add() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
+    world.component<Position>();
 
     auto entity = world.entity();
     test_assert(entity.id() != 0);
@@ -151,7 +151,7 @@ void Entity_add() {
 void Entity_remove() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
+    world.component<Position>();
 
     auto entity = world.entity();
     test_assert(entity.id() != 0);
@@ -166,7 +166,7 @@ void Entity_remove() {
 void Entity_set() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
+    world.component<Position>();
 
     auto entity = world.entity();
     test_assert(entity.id() != 0);
@@ -182,8 +182,8 @@ void Entity_set() {
 void Entity_replace() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = world.entity();
     test_assert(entity.id() != 0);
@@ -207,8 +207,8 @@ void Entity_replace() {
 void Entity_add_2() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = world.entity();
     test_assert(entity.id() != 0);
@@ -262,8 +262,8 @@ void Entity_add_instanceof() {
 void Entity_remove_2() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = world.entity();
     test_assert(entity.id() != 0);
@@ -284,8 +284,8 @@ void Entity_remove_2() {
 void Entity_set_2() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = world.entity();
     test_assert(entity.id() != 0);
@@ -355,7 +355,7 @@ void Entity_remove_instanceof() {
 void Entity_get_generic() {
     flecs::world world;
 
-    auto position = flecs::component<Position>(world, "Position");
+    auto position = world.component<Position>();
 
     auto entity = world.entity()
         .set<Position>({10, 20});
@@ -374,7 +374,7 @@ void Entity_get_generic() {
 void Entity_get_mut_generic() {
     flecs::world world;
 
-    auto position = flecs::component<Position>(world, "Position");
+    auto position = world.component<Position>();
 
     auto entity = world.entity()
         .set<Position>({10, 20});
@@ -383,7 +383,7 @@ void Entity_get_mut_generic() {
     test_assert(entity.has<Position>());
 
     bool invoked;
-    flecs::system<Position>(world)
+    world.system<Position>()
         .kind(flecs::OnSet)
         .each([&invoked](flecs::entity e, Position& p) {
             invoked = true;
@@ -403,7 +403,7 @@ void Entity_get_mut_generic() {
 void Entity_get_generic_w_id() {
     flecs::world world;
 
-    auto position = flecs::component<Position>(world, "Position");
+    auto position = world.component<Position>();
 
     auto entity = world.entity()
         .set<Position>({10, 20});
@@ -422,7 +422,7 @@ void Entity_get_generic_w_id() {
 void Entity_get_mut_generic_w_id() {
     flecs::world world;
 
-    auto position = flecs::component<Position>(world, "Position");
+    auto position = world.component<Position>();
 
     auto entity = world.entity()
         .set<Position>({10, 20});
@@ -431,7 +431,7 @@ void Entity_get_mut_generic_w_id() {
     test_assert(entity.has<Position>());
 
     bool invoked;
-    flecs::system<Position>(world)
+    world.system<Position>()
         .kind(flecs::OnSet)
         .each([&invoked](flecs::entity e, Position& p) {
             invoked = true;

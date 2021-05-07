@@ -20,38 +20,25 @@ int main(int argc, char *argv[]) {
      * EcsDisbled tag, except that they have more features which are 
      * demonstrated in the nested_prefab example. */
     auto BasePrefab = ecs.prefab("BasePrefab")
-        .set<Position>({10, 20});
+        .set<Position>({10, 20})
+        .add_owned<Position>(); // Ensure that component is always overridden
 
     auto SubPrefab1 = ecs.prefab("SubPrefab1")
-        .add(flecs::IsA, BasePrefab)
-        .set<Velocity>({1, 2});
+        .is_a(BasePrefab)
+        .set<Velocity>({1, 2})
+        .add_owned<Velocity>();
 
     auto SubPrefab2 = ecs.prefab("SubPrefab2")
-        .add(flecs::IsA, BasePrefab)
-        .set<Velocity>({3, 4});
+        .is_a(BasePrefab)
+        .set<Velocity>({3, 4})
+        .add_owned<Velocity>();
 
-    std::cout << SubPrefab1.type().str() << std::endl;
-
-    /* Create two types for SubPrefab1 and SubPrefab2 which automatically
-     * override the component values. The Position component will be overridden
-     * from the BasePrefab, while Velocity will be overridden from SubPrefab1
-     * and SubPrefab2 respectively. */
-    auto Sub1 = ecs.type("Sub1")
-        .add(flecs::IsA, SubPrefab1)
-        .add<Position>()
-        .add<Velocity>();
-
-    auto Sub2 = ecs.type("Sub2")
-        .add(flecs::IsA, SubPrefab2)
-        .add<Position>()
-        .add<Velocity>();
-
-    /* Create new entities from Sub1 and Sub2 */
+    /* Create new entities from prefabs */
     auto e1 = ecs.entity()
-        .add(Sub1);
+        .is_a(SubPrefab1);
 
     auto e2 = ecs.entity()
-        .add(Sub2);        
+        .is_a(SubPrefab2);        
 
     /* Print values of e1 */
     const Position *p = e1.get<Position>();

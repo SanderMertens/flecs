@@ -7,11 +7,11 @@ void Iter(ecs_iter_t *it) {
     Mass *m = NULL;
 
     if (it->column_count >= 2) {
-        v = ecs_column(it, Velocity, 2);
+        v = ecs_term(it, Velocity, 2);
     }
 
     if (it->column_count >= 3) {
-        m = ecs_column(it, Mass, 3);
+        m = ecs_term(it, Mass, 3);
     }
 
     probe_system(it);
@@ -1966,9 +1966,9 @@ void SystemPeriodic_not_from_entity() {
 static
 void TestContext(ecs_iter_t *it) {
     void *world_ctx = ecs_get_context(it->world);
-    test_assert(world_ctx == it->param);
-    int32_t *param = it->param;
-    (*param) ++;
+    test_assert(world_ctx == it->ctx);
+    int32_t *ctx = it->ctx;
+    (*ctx) ++;
 }
 
 void SystemPeriodic_sys_context() {
@@ -1979,11 +1979,11 @@ void SystemPeriodic_sys_context() {
 
     ECS_SYSTEM(world, TestContext, EcsOnUpdate, Position);
 
-    ecs_set(world, TestContext, EcsContext, {&param});
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {TestContext}, .ctx = &param
+    });
 
-    const EcsContext *ctx = ecs_get(world, TestContext, EcsContext);
-    test_assert(ctx != NULL);
-    test_assert(ctx->ctx == &param);
+    test_assert(ecs_get_system_ctx(world, TestContext) == &param);
 
     ecs_fini(world);
 }
@@ -1999,7 +1999,10 @@ void SystemPeriodic_get_sys_context_from_param() {
 
     /* Set world context so system can compare if pointer is correct */
     ecs_set_context(world, &param);
-    ecs_set(world, TestContext, EcsContext, {&param});
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {TestContext}, .ctx = &param
+    });
 
     ecs_progress(world, 1);
 

@@ -225,7 +225,11 @@ void Pipeline_system_order_after_new_system_lower_id() {
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Create new system with Sys id */
-    ecs_new_system(world, Sys, "SysA", EcsOnUpdate, "Position", SysA);
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.entity = Sys, .name = "SysA", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysA
+    });
 
     ecs_progress(world, 1);
 
@@ -258,7 +262,11 @@ void Pipeline_system_order_after_new_system_inbetween_id() {
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Create new system with Sys id */
-    ecs_new_system(world, Sys, "SysB", EcsOnUpdate, "Position", SysB);
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.entity = Sys, .name = "SysB", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysB
+    });
 
     ecs_progress(world, 1);
 
@@ -291,7 +299,11 @@ void Pipeline_system_order_after_new_system_higher_id() {
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Create new system with Sys id */
-    ecs_new_system(world, Sys, "SysC", EcsOnUpdate, "Position", SysC);
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {.entity = Sys, .name = "SysC", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysC
+    });
 
     ecs_progress(world, 1);
 
@@ -604,9 +616,21 @@ void Pipeline_3_systems_3_types() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t s1 = ecs_new_system(world, 0, "SysA", EcsOnUpdate, "Position", SysA);
-    ecs_entity_t s2 = ecs_new_system(world, 0, NULL, EcsOnUpdate, "Position", SysB);
-    ecs_entity_t s3 = ecs_new_system(world, 0, "SysC", EcsOnUpdate, ":Position", SysC);
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysA", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysA
+    });
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = NULL, .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysB
+    });
+    ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysC", .add = {EcsOnUpdate} },
+        .query.filter.expr = ":Position",
+        .callback = SysC
+    });
 
     test_assert(s1 != 0);
     test_assert(s2 != 0);
@@ -627,7 +651,7 @@ void Pipeline_3_systems_3_types() {
 
 static
 void RandomWrite(ecs_iter_t *it) {
-    ecs_entity_t ecs_typeid(Position) = ecs_column_entity(it, 2);
+    ecs_entity_t ecs_typeid(Position) = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -678,7 +702,7 @@ void RandomReadAfterRW(ecs_iter_t *it) {
 
 static
 void RandomRead_Not(ecs_iter_t *it) {
-    ecs_entity_t ecs_typeid(Position) = ecs_column_entity(it, 2);
+    ecs_entity_t ecs_typeid(Position) = ecs_term_id(it, 2);
     ecs_type_t ecs_type(Position) = ecs_column_type(it, 2);
 
     int i;

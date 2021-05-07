@@ -26,30 +26,30 @@ flecs::entity ref<T>::entity() const {
     return flecs::entity(m_world, m_entity);
 }
 
-template <typename base>
-inline typename entity_builder<base>::base_type& entity_builder<base>::add(const type& type) const {
-    ecs_add_type(world(), id(), type.c_ptr());
-    return *base();
+template <typename Base>
+inline const Base& entity_builder<Base>::add(const type& type) const {
+    ecs_add_type(this->base_world(), this->base_id(), type.c_ptr());
+    return *this;
 }
 
-template <typename base>
-inline typename entity_builder<base>::base_type& entity_builder<base>::remove(const type& type) const {
-    ecs_remove_type(world(), id(), type.c_ptr());
-    return *base();
+template <typename Base>
+inline const Base& entity_builder<Base>::remove(const type& type) const {
+    ecs_remove_type(this->base_world(), this->base_id(), type.c_ptr());
+    return *this;
 }
 
-template <typename base>
-inline typename entity_builder<base>::base_type& entity_builder<base>::add_owned(const type& type) const {
+template <typename Base>
+inline const Base& entity_builder<Base>::add_owned(const type& type) const {
     return add_owned(type.id());
 }
 
-template <typename base>
-inline typename entity_builder<base>::base_type& entity_builder<base>::add_switch(const type& sw) const {
+template <typename Base>
+inline const Base& entity_builder<Base>::add_switch(const type& sw) const {
     return add_switch(sw.id());
 }
 
-template <typename base>
-inline typename entity_builder<base>::base_type& entity_builder<base>::remove_switch(const type& sw) const {
+template <typename Base>
+inline const Base& entity_builder<Base>::remove_switch(const type& sw) const {
     return remove_switch(sw.id());
 }
 
@@ -104,11 +104,11 @@ inline flecs::entity id::remove_generation() const {
 }
 
 inline entity id::lo() const {
-    return entity(world(), ecs_entity_t_lo(m_id));
+    return entity(m_world, ecs_entity_t_lo(m_id));
 }
 
 inline entity id::hi() const {
-    return entity(world(), ecs_entity_t_hi(m_id));
+    return entity(m_world, ecs_entity_t_hi(m_id));
 }
 
 inline entity id::comb(entity_view lo, entity_view hi) {

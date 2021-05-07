@@ -14,7 +14,7 @@ void Iter(ecs_iter_t *it) {
 
     Velocity *v = NULL;
     if (it->column_count >= 3) {
-        v = ecs_column(it, Velocity, 3);
+        v = ecs_term(it, Velocity, 3);
     }
 
     probe_system(it);
@@ -689,7 +689,7 @@ void Prefab_get_ptr_prefab() {
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, Prefab);
     test_assert(e1 != 0);
     test_assert( ecs_has_pair(world, e1, EcsIsA, Prefab));
-    test_assert( ecs_get_w_entity(world, e1, Prefab) == NULL);
+    test_assert( ecs_get_id(world, e1, Prefab) == NULL);
 
     ecs_fini(world);
 }
@@ -750,7 +750,7 @@ static
 void Prefab_w_shared(ecs_iter_t *it) {
     Velocity *v = NULL;
     if (it->column_count >= 2) {
-        v = ecs_column(it, Velocity, 2);
+        v = ecs_term(it, Velocity, 2);
         if (v) {
             test_assert(!ecs_is_owned(it, 2));
         }
@@ -758,7 +758,7 @@ void Prefab_w_shared(ecs_iter_t *it) {
     
     Mass *m = NULL;
     if (it->column_count >= 3) {
-        m = ecs_column(it, Mass, 3);
+        m = ecs_term(it, Mass, 3);
     }
 
     probe_system(it);
@@ -2911,7 +2911,7 @@ void Prefab_rematch_after_add_instanceof_to_parent() {
     test_int(it.count, 1);
     test_int(it.entities[0], child);
 
-    Position *p = ecs_column(&it, Position, 1);
+    Position *p = ecs_term(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -2951,7 +2951,7 @@ void Prefab_rematch_after_prefab_delete() {
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    Position *p = ecs_column(&it, Position, 1);
+    Position *p = ecs_term(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -3256,12 +3256,12 @@ void Prefab_rematch_after_add_to_recycled_base() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
 
-    const Position *p = ecs_column(&it, Position, 2);
+    const Position *p = ecs_term(&it, Position, 2);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    test_assert(ecs_column_source(&it, 2) == base);
+    test_assert(ecs_term_source(&it, 2) == base);
 
     ecs_fini(world);
 }

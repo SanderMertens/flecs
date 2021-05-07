@@ -209,6 +209,62 @@ void Query_sort_by(void);
 void Query_changed(void);
 void Query_orphaned(void);
 
+// Testsuite 'QueryBuilder'
+void QueryBuilder_builder_assign_same_type(void);
+void QueryBuilder_builder_assign_from_empty(void);
+void QueryBuilder_builder_assign_to_empty(void);
+void QueryBuilder_builder_build(void);
+void QueryBuilder_builder_build_to_auto(void);
+void QueryBuilder_builder_build_n_statements(void);
+void QueryBuilder_1_type(void);
+void QueryBuilder_add_1_type(void);
+void QueryBuilder_add_2_types(void);
+void QueryBuilder_add_1_type_w_1_type(void);
+void QueryBuilder_add_2_types_w_1_type(void);
+void QueryBuilder_add_pair(void);
+void QueryBuilder_add_not(void);
+void QueryBuilder_add_or(void);
+void QueryBuilder_add_optional(void);
+void QueryBuilder_ptr_type(void);
+void QueryBuilder_const_type(void);
+void QueryBuilder_string_term(void);
+void QueryBuilder_singleton_term(void);
+void QueryBuilder_isa_superset_term(void);
+void QueryBuilder_isa_self_superset_term(void);
+void QueryBuilder_childof_superset_term(void);
+void QueryBuilder_childof_self_superset_term(void);
+void QueryBuilder_isa_superset_term_w_each(void);
+void QueryBuilder_isa_self_superset_term_w_each(void);
+void QueryBuilder_childof_superset_term_w_each(void);
+void QueryBuilder_childof_self_superset_term_w_each(void);
+void QueryBuilder_isa_superset_shortcut(void);
+void QueryBuilder_isa_superset_shortcut_w_self(void);
+void QueryBuilder_childof_superset_shortcut(void);
+void QueryBuilder_childof_superset_shortcut_w_self(void);
+void QueryBuilder_isa_supetset_max_depth_1(void);
+void QueryBuilder_isa_supetset_max_depth_2(void);
+void QueryBuilder_isa_supetset_min_depth_2(void);
+void QueryBuilder_isa_supetset_min_depth_2_max_depth_3(void);
+
+// Testsuite 'SystemBuilder'
+void SystemBuilder_builder_assign_same_type(void);
+void SystemBuilder_builder_assign_from_empty(void);
+void SystemBuilder_builder_build_to_auto(void);
+void SystemBuilder_builder_build_n_statements(void);
+void SystemBuilder_1_type(void);
+void SystemBuilder_add_1_type(void);
+void SystemBuilder_add_2_types(void);
+void SystemBuilder_add_1_type_w_1_type(void);
+void SystemBuilder_add_2_types_w_1_type(void);
+void SystemBuilder_add_pair(void);
+void SystemBuilder_add_not(void);
+void SystemBuilder_add_or(void);
+void SystemBuilder_add_optional(void);
+void SystemBuilder_ptr_type(void);
+void SystemBuilder_const_type(void);
+void SystemBuilder_string_term(void);
+void SystemBuilder_singleton_term(void);
+
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_dtor_on_remove(void);
@@ -1086,6 +1142,220 @@ bake_test_case Query_testcases[] = {
     }
 };
 
+bake_test_case QueryBuilder_testcases[] = {
+    {
+        "builder_assign_same_type",
+        QueryBuilder_builder_assign_same_type
+    },
+    {
+        "builder_assign_from_empty",
+        QueryBuilder_builder_assign_from_empty
+    },
+    {
+        "builder_assign_to_empty",
+        QueryBuilder_builder_assign_to_empty
+    },
+    {
+        "builder_build",
+        QueryBuilder_builder_build
+    },
+    {
+        "builder_build_to_auto",
+        QueryBuilder_builder_build_to_auto
+    },
+    {
+        "builder_build_n_statements",
+        QueryBuilder_builder_build_n_statements
+    },
+    {
+        "1_type",
+        QueryBuilder_1_type
+    },
+    {
+        "add_1_type",
+        QueryBuilder_add_1_type
+    },
+    {
+        "add_2_types",
+        QueryBuilder_add_2_types
+    },
+    {
+        "add_1_type_w_1_type",
+        QueryBuilder_add_1_type_w_1_type
+    },
+    {
+        "add_2_types_w_1_type",
+        QueryBuilder_add_2_types_w_1_type
+    },
+    {
+        "add_pair",
+        QueryBuilder_add_pair
+    },
+    {
+        "add_not",
+        QueryBuilder_add_not
+    },
+    {
+        "add_or",
+        QueryBuilder_add_or
+    },
+    {
+        "add_optional",
+        QueryBuilder_add_optional
+    },
+    {
+        "ptr_type",
+        QueryBuilder_ptr_type
+    },
+    {
+        "const_type",
+        QueryBuilder_const_type
+    },
+    {
+        "string_term",
+        QueryBuilder_string_term
+    },
+    {
+        "singleton_term",
+        QueryBuilder_singleton_term
+    },
+    {
+        "isa_superset_term",
+        QueryBuilder_isa_superset_term
+    },
+    {
+        "isa_self_superset_term",
+        QueryBuilder_isa_self_superset_term
+    },
+    {
+        "childof_superset_term",
+        QueryBuilder_childof_superset_term
+    },
+    {
+        "childof_self_superset_term",
+        QueryBuilder_childof_self_superset_term
+    },
+    {
+        "isa_superset_term_w_each",
+        QueryBuilder_isa_superset_term_w_each
+    },
+    {
+        "isa_self_superset_term_w_each",
+        QueryBuilder_isa_self_superset_term_w_each
+    },
+    {
+        "childof_superset_term_w_each",
+        QueryBuilder_childof_superset_term_w_each
+    },
+    {
+        "childof_self_superset_term_w_each",
+        QueryBuilder_childof_self_superset_term_w_each
+    },
+    {
+        "isa_superset_shortcut",
+        QueryBuilder_isa_superset_shortcut
+    },
+    {
+        "isa_superset_shortcut_w_self",
+        QueryBuilder_isa_superset_shortcut_w_self
+    },
+    {
+        "childof_superset_shortcut",
+        QueryBuilder_childof_superset_shortcut
+    },
+    {
+        "childof_superset_shortcut_w_self",
+        QueryBuilder_childof_superset_shortcut_w_self
+    },
+    {
+        "isa_supetset_max_depth_1",
+        QueryBuilder_isa_supetset_max_depth_1
+    },
+    {
+        "isa_supetset_max_depth_2",
+        QueryBuilder_isa_supetset_max_depth_2
+    },
+    {
+        "isa_supetset_min_depth_2",
+        QueryBuilder_isa_supetset_min_depth_2
+    },
+    {
+        "isa_supetset_min_depth_2_max_depth_3",
+        QueryBuilder_isa_supetset_min_depth_2_max_depth_3
+    }
+};
+
+bake_test_case SystemBuilder_testcases[] = {
+    {
+        "builder_assign_same_type",
+        SystemBuilder_builder_assign_same_type
+    },
+    {
+        "builder_assign_from_empty",
+        SystemBuilder_builder_assign_from_empty
+    },
+    {
+        "builder_build_to_auto",
+        SystemBuilder_builder_build_to_auto
+    },
+    {
+        "builder_build_n_statements",
+        SystemBuilder_builder_build_n_statements
+    },
+    {
+        "1_type",
+        SystemBuilder_1_type
+    },
+    {
+        "add_1_type",
+        SystemBuilder_add_1_type
+    },
+    {
+        "add_2_types",
+        SystemBuilder_add_2_types
+    },
+    {
+        "add_1_type_w_1_type",
+        SystemBuilder_add_1_type_w_1_type
+    },
+    {
+        "add_2_types_w_1_type",
+        SystemBuilder_add_2_types_w_1_type
+    },
+    {
+        "add_pair",
+        SystemBuilder_add_pair
+    },
+    {
+        "add_not",
+        SystemBuilder_add_not
+    },
+    {
+        "add_or",
+        SystemBuilder_add_or
+    },
+    {
+        "add_optional",
+        SystemBuilder_add_optional
+    },
+    {
+        "ptr_type",
+        SystemBuilder_ptr_type
+    },
+    {
+        "const_type",
+        SystemBuilder_const_type
+    },
+    {
+        "string_term",
+        SystemBuilder_string_term
+    },
+    {
+        "singleton_term",
+        SystemBuilder_singleton_term
+    }
+};
+
 bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_on_add",
@@ -1556,6 +1826,20 @@ static bake_test_suite suites[] = {
         Query_testcases
     },
     {
+        "QueryBuilder",
+        NULL,
+        NULL,
+        35,
+        QueryBuilder_testcases
+    },
+    {
+        "SystemBuilder",
+        NULL,
+        NULL,
+        17,
+        SystemBuilder_testcases
+    },
+    {
         "ComponentLifecycle",
         NULL,
         NULL,
@@ -1615,5 +1899,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 16);
+    return bake_test_run("cpp_api", argc, argv, suites, 18);
 }

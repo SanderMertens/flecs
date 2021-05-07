@@ -17,11 +17,11 @@ void Iter(ecs_iter_t *it) {
     Velocity *v = NULL;
 
     if (it->column_count >= 2) {
-        p = ecs_column(it, Position, 2);
+        p = ecs_term(it, Position, 2);
     }
 
     if (it->column_count >= 3) {
-        v = ecs_column(it, Velocity, 3);
+        v = ecs_term(it, Velocity, 3);
     }
 
     probe_system(it);
@@ -184,15 +184,15 @@ void Iter_2_shared(ecs_iter_t *it) {
     Velocity *v = NULL;
 
     if (it->column_count >= 2) {
-        r_ptr = ecs_column(it, Rotation, 2);
+        r_ptr = ecs_term(it, Rotation, 2);
     }
 
     if (it->column_count >= 3) {
-        p = ecs_column(it, Position, 3);
+        p = ecs_term(it, Position, 3);
     }
 
     if (it->column_count >= 4) {
-        v = ecs_column(it, Velocity, 4);
+        v = ecs_term(it, Velocity, 4);
     }    
 
     probe_system(it);
@@ -1017,8 +1017,8 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
 
 static
 void AddMass(ecs_iter_t *it) {
-    test_assert(it->param != NULL);
-    ecs_entity_t ecs_typeid(Mass) = *(ecs_entity_t*)it->param;
+    test_assert(it->ctx != NULL);
+    ecs_entity_t ecs_typeid(Mass) = *(ecs_entity_t*)it->ctx;
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1041,7 +1041,9 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
     ECS_TRIGGER(world, AddMass, EcsOnAdd, Tag);
 
-    ecs_set(world, AddMass, EcsContext, {&ecs_typeid(Mass)});
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity = {AddMass}, .ctx = &ecs_typeid(Mass)
+    });
 
     ecs_entity_t parent = ecs_new(world, 0);
     ecs_add_pair(world, e1, EcsChildOf, parent);
@@ -1178,7 +1180,7 @@ void System_w_FromContainer_new_child_after_match() {
 
 void IterSame(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p_parent, 1);
-    Position *p = ecs_column(it, Position, 2);
+    Position *p = ecs_term(it, Position, 2);
 
     test_assert(!ecs_is_owned(it, 1));
 

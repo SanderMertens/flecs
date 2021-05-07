@@ -15,7 +15,7 @@ void My2ndTask(ecs_iter_t *it) {
 }
 
 void My3rdTask(ecs_iter_t *it) {
-    ECS_COLUMN(it, TaskContext, ctx, 1);
+    TaskContext *ctx = ecs_term(it, TaskContext, 1);
 
     printf("Task with context: %d\n", ctx->value);
 }
@@ -24,7 +24,6 @@ int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     // Tasks are systems that are not matched with any entities.
-
     ECS_COMPONENT(world, TaskContext);
 
     // Basic task

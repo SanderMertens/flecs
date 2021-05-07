@@ -1,4 +1,19 @@
 
+namespace flecs {
+
+template<typename T, typename Base>
+class entity_builder_base {
+public:
+    const Base& base() const { return *static_cast<const Base*>(this); }
+    flecs::world_t* base_world() const { return base().world(); }
+    flecs::entity_t base_id() const { return base().id(); }
+    operator const Base&() const {
+        return this->base();
+    }    
+};
+
+}
+
 #ifdef FLECS_DEPRECATED
 #include "../addons/deprecated/entity.hpp"
 #else
@@ -17,9 +32,9 @@ namespace flecs
  * A flecs id is an identifier that can store an entity id, an relation-object 
  * pair, or role annotated id (such as SWITCH | Movement).
  */
-class id {
+class id : public world_base<id> {
 public:
-    id() 
+    explicit id() 
         : m_world(nullptr)
         , m_id(0) { }
 
@@ -104,11 +119,6 @@ public:
      */
     flecs::entity object() const;
 
-    /** Get world. */
-    flecs::world_t* world() const {
-        return m_world;
-    }
-
     /** Convert id to string. */
     flecs::string role_str() const {
         return flecs::string_view( ecs_role_str(m_id & ECS_ROLE_MASK));
@@ -124,11 +134,14 @@ public:
     static 
     flecs::entity comb(entity_view lo, entity_view hi);
 
-    flecs::id_t raw_id() {
+    flecs::id_t raw_id() const {
         return m_id;
     }
 
-protected:
+    operator flecs::id_t() const {
+        return m_id;
+    }
+
     /* World is optional, but guarantees that entity identifiers extracted from
      * the id are valid */
     flecs::world_t *m_world;
@@ -170,15 +183,6 @@ public:
     /** Equality operator. */
     bool operator==(const entity_view& e) {
         return this->id() == e.id();
-    }  
-
-    /** Inequality operator. */
-    bool operator!=(const entity_view& e) {
-        return this->id() != e.id();
-    }            
-
-    explicit operator bool() {
-        return m_id != 0;
     }
 
     /** Entity id 0.
@@ -226,7 +230,7 @@ public:
      */
     flecs::string_view name() const {
         const EcsName *name = static_cast<const EcsName*>(
-            ecs_get_w_entity(m_world, m_id, static_cast<ecs_entity_t>(ecs_id(EcsName))));
+            ecs_get_id(m_world, m_id, static_cast<ecs_entity_t>(ecs_id(EcsName))));
         return flecs::string_view(name ? name->value : nullptr);
     }
 
@@ -242,14 +246,6 @@ public:
 
     bool enabled() {
         return !ecs_has_entity(m_world, m_id, flecs::Disabled);
-    }
-
-    /** Return the world.
-     *
-     * @return The world the entity is stored in.
-     */
-    flecs::world world() const {
-        return flecs::world(m_world);
     }
 
     /** Return the type.
@@ -292,7 +288,7 @@ public:
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const T*>(
-            ecs_get_w_entity(m_world, m_id, comp_id));
+            ecs_get_id(m_world, m_id, comp_id));
     }
 
     /** Get component value (untyped).
@@ -302,7 +298,7 @@ public:
      *         have the component.
      */
     const void* get(const flecs::entity_view& component) const {
-        return ecs_get_w_entity(m_world, m_id, component.id());
+        return ecs_get_id(m_world, m_id, component.id());
     }
 
     /** Get a pair.
@@ -327,7 +323,7 @@ public:
         auto comp_id = _::cpp_type<Relation>::id(m_world);
         ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const Relation*>(
-            ecs_get_w_entity(m_world, m_id, ecs_pair(comp_id, object.id())));
+            ecs_get_id(m_world, m_id, ecs_pair(comp_id, object.id())));
     }
 
     /** Get a pair (untyped).
@@ -339,7 +335,7 @@ public:
      * @param object the object.
      */
     const void* get(const flecs::entity_view& relation, const flecs::entity_view& object) const {
-        return ecs_get_w_entity(m_world, m_id, ecs_pair(relation.id(), object.id()));
+        return ecs_get_id(m_world, m_id, ecs_pair(relation.id(), object.id()));
     }
 
     /** Get the object part from a pair.
@@ -354,7 +350,7 @@ public:
         auto comp_id = _::cpp_type<Object>::id(m_world);
         ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const Object*>(
-            ecs_get_w_entity(m_world, m_id, ecs_pair(relation.id(), comp_id)));
+            ecs_get_id(m_world, m_id, ecs_pair(relation.id(), comp_id)));
     }
 
     /** Get parent from an entity.
@@ -628,9 +624,10 @@ private:
  *   .add<Position>()
  *   .add<Velocity>();
  */
+struct entity_builder_tag { }; // Tag to prevent ambiguous base
+
 template <typename Base>
-class entity_builder {
-    using base_type = const Base;
+class entity_builder : public entity_builder_base<entity_builder_tag, Base> {
 public:
     /** Add a component to an entity.
      * To ensure the component is initialized, it should have a constructor.
@@ -638,9 +635,9 @@ public:
      * @tparam T the component type to add.
      */
     template <typename T>
-    base_type& add() const {
-        ecs_add_entity(world(), id(), _::cpp_type<T>::id(world()));
-        return *base();
+    const Base& add() const {
+        ecs_add_entity(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
+        return *this;
     }
 
     /** Add an entity to an entity.
@@ -648,9 +645,9 @@ public:
      *
      * @param entity The entity to add.
      */
-    base_type& add(const entity_view& entity) const {
-        ecs_add_entity(world(), id(), entity.id());
-        return *base();
+    const Base& add(const entity_view& entity) const {
+        ecs_add_entity(this->base_world(), this->base_id(), entity.id());
+        return *this;
     }
 
     /** Add a type to an entity.
@@ -660,7 +657,7 @@ public:
      * 
      * @param type The type to add.
      */
-    base_type& add(const type& type) const;
+    const Base& add(const type& type) const;
 
     /** Add a pair.
      * This operation adds a pair to the entity.
@@ -668,9 +665,9 @@ public:
      * @param relation The relation id.
      * @param object The object id.
      */
-    base_type& add(const entity_view& relation, const entity_view& object) const {
-        ecs_add_pair(world(), id(), relation.id(), object.id());
-        return *base();
+    const Base& add(const entity_view& relation, const entity_view& object) const {
+        ecs_add_pair(this->base_world(), this->base_id(), relation.id(), object.id());
+        return *this;
     }
 
     /** Add a pair.
@@ -680,8 +677,8 @@ public:
      * @tparam Object the object type.
      */
     template<typename Relation, typename Object>
-    base_type& add() const {
-        return this->add<Relation>(_::cpp_type<Object>::id(world()));
+    const Base& add() const {
+        return this->add<Relation>(_::cpp_type<Object>::id(this->base_world()));
     }
 
     /** Add a pair.
@@ -691,9 +688,17 @@ public:
      * @param object the object type.
      */
     template<typename Relation>
-    base_type& add(const entity_view& object) const {
-        return this->add(_::cpp_type<Relation>::id(world()), object.id());
-    }    
+    const Base& add(const entity_view& object) const {
+        return this->add(_::cpp_type<Relation>::id(this->base_world()), object.id());
+    }
+
+    /** Shortcut for add(IsA. obj).
+     *
+     * @param object the object id.
+     */
+    const Base& is_a(const entity_view& object) const {
+        return this->add(flecs::IsA, object);
+    }
 
     /** Add a pair with object type.
      * This operation adds a pair to the entity. The relation part of the pair
@@ -703,8 +708,8 @@ public:
      * @tparam Object the object type.
      */
     template<typename Object>
-    base_type& add_object(const entity_view& relation) const {
-        return this->add(relation.id(),  _::cpp_type<Object>::id(world()));
+    const Base& add_object(const entity_view& relation) const {
+        return this->add(relation.id(),  _::cpp_type<Object>::id(this->base_world()));
     }
 
     /** Remove a component from an entity.
@@ -712,18 +717,18 @@ public:
      * @tparam T the type of the component to remove.
      */
     template <typename T>
-    base_type& remove() const {
-        ecs_remove_entity(world(), id(), _::cpp_type<T>::id(world()));
-        return *base();
+    const Base& remove() const {
+        ecs_remove_entity(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
+        return *this;
     }
 
     /** Remove an entity from an entity.
      *
      * @param entity The entity to remove.
      */
-    base_type& remove(const entity_view& entity) const {
-        ecs_remove_entity(world(), id(), entity.id());
-        return *base();
+    const Base& remove(const entity_view& entity) const {
+        ecs_remove_entity(this->base_world(), this->base_id(), entity.id());
+        return *this;
     }
 
     /** Remove a type from an entity.
@@ -733,7 +738,7 @@ public:
      *
      * @param type the type to remove.
      */
-    base_type& remove(const type& type) const;
+    const Base& remove(const type& type) const;
 
     /** Remove a pair.
      * This operation removes a pair from the entity.
@@ -741,9 +746,9 @@ public:
      * @param relation The relation id.
      * @param object The object id.
      */
-    base_type& remove(const entity_view& relation, const entity_view& object) const {
-        ecs_remove_pair(world(), id(), relation.id(), object.id());
-        return *base();
+    const Base& remove(const entity_view& relation, const entity_view& object) const {
+        ecs_remove_pair(this->base_world(), this->base_id(), relation.id(), object.id());
+        return *this;
     }
 
     /** Removes a pair.
@@ -753,8 +758,8 @@ public:
      * @tparam Object the object type.
      */
     template<typename Relation, typename Object>
-    base_type& remove() const {
-        return this->remove<Relation>(_::cpp_type<Object>::id(world()));
+    const Base& remove() const {
+        return this->remove<Relation>(_::cpp_type<Object>::id(this->base_world()));
     }
 
     /** Remove a pair.
@@ -764,8 +769,8 @@ public:
      * @param object the object type.
      */
     template<typename Relation>
-    base_type& remove(const entity_view& object) const {
-        return this->remove(_::cpp_type<Relation>::id(world()), object.id());
+    const Base& remove(const entity_view& object) const {
+        return this->remove(_::cpp_type<Relation>::id(this->base_world()), object.id());
     }  
 
     /** Removes a pair with object type.
@@ -775,17 +780,17 @@ public:
      * @tparam Object the object type.
      */
     template<typename Object>
-    base_type& remove_object(const entity_view& relation) const {
-        return this->remove(relation.id(), _::cpp_type<Object>::id(world()));
+    const Base& remove_object(const entity_view& relation) const {
+        return this->remove(relation.id(), _::cpp_type<Object>::id(this->base_world()));
     }    
 
     /** Add owned flag for component (forces ownership when instantiating)
      *
      * @param entity The entity for which to add the OWNED flag
      */    
-    base_type& add_owned(const entity_view& entity) const {
-        ecs_add_entity(world(), id(), ECS_OWNED | entity.id());
-        return *base();  
+    const Base& add_owned(const entity_view& entity) const {
+        ecs_add_entity(this->base_world(), this->base_id(), ECS_OWNED | entity.id());
+        return *this;  
     }
 
     /** Add owned flag for component (forces ownership when instantiating)
@@ -793,23 +798,23 @@ public:
      * @tparam T The component for which to add the OWNED flag
      */    
     template <typename T>
-    base_type& add_owned() const {
-        ecs_add_entity(world(), id(), ECS_OWNED | _::cpp_type<T>::id(world()));
-        return *base();  
+    const Base& add_owned() const {
+        ecs_add_entity(this->base_world(), this->base_id(), ECS_OWNED | _::cpp_type<T>::id(this->base_world()));
+        return *this;  
     }
 
     ECS_DEPRECATED("use add_owned(flecs::entity e)")
-    base_type& add_owned(const type& type) const;
+    const Base& add_owned(const type& type) const;
 
     /** Set value, add owned flag.
      *
      * @tparam T The component to set and for which to add the OWNED flag
      */    
     template <typename T>
-    base_type& set_owned(T&& val) const {
+    const Base& set_owned(T&& val) const {
         this->add_owned<T>();
         this->set<T>(std::forward<T>(val));
-        return *base();  
+        return *this;  
     }    
 
     /** Add a switch to an entity by id.
@@ -818,9 +823,9 @@ public:
      *
      * @param sw The switch entity id to add.
      */    
-    base_type& add_switch(const entity_view& sw) const {
-        ecs_add_entity(world(), id(), ECS_SWITCH | sw.id());
-        return *base();  
+    const Base& add_switch(const entity_view& sw) const {
+        ecs_add_entity(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
+        return *this;  
     }
 
     /** Add a switch to an entity.
@@ -828,15 +833,15 @@ public:
      *
      * @param sw The switch to add.
      */     
-    base_type& add_switch(const type& sw) const;
+    const Base& add_switch(const type& sw) const;
 
     /** Remove a switch from an entity by id.
      *
      * @param sw The switch entity id to remove.
      */    
-    base_type& remove_switch(const entity_view& sw) const {
-        ecs_remove_entity(world(), id(), ECS_SWITCH | sw.id());
-        return *base();  
+    const Base& remove_switch(const entity_view& sw) const {
+        ecs_remove_entity(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
+        return *this;  
     }
     
     /** Remove a switch from an entity.
@@ -844,16 +849,16 @@ public:
      *
      * @param sw The switch to remove.
      */      
-    base_type& remove_switch(const type& sw) const;
+    const Base& remove_switch(const type& sw) const;
 
     /** Add a switch to an entity by id.
      * The case must belong to a switch that is already added to the entity.
      *
      * @param sw_case The case entity id to add.
      */    
-    base_type& add_case(const entity_view& sw_case) const {
-        ecs_add_entity(world(), id(), ECS_CASE | sw_case.id());
-        return *base();
+    const Base& add_case(const entity_view& sw_case) const {
+        ecs_add_entity(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
+        return *this;
     }
 
     /** Add a switch to an entity by id.
@@ -862,7 +867,7 @@ public:
      * @tparam T The case to add.
      */   
     template<typename T>
-    base_type& add_case() const {
+    const Base& add_case() const {
         return this->add_case(_::cpp_type<T>::id());
     }
 
@@ -871,9 +876,9 @@ public:
      *
      * @param sw_case The case entity id to remove.
      */    
-    base_type& remove_case(const entity_view& sw_case) const {
-        ecs_remove_entity(world(), id(), ECS_CASE | sw_case.id());
-        return *base();  
+    const Base& remove_case(const entity_view& sw_case) const {
+        ecs_remove_entity(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
+        return *this;  
     }
 
     /** Remove a switch from an entity by id.
@@ -882,7 +887,7 @@ public:
      * @tparam T The case to remove.
      */   
     template<typename T>
-    base_type& remove_case() const {
+    const Base& remove_case() const {
         return this->remove_case(_::cpp_type<T>::id());
     }
 
@@ -890,18 +895,18 @@ public:
      * Enabled entities are matched with systems and can be searched with
      * queries.
      */
-    base_type& enable() const {
-        ecs_enable(world(), id(), true);
-        return *base();
+    const Base& enable() const {
+        ecs_enable(this->base_world(), this->base_id(), true);
+        return *this;
     }
 
     /** Disable an entity.
      * Disabled entities are not matched with systems and cannot be searched 
      * with queries, unless explicitly specified in the query expression.
      */
-    base_type& disable() const {
-        ecs_enable(world(), id(), false);
-        return *base();
+    const Base& disable() const {
+        ecs_enable(this->base_world(), this->base_id(), false);
+        return *this;
     }
 
     /** Enable a component.
@@ -911,9 +916,9 @@ public:
      * @tparam T The component to enable.
      */   
     template<typename T>
-    base_type& enable() const {
-        ecs_enable_component_w_entity(world(), id(), _::cpp_type<T>::id(), true);
-        return *base();
+    const Base& enable() const {
+        ecs_enable_component_w_entity(this->base_world(), this->base_id(), _::cpp_type<T>::id(), true);
+        return *this;
     }  
 
     /** Disable a component.
@@ -923,9 +928,9 @@ public:
      * @tparam T The component to enable.
      */   
     template<typename T>
-    base_type& disable() const {
-        ecs_enable_component_w_entity(world(), id(), _::cpp_type<T>::id(), false);
-        return *base();
+    const Base& disable() const {
+        ecs_enable_component_w_entity(this->base_world(), this->base_id(), _::cpp_type<T>::id(), false);
+        return *this;
     }  
 
     /** Enable a component.
@@ -933,9 +938,9 @@ public:
      *
      * @param component The component to enable.
      */   
-    base_type& enable(const entity_view& component) const {
-        ecs_enable_component_w_entity(world(), id(), component.id(), true);
-        return *base();       
+    const Base& enable(const entity_view& component) const {
+        ecs_enable_component_w_entity(this->base_world(), this->base_id(), component.id(), true);
+        return *this;       
     }
 
     /** Disable a component.
@@ -943,9 +948,9 @@ public:
      *
      * @param component The component to disable.
      */   
-    base_type& disable(const entity_view& component) const {
-        ecs_enable_component_w_entity(world(), id(), component.id(), false);
-        return *base();       
+    const Base& disable(const entity_view& component) const {
+        ecs_enable_component_w_entity(this->base_world(), this->base_id(), component.id(), false);
+        return *this;       
     }
 
     /** Set a component for an entity.
@@ -956,20 +961,20 @@ public:
      * @param value The value to assign to the component.
      */
     template <typename T>
-    const base_type& set(const T& value) const {
-        auto comp_id = _::cpp_type<T>::id(world());
+    const Base& set(const T& value) const {
+        auto comp_id = _::cpp_type<T>::id(this->base_world());
 
         ecs_assert(_::cpp_type<T>::size() != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
         T& ptr = *static_cast<T*>(
-            ecs_get_mut_w_id(world(), id(), comp_id, NULL));
+            ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, NULL));
 
         ptr = std::move(value);
 
-        ecs_modified_w_id(world(), id(), comp_id);
+        ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
 
-        return *base();
+        return *this;
     }
 
     /** Set a component for an entity.
@@ -980,19 +985,19 @@ public:
      * @param value The value to assign to the component.
      */
     template <typename T>
-    const base_type& set(T&& value) const {
-        auto comp_id = _::cpp_type<T>::id(world());
+    const Base& set(T&& value) const {
+        auto comp_id = _::cpp_type<T>::id(this->base_world());
 
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
         T& ptr = *static_cast<T*>(
-            ecs_get_mut_w_id(world(), id(), comp_id, NULL));
+            ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, NULL));
 
         ptr = std::move(value);
 
-        ecs_modified_w_id(world(), id(), comp_id);
+        ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
 
-        return *base();
+        return *this;
     }
 
     /** Set a pair for an entity.
@@ -1004,17 +1009,17 @@ public:
      * @param value The value to set.
      */
     template <typename Relation, typename Object>
-    const base_type& set(const Relation& value) const {
-        auto comp_id = _::cpp_type<Relation>::id(world());
+    const Base& set(const Relation& value) const {
+        auto comp_id = _::cpp_type<Relation>::id(this->base_world());
 
         ecs_assert(_::cpp_type<Relation>::size() != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
-        ecs_set_ptr_w_entity(world(), id(),
-            ecs_pair(comp_id, _::cpp_type<Object>::id(world())),
+        ecs_set_ptr_w_entity(this->base_world(), this->base_id(),
+            ecs_pair(comp_id, _::cpp_type<Object>::id(this->base_world())),
             sizeof(Relation), &value);
 
-        return *base();
+        return *this;
     }
 
     /** Set a pair for an entity.
@@ -1026,17 +1031,17 @@ public:
      * @param value The value to set.
      */
     template <typename Relation>
-    const base_type& set(const entity_view& object, const Relation& value) const {
-        auto comp_id = _::cpp_type<Relation>::id(world());
+    const Base& set(const entity_view& object, const Relation& value) const {
+        auto comp_id = _::cpp_type<Relation>::id(this->base_world());
 
         ecs_assert(_::cpp_type<Relation>::size() != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
-        ecs_set_ptr_w_entity(world(), id(),
+        ecs_set_ptr_w_entity(this->base_world(), this->base_id(),
             ecs_pair(comp_id, object.id()),
             sizeof(Relation), &value);
 
-        return *base();
+        return *this;
     }    
 
     /** Set a pair for an entity.
@@ -1048,17 +1053,17 @@ public:
      * @param value The value to set.
      */
     template <typename Object>
-    const base_type& set_object(const entity_view& relation, const Object& value) const {
-        auto comp_id = _::cpp_type<Object>::id(world());
+    const Base& set_object(const entity_view& relation, const Object& value) const {
+        auto comp_id = _::cpp_type<Object>::id(this->base_world());
 
         ecs_assert(_::cpp_type<Object>::size() != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
-        ecs_set_ptr_w_entity(world(), id(),
+        ecs_set_ptr_w_entity(this->base_world(), this->base_id(),
             ecs_pair(relation.id(), comp_id),
             sizeof(Object), &value);
 
-        return *base();
+        return *this;
     }
 
     /** Patch a component value.
@@ -1070,27 +1075,22 @@ public:
      * @param func The function invoked by this operation.
      */
     template <typename T, typename Func>
-    const base_type& patch(const Func& func) const {
-        auto comp_id = _::cpp_type<T>::id(world());
+    const Base& patch(const Func& func) const {
+        auto comp_id = _::cpp_type<T>::id(this->base_world());
 
         ecs_assert(_::cpp_type<T>::size() != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
         bool is_added;
         T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-            world(), id(), comp_id, &is_added));
+            this->base_world(), this->base_id(), comp_id, &is_added));
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         func(*ptr);
-        ecs_modified_w_entity(world(), id(), comp_id);
+        ecs_modified_w_entity(this->base_world(), this->base_id(), comp_id);
 
-        return *base();
+        return *this;
     }
-
-private:
-    const Base* base() const { return static_cast<const Base*>(this); }
-    flecs::world_t* world() const { return base()->world().c_ptr(); }
-    flecs::entity_t id() const { return base()->id(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1151,7 +1151,7 @@ class entity :
     public entity_view,
     public entity_builder<entity>, 
     public entity_deprecated<entity>, 
-    public entity_builder_deprecated<entity> 
+    public entity_builder_deprecated<entity>
 {
 public:
     /** Default constructor.
@@ -1229,14 +1229,6 @@ public:
      */
     entity_t id() const {
         return m_id;
-    }
-
-    /** Return the world.
-     *
-     * @return The world the entity is stored in.
-     */
-    flecs::world world() const {
-        return flecs::world(m_world);
     }
 
     /** Get mutable component value.

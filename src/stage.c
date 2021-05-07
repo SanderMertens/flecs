@@ -367,7 +367,7 @@ bool ecs_defer_set(
         op->is._1.value = ecs_os_malloc(size);
 
         if (!value) {
-            value = ecs_get_w_id(world, entity, component);
+            value = ecs_get_id(world, entity, component);
             if (is_added) {
                 *is_added = value == NULL;
             }

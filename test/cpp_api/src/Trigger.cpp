@@ -5,13 +5,13 @@ void Trigger_on_add() {
 
     int invoked = 0;
 
-    flecs::system<Position>(world)
+    world.system<Position>()
         .kind(flecs::OnAdd)
         .each([&](flecs::entity e, Position& p) {
             invoked ++;
         });
 
-    flecs::entity(world)
+    world.entity()
         .add<Position>();
 
     test_int(invoked, 1);
@@ -22,13 +22,13 @@ void Trigger_on_remove() {
 
     int invoked = 0;
 
-    flecs::system<Position>(world)
+    world.system<Position>()
         .kind(flecs::OnRemove)
         .each([&](flecs::entity e, Position& p) {
             invoked ++;
         });
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add<Position>();
 
     test_int(invoked, 0);

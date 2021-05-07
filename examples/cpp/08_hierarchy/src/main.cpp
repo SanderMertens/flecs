@@ -61,9 +61,6 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world ecs(argc, argv);
 
-    /* Register WorldPosition, since our system refers to it by name */
-    ecs.component<WorldPosition>();
-
     /* Move entities with Position and Velocity */
     ecs.system<Position, const Velocity>().each(Move);
 
@@ -85,7 +82,10 @@ int main(int argc, char *argv[]) {
      * In this case we need to use 'action', since otherwise we cannot access
      * the WorldPosition component from the parent.
      */
-    ecs.system<WorldPosition, Position>(nullptr, "CASCADE:WorldPosition")
+    ecs.system<WorldPosition, Position>()
+        .term<WorldPosition>()
+            .superset(flecs::ChildOf, flecs::Cascade)
+            .oper(flecs::Optional)
         .iter(Transform);
 
     /* Create root of the hierachy which moves around */

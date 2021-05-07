@@ -234,7 +234,7 @@ static
 void AddPosition(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t velocity = *(ecs_entity_t*)it->param;
+    ecs_entity_t velocity = *(ecs_entity_t*)it->ctx;
 
     int i;
     for (i = it->count - 1; i >= 0; i --) {
@@ -248,7 +248,7 @@ static
 void SetPosition(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t rotation = *(ecs_entity_t*)it->param;
+    ecs_entity_t rotation = *(ecs_entity_t*)it->ctx;
 
     int i;
     for (i = it->count - 1; i >= 0; i --) {
@@ -449,15 +449,15 @@ void New_w_Count_new_w_data_pair() {
     test_assert(ecs_has_entity(world, ids[2], pair_id));
 
     const Position *
-    p = ecs_get_w_entity(world, ids[0], pair_id);
+    p = ecs_get_id(world, ids[0], pair_id);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_w_entity(world, ids[1], pair_id);
+    p = ecs_get_id(world, ids[1], pair_id);
     test_int(p->x, 30);
     test_int(p->y, 40);
 
-    p = ecs_get_w_entity(world, ids[2], pair_id);
+    p = ecs_get_id(world, ids[2], pair_id);
     test_int(p->x, 50);
     test_int(p->y, 60);
 
@@ -568,19 +568,16 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term.id = ecs_id(Position),
-        .events = {EcsOnAdd},
-        .callback = AddPosition,
-        .ctx = &ecs_id(Velocity)
-    });
-
-    // ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position);
+    ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position);
     ECS_SYSTEM(world, SetPosition, EcsOnSet, Position);
     ECS_SYSTEM(world, OnMovable, EcsMonitor, Position, Velocity);
 
-    // ecs_set(world, AddPosition, EcsContext, {&ecs_typeid(Velocity)});
-    ecs_set(world, SetPosition, EcsContext, {&ecs_typeid(Rotation)});
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity = {AddPosition}, .ctx = &ecs_typeid(Velocity)
+    });
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = {SetPosition}, .ctx = &ecs_typeid(Rotation)
+    });
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_entities_t){

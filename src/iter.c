@@ -134,6 +134,7 @@ bool ecs_term_is_readonly(
     (void)query;
 
     ecs_term_t *term = &it->query->filter.terms[term_index - 1];
+    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
     
     if (term->inout == EcsIn) {
         return true;
@@ -145,7 +146,9 @@ bool ecs_term_is_readonly(
                 return true;
             }
 
-            if ((subj->set != EcsSelf) && (subj->set != EcsDefaultSet)) {
+            if ((subj->set.mask != EcsSelf) && 
+                (subj->set.mask != EcsDefaultSet)) 
+            {
                 return true;
             }
         }

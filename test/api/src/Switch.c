@@ -245,7 +245,7 @@ void Switch_3_entities_change_case() {
 
 static
 void MatchSwitch(ecs_iter_t *it) {
-    ecs_entity_t *movement = ecs_column(it, ecs_entity_t, 1);
+    ecs_entity_t *movement = ecs_term(it, ecs_entity_t, 1);
     test_assert(movement != NULL);
     probe_system(it);
 }
@@ -583,7 +583,7 @@ void Switch_query_after_remove() {
 static
 void AddSwitch(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    ecs_entity_t movement = ecs_column_entity(it, 2);
+    ecs_entity_t movement = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -619,7 +619,7 @@ void Switch_add_switch_in_stage() {
 static
 void SetCase(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    ecs_entity_t sw_case = ecs_column_entity(it, 2);
+    ecs_entity_t sw_case = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -715,7 +715,7 @@ void Switch_change_one_case_in_stage() {
 static
 void RemoveSwitch(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    ecs_entity_t movement = ecs_column_entity(it, 1);
+    ecs_entity_t movement = ecs_term_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -965,7 +965,7 @@ void Switch_query_recycled_tags() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
 
-    ecs_entity_t *cases = ecs_column(&it, ecs_entity_t, 1);
+    ecs_entity_t *cases = ecs_term(&it, ecs_entity_t, 1);
     test_assert(cases != NULL);
     test_assert(cases[0] == Standing);
 

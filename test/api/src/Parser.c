@@ -14,15 +14,15 @@ ecs_term_t* filter_terms(ecs_filter_t *f) {
 
 #define test_pred(column, e, isa)\
     test_int(column.pred.entity, e);\
-    test_int(column.pred.set, isa);
+    test_int(column.pred.set.mask, isa);
 
 #define test_subj(column, e, isa)\
     test_int(column.args[0].entity, e);\
-    test_int(column.args[0].set, isa);
+    test_int(column.args[0].set.mask, isa);
 
 #define test_obj(column, e, isa)\
     test_int(column.args[1].entity, e);\
-    test_int(column.args[1].set, isa);
+    test_int(column.args[1].set.mask, isa);
 
 #define test_pred_var(column, e, isa, str)\
     test_pred(column, e, isa);\
@@ -2369,20 +2369,20 @@ void Parser_pred_implicit_subject_subset_inclusive() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset_full() {
+void Parser_pred_implicit_subject_superset_cascade() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pred);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset|all)"
+        .expr = "Pred(superset|cascade)"
     }));
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
     test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsSuperSet | EcsAll);
+    test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -2393,20 +2393,20 @@ void Parser_pred_implicit_subject_superset_full() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_subset_full() {
+void Parser_pred_implicit_subject_subset_cascade() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pred);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(subset|all)"
+        .expr = "Pred(subset|cascade)"
     }));
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
     test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsSubSet | EcsAll);
+    test_subj(terms[0], EcsThis, EcsSubSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
 
@@ -2417,20 +2417,20 @@ void Parser_pred_implicit_subject_subset_full() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset_inclusive_full() {
+void Parser_pred_implicit_subject_superset_inclusive_cascade() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pred);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset|all|self)"
+        .expr = "Pred(superset|cascade|self)"
     }));
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
     test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsSelf | EcsSuperSet | EcsAll);
+    test_subj(terms[0], EcsThis, EcsSelf | EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
 
@@ -2441,20 +2441,20 @@ void Parser_pred_implicit_subject_superset_inclusive_full() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_subset_inclusive_full() {
+void Parser_pred_implicit_subject_subset_inclusive_cascade() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pred);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(subset|all|self)"
+        .expr = "Pred(subset|cascade|self)"
     }));
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
     test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsSelf | EcsSubSet | EcsAll);
+    test_subj(terms[0], EcsThis, EcsSelf | EcsSubSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
 
@@ -2481,7 +2481,7 @@ void Parser_pred_implicit_subject_superset_depth_1_digit() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].max_depth, 2);
+    test_int(terms[0].args[0].set.max_depth, 2);
 
     test_legacy(f);
 
@@ -2506,7 +2506,7 @@ void Parser_pred_implicit_subject_subset_depth_1_digit() {
     test_subj(terms[0], EcsThis, EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].max_depth, 2);
+    test_int(terms[0].args[0].set.max_depth, 2);
 
     test_legacy(f);
 
@@ -2531,7 +2531,7 @@ void Parser_pred_implicit_subject_superset_depth_2_digits() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].max_depth, 20);
+    test_int(terms[0].args[0].set.max_depth, 20);
 
     test_legacy(f);
 
@@ -2556,7 +2556,7 @@ void Parser_pred_implicit_subject_subset_depth_2_digits() {
     test_subj(terms[0], EcsThis, EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].max_depth, 20);
+    test_int(terms[0].args[0].set.max_depth, 20);
 
     test_legacy(f);
 
@@ -2581,8 +2581,8 @@ void Parser_pred_implicit_superset_min_max_depth() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].min_depth, 2);
-    test_int(terms[0].args[0].max_depth, 3);
+    test_int(terms[0].args[0].set.min_depth, 2);
+    test_int(terms[0].args[0].set.max_depth, 3);
 
     test_legacy(f);
 
@@ -2607,9 +2607,9 @@ void Parser_pred_implicit_superset_childof_min_max_depth() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].min_depth, 2);
-    test_int(terms[0].args[0].max_depth, 3);
-    test_int(terms[0].args[0].relation, EcsChildOf);
+    test_int(terms[0].args[0].set.min_depth, 2);
+    test_int(terms[0].args[0].set.max_depth, 3);
+    test_int(terms[0].args[0].set.relation, EcsChildOf);
 
     test_legacy(f);
 
@@ -2635,7 +2635,7 @@ void Parser_pred_implicit_subject_superset_childof() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].relation, EcsChildOf);
+    test_int(terms[0].args[0].set.relation, EcsChildOf);
 
     test_legacy(f);
 
@@ -2644,23 +2644,23 @@ void Parser_pred_implicit_subject_superset_childof() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_full_superset_childof() {
+void Parser_pred_implicit_subject_cascade_superset_childof() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pred);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(all|superset(ChildOf))"
+        .expr = "Pred(cascade|superset(ChildOf))"
     }));
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
     test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsSuperSet | EcsAll);
+    test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].relation, EcsChildOf);
+    test_int(terms[0].args[0].set.relation, EcsChildOf);
 
     test_legacy(f);
 
@@ -2669,23 +2669,23 @@ void Parser_pred_implicit_subject_full_superset_childof() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset_full_childof() {
+void Parser_pred_implicit_subject_superset_cascade_childof() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pred);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset|all(ChildOf))"
+        .expr = "Pred(superset|cascade(ChildOf))"
     }));
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
     test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsSuperSet | EcsAll);
+    test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].relation, EcsChildOf);
+    test_int(terms[0].args[0].set.relation, EcsChildOf);
 
     test_legacy(f);
 
@@ -2694,23 +2694,23 @@ void Parser_pred_implicit_subject_superset_full_childof() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset_full_childof_optional() {
+void Parser_pred_implicit_subject_superset_cascade_childof_optional() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pred);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "?Pred(superset|all(ChildOf))"
+        .expr = "?Pred(superset|cascade(ChildOf))"
     }));
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
     test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsSuperSet | EcsAll);
+    test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].relation, EcsChildOf);
+    test_int(terms[0].args[0].set.relation, EcsChildOf);
 
     test_legacy(f);
 

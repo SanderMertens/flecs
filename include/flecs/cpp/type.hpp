@@ -20,7 +20,7 @@ public:
         ecs_type_desc_t desc = {};
         desc.entity.name = name;
         desc.ids_expr = expr;
-        m_entity = flecs::entity(world, ecs_type_init(world.c_ptr(), &desc));
+        m_entity = flecs::entity_view(world, ecs_type_init(world.c_ptr(), &desc));
         sync_from_flecs();
     }
 
@@ -51,7 +51,7 @@ public:
         m_normalized = ecs_type_add(world().c_ptr(), m_normalized, e.id());
         sync_from_me();
         return *this;
-    }    
+    }
 
     template <typename T>
     type& add() {
@@ -65,6 +65,10 @@ public:
     template <typename Relation, typename Object>
     type& add() {
         return this->add<Relation>(_::cpp_type<Object>::id(world().c_ptr()));
+    }
+
+    type& is_a(const flecs::entity& object) {
+        return this->add(flecs::IsA, object);
     }
 
     template <typename Relation>
@@ -130,7 +134,7 @@ private:
         }
     }   
 
-    flecs::entity m_entity;
+    flecs::entity_view m_entity;
     type_t m_type;
     type_t m_normalized;
 };

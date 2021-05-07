@@ -22,7 +22,7 @@ void ExpireComponents(ecs_iter_t *it) {
 
     /* Get the handle to the trait. This will tell us on which component the
      * trait is applied */
-    ecs_entity_t trait = ecs_column_entity(it, 1);
+    ecs_entity_t trait = ecs_term_id(it, 1);
 
     /* Obtain the component handle. The component handle is always in the lower
      * 32 bits of the trait handle, which can be obtained with the 

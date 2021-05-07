@@ -117,6 +117,15 @@ public:
         return m_is_shared;
     }
 
+    /** Return whether component is owned.
+     * If the column is shared, this method returns true.
+     * 
+     * @return True if component is shared, false if component is owned.
+     */
+    bool is_owned() const {
+        return !m_is_shared;
+    }    
+
 protected:
     T* m_array;
     size_t m_count;
@@ -127,49 +136,6 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace _ {
-
-/** Similar to flecs::column, but abstracts away from shared / owned columns.
- * 
- * @tparam T component type of the column.
- */
-template <typename T, typename = void>
-class any_column { };
-
-template <typename T>
-class any_column<T, typename std::enable_if<std::is_pointer<T>::value == true>::type > final : public column<typename std::remove_pointer<T>::type> {
-public:
-    any_column(T array, std::size_t count, bool is_shared = false)
-        : column<typename std::remove_pointer<T>::type>(array, count, is_shared) { }
-
-    T operator[](size_t index) {
-        if (!this->m_is_shared) {
-            ecs_assert(index < this->m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-            if (this->m_array) {
-                return &this->m_array[index];
-            } else {
-                return nullptr;
-            }
-        } else {
-            return &this->m_array[0];
-        }
-    }   
-};
-
-template <typename T>
-class any_column<T, typename std::enable_if<std::is_pointer<T>::value == false>::type> final : public column<T> {
-public:
-    any_column(T* array, std::size_t count, bool is_shared = false)
-        : column<T>(array, count, is_shared) { }
-
-    T& operator[](size_t index) {
-        if (!this->m_is_shared) {
-            ecs_assert(index < this->m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-            return this->m_array[index];
-        } else {
-            return this->m_array[0];
-        }
-    }   
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -288,9 +254,15 @@ public:
      */
     flecs::type type() const;
 
-    /** Access param field. 
-     * The param field contains the value assigned to flecs::Context, or the
-     * value passed to the `param` argument when invoking system::run.
+    /** Access ctx. 
+     * ctx contains the context pointer assigned to a system.
+     */
+    void* ctx() {
+        return m_iter->ctx;
+    }
+
+    /** Access param. 
+     * param contains the pointer passed to the param argument of system::run
      */
     void* param() {
         return m_iter->param;
@@ -424,7 +396,7 @@ public:
     template <typename T>
     const T& term_shared(int32_t index) const {
         ecs_assert(
-            ecs_column_entity(m_iter, index) == 
+            ecs_term_id(m_iter, index) == 
                 _::cpp_type<T>::id(m_iter->world), 
                     ECS_COLUMN_TYPE_MISMATCH, NULL);
 
@@ -498,7 +470,7 @@ private:
 
     flecs::unsafe_column get_unsafe_term(int32_t index) const {
         size_t count;
-        size_t size = ecs_column_size(m_iter, index);
+        size_t size = ecs_term_size(m_iter, index);
         bool is_shared = !ecs_term_is_owned(m_iter, index);
 
         /* If a shared column is retrieved with 'column', there will only be a
@@ -513,7 +485,7 @@ private:
         }
 
         return flecs::unsafe_column(
-            ecs_column_w_size(m_iter, 0, index), size, count, is_shared);
+            ecs_term_w_size(m_iter, 0, index), size, count, is_shared);
     }       
 
     /* Get single field, check if correct type is used */

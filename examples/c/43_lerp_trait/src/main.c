@@ -16,13 +16,13 @@ void DoLerp(ecs_iter_t *it) {
 
     /* This is the actual component value. Because the system can match any
      * component type, the size is unknown. */
-    size_t size = ecs_column_size(it, 2);
-    double *cur = ecs_column_w_size(it, size, 2);    
+    size_t size = ecs_term_size(it, 2);
+    double *cur = ecs_term_w_size(it, size, 2);    
 
     /* These are the trait columns for LerpStart and LerpStop. Because these are
      * trait tags, the system does not know their types at compile time. */
-    double *start = ecs_column_w_size(it, size, 3);
-    double *stop = ecs_column_w_size(it, size, 4);
+    double *start = ecs_term_w_size(it, size, 3);
+    double *stop = ecs_term_w_size(it, size, 4);
 
     /* Apply the lerp. Because we don't know the type of the component we'll
      * assume that the component consists out of only double values. We can then
@@ -53,9 +53,9 @@ void DoLerp(ecs_iter_t *it) {
         if (lerp_done) {
             ecs_world_t *world = it->world;
             ecs_entity_t e = it->entities[i];
-            ecs_entity_t trait = ecs_column_entity(it, 1);
-            ecs_entity_t trait_start = ecs_column_entity(it, 2);
-            ecs_entity_t trait_stop = ecs_column_entity(it, 3);            
+            ecs_entity_t trait = ecs_term_id(it, 1);
+            ecs_entity_t trait_start = ecs_term_id(it, 2);
+            ecs_entity_t trait_stop = ecs_term_id(it, 3);            
             
             ecs_remove_entity(world, e, trait);
             ecs_remove_entity(world, e, trait_start);
