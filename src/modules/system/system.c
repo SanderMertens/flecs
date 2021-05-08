@@ -490,7 +490,7 @@ void ecs_colsystem_dtor(
             !ecs_has_id(world, e, EcsDisabledIntern)) 
         {
             invoke_status_action(world, e, ptr, EcsSystemDisabled);
-        }           
+        }
 
         ecs_os_free(system->on_demand);
 
@@ -578,11 +578,15 @@ ecs_entity_t ecs_system_init(
         ecs_query_t *query = ecs_query_init(world, &query_desc);
         if (!query) {
             ecs_delete(world, result);
+            return 0;
         }
 
         /* Re-obtain pointer, as query may have added components */
         system = ecs_get_mut(world, result, EcsSystem, &added);
         ecs_assert(added == false, ECS_INTERNAL_ERROR, NULL);
+
+        /* Prevent the system from moving while we're initializing */
+        ecs_defer_begin(world);
 
         system->entity = result;
         system->query = query;
@@ -660,6 +664,8 @@ ecs_entity_t ecs_system_init(
 
         ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
             ecs_get_name(world, result), query->filter.expr);
+
+        ecs_defer_end(world);            
     } else {
         const char *expr_desc = desc->query.filter.expr;
         const char *expr_sys = system->query->filter.expr;

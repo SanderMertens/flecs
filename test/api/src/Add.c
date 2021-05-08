@@ -396,7 +396,7 @@ void Add_tag() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_add_entity(world, e, Tag);
+    ecs_add_id(world, e, Tag);
     test_assert(ecs_has_entity(world, e, Tag));
 
     ecs_fini(world);
@@ -567,7 +567,7 @@ void Add_add_entity() {
     ecs_entity_t f = ecs_new(world, 0);
     test_assert(f != 0);
 
-    ecs_add_entity(world, e, f);
+    ecs_add_id(world, e, f);
     test_assert(ecs_has_entity(world, e, f));
     
     ecs_fini(world);
@@ -582,10 +582,10 @@ void Add_remove_entity() {
     ecs_entity_t f = ecs_new(world, 0);
     test_assert(f != 0);
 
-    ecs_add_entity(world, e, f);
+    ecs_add_id(world, e, f);
     test_assert(ecs_has_entity(world, e, f));
 
-    ecs_remove_entity(world, e, f);
+    ecs_remove_id(world, e, f);
     test_assert(!ecs_has_entity(world, e, f));
     
     ecs_fini(world);
@@ -601,7 +601,7 @@ void Add_add_0_entity() {
 
     test_expect_abort();
 
-    ecs_add_entity(world, e, 0);
+    ecs_add_id(world, e, 0);
 }
 
 void Add_remove_0_entity() {
@@ -616,7 +616,7 @@ void Add_remove_0_entity() {
 
     test_expect_abort();
 
-    ecs_remove_entity(world, e, 0);
+    ecs_remove_id(world, e, 0);
 }
 
 void Add_add_w_xor() {
@@ -630,7 +630,7 @@ void Add_add_w_xor() {
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
-    ecs_add_entity(world, e, ECS_XOR | Type);
+    ecs_add_id(world, e, ECS_XOR | Type);
     test_assert( ecs_has_entity(world, e, ECS_XOR | Type));
     test_assert( ecs_has(world, e, Position));
 
@@ -652,7 +652,7 @@ void Add_add_same_w_xor() {
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
-    ecs_add_entity(world, e, ECS_XOR | Type);
+    ecs_add_id(world, e, ECS_XOR | Type);
     test_assert( ecs_has_entity(world, e, ECS_XOR | Type));
     test_assert( ecs_has(world, e, Position));
 
@@ -673,11 +673,11 @@ void Add_add_after_remove_xor() {
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
-    ecs_add_entity(world, e, ECS_XOR | Type);
+    ecs_add_id(world, e, ECS_XOR | Type);
     test_assert( ecs_has_entity(world, e, ECS_XOR | Type));
     test_assert( ecs_has(world, e, Position));
 
-    ecs_remove_entity(world, e, ECS_XOR | Type);
+    ecs_remove_id(world, e, ECS_XOR | Type);
     test_assert( !ecs_has_entity(world, e, ECS_XOR | Type));
 
     ecs_add(world, e, Velocity);

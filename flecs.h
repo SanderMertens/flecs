@@ -1973,6 +1973,10 @@ typedef struct ecs_term_t {
 
     int32_t index;              /* Computed term index in filter which takes 
                                  * into account folded OR terms */
+
+    bool move;                  /* When true, this signals to ecs_term_copy that
+                                 * the resources held by this term may be moved
+                                 * into the destination term. */
 } ecs_term_t;
 
 /* Deprecated */
@@ -2700,7 +2704,7 @@ int32_t ecs_type_index_of(
     ecs_entity_t component);
 
 FLECS_API
-int32_t ecs_type_pair_index_of(
+int32_t ecs_type_match(
     ecs_type_t type, 
     int32_t start_index, 
     ecs_entity_t pair);
@@ -5684,6 +5688,20 @@ FLECS_API
 ecs_term_t ecs_term_copy(
     const ecs_term_t *src);
 
+/** Move resources of a term to another term.
+ * Same as copy, but moves resources from src, if src->move is set to true. If
+ * src->move is not set to true, this operation will do a copy.
+ *
+ * The conditional move reduces redundant allocations in scenarios where a list 
+ * of terms is partially created with allocated resources.
+ *
+ * @param dst The term to copy to.
+ * @param src The term to copy from.
+ */
+FLECS_API 
+ecs_term_t ecs_term_move(
+    ecs_term_t *src);    
+
 /** Free resources of term.
  * This operation frees all resources (such as identifiers) of a term. The term
  * object itself is not freed.
@@ -5693,6 +5711,18 @@ ecs_term_t ecs_term_copy(
 FLECS_API
 void ecs_term_fini(
     ecs_term_t *term);
+
+/** Utility to match an id with a pattern.
+ * This operation returns true if the provided pattern matches the provided
+ * id. The pattern may contain a wildcard (or wildcards, when a pair).
+ *
+ * @param id The id.
+ * @param pattern The pattern to compare with.
+ */
+FLECS_API
+bool ecs_id_match(
+    ecs_id_t id,
+    ecs_id_t pattern);
 
 /** @} */
 
@@ -7533,7 +7563,7 @@ extern "C" {
 #endif
 
 /** Add an entity to entities matching a filter.
- * This operation is the same as ecs_add_entity, but is applied to all entities
+ * This operation is the same as ecs_add_id, but is applied to all entities
  * that match the provided filter.
  *
  * @param world The world.
@@ -7572,7 +7602,7 @@ void ecs_bulk_add_type(
     ecs_bulk_add_type(world, ecs_type(type), filter)
 
 /** Removes an entity from entities matching a filter.
- * This operation is the same as ecs_remove_entity, but is applied to all 
+ * This operation is the same as ecs_remove_id, but is applied to all 
  * entities that match the provided filter.
  *
  * @param world The world.
@@ -8791,6 +8821,7 @@ enum var_kind_t {
 };
 
 class world;
+class world_async_stage;
 class snapshot;
 class entity;
 class entity_view;
@@ -10202,7 +10233,9 @@ public:
      * @return The stage.
      */
     flecs::world async_stage() const {
-        return flecs::world(ecs_async_stage_new(m_world));
+        auto result = flecs::world(ecs_async_stage_new(m_world));
+        result.m_owned = true;
+        return result;
     }
 
     /** Get actual world.
@@ -10793,25 +10826,25 @@ public:
 
     ECS_DEPRECATED("use add(flecs::ChildOf, parent)")
     const Base& add_childof(const Base& parent) const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
+        ecs_add_id(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
         return *this;          
     }
     
     ECS_DEPRECATED("use remove(flecs::ChildOf, parent)")
     const Base& remove_childof(const Base& parent) const {
-        ecs_remove_entity(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
+        ecs_remove_id(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
         return *this;
     }
 
     ECS_DEPRECATED("use add(flecs::IsA, base)")
     const Base& add_instanceof(const Base& base_entity) const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
+        ecs_add_id(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
         return *this;        
     }
 
     ECS_DEPRECATED("use remove(flecs::IsA, base)")
     const Base& remove_instanceof(const Base& base_entity) const {
-        ecs_remove_entity(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
+        ecs_remove_id(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
         return *this;
     } 
 };
@@ -11550,7 +11583,7 @@ public:
      */
     template <typename T>
     const Base& add() const {
-        ecs_add_entity(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
+        ecs_add_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
         return *this;
     }
 
@@ -11560,7 +11593,7 @@ public:
      * @param entity The entity to add.
      */
     const Base& add(const entity_view& entity) const {
-        ecs_add_entity(this->base_world(), this->base_id(), entity.id());
+        ecs_add_id(this->base_world(), this->base_id(), entity.id());
         return *this;
     }
 
@@ -11632,7 +11665,7 @@ public:
      */
     template <typename T>
     const Base& remove() const {
-        ecs_remove_entity(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
+        ecs_remove_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
         return *this;
     }
 
@@ -11641,7 +11674,7 @@ public:
      * @param entity The entity to remove.
      */
     const Base& remove(const entity_view& entity) const {
-        ecs_remove_entity(this->base_world(), this->base_id(), entity.id());
+        ecs_remove_id(this->base_world(), this->base_id(), entity.id());
         return *this;
     }
 
@@ -11703,7 +11736,7 @@ public:
      * @param entity The entity for which to add the OWNED flag
      */    
     const Base& add_owned(const entity_view& entity) const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_OWNED | entity.id());
+        ecs_add_id(this->base_world(), this->base_id(), ECS_OWNED | entity.id());
         return *this;  
     }
 
@@ -11713,7 +11746,7 @@ public:
      */    
     template <typename T>
     const Base& add_owned() const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_OWNED | _::cpp_type<T>::id(this->base_world()));
+        ecs_add_id(this->base_world(), this->base_id(), ECS_OWNED | _::cpp_type<T>::id(this->base_world()));
         return *this;  
     }
 
@@ -11738,7 +11771,7 @@ public:
      * @param sw The switch entity id to add.
      */    
     const Base& add_switch(const entity_view& sw) const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
+        ecs_add_id(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
         return *this;  
     }
 
@@ -11754,7 +11787,7 @@ public:
      * @param sw The switch entity id to remove.
      */    
     const Base& remove_switch(const entity_view& sw) const {
-        ecs_remove_entity(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
+        ecs_remove_id(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
         return *this;  
     }
     
@@ -11771,7 +11804,7 @@ public:
      * @param sw_case The case entity id to add.
      */    
     const Base& add_case(const entity_view& sw_case) const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
+        ecs_add_id(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
         return *this;
     }
 
@@ -11791,7 +11824,7 @@ public:
      * @param sw_case The case entity id to remove.
      */    
     const Base& remove_case(const entity_view& sw_case) const {
-        ecs_remove_entity(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
+        ecs_remove_id(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
         return *this;  
     }
 
@@ -12662,15 +12695,23 @@ public:
         return *this;
     }
 
-    Base& id(const flecs::id_t id) {
+    template<typename R>
+    Base& id(id_t o) {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->id = ecs_pair(
+            _::cpp_type<R>::id(world()), o);
+        return *this;
+    }    
+
+    Base& id(id_t id) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->id = id;
         return *this;
     }
 
-    Base& id(const flecs::type& type);  
+    Base& id(const flecs::type& type);
 
-    Base& id(const flecs::id_t r, const flecs::id_t o) {
+    Base& id(id_t r, id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->id = ecs_pair(r, o);
         return *this;
@@ -12766,7 +12807,7 @@ public:
     term(flecs::world_t *world_ptr) 
         : term_builder_i<term>(&value)
         , value({})
-        , m_world(world_ptr) { }
+        , m_world(world_ptr) { value.move = true; }
 
     term(const term& obj) : term_builder_i<term>(&value) {
         m_world = obj.m_world;
@@ -12775,7 +12816,7 @@ public:
 
     term(term&& obj) : term_builder_i<term>(&value) {
         m_world = obj.m_world;
-        value = obj.value;
+        value = ecs_term_move(&obj.value);
         obj.reset();
     }
 
@@ -12794,7 +12835,7 @@ public:
         m_term = nullptr;
         obj.reset();
         return *this;
-    }
+    }   
 
     ~term() {
         ecs_term_fini(&value);
@@ -12817,8 +12858,8 @@ public:
         return ecs_term_is_trivial(&value);
     }
 
-    operator ecs_term_t() {
-        return ecs_term_copy(&value);
+    ecs_term_t move() { /* explicit move to ecs_term_t */
+        return ecs_term_move(&value);
     }
 
     ecs_term_t value;
@@ -12868,38 +12909,45 @@ public:
     template<typename T>
     Base& term() {
         this->term();
-        *this->m_term = flecs::term(world()).id<T>();
+        *this->m_term = flecs::term(world()).id<T>().move();
         return *this;
     }
+
+    Base& term(id_t id) {
+        this->term();
+        *this->m_term = flecs::term(world()).id(id).move();
+        return *this;
+    }   
 
     template<typename R, typename O>
     Base& term() {
         this->term();
-        *this->m_term = flecs::term(world()).id<R, O>();
-        return *this;
-    }    
-
-    Base& term(id_t id) {
-        this->term();
-        *this->m_term = flecs::term(world()).id(id);
+        *this->m_term = flecs::term(world()).id<R, O>().move();
         return *this;
     }
 
+    template<typename R>
+    Base& term(id_t o) {
+        this->term();
+        *this->m_term = flecs::term(world()).id<R>(o).move();
+        return *this;
+    }     
+
     Base& term(id_t r, id_t o) {
         this->term();
-        *this->m_term = flecs::term(world()).id(r, o);
+        *this->m_term = flecs::term(world()).id(r, o).move();
         return *this;
     }
 
     Base& term(const flecs::type& type) {
         this->term();
-        *this->m_term = flecs::term(world()).id(type);
+        *this->m_term = flecs::term(world()).id(type).move();
         return *this;
     }
 
     Base& term(const char *expr) {
         this->term();
-        *this->m_term = flecs::term(world()).expr(expr);
+        *this->m_term = flecs::term(world()).expr(expr).move();
         return *this;
     }
 
@@ -14269,23 +14317,19 @@ flecs::entity module(const flecs::world& world, const char *name = nullptr) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-ecs_entity_t do_import(world& world) {
+ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_trace_1("import %s", _::name_helper<T>::name());
     ecs_log_push();
 
     ecs_entity_t scope = ecs_get_scope(world.c_ptr());
 
-    // Allocate module, so the this ptr will remain stable
-    // TODO: make sure memory is cleaned up with world
-    T *module_data = FLECS_NEW(T)(world);
+    T module_data(world);
 
     ecs_set_scope(world.c_ptr(), scope);
 
     // It should now be possible to lookup the module
-    char *symbol = _::symbol_helper<T>::symbol();
     ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
     ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
-    ecs_os_free(symbol);
 
     _::cpp_type<T>::init(world.c_ptr(), m, false);
 
@@ -14293,11 +14337,10 @@ ecs_entity_t do_import(world& world) {
 
     // Set module singleton component
 
-    ecs_set_ptr_w_entity(
-        world.c_ptr(), m,
-        _::cpp_type<T>::id_no_lifecycle(world.c_ptr()), 
-        _::cpp_type<T>::size(),
-        module_data);
+    T* module_ptr = static_cast<T*>(ecs_get_mut_w_id( world.c_ptr(), m,
+        _::cpp_type<T>::id_no_lifecycle(world.c_ptr()), NULL));
+
+    *module_ptr = std::move(module_data);
 
     // Add module tag        
     ecs_add_id(world.c_ptr(), m, flecs::Module);
@@ -14309,7 +14352,7 @@ ecs_entity_t do_import(world& world) {
 
 template <typename T>
 flecs::entity import(world& world) {
-    const char *symbol = _::symbol_helper<T>::symbol();
+    char *symbol = _::symbol_helper<T>::symbol();
 
     ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
     
@@ -14321,14 +14364,16 @@ flecs::entity import(world& world) {
         
         /* Module is not yet registered, register it now */
         } else {
-            m = do_import<T>(world);
+            m = do_import<T>(world, symbol);
         }
 
     /* Module has been registered, but could have been for another world. Import
      * if module hasn't been registered for this world. */
     } else if (!m) {
-        m = do_import<T>(world);
+        m = do_import<T>(world, symbol);
     }
+
+    ecs_os_free(symbol);
 
     return flecs::entity(world, m);
 }

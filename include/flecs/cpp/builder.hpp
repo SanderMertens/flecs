@@ -108,15 +108,23 @@ public:
         return *this;
     }
 
-    Base& id(const flecs::id_t id) {
+    template<typename R>
+    Base& id(id_t o) {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->id = ecs_pair(
+            _::cpp_type<R>::id(world()), o);
+        return *this;
+    }    
+
+    Base& id(id_t id) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->id = id;
         return *this;
     }
 
-    Base& id(const flecs::type& type);  
+    Base& id(const flecs::type& type);
 
-    Base& id(const flecs::id_t r, const flecs::id_t o) {
+    Base& id(id_t r, id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->id = ecs_pair(r, o);
         return *this;
@@ -212,7 +220,7 @@ public:
     term(flecs::world_t *world_ptr) 
         : term_builder_i<term>(&value)
         , value({})
-        , m_world(world_ptr) { }
+        , m_world(world_ptr) { value.move = true; }
 
     term(const term& obj) : term_builder_i<term>(&value) {
         m_world = obj.m_world;
@@ -221,7 +229,7 @@ public:
 
     term(term&& obj) : term_builder_i<term>(&value) {
         m_world = obj.m_world;
-        value = obj.value;
+        value = ecs_term_move(&obj.value);
         obj.reset();
     }
 
@@ -240,7 +248,7 @@ public:
         m_term = nullptr;
         obj.reset();
         return *this;
-    }
+    }   
 
     ~term() {
         ecs_term_fini(&value);
@@ -263,8 +271,8 @@ public:
         return ecs_term_is_trivial(&value);
     }
 
-    operator ecs_term_t() {
-        return ecs_term_copy(&value);
+    ecs_term_t move() { /* explicit move to ecs_term_t */
+        return ecs_term_move(&value);
     }
 
     ecs_term_t value;
@@ -314,38 +322,45 @@ public:
     template<typename T>
     Base& term() {
         this->term();
-        *this->m_term = flecs::term(world()).id<T>();
+        *this->m_term = flecs::term(world()).id<T>().move();
         return *this;
     }
+
+    Base& term(id_t id) {
+        this->term();
+        *this->m_term = flecs::term(world()).id(id).move();
+        return *this;
+    }   
 
     template<typename R, typename O>
     Base& term() {
         this->term();
-        *this->m_term = flecs::term(world()).id<R, O>();
-        return *this;
-    }    
-
-    Base& term(id_t id) {
-        this->term();
-        *this->m_term = flecs::term(world()).id(id);
+        *this->m_term = flecs::term(world()).id<R, O>().move();
         return *this;
     }
 
+    template<typename R>
+    Base& term(id_t o) {
+        this->term();
+        *this->m_term = flecs::term(world()).id<R>(o).move();
+        return *this;
+    }     
+
     Base& term(id_t r, id_t o) {
         this->term();
-        *this->m_term = flecs::term(world()).id(r, o);
+        *this->m_term = flecs::term(world()).id(r, o).move();
         return *this;
     }
 
     Base& term(const flecs::type& type) {
         this->term();
-        *this->m_term = flecs::term(world()).id(type);
+        *this->m_term = flecs::term(world()).id(type).move();
         return *this;
     }
 
     Base& term(const char *expr) {
         this->term();
-        *this->m_term = flecs::term(world()).expr(expr);
+        *this->m_term = flecs::term(world()).expr(expr).move();
         return *this;
     }
 

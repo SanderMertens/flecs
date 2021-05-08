@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
         SWITCH | Direction, CASE | Back);
 
     /* Add Walking to e4. This will remove the Running case */
-    ecs_add_entity(world, e4, ECS_CASE | Walking);
+    ecs_add_id(world, e4, ECS_CASE | Walking);
 
     /* Set target FPS for main loop */
     ecs_set_target_fps(world, 1);

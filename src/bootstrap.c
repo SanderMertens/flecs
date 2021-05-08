@@ -64,6 +64,27 @@ static ECS_MOVE(EcsName, dst, src, {
     src->symbol = NULL;
 })
 
+/* Component lifecycle actions for EcsTrigger */
+static ECS_CTOR(EcsTrigger, ptr, {
+    ptr->trigger = NULL;
+})
+
+static ECS_DTOR(EcsTrigger, ptr, {
+    ecs_trigger_fini(world, (ecs_trigger_t*)ptr->trigger);
+})
+
+static ECS_COPY(EcsTrigger, dst, src, {
+    ecs_abort(ECS_INVALID_OPERATION, "Trigger component cannot be copied");
+})
+
+static ECS_MOVE(EcsTrigger, dst, src, {
+    if (dst->trigger) {
+        ecs_trigger_fini(world, (ecs_trigger_t*)dst->trigger);
+    }
+    dst->trigger = src->trigger;
+    src->trigger = NULL;
+})
+
 static
 void register_on_delete(ecs_iter_t *it) {
     ecs_id_t id = ecs_term_id(it, 1);
@@ -242,7 +263,14 @@ void ecs_bootstrap(
         .dtor = ecs_dtor(EcsName),
         .copy = ecs_copy(EcsName),
         .move = ecs_move(EcsName)
-    });    
+    });
+
+    ecs_set_component_actions(world, EcsTrigger, {
+        .ctor = ecs_ctor(EcsTrigger),
+        .dtor = ecs_dtor(EcsTrigger),
+        .copy = ecs_copy(EcsTrigger),
+        .move = ecs_move(EcsTrigger)
+    });        
 
     world->stats.last_component_id = EcsFirstUserComponentId;
     world->stats.last_id = EcsFirstUserEntityId;

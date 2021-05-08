@@ -298,7 +298,7 @@ void New_new_component_id_skip_used() {
     test_assert(!ecs_get_type(world, e));
 
     /* Explicitly set an id that is one above the last issued id */
-    ecs_add_entity(world, e + 1, Foo);
+    ecs_add_id(world, e + 1, Foo);
 
     ecs_entity_t e2 = ecs_new_component_id(world);
     test_assert(e2 != 0);
@@ -320,7 +320,7 @@ void New_new_component_id_skip_to_hi_id() {
     /* Use up all low component ids */
     int i;
     for (i = (int)e; i < ECS_HI_COMPONENT_ID; i ++) {
-        ecs_add_entity(world, i, Foo);
+        ecs_add_id(world, i, Foo);
     }
 
     ecs_entity_t e2 = ecs_new_component_id(world);

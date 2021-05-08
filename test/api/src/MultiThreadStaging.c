@@ -12,11 +12,11 @@ void Add_to_current(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component);
+            ecs_add_id(it->world, it->entities[i], ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
+            ecs_add_id(it->world, it->entities[i], ctx->component_2);
         }
 
         ctx->entity_count ++;

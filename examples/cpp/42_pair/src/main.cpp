@@ -1,4 +1,4 @@
-#include <traits.h>
+#include <pair.h>
 #include <iostream>
 
 /* Ordinary position & velocity components */
@@ -10,11 +10,10 @@ struct Velocity {
     double x, y;
 };
 
-/* This component will be used as a trait. A trait is a component that can be
- * added to an entity / component pair, which lets applications implement
- * generic functionality that works with any component. In this case, the
- * trait implements a timer after which the component it is attached to is
- * removed from the entity. */
+/* This component will be used as a relation. A relation can be added to an
+ * entity together with a relation object, which is the thing to which relation
+ * applies. In this case, the ExpiryTime relation will apply to a component that
+ * we want to remove after a timeout. */
 struct ExpiryTimer {
     float expiry_time;
     float t;
@@ -23,14 +22,9 @@ struct ExpiryTimer {
 int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
-    /* Register pair component so that the system can resolve it by name */
-    ecs.component<ExpiryTimer>();
-
-    /* Create a system that matches ExpiryTimer as a pair. Without the PAIR
-     * role the system would look for entities that added ExpiryTimer as usual,
-     * but with the role the system will be matched against every component to
-     * which the pair has been applied. */
-    ecs.system<>(nullptr, "PAIR | ExpiryTimer")
+    /* Create a system that matches all entities with an ExpiryTimer relation */
+    ecs.system<>()
+        .term<ExpiryTimer>(flecs::Wildcard)
         .iter([](flecs::iter it) {
             /* First, get the pair component */
             auto et = it.term<ExpiryTimer>(1);
@@ -77,6 +71,8 @@ int main(int argc, char *argv[]) {
 
     /* Run the main loop until both components have been removed */
     ecs.set_target_fps(1);
+
+    std::cout << "Running..." << std::endl;
 
     /* Run systems */
     while (ecs.progress()) { 

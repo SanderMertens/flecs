@@ -268,7 +268,12 @@
                 "isa_supetset_max_depth_1",
                 "isa_supetset_max_depth_2",
                 "isa_supetset_min_depth_2",
-                "isa_supetset_min_depth_2_max_depth_3"
+                "isa_supetset_min_depth_2_max_depth_3",
+                "role",
+                "relation",
+                "relation_w_object_wildcard",
+                "relation_w_predicate_wildcard",
+                "add_pair_w_rel_type"
             ]         
         }, {
             "id": "SystemBuilder",

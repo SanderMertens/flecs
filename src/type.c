@@ -193,14 +193,6 @@ ecs_type_t ecs_type_find(
 }
 
 static
-bool has_pair(
-    ecs_entity_t pair,
-    ecs_entity_t e)
-{
-    return pair == ECS_PAIR_RELATION(e);
-}
-
-static
 bool has_case(
     const ecs_world_t *world,
     ecs_entity_t sw_case,
@@ -219,20 +211,26 @@ int match_id(
     ecs_entity_t match_with)
 {
     if (ECS_HAS_ROLE(match_with, PAIR)) {
+        if (!ECS_HAS_ROLE(id, PAIR) && 
+            !ECS_HAS_ROLE(id, CHILDOF) && !ECS_HAS_ROLE(id, INSTANCEOF)) 
+        {
+            return 0;
+        }
+
         ecs_entity_t rel = ECS_PAIR_RELATION(match_with);
         ecs_entity_t obj = ECS_PAIR_OBJECT(match_with);
 
-        if (obj == EcsWildcard) {
-            ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
-            
-            if (!ECS_HAS_ROLE(id, PAIR) || !has_pair(rel, id)) {
+        ecs_assert(rel != 0, ECS_INVALID_PARAMETER, NULL);
+
+        if (!obj) {
+            if (rel != EcsWildcard && ECS_PAIR_RELATION(id) != rel) {
                 return 0;
             }
 
             ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
             int32_t i, count = ecs_vector_count(type);
 
-            /* A pair with a (rel, *) requires the component that is the target
+            /* A pair with a (rel, 0) requires the component that is the target
              * of the relation to also be present in the type. This must be
              * verified for each relation in the type, which is why the result
              * is a preliminary OK. If after a match a relation is found with an
@@ -245,10 +243,13 @@ int match_id(
                     return 2;
                 }
             }
-
             return -1;
-        } else if (!rel) {
-            if (ECS_HAS_ROLE(id, PAIR) && has_pair(obj, id)) {
+        } else if (obj == EcsWildcard) {
+            if (rel == EcsWildcard || ECS_PAIR_RELATION(id) == rel) {
+                return 1;
+            }
+        } else if (rel == EcsWildcard) {
+            if (ECS_PAIR_OBJECT(id) == obj) {
                 return 1;
             }
         }
@@ -517,20 +518,18 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     return 0;
 }
 
-int32_t ecs_type_pair_index_of(
+int32_t ecs_type_match(
     ecs_type_t type, 
     int32_t start_index, 
-    ecs_entity_t pair)
+    ecs_entity_t pattern)
 {
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     for (i = start_index; i < count; i ++) {
         ecs_entity_t e = array[i];
-        if (ECS_HAS_ROLE(e, PAIR)) {
-            if (pair == ECS_PAIR_RELATION(e)) {
-                return i;
-            }
+        if (ecs_id_match(e, pattern)) {
+            return i;
         }
     }
 

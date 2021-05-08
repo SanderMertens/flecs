@@ -2349,7 +2349,7 @@ void Prefab_dont_inherit_disabled() {
     ecs_entity_t e1 = ecs_new(world, Position);
     ecs_entity_t e2 = ecs_new(world, Velocity);
     
-    ecs_add_entity(world, e2, EcsDisabled);
+    ecs_add_id(world, e2, EcsDisabled);
     ecs_add_pair(world, e1, EcsIsA, e2);
 
     test_assert( ecs_has(world, e1, Position));
@@ -2971,11 +2971,11 @@ void Prefab_add_tag_w_low_id_to_instance() {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
-    ecs_add_entity(world, base, Tag);
+    ecs_add_id(world, base, Tag);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
     ecs_add(world, e, Position);
-    ecs_add_entity(world, e, Tag);
+    ecs_add_id(world, e, Tag);
     
     test_assert(ecs_has_entity(world, e, Tag));
 

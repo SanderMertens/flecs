@@ -931,6 +931,18 @@ void Pairs_get_typeid_w_recycled_obj(void);
 void Pairs_id_str_w_recycled_rel(void);
 void Pairs_id_str_w_recycled_obj(void);
 void Pairs_set_object_w_zero_sized_rel_comp(void);
+void Pairs_dsl_pair(void);
+void Pairs_dsl_pair_w_pred_wildcard(void);
+void Pairs_dsl_pair_w_obj_wildcard(void);
+void Pairs_dsl_pair_w_both_wildcard(void);
+void Pairs_dsl_pair_w_explicit_subj_this(void);
+void Pairs_dsl_pair_w_explicit_subj(void);
+void Pairs_api_pair(void);
+void Pairs_api_pair_w_pred_wildcard(void);
+void Pairs_api_pair_w_obj_wildcard(void);
+void Pairs_api_pair_w_both_wildcard(void);
+void Pairs_api_pair_w_explicit_subj_this(void);
+void Pairs_api_pair_w_explicit_subj(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -1369,14 +1381,14 @@ void Type_type_has_prefab(void);
 void Type_type_has_parent(void);
 void Type_type_has_pair(void);
 void Type_type_has_pair_exact(void);
-void Type_type_has_pair_wildcard(void);
-void Type_type_has_pair_wildcard_multiple(void);
-void Type_type_has_pair_wildcard_no_pair(void);
+void Type_type_has_pair_0(void);
+void Type_type_has_pair_0_multiple(void);
+void Type_type_has_pair_0_no_pair(void);
 void Type_type_owns_pair(void);
 void Type_type_owns_pair_exact(void);
-void Type_type_owns_pair_wildcard(void);
-void Type_type_owns_pair_wildcard_multiple(void);
-void Type_type_owns_pair_wildcard_no_pair(void);
+void Type_type_owns_pair_0(void);
+void Type_type_owns_pair_0_multiple(void);
+void Type_type_owns_pair_0_no_pair(void);
 void Type_type_merge(void);
 void Type_type_merge_overlap(void);
 void Type_type_merge_overlap_one(void);
@@ -5300,6 +5312,54 @@ bake_test_case Pairs_testcases[] = {
     {
         "set_object_w_zero_sized_rel_comp",
         Pairs_set_object_w_zero_sized_rel_comp
+    },
+    {
+        "dsl_pair",
+        Pairs_dsl_pair
+    },
+    {
+        "dsl_pair_w_pred_wildcard",
+        Pairs_dsl_pair_w_pred_wildcard
+    },
+    {
+        "dsl_pair_w_obj_wildcard",
+        Pairs_dsl_pair_w_obj_wildcard
+    },
+    {
+        "dsl_pair_w_both_wildcard",
+        Pairs_dsl_pair_w_both_wildcard
+    },
+    {
+        "dsl_pair_w_explicit_subj_this",
+        Pairs_dsl_pair_w_explicit_subj_this
+    },
+    {
+        "dsl_pair_w_explicit_subj",
+        Pairs_dsl_pair_w_explicit_subj
+    },
+    {
+        "api_pair",
+        Pairs_api_pair
+    },
+    {
+        "api_pair_w_pred_wildcard",
+        Pairs_api_pair_w_pred_wildcard
+    },
+    {
+        "api_pair_w_obj_wildcard",
+        Pairs_api_pair_w_obj_wildcard
+    },
+    {
+        "api_pair_w_both_wildcard",
+        Pairs_api_pair_w_both_wildcard
+    },
+    {
+        "api_pair_w_explicit_subj_this",
+        Pairs_api_pair_w_explicit_subj_this
+    },
+    {
+        "api_pair_w_explicit_subj",
+        Pairs_api_pair_w_explicit_subj
     }
 };
 
@@ -6930,16 +6990,16 @@ bake_test_case Type_testcases[] = {
         Type_type_has_pair_exact
     },
     {
-        "type_has_pair_wildcard",
-        Type_type_has_pair_wildcard
+        "type_has_pair_0",
+        Type_type_has_pair_0
     },
     {
-        "type_has_pair_wildcard_multiple",
-        Type_type_has_pair_wildcard_multiple
+        "type_has_pair_0_multiple",
+        Type_type_has_pair_0_multiple
     },
     {
-        "type_has_pair_wildcard_no_pair",
-        Type_type_has_pair_wildcard_no_pair
+        "type_has_pair_0_no_pair",
+        Type_type_has_pair_0_no_pair
     },
     {
         "type_owns_pair",
@@ -6950,16 +7010,16 @@ bake_test_case Type_testcases[] = {
         Type_type_owns_pair_exact
     },
     {
-        "type_owns_pair_wildcard",
-        Type_type_owns_pair_wildcard
+        "type_owns_pair_0",
+        Type_type_owns_pair_0
     },
     {
-        "type_owns_pair_wildcard_multiple",
-        Type_type_owns_pair_wildcard_multiple
+        "type_owns_pair_0_multiple",
+        Type_type_owns_pair_0_multiple
     },
     {
-        "type_owns_pair_wildcard_no_pair",
-        Type_type_owns_pair_wildcard_no_pair
+        "type_owns_pair_0_no_pair",
+        Type_type_owns_pair_0_no_pair
     },
     {
         "type_merge",
@@ -8745,7 +8805,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        30,
+        42,
         Pairs_testcases
     },
     {

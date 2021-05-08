@@ -636,7 +636,7 @@ void Pipeline_3_systems_3_types() {
     test_assert(s2 != 0);
     test_assert(s3 != 0);
 
-    ecs_add_entity(world, s3, Tag);
+    ecs_add_id(world, s3, Tag);
 
     ecs_new(world, Position);
 

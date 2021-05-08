@@ -692,9 +692,7 @@ void fini_id_triggers(
         ecs_map_free(t->on_add_triggers);
         ecs_map_free(t->on_remove_triggers);
     }
-
     ecs_map_free(world->id_triggers);
-
     ecs_sparse_free(world->triggers);
 }
 

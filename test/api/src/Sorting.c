@@ -1301,8 +1301,8 @@ void Sorting_sort_3_entities_3_types_2() {
     ecs_entity_t e2 = ecs_new(world, Tag);
     ecs_entity_t e3 = ecs_new(world, Tag);
 
-    ecs_add_entity(world, e1, Foo);
-    ecs_add_entity(world, e2, Bar);
+    ecs_add_id(world, e1, Foo);
+    ecs_add_id(world, e2, Bar);
 
     ecs_iter_t it = ecs_query_iter(q);
     ecs_entity_t e = 0;

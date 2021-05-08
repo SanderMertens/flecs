@@ -89,7 +89,24 @@ int term_resolve_ids(
         return -1;
     }
 
-    if (term->args[1].entity) {
+    /* An explicitly set PAIR role indicates legacy behavior. In the legacy
+     * query language a wildcard object means that the entity should have the
+     * matched object by itself. This is incompatible with the new query parser.
+     * For now, this behavior is mapped to a pair with a 0 object, but in the
+     * future this behavior will be replaced with variables. */
+    if (term->role == ECS_PAIR) {
+        if (term->args[1].entity == EcsWildcard) {
+            term->args[1].entity = 0;
+            if (term->move) {
+                ecs_os_free(term->args[1].name);
+            }
+            term->args[1].name = NULL;
+        } else if (!term->args[1].entity) {
+            term->args[1].entity = EcsWildcard;
+        }
+    }
+
+    if (term->args[1].entity || term->role == ECS_PAIR) {
         term->id = ecs_pair(term->pred.entity, term->args[1].entity);
     } else {
         term->id = term->pred.entity;
@@ -98,6 +115,49 @@ int term_resolve_ids(
     term->id |= term->role;
 
     return 0;
+}
+
+bool ecs_id_match(
+    ecs_id_t id,
+    ecs_id_t pattern)
+{
+    if (id == pattern) {
+        return true;
+    }
+
+    if (ECS_HAS_ROLE(pattern, PAIR)) {
+        if (!ECS_HAS_ROLE(id, PAIR)) {
+            /* legacy roles that are now relations */
+            if (!ECS_HAS_ROLE(id, INSTANCEOF) && !ECS_HAS_ROLE(id, CHILDOF)) {
+                return false;
+            }
+        }
+
+        ecs_entity_t id_rel = ECS_PAIR_RELATION(id);
+        ecs_entity_t id_obj = ECS_PAIR_OBJECT(id);
+        ecs_entity_t pattern_rel = ECS_PAIR_RELATION(pattern);
+        ecs_entity_t pattern_obj = ECS_PAIR_OBJECT(pattern);
+
+        if (pattern_rel == EcsWildcard) {
+            if (pattern_obj == EcsWildcard || !pattern_obj || pattern_obj == id_obj) {
+                return true;
+            }
+        } else if (!pattern_obj || pattern_obj == EcsWildcard) {
+            if (pattern_rel == id_rel) {
+                return true;
+            }
+        }
+    } else {
+        if ((id & ECS_ROLE_MASK) != (pattern & ECS_ROLE_MASK)) {
+            return false;
+        }
+
+        if ((ECS_COMPONENT_MASK & pattern) == EcsWildcard) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool ecs_term_is_set(
@@ -138,8 +198,8 @@ int ecs_term_finalize(
     const char *expr,
     ecs_term_t *term)
 {
-    /* If id is set, derive predicate and object */
     if (term->id) {
+        /* If id is set, check for pair and derive predicate and object */
         if (ECS_HAS_ROLE(term->id, PAIR)) {
             term->pred.entity = ECS_PAIR_RELATION(term->id);
             term->args[1].entity = ECS_PAIR_OBJECT(term->id);
@@ -176,7 +236,23 @@ ecs_term_t ecs_term_copy(
     dst.pred.name = ecs_os_strdup(src->pred.name);
     dst.args[0].name = ecs_os_strdup(src->args[0].name);
     dst.args[1].name = ecs_os_strdup(src->args[1].name);
+
     return dst;
+}
+
+ecs_term_t ecs_term_move(
+    ecs_term_t *src)
+{
+    if (src->move) {
+        ecs_term_t dst = *src;
+        src->name = NULL;
+        src->pred.name = NULL;
+        src->args[0].name = NULL;
+        src->args[1].name = NULL;
+        return dst;
+    } else {
+        return ecs_term_copy(src);
+    }
 }
 
 void ecs_term_fini(
@@ -280,17 +356,17 @@ int ecs_filter_init(
         goto error;
     }
 
-    /* Copy term resources. If an expression was provided, the resources in the
-     * terms are already owned by the filter. */
-    if (!f.expr) {
-        if (term_count) {
+    /* Copy term resources. */
+    if (term_count) {
+        if (!f.expr) {
             f.terms = ecs_os_malloc(term_count * ECS_SIZEOF(ecs_term_t));
-            for (i = 0; i < term_count; i ++) {
-                f.terms[i] = ecs_term_copy(&terms[i]);
-            }
-        } else {
-            f.terms = NULL;
         }
+
+        for (i = 0; i < term_count; i ++) {
+            f.terms[i] = ecs_term_move(&terms[i]);
+        }        
+    } else {
+        f.terms = NULL;
     }
 
     f.name = ecs_os_strdup(desc->name);

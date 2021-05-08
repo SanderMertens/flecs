@@ -107,25 +107,25 @@ public:
 
     ECS_DEPRECATED("use add(flecs::ChildOf, parent)")
     const Base& add_childof(const Base& parent) const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
+        ecs_add_id(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
         return *this;          
     }
     
     ECS_DEPRECATED("use remove(flecs::ChildOf, parent)")
     const Base& remove_childof(const Base& parent) const {
-        ecs_remove_entity(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
+        ecs_remove_id(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
         return *this;
     }
 
     ECS_DEPRECATED("use add(flecs::IsA, base)")
     const Base& add_instanceof(const Base& base_entity) const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
+        ecs_add_id(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
         return *this;        
     }
 
     ECS_DEPRECATED("use remove(flecs::IsA, base)")
     const Base& remove_instanceof(const Base& base_entity) const {
-        ecs_remove_entity(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
+        ecs_remove_id(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
         return *this;
     } 
 };

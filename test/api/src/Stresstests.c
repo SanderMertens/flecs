@@ -15,7 +15,7 @@ void add_random(
         if (!entity) {
             entity = ecs_new_w_entity(world, component);
         } else {
-            ecs_add_entity(world, entity, component);
+            ecs_add_id(world, entity, component);
         }
     }    
 }
@@ -276,7 +276,7 @@ void Stresstests_add_1k_tags() {
 
     int i;
     for (i = 0; i < 1000; i ++) {
-        ecs_add_entity(world, e, i + 1000);
+        ecs_add_id(world, e, i + 1000);
         test_assert(ecs_has_entity(world, e, i + 1000));
     }
 

@@ -254,8 +254,8 @@ void Has_has_entity_owned() {
     ecs_entity_t base = ecs_new(world, 0);
     test_assert(base != 0);
 
-    ecs_add_entity(world, e, f);
-    ecs_add_entity(world, base, g);
+    ecs_add_id(world, e, f);
+    ecs_add_id(world, base, g);
     ecs_add_pair(world, e, EcsIsA, base);
 
     test_assert( ecs_has_entity(world, e, f));

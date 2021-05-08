@@ -526,7 +526,7 @@ const char* parse_term(
 {
     const char *ptr = expr;
     char token[ECS_MAX_TOKEN_SIZE] = {0};
-    ecs_term_t term = { 0 };
+    ecs_term_t term = { .move = true /* parser never owns resources */ };
 
     ptr = skip_space(ptr);
 

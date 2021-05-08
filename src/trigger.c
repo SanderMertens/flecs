@@ -318,7 +318,7 @@ ecs_entity_t ecs_trigger_init(
         ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
 
         ecs_trigger_t *trigger = ecs_sparse_add(world->triggers, ecs_trigger_t);
-        trigger->term = term;
+        trigger->term = ecs_term_move(&term);
         trigger->action = desc->callback;
         trigger->ctx = desc->ctx;
         trigger->binding_ctx = desc->binding_ctx;

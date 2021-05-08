@@ -287,38 +287,38 @@ int get_comp_and_src(
     return t;
 }
 
-typedef struct trait_offset_t {
+typedef struct pair_offset_t {
     int32_t index;
     int32_t count;
-} trait_offset_t;
+} pair_offset_t;
 
-/* Get index for specified trait. Take into account that a trait can be matched
+/* Get index for specified pair. Take into account that a pair can be matched
  * multiple times per table, by keeping an offset of the last found index */
 static
-int32_t get_trait_index(
+int32_t get_pair_index(
     ecs_type_t table_type,
-    ecs_entity_t component,
+    ecs_id_t pair,
     int32_t column_index,
-    trait_offset_t *trait_offsets,
+    pair_offset_t *pair_offsets,
     int32_t count)
 {
     int32_t result;
 
-    /* The count variable keeps track of the number of times a trait has been
+    /* The count variable keeps track of the number of times a pair has been
      * matched with the current table. Compare the count to check if the index
      * was already resolved for this iteration */
-    if (trait_offsets[column_index].count == count) {
+    if (pair_offsets[column_index].count == count) {
         /* If it was resolved, return the last stored index. Subtract one as the
          * index is offset by one, to ensure we're not getting stuck on the same
          * index. */
-        result = trait_offsets[column_index].index - 1;
+        result = pair_offsets[column_index].index - 1;
     } else {
-        /* First time for this iteration that the trait index is resolved, look
+        /* First time for this iteration that the pair index is resolved, look
          * it up in the type. */
-        result = ecs_type_pair_index_of(table_type, 
-            trait_offsets[column_index].index, component);
-        trait_offsets[column_index].index = result + 1;
-        trait_offsets[column_index].count = count;
+        result = ecs_type_match(table_type, 
+            pair_offsets[column_index].index, pair);
+        pair_offsets[column_index].index = result + 1;
+        pair_offsets[column_index].count = count;
     }
     
     return result;
@@ -332,7 +332,7 @@ int32_t get_component_index(
     ecs_entity_t *component_out,
     int32_t column_index,
     ecs_oper_kind_t op,
-    trait_offset_t *trait_offsets,
+    pair_offset_t *pair_offsets,
     int32_t count)
 {
     int32_t result = 0;
@@ -349,74 +349,76 @@ int32_t get_component_index(
             result += table->sw_column_offset;
         } else
         if (ECS_HAS_ROLE(component, PAIR)) { 
-            /* If only the lo part of the trait identifier is set, interpret it
-             * as the trait to match. This will match any instance of the trait
+            /* If only the lo part of the pair identifier is set, interpret it
+             * as the pair to match. This will match any instance of the pair
              * on the entity and in a signature looks like "PAIR | MyTrait". */
-            if (!ECS_PAIR_RELATION(component)) {
-                ecs_assert(trait_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_entity_t rel = ECS_PAIR_RELATION(component);
+            ecs_entity_t obj = ECS_PAIR_OBJECT(component);
 
-                /* Strip the PAIR role */
-                component &= ECS_COMPONENT_MASK;
+            ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
 
-                /* Get index of trait. Start looking from the last trait index
-                 * as this may not be the first instance of the trait. */
-                result = get_trait_index(
-                    table_type, component, column_index, trait_offsets, count);
+            if (rel == EcsWildcard || obj == EcsWildcard) {
+                ecs_assert(pair_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                /* Get index of pair. Start looking from the last pair index
+                 * as this may not be the first instance of the pair. */
+                result = get_pair_index(
+                    table_type, component, column_index, pair_offsets, count);
                 
                 if (result != -1) {
-                    /* If component of current column is a trait, get the actual 
-                     * trait type for the table, so the system can see which 
-                     * component the trait was applied to */   
-                    ecs_entity_t *trait = ecs_vector_get(
+                    /* If component of current column is a pair, get the actual 
+                     * pair type for the table, so the system can see which 
+                     * component the pair was applied to */   
+                    ecs_entity_t *pair = ecs_vector_get(
                         table_type, ecs_entity_t, result);
-                    *component_out = *trait;
+                    *component_out = *pair;
 
-                    /* Check if the trait is a tag or whether it has data */
-                    if (ecs_get(world, component, EcsComponent) == NULL) {
-                        /* If trait has no data associated with it, use the
-                         * component to which the trait has been added */
-                        component = ecs_entity_t_lo(*trait);
+                    char buf[256]; ecs_entity_str(world, *pair, buf, 256);
+
+                    /* Check if the pair is a tag or whether it has data */
+                    if (ecs_get(world, rel, EcsComponent) == NULL) {
+                        /* If pair has no data associated with it, use the
+                         * component to which the pair has been added */
+                        component = ECS_PAIR_OBJECT(*pair);
+                    } else {
+                        component = rel;
                     }
                 }
             } else {
-                /* If trait does have the hi part of the identifier set, this is
-                 * a fully qualified trait identifier. In a signature this looks
+                /* If pair does have the hi part of the identifier set, this is
+                 * a fully qualified pair identifier. In a signature this looks
                  * like "PAIR | MyTrait > Comp". */
-                ecs_entity_t lo = ecs_entity_t_lo(component);
-                if (lo == EcsWildcard) {
-                    ecs_assert(trait_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (!obj) {
+                    ecs_assert(pair_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                    /* Get id for the trait to lookup by taking the trait from
-                     * the high 32 bits, move it to the low 32 bits, and reapply
-                     * the PAIR mask. */
-                    component = ECS_PAIR_RELATION(component);
-
-                    /* If the low part of the identifier is the wildcard entity,
+                    /* If the low part of the identifier is 0,
                      * this column is requesting the component to which the 
-                     * trait is applied. First, find the component identifier */
-                    result = get_trait_index(table_type, component, 
-                        column_index, trait_offsets, count);
+                     * pair is applied. First, find the component identifier 
+                     *
+                     * This behavior will be replaced by query variables. */
+                    result = get_pair_index(table_type, component, 
+                        column_index, pair_offsets, count);
 
-                    /* Type must have the trait, otherwise table would not have
+                    /* Type must have the pair, otherwise table would not have
                      * matched */
                     ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
 
                     /* Get component id at returned index */
-                    ecs_entity_t *trait = ecs_vector_get(
+                    ecs_entity_t *pair = ecs_vector_get(
                         table_type, ecs_entity_t, result);
-                    ecs_assert(trait != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                    /* Get the lower part of the trait id. This is the component
+                    /* Get the lower part of the pair id. This is the component
                      * we're looking for. */
-                    component = ecs_entity_t_lo(*trait);
+                    component = ECS_PAIR_OBJECT(*pair);
                     *component_out = component;
 
                     /* Now lookup the component as usual */
                 }
 
                 /* If the low part is a regular entity (component), then
-                 * this query exactly matches a single trait instance. In
-                 * this case we can simply do a lookup of the trait 
+                 * this query exactly matches a single pair instance. In
+                 * this case we can simply do a lookup of the pair 
                  * identifier in the table type. */
                 result = ecs_type_index_of(table_type, component);
             }
@@ -485,68 +487,62 @@ ecs_vector_t* add_ref(
 }
 
 static
-ecs_entity_t is_column_trait(
+bool is_column_wildcard_pair(
     ecs_term_t *term)
 {
     ecs_entity_t c = term->id;
-    if (c) {
-        if (ECS_HAS_ROLE(c, PAIR)) {
-            if (!ECS_PAIR_RELATION(c)) {
-                return c;
-            } else
-            if (ECS_PAIR_OBJECT(c) == EcsWildcard) {
-                return ECS_PAIR_RELATION(c);
-            }
+
+    if (ECS_HAS_ROLE(c, PAIR)) {
+        ecs_assert(ECS_PAIR_RELATION(c) != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t rel = ECS_PAIR_RELATION(c);
+        ecs_entity_t obj = ECS_PAIR_OBJECT(c);
+        if (!obj || obj == EcsWildcard) {
+            return true;
         }
+        if (rel == EcsWildcard) {
+            return true;
+        }
+    } else {
+        return false;
     }
 
-    return 0;
+    return false;
 }
 
 static
-int32_t type_trait_count(
+int32_t get_pair_count(
     ecs_type_t type,
-    ecs_entity_t trait)
+    ecs_entity_t pair)
 {
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
-    int32_t result = 0;
-
-    trait &= ECS_COMPONENT_MASK;
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];
-        if (ECS_HAS_ROLE(e, PAIR)) {
-            if (ECS_PAIR_RELATION(e) == trait) {
-                result ++;
-            }
-        }
+    int32_t i = -1, result = 0;
+    while (-1 != (i = ecs_type_match(type, i + 1, pair))) {
+        result ++;
     }
 
     return result;
 }
 
-/* For each trait that the query subscribes for, count the occurrences in the
- * table. Cardinality of subscribed for traits must be the same as in the table
+/* For each pair that the query subscribes for, count the occurrences in the
+ * table. Cardinality of subscribed for pairs must be the same as in the table
  * or else the table won't match. */
 static
-int32_t count_traits(
+int32_t count_pairs(
     const ecs_query_t *query,
     ecs_type_t type)
 {
     ecs_term_t *terms = query->filter.terms;
     int32_t i, count = query->filter.term_count;
-    int32_t first_count = 0, trait_count = 0;
+    int32_t first_count = 0, pair_count = 0;
 
     for (i = 0; i < count; i ++) {
-        ecs_entity_t trait = is_column_trait(&terms[i]);
-        if (trait) {
-            trait_count = type_trait_count(type, trait);
+        ecs_term_t *term = &terms[i];
+        if (is_column_wildcard_pair(term)) {
+            pair_count = get_pair_count(type, term->id);
             if (!first_count) {
-                first_count = trait_count;
+                first_count = pair_count;
             } else {
-                if (first_count != trait_count) {
-                    /* The traits that this query subscribed for occur in the
+                if (first_count != pair_count) {
+                    /* The pairs that this query subscribed for occur in the
                      * table but don't have the same cardinality. Ignore the
                      * table. This could typically happen for empty tables along
                      * a path in the table graph. */
@@ -594,18 +590,18 @@ void add_table(
         table_type = table->type;
     }
 
-    int32_t trait_cur = 0, trait_count = count_traits(query, table_type);
+    int32_t pair_cur = 0, pair_count = count_pairs(query, table_type);
     
-    /* If the query has traits, we need to account for the fact that a table may
-     * have multiple components to which the trait is applied, which means the
+    /* If the query has pairs, we need to account for the fact that a table may
+     * have multiple components to which the pair is applied, which means the
      * table has to be registered with the query multiple times, with different
-     * table columns. If so, allocate a small array for each trait in which the
-     * last added table index of the trait is stored, so that in the next 
+     * table columns. If so, allocate a small array for each pair in which the
+     * last added table index of the pair is stored, so that in the next 
      * iteration we can start the search from the correct offset type. */
-    trait_offset_t *trait_offsets = NULL;
-    if (trait_count) {
-        trait_offsets = ecs_os_calloc(
-            ECS_SIZEOF(trait_offset_t) * term_count);
+    pair_offset_t *pair_offsets = NULL;
+    if (pair_count) {
+        pair_offsets = ecs_os_calloc(
+            ECS_SIZEOF(pair_offset_t) * term_count);
     }
 
     /* From here we recurse */
@@ -615,7 +611,7 @@ void add_table(
     ecs_matched_table_t table_data;
     ecs_vector_t *references = NULL;
 
-add_trait:
+add_pair:
     table_data = (ecs_matched_table_t){ .iter_data.table = table };
     if (table) {
         table_type = table->type;
@@ -659,7 +655,7 @@ add_trait:
         /* This column does not retrieve data from a static entity */
         if (!entity && subj.entity) {
             int32_t index = get_component_index(world, table, table_type, 
-                &component, c, op, trait_offsets, trait_cur + 1);
+                &component, c, op, pair_offsets, pair_cur + 1);
 
             if (index == -1) {
                 if (op == EcsOptional && subj.set.mask == EcsSelf) {
@@ -775,10 +771,10 @@ add_trait:
 
     *table_elem = table_data;
 
-    /* Use tail recursion when adding table for multiple traits */
-    trait_cur ++;
-    if (trait_cur < trait_count) {
-        goto add_trait;
+    /* Use tail recursion when adding table for multiple pairs */
+    pair_cur ++;
+    if (pair_cur < pair_count) {
+        goto add_pair;
     }
 
     /* Register table indices before sending out the match signal. This signal
@@ -803,8 +799,8 @@ add_trait:
         activate_table(world, query, table, true);
     }
 
-    if (trait_offsets) {
-        ecs_os_free(trait_offsets);
+    if (pair_offsets) {
+        ecs_os_free(pair_offsets);
     }
 }
 
@@ -877,8 +873,8 @@ bool ecs_query_match(
         return false;
     }
 
-    /* Check if trait cardinality matches traits in query, if any */
-    if (count_traits(query, table->type) == -1) {
+    /* Check if pair cardinality matches pairs in query, if any */
+    if (count_pairs(query, table->type) == -1) {
         return false;
     }
 
@@ -1410,14 +1406,14 @@ bool has_refs(
 }
 
 static
-bool has_traits(
+bool has_pairs(
     ecs_query_t *query)
 {
     ecs_term_t *terms = query->filter.terms;
     int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
-        if (is_column_trait(&terms[i])) {
+        if (is_column_wildcard_pair(&terms[i])) {
             return true;
         }
     }
@@ -1552,7 +1548,7 @@ void process_signature(
     }
 
     query->flags |= (ecs_flags32_t)(has_refs(query) * EcsQueryHasRefs);
-    query->flags |= (ecs_flags32_t)(has_traits(query) * EcsQueryHasTraits);
+    query->flags |= (ecs_flags32_t)(has_pairs(query) * EcsQueryHasTraits);
 
     if (!(query->flags & EcsQueryIsSubquery)) {
         register_monitors(world, query);

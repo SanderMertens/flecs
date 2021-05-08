@@ -287,7 +287,9 @@ public:
      * @return The stage.
      */
     flecs::world async_stage() const {
-        return flecs::world(ecs_async_stage_new(m_world));
+        auto result = flecs::world(ecs_async_stage_new(m_world));
+        result.m_owned = true;
+        return result;
     }
 
     /** Get actual world.

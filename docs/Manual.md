@@ -590,8 +590,8 @@ ecs_entity_t tag_1 = ecs_new(world, 0);
 ecs_entity_t tag_2 = ecs_new(world, 0);
 
 ecs_entity_t e = ecs_new(world, 0);
-ecs_add_entity(world, e, tag_1);
-ecs_add_entity(world, e, tag_2);
+ecs_add_id(world, e, tag_1);
+ecs_add_id(world, e, tag_2);
 ```
 
 Printing the contents of the type of `e` now would produce something similar to:
@@ -637,7 +637,7 @@ Entities with type flags can be dynamically added or removed:
 
 ```c
 ecs_add_pair(world, child, EcsChildOf, parent);
-ecs_remove_entity(world, child, ECS_CHILDOF | parent);
+ecs_remove_id(world, child, ECS_CHILDOF | parent);
 ```
 
 Additionally, type flags can also be used inside of type and signature expressions, such as in the `ECS_TYPE` and `ECS_ENTITY` macro's:
@@ -679,8 +679,8 @@ The `Sandwich` entity contains an `OR` type constraint that is applied to the `T
 Type constraints can be added and removed like other type flags:
 
 ```c
-ecs_add_entity(world, child, ECS_OR | Toppings);
-ecs_remove_entity(world, child, ECS_OR | Toppings);
+ecs_add_id(world, child, ECS_OR | Toppings);
+ecs_remove_id(world, child, ECS_OR | Toppings);
 ```
 
 ## Components
@@ -953,7 +953,7 @@ For functions that require an `ecs_entity_t` handle, the tag variable names are 
 
 ```c
 void add_tag(ecs_world_t *t, ecs_entity_t e, ecs_entity_t Tag) {
-    ecs_add_entity(world, e, Tag);
+    ecs_add_id(world, e, Tag);
 }
 
 int main() {
@@ -968,7 +968,7 @@ int main() {
 }
 ```
 
-Anyone who paid careful attention to this example will notice that the `ecs_add_entity` operation accepts two regular entities. 
+Anyone who paid careful attention to this example will notice that the `ecs_add_id` operation accepts two regular entities. 
 
 ### Switchable tags
 Switchable tags are sets of regular tags that can be added to an entity, except that only one of the set can be active at the same time. This is particularly useful when storing state machines. Consider the following example:
@@ -985,16 +985,16 @@ ecs_entity_t e = ecs_new(world, 0);
 
 /* Add the switch to the entity. This lets Flecs know that only one of the tags
  * in the Movement type may be active at the same time. */
-ecs_add_entity(world, e, ECS_SWITCH | Movement);
+ecs_add_id(world, e, ECS_SWITCH | Movement);
 
 /* Add the Standing case to the entity */
-ecs_add_entity(world, e, ECS_CASE | Standing);
+ecs_add_id(world, e, ECS_CASE | Standing);
 
 /* Add the Walking case to the entity. This removes Standing */
-ecs_add_entity(world, e, ECS_CASE | Walking);
+ecs_add_id(world, e, ECS_CASE | Walking);
 
 /* Add the Running case to the entity. This removes Walking */
-ecs_add_entity(world, e, ECS_CASE | Running);
+ecs_add_id(world, e, ECS_CASE | Running);
 ```
 
 Switchable tags aren't just convenient, they are also very fast, as changing a case does not move the entity between archetypes like regular tags do. This makes switchable components particularly useful for fast-changing data, like states in a state machine. Systems can query for switchable tags by using the `SWITCH` and `CASE` roles:
@@ -1890,7 +1890,7 @@ CHILDOF relationships can be added and removed dynamically, similar to how compo
 
 ```c
 ecs_add_pair(world, child, EcsChildOf, parent);
-ecs_remove_entity(world, child, ECS_CHILDOF | parent);
+ecs_remove_id(world, child, ECS_CHILDOF | parent);
 ```
 
 CHILDOF relationships can also be created through the `ECS_ENTITY` macro:
@@ -2053,8 +2053,8 @@ ecs_get(world, base, Position) == ecs_get(world, instance, Position); // 1
 INSTANCEOF relationships can be added and removed dynamically, similar to how components can be added and removed:
 
 ```c
-ecs_add_entity(world, instance, ECS_INSTANCEOF | base);
-ecs_remove_entity(world, instance, ECS_INSTANCEOF | base);
+ecs_add_id(world, instance, ECS_INSTANCEOF | base);
+ecs_remove_id(world, instance, ECS_INSTANCEOF | base);
 ```
 
 INSTANCEOF relationships can also be created through the `ECS_ENTITY` macro:
@@ -2139,7 +2139,7 @@ In some scenarios it is desirable that an entity is initialized with a specific 
 ecs_entity_t Base = ecs_set(world, 0, Position, {10, 20});
 
 // Mark as OWNED. This ensures that when base is instantiated, Position is overridden
-ecs_add_entity(world, world, Base, ECS_OWNED | ecs_typeid(Position));
+ecs_add_id(world, world, Base, ECS_OWNED | ecs_typeid(Position));
 
 // Create entity from BaseType. This adds the INSTANCEOF relationship in addition 
 // to overriding Position, effectively initializing the Position component for the instance.
@@ -2198,7 +2198,7 @@ ecs_set(world, child, EcsName, {"Child"});
 
 // Create actual child that is an instance of child base
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
-ecs_add_entity(world, child, ECS_INSTANCEOF | child_base);
+ecs_add_id(world, child, ECS_INSTANCEOF | child_base);
 
 // Create instance of parent, two childs are added to the instance
 ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, parent);
@@ -2218,8 +2218,8 @@ ecs_entity_t prefab = ecs_new_w_entity(world, EcsPrefab);
 The `EcsPrefab` tag can also be added or removed dynamically:
 
 ```c
-ecs_add_entity(world, prefab, EcsPrefab);
-ecs_remove_entity(world, prefab, EcsPrefab);
+ecs_add_id(world, prefab, EcsPrefab);
+ecs_remove_id(world, prefab, EcsPrefab);
 ```
 
 Prefabs can also be created with the `ECS_PREFAB` macro:
@@ -2317,10 +2317,10 @@ void ExpireComponents(ecs_iter_t *it) {
             printf("Remove component '%s'\n", ecs_get_name(it->world, comp));
 
             /* Removes component (Position or Velocity) */
-            ecs_remove_entity(it->world, it->entities[i], comp);
+            ecs_remove_id(it->world, it->entities[i], comp);
 
             /* Removes trait */
-            ecs_remove_entity(it->world, it->entities[i], trait);
+            ecs_remove_id(it->world, it->entities[i], trait);
         }
     }
 }

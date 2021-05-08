@@ -636,7 +636,7 @@ public:
      */
     template <typename T>
     const Base& add() const {
-        ecs_add_entity(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
+        ecs_add_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
         return *this;
     }
 
@@ -646,7 +646,7 @@ public:
      * @param entity The entity to add.
      */
     const Base& add(const entity_view& entity) const {
-        ecs_add_entity(this->base_world(), this->base_id(), entity.id());
+        ecs_add_id(this->base_world(), this->base_id(), entity.id());
         return *this;
     }
 
@@ -718,7 +718,7 @@ public:
      */
     template <typename T>
     const Base& remove() const {
-        ecs_remove_entity(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
+        ecs_remove_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
         return *this;
     }
 
@@ -727,7 +727,7 @@ public:
      * @param entity The entity to remove.
      */
     const Base& remove(const entity_view& entity) const {
-        ecs_remove_entity(this->base_world(), this->base_id(), entity.id());
+        ecs_remove_id(this->base_world(), this->base_id(), entity.id());
         return *this;
     }
 
@@ -789,7 +789,7 @@ public:
      * @param entity The entity for which to add the OWNED flag
      */    
     const Base& add_owned(const entity_view& entity) const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_OWNED | entity.id());
+        ecs_add_id(this->base_world(), this->base_id(), ECS_OWNED | entity.id());
         return *this;  
     }
 
@@ -799,7 +799,7 @@ public:
      */    
     template <typename T>
     const Base& add_owned() const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_OWNED | _::cpp_type<T>::id(this->base_world()));
+        ecs_add_id(this->base_world(), this->base_id(), ECS_OWNED | _::cpp_type<T>::id(this->base_world()));
         return *this;  
     }
 
@@ -824,7 +824,7 @@ public:
      * @param sw The switch entity id to add.
      */    
     const Base& add_switch(const entity_view& sw) const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
+        ecs_add_id(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
         return *this;  
     }
 
@@ -840,7 +840,7 @@ public:
      * @param sw The switch entity id to remove.
      */    
     const Base& remove_switch(const entity_view& sw) const {
-        ecs_remove_entity(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
+        ecs_remove_id(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
         return *this;  
     }
     
@@ -857,7 +857,7 @@ public:
      * @param sw_case The case entity id to add.
      */    
     const Base& add_case(const entity_view& sw_case) const {
-        ecs_add_entity(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
+        ecs_add_id(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
         return *this;
     }
 
@@ -877,7 +877,7 @@ public:
      * @param sw_case The case entity id to remove.
      */    
     const Base& remove_case(const entity_view& sw_case) const {
-        ecs_remove_entity(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
+        ecs_remove_id(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
         return *this;  
     }
 

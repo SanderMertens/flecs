@@ -115,6 +115,8 @@ void World_multi_world_component_namespace() {
     auto id_2 = c.id();
 
     test_assert(id_1 == id_2);
+
+    delete w;
 }
 
 void World_type_id() {

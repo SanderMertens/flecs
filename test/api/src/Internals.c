@@ -214,7 +214,7 @@ void Internals_create_65k_tables() {
     int32_t i;
     for (i = 0; i <= 65536; i ++) {
         ecs_entity_t e = ecs_new_id(world);
-        ecs_add_entity(world, e, e);
+        ecs_add_id(world, e, e);
         test_assert(ecs_has_entity(world, e, e));
         test_int(ecs_vector_count(ecs_get_type(world, e)), 1);
     }

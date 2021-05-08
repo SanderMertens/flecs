@@ -3332,7 +3332,6 @@ size_t ecs_id_str(
     size_t buffer_len)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(buffer != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(buffer_len > 0, ECS_INVALID_PARAMETER, NULL);
 
@@ -3352,8 +3351,8 @@ size_t ecs_id_str(
         ecs_entity_t lo = ECS_PAIR_OBJECT(id);
         ecs_entity_t hi = ECS_PAIR_RELATION(id);
 
-        lo = ecs_get_alive(world, lo);
-        hi = ecs_get_alive(world, hi);
+        if (lo) lo = ecs_get_alive(world, lo);
+        if (hi) hi = ecs_get_alive(world, hi);
 
         if (hi) {
             char *hi_path = ecs_get_fullpath(world, hi);

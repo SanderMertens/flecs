@@ -321,10 +321,10 @@ void ExpireComponents(ecs_iter_t *it) {
         et[i].t += it->delta_time;
         if (et[i].t >= et[i].expiry_time) {
             /* Remove component */
-            ecs_remove_entity(it->world, it->entities[i], comp);
+            ecs_remove_id(it->world, it->entities[i], comp);
 
             /* Removes trait, so system won't be invoked again */
-            ecs_remove_entity(it->world, it->entities[i], trait);
+            ecs_remove_id(it->world, it->entities[i], trait);
         }
     }
 ```

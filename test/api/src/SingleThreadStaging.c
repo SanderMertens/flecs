@@ -219,10 +219,10 @@ void Add_to_new_empty(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = ecs_new(it->world, 0);
         if (ctx->component) {
-            ecs_add_entity(it->world, e, ctx->component);
+            ecs_add_id(it->world, e, ctx->component);
         }
         if (ctx->component_2) {
-            ecs_add_entity(it->world, e, ctx->component_2);
+            ecs_add_id(it->world, e, ctx->component_2);
         }
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -297,13 +297,13 @@ void Add_remove_same_from_new(ecs_iter_t *it) {
         test_assert( !ecs_get_type(it->world, e));
 
         if (ctx->component) {
-            ecs_add_entity(it->world, e, ctx->component);
-            ecs_remove_entity(it->world, e, ctx->component);
+            ecs_add_id(it->world, e, ctx->component);
+            ecs_remove_id(it->world, e, ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(it->world, e, ctx->component_2);
-            ecs_remove_entity(it->world, e, ctx->component_2);
+            ecs_add_id(it->world, e, ctx->component_2);
+            ecs_remove_id(it->world, e, ctx->component_2);
         }
 
         ctx->new_entities[ctx->entity_count] = e;
@@ -373,8 +373,8 @@ void Add_remove_same_from_new_w_component(ecs_iter_t *it) {
         ecs_entity_t e = ecs_new_w_entity(it->world, ctx->component);
 
         if (ctx->component_2) {
-            ecs_add_entity(it->world, e, ctx->component_2);
-            ecs_remove_entity(it->world, e, ctx->component_2);
+            ecs_add_id(it->world, e, ctx->component_2);
+            ecs_remove_id(it->world, e, ctx->component_2);
         }
 
         ctx->new_entities[ctx->entity_count] = e;
@@ -419,15 +419,15 @@ void Add_remove_different_from_new_empty(ecs_iter_t *it) {
         ecs_entity_t e = ecs_new(it->world, 0);
 
         if (ctx->component_3) {
-            ecs_add_entity(it->world, e, ctx->component_3);
+            ecs_add_id(it->world, e, ctx->component_3);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(it->world, e, ctx->component_2);
+            ecs_remove_id(it->world, e, ctx->component_2);
         }
 
         if (ctx->component) {
-            ecs_add_entity(it->world, e, ctx->component);
+            ecs_add_id(it->world, e, ctx->component);
         }
 
         ctx->new_entities[ctx->entity_count] = e;
@@ -611,10 +611,10 @@ void Add_to_current(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component);
+            ecs_add_id(it->world, it->entities[i], ctx->component);
         }
         if (ctx->component_2) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
+            ecs_add_id(it->world, it->entities[i], ctx->component_2);
         }
         ctx->entity_count ++;
     }
@@ -697,11 +697,11 @@ void Remove_from_current(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
 
         if (ctx->component) {
-            ecs_remove_entity(it->world, e, ctx->component);
+            ecs_remove_id(it->world, e, ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(it->world, e, ctx->component_2);
+            ecs_remove_id(it->world, e, ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -797,13 +797,13 @@ void Add_remove_same_from_current(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component);
-            ecs_remove_entity(it->world, it->entities[i], ctx->component);
+            ecs_add_id(it->world, it->entities[i], ctx->component);
+            ecs_remove_id(it->world, it->entities[i], ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
-            ecs_remove_entity(it->world, it->entities[i], ctx->component_2);
+            ecs_add_id(it->world, it->entities[i], ctx->component_2);
+            ecs_remove_id(it->world, it->entities[i], ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -896,13 +896,13 @@ void Remove_add_same_from_current(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_remove_entity(it->world, it->entities[i], ctx->component);
-            ecs_add_entity(it->world, it->entities[i], ctx->component);
+            ecs_remove_id(it->world, it->entities[i], ctx->component);
+            ecs_add_id(it->world, it->entities[i], ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(it->world, it->entities[i], ctx->component_2);
-            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
+            ecs_remove_id(it->world, it->entities[i], ctx->component_2);
+            ecs_add_id(it->world, it->entities[i], ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -1199,15 +1199,15 @@ void Add_remove_different_from_current(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         if (ctx->component_3) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component_3);
+            ecs_add_id(it->world, it->entities[i], ctx->component_3);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(it->world, it->entities[i], ctx->component_2);
+            ecs_remove_id(it->world, it->entities[i], ctx->component_2);
         }
 
         if (ctx->component) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component);
+            ecs_add_id(it->world, it->entities[i], ctx->component);
         }
 
         ctx->entity_count ++;
@@ -1308,15 +1308,15 @@ void Add_1_remove_2_different_from_current(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component);
+            ecs_add_id(it->world, it->entities[i], ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(it->world, it->entities[i], ctx->component_2);
+            ecs_remove_id(it->world, it->entities[i], ctx->component_2);
         }
 
         if (ctx->component_3) {
-            ecs_remove_entity(it->world, it->entities[i], ctx->component_3);
+            ecs_remove_id(it->world, it->entities[i], ctx->component_3);
         }
 
         ctx->entity_count ++;
@@ -1788,7 +1788,7 @@ void Set_new_after_add(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = ecs_new(it->world, 0);
-        ecs_add_entity(it->world, e, ctx->component);
+        ecs_add_id(it->world, e, ctx->component);
         ecs_set(it->world, e, Position, {10 + e, 20 + e});
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1845,7 +1845,7 @@ void Remove_after_set(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = ecs_new(it->world, 0);
         ecs_set(it->world, e, Position, {10 + e, 20 + e});
-        ecs_remove_entity(it->world, e, ctx->component);
+        ecs_remove_id(it->world, e, ctx->component);
 
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;

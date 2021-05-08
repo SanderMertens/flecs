@@ -50,6 +50,7 @@ enum var_kind_t {
 };
 
 class world;
+class world_async_stage;
 class snapshot;
 class entity;
 class entity_view;

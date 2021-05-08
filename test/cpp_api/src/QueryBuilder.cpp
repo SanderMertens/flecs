@@ -875,3 +875,153 @@ void QueryBuilder_isa_supetset_min_depth_2_max_depth_3() {
     
     test_int(count, 4);
 }
+
+void QueryBuilder_role() {
+    flecs::world ecs;
+
+    struct Walking { };
+    struct Running { };
+
+    auto Movement = ecs.type()
+        .add<Walking>()
+        .add<Running>();
+
+    auto q = ecs.query_builder<Self>()
+        .term(Movement).role(flecs::Switch)
+        .term<Running>().role(flecs::Case)
+        .build();
+
+    auto 
+    e = ecs.entity().add_switch(Movement).add_case<Running>(); e.set<Self>({e});
+    e = ecs.entity().add_switch(Movement).add_case<Running>(); e.set<Self>({e});
+
+    e = ecs.entity().add_switch(Movement).add_case<Walking>(); e.set<Self>({0});
+    e = ecs.entity().add_switch(Movement).add_case<Walking>(); e.set<Self>({0});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+    
+    test_int(count, 2);
+}
+
+void QueryBuilder_relation() {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Bob = ecs.entity();
+    auto Alice = ecs.entity();
+
+    auto q = ecs.query_builder<Self>()
+        .term(Likes, Bob)
+        .build();
+
+    auto 
+    e = ecs.entity().add(Likes, Bob); e.set<Self>({e});
+    e = ecs.entity().add(Likes, Bob); e.set<Self>({e});
+
+    e = ecs.entity().add(Likes, Alice); e.set<Self>({0});
+    e = ecs.entity().add(Likes, Alice); e.set<Self>({0});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+    
+    test_int(count, 2);
+}
+
+void QueryBuilder_relation_w_object_wildcard() {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Bob = ecs.entity();
+    auto Alice = ecs.entity();
+
+    auto q = ecs.query_builder<Self>()
+        .term(Likes, flecs::Wildcard)
+        .build();
+
+    auto 
+    e = ecs.entity().add(Likes, Bob); e.set<Self>({e});
+    e = ecs.entity().add(Likes, Bob); e.set<Self>({e});
+
+    e = ecs.entity().add(Likes, Alice); e.set<Self>({e});
+    e = ecs.entity().add(Likes, Alice); e.set<Self>({e});
+
+    e = ecs.entity(); e.set<Self>({0});
+    e = ecs.entity(); e.set<Self>({0});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+    
+    test_int(count, 4);
+}
+
+void QueryBuilder_relation_w_predicate_wildcard() {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Dislikes = ecs.entity();
+    auto Bob = ecs.entity();
+    auto Alice = ecs.entity();
+
+    auto q = ecs.query_builder<Self>()
+        .term(flecs::Wildcard, Alice)
+        .build();
+
+    auto 
+    e = ecs.entity().add(Likes, Alice); e.set<Self>({e});
+    e = ecs.entity().add(Dislikes, Alice); e.set<Self>({e});
+
+    e = ecs.entity().add(Likes, Bob); e.set<Self>({0});
+    e = ecs.entity().add(Dislikes, Bob); e.set<Self>({0});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+    
+    test_int(count, 2);
+}
+
+void QueryBuilder_add_pair_w_rel_type() {
+    flecs::world ecs;
+
+    struct Likes { };
+    
+    auto Dislikes = ecs.entity();
+    auto Bob = ecs.entity();
+    auto Alice = ecs.entity();
+
+    auto q = ecs.query_builder<Self>()
+        .term<Likes>(flecs::Wildcard)
+        .build();
+
+    auto 
+    e = ecs.entity().add<Likes>(Alice); e.set<Self>({e});
+    e = ecs.entity().add(Dislikes, Alice); e.set<Self>({0});
+
+    e = ecs.entity().add<Likes>(Bob); e.set<Self>({e});
+    e = ecs.entity().add(Dislikes, Bob); e.set<Self>({0});
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+    
+    test_int(count, 2);
+}

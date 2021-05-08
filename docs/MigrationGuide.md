@@ -127,10 +127,10 @@ While there have been many changes to the API in v2, in general the operations r
 
 Old                      | New
 -------------------------|------
-`ecs_adopt(world, e, p)` | `ecs_add_entity(world, e, ECS_CHILDOF \| p)`
-`ecs_orphan(world, e, p)` | `ecs_remove_entity(world, e, ECS_CHILDOF \| p)`
-`ecs_inherit(world, e, b)` | `ecs_add_entity(world, e, ECS_INSTANCEOF \| b)`
-`ecs_disinherit(world, e, b)` | `ecs_remove_entity(world, e, ECS_INSTANCEOF \| b)`
+`ecs_adopt(world, e, p)` | `ecs_add_id(world, e, ECS_CHILDOF \| p)`
+`ecs_orphan(world, e, p)` | `ecs_remove_id(world, e, ECS_CHILDOF \| p)`
+`ecs_inherit(world, e, b)` | `ecs_add_id(world, e, ECS_INSTANCEOF \| b)`
+`ecs_disinherit(world, e, b)` | `ecs_remove_id(world, e, ECS_INSTANCEOF \| b)`
 
 - `ecs_get_id` is now `ecs_get_name`
 - `EcsId` is now `EcsName`

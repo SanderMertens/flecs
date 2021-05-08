@@ -245,6 +245,11 @@ void QueryBuilder_isa_supetset_max_depth_1(void);
 void QueryBuilder_isa_supetset_max_depth_2(void);
 void QueryBuilder_isa_supetset_min_depth_2(void);
 void QueryBuilder_isa_supetset_min_depth_2_max_depth_3(void);
+void QueryBuilder_role(void);
+void QueryBuilder_relation(void);
+void QueryBuilder_relation_w_object_wildcard(void);
+void QueryBuilder_relation_w_predicate_wildcard(void);
+void QueryBuilder_add_pair_w_rel_type(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -1282,6 +1287,26 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "isa_supetset_min_depth_2_max_depth_3",
         QueryBuilder_isa_supetset_min_depth_2_max_depth_3
+    },
+    {
+        "role",
+        QueryBuilder_role
+    },
+    {
+        "relation",
+        QueryBuilder_relation
+    },
+    {
+        "relation_w_object_wildcard",
+        QueryBuilder_relation_w_object_wildcard
+    },
+    {
+        "relation_w_predicate_wildcard",
+        QueryBuilder_relation_w_predicate_wildcard
+    },
+    {
+        "add_pair_w_rel_type",
+        QueryBuilder_add_pair_w_rel_type
     }
 };
 
@@ -1829,7 +1854,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        35,
+        40,
         QueryBuilder_testcases
     },
     {

@@ -12,13 +12,13 @@ void Add_to_current(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component);
+            ecs_add_id(it->world, it->entities[i], ctx->component);
 
             test_assert( !!ecs_get_type(it->world, it->entities[i]));
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
+            ecs_add_id(it->world, it->entities[i], ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -34,11 +34,11 @@ void Remove_from_current(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
 
         if (ctx->component) {
-            ecs_remove_entity(it->world, e, ctx->component);
+            ecs_remove_id(it->world, e, ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(it->world, e, ctx->component_2);
+            ecs_remove_id(it->world, e, ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -798,7 +798,7 @@ void SystemOnSet_no_set_after_remove_base() {
     ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
-    ecs_remove_entity(world, e, ecs_pair(EcsIsA, Base));
+    ecs_remove_id(world, e, ecs_pair(EcsIsA, Base));
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
@@ -838,7 +838,7 @@ void SystemOnSet_un_set_after_remove_base() {
     ecs_add_pair(world, e, EcsIsA, Base);
     test_int(ctx.invoked, 0);
 
-    ecs_remove_entity(world, e, ecs_pair(EcsIsA, Base));
+    ecs_remove_id(world, e, ecs_pair(EcsIsA, Base));
     test_int(ctx.invoked, 1);
 
     ecs_fini(world);
@@ -1106,7 +1106,7 @@ void Add0(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add_entity(it->world, it->entities[i], 0);
+        ecs_add_id(it->world, it->entities[i], 0);
     }
 }
 

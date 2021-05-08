@@ -1,8 +1,8 @@
-#ifndef TRAITS_H
-#define TRAITS_H
+#ifndef PAIR_H
+#define PAIR_H
 
 /* This generated file contains includes for project dependencies */
-#include "traits/bake_config.h"
+#include "pair/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

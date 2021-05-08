@@ -229,6 +229,10 @@ typedef struct ecs_term_t {
 
     int32_t index;              /* Computed term index in filter which takes 
                                  * into account folded OR terms */
+
+    bool move;                  /* When true, this signals to ecs_term_copy that
+                                 * the resources held by this term may be moved
+                                 * into the destination term. */
 } ecs_term_t;
 
 /* Deprecated */
@@ -2696,6 +2700,20 @@ FLECS_API
 ecs_term_t ecs_term_copy(
     const ecs_term_t *src);
 
+/** Move resources of a term to another term.
+ * Same as copy, but moves resources from src, if src->move is set to true. If
+ * src->move is not set to true, this operation will do a copy.
+ *
+ * The conditional move reduces redundant allocations in scenarios where a list 
+ * of terms is partially created with allocated resources.
+ *
+ * @param dst The term to copy to.
+ * @param src The term to copy from.
+ */
+FLECS_API 
+ecs_term_t ecs_term_move(
+    ecs_term_t *src);    
+
 /** Free resources of term.
  * This operation frees all resources (such as identifiers) of a term. The term
  * object itself is not freed.
@@ -2705,6 +2723,18 @@ ecs_term_t ecs_term_copy(
 FLECS_API
 void ecs_term_fini(
     ecs_term_t *term);
+
+/** Utility to match an id with a pattern.
+ * This operation returns true if the provided pattern matches the provided
+ * id. The pattern may contain a wildcard (or wildcards, when a pair).
+ *
+ * @param id The id.
+ * @param pattern The pattern to compare with.
+ */
+FLECS_API
+bool ecs_id_match(
+    ecs_id_t id,
+    ecs_id_t pattern);
 
 /** @} */
 

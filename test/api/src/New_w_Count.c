@@ -253,7 +253,7 @@ void SetPosition(ecs_iter_t *it) {
     int i;
     for (i = it->count - 1; i >= 0; i --) {
         p[i].y ++;
-        ecs_add_entity(it->world, it->entities[i], rotation);
+        ecs_add_id(it->world, it->entities[i], rotation);
     }
 }
 

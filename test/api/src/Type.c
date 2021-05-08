@@ -193,7 +193,7 @@ void Type_type_has_pair() {
     ecs_entity_t entities[2] = {ecs_pair(Pair, ecs_typeid(Position))};
     ecs_type_t t = ecs_type_find(world, entities, 1);
     test_assert(t == ecs_type(Type));
-    test_assert( ecs_type_has_entity(world, t, ECS_PAIR | Pair));
+    test_assert( ecs_type_has_entity(world, t, ecs_pair(Pair, EcsWildcard)));
 
     ecs_fini(world);
 }
@@ -214,7 +214,7 @@ void Type_type_has_pair_exact() {
     ecs_fini(world);
 }
 
-void Type_type_has_pair_wildcard() {
+void Type_type_has_pair_0() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -224,15 +224,15 @@ void Type_type_has_pair_wildcard() {
     ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position);
 
     test_assert( ecs_type_has_entity(world, ecs_type(TypeMatch), 
-        ecs_pair(Pair, EcsWildcard)));
+        ecs_pair(Pair, 0)));
 
     test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, EcsWildcard)));
+        ecs_pair(Pair, 0)));
 
     ecs_fini(world);
 }
 
-void Type_type_has_pair_wildcard_multiple() {
+void Type_type_has_pair_0_multiple() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -243,15 +243,15 @@ void Type_type_has_pair_wildcard_multiple() {
     ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position, Position, PAIR | Pair > Velocity);
 
     test_assert( ecs_type_has_entity(world, ecs_type(TypeMatch),
-        ecs_pair(Pair, EcsWildcard)));
+        ecs_pair(Pair, 0)));
 
     test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, EcsWildcard)));
+        ecs_pair(Pair, 0)));
 
     ecs_fini(world);
 }
 
-void Type_type_has_pair_wildcard_no_pair() {
+void Type_type_has_pair_0_no_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -261,7 +261,7 @@ void Type_type_has_pair_wildcard_no_pair() {
     ECS_TYPE(world, TypeNoMatch, Position);
 
     test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, EcsWildcard)));
+        ecs_pair(Pair, 0)));
 
     ecs_fini(world);
 }
@@ -277,7 +277,7 @@ void Type_type_owns_pair() {
     ecs_entity_t entities[2] = {ecs_pair(Pair, ecs_typeid(Position))};
     ecs_type_t t = ecs_type_find(world, entities, 1);
     test_assert(t == ecs_type(Type));
-    test_assert( ecs_type_owns_entity(world, t, ECS_PAIR | Pair, true));
+    test_assert( ecs_type_owns_entity(world, t, ecs_pair(Pair, EcsWildcard), true));
 
     ecs_fini(world);
 }
@@ -298,7 +298,7 @@ void Type_type_owns_pair_exact() {
     ecs_fini(world);
 }
 
-void Type_type_owns_pair_wildcard() {
+void Type_type_owns_pair_0() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -308,15 +308,15 @@ void Type_type_owns_pair_wildcard() {
     ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position);
 
     test_assert( ecs_type_owns_entity(world, ecs_type(TypeMatch), 
-        ecs_pair(Pair, EcsWildcard), true));
+        ecs_pair(Pair, 0), true));
 
     test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, EcsWildcard), true));
+        ecs_pair(Pair, 0), true));
 
     ecs_fini(world);
 }
 
-void Type_type_owns_pair_wildcard_multiple() {
+void Type_type_owns_pair_0_multiple() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -327,15 +327,15 @@ void Type_type_owns_pair_wildcard_multiple() {
     ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position, Position, PAIR | Pair > Velocity);
 
     test_assert( ecs_type_owns_entity(world, ecs_type(TypeMatch), 
-        ecs_pair(Pair, EcsWildcard), true));
+        ecs_pair(Pair, 0), true));
 
     test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, EcsWildcard), true));
+        ecs_pair(Pair, 0), true));
 
     ecs_fini(world);
 }
 
-void Type_type_owns_pair_wildcard_no_pair() {
+void Type_type_owns_pair_0_no_pair() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -345,7 +345,7 @@ void Type_type_owns_pair_wildcard_no_pair() {
     ECS_TYPE(world, TypeNoMatch, Position);
 
     test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, EcsWildcard), true));
+        ecs_pair(Pair, 0), true));
 
     ecs_fini(world);
 }
@@ -1067,15 +1067,17 @@ void Type_type_from_expr_childof() {
 }
 
 void Type_type_from_expr_pair() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
     
     ECS_TAG(world, Pair);
 
-    /* Cannot create a type that only sets the hi id */
-    test_expect_abort();
-    ecs_type_from_str(world, "PAIR | Pair");
+    /* Legacy notation, translates to (Pair, *) */
+    ecs_type_t type = ecs_type_from_str(world, "PAIR | Pair");
+
+    test_int(ecs_vector_count(type), 1);
+    test_assert(ecs_type_has_entity(world, type, ecs_pair(Pair, EcsWildcard)));
+
+    ecs_fini(world);
 }
 
 void Type_type_from_expr_pair_w_comp() {

@@ -1049,7 +1049,7 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
-    ecs_add_entity(world, parent, Tag);
+    ecs_add_id(world, parent, Tag);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);

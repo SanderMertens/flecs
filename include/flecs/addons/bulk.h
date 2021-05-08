@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 /** Add an entity to entities matching a filter.
- * This operation is the same as ecs_add_entity, but is applied to all entities
+ * This operation is the same as ecs_add_id, but is applied to all entities
  * that match the provided filter.
  *
  * @param world The world.
@@ -52,7 +52,7 @@ void ecs_bulk_add_type(
     ecs_bulk_add_type(world, ecs_type(type), filter)
 
 /** Removes an entity from entities matching a filter.
- * This operation is the same as ecs_remove_entity, but is applied to all 
+ * This operation is the same as ecs_remove_id, but is applied to all 
  * entities that match the provided filter.
  *
  * @param world The world.
