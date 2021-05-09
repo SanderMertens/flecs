@@ -179,6 +179,7 @@ void System_each_w_mut_children_it(void);
 void System_readonly_children_iter(void);
 void System_rate_filter(void);
 void System_update_rate_filter(void);
+void System_default_ctor(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -208,6 +209,7 @@ void Query_shared_tag_w_each(void);
 void Query_sort_by(void);
 void Query_changed(void);
 void Query_orphaned(void);
+void Query_default_ctor(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1038,6 +1040,10 @@ bake_test_case System_testcases[] = {
     {
         "update_rate_filter",
         System_update_rate_filter
+    },
+    {
+        "default_ctor",
+        System_default_ctor
     }
 };
 
@@ -1144,6 +1150,10 @@ bake_test_case Query_testcases[] = {
     {
         "orphaned",
         Query_orphaned
+    },
+    {
+        "default_ctor",
+        Query_default_ctor
     }
 };
 
@@ -1833,7 +1843,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        37,
+        38,
         System_testcases
     },
     {
@@ -1847,7 +1857,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        20,
+        21,
         Query_testcases
     },
     {

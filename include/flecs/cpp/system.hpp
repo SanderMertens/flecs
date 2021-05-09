@@ -77,6 +77,9 @@ template<typename ... Components>
 class system : public entity
 {
 public:
+    explicit system() 
+        : entity() { }
+
     explicit system(flecs::world_t *world, flecs::entity_t id)
         : entity(world, id) { }
 

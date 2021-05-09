@@ -196,7 +196,8 @@
                 "each_w_mut_children_it",
                 "readonly_children_iter",
                 "rate_filter",
-                "update_rate_filter"
+                "update_rate_filter",
+                "default_ctor"
             ]
         }, {
             "id": "Trigger",
@@ -229,7 +230,8 @@
                 "shared_tag_w_each",
                 "sort_by",
                 "changed",
-                "orphaned"
+                "orphaned",
+                "default_ctor"
             ]
         }, {
             "id": "QueryBuilder",

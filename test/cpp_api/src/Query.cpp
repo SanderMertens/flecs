@@ -623,3 +623,24 @@ void Query_orphaned() {
 
     test_assert(sq.orphaned());
 }
+
+void Query_default_ctor() {
+    flecs::world world;
+
+    flecs::query<Position> q_var;
+
+    int count = 0;
+    auto q = world.query<Position>();
+
+    world.entity().set<Position>({10, 20});
+
+    q_var = q;
+    
+    q.each([&](flecs::entity e, Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

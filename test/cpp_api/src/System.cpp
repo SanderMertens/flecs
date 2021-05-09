@@ -1108,3 +1108,25 @@ void System_update_rate_filter() {
         test_int(l2_count, frame_count / l2_mult);
     }      
 }
+
+void System_default_ctor() {
+    flecs::world world;
+
+    flecs::system<Position> sys_var;
+
+    int count = 0;
+    auto sys = world.system<Position>()
+        .each([&](flecs::entity e, Position& p) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            count ++;
+        });
+
+    world.entity().set<Position>({10, 20});
+
+    sys_var = sys;
+
+    sys_var.run();
+
+    test_int(count, 1);
+}
