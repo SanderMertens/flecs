@@ -233,7 +233,8 @@
                 "changed",
                 "orphaned",
                 "default_ctor",
-                "expr_w_template"
+                "expr_w_template",
+                "query_type_w_template"
             ]
         }, {
             "id": "QueryBuilder",

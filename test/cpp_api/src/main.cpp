@@ -212,6 +212,7 @@ void Query_changed(void);
 void Query_orphaned(void);
 void Query_default_ctor(void);
 void Query_expr_w_template(void);
+void Query_query_type_w_template(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1165,6 +1166,10 @@ bake_test_case Query_testcases[] = {
     {
         "expr_w_template",
         Query_expr_w_template
+    },
+    {
+        "query_type_w_template",
+        Query_query_type_w_template
     }
 };
 
@@ -1872,7 +1877,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        22,
+        23,
         Query_testcases
     },
     {

@@ -671,3 +671,29 @@ void Query_expr_w_template() {
 
     test_int(count, 1);
 }
+
+void Query_query_type_w_template() {
+    flecs::world world;
+
+    auto comp = world.component<Template<int>>();
+    test_str(comp.name(), "Template<int>");
+
+    int count = 0;
+    auto q = world.query<Position, Template<int>>();
+
+    world.entity()
+        .set<Position>({10, 20})
+        .set<Template<int>>({30, 40});
+    
+    q.each([&](flecs::entity e, Position& p, Template<int>& t) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(t.x, 30);
+        test_int(t.y, 40);        
+
+        count ++;
+    });
+
+    test_int(count, 1);
+}
