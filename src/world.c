@@ -612,7 +612,7 @@ void fini_unset_tables(
     int32_t i, count = ecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
-        ecs_table_unset(world, table);
+        ecs_table_remove_actions(world, table);
     }
 }
 

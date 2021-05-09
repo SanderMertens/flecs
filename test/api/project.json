@@ -433,6 +433,8 @@
                 "delete_tree_staged",
                 "delete_tree_empty_table",
                 "delete_tree_recreate",
+                "delete_tree_w_onremove",
+                "delete_tree_w_dtor",
                 "get_child_count",
                 "get_child_count_2_tables",
                 "get_child_count_no_children",
@@ -638,7 +640,8 @@
                 "include_exact",
                 "exclude_exact",
                 "system_activate_test",
-                "skip_builtin_tables"
+                "skip_builtin_tables",
+                "delete_w_on_remove"
             ]
         }, {
             "id": "Set",
@@ -1035,6 +1038,7 @@
                "remove_twice",
                "on_remove_w_clear",
                "on_remove_w_delete",
+               "on_remove_w_world_fini",
                "on_add_w_clone",
                "add_in_trigger",
                "remove_in_trigger",

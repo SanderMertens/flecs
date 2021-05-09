@@ -761,6 +761,33 @@ void Trigger_on_remove_w_delete() {
     ecs_fini(world);
 }
 
+void Trigger_on_remove_w_world_fini() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA,
+        .events = {EcsOnRemove},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {TagA}
+    });
+    test_assert(e != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+}
+
 void Trigger_on_add_w_clone() {
     ecs_world_t *world = ecs_init();
 
@@ -912,3 +939,4 @@ void Trigger_trigger_w_named_entity() {
 
     ecs_fini(world);
 }
+

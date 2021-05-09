@@ -408,6 +408,8 @@ void Hierarchies_delete_tree_count_tables(void);
 void Hierarchies_delete_tree_staged(void);
 void Hierarchies_delete_tree_empty_table(void);
 void Hierarchies_delete_tree_recreate(void);
+void Hierarchies_delete_tree_w_onremove(void);
+void Hierarchies_delete_tree_w_dtor(void);
 void Hierarchies_get_child_count(void);
 void Hierarchies_get_child_count_2_tables(void);
 void Hierarchies_get_child_count_no_children(void);
@@ -594,6 +596,7 @@ void Delete_w_filter_include_exact(void);
 void Delete_w_filter_exclude_exact(void);
 void Delete_w_filter_system_activate_test(void);
 void Delete_w_filter_skip_builtin_tables(void);
+void Delete_w_filter_delete_w_on_remove(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -968,6 +971,7 @@ void Trigger_add_twice(void);
 void Trigger_remove_twice(void);
 void Trigger_on_remove_w_clear(void);
 void Trigger_on_remove_w_delete(void);
+void Trigger_on_remove_w_world_fini(void);
 void Trigger_on_add_w_clone(void);
 void Trigger_add_in_trigger(void);
 void Trigger_remove_in_trigger(void);
@@ -3350,6 +3354,14 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_delete_tree_recreate
     },
     {
+        "delete_tree_w_onremove",
+        Hierarchies_delete_tree_w_onremove
+    },
+    {
+        "delete_tree_w_dtor",
+        Hierarchies_delete_tree_w_dtor
+    },
+    {
         "get_child_count",
         Hierarchies_get_child_count
     },
@@ -4030,6 +4042,10 @@ bake_test_case Delete_w_filter_testcases[] = {
     {
         "skip_builtin_tables",
         Delete_w_filter_skip_builtin_tables
+    },
+    {
+        "delete_w_on_remove",
+        Delete_w_filter_delete_w_on_remove
     }
 };
 
@@ -5455,6 +5471,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_remove_w_delete",
         Trigger_on_remove_w_delete
+    },
+    {
+        "on_remove_w_world_fini",
+        Trigger_on_remove_w_world_fini
     },
     {
         "on_add_w_clone",
@@ -8665,7 +8685,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        79,
+        81,
         Hierarchies_testcases
     },
     {
@@ -8735,7 +8755,7 @@ static bake_test_suite suites[] = {
         "Delete_w_filter",
         NULL,
         NULL,
-        12,
+        13,
         Delete_w_filter_testcases
     },
     {
@@ -8812,7 +8832,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        29,
+        30,
         Trigger_testcases
     },
     {

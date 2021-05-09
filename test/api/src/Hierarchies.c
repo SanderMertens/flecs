@@ -1303,6 +1303,86 @@ void Hierarchies_add_child_after_delete_tree() {
     ecs_fini(world);
 }
 
+static int on_remove_count = 0;
+
+static
+void RemovePosition(ecs_iter_t *it) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        on_remove_count ++;
+    }
+}
+
+void Hierarchies_delete_tree_w_onremove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TRIGGER(world, RemovePosition, EcsOnRemove, Position);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+    ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_assert(child_1 != 0);
+    test_assert(child_2 != 0);
+    test_assert(ecs_has_pair(world, child_1, EcsChildOf, parent));
+    test_assert(ecs_has_pair(world, child_2, EcsChildOf, parent));
+
+    ecs_add(world, parent, Position);
+    ecs_add(world, child_1, Position);
+    ecs_add(world, child_2, Position);
+
+    ecs_delete(world, parent);
+
+    test_assert( !ecs_is_alive(world, parent));
+    test_assert( !ecs_is_alive(world, child_1));
+    test_assert( !ecs_is_alive(world, child_2));
+
+    test_int(on_remove_count, 3);
+
+    ecs_fini(world);
+}
+
+static int dtor_count = 0;
+
+static ECS_DTOR(Position, ptr, {
+    dtor_count ++;
+})
+
+void Hierarchies_delete_tree_w_dtor() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_component_actions(world, Position, {
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+    ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_assert(child_1 != 0);
+    test_assert(child_2 != 0);
+    test_assert(ecs_has_pair(world, child_1, EcsChildOf, parent));
+    test_assert(ecs_has_pair(world, child_2, EcsChildOf, parent));
+
+    ecs_add(world, parent, Position);
+    ecs_add(world, child_1, Position);
+    ecs_add(world, child_2, Position);
+
+    ecs_delete(world, parent);
+
+    test_assert( !ecs_is_alive(world, parent));
+    test_assert( !ecs_is_alive(world, child_1));
+    test_assert( !ecs_is_alive(world, child_2));
+
+    test_int(dtor_count, 3);
+
+    ecs_fini(world);
+}
+
 void Hierarchies_add_child_to_recycled_parent() {
     ecs_world_t *world = ecs_init();
 

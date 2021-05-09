@@ -530,3 +530,39 @@ void Delete_w_filter_skip_builtin_tables() {
 
     ecs_fini(world);
 }
+
+static int on_remove_count = 0;
+
+static
+void RemovePosition(ecs_iter_t *it) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        on_remove_count ++;
+    }
+}
+
+void Delete_w_filter_delete_w_on_remove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TRIGGER(world, RemovePosition, EcsOnRemove, Position);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    test_int( ecs_count(world, Position), 3);
+
+    ecs_bulk_delete(world, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+    
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e3));
+
+    test_int(on_remove_count, 3);
+
+    ecs_fini(world);
+}

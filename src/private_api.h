@@ -455,7 +455,7 @@ void ecs_init_root_table(
     ecs_world_t *world);
 
 /* Unset components in table */
-void ecs_table_unset(
+void ecs_table_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table);
 

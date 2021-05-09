@@ -198,7 +198,7 @@ void notify_trigger(
 }
 
 static
-void run_un_set_handlers(
+void run_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data)
@@ -206,6 +206,17 @@ void run_un_set_handlers(
     int32_t count = ecs_vector_count(data->entities);
     if (count) {
         ecs_run_monitors(world, table, table->un_set_all, 0, count, NULL);
+
+        int32_t i, type_count = ecs_vector_count(table->type);
+        ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+        for (i = 0; i < type_count; i ++) {
+            ecs_entities_t removed = {
+                .array = &ids[i],
+                .count = 1
+            };
+
+            ecs_run_remove_actions(world, table, data, 0, count, &removed);
+        }
     }
 }
 
@@ -591,18 +602,6 @@ void dtor_all_components(
     }
 }
 
-static
-void run_remove_actions(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t row,
-    int32_t count)
-{
-    if (count) {
-        ecs_run_monitors(world, table, NULL, row, count, table->un_set_all);        
-    }
-}
-
 void ecs_table_clear_data(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -680,7 +679,7 @@ void ecs_table_delete_entities(
     ecs_data_t *data = ecs_table_get_data(table);
 
     if (data) {
-        run_remove_actions(world, table, 0, ecs_table_data_count(data));
+        run_remove_actions(world, table, data);
 
         ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
         int32_t i, count = ecs_vector_count(data->entities);
@@ -702,7 +701,7 @@ void ecs_table_clear(
     ecs_data_t *data = ecs_table_get_data(table);
 
     if (data) {
-        run_remove_actions(world, table, 0, ecs_table_data_count(data));
+        run_remove_actions(world, table, data);
 
         ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
         int32_t i, count = ecs_vector_count(data->entities);
@@ -717,14 +716,14 @@ void ecs_table_clear(
 
 /* Unset all components in table. This function is called before a table is 
  * deleted, and invokes all UnSet handlers, if any */
-void ecs_table_unset(
+void ecs_table_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table)
 {
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
-        run_un_set_handlers(world, table, data);
+        run_remove_actions(world, table, data);
     }   
 }
 
@@ -736,7 +735,6 @@ void ecs_table_free(
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
-        run_remove_actions(world, table, 0, ecs_table_data_count(data));
         ecs_table_clear_data(world, table, data);
     }
 
@@ -2066,7 +2064,7 @@ void ecs_table_replace_data(
 
     if (table_data) {
         prev_count = ecs_vector_count(table_data->entities);
-        run_remove_actions(world, table, 0, ecs_table_data_count(table_data));
+        run_remove_actions(world, table, table_data);
         ecs_table_clear_data(world, table, table_data);
     }
 
