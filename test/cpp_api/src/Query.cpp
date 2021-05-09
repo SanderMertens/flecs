@@ -636,9 +636,36 @@ void Query_default_ctor() {
 
     q_var = q;
     
+    q_var.each([&](flecs::entity e, Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void Query_expr_w_template() {
+    flecs::world world;
+
+    auto comp = world.component<Template<int>>();
+    test_str(comp.name(), "Template<int>");
+
+    int count = 0;
+    auto q = world.query<Position>("Template<int>");
+
+    world.entity()
+        .set<Position>({10, 20})
+        .set<Template<int>>({30, 40});
+    
     q.each([&](flecs::entity e, Position& p) {
         test_int(p.x, 10);
         test_int(p.y, 20);
+
+        const Template<int> *t = e.get<Template<int>>();
+        test_int(t->x, 30);
+        test_int(t->y, 40);        
+
         count ++;
     });
 

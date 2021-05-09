@@ -12838,7 +12838,17 @@ const char* parse_token(
     tptr ++;
     ptr ++;
 
+    int tmpl_nesting = 0;
+
     for (; (ch = *ptr); ptr ++) {
+        if (ch == '<') {
+            tmpl_nesting ++;
+        } else if (ch == '>') {
+            if (!tmpl_nesting) {
+                break;
+            }
+            tmpl_nesting --;
+        } else
         if (!valid_token_char(ch)) {
             break;
         }
@@ -12848,6 +12858,12 @@ const char* parse_token(
     }
 
     tptr[0] = '\0';
+
+    if (tmpl_nesting != 0) {
+        ecs_parser_error(name, sig, column, 
+            "identifier '%s' has mismatching < > pairs", ptr);
+        return NULL;
+    }
 
     return skip_space(ptr);
 }

@@ -1028,3 +1028,14 @@ void Entity_create_entity_view_from_stage() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
+
+void Entity_set_template() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Template<int>>({10, 20});
+
+    const Template<int> *ptr = e.get<Template<int>>();
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}

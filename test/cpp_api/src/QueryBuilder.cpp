@@ -1025,3 +1025,22 @@ void QueryBuilder_add_pair_w_rel_type() {
     
     test_int(count, 2);
 }
+
+void QueryBuilder_template_term() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Position>()
+        .term<Template<int>>()
+        .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Template<int>>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position& p) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}

@@ -73,6 +73,7 @@ void Entity_entity_to_entity_view(void);
 void Entity_entity_view_to_entity_world(void);
 void Entity_entity_view_to_entity_stage(void);
 void Entity_create_entity_view_from_stage(void);
+void Entity_set_template(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -210,6 +211,7 @@ void Query_sort_by(void);
 void Query_changed(void);
 void Query_orphaned(void);
 void Query_default_ctor(void);
+void Query_expr_w_template(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -252,6 +254,7 @@ void QueryBuilder_relation(void);
 void QueryBuilder_relation_w_object_wildcard(void);
 void QueryBuilder_relation_w_predicate_wildcard(void);
 void QueryBuilder_add_pair_w_rel_type(void);
+void QueryBuilder_template_term(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -641,6 +644,10 @@ bake_test_case Entity_testcases[] = {
     {
         "create_entity_view_from_stage",
         Entity_create_entity_view_from_stage
+    },
+    {
+        "set_template",
+        Entity_set_template
     }
 };
 
@@ -1154,6 +1161,10 @@ bake_test_case Query_testcases[] = {
     {
         "default_ctor",
         Query_default_ctor
+    },
+    {
+        "expr_w_template",
+        Query_expr_w_template
     }
 };
 
@@ -1317,6 +1328,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "add_pair_w_rel_type",
         QueryBuilder_add_pair_w_rel_type
+    },
+    {
+        "template_term",
+        QueryBuilder_template_term
     }
 };
 
@@ -1808,7 +1823,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        64,
+        65,
         Entity_testcases
     },
     {
@@ -1857,14 +1872,14 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        21,
+        22,
         Query_testcases
     },
     {
         "QueryBuilder",
         NULL,
         NULL,
-        40,
+        41,
         QueryBuilder_testcases
     },
     {

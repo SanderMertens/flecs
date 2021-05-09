@@ -60,7 +60,11 @@ public:
     static int move_invoked;
 };
 
-
+template <typename T>
+struct Template {
+    T x;
+    T y;
+};
 
 #endif
 
