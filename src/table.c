@@ -106,13 +106,7 @@ ecs_flags32_t get_component_action_flags(
     }
     if (c_info->lifecycle.move) {
         flags |= EcsTableHasMove;
-    }
-    if (c_info->on_add) {
-        flags |= EcsTableHasOnAdd;
-    }
-    if (c_info->on_remove) {
-        flags |= EcsTableHasOnRemove;
-    }    
+    }  
 
     return flags;  
 }
@@ -193,6 +187,8 @@ void notify_trigger(
             table->flags |= EcsTableHasOnAdd;
         } else if (event == EcsOnRemove) {
             table->flags |= EcsTableHasOnRemove;
+        } else if (event == EcsOnSet) {
+            table->flags |= EcsTableHasOnSet;
         }
     }
 }

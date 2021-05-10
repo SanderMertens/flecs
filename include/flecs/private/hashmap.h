@@ -25,7 +25,7 @@ typedef struct {
 
 typedef struct {
     ecs_map_iter_t it;
-    struct ecs_bucket_t *bucket;
+    struct ecs_hm_bucket_t *bucket;
     int32_t index;
 } ecs_hashmap_iter_t;
 

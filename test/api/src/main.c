@@ -993,6 +993,13 @@ void Trigger_on_remove_pair_obj_wildcard(void);
 void Trigger_on_remove_pair_pred_wildcard(void);
 void Trigger_on_remove_pair_wildcard(void);
 void Trigger_on_add_remove(void);
+void Trigger_on_set_component(void);
+void Trigger_on_set_wildcard(void);
+void Trigger_on_set_pair(void);
+void Trigger_on_set_pair_w_obj_wildcard(void);
+void Trigger_on_set_pair_pred_wildcard(void);
+void Trigger_on_set_pair_wildcard(void);
+void Trigger_on_set_component_after_modified(void);
 void Trigger_add_twice(void);
 void Trigger_remove_twice(void);
 void Trigger_on_remove_w_clear(void);
@@ -5595,6 +5602,34 @@ bake_test_case Trigger_testcases[] = {
         Trigger_on_add_remove
     },
     {
+        "on_set_component",
+        Trigger_on_set_component
+    },
+    {
+        "on_set_wildcard",
+        Trigger_on_set_wildcard
+    },
+    {
+        "on_set_pair",
+        Trigger_on_set_pair
+    },
+    {
+        "on_set_pair_w_obj_wildcard",
+        Trigger_on_set_pair_w_obj_wildcard
+    },
+    {
+        "on_set_pair_pred_wildcard",
+        Trigger_on_set_pair_pred_wildcard
+    },
+    {
+        "on_set_pair_wildcard",
+        Trigger_on_set_pair_wildcard
+    },
+    {
+        "on_set_component_after_modified",
+        Trigger_on_set_component_after_modified
+    },
+    {
         "add_twice",
         Trigger_add_twice
     },
@@ -9002,7 +9037,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        33,
+        40,
         Trigger_testcases
     },
     {

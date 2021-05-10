@@ -51,8 +51,6 @@
 /** Component-specific data */
 typedef struct ecs_type_info_t {
     ecs_entity_t component;
-    ecs_vector_t *on_add;       /* Systems ran after adding this component */
-    ecs_vector_t *on_remove;    /* Systems ran after removing this component */
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
     bool lifecycle_set;
 } ecs_type_info_t;
@@ -324,6 +322,7 @@ struct ecs_query_t {
 typedef struct ecs_id_trigger_t {
     ecs_map_t *on_add_triggers;
     ecs_map_t *on_remove_triggers;
+    ecs_map_t *on_set_triggers;
 } ecs_id_trigger_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -437,8 +436,14 @@ typedef struct ecs_table_record_t {
 typedef struct ecs_id_record_t {
     /* All tables that contain the id */
     ecs_map_t *table_index;         /* map<table_id, ecs_table_record_t> */
+
     ecs_entity_t on_delete;         /* Cleanup action for removing id */
     ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
+
+    ecs_hashmap_t *value_index;     /* Lookup index for component values. 
+                                     * Currently only used for Name/ChildOf,
+                                     * but could be generalized to other 
+                                     * component types/relations. */
 } ecs_id_record_t;
 
 typedef struct ecs_store_t {

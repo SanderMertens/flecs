@@ -1,9 +1,9 @@
 #include "private_api.h"
 
-typedef struct ecs_bucket_t {
+typedef struct ecs_hm_bucket_t {
     ecs_vector_t *keys;
     ecs_vector_t *values;
-} ecs_bucket_t;
+} ecs_hm_bucket_t;
 
 static
 int32_t find_key(
@@ -34,7 +34,7 @@ ecs_hashmap_t _ecs_hashmap_new(
         .value_size = value_size,
         .compare = compare,
         .hash = hash,
-        .impl = ecs_map_new(ecs_bucket_t, 0)
+        .impl = ecs_map_new(ecs_hm_bucket_t, 0)
     };
 }
 
@@ -42,8 +42,8 @@ void ecs_hashmap_free(
     ecs_hashmap_t map)
 {
     ecs_map_iter_t it = ecs_map_iter(map.impl);
-    ecs_bucket_t *bucket;
-    while ((bucket = ecs_map_next(&it, ecs_bucket_t, NULL))) {
+    ecs_hm_bucket_t *bucket;
+    while ((bucket = ecs_map_next(&it, ecs_hm_bucket_t, NULL))) {
         ecs_vector_free(bucket->keys);
         ecs_vector_free(bucket->values);
     }
@@ -61,7 +61,7 @@ void* _ecs_hashmap_get(
     ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t hash = map.hash(key);
-    ecs_bucket_t *bucket = ecs_map_get(map.impl, ecs_bucket_t, hash);
+    ecs_hm_bucket_t *bucket = ecs_map_get(map.impl, ecs_hm_bucket_t, hash);
     if (!bucket) {
         return NULL;
     }
@@ -84,7 +84,7 @@ ecs_hashmap_result_t _ecs_hashmap_ensure(
     ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t hash = map.hash(key);
-    ecs_bucket_t *bucket = ecs_map_ensure(map.impl, ecs_bucket_t, hash);
+    ecs_hm_bucket_t *bucket = ecs_map_ensure(map.impl, ecs_hm_bucket_t, hash);
     ecs_assert(bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
     void *value_ptr, *key_ptr;
@@ -140,7 +140,7 @@ void _ecs_hashmap_remove(
     ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t hash = map.hash(key);
-    ecs_bucket_t *bucket = ecs_map_get(map.impl, ecs_bucket_t, hash);
+    ecs_hm_bucket_t *bucket = ecs_map_get(map.impl, ecs_hm_bucket_t, hash);
     if (!bucket) {
         return;
     }
@@ -175,9 +175,9 @@ void* _ecs_hashmap_next(
     ecs_size_t value_size)
 {
     int32_t index = ++ it->index;
-    ecs_bucket_t *bucket = it->bucket;
+    ecs_hm_bucket_t *bucket = it->bucket;
     while (!bucket || it->index >= ecs_vector_count(bucket->keys)) {
-        bucket = it->bucket = ecs_map_next(&it->it, ecs_bucket_t, NULL);
+        bucket = it->bucket = ecs_map_next(&it->it, ecs_hm_bucket_t, NULL);
         if (!bucket) {
             return NULL;
         }

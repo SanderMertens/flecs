@@ -249,6 +249,26 @@ void run_set_systems_for_entities(
 }
 #endif
 
+static
+void notify(
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
+    int32_t row,
+    int32_t count,
+    ecs_entity_t event,
+    ecs_ids_t *ids)
+{
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t *arr = ids->array;
+    int32_t arr_count = ids->count;
+
+    int i;
+    for (i = 0; i < arr_count; i ++) {
+        ecs_triggers_notify(world, arr[i], event, table, data, row, count);
+    }
+}
+
 void ecs_run_set_systems(
     ecs_world_t * world,
     ecs_ids_t * components,
@@ -258,14 +278,6 @@ void ecs_run_set_systems(
     int32_t count,
     bool set_all)
 {
-    (void)world;
-    (void)components;
-    (void)table;
-    (void)data;
-    (void)row;
-    (void)count;
-    (void)set_all;
-
 #ifdef FLECS_SYSTEM    
     if (!count || !data) {
         return;
@@ -281,6 +293,27 @@ void ecs_run_set_systems(
     run_set_systems_for_entities(world, components, table, row, 
         count, entities, set_all);
 #endif
+
+    if (table->flags & EcsTableHasOnSet) {
+        if (!set_all) {
+            notify(world, table, data, row, count, EcsOnSet, components);
+        } else {
+            ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+            int32_t i, column_count = table->column_count;
+            for (i = 0; i < column_count; i ++) {
+                ecs_column_t *column = &data->columns[i];
+                if (column->size) {
+                    ecs_ids_t component = {
+                        .array = &ids[i],
+                        .count = 1
+                    };
+
+                    notify( world, table, data, row, count, EcsOnSet, 
+                        &component);
+                }
+            }
+        }
+    }
 }
 
 void ecs_run_monitors(
@@ -740,26 +773,6 @@ void ecs_components_switch(
     if (removed) {
         set_switch(world, table, data, row, count, removed, true);
     } 
-}
-
-static
-void notify(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count,
-    ecs_entity_t event,
-    ecs_ids_t *ids)
-{
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_id_t *arr = ids->array;
-    int32_t arr_count = ids->count;
-
-    int i;
-    for (i = 0; i < arr_count; i ++) {
-        ecs_triggers_notify(world, arr[i], event, table, data, row, count);
-    }
 }
 
 void ecs_run_add_actions(

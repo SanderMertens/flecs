@@ -558,7 +558,7 @@ typedef struct {
 
 typedef struct {
     ecs_map_iter_t it;
-    struct ecs_bucket_t *bucket;
+    struct ecs_hm_bucket_t *bucket;
     int32_t index;
 } ecs_hashmap_iter_t;
 
@@ -663,8 +663,6 @@ void* _ecs_hashmap_next(
 /** Component-specific data */
 typedef struct ecs_type_info_t {
     ecs_entity_t component;
-    ecs_vector_t *on_add;       /* Systems ran after adding this component */
-    ecs_vector_t *on_remove;    /* Systems ran after removing this component */
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
     bool lifecycle_set;
 } ecs_type_info_t;
@@ -936,6 +934,7 @@ struct ecs_query_t {
 typedef struct ecs_id_trigger_t {
     ecs_map_t *on_add_triggers;
     ecs_map_t *on_remove_triggers;
+    ecs_map_t *on_set_triggers;
 } ecs_id_trigger_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -1049,8 +1048,14 @@ typedef struct ecs_table_record_t {
 typedef struct ecs_id_record_t {
     /* All tables that contain the id */
     ecs_map_t *table_index;         /* map<table_id, ecs_table_record_t> */
+
     ecs_entity_t on_delete;         /* Cleanup action for removing id */
     ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
+
+    ecs_hashmap_t *value_index;     /* Lookup index for component values. 
+                                     * Currently only used for Name/ChildOf,
+                                     * but could be generalized to other 
+                                     * component types/relations. */
 } ecs_id_record_t;
 
 typedef struct ecs_store_t {
@@ -2459,13 +2464,7 @@ ecs_flags32_t get_component_action_flags(
     }
     if (c_info->lifecycle.move) {
         flags |= EcsTableHasMove;
-    }
-    if (c_info->on_add) {
-        flags |= EcsTableHasOnAdd;
-    }
-    if (c_info->on_remove) {
-        flags |= EcsTableHasOnRemove;
-    }    
+    }  
 
     return flags;  
 }
@@ -2546,6 +2545,8 @@ void notify_trigger(
             table->flags |= EcsTableHasOnAdd;
         } else if (event == EcsOnRemove) {
             table->flags |= EcsTableHasOnRemove;
+        } else if (event == EcsOnSet) {
+            table->flags |= EcsTableHasOnSet;
         }
     }
 }
@@ -4767,6 +4768,26 @@ void run_set_systems_for_entities(
 }
 #endif
 
+static
+void notify(
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
+    int32_t row,
+    int32_t count,
+    ecs_entity_t event,
+    ecs_ids_t *ids)
+{
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t *arr = ids->array;
+    int32_t arr_count = ids->count;
+
+    int i;
+    for (i = 0; i < arr_count; i ++) {
+        ecs_triggers_notify(world, arr[i], event, table, data, row, count);
+    }
+}
+
 void ecs_run_set_systems(
     ecs_world_t * world,
     ecs_ids_t * components,
@@ -4776,14 +4797,6 @@ void ecs_run_set_systems(
     int32_t count,
     bool set_all)
 {
-    (void)world;
-    (void)components;
-    (void)table;
-    (void)data;
-    (void)row;
-    (void)count;
-    (void)set_all;
-
 #ifdef FLECS_SYSTEM    
     if (!count || !data) {
         return;
@@ -4799,6 +4812,27 @@ void ecs_run_set_systems(
     run_set_systems_for_entities(world, components, table, row, 
         count, entities, set_all);
 #endif
+
+    if (table->flags & EcsTableHasOnSet) {
+        if (!set_all) {
+            notify(world, table, data, row, count, EcsOnSet, components);
+        } else {
+            ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+            int32_t i, column_count = table->column_count;
+            for (i = 0; i < column_count; i ++) {
+                ecs_column_t *column = &data->columns[i];
+                if (column->size) {
+                    ecs_ids_t component = {
+                        .array = &ids[i],
+                        .count = 1
+                    };
+
+                    notify( world, table, data, row, count, EcsOnSet, 
+                        &component);
+                }
+            }
+        }
+    }
 }
 
 void ecs_run_monitors(
@@ -5258,26 +5292,6 @@ void ecs_components_switch(
     if (removed) {
         set_switch(world, table, data, row, count, removed, true);
     } 
-}
-
-static
-void notify(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count,
-    ecs_entity_t event,
-    ecs_ids_t *ids)
-{
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_id_t *arr = ids->array;
-    int32_t arr_count = ids->count;
-
-    int i;
-    for (i = 0; i < arr_count; i ++) {
-        ecs_triggers_notify(world, arr[i], event, table, data, row, count);
-    }
 }
 
 void ecs_run_add_actions(
@@ -15166,16 +15180,6 @@ static
 void fini_component_lifecycle(
     ecs_world_t *world)
 {
-    int32_t i, count = ecs_sparse_count(world->type_info);
-    for (i = 0; i < count; i ++) {
-        ecs_type_info_t *type_info = ecs_sparse_get(
-            world->type_info, ecs_type_info_t, i);
-        ecs_assert(type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_vector_free(type_info->on_add);
-        ecs_vector_free(type_info->on_remove);
-    }
-
     ecs_sparse_free(world->type_info);
 }
 
@@ -15224,6 +15228,7 @@ void fini_id_triggers(
     while ((t = ecs_map_next(&it, ecs_id_trigger_t, NULL))) {
         ecs_map_free(t->on_add_triggers);
         ecs_map_free(t->on_remove_triggers);
+        ecs_map_free(t->on_set_triggers);
     }
     ecs_map_free(world->id_triggers);
     ecs_sparse_free(world->triggers);
@@ -15744,6 +15749,9 @@ void register_table_for_id(
         if (ecs_triggers_get(world, id, EcsOnRemove)) {
             table->flags |= EcsTableHasOnRemove;
         }
+        if (ecs_triggers_get(world, id, EcsOnSet)) {
+            table->flags |= EcsTableHasOnSet;
+        }        
     }
 }
 
@@ -23363,33 +23371,31 @@ void register_trigger(
 
     int i;
     for (i = 0; i < trigger->event_count; i ++) {
+        ecs_map_t **set = NULL;
         if (trigger->events[i] == EcsOnAdd) {
-            ecs_map_t *set = idt->on_add_triggers;
-            if (!set) {
-                set = idt->on_add_triggers = ecs_map_new(ecs_trigger_t*, 1);
-
-                // First OnAdd trigger, send table notification
-                ecs_notify_tables(world, id, &(ecs_table_event_t){
-                    .kind = EcsTableTriggerMatch,
-                    .event = EcsOnAdd
-                });
-            }
-            register_id_trigger(set, trigger);
-        } else
-        if (trigger->events[i] == EcsOnRemove) {
-            ecs_map_t *set = idt->on_remove_triggers;
-            if (!set) {
-                set = idt->on_remove_triggers = ecs_map_new(ecs_trigger_t*, 1);
-
-                // First OnRemove trigger, send table notification
-                ecs_notify_tables(world, id, &(ecs_table_event_t){
-                    .kind = EcsTableTriggerMatch,
-                    .event = EcsOnRemove
-                });
-            }
-
-            register_id_trigger(set, trigger);            
+            set = &idt->on_add_triggers;
+        } else if (trigger->events[i] == EcsOnRemove) {
+            set = &idt->on_remove_triggers;
+        } else if (trigger->events[i] == EcsOnSet) {
+            set = &idt->on_set_triggers;
+        } else {
+            /* Invalid event provided */
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
+
+        ecs_assert(set != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!*set) {
+            *set = ecs_map_new(ecs_trigger_t*, 1);
+
+            // First trigger of its kind, send table notification
+            ecs_notify_tables(world, id, &(ecs_table_event_t){
+                .kind = EcsTableTriggerMatch,
+                .event = trigger->events[i]
+            });            
+        }
+
+        register_id_trigger(*set, trigger);
     }
 }
 
@@ -23425,7 +23431,14 @@ void unregister_trigger(
                 return;
             }
             idt->on_remove_triggers = unregister_id_trigger(set, trigger);
-        }          
+        } else
+        if (trigger->events[i] == EcsOnSet) {
+            ecs_map_t *set = idt->on_set_triggers;
+            if (!set) {
+                return;
+            }
+            idt->on_set_triggers = unregister_id_trigger(set, trigger);
+        }                  
     }  
 }
 
@@ -23453,6 +23466,10 @@ ecs_map_t* ecs_triggers_get(
         if (idt->on_remove_triggers && ecs_map_count(idt->on_remove_triggers)) {
             return idt->on_remove_triggers;
         }
+    } else if (event == EcsOnSet) {
+        if (idt->on_set_triggers && ecs_map_count(idt->on_set_triggers)) {
+            return idt->on_set_triggers;
+        }        
     }
 
     return NULL;
@@ -26469,10 +26486,10 @@ ecs_table_t* ecs_table_from_str(
     return result;
 }
 
-typedef struct ecs_bucket_t {
+typedef struct ecs_hm_bucket_t {
     ecs_vector_t *keys;
     ecs_vector_t *values;
-} ecs_bucket_t;
+} ecs_hm_bucket_t;
 
 static
 int32_t find_key(
@@ -26503,7 +26520,7 @@ ecs_hashmap_t _ecs_hashmap_new(
         .value_size = value_size,
         .compare = compare,
         .hash = hash,
-        .impl = ecs_map_new(ecs_bucket_t, 0)
+        .impl = ecs_map_new(ecs_hm_bucket_t, 0)
     };
 }
 
@@ -26511,8 +26528,8 @@ void ecs_hashmap_free(
     ecs_hashmap_t map)
 {
     ecs_map_iter_t it = ecs_map_iter(map.impl);
-    ecs_bucket_t *bucket;
-    while ((bucket = ecs_map_next(&it, ecs_bucket_t, NULL))) {
+    ecs_hm_bucket_t *bucket;
+    while ((bucket = ecs_map_next(&it, ecs_hm_bucket_t, NULL))) {
         ecs_vector_free(bucket->keys);
         ecs_vector_free(bucket->values);
     }
@@ -26530,7 +26547,7 @@ void* _ecs_hashmap_get(
     ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t hash = map.hash(key);
-    ecs_bucket_t *bucket = ecs_map_get(map.impl, ecs_bucket_t, hash);
+    ecs_hm_bucket_t *bucket = ecs_map_get(map.impl, ecs_hm_bucket_t, hash);
     if (!bucket) {
         return NULL;
     }
@@ -26553,7 +26570,7 @@ ecs_hashmap_result_t _ecs_hashmap_ensure(
     ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t hash = map.hash(key);
-    ecs_bucket_t *bucket = ecs_map_ensure(map.impl, ecs_bucket_t, hash);
+    ecs_hm_bucket_t *bucket = ecs_map_ensure(map.impl, ecs_hm_bucket_t, hash);
     ecs_assert(bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
     void *value_ptr, *key_ptr;
@@ -26609,7 +26626,7 @@ void _ecs_hashmap_remove(
     ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t hash = map.hash(key);
-    ecs_bucket_t *bucket = ecs_map_get(map.impl, ecs_bucket_t, hash);
+    ecs_hm_bucket_t *bucket = ecs_map_get(map.impl, ecs_hm_bucket_t, hash);
     if (!bucket) {
         return;
     }
@@ -26644,9 +26661,9 @@ void* _ecs_hashmap_next(
     ecs_size_t value_size)
 {
     int32_t index = ++ it->index;
-    ecs_bucket_t *bucket = it->bucket;
+    ecs_hm_bucket_t *bucket = it->bucket;
     while (!bucket || it->index >= ecs_vector_count(bucket->keys)) {
-        bucket = it->bucket = ecs_map_next(&it->it, ecs_bucket_t, NULL);
+        bucket = it->bucket = ecs_map_next(&it->it, ecs_hm_bucket_t, NULL);
         if (!bucket) {
             return NULL;
         }
