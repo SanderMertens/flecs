@@ -239,7 +239,7 @@ void init_store(
     world->store.tables = ecs_sparse_new(ecs_table_t);
 
     /* Initialize table map */
-    world->store.table_map = ecs_map_new(ecs_vector_t*, 8);
+    world->store.table_map = ecs_table_hashmap_new();
 
     /* Initialize one root table per stage */
     ecs_init_root_table(world);
@@ -268,14 +268,7 @@ void fini_store(ecs_world_t *world) {
     ecs_sparse_free(world->store.tables);
     ecs_table_free(world, &world->store.root);
     ecs_sparse_free(world->store.entity_index);
-
-    ecs_map_iter_t it = ecs_map_iter(world->store.table_map);
-    ecs_vector_t *tables;
-    while ((tables = ecs_map_next_ptr(&it, ecs_vector_t*, NULL))) {
-        ecs_vector_free(tables);
-    }
-    
-    ecs_map_free(world->store.table_map);
+    ecs_hashmap_free(world->store.table_map);
 }
 
 /* -- Public functions -- */
@@ -1380,7 +1373,16 @@ void ecs_unregister_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    /* Remove table from id indices */
     do_register_each_id(world, table, true);
+
+    /* Remove table from table map */
+    ecs_ids_t key = {
+        .array = ecs_vector_first(table->type, ecs_id_t),
+        .count = ecs_vector_count(table->type)
+    };
+
+    ecs_hashmap_remove(world->store.table_map, &key, ecs_table_t*);
 }
 
 ecs_id_record_t* ecs_ensure_id_record(

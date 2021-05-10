@@ -258,7 +258,7 @@ void SystemOnSet_bulk_new_1() {
     ecs_set_context(world, &ctx);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){ecs_typeid(Position)}, 
             .count = 1
         },
@@ -297,7 +297,7 @@ void SystemOnSet_bulk_new_2() {
     ecs_set_context(world, &ctx);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){
                 ecs_typeid(Position),
                 ecs_typeid(Velocity)
@@ -346,7 +346,7 @@ void SystemOnSet_bulk_new_2_of_1() {
     ecs_set_context(world, &ctx);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){
                 ecs_typeid(Position),
                 ecs_typeid(Velocity)
@@ -394,7 +394,7 @@ void SystemOnSet_bulk_new_3() {
     ecs_set_context(world, &ctx);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){
                 ecs_typeid(Position),
                 ecs_typeid(Velocity),
@@ -452,7 +452,7 @@ void SystemOnSet_bulk_new_3_of_2() {
     ecs_set_context(world, &ctx);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){
                 ecs_typeid(Position),
                 ecs_typeid(Velocity),
@@ -509,7 +509,7 @@ void SystemOnSet_bulk_new_1_from_base() {
     ecs_set_context(world, &ctx);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){
                 ecs_typeid(Velocity),
                 ecs_typeid(Mass),

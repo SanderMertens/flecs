@@ -203,6 +203,8 @@ extern "C" {
 #define ecs_owns_entity(world, entity, id, owned)\
     ecs_type_owns_id(world, ecs_get_type(world, entity), id, owned)
 
+typedef ecs_ids_t ecs_entities_t;
+
 ECS_DEPRECATED("deprecated functionality")
 FLECS_API
 void ecs_dim_type(

@@ -153,8 +153,8 @@ ecs_type_t ecs_type_merge(
     ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
     
     ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
-    ecs_entities_t add_array = ecs_type_to_entities(to_add);
-    ecs_entities_t remove_array = ecs_type_to_entities(to_remove);
+    ecs_ids_t add_array = ecs_type_to_entities(to_add);
+    ecs_ids_t remove_array = ecs_type_to_entities(to_remove);
     
     table = ecs_table_traverse_remove(
         unsafe_world, table, &remove_array, NULL); 
@@ -181,7 +181,7 @@ ecs_type_t ecs_type_find(
      * results in the creation of a table, an assert will trigger. */    
     ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
 
-    ecs_entities_t entities = {
+    ecs_ids_t entities = {
         .array = array,
         .count = count
     };
@@ -409,7 +409,7 @@ ecs_type_t ecs_type_add(
 
     ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
 
-    ecs_entities_t entities = {
+    ecs_ids_t entities = {
         .array = &e,
         .count = 1
     };
@@ -435,7 +435,7 @@ ecs_type_t ecs_type_remove(
     
     ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
 
-    ecs_entities_t entities = {
+    ecs_ids_t entities = {
         .array = &e,
         .count = 1
     };

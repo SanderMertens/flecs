@@ -254,17 +254,17 @@ int32_t _ecs_vector_move_index(
 
 /** Remove element at specified index. Moves the last value to the index. */
 FLECS_API
-int32_t _ecs_vector_remove_index(
+int32_t _ecs_vector_remove(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
     int16_t offset,
     int32_t index);
 
-#define ecs_vector_remove_index(vector, T, index) \
-    _ecs_vector_remove_index(vector, ECS_VECTOR_T(T), index)
+#define ecs_vector_remove(vector, T, index) \
+    _ecs_vector_remove(vector, ECS_VECTOR_T(T), index)
 
-#define ecs_vector_remove_index_t(vector, size, alignment, index) \
-    _ecs_vector_remove_index(vector, ECS_VECTOR_U(size, alignment), index)
+#define ecs_vector_remove_t(vector, size, alignment, index) \
+    _ecs_vector_remove(vector, ECS_VECTOR_U(size, alignment), index)
 
 /** Shrink vector to make the size match the count. */
 FLECS_API

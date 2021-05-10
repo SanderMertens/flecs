@@ -49,8 +49,8 @@ void merge_table(
     ecs_world_t *world,
     ecs_table_t *dst_table,
     ecs_table_t *src_table,
-    ecs_entities_t *to_add,
-    ecs_entities_t *to_remove)
+    ecs_ids_t *to_add,
+    ecs_ids_t *to_remove)
 {    
     if (!dst_table->type) {
         /* If this removes all components, clear table */
@@ -99,15 +99,15 @@ void ecs_bulk_add_remove_type(
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
-    ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
-    ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
+    ecs_ids_t to_add_array = ecs_type_to_entities(to_add);
+    ecs_ids_t to_remove_array = ecs_type_to_entities(to_remove);
 
-    ecs_entities_t added = {
+    ecs_ids_t added = {
         .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_add_array.count),
         .count = 0
     }; 
 
-    ecs_entities_t removed = {
+    ecs_ids_t removed = {
         .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_remove_array.count),
         .count = 0
     };
@@ -157,8 +157,8 @@ void ecs_bulk_add_type(
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
-    ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
-    ecs_entities_t added = {
+    ecs_ids_t to_add_array = ecs_type_to_entities(to_add);
+    ecs_ids_t added = {
         .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_add_array.count),
         .count = 0
     };
@@ -202,10 +202,10 @@ void ecs_bulk_add_entity(
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
-    ecs_entities_t to_add_array = { .array = &to_add, .count = 1 };
+    ecs_ids_t to_add_array = { .array = &to_add, .count = 1 };
 
     ecs_entity_t added_entity;
-    ecs_entities_t added = {
+    ecs_ids_t added = {
         .array = &added_entity,
         .count = 0
     };
@@ -249,8 +249,8 @@ void ecs_bulk_remove_type(
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
-    ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
-    ecs_entities_t removed = {
+    ecs_ids_t to_remove_array = ecs_type_to_entities(to_remove);
+    ecs_ids_t removed = {
         .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * to_remove_array.count),
         .count = 0
     };
@@ -294,10 +294,10 @@ void ecs_bulk_remove_entity(
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
-    ecs_entities_t to_remove_array = { .array = &to_remove, .count = 1 };
+    ecs_ids_t to_remove_array = { .array = &to_remove, .count = 1 };
 
     ecs_entity_t removed_entity;
-    ecs_entities_t removed = {
+    ecs_ids_t removed = {
         .array = &removed_entity,
         .count = 0
     };

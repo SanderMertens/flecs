@@ -676,17 +676,17 @@ int32_t _ecs_vector_move_index(
 
 /** Remove element at specified index. Moves the last value to the index. */
 FLECS_API
-int32_t _ecs_vector_remove_index(
+int32_t _ecs_vector_remove(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
     int16_t offset,
     int32_t index);
 
-#define ecs_vector_remove_index(vector, T, index) \
-    _ecs_vector_remove_index(vector, ECS_VECTOR_T(T), index)
+#define ecs_vector_remove(vector, T, index) \
+    _ecs_vector_remove(vector, ECS_VECTOR_T(T), index)
 
-#define ecs_vector_remove_index_t(vector, size, alignment, index) \
-    _ecs_vector_remove_index(vector, ECS_VECTOR_U(size, alignment), index)
+#define ecs_vector_remove_t(vector, size, alignment, index) \
+    _ecs_vector_remove(vector, ECS_VECTOR_U(size, alignment), index)
 
 /** Shrink vector to make the size match the count. */
 FLECS_API
@@ -982,12 +982,11 @@ extern "C" {
 #endif
 
 typedef struct ecs_map_t ecs_map_t;
-typedef struct ecs_bucket_t ecs_bucket_t;
 typedef uint64_t ecs_map_key_t;
 
 typedef struct ecs_map_iter_t {
     const ecs_map_t *map;
-    ecs_bucket_t *bucket;
+    struct ecs_bucket_t *bucket;
     int32_t bucket_index;
     int32_t element_index;
     void *payload;
@@ -1866,16 +1865,9 @@ typedef void (*ecs_iter_action_t)(
     ecs_iter_t *it);
 
 typedef bool (*ecs_iter_next_action_t)(
-    ecs_iter_t *it);
+    ecs_iter_t *it);  
 
-/** Compare callback used for sorting */
-typedef int (*ecs_compare_action_t)(
-    ecs_entity_t e1,
-    const void *ptr1,
-    ecs_entity_t e2,
-    const void *ptr2);    
-
-/** Compare callback used for sorting */
+/** Callback used for ranking types */
 typedef int32_t (*ecs_rank_type_action_t)(
     ecs_world_t *world,
     ecs_entity_t rank_component,
@@ -1893,6 +1885,22 @@ typedef void (*ecs_fini_action_t)(
 /** Function to cleanup context data */
 typedef void (*ecs_ctx_free_t)(
     void *ctx);
+
+/** Callback used for sorting values */
+typedef int (*ecs_compare_value_action_t)(
+    const void *ptr1,
+    const void *ptr2);
+
+/** Callback used for hashing values */
+typedef uint64_t (*ecs_hash_value_action_t)(
+    const void *ptr);
+
+/** Callback used for sorting components */
+typedef int (*ecs_compare_action_t)(
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
+    const void *ptr2);  
 
 /** @} */
 
@@ -2091,10 +2099,10 @@ struct ecs_ref_t {
 };
 
 /** Array of entity ids that, other than a type, can live on the stack */
-typedef struct ecs_entities_t {
+typedef struct ecs_ids_t {
     ecs_entity_t *array;    /**< An array with entity ids */
     int32_t count;          /**< The number of entities in the array */
-} ecs_entities_t;
+} ecs_ids_t;
 
 typedef struct ecs_page_cursor_t {
     int32_t first;
@@ -2192,7 +2200,7 @@ struct ecs_iter_t {
     int32_t count;                /**< Number of entities to process by system */
     int32_t total_count;          /**< Total number of entities in table */
 
-    ecs_entities_t *triggered_by; /**< Component(s) that triggered the system */
+    ecs_ids_t *triggered_by; /**< Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
 
     union {
@@ -3191,6 +3199,8 @@ extern "C" {
 
 #define ecs_owns_entity(world, entity, id, owned)\
     ecs_type_owns_id(world, ecs_get_type(world, entity), id, owned)
+
+typedef ecs_ids_t ecs_entities_t;
 
 ECS_DEPRECATED("deprecated functionality")
 FLECS_API
@@ -4372,7 +4382,7 @@ FLECS_API
 const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
-    const ecs_entities_t *component_ids,
+    const ecs_ids_t *component_ids,
     void *data);
 
 /** Create N new entities.

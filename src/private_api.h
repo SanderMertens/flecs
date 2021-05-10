@@ -193,7 +193,7 @@ bool ecs_defer_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_entities_t *components);
+    ecs_ids_t *components);
 
 bool ecs_defer_clone(
     ecs_world_t *world,
@@ -206,7 +206,7 @@ bool ecs_defer_bulk_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     int32_t count,
-    const ecs_entities_t *components,
+    const ecs_ids_t *components,
     void **component_data,
     const ecs_entity_t **ids_out);
 
@@ -231,13 +231,13 @@ bool ecs_defer_add(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_entities_t *components);
+    ecs_ids_t *components);
 
 bool ecs_defer_remove(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_entities_t *components);
+    ecs_ids_t *components);
 
 bool ecs_defer_set(
     ecs_world_t *world,
@@ -292,7 +292,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
 void ecs_get_column_info(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entities_t *components,
+    ecs_ids_t *components,
     ecs_column_info_t *cinfo,
     bool get_all);
 
@@ -302,7 +302,7 @@ void ecs_run_add_actions(
     ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_entities_t *added,
+    ecs_ids_t *added,
     bool get_all,
     bool run_on_set);   
 
@@ -312,11 +312,11 @@ void ecs_run_remove_actions(
     ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_entities_t *removed);
+    ecs_ids_t *removed);
 
 void ecs_run_set_systems(
     ecs_world_t *world,
-    ecs_entities_t *components,
+    ecs_ids_t *components,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t row,
@@ -331,7 +331,7 @@ void ecs_run_set_systems(
 /** Find or create table for a set of components */
 ecs_table_t* ecs_table_find_or_create(
     ecs_world_t *world,
-    ecs_entities_t *type);   
+    ecs_ids_t *type);   
 
 /* Get table data */
 ecs_data_t *ecs_table_get_data(
@@ -487,14 +487,14 @@ void ecs_table_swap(
 ecs_table_t *ecs_table_traverse_add(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entities_t *to_add,
-    ecs_entities_t *added);
+    ecs_ids_t *to_add,
+    ecs_ids_t *added);
 
 ecs_table_t *ecs_table_traverse_remove(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entities_t *to_remove,
-    ecs_entities_t *removed);
+    ecs_ids_t *to_remove,
+    ecs_ids_t *removed);
 
 void ecs_table_mark_dirty(
     ecs_table_t *table,
@@ -522,6 +522,8 @@ void ecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
+ecs_hashmap_t ecs_table_hashmap_new(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
@@ -541,7 +543,7 @@ void ecs_query_rematch(
 void ecs_run_monitor(
     ecs_world_t *world,
     ecs_matched_query_t *monitor,
-    ecs_entities_t *components,
+    ecs_ids_t *components,
     int32_t row,
     int32_t count,
     ecs_entity_t *entities);
@@ -628,7 +630,7 @@ int32_t ecs_row_to_record(
     bool is_watched);
 
 /* Convert type to entity array */
-ecs_entities_t ecs_type_to_entities(
+ecs_ids_t ecs_type_to_entities(
     ecs_type_t type); 
 
 /* Convert a symbol name to an entity name by removing the prefix */

@@ -30,6 +30,7 @@
 #include "flecs/private/bitset.h"
 #include "flecs/private/sparse.h"
 #include "flecs/private/switch_list.h"
+#include "flecs/private/hashmap.h"
 #include "flecs/type.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
@@ -370,7 +371,7 @@ typedef struct ecs_op_n_t {
 typedef struct ecs_op_t {
     ecs_op_kind_t kind;         /* Operation kind */    
     ecs_entity_t component;     /* Single component (components.count = 1) */
-    ecs_entities_t components;  /* Multiple components */
+    ecs_ids_t components;  /* Multiple components */
     union {
         ecs_op_1_t _1;
         ecs_op_n_t _n;
@@ -448,7 +449,7 @@ typedef struct ecs_store_t {
     ecs_sparse_t *tables; /* sparse<table_id, ecs_table_t> */
 
     /* Table lookup by hash */
-    ecs_map_t *table_map; /* map<component_hash, vector<ecs_table_t*>> */  
+    ecs_hashmap_t table_map; /* hashmap<ecs_ids_t, ecs_table_t*> */
 
     /* Root table */
     ecs_table_t root;

@@ -1641,7 +1641,7 @@ int32_t move_table(
         ecs_assert(ecs_vector_count(*dst_array) == (new_index + 1), 
             ECS_INTERNAL_ERROR, NULL);  
     } else {
-        ecs_vector_remove_index(src_array, ecs_matched_table_t, index);
+        ecs_vector_remove(src_array, ecs_matched_table_t, index);
     }
 
     /* Ensure that src array has now one element less */
@@ -2039,7 +2039,7 @@ void remove_subquery(
         }
     }
 
-    ecs_vector_remove_index(parent->subqueries, ecs_query_t*, i);
+    ecs_vector_remove(parent->subqueries, ecs_query_t*, i);
 }
 
 /* -- Private API -- */

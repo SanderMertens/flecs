@@ -180,7 +180,7 @@ int32_t _ecs_vector_move_index(
     void *src_elem = _ecs_vector_get(src, elem_size, offset, index);
 
     ecs_os_memcpy(dst_elem, src_elem, elem_size);
-    return _ecs_vector_remove_index(src, elem_size, offset, index);
+    return _ecs_vector_remove(src, elem_size, offset, index);
 }
 
 void ecs_vector_remove_last(
@@ -217,7 +217,7 @@ bool _ecs_vector_pop(
     return true;
 }
 
-int32_t _ecs_vector_remove_index(
+int32_t _ecs_vector_remove(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
     int16_t offset,

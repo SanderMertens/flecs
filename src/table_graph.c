@@ -1,5 +1,47 @@
 #include "private_api.h"
 
+static
+uint64_t ids_hash(const void *ptr) {
+    const ecs_ids_t *type = ptr;
+    ecs_id_t *ids = type->array;
+    int32_t count = type->count;
+    uint64_t hash = 0;
+    ecs_hash(ids, count * ECS_SIZEOF(ecs_entity_t), &hash);
+    return hash;
+}
+
+static
+int ids_compare(const void *ptr_1, const void *ptr_2) {
+    const ecs_ids_t *type_1 = ptr_1;
+    const ecs_ids_t *type_2 = ptr_2;
+
+    int32_t count_1 = type_1->count;
+    int32_t count_2 = type_2->count;
+
+    if (count_1 != count_2) {
+        return (count_1 > count_2) - (count_1 < count_2);
+    }
+
+    const ecs_id_t *ids_1 = type_1->array;
+    const ecs_id_t *ids_2 = type_2->array;
+    
+    int32_t i;
+    for (i = 0; i < count_1; i ++) {
+        ecs_id_t id_1 = ids_1[i];
+        ecs_id_t id_2 = ids_2[i];
+
+        if (id_1 != id_2) {
+            return (id_1 > id_2) - (id_1 < id_2);
+        }
+    }
+
+    return 0;
+}
+
+ecs_hashmap_t ecs_table_hashmap_new(void) {
+    return ecs_hashmap_new(ecs_ids_t, ecs_table_t*, ids_hash, ids_compare);
+}
+
 const EcsComponent* ecs_component_from_id(
     const ecs_world_t *world,
     ecs_entity_t e)
@@ -125,7 +167,7 @@ int32_t bitset_column_count(
 
 static
 ecs_type_t entities_to_type(
-    ecs_entities_t *entities)
+    ecs_ids_t *entities)
 {
     if (entities->count) {
         ecs_vector_t *result = NULL;
@@ -248,7 +290,7 @@ static
 void init_table(
     ecs_world_t * world,
     ecs_table_t * table,
-    ecs_entities_t * entities)
+    ecs_ids_t * entities)
 {
     table->type = entities_to_type(entities);
     table->c_info = NULL;
@@ -276,8 +318,8 @@ void init_table(
 static
 ecs_table_t *create_table(
     ecs_world_t * world,
-    ecs_entities_t * entities,
-    uint64_t hash)
+    ecs_ids_t * entities,
+    ecs_hashmap_result_t table_elem)
 {
     ecs_table_t *result = ecs_sparse_add(world->store.tables, ecs_table_t);
     result->id = ecs_sparse_last_id(world->store.tables);
@@ -292,11 +334,15 @@ ecs_table_t *create_table(
 #endif
     ecs_log_push();
 
-    /* Store table in lookup map */
-    ecs_vector_t *tables = ecs_map_get_ptr(world->store.table_map, ecs_vector_t*, hash);
-    ecs_table_t **elem = ecs_vector_add(&tables, ecs_table_t*);
-    *elem = result;
-    ecs_map_set(world->store.table_map, hash, &tables);
+    /* Store table in table hashmap */
+    *(ecs_table_t**)table_elem.value = result;
+
+    /* Set keyvalue to one that has the same lifecycle as the table */
+    ecs_ids_t key = {
+        .array = ecs_vector_first(result->type, ecs_id_t),
+        .count = ecs_vector_count(result->type)
+    };
+    *(ecs_ids_t*)table_elem.key = key;
 
     ecs_notify_queries(world, &(ecs_query_event_t) {
         .kind = EcsQueryTableMatch,
@@ -313,7 +359,7 @@ void add_entity_to_type(
     ecs_type_t type,
     ecs_entity_t add,
     ecs_entity_t replace,
-    ecs_entities_t *out)
+    ecs_ids_t *out)
 {
     int32_t count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);    
@@ -349,7 +395,7 @@ static
 void remove_entity_from_type(
     ecs_type_t type,
     ecs_entity_t remove,
-    ecs_entities_t *out)
+    ecs_ids_t *out)
 {
     int32_t count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
@@ -489,7 +535,7 @@ ecs_table_t *find_or_create_table_include(
         ecs_type_t type = node->type;
         int32_t count = ecs_vector_count(type);
 
-        ecs_entities_t entities = {
+        ecs_ids_t entities = {
             .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * (count + 1)),
             .count = count + 1
         };
@@ -522,7 +568,7 @@ ecs_table_t *find_or_create_table_exclude(
     ecs_type_t type = node->type;
     int32_t count = ecs_vector_count(type);
 
-    ecs_entities_t entities = {
+    ecs_ids_t entities = {
         .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * count),
         .count = count
     };
@@ -544,8 +590,8 @@ ecs_table_t *find_or_create_table_exclude(
 ecs_table_t* ecs_table_traverse_remove(
     ecs_world_t * world,
     ecs_table_t * node,
-    ecs_entities_t * to_remove,
-    ecs_entities_t * removed)
+    ecs_ids_t * to_remove,
+    ecs_ids_t * removed)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
@@ -595,7 +641,7 @@ void find_owned_components(
     ecs_world_t * world,
     ecs_table_t * node,
     ecs_entity_t base,
-    ecs_entities_t * owned)
+    ecs_ids_t * owned)
 {
     /* If we're adding an IsA relationship, check if the base
      * has OWNED components that need to be added to the instance */
@@ -630,8 +676,8 @@ void find_owned_components(
 ecs_table_t* ecs_table_traverse_add(
     ecs_world_t * world,
     ecs_table_t * node,
-    ecs_entities_t * to_add,
-    ecs_entities_t * added)    
+    ecs_ids_t * to_add,
+    ecs_ids_t * added)    
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
@@ -641,7 +687,7 @@ ecs_table_t* ecs_table_traverse_add(
     node = node ? node : &world->store.root;
 
     ecs_entity_t owned_array[ECS_MAX_ADD_REMOVE];
-    ecs_entities_t owned = {
+    ecs_ids_t owned = {
         .array = owned_array,
         .count = 0
     };    
@@ -684,7 +730,7 @@ ecs_table_t* ecs_table_traverse_add(
 
 static
 bool ecs_entity_array_is_ordered(
-    ecs_entities_t *entities)
+    ecs_ids_t *entities)
 {
     ecs_entity_t prev = 0;
     ecs_entity_t *array = entities->array;
@@ -729,7 +775,7 @@ int32_t ecs_entity_array_dedup(
 static
 int32_t count_occurrences(
     ecs_world_t * world,
-    ecs_entities_t * entities,
+    ecs_ids_t * entities,
     ecs_entity_t entity,
     int32_t constraint_index)    
 {
@@ -758,7 +804,7 @@ int32_t count_occurrences(
 static
 void verify_constraints(
     ecs_world_t * world,
-    ecs_entities_t * entities)
+    ecs_ids_t * entities)
 {
     int i, count = entities->count;
     for (i = count - 1; i >= 0; i --) {
@@ -791,88 +837,57 @@ void verify_constraints(
 #endif
 
 static
-ecs_table_t *find_or_create(
-    ecs_world_t * world,
-    ecs_entities_t * entities)
+ecs_table_t* find_or_create(
+    ecs_world_t *world,
+    ecs_ids_t *ids)
 {    
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
 
     /* Make sure array is ordered and does not contain duplicates */
-    int32_t type_count = entities->count;
-    ecs_entity_t *ordered = NULL;
+    int32_t type_count = ids->count;
+    ecs_id_t *ordered = NULL;
 
     if (!type_count) {
         return &world->store.root;
     }
 
-    if (!ecs_entity_array_is_ordered(entities)) {
+    if (!ecs_entity_array_is_ordered(ids)) {
         ecs_size_t size = ECS_SIZEOF(ecs_entity_t) * type_count;
         ordered = ecs_os_alloca(size);
-        ecs_os_memcpy(ordered, entities->array, size);
-        qsort(
-            ordered, (size_t)type_count, sizeof(ecs_entity_t), ecs_entity_compare_qsort);
-        type_count = ecs_entity_array_dedup(ordered, type_count);
+        ecs_os_memcpy(ordered, ids->array, size);
+        qsort(ordered, (size_t)type_count, sizeof(ecs_entity_t), 
+            ecs_entity_compare_qsort);
+        type_count = ecs_entity_array_dedup(ordered, type_count);        
     } else {
-        ordered = entities->array;
+        ordered = ids->array;
     }
 
-    uint64_t hash = 0;
-    ecs_hash(ordered, entities->count * ECS_SIZEOF(ecs_entity_t), &hash);
-    ecs_vector_t *table_vec = ecs_map_get_ptr(
-        world->store.table_map, ecs_vector_t*, hash);
-    if (table_vec) {
-        /* Usually this will be just one, but in the case of a collision
-         * multiple tables can be stored using the same hash. */
-        int32_t i, count = ecs_vector_count(table_vec);
-        ecs_table_t *table, **tables = ecs_vector_first(
-            table_vec, ecs_table_t*);
+    ecs_ids_t ordered_ids = {
+        .array = ordered,
+        .count = type_count
+    };
 
-        for (i = 0; i < count; i ++) {
-            table = tables[i];
-            int32_t t, table_type_count = ecs_vector_count(table->type);
-
-            /* If number of components in table doesn't match, it's definitely
-             * a collision. */
-            if (table_type_count != type_count) {
-                table = NULL;
-                continue;
-            }
-
-            /* Check if components of table match */
-            ecs_entity_t *table_type = ecs_vector_first(
-                table->type, ecs_entity_t);
-            for (t = 0; t < type_count; t ++) {
-                if (table_type[t] != ordered[t]) {
-                    table = NULL;
-                    break;
-                }
-            }
-
-            if (table) {
-                return table;
-            }
-        }
+    ecs_table_t *table;
+    ecs_hashmap_result_t elem = ecs_hashmap_ensure(
+        world->store.table_map, &ordered_ids, ecs_table_t*);
+    if ((table = *(ecs_table_t**)elem.value)) {
+        return table;
     }
 
     /* If we get here, table needs to be created which is only allowed when the
      * application is not currently in progress */
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entities_t ordered_entities = {
-        .array = ordered,
-        .count = type_count
-    };
-
 #ifndef NDEBUG
     /* Check for constraint violations */
-    verify_constraints(world, &ordered_entities);
+    verify_constraints(world, &ordered_ids);
 #endif
 
     /* If we get here, the table has not been found, so create it. */
-    ecs_table_t *result = create_table(world, &ordered_entities, hash);
+    ecs_table_t *result = create_table(world, &ordered_ids, elem);
     
-    ecs_assert(ordered_entities.count == ecs_vector_count(result->type), 
+    ecs_assert(ordered_ids.count == ecs_vector_count(result->type), 
         ECS_INTERNAL_ERROR, NULL);
 
     return result;
@@ -880,7 +895,7 @@ ecs_table_t *find_or_create(
 
 ecs_table_t* ecs_table_find_or_create(
     ecs_world_t * world,
-    ecs_entities_t * components)
+    ecs_ids_t * components)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
@@ -891,7 +906,7 @@ ecs_table_t* ecs_table_from_type(
     ecs_world_t *world,
     ecs_type_t type)
 {
-    ecs_entities_t components = ecs_type_to_entities(type);
+    ecs_ids_t components = ecs_type_to_entities(type);
     return ecs_table_find_or_create(
         world, &components);
 }
@@ -902,7 +917,7 @@ void ecs_init_root_table(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
 
-    ecs_entities_t entities = {
+    ecs_ids_t entities = {
         .array = NULL,
         .count = 0
     };
