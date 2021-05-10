@@ -32,6 +32,7 @@ typedef struct {
 typedef struct {
     void *key;
     void *value;
+    uint64_t hash;
 } ecs_hashmap_result_t;
 
 FLECS_DBG_API
@@ -84,10 +85,21 @@ void _ecs_hashmap_remove(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
     const void *key,
-    ecs_size_t map_size);
+    ecs_size_t value_size);
 
 #define ecs_hashmap_remove(map, key, V)\
     _ecs_hashmap_remove(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+
+FLECS_DBG_API
+void _ecs_hashmap_remove_w_hash(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    const void *key,
+    ecs_size_t value_size,
+    uint64_t hash);
+
+#define ecs_hashmap_remove_w_hash(map, key, V, hash)\
+    _ecs_hashmap_remove_w_hash(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), hash)
 
 FLECS_DBG_API
 ecs_hashmap_iter_t ecs_hashmap_iter(

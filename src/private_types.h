@@ -48,6 +48,13 @@
 /* Maximum length of an entity name, including 0 terminator */
 #define ECS_MAX_NAME_LENGTH (64)
 
+/** Type used for internal string hashmap */
+typedef struct ecs_string_t {
+    char *value;
+    ecs_size_t length;
+    uint64_t hash;
+} ecs_string_t;
+
 /** Component-specific data */
 typedef struct ecs_type_info_t {
     ecs_entity_t component;
@@ -323,6 +330,7 @@ typedef struct ecs_id_trigger_t {
     ecs_map_t *on_add_triggers;
     ecs_map_t *on_remove_triggers;
     ecs_map_t *on_set_triggers;
+    ecs_map_t *un_set_triggers;
 } ecs_id_trigger_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -432,6 +440,19 @@ typedef struct ecs_table_record_t {
     int32_t column;
 } ecs_table_record_t;
 
+typedef struct ecs_value_index_t {
+    /* Lookup index for component values. Currently only used for Name/ChildOf,
+     * but could be generalized to other component types/relations. */
+    ecs_hashmap_t index;     /* hashmap<value, entity> */
+                                                                     
+    /* Used for finding the indexed value for an entity id. This serves a dual 
+     * purpose: it provides a stable storage to the value even as the component 
+     * moves around, and allows for retrieval of the previous value after a 
+     * component changed. The latter is necessary to remove/replace values in 
+     * the hasmap. */
+    ecs_map_t *reverse_index; /* map<entity, value> */ 
+} ecs_value_index_t;
+
 /* Payload for id index which contains all datastructures for an id. */
 typedef struct ecs_id_record_t {
     /* All tables that contain the id */
@@ -440,10 +461,7 @@ typedef struct ecs_id_record_t {
     ecs_entity_t on_delete;         /* Cleanup action for removing id */
     ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
 
-    ecs_hashmap_t *value_index;     /* Lookup index for component values. 
-                                     * Currently only used for Name/ChildOf,
-                                     * but could be generalized to other 
-                                     * component types/relations. */
+    ecs_value_index_t *value_index; /* Optional lookup by value index */
 } ecs_id_record_t;
 
 typedef struct ecs_store_t {

@@ -818,9 +818,12 @@ void ecs_run_remove_actions(
     ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(removed->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
+    if (table->flags & EcsTableHasUnSet) {
+        notify(world, table, data, row, count, EcsUnSet, removed);
+    } 
     if (table->flags & EcsTableHasOnRemove) {
         notify(world, table, data, row, count, EcsOnRemove, removed);
-    }   
+    }  
 }
 
 static

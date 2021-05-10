@@ -62,6 +62,14 @@ void ecs_run_monitors(
     int32_t count, 
     ecs_vector_t *v_src_monitors);
 
+void ecs_register_name(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name);
+
+void ecs_unregister_name(
+    ecs_world_t *world,
+    ecs_entity_t entity);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// World API

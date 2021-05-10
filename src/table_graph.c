@@ -6,7 +6,7 @@ uint64_t ids_hash(const void *ptr) {
     ecs_id_t *ids = type->array;
     int32_t count = type->count;
     uint64_t hash = 0;
-    ecs_hash(ids, count * ECS_SIZEOF(ecs_entity_t), &hash);
+    ecs_hash(ids, count * ECS_SIZEOF(ecs_id_t), &hash);
     return hash;
 }
 

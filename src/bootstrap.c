@@ -86,6 +86,24 @@ static ECS_MOVE(EcsTrigger, dst, src, {
 })
 
 static
+void register_name(ecs_iter_t *it) {
+    EcsName *name = ecs_term(it, EcsName, 1);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_register_name(it->world, it->entities[i], name[i].value);
+    }
+}
+
+static
+void unregister_name(ecs_iter_t *it) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_unregister_name(it->world, it->entities[i]);
+    }
+}
+
+static
 void register_on_delete(ecs_iter_t *it) {
     ecs_id_t id = ecs_term_id(it, 1);
     int i;
@@ -270,7 +288,7 @@ void ecs_bootstrap(
         .dtor = ecs_dtor(EcsTrigger),
         .copy = ecs_copy(EcsTrigger),
         .move = ecs_move(EcsTrigger)
-    });        
+    });
 
     world->stats.last_component_id = EcsFirstUserComponentId;
     world->stats.last_id = EcsFirstUserEntityId;
@@ -331,7 +349,20 @@ void ecs_bootstrap(
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
         .callback = register_on_delete_object,
         .events = {EcsOnAdd}
-    });  
+    });   
+
+    /* Define triggers for when a name is assigned, to update the index */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_id(EcsName)},
+        .callback = register_name,
+        .events = {EcsOnSet}
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_id(EcsName)},
+        .callback = unregister_name,
+        .events = {EcsUnSet}
+    });
 
     /* Removal of ChildOf objects (parents) deletes the subject (child) */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);  

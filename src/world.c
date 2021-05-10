@@ -718,6 +718,16 @@ void fini_stages(
     ecs_set_stages(world, 0);
 }
 
+/* Cleanup value index */
+static
+void fini_value_index(
+    ecs_value_index_t *value_index)
+{
+    ecs_hashmap_free(value_index->index);
+    ecs_map_free(value_index->reverse_index);
+    ecs_os_free(value_index);
+}
+
 /* Cleanup id index */
 static
 void fini_id_index(
@@ -727,6 +737,9 @@ void fini_id_index(
     ecs_id_record_t *r;
     while ((r = ecs_map_next(&it, ecs_id_record_t, NULL))) {
         ecs_map_free(r->table_index);
+        if (r->value_index) {
+            fini_value_index(r->value_index);
+        }
     }
 
     ecs_map_free(world->id_index);
@@ -742,6 +755,7 @@ void fini_id_triggers(
         ecs_map_free(t->on_add_triggers);
         ecs_map_free(t->on_remove_triggers);
         ecs_map_free(t->on_set_triggers);
+        ecs_map_free(t->un_set_triggers);
     }
     ecs_map_free(world->id_triggers);
     ecs_sparse_free(world->triggers);
@@ -1264,7 +1278,10 @@ void register_table_for_id(
         }
         if (ecs_triggers_get(world, id, EcsOnSet)) {
             table->flags |= EcsTableHasOnSet;
-        }        
+        }
+        if (ecs_triggers_get(world, id, EcsUnSet)) {
+            table->flags |= EcsTableHasUnSet;
+        }                
     }
 }
 

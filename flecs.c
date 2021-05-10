@@ -565,6 +565,7 @@ typedef struct {
 typedef struct {
     void *key;
     void *value;
+    uint64_t hash;
 } ecs_hashmap_result_t;
 
 FLECS_DBG_API
@@ -617,10 +618,21 @@ void _ecs_hashmap_remove(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
     const void *key,
-    ecs_size_t map_size);
+    ecs_size_t value_size);
 
 #define ecs_hashmap_remove(map, key, V)\
     _ecs_hashmap_remove(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+
+FLECS_DBG_API
+void _ecs_hashmap_remove_w_hash(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    const void *key,
+    ecs_size_t value_size,
+    uint64_t hash);
+
+#define ecs_hashmap_remove_w_hash(map, key, V, hash)\
+    _ecs_hashmap_remove_w_hash(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), hash)
 
 FLECS_DBG_API
 ecs_hashmap_iter_t ecs_hashmap_iter(
@@ -659,6 +671,13 @@ void* _ecs_hashmap_next(
 
 /* Maximum length of an entity name, including 0 terminator */
 #define ECS_MAX_NAME_LENGTH (64)
+
+/** Type used for internal string hashmap */
+typedef struct ecs_string_t {
+    char *value;
+    ecs_size_t length;
+    uint64_t hash;
+} ecs_string_t;
 
 /** Component-specific data */
 typedef struct ecs_type_info_t {
@@ -935,6 +954,7 @@ typedef struct ecs_id_trigger_t {
     ecs_map_t *on_add_triggers;
     ecs_map_t *on_remove_triggers;
     ecs_map_t *on_set_triggers;
+    ecs_map_t *un_set_triggers;
 } ecs_id_trigger_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -1044,6 +1064,19 @@ typedef struct ecs_table_record_t {
     int32_t column;
 } ecs_table_record_t;
 
+typedef struct ecs_value_index_t {
+    /* Lookup index for component values. Currently only used for Name/ChildOf,
+     * but could be generalized to other component types/relations. */
+    ecs_hashmap_t index;     /* hashmap<value, entity> */
+                                                                     
+    /* Used for finding the indexed value for an entity id. This serves a dual 
+     * purpose: it provides a stable storage to the value even as the component 
+     * moves around, and allows for retrieval of the previous value after a 
+     * component changed. The latter is necessary to remove/replace values in 
+     * the hasmap. */
+    ecs_map_t *reverse_index; /* map<entity, value> */ 
+} ecs_value_index_t;
+
 /* Payload for id index which contains all datastructures for an id. */
 typedef struct ecs_id_record_t {
     /* All tables that contain the id */
@@ -1052,10 +1085,7 @@ typedef struct ecs_id_record_t {
     ecs_entity_t on_delete;         /* Cleanup action for removing id */
     ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
 
-    ecs_hashmap_t *value_index;     /* Lookup index for component values. 
-                                     * Currently only used for Name/ChildOf,
-                                     * but could be generalized to other 
-                                     * component types/relations. */
+    ecs_value_index_t *value_index; /* Optional lookup by value index */
 } ecs_id_record_t;
 
 typedef struct ecs_store_t {
@@ -1286,6 +1316,14 @@ void ecs_run_monitors(
     int32_t count, 
     ecs_vector_t *v_src_monitors);
 
+void ecs_register_name(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name);
+
+void ecs_unregister_name(
+    ecs_world_t *world,
+    ecs_entity_t entity);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// World API
@@ -2547,6 +2585,8 @@ void notify_trigger(
             table->flags |= EcsTableHasOnRemove;
         } else if (event == EcsOnSet) {
             table->flags |= EcsTableHasOnSet;
+        } else if (event == EcsUnSet) {
+            table->flags |= EcsTableHasUnSet;
         }
     }
 }
@@ -5337,9 +5377,12 @@ void ecs_run_remove_actions(
     ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(removed->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
+    if (table->flags & EcsTableHasUnSet) {
+        notify(world, table, data, row, count, EcsUnSet, removed);
+    } 
     if (table->flags & EcsTableHasOnRemove) {
         notify(world, table, data, row, count, EcsOnRemove, removed);
-    }   
+    }  
 }
 
 static
@@ -15205,6 +15248,16 @@ void fini_stages(
     ecs_set_stages(world, 0);
 }
 
+/* Cleanup value index */
+static
+void fini_value_index(
+    ecs_value_index_t *value_index)
+{
+    ecs_hashmap_free(value_index->index);
+    ecs_map_free(value_index->reverse_index);
+    ecs_os_free(value_index);
+}
+
 /* Cleanup id index */
 static
 void fini_id_index(
@@ -15214,6 +15267,9 @@ void fini_id_index(
     ecs_id_record_t *r;
     while ((r = ecs_map_next(&it, ecs_id_record_t, NULL))) {
         ecs_map_free(r->table_index);
+        if (r->value_index) {
+            fini_value_index(r->value_index);
+        }
     }
 
     ecs_map_free(world->id_index);
@@ -15229,6 +15285,7 @@ void fini_id_triggers(
         ecs_map_free(t->on_add_triggers);
         ecs_map_free(t->on_remove_triggers);
         ecs_map_free(t->on_set_triggers);
+        ecs_map_free(t->un_set_triggers);
     }
     ecs_map_free(world->id_triggers);
     ecs_sparse_free(world->triggers);
@@ -15751,7 +15808,10 @@ void register_table_for_id(
         }
         if (ecs_triggers_get(world, id, EcsOnSet)) {
             table->flags |= EcsTableHasOnSet;
-        }        
+        }
+        if (ecs_triggers_get(world, id, EcsUnSet)) {
+            table->flags |= EcsTableHasUnSet;
+        }                
     }
 }
 
@@ -21544,7 +21604,7 @@ uint64_t ids_hash(const void *ptr) {
     ecs_id_t *ids = type->array;
     int32_t count = type->count;
     uint64_t hash = 0;
-    ecs_hash(ids, count * ECS_SIZEOF(ecs_entity_t), &hash);
+    ecs_hash(ids, count * ECS_SIZEOF(ecs_id_t), &hash);
     return hash;
 }
 
@@ -23378,6 +23438,8 @@ void register_trigger(
             set = &idt->on_remove_triggers;
         } else if (trigger->events[i] == EcsOnSet) {
             set = &idt->on_set_triggers;
+        } else if (trigger->events[i] == EcsUnSet) {
+            set = &idt->un_set_triggers;            
         } else {
             /* Invalid event provided */
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
@@ -23418,27 +23480,24 @@ void unregister_trigger(
 
     int i;
     for (i = 0; i < trigger->event_count; i ++) {
+        ecs_map_t **set = NULL;
         if (trigger->events[i] == EcsOnAdd) {
-            ecs_map_t *set = idt->on_add_triggers;
-            if (!set) {
-                return;
-            }
-            idt->on_add_triggers = unregister_id_trigger(set, trigger);
-        } else
-        if (trigger->events[i] == EcsOnRemove) {
-            ecs_map_t *set = idt->on_remove_triggers;
-            if (!set) {
-                return;
-            }
-            idt->on_remove_triggers = unregister_id_trigger(set, trigger);
-        } else
-        if (trigger->events[i] == EcsOnSet) {
-            ecs_map_t *set = idt->on_set_triggers;
-            if (!set) {
-                return;
-            }
-            idt->on_set_triggers = unregister_id_trigger(set, trigger);
-        }                  
+            set = &idt->on_add_triggers;
+        } else if (trigger->events[i] == EcsOnRemove) {
+            set = &idt->on_remove_triggers;
+        } else if (trigger->events[i] == EcsOnSet) {
+            set = &idt->on_set_triggers;
+        } else if (trigger->events[i] == EcsUnSet) {
+            set = &idt->un_set_triggers;            
+        } else {
+            /* Invalid event provided */
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+        if (!*set) {
+            return;
+        }
+
+        *set = unregister_id_trigger(*set, trigger);                
     }  
 }
 
@@ -23458,21 +23517,23 @@ ecs_map_t* ecs_triggers_get(
         return NULL;
     }
 
+    ecs_map_t *set = NULL;
+
     if (event == EcsOnAdd) {
-        if (idt->on_add_triggers && ecs_map_count(idt->on_add_triggers)) {
-            return idt->on_add_triggers;
-        }
+        set = idt->on_add_triggers;
     } else if (event == EcsOnRemove) {
-        if (idt->on_remove_triggers && ecs_map_count(idt->on_remove_triggers)) {
-            return idt->on_remove_triggers;
-        }
+        set = idt->on_remove_triggers;
     } else if (event == EcsOnSet) {
-        if (idt->on_set_triggers && ecs_map_count(idt->on_set_triggers)) {
-            return idt->on_set_triggers;
-        }        
+        set = idt->on_set_triggers;
+    } else if (event == EcsUnSet) {
+        set = idt->un_set_triggers;
     }
 
-    return NULL;
+    if (ecs_map_count(set)) {
+        return set;
+    } else {
+        return NULL;
+    }
 }
 
 static
@@ -26600,7 +26661,8 @@ ecs_hashmap_result_t _ecs_hashmap_ensure(
 
     return (ecs_hashmap_result_t){
         .key = key_ptr,
-        .value = value_ptr
+        .value = value_ptr,
+        .hash = hash
     };
 }
 
@@ -26616,16 +26678,13 @@ void _ecs_hashmap_set(
     ecs_os_memcpy(value_ptr, value, value_size);
 }
 
-void _ecs_hashmap_remove(
+void _ecs_hashmap_remove_w_hash(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
     const void *key,
-    ecs_size_t value_size)
+    ecs_size_t value_size,
+    uint64_t hash)
 {
-    ecs_assert(map.key_size == key_size, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
-
-    uint64_t hash = map.hash(key);
     ecs_hm_bucket_t *bucket = ecs_map_get(map.impl, ecs_hm_bucket_t, hash);
     if (!bucket) {
         return;
@@ -26644,6 +26703,19 @@ void _ecs_hashmap_remove(
         ecs_vector_free(bucket->values);
         ecs_map_remove(map.impl, hash);
     }
+}
+
+void _ecs_hashmap_remove(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    const void *key,
+    ecs_size_t value_size)
+{
+    ecs_assert(map.key_size == key_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
+
+    uint64_t hash = map.hash(key);
+    _ecs_hashmap_remove_w_hash(map, key_size, key, value_size, hash);
 }
 
 ecs_hashmap_iter_t ecs_hashmap_iter(
@@ -26761,6 +26833,24 @@ static ECS_MOVE(EcsTrigger, dst, src, {
     dst->trigger = src->trigger;
     src->trigger = NULL;
 })
+
+static
+void register_name(ecs_iter_t *it) {
+    EcsName *name = ecs_term(it, EcsName, 1);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_register_name(it->world, it->entities[i], name[i].value);
+    }
+}
+
+static
+void unregister_name(ecs_iter_t *it) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_unregister_name(it->world, it->entities[i]);
+    }
+}
 
 static
 void register_on_delete(ecs_iter_t *it) {
@@ -26947,7 +27037,7 @@ void ecs_bootstrap(
         .dtor = ecs_dtor(EcsTrigger),
         .copy = ecs_copy(EcsTrigger),
         .move = ecs_move(EcsTrigger)
-    });        
+    });
 
     world->stats.last_component_id = EcsFirstUserComponentId;
     world->stats.last_id = EcsFirstUserEntityId;
@@ -27008,7 +27098,20 @@ void ecs_bootstrap(
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
         .callback = register_on_delete_object,
         .events = {EcsOnAdd}
-    });  
+    });   
+
+    /* Define triggers for when a name is assigned, to update the index */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_id(EcsName)},
+        .callback = register_name,
+        .events = {EcsOnSet}
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_id(EcsName)},
+        .callback = unregister_name,
+        .events = {EcsUnSet}
+    });
 
     /* Removal of ChildOf objects (parents) deletes the subject (child) */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);  
@@ -27238,6 +27341,144 @@ ecs_entity_t get_parent_from_path(
     *path_ptr = path;
 
     return parent;
+}
+
+static
+uint64_t string_hash(
+    const void *ptr)
+{
+    const ecs_string_t *str = ptr;
+    if (str->hash) {
+        return str->hash;
+    } else {
+        uint64_t hash = 0;
+        ecs_hash(str->value, str->length, &hash);
+        return hash;
+    }
+}
+
+static
+int string_compare(
+    const void *ptr1, 
+    const void *ptr2)
+{
+    const ecs_string_t *str1 = ptr1;
+    const ecs_string_t *str2 = ptr2;
+    ecs_size_t len1 = str1->length;
+    ecs_size_t len2 = str2->length;
+    if (len1 != len2) {
+        return (len1 > len2) - (len1 < len2);
+    }
+
+    return ecs_os_memcmp(str1->value, str2->value, len1);
+}
+
+static
+ecs_value_index_t* ensure_value_index(
+    ecs_id_record_t *idr)
+{
+    ecs_value_index_t *result = idr->value_index;
+    if (!result) {
+        result = idr->value_index = ecs_os_calloc(sizeof(ecs_value_index_t));
+        result->index = ecs_hashmap_new(
+            ecs_string_t, ecs_entity_t, string_hash, string_compare);
+        result->reverse_index = ecs_map_new(ecs_string_t, 1);
+    }
+    return result;
+}
+
+static
+ecs_string_t* get_cur_name(
+    ecs_id_record_t *idr,
+    ecs_entity_t entity)
+{
+    if (idr->value_index) {
+        return ecs_map_get(
+            idr->value_index->reverse_index, ecs_string_t, entity);
+    } else {
+        return NULL;
+    }
+}
+
+static
+void unregister_cur_name(
+    ecs_id_record_t *idr,
+    ecs_entity_t entity)
+{
+    ecs_string_t *prev = get_cur_name(idr, entity);
+    if (prev) {
+        ecs_value_index_t *vi = idr->value_index;
+        ecs_assert(vi != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(vi->index.impl != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(vi->reverse_index != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_hashmap_remove_w_hash(vi->index, prev, ecs_entity_t, prev->hash);
+        ecs_map_remove(vi->reverse_index, entity);
+        ecs_os_free(prev->value);
+    }
+}
+
+static
+ecs_id_record_t* get_id_record(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_record_t *r = ecs_eis_get(world, entity);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_t *table = r->table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_record_t *idr;
+    if (table->flags & EcsTableHasParent) {
+        int32_t index = ecs_type_match(
+            table->type, 0, ecs_pair(EcsChildOf, EcsWildcard));
+        ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
+        
+        ecs_id_t *pair_ptr = ecs_vector_get(table->type, ecs_id_t, index);
+        ecs_assert(pair_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* This does potential conversions from CHILDOF to EcsChildOf */
+        ecs_id_t pair = ecs_pair(
+            ECS_PAIR_RELATION(*pair_ptr), ECS_PAIR_OBJECT(*pair_ptr));
+        idr = ecs_get_id_record(world, pair);
+    } else {
+        idr = ecs_get_id_record(world, ecs_pair(EcsChildOf, 0));
+    }
+
+    return idr;
+}
+
+void ecs_register_name(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_id_record_t *idr = get_id_record(world, entity);
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    unregister_cur_name(idr, entity);
+    
+    ecs_value_index_t *vi = ensure_value_index(idr);
+    ecs_string_t key = {
+        .value = ecs_os_strdup(name),
+        .length = name ? ecs_os_strlen(name) : 0
+    };
+
+    ecs_hashmap_result_t hmr = ecs_hashmap_ensure(
+        vi->index, &key, ecs_entity_t);
+    ((ecs_string_t*)hmr.key)->hash = hmr.hash;
+    *((ecs_entity_t*)hmr.value) = entity;
+}
+
+void ecs_unregister_name(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_id_record_t *idr = get_id_record(world, entity);
+    if (idr) {
+        unregister_cur_name(idr, entity);
+    }
 }
 
 char* ecs_get_path_w_sep(

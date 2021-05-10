@@ -222,6 +222,144 @@ ecs_entity_t get_parent_from_path(
     return parent;
 }
 
+static
+uint64_t string_hash(
+    const void *ptr)
+{
+    const ecs_string_t *str = ptr;
+    if (str->hash) {
+        return str->hash;
+    } else {
+        uint64_t hash = 0;
+        ecs_hash(str->value, str->length, &hash);
+        return hash;
+    }
+}
+
+static
+int string_compare(
+    const void *ptr1, 
+    const void *ptr2)
+{
+    const ecs_string_t *str1 = ptr1;
+    const ecs_string_t *str2 = ptr2;
+    ecs_size_t len1 = str1->length;
+    ecs_size_t len2 = str2->length;
+    if (len1 != len2) {
+        return (len1 > len2) - (len1 < len2);
+    }
+
+    return ecs_os_memcmp(str1->value, str2->value, len1);
+}
+
+static
+ecs_value_index_t* ensure_value_index(
+    ecs_id_record_t *idr)
+{
+    ecs_value_index_t *result = idr->value_index;
+    if (!result) {
+        result = idr->value_index = ecs_os_calloc(sizeof(ecs_value_index_t));
+        result->index = ecs_hashmap_new(
+            ecs_string_t, ecs_entity_t, string_hash, string_compare);
+        result->reverse_index = ecs_map_new(ecs_string_t, 1);
+    }
+    return result;
+}
+
+static
+ecs_string_t* get_cur_name(
+    ecs_id_record_t *idr,
+    ecs_entity_t entity)
+{
+    if (idr->value_index) {
+        return ecs_map_get(
+            idr->value_index->reverse_index, ecs_string_t, entity);
+    } else {
+        return NULL;
+    }
+}
+
+static
+void unregister_cur_name(
+    ecs_id_record_t *idr,
+    ecs_entity_t entity)
+{
+    ecs_string_t *prev = get_cur_name(idr, entity);
+    if (prev) {
+        ecs_value_index_t *vi = idr->value_index;
+        ecs_assert(vi != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(vi->index.impl != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(vi->reverse_index != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_hashmap_remove_w_hash(vi->index, prev, ecs_entity_t, prev->hash);
+        ecs_map_remove(vi->reverse_index, entity);
+        ecs_os_free(prev->value);
+    }
+}
+
+static
+ecs_id_record_t* get_id_record(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_record_t *r = ecs_eis_get(world, entity);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_t *table = r->table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_record_t *idr;
+    if (table->flags & EcsTableHasParent) {
+        int32_t index = ecs_type_match(
+            table->type, 0, ecs_pair(EcsChildOf, EcsWildcard));
+        ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
+        
+        ecs_id_t *pair_ptr = ecs_vector_get(table->type, ecs_id_t, index);
+        ecs_assert(pair_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* This does potential conversions from CHILDOF to EcsChildOf */
+        ecs_id_t pair = ecs_pair(
+            ECS_PAIR_RELATION(*pair_ptr), ECS_PAIR_OBJECT(*pair_ptr));
+        idr = ecs_get_id_record(world, pair);
+    } else {
+        idr = ecs_get_id_record(world, ecs_pair(EcsChildOf, 0));
+    }
+
+    return idr;
+}
+
+void ecs_register_name(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_id_record_t *idr = get_id_record(world, entity);
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    unregister_cur_name(idr, entity);
+    
+    ecs_value_index_t *vi = ensure_value_index(idr);
+    ecs_string_t key = {
+        .value = ecs_os_strdup(name),
+        .length = name ? ecs_os_strlen(name) : 0
+    };
+
+    ecs_hashmap_result_t hmr = ecs_hashmap_ensure(
+        vi->index, &key, ecs_entity_t);
+    ((ecs_string_t*)hmr.key)->hash = hmr.hash;
+    *((ecs_entity_t*)hmr.value) = entity;
+}
+
+void ecs_unregister_name(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_id_record_t *idr = get_id_record(world, entity);
+    if (idr) {
+        unregister_cur_name(idr, entity);
+    }
+}
+
 char* ecs_get_path_w_sep(
     const ecs_world_t *world,
     ecs_entity_t parent,

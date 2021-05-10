@@ -114,7 +114,8 @@ ecs_hashmap_result_t _ecs_hashmap_ensure(
 
     return (ecs_hashmap_result_t){
         .key = key_ptr,
-        .value = value_ptr
+        .value = value_ptr,
+        .hash = hash
     };
 }
 
@@ -130,16 +131,13 @@ void _ecs_hashmap_set(
     ecs_os_memcpy(value_ptr, value, value_size);
 }
 
-void _ecs_hashmap_remove(
+void _ecs_hashmap_remove_w_hash(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
     const void *key,
-    ecs_size_t value_size)
+    ecs_size_t value_size,
+    uint64_t hash)
 {
-    ecs_assert(map.key_size == key_size, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
-
-    uint64_t hash = map.hash(key);
     ecs_hm_bucket_t *bucket = ecs_map_get(map.impl, ecs_hm_bucket_t, hash);
     if (!bucket) {
         return;
@@ -158,6 +156,19 @@ void _ecs_hashmap_remove(
         ecs_vector_free(bucket->values);
         ecs_map_remove(map.impl, hash);
     }
+}
+
+void _ecs_hashmap_remove(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    const void *key,
+    ecs_size_t value_size)
+{
+    ecs_assert(map.key_size == key_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
+
+    uint64_t hash = map.hash(key);
+    _ecs_hashmap_remove_w_hash(map, key_size, key, value_size, hash);
 }
 
 ecs_hashmap_iter_t ecs_hashmap_iter(
