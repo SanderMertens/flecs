@@ -10044,7 +10044,34 @@ public:
      */
     bool should_quit() {
         return ecs_should_quit(m_world);
-    }    
+    }
+
+    /** Get id from a type.
+     */
+    template <typename T>
+    entity_t id() {
+        return _::cpp_type<T>::id(m_world);
+    }
+
+    /** Get pair id from relation, object
+     */
+    template <typename R, typename O>
+    entity_t pair() {
+        return ecs_pair(_::cpp_type<R>::id(m_world), _::cpp_type<O>::id(m_world));
+    }
+
+    /** Get pair id from relation, object
+     */
+    template <typename R>
+    entity_t pair(entity_t o) {
+        return ecs_pair(_::cpp_type<R>::id(m_world), o);
+    }
+
+    /** Get pair id from relation, object
+     */
+    entity_t pair(entity_t r, entity_t o) {
+        return ecs_pair(r, o);
+    }
 
     /** Begin frame.
      * When an application does not use progress() to control the main loop, it
@@ -12746,6 +12773,32 @@ public:
         this->m_term_id = &m_term->args[1];
         return *this;
     }
+
+    Base& subject(entity_t entity) {
+        this->subject();
+        this->m_term_id->entity = entity;
+        return *this;
+    }
+
+    Base& object(entity_t entity) {
+        this->object();
+        this->m_term_id->entity = entity;
+        return *this;
+    }
+    
+    template<typename T>
+    Base& subject() {
+        this->subject();
+        this->m_term_id->entity = _::cpp_type<T>::id(world());
+        return *this;
+    }
+
+    template<typename T>
+    Base& object() {
+        this->object();
+        this->m_term_id->entity = _::cpp_type<T>::id(world());
+        return *this;
+    }        
 
     Base& role(id_t role) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);

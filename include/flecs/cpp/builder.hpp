@@ -160,6 +160,32 @@ public:
         return *this;
     }
 
+    Base& subject(entity_t entity) {
+        this->subject();
+        this->m_term_id->entity = entity;
+        return *this;
+    }
+
+    Base& object(entity_t entity) {
+        this->object();
+        this->m_term_id->entity = entity;
+        return *this;
+    }
+    
+    template<typename T>
+    Base& subject() {
+        this->subject();
+        this->m_term_id->entity = _::cpp_type<T>::id(world());
+        return *this;
+    }
+
+    template<typename T>
+    Base& object() {
+        this->object();
+        this->m_term_id->entity = _::cpp_type<T>::id(world());
+        return *this;
+    }        
+
     Base& role(id_t role) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->role = role;

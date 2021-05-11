@@ -98,7 +98,34 @@ public:
      */
     bool should_quit() {
         return ecs_should_quit(m_world);
-    }    
+    }
+
+    /** Get id from a type.
+     */
+    template <typename T>
+    entity_t id() {
+        return _::cpp_type<T>::id(m_world);
+    }
+
+    /** Get pair id from relation, object
+     */
+    template <typename R, typename O>
+    entity_t pair() {
+        return ecs_pair(_::cpp_type<R>::id(m_world), _::cpp_type<O>::id(m_world));
+    }
+
+    /** Get pair id from relation, object
+     */
+    template <typename R>
+    entity_t pair(entity_t o) {
+        return ecs_pair(_::cpp_type<R>::id(m_world), o);
+    }
+
+    /** Get pair id from relation, object
+     */
+    entity_t pair(entity_t r, entity_t o) {
+        return ecs_pair(r, o);
+    }
 
     /** Begin frame.
      * When an application does not use progress() to control the main loop, it

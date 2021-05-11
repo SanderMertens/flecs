@@ -199,6 +199,17 @@ int ecs_term_finalize(
     ecs_term_t *term)
 {
     if (term->id) {
+        /* Allow for combining explicit object with id */
+        if (term->args[1].name && !term->args[1].entity) {
+            if (resolve_identifier(world, name, expr, &term->args[1])) {
+                return -1;
+            }
+        }
+
+        if (term->args[1].entity) {
+            term->id = ecs_pair(term->id, term->args[1].entity);
+        }
+
         /* If id is set, check for pair and derive predicate and object */
         if (ECS_HAS_ROLE(term->id, PAIR)) {
             term->pred.entity = ECS_PAIR_RELATION(term->id);

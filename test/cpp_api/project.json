@@ -279,7 +279,11 @@
                 "relation_w_object_wildcard",
                 "relation_w_predicate_wildcard",
                 "add_pair_w_rel_type",
-                "template_term"
+                "template_term",
+                "explicit_subject_w_id",
+                "explicit_subject_w_type",
+                "explicit_object_w_id",
+                "explicit_object_w_type"
             ]         
         }, {
             "id": "SystemBuilder",

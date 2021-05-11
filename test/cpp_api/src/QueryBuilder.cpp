@@ -1044,3 +1044,88 @@ void QueryBuilder_template_term() {
     
     test_int(count, 1);
 }
+
+void QueryBuilder_explicit_subject_w_id() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Position>()
+        .term<Position>().entity(flecs::This)
+        .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Velocity>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position& p) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void QueryBuilder_explicit_subject_w_type() {
+    flecs::world ecs;
+
+    ecs.set<Position>({10, 20});
+
+    auto q = ecs.query_builder<Position>()
+        .term<Position>().subject<Position>()
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+        test_assert(e == ecs.singleton<Position>());
+    });
+    
+    test_int(count, 1);
+}
+
+void QueryBuilder_explicit_object_w_id() {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Alice = ecs.entity();
+    auto Bob = ecs.entity();
+
+    auto q = ecs.query_builder<>()
+        .term(Likes).object(Alice)
+        .build();
+
+    auto e1 = ecs.entity().add(Likes, Alice);
+    ecs.entity().add(Likes, Bob);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void QueryBuilder_explicit_object_w_type() {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    struct Alice { };
+    auto Bob = ecs.entity();
+
+    auto q = ecs.query_builder<>()
+        .term(Likes).object<Alice>()
+        .build();
+
+    auto e1 = ecs.entity().add(Likes, ecs.id<Alice>());
+    ecs.entity().add(Likes, Bob);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
