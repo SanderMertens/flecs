@@ -234,15 +234,21 @@ Alternatively, the `iter` call can be written in such a way that it is fully gen
 
 ```cpp
 q.iter([](flecs::iter& it) {
-  for (int i = 0; i < it.term_count(); i ++) {
-    auto id = it.term_id(1);
-    // Use id, for example for reflection
+  for (int t = 0; t < it.term_count(); t++) {
+    auto id = it.term_id(t);
+    auto data = it.term(t);
+
+    // Use id & data, for example for reflection
+    for (auto i : it) {
+      void *ptr = data[i];
+      // ...
+    }
   }
 });
 ```
 
 ### Iter (C)
-The `ecs_query_iter` function is how C applications can iterate queries, and provides functionality similar to the C++ `iter` function. This i simple an example of using `ecs_query_iter`:
+The `ecs_query_iter` function is how C applications can iterate queries, and provides functionality similar to the C++ `iter` function. This is a simple example of using `ecs_query_iter`:
 
 ```c
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
@@ -439,6 +445,44 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   }
 });
 ```
+
+### Read/write access
+A query term can specify whether the query intends to read or write data from the term. This is an example of a query term that specifies readonly access:
+
+```
+Position, [in] Velocity
+```
+
+This example shows how to specify read/write access in the builder API:
+
+```cpp
+auto qb = world.query_builder<Position>()
+  .term<Velocity>().inout(flecs::In);
+```
+
+Alternatively a query may also use `const` to indicate readonly access, which is equivalent to specifying `flecs::In`. Using `const` however should be preferred, as the qualifier is propagated to the `each` and `iter` callbacks:
+
+```cpp
+auto q = world.query<Position, const Velocity>();
+
+q.each([](flecs::entity e, Position& p, const Velocity& v){
+  p.x += v.x;
+  p.y += v.y;
+});
+```
+
+This example shows how to specify read/write access in the query descriptor:
+
+```c
+ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
+  .filter.terms = {
+    {ecs_id(Position)},
+    {ecs_id(Position), .inout = EcsIn}
+  }
+});
+```
+
+The default read/write access is `InOut` for terms that have `This` as the subject. Terms that have an entity other than `This` have `In` as default. Either defaults can be overridden.
 
 ### Predicate
 Each term has exactly one predicate. Conceptually, a predicate is a function that returns true when its inputs match, and false when its inputs do not match. When translating this to simple flecs query, a component represents a predicate that returns true when its input has the component:
