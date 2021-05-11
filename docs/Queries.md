@@ -546,7 +546,7 @@ In the builder API components can be specified using template arguments:
 ```cpp
 // Position & Velocity are C++ types
 auto qb = world.query_builder<Position, const Velocity>()
-  .term<Mass>(); // Mas is a C++ type
+  .term<Mass>(); // Mass is a C++ type
 ```
 
 In the descriptor API components can be specified with the `ecs_id` macro. This macro requires that the component id is known in the current scope (see the manual for how to register components/declare component identifiers):
