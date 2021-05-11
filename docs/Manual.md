@@ -1057,6 +1057,8 @@ if (ecs_query_changed(q)) {
 ```
 
 ## Signatures
+**NOTE**: This section describes the legacy query DSL. For documentation on the new query DSL and APIs, see the [Queries manual](Queries.md).
+
 The query signature accepts a wide range of operators and options that allow an application to determine with fine granularity which entities to iterate over. The most common kind of signature is one that subscribes for entities with a set of components. An example of such a signature looks like a comma delimited list of component or tag identifiers:
 
 ```
