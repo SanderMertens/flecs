@@ -6,16 +6,23 @@
 [![Try online](https://img.shields.io/badge/try-online-brightgreen)](https://godbolt.org/z/bs11T3)
 [![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
 
-Flecs is a fast and lightweight Entity Component System with a focus on high performance game development ([join the Discord!](https://discord.gg/MRSAZqb)). Highlights of the framework are:
+Flecs is a fast and lightweight Entity Component System with a focus on high performance game development ([join the Discord!](https://discord.gg/MRSAZqb)). The highlights of the framework are:
 
-- Fast to compile & integrate in any project with zero-dependency core that is written entirely in C99
-- Highly portable with C++11 API that does not depend on any STL types
-- Provides (SoA) access to raw component arrays for optimal cache efficiency and vectorization
-- Archetype-storage with unique graph-based design enables high performance entity mutations 
-- Flexible API primitives allow for efficient implementation of prefabs, runtime tags and entity graphs
-- Supports advanced queries that are entirely evaluated offline to eliminate searching from the main loop
-- Lockless threading design allows for efficient execution of systems on multiple threads
-- A dashboard module for tracking application metrics (see below for repository link):
+- C99 core, modern C++11 API, no dependencies on STL types
+- Batched iteration with direct access to component arrays
+- SoA/Archetype storage for efficient CPU caching & vectorization
+- Automatic component registration across binaries
+- Hierarchies
+- Prefabs
+- Entity relationships
+- Fast graph queries
+- Thread safe, lockless API
+- Systems that are ran manually, every frame or at a time/rate interval
+- Queries that can be iterated from free functions
+- Modules for organizing components & systems
+- Builtin statistics & introspection
+- Modular core with compile-time disabling of optional features
+- A dashboard module for visualizing statistics:
 
 <img width="942" alt="Screen Shot 2020-12-02 at 1 28 04 AM" src="https://user-images.githubusercontent.com/9919222/100856510-5eebe000-3440-11eb-908e-f4844c335f37.png">
 
