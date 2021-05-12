@@ -283,7 +283,12 @@
                 "explicit_subject_w_id",
                 "explicit_subject_w_type",
                 "explicit_object_w_id",
-                "explicit_object_w_type"
+                "explicit_object_w_type",
+                "explicit_term",
+                "explicit_term_w_type",
+                "explicit_term_w_pair_type",
+                "explicit_term_w_id",
+                "explicit_term_w_pair_id"
             ]         
         }, {
             "id": "SystemBuilder",

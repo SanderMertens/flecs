@@ -56,6 +56,7 @@ class entity;
 class entity_view;
 class type;
 class iter;
+class term;
 class filter;
 class filter_iterator;
 class child_iterator;

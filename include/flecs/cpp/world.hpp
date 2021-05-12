@@ -292,8 +292,8 @@ public:
      * @param stage_id The index of the stage to retrieve.
      * @return A thread-specific pointer to the world. 
      */
-    flecs::world get_stage(int32_t id) const {
-        return flecs::world(ecs_get_stage(m_world, id));
+    flecs::world get_stage(int32_t stage_id) const {
+        return flecs::world(ecs_get_stage(m_world, stage_id));
     }
 
     /** Create asynchronous stage.
@@ -722,7 +722,7 @@ public:
 
     /** Create an system from an entity
      */
-    flecs::system<> system(flecs::entity id) const;
+    flecs::system<> system(flecs::entity e) const;
 
     /** Create an system.
      */
@@ -738,6 +738,21 @@ public:
      */
     template <typename... Comps, typename... Args>
     flecs::query_builder<Comps...> query_builder(Args &&... args) const;
+
+    /** Create a term 
+     */
+    template<typename... Args>
+    flecs::term term(Args &&... args) const;
+
+    /** Create a term for a type
+     */
+    template<typename T, typename... Args>
+    flecs::term term(Args &&... args) const;  
+
+    /** Create a term for a pair
+     */
+    template<typename R, typename O, typename... Args>
+    flecs::term term(Args &&... args) const;        
 
     /** Register a component.
      */

@@ -248,6 +248,22 @@ public:
         , value({})
         , m_world(world_ptr) { value.move = true; }
 
+    term(flecs::world_t *world_ptr, id_t id) 
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(world_ptr) { 
+            value.move = true; 
+            this->id(id);
+        }
+
+    term(flecs::world_t *world_ptr, id_t r, id_t o) 
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(world_ptr) { 
+            value.move = true; 
+            this->id(r, o);
+        }        
+
     term(const term& obj) : term_builder_i<term>(&value) {
         m_world = obj.m_world;
         value = ecs_term_copy(&obj.value);
@@ -390,11 +406,17 @@ public:
         return *this;
     }
 
-    Base& term(const flecs::term& term) {
+    Base& term(flecs::term& term) {
         this->term();
-        *this->m_term = term;
+        *this->m_term = term.move();
         return *this;
     }
+
+    Base& term(flecs::term&& term) {
+        this->term();
+        *this->m_term = term.move();
+        return *this;
+    }    
 
     void populate_filter_from_pack() {
         flecs::array<flecs::id_t, sizeof...(Components)> ids ({

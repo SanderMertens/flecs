@@ -8827,6 +8827,7 @@ class entity;
 class entity_view;
 class type;
 class iter;
+class term;
 class filter;
 class filter_iterator;
 class child_iterator;
@@ -10238,8 +10239,8 @@ public:
      * @param stage_id The index of the stage to retrieve.
      * @return A thread-specific pointer to the world. 
      */
-    flecs::world get_stage(int32_t id) const {
-        return flecs::world(ecs_get_stage(m_world, id));
+    flecs::world get_stage(int32_t stage_id) const {
+        return flecs::world(ecs_get_stage(m_world, stage_id));
     }
 
     /** Create asynchronous stage.
@@ -10668,7 +10669,7 @@ public:
 
     /** Create an system from an entity
      */
-    flecs::system<> system(flecs::entity id) const;
+    flecs::system<> system(flecs::entity e) const;
 
     /** Create an system.
      */
@@ -10684,6 +10685,21 @@ public:
      */
     template <typename... Comps, typename... Args>
     flecs::query_builder<Comps...> query_builder(Args &&... args) const;
+
+    /** Create a term 
+     */
+    template<typename... Args>
+    flecs::term term(Args &&... args) const;
+
+    /** Create a term for a type
+     */
+    template<typename T, typename... Args>
+    flecs::term term(Args &&... args) const;  
+
+    /** Create a term for a pair
+     */
+    template<typename R, typename O, typename... Args>
+    flecs::term term(Args &&... args) const;        
 
     /** Register a component.
      */
@@ -12862,6 +12878,22 @@ public:
         , value({})
         , m_world(world_ptr) { value.move = true; }
 
+    term(flecs::world_t *world_ptr, id_t id) 
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(world_ptr) { 
+            value.move = true; 
+            this->id(id);
+        }
+
+    term(flecs::world_t *world_ptr, id_t r, id_t o) 
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(world_ptr) { 
+            value.move = true; 
+            this->id(r, o);
+        }        
+
     term(const term& obj) : term_builder_i<term>(&value) {
         m_world = obj.m_world;
         value = ecs_term_copy(&obj.value);
@@ -13004,11 +13036,17 @@ public:
         return *this;
     }
 
-    Base& term(const flecs::term& term) {
+    Base& term(flecs::term& term) {
         this->term();
-        *this->m_term = term;
+        *this->m_term = term.move();
         return *this;
     }
+
+    Base& term(flecs::term&& term) {
+        this->term();
+        *this->m_term = term.move();
+        return *this;
+    }    
 
     void populate_filter_from_pack() {
         flecs::array<flecs::id_t, sizeof...(Components)> ids ({
@@ -15654,32 +15692,32 @@ inline void world::init_builtin_components() {
 
 template <typename T>
 inline flecs::entity world::use(const char *alias) {
-    entity_t id = _::cpp_type<T>::id(m_world);
+    entity_t e = _::cpp_type<T>::id(m_world);
     const char *name = alias;
     if (!name) {
         // If no name is defined, use the entity name without the scope
-        name = ecs_get_name(m_world, id);
+        name = ecs_get_name(m_world, e);
     }
-    ecs_use(m_world, id, name);
-    return flecs::entity(m_world, id);
+    ecs_use(m_world, e, name);
+    return flecs::entity(m_world, e);
 }
 
 inline flecs::entity world::use(const char *name, const char *alias) {
-    entity_t id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+    entity_t e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
+    ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_use(m_world, id, alias);
-    return flecs::entity(m_world, id);
+    ecs_use(m_world, e, alias);
+    return flecs::entity(m_world, e);
 }
 
 inline void world::use(flecs::entity e, const char *alias) {
-    entity_t id = e.id();
+    entity_t eid = e.id();
     const char *name = alias;
     if (!name) {
         // If no name is defined, use the entity name without the scope
-        ecs_get_name(m_world, id);
+        ecs_get_name(m_world, eid);
     }
-    ecs_use(m_world, id, alias);
+    ecs_use(m_world, eid, alias);
 }
 
 inline flecs::entity world::set_scope(const flecs::entity& scope) const {
@@ -15691,8 +15729,8 @@ inline flecs::entity world::get_scope() const {
 }
 
 inline entity world::lookup(const char *name) const {
-    auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
-    return flecs::entity(*this, id);
+    auto e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
+    return flecs::entity(*this, e);
 }
 
 template <typename T>
@@ -15757,8 +15795,8 @@ inline flecs::type world::type(Args &&... args) const {
     return flecs::type(*this, std::forward<Args>(args)...);
 }
 
-inline flecs::system<> world::system(flecs::entity id) const {
-    return flecs::system<>(m_world, id);
+inline flecs::system<> world::system(flecs::entity e) const {
+    return flecs::system<>(m_world, e);
 }
 
 template <typename... Comps, typename... Args>
@@ -15774,6 +15812,21 @@ inline flecs::query<Comps...> world::query(Args &&... args) const {
 template <typename... Comps, typename... Args>
 inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
     return flecs::query_builder<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+inline flecs::term world::term(Args &&... args) const {
+    return flecs::term(*this, std::forward<Args>(args)...);
+}
+
+template <typename T, typename... Args>
+inline flecs::term world::term(Args &&... args) const {
+    return flecs::term(*this, std::forward<Args>(args)...).id<T>();
+}
+
+template <typename R, typename O, typename... Args>
+inline flecs::term world::term(Args &&... args) const {
+    return flecs::term(*this, std::forward<Args>(args)...).id<R, O>();
 }
 
 template <typename Module, typename... Args>

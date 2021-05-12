@@ -1129,3 +1129,109 @@ void QueryBuilder_explicit_object_w_type() {
     
     test_int(count, 1);
 }
+
+void QueryBuilder_explicit_term() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<>()
+        .term(ecs.term().id<Position>())
+        .build();
+
+    auto e1 = ecs.entity().add<Position>();
+    ecs.entity().add<Velocity>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void QueryBuilder_explicit_term_w_type() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<>()
+        .term(ecs.term<Position>())
+        .build();
+
+    auto e1 = ecs.entity().add<Position>();
+    ecs.entity().add<Velocity>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void QueryBuilder_explicit_term_w_pair_type() {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Alice { };
+    struct Bob { };
+
+    auto q = ecs.query_builder<>()
+        .term(ecs.term<Likes, Alice>())
+        .build();
+
+    auto e1 = ecs.entity().add<Likes, Alice>();
+    ecs.entity().add<Likes, Bob>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void QueryBuilder_explicit_term_w_id() {
+    flecs::world ecs;
+
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+
+    auto q = ecs.query_builder<>()
+        .term(ecs.term(Apples))
+        .build();
+
+    auto e1 = ecs.entity().add(Apples);
+    ecs.entity().add(Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void QueryBuilder_explicit_term_w_pair_id() {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+
+    auto q = ecs.query_builder<>()
+        .term(ecs.term(Likes, Apples))
+        .build();
+
+    auto e1 = ecs.entity().add(Likes, Apples);
+    ecs.entity().add(Likes, Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}

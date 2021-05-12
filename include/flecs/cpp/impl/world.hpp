@@ -74,32 +74,32 @@ inline void world::init_builtin_components() {
 
 template <typename T>
 inline flecs::entity world::use(const char *alias) {
-    entity_t id = _::cpp_type<T>::id(m_world);
+    entity_t e = _::cpp_type<T>::id(m_world);
     const char *name = alias;
     if (!name) {
         // If no name is defined, use the entity name without the scope
-        name = ecs_get_name(m_world, id);
+        name = ecs_get_name(m_world, e);
     }
-    ecs_use(m_world, id, name);
-    return flecs::entity(m_world, id);
+    ecs_use(m_world, e, name);
+    return flecs::entity(m_world, e);
 }
 
 inline flecs::entity world::use(const char *name, const char *alias) {
-    entity_t id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+    entity_t e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
+    ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_use(m_world, id, alias);
-    return flecs::entity(m_world, id);
+    ecs_use(m_world, e, alias);
+    return flecs::entity(m_world, e);
 }
 
 inline void world::use(flecs::entity e, const char *alias) {
-    entity_t id = e.id();
+    entity_t eid = e.id();
     const char *name = alias;
     if (!name) {
         // If no name is defined, use the entity name without the scope
-        ecs_get_name(m_world, id);
+        ecs_get_name(m_world, eid);
     }
-    ecs_use(m_world, id, alias);
+    ecs_use(m_world, eid, alias);
 }
 
 inline flecs::entity world::set_scope(const flecs::entity& scope) const {
@@ -111,8 +111,8 @@ inline flecs::entity world::get_scope() const {
 }
 
 inline entity world::lookup(const char *name) const {
-    auto id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
-    return flecs::entity(*this, id);
+    auto e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
+    return flecs::entity(*this, e);
 }
 
 template <typename T>
@@ -177,8 +177,8 @@ inline flecs::type world::type(Args &&... args) const {
     return flecs::type(*this, std::forward<Args>(args)...);
 }
 
-inline flecs::system<> world::system(flecs::entity id) const {
-    return flecs::system<>(m_world, id);
+inline flecs::system<> world::system(flecs::entity e) const {
+    return flecs::system<>(m_world, e);
 }
 
 template <typename... Comps, typename... Args>
@@ -194,6 +194,21 @@ inline flecs::query<Comps...> world::query(Args &&... args) const {
 template <typename... Comps, typename... Args>
 inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
     return flecs::query_builder<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+inline flecs::term world::term(Args &&... args) const {
+    return flecs::term(*this, std::forward<Args>(args)...);
+}
+
+template <typename T, typename... Args>
+inline flecs::term world::term(Args &&... args) const {
+    return flecs::term(*this, std::forward<Args>(args)...).id<T>();
+}
+
+template <typename R, typename O, typename... Args>
+inline flecs::term world::term(Args &&... args) const {
+    return flecs::term(*this, std::forward<Args>(args)...).id<R, O>();
 }
 
 template <typename Module, typename... Args>
