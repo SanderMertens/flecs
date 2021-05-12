@@ -6,7 +6,7 @@
 [![Try online](https://img.shields.io/badge/try-online-brightgreen)](https://godbolt.org/z/bs11T3)
 [![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
 
-Flecs is a fast and lightweight Entity Component System with a focus on high performance game development ([join the Discord!](https://discord.gg/MRSAZqb)). The highlights of the framework are:
+Flecs is a fast and lightweight Entity Component System with a focus on high performance game development and usability ([join the Discord!](https://discord.gg/MRSAZqb)). The highlights of the framework are:
 
 - C99 core, modern C++11 API, no dependencies on STL types
 - Batched iteration with direct access to component arrays
