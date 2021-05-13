@@ -226,11 +226,11 @@ ecs_iter_t it = ecs_query_iter(query);
 // Iterate all the matching archetypes
 while (ecs_query_next(&it)) {
     // Get the component arrays
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_term(&it, Position, 1);
+    Velocity *v = ecs_term(&it, Velocity, 2);
 
     // Iterate the entities in the archetype
-    for (int i = 0; i < it->count; i ++) {
+    for (int i = 0; i < it.count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
