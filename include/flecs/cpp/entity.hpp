@@ -181,7 +181,7 @@ public:
         : flecs::id( nullptr, id ) { }
 
     /** Equality operator. */
-    bool operator==(const entity_view& e) {
+    bool operator==(const entity_view& e) const {
         return this->id() == e.id();
     }
 
