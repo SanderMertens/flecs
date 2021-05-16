@@ -250,7 +250,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macOS-latest ]
-        compiler: [ gcc, clang ]
+        compiler: [ gcc ]
     steps:
       - uses: actions/checkout@v2
 
@@ -299,3 +299,27 @@ jobs:
         run: | 
           cmake ..
           cmake --build .
+
+  meson:
+    timeout-minutes: 20
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+        compiler: [ gcc ]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install meson
+        run: |
+          pip3 install meson
+          pip3 install ninja
+        
+      - name: Create build folder
+        run: meson meson_build
+
+      - name: Build Flecs
+        working-directory: meson_build
+        run: |
+          meson compile
