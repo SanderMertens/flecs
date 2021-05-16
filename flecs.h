@@ -14332,6 +14332,15 @@ flecs::entity module(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name, false);
     ecs_add_module_tag(world, result.id());
     ecs_set_scope(world.c_ptr(), result.id());
+
+    // Only register copy/move/dtor, make sure to not instantiate ctor as the
+    // default ctor doesn't work for modules.
+    EcsComponentLifecycle cl{};
+    cl.copy = _::component_copy<T>;
+    cl.move = _::component_move<T>;
+    cl.dtor = _::component_dtor<T>;
+    ecs_set_component_actions_w_entity(world, result, &cl);
+
     return result;
 }
 
@@ -14346,7 +14355,9 @@ ecs_entity_t do_import(world& world, const char *symbol) {
 
     ecs_entity_t scope = ecs_get_scope(world.c_ptr());
 
-    T module_data(world);
+    // Create custom storage to prevent object destruction
+    T* module_data = static_cast<T*>(ecs_os_malloc(sizeof(T)));
+    FLECS_PLACEMENT_NEW(module_data, T(world));
 
     ecs_set_scope(world.c_ptr(), scope);
 
@@ -14360,10 +14371,16 @@ ecs_entity_t do_import(world& world, const char *symbol) {
 
     // Set module singleton component
 
-    T* module_ptr = static_cast<T*>(ecs_get_mut_w_id( world.c_ptr(), m,
-        _::cpp_type<T>::id_no_lifecycle(world.c_ptr(), nullptr, false), NULL));
+    T* module_ptr = static_cast<T*>(
+        ecs_get_mut_w_id( world.c_ptr(), m,
+            _::cpp_type<T>::id_no_lifecycle(world.c_ptr(), nullptr, false), 
+                NULL));
 
-    *module_ptr = std::move(module_data);
+    *module_ptr = std::move(*module_data);
+
+    // Don't dtor, as a module should only be destructed once when the module
+    // component is removed.
+    ecs_os_free(module_data);
 
     // Add module tag        
     ecs_add_id(world.c_ptr(), m, flecs::Module);

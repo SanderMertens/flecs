@@ -179,3 +179,34 @@ void Module_module_tag_on_namespace() {
     auto nsid = world.lookup("ns");
     test_assert(nsid.has(flecs::Module));
 }
+
+static int module_ctor_invoked = 0;
+static int module_dtor_invoked = 0;
+
+class Module_w_dtor {
+public:
+    Module_w_dtor(flecs::world& world) {
+        world.module<Module_w_dtor>();
+        module_ctor_invoked ++;
+    }
+
+    ~Module_w_dtor() {
+        module_dtor_invoked ++;
+    }    
+};
+
+void Module_dtor_on_fini() {
+    {
+        flecs::world ecs;
+
+        test_int(module_ctor_invoked, 0);
+        test_int(module_dtor_invoked, 0);
+
+        ecs.import<Module_w_dtor>();
+        
+        test_int(module_ctor_invoked, 1);
+        test_int(module_dtor_invoked, 0);
+    }
+
+    test_int(module_dtor_invoked, 1);
+}
