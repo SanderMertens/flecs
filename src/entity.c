@@ -1865,12 +1865,17 @@ ecs_entity_t ecs_entity_init(
     /* Set name */
     if (name && !name_assigned) {
         ecs_add_path_w_sep(world, result, scope, name, sep, NULL);   
-        if (desc->symbol) {
-            EcsName *name_ptr = ecs_get_mut(world, result, EcsName, NULL);
-            ecs_os_free(name_ptr->symbol);
+    }
+
+    if (desc->symbol) {
+        EcsName *name_ptr = ecs_get_mut(world, result, EcsName, NULL);
+        if (name_ptr->symbol) {
+            ecs_assert(!ecs_os_strcmp(desc->symbol, name_ptr->symbol),
+                ECS_INCONSISTENT_NAME, desc->symbol);
+        } else {
             name_ptr->symbol = ecs_os_strdup(desc->symbol);
         }
-    }
+    }    
 
     return result;
 }

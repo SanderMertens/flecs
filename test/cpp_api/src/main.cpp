@@ -343,6 +343,7 @@ void ImplicitComponents_implicit_base(void);
 void ImplicitComponents_implicit_const(void);
 void ImplicitComponents_implicit_ref(void);
 void ImplicitComponents_implicit_ptr(void);
+void ImplicitComponents_implicit_const_ref(void);
 
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
@@ -370,6 +371,7 @@ void WorldFactory_module_w_name(void);
 void World_multi_world_empty(void);
 void World_multi_world_component(void);
 void World_multi_world_component_namespace(void);
+void World_multi_world_module(void);
 void World_type_id(void);
 void World_different_comp_same_name(void);
 void World_reregister_after_reset(void);
@@ -1670,6 +1672,10 @@ bake_test_case ImplicitComponents_testcases[] = {
     {
         "implicit_ptr",
         ImplicitComponents_implicit_ptr
+    },
+    {
+        "implicit_const_ref",
+        ImplicitComponents_implicit_const_ref
     }
 };
 
@@ -1763,6 +1769,10 @@ bake_test_case World_testcases[] = {
     {
         "multi_world_component_namespace",
         World_multi_world_component_namespace
+    },
+    {
+        "multi_world_module",
+        World_multi_world_module
     },
     {
         "type_id",
@@ -1969,7 +1979,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        25,
+        26,
         ImplicitComponents_testcases
     },
     {
@@ -1990,7 +2000,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        20,
+        21,
         World_testcases
     },
     {

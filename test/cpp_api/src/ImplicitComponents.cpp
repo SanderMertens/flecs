@@ -435,3 +435,14 @@ void ImplicitComponents_implicit_ptr() {
     test_int(v.id(), flecs::type_id<Position*>());
     test_int(v.id(), flecs::type_id<Position&>());
 }
+
+void ImplicitComponents_implicit_const_ref() {
+    flecs::world world;
+
+    auto v = world.use<const Position&>();
+
+    test_int(v.id(), flecs::type_id<Position>());
+    test_int(v.id(), flecs::type_id<const Position>());
+    test_int(v.id(), flecs::type_id<Position*>());
+    test_int(v.id(), flecs::type_id<Position&>());
+}

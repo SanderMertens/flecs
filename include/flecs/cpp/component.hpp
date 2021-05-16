@@ -313,18 +313,9 @@ void register_lifecycle_actions(
 //    the same identifiers. If a component is registered under different names
 //    in the same application, id conflicts can occur.
 //
-// Known issues:
-//
-// It seems like component registration does not always work correctly in Unreal
-// engine when recreating a world. A plausible cause for this is the hot 
-// reloading of dynamic libraries by the engine. A workaround for this issue is
-// to call flecs::_::cpp_type<T>::reset() before recreating the world.
-// This will reset the global component state and avoids conflicts. The exact
-// cause of the issue is investigated here: 
-//   https://github.com/SanderMertens/flecs/issues/293
 
 template <typename T>
-class cpp_type final {
+class cpp_type_impl {
 public:
     // Initialize component identifier
     static void init(world_t* world, entity_t entity, bool allow_tag = true) {
@@ -393,41 +384,21 @@ public:
             // low ids in some parts of the code allow for direct indexing.
             flecs::world w(world);
             flecs::entity result = entity(w, name, true);
-            
-            // Initialize types with identifier
-            cpp_type<typename base_type<T>::type>::init(world, result.id(), allow_tag);
-            cpp_type<const typename base_type<T>::type>::init(world, result.id(), allow_tag);
-            cpp_type<typename base_type<T>::type*>::init(world, result.id(), allow_tag);
-            cpp_type<typename base_type<T>::type&>::init(world, result.id(), allow_tag);
+
+            init(world, result.id(), allow_tag);
 
             // Now use the resulting identifier to register the component. Note
             // that the name is not passed into this function, as the entity was
             // already created with the correct name.
+            char *symbol = symbol_helper<T>::symbol();
             ecs_component_desc_t desc = {};
             desc.entity.entity = result.id();
+            desc.entity.symbol = symbol;
             desc.size = size();
             desc.alignment = alignment();
             ecs_entity_t entity = ecs_component_init(world, &desc);
             ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
-
-            // Set the symbol in the Name component to the actual C++ name.
-            // Comparing symbols allows for verifying whether a different 
-            // component is being registered under the same name. We can't use
-            // the name used for registration, because it is possible that a
-            // user (erroneously) attempts to register the same datatype with
-            // the same name. Without verifying that the actual C++ type name
-            // matches, that scenario would go undetected.
-            EcsName *name_comp = static_cast<EcsName*>(ecs_get_mut_w_id(
-                world, entity, ecs_id(EcsName), NULL));
-            char *symbol = symbol_helper<T>::symbol();
-
-            if (name_comp->symbol) {
-                ecs_assert( !strcmp(name_comp->symbol, symbol), 
-                    ECS_COMPONENT_NAME_IN_USE, name);
-                ecs_os_free(symbol);
-            } else {
-                name_comp->symbol = symbol;
-            }
+            ecs_os_free(symbol);
             
             // The identifier returned by the function should be the same as the
             // identifier that was passed in.
@@ -442,12 +413,15 @@ public:
                 name = n;
             }
 
+            char *symbol = symbol_helper<T>::symbol();
             ecs_component_desc_t desc = {};
             desc.entity.entity = s_id;
+            desc.entity.symbol = symbol;
             desc.entity.name = name;
             desc.size = size();
             desc.alignment = alignment();
             ecs_entity_t entity = ecs_component_init(world, &desc);
+            ecs_os_free(symbol);
                 
             (void)entity;
 
@@ -593,10 +567,13 @@ private:
 };
 
 // Global templated variables that hold component identifier and other info
-template <typename T> entity_t cpp_type<T>::s_id( 0 );
-template <typename T> type_t cpp_type<T>::s_type( nullptr );
-template <typename T> flecs::string cpp_type<T>::s_name;
-template <typename T> bool cpp_type<T>::s_allow_tag( true );
+template <typename T> entity_t cpp_type_impl<T>::s_id( 0 );
+template <typename T> type_t cpp_type_impl<T>::s_type( nullptr );
+template <typename T> flecs::string cpp_type_impl<T>::s_name;
+template <typename T> bool cpp_type_impl<T>::s_allow_tag( true );
+
+template <typename T>
+class cpp_type final : public cpp_type_impl<typename base_type<T>::type> { };
 
 } // namespace _
 
@@ -668,8 +645,12 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
          * registered explicitly. */
     } else {
         /* If the component is not yet registered, ensure no other component
-         * or entity has been registered with this name */
-        ecs_entity_t entity = ecs_lookup_fullpath(world_ptr, name);
+         * or entity has been registered with this name. Ensure component is 
+         * looked up from root. */
+        ecs_entity_t prev_scope = ecs_set_scope(world_ptr, 0);
+        ecs_entity_t entity = ecs_lookup_path_w_sep(world_ptr, 0, name,
+            "::", "::", false);
+        ecs_set_scope(world_ptr, prev_scope);
 
         /* If entity exists, compare symbol name to ensure that the component
          * we are trying to register under this name is the same */
@@ -679,13 +660,20 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
             ecs_assert(name_comp != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(name_comp->symbol != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            const char *symbol = _::name_helper<T>::name();
-
+            char *symbol = _::symbol_helper<T>::symbol();
             ecs_assert(!strcmp(name_comp->symbol, symbol), 
                 ECS_COMPONENT_NAME_IN_USE, name);
+            ecs_os_free(symbol);
 
             (void)name_comp;
-            (void)symbol;
+
+        /* If no entity is found, lookup symbol to verify if the component was
+         * registered under a different name. */
+        } else {
+            char *symbol = _::symbol_helper<T>::symbol();
+            entity = ecs_lookup_symbol(world_ptr, symbol);
+            ecs_assert(entity == 0, ECS_INCONSISTENT_COMPONENT_ID, symbol);
+            ecs_os_free(symbol);
         }
 
         /* Register id as usual */

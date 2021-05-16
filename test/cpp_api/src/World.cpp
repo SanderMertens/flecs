@@ -39,7 +39,6 @@ void TestInteropModuleImport(ecs_world_t *world) {
     desc.entity.symbol = "Position";
     desc.size = sizeof(Position);
     desc.alignment = alignof(Position);
-
     ecs_component_init(world, &desc);
 }
 
@@ -72,12 +71,20 @@ namespace ns {
             ecs.component<FooComp>();
 
             import_count ++;
+
+            ecs.system<FooComp>()
+                .kind(flecs::OnUpdate)
+                .each([](flecs::entity entity, FooComp &sc) {
+                    namespace_module::system_invoke_count ++;
+                });
         }
 
         static int import_count;
+        static int system_invoke_count;
     };
 
     int namespace_module::import_count = 0;
+    int namespace_module::system_invoke_count = 0;
 }
 
 void World_multi_world_component() {
@@ -118,6 +125,24 @@ void World_multi_world_component_namespace() {
 
     delete w;
 }
+
+void World_multi_world_module() {
+    flecs::world world1;
+	world1.import<ns::namespace_module>();
+
+	flecs::world world2;
+	world2.import<ns::namespace_module>();
+
+    world1.entity().add<ns::FooComp>();
+    world2.entity().add<ns::FooComp>();
+
+    world1.progress();
+    test_int(ns::namespace_module::system_invoke_count, 1);
+
+    world2.progress();
+    test_int(ns::namespace_module::system_invoke_count, 2);
+}
+
 
 void World_type_id() {
     flecs::world w;
