@@ -2339,6 +2339,11 @@ bool ecs_component_has_actions(
     const ecs_world_t *world,
     ecs_entity_t component);
 
+FLECS_API
+void ecs_add_module_tag(
+    ecs_world_t *world,
+    ecs_entity_t module);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
 ////////////////////////////////////////////////////////////////////////////////
@@ -13992,7 +13997,7 @@ public:
             if (ptr) {
                 ptr --;
                 ecs_assert(ptr[0] == ':', ECS_INTERNAL_ERROR, NULL);
-                ecs_size_t name_path_len = ptr - name;
+                ecs_size_t name_path_len = static_cast<ecs_size_t>(ptr - name);
                 if (name_path_len <= ecs_os_strlen(path)) {
                     if (!ecs_os_strncmp(name, path, name_path_len)) {
                         name = &name[name_path_len + 2];
@@ -14325,10 +14330,10 @@ template <typename T>
 flecs::entity module(const flecs::world& world, const char *name = nullptr) {
     ecs_set_scope(world.c_ptr(), 0);
     flecs::entity result = pod_component<T>(world, name, false);
+    ecs_add_module_tag(world, result.id());
     ecs_set_scope(world.c_ptr(), result.id());
     return result;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Import a module

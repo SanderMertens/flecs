@@ -10836,6 +10836,29 @@ ecs_entity_t ecs_import_from_library(
     return result;
 }
 
+void ecs_add_module_tag(
+    ecs_world_t *world,
+    ecs_entity_t module)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(module != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_entity_t e = module;
+    do {
+        ecs_add_id(world, e, EcsModule);
+        ecs_type_t type = ecs_get_type(world, e);
+        int32_t index = ecs_type_match(type, 0, 
+            ecs_pair(EcsChildOf, EcsWildcard));
+        if (index == -1) {
+            return;
+        }
+
+        ecs_entity_t *pair = ecs_vector_get(type, ecs_id_t, index);
+        ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
+        e = ecs_pair_object(world, *pair);
+    } while (true);
+}
+
 ecs_entity_t ecs_new_module(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -10869,7 +10892,7 @@ ecs_entity_t ecs_new_module(
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Add module tag */
-    ecs_add_id(world, result, EcsModule);
+    ecs_add_module_tag(world, result);
 
     /* Add module to itself. This way we have all the module information stored
      * in a single contained entity that we can use for namespacing */

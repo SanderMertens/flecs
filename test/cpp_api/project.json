@@ -346,7 +346,8 @@
                 "nested_module",
                 "nested_type_module",
                 "module_type_w_explicit_name",
-                "component_redefinition_outside_module"
+                "component_redefinition_outside_module",
+                "module_tag_on_namespace"
             ]
         }, {
             "id": "ImplicitComponents",

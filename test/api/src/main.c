@@ -1759,6 +1759,7 @@ void Modules_name_prefix_underscore(void);
 void Modules_lookup_by_symbol(void);
 void Modules_import_type(void);
 void Modules_nested_module(void);
+void Modules_module_tag_on_namespace(void);
 
 // Testsuite 'DirectAccess'
 void DirectAccess_get_table_from_str(void);
@@ -8430,6 +8431,10 @@ bake_test_case Modules_testcases[] = {
     {
         "nested_module",
         Modules_nested_module
+    },
+    {
+        "module_tag_on_namespace",
+        Modules_module_tag_on_namespace
     }
 };
 
@@ -9035,7 +9040,7 @@ static bake_test_suite suites[] = {
         "Modules",
         Modules_setup,
         NULL,
-        19,
+        20,
         Modules_testcases
     },
     {

@@ -10,10 +10,10 @@ template <typename T>
 flecs::entity module(const flecs::world& world, const char *name = nullptr) {
     ecs_set_scope(world.c_ptr(), 0);
     flecs::entity result = pod_component<T>(world, name, false);
+    ecs_add_module_tag(world, result.id());
     ecs_set_scope(world.c_ptr(), result.id());
     return result;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Import a module

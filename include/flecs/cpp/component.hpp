@@ -369,7 +369,7 @@ public:
             if (ptr) {
                 ptr --;
                 ecs_assert(ptr[0] == ':', ECS_INTERNAL_ERROR, NULL);
-                ecs_size_t name_path_len = ptr - name;
+                ecs_size_t name_path_len = static_cast<ecs_size_t>(ptr - name);
                 if (name_path_len <= ecs_os_strlen(path)) {
                     if (!ecs_os_strncmp(name, path, name_path_len)) {
                         name = &name[name_path_len + 2];

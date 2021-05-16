@@ -1883,7 +1883,8 @@
                 "name_prefix_underscore",
                 "lookup_by_symbol",
                 "import_type",
-                "nested_module"
+                "nested_module",
+                "module_tag_on_namespace"
             ]
         }, {
             "id": "DirectAccess",

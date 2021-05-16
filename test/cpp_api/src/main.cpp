@@ -316,6 +316,7 @@ void Module_nested_module(void);
 void Module_nested_type_module(void);
 void Module_module_type_w_explicit_name(void);
 void Module_component_redefinition_outside_module(void);
+void Module_module_tag_on_namespace(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -1569,6 +1570,10 @@ bake_test_case Module_testcases[] = {
     {
         "component_redefinition_outside_module",
         Module_component_redefinition_outside_module
+    },
+    {
+        "module_tag_on_namespace",
+        Module_module_tag_on_namespace
     }
 };
 
@@ -1972,7 +1977,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        6,
+        7,
         Module_testcases
     },
     {

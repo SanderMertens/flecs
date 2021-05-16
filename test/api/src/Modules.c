@@ -386,3 +386,19 @@ void Modules_nested_module() {
 
     ecs_fini(world);
 }
+
+void Modules_module_tag_on_namespace() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, SimpleModule);
+
+    ecs_entity_t mid = ecs_lookup_fullpath(world, "simple.module");
+    test_assert(mid != 0);
+    test_assert(ecs_has_id(world, mid, EcsModule));
+
+    ecs_entity_t nid = ecs_lookup_fullpath(world, "simple");
+    test_assert(nid != 0);
+    test_assert(ecs_has_id(world, nid, EcsModule));
+
+    ecs_fini(world);
+}

@@ -169,3 +169,13 @@ void Module_component_redefinition_outside_module() {
 
     test_int(childof_count, 1);
 }
+
+void Module_module_tag_on_namespace() {
+    flecs::world world;
+
+    auto mid = world.import<ns::NestedModule>();
+    test_assert(mid.has(flecs::Module));
+
+    auto nsid = world.lookup("ns");
+    test_assert(nsid.has(flecs::Module));
+}
