@@ -322,4 +322,4 @@ jobs:
       - name: Build Flecs
         working-directory: meson_build
         run: |
-          meson build
+          meson compile
