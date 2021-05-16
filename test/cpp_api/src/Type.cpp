@@ -119,7 +119,7 @@ void Type_type_no_name() {
 void Type_null_args() {
     flecs::world world;
 
-    flecs::type(nullptr, nullptr);
+    flecs::type t();
 
     // Make sure code didn't crash
     test_assert(true);

@@ -15,19 +15,14 @@ namespace flecs
 
 class type final : public type_deprecated<type> {
 public:
-    explicit type(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr)
+    explicit type(world_t *world, const char *name = nullptr, const char *expr = nullptr)
     { 
         ecs_type_desc_t desc = {};
         desc.entity.name = name;
         desc.ids_expr = expr;
-        m_entity = flecs::entity_view(world, ecs_type_init(world.c_ptr(), &desc));
+        m_entity = flecs::entity_view(world, ecs_type_init(world, &desc));
         sync_from_flecs();
     }
-
-    explicit type(const flecs::world& world, type_t t)
-        : m_entity( world.c_ptr(), 0 )
-        , m_type( t )
-        , m_normalized( t ) { }
 
     explicit type(world_t *world, type_t t)
         : m_entity( world, 0 )
@@ -46,9 +41,9 @@ public:
         return *this;
     }
 
-    type& add(const entity& e) {
-        m_type = ecs_type_add(world().c_ptr(), m_type, e.id());
-        m_normalized = ecs_type_add(world().c_ptr(), m_normalized, e.id());
+    type& add(entity_t e) {
+        m_type = ecs_type_add(world().c_ptr(), m_type, e);
+        m_normalized = ecs_type_add(world().c_ptr(), m_normalized, e);
         sync_from_me();
         return *this;
     }
@@ -58,8 +53,8 @@ public:
         return this->add(_::cpp_type<T>::id(world().c_ptr()));
     }
 
-    type& add(const flecs::entity& relation, const flecs::entity& object) {
-        return this->add(ecs_pair(relation.id(), object.id()));
+    type& add(entity_t relation, entity_t object) {
+        return this->add(ecs_pair(relation, object));
     }
 
     template <typename Relation, typename Object>
@@ -67,19 +62,18 @@ public:
         return this->add<Relation>(_::cpp_type<Object>::id(world().c_ptr()));
     }
 
-    type& is_a(const flecs::entity& object) {
+    type& is_a(entity_t object) {
         return this->add(flecs::IsA, object);
     }
 
     template <typename Relation>
-    type& add(const flecs::entity& object) {
-        return this->add(_::cpp_type<Relation>::id(world().c_ptr()),
-                object.id());
+    type& add(entity_t object) {
+        return this->add(_::cpp_type<Relation>::id(world().c_ptr()), object);
     }     
 
     template <typename Object>
-    type& add_object(const flecs::entity& relation) {
-        return this->add(relation.id(), _::cpp_type<Object>::id(world().c_ptr()));
+    type& add_object(entity_t relation) {
+        return this->add(relation, _::cpp_type<Object>::id(world().c_ptr()));
     }
 
     flecs::string str() const {
