@@ -399,6 +399,7 @@ public:
             ecs_entity_t entity = ecs_component_init(world, &desc);
             ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
             ecs_os_free(symbol);
+            (void)entity;
             
             // The identifier returned by the function should be the same as the
             // identifier that was passed in.
@@ -422,7 +423,6 @@ public:
             desc.alignment = alignment();
             ecs_entity_t entity = ecs_component_init(world, &desc);
             ecs_os_free(symbol);
-                
             (void)entity;
 
             ecs_assert(entity == s_id, ECS_INTERNAL_ERROR, NULL);
