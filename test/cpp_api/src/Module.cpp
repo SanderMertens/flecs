@@ -1,6 +1,8 @@
 #include <cpp_api.h>
 
 namespace ns {
+struct NestedNameSpaceType { };
+
 class NestedModule {
 public:
     NestedModule(flecs::world& world) {
@@ -25,6 +27,7 @@ public:
     NestedTypeModule(flecs::world& world) {
         world.module<NestedTypeModule>();
         world.component<NestedType>();
+        world.component<NestedNameSpaceType>();
     }
 };
 
@@ -112,12 +115,22 @@ void Module_nested_type_module() {
     auto type_entity = world.lookup("ns::NestedTypeModule::NestedType");
     test_assert(type_entity.id() != 0);
 
+    auto ns_type_entity = world.lookup("ns::NestedTypeModule::NestedNameSpaceType");
+    test_assert(ns_type_entity.id() != 0);
+
     int32_t childof_count = 0;
     type_entity.each(flecs::ChildOf, [&](flecs::entity) {
         childof_count ++;
     });
 
     test_int(childof_count, 1);
+
+    childof_count = 0;
+    ns_type_entity.each(flecs::ChildOf, [&](flecs::entity) {
+        childof_count ++;
+    });
+
+    test_int(childof_count, 1);    
 }
 
 void Module_module_type_w_explicit_name() {
