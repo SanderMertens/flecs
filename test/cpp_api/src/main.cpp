@@ -213,6 +213,7 @@ void Query_orphaned(void);
 void Query_default_ctor(void);
 void Query_expr_w_template(void);
 void Query_query_type_w_template(void);
+void Query_compare_term_id(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1179,6 +1180,10 @@ bake_test_case Query_testcases[] = {
     {
         "query_type_w_template",
         Query_query_type_w_template
+    },
+    {
+        "compare_term_id",
+        Query_compare_term_id
     }
 };
 
@@ -1922,7 +1927,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        23,
+        24,
         Query_testcases
     },
     {

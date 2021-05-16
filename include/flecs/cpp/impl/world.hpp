@@ -2,6 +2,36 @@
 namespace flecs 
 {
 
+/** Get id from a type. */
+template <typename T>
+inline flecs::id world::id() const {
+    return flecs::id(m_world, _::cpp_type<T>::id(m_world));
+}
+
+template <typename R, typename O>
+inline flecs::id world::pair() const {
+    return flecs::id(
+        m_world, 
+        ecs_pair(
+            _::cpp_type<R>::id(m_world), 
+            _::cpp_type<O>::id(m_world)));
+}
+
+template <typename R>
+inline flecs::id world::pair(entity_t o) const {
+    return flecs::id(
+        m_world,
+        ecs_pair(
+            _::cpp_type<R>::id(m_world), 
+            o));
+}
+
+inline flecs::id world::pair(entity_t r, entity_t o) const {
+    return flecs::id(
+        m_world,
+        ecs_pair(r, o));
+}    
+
 inline void world::delete_entities(flecs::filter filter) const {
     ecs_bulk_delete(m_world, filter.c_ptr());
 }

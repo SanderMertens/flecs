@@ -697,3 +697,22 @@ void Query_query_type_w_template() {
 
     test_int(count, 1);
 }
+
+void Query_compare_term_id() {
+    flecs::world world;
+
+    int count = 0;
+    auto e = world.entity().add<Tag>();
+
+    auto q = world.query_builder<>()
+        .term<Tag>()
+        .build();
+    
+    q.iter([&](flecs::iter& it) {
+        test_assert(it.term_id(1) == it.world().id<Tag>());
+        test_assert(it.entity(0) == e);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

@@ -58,6 +58,9 @@ protected:
 template <typename T>
 class column {
 public:
+    static_assert(std::is_empty<T>() == false, 
+        "invalid type for column, cannot iterate empty type");
+        
     /** Create column from component array.
      *
      * @param array Pointer to the component array.

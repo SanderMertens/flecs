@@ -9,7 +9,7 @@ public:
     flecs::entity_t base_id() const { return base().id(); }
     operator const Base&() const {
         return this->base();
-    }    
+    }
 };
 
 }

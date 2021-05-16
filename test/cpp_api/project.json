@@ -234,7 +234,8 @@
                 "orphaned",
                 "default_ctor",
                 "expr_w_template",
-                "query_type_w_template"
+                "query_type_w_template",
+                "compare_term_id"
             ]
         }, {
             "id": "QueryBuilder",

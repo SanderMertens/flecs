@@ -103,29 +103,21 @@ public:
     /** Get id from a type.
      */
     template <typename T>
-    entity_t id() {
-        return _::cpp_type<T>::id(m_world);
-    }
+    flecs::id id() const;
 
     /** Get pair id from relation, object
      */
     template <typename R, typename O>
-    entity_t pair() {
-        return ecs_pair(_::cpp_type<R>::id(m_world), _::cpp_type<O>::id(m_world));
-    }
+    flecs::id pair() const;
 
     /** Get pair id from relation, object
      */
     template <typename R>
-    entity_t pair(entity_t o) {
-        return ecs_pair(_::cpp_type<R>::id(m_world), o);
-    }
+    flecs::id pair(entity_t o) const;
 
     /** Get pair id from relation, object
      */
-    entity_t pair(entity_t r, entity_t o) {
-        return ecs_pair(r, o);
-    }
+    flecs::id pair(entity_t r, entity_t o) const;
 
     /** Begin frame.
      * When an application does not use progress() to control the main loop, it
