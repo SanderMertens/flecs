@@ -312,7 +312,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install meson
-        run: pip3 install meson
+        run: |
+          pip3 install meson
+          pip3 install ninja
         
       - name: Create build folder
         run: meson meson_build
