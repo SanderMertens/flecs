@@ -1397,7 +1397,7 @@ public:
 /** Prefab class */
 class prefab final : public entity {
 public:
-    explicit prefab(const flecs::world& world, const char *name = nullptr) 
+    explicit prefab(world_t *world, const char *name = nullptr) 
         : entity(world, name)
     {
         this->add(flecs::Prefab);

@@ -8823,6 +8823,7 @@ enum var_kind_t {
 class world;
 class world_async_stage;
 class snapshot;
+class id;
 class entity;
 class entity_view;
 class type;
@@ -9408,6 +9409,9 @@ protected:
 template <typename T>
 class column {
 public:
+    static_assert(std::is_empty<T>() == false, 
+        "invalid type for column, cannot iterate empty type");
+        
     /** Create column from component array.
      *
      * @param array Pointer to the component array.
@@ -10050,29 +10054,21 @@ public:
     /** Get id from a type.
      */
     template <typename T>
-    entity_t id() {
-        return _::cpp_type<T>::id(m_world);
-    }
+    flecs::id id() const;
 
     /** Get pair id from relation, object
      */
     template <typename R, typename O>
-    entity_t pair() {
-        return ecs_pair(_::cpp_type<R>::id(m_world), _::cpp_type<O>::id(m_world));
-    }
+    flecs::id pair() const;
 
     /** Get pair id from relation, object
      */
     template <typename R>
-    entity_t pair(entity_t o) {
-        return ecs_pair(_::cpp_type<R>::id(m_world), o);
-    }
+    flecs::id pair(entity_t o) const;
 
     /** Get pair id from relation, object
      */
-    entity_t pair(entity_t r, entity_t o) {
-        return ecs_pair(r, o);
-    }
+    flecs::id pair(entity_t r, entity_t o) const;
 
     /** Begin frame.
      * When an application does not use progress() to control the main loop, it
@@ -10754,7 +10750,7 @@ public:
     flecs::entity_t base_id() const { return base().id(); }
     operator const Base&() const {
         return this->base();
-    }    
+    }
 };
 
 }
@@ -11635,8 +11631,8 @@ public:
      *
      * @param entity The entity to add.
      */
-    const Base& add(const entity_view& entity) const {
-        ecs_add_id(this->base_world(), this->base_id(), entity.id());
+    const Base& add(entity_t entity) const {
+        ecs_add_id(this->base_world(), this->base_id(), entity);
         return *this;
     }
 
@@ -11655,8 +11651,8 @@ public:
      * @param relation The relation id.
      * @param object The object id.
      */
-    const Base& add(const entity_view& relation, const entity_view& object) const {
-        ecs_add_pair(this->base_world(), this->base_id(), relation.id(), object.id());
+    const Base& add(entity_t relation, entity_t object) const {
+        ecs_add_pair(this->base_world(), this->base_id(), relation, object);
         return *this;
     }
 
@@ -11678,15 +11674,15 @@ public:
      * @param object the object type.
      */
     template<typename Relation>
-    const Base& add(const entity_view& object) const {
-        return this->add(_::cpp_type<Relation>::id(this->base_world()), object.id());
+    const Base& add(entity_t object) const {
+        return this->add(_::cpp_type<Relation>::id(this->base_world()), object);
     }
 
     /** Shortcut for add(IsA. obj).
      *
      * @param object the object id.
      */
-    const Base& is_a(const entity_view& object) const {
+    const Base& is_a(entity_t object) const {
         return this->add(flecs::IsA, object);
     }
 
@@ -11698,8 +11694,8 @@ public:
      * @tparam Object the object type.
      */
     template<typename Object>
-    const Base& add_object(const entity_view& relation) const {
-        return this->add(relation.id(),  _::cpp_type<Object>::id(this->base_world()));
+    const Base& add_object(entity_t relation) const {
+        return this->add(relation,  _::cpp_type<Object>::id(this->base_world()));
     }
 
     /** Remove a component from an entity.
@@ -11716,8 +11712,8 @@ public:
      *
      * @param entity The entity to remove.
      */
-    const Base& remove(const entity_view& entity) const {
-        ecs_remove_id(this->base_world(), this->base_id(), entity.id());
+    const Base& remove(entity_t entity) const {
+        ecs_remove_id(this->base_world(), this->base_id(), entity);
         return *this;
     }
 
@@ -11736,8 +11732,8 @@ public:
      * @param relation The relation id.
      * @param object The object id.
      */
-    const Base& remove(const entity_view& relation, const entity_view& object) const {
-        ecs_remove_pair(this->base_world(), this->base_id(), relation.id(), object.id());
+    const Base& remove(entity_t relation, entity_t object) const {
+        ecs_remove_pair(this->base_world(), this->base_id(), relation, object);
         return *this;
     }
 
@@ -11759,8 +11755,8 @@ public:
      * @param object the object type.
      */
     template<typename Relation>
-    const Base& remove(const entity_view& object) const {
-        return this->remove(_::cpp_type<Relation>::id(this->base_world()), object.id());
+    const Base& remove(entity_t object) const {
+        return this->remove(_::cpp_type<Relation>::id(this->base_world()), object);
     }  
 
     /** Removes a pair with object type.
@@ -11770,16 +11766,16 @@ public:
      * @tparam Object the object type.
      */
     template<typename Object>
-    const Base& remove_object(const entity_view& relation) const {
-        return this->remove(relation.id(), _::cpp_type<Object>::id(this->base_world()));
+    const Base& remove_object(entity_t relation) const {
+        return this->remove(relation, _::cpp_type<Object>::id(this->base_world()));
     }    
 
     /** Add owned flag for component (forces ownership when instantiating)
      *
      * @param entity The entity for which to add the OWNED flag
      */    
-    const Base& add_owned(const entity_view& entity) const {
-        ecs_add_id(this->base_world(), this->base_id(), ECS_OWNED | entity.id());
+    const Base& add_owned(entity_t entity) const {
+        ecs_add_id(this->base_world(), this->base_id(), ECS_OWNED | entity);
         return *this;  
     }
 
@@ -11813,8 +11809,8 @@ public:
      *
      * @param sw The switch entity id to add.
      */    
-    const Base& add_switch(const entity_view& sw) const {
-        ecs_add_id(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
+    const Base& add_switch(entity_t sw) const {
+        ecs_add_id(this->base_world(), this->base_id(), ECS_SWITCH | sw);
         return *this;  
     }
 
@@ -11829,8 +11825,8 @@ public:
      *
      * @param sw The switch entity id to remove.
      */    
-    const Base& remove_switch(const entity_view& sw) const {
-        ecs_remove_id(this->base_world(), this->base_id(), ECS_SWITCH | sw.id());
+    const Base& remove_switch(entity_t sw) const {
+        ecs_remove_id(this->base_world(), this->base_id(), ECS_SWITCH | sw);
         return *this;  
     }
     
@@ -11846,8 +11842,8 @@ public:
      *
      * @param sw_case The case entity id to add.
      */    
-    const Base& add_case(const entity_view& sw_case) const {
-        ecs_add_id(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
+    const Base& add_case(entity_t sw_case) const {
+        ecs_add_id(this->base_world(), this->base_id(), ECS_CASE | sw_case);
         return *this;
     }
 
@@ -11866,8 +11862,8 @@ public:
      *
      * @param sw_case The case entity id to remove.
      */    
-    const Base& remove_case(const entity_view& sw_case) const {
-        ecs_remove_id(this->base_world(), this->base_id(), ECS_CASE | sw_case.id());
+    const Base& remove_case(entity_t sw_case) const {
+        ecs_remove_id(this->base_world(), this->base_id(), ECS_CASE | sw_case);
         return *this;  
     }
 
@@ -11928,8 +11924,8 @@ public:
      *
      * @param component The component to enable.
      */   
-    const Base& enable(const entity_view& component) const {
-        ecs_enable_component_w_entity(this->base_world(), this->base_id(), component.id(), true);
+    const Base& enable(entity_t component) const {
+        ecs_enable_component_w_entity(this->base_world(), this->base_id(), component, true);
         return *this;       
     }
 
@@ -11938,8 +11934,8 @@ public:
      *
      * @param component The component to disable.
      */   
-    const Base& disable(const entity_view& component) const {
-        ecs_enable_component_w_entity(this->base_world(), this->base_id(), component.id(), false);
+    const Base& disable(entity_t component) const {
+        ecs_enable_component_w_entity(this->base_world(), this->base_id(), component, false);
         return *this;       
     }
 
@@ -12021,14 +12017,14 @@ public:
      * @param value The value to set.
      */
     template <typename Relation>
-    const Base& set(const entity_view& object, const Relation& value) const {
+    const Base& set(entity_t object, const Relation& value) const {
         auto comp_id = _::cpp_type<Relation>::id(this->base_world());
 
         ecs_assert(_::cpp_type<Relation>::size() != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
         ecs_set_ptr_w_entity(this->base_world(), this->base_id(),
-            ecs_pair(comp_id, object.id()),
+            ecs_pair(comp_id, object),
             sizeof(Relation), &value);
 
         return *this;
@@ -12043,14 +12039,14 @@ public:
      * @param value The value to set.
      */
     template <typename Object>
-    const Base& set_object(const entity_view& relation, const Object& value) const {
+    const Base& set_object(entity_t relation, const Object& value) const {
         auto comp_id = _::cpp_type<Object>::id(this->base_world());
 
         ecs_assert(_::cpp_type<Object>::size() != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
         ecs_set_ptr_w_entity(this->base_world(), this->base_id(),
-            ecs_pair(relation.id(), comp_id),
+            ecs_pair(relation, comp_id),
             sizeof(Object), &value);
 
         return *this;
@@ -12153,11 +12149,11 @@ public:
      *
      * @param world The world in which to create the entity.
      */
-    explicit entity(const flecs::world& world) 
+    explicit entity(world_t *world) 
         : flecs::entity_view() 
     {
-        m_world = world.c_ptr();
-        m_id = ecs_new_w_type(world.c_ptr(), 0);
+        m_world = world;
+        m_id = ecs_new_w_type(world, 0);
     }
 
     /** Create a named entity.
@@ -12170,10 +12166,10 @@ public:
      * @param name The entity name.
      * @param is_component If true, the entity will be created from the pool of component ids (default = false).
      */
-    explicit entity(const flecs::world& world, const char *name, bool is_component = false) 
+    explicit entity(world_t *world, const char *name, bool is_component = false) 
         : flecs::entity_view()
     { 
-        m_world = world.c_ptr();
+        m_world = world;
         m_id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
 
         if (!m_id) {
@@ -12181,8 +12177,7 @@ public:
                 m_id = ecs_new_component_id(m_world);
             }
 
-            m_id = ecs_add_path_w_sep(
-                world.c_ptr(), m_id, 0, name, "::", "::");
+            m_id = ecs_add_path_w_sep(world, m_id, 0, name, "::", "::");
         }
     }
 
@@ -12191,27 +12186,15 @@ public:
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    explicit entity(const flecs::world& world, const entity& id)
-        : flecs::entity_view()
-    {
-        m_world = world.c_ptr();
-        m_id = id.id();
-    }
-
-    /** Wrap an existing entity id.
-     *
-     * @param world Pointer to the world in which the entity is created.
-     * @param id The entity id.
-     */
-    explicit entity(world_t *world, const entity& id) 
+    explicit entity(world_t *world, entity_t id)
         : flecs::entity_view()
     {
         m_world = world;
-        m_id = id.id();
+        m_id = id;
     }
 
-    /** Implicit conversion from flecs::entity_t to flecs::entity. */
-    entity(entity_t id) 
+    /** Conversion from flecs::entity_t to flecs::entity. */
+    explicit entity(entity_t id) 
         : flecs::entity_view( nullptr, id ) { }
 
     /** Get entity id.
@@ -12249,22 +12232,8 @@ public:
      * @param is_added If provided, this parameter will be set to true if the component was added.
      * @return Pointer to the component value.
      */
-    void* get_mut(flecs::entity component, bool *is_added = nullptr) const {
-        return ecs_get_mut_w_entity(m_world, m_id, component.id(), is_added);
-    }
-
-    /** Get mutable component value (untyped).
-     * This operation returns a mutable pointer to the component. If the entity
-     * did not yet have the component, it will be added. If a base entity had
-     * the component, it will be overridden, and the value of the base component
-     * will be copied to the entity before this function returns.
-     *
-     * @param component The id of the component to get.
-     * @param is_added If provided, this parameter will be set to true if the component was added.
-     * @return Pointer to the component value.
-     */
-    void* get_mut(entity_t component_id, bool *is_added = nullptr) const {
-        return ecs_get_mut_w_entity(m_world, m_id, component_id, is_added);
+    void* get_mut(entity_t component, bool *is_added = nullptr) const {
+        return ecs_get_mut_w_entity(m_world, m_id, component, is_added);
     }
 
     /** Get mutable pointer for a pair.
@@ -12286,12 +12255,12 @@ public:
      * @param object the object.
      */
     template <typename Relation>
-    Relation* get_mut(const flecs::entity& object, bool *is_added = nullptr) const {
+    Relation* get_mut(entity_t object, bool *is_added = nullptr) const {
         auto comp_id = _::cpp_type<Relation>::id(m_world);
         ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Relation*>(
             ecs_get_mut_w_entity(m_world, m_id, 
-                ecs_pair(comp_id, object.id()), is_added));
+                ecs_pair(comp_id, object), is_added));
     }
 
     /** Get mutable pointer for a pair (untyped).
@@ -12301,9 +12270,9 @@ public:
      * @param relation the relation.
      * @param object the object.
      */
-    void* get_mut(const flecs::entity& relation, const flecs::entity& object, bool *is_added = nullptr) const {
+    void* get_mut(entity_t relation, entity_t object, bool *is_added = nullptr) const {
         return ecs_get_mut_w_entity(m_world, m_id, 
-                ecs_pair(relation.id(), object.id()), is_added);
+                ecs_pair(relation, object), is_added);
     }
 
     /** Get mutable pointer for the object from a pair.
@@ -12313,12 +12282,12 @@ public:
      * @param relation the relation.
      */
     template <typename Object>
-    Object* get_mut_object(const flecs::entity& relation, bool *is_added = nullptr) const {
+    Object* get_mut_object(entity_t relation, bool *is_added = nullptr) const {
         auto comp_id = _::cpp_type<Object>::id(m_world);
         ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Object*>(
             ecs_get_mut_w_entity(m_world, m_id, 
-                ecs_pair(relation.id(), comp_id), is_added));
+                ecs_pair(relation, comp_id), is_added));
     }           
 
     /** Signal that component was modified.
@@ -12329,16 +12298,8 @@ public:
     void modified() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_modified_w_entity(m_world, m_id, comp_id);
-    }
-
-    /** Signal that component was modified.
-     *
-     * @param component component that was modified.
-     */
-    void modified(const flecs::entity& component) const {
-        ecs_modified_w_entity(m_world, m_id, component.id());
-    }  
+        this->modified(comp_id);
+    } 
 
     /** Signal that the relation part of a pair was modified.
      *
@@ -12356,10 +12317,10 @@ public:
      * @param object the object.
      */
     template <typename Relation>
-    void modified(const flecs::entity& object) const {
+    void modified(entity_t object) const {
         auto comp_id = _::cpp_type<Relation>::id(m_world);
         ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_modified_w_entity(m_world, m_id, ecs_pair(comp_id, object.id()));
+        this->modified(comp_id, object);
     }
 
     /** Signal that a pair has modified (untyped).
@@ -12369,10 +12330,17 @@ public:
      * @param relation the relation.
      * @param object the object.
      */
-    void modified(const flecs::entity& relation, const flecs::entity& object) const {
-        ecs_modified_w_entity(m_world, m_id, 
-            ecs_pair(relation.id(), object.id()));
-    }    
+    void modified(entity_t relation, entity_t object) const {
+        this->modified(ecs_pair(relation, object));
+    }
+
+    /** Signal that component was modified.
+     *
+     * @param component component that was modified.
+     */
+    void modified(entity_t component) const {
+        ecs_modified_w_entity(m_world, m_id, component);
+    }
 
     /** Get reference to component.
      * A reference allows for quick and safe access to a component value, and is
@@ -12415,7 +12383,7 @@ public:
 /** Prefab class */
 class prefab final : public entity {
 public:
-    explicit prefab(const flecs::world& world, const char *name = nullptr) 
+    explicit prefab(world_t *world, const char *name = nullptr) 
         : entity(world, name)
     {
         this->add(flecs::Prefab);
@@ -13534,19 +13502,14 @@ namespace flecs
 
 class type final : public type_deprecated<type> {
 public:
-    explicit type(const flecs::world& world, const char *name = nullptr, const char *expr = nullptr)
+    explicit type(world_t *world, const char *name = nullptr, const char *expr = nullptr)
     { 
         ecs_type_desc_t desc = {};
         desc.entity.name = name;
         desc.ids_expr = expr;
-        m_entity = flecs::entity_view(world, ecs_type_init(world.c_ptr(), &desc));
+        m_entity = flecs::entity_view(world, ecs_type_init(world, &desc));
         sync_from_flecs();
     }
-
-    explicit type(const flecs::world& world, type_t t)
-        : m_entity( world.c_ptr(), 0 )
-        , m_type( t )
-        , m_normalized( t ) { }
 
     explicit type(world_t *world, type_t t)
         : m_entity( world, 0 )
@@ -13565,9 +13528,9 @@ public:
         return *this;
     }
 
-    type& add(const entity& e) {
-        m_type = ecs_type_add(world().c_ptr(), m_type, e.id());
-        m_normalized = ecs_type_add(world().c_ptr(), m_normalized, e.id());
+    type& add(entity_t e) {
+        m_type = ecs_type_add(world().c_ptr(), m_type, e);
+        m_normalized = ecs_type_add(world().c_ptr(), m_normalized, e);
         sync_from_me();
         return *this;
     }
@@ -13577,8 +13540,8 @@ public:
         return this->add(_::cpp_type<T>::id(world().c_ptr()));
     }
 
-    type& add(const flecs::entity& relation, const flecs::entity& object) {
-        return this->add(ecs_pair(relation.id(), object.id()));
+    type& add(entity_t relation, entity_t object) {
+        return this->add(ecs_pair(relation, object));
     }
 
     template <typename Relation, typename Object>
@@ -13586,19 +13549,18 @@ public:
         return this->add<Relation>(_::cpp_type<Object>::id(world().c_ptr()));
     }
 
-    type& is_a(const flecs::entity& object) {
+    type& is_a(entity_t object) {
         return this->add(flecs::IsA, object);
     }
 
     template <typename Relation>
-    type& add(const flecs::entity& object) {
-        return this->add(_::cpp_type<Relation>::id(world().c_ptr()),
-                object.id());
+    type& add(entity_t object) {
+        return this->add(_::cpp_type<Relation>::id(world().c_ptr()), object);
     }     
 
     template <typename Object>
-    type& add_object(const flecs::entity& relation) {
-        return this->add(relation.id(), _::cpp_type<Object>::id(world().c_ptr()));
+    type& add_object(entity_t relation) {
+        return this->add(relation, _::cpp_type<Object>::id(world().c_ptr()));
     }
 
     flecs::string str() const {
@@ -15448,12 +15410,12 @@ inline flecs::entity entity_view::mut(const flecs::world& stage) const {
 }
 
 /** Same as mut(world), but for iterator.
-    * This operation allows for the construction of a mutable entity handle
-    * from an iterator.
-    *
-    * @param stage An created for the current stage.
-    * @return An entity handle that allows for mutations in the current stage.
-    */
+ * This operation allows for the construction of a mutable entity handle
+ * from an iterator.
+ *
+ * @param stage An created for the current stage.
+ * @return An entity handle that allows for mutations in the current stage.
+ */
 inline flecs::entity entity_view::mut(const flecs::iter& it) const {
     ecs_assert(!it.world().is_readonly(), ECS_INVALID_PARAMETER, 
         "cannot use iterator created for readonly world/stage to create mutable handle");
@@ -15619,6 +15581,36 @@ inline flecs::entity iter::term_id(int32_t index) const {
 
 namespace flecs 
 {
+
+/** Get id from a type. */
+template <typename T>
+inline flecs::id world::id() const {
+    return flecs::id(m_world, _::cpp_type<T>::id(m_world));
+}
+
+template <typename R, typename O>
+inline flecs::id world::pair() const {
+    return flecs::id(
+        m_world, 
+        ecs_pair(
+            _::cpp_type<R>::id(m_world), 
+            _::cpp_type<O>::id(m_world)));
+}
+
+template <typename R>
+inline flecs::id world::pair(entity_t o) const {
+    return flecs::id(
+        m_world,
+        ecs_pair(
+            _::cpp_type<R>::id(m_world), 
+            o));
+}
+
+inline flecs::id world::pair(entity_t r, entity_t o) const {
+    return flecs::id(
+        m_world,
+        ecs_pair(r, o));
+}    
 
 inline void world::delete_entities(flecs::filter filter) const {
     ecs_bulk_delete(m_world, filter.c_ptr());
