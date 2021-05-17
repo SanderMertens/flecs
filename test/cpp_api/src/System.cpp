@@ -1130,3 +1130,67 @@ void System_default_ctor() {
 
     test_int(count, 1);
 }
+
+void System_test_auto_defer_each() {
+    flecs::world world;
+
+    struct Value { int value; };
+
+    auto e1 = world.entity().add<Tag>().set<Value>({10});
+    auto e2 = world.entity().add<Tag>().set<Value>({20});
+    auto e3 = world.entity().add<Tag>().set<Value>({30});
+
+    auto s = world.system<Value>()
+        .term<Tag>()
+        .each([](flecs::entity e, Value& v) {
+            v.value ++;
+            e.remove<Tag>();
+        });
+
+    s.run();
+
+    test_assert(!e1.has<Tag>());
+    test_assert(!e2.has<Tag>());
+    test_assert(!e3.has<Tag>());
+
+    test_assert(e1.has<Value>());
+    test_assert(e2.has<Value>());
+    test_assert(e3.has<Value>());
+
+    test_int(e1.get<Value>()->value, 11);
+    test_int(e2.get<Value>()->value, 21);
+    test_int(e3.get<Value>()->value, 31);
+}
+
+void System_test_auto_defer_iter() {
+    flecs::world world;
+
+    struct Value { int value; };
+
+    auto e1 = world.entity().add<Tag>().set<Value>({10});
+    auto e2 = world.entity().add<Tag>().set<Value>({20});
+    auto e3 = world.entity().add<Tag>().set<Value>({30});
+
+    auto s = world.system<Value>()
+        .term<Tag>()
+        .iter([](flecs::iter& it, Value *v) {
+            for (auto i : it) {
+                v[i].value ++;
+                it.entity(i).remove<Tag>();
+            }
+        });
+
+    s.run();
+
+    test_assert(!e1.has<Tag>());
+    test_assert(!e2.has<Tag>());
+    test_assert(!e3.has<Tag>());
+
+    test_assert(e1.has<Value>());
+    test_assert(e2.has<Value>());
+    test_assert(e3.has<Value>());
+
+    test_int(e1.get<Value>()->value, 11);
+    test_int(e2.get<Value>()->value, 21);
+    test_int(e3.get<Value>()->value, 31);
+}

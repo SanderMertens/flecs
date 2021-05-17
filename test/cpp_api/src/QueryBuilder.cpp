@@ -1,9 +1,5 @@
 #include <cpp_api.h>
 
-struct Self {
-    flecs::entity_view value;
-};
-
 struct Other {
     int32_t value;
 };

@@ -181,6 +181,8 @@ void System_readonly_children_iter(void);
 void System_rate_filter(void);
 void System_update_rate_filter(void);
 void System_default_ctor(void);
+void System_test_auto_defer_each(void);
+void System_test_auto_defer_iter(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -214,6 +216,8 @@ void Query_default_ctor(void);
 void Query_expr_w_template(void);
 void Query_query_type_w_template(void);
 void Query_compare_term_id(void);
+void Query_test_auto_defer_each(void);
+void Query_test_auto_defer_iter(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1070,6 +1074,14 @@ bake_test_case System_testcases[] = {
     {
         "default_ctor",
         System_default_ctor
+    },
+    {
+        "test_auto_defer_each",
+        System_test_auto_defer_each
+    },
+    {
+        "test_auto_defer_iter",
+        System_test_auto_defer_iter
     }
 };
 
@@ -1192,6 +1204,14 @@ bake_test_case Query_testcases[] = {
     {
         "compare_term_id",
         Query_compare_term_id
+    },
+    {
+        "test_auto_defer_each",
+        Query_test_auto_defer_each
+    },
+    {
+        "test_auto_defer_iter",
+        Query_test_auto_defer_iter
     }
 };
 
@@ -1953,7 +1973,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        38,
+        40,
         System_testcases
     },
     {
@@ -1967,7 +1987,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        24,
+        26,
         Query_testcases
     },
     {

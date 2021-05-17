@@ -197,7 +197,9 @@
                 "readonly_children_iter",
                 "rate_filter",
                 "update_rate_filter",
-                "default_ctor"
+                "default_ctor",
+                "test_auto_defer_each",
+                "test_auto_defer_iter"
             ]
         }, {
             "id": "Trigger",
@@ -234,7 +236,9 @@
                 "default_ctor",
                 "expr_w_template",
                 "query_type_w_template",
-                "compare_term_id"
+                "compare_term_id",
+                "test_auto_defer_each",
+                "test_auto_defer_iter"
             ]
         }, {
             "id": "QueryBuilder",

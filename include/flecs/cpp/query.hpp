@@ -219,9 +219,11 @@ private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_query_iter(m_query);
+        ecs_defer_begin(it.world);
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }
+        ecs_defer_end(it.world);
     }
 };
 

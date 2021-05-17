@@ -24,6 +24,10 @@ struct Rotation {
 
 struct Tag { };
 
+struct Self {
+    flecs::entity_view value;
+};
+
 class Pod {
 public:
     Pod() {

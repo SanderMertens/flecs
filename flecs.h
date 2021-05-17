@@ -13821,7 +13821,7 @@ void component_ctor(
     // If type is trivially copyable but does not have a default ctor,
     // initialize it with 0. This will generally work, with the only limitation
     // that if a type has default values, they will be set to 0.
-    ecs_os_memset(ptr, 0, size * count);
+    ecs_os_memset(ptr, 0, static_cast<ecs_size_t>(size) * count);
 } 
 
 template <typename T, typename std::enable_if<
@@ -13892,7 +13892,7 @@ void component_copy_ctor(
     const ecs_entity_t*, const ecs_entity_t*, void*, 
     const void*, size_t, int32_t, void*)
 {
-    ecs_abort(ECS_INVALID_OPERATION, "type is not copy constructable");
+    ecs_abort(ECS_INVALID_OPERATION, "type is not copy constructible");
 }
 
 template <typename T, typename std::enable_if<
@@ -15053,9 +15053,11 @@ private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_query_iter(m_query);
+        ecs_defer_begin(it.world);
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }
+        ecs_defer_end(it.world);
     }
 };
 
