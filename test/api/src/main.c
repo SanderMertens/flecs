@@ -978,6 +978,7 @@ void Trigger_remove_in_trigger(void);
 void Trigger_clear_in_trigger(void);
 void Trigger_delete_in_trigger(void);
 void Trigger_trigger_w_named_entity(void);
+void Trigger_on_remove_tree(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -5500,6 +5501,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "trigger_w_named_entity",
         Trigger_trigger_w_named_entity
+    },
+    {
+        "on_remove_tree",
+        Trigger_on_remove_tree
     }
 };
 
@@ -8837,7 +8842,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        30,
+        31,
         Trigger_testcases
     },
     {

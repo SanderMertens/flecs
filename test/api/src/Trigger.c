@@ -1,5 +1,7 @@
 #include <api.h>
 
+static int on_remove_count = 0;
+
 void Trigger(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 }
@@ -940,3 +942,76 @@ void Trigger_trigger_w_named_entity() {
     ecs_fini(world);
 }
 
+typedef struct Self {
+    ecs_entity_t value;
+} Self;
+
+void RemoveSelf(ecs_iter_t *it) {
+    Self *s = ecs_term(it, Self, 1);
+    ecs_id_t ecs_id(Self) = ecs_term_id(it, 1);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_record_t *r = ecs_record_find(it->world, it->entities[i]);
+        printf("%d: record = %d, table = %p [%s]\n", it->entities[i], r->row, r->table,
+            ecs_type_str(it->world, ecs_table_get_type(r->table)));
+
+        test_assert(s[i].value == it->entities[i]);
+        
+        const Self *ptr = ecs_get(it->world, it->entities[i], Self);
+        test_assert(ptr != NULL);
+        test_assert(ptr->value == it->entities[i]);
+
+        s[i].value = 0;
+        on_remove_count ++;
+    }
+}
+
+void Trigger_on_remove_tree() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Self);
+
+    ECS_TRIGGER(world, RemoveSelf, EcsOnRemove, Self);
+
+    ecs_entity_t root = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, root);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_entity_t e5 = ecs_new_w_pair(world, EcsChildOf, e2);
+    
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, root);
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, e6);
+    ecs_entity_t e8 = ecs_new_w_pair(world, EcsChildOf, e6);
+    ecs_entity_t e9 = ecs_new_w_pair(world, EcsChildOf, e7);
+    ecs_entity_t e10 = ecs_new_w_pair(world, EcsChildOf, e7);
+    
+    ecs_set(world, e1, Self, {e1});
+    ecs_set(world, e2, Self, {e2});
+    ecs_set(world, e3, Self, {e3});
+    ecs_set(world, e4, Self, {e4});
+    ecs_set(world, e5, Self, {e5});
+    ecs_set(world, e6, Self, {e6});
+    ecs_set(world, e7, Self, {e7});
+    ecs_set(world, e8, Self, {e8});
+    ecs_set(world, e9, Self, {e9});
+    ecs_set(world, e10, Self, {e10});
+
+    ecs_delete(world, root);
+
+    test_int(on_remove_count, 10);
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e3));
+    test_assert(!ecs_is_alive(world, e4));
+    test_assert(!ecs_is_alive(world, e5));
+    test_assert(!ecs_is_alive(world, e6));
+    test_assert(!ecs_is_alive(world, e7));
+    test_assert(!ecs_is_alive(world, e8));
+    test_assert(!ecs_is_alive(world, e9));
+    test_assert(!ecs_is_alive(world, e10));
+    
+    ecs_fini(world);
+}

@@ -1044,7 +1044,8 @@
                "remove_in_trigger",
                "clear_in_trigger",
                "delete_in_trigger",
-               "trigger_w_named_entity"
+               "trigger_w_named_entity",
+               "on_remove_tree"
            ]
         }, {
             "id": "TriggerOnAdd",

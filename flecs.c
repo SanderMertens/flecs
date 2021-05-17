@@ -6629,7 +6629,7 @@ void delete_objects(
             if (r && r->row < 0) {
                 /* Make row positive which prevents infinite recursion in case
                  * of cyclic delete actions */
-                r->row = (-r->row) - 1;
+                r->row = (-r->row);
 
                 /* Run delete actions for objects */
                 on_delete_action(world, entities[i]);
@@ -6783,7 +6783,7 @@ void ecs_delete(
         if (info.is_watched) {
             /* Make row positive which prevents infinite recursion in case
              * of cyclic delete actions */
-            r->row = (-r->row) - 1;
+            r->row = (-r->row);
 
             /* Ensure that the store contains no dangling references to the
              * deleted entity (as a component, or as part of a relation) */
