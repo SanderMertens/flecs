@@ -350,6 +350,9 @@ void SystemBuilder_singleton_term() {
             auto s = it.term<const Singleton>(2);
             test_assert(!s.is_owned());
             test_int(s->value, 10);
+            
+            const Singleton& s_ref = *s;
+            test_int(s_ref.value, 10);
 
             for (auto i : it) {
                 test_assert(it.entity(i) == e[i].value);

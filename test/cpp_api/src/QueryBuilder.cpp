@@ -372,6 +372,9 @@ void QueryBuilder_singleton_term() {
         auto o = it.term<const Other>(2);
         test_assert(!o.is_owned());
         test_int(o->value, 10);
+        
+        const Other& o_ref = *o;
+        test_int(o_ref.value, 10);
 
         for (auto i : it) {
             test_assert(it.entity(i) == s[i].value);
