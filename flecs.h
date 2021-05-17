@@ -2936,11 +2936,11 @@ struct EcsComponentLifecycle {
     ecs_copy_t copy;            /**< copy assignment */
     ecs_move_t move;            /**< move assignment */
 
-    ecs_copy_ctor_t copy_ctor;  /**< copy ctor (ctor+copy) */
-    ecs_move_ctor_t move_ctor;  /**< move ctor (ctor+move) */
-    ecs_move_ctor_t merge;      /**< move ctor (ctor+move+dtor) */
-
     void *ctx;              /**< User defined context */
+
+    ecs_copy_ctor_t copy_ctor;  /**< copy ctor (optional, ctor+copy) */
+    ecs_move_ctor_t move_ctor;  /**< move ctor (optional, ctor+move) */
+    ecs_move_ctor_t merge;      /**< move ctor (optional, ctor+move+dtor) */    
 };
 
 /** Component that stores reference to trigger */

@@ -1026,10 +1026,12 @@ void ComponentLifecycle_merge_to_different_table() {
     test_int(move_position, 0);
 
     test_int(ctor_velocity, 0);
+    test_int(dtor_velocity, 0);
     test_int(copy_velocity, 0);
     test_int(move_velocity, 0);
 
     test_int(ctor_rotation, 0);
+    test_int(dtor_rotation, 0);
     test_int(copy_rotation, 0);
     test_int(move_rotation, 0);
 
@@ -1037,19 +1039,23 @@ void ComponentLifecycle_merge_to_different_table() {
     test_int(ctor_mass, 0);
 
     test_int(ctor_velocity, 0);
+    test_int(dtor_velocity, 0);
     test_int(copy_velocity, 0);
     test_int(move_velocity, 0);
+
     test_int(ctor_rotation, 0);
+    test_int(dtor_rotation, 0);
     test_int(copy_rotation, 0);
     test_int(move_rotation, 0);
 
     ecs_remove(world, e, Rotation);
-    test_int(dtor_rotation, 0);
     test_int(ctor_rotation, 0);
+    test_int(dtor_rotation, 0);
     test_int(copy_rotation, 0);
     test_int(move_rotation, 0);
 
     test_int(ctor_velocity, 0);
+    test_int(dtor_velocity, 0);
     test_int(copy_velocity, 0);
     test_int(move_velocity, 0);
 
@@ -1061,22 +1067,22 @@ void ComponentLifecycle_merge_to_different_table() {
     test_assert(!ecs_has(world, e, Rotation));
 
     test_int(ctor_position, 0);
-    test_int(dtor_position, 1);
+    test_int(dtor_position, 1); // removed first, no moves
     test_int(copy_position, 0);
     test_int(move_position, 0);
 
-    test_int(ctor_velocity, 3);
-    test_int(dtor_velocity, 0);
+    test_int(ctor_velocity, 3); // got moved 3 times
+    test_int(dtor_velocity, 3);
     test_int(copy_velocity, 0);
     test_int(move_velocity, 3);
 
-    test_int(ctor_rotation, 2);
-    test_int(dtor_rotation, 1);
+    test_int(ctor_rotation, 2); // got moved 2 times, then removed
+    test_int(dtor_rotation, 3);
     test_int(copy_rotation, 0);
     test_int(move_rotation, 2);
 
-    test_int(ctor_mass, 2);
-    test_int(dtor_mass, 0);
+    test_int(ctor_mass, 2); // got added, moved once
+    test_int(dtor_mass, 1);
     test_int(copy_mass, 0);
     test_int(move_mass, 1);
 

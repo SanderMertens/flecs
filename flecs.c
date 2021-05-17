@@ -3759,10 +3759,11 @@ void ecs_table_move(
 
                 ecs_type_info_t *cdata = new_table->c_info[i_new];
                 if (same_entity) {
-                    ecs_move_ctor_t move;
-                    if (cdata && (move = cdata->lifecycle.move_ctor)) {
+                    ecs_move_ctor_t merge;
+                    if (cdata && (merge = cdata->lifecycle.merge)) {
                         void *ctx = cdata->lifecycle.ctx;
-                        move(world, new_component, &cdata->lifecycle, 
+                        /* ctor + move + dtor */
+                        merge(world, new_component, &cdata->lifecycle, 
                             &dst_entity, &src_entity, 
                             dst, src, ecs_to_size_t(size), 1, ctx);
                     } else {
@@ -8393,7 +8394,7 @@ bool ecs_defer_set(
     } else {
         stage->defer ++;
     }
-    
+
     return false;
 }
 
