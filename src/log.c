@@ -388,7 +388,7 @@ const char* ecs_strerror(
     case ECS_OUT_OF_MEMORY:
         return "out of memory";
     case ECS_MODULE_UNDEFINED:
-        return "module is undefined";
+        return "module is undefined (register the module in the ctor/import)";
     case ECS_COLUMN_INDEX_OUT_OF_RANGE:
         return "column index out of range";
     case ECS_COLUMN_IS_NOT_SHARED:

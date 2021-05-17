@@ -40,6 +40,16 @@ public:
         dtor_invoked ++;
     }
 
+    Pod(const Pod& obj) {
+        copy_ctor_invoked ++;
+        *this = obj;
+    }
+
+    Pod(Pod&& obj) {
+        move_ctor_invoked ++;
+        *this = std::move(obj);
+    }
+
     Pod& operator=(const Pod& obj) {
         copy_invoked ++;
         this->value = obj.value;
@@ -58,6 +68,8 @@ public:
     static int dtor_invoked;
     static int copy_invoked;
     static int move_invoked;
+    static int copy_ctor_invoked;
+    static int move_ctor_invoked;
 };
 
 template <typename T>

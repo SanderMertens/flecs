@@ -17,6 +17,14 @@ struct DynamicBuffer {
         free(data);
     }
 
+    DynamicBuffer(const DynamicBuffer& obj) {
+        *this = obj;
+    }
+
+    DynamicBuffer(DynamicBuffer&& obj) {
+        *this = std::move(obj);
+    }    
+
     DynamicBuffer& operator=(const DynamicBuffer& src) {
         std::cout << "DynamicBuffer::copy" << std::endl;
         if (data) {
@@ -107,7 +115,8 @@ int main(int argc, char *argv[]) {
     /* Add component. This causes the entity to move between tables, and will
      * invoke DynamicComponent::move to copy the component value from the src to
      * the dst table. This also invokes DynamicComponent::ctor to construct the
-     * component in the dst table. */
+     * component in the dst table, and DynamicComponent::dtor to destruct the
+     * element in the src table. */
     e.add<Position>();
 
     /* World gets cleaned up, which invokes DynamicComponent::dtor. */

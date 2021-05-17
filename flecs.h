@@ -13814,105 +13814,94 @@ struct symbol_helper
 
 template <typename T>
 void component_ctor(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entity_ptr,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
+    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
+    int32_t count, void*)
 {
-    (void)world;
-    (void)component;
-    (void)entity_ptr;
-    (void)size;
-    (void)ctx;
-
-    ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *t_ptr = static_cast<T*>(ptr);
-    
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *arr = static_cast<T*>(ptr);
     for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&t_ptr[i], T);
+        FLECS_PLACEMENT_NEW(&arr[i], T);
     }
 } 
 
 template <typename T>
 void component_dtor(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entity_ptr,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
+    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
+    int32_t count, void*)
 {
-    (void)world;
-    (void)component;
-    (void)entity_ptr;
-    (void)size;
-    (void)ctx;
-
-    ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *t_ptr = static_cast<T*>(ptr);
-    
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *arr = static_cast<T*>(ptr);
     for (int i = 0; i < count; i ++) {
-        t_ptr[i].~T();
+        arr[i].~T();
     }
 }
 
 template <typename T>
 void component_copy(
-    ecs_world_t *world,
-    ecs_entity_t component,    
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
-    void *dst_ptr,
-    const void *src_ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
+    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*, 
+    void *dst_ptr, const void *src_ptr, size_t size, int32_t count, void*)
 {
-    (void)world;
-    (void)component;
-    (void)dst_entity;
-    (void)src_entity;
-    (void)size;
-    (void)ctx;
-
-    ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *t_dst_ptr = static_cast<T*>(dst_ptr);
-    const T *t_src_ptr = static_cast<const T*>(src_ptr);
-    
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    const T *src_arr = static_cast<const T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
-        t_dst_ptr[i] = t_src_ptr[i];
+        dst_arr[i] = src_arr[i];
     }
 }
 
 template <typename T>
 void component_move(
-    ecs_world_t *world,
-    ecs_entity_t component,    
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
-    void *dst_ptr,
-    void *src_ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
+    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*,
+    void *dst_ptr, void *src_ptr, size_t size, int32_t count, void*)
 {
-    (void)world;
-    (void)component;
-    (void)dst_entity;
-    (void)src_entity;
-    (void)size;
-    (void)ctx;
-
-    ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *t_dst_ptr = static_cast<T*>(dst_ptr);
-    T *t_src_ptr = static_cast<T*>(src_ptr);
-    
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
-        t_dst_ptr[i] = std::move(t_src_ptr[i]);
+        dst_arr[i] = std::move(src_arr[i]);
+    }
+}
+
+template <typename T>
+void component_copy_ctor(
+    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
+    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    const void *src_ptr, size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    const T *src_arr = static_cast<const T*>(src_ptr);
+    for (int i = 0; i < count; i ++) {
+        FLECS_PLACEMENT_NEW(&dst_arr[i], T(src_arr[i]));
+    }
+}
+
+template <typename T>
+void component_move_ctor(
+    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
+    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    T *src_arr = static_cast<T*>(src_ptr);
+    for (int i = 0; i < count; i ++) {
+        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
+    }
+}
+
+template <typename T>
+void component_merge(
+    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
+    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    T *src_arr = static_cast<T*>(src_ptr);
+    for (int i = 0; i < count; i ++) {
+        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
+        src_arr[i].~T();
     }
 }
 
@@ -13936,9 +13925,12 @@ void register_lifecycle_actions(
         }
         if (copy) {
             cl.copy = _::component_copy<typename base_type<T>::type>;
+            cl.copy_ctor = _::component_copy_ctor<typename base_type<T>::type>;
         }
         if (move) {
             cl.move = _::component_move<typename base_type<T>::type>;
+            cl.move_ctor = _::component_move_ctor<typename base_type<T>::type>;
+            cl.merge = _::component_merge<typename base_type<T>::type>;
         }
 
         ecs_set_component_actions_w_entity( world, component, &cl);
