@@ -150,6 +150,19 @@ struct symbol_helper
 // Lifecycle callbacks are not registered for trivial types.
 
 template <typename T, typename std::enable_if<
+    std::is_default_constructible<T>::value == false && 
+    std::is_trivially_copyable<T>::value == true, void>::type* = nullptr>
+void component_ctor(
+    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
+    int32_t count, void*)
+{
+    // If type is trivially copyable but does not have a default ctor,
+    // initialize it with 0. This will generally work, with the only limitation
+    // that if a type has default values, they will be set to 0.
+    ecs_os_memset(ptr, 0, static_cast<ecs_size_t>(size) * count);
+} 
+
+template <typename T, typename std::enable_if<
     std::is_default_constructible<T>::value == true, void>::type* = nullptr>
 void component_ctor(
     ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
@@ -217,7 +230,7 @@ void component_copy_ctor(
     const ecs_entity_t*, const ecs_entity_t*, void*, 
     const void*, size_t, int32_t, void*)
 {
-    ecs_abort(ECS_INVALID_OPERATION, "type is not copy constructable");
+    ecs_abort(ECS_INVALID_OPERATION, "type is not copy constructible");
 }
 
 template <typename T, typename std::enable_if<
