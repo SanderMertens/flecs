@@ -330,7 +330,8 @@
                 "relocatable_component",
                 "implicit_component",
                 "implicit_after_query",
-                "deleted_copy"
+                "deleted_copy",
+                "no_default_ctor"
             ]
         }, {
             "id": "Refs",

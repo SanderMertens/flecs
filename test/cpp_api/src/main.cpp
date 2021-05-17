@@ -304,6 +304,7 @@ void ComponentLifecycle_relocatable_component(void);
 void ComponentLifecycle_implicit_component(void);
 void ComponentLifecycle_implicit_after_query(void);
 void ComponentLifecycle_deleted_copy(void);
+void ComponentLifecycle_no_default_ctor(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref(void);
@@ -1536,6 +1537,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "deleted_copy",
         ComponentLifecycle_deleted_copy
+    },
+    {
+        "no_default_ctor",
+        ComponentLifecycle_no_default_ctor
     }
 };
 
@@ -1983,7 +1988,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        17,
+        18,
         ComponentLifecycle_testcases
     },
     {

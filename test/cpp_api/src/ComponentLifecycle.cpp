@@ -409,3 +409,30 @@ void ComponentLifecycle_deleted_copy() {
     e.remove<NoCopy>();
     test_assert(!e.has<NoCopy>());
 }
+
+class NoDefaultCtor {
+public:
+    NoDefaultCtor(int x, int y)  { x_ = x; y_ = y; };
+    int x_;
+    int y_;
+};
+
+void ComponentLifecycle_no_default_ctor() {
+    flecs::world ecs;
+
+    // This is allowed as long as the type is trivially copyable
+    ecs.component<NoDefaultCtor>();
+
+    auto e = ecs.entity().add<NoDefaultCtor>();
+    test_assert(e.has<NoDefaultCtor>());
+    const NoDefaultCtor *ptr = e.get<NoDefaultCtor>();
+    test_int(ptr->x_, 0);
+    test_int(ptr->y_, 0);
+
+    e.set<NoDefaultCtor>({10, 20});
+    ptr = e.get<NoDefaultCtor>();
+    test_int(ptr->x_, 10);
+    test_int(ptr->y_, 20);
+    e.remove<NoDefaultCtor>();
+    test_assert(!e.has<NoDefaultCtor>());
+}
