@@ -289,6 +289,8 @@ void SystemBuilder_singleton_term(void);
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_dtor_on_remove(void);
+void ComponentLifecycle_move_on_add(void);
+void ComponentLifecycle_move_on_remove(void);
 void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
 void ComponentLifecycle_non_pod_add(void);
@@ -1475,6 +1477,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_dtor_on_remove
     },
     {
+        "move_on_add",
+        ComponentLifecycle_move_on_add
+    },
+    {
+        "move_on_remove",
+        ComponentLifecycle_move_on_remove
+    },
+    {
         "copy_on_set",
         ComponentLifecycle_copy_on_set
     },
@@ -1968,7 +1978,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        14,
+        16,
         ComponentLifecycle_testcases
     },
     {

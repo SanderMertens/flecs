@@ -2172,7 +2172,7 @@ const char* ecs_strerror(
     case ECS_OUT_OF_MEMORY:
         return "out of memory";
     case ECS_MODULE_UNDEFINED:
-        return "module is undefined";
+        return "module is undefined (register the module in the ctor/import)";
     case ECS_COLUMN_INDEX_OUT_OF_RANGE:
         return "column index out of range";
     case ECS_COLUMN_IS_NOT_SHARED:
@@ -14648,6 +14648,18 @@ void default_merge(
     callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
 }
 
+static
+void default_merge_w_move_ctor(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    callbacks->move_ctor(world, component, callbacks, dst_entity, src_entity, 
+        dst_ptr, src_ptr, size, count, ctx);
+    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
+}
+
 void ecs_set_component_actions_w_id(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -14705,9 +14717,16 @@ void ecs_set_component_actions_w_id(
 
         if (lifecycle->move && !lifecycle->merge) {
             if (lifecycle->dtor) {
-                c_info->lifecycle.merge = default_merge;
+                if (lifecycle->move_ctor) {
+                    /* If an explicit move ctor has been set, use a merge that
+                     * uses the move ctor vs. using a ctor+move */
+                    c_info->lifecycle.merge = default_merge_w_move_ctor;
+                } else {
+                    c_info->lifecycle.merge = default_merge;
+                }
             } else {
-                c_info->lifecycle.merge = default_move_ctor;
+                /* If no dtor has been set, this is the same as a move ctor */
+                c_info->lifecycle.merge = c_info->lifecycle.move_ctor;
             }            
         }
 

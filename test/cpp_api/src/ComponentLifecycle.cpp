@@ -6,6 +6,8 @@ int Pod::ctor_invoked = 0;
 int Pod::dtor_invoked = 0;
 int Pod::copy_invoked = 0;
 int Pod::move_invoked = 0;
+int Pod::copy_ctor_invoked = 0;
+int Pod::move_ctor_invoked = 0;
 
 class Str {
 public:
@@ -15,7 +17,7 @@ public:
 void ComponentLifecycle_ctor_on_add() {
     flecs::world world;
 
-    flecs::component<Pod>(world, "Pod");
+    world.component<Pod>();
 
     auto e = flecs::entity(world).add<Pod>();
     test_assert(e.id() != 0);
@@ -34,7 +36,7 @@ void ComponentLifecycle_ctor_on_add() {
 void ComponentLifecycle_dtor_on_remove() {
     flecs::world world;
 
-    flecs::component<Pod>(world, "Pod");
+    world.component<Pod>();
 
     auto e = flecs::entity(world).add<Pod>();
     test_assert(e.id() != 0);
@@ -49,10 +51,70 @@ void ComponentLifecycle_dtor_on_remove() {
     test_int(Pod::move_invoked, 0);
 }
 
+void ComponentLifecycle_move_on_add() {
+    flecs::world world;
+
+    world.component<Pod>();
+
+    auto e = flecs::entity(world).add<Pod>();
+    test_assert(e.id() != 0);
+    test_assert(e.has<Pod>());
+
+    const Pod *pod = e.get<Pod>();
+    test_assert(pod != NULL);
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 0);
+    test_int(Pod::copy_invoked, 0);
+    test_int(Pod::move_invoked, 0);
+    test_int(Pod::copy_ctor_invoked, 0);
+    test_int(Pod::move_ctor_invoked, 0);
+
+    e.add<Position>();
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 1);
+    test_int(Pod::copy_invoked, 0);
+    test_int(Pod::move_invoked, 1);
+    test_int(Pod::copy_ctor_invoked, 0);
+    test_int(Pod::move_ctor_invoked, 1);
+
+    test_int(pod->value, 10);
+}
+
+void ComponentLifecycle_move_on_remove() {
+    flecs::world world;
+
+    world.component<Pod>();
+
+    auto e = flecs::entity(world).add<Position>().add<Pod>();
+    test_assert(e.id() != 0);
+    test_assert(e.has<Pod>());
+
+    const Pod *pod = e.get<Pod>();
+    test_assert(pod != NULL);
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 0);
+    test_int(Pod::copy_invoked, 0);
+    test_int(Pod::move_invoked, 0);
+    test_int(Pod::copy_ctor_invoked, 0);
+    test_int(Pod::move_ctor_invoked, 0);
+
+    e.remove<Position>();
+    
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 1);
+    test_int(Pod::copy_invoked, 0);
+    test_int(Pod::move_invoked, 1);
+    test_int(Pod::copy_ctor_invoked, 0);
+    test_int(Pod::move_ctor_invoked, 1);
+
+    test_int(pod->value, 10);
+}
+
 void ComponentLifecycle_copy_on_set() {
     flecs::world world;
 
-    flecs::component<Pod>(world, "Pod");
+    world.component<Pod>();
 
     auto e = flecs::entity(world);
     test_assert(e.id() != 0);
@@ -68,7 +130,7 @@ void ComponentLifecycle_copy_on_set() {
 void ComponentLifecycle_copy_on_override() {
     flecs::world world;
 
-    flecs::component<Pod>(world, "Pod");
+    world.component<Pod>();
 
     auto base = flecs::entity(world);
     test_assert(base.id() != 0);
@@ -166,7 +228,7 @@ void ComponentLifecycle_non_pod_override() {
 void ComponentLifecycle_get_mut_new() {
     flecs::world world;
 
-    flecs::component<Pod>(world, "Pod");
+    world.component<Pod>();
 
     auto e = flecs::entity(world);
     test_assert(e.id() != 0);
@@ -190,7 +252,7 @@ void ComponentLifecycle_get_mut_new() {
 void ComponentLifecycle_get_mut_existing() {
     flecs::world world;
 
-    flecs::component<Pod>(world, "Pod");
+    world.component<Pod>();
 
     auto e = flecs::entity(world);
     test_assert(e.id() != 0);

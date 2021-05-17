@@ -316,6 +316,8 @@
             "testcases": [
                 "ctor_on_add",
                 "dtor_on_remove",
+                "move_on_add",
+                "move_on_remove",
                 "copy_on_set",
                 "copy_on_override",
                 "non_pod_add",
