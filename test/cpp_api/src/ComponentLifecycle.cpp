@@ -100,7 +100,7 @@ void ComponentLifecycle_move_on_remove() {
     test_int(Pod::move_ctor_invoked, 0);
 
     e.remove<Position>();
-    
+
     test_int(Pod::ctor_invoked, 1);
     test_int(Pod::dtor_invoked, 1);
     test_int(Pod::copy_invoked, 0);
@@ -373,4 +373,39 @@ void ComponentLifecycle_implicit_after_query() {
     flecs::entity(world).add<Pod>();
     test_int(Pod::ctor_invoked, 5);
     test_int(Pod::move_invoked, 2); 
+}
+
+class NoCopy {
+public:
+    NoCopy() { };
+    NoCopy(int x, int y) { x_ = x; y_ = y; };
+    ~NoCopy() { };
+
+    NoCopy(const NoCopy& obj) = delete;
+    NoCopy(NoCopy&& obj) { *this = std::move(obj); };
+
+    NoCopy& operator=(const NoCopy& obj) = delete;
+    NoCopy& operator=(NoCopy&& obj) { 
+        this->x_ = obj.x_; 
+        this->y_ = obj.y_; 
+        return *this; 
+    };
+
+    int x_;
+    int y_;
+};
+
+void ComponentLifecycle_deleted_copy() {
+    flecs::world ecs;
+
+    ecs.component<NoCopy>();
+
+    auto e = ecs.entity().add<NoCopy>();
+    test_assert(e.has<NoCopy>());
+    e.set<NoCopy>({10, 20});
+    const NoCopy *ptr = e.get<NoCopy>();
+    test_int(ptr->x_, 10);
+    test_int(ptr->y_, 20);
+    e.remove<NoCopy>();
+    test_assert(!e.has<NoCopy>());
 }

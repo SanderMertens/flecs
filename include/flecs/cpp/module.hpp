@@ -14,7 +14,8 @@ flecs::entity module(const flecs::world& world, const char *name = nullptr) {
     ecs_set_scope(world.c_ptr(), result.id());
 
     // Only register copy/move/dtor, make sure to not instantiate ctor as the
-    // default ctor doesn't work for modules.
+    // default ctor doesn't work for modules. Additionally, the module ctor
+    // should only be invoked once per import.
     EcsComponentLifecycle cl{};
     cl.copy = _::component_copy<T>;
     cl.move = _::component_move<T>;
