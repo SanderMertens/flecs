@@ -147,10 +147,10 @@ struct symbol_helper
 // all types require this, yet callbacks are registered by default, which
 // introduces some overhead when working with components.
 //
-// An application can optimize this by explicitly registering a component as a
-// plain old datatype, with world.pod_component<T>().
+// Lifecycle callbacks are not registered for trivial types.
 
-template <typename T>
+template <typename T, typename std::enable_if<
+    std::is_default_constructible<T>::value == true, void>::type* = nullptr>
 void component_ctor(
     ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
     int32_t count, void*)
@@ -174,7 +174,17 @@ void component_dtor(
     }
 }
 
-template <typename T>
+template <typename T, typename std::enable_if<
+    std::is_copy_assignable<T>::value == false, void>::type* = nullptr>
+void component_copy(
+    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*, 
+    void*, const void*, size_t, int32_t, void*)
+{
+    ecs_abort(ECS_INVALID_OPERATION, "type is not copy assignable");
+}
+
+template <typename T, typename std::enable_if<
+    std::is_copy_assignable<T>::value == true, void>::type* = nullptr>
 void component_copy(
     ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*, 
     void *dst_ptr, const void *src_ptr, size_t size, int32_t count, void*)
@@ -200,7 +210,18 @@ void component_move(
     }
 }
 
-template <typename T>
+template <typename T, typename std::enable_if<
+    std::is_copy_constructible<T>::value == false, void>::type* = nullptr>
+void component_copy_ctor(
+    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
+    const ecs_entity_t*, const ecs_entity_t*, void*, 
+    const void*, size_t, int32_t, void*)
+{
+    ecs_abort(ECS_INVALID_OPERATION, "type is not copy constructable");
+}
+
+template <typename T, typename std::enable_if<
+    std::is_copy_constructible<T>::value == true, void>::type* = nullptr>
 void component_copy_ctor(
     ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
     const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
@@ -228,6 +249,7 @@ void component_move_ctor(
     }
 }
 
+// A move ctor that also destructs the source value
 template <typename T>
 void component_merge(
     ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
@@ -243,34 +265,32 @@ void component_merge(
     }
 }
 
-// Register component lifecycle callbacks with flecs.
-template<typename T>
+// Don't register any lifecycle callbacks for trivial types
+template<typename T, typename std::enable_if<
+    std::is_trivial<T>::value == true, void>::type* = nullptr>
 void register_lifecycle_actions(
     ecs_world_t *world,
-    ecs_entity_t component,
-    bool ctor,
-    bool dtor,
-    bool copy,
-    bool move)
+    ecs_entity_t component)
+{
+    (void)world; (void)component;
+}
+
+// Register component lifecycle callbacks with flecs.
+template<typename T, typename std::enable_if<
+    std::is_trivial<T>::value == false, void>::type* = nullptr>
+void register_lifecycle_actions(
+    ecs_world_t *world,
+    ecs_entity_t component)
 {
     if (!ecs_component_has_actions(world, component)) {
         EcsComponentLifecycle cl{};
-        if (ctor) {
-            cl.ctor = _::component_ctor<typename base_type<T>::type>;
-        }
-        if (dtor) {
-            cl.dtor = _::component_dtor<typename base_type<T>::type>;
-        }
-        if (copy) {
-            cl.copy = _::component_copy<typename base_type<T>::type>;
-            cl.copy_ctor = _::component_copy_ctor<typename base_type<T>::type>;
-        }
-        if (move) {
-            cl.move = _::component_move<typename base_type<T>::type>;
-            cl.move_ctor = _::component_move_ctor<typename base_type<T>::type>;
-            cl.merge = _::component_merge<typename base_type<T>::type>;
-        }
-
+        cl.ctor = _::component_ctor<typename base_type<T>::type>;
+        cl.dtor = _::component_dtor<typename base_type<T>::type>;
+        cl.copy = _::component_copy<typename base_type<T>::type>;
+        cl.copy_ctor = _::component_copy_ctor<typename base_type<T>::type>;
+        cl.move = _::component_move<typename base_type<T>::type>;
+        cl.move_ctor = _::component_move_ctor<typename base_type<T>::type>;
+        cl.merge = _::component_merge<typename base_type<T>::type>;
         ecs_set_component_actions_w_entity( world, component, &cl);
     }
 }
@@ -435,8 +455,7 @@ public:
             // size. Components that don't have a size are tags, and tags don't
             // require construction/destruction/copy/move's. */
             if (size()) {
-                register_lifecycle_actions<T>(world, s_id,
-                    true, true, true, true);
+                register_lifecycle_actions<T>(world, s_id);
             }
         }
 
@@ -658,20 +677,18 @@ flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
     if (_::cpp_type<T>::size()) {
-        _::register_lifecycle_actions<T>(world.c_ptr(), result.id(),
-            true, true, true, true);
+        _::register_lifecycle_actions<T>(world.c_ptr(), result.id());
     }
 
     return result;
 }
 
-/** Trivially relocatable component that can be memcpy'd. */
+ECS_DEPRECATED("API detects automatically whether type is trivial")
 template <typename T>
 flecs::entity relocatable_component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
-    _::register_lifecycle_actions<T>(world.c_ptr(), result.id(),
-        true, true, true, false);
+    _::register_lifecycle_actions<T>(world.c_ptr(), result.id());
 
     return result;
 }
