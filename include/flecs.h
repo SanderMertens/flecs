@@ -470,13 +470,18 @@ typedef struct EcsType {
 } EcsType;
 
 /** Component that contains lifecycle callbacks for a component. */
-typedef struct EcsComponentLifecycle {
-    ecs_xtor_t ctor;        /**< Component constructor */
-    ecs_xtor_t dtor;        /**< Component destructor */
-    ecs_copy_t copy;        /**< Component copy */
-    ecs_move_t move;        /**< Component move */
+struct EcsComponentLifecycle {
+    ecs_xtor_t ctor;            /**< ctor */
+    ecs_xtor_t dtor;            /**< dtor */
+    ecs_copy_t copy;            /**< copy assignment */
+    ecs_move_t move;            /**< move assignment */
+
     void *ctx;              /**< User defined context */
-} EcsComponentLifecycle;
+
+    ecs_copy_ctor_t copy_ctor;  /**< copy ctor (optional, ctor+copy) */
+    ecs_move_ctor_t move_ctor;  /**< move ctor (optional, ctor+move) */
+    ecs_move_ctor_t merge;      /**< move ctor (optional, ctor+move+dtor) */    
+};
 
 /** Component that stores reference to trigger */
 typedef struct EcsTrigger {

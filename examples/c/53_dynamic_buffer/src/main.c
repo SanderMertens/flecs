@@ -97,11 +97,10 @@ int main(int argc, char *argv[]) {
 
     /* Register lifecycle functions for comopnent */
     ecs_set_component_actions(ecs, DynamicBuffer, {
-        ecs_ctor(DynamicBuffer),
-        ecs_dtor(DynamicBuffer),
-        ecs_copy(DynamicBuffer),
-        ecs_move(DynamicBuffer),
-        NULL /* optional context */
+        .ctor = ecs_ctor(DynamicBuffer),
+        .dtor = ecs_dtor(DynamicBuffer),
+        .copy = ecs_copy(DynamicBuffer),
+        .move = ecs_move(DynamicBuffer)
     });
 
     ecs_entity_t e = ecs_new_id(ecs);

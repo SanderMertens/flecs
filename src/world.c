@@ -451,23 +451,6 @@ void on_demand_in_map_fini(
     ecs_map_free(map);
 }
 
-static
-void ctor_init_zero(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entity_ptr,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    (void)world;
-    (void)component;
-    (void)entity_ptr;
-    (void)ctx;
-    ecs_os_memset(ptr, 0, ecs_from_size_t(size) * count);
-}
-
 void ecs_notify_tables(
     ecs_world_t *world,
     ecs_id_t id,
@@ -498,6 +481,52 @@ void ecs_notify_tables(
             ecs_table_notify(world, tr->table, event);
         }
     }
+}
+
+static
+void default_ctor(
+    ecs_world_t *world, ecs_entity_t component, const ecs_entity_t *entity_ptr,
+    void *ptr, size_t size, int32_t count, void *ctx)
+{
+    (void)world; (void)component; (void)entity_ptr; (void)ctx;
+    ecs_os_memset(ptr, 0, ecs_from_size_t(size) * count);
+}
+
+static
+void default_copy_ctor(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, const void *src_ptr,
+    size_t size, int32_t count, void *ctx)
+{
+    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
+    callbacks->copy(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
+        size, count, ctx);
+}
+
+static
+void default_move_ctor(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
+    callbacks->move(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
+        size, count, ctx);
+}
+
+static
+void default_merge(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
+    callbacks->move(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
+        size, count, ctx);
+    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
 }
 
 void ecs_set_component_actions_w_id(
@@ -540,8 +569,27 @@ void ecs_set_component_actions_w_id(
          * is not safe as they will potentially access uninitialized memory. For 
          * ease of use, if no constructor is specified, set a default one that 
          * initializes the component to 0. */
-        if (!lifecycle->ctor && (lifecycle->dtor || lifecycle->copy || lifecycle->move)) {
-            c_info->lifecycle.ctor = ctor_init_zero;   
+        if (!lifecycle->ctor && 
+            (lifecycle->dtor || lifecycle->copy || lifecycle->move)) 
+        {
+            c_info->lifecycle.ctor = default_ctor;   
+        }
+
+        /* Set default copy ctor, move ctor and merge */
+        if (lifecycle->copy && !lifecycle->copy_ctor) {
+            c_info->lifecycle.copy_ctor = default_copy_ctor;
+        }
+
+        if (lifecycle->move && !lifecycle->move_ctor) {
+            c_info->lifecycle.move_ctor = default_move_ctor;
+        }
+
+        if (lifecycle->move && !lifecycle->merge) {
+            if (lifecycle->dtor) {
+                c_info->lifecycle.merge = default_merge;
+            } else {
+                c_info->lifecycle.merge = default_move_ctor;
+            }            
         }
 
         /* Broadcast to all tables since we need to register a ctor for every

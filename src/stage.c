@@ -378,24 +378,24 @@ bool ecs_defer_set(
         if (real_id) {
             c_info = ecs_get_c_info(world, real_id);
         }
-        ecs_xtor_t ctor;
-        if (c_info && (ctor = c_info->lifecycle.ctor)) {
-            ctor(world, component, &entity, op->is._1.value, 
-                ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
 
-            ecs_copy_t copy;
-            if (value) {
-                if ((copy = c_info->lifecycle.copy)) {
-                    copy(world, component, &entity, &entity, op->is._1.value, value, 
-                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
-                } else {
-                    ecs_os_memcpy(op->is._1.value, value, size);
-                }
+        if (value) {
+            ecs_copy_ctor_t copy;
+            if (c_info && (copy = c_info->lifecycle.copy_ctor)) {
+                copy(world, component, &c_info->lifecycle, &entity, &entity, 
+                    op->is._1.value, value, ecs_to_size_t(size), 1, 
+                        c_info->lifecycle.ctx);
+            } else {
+                ecs_os_memcpy(op->is._1.value, value, size);
             }
-        } else if (value) {
-            ecs_os_memcpy(op->is._1.value, value, size);
+        } else {
+            ecs_xtor_t ctor;
+            if (c_info && (ctor = c_info->lifecycle.ctor)) {
+                ctor(world, component, &entity, op->is._1.value, 
+                    ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+            }
         }
-        
+
         if (value_out) {
             *value_out = op->is._1.value;
         }
@@ -404,7 +404,7 @@ bool ecs_defer_set(
     } else {
         stage->defer ++;
     }
-    
+
     return false;
 }
 
