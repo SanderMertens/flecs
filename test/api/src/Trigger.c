@@ -952,16 +952,14 @@ void RemoveSelf(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_record_t *r = ecs_record_find(it->world, it->entities[i]);
-        printf("%d: record = %d, table = %p [%s]\n", it->entities[i], r->row, r->table,
-            ecs_type_str(it->world, ecs_table_get_type(r->table)));
-
         test_assert(s[i].value == it->entities[i]);
         
         const Self *ptr = ecs_get(it->world, it->entities[i], Self);
         test_assert(ptr != NULL);
         test_assert(ptr->value == it->entities[i]);
 
+        // Set to 0 so that if an entity were to get matched twice, it wouldn't
+        // silently succeed.
         s[i].value = 0;
         on_remove_count ++;
     }

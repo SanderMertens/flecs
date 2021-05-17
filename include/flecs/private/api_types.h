@@ -205,6 +205,8 @@ typedef struct ecs_match_failure_t {
 //// Function types
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef struct EcsComponentLifecycle EcsComponentLifecycle;
+
 /** Constructor/destructor. Used for initializing / deinitializing components. */
 typedef void (*ecs_xtor_t)(
     ecs_world_t *world,
@@ -231,6 +233,32 @@ typedef void (*ecs_copy_t)(
 typedef void (*ecs_move_t)(
     ecs_world_t *world,
     ecs_entity_t component,
+    const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity,
+    void *dst_ptr,
+    void *src_ptr,
+    size_t size,
+    int32_t count,
+    void *ctx);
+
+/** Copy ctor */
+typedef void (*ecs_copy_ctor_t)(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks,
+    const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity,
+    void *dst_ptr,
+    const void *src_ptr,
+    size_t size,
+    int32_t count,
+    void *ctx);
+
+/** Move ctor */
+typedef void (*ecs_move_ctor_t)(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks,
     const ecs_entity_t *dst_entity,
     const ecs_entity_t *src_entity,
     void *dst_ptr,

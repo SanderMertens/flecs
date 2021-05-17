@@ -2233,6 +2233,8 @@ typedef struct ecs_match_failure_t {
 //// Function types
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef struct EcsComponentLifecycle EcsComponentLifecycle;
+
 /** Constructor/destructor. Used for initializing / deinitializing components. */
 typedef void (*ecs_xtor_t)(
     ecs_world_t *world,
@@ -2259,6 +2261,32 @@ typedef void (*ecs_copy_t)(
 typedef void (*ecs_move_t)(
     ecs_world_t *world,
     ecs_entity_t component,
+    const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity,
+    void *dst_ptr,
+    void *src_ptr,
+    size_t size,
+    int32_t count,
+    void *ctx);
+
+/** Copy ctor */
+typedef void (*ecs_copy_ctor_t)(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks,
+    const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity,
+    void *dst_ptr,
+    const void *src_ptr,
+    size_t size,
+    int32_t count,
+    void *ctx);
+
+/** Move ctor */
+typedef void (*ecs_move_ctor_t)(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks,
     const ecs_entity_t *dst_entity,
     const ecs_entity_t *src_entity,
     void *dst_ptr,
@@ -2902,13 +2930,18 @@ typedef struct EcsType {
 } EcsType;
 
 /** Component that contains lifecycle callbacks for a component. */
-typedef struct EcsComponentLifecycle {
-    ecs_xtor_t ctor;        /**< Component constructor */
-    ecs_xtor_t dtor;        /**< Component destructor */
-    ecs_copy_t copy;        /**< Component copy */
-    ecs_move_t move;        /**< Component move */
+struct EcsComponentLifecycle {
+    ecs_xtor_t ctor;            /**< ctor */
+    ecs_xtor_t dtor;            /**< dtor */
+    ecs_copy_t copy;            /**< copy assignment */
+    ecs_move_t move;            /**< move assignment */
+
+    ecs_copy_ctor_t copy_ctor;  /**< copy ctor (ctor+copy) */
+    ecs_move_ctor_t move_ctor;  /**< move ctor (ctor+move) */
+    ecs_move_ctor_t merge;      /**< move ctor (ctor+move+dtor) */
+
     void *ctx;              /**< User defined context */
-} EcsComponentLifecycle;
+};
 
 /** Component that stores reference to trigger */
 typedef struct EcsTrigger {
@@ -12500,56 +12533,6 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Utility class to invoke a system action
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename Func, typename ... Components>
-class action_invoker : public invoker {
-    using Terms = typename term_ptrs<Components ...>::Terms;
-public:
-    explicit action_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
-    explicit action_invoker(const Func& func) noexcept : m_func(func) { }
-
-    // Invoke object directly. This operation is useful when the calling
-    // function has just constructed the invoker, such as what happens when
-    // iterating a query.
-    void invoke(ecs_iter_t *iter) const {
-        term_ptrs<Components...> terms;
-        terms.populate_w_refs(iter);
-        invoke_callback(iter, m_func, 0, terms.m_terms);
-    }
-
-    // Static function that can be used as callback for systems/triggers
-    static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const action_invoker*>(iter->binding_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
-        self->invoke(iter);
-    }
-
-private:
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
-        (void)index;
-        (void)columns;
-        flecs::iter iter_wrapper(iter);
-        func(iter_wrapper, (column<typename std::remove_reference<
-            typename std::remove_pointer<Components>::type >::type>(
-                static_cast<typename std::remove_reference< 
-                    typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
-                        iter->count, comps.is_ref))...);
-    }
-
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
-        invoke_callback(iter, func, index + 1, columns, comps..., columns[index]);
-    }
-
-    Func m_func;
-};
-
-////////////////////////////////////////////////////////////////////////////////
 //// Utility class to invoke a system iterate action
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12587,6 +12570,57 @@ private:
         func(iter_wrapper, (
             static_cast<typename std::remove_reference< 
                 typename std::remove_pointer<Components>::type >::type*>(comps.ptr))...);
+    }
+
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
+        invoke_callback(iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
+    Func m_func;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Utility class to invoke a system action (deprecated)
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Func, typename ... Components>
+class action_invoker : public invoker {
+    using Terms = typename term_ptrs<Components ...>::Terms;
+public:
+    explicit action_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
+    explicit action_invoker(const Func& func) noexcept : m_func(func) { }
+
+    // Invoke object directly. This operation is useful when the calling
+    // function has just constructed the invoker, such as what happens when
+    // iterating a query.
+    void invoke(ecs_iter_t *iter) const {
+        term_ptrs<Components...> terms;
+        terms.populate_w_refs(iter);
+        invoke_callback(iter, m_func, 0, terms.m_terms);
+    }
+
+    // Static function that can be used as callback for systems/triggers
+    static void run(ecs_iter_t *iter) {
+        auto self = static_cast<const action_invoker*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->invoke(iter);
+    }
+
+private:
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
+        (void)index;
+        (void)columns;
+        flecs::iter iter_wrapper(iter);
+        func(iter_wrapper, (column<typename std::remove_reference<
+            typename std::remove_pointer<Components>::type >::type>(
+                static_cast<typename std::remove_reference< 
+                    typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
+                        iter->count, comps.is_ref))...);
     }
 
     template <typename... Targs,

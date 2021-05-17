@@ -3749,42 +3749,31 @@ void ecs_table_move(
             int16_t alignment = new_column->alignment;
 
             if (size) {
-                void *dst = ecs_vector_get_t(new_column->data, size, alignment, new_index);
-                void *src = ecs_vector_get_t(old_column->data, size, alignment, old_index);
+                void *dst = ecs_vector_get_t(
+                    new_column->data, size, alignment, new_index);
+                void *src = ecs_vector_get_t(
+                    old_column->data, size, alignment, old_index);
 
                 ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 ecs_type_info_t *cdata = new_table->c_info[i_new];
                 if (same_entity) {
-                    ecs_move_t move;
-                    if (cdata && (move = cdata->lifecycle.move)) {
+                    ecs_move_ctor_t move;
+                    if (cdata && (move = cdata->lifecycle.move_ctor)) {
                         void *ctx = cdata->lifecycle.ctx;
-                        ecs_xtor_t ctor = cdata->lifecycle.ctor;
-
-                        /* Ctor should always be set if copy is set */
-                        ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                        /* Construct a new value, move the value to it */
-                        ctor(world, new_component, &dst_entity, dst, 
-                                ecs_to_size_t(size), 1, ctx);
-
-                        move(world, new_component, &dst_entity, &src_entity, 
+                        move(world, new_component, &cdata->lifecycle, 
+                            &dst_entity, &src_entity, 
                             dst, src, ecs_to_size_t(size), 1, ctx);
                     } else {
                         ecs_os_memcpy(dst, src, size);
                     }
                 } else {
-                    ecs_copy_t copy;
-                    if (cdata && (copy = cdata->lifecycle.copy)) {
+                    ecs_copy_ctor_t copy;
+                    if (cdata && (copy = cdata->lifecycle.copy_ctor)) {
                         void *ctx = cdata->lifecycle.ctx;
-                        ecs_xtor_t ctor = cdata->lifecycle.ctor;
-
-                        /* Ctor should always be set if copy is set */
-                        ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
-                        ctor(world, new_component, &dst_entity, dst, 
-                            ecs_to_size_t(size), 1, ctx);
-                        copy(world, new_component, &dst_entity, &src_entity, 
+                        copy(world, new_component, &cdata->lifecycle, 
+                            &dst_entity, &src_entity, 
                             dst, src, ecs_to_size_t(size), 1, ctx);
                     } else {
                         ecs_os_memcpy(dst, src, size);
@@ -8378,24 +8367,24 @@ bool ecs_defer_set(
         if (real_id) {
             c_info = ecs_get_c_info(world, real_id);
         }
-        ecs_xtor_t ctor;
-        if (c_info && (ctor = c_info->lifecycle.ctor)) {
-            ctor(world, component, &entity, op->is._1.value, 
-                ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
 
-            ecs_copy_t copy;
-            if (value) {
-                if ((copy = c_info->lifecycle.copy)) {
-                    copy(world, component, &entity, &entity, op->is._1.value, value, 
-                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
-                } else {
-                    ecs_os_memcpy(op->is._1.value, value, size);
-                }
+        if (value) {
+            ecs_copy_ctor_t copy;
+            if (c_info && (copy = c_info->lifecycle.copy_ctor)) {
+                copy(world, component, &c_info->lifecycle, &entity, &entity, 
+                    op->is._1.value, value, ecs_to_size_t(size), 1, 
+                        c_info->lifecycle.ctx);
+            } else {
+                ecs_os_memcpy(op->is._1.value, value, size);
             }
-        } else if (value) {
-            ecs_os_memcpy(op->is._1.value, value, size);
+        } else {
+            ecs_xtor_t ctor;
+            if (c_info && (ctor = c_info->lifecycle.ctor)) {
+                ctor(world, component, &entity, op->is._1.value, 
+                    ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+            }
         }
-        
+
         if (value_out) {
             *value_out = op->is._1.value;
         }
@@ -14580,23 +14569,6 @@ void on_demand_in_map_fini(
     ecs_map_free(map);
 }
 
-static
-void ctor_init_zero(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entity_ptr,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    (void)world;
-    (void)component;
-    (void)entity_ptr;
-    (void)ctx;
-    ecs_os_memset(ptr, 0, ecs_from_size_t(size) * count);
-}
-
 void ecs_notify_tables(
     ecs_world_t *world,
     ecs_id_t id,
@@ -14627,6 +14599,52 @@ void ecs_notify_tables(
             ecs_table_notify(world, tr->table, event);
         }
     }
+}
+
+static
+void default_ctor(
+    ecs_world_t *world, ecs_entity_t component, const ecs_entity_t *entity_ptr,
+    void *ptr, size_t size, int32_t count, void *ctx)
+{
+    (void)world; (void)component; (void)entity_ptr; (void)ctx;
+    ecs_os_memset(ptr, 0, ecs_from_size_t(size) * count);
+}
+
+static
+void default_copy_ctor(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, const void *src_ptr,
+    size_t size, int32_t count, void *ctx)
+{
+    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
+    callbacks->copy(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
+        size, count, ctx);
+}
+
+static
+void default_move_ctor(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
+    callbacks->move(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
+        size, count, ctx);
+}
+
+static
+void default_merge(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
+    callbacks->move(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
+        size, count, ctx);
+    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
 }
 
 void ecs_set_component_actions_w_id(
@@ -14669,8 +14687,27 @@ void ecs_set_component_actions_w_id(
          * is not safe as they will potentially access uninitialized memory. For 
          * ease of use, if no constructor is specified, set a default one that 
          * initializes the component to 0. */
-        if (!lifecycle->ctor && (lifecycle->dtor || lifecycle->copy || lifecycle->move)) {
-            c_info->lifecycle.ctor = ctor_init_zero;   
+        if (!lifecycle->ctor && 
+            (lifecycle->dtor || lifecycle->copy || lifecycle->move)) 
+        {
+            c_info->lifecycle.ctor = default_ctor;   
+        }
+
+        /* Set default copy ctor, move ctor and merge */
+        if (lifecycle->copy && !lifecycle->copy_ctor) {
+            c_info->lifecycle.copy_ctor = default_copy_ctor;
+        }
+
+        if (lifecycle->move && !lifecycle->move_ctor) {
+            c_info->lifecycle.move_ctor = default_move_ctor;
+        }
+
+        if (lifecycle->move && !lifecycle->merge) {
+            if (lifecycle->dtor) {
+                c_info->lifecycle.merge = default_merge;
+            } else {
+                c_info->lifecycle.merge = default_move_ctor;
+            }            
         }
 
         /* Broadcast to all tables since we need to register a ctor for every

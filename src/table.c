@@ -1503,42 +1503,31 @@ void ecs_table_move(
             int16_t alignment = new_column->alignment;
 
             if (size) {
-                void *dst = ecs_vector_get_t(new_column->data, size, alignment, new_index);
-                void *src = ecs_vector_get_t(old_column->data, size, alignment, old_index);
+                void *dst = ecs_vector_get_t(
+                    new_column->data, size, alignment, new_index);
+                void *src = ecs_vector_get_t(
+                    old_column->data, size, alignment, old_index);
 
                 ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 ecs_type_info_t *cdata = new_table->c_info[i_new];
                 if (same_entity) {
-                    ecs_move_t move;
-                    if (cdata && (move = cdata->lifecycle.move)) {
+                    ecs_move_ctor_t move;
+                    if (cdata && (move = cdata->lifecycle.move_ctor)) {
                         void *ctx = cdata->lifecycle.ctx;
-                        ecs_xtor_t ctor = cdata->lifecycle.ctor;
-
-                        /* Ctor should always be set if copy is set */
-                        ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                        /* Construct a new value, move the value to it */
-                        ctor(world, new_component, &dst_entity, dst, 
-                                ecs_to_size_t(size), 1, ctx);
-
-                        move(world, new_component, &dst_entity, &src_entity, 
+                        move(world, new_component, &cdata->lifecycle, 
+                            &dst_entity, &src_entity, 
                             dst, src, ecs_to_size_t(size), 1, ctx);
                     } else {
                         ecs_os_memcpy(dst, src, size);
                     }
                 } else {
-                    ecs_copy_t copy;
-                    if (cdata && (copy = cdata->lifecycle.copy)) {
+                    ecs_copy_ctor_t copy;
+                    if (cdata && (copy = cdata->lifecycle.copy_ctor)) {
                         void *ctx = cdata->lifecycle.ctx;
-                        ecs_xtor_t ctor = cdata->lifecycle.ctor;
-
-                        /* Ctor should always be set if copy is set */
-                        ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
-                        ctor(world, new_component, &dst_entity, dst, 
-                            ecs_to_size_t(size), 1, ctx);
-                        copy(world, new_component, &dst_entity, &src_entity, 
+                        copy(world, new_component, &cdata->lifecycle, 
+                            &dst_entity, &src_entity, 
                             dst, src, ecs_to_size_t(size), 1, ctx);
                     } else {
                         ecs_os_memcpy(dst, src, size);
