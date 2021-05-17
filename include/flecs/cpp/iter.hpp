@@ -91,11 +91,21 @@ public:
         ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return m_array[index];
     }
+  
+    /** Return first element of component array.
+     * This operator is typically used when the column is shared.
+     *
+     * @return Reference to the first element.
+     */
+    T& operator*() {
+      ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+      return *m_array;
+    }
 
     /** Return first element of component array.
      * This operator is typically used when the column is shared.
      * 
-     * @return Reference to the first element.
+     * @return Pointer to the first element.
      */
     T* operator->() {
         ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
