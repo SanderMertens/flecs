@@ -127,7 +127,26 @@ public:
     const Base& remove_instanceof(const Base& base_entity) const {
         ecs_remove_id(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
         return *this;
-    } 
+    }
+
+    ECS_DEPRECATED("use set(Func func)")
+    template <typename T, typename Func>
+    const Base& patch(const Func& func) const {
+        auto comp_id = _::cpp_type<T>::id(this->base_world());
+
+        ecs_assert(_::cpp_type<T>::size() != 0, 
+            ECS_INVALID_PARAMETER, NULL);
+
+        bool is_added;
+        T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
+            this->base_world(), this->base_id(), comp_id, &is_added));
+        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        func(*ptr);
+        ecs_modified_w_entity(this->base_world(), this->base_id(), comp_id);
+
+        return *this;
+    }    
 };
 
 struct entity_deprecated_tag { };

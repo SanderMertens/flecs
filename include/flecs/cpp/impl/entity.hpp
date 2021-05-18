@@ -53,6 +53,14 @@ inline const Base& entity_builder<Base>::remove_switch(const type& sw) const {
     return remove_switch(sw.id());
 }
 
+template <typename Base>
+template <typename Func, typename _::is_function<Func>::type*>
+inline const Base& entity_builder<Base>::set(const Func& func) const {
+    _::entity_with_invoker<Func>::invoke_get_mut(
+        this->base_world(), this->base_id(), func);
+    return *this;
+}
+
 inline bool entity_view::has_switch(const flecs::type& type) const {
     return ecs_has_entity(m_world, m_id, flecs::Switch | type.id());
 }
@@ -228,6 +236,11 @@ inline void entity_view::each(const flecs::entity_view& rel, const Func& func) c
         flecs::entity ent(m_world, id_cl.object());
         func(ent);         
     }
+}
+
+template <typename Func, typename _::is_function<Func>::type*>
+inline bool entity_view::get(const Func& func) const {
+    return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
 }
 
 }

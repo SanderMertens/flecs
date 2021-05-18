@@ -1,8 +1,8 @@
-#ifndef PATCH_H
-#define PATCH_H
+#ifndef SET_H
+#define SET_H
 
 /* This generated file contains includes for project dependencies */
-#include "patch/bake_config.h"
+#include "set/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

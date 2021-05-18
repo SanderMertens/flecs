@@ -350,9 +350,7 @@ public:
      * @return True if the entity has all components, false if not.
      */
     template <typename Func, typename _::is_function<Func>::type* = nullptr>
-    bool get(const Func& func) const {
-        return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
-    }
+    bool get(const Func& func) const;
 
     /** Get the object part from a pair.
      * This operation gets the value for a pair from the entity. The relation
@@ -1100,37 +1098,7 @@ public:
      * @param func The callback to invoke.
      */
     template <typename Func, typename _::is_function<Func>::type* = nullptr>
-    const Base& set(const Func& func) const {
-        _::entity_with_invoker<Func>::invoke_get_mut(
-            this->base_world(), this->base_id(), func);
-        return *this;
-    }
-
-    /** Patch a component value.
-     * This operation allows an application to partially overwrite a component 
-     * value. The operation invokes a function with a reference to the value to
-     * write, and a boolean indicating if the component already existed.
-     *
-     * @tparam T The component to patch.
-     * @param func The function invoked by this operation.
-     */
-    template <typename T, typename Func>
-    const Base& patch(const Func& func) const {
-        auto comp_id = _::cpp_type<T>::id(this->base_world());
-
-        ecs_assert(_::cpp_type<T>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
-
-        bool is_added;
-        T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
-            this->base_world(), this->base_id(), comp_id, &is_added));
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        func(*ptr);
-        ecs_modified_w_entity(this->base_world(), this->base_id(), comp_id);
-
-        return *this;
-    }
+    const Base& set(const Func& func) const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
