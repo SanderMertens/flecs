@@ -762,6 +762,7 @@ void Entity_get_parent() {
 
     auto p = child.get_parent<Velocity>();
     test_assert(p.id() != 0);
+    test_int(p.id(), parent2.id());
     test_assert(p == parent2);
 }
 
@@ -1038,4 +1039,417 @@ void Entity_set_template() {
     const Template<int> *ptr = e.get<Template<int>>();
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
+}
+
+void Entity_get_1_component_w_callback() {
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e_2 = ecs.entity()
+        .set<Position>({11, 22});
+
+    auto e_3 = ecs.entity()
+        .set<Velocity>({1, 2});
+
+    test_bool(e_1.get([](const Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+    }), true);
+
+    test_bool(e_2.get([](const Position& p) {
+        test_int(p.x, 11);
+        test_int(p.y, 22);
+    }), true);
+
+    test_bool(e_3.get([](const Position& p) {}), false);
+}
+
+void Entity_get_2_components_w_callback() {
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e_2 = ecs.entity()
+        .set<Position>({11, 22});
+
+    auto e_3 = ecs.entity()
+        .set<Velocity>({1, 2});
+
+    test_bool(e_1.get([](const Position& p, const Velocity& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+    }), true);
+
+    test_bool(e_2.get([](const Position& p, const Velocity& v) {}), false);
+
+    test_bool(e_3.get([](const Position& p, const Velocity& v) {}), false);
+}
+
+void Entity_set_1_component_w_callback() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set([](Position& p){
+            p.x = 10;
+            p.y = 20;
+        });
+
+    test_assert(e.has<Position>());
+
+    const Position *p = e.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_set_2_components_w_callback() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set([](Position& p, Velocity& v){
+            p = {10, 20};
+            v = {1, 2};
+        });
+
+    test_assert(e.has<Position>());
+
+    const Position *p = e.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = e.get<Velocity>();
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void Entity_set_3_components_w_callback() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set([](Position& p, Velocity& v, Mass& m){
+            p = {10, 20};
+            v = {1, 2};
+            m = {50};
+        });
+
+    test_assert(e.has<Position>());
+
+    const Position *p = e.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = e.get<Velocity>();
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    const Mass *m = e.get<Mass>();
+    test_assert(m != NULL);
+    test_int(m->value, 50);
+}
+
+void Entity_defer_set_1_component() {
+    flecs::world ecs;
+
+    ecs.defer_begin();
+
+    auto e = ecs.entity()
+        .set([](Position& p){
+            p.x = 10;
+            p.y = 20;
+        });
+
+    test_assert(!e.has<Position>());
+
+    ecs.defer_end();
+
+    test_assert(e.has<Position>());
+
+    e.get([](const Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+    });
+}
+
+void Entity_defer_set_2_components() {
+    flecs::world ecs;
+
+    ecs.defer_begin();
+
+    auto e = ecs.entity()
+        .set([](Position& p, Velocity& v){
+            p = {10, 20};
+            v = {1, 2};
+        });
+
+    test_assert(!e.has<Position>());
+    test_assert(!e.has<Velocity>());
+
+    ecs.defer_end();
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+
+    e.get([](const Position& p, const Velocity& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+    });    
+}
+
+void Entity_defer_set_3_components() {
+    flecs::world ecs;
+
+    ecs.defer_begin();
+
+    auto e = ecs.entity()
+        .set([](Position& p, Velocity& v, Mass& m){
+            p = {10, 20};
+            v = {1, 2};
+            m = {50};
+        });
+
+    test_assert(!e.has<Position>());
+    test_assert(!e.has<Velocity>());
+    test_assert(!e.has<Mass>());
+
+    ecs.defer_end();
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+    test_assert(e.has<Mass>());
+
+    e.get([](const Position& p, const Velocity& v, const Mass& m) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+
+        test_int(m.value, 50);
+    });  
+}
+
+void Entity_set_2_w_on_set() {
+    flecs::world ecs;
+
+    int32_t position_set = 0;
+    int32_t velocity_set = 0;
+
+    ecs.system<Position>()
+        .kind(flecs::OnSet)
+        .each([&](flecs::entity e, Position& p) {
+            position_set ++;
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+        });
+
+    ecs.system<Velocity>()
+        .kind(flecs::OnSet)
+        .each([&](flecs::entity e, Velocity& v) {
+            velocity_set ++;
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+        });        
+
+    auto e = ecs.entity()
+        .set([](Position& p, Velocity& v){
+            p = {10, 20};
+            v = {1, 2};
+        });
+
+    test_int(position_set, 1);
+    test_int(velocity_set, 1);
+
+    test_bool(e.get([](const Position& p, const Velocity& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+    }), true);
+}
+
+void Entity_defer_set_2_w_on_set() {
+    flecs::world ecs;
+
+    int32_t position_set = 0;
+    int32_t velocity_set = 0;
+
+    ecs.system<Position>()
+        .kind(flecs::OnSet)
+        .each([&](flecs::entity e, Position& p) {
+            position_set ++;
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+        });
+
+    ecs.system<Velocity>()
+        .kind(flecs::OnSet)
+        .each([&](flecs::entity e, Velocity& v) {
+            velocity_set ++;
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+        });
+
+    ecs.defer_begin();   
+
+    auto e = ecs.entity()
+        .set([](Position& p, Velocity& v){
+            p = {10, 20};
+            v = {1, 2};
+        });
+
+    test_int(position_set, 0);
+    test_int(velocity_set, 0);
+
+    ecs.defer_end();
+
+    test_int(position_set, 1);
+    test_int(velocity_set, 1);
+
+    test_bool(e.get([](const Position& p, const Velocity& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+    }), true);
+}
+
+void Entity_set_2_after_fluent() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Mass>({50})
+        .set([](Position& p, Velocity& v){
+            p = {10, 20};
+            v = {1, 2};
+        });
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+    test_assert(e.has<Mass>());
+
+    test_bool(e.get([](const Position& p, const Velocity& v, const Mass& m) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+        
+        test_int(m.value, 50);
+    }), true);
+}
+
+void Entity_set_2_before_fluent() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set([](Position& p, Velocity& v){
+            p = {10, 20};
+            v = {1, 2};
+        })
+        .set<Mass>({50});
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+    test_assert(e.has<Mass>());
+
+    test_bool(e.get([](const Position& p, const Velocity& v, const Mass& m) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+        
+        test_int(m.value, 50);
+    }), true);
+}
+
+void Entity_set_2_after_set_1() {
+    flecs::world ecs;
+
+    int called = 0;
+
+    auto e = ecs.entity().set<Position>({5, 10});
+    test_assert(e.has<Position>());
+
+    test_bool(e.get([](const Position& p) {
+        test_int(p.x, 5);
+        test_int(p.y, 10);
+    }), true);
+
+    // Set both Position and Velocity
+    e.set([](Position& p, Velocity& v) {
+        p = {10, 20};
+        v = {1, 2};
+    });
+
+    test_bool(e.get([&](const Position& p, const Velocity& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+        
+        called ++;
+    }), true);
+
+    test_int(called, 1);
+}
+
+void Entity_set_2_after_set_2() {
+    flecs::world ecs;
+
+    int called = 0;
+
+    auto e = ecs.entity()
+        .set<Position>({5, 10})
+        .set<Velocity>({1, 2});
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());    
+
+    test_bool(e.get([&](const Position& p, const Velocity& v) {
+        test_int(p.x, 5);
+        test_int(p.y, 10);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+
+        called ++;
+    }), true);
+
+    test_int(called, 1);
+
+    // Set both Position and Velocity (doesn't add any components)
+    e.set([](Position& p, Velocity& v) {
+        p = {10, 20};
+        v = {3, 4};
+    });
+
+    test_bool(e.get([&](const Position& p, const Velocity& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 3);
+        test_int(v.y, 4);
+
+        called ++;
+    }), true);  
+
+    test_int(called, 2);
 }

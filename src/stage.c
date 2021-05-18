@@ -680,3 +680,11 @@ bool ecs_stage_is_async(
 
     return ((ecs_stage_t*)stage)->asynchronous;
 }
+
+bool ecs_is_deferred(
+    const ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_stage_t *stage = ecs_stage_from_readonly_world(world);
+    return stage->defer != 0;
+}

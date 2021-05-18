@@ -74,6 +74,20 @@ void Entity_entity_view_to_entity_world(void);
 void Entity_entity_view_to_entity_stage(void);
 void Entity_create_entity_view_from_stage(void);
 void Entity_set_template(void);
+void Entity_get_1_component_w_callback(void);
+void Entity_get_2_components_w_callback(void);
+void Entity_set_1_component_w_callback(void);
+void Entity_set_2_components_w_callback(void);
+void Entity_set_3_components_w_callback(void);
+void Entity_defer_set_1_component(void);
+void Entity_defer_set_2_components(void);
+void Entity_defer_set_3_components(void);
+void Entity_set_2_w_on_set(void);
+void Entity_defer_set_2_w_on_set(void);
+void Entity_set_2_after_fluent(void);
+void Entity_set_2_before_fluent(void);
+void Entity_set_2_after_set_1(void);
+void Entity_set_2_after_set_2(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -671,6 +685,62 @@ bake_test_case Entity_testcases[] = {
     {
         "set_template",
         Entity_set_template
+    },
+    {
+        "get_1_component_w_callback",
+        Entity_get_1_component_w_callback
+    },
+    {
+        "get_2_components_w_callback",
+        Entity_get_2_components_w_callback
+    },
+    {
+        "set_1_component_w_callback",
+        Entity_set_1_component_w_callback
+    },
+    {
+        "set_2_components_w_callback",
+        Entity_set_2_components_w_callback
+    },
+    {
+        "set_3_components_w_callback",
+        Entity_set_3_components_w_callback
+    },
+    {
+        "defer_set_1_component",
+        Entity_defer_set_1_component
+    },
+    {
+        "defer_set_2_components",
+        Entity_defer_set_2_components
+    },
+    {
+        "defer_set_3_components",
+        Entity_defer_set_3_components
+    },
+    {
+        "set_2_w_on_set",
+        Entity_set_2_w_on_set
+    },
+    {
+        "defer_set_2_w_on_set",
+        Entity_defer_set_2_w_on_set
+    },
+    {
+        "set_2_after_fluent",
+        Entity_set_2_after_fluent
+    },
+    {
+        "set_2_before_fluent",
+        Entity_set_2_before_fluent
+    },
+    {
+        "set_2_after_set_1",
+        Entity_set_2_after_set_1
+    },
+    {
+        "set_2_after_set_2",
+        Entity_set_2_after_set_2
     }
 };
 
@@ -1938,7 +2008,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        65,
+        79,
         Entity_testcases
     },
     {

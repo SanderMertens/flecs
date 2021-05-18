@@ -954,3 +954,22 @@ void ecs_table_clear_edges(
         }
     }
 }
+
+/* Public convenience functions for traversing table graph */
+ecs_table_t* ecs_table_add_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_entities_t arr = { .array = &id, .count = 1 };
+    return ecs_table_traverse_add(world, table, &arr, NULL);
+}
+
+ecs_table_t* ecs_table_remove_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_entities_t arr = { .array = &id, .count = 1 };
+    return ecs_table_traverse_remove(world, table, &arr, NULL);
+}

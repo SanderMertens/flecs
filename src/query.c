@@ -1859,14 +1859,14 @@ void resolve_cascade_container(
             ECS_INTERNAL_ERROR, NULL);
 
         /* Resolve container entity */
-        ecs_entity_t container = ecs_find_in_type(
-            world, table_type, ref->component, EcsChildOf);
+        ecs_entity_t container;
+        ecs_type_find_id(world, table_type, ref->component, 
+            EcsChildOf, 1, 0, &container);
 
         /* If container was found, update the reference */
         if (container) {
-            references[ref_index].entity = container;
-            ecs_get_ref_w_id(
-                world, &references[ref_index], container, 
+            references[ref_index].entity = ecs_get_alive(world, container);
+            ecs_get_ref_w_id(world, &references[ref_index], container, 
                 ref->component);
         } else {
             references[ref_index].entity = 0;

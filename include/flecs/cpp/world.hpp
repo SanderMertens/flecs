@@ -203,6 +203,12 @@ public:
         return ecs_defer_end(m_world);
     }
 
+    /** Test whether deferring is enabled.
+     */
+    bool is_deferred() {
+        return ecs_is_deferred(m_world);
+    }
+
     /** Configure world to have N stages.
      * This initializes N stages, which allows applications to defer operations to
      * multiple isolated defer queues. This is typically used for applications with
@@ -324,8 +330,8 @@ public:
     }
 
     /** Test whether the current world object is readonly.
-     * This function allows the code to test whether the currently used world object
-     * is readonly or whether it allows for writing.  
+     * This function allows the code to test whether the currently used world
+     * object is readonly or whether it allows for writing.
      *
      * @return True if the world or stage is readonly.
      */

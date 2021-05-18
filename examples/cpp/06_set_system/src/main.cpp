@@ -6,9 +6,7 @@ struct Position {
 };
 
 /* This system will be called when Position is added */
-void AddPosition(flecs::entity,  Position& p) {
-    p.x = 10;
-    p.y = 20;
+void AddPosition(flecs::entity, Position&) {
     std::cout << "Position added" << std::endl;
 }
 
@@ -29,9 +27,7 @@ int main(int argc, char *argv[]) {
 
     auto e = ecs.entity();
 
-    /* Add Position. Because we have an OnAdd system, flecs assumes a valid 
-     * value will be assigned to Position, and therefore the OnSet system is 
-     * invoked directly after the OnAdd system. */
+    /* Add Position. This will not trigger the OnSet system */
     e.add<Position>();
 
     /* Set Position. This will trigger the OnSet system. */

@@ -1483,3 +1483,107 @@ void DeferredActions_async_stage_is_async() {
     ecs_async_stage_free(async);
     ecs_fini(world);
 }
+
+static
+void RegisterComponent(ecs_iter_t *it) {
+    ecs_entity_t ecs_id(Position) = ecs_component_init(it->world, 
+        &(ecs_component_desc_t){
+            .entity = {.name = "Position"},
+            .size = sizeof(Position),
+            .alignment = ECS_ALIGNOF(Position)
+        });    
+
+    test_assert(ecs_id(Position) != 0);
+}
+
+void DeferredActions_register_component_while_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_SYSTEM(world, RegisterComponent, EcsOnUpdate, 0);
+
+    ecs_progress(world, 0);
+
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+    test_assert(ecs_id(Position) != 0);
+    test_assert(ecs_has(world, ecs_id(Position), EcsComponent));
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_assert(ecs_has_id(world, e, ecs_id(Position)));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_register_component_while_staged() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t canary = ecs_new_id(world);
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_add_id(stage, canary, Tag);
+
+    ecs_entity_t ecs_id(Position) = ecs_component_init(stage, 
+        &(ecs_component_desc_t){
+            .entity = {.name = "Position"},
+            .size = sizeof(Position),
+            .alignment = ECS_ALIGNOF(Position)
+        });
+
+    test_assert(ecs_id(Position) != 0);
+
+    ecs_set(stage, e, Position, {10, 20});
+    test_assert(!ecs_has_id(world, e, ecs_id(Position)));
+    test_assert(!ecs_has_id(world, canary, Tag));
+
+    ecs_staging_end(world);
+
+    test_assert(ecs_has_id(world, e, ecs_id(Position)));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_register_component_while_deferred() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t canary = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+
+    ecs_add_id(world, canary, Tag);
+
+    ecs_entity_t ecs_id(Position) = ecs_component_init(world, 
+        &(ecs_component_desc_t){
+            .entity = {.name = "Position"},
+            .size = sizeof(Position),
+            .alignment = ECS_ALIGNOF(Position)
+        });
+
+    test_assert(ecs_id(Position) != 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_assert(!ecs_has_id(world, e, ecs_id(Position)));
+    test_assert(!ecs_has_id(world, canary, Tag));
+
+    ecs_defer_end(world);
+
+    ecs_fini(world);
+}
