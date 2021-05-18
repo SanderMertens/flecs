@@ -282,7 +282,7 @@ public:
     }
 
     // Utility for storing id in array in pack expansion
-    static int32_t store_added(IdArray& added, int32_t elem, ecs_table_t *prev, 
+    static size_t store_added(IdArray& added, size_t elem, ecs_table_t *prev, 
         ecs_table_t *next, id_t id) 
     {
         // Array should only contain ids for components that are actually added,
@@ -314,7 +314,7 @@ public:
 
             // Find destination table that has all components
             ecs_table_t *prev = table, *next;
-            int elem = 0;
+            size_t elem = 0;
             flecs::array<ecs_id_t, sizeof...(Args)> added;
 
             // Iterate components, onlt store added component ids in added array
@@ -329,7 +329,7 @@ public:
             if (table != next) {
                 ecs_entities_t ids;
                 ids.array = added.ptr();
-                ids.count = elem;
+                ids.count = static_cast<ecs_size_t>(elem);
                 ecs_commit(world, id, r, next, &ids, NULL);
                 table = next;
             }
@@ -357,14 +357,14 @@ public:
 private:
     template <typename Func, typename ArrayType, typename ... TArgs, 
         typename std::enable_if<sizeof...(TArgs) == sizeof...(Args), void>::type* = nullptr>
-    static void invoke_callback(const Func& f, int arg, ArrayType& ptrs, TArgs&& ... comps) {
+    static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs, TArgs&& ... comps) {
         (void)arg; (void)ptrs;
         f(*static_cast<typename base_arg_type<Args>::type*>(comps)...);
     }
 
     template <typename Func, typename ArrayType, typename ... TArgs, 
         typename std::enable_if<sizeof...(TArgs) != sizeof...(Args), void>::type* = nullptr>
-    static void invoke_callback(const Func& f, int arg, ArrayType& ptrs, TArgs&& ... comps) {
+    static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs, TArgs&& ... comps) {
         return invoke_callback(f, arg + 1, ptrs, comps..., ptrs[arg]);
     }
 };
