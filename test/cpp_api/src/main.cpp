@@ -232,6 +232,8 @@ void Query_query_type_w_template(void);
 void Query_compare_term_id(void);
 void Query_test_auto_defer_each(void);
 void Query_test_auto_defer_iter(void);
+void Query_inspect_terms(void);
+void Query_inspect_terms_w_each(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1282,6 +1284,14 @@ bake_test_case Query_testcases[] = {
     {
         "test_auto_defer_iter",
         Query_test_auto_defer_iter
+    },
+    {
+        "inspect_terms",
+        Query_inspect_terms
+    },
+    {
+        "inspect_terms_w_each",
+        Query_inspect_terms_w_each
     }
 };
 
@@ -2057,7 +2067,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        26,
+        28,
         Query_testcases
     },
     {

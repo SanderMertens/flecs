@@ -902,6 +902,7 @@ void Queries_only_from_entity(void);
 void Queries_only_from_singleton(void);
 void Queries_only_not_from_entity(void);
 void Queries_only_not_from_singleton(void);
+void Queries_get_filter(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -5210,6 +5211,10 @@ bake_test_case Queries_testcases[] = {
     {
         "only_not_from_singleton",
         Queries_only_not_from_singleton
+    },
+    {
+        "get_filter",
+        Queries_get_filter
     }
 };
 
@@ -8843,7 +8848,7 @@ static bake_test_suite suites[] = {
         "Queries",
         NULL,
         NULL,
-        36,
+        37,
         Queries_testcases
     },
     {

@@ -964,7 +964,8 @@
                 "only_from_entity",
                 "only_from_singleton",
                 "only_not_from_entity",
-                "only_not_from_singleton"
+                "only_not_from_singleton",
+                "get_filter"
             ]
         }, {
             "id": "Pairs",

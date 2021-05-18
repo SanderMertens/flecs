@@ -2382,12 +2382,6 @@ bool ecs_identifier_is_0(
 bool ecs_identifier_is_var(
     const char *id);
 
-/** Get filter from query */
-FLECS_API
-ecs_filter_t* ecs_query_get_filter(
-    ecs_query_t *query);
-
-
 #define ECS_INVALID_ENTITY (1)
 #define ECS_INVALID_PARAMETER (2)
 #define ECS_INVALID_COMPONENT_ID (3)
@@ -5937,6 +5931,16 @@ ecs_query_t* ecs_query_init(
 FLECS_API
 void ecs_query_fini(
     ecs_query_t *query);
+
+/** Get filter object of query.
+ * This operation obtains a pointer to the internally constructed filter object
+ * of the query and can be used to introspect the query terms.
+ *
+ * @param query The query.
+ */
+FLECS_API
+const ecs_filter_t* ecs_query_get_filter(
+    ecs_query_t *query);    
 
 /** Return a query iterator.
  * A query iterator lets an application iterate over entities that match the
@@ -12974,7 +12978,7 @@ public:
     }
 
     // Utility for storing id in array in pack expansion
-    static int32_t store_added(IdArray& added, int32_t elem, ecs_table_t *prev, 
+    static size_t store_added(IdArray& added, size_t elem, ecs_table_t *prev, 
         ecs_table_t *next, id_t id) 
     {
         // Array should only contain ids for components that are actually added,
@@ -13006,10 +13010,10 @@ public:
 
             // Find destination table that has all components
             ecs_table_t *prev = table, *next;
-            int elem = 0;
-            flecs::array<ecs_id_t, sizeof...(Args)> added;
+            size_t elem = 0;
+            IdArray added;
 
-            // Iterate components, onlt store added component ids in added array
+            // Iterate components, only store added component ids in added array
             DummyArray dummy_before ({ (
                 next = ecs_table_add_id(world, prev, w.id<Args>()),
                 elem = store_added(added, elem, prev, next, w.id<Args>()),
@@ -13021,7 +13025,7 @@ public:
             if (table != next) {
                 ecs_entities_t ids;
                 ids.array = added.ptr();
-                ids.count = elem;
+                ids.count = static_cast<ecs_size_t>(elem);
                 ecs_commit(world, id, r, next, &ids, NULL);
                 table = next;
             }
@@ -13049,14 +13053,14 @@ public:
 private:
     template <typename Func, typename ArrayType, typename ... TArgs, 
         typename std::enable_if<sizeof...(TArgs) == sizeof...(Args), void>::type* = nullptr>
-    static void invoke_callback(const Func& f, int arg, ArrayType& ptrs, TArgs&& ... comps) {
+    static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs, TArgs&& ... comps) {
         (void)arg; (void)ptrs;
         f(*static_cast<typename base_arg_type<Args>::type*>(comps)...);
     }
 
     template <typename Func, typename ArrayType, typename ... TArgs, 
         typename std::enable_if<sizeof...(TArgs) != sizeof...(Args), void>::type* = nullptr>
-    static void invoke_callback(const Func& f, int arg, ArrayType& ptrs, TArgs&& ... comps) {
+    static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs, TArgs&& ... comps) {
         return invoke_callback(f, arg + 1, ptrs, comps..., ptrs[arg]);
     }
 };
@@ -13300,7 +13304,27 @@ public:
         m_term->args[0].entity = pred;
 
         return *this;
-    }    
+    }
+
+    flecs::id id() {
+        return flecs::id(world(), m_term->id);
+    }
+
+    flecs::entity get_subject() {
+        return flecs::entity(world(), m_term->args[0].entity);
+    }
+
+    flecs::entity get_object() {
+        return flecs::entity(world(), m_term->args[1].entity);
+    }
+
+    flecs::inout_kind_t inout() {
+        return static_cast<flecs::inout_kind_t>(m_term->inout);
+    }
+
+    flecs::oper_kind_t oper() {
+        return static_cast<flecs::oper_kind_t>(m_term->oper);
+    }
 
     ecs_term_t *m_term;
 
@@ -13338,30 +13362,41 @@ public:
             this->id(id);
         }
 
+    term(flecs::world_t *world_ptr, ecs_term_t t)
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(world_ptr) {
+            value = t;
+            value.move = false;
+            this->set_term(&value);
+        }        
+
     term(flecs::world_t *world_ptr, id_t r, id_t o) 
         : term_builder_i<term>(&value)
         , value({})
         , m_world(world_ptr) { 
             value.move = true; 
             this->id(r, o);
-        }        
+        }
 
     term(const term& obj) : term_builder_i<term>(&value) {
         m_world = obj.m_world;
         value = ecs_term_copy(&obj.value);
+        this->set_term(&value);
     }
 
     term(term&& obj) : term_builder_i<term>(&value) {
         m_world = obj.m_world;
         value = ecs_term_move(&obj.value);
         obj.reset();
+        this->set_term(&value);
     }
 
     term& operator=(const term& obj) {
         ecs_assert(m_world == obj.m_world, ECS_INVALID_PARAMETER, NULL);
         ecs_term_fini(&value);
         value = ecs_term_copy(&obj.value);
-        m_term = nullptr;
+        this->set_term(&value);
         return *this;
     }
 
@@ -13369,7 +13404,7 @@ public:
         ecs_assert(m_world == obj.m_world, ECS_INVALID_PARAMETER, NULL);
         ecs_term_fini(&value);
         value = obj.value;
-        m_term = nullptr;
+        this->set_term(&value);
         obj.reset();
         return *this;
     }   
@@ -15408,6 +15443,28 @@ public:
             _::iter_invoker<Func>(func).invoke(&it);
         }
     }  
+
+    template <typename Func>
+    void each_term(const Func& func) {
+        const ecs_filter_t *f = ecs_query_get_filter(m_query);
+        ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
+
+        for (int i = 0; i < f->term_count; i ++) {
+            flecs::term t(m_world, f->terms[i]);
+            func(t);
+        }
+    }
+
+    flecs::term term(int32_t index) {
+        const ecs_filter_t *f = ecs_query_get_filter(m_query);
+        ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
+        return flecs::term(m_world, f->terms[index]);
+    }
+
+    int32_t term_count() {
+        const ecs_filter_t *f = ecs_query_get_filter(m_query);
+        return f->term_count;   
+    }
 
 protected:
     world_t *m_world;

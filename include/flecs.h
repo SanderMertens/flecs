@@ -2917,6 +2917,16 @@ FLECS_API
 void ecs_query_fini(
     ecs_query_t *query);
 
+/** Get filter object of query.
+ * This operation obtains a pointer to the internally constructed filter object
+ * of the query and can be used to introspect the query terms.
+ *
+ * @param query The query.
+ */
+FLECS_API
+const ecs_filter_t* ecs_query_get_filter(
+    ecs_query_t *query);    
+
 /** Return a query iterator.
  * A query iterator lets an application iterate over entities that match the
  * specified query. If a sorting function is specified, the query will check

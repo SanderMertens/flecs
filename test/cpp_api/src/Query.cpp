@@ -776,3 +776,65 @@ void Query_test_auto_defer_iter() {
     test_int(e2.get<Value>()->value, 21);
     test_int(e3.get<Value>()->value, 31);
 }
+
+void Query_inspect_terms() {
+    flecs::world world;
+
+    auto p = world.entity();
+
+    auto q = world.query_builder<Position>()
+        .term<Velocity>()
+        .term(flecs::ChildOf, p)
+        .build();
+
+    test_int(3, q.term_count());
+
+    auto t = q.term(0);
+    test_int(t.id(), world.id<Position>());
+    test_int(t.oper(), flecs::And);
+    test_int(t.inout(), flecs::InOutDefault);
+
+    t = q.term(1);
+    test_int(t.id(), world.id<Velocity>());
+    test_int(t.oper(), flecs::And);
+    test_int(t.inout(), flecs::InOutDefault);
+
+    t = q.term(2);
+    test_int(t.id(), world.pair(flecs::ChildOf, p));
+    test_int(t.oper(), flecs::And);
+    test_int(t.inout(), flecs::InOutDefault);
+    test_assert(t.id().object() == p);
+}
+
+void Query_inspect_terms_w_each() {
+    flecs::world world;
+
+    auto p = world.entity();
+
+    auto q = world.query_builder<Position>()
+        .term<Velocity>()
+        .term(flecs::ChildOf, p)
+        .build();
+
+    int32_t count =  0;
+    q.each_term([&](flecs::term& t) {
+        if (count == 0) {
+            test_int(t.id(), world.id<Position>());
+        } else if (count == 1) {
+            test_int(t.id(), world.id<Velocity>());
+        } else if (count == 2) {
+            test_int(t.id(), world.pair(flecs::ChildOf, p));
+            test_assert(t.id().object() == p);
+        } else {
+            test_assert(false);
+        }
+
+        test_int(t.oper(), flecs::And);
+        test_int(t.inout(), flecs::InOutDefault);
+
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+

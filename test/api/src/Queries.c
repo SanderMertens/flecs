@@ -1252,3 +1252,22 @@ void Queries_only_not_from_singleton() {
 
     ecs_fini(world);
 }
+
+void Queries_get_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
+    test_assert(q != NULL);
+
+    const ecs_filter_t *f = ecs_query_get_filter(q);
+    test_assert(f != NULL);
+
+    test_int(f->term_count, 2);
+    test_int(f->terms[0].id, ecs_id(Position));
+    test_int(f->terms[1].id, ecs_id(Velocity));
+
+    ecs_fini(world);
+}

@@ -218,7 +218,27 @@ public:
         m_term->args[0].entity = pred;
 
         return *this;
-    }    
+    }
+
+    flecs::id id() {
+        return flecs::id(world(), m_term->id);
+    }
+
+    flecs::entity get_subject() {
+        return flecs::entity(world(), m_term->args[0].entity);
+    }
+
+    flecs::entity get_object() {
+        return flecs::entity(world(), m_term->args[1].entity);
+    }
+
+    flecs::inout_kind_t inout() {
+        return static_cast<flecs::inout_kind_t>(m_term->inout);
+    }
+
+    flecs::oper_kind_t oper() {
+        return static_cast<flecs::oper_kind_t>(m_term->oper);
+    }
 
     ecs_term_t *m_term;
 
@@ -256,30 +276,41 @@ public:
             this->id(id);
         }
 
+    term(flecs::world_t *world_ptr, ecs_term_t t)
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(world_ptr) {
+            value = t;
+            value.move = false;
+            this->set_term(&value);
+        }        
+
     term(flecs::world_t *world_ptr, id_t r, id_t o) 
         : term_builder_i<term>(&value)
         , value({})
         , m_world(world_ptr) { 
             value.move = true; 
             this->id(r, o);
-        }        
+        }
 
     term(const term& obj) : term_builder_i<term>(&value) {
         m_world = obj.m_world;
         value = ecs_term_copy(&obj.value);
+        this->set_term(&value);
     }
 
     term(term&& obj) : term_builder_i<term>(&value) {
         m_world = obj.m_world;
         value = ecs_term_move(&obj.value);
         obj.reset();
+        this->set_term(&value);
     }
 
     term& operator=(const term& obj) {
         ecs_assert(m_world == obj.m_world, ECS_INVALID_PARAMETER, NULL);
         ecs_term_fini(&value);
         value = ecs_term_copy(&obj.value);
-        m_term = nullptr;
+        this->set_term(&value);
         return *this;
     }
 
@@ -287,7 +318,7 @@ public:
         ecs_assert(m_world == obj.m_world, ECS_INVALID_PARAMETER, NULL);
         ecs_term_fini(&value);
         value = obj.value;
-        m_term = nullptr;
+        this->set_term(&value);
         obj.reset();
         return *this;
     }   

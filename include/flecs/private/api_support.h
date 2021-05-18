@@ -80,12 +80,6 @@ bool ecs_identifier_is_0(
 bool ecs_identifier_is_var(
     const char *id);
 
-/** Get filter from query */
-FLECS_API
-ecs_filter_t* ecs_query_get_filter(
-    ecs_query_t *query);
-
-
 #define ECS_INVALID_ENTITY (1)
 #define ECS_INVALID_PARAMETER (2)
 #define ECS_INVALID_COMPONENT_ID (3)

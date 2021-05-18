@@ -2236,7 +2236,7 @@ void ecs_query_fini(
     ecs_sparse_remove(world->queries, query->id);
 }
 
-ecs_filter_t* ecs_query_get_filter(
+const ecs_filter_t* ecs_query_get_filter(
     ecs_query_t *query)
 {
     return &query->filter;
@@ -2934,3 +2934,4 @@ bool ecs_query_orphaned(
 {
     return query->flags & EcsQueryIsOrphaned;
 }
+

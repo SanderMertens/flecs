@@ -315,9 +315,9 @@ public:
             // Find destination table that has all components
             ecs_table_t *prev = table, *next;
             size_t elem = 0;
-            flecs::array<ecs_id_t, sizeof...(Args)> added;
+            IdArray added;
 
-            // Iterate components, onlt store added component ids in added array
+            // Iterate components, only store added component ids in added array
             DummyArray dummy_before ({ (
                 next = ecs_table_add_id(world, prev, w.id<Args>()),
                 elem = store_added(added, elem, prev, next, w.id<Args>()),
