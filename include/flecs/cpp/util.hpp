@@ -245,6 +245,14 @@ public:
     array_iterator<T> end() {
         return array_iterator<T>(m_array, Size);
     }
+
+    size_t size() {
+        return Size;
+    }
+
+    T* ptr() {
+        return m_array;
+    }
 private:
     T m_array[Size];
 };
@@ -258,13 +266,28 @@ public:
     T operator[](size_t index) { abort(); (void)index; return T(); }
     array_iterator<T> begin() { return array_iterator<T>(nullptr, 0); }
     array_iterator<T> end() { return array_iterator<T>(nullptr, 0); }
+
+    size_t size() {
+        return 0;
+    }
+
+    T* ptr() {
+        return NULL;
+    }
 };
 
-// Utility to get actual component type
+// Utility to get actual type
 template<typename Type>
 struct base_type {
     typedef typename std::remove_pointer<
         typename std::decay<Type>::type>::type type;
+};
+
+// Utility to get actual argument type (doesn't remove const)
+template<typename Type>
+struct base_arg_type {
+    typedef typename std::remove_pointer<
+        typename std::remove_reference<Type>::type>::type type;
 };
 
 namespace _ 

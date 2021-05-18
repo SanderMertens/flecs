@@ -48,13 +48,6 @@ void ecs_set_watch(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-/* Does one of the entity containers has specified component */
-ecs_entity_t ecs_find_in_type(
-    const ecs_world_t *world,
-    ecs_type_t table_type,
-    ecs_entity_t component,
-    ecs_entity_t flags);
-
 /* Obtain entity info */
 bool ecs_get_info(
     const ecs_world_t *world,

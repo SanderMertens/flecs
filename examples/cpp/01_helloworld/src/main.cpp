@@ -3,11 +3,6 @@
 
 struct Position {
     double x, y;
-    Position& set(double xa, double ya) {
-        x = xa;
-        y = ya;
-        return *this;
-    }
 };
 
 struct Velocity {
@@ -23,14 +18,25 @@ int main(int argc, char *argv[]) {
     auto e = ecs.entity("MyEntity");
 
     // Set the Position component on the entity.
-    e.set<Position>({10, 20});
+    e.set<Position>({5, 10});
 
-    // Get the Position component.
-    const Position *p = e.get<Position>();
+    // Print the Position component
+    const Position *ptr = e.get<Position>();
+    std::cout << "Position: " 
+              << ptr->x << ", " 
+              << ptr->y << std::endl << std::endl;
 
-    std::cout << "Position of " << e.name() << " is {" 
-              << p->x << ", " << p->y << "}" 
-              << std::endl;
+    // Set both Position and Velocity
+    e.set([](Position& p, Velocity& v) {
+        p = {10, 20};
+        v = {1, 2};
+    });
+
+    // Print both Position and Velocity
+    e.get([](const Position& p, const Velocity& v) {
+        std::cout << "Position: " << p.x << ", " << p.y << std::endl;
+        std::cout << "Velocity: " << v.x << ", " << v.y << std::endl;
+    });
 
     return 0;
 }

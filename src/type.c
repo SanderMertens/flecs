@@ -285,10 +285,6 @@ bool search_type(
         return false;
     }
 
-    if (!id) {
-        return true;
-    }
-
     if (max_depth && depth > max_depth) {
         return false;
     }
@@ -297,7 +293,7 @@ bool search_type(
     int32_t i, count = ecs_vector_count(type);
     int matched = 0;
 
-    if (depth >= min_depth) {
+    if (id && depth >= min_depth) {
         for (i = 0; i < count; i ++) {
             int ret = match_id(world, type, ids[i], id);
             switch(ret) {
@@ -326,8 +322,7 @@ bool search_type(
             }
 
             ecs_type_t base_type = ecs_get_type(world, base);
-
-            if (search_type(world, base_type, id, rel, 
+            if (!id || search_type(world, base_type, id, rel, 
                 min_depth, max_depth, depth + 1, out)) 
             {
                 if (out && !*out) {

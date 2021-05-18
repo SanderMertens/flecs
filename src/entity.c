@@ -1279,7 +1279,7 @@ void add_remove(
 }
 
 static
-void add_entities_w_info(
+void add_ids_w_info(
     ecs_world_t * world,
     ecs_entity_t entity,
     ecs_entity_info_t * info,
@@ -1297,7 +1297,7 @@ void add_entities_w_info(
 }
 
 static
-void remove_entities_w_info(
+void remove_ids_w_info(
     ecs_world_t * world,
     ecs_entity_t entity,
     ecs_entity_info_t * info,
@@ -1315,7 +1315,7 @@ void remove_entities_w_info(
 }
 
 static
-void add_entities(
+void add_ids(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entities_t * components)
@@ -1344,7 +1344,7 @@ void add_entities(
 }
 
 static
-void remove_entities(
+void remove_ids(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entities_t * components)
@@ -1397,7 +1397,7 @@ void *get_mutable(
             .count = 1
         };
 
-        add_entities_w_info(world, entity, info, &to_add);
+        add_ids_w_info(world, entity, info, &to_add);
 
         ecs_get_info(world, entity, info);
         ecs_assert(info->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1469,36 +1469,34 @@ void ecs_set_watch(
     }
 }
 
-ecs_entity_t ecs_find_in_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t component,
-    ecs_entity_t flags)
-{
-    ecs_vector_each(type, ecs_entity_t, c_ptr, {
-        ecs_entity_t c = *c_ptr;
-
-        if (!ECS_HAS_RELATION(c, flags)) {
-            continue;
-        }
-
-        ecs_entity_t e = ecs_pair_object(world, c);
-
-        if (component) {
-            ecs_type_t component_type = ecs_get_type(world, e);
-            if (!ecs_type_has_id(world, component_type, component)) {
-                continue;
-            }
-        }
-
-        return e;
-    });
-
-    return 0;
-}
-
 
 /* -- Public functions -- */
+
+bool ecs_commit(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_record_t *record,
+    ecs_table_t *table,
+    ecs_entities_t *added,
+    ecs_entities_t *removed)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_t *src_table = NULL;
+    if (!record) {
+        record = ecs_eis_get(world, entity);
+        src_table = record->table;
+    }
+
+    ecs_entity_info_t info = {0};
+    if (record) {
+        set_info_from_record(entity, &info, record);
+    }
+
+    commit(world, entity, &info, table, added, removed);
+
+    return src_table != table;
+}
 
 ecs_entity_t ecs_new_id(
     ecs_world_t *world)
@@ -1885,18 +1883,31 @@ ecs_entity_t ecs_component_init(
     const ecs_component_desc_t *desc)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_stage_from_world(&world);
+    world = (ecs_world_t*)ecs_get_world(world);
 
     bool is_readonly = world->is_readonly;
+    bool is_deferred = ecs_is_deferred(world);
+    int32_t defer_count = 0;
+    ecs_vector_t *defer_queue = NULL;
+    ecs_stage_t *stage = NULL;
 
-    /* If world is in progress component may be registered, but only when not
-     * in multithreading mode. */
-    if (is_readonly) {
+    /* If world is readonly or deferring is enabled, component registration can
+     * still happen directly on the main storage, but only if the application
+     * is singlethreaded. */
+    if (is_readonly || is_deferred) {
         ecs_assert(ecs_get_stage_count(world) <= 1, 
             ECS_INVALID_WHILE_ITERATING, NULL);
 
-        /* Component creation should not be deferred */
+        /* Silence readonly warnings */
         world->is_readonly = false;
+
+        /* Hack around safety checks (this ought to look ugly) */
+        ecs_world_t *temp_world = world;
+        stage = ecs_stage_from_world(&temp_world);
+        defer_count = stage->defer;
+        defer_queue = stage->defer_queue;
+        stage->defer = 0;
+        stage->defer_queue = NULL;
     }
 
     ecs_entity_desc_t entity_desc = desc->entity;
@@ -1935,8 +1946,11 @@ ecs_entity_t ecs_component_init(
     /* Ensure components cannot be deleted */
     ecs_add_pair(world, result, EcsOnDelete, EcsThrow);    
 
-    if (is_readonly) {
-        world->is_readonly = true;
+    if (is_readonly || is_deferred) {
+        /* Restore readonly state / defer count */
+        world->is_readonly = is_readonly;
+        stage->defer = defer_count;
+        stage->defer_queue = defer_queue;
     }
 
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
@@ -2106,7 +2120,7 @@ void ecs_clear(
 
         /* Remove all components */
         ecs_entities_t to_remove = ecs_type_to_entities(type);
-        remove_entities_w_info(world, entity, &info, &to_remove);
+        remove_ids_w_info(world, entity, &info, &to_remove);
     }    
 
     ecs_defer_flush(world, stage);
@@ -2401,7 +2415,7 @@ void ecs_add_type(
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     ecs_entities_t components = ecs_type_to_entities(type);
-    add_entities(world, entity, &components);
+    add_ids(world, entity, &components);
 }
 
 void ecs_add_id(
@@ -2414,7 +2428,7 @@ void ecs_add_id(
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     ecs_entities_t components = { .array = &id, .count = 1 };
-    add_entities(world, entity, &components);
+    add_ids(world, entity, &components);
 }
 
 void ecs_remove_type(
@@ -2426,7 +2440,7 @@ void ecs_remove_type(
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     ecs_entities_t components = ecs_type_to_entities(type);
-    remove_entities(world, entity, &components);
+    remove_ids(world, entity, &components);
 }
 
 void ecs_remove_id(
@@ -2439,7 +2453,7 @@ void ecs_remove_id(
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     ecs_entities_t components = { .array = &id, .count = 1 };
-    remove_entities(world, entity, &components);
+    remove_ids(world, entity, &components);
 }
 
 // DEPRECATED
@@ -2972,8 +2986,14 @@ ecs_entity_t ecs_get_object_w_id(
     }
 
     ecs_type_t type = ecs_get_type(world, entity);    
-    ecs_entity_t object = ecs_find_in_type(world, type, id, rel);
-    return object;
+    ecs_entity_t object;
+
+    /* Find first object for relation */
+    if (ecs_type_find_id(world, type, id, rel, 1, 0, &object)) {
+        return ecs_get_alive(world, object);
+    } else {
+        return 0;
+    }
 }
 
 const char* ecs_get_name(
@@ -3410,7 +3430,7 @@ void flush_bulk_new(
     } else {
         int i, count = op->is._n.count;
         for (i = 0; i < count; i ++) {
-            add_entities(world, ids[i], &op->components);
+            add_ids(world, ids[i], &op->components);
         }
     }
 
@@ -3508,13 +3528,13 @@ bool ecs_defer_flush(
                 case EcsOpAdd:
                     if (valid_components(world, &op->components)) {
                         world->add_count ++;
-                        add_entities(world, e, &op->components);
+                        add_ids(world, e, &op->components);
                     } else {
                         ecs_delete(world, e);
                     }
                     break;
                 case EcsOpRemove:
-                    remove_entities(world, e, &op->components);
+                    remove_ids(world, e, &op->components);
                     break;
                 case EcsOpClone:
                     ecs_clone(world, e, op->component, op->is._1.clone_value);

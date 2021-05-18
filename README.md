@@ -64,9 +64,12 @@ This is a simple flecs example in the C99 API:
 
 ```c
 typedef struct {
-  float x;
-  float y;
+  float x, y;
 } Position, Velocity;
+
+typedef struct {
+  float value;
+} Mass;
 
 void Move(ecs_iter_t *it) {
   Position *p = ecs_term(it, Position, 1);
@@ -79,6 +82,64 @@ void Move(ecs_iter_t *it) {
   }
 }
 
+int main(int argc, char *argv[]) {
+  ecs_world_t *ecs = ecs_init();
+
+  ECS_COMPONENT(ecs, Position);
+  ECS_COMPONENT(ecs, Velocity);
+  ECS_COMPONENT(ecs, Mass);
+
+  ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, [in] Velocity);
+
+  ecs_entity_t e = ecs_entity_init(ecs, &(ecs_entity_desc_t){
+    .name = "MyEntity"
+  });
+
+  ecs_set(ecs, e, Position, {0, 0});
+  ecs_set(ecs, e, Velocity, {1, 1});
+  ecs_set(ecs, e, Mass, {50});
+
+  while (ecs_progress(ecs, 0)) { }
+}
+```
+
+This is the same example in the C++11 API:
+
+```c++
+struct Position {
+  float x, y;
+};
+
+struct Velocity {
+  float x, y;
+};
+
+int main(int argc, char *argv[]) {
+  flecs::world ecs;
+
+  ecs.system<Position, const Velocity>()
+    .each([](flecs::entity e, Position& p, const Velocity& v) {
+      p.x += v.x * e.delta_time();
+      p.y += v.y * e.delta_time();
+      std::cout << "Entity " << e.name() << " moved!" << std::endl;
+    });
+
+  ecs.entity("MyEntity")
+    .set<Mass>({50})
+    .set([](Position& p, Velocity& v) {
+      p = {10, 20};
+      v = {2, 2};
+    });
+    
+  while (ecs.progress()) { }
+}
+```
+
+The first C example used macro's to emulate a type-safe layer on top of the
+underlying generic API. This example uses the C API without macro's (system code
+omitted as it's the same as the previous C example):
+
+```c
 int main(int argc, char *argv[]) {
   ecs_world_t *ecs = ecs_init();
 
@@ -112,61 +173,6 @@ int main(int argc, char *argv[]) {
 
   // Run the main loop
   while (ecs_progress(ecs, 0)) { }
-}
-```
-
-Because C99 lacks generics, the API provides a number of convenience macro's 
-that reduce boilerplate & improve type safety. This is the same example
-with macro's (system implementation ommitted since it doesn't change):
-
-```c
-int main(int argc, char *argv[]) {
-  ecs_world_t *ecs = ecs_init();
-
-  ECS_COMPONENT(ecs, Position);
-  ECS_COMPONENT(ecs, Velocity);
-
-  ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, [in] Velocity);
-
-  ecs_entity_t e = ecs_entity_init(ecs, &(ecs_entity_desc_t){
-    .name = "MyEntity"
-  });
-
-  ecs_set(ecs, e, Position, {0, 0});
-  ecs_set(ecs, e, Velocity, {1, 1});
-
-  while (ecs_progress(ecs, 0)) { }
-}
-```
-
-This is the same example in the C++11 API:
-
-```c++
-struct Position {
-  float x;
-  float y;
-};
-
-struct Velocity {
-  float x;
-  float y;
-};
-
-int main(int argc, char *argv[]) {
-  flecs::world ecs;
-
-  ecs.system<Position, const Velocity>()
-    .each([](flecs::entity e, Position& p, const Velocity& v) {
-      p.x += v.x * e.delta_time();
-      p.y += v.y * e.delta_time();
-      std::cout << "Entity " << e.name() << " moved!" << std::endl;
-    });
-
-  ecs.entity("MyEntity")
-    .set<Position>({0, 0})
-    .set<Velocity>({1, 1});
-
-  while (ecs.progress()) { }
 }
 ```
 

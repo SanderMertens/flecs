@@ -338,6 +338,22 @@ public:
         return ecs_get_id(m_world, m_id, ecs_pair(relation.id(), object.id()));
     }
 
+    /** Get 1..N components.
+     * This operation accepts a callback with as arguments the components to
+     * retrieve. The callback will only be invoked when the entity has all
+     * the components.
+     *
+     * This operation is faster than individually calling get for each component
+     * as it only obtains entity metadata once.
+     *
+     * @param func The callback to invoke.
+     * @return True if the entity has all components, false if not.
+     */
+    template <typename Func, typename _::is_function<Func>::type* = nullptr>
+    bool get(const Func& func) const {
+        return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
+    }
+
     /** Get the object part from a pair.
      * This operation gets the value for a pair from the entity. The relation
      * part of the pair should not be a component.
@@ -364,12 +380,14 @@ public:
      */
     template <typename T>
     flecs::entity_view get_parent() {
-        return flecs::entity_view(m_world, ecs_get_parent_w_entity(m_world, m_id, 
-            _::cpp_type<T>::id(m_world)));
+        return flecs::entity_view(m_world, 
+            ecs_get_parent_w_entity(m_world, m_id, 
+                _::cpp_type<T>::id(m_world)));
     }
 
     flecs::entity_view get_parent(flecs::entity_view e) {
-        return flecs::entity_view(m_world, ecs_get_parent_w_entity(m_world, m_id, e.id()));
+        return flecs::entity_view(m_world, 
+            ecs_get_parent_w_entity(m_world, m_id, e.id()));
     }    
 
     /** Lookup an entity by name.
@@ -960,7 +978,7 @@ public:
      * @tparam T The component to set.
      * @param value The value to assign to the component.
      */
-    template <typename T>
+    template <typename T, typename _::no_function<T>::type* = nullptr>
     const Base& set(const T& value) const {
         auto comp_id = _::cpp_type<T>::id(this->base_world());
 
@@ -984,7 +1002,7 @@ public:
      * @tparam T The component to set.
      * @param value The value to assign to the component.
      */
-    template <typename T>
+    template <typename T, typename _::no_function<T>::type* = nullptr>
     const Base& set(T&& value) const {
         auto comp_id = _::cpp_type<T>::id(this->base_world());
 
@@ -1063,6 +1081,28 @@ public:
             ecs_pair(relation, comp_id),
             sizeof(Object), &value);
 
+        return *this;
+    }
+
+    /** Set 1..N components.
+     * This operation accepts a callback with as arguments the components to
+     * set. If the entity does not have all of the provided components, they
+     * will be added.
+     *
+     * This operation is faster than individually calling get for each component
+     * as it only obtains entity metadata once. When this operation is called
+     * while deferred, its performance is equivalent to that of calling get_mut
+     * for each component separately.
+     *
+     * The operation will invoke modified for each component after the callback
+     * has been invoked.
+     *
+     * @param func The callback to invoke.
+     */
+    template <typename Func, typename _::is_function<Func>::type* = nullptr>
+    const Base& set(const Func& func) const {
+        _::entity_with_invoker<Func>::invoke_get_mut(
+            this->base_world(), this->base_id(), func);
         return *this;
     }
 

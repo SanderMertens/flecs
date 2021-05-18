@@ -1683,7 +1683,10 @@
                 "async_stage_new",
                 "async_stage_no_get",
                 "async_stage_readonly",
-                "async_stage_is_async"
+                "async_stage_is_async",
+                "register_component_while_in_progress",
+                "register_component_while_staged",
+                "register_component_while_deferred"
             ]
         }, {
             "id": "SingleThreadStaging",

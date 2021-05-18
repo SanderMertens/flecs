@@ -3375,6 +3375,15 @@ FLECS_API
 bool ecs_defer_begin(
     ecs_world_t *world);
 
+/** Test if deferring is enabled for current stage.
+ * 
+ * @param world The world.
+ * @return True if deferred, false if not.
+ */
+FLECS_API
+bool ecs_is_deferred(
+    const ecs_world_t *world);
+
 /** End block of operations to defer. 
  * See defer_begin.
  *
@@ -3533,6 +3542,10 @@ bool ecs_stage_is_async(
 
 /**
  * @defgroup table_functions Public table operations
+ * @brief Low-level table functions. These functions are intended to enable the
+ *        creation of higher-level operations. It is not recommended to use
+ *        these operations directly in application code as they do not provide
+ *        the same safety guarantees as the other APIs.
  * @{
  */
 
@@ -3613,6 +3626,67 @@ ecs_record_t ecs_table_insert(
 FLECS_API
 int32_t ecs_table_count(
     const ecs_table_t *table);
+
+/** Get table that has all components of current table plus the specified id.
+ * If the provided table already has the provided id, the operation will return
+ * the provided table.
+ *
+ * @param world The world.
+ * @param table The table.
+ * @param id The id to add.
+ * @result The resulting table.
+ */
+FLECS_API
+ecs_table_t* ecs_table_add_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id);
+
+/** Get table that has all components of current table minus the specified id.
+ * If the provided table doesn't have the provided id, the operation will return
+ * the provided table.
+ *
+ * @param world The world.
+ * @param table The table.
+ * @param id The id to remove.
+ * @result The resulting table.
+ */
+FLECS_API
+ecs_table_t* ecs_table_remove_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id);
+
+/** Commit (move) entity to a table.
+ * This operation moves an entity from its current table to the specified
+ * table. This may trigger the following actions:
+ * - Ctor for each component in the target table
+ * - Move for each overlapping component
+ * - Dtor for each component in the source table.
+ * - OnAdd triggers for non-overlapping components in the target table
+ * - OnRemove triggers for non-overlapping components in the source table.
+ *
+ * This operation is a faster than adding/removing components individually.
+ *
+ * The application must explicitly provide the difference in components between
+ * tables as the added/removed parameters. This can usually be derived directly
+ * from the result of ecs_table_add_id and esc_table_remove_id. These arrays are
+ * required to properly execute OnAdd/OnRemove triggers.
+ *
+ * @param world The world.
+ * @param entity The entity to commit.
+ * @param record The entity's record (optional, providing it saves a lookup).
+ * @param table The table to commit the entity to.
+ * @return True if the entity got moved, false otherwise.
+ */
+FLECS_API
+bool ecs_commit(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_record_t *record,
+    ecs_table_t *table,
+    ecs_entities_t *added,
+    ecs_entities_t *removed);
 
 /** @} */
 
