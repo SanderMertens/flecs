@@ -353,7 +353,7 @@ ecs_world_t *ecs_mini(void) {
     world->stats.systems_ran_frame = 0;
     world->stats.pipeline_build_count_total = 0;
     
-    world->range_check_enabled = true;
+    world->range_check_enabled = false;
 
     world->fps_sleep = 0;
 

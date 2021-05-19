@@ -111,6 +111,7 @@ void World_entity_range_offset_out_of_range() {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_enable_range_check(world, true);
     ecs_set_entity_range(world, 2000, 0);
 
     test_expect_abort();
@@ -127,6 +128,7 @@ void World_entity_range_limit_out_of_range() {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_enable_range_check(world, true);
     ecs_set_entity_range(world, 0, 2000);
 
     test_expect_abort();
@@ -227,6 +229,7 @@ void World_entity_range_add_out_of_range_in_progress() {
 
     ECS_SYSTEM(world, AddOutOfRange, EcsOnUpdate, Position, :Velocity);
 
+    ecs_enable_range_check(world, true);
     ecs_set_entity_range(world, 500, 1000);
 
     /* Dummy entity to invoke the system */
