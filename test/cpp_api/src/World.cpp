@@ -145,47 +145,47 @@ void World_multi_world_module() {
 
 
 void World_type_id() {
-    flecs::world w;
+    flecs::world ecs;
 
-    auto p = w.component<Position>();
+    auto p = ecs.component<Position>();
 
     test_assert(p.id() == flecs::type_id<Position>());
 }
 
 void World_different_comp_same_name() {
-    flecs::world w;
+    flecs::world ecs;
 
     install_test_abort();
     test_expect_abort();
 
-    w.component<Position>("Position");
-    w.component<Velocity>("Position");
+    ecs.component<Position>("Position");
+    ecs.component<Velocity>("Position");
 }
 
 void World_reregister_after_reset() {
-    flecs::world w;
+    flecs::world ecs;
 
-    auto p1 = w.component<Position>("Position");
+    auto p1 = ecs.component<Position>("Position");
 
     // Simulate different binary
     flecs::_::cpp_type<Position>::reset();
 
-    auto p2 = w.component<Position>("Position");
+    auto p2 = ecs.component<Position>("Position");
 
     test_assert(p1.id() == p2.id());
 }
 
 void World_implicit_reregister_after_reset() {
-    flecs::world w;
+    flecs::world ecs;
 
-    w.entity().add<Position>();
+    ecs.entity().add<Position>();
 
     flecs::entity_t p_id_1 = flecs::type_id<Position>();
 
     // Simulate different binary
     flecs::_::cpp_type<Position>::reset();
 
-    w.entity().add<Position>();
+    ecs.entity().add<Position>();
 
     flecs::entity_t p_id_2 = flecs::type_id<Position>();
 
@@ -193,16 +193,16 @@ void World_implicit_reregister_after_reset() {
 }
 
 void World_reregister_after_reset_w_namespace() {
-    flecs::world w;
+    flecs::world ecs;
 
-    w.component<ns::FooComp>();
+    ecs.component<ns::FooComp>();
 
     flecs::entity_t p_id_1 = flecs::type_id<ns::FooComp>();
 
     // Simulate different binary
     flecs::_::cpp_type<ns::FooComp>::reset();
 
-    w.component<ns::FooComp>();
+    ecs.component<ns::FooComp>();
 
     flecs::entity_t p_id_2 = flecs::type_id<ns::FooComp>();
 
@@ -210,13 +210,13 @@ void World_reregister_after_reset_w_namespace() {
 }
 
 void World_reregister_namespace() {
-    flecs::world w;
+    flecs::world ecs;
 
-    w.component<ns::FooComp>();
+    ecs.component<ns::FooComp>();
 
     flecs::entity_t p_id_1 = flecs::type_id<ns::FooComp>();
 
-    w.component<ns::FooComp>();
+    ecs.component<ns::FooComp>();
 
     flecs::entity_t p_id_2 = flecs::type_id<ns::FooComp>();
 
@@ -224,38 +224,38 @@ void World_reregister_namespace() {
 }
 
 void World_reregister_after_reset_different_name() {
-    flecs::world w;
+    flecs::world ecs;
 
     install_test_abort();
     test_expect_abort();    
 
-    w.component<Position>("Position");
+    ecs.component<Position>("Position");
 
     // Simulate different binary
     flecs::_::cpp_type<Position>::reset();
 
-    w.component<Position>("Velocity");
+    ecs.component<Position>("Velocity");
 }
 
 void World_reimport() {
-    flecs::world w;
+    flecs::world ecs;
 
-    auto m1 = w.import<FooModule>();
+    auto m1 = ecs.import<FooModule>();
 
-    auto m2 = w.import<FooModule>();
+    auto m2 = ecs.import<FooModule>();
     
     test_assert(m1.id() == m2.id());
 }
 
 void World_reimport_module_after_reset() {
-    flecs::world w;
+    flecs::world ecs;
 
-    auto m1 = w.import<FooModule>();
+    auto m1 = ecs.import<FooModule>();
 
     // Simulate different binary
     flecs::_::cpp_type<FooModule>::reset();
 
-    auto m2 = w.import<FooModule>();
+    auto m2 = ecs.import<FooModule>();
     
     test_assert(m1.id() == m2.id());
 }
@@ -263,15 +263,15 @@ void World_reimport_module_after_reset() {
 void World_reimport_module_new_world() {
     flecs::entity e1;
     {
-        flecs::world w;
+        flecs::world ecs;
 
-        e1 = w.import<FooModule>();
+        e1 = ecs.import<FooModule>();
     }
 
     {
-        flecs::world w;
+        flecs::world ecs;
 
-        auto e2 = w.import<FooModule>();
+        auto e2 = ecs.import<FooModule>();
         
         test_assert(e1.id() == e2.id());
     }
@@ -295,32 +295,32 @@ void World_reimport_namespaced_module() {
 
 
 void World_c_interop_module() {
-    flecs::world w;
+    flecs::world ecs;
 
-    w.import<test::interop::module>();
+    ecs.import<test::interop::module>();
 
-    auto e_pos = w.lookup("test::interop::module::Position");
+    auto e_pos = ecs.lookup("test::interop::module::Position");
     test_assert(e_pos.id() != 0);
 }
 
 void World_c_interop_after_reset() {
-    flecs::world w;
+    flecs::world ecs;
 
-    w.import<test::interop::module>();
+    ecs.import<test::interop::module>();
 
-    auto e_pos = w.lookup("test::interop::module::Position");
+    auto e_pos = ecs.lookup("test::interop::module::Position");
     test_assert(e_pos.id() != 0);
 
     flecs::_::cpp_type<test::interop::module>::reset();
 
-    w.import<test::interop::module>();
+    ecs.import<test::interop::module>();
 }
 
 void World_implicit_register_w_new_world() {
     {
-        flecs::world w;
+        flecs::world ecs;
 
-        auto e = w.entity().set<Position>({10, 20});
+        auto e = ecs.entity().set<Position>({10, 20});
         test_assert(e.has<Position>());
         auto *p = e.get<Position>();
         test_assert(p != NULL);
@@ -330,9 +330,9 @@ void World_implicit_register_w_new_world() {
 
     {
         /* Recreate world, does not reset static state */
-        flecs::world w;
+        flecs::world ecs;
 
-        auto e = w.entity().set<Position>({10, 20});
+        auto e = ecs.entity().set<Position>({10, 20});
         test_assert(e.has<Position>());
         auto *p = e.get<Position>();
         test_assert(p != NULL);
@@ -342,32 +342,32 @@ void World_implicit_register_w_new_world() {
 }
 
 void World_count() {
-    flecs::world w;
+    flecs::world ecs;
 
-    test_int(w.count<Position>(), 0);
+    test_int(ecs.count<Position>(), 0);
 
-    w.entity().add<Position>();
-    w.entity().add<Position>();
-    w.entity().add<Position>();
-    w.entity().add<Position>().add<Mass>();
-    w.entity().add<Position>().add<Mass>();
-    w.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>().add<Mass>();
+    ecs.entity().add<Position>().add<Mass>();
+    ecs.entity().add<Position>().add<Velocity>();
 
-    test_int(w.count<Position>(), 6);
+    test_int(ecs.count<Position>(), 6);
 }
 
 void World_staged_count() {
-    flecs::world w;
+    flecs::world ecs;
 
-    flecs::world stage = w.get_stage(0);
+    flecs::world stage = ecs.get_stage(0);
 
-    w.staging_begin();
+    ecs.staging_begin();
 
     test_int(stage.count<Position>(), 0);
 
-    w.staging_end();
+    ecs.staging_end();
 
-    w.staging_begin();
+    ecs.staging_begin();
 
     stage.entity().add<Position>();
     stage.entity().add<Position>();
@@ -378,21 +378,315 @@ void World_staged_count() {
 
     test_int(stage.count<Position>(), 0);
 
-    w.staging_end();
+    ecs.staging_end();
 
     test_int(stage.count<Position>(), 6);
 }
 
 void World_async_stage_add() {
-    flecs::world w;
+    flecs::world ecs;
 
-    w.component<Position>();
+    ecs.component<Position>();
 
-    auto e = w.entity();
+    auto e = ecs.entity();
 
-    flecs::world async = w.async_stage();
+    flecs::world async = ecs.async_stage();
     e.mut(async).add<Position>();
     test_assert(!e.has<Position>());
     async.merge();
     test_assert(e.has<Position>());
+}
+
+void World_with_tag() {
+    flecs::world ecs;
+
+    auto Tag = ecs.entity();
+
+    ecs.with(Tag, [&]{
+        auto e1 = ecs.entity(); e1.set<Self>({e1});
+        auto e2 = ecs.entity(); e2.set<Self>({e2});
+        auto e3 = ecs.entity(); e3.set<Self>({e3});
+    });
+
+    // Ensures that while Self is (implicitly) registered within the with, it
+    // does not get any contents from the with.
+    auto self = ecs.component<Self>();
+    test_assert(!self.has(Tag));    
+
+    auto q = ecs.query_builder<>().term(Tag).build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e) {
+        test_assert(e.has(Tag));
+
+        test_bool(e.get([&](const Self& s) {
+            test_assert(s.value == e);
+        }), true);
+
+        count ++;
+    });
+
+    count ++;
+}
+
+void World_with_tag_type() {
+    flecs::world ecs;
+
+    struct Tag { };
+
+    ecs.with<Tag>([&]{
+        auto e1 = ecs.entity(); e1.set<Self>({e1});
+        auto e2 = ecs.entity(); e2.set<Self>({e2});
+        auto e3 = ecs.entity(); e3.set<Self>({e3});
+    });
+
+    // Ensures that while Self is (implicitly) registered within the with, it
+    // does not get any contents from the with.
+    auto self = ecs.component<Self>();
+    test_assert(!self.has<Tag>());
+
+    auto q = ecs.query_builder<>().term<Tag>().build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e) {
+        test_assert(e.has<Tag>());
+
+        test_bool(e.get([&](const Self& s) {
+            test_assert(s.value == e);
+        }), true);
+
+        count ++;
+    });
+
+    count ++;
+}
+
+void World_with_relation() {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Bob = ecs.entity();
+
+    ecs.with(Likes, Bob, [&]{
+        auto e1 = ecs.entity(); e1.set<Self>({e1});
+        auto e2 = ecs.entity(); e2.set<Self>({e2});
+        auto e3 = ecs.entity(); e3.set<Self>({e3});
+    });
+
+    // Ensures that while Self is (implicitly) registered within the with, it
+    // does not get any contents from the with.
+    auto self = ecs.component<Self>();
+    test_assert(!self.has(Likes, Bob));
+
+    auto q = ecs.query_builder<>().term(Likes, Bob).build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e) {
+        test_assert(e.has(Likes, Bob));
+
+        test_bool(e.get([&](const Self& s) {
+            test_assert(s.value == e);
+        }), true);
+
+        count ++;
+    });
+
+    count ++;
+}
+
+void World_with_relation_type() {
+    flecs::world ecs;
+
+    struct Likes { };
+    auto Bob = ecs.entity();
+
+    ecs.with<Likes>(Bob, [&]{
+        auto e1 = ecs.entity(); e1.set<Self>({e1});
+        auto e2 = ecs.entity(); e2.set<Self>({e2});
+        auto e3 = ecs.entity(); e3.set<Self>({e3});
+    });
+
+    // Ensures that while Self is (implicitly) registered within the with, it
+    // does not get any contents from the with.
+    auto self = ecs.component<Self>();
+    test_assert(!self.has<Likes>(Bob));
+
+    auto q = ecs.query_builder<>().term<Likes>(Bob).build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e) {
+        test_assert(e.has<Likes>(Bob));
+
+        test_bool(e.get([&](const Self& s) {
+            test_assert(s.value == e);
+        }), true);
+
+        count ++;
+    });
+
+    count ++;
+}
+
+void World_with_relation_object_type() {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Bob { };
+
+    ecs.with<Likes, Bob>([&]{
+        auto e1 = ecs.entity(); e1.set<Self>({e1});
+        auto e2 = ecs.entity(); e2.set<Self>({e2});
+        auto e3 = ecs.entity(); e3.set<Self>({e3});
+    });
+
+    // Ensures that while Self is (implicitly) registered within the with, it
+    // does not get any contents from the with.
+    auto self = ecs.component<Self>();
+    test_assert(!(self.has<Likes, Bob>()));
+
+    auto q = ecs.query_builder<>().term<Likes, Bob>().build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::entity e) {
+        test_assert((e.has<Likes, Bob>()));
+
+        test_bool(e.get([&](const Self& s) {
+            test_assert(s.value == e);
+        }), true);
+
+        count ++;
+    });
+
+    count ++;
+}
+
+void World_with_scope() {
+    flecs::world ecs;
+
+    auto parent = ecs.entity("P");
+
+    ecs.scope(parent, [&]{
+        auto e1 = ecs.entity("C1"); e1.set<Self>({e1});
+        auto e2 = ecs.entity("C2"); e2.set<Self>({e2});
+        auto e3 = ecs.entity("C3"); e3.set<Self>({e3});
+
+        // Ensure relative lookups work
+        test_assert(ecs.lookup("C1") == e1);
+        test_assert(ecs.lookup("C2") == e2);
+        test_assert(ecs.lookup("C3") == e3);
+
+        test_assert(parent.lookup("C1") == e1);
+        test_assert(parent.lookup("C2") == e2);
+        test_assert(parent.lookup("C3") == e3);
+
+        test_assert(ecs.lookup("::P::C1") == e1);
+        test_assert(ecs.lookup("::P::C2") == e2);
+        test_assert(ecs.lookup("::P::C3") == e3);
+    });
+
+    test_assert(parent.lookup("C1") != 0);
+    test_assert(parent.lookup("C2") != 0);
+    test_assert(parent.lookup("C3") != 0);
+
+    test_assert(ecs.lookup("P::C1") == parent.lookup("C1"));
+    test_assert(ecs.lookup("P::C2") == parent.lookup("C2"));
+    test_assert(ecs.lookup("P::C3") == parent.lookup("C3"));
+
+    // Ensures that while Self is (implicitly) registered within the with, it
+    // does not become a child of the parent.
+    auto self = ecs.component<Self>();
+    test_assert(!self.has(flecs::ChildOf, parent));
+
+    int count = 0;
+    auto q = ecs.query_builder<>().term(flecs::ChildOf, parent).build();
+
+    q.each([&](flecs::entity e) {
+        test_assert(e.has(flecs::ChildOf, parent));
+
+        test_bool(e.get([&](const Self& s){
+            test_assert(s.value == e);
+        }), true);
+
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void World_with_tag_nested() {
+    flecs::world ecs;
+
+    auto Tier1 = ecs.entity();
+    
+    ecs.with(Tier1, [&]{
+        ecs.entity("Tier2").with([&]{
+            ecs.entity("Tier3");
+        });
+    });
+
+    auto Tier2 = ecs.lookup("Tier2");
+    test_assert(Tier2 != 0);
+
+    auto Tier3 = ecs.lookup("Tier3");
+    test_assert(Tier3 != 0);
+
+    test_assert(Tier2.has(Tier1));
+    test_assert(Tier3.has(Tier2));
+}
+
+void World_with_scope_nested() {
+    flecs::world ecs;
+
+    auto parent = ecs.entity("P");
+
+    ecs.scope(parent, [&]{
+        auto child = ecs.entity("C").scope([&]{
+            auto gchild = ecs.entity("GC");
+            test_assert(gchild == ecs.lookup("GC"));
+            test_assert(gchild == ecs.lookup("::P::C::GC"));
+        });
+
+        // Ensure relative lookups work
+        test_assert(ecs.lookup("C") == child);
+        test_assert(ecs.lookup("::P::C") == child);
+        test_assert(ecs.lookup("::P::C::GC") != 0);
+    });
+
+    test_assert(0 == ecs.lookup("C"));
+    test_assert(0 == ecs.lookup("GC"));
+    test_assert(0 == ecs.lookup("C::GC"));
+
+    auto child = ecs.lookup("P::C");
+    test_assert(0 != child);
+    test_assert(child.has(flecs::ChildOf, parent));
+
+    auto gchild = ecs.lookup("P::C::GC");
+    test_assert(0 != gchild);
+    test_assert(gchild.has(flecs::ChildOf, child));
+}
+
+void World_recursive_lookup() {
+    flecs::world ecs;
+
+    auto A = ecs.entity("A");
+    auto B = ecs.entity("B");
+
+    auto P = ecs.entity("P");
+    P.scope([&]{
+        auto CA = ecs.entity("A");
+        test_assert(CA != A);
+
+        test_assert(CA == ecs.lookup("A"));
+        test_assert(CA == ecs.lookup("P::A"));
+        test_assert(CA == ecs.lookup("::P::A"));
+        test_assert(A == ecs.lookup("::A"));
+
+        test_assert(B == ecs.lookup("B"));
+        test_assert(B == ecs.lookup("::B"));
+    });
 }

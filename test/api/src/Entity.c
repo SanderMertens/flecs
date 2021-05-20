@@ -802,3 +802,85 @@ void Entity_init_w_core_name() {
 
     ecs_fini(world);
 }
+
+void Entity_init_w_with() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_set_with(world, Tag);
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){ });
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, Tag));
+
+    test_int(ecs_set_with(world, 0), Tag);
+
+    ecs_fini(world);
+}
+
+void Entity_init_w_with_w_name() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_set_with(world, Tag);
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){ 
+        .name = "foo"
+    });
+
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, Tag));
+    test_str(ecs_get_name(world, e), "foo");
+
+    test_int(ecs_set_with(world, 0), Tag);
+
+    ecs_fini(world);
+}
+
+void Entity_init_w_with_w_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_new_id(world);
+
+    ecs_set_with(world, Tag);
+    ecs_set_scope(world, parent);
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){ });
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, Tag));
+    test_assert(ecs_has_id(world, e, ecs_pair(EcsChildOf, parent)));
+
+    test_int(ecs_set_with(world, 0), Tag);
+    test_int(ecs_set_scope(world, 0), parent);
+
+    ecs_fini(world);
+}
+
+void Entity_init_w_with_w_name_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_new_id(world);
+
+    ecs_set_with(world, Tag);
+    ecs_set_scope(world, parent);
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "foo"
+    });
+
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, Tag));
+    test_assert(ecs_has_id(world, e, ecs_pair(EcsChildOf, parent)));
+    test_str(ecs_get_name(world, e), "foo");
+
+    test_int(ecs_set_with(world, 0), Tag);
+    test_int(ecs_set_scope(world, 0), parent);
+
+    ecs_fini(world);
+}

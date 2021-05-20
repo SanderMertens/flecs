@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
          * string-based type expression to create the type, as the type needs to
          * be fully constructed before registering it with the prefab parent. */
         ecs.prefab("Child")
-            .add(flecs::ChildOf, RootPrefab)
+            .child_of(RootPrefab)
             .is_a(ChildPrefab);
 
     /* Create new entity from Root. */

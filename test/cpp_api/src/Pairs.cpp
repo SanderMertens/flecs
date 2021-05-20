@@ -631,8 +631,8 @@ void Pairs_each_pair_w_childof() {
     auto p_2 = world.entity();
 
     auto e = world.entity()
-        .add(flecs::ChildOf, p_1)
-        .add(flecs::ChildOf, p_2);
+        .child_of(p_1)
+        .child_of(p_2);
 
     int32_t count = 0;
 
@@ -718,4 +718,24 @@ void Pairs_each_pair_w_recycled_obj() {
     });
 
     test_int(count, 2);
+}
+
+void Pairs_has_tag_w_object() {
+    flecs::world world;
+
+    struct Likes { };
+
+    auto Bob = world.entity();
+    auto e = world.entity().add<Likes>(Bob);
+    test_assert(e.has<Likes>(Bob));
+}
+
+void Pairs_has_object_tag() {
+    flecs::world world;
+
+    struct Bob { };
+
+    auto Likes = world.entity();
+    auto e = world.entity().add_object<Bob>(Likes);
+    test_assert(e.has_object<Bob>(Likes));
 }

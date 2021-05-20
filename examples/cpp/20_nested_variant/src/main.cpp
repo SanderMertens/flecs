@@ -19,23 +19,23 @@ int main(int argc, char *argv[]) {
         .set<Position>({15, 25});
 
     /* Create the root of the prefab hierarchy  */
-    auto Root = ecs.prefab("RootPrefab")
+    auto RootPrefab = ecs.prefab("RootPrefab")
         .set<Position>({10, 20});
         
         /* Create two child prefabs that inherit from ChildBase */
         ecs.prefab("Child1")
-            .add(flecs::ChildOf, Root)
-            .add(flecs::IsA, ChildBase)
+            .child_of(RootPrefab)
+            .is_a(ChildBase)
             .set<Velocity>({30, 40});
 
         ecs.prefab("Child2")
-            .add(flecs::ChildOf, Root)
-            .add(flecs::IsA, ChildBase)
+            .child_of(RootPrefab)
+            .is_a(ChildBase)
             .set<Velocity>({50, 60});            
 
     /* Create instance of Root */
     auto e = ecs.entity()
-        .is_a(Root);
+        .is_a(RootPrefab);
 
     /* Print types of child1 and child2 */
     auto child1 = e.lookup("Child1");
@@ -44,19 +44,23 @@ int main(int argc, char *argv[]) {
     auto child2 = e.lookup("Child2");
     std::cout << "Child2 type = [" << child2.type().str() << "]" << std::endl;
 
-    /* e shares Position from Root */
-    const Position *p = e.get<Position>();
-    std::cout << "Position of e = {" << p->x << ", " << p->y << "}" << std::endl;
+    /* e shares Position from RootPrefab */
+    e.get([](const Position& p) {
+        std::cout << "Position of e = {" << p.x << ", " << p.y << "}" 
+                  << std::endl;
+    });    
 
     /* Children will share Position from ChildBase and Velocity from the Child1
      * and Child2 prefabs respectively */
-    p = child1.get<Position>();
-    const Velocity *v = child1.get<Velocity>();
-    std::cout << "Child1 Position = {" << p->x << ", " << p->y << "} " 
-        << "Velocity = {" << v->x << ", " << v->y << "}" << std::endl;
+    child1.get([](const Position& p, const Velocity& v) {
+        std::cout << "Child1 Position = {" << p.x << ", " << p.y << "} " 
+                  <<        "Velocity = {" << v.x << ", " << v.y << "}" 
+                  << std::endl;
+    });
 
-    p = child2.get<Position>();
-    v = child2.get<Velocity>();
-    std::cout << "Child2 Position = {" << p->x << ", " << p->y << "} " 
-        << "Velocity = {" << v->x << ", " << v->y << "}" << std::endl;        
+    child2.get([](const Position& p, const Velocity& v) {
+        std::cout << "Child2 Position = {" << p.x << ", " << p.y << "} " 
+                  <<        "Velocity = {" << v.x << ", " << v.y << "}" 
+                  << std::endl;
+    });      
 }

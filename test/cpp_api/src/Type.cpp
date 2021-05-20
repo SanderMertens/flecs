@@ -37,7 +37,7 @@ void Type_add_childof() {
 
     auto parent = flecs::entity(world);
     auto type = flecs::type(world)
-        .add(flecs::ChildOf, parent);
+        .child_of(parent);
 
     auto entity = flecs::entity(world);
     test_assert(entity.id() != 0);

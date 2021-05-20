@@ -462,9 +462,9 @@ void QueryBuilder_childof_superset_term() {
     auto base = ecs.entity().set<Other>({10});
 
     auto 
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
 
     int32_t count = 0;
 
@@ -492,9 +492,9 @@ void QueryBuilder_childof_self_superset_term() {
     auto base = ecs.entity().set<Other>({10});
 
     auto 
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
     e = ecs.entity().set<Other>({20}); e.set<Self>({e});
     e = ecs.entity().set<Other>({20}); e.set<Self>({e});
 
@@ -585,9 +585,9 @@ void QueryBuilder_childof_superset_term_w_each() {
     auto base = ecs.entity().set<Other>({10});
 
     auto 
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
 
     int32_t count = 0;
 
@@ -610,9 +610,9 @@ void QueryBuilder_childof_self_superset_term_w_each() {
     auto base = ecs.entity().set<Other>({10});
 
     auto 
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
     e = ecs.entity().set<Other>({10}); e.set<Self>({e});
     e = ecs.entity().set<Other>({10}); e.set<Self>({e});
 
@@ -689,9 +689,9 @@ void QueryBuilder_childof_superset_shortcut() {
     auto base = ecs.entity().set<Other>({10});
 
     auto 
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
 
     int32_t count = 0;
 
@@ -714,9 +714,9 @@ void QueryBuilder_childof_superset_shortcut_w_self() {
     auto base = ecs.entity().set<Other>({10});
 
     auto 
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
-    e = ecs.entity().add(flecs::ChildOf, base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
+    e = ecs.entity().child_of(base); e.set<Self>({e});
     e = ecs.entity().set<Other>({10}); e.set<Self>({e});
     e = ecs.entity().set<Other>({10}); e.set<Self>({e});
 

@@ -693,6 +693,63 @@ public:
         ecs_unlock(m_world);
     }
 
+    /** All entities created in function are created with id.
+     */
+    template <typename Func>
+    void with(id_t with_id, const Func& func) const {
+        ecs_id_t prev = ecs_set_with(m_world, with_id);
+        func();
+        ecs_set_with(m_world, prev);    
+    }
+
+    /** All entities created in function are created with type.
+     */
+    template <typename T, typename Func>
+    void with(const Func& func) const {
+        with(this->id<T>(), func);
+    }
+
+    /** All entities created in function are created with relation.
+     */
+    template <typename Relation, typename Object, typename Func>
+    void with(const Func& func) const {
+        with(ecs_pair(this->id<Relation>(), this->id<Object>()), func);
+    }
+
+    /** All entities created in function are created with relation.
+     */
+    template <typename Relation, typename Func>
+    void with(id_t object, const Func& func) const {
+        with(ecs_pair(this->id<Relation>(), object), func);
+    } 
+
+    /** All entities created in function are created with relation.
+     */
+    template <typename Func>
+    void with(id_t relation, id_t object, const Func& func) const {
+        with(ecs_pair(relation, object), func);
+    }
+
+    /** All entities created in function are created in scope. All operations
+     * called in function (such as lookup) are relative to scope.
+     */
+    template <typename Func>
+    void scope(id_t parent, const Func& func) const {
+        ecs_entity_t prev = ecs_set_scope(m_world, parent);
+        func();
+        ecs_set_scope(m_world, prev);
+    }
+
+    /** Defer all operations called in function. If the world is already in
+     * deferred mode, do nothing.
+     */
+    template <typename Func>
+    void defer(const Func& func) const {
+        ecs_defer_begin(m_world);
+        func();
+        ecs_defer_end(m_world);
+    }
+
     /** Create a prefab.
      */
     template <typename... Args>

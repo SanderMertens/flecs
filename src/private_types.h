@@ -368,8 +368,7 @@ typedef struct ecs_op_n_t {
 } ecs_op_n_t;
 
 typedef struct ecs_op_t {
-    ecs_op_kind_t kind;         /* Operation kind */
-    ecs_entity_t scope;         /* Scope of operation (for new) */       
+    ecs_op_kind_t kind;         /* Operation kind */    
     ecs_entity_t component;     /* Single component (components.count = 1) */
     ecs_entities_t components;  /* Multiple components */
     union {
@@ -401,6 +400,7 @@ struct ecs_stage_t {
     /* Namespacing */
     ecs_table_t *scope_table;      /* Table for current scope */
     ecs_entity_t scope;            /* Entity of current scope */
+    ecs_entity_t with;             /* Id to add by default to new entities */
 
     /* Properties */
     bool auto_merge;               /* Should this stage automatically merge? */

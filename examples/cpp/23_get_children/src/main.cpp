@@ -23,11 +23,14 @@ int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
     // Create a simple hierarchy with 2 levels
-    auto Parent = ecs.entity("Parent");
-        auto Child1 = ecs.entity("Child1").add(flecs::ChildOf, Parent);
-            ecs.entity("GrandChild").add(flecs::ChildOf, Child1);
-        ecs.entity("Child2").add(flecs::ChildOf, Parent);
-        ecs.entity("Child3").add(flecs::ChildOf, Parent);
-    
-    print_tree(Parent);    
+    auto parent = ecs.entity("Parent").scope([&]{
+        ecs.entity("Child1").scope([&]{
+            ecs.entity("GrandChild");
+        });
+
+        ecs.entity("Child2");
+        ecs.entity("Child3");
+    });
+
+    print_tree(parent);    
 }

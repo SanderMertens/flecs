@@ -2602,6 +2602,29 @@ FLECS_API
 ecs_entity_t ecs_get_scope(
     const ecs_world_t *world);
 
+/** Set current with id.
+ * New entities are automatically created with the specified id.
+ *
+ * @param world The world.
+ * @param id The id.
+ * @return The previous id.
+ */
+FLECS_API
+ecs_entity_t ecs_set_with(
+    ecs_world_t *world,
+    ecs_id_t id);
+
+/** Get current with id.
+ * Get the id set with ecs_set_with.
+ *
+ * @param world The world.
+ * @param id The id.
+ * @return The previous id.
+ */
+FLECS_API
+ecs_entity_t ecs_get_with(
+    const ecs_world_t *world);
+
 /** Set a name prefix for newly created entities.
  * This is a utility that lets C modules use prefixed names for C types and
  * C functions, while using names for the entity names that do not have the 

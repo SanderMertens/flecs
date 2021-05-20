@@ -88,6 +88,28 @@ void Entity_set_2_after_fluent(void);
 void Entity_set_2_before_fluent(void);
 void Entity_set_2_after_set_1(void);
 void Entity_set_2_after_set_2(void);
+void Entity_with_self(void);
+void Entity_with_relation_type_self(void);
+void Entity_with_relation_self(void);
+void Entity_with_self_w_name(void);
+void Entity_with_self_nested(void);
+void Entity_with_after_builder_method(void);
+void Entity_with_before_builder_method(void);
+void Entity_with_scope(void);
+void Entity_with_scope_nested(void);
+void Entity_with_scope_nested_same_name_as_parent(void);
+void Entity_scope_after_builder_method(void);
+void Entity_scope_before_builder_method(void);
+void Entity_no_recursive_lookup(void);
+void Entity_defer_new_w_name(void);
+void Entity_defer_new_w_nested_name(void);
+void Entity_defer_new_w_scope_name(void);
+void Entity_defer_new_w_scope_nested_name(void);
+void Entity_defer_new_w_deferred_scope_nested_name(void);
+void Entity_defer_new_w_scope(void);
+void Entity_defer_new_w_with(void);
+void Entity_defer_new_w_name_scope_with(void);
+void Entity_defer_w_with_implicit_component(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -123,6 +145,8 @@ void Pairs_each_pair_by_type(void);
 void Pairs_each_pair_w_childof(void);
 void Pairs_each_pair_w_recycled_rel(void);
 void Pairs_each_pair_w_recycled_obj(void);
+void Pairs_has_tag_w_object(void);
+void Pairs_has_object_tag(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -415,6 +439,15 @@ void World_implicit_register_w_new_world(void);
 void World_count(void);
 void World_staged_count(void);
 void World_async_stage_add(void);
+void World_with_tag(void);
+void World_with_tag_type(void);
+void World_with_relation(void);
+void World_with_relation_type(void);
+void World_with_relation_object_type(void);
+void World_with_tag_nested(void);
+void World_with_scope(void);
+void World_with_scope_nested(void);
+void World_recursive_lookup(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -743,6 +776,94 @@ bake_test_case Entity_testcases[] = {
     {
         "set_2_after_set_2",
         Entity_set_2_after_set_2
+    },
+    {
+        "with_self",
+        Entity_with_self
+    },
+    {
+        "with_relation_type_self",
+        Entity_with_relation_type_self
+    },
+    {
+        "with_relation_self",
+        Entity_with_relation_self
+    },
+    {
+        "with_self_w_name",
+        Entity_with_self_w_name
+    },
+    {
+        "with_self_nested",
+        Entity_with_self_nested
+    },
+    {
+        "with_after_builder_method",
+        Entity_with_after_builder_method
+    },
+    {
+        "with_before_builder_method",
+        Entity_with_before_builder_method
+    },
+    {
+        "with_scope",
+        Entity_with_scope
+    },
+    {
+        "with_scope_nested",
+        Entity_with_scope_nested
+    },
+    {
+        "with_scope_nested_same_name_as_parent",
+        Entity_with_scope_nested_same_name_as_parent
+    },
+    {
+        "scope_after_builder_method",
+        Entity_scope_after_builder_method
+    },
+    {
+        "scope_before_builder_method",
+        Entity_scope_before_builder_method
+    },
+    {
+        "no_recursive_lookup",
+        Entity_no_recursive_lookup
+    },
+    {
+        "defer_new_w_name",
+        Entity_defer_new_w_name
+    },
+    {
+        "defer_new_w_nested_name",
+        Entity_defer_new_w_nested_name
+    },
+    {
+        "defer_new_w_scope_name",
+        Entity_defer_new_w_scope_name
+    },
+    {
+        "defer_new_w_scope_nested_name",
+        Entity_defer_new_w_scope_nested_name
+    },
+    {
+        "defer_new_w_deferred_scope_nested_name",
+        Entity_defer_new_w_deferred_scope_nested_name
+    },
+    {
+        "defer_new_w_scope",
+        Entity_defer_new_w_scope
+    },
+    {
+        "defer_new_w_with",
+        Entity_defer_new_w_with
+    },
+    {
+        "defer_new_w_name_scope_with",
+        Entity_defer_new_w_name_scope_with
+    },
+    {
+        "defer_w_with_implicit_component",
+        Entity_defer_w_with_implicit_component
     }
 };
 
@@ -878,6 +999,14 @@ bake_test_case Pairs_testcases[] = {
     {
         "each_pair_w_recycled_obj",
         Pairs_each_pair_w_recycled_obj
+    },
+    {
+        "has_tag_w_object",
+        Pairs_has_tag_w_object
+    },
+    {
+        "has_object_tag",
+        Pairs_has_object_tag
     }
 };
 
@@ -1971,6 +2100,42 @@ bake_test_case World_testcases[] = {
     {
         "async_stage_add",
         World_async_stage_add
+    },
+    {
+        "with_tag",
+        World_with_tag
+    },
+    {
+        "with_tag_type",
+        World_with_tag_type
+    },
+    {
+        "with_relation",
+        World_with_relation
+    },
+    {
+        "with_relation_type",
+        World_with_relation_type
+    },
+    {
+        "with_relation_object_type",
+        World_with_relation_object_type
+    },
+    {
+        "with_tag_nested",
+        World_with_tag_nested
+    },
+    {
+        "with_scope",
+        World_with_scope
+    },
+    {
+        "with_scope_nested",
+        World_with_scope_nested
+    },
+    {
+        "recursive_lookup",
+        World_recursive_lookup
     }
 };
 
@@ -2018,14 +2183,14 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        79,
+        101,
         Entity_testcases
     },
     {
         "Pairs",
         NULL,
         NULL,
-        33,
+        35,
         Pairs_testcases
     },
     {
@@ -2130,7 +2295,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        21,
+        30,
         World_testcases
     },
     {

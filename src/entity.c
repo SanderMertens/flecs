@@ -1116,7 +1116,7 @@ void new(
 {
     ecs_entity_info_t info = {0};
     ecs_table_t *table = ecs_table_traverse_add(
-        world, world->stage.scope_table, to_add, NULL);
+        world, &world->store.root, to_add, NULL);
     new_entity(world, entity, &info, table, to_add);
 }
 
@@ -1532,6 +1532,23 @@ ecs_entity_t ecs_new_id(
     return entity;
 }
 
+ecs_entity_t ecs_set_with(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_id_t prev = stage->with;
+    stage->with = id;
+    return prev;
+}
+
+ecs_entity_t ecs_get_with(
+    const ecs_world_t *world)
+{
+    const ecs_stage_t *stage = ecs_stage_from_readonly_world(world);
+    return stage->with;
+}
+
 ecs_entity_t ecs_new_component_id(
     ecs_world_t *world)
 {
@@ -1576,19 +1593,41 @@ ecs_entity_t ecs_new_w_type(
     ecs_type_t type)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (!type) {
+        return ecs_new_w_id(world, 0);
+    }
 
     ecs_stage_t *stage = ecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new_id(world);
+    ecs_id_t with = stage->with;
+    ecs_entity_t scope = stage->scope;
 
     ecs_entities_t to_add = ecs_type_to_entities(type);
     if (ecs_defer_new(world, stage, entity, &to_add)) {
+        if (with) {
+            ecs_add_id(world, entity, with);
+        }
+        if (scope) {
+            ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
+        }
         return entity;
     }
 
-    if (type || world->stage.scope) {
-        new(world, entity, &to_add);
-    } else {
-        ecs_eis_set(world, entity, &(ecs_record_t){ 0 });
+    new(world, entity, &to_add);
+
+    ecs_id_t ids[2];
+    to_add = (ecs_entities_t){ .array = ids, .count = 0 };
+
+    if (with) {
+        ids[to_add.count ++] = with;
+    }
+
+    if (scope) {
+        ids[to_add.count ++] = ecs_pair(EcsChildOf, scope);
+    }
+
+    if (to_add.count) {
+        add_ids(world, entity, &to_add);
     }
 
     ecs_defer_flush(world, stage);    
@@ -1605,26 +1644,31 @@ ecs_entity_t ecs_new_w_id(
     ecs_stage_t *stage = ecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new_id(world);
 
-    ecs_entities_t to_add = {
-        .array = &id,
-        .count = 1
-    };
+    ecs_id_t ids[3];
+    ecs_entities_t to_add = { .array = ids, .count = 0 };
+
+    if (id) {
+        ids[to_add.count ++] = id;
+    }
+
+    ecs_id_t with = stage->with;
+    if (with) {
+        ids[to_add.count ++] = with;
+    }
+
+    ecs_entity_t scope = stage->scope;
+    if (scope) {
+        if (!id || !ECS_HAS_RELATION(id, EcsChildOf)) {
+            ids[to_add.count ++] = ecs_pair(EcsChildOf, scope);
+        }
+    }
 
     if (ecs_defer_new(world, stage, entity, &to_add)) {
         return entity;
     } 
 
-    if (id || stage->scope) {
-        ecs_entity_t old_scope = 0;
-        if (ECS_HAS_RELATION(id, EcsChildOf)) {
-            old_scope = ecs_set_scope(world, 0);
-        }
-
+    if (to_add.count) {
         new(world, entity, &to_add);
-
-        if (ECS_HAS_RELATION(id, EcsChildOf)) {
-            ecs_set_scope(world, old_scope);
-        }
     } else {
         ecs_eis_set(world, entity, &(ecs_record_t){ 0 });
     }
@@ -1635,6 +1679,9 @@ ecs_entity_t ecs_new_w_id(
 }
 
 #ifdef FLECS_PARSER
+
+/* Traverse table graph by either adding or removing identifiers parsed from the
+ * passed in expression. */
 static
 ecs_table_t *traverse_from_expr(
     ecs_world_t *world,
@@ -1704,7 +1751,261 @@ ecs_table_t *traverse_from_expr(
 
     return table;
 }
+
+/* Add/remove components based on the parsed expression. This operation is 
+ * slower than traverse_from_expr, but safe to use from a deferred context. */
+static
+void defer_from_expr(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name,
+    const char *expr,
+    bool is_add,
+    bool replace_and)
+{
+    const char *ptr = expr;
+    if (ptr) {
+        ecs_term_t term = {0};
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
+            if (!ecs_term_is_set(&term)) {
+                break;
+            }
+
+            if (ecs_term_finalize(world, name, expr, &term)) {
+                return;
+            }
+
+            if (!ecs_term_is_trivial(&term)) {
+                ecs_parser_error(name, expr, (ptr - expr), 
+                    "invalid non-trivial term in add expression");
+                return;
+            }
+
+            if (term.oper == EcsAnd || !replace_and) {
+                /* Regular AND expression */
+                if (is_add) {
+                    ecs_add_id(world, entity, term.id);
+                } else {
+                    ecs_remove_id(world, entity, term.id);
+                }
+            } else if (term.oper == EcsAndFrom) {
+                /* Add all components from the specified type */
+                const EcsType *t = ecs_get(world, term.id, EcsType);
+                if (!t) {
+                    ecs_parser_error(name, expr, (ptr - expr), 
+                        "expected type for AND role");
+                    return;
+                }
+                
+                ecs_id_t *ids = ecs_vector_first(t->normalized, ecs_id_t);
+                int32_t i, count = ecs_vector_count(t->normalized);
+                for (i = 0; i < count; i ++) {
+                    if (is_add) {
+                        ecs_add_id(world, entity, ids[i]);
+                    } else {
+                        ecs_remove_id(world, entity, ids[i]);
+                    }
+                }
+            }
+
+            ecs_term_fini(&term);
+        }
+    }
+}
 #endif
+
+/* If operation is not deferred, add/remove components by finding the target
+ * table and moving the entity towards it. */
+static 
+void traverse_add_remove(
+    ecs_world_t *world,
+    ecs_entity_t result,
+    const char *name,
+    const ecs_entity_desc_t *desc,
+    ecs_entity_t scope,
+    ecs_id_t with,
+    bool new_entity,
+    bool name_assigned)
+{
+    const char *sep = desc->sep;
+
+    /* Find existing table */
+    ecs_entity_info_t info = {0};
+    ecs_table_t *src_table = NULL, *table = NULL;
+    if (!new_entity) {
+        if (ecs_get_info(world, result, &info)) {
+            table = info.table;
+        }
+    }
+
+    ecs_entity_t added_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t added = { .array = added_buffer };
+
+    ecs_entity_t removed_buffer[ECS_MAX_ADD_REMOVE];
+    ecs_entities_t removed = { .array = removed_buffer };
+
+    /* Find destination table */
+
+    /* If this is a new entity without a name, add the scope. If a name is
+     * provided, the scope will be added by the add_path_w_sep function */
+    if (new_entity) {
+        if (new_entity && scope && !name && !name_assigned) {
+            ecs_entity_t id = ecs_pair(EcsChildOf, scope);
+            ecs_entities_t arr = { .array = &id, .count = 1 };
+            table = ecs_table_traverse_add(world, table, &arr, &added);
+            ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (with) {
+            ecs_entities_t arr = { .array = &with, .count = 1 };
+            table = ecs_table_traverse_add(world, table, &arr, &added);
+            ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
+        }
+    }
+
+    /* If a name is provided but not yet assigned, add the Name component */
+    if (name && !name_assigned) {
+        ecs_entity_t id = ecs_id(EcsName);
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
+    }
+
+    /* Add components from the 'add' id array */
+    int32_t i = 0;
+    ecs_id_t id;
+    const ecs_id_t *ids = desc->add;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_add(world, table, &arr, &added);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    /* Add components from the 'remove' id array */
+    i = 0;
+    ids = desc->remove;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+        ecs_entities_t arr = { .array = &id, .count = 1 };
+        table = ecs_table_traverse_remove(world, table, &arr, &removed);
+        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    /* Add components from the 'add_expr' expression */
+    if (desc->add_expr) {
+#ifdef FLECS_PARSER
+        table = traverse_from_expr(
+            world, table, name, desc->add_expr, &added, true, true);
+#else
+        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+#endif
+    }
+
+    /* Remove components from the 'remove_expr' expression */
+    if (desc->remove_expr) {
+#ifdef FLECS_PARSER
+    table = traverse_from_expr(
+        world, table, name, desc->remove_expr, &removed, false, true);
+#else
+        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+#endif
+    }
+
+    /* Commit entity to destination table */
+    if (src_table != table) {
+        commit(world, result, &info, table, &added, &removed);
+    }
+
+    /* Set name */
+    if (name && !name_assigned) {
+        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);   
+    }
+
+    if (desc->symbol) {
+        EcsName *name_ptr = ecs_get_mut(world, result, EcsName, NULL);
+        if (name_ptr->symbol) {
+            ecs_assert(!ecs_os_strcmp(desc->symbol, name_ptr->symbol),
+                ECS_INCONSISTENT_NAME, desc->symbol);
+        } else {
+            name_ptr->symbol = ecs_os_strdup(desc->symbol);
+        }
+    }
+}
+
+/* When in deferred mode, we need to add/remove components one by one using
+ * the regular operations. */
+static 
+void deferred_add_remove(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name,
+    const ecs_entity_desc_t *desc,
+    ecs_entity_t scope,
+    ecs_id_t with,
+    bool new_entity,
+    bool name_assigned)
+{
+    const char *sep = desc->sep;
+
+    /* If this is a new entity without a name, add the scope. If a name is
+     * provided, the scope will be added by the add_path_w_sep function */
+    if (new_entity) {
+        if (new_entity && scope && !name && !name_assigned) {
+            ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
+        }
+
+        if (with) {
+            ecs_add_id(world, entity, with);
+        }
+    }
+
+    /* Add components from the 'add' id array */
+    int32_t i = 0;
+    ecs_id_t id;
+    const ecs_id_t *ids = desc->add;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+        ecs_add_id(world, entity, id);
+    }
+
+    /* Add components from the 'remove' id array */
+    i = 0;
+    ids = desc->remove;
+    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+        ecs_remove_id(world, entity, id);
+    }
+
+    /* Add components from the 'add_expr' expression */
+    if (desc->add_expr) {
+#ifdef FLECS_PARSER
+        defer_from_expr(world, entity, name, desc->add_expr, true, true);
+#else
+        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+#endif
+    }
+
+    /* Remove components from the 'remove_expr' expression */
+    if (desc->remove_expr) {
+#ifdef FLECS_PARSER
+        defer_from_expr(world, entity, name, desc->remove_expr, true, false);
+#else
+        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
+#endif
+    }
+
+    /* Set name */
+    if (name && !name_assigned) {
+        ecs_add_path_w_sep(world, entity, scope, name, sep, NULL);   
+    }
+
+    /* Currently it's not supported to set the symbol from a deferred context */
+    if (desc->symbol) {
+        const EcsName *ptr = ecs_get(world, entity, EcsName);
+        (void)ptr;
+        
+        ecs_assert(ptr != NULL, ECS_UNSUPPORTED, NULL);
+        ecs_assert(!ecs_os_strcmp(ptr->symbol, desc->symbol), 
+            ECS_UNSUPPORTED, NULL);
+    }
+}
 
 ecs_entity_t ecs_entity_init(
     ecs_world_t *world,
@@ -1713,7 +2014,9 @@ ecs_entity_t ecs_entity_init(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
     ecs_entity_t scope = ecs_get_scope(world);
+    ecs_id_t with = ecs_get_with(world);
 
     const char *name = desc->name;
     const char *sep = desc->sep;
@@ -1781,99 +2084,13 @@ ecs_entity_t ecs_entity_init(
         }
     }
 
-    /* Find existing table */
-    ecs_entity_info_t info = {0};
-    ecs_table_t *src_table = NULL, *table = NULL;
-    if (!new_entity) {
-        if (ecs_get_info(world, result, &info)) {
-            table = info.table;
-        }
+    if (stage->defer) {
+        deferred_add_remove(world, result, name, desc, 
+            scope, with, new_entity, name_assigned);
+    } else {
+        traverse_add_remove(world, result, name, desc,
+            scope, with, new_entity, name_assigned);
     }
-
-    ecs_entity_t added_buffer[ECS_MAX_ADD_REMOVE];
-    ecs_entities_t added = { .array = added_buffer };
-
-    ecs_entity_t removed_buffer[ECS_MAX_ADD_REMOVE];
-    ecs_entities_t removed = { .array = removed_buffer };
-
-    /* Find destination table */
-
-    /* If this is a new entity without a name, add the scope. If a name is
-     * provided, the scope will be added by the add_path_w_sep function */
-    if (new_entity && scope && !name && !name_assigned) {
-        ecs_entity_t id = ecs_pair(EcsChildOf, scope);
-        ecs_entities_t arr = { .array = &id, .count = 1 };
-        table = ecs_table_traverse_add(world, table, &arr, &added);
-        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-    }
-
-    /* If a name is provided but not yet assigned, add the Name component */
-    if (name && !name_assigned) {
-        ecs_entity_t id = ecs_id(EcsName);
-        ecs_entities_t arr = { .array = &id, .count = 1 };
-        table = ecs_table_traverse_add(world, table, &arr, &added);
-        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
-    }
-
-    /* Add components from the 'add' id array */
-    int32_t i = 0;
-    ecs_id_t id;
-    const ecs_id_t *ids = desc->add;
-    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        ecs_entities_t arr = { .array = &id, .count = 1 };
-        table = ecs_table_traverse_add(world, table, &arr, &added);
-        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-    }
-
-    /* Add components from the 'remove' id array */
-    i = 0;
-    ids = desc->remove;
-    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i])) {
-        ecs_entities_t arr = { .array = &id, .count = 1 };
-        table = ecs_table_traverse_remove(world, table, &arr, &removed);
-        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-        i ++;
-    }
-
-    /* Add components from the 'add_expr' expression */
-    if (desc->add_expr) {
-#ifdef FLECS_PARSER
-        table = traverse_from_expr(
-            world, table, name, desc->add_expr, &added, true, true);
-#else
-        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
-#endif
-    }
-
-    /* Remove components from the 'remove_expr' expression */
-    if (desc->remove_expr) {
-#ifdef FLECS_PARSER
-    table = traverse_from_expr(
-        world, table, name, desc->remove_expr, &removed, false, true);
-#else
-        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
-#endif
-    }
-
-    /* Commit entity to destination table */
-    if (src_table != table) {
-        commit(world, result, &info, table, &added, &removed);
-    }
-
-    /* Set name */
-    if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);   
-    }
-
-    if (desc->symbol) {
-        EcsName *name_ptr = ecs_get_mut(world, result, EcsName, NULL);
-        if (name_ptr->symbol) {
-            ecs_assert(!ecs_os_strcmp(desc->symbol, name_ptr->symbol),
-                ECS_INCONSISTENT_NAME, desc->symbol);
-        } else {
-            name_ptr->symbol = ecs_os_strdup(desc->symbol);
-        }
-    }    
 
     return result;
 }
@@ -3521,10 +3738,6 @@ bool ecs_defer_flush(
 
                 switch(op->kind) {
                 case EcsOpNew:
-                    if (op->scope) {
-                        ecs_add_pair(world, e, EcsChildOf, op->scope);
-                    }
-                    /* Fallthrough */
                 case EcsOpAdd:
                     if (valid_components(world, &op->components)) {
                         world->add_count ++;

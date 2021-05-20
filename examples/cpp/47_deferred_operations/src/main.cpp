@@ -5,38 +5,27 @@ struct Position {
     double x, y;
 };
 
-struct Velocity {
-    double x, y;
-};
-
 int main(int, char *[]) {
     flecs::world ecs;
 
     /* Create OnSet system so we can see when Velocity is actually set */
-    ecs.system<Velocity>()
+    ecs.system<Position>()
         .kind(flecs::OnSet)
-        .each([](flecs::entity, Velocity& v) {
-            std::cout << "Velocity set to {" << v.x << ", " << v.y << "}" 
+        .each([](flecs::entity, Position& p) {
+            std::cout << "Position set to {" << p.x << ", " << p.y << "}" 
                       << std::endl;
         });
 
-    // Create 3 entities with position
-    ecs.entity().add<Position>();
-    ecs.entity().add<Position>();
-    ecs.entity().add<Position>();
-
-    // Create a query for Position to set Velocity for each entity with Position.
-    // Because adding a component changes the underlying data structures, we
-    // need to defer the operations until we have finished iterating.
-    auto q = ecs.query<Position>();
-
+    // Defer operations until end of defer statement
     std::cout << "Defer begin" << std::endl;
-    ecs.defer_begin();
+    ecs.defer([&]{
+        ecs.entity().set<Position>({10, 20});
+        ecs.entity().set<Position>({20, 30});
+        ecs.entity().set<Position>({30, 40});
 
-    q.each([](flecs::entity e, Position&) {
-        e.set<Velocity>({1, 2});
+        // After the function exits, the deferred operations will be processed
+        // and the OnSet system will be called.
+        std::cout << "Operations enqueued" << std::endl;
     });
-
     std::cout << "Defer end" << std::endl;
-    ecs.defer_end();
 }

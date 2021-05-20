@@ -180,11 +180,6 @@ public:
     entity_view(entity_t id) 
         : flecs::id( nullptr, id ) { }
 
-    /** Equality operator. */
-    bool operator==(const entity_view& e) const {
-        return this->id() == e.id();
-    }
-
     /** Entity id 0.
      * This function is useful when the API must provide an entity object that
      * belongs to a world, but the entity id is 0.
@@ -396,7 +391,7 @@ public:
      * @return The found entity, or entity::null if no entity matched.
      */
     flecs::entity_view lookup(const char *path) const {
-        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", true);
+        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
         return flecs::entity_view(m_world, id);
     }
 
@@ -448,8 +443,6 @@ public:
     template <typename Relation>
     bool has(const flecs::entity_view& object) const {
         auto comp_id = _::cpp_type<Relation>::id(m_world);
-        ecs_assert(_::cpp_type<Relation>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, 
             ecs_pair(comp_id, object.id()));
     }
@@ -474,8 +467,6 @@ public:
     template <typename Object>
     bool has_object(const flecs::entity_view& relation) const {
         auto comp_id = _::cpp_type<Object>::id(m_world);
-        ecs_assert(_::cpp_type<Object>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, 
             ecs_pair(relation.id(), comp_id));
     }
@@ -714,6 +705,14 @@ public:
      */
     const Base& is_a(entity_t object) const {
         return this->add(flecs::IsA, object);
+    }
+
+    /** Shortcut for add(ChildOf. obj).
+     *
+     * @param object the object id.
+     */
+    const Base& child_of(entity_t object) const {
+        return this->add(flecs::ChildOf, object);
     }
 
     /** Add a pair with object type.
@@ -1099,6 +1098,53 @@ public:
      */
     template <typename Func, typename _::is_function<Func>::type* = nullptr>
     const Base& set(const Func& func) const;
+
+    /** Entities created in function will have the current entity.
+     *
+     * @param func The function to call.
+     */
+    template <typename Func>
+    const Base& with(const Func& func) const {
+        ecs_id_t prev = ecs_set_with(this->base_world(), this->base_id());
+        func();
+        ecs_set_with(this->base_world(), prev);
+        return *this;
+    }
+
+    /** Entities created in function will have (Relation, this) 
+     * This operation is thread safe.
+     *
+     * @tparam Relation The relation to use.
+     * @param func The function to call.
+     */
+    template <typename Relation, typename Func>
+    const Base& with(const Func& func) const {
+        with(_::cpp_type<Relation>::id(this->base_world()), func);
+        return *this;
+    }  
+
+    /** Entities created in function will have (relation, this) 
+     *
+     * @param relation The relation to use.
+     * @param func The function to call.
+     */
+    template <typename Func>
+    const Base& with(id_t relation, const Func& func) const {
+        ecs_id_t prev = ecs_set_with(this->base_world(), 
+            ecs_pair(relation, this->base_id()));
+        func();
+        ecs_set_with(this->base_world(), prev);
+        return *this;
+    }
+
+    /** The function will be ran with the scope set to the current entity. */
+    template <typename Func>
+    const Base& scope(const Func& func) const {
+        ecs_entity_t prev = ecs_set_scope(this->base_world(), this->base_id());
+        func();
+        ecs_set_scope(this->base_world(), prev);
+        return *this;
+    }    
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1188,19 +1234,15 @@ public:
      * @param name The entity name.
      * @param is_component If true, the entity will be created from the pool of component ids (default = false).
      */
-    explicit entity(world_t *world, const char *name, bool is_component = false) 
+    explicit entity(world_t *world, const char *name) 
         : flecs::entity_view()
     { 
         m_world = world;
-        m_id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
 
-        if (!m_id) {
-            if (is_component) {
-                m_id = ecs_new_component_id(m_world);
-            }
-
-            m_id = ecs_add_path_w_sep(world, m_id, 0, name, "::", "::");
-        }
+        ecs_entity_desc_t desc = {};
+        desc.name = name;
+        desc.sep = "::";
+        m_id = ecs_entity_init(world, &desc);
     }
 
     /** Wrap an existing entity id.

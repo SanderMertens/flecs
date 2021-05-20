@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
          * cause the child prefab to be instantiated whenever an instanceof
          * RootPrefab is created. */
         ecs.prefab("Child")
-            .add(flecs::ChildOf, Root)
+            .child_of(Root)
             .set<Position>({30, 40});
 
     auto e = ecs.entity()

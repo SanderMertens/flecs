@@ -105,7 +105,7 @@ public:
         return *this;
     }
 
-    ECS_DEPRECATED("use add(flecs::ChildOf, parent)")
+    ECS_DEPRECATED("use child_of(parent)")
     const Base& add_childof(const Base& parent) const {
         ecs_add_id(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
         return *this;          

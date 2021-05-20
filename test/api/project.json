@@ -50,7 +50,11 @@
                     "find_id_remove_1_comp",
                     "find_id_remove_2_comp",
                     "init_w_scope_name",
-                    "init_w_core_name"
+                    "init_w_core_name",
+                    "init_w_with",
+                    "init_w_with_w_name",
+                    "init_w_with_w_scope",
+                    "init_w_with_w_name_scope"
                 ]
             }, {
             "id": "New",
@@ -79,7 +83,17 @@
                 "new_component_id_skip_used",
                 "new_component_id_skip_to_hi_id",
                 "new_w_entity_0",
-                "create_w_explicit_id_2_worlds"
+                "create_w_explicit_id_2_worlds",
+                "new_w_id_0_w_with",
+                "new_w_id_w_with",
+                "new_w_type_0_w_with",
+                "new_w_type_w_with",
+                "new_w_id_w_with_w_scope",
+                "new_w_type_w_with_w_scope",
+                "new_w_id_w_with_defer",
+                "new_w_id_w_with_defer_w_scope",
+                "new_w_type_w_with_defer",
+                "new_w_type_w_with_defer_w_scope"
             ]
         }, {
             "id": "New_w_Count",

@@ -66,6 +66,10 @@ public:
         return this->add(flecs::IsA, object);
     }
 
+    type& child_of(entity_t object) {
+        return this->add(flecs::ChildOf, object);
+    }    
+
     template <typename Relation>
     type& add(entity_t object) {
         return this->add(_::cpp_type<Relation>::id(world().c_ptr()), object);
