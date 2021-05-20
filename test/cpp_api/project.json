@@ -278,7 +278,12 @@
                 "test_auto_defer_each",
                 "test_auto_defer_iter",
                 "inspect_terms",
-                "inspect_terms_w_each"
+                "inspect_terms_w_each",
+                "comp_to_str",
+                "pair_to_str",
+                "oper_not_to_str",
+                "oper_optional_to_str",
+                "oper_or_to_str"
             ]
         }, {
             "id": "QueryBuilder",

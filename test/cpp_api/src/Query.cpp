@@ -838,3 +838,53 @@ void Query_inspect_terms_w_each() {
     test_int(count, 3);
 }
 
+
+void Query_comp_to_str() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Position>()
+        .term<Velocity>()
+        .build();
+    test_str(q.str(), "Position, Velocity");
+}
+
+struct Eats { };
+struct Apples { };
+
+void Query_pair_to_str() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Position>()
+        .term<Velocity>()
+        .term<Eats, Apples>()
+        .build();
+    test_str(q.str(), "Position, Velocity, (Eats, Apples)");
+}
+
+void Query_oper_not_to_str() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Position>()
+        .term<Velocity>().oper(flecs::Not)
+        .build();
+    test_str(q.str(), "Position, !Velocity");
+}
+
+void Query_oper_optional_to_str() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Position>()
+        .term<Velocity>().oper(flecs::Optional)
+        .build();
+    test_str(q.str(), "Position, ?Velocity");
+}
+
+void Query_oper_or_to_str() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<>()
+        .term<Position>().oper(flecs::Or)
+        .term<Velocity>().oper(flecs::Or)
+        .build();
+    test_str(q.str(), "Position || Velocity");
+}

@@ -5847,7 +5847,7 @@ int ecs_filter_finalize(
 FLECS_API 
 char* ecs_filter_str(
     const ecs_world_t *world,
-    ecs_filter_t *filter); 
+    const ecs_filter_t *filter); 
 
 /** Match entity with filter.
  * Test if entity matches filter terms. The function will substitute terms with
@@ -10940,8 +10940,8 @@ public:
     /** All entities created in function are created with id.
      */
     template <typename Func>
-    void with(id_t id, const Func& func) const {
-        ecs_id_t prev = ecs_set_with(m_world, id);
+    void with(id_t with_id, const Func& func) const {
+        ecs_id_t prev = ecs_set_with(m_world, with_id);
         func();
         ecs_set_with(m_world, prev);    
     }
@@ -15611,6 +15611,12 @@ public:
         return f->term_count;   
     }
 
+    flecs::string str() {
+        const ecs_filter_t *f = ecs_query_get_filter(m_query);
+        char *result = ecs_filter_str(m_world, f);
+        return flecs::string(result);
+    }
+
 protected:
     world_t *m_world;
     query_t *m_query;
@@ -16424,8 +16430,8 @@ inline void world::use(flecs::entity e, const char *alias) {
     ecs_use(m_world, eid, alias);
 }
 
-inline flecs::entity world::set_scope(const flecs::entity& scope) const {
-    return flecs::entity(ecs_set_scope(m_world, scope.id()));
+inline flecs::entity world::set_scope(const flecs::entity& s) const {
+    return flecs::entity(ecs_set_scope(m_world, s.id()));
 }
 
 inline flecs::entity world::get_scope() const {

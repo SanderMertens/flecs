@@ -258,6 +258,11 @@ void Query_test_auto_defer_each(void);
 void Query_test_auto_defer_iter(void);
 void Query_inspect_terms(void);
 void Query_inspect_terms_w_each(void);
+void Query_comp_to_str(void);
+void Query_pair_to_str(void);
+void Query_oper_not_to_str(void);
+void Query_oper_optional_to_str(void);
+void Query_oper_or_to_str(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1421,6 +1426,26 @@ bake_test_case Query_testcases[] = {
     {
         "inspect_terms_w_each",
         Query_inspect_terms_w_each
+    },
+    {
+        "comp_to_str",
+        Query_comp_to_str
+    },
+    {
+        "pair_to_str",
+        Query_pair_to_str
+    },
+    {
+        "oper_not_to_str",
+        Query_oper_not_to_str
+    },
+    {
+        "oper_optional_to_str",
+        Query_oper_optional_to_str
+    },
+    {
+        "oper_or_to_str",
+        Query_oper_or_to_str
     }
 };
 
@@ -2232,7 +2257,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        28,
+        33,
         Query_testcases
     },
     {

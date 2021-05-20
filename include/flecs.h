@@ -2832,7 +2832,7 @@ int ecs_filter_finalize(
 FLECS_API 
 char* ecs_filter_str(
     const ecs_world_t *world,
-    ecs_filter_t *filter); 
+    const ecs_filter_t *filter); 
 
 /** Match entity with filter.
  * Test if entity matches filter terms. The function will substitute terms with

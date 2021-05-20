@@ -449,7 +449,7 @@ void filter_str_add_id(
 
 char* ecs_filter_str(
     const ecs_world_t *world,
-    ecs_filter_t *filter)
+    const ecs_filter_t *filter)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
@@ -478,7 +478,7 @@ char* ecs_filter_str(
             }
         }
 
-        if (term->role) {
+        if (term->role && term->role != ECS_PAIR) {
             ecs_strbuf_appendstr(&buf, ecs_role_str(term->role));
             ecs_strbuf_appendstr(&buf, " ");
         }
@@ -516,9 +516,14 @@ char* ecs_filter_str(
                 filter_str_add_id(world, &buf, &term->args[1]);
                 ecs_strbuf_appendstr(&buf, ")");
             }
-        } else {
+        } else if (!term_id_is_set(&term->args[1])) {
             ecs_strbuf_appendstr(&buf, "$");
             filter_str_add_id(world, &buf, &term->pred);
+        } else if (term_id_is_set(&term->args[1])) {
+            filter_str_add_id(world, &buf, &term->pred);
+            ecs_strbuf_appendstr(&buf, ", ");
+            filter_str_add_id(world, &buf, &term->args[1]);
+            ecs_strbuf_appendstr(&buf, ")");
         }
     }
 
