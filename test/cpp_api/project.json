@@ -337,7 +337,8 @@
                 "explicit_term_w_type",
                 "explicit_term_w_pair_type",
                 "explicit_term_w_id",
-                "explicit_term_w_pair_id"
+                "explicit_term_w_pair_id",
+                "1_term_to_empty"
             ]         
         }, {
             "id": "SystemBuilder",

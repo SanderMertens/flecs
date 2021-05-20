@@ -1234,3 +1234,21 @@ void QueryBuilder_explicit_term_w_pair_id() {
     
     test_int(count, 1);
 }
+
+void QueryBuilder_1_term_to_empty() {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Apples = ecs.entity();
+
+    auto qb = ecs.query_builder<>()
+        .term<Position>();
+
+    qb.term(Likes, Apples);
+
+    auto q = qb.build();
+
+    test_int(q.term_count(), 2);
+    test_int(q.term(0).id(), ecs.id<Position>());
+    test_int(q.term(1).id(), ecs.pair(Likes, Apples));
+}

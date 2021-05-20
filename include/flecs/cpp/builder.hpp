@@ -361,9 +361,9 @@ private:
 template<typename Base, typename ... Components>
 class filter_builder_i : public term_builder_i<Base> {
 public:
-    filter_builder_i(ecs_filter_desc_t *desc) 
-        : m_desc(desc)
-        , m_term_index(0) { }
+    filter_builder_i(ecs_filter_desc_t *desc, int32_t term_index = 0) 
+        : m_term_index(term_index)
+        , m_desc(desc) { }
 
     Base& expr(const char *expr) {
         m_desc->expr = expr;
@@ -471,6 +471,7 @@ public:
 
 protected:
     virtual flecs::world_t* world() = 0;
+    int32_t m_term_index;
 
 private:
     operator Base&() {
@@ -508,7 +509,6 @@ private:
     }
 
     ecs_filter_desc_t *m_desc;
-    int32_t m_term_index;
 };
 
 // Query builder interface
@@ -520,8 +520,8 @@ public:
         : BaseClass(nullptr)
         , m_desc(nullptr) { }
 
-    query_builder_i(ecs_query_desc_t *desc) 
-        : BaseClass(&desc->filter)
+    query_builder_i(ecs_query_desc_t *desc, int32_t term_index = 0) 
+        : BaseClass(&desc->filter, term_index)
         , m_desc(desc) { }
 
     /** Sort the output of a query.
@@ -740,14 +740,14 @@ public:
     }
 
     query_builder_base(const query_builder_base& obj) 
-        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc)
+        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc, obj.m_term_index)
     {
         m_world = obj.m_world;
         m_desc = obj.m_desc;
     }
 
     query_builder_base(query_builder_base&& obj) 
-        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc)
+        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc, obj.m_term_index)
     {
         m_world = obj.m_world;
         m_desc = obj.m_desc;

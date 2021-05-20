@@ -315,6 +315,7 @@ void QueryBuilder_explicit_term_w_type(void);
 void QueryBuilder_explicit_term_w_pair_type(void);
 void QueryBuilder_explicit_term_w_id(void);
 void QueryBuilder_explicit_term_w_pair_id(void);
+void QueryBuilder_1_term_to_empty(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -1649,6 +1650,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "explicit_term_w_pair_id",
         QueryBuilder_explicit_term_w_pair_id
+    },
+    {
+        "1_term_to_empty",
+        QueryBuilder_1_term_to_empty
     }
 };
 
@@ -2264,7 +2269,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        50,
+        51,
         QueryBuilder_testcases
     },
     {
