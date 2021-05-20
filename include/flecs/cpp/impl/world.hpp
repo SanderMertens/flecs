@@ -96,6 +96,12 @@ inline int world::count(flecs::filter filter) const {
     return ecs_count_w_filter(m_world, filter.c_ptr());
 }
 
+/** All entities created in function are created in scope. All operations
+    * called in function (such as lookup) are relative to scope.
+    */
+template <typename Func>
+void scope(id_t parent, const Func& func);
+
 inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");
     pod_component<Type>("flecs::core::Type");
@@ -132,8 +138,8 @@ inline void world::use(flecs::entity e, const char *alias) {
     ecs_use(m_world, eid, alias);
 }
 
-inline flecs::entity world::set_scope(const flecs::entity& scope) const {
-    return flecs::entity(ecs_set_scope(m_world, scope.id()));
+inline flecs::entity world::set_scope(const flecs::entity& s) const {
+    return flecs::entity(ecs_set_scope(m_world, s.id()));
 }
 
 inline flecs::entity world::get_scope() const {

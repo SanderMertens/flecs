@@ -407,8 +407,8 @@ public:
         return name;
     }
 
-    // Obtain a component identifier without registering lifecycle callbacks.
-    static entity_t id_no_lifecycle(world_t *world = nullptr, 
+    // Obtain a component identifier for explicit component registration.
+    static entity_t id_explicit(world_t *world = nullptr, 
         const char *name = nullptr, bool allow_tag = true) 
     {
         if (!s_id) {
@@ -453,22 +453,41 @@ public:
         return s_id;
     }
 
-    // Obtain a component identifier, register lifecycle callbacks if this is
-    // the first time the component is used.
+    // Obtain a component identifier for implicit component registration. This
+    // is almost the same as id_explicit, except that this operation 
+    // automatically registers lifecycle callbacks.
+    // Additionally, implicit registration temporarily resets the scope & with
+    // state of the world, so that the component is not implicitly created with
+    // the scope/with of the code it happens to be first used in.
     static entity_t id(world_t *world = nullptr, const char *name = nullptr, 
         bool allow_tag = true) 
     {
         // If no id has been registered yet, do it now.
         if (!s_id || (world && !ecs_exists(world, s_id))) {
+            ecs_entity_t prev_scope = 0;
+            ecs_id_t prev_with = 0;
+
+            if (world) {
+                prev_scope = ecs_set_scope(world, 0);
+                prev_with = ecs_set_with(world, 0);
+            }
+            
             // This will register a component id, but will not register 
             // lifecycle callbacks.
-            id_no_lifecycle(world, name, allow_tag);
+            id_explicit(world, name, allow_tag);
 
             // Register lifecycle callbacks, but only if the component has a
             // size. Components that don't have a size are tags, and tags don't
             // require construction/destruction/copy/move's. */
             if (size()) {
                 register_lifecycle_actions<T>(world, s_id);
+            }
+            
+            if (prev_with) {
+                ecs_set_with(world, prev_with);
+            }
+            if (prev_scope) {
+                ecs_set_scope(world, prev_scope);
             }
         }
 
@@ -494,14 +513,14 @@ public:
 
     // Obtain a component name, don't register lifecycle if the component hadn't
     // been registered yet. While functionally the same could be achieved by
-    // first calling id_no_lifecycle() and then name(), this function ensures
+    // first calling id_explicit() and then name(), this function ensures
     // that the lifecycle callback templates are not instantiated. This allows
     // some types (such as module classes) to be created without a default
     // constructor.
     static const char* name_no_lifecycle(world_t *world = nullptr) {
         // If no id has been registered yet, do it now.
         if (!s_id) {
-            id_no_lifecycle(world);
+            id_explicit(world);
         }
 
         // By now we should have a valid identifier
@@ -604,7 +623,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     if (_::cpp_type<T>::registered()) {
         /* Obtain component id. Because the component is already registered,
          * this operation does nothing besides returning the existing id */
-        id = _::cpp_type<T>::id_no_lifecycle(world_ptr, name, allow_tag);
+        id = _::cpp_type<T>::id_explicit(world_ptr, name, allow_tag);
 
         /* If entity is not empty check if the name matches */
         if (ecs_get_type(world_ptr, id) != nullptr) {
@@ -639,9 +658,9 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         
         ecs_assert(entity == id, ECS_INTERNAL_ERROR, NULL);
 
-        /* This functionality could have been put in id_no_lifecycle, but since
+        /* This functionality could have been put in id_explicit, but since
          * this code happens when a component is registered, and the entire API
-         * calls id_no_lifecycle, this would add a lot of overhead to each call.
+         * calls id_explicit, this would add a lot of overhead to each call.
          * This is why when using multiple worlds, components should be 
          * registered explicitly. */
     } else {
@@ -678,7 +697,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         }
 
         /* Register id as usual */
-        id = _::cpp_type<T>::id_no_lifecycle(world_ptr, name, allow_tag);
+        id = _::cpp_type<T>::id_explicit(world_ptr, name, allow_tag);
     }
     
     return world.entity(id);

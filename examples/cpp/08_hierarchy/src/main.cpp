@@ -88,31 +88,30 @@ int main(int argc, char *argv[]) {
             .oper(flecs::Optional)
         .iter(Transform);
 
-    /* Create root of the hierachy which moves around */
-    auto Root = ecs.entity("Root")
+    // Create entity hierarchy
+    ecs.entity("Root")
         .add<WorldPosition>()
         .set<Position>({0, 0})
-        .set<Velocity>({1, 2});
-
-        auto Child1 = ecs.entity("Child1")
-            .add(flecs::ChildOf, Root)
-            .add<WorldPosition>()
-            .set<Position>({100, 100});
-
-            ecs.entity("GChild1")
-                .add(flecs::ChildOf, Child1)
+        .set<Velocity>({1, 2})
+        .scope([&]{ // From here entities are created with (ChildOf, Root)
+            ecs.entity("Child1")
                 .add<WorldPosition>()
-                .set<Position>({1000, 1000});
+                .set<Position>({100, 100})
+                .scope([&]{ // (ChildOf, Root::Child1)
+                    ecs.entity("GChild1")
+                        .add<WorldPosition>()
+                        .set<Position>({1000, 1000});
+                });
 
-        auto Child2 = ecs.entity("Child2")
-            .add(flecs::ChildOf, Root)
-            .add<WorldPosition>()
-            .set<Position>({200, 200});
-
-            ecs.entity("GChild2")
-                .add(flecs::ChildOf, Child2)
+            ecs.entity("Child2")
                 .add<WorldPosition>()
-                .set<Position>({2000, 2000});
+                .set<Position>({200, 200})
+                .scope([&]{ // (ChildOf, Root::Child2)
+                    ecs.entity("GChild2")
+                        .add<WorldPosition>()
+                        .set<Position>({2000, 2000});
+                });
+        });
 
     ecs.set_target_fps(1);
 

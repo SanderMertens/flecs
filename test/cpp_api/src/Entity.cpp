@@ -1453,3 +1453,587 @@ void Entity_set_2_after_set_2() {
 
     test_int(called, 2);
 }
+
+void Entity_with_self() {
+    flecs::world ecs;
+
+    auto Tag = ecs.entity().with([&]{
+        auto e1 = ecs.entity(); e1.set<Self>({e1});
+        auto e2 = ecs.entity(); e2.set<Self>({e2});
+        auto e3 = ecs.entity(); e3.set<Self>({e3});
+    });
+
+    // Ensures that while Self is (implicitly) registered within the with, it
+    // does not get the tag.
+    auto self = ecs.component<Self>();
+    test_assert(!self.has(Tag));
+
+    int count = 0;
+    auto q = ecs.query_builder<>().term(Tag).build();
+
+    q.each([&](flecs::entity e) {
+        test_assert(e.has(Tag));
+
+        test_bool(e.get([&](const Self& s){
+            test_assert(s.value == e);
+        }), true);
+
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void Entity_with_relation_type_self() {
+    flecs::world ecs;
+
+    struct Likes { };
+
+    auto Bob = ecs.entity().with<Likes>([&]{
+        auto e1 = ecs.entity(); e1.set<Self>({e1});
+        auto e2 = ecs.entity(); e2.set<Self>({e2});
+        auto e3 = ecs.entity(); e3.set<Self>({e3});
+    });
+
+    // Ensures that while Self is (implicitly) registered within the with, it
+    // does not get the tag.
+    auto self = ecs.component<Self>();
+    test_assert(!self.has<Likes>(Bob));
+
+    int count = 0;
+    auto q = ecs.query_builder<>().term<Likes>(Bob).build();
+
+    q.each([&](flecs::entity e) {
+        test_assert(e.has<Likes>(Bob));
+
+        test_bool(e.get([&](const Self& s){
+            test_assert(s.value == e);
+        }), true);
+
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void Entity_with_relation_self() {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+
+    auto Bob = ecs.entity().with(Likes, [&]{
+        auto e1 = ecs.entity(); e1.set<Self>({e1});
+        auto e2 = ecs.entity(); e2.set<Self>({e2});
+        auto e3 = ecs.entity(); e3.set<Self>({e3});
+    });
+
+    // Ensures that while Self is (implicitly) registered within the with, it
+    // does not get the tag.
+    auto self = ecs.component<Self>();
+    test_assert(!self.has(Likes, Bob));
+
+    int count = 0;
+    auto q = ecs.query_builder<>().term(Likes, Bob).build();
+
+    q.each([&](flecs::entity e) {
+        test_assert(e.has(Likes, Bob));
+
+        test_bool(e.get([&](const Self& s){
+            test_assert(s.value == e);
+        }), true);
+
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void Entity_with_self_w_name() {
+    flecs::world ecs;
+
+    auto Tier1 = ecs.entity("Tier1").with([&]{
+        auto Tier2 = ecs.entity("Tier2");
+        Tier2.set<Self>({Tier2});
+    });
+
+    auto Tier2 = ecs.lookup("Tier2");
+    test_assert(Tier2 != 0);
+
+    test_assert(Tier2.has(Tier1));
+}
+
+void Entity_with_self_nested() {
+    flecs::world ecs;
+
+    auto Tier1 = ecs.entity("Tier1").with([&]{
+        ecs.entity("Tier2").with([&]{
+            ecs.entity("Tier3");
+        });
+    });
+
+    auto Tier2 = ecs.lookup("Tier2");
+    test_assert(Tier2 != 0);
+
+    auto Tier3 = ecs.lookup("Tier3");
+    test_assert(Tier3 != 0);
+
+    test_assert(Tier2.has(Tier1));
+    test_assert(Tier3.has(Tier2));
+}
+
+void Entity_with_scope() {
+    flecs::world ecs;
+
+    auto parent = ecs.entity("P").scope([&]{
+        auto e1 = ecs.entity("C1"); e1.set<Self>({e1});
+        auto e2 = ecs.entity("C2"); e2.set<Self>({e2});
+        auto e3 = ecs.entity("C3"); e3.set<Self>({e3});
+
+        // Ensure relative lookups work
+        test_assert(ecs.lookup("C1") == e1);
+        test_assert(ecs.lookup("C2") == e2);
+        test_assert(ecs.lookup("C3") == e3);
+
+        test_assert(ecs.lookup("::P::C1") == e1);
+        test_assert(ecs.lookup("::P::C2") == e2);
+        test_assert(ecs.lookup("::P::C3") == e3);        
+    });
+
+    // Ensure entities are created in correct scope
+    test_assert(ecs.lookup("C1") == 0);
+    test_assert(ecs.lookup("C2") == 0);
+    test_assert(ecs.lookup("C3") == 0);
+
+    test_assert(parent.lookup("C1") != 0);
+    test_assert(parent.lookup("C2") != 0);
+    test_assert(parent.lookup("C3") != 0);
+
+    test_assert(ecs.lookup("P::C1") == parent.lookup("C1"));
+    test_assert(ecs.lookup("P::C2") == parent.lookup("C2"));
+    test_assert(ecs.lookup("P::C3") == parent.lookup("C3"));
+
+    // Ensures that while Self is (implicitly) registered within the with, it
+    // does not become a child of the parent.
+    auto self = ecs.component<Self>();
+    test_assert(!self.has(flecs::ChildOf, parent));
+
+    int count = 0;
+    auto q = ecs.query_builder<>().term(flecs::ChildOf, parent).build();
+
+    q.each([&](flecs::entity e) {
+        test_assert(e.has(flecs::ChildOf, parent));
+
+        test_bool(e.get([&](const Self& s){
+            test_assert(s.value == e);
+        }), true);
+
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void Entity_with_scope_nested() {
+    flecs::world ecs;
+
+    auto parent = ecs.entity("P").scope([&]{
+        auto child = ecs.entity("C").scope([&]{
+            auto gchild = ecs.entity("GC");
+            test_assert(gchild == ecs.lookup("GC"));
+            test_assert(gchild == ecs.lookup("::P::C::GC"));
+        });
+
+        // Ensure relative lookups work
+        test_assert(ecs.lookup("C") == child);
+        test_assert(ecs.lookup("::P::C") == child);
+        test_assert(ecs.lookup("::P::C::GC") != 0);
+    });
+
+    test_assert(0 == ecs.lookup("C"));
+    test_assert(0 == ecs.lookup("GC"));
+    test_assert(0 == ecs.lookup("C::GC"));
+
+    auto child = ecs.lookup("P::C");
+    test_assert(0 != child);
+    test_assert(child.has(flecs::ChildOf, parent));
+
+    auto gchild = ecs.lookup("P::C::GC");
+    test_assert(0 != gchild);
+    test_assert(gchild.has(flecs::ChildOf, child));
+}
+
+void Entity_with_scope_nested_same_name_as_parent() {
+    flecs::world ecs;
+
+    auto parent = ecs.entity("P").scope([&]{
+        auto child = ecs.entity("C").scope([&]{
+            auto gchild = ecs.entity("C");
+            test_assert(gchild == ecs.lookup("C"));
+            test_assert(gchild == ecs.lookup("::P::C::C"));
+        });
+
+        // Ensure relative lookups work
+        test_assert(ecs.lookup("C") == child);
+        test_assert(ecs.lookup("::P::C") == child);
+        test_assert(ecs.lookup("::P::C::C") != 0);
+    });
+
+    test_assert(0 == ecs.lookup("C"));
+    test_assert(0 == ecs.lookup("C"));
+    test_assert(0 == ecs.lookup("C::C"));
+
+    auto child = ecs.lookup("P::C");
+    test_assert(0 != child);
+    test_assert(child.has(flecs::ChildOf, parent));
+
+    auto gchild = ecs.lookup("P::C::C");
+    test_assert(0 != gchild);
+    test_assert(gchild.has(flecs::ChildOf, child));
+}
+
+void Entity_no_recursive_lookup() {
+    flecs::world ecs;
+
+    auto p = ecs.entity("P");
+    auto c = ecs.entity("C").child_of(p);
+    auto gc = ecs.entity("GC").child_of(c);
+
+    test_assert(c.lookup("GC") == gc);
+    test_assert(c.lookup("C") == 0);
+    test_assert(c.lookup("P") == 0);
+}
+
+void Entity_defer_new_w_name() {
+    flecs::world ecs;
+
+    flecs::entity e;
+
+    ecs.defer([&]{
+        e = ecs.entity("Foo");
+        test_assert(e != 0);
+        test_assert(0 == ecs.lookup("Foo"));
+        test_assert(!e.has<flecs::Name>());
+    });
+
+    test_assert(e.has<flecs::Name>());
+    test_str(e.name(), "Foo");
+}
+
+void Entity_defer_new_w_nested_name() {
+    flecs::world ecs;
+
+    flecs::entity e;
+
+    ecs.defer([&]{
+        e = ecs.entity("Foo::Bar");
+        test_assert(e != 0);
+        test_assert(0 == ecs.lookup("Foo"));
+        test_assert(0 == ecs.lookup("Bar"));
+        test_assert(!e.has<flecs::Name>());
+    });
+
+    test_assert(e.has<flecs::Name>());
+    test_str(e.name(), "Bar");
+    test_str(e.path(), "::Foo::Bar");
+}
+
+
+void Entity_defer_new_w_scope_name() {
+    flecs::world ecs;
+
+    flecs::entity e, parent = ecs.entity("Parent");
+
+    ecs.defer([&]{
+        parent.scope([&]{
+            e = ecs.entity("Foo");
+            test_assert(e != 0);
+            test_assert(0 == ecs.lookup("Foo"));
+            test_assert(!e.has<flecs::Name>());
+        });
+    });
+
+    test_assert(e.has<flecs::Name>());
+    test_str(e.name(), "Foo");
+    test_str(e.path(), "::Parent::Foo");
+}
+
+void Entity_defer_new_w_scope_nested_name() {
+    flecs::world ecs;
+
+    flecs::entity e, parent = ecs.entity("Parent");
+
+    ecs.defer([&]{
+        parent.scope([&]{
+            e = ecs.entity("Foo::Bar");
+            test_assert(e != 0);
+            test_assert(0 == ecs.lookup("Foo"));
+            test_assert(0 == ecs.lookup("Bar"));
+            test_assert(!e.has<flecs::Name>());
+        });
+    });
+
+    test_assert(e.has<flecs::Name>());
+    test_str(e.name(), "Bar");
+    test_str(e.path(), "::Parent::Foo::Bar");
+}
+
+void Entity_defer_new_w_deferred_scope_nested_name() {
+    flecs::world ecs;
+
+    flecs::entity e, parent;
+
+    ecs.defer([&]{
+        parent = ecs.entity("Parent").scope([&]{
+            e = ecs.entity("Foo::Bar");
+            test_assert(e != 0);
+            test_assert(0 == ecs.lookup("Foo"));
+            test_assert(0 == ecs.lookup("Bar"));
+            test_assert(!e.has<flecs::Name>());
+        });
+
+        test_assert(0 == ecs.lookup("Parent"));
+        test_assert(0 == ecs.lookup("Foo"));
+        test_assert(0 == ecs.lookup("Bar"));
+        test_assert(!parent.has<flecs::Name>());
+    });
+
+    test_assert(parent.has<flecs::Name>());
+    test_str(parent.name(), "Parent");
+    test_str(parent.path(), "::Parent");
+
+    test_assert(e.has<flecs::Name>());
+    test_str(e.name(), "Bar");
+    test_str(e.path(), "::Parent::Foo::Bar");
+}
+
+void Entity_defer_new_w_scope() {
+    flecs::world ecs;
+
+    flecs::entity e, parent = ecs.entity();
+
+    ecs.defer([&]{
+        parent.scope([&]{
+            e = ecs.entity();
+            test_assert(e != 0);
+        });
+    });
+
+    test_assert(e.has(flecs::ChildOf, parent));
+}
+
+void Entity_defer_new_w_with() {
+    flecs::world ecs;
+
+    flecs::entity e, Tag = ecs.entity();
+
+    ecs.defer([&]{
+        Tag.with([&]{
+            e = ecs.entity();
+            test_assert(e != 0);
+            test_assert(!e.has(Tag));
+        });
+    });
+
+    test_assert(e.has(Tag));
+}
+
+void Entity_defer_new_w_name_scope_with() {
+    flecs::world ecs;
+
+    flecs::entity e, Tag = ecs.entity(), parent = ecs.entity("Parent");
+
+    ecs.defer([&]{
+        Tag.with([&]{
+            parent.scope([&]{
+                e = ecs.entity("Foo");
+                test_assert(e != 0);
+                test_assert(0 == ecs.lookup("Foo"));
+                test_assert(!e.has(Tag));
+                test_assert(!e.has<flecs::Name>());
+            });
+            test_assert(0 == ecs.lookup("Foo"));
+            test_assert(!e.has(Tag));
+            test_assert(!e.has<flecs::Name>());
+        });
+        test_assert(0 == ecs.lookup("Foo"));
+        test_assert(!e.has(Tag));
+        test_assert(!e.has<flecs::Name>());
+    });
+
+    test_assert(e.has(Tag));
+    test_assert(e.has<flecs::Name>());
+    test_str(e.name(), "Foo");
+    test_str(e.path(), "::Parent::Foo");
+}
+
+void Entity_defer_new_w_nested_name_scope_with() {
+    flecs::world ecs;
+
+    flecs::entity e, Tag = ecs.entity(), parent = ecs.entity("Parent");
+
+    ecs.defer([&]{
+        Tag.with([&]{
+            parent.scope([&]{
+                e = ecs.entity("Foo::Bar");
+                test_assert(e != 0);
+                test_assert(0 == ecs.lookup("Foo"));
+                test_assert(0 == ecs.lookup("Bar"));
+                test_assert(!e.has(Tag));
+                test_assert(!e.has<flecs::Name>());
+            });
+            test_assert(0 == ecs.lookup("Foo"));
+            test_assert(!e.has(Tag));
+            test_assert(!e.has<flecs::Name>());
+        });
+        test_assert(0 == ecs.lookup("Foo"));
+        test_assert(!e.has(Tag));
+        test_assert(!e.has<flecs::Name>());
+    });
+
+    test_assert(e.has(Tag));
+    test_assert(e.has<flecs::Name>());
+    test_str(e.name(), "Bar");
+    test_str(e.path(), "::Parent::Foo::Bar");
+}
+
+void Entity_defer_w_with_implicit_component() {
+    flecs::world ecs;
+
+    struct Tag { };
+
+    flecs::entity e;
+
+    ecs.defer([&]{
+        ecs.with<Tag>([&]{
+            e = ecs.entity();
+            test_assert(!e.has<Tag>());
+        });
+        test_assert(!e.has<Tag>());
+    });
+
+    test_assert(e.has<Tag>());
+}
+
+void Entity_with_after_builder_method() {
+    flecs::world ecs;
+
+    struct Likes { };
+
+    auto A = ecs.entity()
+        .set<Position>({10, 20})
+        .with([&]{
+            ecs.entity("X");
+        });
+
+    auto B = ecs.entity().set<Position>({30, 40})
+        .with<Likes>([&]{
+            ecs.entity("Y");
+        }); 
+
+    auto C = ecs.entity().set<Position>({50, 60})
+        .with(flecs::IsA, [&]{
+            ecs.entity("Z");
+        });                
+
+    test_assert(A.get([](const Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+    }));
+
+    test_assert(B.get([](const Position& p) {
+        test_int(p.x, 30);
+        test_int(p.y, 40);
+    }));
+
+    test_assert(C.get([](const Position& p) {
+        test_int(p.x, 50);
+        test_int(p.y, 60);
+    }));
+
+    auto X = ecs.lookup("X");
+    test_assert(X != 0);
+    test_assert(X.has(A));
+
+    auto Y = ecs.lookup("Y");
+    test_assert(Y != 0);
+    test_assert(Y.has<Likes>(B));
+
+    auto Z = ecs.lookup("Z");
+    test_assert(Z != 0);
+    test_assert(Z.has(flecs::IsA, C));
+}
+
+void Entity_with_before_builder_method() {
+    flecs::world ecs;
+
+    struct Likes { };
+
+    auto A = ecs.entity()
+        .with([&]{
+            ecs.entity("X");
+        })
+        .set<Position>({10, 20});
+
+    auto B = ecs.entity().with<Likes>([&]{
+            ecs.entity("Y");
+        })
+        .set<Position>({30, 40});
+
+    auto C = ecs.entity().with(flecs::IsA, [&]{
+            ecs.entity("Z");
+        })
+        .set<Position>({50, 60});          
+
+    test_assert(A.get([](const Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+    }));
+
+    test_assert(B.get([](const Position& p) {
+        test_int(p.x, 30);
+        test_int(p.y, 40);
+    }));
+
+    test_assert(C.get([](const Position& p) {
+        test_int(p.x, 50);
+        test_int(p.y, 60);
+    }));
+
+    auto X = ecs.lookup("X");
+    test_assert(X != 0);
+    test_assert(X.has(A));
+
+    auto Y = ecs.lookup("Y");
+    test_assert(Y != 0);
+    test_assert(Y.has<Likes>(B));
+
+    auto Z = ecs.lookup("Z");
+    test_assert(Z != 0);
+    test_assert(Z.has(flecs::IsA, C));
+}
+
+void Entity_scope_after_builder_method() {
+    flecs::world ecs;
+
+    ecs.entity("P")
+        .set<Position>({10, 20})
+        .scope([&]{
+            ecs.entity("C");
+        });
+
+    auto C = ecs.lookup("P::C");
+    test_assert(C != 0);
+}
+
+void Entity_scope_before_builder_method() {
+    flecs::world ecs;
+
+    ecs.entity("P")
+        .scope([&]{
+            ecs.entity("C");
+        })
+        .set<Position>({10, 20});
+
+    auto C = ecs.lookup("P::C");
+    test_assert(C != 0);
+}

@@ -5617,6 +5617,29 @@ FLECS_API
 ecs_entity_t ecs_get_scope(
     const ecs_world_t *world);
 
+/** Set current with id.
+ * New entities are automatically created with the specified id.
+ *
+ * @param world The world.
+ * @param id The id.
+ * @return The previous id.
+ */
+FLECS_API
+ecs_entity_t ecs_set_with(
+    ecs_world_t *world,
+    ecs_id_t id);
+
+/** Get current with id.
+ * Get the id set with ecs_set_with.
+ *
+ * @param world The world.
+ * @param id The id.
+ * @return The previous id.
+ */
+FLECS_API
+ecs_entity_t ecs_get_with(
+    const ecs_world_t *world);
+
 /** Set a name prefix for newly created entities.
  * This is a utility that lets C modules use prefixed names for C types and
  * C functions, while using names for the entity names that do not have the 
@@ -10914,6 +10937,63 @@ public:
         ecs_unlock(m_world);
     }
 
+    /** All entities created in function are created with id.
+     */
+    template <typename Func>
+    void with(id_t id, const Func& func) const {
+        ecs_id_t prev = ecs_set_with(m_world, id);
+        func();
+        ecs_set_with(m_world, prev);    
+    }
+
+    /** All entities created in function are created with type.
+     */
+    template <typename T, typename Func>
+    void with(const Func& func) const {
+        with(this->id<T>(), func);
+    }
+
+    /** All entities created in function are created with relation.
+     */
+    template <typename Relation, typename Object, typename Func>
+    void with(const Func& func) const {
+        with(ecs_pair(this->id<Relation>(), this->id<Object>()), func);
+    }
+
+    /** All entities created in function are created with relation.
+     */
+    template <typename Relation, typename Func>
+    void with(id_t object, const Func& func) const {
+        with(ecs_pair(this->id<Relation>(), object), func);
+    } 
+
+    /** All entities created in function are created with relation.
+     */
+    template <typename Func>
+    void with(id_t relation, id_t object, const Func& func) const {
+        with(ecs_pair(relation, object), func);
+    }
+
+    /** All entities created in function are created in scope. All operations
+     * called in function (such as lookup) are relative to scope.
+     */
+    template <typename Func>
+    void scope(id_t parent, const Func& func) const {
+        ecs_entity_t prev = ecs_set_scope(m_world, parent);
+        func();
+        ecs_set_scope(m_world, prev);
+    }
+
+    /** Defer all operations called in function. If the world is already in
+     * deferred mode, do nothing.
+     */
+    template <typename Func>
+    void defer(const Func& func) const {
+        ecs_defer_begin(m_world);
+        func();
+        ecs_defer_end(m_world);
+    }
+
     /** Create a prefab.
      */
     template <typename... Args>
@@ -11139,7 +11219,7 @@ public:
         return *this;
     }
 
-    ECS_DEPRECATED("use add(flecs::ChildOf, parent)")
+    ECS_DEPRECATED("use child_of(parent)")
     const Base& add_childof(const Base& parent) const {
         ecs_add_id(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
         return *this;          
@@ -11461,11 +11541,6 @@ public:
     entity_view(entity_t id) 
         : flecs::id( nullptr, id ) { }
 
-    /** Equality operator. */
-    bool operator==(const entity_view& e) const {
-        return this->id() == e.id();
-    }
-
     /** Entity id 0.
      * This function is useful when the API must provide an entity object that
      * belongs to a world, but the entity id is 0.
@@ -11677,7 +11752,7 @@ public:
      * @return The found entity, or entity::null if no entity matched.
      */
     flecs::entity_view lookup(const char *path) const {
-        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", true);
+        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
         return flecs::entity_view(m_world, id);
     }
 
@@ -11729,8 +11804,6 @@ public:
     template <typename Relation>
     bool has(const flecs::entity_view& object) const {
         auto comp_id = _::cpp_type<Relation>::id(m_world);
-        ecs_assert(_::cpp_type<Relation>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, 
             ecs_pair(comp_id, object.id()));
     }
@@ -11755,8 +11828,6 @@ public:
     template <typename Object>
     bool has_object(const flecs::entity_view& relation) const {
         auto comp_id = _::cpp_type<Object>::id(m_world);
-        ecs_assert(_::cpp_type<Object>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
         return ecs_has_entity(m_world, m_id, 
             ecs_pair(relation.id(), comp_id));
     }
@@ -11995,6 +12066,14 @@ public:
      */
     const Base& is_a(entity_t object) const {
         return this->add(flecs::IsA, object);
+    }
+
+    /** Shortcut for add(ChildOf. obj).
+     *
+     * @param object the object id.
+     */
+    const Base& child_of(entity_t object) const {
+        return this->add(flecs::ChildOf, object);
     }
 
     /** Add a pair with object type.
@@ -12380,6 +12459,53 @@ public:
      */
     template <typename Func, typename _::is_function<Func>::type* = nullptr>
     const Base& set(const Func& func) const;
+
+    /** Entities created in function will have the current entity.
+     *
+     * @param func The function to call.
+     */
+    template <typename Func>
+    const Base& with(const Func& func) const {
+        ecs_id_t prev = ecs_set_with(this->base_world(), this->base_id());
+        func();
+        ecs_set_with(this->base_world(), prev);
+        return *this;
+    }
+
+    /** Entities created in function will have (Relation, this) 
+     * This operation is thread safe.
+     *
+     * @tparam Relation The relation to use.
+     * @param func The function to call.
+     */
+    template <typename Relation, typename Func>
+    const Base& with(const Func& func) const {
+        with(_::cpp_type<Relation>::id(this->base_world()), func);
+        return *this;
+    }  
+
+    /** Entities created in function will have (relation, this) 
+     *
+     * @param relation The relation to use.
+     * @param func The function to call.
+     */
+    template <typename Func>
+    const Base& with(id_t relation, const Func& func) const {
+        ecs_id_t prev = ecs_set_with(this->base_world(), 
+            ecs_pair(relation, this->base_id()));
+        func();
+        ecs_set_with(this->base_world(), prev);
+        return *this;
+    }
+
+    /** The function will be ran with the scope set to the current entity. */
+    template <typename Func>
+    const Base& scope(const Func& func) const {
+        ecs_entity_t prev = ecs_set_scope(this->base_world(), this->base_id());
+        func();
+        ecs_set_scope(this->base_world(), prev);
+        return *this;
+    }    
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -12469,19 +12595,15 @@ public:
      * @param name The entity name.
      * @param is_component If true, the entity will be created from the pool of component ids (default = false).
      */
-    explicit entity(world_t *world, const char *name, bool is_component = false) 
+    explicit entity(world_t *world, const char *name) 
         : flecs::entity_view()
     { 
         m_world = world;
-        m_id = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
 
-        if (!m_id) {
-            if (is_component) {
-                m_id = ecs_new_component_id(m_world);
-            }
-
-            m_id = ecs_add_path_w_sep(world, m_id, 0, name, "::", "::");
-        }
+        ecs_entity_desc_t desc = {};
+        desc.name = name;
+        desc.sep = "::";
+        m_id = ecs_entity_init(world, &desc);
     }
 
     /** Wrap an existing entity id.
@@ -13996,7 +14118,7 @@ public:
         return static_cast<Base*>(this)->add(ECS_INSTANCEOF | e.id());
     }
 
-    ECS_DEPRECATED("use add(flecs::ChildOf, parent)")
+    ECS_DEPRECATED("use child_of(parent)")
     type& add_childof(const entity& e) {
         return static_cast<Base*>(this)->add(ECS_CHILDOF | e.id());
     }  
@@ -14071,6 +14193,10 @@ public:
     type& is_a(entity_t object) {
         return this->add(flecs::IsA, object);
     }
+
+    type& child_of(entity_t object) {
+        return this->add(flecs::ChildOf, object);
+    }    
 
     template <typename Relation>
     type& add(entity_t object) {
@@ -14549,8 +14675,8 @@ public:
         return name;
     }
 
-    // Obtain a component identifier without registering lifecycle callbacks.
-    static entity_t id_no_lifecycle(world_t *world = nullptr, 
+    // Obtain a component identifier for explicit component registration.
+    static entity_t id_explicit(world_t *world = nullptr, 
         const char *name = nullptr, bool allow_tag = true) 
     {
         if (!s_id) {
@@ -14595,22 +14721,41 @@ public:
         return s_id;
     }
 
-    // Obtain a component identifier, register lifecycle callbacks if this is
-    // the first time the component is used.
+    // Obtain a component identifier for implicit component registration. This
+    // is almost the same as id_explicit, except that this operation 
+    // automatically registers lifecycle callbacks.
+    // Additionally, implicit registration temporarily resets the scope & with
+    // state of the world, so that the component is not implicitly created with
+    // the scope/with of the code it happens to be first used in.
     static entity_t id(world_t *world = nullptr, const char *name = nullptr, 
         bool allow_tag = true) 
     {
         // If no id has been registered yet, do it now.
         if (!s_id || (world && !ecs_exists(world, s_id))) {
+            ecs_entity_t prev_scope = 0;
+            ecs_id_t prev_with = 0;
+
+            if (world) {
+                prev_scope = ecs_set_scope(world, 0);
+                prev_with = ecs_set_with(world, 0);
+            }
+            
             // This will register a component id, but will not register 
             // lifecycle callbacks.
-            id_no_lifecycle(world, name, allow_tag);
+            id_explicit(world, name, allow_tag);
 
             // Register lifecycle callbacks, but only if the component has a
             // size. Components that don't have a size are tags, and tags don't
             // require construction/destruction/copy/move's. */
             if (size()) {
                 register_lifecycle_actions<T>(world, s_id);
+            }
+            
+            if (prev_with) {
+                ecs_set_with(world, prev_with);
+            }
+            if (prev_scope) {
+                ecs_set_scope(world, prev_scope);
             }
         }
 
@@ -14636,14 +14781,14 @@ public:
 
     // Obtain a component name, don't register lifecycle if the component hadn't
     // been registered yet. While functionally the same could be achieved by
-    // first calling id_no_lifecycle() and then name(), this function ensures
+    // first calling id_explicit() and then name(), this function ensures
     // that the lifecycle callback templates are not instantiated. This allows
     // some types (such as module classes) to be created without a default
     // constructor.
     static const char* name_no_lifecycle(world_t *world = nullptr) {
         // If no id has been registered yet, do it now.
         if (!s_id) {
-            id_no_lifecycle(world);
+            id_explicit(world);
         }
 
         // By now we should have a valid identifier
@@ -14746,7 +14891,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     if (_::cpp_type<T>::registered()) {
         /* Obtain component id. Because the component is already registered,
          * this operation does nothing besides returning the existing id */
-        id = _::cpp_type<T>::id_no_lifecycle(world_ptr, name, allow_tag);
+        id = _::cpp_type<T>::id_explicit(world_ptr, name, allow_tag);
 
         /* If entity is not empty check if the name matches */
         if (ecs_get_type(world_ptr, id) != nullptr) {
@@ -14781,9 +14926,9 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         
         ecs_assert(entity == id, ECS_INTERNAL_ERROR, NULL);
 
-        /* This functionality could have been put in id_no_lifecycle, but since
+        /* This functionality could have been put in id_explicit, but since
          * this code happens when a component is registered, and the entire API
-         * calls id_no_lifecycle, this would add a lot of overhead to each call.
+         * calls id_explicit, this would add a lot of overhead to each call.
          * This is why when using multiple worlds, components should be 
          * registered explicitly. */
     } else {
@@ -14820,7 +14965,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         }
 
         /* Register id as usual */
-        id = _::cpp_type<T>::id_no_lifecycle(world_ptr, name, allow_tag);
+        id = _::cpp_type<T>::id_explicit(world_ptr, name, allow_tag);
     }
     
     return world.entity(id);
@@ -14910,7 +15055,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
 
     T* module_ptr = static_cast<T*>(
         ecs_get_mut_w_id( world.c_ptr(), m,
-            _::cpp_type<T>::id_no_lifecycle(world.c_ptr(), nullptr, false), 
+            _::cpp_type<T>::id_explicit(world.c_ptr(), nullptr, false), 
                 NULL));
 
     *module_ptr = std::move(*module_data);
@@ -16236,6 +16381,12 @@ inline filter_iterator world::end() const {
 inline int world::count(flecs::filter filter) const {
     return ecs_count_w_filter(m_world, filter.c_ptr());
 }
+
+/** All entities created in function are created in scope. All operations
+    * called in function (such as lookup) are relative to scope.
+    */
+template <typename Func>
+void scope(id_t parent, const Func& func);
 
 inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");

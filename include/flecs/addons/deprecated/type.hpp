@@ -41,7 +41,7 @@ public:
         return static_cast<Base*>(this)->add(ECS_INSTANCEOF | e.id());
     }
 
-    ECS_DEPRECATED("use add(flecs::ChildOf, parent)")
+    ECS_DEPRECATED("use child_of(parent)")
     type& add_childof(const entity& e) {
         return static_cast<Base*>(this)->add(ECS_CHILDOF | e.id());
     }  

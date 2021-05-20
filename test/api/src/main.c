@@ -44,6 +44,10 @@ void Entity_find_id_remove_1_comp(void);
 void Entity_find_id_remove_2_comp(void);
 void Entity_init_w_scope_name(void);
 void Entity_init_w_core_name(void);
+void Entity_init_w_with(void);
+void Entity_init_w_with_w_name(void);
+void Entity_init_w_with_w_scope(void);
+void Entity_init_w_with_w_name_scope(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -71,6 +75,16 @@ void New_new_component_id_skip_used(void);
 void New_new_component_id_skip_to_hi_id(void);
 void New_new_w_entity_0(void);
 void New_create_w_explicit_id_2_worlds(void);
+void New_new_w_id_0_w_with(void);
+void New_new_w_id_w_with(void);
+void New_new_w_type_0_w_with(void);
+void New_new_w_type_w_with(void);
+void New_new_w_id_w_with_w_scope(void);
+void New_new_w_type_w_with_w_scope(void);
+void New_new_w_id_w_with_defer(void);
+void New_new_w_id_w_with_defer_w_scope(void);
+void New_new_w_type_w_with_defer(void);
+void New_new_w_type_w_with_defer_w_scope(void);
 
 // Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
@@ -1959,6 +1973,22 @@ bake_test_case Entity_testcases[] = {
     {
         "init_w_core_name",
         Entity_init_w_core_name
+    },
+    {
+        "init_w_with",
+        Entity_init_w_with
+    },
+    {
+        "init_w_with_w_name",
+        Entity_init_w_with_w_name
+    },
+    {
+        "init_w_with_w_scope",
+        Entity_init_w_with_w_scope
+    },
+    {
+        "init_w_with_w_name_scope",
+        Entity_init_w_with_w_name_scope
     }
 };
 
@@ -2058,6 +2088,46 @@ bake_test_case New_testcases[] = {
     {
         "create_w_explicit_id_2_worlds",
         New_create_w_explicit_id_2_worlds
+    },
+    {
+        "new_w_id_0_w_with",
+        New_new_w_id_0_w_with
+    },
+    {
+        "new_w_id_w_with",
+        New_new_w_id_w_with
+    },
+    {
+        "new_w_type_0_w_with",
+        New_new_w_type_0_w_with
+    },
+    {
+        "new_w_type_w_with",
+        New_new_w_type_w_with
+    },
+    {
+        "new_w_id_w_with_w_scope",
+        New_new_w_id_w_with_w_scope
+    },
+    {
+        "new_w_type_w_with_w_scope",
+        New_new_w_type_w_with_w_scope
+    },
+    {
+        "new_w_id_w_with_defer",
+        New_new_w_id_w_with_defer
+    },
+    {
+        "new_w_id_w_with_defer_w_scope",
+        New_new_w_id_w_with_defer_w_scope
+    },
+    {
+        "new_w_type_w_with_defer",
+        New_new_w_type_w_with_defer
+    },
+    {
+        "new_w_type_w_with_defer_w_scope",
+        New_new_w_type_w_with_defer_w_scope
     }
 };
 
@@ -8652,14 +8722,14 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        35,
+        39,
         Entity_testcases
     },
     {
         "New",
         New_setup,
         NULL,
-        24,
+        34,
         New_testcases
     },
     {

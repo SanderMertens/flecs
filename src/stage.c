@@ -40,16 +40,14 @@ bool defer_add_remove(
     ecs_entities_t *components)
 {
     if (stage->defer) {
-        ecs_entity_t scope = stage->scope;
         if (components) {
-            if (!components->count && !scope) {
+            if (!components->count) {
                 return true;
             }
         }
 
         ecs_op_t *op = new_defer_op(stage);
         op->kind = op_kind;
-        op->scope = scope;
         op->is._1.entity = entity;
 
         new_defer_component_ids(op, components);
