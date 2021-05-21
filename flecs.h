@@ -2903,15 +2903,15 @@ typedef struct ecs_trigger_desc_t {
 
 /** Entity name. */
 typedef struct EcsName {
-    const char *value;     /**< Entity name */
-    char *symbol;          /**< Optional symbol name, if it differs from name */
-    char *alloc_value;     /**< If set, value will be freed on destruction */
+    const char *value;     /* Entity name */
+    char *symbol;          /* Optional symbol name, if it differs from name */
+    char *alloc_value;     /* If set, value will be freed on destruction */
 } EcsName;
 
 /** Component information. */
 typedef struct EcsComponent {
-    ecs_size_t size;           /**< Component size */
-    ecs_size_t alignment;      /**< Component alignment */
+    ecs_size_t size;           /* Component size */
+    ecs_size_t alignment;      /* Component alignment */
 } EcsComponent;
 
 /** Component that stores an ecs_type_t. 
@@ -2919,22 +2919,30 @@ typedef struct EcsComponent {
  * therefore the creation of named types. This component is typically 
  * instantiated by ECS_TYPE. */
 typedef struct EcsType {
-    ecs_type_t type;        /**< Preserved nested types */
-    ecs_type_t normalized;  /**< Union of type and nested AND types */
+    ecs_type_t type;        /* Preserved nested types */
+    ecs_type_t normalized;  /* Union of type and nested AND types */
 } EcsType;
 
 /** Component that contains lifecycle callbacks for a component. */
 struct EcsComponentLifecycle {
-    ecs_xtor_t ctor;            /**< ctor */
-    ecs_xtor_t dtor;            /**< dtor */
-    ecs_copy_t copy;            /**< copy assignment */
-    ecs_move_t move;            /**< move assignment */
+    ecs_xtor_t ctor;            /* ctor */
+    ecs_xtor_t dtor;            /* dtor */
+    ecs_copy_t copy;            /* copy assignment */
+    ecs_move_t move;            /* move assignment */
 
-    void *ctx;              /**< User defined context */
+    void *ctx;                  /* User defined context */
 
-    ecs_copy_ctor_t copy_ctor;  /**< copy ctor (optional, ctor+copy) */
-    ecs_move_ctor_t move_ctor;  /**< move ctor (optional, ctor+move) */
-    ecs_move_ctor_t merge;      /**< move ctor (optional, ctor+move+dtor) */    
+    ecs_copy_ctor_t copy_ctor;  /* copy ctor (optional, ctor+copy) */
+    ecs_move_ctor_t move_ctor;  /* move ctor (optional, ctor+move) */
+    ecs_move_ctor_t merge;      /* move ctor (optional, ctor+move+dtor) */
+
+    bool ctor_illegal;          /* cannot default construct */
+    bool copy_illegal;          /* cannot copy assign */
+    bool move_illegal;          /* cannot move assign */
+    bool copy_ctor_illegal;     /* cannot copy construct */
+    bool move_ctor_illegal;     /* cannot move construct (or merge) */
+
+    /* Note that a type must be destructible */
 };
 
 /** Component that stores reference to trigger */
@@ -2957,25 +2965,25 @@ typedef struct EcsQuery {
 
 /** Type that contains information about the world. */
 typedef struct ecs_world_info_t {
-    ecs_entity_t last_component_id;   /**< Last issued component entity id */
-    ecs_entity_t last_id;             /**< Last issued entity id */
-    ecs_entity_t min_id;              /**< First allowed entity id */
-    ecs_entity_t max_id;              /**< Last allowed entity id */
+    ecs_entity_t last_component_id;   /* Last issued component entity id */
+    ecs_entity_t last_id;             /* Last issued entity id */
+    ecs_entity_t min_id;              /* First allowed entity id */
+    ecs_entity_t max_id;              /* Last allowed entity id */
 
-    FLECS_FLOAT delta_time_raw;      /**< Raw delta time (no time scaling) */
-    FLECS_FLOAT delta_time;          /**< Time passed to or computed by ecs_progress */
-    FLECS_FLOAT time_scale;          /**< Time scale applied to delta_time */
-    FLECS_FLOAT target_fps;          /**< Target fps */
-    FLECS_FLOAT frame_time_total;    /**< Total time spent processing a frame */
-    FLECS_FLOAT system_time_total;   /**< Total time spent in systems */
-    FLECS_FLOAT merge_time_total;    /**< Total time spent in merges */
-    FLECS_FLOAT world_time_total;    /**< Time elapsed in simulation */
-    FLECS_FLOAT world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
+    FLECS_FLOAT delta_time_raw;       /* Raw delta time (no time scaling) */
+    FLECS_FLOAT delta_time;           /* Time passed to or computed by ecs_progress */
+    FLECS_FLOAT time_scale;           /* Time scale applied to delta_time */
+    FLECS_FLOAT target_fps;           /* Target fps */
+    FLECS_FLOAT frame_time_total;     /* Total time spent processing a frame */
+    FLECS_FLOAT system_time_total;    /* Total time spent in systems */
+    FLECS_FLOAT merge_time_total;     /* Total time spent in merges */
+    FLECS_FLOAT world_time_total;     /* Time elapsed in simulation */
+    FLECS_FLOAT world_time_total_raw; /* Time elapsed in simulation (no scaling) */
     
-    int32_t frame_count_total;  /**< Total number of frames */
-    int32_t merge_count_total;  /**< Total number of merges */
-    int32_t pipeline_build_count_total; /**< Total number of pipeline builds */
-    int32_t systems_ran_frame;  /**< Total number of systems ran in last frame */
+    int32_t frame_count_total;        /* Total number of frames */
+    int32_t merge_count_total;        /* Total number of merges */
+    int32_t pipeline_build_count_total; /* Total number of pipeline builds */
+    int32_t systems_ran_frame;  /* Total number of systems ran in last frame */
 } ecs_world_info_t;
 
 /** @} */
@@ -8920,6 +8928,11 @@ FLECS_API void ecs_gauge_reduce(
 // The C++ API does not use STL, save for type_traits
 #include <type_traits>
 
+// Allows overriding flecs_static_assert, which is useful when testing
+#ifndef flecs_static_assert
+#define flecs_static_assert(cond, str) static_assert(cond, str)
+#endif
+
 namespace flecs {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9476,6 +9489,15 @@ public:
     }
 };
 
+namespace _
+{
+
+// Utility to prevent static assert from immediately triggering
+template <class... T>
+struct always_false {
+    static const bool value = false;
+};
+
 // Utility to get actual type
 template<typename Type>
 struct base_type {
@@ -9488,10 +9510,7 @@ template<typename Type>
 struct base_arg_type {
     typedef typename std::remove_pointer<
         typename std::remove_reference<Type>::type>::type type;
-};
-
-namespace _ 
-{
+};    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility to convert template argument pack to array of term ptrs
@@ -9632,6 +9651,339 @@ bool pack_args_to_string(world_t *world, flecs::stringstream& str, bool is_each 
 } // namespace _
 
 } // namespace flecs
+namespace flecs 
+{
+
+namespace _ 
+{
+
+// T()
+// Can't coexist with T(flecs::entity) or T(flecs::world, flecs::entity)
+template <typename T>
+void ctor_impl(
+    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
+    int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *arr = static_cast<T*>(ptr);
+    for (int i = 0; i < count; i ++) {
+        FLECS_PLACEMENT_NEW(&arr[i], T);
+    }
+}
+
+// T(flecs::world, flecs::entity)
+// Can't coexist with T() or T(flecs::entity)
+template <typename T>
+void ctor_world_entity_impl(
+    ecs_world_t* world, ecs_entity_t, const ecs_entity_t* ids, void *ptr, 
+    size_t size, int32_t count, void*);
+
+// ~T()
+template <typename T>
+void dtor_impl(
+    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
+    int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *arr = static_cast<T*>(ptr);
+    for (int i = 0; i < count; i ++) {
+        arr[i].~T();
+    }
+}
+
+// T& operator=(const T&)
+template <typename T>
+void copy_impl(
+    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*, 
+    void *dst_ptr, const void *src_ptr, size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    const T *src_arr = static_cast<const T*>(src_ptr);
+    for (int i = 0; i < count; i ++) {
+        dst_arr[i] = src_arr[i];
+    }
+}
+
+// T& operator=(T&&)
+template <typename T>
+void move_impl(
+    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*,
+    void *dst_ptr, void *src_ptr, size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    T *src_arr = static_cast<T*>(src_ptr);
+    for (int i = 0; i < count; i ++) {
+        dst_arr[i] = std::move(src_arr[i]);
+    }
+}
+
+// T(T&)
+template <typename T>
+void copy_ctor_impl(
+    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
+    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    const void *src_ptr, size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    const T *src_arr = static_cast<const T*>(src_ptr);
+    for (int i = 0; i < count; i ++) {
+        FLECS_PLACEMENT_NEW(&dst_arr[i], T(src_arr[i]));
+    }
+}
+
+// T(T&&)
+template <typename T>
+void move_ctor_impl(
+    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
+    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    T *src_arr = static_cast<T*>(src_ptr);
+    for (int i = 0; i < count; i ++) {
+        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
+    }
+}
+
+// T(T&&), ~T()
+// Typically used when moving to a new table, and removing from the old table
+template <typename T>
+void merge_impl(
+    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
+    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    T *src_arr = static_cast<T*>(src_ptr);
+    for (int i = 0; i < count; i ++) {
+        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
+        src_arr[i].~T();
+    }
+}
+
+// Utility to return callback and whether callback is allowed
+template <typename T>
+struct lifecycle_callback_result {
+    T callback;  // The callback function
+    bool illegal; // If true, callback is not allowed
+    
+    static const lifecycle_callback_result is_illegal;
+    static const lifecycle_callback_result not_set;
+};
+
+template <typename T>
+const lifecycle_callback_result<T> lifecycle_callback_result<T>::is_illegal = {nullptr, true};
+
+template <typename T>
+const lifecycle_callback_result<T> lifecycle_callback_result<T>::not_set = {nullptr, true};
+
+using ctor_result = lifecycle_callback_result<ecs_xtor_t>;
+using dtor_result = lifecycle_callback_result<ecs_xtor_t>;
+using copy_result = lifecycle_callback_result<ecs_copy_t>;
+using move_result = lifecycle_callback_result<ecs_move_t>;
+using copy_ctor_result = lifecycle_callback_result<ecs_copy_ctor_t>;
+using move_ctor_result = lifecycle_callback_result<ecs_move_ctor_t>;
+using merge_result = lifecycle_callback_result<ecs_move_ctor_t>;
+
+template <typename T>
+struct has_flecs_ctor {
+    static constexpr bool value = 
+        std::is_constructible<T, flecs::world&, flecs::entity>::value;
+};
+
+template <typename T>
+struct is_flecs_constructible {
+    static constexpr bool value = 
+        std::is_default_constructible<T>::value ||
+        std::is_constructible<T, flecs::world&, flecs::entity>::value;
+};
+
+// Trivially constructible
+template <typename T, typename std::enable_if<
+    std::is_trivially_constructible<T>::value, void>::type* = nullptr>
+ctor_result ctor() {
+    return ctor_result::not_set;
+}
+
+// Not constructible by flecs
+template <typename T, typename std::enable_if<
+    ! std::is_default_constructible<T>::value &&
+    ! has_flecs_ctor<T>::value,
+        void>::type* = nullptr>
+ctor_result ctor() {
+    return ctor_result::is_illegal;
+}
+
+// Default constructible
+template <typename T, typename std::enable_if<
+    ! std::is_trivially_constructible<T>::value &&
+    std::is_default_constructible<T>::value &&
+    ! has_flecs_ctor<T>::value, 
+        void>::type* = nullptr>
+ctor_result ctor() {
+    return {ctor_impl<T>, false};
+}
+
+// Flecs constructible: T(flecs::world, flecs::entity)
+template <typename T, typename std::enable_if<
+    has_flecs_ctor<T>::value, 
+        void>::type* = nullptr>
+ctor_result ctor() {
+    return {ctor_world_entity_impl<T>, false};
+}
+
+// No dtor
+template <typename T, typename std::enable_if<
+    std::is_trivially_destructible<T>::value, void>::type* = nullptr>
+dtor_result dtor() {
+    return dtor_result::not_set;
+}
+
+// Dtor
+template <typename T, typename std::enable_if<
+    std::is_destructible<T>::value &&
+    ! std::is_trivially_destructible<T>::value, void>::type* = nullptr>
+dtor_result dtor() {
+    return {dtor_impl<T>, false};
+}
+
+// Assert when the type cannot be destructed
+template <typename T, typename std::enable_if<
+    ! std::is_destructible<T>::value, void>::type* = nullptr>
+dtor_result dtor() {
+    flecs_static_assert(always_false<T>::value, 
+        "component type must be destructible");
+    return dtor_result::is_illegal;
+}
+
+// Trivially copyable
+template <typename T, typename std::enable_if<
+    std::is_trivially_copyable<T>::value, void>::type* = nullptr>
+copy_result copy() {
+    return copy_result::not_set;
+}
+
+// Not copyable
+template <typename T, typename std::enable_if<
+    ! std::is_trivially_copyable<T>::value &&
+    ! std::is_copy_assignable<T>::value, void>::type* = nullptr>
+copy_result copy() {
+    return copy_result::is_illegal;
+}
+
+// Copy assignment
+template <typename T, typename std::enable_if<
+    std::is_copy_assignable<T>::value &&
+    ! std::is_trivially_copyable<T>::value, void>::type* = nullptr>
+copy_result copy() {
+    return {copy_impl<T>, false};
+}
+
+// Trivially move assignable
+template <typename T, typename std::enable_if<
+    std::is_trivially_move_assignable<T>::value, void>::type* = nullptr>
+move_result move() {
+    return move_result::not_set;
+}
+
+// Component types must be move assignable
+template <typename T, typename std::enable_if<
+    ! std::is_move_assignable<T>::value, void>::type* = nullptr>
+move_result move() {
+    flecs_static_assert(always_false<T>::value,
+        "component type must be move assignable");
+    return move_result::is_illegal;
+}
+
+// Move assignment
+template <typename T, typename std::enable_if<
+    std::is_move_assignable<T>::value &&
+    ! std::is_trivially_move_assignable<T>::value, void>::type* = nullptr>
+move_result move() {
+    return {move_impl<T>, false};
+}
+
+// Trivially copy constructible
+template <typename T, typename std::enable_if<
+    std::is_trivially_copy_constructible<T>::value, void>::type* = nullptr>
+copy_ctor_result copy_ctor() {
+    return copy_ctor_result::not_set;
+}
+
+// No copy ctor
+template <typename T, typename std::enable_if<
+    ! std::is_copy_constructible<T>::value, void>::type* = nullptr>
+copy_ctor_result copy_ctor() {
+    return copy_ctor_result::is_illegal;
+}
+
+// Copy ctor
+template <typename T, typename std::enable_if<
+    std::is_copy_constructible<T>::value &&
+    ! std::is_trivially_copy_constructible<T>::value, void>::type* = nullptr>
+copy_ctor_result copy_ctor() {
+    return {copy_ctor_impl<T>, false};
+}
+
+// Trivially move constructible
+template <typename T, typename std::enable_if<
+    std::is_trivially_move_constructible<T>::value, void>::type* = nullptr>
+move_ctor_result move_ctor() {
+    return move_ctor_result::not_set;
+}
+
+// Component types must be move constructible
+template <typename T, typename std::enable_if<
+    ! std::is_move_constructible<T>::value, void>::type* = nullptr>
+move_ctor_result move_ctor() {
+    flecs_static_assert(always_false<T>::value,
+        "component type must be move constructible");    
+    return move_ctor_result::is_illegal;
+}
+
+// Move ctor
+template <typename T, typename std::enable_if<
+    std::is_move_constructible<T>::value &&
+    ! std::is_trivially_move_constructible<T>::value, void>::type* = nullptr>
+move_ctor_result move_ctor() {
+    return {move_ctor_impl<T>, false};
+}
+
+// Trivial merge (move assign + dtor)
+template <typename T, typename std::enable_if<
+    std::is_trivially_move_constructible<T>::value  &&
+    std::is_trivially_destructible<T>::value, void>::type* = nullptr>
+move_ctor_result merge() {
+    return move_ctor_result::not_set;
+}
+
+// Component types must be move constructible and destructible
+template <typename T, typename std::enable_if<
+    ! std::is_move_constructible<T>::value ||
+    ! std::is_destructible<T>::value, void>::type* = nullptr>
+move_ctor_result merge() {
+    flecs_static_assert(always_false<T>::value,
+        "component type must be move constructible and destructible");
+    return move_ctor_result::is_illegal;
+}
+
+// Merge (move assign + dtor)
+template <typename T, typename std::enable_if<
+    !(std::is_trivially_move_constructible<T>::value  &&
+      std::is_trivially_destructible<T>::value) &&
+    std::is_move_constructible<T>::value &&
+    std::is_destructible<T>::value, void>::type* = nullptr>
+move_ctor_result merge() {
+    return {merge_impl<T>, false};
+}
+
+} // _
+} // flecs
 
 namespace flecs 
 {
@@ -12002,9 +12354,21 @@ public:
      * 
      * @tparam T the component type to add.
      */
-    template <typename T>
+    template <typename T, typename std::enable_if<
+        _::is_flecs_constructible<T>::value,
+            void>::type* = nullptr>
     const Base& add() const {
         ecs_add_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
+        return *this;
+    }
+
+    template <typename T, typename std::enable_if<
+        !_::is_flecs_constructible<T>::value,
+            void>::type* = nullptr>
+    const Base& add() const {
+        flecs_static_assert(_::always_false<T>::value,
+            "add<T>() cannot construct type: add T() or "
+                "T(flecs::world&, flecs::entity)");
         return *this;
     }
 
@@ -12055,9 +12419,22 @@ public:
      * @tparam Relation the relation type.
      * @param object the object type.
      */
-    template<typename Relation>
+    template<typename Relation, typename std::enable_if<
+        _::is_flecs_constructible<Relation>::value,
+            void>::type* = nullptr>
     const Base& add(entity_t object) const {
         return this->add(_::cpp_type<Relation>::id(this->base_world()), object);
+    }
+
+    template<typename Relation, typename std::enable_if<
+        !_::is_flecs_constructible<Relation>::value,
+            void>::type* = nullptr>
+    const Base& add(entity_t object) const {
+        (void)object;
+        flecs_static_assert(_::always_false<Relation>::value,
+            "add<T>(entity_t) cannot construct type: add T() or "
+                "T(flecs::world&, flecs::entity)");
+        return *this;
     }
 
     /** Shortcut for add(IsA. obj).
@@ -12083,9 +12460,22 @@ public:
      * @param relation the relation type.
      * @tparam Object the object type.
      */
-    template<typename Object>
+    template<typename Object, typename std::enable_if<
+        _::is_flecs_constructible<Object>::value,
+            void>::type* = nullptr>
     const Base& add_object(entity_t relation) const {
         return this->add(relation,  _::cpp_type<Object>::id(this->base_world()));
+    }
+
+    template<typename Object, typename std::enable_if<
+        !_::is_flecs_constructible<Object>::value,
+            void>::type* = nullptr>
+    const Base& add_object(entity_t relation) const {
+        (void)relation;
+        flecs_static_assert(_::always_false<Object>::value,
+            "add_object<T>(entity_t) cannot construct type: add T() or "
+                "T(flecs::world&, flecs::entity)");
+        return *this;
     }
 
     /** Remove a component from an entity.
@@ -12336,45 +12726,49 @@ public:
      * @tparam T The component to set.
      * @param value The value to assign to the component.
      */
-    template <typename T, typename _::no_function<T>::type* = nullptr>
+    template <typename T, typename std::enable_if<
+        _::is_flecs_constructible<T>::value, void>::type* = nullptr,
+        typename _::no_function<T>::type* = nullptr>
     const Base& set(const T& value) const {
         auto comp_id = _::cpp_type<T>::id(this->base_world());
-
-        ecs_assert(_::cpp_type<T>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
-
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         T& ptr = *static_cast<T*>(
             ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, NULL));
-
         ptr = std::move(value);
-
         ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
-
         return *this;
     }
 
-    /** Set a component for an entity.
-     * This operation sets the component value. If the entity did not yet
-     * have the component, it will be added.
-     *
-     * @tparam T The component to set.
-     * @param value The value to assign to the component.
-     */
-    template <typename T, typename _::no_function<T>::type* = nullptr>
+    template <typename T, typename std::enable_if<
+        _::is_flecs_constructible<T>::value, void>::type* = nullptr,
+        typename _::no_function<T>::type* = nullptr>
     const Base& set(T&& value) const {
         auto comp_id = _::cpp_type<T>::id(this->base_world());
-
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-
         T& ptr = *static_cast<T*>(
             ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, NULL));
-
         ptr = std::move(value);
-
         ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
-
         return *this;
     }
+
+    template <typename T, typename std::enable_if<
+        !_::is_flecs_constructible<T>::value, void>::type* = nullptr,
+        typename _::no_function<T>::type* = nullptr>
+    const Base& set(T&& value) const {
+        auto comp_id = _::cpp_type<T>::id(this->base_world());
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        bool is_added = false;
+        T& ptr = *static_cast<T*>(
+            ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, &is_added));
+        if (is_added) {
+            FLECS_PLACEMENT_NEW(&ptr, T(std::move(value)));
+        } else {
+            ptr = std::move(value);
+        }
+        ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
+        return *this;
+    }        
 
     /** Set a pair for an entity.
      * This operation sets the pair value, and uses the relation as type. If the
@@ -14410,143 +14804,7 @@ struct symbol_helper
     }
 };
 
-// The following functions are lifecycle callbacks that are automatically
-// registered with flecs to ensure component lifecycle is handled correctly. Not
-// all types require this, yet callbacks are registered by default, which
-// introduces some overhead when working with components.
-//
-// Lifecycle callbacks are not registered for trivial types.
-
-template <typename T, typename std::enable_if<
-    std::is_default_constructible<T>::value == false && 
-    std::is_trivially_copyable<T>::value == true, void>::type* = nullptr>
-void component_ctor(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
-    int32_t count, void*)
-{
-    // If type is trivially copyable but does not have a default ctor,
-    // initialize it with 0. This will generally work, with the only limitation
-    // that if a type has default values, they will be set to 0.
-    ecs_os_memset(ptr, 0, static_cast<ecs_size_t>(size) * count);
-} 
-
-template <typename T, typename std::enable_if<
-    std::is_default_constructible<T>::value == true, void>::type* = nullptr>
-void component_ctor(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
-    int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *arr = static_cast<T*>(ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&arr[i], T);
-    }
-} 
-
-template <typename T>
-void component_dtor(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
-    int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *arr = static_cast<T*>(ptr);
-    for (int i = 0; i < count; i ++) {
-        arr[i].~T();
-    }
-}
-
-template <typename T, typename std::enable_if<
-    std::is_copy_assignable<T>::value == false, void>::type* = nullptr>
-void component_copy(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*, 
-    void*, const void*, size_t, int32_t, void*)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "type is not copy assignable");
-}
-
-template <typename T, typename std::enable_if<
-    std::is_copy_assignable<T>::value == true, void>::type* = nullptr>
-void component_copy(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*, 
-    void *dst_ptr, const void *src_ptr, size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    const T *src_arr = static_cast<const T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        dst_arr[i] = src_arr[i];
-    }
-}
-
-template <typename T>
-void component_move(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*,
-    void *dst_ptr, void *src_ptr, size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        dst_arr[i] = std::move(src_arr[i]);
-    }
-}
-
-template <typename T, typename std::enable_if<
-    std::is_copy_constructible<T>::value == false, void>::type* = nullptr>
-void component_copy_ctor(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void*, 
-    const void*, size_t, int32_t, void*)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "type is not copy constructible");
-}
-
-template <typename T, typename std::enable_if<
-    std::is_copy_constructible<T>::value == true, void>::type* = nullptr>
-void component_copy_ctor(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    const void *src_ptr, size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    const T *src_arr = static_cast<const T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(src_arr[i]));
-    }
-}
-
-template <typename T>
-void component_move_ctor(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
-    }
-}
-
-// A move ctor that also destructs the source value
-template <typename T>
-void component_merge(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
-        src_arr[i].~T();
-    }
-}
-
-// Don't register any lifecycle callbacks for trivial types
+// If type is trivial, don't register lifecycle actions.
 template<typename T, typename std::enable_if<
     std::is_trivial<T>::value == true, void>::type* = nullptr>
 void register_lifecycle_actions(
@@ -14556,7 +14814,8 @@ void register_lifecycle_actions(
     (void)world; (void)component;
 }
 
-// Register component lifecycle callbacks with flecs.
+// If the component is non-trivial, register component lifecycle actions. 
+// Depending on the type not all callbacks may be available.
 template<typename T, typename std::enable_if<
     std::is_trivial<T>::value == false, void>::type* = nullptr>
 void register_lifecycle_actions(
@@ -14565,13 +14824,16 @@ void register_lifecycle_actions(
 {
     if (!ecs_component_has_actions(world, component)) {
         EcsComponentLifecycle cl{};
-        cl.ctor = _::component_ctor<typename base_type<T>::type>;
-        cl.dtor = _::component_dtor<typename base_type<T>::type>;
-        cl.copy = _::component_copy<typename base_type<T>::type>;
-        cl.copy_ctor = _::component_copy_ctor<typename base_type<T>::type>;
-        cl.move = _::component_move<typename base_type<T>::type>;
-        cl.move_ctor = _::component_move_ctor<typename base_type<T>::type>;
-        cl.merge = _::component_merge<typename base_type<T>::type>;
+        cl.ctor = ctor<T>().callback;
+        cl.dtor = dtor<T>().callback;
+
+        cl.copy = copy<T>().callback;
+        cl.copy_ctor = copy_ctor<T>().callback;
+        cl.move = move<T>().callback;
+        cl.move_ctor = move_ctor<T>().callback;
+
+        cl.merge = merge<T>().callback;
+
         ecs_set_component_actions_w_entity( world, component, &cl);
     }
 }
@@ -15018,9 +15280,9 @@ flecs::entity module(const flecs::world& world, const char *name = nullptr) {
     // default ctor doesn't work for modules. Additionally, the module ctor
     // should only be invoked once per import.
     EcsComponentLifecycle cl{};
-    cl.copy = _::component_copy<T>;
-    cl.move = _::component_move<T>;
-    cl.dtor = _::component_dtor<T>;
+    cl.copy = _::copy<T>().callback;
+    cl.move = _::move<T>().callback;
+    cl.dtor = _::dtor<T>().callback;
     ecs_set_component_actions_w_entity(world, result, &cl);
 
     return result;
@@ -15984,6 +16246,30 @@ private:
 
 } // namespace flecs
 
+
+
+namespace flecs 
+{
+
+namespace _
+{
+
+template <typename T>
+inline void ctor_world_entity_impl(
+    ecs_world_t* world, ecs_entity_t, const ecs_entity_t* ids, void *ptr, 
+    size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *arr = static_cast<T*>(ptr);
+    flecs::world w(world);
+    for (int i = 0; i < count; i ++) {
+        flecs::entity e(world, ids[i]);
+        FLECS_PLACEMENT_NEW(&arr[i], T(w, e));
+    }
+}
+
+} // _
+} // flecs
 
 namespace flecs 
 {

@@ -371,6 +371,7 @@ void ComponentLifecycle_flecs_ctor(void);
 void ComponentLifecycle_flecs_ctor_w_default_ctor(void);
 void ComponentLifecycle_default_ctor_w_value_ctor(void);
 void ComponentLifecycle_flecs_ctor_w_value_ctor(void);
+void ComponentLifecycle_no_default_ctor_move_ctor_on_set(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref(void);
@@ -1880,6 +1881,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "flecs_ctor_w_value_ctor",
         ComponentLifecycle_flecs_ctor_w_value_ctor
+    },
+    {
+        "no_default_ctor_move_ctor_on_set",
+        ComponentLifecycle_no_default_ctor_move_ctor_on_set
     }
 };
 
@@ -2363,7 +2368,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        34,
+        35,
         ComponentLifecycle_testcases
     },
     {
