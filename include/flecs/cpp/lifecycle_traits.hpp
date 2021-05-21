@@ -19,7 +19,6 @@ void ctor_impl(
 }
 
 // T(flecs::world, flecs::entity)
-// Can't coexist with T() or T(flecs::entity)
 template <typename T>
 void ctor_world_entity_impl(
     ecs_world_t* world, ecs_entity_t, const ecs_entity_t* ids, void *ptr, 
