@@ -142,143 +142,7 @@ struct symbol_helper
     }
 };
 
-// The following functions are lifecycle callbacks that are automatically
-// registered with flecs to ensure component lifecycle is handled correctly. Not
-// all types require this, yet callbacks are registered by default, which
-// introduces some overhead when working with components.
-//
-// Lifecycle callbacks are not registered for trivial types.
-
-template <typename T, typename std::enable_if<
-    std::is_default_constructible<T>::value == false && 
-    std::is_trivially_copyable<T>::value == true, void>::type* = nullptr>
-void component_ctor(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
-    int32_t count, void*)
-{
-    // If type is trivially copyable but does not have a default ctor,
-    // initialize it with 0. This will generally work, with the only limitation
-    // that if a type has default values, they will be set to 0.
-    ecs_os_memset(ptr, 0, static_cast<ecs_size_t>(size) * count);
-} 
-
-template <typename T, typename std::enable_if<
-    std::is_default_constructible<T>::value == true, void>::type* = nullptr>
-void component_ctor(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
-    int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *arr = static_cast<T*>(ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&arr[i], T);
-    }
-} 
-
-template <typename T>
-void component_dtor(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
-    int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *arr = static_cast<T*>(ptr);
-    for (int i = 0; i < count; i ++) {
-        arr[i].~T();
-    }
-}
-
-template <typename T, typename std::enable_if<
-    std::is_copy_assignable<T>::value == false, void>::type* = nullptr>
-void component_copy(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*, 
-    void*, const void*, size_t, int32_t, void*)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "type is not copy assignable");
-}
-
-template <typename T, typename std::enable_if<
-    std::is_copy_assignable<T>::value == true, void>::type* = nullptr>
-void component_copy(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*, 
-    void *dst_ptr, const void *src_ptr, size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    const T *src_arr = static_cast<const T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        dst_arr[i] = src_arr[i];
-    }
-}
-
-template <typename T>
-void component_move(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*,
-    void *dst_ptr, void *src_ptr, size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        dst_arr[i] = std::move(src_arr[i]);
-    }
-}
-
-template <typename T, typename std::enable_if<
-    std::is_copy_constructible<T>::value == false, void>::type* = nullptr>
-void component_copy_ctor(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void*, 
-    const void*, size_t, int32_t, void*)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "type is not copy constructible");
-}
-
-template <typename T, typename std::enable_if<
-    std::is_copy_constructible<T>::value == true, void>::type* = nullptr>
-void component_copy_ctor(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    const void *src_ptr, size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    const T *src_arr = static_cast<const T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(src_arr[i]));
-    }
-}
-
-template <typename T>
-void component_move_ctor(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
-    }
-}
-
-// A move ctor that also destructs the source value
-template <typename T>
-void component_merge(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
-        src_arr[i].~T();
-    }
-}
-
-// Don't register any lifecycle callbacks for trivial types
+// If type is trivial, don't register lifecycle actions.
 template<typename T, typename std::enable_if<
     std::is_trivial<T>::value == true, void>::type* = nullptr>
 void register_lifecycle_actions(
@@ -288,7 +152,8 @@ void register_lifecycle_actions(
     (void)world; (void)component;
 }
 
-// Register component lifecycle callbacks with flecs.
+// If the component is non-trivial, register component lifecycle actions. 
+// Depending on the type not all callbacks may be available.
 template<typename T, typename std::enable_if<
     std::is_trivial<T>::value == false, void>::type* = nullptr>
 void register_lifecycle_actions(
@@ -297,13 +162,16 @@ void register_lifecycle_actions(
 {
     if (!ecs_component_has_actions(world, component)) {
         EcsComponentLifecycle cl{};
-        cl.ctor = _::component_ctor<typename base_type<T>::type>;
-        cl.dtor = _::component_dtor<typename base_type<T>::type>;
-        cl.copy = _::component_copy<typename base_type<T>::type>;
-        cl.copy_ctor = _::component_copy_ctor<typename base_type<T>::type>;
-        cl.move = _::component_move<typename base_type<T>::type>;
-        cl.move_ctor = _::component_move_ctor<typename base_type<T>::type>;
-        cl.merge = _::component_merge<typename base_type<T>::type>;
+        cl.ctor = ctor<T>().callback;
+        cl.dtor = dtor<T>().callback;
+
+        cl.copy = copy<T>().callback;
+        cl.copy_ctor = copy_ctor<T>().callback;
+        cl.move = move<T>().callback;
+        cl.move_ctor = move_ctor<T>().callback;
+
+        cl.merge = merge<T>().callback;
+
         ecs_set_component_actions_w_entity( world, component, &cl);
     }
 }

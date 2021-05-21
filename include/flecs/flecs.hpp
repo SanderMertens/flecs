@@ -10,6 +10,11 @@
 // The C++ API does not use STL, save for type_traits
 #include <type_traits>
 
+// Allows overriding flecs_static_assert, which is useful when testing
+#ifndef flecs_static_assert
+#define flecs_static_assert(cond, str) static_assert(cond, str)
+#endif
+
 namespace flecs {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,6 +174,7 @@ static const flecs::entity_t Throw = EcsThrow;
 
 #include <flecs/cpp/function_traits.hpp>
 #include <flecs/cpp/util.hpp>
+#include <flecs/cpp/lifecycle_traits.hpp>
 #include <flecs/cpp/iter.hpp>
 #include <flecs/cpp/world.hpp>
 #include <flecs/cpp/entity.hpp>

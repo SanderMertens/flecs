@@ -17,9 +17,9 @@ flecs::entity module(const flecs::world& world, const char *name = nullptr) {
     // default ctor doesn't work for modules. Additionally, the module ctor
     // should only be invoked once per import.
     EcsComponentLifecycle cl{};
-    cl.copy = _::component_copy<T>;
-    cl.move = _::component_move<T>;
-    cl.dtor = _::component_dtor<T>;
+    cl.copy = _::copy<T>().callback;
+    cl.move = _::move<T>().callback;
+    cl.dtor = _::dtor<T>().callback;
     ecs_set_component_actions_w_entity(world, result, &cl);
 
     return result;

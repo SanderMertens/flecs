@@ -355,6 +355,22 @@ void ComponentLifecycle_implicit_component(void);
 void ComponentLifecycle_implicit_after_query(void);
 void ComponentLifecycle_deleted_copy(void);
 void ComponentLifecycle_no_default_ctor(void);
+void ComponentLifecycle_default_init(void);
+void ComponentLifecycle_no_default_ctor_add(void);
+void ComponentLifecycle_no_default_ctor_add_relation(void);
+void ComponentLifecycle_no_default_ctor_add_object(void);
+void ComponentLifecycle_no_default_ctor_set(void);
+void ComponentLifecycle_no_copy_ctor(void);
+void ComponentLifecycle_no_move_ctor(void);
+void ComponentLifecycle_no_copy_assign(void);
+void ComponentLifecycle_no_move_assign(void);
+void ComponentLifecycle_no_copy(void);
+void ComponentLifecycle_no_move(void);
+void ComponentLifecycle_no_dtor(void);
+void ComponentLifecycle_flecs_ctor(void);
+void ComponentLifecycle_flecs_ctor_w_default_ctor(void);
+void ComponentLifecycle_default_ctor_w_value_ctor(void);
+void ComponentLifecycle_flecs_ctor_w_value_ctor(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref(void);
@@ -1800,6 +1816,70 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "no_default_ctor",
         ComponentLifecycle_no_default_ctor
+    },
+    {
+        "default_init",
+        ComponentLifecycle_default_init
+    },
+    {
+        "no_default_ctor_add",
+        ComponentLifecycle_no_default_ctor_add
+    },
+    {
+        "no_default_ctor_add_relation",
+        ComponentLifecycle_no_default_ctor_add_relation
+    },
+    {
+        "no_default_ctor_add_object",
+        ComponentLifecycle_no_default_ctor_add_object
+    },
+    {
+        "no_default_ctor_set",
+        ComponentLifecycle_no_default_ctor_set
+    },
+    {
+        "no_copy_ctor",
+        ComponentLifecycle_no_copy_ctor
+    },
+    {
+        "no_move_ctor",
+        ComponentLifecycle_no_move_ctor
+    },
+    {
+        "no_copy_assign",
+        ComponentLifecycle_no_copy_assign
+    },
+    {
+        "no_move_assign",
+        ComponentLifecycle_no_move_assign
+    },
+    {
+        "no_copy",
+        ComponentLifecycle_no_copy
+    },
+    {
+        "no_move",
+        ComponentLifecycle_no_move
+    },
+    {
+        "no_dtor",
+        ComponentLifecycle_no_dtor
+    },
+    {
+        "flecs_ctor",
+        ComponentLifecycle_flecs_ctor
+    },
+    {
+        "flecs_ctor_w_default_ctor",
+        ComponentLifecycle_flecs_ctor_w_default_ctor
+    },
+    {
+        "default_ctor_w_value_ctor",
+        ComponentLifecycle_default_ctor_w_value_ctor
+    },
+    {
+        "flecs_ctor_w_value_ctor",
+        ComponentLifecycle_flecs_ctor_w_value_ctor
     }
 };
 
@@ -2283,7 +2363,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        18,
+        34,
         ComponentLifecycle_testcases
     },
     {

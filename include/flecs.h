@@ -449,15 +449,15 @@ typedef struct ecs_trigger_desc_t {
 
 /** Entity name. */
 typedef struct EcsName {
-    const char *value;     /**< Entity name */
-    char *symbol;          /**< Optional symbol name, if it differs from name */
-    char *alloc_value;     /**< If set, value will be freed on destruction */
+    const char *value;     /* Entity name */
+    char *symbol;          /* Optional symbol name, if it differs from name */
+    char *alloc_value;     /* If set, value will be freed on destruction */
 } EcsName;
 
 /** Component information. */
 typedef struct EcsComponent {
-    ecs_size_t size;           /**< Component size */
-    ecs_size_t alignment;      /**< Component alignment */
+    ecs_size_t size;           /* Component size */
+    ecs_size_t alignment;      /* Component alignment */
 } EcsComponent;
 
 /** Component that stores an ecs_type_t. 
@@ -465,22 +465,30 @@ typedef struct EcsComponent {
  * therefore the creation of named types. This component is typically 
  * instantiated by ECS_TYPE. */
 typedef struct EcsType {
-    ecs_type_t type;        /**< Preserved nested types */
-    ecs_type_t normalized;  /**< Union of type and nested AND types */
+    ecs_type_t type;        /* Preserved nested types */
+    ecs_type_t normalized;  /* Union of type and nested AND types */
 } EcsType;
 
 /** Component that contains lifecycle callbacks for a component. */
 struct EcsComponentLifecycle {
-    ecs_xtor_t ctor;            /**< ctor */
-    ecs_xtor_t dtor;            /**< dtor */
-    ecs_copy_t copy;            /**< copy assignment */
-    ecs_move_t move;            /**< move assignment */
+    ecs_xtor_t ctor;            /* ctor */
+    ecs_xtor_t dtor;            /* dtor */
+    ecs_copy_t copy;            /* copy assignment */
+    ecs_move_t move;            /* move assignment */
 
-    void *ctx;              /**< User defined context */
+    void *ctx;                  /* User defined context */
 
-    ecs_copy_ctor_t copy_ctor;  /**< copy ctor (optional, ctor+copy) */
-    ecs_move_ctor_t move_ctor;  /**< move ctor (optional, ctor+move) */
-    ecs_move_ctor_t merge;      /**< move ctor (optional, ctor+move+dtor) */    
+    ecs_copy_ctor_t copy_ctor;  /* copy ctor (optional, ctor+copy) */
+    ecs_move_ctor_t move_ctor;  /* move ctor (optional, ctor+move) */
+    ecs_move_ctor_t merge;      /* move ctor (optional, ctor+move+dtor) */
+
+    bool ctor_illegal;          /* cannot default construct */
+    bool copy_illegal;          /* cannot copy assign */
+    bool move_illegal;          /* cannot move assign */
+    bool copy_ctor_illegal;     /* cannot copy construct */
+    bool move_ctor_illegal;     /* cannot move construct (or merge) */
+
+    /* Note that a type must be destructible */
 };
 
 /** Component that stores reference to trigger */
@@ -503,25 +511,25 @@ typedef struct EcsQuery {
 
 /** Type that contains information about the world. */
 typedef struct ecs_world_info_t {
-    ecs_entity_t last_component_id;   /**< Last issued component entity id */
-    ecs_entity_t last_id;             /**< Last issued entity id */
-    ecs_entity_t min_id;              /**< First allowed entity id */
-    ecs_entity_t max_id;              /**< Last allowed entity id */
+    ecs_entity_t last_component_id;   /* Last issued component entity id */
+    ecs_entity_t last_id;             /* Last issued entity id */
+    ecs_entity_t min_id;              /* First allowed entity id */
+    ecs_entity_t max_id;              /* Last allowed entity id */
 
-    FLECS_FLOAT delta_time_raw;      /**< Raw delta time (no time scaling) */
-    FLECS_FLOAT delta_time;          /**< Time passed to or computed by ecs_progress */
-    FLECS_FLOAT time_scale;          /**< Time scale applied to delta_time */
-    FLECS_FLOAT target_fps;          /**< Target fps */
-    FLECS_FLOAT frame_time_total;    /**< Total time spent processing a frame */
-    FLECS_FLOAT system_time_total;   /**< Total time spent in systems */
-    FLECS_FLOAT merge_time_total;    /**< Total time spent in merges */
-    FLECS_FLOAT world_time_total;    /**< Time elapsed in simulation */
-    FLECS_FLOAT world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
+    FLECS_FLOAT delta_time_raw;       /* Raw delta time (no time scaling) */
+    FLECS_FLOAT delta_time;           /* Time passed to or computed by ecs_progress */
+    FLECS_FLOAT time_scale;           /* Time scale applied to delta_time */
+    FLECS_FLOAT target_fps;           /* Target fps */
+    FLECS_FLOAT frame_time_total;     /* Total time spent processing a frame */
+    FLECS_FLOAT system_time_total;    /* Total time spent in systems */
+    FLECS_FLOAT merge_time_total;     /* Total time spent in merges */
+    FLECS_FLOAT world_time_total;     /* Time elapsed in simulation */
+    FLECS_FLOAT world_time_total_raw; /* Time elapsed in simulation (no scaling) */
     
-    int32_t frame_count_total;  /**< Total number of frames */
-    int32_t merge_count_total;  /**< Total number of merges */
-    int32_t pipeline_build_count_total; /**< Total number of pipeline builds */
-    int32_t systems_ran_frame;  /**< Total number of systems ran in last frame */
+    int32_t frame_count_total;        /* Total number of frames */
+    int32_t merge_count_total;        /* Total number of merges */
+    int32_t pipeline_build_count_total; /* Total number of pipeline builds */
+    int32_t systems_ran_frame;  /* Total number of systems ran in last frame */
 } ecs_world_info_t;
 
 /** @} */
