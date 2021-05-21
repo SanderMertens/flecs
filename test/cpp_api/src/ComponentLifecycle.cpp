@@ -13,6 +13,13 @@ int Pod::move_invoked = 0;
 int Pod::copy_ctor_invoked = 0;
 int Pod::move_ctor_invoked = 0;
 
+int CountNoDefaultCtor::ctor_invoked = 0;
+int CountNoDefaultCtor::dtor_invoked = 0;
+int CountNoDefaultCtor::copy_invoked = 0;
+int CountNoDefaultCtor::move_invoked = 0;
+int CountNoDefaultCtor::copy_ctor_invoked = 0;
+int CountNoDefaultCtor::move_ctor_invoked = 0;
+
 class Str {
 public:
     std::string value;
@@ -659,4 +666,35 @@ void ComponentLifecycle_flecs_ctor_w_value_ctor() {
     try_add<FlecsCtorValueCtor>(ecs);
 
     try_set<FlecsCtorValueCtor>(ecs);
+}
+
+void ComponentLifecycle_no_default_ctor_move_ctor_on_set() {
+    flecs::world ecs;
+
+    ecs.component<CountNoDefaultCtor>();
+
+    // First set, move construct
+    auto e = ecs.entity().set<CountNoDefaultCtor>({10});
+    test_assert(e.has<CountNoDefaultCtor>());
+
+    const CountNoDefaultCtor* ptr = e.get<CountNoDefaultCtor>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 1);
+    test_int(CountNoDefaultCtor::copy_invoked, 0);
+    test_int(CountNoDefaultCtor::move_invoked, 0);
+    test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+
+    // Second set, move assign
+    e.set<CountNoDefaultCtor>({10});
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 2);
+    test_int(CountNoDefaultCtor::dtor_invoked, 2);
+    test_int(CountNoDefaultCtor::copy_invoked, 0);
+    test_int(CountNoDefaultCtor::move_invoked, 1);
+    test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 1);    
 }

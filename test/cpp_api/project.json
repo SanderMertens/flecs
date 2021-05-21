@@ -397,7 +397,8 @@
                 "flecs_ctor",
                 "flecs_ctor_w_default_ctor",
                 "default_ctor_w_value_ctor",
-                "flecs_ctor_w_value_ctor"
+                "flecs_ctor_w_value_ctor",
+                "no_default_ctor_move_ctor_on_set"
             ]
         }, {
             "id": "Refs",

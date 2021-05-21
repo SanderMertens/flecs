@@ -270,6 +270,48 @@ struct FlecsCtorValueCtor {
     flecs::entity e_;
 };
 
+class CountNoDefaultCtor {
+public:
+    CountNoDefaultCtor(int v) {
+        ctor_invoked ++;
+        value = v;
+    }    
+
+    ~CountNoDefaultCtor() {
+        dtor_invoked ++;
+    }
+
+    CountNoDefaultCtor(const CountNoDefaultCtor& obj) {
+        copy_ctor_invoked ++;
+        this->value = obj.value;
+    }
+
+    CountNoDefaultCtor(CountNoDefaultCtor&& obj) {
+        move_ctor_invoked ++;
+        this->value = obj.value;
+    }
+
+    CountNoDefaultCtor& operator=(const CountNoDefaultCtor& obj) {
+        copy_invoked ++;
+        this->value = obj.value;
+        return *this;
+    }
+
+    CountNoDefaultCtor& operator=(CountNoDefaultCtor&& obj) {
+        move_invoked ++;
+        this->value = obj.value;
+        return *this;
+    }   
+
+    int value;
+
+    static int ctor_invoked;
+    static int dtor_invoked;
+    static int copy_invoked;
+    static int move_invoked;
+    static int copy_ctor_invoked;
+    static int move_ctor_invoked;
+};
 
 void install_test_abort();
 

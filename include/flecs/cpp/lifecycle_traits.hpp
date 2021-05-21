@@ -18,36 +18,12 @@ void ctor_impl(
     }
 }
 
-// T(flecs::entity) 
-// Can't coexist with T() or T(flecs::world, flecs::entity)
-template <typename T>
-void ctor_entity_impl(
-    ecs_world_t* world, ecs_entity_t, const ecs_entity_t* ids, void *ptr, 
-    size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *arr = static_cast<T*>(ptr);
-    for (int i = 0; i < count; i ++) {
-        flecs::entity e(world, ids[i]);
-        FLECS_PLACEMENT_NEW(&arr[i], T(e));
-    }
-}
-
 // T(flecs::world, flecs::entity)
 // Can't coexist with T() or T(flecs::entity)
 template <typename T>
 void ctor_world_entity_impl(
     ecs_world_t* world, ecs_entity_t, const ecs_entity_t* ids, void *ptr, 
-    size_t size, int32_t count, void*)
-{
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
-    T *arr = static_cast<T*>(ptr);
-    flecs::world w(world);
-    for (int i = 0; i < count; i ++) {
-        flecs::entity e(world, ids[i]);
-        FLECS_PLACEMENT_NEW(&arr[i], T(w, e));
-    }
-}
+    size_t size, int32_t count, void*);
 
 // ~T()
 template <typename T>
@@ -143,9 +119,15 @@ struct lifecycle_callback_result {
     T callback;  // The callback function
     bool illegal; // If true, callback is not allowed
     
-    static constexpr lifecycle_callback_result is_illegal = {nullptr, true};
-    static constexpr lifecycle_callback_result not_set = {nullptr, true};
+    static const lifecycle_callback_result is_illegal;
+    static const lifecycle_callback_result not_set;
 };
+
+template <typename T>
+const lifecycle_callback_result<T> lifecycle_callback_result<T>::is_illegal = {nullptr, true};
+
+template <typename T>
+const lifecycle_callback_result<T> lifecycle_callback_result<T>::not_set = {nullptr, true};
 
 using ctor_result = lifecycle_callback_result<ecs_xtor_t>;
 using dtor_result = lifecycle_callback_result<ecs_xtor_t>;

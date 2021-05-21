@@ -1013,45 +1013,49 @@ public:
      * @tparam T The component to set.
      * @param value The value to assign to the component.
      */
-    template <typename T, typename _::no_function<T>::type* = nullptr>
+    template <typename T, typename std::enable_if<
+        _::is_flecs_constructible<T>::value, void>::type* = nullptr,
+        typename _::no_function<T>::type* = nullptr>
     const Base& set(const T& value) const {
         auto comp_id = _::cpp_type<T>::id(this->base_world());
-
-        ecs_assert(_::cpp_type<T>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
-
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         T& ptr = *static_cast<T*>(
             ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, NULL));
-
         ptr = std::move(value);
-
         ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
-
         return *this;
     }
 
-    /** Set a component for an entity.
-     * This operation sets the component value. If the entity did not yet
-     * have the component, it will be added.
-     *
-     * @tparam T The component to set.
-     * @param value The value to assign to the component.
-     */
-    template <typename T, typename _::no_function<T>::type* = nullptr>
+    template <typename T, typename std::enable_if<
+        _::is_flecs_constructible<T>::value, void>::type* = nullptr,
+        typename _::no_function<T>::type* = nullptr>
     const Base& set(T&& value) const {
         auto comp_id = _::cpp_type<T>::id(this->base_world());
-
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-
         T& ptr = *static_cast<T*>(
             ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, NULL));
-
         ptr = std::move(value);
-
         ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
-
         return *this;
     }
+
+    template <typename T, typename std::enable_if<
+        !_::is_flecs_constructible<T>::value, void>::type* = nullptr,
+        typename _::no_function<T>::type* = nullptr>
+    const Base& set(T&& value) const {
+        auto comp_id = _::cpp_type<T>::id(this->base_world());
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        bool is_added = false;
+        T& ptr = *static_cast<T*>(
+            ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, &is_added));
+        if (is_added) {
+            FLECS_PLACEMENT_NEW(&ptr, T(std::move(value)));
+        } else {
+            ptr = std::move(value);
+        }
+        ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
+        return *this;
+    }        
 
     /** Set a pair for an entity.
      * This operation sets the pair value, and uses the relation as type. If the
