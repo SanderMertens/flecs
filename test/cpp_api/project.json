@@ -381,7 +381,23 @@
                 "implicit_component",
                 "implicit_after_query",
                 "deleted_copy",
-                "no_default_ctor"
+                "no_default_ctor",
+                "default_init",
+                "no_default_ctor_add",
+                "no_default_ctor_add_relation",
+                "no_default_ctor_add_object",
+                "no_default_ctor_set",
+                "no_copy_ctor",
+                "no_move_ctor",
+                "no_copy_assign",
+                "no_move_assign",
+                "no_copy",
+                "no_move",
+                "no_dtor",
+                "flecs_ctor",
+                "flecs_ctor_w_default_ctor",
+                "default_ctor_w_value_ctor",
+                "flecs_ctor_w_value_ctor"
             ]
         }, {
             "id": "Refs",

@@ -641,9 +641,21 @@ public:
      * 
      * @tparam T the component type to add.
      */
-    template <typename T>
+    template <typename T, typename std::enable_if<
+        _::is_flecs_constructible<T>::value,
+            void>::type* = nullptr>
     const Base& add() const {
         ecs_add_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
+        return *this;
+    }
+
+    template <typename T, typename std::enable_if<
+        !_::is_flecs_constructible<T>::value,
+            void>::type* = nullptr>
+    const Base& add() const {
+        flecs_static_assert(_::always_false<T>::value,
+            "add<T>() cannot construct type: add T() or "
+                "T(flecs::world&, flecs::entity)");
         return *this;
     }
 
@@ -694,9 +706,22 @@ public:
      * @tparam Relation the relation type.
      * @param object the object type.
      */
-    template<typename Relation>
+    template<typename Relation, typename std::enable_if<
+        _::is_flecs_constructible<Relation>::value,
+            void>::type* = nullptr>
     const Base& add(entity_t object) const {
         return this->add(_::cpp_type<Relation>::id(this->base_world()), object);
+    }
+
+    template<typename Relation, typename std::enable_if<
+        !_::is_flecs_constructible<Relation>::value,
+            void>::type* = nullptr>
+    const Base& add(entity_t object) const {
+        (void)object;
+        flecs_static_assert(_::always_false<Relation>::value,
+            "add<T>(entity_t) cannot construct type: add T() or "
+                "T(flecs::world&, flecs::entity)");
+        return *this;
     }
 
     /** Shortcut for add(IsA. obj).
@@ -722,9 +747,22 @@ public:
      * @param relation the relation type.
      * @tparam Object the object type.
      */
-    template<typename Object>
+    template<typename Object, typename std::enable_if<
+        _::is_flecs_constructible<Object>::value,
+            void>::type* = nullptr>
     const Base& add_object(entity_t relation) const {
         return this->add(relation,  _::cpp_type<Object>::id(this->base_world()));
+    }
+
+    template<typename Object, typename std::enable_if<
+        !_::is_flecs_constructible<Object>::value,
+            void>::type* = nullptr>
+    const Base& add_object(entity_t relation) const {
+        (void)relation;
+        flecs_static_assert(_::always_false<Object>::value,
+            "add_object<T>(entity_t) cannot construct type: add T() or "
+                "T(flecs::world&, flecs::entity)");
+        return *this;
     }
 
     /** Remove a component from an entity.

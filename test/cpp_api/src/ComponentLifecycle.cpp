@@ -1,3 +1,7 @@
+// Catch static asserts
+#define flecs_static_assert(cond, str)\
+    ecs_assert(cond, ECS_INVALID_OPERATION, str)
+
 #include <cpp_api.h>
 
 #include <string>
@@ -375,64 +379,284 @@ void ComponentLifecycle_implicit_after_query() {
     test_int(Pod::move_invoked, 2); 
 }
 
-class NoCopy {
-public:
-    NoCopy() { };
-    NoCopy(int x, int y) { x_ = x; y_ = y; };
-    ~NoCopy() { };
+template <typename T, typename std::enable_if<
+    !flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+static void try_add(flecs::world& ecs) {
+    flecs::entity e = ecs.entity().add<T>();
+    
+    test_assert(e.has<T>());
 
-    NoCopy(const NoCopy& obj) = delete;
-    NoCopy(NoCopy&& obj) { *this = std::move(obj); };
+    const T *ptr = e.get<T>();
+    test_int(ptr->x_, 99);
 
-    NoCopy& operator=(const NoCopy& obj) = delete;
-    NoCopy& operator=(NoCopy&& obj) { 
-        this->x_ = obj.x_; 
-        this->y_ = obj.y_; 
-        return *this; 
-    };
+    e.remove<T>();
+    test_assert(!e.has<T>());
+}
 
-    int x_;
-    int y_;
-};
+template <typename T, typename std::enable_if<
+    flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+static void try_add(flecs::world& ecs) {
+    flecs::entity e = ecs.entity().add<T>();
+    test_assert(e.has<T>());
+
+    const T *ptr = e.get<T>();
+    test_int(ptr->x_, 89);
+    test_int(ptr->e_, e);
+
+    e.remove<T>();
+    test_assert(!e.has<T>());
+}
+
+template <typename T>
+static void try_add_relation(flecs::world& ecs) {
+    flecs::entity obj = ecs.entity();
+
+    flecs::entity e = ecs.entity().add<T>(obj);
+    test_assert(e.has<T>());
+
+    const T *ptr = e.get<T>();
+    test_int(ptr->x_, 89);
+
+    e.remove<T>();
+    test_assert(!e.has<T>());
+}
+
+template <typename T>
+static void try_add_object(flecs::world& ecs) {
+    flecs::entity rel = ecs.entity();
+
+    flecs::entity e = ecs.entity().add_object<T>(rel);
+    test_assert(e.has<T>());
+
+    const T *ptr = e.get<T>();
+    test_int(ptr->x_, 89);
+
+    e.remove<T>();
+    test_assert(!e.has<T>());
+}
+
+template <typename T, typename std::enable_if<
+    !flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+static void try_set(flecs::world& ecs) {
+    flecs::entity e = ecs.entity().set<T>({10});
+
+    const T *ptr = e.get<T>();
+    test_int(ptr->x_, 10);
+}
+
+template <typename T, typename std::enable_if<
+    flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+static void try_set(flecs::world& ecs) {
+    flecs::entity e = ecs.entity().set<T>({10});
+
+    const T *ptr = e.get<T>();
+    test_int(ptr->x_, 10);
+    test_int(ptr->e_, 0);
+
+    e.remove<T>();
+}
+
+template <typename T, typename std::enable_if<
+    !flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+static void try_set_default(flecs::world& ecs) {
+    flecs::entity e = ecs.entity().set(T());
+
+    const T *ptr = e.get<T>();
+    test_int(ptr->x_, 99);
+
+    e.remove<T>();
+}
+
+template <typename T, typename std::enable_if<
+    flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+static void try_set_default(flecs::world& ecs) {
+    flecs::entity e = ecs.entity().set(T());
+
+    const T *ptr = e.get<T>();
+    test_int(ptr->x_, 99);
+    test_int(ptr->e_, 0);
+
+    e.remove<T>();
+}
 
 void ComponentLifecycle_deleted_copy() {
     flecs::world ecs;
 
     ecs.component<NoCopy>();
 
-    auto e = ecs.entity().add<NoCopy>();
-    test_assert(e.has<NoCopy>());
-    e.set<NoCopy>({10, 20});
-    const NoCopy *ptr = e.get<NoCopy>();
-    test_int(ptr->x_, 10);
-    test_int(ptr->y_, 20);
-    e.remove<NoCopy>();
-    test_assert(!e.has<NoCopy>());
-}
+    try_add<NoCopy>(ecs);
 
-class NoDefaultCtor {
-public:
-    NoDefaultCtor(int x, int y)  { x_ = x; y_ = y; };
-    int x_;
-    int y_;
-};
+    try_set<NoCopy>(ecs);
+}
 
 void ComponentLifecycle_no_default_ctor() {
     flecs::world ecs;
 
-    // This is allowed as long as the type is trivially copyable
     ecs.component<NoDefaultCtor>();
 
-    auto e = ecs.entity().add<NoDefaultCtor>();
-    test_assert(e.has<NoDefaultCtor>());
-    const NoDefaultCtor *ptr = e.get<NoDefaultCtor>();
-    test_int(ptr->x_, 0);
-    test_int(ptr->y_, 0);
+    try_set<NoDefaultCtor>(ecs);    
+}
 
-    e.set<NoDefaultCtor>({10, 20});
-    ptr = e.get<NoDefaultCtor>();
-    test_int(ptr->x_, 10);
-    test_int(ptr->y_, 20);
-    e.remove<NoDefaultCtor>();
-    test_assert(!e.has<NoDefaultCtor>());
+void ComponentLifecycle_default_init() {
+    flecs::world ecs;
+
+    ecs.component<DefaultInit>();
+
+    try_add<DefaultInit>(ecs);
+
+    try_set<DefaultInit>(ecs);   
+}
+
+void ComponentLifecycle_no_default_ctor_add() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.component<NoDefaultCtor>();
+
+    test_expect_abort();
+
+    try_add<NoDefaultCtor>(ecs);  
+}
+
+void ComponentLifecycle_no_default_ctor_add_relation() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.component<NoDefaultCtor>();
+
+    test_expect_abort();
+
+    try_add_relation<NoDefaultCtor>(ecs); 
+}
+
+void ComponentLifecycle_no_default_ctor_add_object() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.component<NoDefaultCtor>();
+
+    test_expect_abort();
+
+    try_add_object<NoDefaultCtor>(ecs);
+}
+
+void ComponentLifecycle_no_default_ctor_set() {
+    flecs::world ecs;
+
+    ecs.component<NoDefaultCtor>();
+
+    try_set<NoDefaultCtor>(ecs);  
+}
+
+void ComponentLifecycle_no_copy_ctor() {
+    flecs::world ecs;
+
+    ecs.component<NoCopyCtor>();
+
+    try_add<NoCopyCtor>(ecs);
+
+    try_set<NoCopyCtor>(ecs); 
+}
+
+void ComponentLifecycle_no_move_ctor() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    test_expect_abort();
+
+    ecs.component<NoMoveCtor>();
+}
+
+void ComponentLifecycle_no_copy_assign() {
+    flecs::world ecs;
+
+    ecs.component<NoCopyAssign>();
+
+    try_add<NoCopyAssign>(ecs);
+
+    try_set<NoCopyAssign>(ecs);
+}
+
+void ComponentLifecycle_no_move_assign() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    test_expect_abort();
+
+    ecs.component<NoMoveAssign>();
+}
+
+void ComponentLifecycle_no_copy() {
+    flecs::world ecs;
+
+    ecs.component<NoCopy>();
+
+    try_add<NoCopy>(ecs);
+
+    try_set<NoCopy>(ecs);
+}
+
+void ComponentLifecycle_no_move() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    test_expect_abort();
+
+    ecs.component<NoMove>();
+}
+
+void ComponentLifecycle_no_dtor() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    test_expect_abort();
+
+    ecs.component<NoDtor>();
+}
+
+void ComponentLifecycle_flecs_ctor() {
+    flecs::world ecs;
+
+    ecs.component<FlecsCtor>();
+
+    try_add<FlecsCtor>(ecs);
+}
+
+void ComponentLifecycle_flecs_ctor_w_default_ctor() {
+    flecs::world ecs;
+
+    ecs.component<FlecsCtorDefaultCtor>();
+
+    try_add<FlecsCtorDefaultCtor>(ecs);
+
+    try_set_default<FlecsCtorDefaultCtor>(ecs);
+}
+
+void ComponentLifecycle_default_ctor_w_value_ctor() {
+    flecs::world ecs;
+
+    ecs.component<DefaultCtorValueCtor>();
+
+    try_add<DefaultCtorValueCtor>(ecs);
+
+    try_set<DefaultCtorValueCtor>(ecs);
+
+    try_set_default<FlecsCtorDefaultCtor>(ecs);
+}
+
+void ComponentLifecycle_flecs_ctor_w_value_ctor() {
+    flecs::world ecs;
+
+    ecs.component<FlecsCtorValueCtor>();
+
+    try_add<FlecsCtorValueCtor>(ecs);
+
+    try_set<FlecsCtorValueCtor>(ecs);
 }

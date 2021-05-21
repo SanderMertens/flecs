@@ -276,6 +276,15 @@ public:
     }
 };
 
+namespace _
+{
+
+// Utility to prevent static assert from immediately triggering
+template <class... T>
+struct always_false {
+    static const bool value = false;
+};
+
 // Utility to get actual type
 template<typename Type>
 struct base_type {
@@ -288,10 +297,7 @@ template<typename Type>
 struct base_arg_type {
     typedef typename std::remove_pointer<
         typename std::remove_reference<Type>::type>::type type;
-};
-
-namespace _ 
-{
+};    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility to convert template argument pack to array of term ptrs
