@@ -126,7 +126,7 @@ template <typename T>
 const lifecycle_callback_result<T> lifecycle_callback_result<T>::is_illegal = {nullptr, true};
 
 template <typename T>
-const lifecycle_callback_result<T> lifecycle_callback_result<T>::not_set = {nullptr, true};
+const lifecycle_callback_result<T> lifecycle_callback_result<T>::not_set = {nullptr, false};
 
 using ctor_result = lifecycle_callback_result<ecs_xtor_t>;
 using dtor_result = lifecycle_callback_result<ecs_xtor_t>;
