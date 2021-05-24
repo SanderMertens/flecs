@@ -67,18 +67,13 @@ typedef struct {
   float x, y;
 } Position, Velocity;
 
-typedef struct {
-  float value;
-} Mass;
-
 void Move(ecs_iter_t *it) {
   Position *p = ecs_term(it, Position, 1);
   Velocity *v = ecs_term(it, Velocity, 2);
   
   for (int i = 0; i < it->count; i ++) {
-    p[i].x += v[i].x * it->delta_time;
-    p[i].y += v[i].y * it->delta_time;
-    printf("Entity %s moved!\n", ecs_get_name(it->world, it->entities[i]));
+    p[i].x += v[i].x;
+    p[i].y += v[i].y;
   }
 }
 
@@ -87,7 +82,6 @@ int main(int argc, char *argv[]) {
 
   ECS_COMPONENT(ecs, Position);
   ECS_COMPONENT(ecs, Velocity);
-  ECS_COMPONENT(ecs, Mass);
 
   ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, [in] Velocity);
 
@@ -97,7 +91,6 @@ int main(int argc, char *argv[]) {
 
   ecs_set(ecs, e, Position, {0, 0});
   ecs_set(ecs, e, Velocity, {1, 1});
-  ecs_set(ecs, e, Mass, {50});
 
   while (ecs_progress(ecs, 0)) { }
 }
@@ -119,17 +112,14 @@ int main(int argc, char *argv[]) {
 
   ecs.system<Position, const Velocity>()
     .each([](flecs::entity e, Position& p, const Velocity& v) {
-      p.x += v.x * e.delta_time();
-      p.y += v.y * e.delta_time();
-      std::cout << "Entity " << e.name() << " moved!" << std::endl;
+      p.x += v.x;
+      p.y += v.y;
     });
 
-  ecs.entity("MyEntity")
-    .set<Mass>({50})
-    .set([](Position& p, Velocity& v) {
-      p = {10, 20};
-      v = {2, 2};
-    });
+  ecs.entity("MyEntity").set([](Position& p, Velocity& v) {
+    p = {10, 20};
+    v = {2, 2};
+  });
     
   while (ecs.progress()) { }
 }
@@ -210,7 +200,7 @@ The following parts of the API are not stable between patch/minor versions:
 - Anything in include/private
 - The ABI is not guaranteed to be stable, so a recompile of code is required after upgrading
 
-Functions may become deprecated before a major release. Deprecated code is moved to the deprecated addon. Applications can build Flecs without deprecated functions by specifying excluding the `FLECS_DEPRECATED` addon (see [custom builds](https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#custom-builds)).
+Functions may become deprecated before a major release. To build flecs without deprecated functions, exclude the `FLECS_DEPRECATED` addon. (see [custom builds](https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#custom-builds)).
 
 ## Modules
 The following modules are available in [flecs-hub](https://github.com/flecs-hub). Note that modules are mostly intended as example code, and their APIs may change at any point in time.
