@@ -297,9 +297,9 @@ ecs_add_pair(world, Bob, Eats, Pears);
 ecs_type_t bob_type = ecs_get_type(world, Bob);
 ecs_id_t wildcard = ecs_pair(Eats, EcsWildcard);
 ecs_id_t *ids = ecs_vector_first(bob_type);
-int32_t cur = 0;
+int32_t cur = -1;
 
-while (-1 != (cur = ecs_type_match(type, cur, wildcard))) {
+while (-1 != (cur = ecs_type_match(type, cur + 1, wildcard))) {
   ecs_entity_t obj = ecs_pair_object(ids[cur]);
   printf("Bob eats %s\n", ecs_get_name(world, obj));
 }
