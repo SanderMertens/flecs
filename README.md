@@ -185,9 +185,10 @@ The Flecs source has a modular design which makes it easy to strip out code you 
 ## Software Quality
 To ensure stability of Flecs, the code is thoroughly tested on every commit:
 
-- 40.000 lines of test code, for 18.000 lines of framework code
-- More than 1600 testcases
+- More than 2200 testcases and 50.000 lines of test code
 - Over 90% code coverage
+- All tests run without memory leaks & memory corruption
+- All examples are compiled warning free
 
 The code is validated on the following platforms/compilers:
 
@@ -200,16 +201,16 @@ The code is validated on the following platforms/compilers:
   - gcc 10
   - clang 9
 
-The framework code and example code is compiled warning free on all platforms with the strictest warning settings. A sanitized build is ran on each commit to test for memory corruption and undefined behavior.
-
-Performance is tracked on a per-release basis, with the results for the latest release published here: https://github.com/SanderMertens/ecs_benchmark
-
 ### API stability
-API (programming interface) stability is guaranteed between minor releases, except in the rare case when an API is found to be an obvious source of confusion or bugs. When breaking changes do happen, the release notes will mention it with potential workarounds. 
+APIs are stable between minor and patch versions, but exceptions are made in these scenarios:
+- The design of an API prevents it from being used without introducing bugs
+- The design of an API is prone to misuse or confusing
 
-ABI (binary interface) stability is _not_ guaranteed inbetween versions, as non-opaque types and signatures may change at any point in time, as long as they don't break compilation of code that uses the public API. Headers under include/private are not part of the public API, and may introduce breaking changes at any point.
+The following parts of the API are not stable between patch/minor versions:
+- Anything in include/private
+- The ABI is not guaranteed to be stable, so a recompile of code is required after upgrading
 
-It is generally safe to use the master branch, which contains the latest version of the code. New features that are on master but are not yet part of a release may still see changes in their API. Once a feature is part of a release, its API will not change until at least the next major release.
+Functions may become deprecated before a major release. Deprecated code is moved to the deprecated addon. Applications can build Flecs without deprecated functions by specifying excluding the `FLECS_DEPRECATED` addon (see [custom builds](https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#custom-builds)).
 
 ## Modules
 The following modules are available in [flecs-hub](https://github.com/flecs-hub). Note that modules are mostly intended as example code, and their APIs may change at any point in time.
