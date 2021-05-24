@@ -64,6 +64,7 @@ void Entity_get_type(void);
 void Entity_get_nonempty_type(void);
 void Entity_set_no_copy(void);
 void Entity_set_copy(void);
+void Entity_set_deduced(void);
 void Entity_add_owned(void);
 void Entity_set_owned(void);
 void Entity_implicit_name_to_char(void);
@@ -145,8 +146,24 @@ void Pairs_each_pair_by_type(void);
 void Pairs_each_pair_w_childof(void);
 void Pairs_each_pair_w_recycled_rel(void);
 void Pairs_each_pair_w_recycled_obj(void);
+void Pairs_match_pair(void);
+void Pairs_match_pair_obj_wildcard(void);
+void Pairs_match_pair_rel_wildcard(void);
+void Pairs_match_pair_both_wildcard(void);
 void Pairs_has_tag_w_object(void);
 void Pairs_has_object_tag(void);
+void Pairs_add_pair_type(void);
+void Pairs_remove_pair_type(void);
+void Pairs_set_pair_type(void);
+void Pairs_has_pair_type(void);
+void Pairs_get_1_pair_arg(void);
+void Pairs_get_2_pair_arg(void);
+void Pairs_set_1_pair_arg(void);
+void Pairs_set_2_pair_arg(void);
+void Pairs_get_inline_pair_type(void);
+void Pairs_set_inline_pair_type(void);
+void Pairs_get_pair_type_object(void);
+void Pairs_set_pair_type_object(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -705,6 +722,10 @@ bake_test_case Entity_testcases[] = {
         Entity_set_copy
     },
     {
+        "set_deduced",
+        Entity_set_deduced
+    },
+    {
         "add_owned",
         Entity_add_owned
     },
@@ -1024,12 +1045,76 @@ bake_test_case Pairs_testcases[] = {
         Pairs_each_pair_w_recycled_obj
     },
     {
+        "match_pair",
+        Pairs_match_pair
+    },
+    {
+        "match_pair_obj_wildcard",
+        Pairs_match_pair_obj_wildcard
+    },
+    {
+        "match_pair_rel_wildcard",
+        Pairs_match_pair_rel_wildcard
+    },
+    {
+        "match_pair_both_wildcard",
+        Pairs_match_pair_both_wildcard
+    },
+    {
         "has_tag_w_object",
         Pairs_has_tag_w_object
     },
     {
         "has_object_tag",
         Pairs_has_object_tag
+    },
+    {
+        "add_pair_type",
+        Pairs_add_pair_type
+    },
+    {
+        "remove_pair_type",
+        Pairs_remove_pair_type
+    },
+    {
+        "set_pair_type",
+        Pairs_set_pair_type
+    },
+    {
+        "has_pair_type",
+        Pairs_has_pair_type
+    },
+    {
+        "get_1_pair_arg",
+        Pairs_get_1_pair_arg
+    },
+    {
+        "get_2_pair_arg",
+        Pairs_get_2_pair_arg
+    },
+    {
+        "set_1_pair_arg",
+        Pairs_set_1_pair_arg
+    },
+    {
+        "set_2_pair_arg",
+        Pairs_set_2_pair_arg
+    },
+    {
+        "get_inline_pair_type",
+        Pairs_get_inline_pair_type
+    },
+    {
+        "set_inline_pair_type",
+        Pairs_set_inline_pair_type
+    },
+    {
+        "get_pair_type_object",
+        Pairs_get_pair_type_object
+    },
+    {
+        "set_pair_type_object",
+        Pairs_set_pair_type_object
     }
 };
 
@@ -2298,14 +2383,14 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        101,
+        102,
         Entity_testcases
     },
     {
         "Pairs",
         NULL,
         NULL,
-        35,
+        51,
         Pairs_testcases
     },
     {

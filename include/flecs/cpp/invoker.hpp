@@ -8,42 +8,70 @@ namespace flecs
 
 namespace _ 
 {
+
 class invoker { };
 
-template <typename T, typename = void>
+// Template that figures out from the template parameters of a query/system
+// how to pass the value to the each callback
+template <typename T, typename = int>
 struct each_column { };
 
+// Base class
 struct each_column_base {
-    each_column_base(const _::TermPtr& term, size_t row) : m_term(term), m_row(row) { }
+    each_column_base(const _::term_ptr& term, size_t row) 
+        : m_term(term), m_row(row) { }
+
 protected:
-    const _::TermPtr& m_term;
+    const _::term_ptr& m_term;
     size_t m_row;    
 };
 
+// If type is not a pointer, return a reference to the type (default case)
 template <typename T>
-struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == false>::type> : public each_column_base {
-    each_column(const _::TermPtr& term, size_t row) : each_column_base(term, row) { }
+struct each_column<T, if_not_t< is_pointer<T>::value > > 
+    : public each_column_base 
+{
+    each_column(const _::term_ptr& term, size_t row) 
+        : each_column_base(term, row) { }
+
     T& get_row() {
         return static_cast<T*>(this->m_term.ptr)[this->m_row];
     }
 };
 
+// If type is a pointer (indicating an optional value) return the type as is
 template <typename T>
-struct each_column<T, typename std::enable_if<std::is_pointer<T>::value == true>::type> : public each_column_base {
-    each_column(const _::TermPtr& term, size_t row) : each_column_base(term, row) { }
+struct each_column<T, if_t< is_pointer<T>::value > > 
+    : public each_column_base 
+{
+    each_column(const _::term_ptr& term, size_t row) 
+        : each_column_base(term, row) { }
+
     T get_row() {
         if (this->m_term.ptr) {
             return &static_cast<T>(this->m_term.ptr)[this->m_row];
         } else {
+            // optional argument doesn't hava a value
             return nullptr;
         }
     }
 };
 
-template <typename T, typename = void>
+// If the query contains component references to other entities, check if the
+// current argument is one.
+template <typename T, typename = int>
 struct each_ref_column : public each_column<T> {
-    each_ref_column(const _::TermPtr& term, size_t row) : each_column<T>(term, row) {
+    each_ref_column(const _::term_ptr& term, size_t row) 
+        : each_column<T>(term, row) {
+
         if (term.is_ref) {
+            // If this is a reference, set the row to 0 as a ref always is a
+            // single value, not an array. This prevents the application from
+            // having to do an if-check on whether the column is owned.
+            //
+            // This check only happens when the current table being iterated
+            // over caused the query to match a reference. The check is
+            // performed once per iterated table.
             this->m_row = 0;
         }
     }
@@ -51,11 +79,14 @@ struct each_ref_column : public each_column<T> {
 
 template <typename Func, typename ... Components>
 class each_invoker : public invoker {
-    using Terms = typename term_ptrs<Components ...>::Terms;
+    using Terms = typename term_ptrs<Components ...>::array;
 
 public:
-    explicit each_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
-    explicit each_invoker(const Func& func) noexcept : m_func(func) { }
+    explicit each_invoker(Func&& func) noexcept 
+        : m_func(std::move(func)) { }
+
+    explicit each_invoker(const Func& func) noexcept 
+        : m_func(func) { }
 
     // Invoke object directly. This operation is useful when the calling
     // function has just constructed the invoker, such as what happens when
@@ -64,9 +95,9 @@ public:
         term_ptrs<Components...> terms;
 
         if (terms.populate_w_refs(iter)) {
-            invoke_callback<each_ref_column>(iter, m_func, 0, terms.m_terms);
+            invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
         } else {
-            invoke_callback<each_column>(iter, m_func, 0, terms.m_terms);
+            invoke_callback< each_column >(iter, m_func, 0, terms.m_terms);
         }   
     }
 
@@ -78,23 +109,28 @@ public:
     }
 
 private:
-    template <template<typename Ta, typename = void> class ColumnType, typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
-        (void)index;
-        (void)columns;
+    template <template<typename Ta, typename = int> class ColumnType, 
+        typename... Targs,
+            if_t< sizeof...(Targs) == sizeof...(Components) > = 0>
+    static void invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Targs... comps) 
+    {
         flecs::iter it(iter);
         for (auto row : it) {
             func(it.entity(row),
-                (ColumnType<typename std::remove_reference<Components>::type>(comps, row)
+                (ColumnType< remove_reference_t<Components> >(comps, row)
                     .get_row())...);
         }
     }
 
-    template <template<typename Ta, typename = void> class ColumnType, typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
-        each_invoker::invoke_callback<ColumnType>(iter, func, index + 1, columns, comps..., columns[index]);
+    template <template<typename Ta, typename = int> class ColumnType, 
+        typename... Targs,
+            if_t< sizeof...(Targs) != sizeof...(Components) > = 0>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, 
+        size_t index, Terms& columns, Targs... comps) 
+    {
+        invoke_callback<ColumnType>(
+            iter, func, index + 1, columns, comps..., columns[index]);
     }    
 
     Func m_func;
@@ -107,11 +143,14 @@ private:
 
 template <typename Func, typename ... Components>
 class iter_invoker : public invoker {
-    using Terms = typename term_ptrs<Components ...>::Terms;
+    using Terms = typename term_ptrs<Components ...>::array;
 
 public:
-    explicit iter_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
-    explicit iter_invoker(const Func& func) noexcept : m_func(func) { }
+    explicit iter_invoker(Func&& func) noexcept 
+        : m_func(std::move(func)) { }
+
+    explicit iter_invoker(const Func& func) noexcept 
+        : m_func(func) { }
 
     // Invoke object directly. This operation is useful when the calling
     // function has just constructed the invoker, such as what happens when
@@ -131,20 +170,23 @@ public:
 
 private:
     template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
-        (void)index;
-        (void)columns;
+        if_t<sizeof...(Targs) == sizeof...(Components)> = 0>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t, 
+        Terms&, Targs... comps) 
+    {
         flecs::iter iter_wrapper(iter);
         func(iter_wrapper, (
-            static_cast<typename std::remove_reference< 
-                typename std::remove_pointer<Components>::type >::type*>(comps.ptr))...);
+            static_cast< remove_reference_t< remove_pointer_t<Components> >* >
+                (comps.ptr))...);
     }
 
     template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
-        invoke_callback(iter, func, index + 1, columns, comps..., columns[index]);
+        if_t<sizeof...(Targs) != sizeof...(Components)> = 0>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, 
+        size_t index, Terms& columns, Targs... comps) 
+    {
+        invoke_callback(iter, func, index + 1, columns, comps..., 
+            columns[index]);
     }
 
     Func m_func;
@@ -157,7 +199,7 @@ private:
 
 template <typename Func, typename ... Components>
 class action_invoker : public invoker {
-    using Terms = typename term_ptrs<Components ...>::Terms;
+    using Terms = typename term_ptrs<Components ...>::array;
 public:
     explicit action_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
     explicit action_invoker(const Func& func) noexcept : m_func(func) { }
@@ -179,23 +221,26 @@ public:
     }
 
 private:
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
-        (void)index;
-        (void)columns;
+    template <typename... Targs, 
+        if_t< sizeof...(Targs) == sizeof...(Components) > = 0>
+    static void invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Targs... comps) 
+    {
         flecs::iter iter_wrapper(iter);
-        func(iter_wrapper, (column<typename std::remove_reference<
-            typename std::remove_pointer<Components>::type >::type>(
-                static_cast<typename std::remove_reference< 
-                    typename std::remove_pointer<Components>::type >::type*>(comps.ptr), 
-                        iter->count, comps.is_ref))...);
+        func(iter_wrapper, (column<
+        remove_reference_t< remove_pointer_t<Components> > >(
+            static_cast< remove_reference_t< 
+                remove_pointer_t<Components> > *>
+                    (comps.ptr), iter->count, comps.is_ref))...);
     }
 
     template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t index, Terms& columns, Targs... comps) {
-        invoke_callback(iter, func, index + 1, columns, comps..., columns[index]);
+        if_t<sizeof...(Targs) != sizeof...(Components)> = 0>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, 
+        size_t index, Terms& columns, Targs... comps) 
+    {
+        invoke_callback(iter, func, index + 1, columns, comps..., 
+            columns[index]);
     }
 
     Func m_func;
@@ -218,7 +263,9 @@ public:
     using IdArray = flecs::array<id_t, sizeof...(Args)>;
 
     template <typename ArrayType>
-    static bool get_ptrs(world& w, ecs_record_t *r, ecs_table_t *table, ArrayType& ptrs) {
+    static bool get_ptrs(world& w, ecs_record_t *r, ecs_table_t *table, 
+        ArrayType& ptrs) 
+    {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_type_t type = ecs_table_get_type(table);
@@ -356,33 +403,33 @@ public:
 
 private:
     template <typename Func, typename ArrayType, typename ... TArgs, 
-        typename std::enable_if<sizeof...(TArgs) == sizeof...(Args), void>::type* = nullptr>
-    static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs, TArgs&& ... comps) {
-        (void)arg; (void)ptrs;
+        if_t<sizeof...(TArgs) == sizeof...(Args)> = 0>
+    static void invoke_callback(
+        const Func& f, size_t, ArrayType&, TArgs&& ... comps) 
+    {
         f(*static_cast<typename base_arg_type<Args>::type*>(comps)...);
     }
 
     template <typename Func, typename ArrayType, typename ... TArgs, 
-        typename std::enable_if<sizeof...(TArgs) != sizeof...(Args), void>::type* = nullptr>
-    static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs, TArgs&& ... comps) {
-        return invoke_callback(f, arg + 1, ptrs, comps..., ptrs[arg]);
+        if_t<sizeof...(TArgs) != sizeof...(Args)> = 0>
+    static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs, 
+        TArgs&& ... comps) 
+    {
+        invoke_callback(f, arg + 1, ptrs, comps..., ptrs[arg]);
     }
 };
 
-template <typename Func, typename U = void>
-class entity_with_invoker
-{
-    static_assert(function_traits<Func>::is_callable == true,
-        "Object is not a function");
+template <typename Func, typename U = int>
+class entity_with_invoker {
+    static_assert(function_traits<Func>::value, "type is not callable");
 };
 
 template <typename Func>
-class entity_with_invoker<Func, 
-    typename std::enable_if<function_traits<Func>::is_callable == true, void>::type> 
-    : public entity_with_invoker_impl<typename function_traits<Func>::args>
+class entity_with_invoker<Func, if_t< is_callable<Func>::value > >
+    : public entity_with_invoker_impl< arg_list_t<Func> >
 {
     static_assert(function_traits<Func>::arity > 0,
-        "Function must have at least one argument");
+        "function must have at least one argument");
 };
 
 } // namespace _

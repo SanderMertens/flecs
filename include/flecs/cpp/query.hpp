@@ -166,7 +166,7 @@ protected:
 
 template<typename ... Components>
 class query : public query_base {
-    using Terms = typename _::term_ptrs<Components...>::Terms;
+    using Terms = typename _::term_ptrs<Components...>::array;
 
 public:
     query() { }

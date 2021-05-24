@@ -84,7 +84,7 @@ class system_builder;
 
 namespace _
 {
-template <typename T>
+template <typename T, typename U = int>
 class cpp_type;
 }
 
@@ -172,16 +172,17 @@ static const flecs::entity_t Throw = EcsThrow;
 
 }
 
-#include <flecs/cpp/function_traits.hpp>
 #include <flecs/cpp/util.hpp>
+#include <flecs/cpp/pair.hpp>
+#include <flecs/cpp/function_traits.hpp>
 #include <flecs/cpp/lifecycle_traits.hpp>
 #include <flecs/cpp/iter.hpp>
 #include <flecs/cpp/world.hpp>
 #include <flecs/cpp/entity.hpp>
+#include <flecs/cpp/component.hpp>
 #include <flecs/cpp/invoker.hpp>
 #include <flecs/cpp/builder.hpp>
 #include <flecs/cpp/type.hpp>
-#include <flecs/cpp/component.hpp>
 #include <flecs/cpp/module.hpp>
 #include <flecs/cpp/filter.hpp>
 #include <flecs/cpp/snapshot.hpp>

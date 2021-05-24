@@ -478,32 +478,28 @@ private:
         return *static_cast<Base*>(this);
     }
 
-    template <typename T,
-        typename std::enable_if< std::is_const<T>::value == true, void>::type* = nullptr>
+    template <typename T, if_t< is_const<T>::value > = 0>
     constexpr flecs::inout_kind_t type_to_inout() const {
         return flecs::In;
     }
 
-    template <typename T,
-        typename std::enable_if< std::is_reference<T>::value == true, void>::type* = nullptr>
+    template <typename T, if_t< is_reference<T>::value > = 0>
     constexpr flecs::inout_kind_t type_to_inout() const {
         return flecs::Out;
     }
 
-    template <typename T,
-        typename std::enable_if<std::is_const<T>::value == false && std::is_reference<T>::value == false, void>::type* = nullptr>
+    template <typename T, if_not_t< 
+        is_const<T>::value || is_reference<T>::value > = 0>
     constexpr flecs::inout_kind_t type_to_inout() const {
         return flecs::InOutDefault;
     }
 
-    template <typename T,
-        typename std::enable_if< std::is_pointer<T>::value == true, void>::type* = nullptr>
+    template <typename T, if_t< is_pointer<T>::value > = 0>
     constexpr flecs::oper_kind_t type_to_oper() const {
         return flecs::Optional;
     }
 
-    template <typename T,
-        typename std::enable_if< std::is_pointer<T>::value == false, void>::type* = nullptr>
+    template <typename T, if_not_t< is_pointer<T>::value > = 0>
     constexpr flecs::oper_kind_t type_to_oper() const {
         return flecs::And;
     }

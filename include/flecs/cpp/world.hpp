@@ -2,6 +2,81 @@
 namespace flecs 
 {
 
+/** Static helper functions to assign a component value */
+
+// set(T&&), T = constructible
+template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
+inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+
+    T& dst = *static_cast<T*>(
+        ecs_get_mut_w_id(world, entity, id, NULL));
+    dst = std::move(value);
+
+    ecs_modified_w_id(world, entity, id);
+}
+
+// set(const T&), T = constructible
+template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
+inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+
+    T& dst = *static_cast<T*>(
+        ecs_get_mut_w_id(world, entity, id, NULL));
+    dst = value;
+
+    ecs_modified_w_id(world, entity, id);
+}
+
+// set(T&&), T = not constructible
+template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
+inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+
+    bool is_new = false;
+    T& dst = *static_cast<T*>(
+        ecs_get_mut_w_id(world, entity, id, &is_new));
+    if (is_new) {
+        FLECS_PLACEMENT_NEW(&dst, T(std::move(value)));
+    } else {
+        dst = std::move(value);
+    }
+
+    ecs_modified_w_id(world, entity, id);
+}
+
+// set(const T&), T = not constructible
+template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
+inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+
+    bool is_new = false;
+    T& dst = *static_cast<T*>(
+        ecs_get_mut_w_id(world, entity, id, &is_new));
+    if (is_new) {
+        FLECS_PLACEMENT_NEW(&dst, T(std::move(value)));
+    } else {
+        dst = value;
+    }
+
+    ecs_modified_w_id(world, entity, id);
+}
+
+// set(T&&)
+template <typename T, typename A>
+inline void set(world_t *world, entity_t entity, A&& value) {
+    id_t id = _::cpp_type<T>::id(world);
+    flecs::set(world, entity, std::forward<A&&>(value), id);
+}
+
+// set(const T&)
+template <typename T, typename A>
+inline void set(world_t *world, entity_t entity, const A& value) {
+    id_t id = _::cpp_type<T>::id(world);
+    flecs::set(world, entity, value, id);
+}
+    
+
 /** The world.
  * The world is the container of all ECS data and systems. If the world is
  * deleted, all data in the world will be deleted as well.
@@ -509,7 +584,14 @@ public:
     /** Set singleton component.
      */
     template <typename T>
-    void set(T value) const;
+    void set(const T& value) const {
+        flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), value);
+    }
+
+    template <typename T>
+    void set(T&& value) const {
+        flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), std::forward<T&&>(value));
+    }    
 
     /** Get mut singleton component.
      */

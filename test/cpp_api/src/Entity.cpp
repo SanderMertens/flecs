@@ -880,6 +880,19 @@ void Entity_set_copy() {
     test_int(p->value, 10);
 }
 
+void Entity_set_deduced() {
+    flecs::world world;
+
+    auto e = world.entity()
+        .set(Position{10, 20});
+
+    test_assert(e.has<Position>());
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
 void Entity_add_owned() {
     flecs::world world;
 
@@ -2037,3 +2050,4 @@ void Entity_scope_before_builder_method() {
     auto C = ecs.lookup("P::C");
     test_assert(C != 0);
 }
+

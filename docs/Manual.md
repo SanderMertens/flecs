@@ -63,7 +63,7 @@ A trigger is a function that is executed when a component is added or removed. T
 A type is a collection (vector) of entity identifiers (`ecs_entity_t`) that can describe anything from a set of components, systems and tags, to plain entities. Every entity is associated with exactly one type that describes which components, tags, or other it has.
 
 ### Type role
-A type role is a flag that indicates which role an entity fulfills in a type. By default this flag is `0`, indicating that the entity should be interpreted as component or tag. Type roles are used amongst others to indicate hierarchies (the `CHILDOF` role) or instancing (the `INSTANCEOF` flag).
+A type role is a flag that indicates which role an entity fulfills in a type. By default this flag is `0`, indicating that the entity should be interpreted as component or tag. Type roles are most commonly used in applications for switch types (`ECS_SWITCH` and `ECS_CASE`)
 
 ### Scope
 A scope is a virtual container that contains all of the child entities for a specific parent entity. Scopes are not recursive. Scopes are identified by their parent, which is why scope handles are of type `ecs_entity_t`.
@@ -614,44 +614,44 @@ tag_1, tag_2
 ```
 
 ### Type roles
-The ability to add entities, and not just components to entities is the cornerstone of many features such as tags, hierarchies and instancing. To be able to define whether an entity in a type is a parent or not, type flags are used.
-
-This example shows how to add an entity as a parent:
+Type roles are flags that can be added to an identifier which provide information to how components should behave and be stored. A feature that uses type roles is switch types:
 
 ```c
-ecs_entity_t parent = ecs_new(world, 0);
-ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+ECS_TAG(world, Running);
+ECS_TAG(world, Walking);
+ECS_TYPE(world, Movable, Running, Walking);
+
+ecs_entity_t entity = ecs_new_w_id(world, ECS_SWITCH | Movable);
 ```
 
-Here, `ECS_CHILDOF` is the type flag. This is an overview of the different type flags:
+Here, `ECS_SWITCH` is the type role. This is an overview of the different roles:
 
 | Flag | Description |
 |------|-------------|
-| ECS_INSTANCEOF | The entity is a base |
-| ECS_CHILDOF | The entity is a parent |
 | ECS_SWITCH | The entity is a switch type |
 | ECS_CASE | The entity is a case belonging to a switch type |
 | ECS_OWNED | The entity is a component for which ownership is enforced |
 
-Entities with type flags can be dynamically added or removed:
+Entities with type roles can be dynamically added or removed:
 
 ```c
-ecs_add_pair(world, child, EcsChildOf, parent);
-ecs_remove_id(world, child, ECS_CHILDOF | parent);
+ecs_add_id(world, entity, ECS_SWITCH | Movable);
+ecs_remove_id(world, entity, ECS_SWITCH | Movable);
 ```
 
-Additionally, type flags can also be used inside of type and signature expressions, such as in the `ECS_TYPE` and `ECS_ENTITY` macro's:
+Additionally, type roles can also be used inside of type and signature expressions, such as in the `ECS_TYPE` and `ECS_ENTITY` macro's:
 
 ```c
-ECS_ENTITY(world, Base, Position);
-ECS_ENTITY(world, Parent, Position, INSTANCEOF | Base);
-ECS_TYPE(world, MyType, CHILDOF | Parent);
+ECS_TAG(world, Running);
+ECS_TAG(world, Walking);
+ECS_TYPE(world, Movement, Running, Walking);
+ECS_ENTITY(world, Parent, Position, SWITCH | Movement, CASE | Running);
 ```
 
 Note that when used inside a type expression, there is no need to provide the `ECS` prefix.
 
 ### Type constraints
-Type constraints are special type flags that allow an application to put constraints on what entities a type can contain. Type constraints apply to type
+Type constraints are special type roles that allow an application to put constraints on what entities a type can contain. Type constraints apply to type
 entities, typically created with the `ECS_TYPE` macro. An example:
 
 ```c
@@ -676,7 +676,7 @@ The `Sandwich` entity contains an `OR` type constraint that is applied to the `T
 | ECS_NOT | Entity must have no entities from provided type | 
 | ECS_XOR | Entity must have exactly one entity from provided type |
 
-Type constraints can be added and removed like other type flags:
+Type constraints can be added and removed like other type roles:
 
 ```c
 ecs_add_id(world, child, ECS_OR | Toppings);
@@ -907,7 +907,7 @@ Component disabling can be used to temporarily suspend and resume a component va
 #### Limitations
 Component disabling does not work for components not matched with the entity. If a query matches with a component from a base (prefab) or parent entity and the component is disabled for that entity, the query will not take this into account. If entities with disabled components from a base or parent entity need to be skipped. a query should manually check this.
 
-Because component disabling is implemented with a type role, it cannot be used together with other type roles. This means that it is not possible to disable, for example, an `INSTANCEOF` or `CHILDOF` relationship.
+Because component disabling is implemented with a type role, it cannot be used together with other type roles. This means that it is not possible to disable, for example, tags with `SWITCH` or `CASE` roles. Additionally since relationships rely on a role, it is currently not possible to disable relationships such as `(ChildOf, parent)` or `(IsA, prefab)`.
 
 Another limitation is that currently the query NOT (!) operator does not take into account disabled entities. The optional operator (?) technically works, but a query is unable to see whether a component has been set or not as both the enabled and disabled values are returned to the application in a single array.
 
@@ -1057,7 +1057,7 @@ if (ecs_query_changed(q)) {
 ```
 
 ## Signatures
-**NOTE**: This section describes the legacy query DSL. For documentation on the new query DSL and APIs, see the [Queries manual](Queries.md).
+**NOTE**: This section describes the legacy query DSL. For documentation on the new query DSL and APIs, see the [Queries manual](Queries.md). The following documentation describes the legacy query language that will be deprecated in the next major version of flecs.
 
 The query signature accepts a wide range of operators and options that allow an application to determine with fine granularity which entities to iterate over. The most common kind of signature is one that subscribes for entities with a set of components. An example of such a signature looks like a comma delimited list of component or tag identifiers:
 
@@ -1074,13 +1074,13 @@ my.namespace.Position, my.namespace.Velocity
 Signatures may contain type roles. Type roles have the same identifier as the API constants, without the `ECS` prefix.
 
 ```
-INSTANCEOF | base, my.namespace.Position
+SWITCH | Movement, my.namespace.Position
 ```
 
 The subset of signatures described so far are called "type expressions", and can be used not only for queries, but also for defining types, usually in combination with the `ECS_TYPE` macro:
 
 ```c
-ECS_TYPE(world, MyType, INSTANCEOF | base, my.namespace.Position);
+ECS_TYPE(world, MyType, SWITCH | Movement, my.namespace.Position);
 ```
 
 The features described from here are not allowed in type expressions, and may only occur for queries and systems.
@@ -1116,7 +1116,7 @@ ecs_entity_t e = ecs_new(world, 0);
 ecs_add(world, e, Position);
 ```
 
-Components can be shared, when an entity has an `INSTANCEOF` relationship, in which case an entity may share components with a base entity:
+Components can be shared, when an entity has a `IsA` relationship, in which case an entity may share components with a base entity:
 
 ```c
 ecs_entity_t base = ecs_new(world, 0);
@@ -1135,7 +1135,7 @@ OWNED:Position, OWNED:Velocity
 `OWNED` is the default modifier, which means that if an application does not provide a source modifier, `OWNED` is used.
 
 #### SHARED
-The `SHARED` modifier only matches shared components. A shared component is a component that the entity inherits from a base entity, through an `INSTANCEOF` relationship (see the examples in `OWNED`).
+The `SHARED` modifier only matches shared components. A shared component is a component that the entity inherits from a base entity, through an `IsA` relationship (see the examples in `OWNED`).
 
 When a query or system matches with a `SHARED` component, the `ecs_term` function does not provide an array. Instead it provides a pointer to the shared component which is shared with the entities in the table being iterated over:
 
@@ -1189,7 +1189,7 @@ while (ecs_query_next(&it)) {
 ```
 
 #### PARENT
-The `PARENT` modifier requests a component from the parent of an entity. This works with entities that have a `CHILDOF` relationship:
+The `PARENT` modifier requests a component from the parent of an entity. This works with entities that have a `ChildOf` relationship:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
@@ -1881,25 +1881,25 @@ flecs::import<vehicles>(world);
 ```
 
 ## Hierarchies
-Entities in Flecs can be organized in hierarchies, which is useful when for example constructing a scene graph. To create hierarchies, applications can add "CHILDOF" relationships to entities. This creates a relationship between a parent entity and a child entity that the application can later traverse. This is an example of a simple hierarchy:
+Entities in Flecs can be organized in hierarchies, which is useful when for example constructing a scene graph. To create hierarchies, applications can add `ChildOf` relationships to entities. This creates a relationship between a parent entity and a child entity that the application can later traverse. This is an example of a simple hierarchy:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ```
 
-CHILDOF relationships can be added and removed dynamically, similar to how components can be added and removed:
+`ChildOf` relationships can be added and removed dynamically, similar to how components can be added and removed:
 
 ```c
 ecs_add_pair(world, child, EcsChildOf, parent);
-ecs_remove_id(world, child, ECS_CHILDOF | parent);
+ecs_remove_pair(world, child, EcsChildOf, parent);
 ```
 
-CHILDOF relationships can also be created through the `ECS_ENTITY` macro:
+`ChildOf` relationships can also be created through the `ECS_ENTITY` macro:
 
 ```c
 ECS_ENTITY(world, parent, 0);
-ECS_ENTITY(world, child, CHILDOF | parent);
+ECS_ENTITY(world, child, (ChildOf, parent));
 ```
 
 ### Iteration
@@ -1953,7 +1953,7 @@ When entities in a hierarchy have names assigned to them, they can be looked up 
 
 ```c
 ECS_ENTITY(world, parent, 0);
-ECS_ENTITY(world, child, CHILDOF | parent);
+ECS_ENTITY(world, child, (ChildOf, parent));
 
 char *path = ecs_get_fullpath(world, child);
 printf("%s\n", path); // Prints  "parent.child"
@@ -2037,36 +2037,36 @@ ecs_set_scope(world, prev_scope);
 ECS_SYSTEM(world, MoveNotInScope, EcsOnUpdate, transform.Position);
 ```
 
-## Instancing
-Instancing is the ability to share components between entities by _instantiating_ them, by using the INSTANCEOF role. This is a simple example in the C API:
+## Inheritance
+Inheritance is the ability to share components between entities by _inheriting_ from them, by using the `IsA` relation. This is a simple example in the C API:
 
 ```c
 // Create a base entity
 ecs_entity_t base = ecs_new(world, 0);
 ecs_set(world, base, Position, {10, 20});
 
-// Create an instance of the base
-ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
+// Derive from base
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
-// Instance now shares Position with base
-ecs_get(world, base, Position) == ecs_get(world, instance, Position); // 1
+// e now shares Position with base
+ecs_get(world, base, Position) == ecs_get(world, e, Position); // 1
 ```
 
-INSTANCEOF relationships can be added and removed dynamically, similar to how components can be added and removed:
+`IsA` relationships can be added and removed dynamically, similar to how components can be added and removed:
 
 ```c
-ecs_add_id(world, instance, ECS_INSTANCEOF | base);
-ecs_remove_id(world, instance, ECS_INSTANCEOF | base);
+ecs_add_id(world, e, (IsA, base));
+ecs_remove_id(world, e, (IsA, base));
 ```
 
-INSTANCEOF relationships can also be created through the `ECS_ENTITY` macro:
+`IsA` relationships can also be created through the `ECS_ENTITY` macro:
 
 ```c
 ECS_ENTITY(world, base, Position);
-ECS_ENTITY(world, instance, INSTANCEOF | base);
+ECS_ENTITY(world, e, (IsA, base));
 ```
 
-INSTANCEOF relationships can be nested:
+`IsA` relationships can be nested:
 
 ```c
 ecs_entity_t base = ecs_new(world, 0);
@@ -2074,48 +2074,48 @@ ecs_set(world, base, Position, {10, 20});
 
 ecs_entity_t derived = ecs_new_w_pair(world, EcsIsA, base);
 
-// Create instance of 'derived', which is also an instance of base
-ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, derived);
+// Derive from "derived" which is itself derived from base
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, derived);
 
 // All three entities now share Position
-ecs_get(world, base, Position) == ecs_get(world, instance, Position); // 1
+ecs_get(world, base, Position) == ecs_get(world, e, Position); // 1
 ecs_get(world, base, Position) == ecs_get(world, derived, Position);  // 1
 ```
 
 ### Overriding
-Instances can override components from their base by adding the component as they would normally. When overriding a component, the value of the base component is copied to the instance. This example shows how an instance overrides the Position component:
+Derived entities can override components from their base by adding the component as they would normally. When overriding a component, the value of the base component is copied to the entity. This example shows how a derived entity overrides the Position component:
 
 ```c
 // Shortcut for creating a base entity and setting Position
 ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
 
-// Create an instance of the base
-ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
+// Derive from the base
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
 // Override Position
-ecs_add(world, instance, Position);
+ecs_add(world, e, Position);
 
 // Position component no longer matches with base
-ecs_get(world, base, Position) != ecs_get(world, instance, Position); // 1
+ecs_get(world, base, Position) != ecs_get(world, e, Position); // 1
 
 // Prints {10, 20}
-const Position *p = ecs_get(world, instance, Position);
+const Position *p = ecs_get(world, e, Position);
 printf("{%f, %f}\n", p->x, p->y); 
 ```
 
-When an instance shared a component from a base entity, we say that the component is "shared". If the component is not shared, it is "owned". After an entity overrides a component, it will own the component.
+When an entity shared a component from a base entity, we say that the component is "shared". If the component is not shared, it is "owned". After an entity overrides a component, it will own the component.
 
 It is possible to remove an override, in which case the component will be shared with the base entity again:
 
 ```c
 // Removes override on Position
-ecs_remove(world, instance, Position);
+ecs_remove(world, e, Position);
 
 // Position is again shared with base
-ecs_get(world, base, Position) == ecs_get(world, instance, Position); // 1
+ecs_get(world, base, Position) == ecs_get(world, e, Position); // 1
 ```
 
-Overrides work with nested INSTANCEOF relationships:
+Overrides work with nested `IsA` relationships:
 
 ```c
 // Shortcut for creating a base entity and setting Position
@@ -2127,25 +2127,25 @@ ecs_set(world, base, Velocity, {1, 1});
 ecs_entity_t derived = ecs_new_w_pair(world, EcsIsA, base);
 ecs_add(world, base, Position);
 
-// Create instance of 'derived', which is also an instance of base
-ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, derived);
+// Derive from 'derived', which is derived from base
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, derived);
 
-// The instance now shares Position from derived, and Velocity from base
+// The entity now shares Position from derived, and Velocity from base
 ```
 
 ### Automatic overriding
-In some scenarios it is desirable that an entity is initialized with a specific set of values, yet does not share the components from the base entity. In this case the instance can override each component individually, but this can become hard to maintain as components are added or removed to the base. This can be achieved by marking components as owned. Consider the following example:
+In some scenarios it is desirable that an entity is initialized with a specific set of values, yet does not share the components from the base entity. In this case the derived entity can override each component individually, but this can become hard to maintain as components are added or removed to the base. This can be achieved by marking components as owned. Consider the following example:
 
 ```c
-// Create a base. Simply creating an instance of base will share the component, but not override it.
+// Create a base. Simply deriving the base will share the component, but not override it.
 ecs_entity_t Base = ecs_set(world, 0, Position, {10, 20});
 
-// Mark as OWNED. This ensures that when base is instantiated, Position is overridden
+// Mark as OWNED. This ensures that when base is derived from, Position is overridden
 ecs_add_id(world, world, Base, ECS_OWNED | ecs_typeid(Position));
 
-// Create entity from BaseType. This adds the INSTANCEOF relationship in addition 
-// to overriding Position, effectively initializing the Position component for the instance.
-ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, Base);
+// Create entity from BaseType. This adds the IsA relationship in addition 
+// to overriding Position, effectively initializing the Position component for the entity.
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
 ```
 
 The combination of instancing, overriding and OWNED is one of the fastest and easiest ways to create an entity with a set of initialized components. The OWNED relationship can also be specified inside type expressions. The following example is equivalent to the previous one:
@@ -2155,22 +2155,22 @@ ECS_ENTITY(world, Base, Position, OWNED | Position);
 
 ecs_set(world, Base, Position, {10, 20});
 
-ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, Base);
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
 ```
 
-### Instance hierarchies
-If a base entity has children, instances of that base entity will, when the INSTANCEOF relationship is added, acquire the same set of children. Take this example:
+### Inheritance hierarchies
+If a base entity has children, derived entities of that base entity will, when the `IsA` relationship is added, acquire the same set of children. Take this example:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
 ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
 
-// Create instance of parent, two childs are added to the instance
-ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, parent);
+// Derive from parent, two childs are added to the entity
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, parent);
 ```
 
-The children that are copied to the instance will have exactly the same set of components as the children of the base. For example, if the base child has components `Position, Velocity`, the instance child will also have `Position, Velocity`. Furthermore, the values of the base child components will be copied to the instance child:
+The children that are copied to the entity will have exactly the same set of components as the children of the base. For example, if the base child has components `Position, Velocity`, the derived child will also have `Position, Velocity`. Furthermore, the values of the base child components will be copied to the entity child:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
@@ -2178,17 +2178,17 @@ ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_set(world, child, EcsName, {"Child"}); // Give child a name, so we can look it up
 ecs_set(world, child, Position, {10, 20});
 
-// Create instance of parent, two childs are added to the instance
-ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, parent);
-ecs_entity_t instance_child = ecs_lookup_path(world, instance, "Child");
-const Position *p = ecs_get(world, instance_child, Position);
+// Derive from parent, two childs are added to the derived entity
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, parent);
+ecs_entity_t e_child = ecs_lookup_path(world, e, "Child");
+const Position *p = ecs_get(world, e_child, Position);
 printf("{%f, %f}\n", p->x, p->y); // Prints {10, 20}
 
-// The components are not shared with the instance child!
-ecs_get(world, child, Position) != ecs_get(world, instance_child, Position); // 1
+// The components are not shared with the derived child!
+ecs_get(world, child, Position) != ecs_get(world, e_child, Position); // 1
 ```
 
-Since the instance children have the exact same components as the base children, their components are not shared. Component sharing between children is possible however, as INSTANCEOF relationships are also copied over to the instance child:
+Since the children of the derived entitiy have the exact same components as the base children, their components are not shared. Component sharing between children is possible however, as `IsA` relationships are also copied over to the child of the derived entity:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
@@ -2198,16 +2198,16 @@ ecs_entity_t child_base = ecs_new(world, 0);
 ecs_set(world, child_base, Position, {10, 20});
 ecs_set(world, child, EcsName, {"Child"});
 
-// Create actual child that is an instance of child base
+// Create actual child that inherits from the child base
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
-ecs_add_id(world, child, ECS_INSTANCEOF | child_base);
+ecs_add_pair(world, child, EcsIsA, child_base);
 
-// Create instance of parent, two childs are added to the instance
-ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, parent);
-ecs_entity_t instance_child = ecs_lookup_path(world, instance, "Child");
+// Inherit from parent, two childs are added to the entity
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, parent);
+ecs_entity_t e_child = ecs_lookup_path(world, e, "Child");
 
 // The component is now shared with the child and child_base
-ecs_get(world, child, Position) == ecs_get(world, instance_child, Position); // 1
+ecs_get(world, child, Position) == ecs_get(world, e_child, Position); // 1
 ```
 
 ### Prefabs
@@ -2230,202 +2230,23 @@ Prefabs can also be created with the `ECS_PREFAB` macro:
 ECS_PREFAB(world, prefab, Position, Velocity);
 ```
 
-To instantiate a prefab, an application can use regular instancing:
+To instantiate a prefab, an application can use the `IsA` relation:
 
 ```c
-ecs_entity_t instance = ecs_new(world, ECS_INSTANCEOF | prefab);
+ecs_entity_t e = ecs_new_w_pair(world, (IsA, prefab));
 ```
 
-This behaves exactly the same as regular instancing, with as only difference that the `EcsPrefab` tag is not shared.
-
-## Traits
-Traits are a special kind of component that can be used for many purposes. The most common one is to let applications implement generic behavior that can be applied to multiple components. A typical example is an "ExpiryTimer" trait, which deletes a component after a timeout expires. This behavior is not specific to a component, in that it does not require the value of the component that is being expired.
-
-The ExpiryTime logic is difficult to implement with regular systems and components, as a single entity may need to expire multiple components at the same time. If ExpiryTime were to be implemented as a regular component, this component would have to be added multiple times, which is is not possible. Another alternative would be to store a vector of to be expired components, but this is both less efficient and harder to implement than working with regular components.
-
-Traits address this by allowing an application to add components ("traits") to other components. To implement the ExpiryTime behavior, an application could for example apply an `ExpiryTime` trait to both a `HealthBuff` and `StaminaBuff` component.
-
-Traits are regular types, just like components:
+To ensure that entities that inherit from a prefab don't also inherit the `Prefab` tag (which would cause them to not get matched with systems), the `Prefab` tag does not propagate to derived entities. This is illustrated in the following example:
 
 ```c
-typedef struct ExpiryTimer {
-    float expiry_time;
-    float t;
-} ExpiryTimer;
-```
+ECS_PREFAB(world, prefab, Position);
 
-This example show how to add the ExpiryTime component to a HealthBuff and a StaminaBuff component:
+ecs_has(world, prefab, EcsPrefab); // true
+ecs_has(world, prefab, Position); // true
 
-```c
-// Register trait like a regular component
-ECS_COMPONENT(world, ExpiryTimer);
-
-ecs_entity_t e = ecs_new(world, 0);
-
-// Add HealthBuff, set the ExpiryTimer trait for HealthBuff to 10 seconds
-ecs_add(world, e, HealthBuff);
-
-ecs_set_trait(world, e, HealthBuff, ExpiryTimer, {
-    .expiry_time = 10
-});
-
-// Add StaminaBuff, set the ExpiryTimer trait for StaminaBuff to 5 seconds
-ecs_add(world, e, StaminaBuff);
-
-ecs_set_trait(world, e, StaminaBuff, ExpiryTimer, {
-    .expiry_time = 5
-});
-```
-
-This adds the ExpiryTimer trait twice to the entity, once for HealthBuff and once for StaminaBuff. The trait can be obtained with the `ecs_get_trait` function:
-
-```c
-// Get ExpiryTime for Position
-const ExpiryTime *et_pos = ecs_get_trait(world, e, Position, ExpiryTime);
-
-// Get ExpiryTime for Velocity
-const ExpiryTime *et_vel = ecs_get_trait(world, e, Position, ExpiryTime);
-```
-
-### Traits and queries
-To write a query (or system) that iterates over a trait, the PAIR role should be added to the query signature:
-
-```c
-ecs_query_t *q = ecs_query_new(world, "PAIR | ExpiryTimer");
-```
-
-This will iterate all entities with the ExpiryTimer trait, for each instance of the trait. If an entity has the trait instantiated two times, the query will iterate that entity two times. Other than that traits are much like regular components, in that a query provides a trait like a regular C array. This is an example of what an `ExpireComponents` system could look like:
-
-```c
-void ExpireComponents(ecs_iter_t *it) {
-    /* Obtain the array containing the trait component */
-    ExpiryTimer *et = ecs_term(it, ExpiryTimer, 1);
-
-    /* Get the handle to the trait. This will tell us on which component the
-     * trait is applied */
-    ecs_entity_t trait = ecs_term_id(it, 1);
-
-    /* Obtain the component to which the trait is applied */
-    ecs_entity_t comp = ecs_entity_t_lo(trait);
-
-    /* Iterate trait component as a regular component */
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        /* Increase timer. When timer hits expiry time, remove component */
-        et[i].t += it->delta_time;
-        if (et[i].t >= et[i].expiry_time) {
-            /* Remove both the component and the trait. If the trait would not
-             * be removed, the system would still be invoked after this. */
-            printf("Remove component '%s'\n", ecs_get_name(it->world, comp));
-
-            /* Removes component (Position or Velocity) */
-            ecs_remove_id(it->world, it->entities[i], comp);
-
-            /* Removes trait */
-            ecs_remove_id(it->world, it->entities[i], trait);
-        }
-    }
-}
-```
-
-Additionally, a query can also subscribe for a trait applied to a specific component:
-
-```c
-ecs_query_t *q = ecs_query_new(world, "PAIR | ExpiryTimer > Position");
-```
-
-### Pair tags
-Tags can also be used as traits, in which case they assume the type of the component. This example uses a trait tag to add the `Position` component twice, once as a regular component, and once for the `WorldSpace` trait:
-
-```c
-// Define the trait as a tag
-ECS_TAG(world, WorldSpace);
-
-// Define a regular component
-ECS_COMPONENT(world, Position);
-
-ecs_entity_t e = ecs_new(world, 0);
-
-// Add regular Position to the entity
-ecs_set(world, e, Position, {10, 20});
-
-// Add Position for the WorldSpace trait:
-ecs_set_trait_tag(world, WorldSpace, Position, {10, 20});
-```
-
-Data for trait tags can be retrieved with the `ecs_get_trait_tag` function:
-
-```c
-const Position *p = ecs_get_trait_tag(world, e, WorldSpace, Position);
-```
-
-### Pair encoding
-Traits are encoded in the entity id, by using the upper 32 bits of the identifier to store the id of the trait. The lower 32 bits of the identifier are used to store the component to which the trait is applied. To indicate that the combined identifiers are a trait, the `PAIR` role is added.
-
-To create a trait from a trait identifier and a component identifier, an application could use the following code:
-
-```c
-ECS_COMPONENT(world, Pair);
-ECS_COMPONENT(world, Component);
-
-ecs_entity_t lo = ecs_typeid(Component);
-ecs_entity_t hi = ecs_typeid(Pair);
-
-ecs_entity_t trait = (lo + hi << 32) | ECS_PAIR;
-```
-
-The API provides a convenience macro to make this easier:
-
-```c
-ecs_entity_t trait = ecs_trait(ecs_typeid(Component), ecs_typeid(Pair));
-```
-
-To extract the component id from a trait, an application must get the lower 32 bits of an entity identifier. The API provides the convenience `ecs_entity_t_lo` macro to do this:
-
-```c
-// This extracts the id of Component
-ecs_entity_t comp = ecs_entity_t_lo(trait);
-```
-
-To obtain the trait, the application first has to remove the `ECS_PAIR` role, after which the upper 32 bits should be used. To remove the `ECS_PAIR` role the application can apply the `ECS_COMPONENT_MASK` mask with a bitwise AND, after which the trait component id can be obtained with `ecs_entity_t_hi`:
-
-```c
-// This extracts the id of Pair
-ecs_entity_t trait_comp = ecs_entity_t_hi(trait & ECS_COMPONENT_MASK);
-```
-
-### Traits as entity relationships
-Traits can also be used as a tool to describe relationships between entities. In this case both the trait and the entity are not components, and the trait does not add any data to the entity. The following example shows how to describe family relationships between different entities in the C++ API:
-
-```c
-// Create traits that describe the different kinds of relationships
-auto HasMother = flecs::entity(world);
-auto HasFather = flecs::entity(world);
-auto HasSibling = flecs::entity(world);
-
-// Create a few entities
-auto Bob = flecs::entity(world);
-auto Alice = flecs::entity(world);
-auto Jane = flecs::entity(world);
-auto Jeff = flecs::entity(world);
-
-// Create the relationships
-Jane.add(HasMother, Alice);
-Jane.add(HasFather, Bob);
-
-Jeff.add(HasMother, Alice);
-Jeff.add(HasFater, Bob);
-
-Jane.add(HasSibling, Jeff);
-Jeff.add(HasSibling, Jane);
-```
-
-To test if an entity has a trait, applications can use the `has_trait` function:
-
-```c
-if (Jane.has_trait(IsSibling, Jeff)) {
-    std::cout << "Jane is a sibling of Jeff" << std::endl;
-}
+ecs_entity_t e = ecs_new_w_pair(world, (IsA, prefab));
+ecs_has(world, e, EcsPrefab); // false
+ecs_has(world, e, Position); // true
 ```
 
 ## Deferred operations

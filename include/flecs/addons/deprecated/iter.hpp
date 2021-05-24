@@ -33,16 +33,13 @@ public:
     ECS_DEPRECATED("use type()")
     type table_type() const; 
 
-    template <typename T,
-        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
+    template <typename T, if_t< is_const<T>::value > = 0>
     ECS_DEPRECATED("use term<const T>(int32_t)")
     flecs::column<T> column(int32_t col) const {
         return base()->template term<T>(col);
     }
 
-    template <typename T,
-        typename std::enable_if<
-            std::is_const<T>::value == false, void>::type* = nullptr>
+    template <typename T, if_not_t< is_const<T>::value > = 0>
     ECS_DEPRECATED("use term<T>(int32_t)")
     flecs::column<T> column(int32_t col) const {
         ecs_assert(!ecs_is_readonly(iter(), col), 
@@ -67,16 +64,13 @@ public:
         return base()->template shared<T>(col);
     }
 
-    template <typename T,
-        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>    
+    template <typename T, if_t< is_const<T>::value > = 0> 
     ECS_DEPRECATED("no replacement")
     T& element(int32_t col, int32_t row) const {
         return base()->template get_element<T>(col, row);
     }
 
-    template <typename T,
-        typename std::enable_if<
-            std::is_const<T>::value == false, void>::type* = nullptr>
+    template <typename T, if_not_t< is_const<T>::value > = 0>
     ECS_DEPRECATED("no replacement")
     T& element(int32_t col, int32_t row) const {
         ecs_assert(!ecs_is_readonly(iter(), col), 

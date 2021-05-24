@@ -71,6 +71,7 @@
                 "get_nonempty_type",
                 "set_no_copy",
                 "set_copy",
+                "set_deduced",
                 "add_owned",
                 "set_owned",
                 "implicit_name_to_char",
@@ -154,8 +155,24 @@
                 "each_pair_w_childof",
                 "each_pair_w_recycled_rel",
                 "each_pair_w_recycled_obj",
+                "match_pair",
+                "match_pair_obj_wildcard",
+                "match_pair_rel_wildcard",
+                "match_pair_both_wildcard",
                 "has_tag_w_object",
-                "has_object_tag"
+                "has_object_tag",
+                "add_pair_type",
+                "remove_pair_type",
+                "set_pair_type",
+                "has_pair_type",
+                "get_1_pair_arg",
+                "get_2_pair_arg",
+                "set_1_pair_arg",
+                "set_2_pair_arg",
+                "get_inline_pair_type",
+                "set_inline_pair_type",
+                "get_pair_type_object",
+                "set_pair_type_object"
             ]
         }, {
             "id": "Switch",

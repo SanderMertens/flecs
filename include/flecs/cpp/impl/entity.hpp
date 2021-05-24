@@ -54,7 +54,7 @@ inline const Base& entity_builder<Base>::remove_switch(const type& sw) const {
 }
 
 template <typename Base>
-template <typename Func, typename _::is_function<Func>::type*>
+template <typename Func, if_t< is_callable<Func>::value > >
 inline const Base& entity_builder<Base>::set(const Func& func) const {
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->base_world(), this->base_id(), func);
@@ -202,43 +202,32 @@ inline void entity_view::each(const Func& func) const {
 }
 
 template <typename Func>
-inline void entity_view::each(const flecs::entity_view& rel, const Func& func) const {
+inline void entity_view::match(id_t pattern, const Func& func) const {
     const ecs_vector_t *type = ecs_get_type(m_world, m_id);
     if (!type) {
         return;
     }
 
-    flecs::entity_t rel_id = rel.remove_generation().id();
-
-    const ecs_id_t *ids = static_cast<ecs_id_t*>(
+    id_t *ids = static_cast<ecs_id_t*>(
         _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
-    int32_t count = ecs_vector_count(type);
+    int32_t cur = 0;
 
-    // First, skip to the point where the relationship starts
-    // TODO: replace this with an O(1) search when the new table lookup
-    //       datastructures land
-    int i;
-    for (i = 0; i < count; i ++) {
-        ecs_id_t id = ids[i];
-        if (ECS_PAIR_RELATION(id) == rel_id) {
-            break;
-        }
-    }
-
-    // Iterate all entries until the relationship stops
-    for (; i < count; i ++) {
-        ecs_id_t id = ids[i];
-        if (ECS_PAIR_RELATION(id) != rel_id) {
-            break;
-        }
-
-        flecs::id id_cl(m_world, ids[i]);
-        flecs::entity ent(m_world, id_cl.object());
-        func(ent);         
+    while (-1 != (cur = ecs_type_match(type, cur, pattern))) {
+        flecs::entity ent(m_world, ids[cur]);
+        func(ent);
+        cur ++;
     }
 }
 
-template <typename Func, typename _::is_function<Func>::type*>
+template <typename Func>
+inline void entity_view::each(const flecs::entity_view& rel, const Func& func) const {
+    return this->match(ecs_pair(rel, flecs::Wildcard), [&](flecs::id id) {
+        flecs::entity obj = id.object();
+        func(obj);
+    });
+}
+
+template <typename Func, if_t< is_callable<Func>::value > >
 inline bool entity_view::get(const Func& func) const {
     return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
 }

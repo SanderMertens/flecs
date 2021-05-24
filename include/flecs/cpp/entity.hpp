@@ -25,7 +25,7 @@ class entity_deprecated { };
 }
 #endif
 
-namespace flecs 
+namespace flecs
 {
 
 /** Class that stores a flecs id.
@@ -272,18 +272,62 @@ public:
         return each(_::cpp_type<Rel>::id(m_world), func);
     }
 
+    /** Find all contents of an entity matching a pattern. */
+    template <typename Func>
+    void match(id_t pattern, const Func& func) const;
+
     /** Get component value.
      * 
      * @tparam T The component to get.
      * @return Pointer to the component value, nullptr if the entity does not
      *         have the component.
      */
-    template <typename T>
+    template <typename T, if_t< is_actual<T>::value > = 0>
     const T* get() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<const T*>(
-            ecs_get_id(m_world, m_id, comp_id));
+        return static_cast<const T*>(ecs_get_id(m_world, m_id, comp_id));
+    }
+
+    /** Get component value.
+     * Overload for when T is not the same as the actual type, which happens
+     * when using pair types.
+     * 
+     * @tparam T The component to get.
+     * @return Pointer to the component value, nullptr if the entity does not
+     *         have the component.
+     */
+    template <typename T, typename A = actual_type_t<T>, 
+        if_not_t< is_actual<T>::value > = 0>
+    const A* get() const {
+        auto comp_id = _::cpp_type<T>::id(m_world);
+        ecs_assert(_::cpp_type<A>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<const A*>(ecs_get_id(m_world, m_id, comp_id));
+    }
+
+    /** Get a pair.
+     * This operation gets the value for a pair from the entity.
+     *
+     * @tparam R the relation type.
+     * @tparam O the object type.
+     */
+    template <typename R, typename O, if_not_t< flecs::is_pair<R>::value > = 0>
+    const R* get() const {
+        return this->get<flecs::pair<R, O>>();
+    }
+
+    /** Get a pair.
+     * This operation gets the value for a pair from the entity. 
+     *
+     * @tparam R the relation type.
+     * @param object the object.
+     */
+    template<typename R>
+    const R* get(const flecs::entity_view& object) const {
+        auto comp_id = _::cpp_type<R>::id(m_world);
+        ecs_assert(_::cpp_type<R>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<const R*>(
+            ecs_get_id(m_world, m_id, ecs_pair(comp_id, object.id())));
     }
 
     /** Get component value (untyped).
@@ -294,31 +338,6 @@ public:
      */
     const void* get(const flecs::entity_view& component) const {
         return ecs_get_id(m_world, m_id, component.id());
-    }
-
-    /** Get a pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam Relation the relation type.
-     * @tparam Object the object type.
-     */
-    template<typename Relation, typename Object>
-    const Relation* get() const {
-        return this->get<Relation>(_::cpp_type<Object>::id(m_world));
-    }
-
-    /** Get a pair.
-     * This operation gets the value for a pair from the entity. 
-     *
-     * @tparam Relation the relation type.
-     * @param object the object.
-     */
-    template<typename Relation>
-    const Relation* get(const flecs::entity_view& object) const {
-        auto comp_id = _::cpp_type<Relation>::id(m_world);
-        ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<const Relation*>(
-            ecs_get_id(m_world, m_id, ecs_pair(comp_id, object.id())));
     }
 
     /** Get a pair (untyped).
@@ -344,23 +363,35 @@ public:
      * @param func The callback to invoke.
      * @return True if the entity has all components, false if not.
      */
-    template <typename Func, typename _::is_function<Func>::type* = nullptr>
+    template <typename Func, if_t< is_callable<Func>::value > = 0>
     bool get(const Func& func) const;
 
     /** Get the object part from a pair.
      * This operation gets the value for a pair from the entity. The relation
      * part of the pair should not be a component.
      *
-     * @tparam Object the object type.
+     * @tparam O the object type.
      * @param relation the relation.
      */
-    template<typename Object>
-    const Object* get_object(const flecs::entity_view& relation) const {
-        auto comp_id = _::cpp_type<Object>::id(m_world);
-        ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<const Object*>(
+    template<typename O>
+    const O* get_object(const flecs::entity_view& relation) const {
+        auto comp_id = _::cpp_type<O>::id(m_world);
+        ecs_assert(_::cpp_type<O>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<const O*>(
             ecs_get_id(m_world, m_id, ecs_pair(relation.id(), comp_id)));
     }
+
+    /** Get the object part from a pair.
+     * This operation gets the value for a pair from the entity. The relation
+     * part of the pair should not be a component.
+     *
+     * @tparam R the relation type.
+     * @tparam O the object type.
+     */
+    template<typename R, typename O>
+    const O* get_object() const {
+        return get<pair_object<R, O>>();
+    }    
 
     /** Get parent from an entity.
      * This operation retrieves the parent entity that has the specified 
@@ -641,21 +672,12 @@ public:
      * 
      * @tparam T the component type to add.
      */
-    template <typename T, typename std::enable_if<
-        _::is_flecs_constructible<T>::value,
-            void>::type* = nullptr>
+    template <typename T>
     const Base& add() const {
-        ecs_add_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
-        return *this;
-    }
-
-    template <typename T, typename std::enable_if<
-        !_::is_flecs_constructible<T>::value,
-            void>::type* = nullptr>
-    const Base& add() const {
-        flecs_static_assert(_::always_false<T>::value,
+        flecs_static_assert(is_flecs_constructible<T>::value,
             "add<T>() cannot construct type: add T() or "
                 "T(flecs::world&, flecs::entity)");
+        ecs_add_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
         return *this;
     }
 
@@ -692,36 +714,26 @@ public:
     /** Add a pair.
      * This operation adds a pair to the entity.
      *
-     * @tparam Relation the relation type.
-     * @tparam Object the object type.
+     * @tparam R the relation type.
+     * @tparam O the object type.
      */
-    template<typename Relation, typename Object>
+    template<typename R, typename O>
     const Base& add() const {
-        return this->add<Relation>(_::cpp_type<Object>::id(this->base_world()));
+        return this->add<R>(_::cpp_type<O>::id(this->base_world()));
     }
 
     /** Add a pair.
      * This operation adds a pair to the entity.
      *
-     * @tparam Relation the relation type.
+     * @tparam R the relation type.
      * @param object the object type.
      */
-    template<typename Relation, typename std::enable_if<
-        _::is_flecs_constructible<Relation>::value,
-            void>::type* = nullptr>
+    template<typename R>
     const Base& add(entity_t object) const {
-        return this->add(_::cpp_type<Relation>::id(this->base_world()), object);
-    }
-
-    template<typename Relation, typename std::enable_if<
-        !_::is_flecs_constructible<Relation>::value,
-            void>::type* = nullptr>
-    const Base& add(entity_t object) const {
-        (void)object;
-        flecs_static_assert(_::always_false<Relation>::value,
+        flecs_static_assert(is_flecs_constructible<R>::value,
             "add<T>(entity_t) cannot construct type: add T() or "
-                "T(flecs::world&, flecs::entity)");
-        return *this;
+                "T(flecs::world&, flecs::entity)");        
+        return this->add(_::cpp_type<R>::id(this->base_world()), object);
     }
 
     /** Shortcut for add(IsA. obj).
@@ -745,24 +757,14 @@ public:
      * should not be a component.
      *
      * @param relation the relation type.
-     * @tparam Object the object type.
+     * @tparam O the object type.
      */
-    template<typename Object, typename std::enable_if<
-        _::is_flecs_constructible<Object>::value,
-            void>::type* = nullptr>
+    template<typename O>
     const Base& add_object(entity_t relation) const {
-        return this->add(relation,  _::cpp_type<Object>::id(this->base_world()));
-    }
-
-    template<typename Object, typename std::enable_if<
-        !_::is_flecs_constructible<Object>::value,
-            void>::type* = nullptr>
-    const Base& add_object(entity_t relation) const {
-        (void)relation;
-        flecs_static_assert(_::always_false<Object>::value,
+        flecs_static_assert(is_flecs_constructible<O>::value,
             "add_object<T>(entity_t) cannot construct type: add T() or "
-                "T(flecs::world&, flecs::entity)");
-        return *this;
+                "T(flecs::world&, flecs::entity)");        
+        return this->add(relation,  _::cpp_type<O>::id(this->base_world()));
     }
 
     /** Remove a component from an entity.
@@ -1006,76 +1008,45 @@ public:
         return *this;       
     }
 
-    /** Set a component for an entity.
-     * This operation sets the component value. If the entity did not yet
-     * have the component, it will be added.
-     *
-     * @tparam T The component to set.
-     * @param value The value to assign to the component.
-     */
-    template <typename T, typename std::enable_if<
-        _::is_flecs_constructible<T>::value, void>::type* = nullptr,
-        typename _::no_function<T>::type* = nullptr>
+    template<typename T, if_t< 
+        !is_callable<T>::value && is_actual<T>::value> = 0 >
+    const Base& set(T&& value) const {
+        flecs::set<T>(this->base_world(), this->base_id(), std::forward<T&&>(value));
+        return *this;
+    }
+
+    template<typename T, if_t< 
+        !is_callable<T>::value && is_actual<T>::value > = 0>
     const Base& set(const T& value) const {
-        auto comp_id = _::cpp_type<T>::id(this->base_world());
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        T& ptr = *static_cast<T*>(
-            ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, NULL));
-        ptr = std::move(value);
-        ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
+        flecs::set<T>(this->base_world(), this->base_id(), value);
         return *this;
     }
 
-    template <typename T, typename std::enable_if<
-        _::is_flecs_constructible<T>::value, void>::type* = nullptr,
-        typename _::no_function<T>::type* = nullptr>
-    const Base& set(T&& value) const {
-        auto comp_id = _::cpp_type<T>::id(this->base_world());
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        T& ptr = *static_cast<T*>(
-            ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, NULL));
-        ptr = std::move(value);
-        ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
+    template<typename T, typename A = actual_type_t<T>, if_not_t< 
+        is_callable<T>::value || is_actual<T>::value > = 0>
+    const Base& set(A&& value) const {
+        flecs::set<T>(this->base_world(), this->base_id(), std::forward<A&&>(value));
         return *this;
     }
 
-    template <typename T, typename std::enable_if<
-        !_::is_flecs_constructible<T>::value, void>::type* = nullptr,
-        typename _::no_function<T>::type* = nullptr>
-    const Base& set(T&& value) const {
-        auto comp_id = _::cpp_type<T>::id(this->base_world());
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        bool is_added = false;
-        T& ptr = *static_cast<T*>(
-            ecs_get_mut_w_id(this->base_world(), this->base_id(), comp_id, &is_added));
-        if (is_added) {
-            FLECS_PLACEMENT_NEW(&ptr, T(std::move(value)));
-        } else {
-            ptr = std::move(value);
-        }
-        ecs_modified_w_id(this->base_world(), this->base_id(), comp_id);
+    template<typename T, typename A = actual_type_t<T>, if_not_t<
+        is_callable<T>::value || is_actual<T>::value > = 0>
+    const Base& set(const A& value) const {
+        flecs::set<T>(this->base_world(), this->base_id(), value);
         return *this;
-    }        
+    }
 
     /** Set a pair for an entity.
      * This operation sets the pair value, and uses the relation as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam Relation The relation part of the pair.
-     * @tparam Object The object part of the pair.
+     * @tparam R The relation part of the pair.
+     * @tparam O The object part of the pair.
      * @param value The value to set.
      */
-    template <typename Relation, typename Object>
-    const Base& set(const Relation& value) const {
-        auto comp_id = _::cpp_type<Relation>::id(this->base_world());
-
-        ecs_assert(_::cpp_type<Relation>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
-
-        ecs_set_ptr_w_entity(this->base_world(), this->base_id(),
-            ecs_pair(comp_id, _::cpp_type<Object>::id(this->base_world())),
-            sizeof(Relation), &value);
-
+    template <typename R, typename O, if_not_t< is_pair<R>::value> = 0>
+    const Base& set(const R& value) const {
+        flecs::set<pair<R, O>>(this->base_world(), this->base_id(), value);
         return *this;
     }
 
@@ -1083,23 +1054,17 @@ public:
      * This operation sets the pair value, and uses the relation as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam Relation The relation part of the pair.
+     * @tparam R The relation part of the pair.
      * @param object The object part of the pair.
      * @param value The value to set.
      */
-    template <typename Relation>
-    const Base& set(entity_t object, const Relation& value) const {
-        auto comp_id = _::cpp_type<Relation>::id(this->base_world());
-
-        ecs_assert(_::cpp_type<Relation>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
-
-        ecs_set_ptr_w_entity(this->base_world(), this->base_id(),
-            ecs_pair(comp_id, object),
-            sizeof(Relation), &value);
-
+    template <typename R>
+    const Base& set(entity_t object, const R& value) const {
+        auto relation = _::cpp_type<R>::id(this->base_world());
+        flecs::set(this->base_world(), this->base_id(), value, 
+            ecs_pair(relation, object));
         return *this;
-    }    
+    }
 
     /** Set a pair for an entity.
      * This operation sets the pair value, and uses the relation as type. If the
@@ -1109,19 +1074,19 @@ public:
      * @param relation The relation part of the pair.
      * @param value The value to set.
      */
-    template <typename Object>
-    const Base& set_object(entity_t relation, const Object& value) const {
-        auto comp_id = _::cpp_type<Object>::id(this->base_world());
-
-        ecs_assert(_::cpp_type<Object>::size() != 0, 
-            ECS_INVALID_PARAMETER, NULL);
-
-        ecs_set_ptr_w_entity(this->base_world(), this->base_id(),
-            ecs_pair(relation, comp_id),
-            sizeof(Object), &value);
-
+    template <typename O>
+    const Base& set_object(entity_t relation, const O& value) const {
+        auto object = _::cpp_type<O>::id(this->base_world());
+        flecs::set(this->base_world(), this->base_id(), value, 
+            ecs_pair(relation, object));
         return *this;
     }
+
+    template <typename R, typename O>
+    const Base& set_object(const O& value) const {
+        flecs::set<pair_object<R, O>>(this->base_world(), this->base_id(), value);
+        return *this;
+    }    
 
     /** Set 1..N components.
      * This operation accepts a callback with as arguments the components to
@@ -1138,7 +1103,7 @@ public:
      *
      * @param func The callback to invoke.
      */
-    template <typename Func, typename _::is_function<Func>::type* = nullptr>
+    template <typename Func, if_t< is_callable<Func>::value > = 0>
     const Base& set(const Func& func) const;
 
     /** Entities created in function will have the current entity.
@@ -1483,7 +1448,7 @@ public:
     template <typename Func>
     void invoke(Func&& action) const {
         action(m_world, m_id);
-    }
+    }   
 };
 
 /** Prefab class */

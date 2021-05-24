@@ -351,9 +351,7 @@ public:
      * @param index The term index.
      * @return The term data.
      */
-    template <typename T,
-        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
-        
+    template <typename T, if_t< is_const<T>::value > = 0>         
     flecs::column<T> term(int32_t index) const {
         return get_term<T>(index);
     }
@@ -366,10 +364,7 @@ public:
      * @param index The term index.
      * @return The term data.
      */
-    template <typename T,
-        typename std::enable_if<
-            std::is_const<T>::value == false, void>::type* = nullptr>
-
+    template <typename T, if_not_t< is_const<T>::value > = 0>
     flecs::column<T> term(int32_t index) const {
         ecs_assert(!ecs_term_is_readonly(m_iter, index), 
             ECS_COLUMN_ACCESS_VIOLATION, NULL);
