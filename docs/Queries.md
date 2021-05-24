@@ -1,4 +1,4 @@
-# Flecs Queries
+# Queries
 Queries are the mechanism that allow applications to get the entities that match with a certain set of conditions. Queries can range from simple lists of components to complex expressions that efficiently traverse an entity graph. This manual explains the ins & outs of how to use them.
 
 **NOTE**: this manual describes queries as they are intended to work. The actual implementation may not have support for certain combinations of features. When an application attempts to use a feature that is not yet supported, an `UNSUPPORTED` error will be thrown.
