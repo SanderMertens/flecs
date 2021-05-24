@@ -89,8 +89,8 @@ int main(int argc, char *argv[]) {
     .name = "MyEntity"
   });
 
-  ecs_set(ecs, e, Position, {0, 0});
-  ecs_set(ecs, e, Velocity, {1, 1});
+  ecs_set(ecs, e, Position, {10, 20});
+  ecs_set(ecs, e, Velocity, {1, 2});
 
   while (ecs_progress(ecs, 0)) { }
 }
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 
   ecs.entity("MyEntity").set([](Position& p, Velocity& v) {
     p = {10, 20};
-    v = {2, 2};
+    v = {1, 2};
   });
     
   while (ecs.progress()) { }
@@ -158,8 +158,8 @@ int main(int argc, char *argv[]) {
   });
 
   // Set components
-  ecs_set_id(ecs, e, pos, sizeof(Position), &(Position){0, 0});
-  ecs_set_id(ecs, e, vel, sizeof(Velocity), &(Velocity){1, 1});
+  ecs_set_id(ecs, e, pos, sizeof(Position), &(Position){10, 20});
+  ecs_set_id(ecs, e, vel, sizeof(Velocity), &(Velocity){1, 2});
 
   // Run the main loop
   while (ecs_progress(ecs, 0)) { }
