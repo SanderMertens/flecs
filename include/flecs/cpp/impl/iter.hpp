@@ -1,5 +1,5 @@
 
-namespace flecs 
+namespace flecs
 {
 
 inline flecs::entity iter::system() const {

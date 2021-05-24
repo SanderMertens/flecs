@@ -5,9 +5,9 @@ typedef struct Pair {
 } Pair;
 
 void Pairs_add_component_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto entity = world.entity()
+    auto entity = ecs.entity()
         .add<Pair, Position>();
 
     test_assert(entity.id() != 0);
@@ -18,12 +18,12 @@ void Pairs_add_component_pair() {
 }
 
 void Pairs_add_tag_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    flecs::component<Position>(world, "Position");
-    auto Pair = world.entity("Pair");
+    ecs.component<Position>();
+    auto Pair = ecs.entity("Pair");
 
-    auto entity = world.entity()
+    auto entity = ecs.entity()
         .add_object<Position>(Pair);
 
     test_assert(entity.id() != 0);
@@ -33,12 +33,12 @@ void Pairs_add_tag_pair() {
 }
 
 void Pairs_add_tag_pair_to_tag() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Tag = world.entity("Tag");
-    auto Pair = world.entity("Pair");
+    auto Tag = ecs.entity("Tag");
+    auto Pair = ecs.entity("Pair");
 
-    auto entity = world.entity()
+    auto entity = ecs.entity()
         .add(Pair, Tag);
 
     test_assert(entity.id() != 0);
@@ -47,12 +47,12 @@ void Pairs_add_tag_pair_to_tag() {
 }
 
 void Pairs_remove_component_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Pair>(world, "Pair");
+    ecs.component<Position>();
+    ecs.component<Pair>();
 
-    auto entity = world.entity()
+    auto entity = ecs.entity()
         .add<Pair, Position>();
 
     test_assert(entity.id() != 0);
@@ -66,12 +66,12 @@ void Pairs_remove_component_pair() {
 }
 
 void Pairs_remove_tag_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    flecs::component<Position>(world, "Position");
-    auto Pair = world.entity("Pair");
+    ecs.component<Position>();
+    auto Pair = ecs.entity("Pair");
 
-    auto entity = world.entity()
+    auto entity = ecs.entity()
         .add_object<Position>(Pair);
 
     test_assert(entity.id() != 0);
@@ -84,12 +84,12 @@ void Pairs_remove_tag_pair() {
 }
 
 void Pairs_remove_tag_pair_to_tag() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Tag = world.entity("Tag");
-    auto Pair = world.entity("Pair");
+    auto Tag = ecs.entity("Tag");
+    auto Pair = ecs.entity("Pair");
 
-    auto entity = world.entity()
+    auto entity = ecs.entity()
         .add(Pair, Tag);
 
     test_assert(entity.id() != 0);
@@ -101,9 +101,9 @@ void Pairs_remove_tag_pair_to_tag() {
 }
 
 void Pairs_set_component_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto entity = world.entity()
+    auto entity = ecs.entity()
         .set<Pair, Position>({10});
 
     test_assert(entity.id() != 0);
@@ -117,11 +117,11 @@ void Pairs_set_component_pair() {
 }
 
 void Pairs_set_tag_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Pair = world.entity("Pair");
+    auto Pair = ecs.entity("Pair");
 
-    auto entity = world.entity()
+    auto entity = ecs.entity()
         .set_object<Position>(Pair, {10, 20});
 
     test_assert(entity.id() != 0);
@@ -135,16 +135,16 @@ void Pairs_set_tag_pair() {
 }
 
 void Pairs_system_1_pair_instance() {
-    flecs::world world;
+    flecs::world ecs;
 
-    world.entity()
+    ecs.entity()
         .set<Pair, Position>({10});
 
     int invoke_count = 0;
     int entity_count = 0;
     int trait_value = 0;
 
-    world.system<>(nullptr, "PAIR | Pair")
+    ecs.system<>(nullptr, "PAIR | Pair")
         .iter([&](flecs::iter it) {
             flecs::column<Pair> tr(it, 1);
             invoke_count ++;            
@@ -154,7 +154,7 @@ void Pairs_system_1_pair_instance() {
             }
         });
 
-    world.progress();
+    ecs.progress();
 
     test_int(invoke_count, 1);
     test_int(entity_count, 1);
@@ -162,9 +162,9 @@ void Pairs_system_1_pair_instance() {
 }
 
 void Pairs_system_2_pair_instances() {
-    flecs::world world;
+    flecs::world ecs;
 
-    world.entity()
+    ecs.entity()
         .set<Pair, Position>({10})
         .set<Pair, Velocity>({20});
 
@@ -172,7 +172,7 @@ void Pairs_system_2_pair_instances() {
     int entity_count = 0;
     int trait_value = 0;
 
-    world.system<>(nullptr, "PAIR | Pair")
+    ecs.system<>(nullptr, "PAIR | Pair")
         .iter([&](flecs::iter it) {
             flecs::column<Pair> tr(it, 1);
             invoke_count ++;            
@@ -182,7 +182,7 @@ void Pairs_system_2_pair_instances() {
             }
         });
 
-    world.progress();
+    ecs.progress();
 
     test_int(invoke_count, 2);
     test_int(entity_count, 2);
@@ -190,12 +190,12 @@ void Pairs_system_2_pair_instances() {
 }
 
 void Pairs_override_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto base = world.entity()
+    auto base = ecs.entity()
         .set<Pair, Position>({10});
 
-    auto instance = world.entity()
+    auto instance = ecs.entity()
         .add(flecs::IsA, base);
 
     test_assert((instance.has<Pair, Position>()));
@@ -217,14 +217,14 @@ void Pairs_override_pair() {
 }
 
 void Pairs_override_tag_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Pair = world.entity();
+    auto Pair = ecs.entity();
 
-    auto base = world.entity()
+    auto base = ecs.entity()
         .set_object<Position>(Pair, {10, 20});
 
-    auto instance = world.entity()
+    auto instance = ecs.entity()
         .add(flecs::IsA, base);
 
     test_assert((instance.has_object<Position>(Pair)));
@@ -249,9 +249,9 @@ void Pairs_override_tag_pair() {
 }
 
 void Pairs_get_mut_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto e = world.entity();
+    auto e = ecs.entity();
 
     bool added = false;
     Pair *t = e.get_mut<Pair, Position>(&added);
@@ -265,9 +265,9 @@ void Pairs_get_mut_pair() {
 }
 
 void Pairs_get_mut_pair_existing() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .set<Pair, Position>({20});
 
     bool added = false;
@@ -283,11 +283,11 @@ void Pairs_get_mut_pair_existing() {
 }
 
 void Pairs_get_mut_pair_tag() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Pair = world.entity();
+    auto Pair = ecs.entity();
 
-    auto e = world.entity();
+    auto e = ecs.entity();
 
     bool added = false;
     Position *p = e.get_mut_object<Position>(Pair, &added);
@@ -303,11 +303,11 @@ void Pairs_get_mut_pair_tag() {
 }
 
 void Pairs_get_mut_pair_tag_existing() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Pair = world.entity();
+    auto Pair = ecs.entity();
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .set_object<Position>(Pair, {10, 20});
 
     bool added = false;
@@ -324,71 +324,71 @@ void Pairs_get_mut_pair_tag_existing() {
 }
 
 void Pairs_type_w_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Type = world.type()
+    auto Type = ecs.type()
         .add<Pair, Position>();
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add(Type);
 
     test_assert((e.has<Pair, Position>()));
 }
 
 void Pairs_type_w_pair_tag() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Tag = world.entity();
+    auto Tag = ecs.entity();
 
-    auto Type = world.type()
+    auto Type = ecs.type()
         .add<Pair>(Tag);
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add(Type);
 
     test_assert((e.has<Pair>(Tag)));
 }
 
 void Pairs_type_w_pair_tags() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Tag = world.entity();
-    auto Pair = world.entity();
+    auto Tag = ecs.entity();
+    auto Pair = ecs.entity();
 
-    auto Type = world.type()
+    auto Type = ecs.type()
         .add(Pair, Tag);
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add(Type);
 
     test_assert((e.has(Pair, Tag)));
 }
 
 void Pairs_type_w_tag_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Tag = world.entity();
+    auto Tag = ecs.entity();
 
-    auto Type = world.type()
+    auto Type = ecs.type()
         .add<Pair>(Tag);
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add(Type);
 
     test_assert((e.has<Pair>(Tag)));
 }
 
 void Pairs_override_pair_w_type() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Prefab = world.prefab("Prefab")
+    auto Prefab = ecs.prefab("Prefab")
         .set<Pair, Position>({10});
 
-    auto Type = world.type()
+    auto Type = ecs.type()
         .add(flecs::IsA, Prefab)
         .add<Pair, Position>();
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add(Type);
 
     test_assert((e.has<Pair, Position>()));
@@ -405,18 +405,18 @@ void Pairs_override_pair_w_type() {
 }
 
 void Pairs_override_pair_w_type_tag() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Tag = world.entity();
+    auto Tag = ecs.entity();
 
-    auto Prefab = world.prefab("Prefab")
+    auto Prefab = ecs.prefab("Prefab")
         .set<Pair>(Tag, {10});
 
-    auto Type = world.type()
+    auto Type = ecs.type()
         .add(flecs::IsA, Prefab)
         .add<Pair>(Tag);
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add(Type);
 
     test_assert((e.has<Pair>(Tag)));
@@ -433,18 +433,18 @@ void Pairs_override_pair_w_type_tag() {
 }
 
 void Pairs_override_tag_pair_w_type() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto Pair = world.entity();
+    auto Pair = ecs.entity();
 
-    auto Prefab = world.prefab("Prefab")
+    auto Prefab = ecs.prefab("Prefab")
         .set_object<Position>(Pair, {10, 20});
 
-    auto Type = world.type()
+    auto Type = ecs.type()
         .add(flecs::IsA, Prefab)
         .add_object<Position>(Pair);
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add(Type);
 
     test_assert((e.has_object<Position>(Pair)));
@@ -463,10 +463,10 @@ void Pairs_override_tag_pair_w_type() {
 }
 
 void Pairs_get_relation_from_id() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto rel = world.entity();
-    auto obj = world.entity();
+    auto rel = ecs.entity();
+    auto obj = ecs.entity();
 
     flecs::id pair(rel, obj);
 
@@ -478,10 +478,10 @@ void Pairs_get_relation_from_id() {
 }
 
 void Pairs_get_object_from_id() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto rel = world.entity();
-    auto obj = world.entity();
+    auto rel = ecs.entity();
+    auto obj = ecs.entity();
 
     flecs::id pair(rel, obj);
 
@@ -493,16 +493,16 @@ void Pairs_get_object_from_id() {
 }
 
 void Pairs_get_recycled_relation_from_id() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto rel = world.entity();
-    auto obj = world.entity();
+    auto rel = ecs.entity();
+    auto obj = ecs.entity();
 
     rel.destruct();
     obj.destruct();
 
-    rel = world.entity();
-    obj = world.entity();
+    rel = ecs.entity();
+    obj = ecs.entity();
 
     // Make sure ids are recycled
     test_assert((uint32_t)rel.id() != rel.id());
@@ -518,16 +518,16 @@ void Pairs_get_recycled_relation_from_id() {
 }
 
 void Pairs_get_recycled_object_from_id() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto rel = world.entity();
-    auto obj = world.entity();
+    auto rel = ecs.entity();
+    auto obj = ecs.entity();
 
     rel.destruct();
     obj.destruct();
 
-    rel = world.entity();
-    obj = world.entity();
+    rel = ecs.entity();
+    obj = ecs.entity();
 
     // Make sure ids are recycled
     test_assert((uint32_t)rel.id() != rel.id());
@@ -543,12 +543,12 @@ void Pairs_get_recycled_object_from_id() {
 }
 
 void Pairs_each() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto p_1 = world.entity();
-    auto p_2 = world.entity();
+    auto p_1 = ecs.entity();
+    auto p_2 = ecs.entity();
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add(p_1)
         .add(p_2);
 
@@ -570,13 +570,13 @@ void Pairs_each() {
 }
 
 void Pairs_each_pair() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto pair = world.component<Pair>();
-    auto pos = world.component<Position>();
-    auto vel = world.component<Velocity>();
+    auto pair = ecs.component<Pair>();
+    auto pos = ecs.component<Position>();
+    auto vel = ecs.component<Velocity>();
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add<Pair, Position>()
         .add<Pair, Velocity>();
 
@@ -598,12 +598,12 @@ void Pairs_each_pair() {
 }
 
 void Pairs_each_pair_by_type() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto pos = world.component<Position>();
-    auto vel = world.component<Velocity>();
+    auto pos = ecs.component<Position>();
+    auto vel = ecs.component<Velocity>();
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add<Pair, Position>()
         .add<Pair, Velocity>();
 
@@ -625,12 +625,12 @@ void Pairs_each_pair_by_type() {
 }
 
 void Pairs_each_pair_w_childof() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto p_1 = world.entity();
-    auto p_2 = world.entity();
+    auto p_1 = ecs.entity();
+    auto p_2 = ecs.entity();
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .child_of(p_1)
         .child_of(p_2);
 
@@ -652,18 +652,18 @@ void Pairs_each_pair_w_childof() {
 }
 
 void Pairs_each_pair_w_recycled_rel() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto e_1 = world.entity();
-    auto e_2 = world.entity();
+    auto e_1 = ecs.entity();
+    auto e_2 = ecs.entity();
 
-    world.entity().destruct(); // force recycling
+    ecs.entity().destruct(); // force recycling
 
-    auto pair = world.entity();
+    auto pair = ecs.entity();
 
     test_assert((uint32_t)pair.id() != pair.id()); // ensure recycled
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add(pair, e_1)
         .add(pair, e_2);
 
@@ -686,19 +686,19 @@ void Pairs_each_pair_w_recycled_rel() {
 }
 
 void Pairs_each_pair_w_recycled_obj() {
-    flecs::world world;
+    flecs::world ecs;
 
-    auto pair = world.component<Pair>();
+    auto pair = ecs.component<Pair>();
 
-    world.entity().destruct(); // force recycling
-    auto e_1 = world.entity();
+    ecs.entity().destruct(); // force recycling
+    auto e_1 = ecs.entity();
     test_assert((uint32_t)e_1.id() != e_1.id()); // ensure recycled
 
-    world.entity().destruct();
-    auto e_2 = world.entity();    
+    ecs.entity().destruct();
+    auto e_2 = ecs.entity();    
     test_assert((uint32_t)e_2.id() != e_2.id());
 
-    auto e = world.entity()
+    auto e = ecs.entity()
         .add<Pair>(e_1)
         .add<Pair>(e_2);
 
@@ -720,22 +720,285 @@ void Pairs_each_pair_w_recycled_obj() {
     test_int(count, 2);
 }
 
+void Pairs_match_pair() {
+    flecs::world ecs;
+
+    auto Eats = ecs.entity();
+    auto Dislikes = ecs.entity();
+
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+    auto Bananas = ecs.entity();
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20}) // should not be matched
+        .add(Eats, Apples)
+        .add(Eats, Pears)
+        .add(Dislikes, Bananas);
+
+    int32_t count = 0;
+
+    e.match(ecs.pair(Eats, Apples), 
+        [&](flecs::id id) {
+            test_assert(id.relation() == Eats);
+            test_assert(id.object() == Apples);
+            count ++;
+        });
+    
+    test_int(count, 1);
+}
+
+void Pairs_match_pair_obj_wildcard() {
+    flecs::world ecs;
+
+    auto Eats = ecs.entity();
+    auto Dislikes = ecs.entity();
+
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+    auto Bananas = ecs.entity();
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20}) // should not be matched
+        .add(Eats, Apples)
+        .add(Eats, Pears)
+        .add(Dislikes, Bananas);
+
+    int32_t count = 0;
+
+    e.match(ecs.pair(Eats, flecs::Wildcard), 
+        [&](flecs::id id) {
+            test_assert(id.relation() == Eats);
+            test_assert(id.object() == Apples || id.object() == Pears);
+            count ++;
+        });
+    
+    test_int(count, 2);
+}
+
+void Pairs_match_pair_rel_wildcard() {
+    flecs::world ecs;
+
+    auto Eats = ecs.entity();
+    auto Dislikes = ecs.entity();
+
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+    auto Bananas = ecs.entity();
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20}) // should not be matched
+        .add(Eats, Apples)
+        .add(Eats, Pears)
+        .add(Dislikes, Bananas);
+
+    int32_t count = 0;
+
+    e.match(ecs.pair(flecs::Wildcard, Pears), 
+        [&](flecs::id id) {
+            test_assert(id.relation() == Eats);
+            test_assert(id.object() == Pears);
+            count ++;
+        });
+    
+    test_int(count, 1);
+}
+
+void Pairs_match_pair_both_wildcard() {
+    flecs::world ecs;
+
+    auto Eats = ecs.entity();
+    auto Dislikes = ecs.entity();
+
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+    auto Bananas = ecs.entity();
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20}) // should not be matched
+        .add(Eats, Apples)
+        .add(Eats, Pears)
+        .add(Dislikes, Bananas);
+
+    int32_t count = 0;
+
+    e.match(ecs.pair(flecs::Wildcard, flecs::Wildcard), 
+        [&](flecs::id id) {
+            count ++;
+        });
+    
+    test_int(count, 3);
+}
+
 void Pairs_has_tag_w_object() {
-    flecs::world world;
+    flecs::world ecs;
 
     struct Likes { };
 
-    auto Bob = world.entity();
-    auto e = world.entity().add<Likes>(Bob);
+    auto Bob = ecs.entity();
+    auto e = ecs.entity().add<Likes>(Bob);
     test_assert(e.has<Likes>(Bob));
 }
 
 void Pairs_has_object_tag() {
-    flecs::world world;
+    flecs::world ecs;
 
     struct Bob { };
 
-    auto Likes = world.entity();
-    auto e = world.entity().add_object<Bob>(Likes);
+    auto Likes = ecs.entity();
+    auto e = ecs.entity().add_object<Bob>(Likes);
     test_assert(e.has_object<Bob>(Likes));
+}
+
+struct Eats { int amount; };
+struct Apples { };
+struct Pears { };
+
+using EatsApples = flecs::pair<Eats, Apples>;
+using EatsPears = flecs::pair<Eats, Pears>;
+
+void Pairs_add_pair_type() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().add<EatsApples>();
+    test_assert((e.has<Eats, Apples>()));
+    test_assert((e.has<EatsApples>()));
+}
+
+void Pairs_remove_pair_type() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().add<EatsApples>();
+    test_assert((e.has<Eats, Apples>()));
+    test_assert((e.has<EatsApples>()));
+
+    e.remove<EatsApples>();
+    test_assert(!(e.has<Eats, Apples>()));
+    test_assert(!(e.has<EatsApples>()));    
+}
+
+void Pairs_set_pair_type() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().set<EatsApples>({10});
+    test_assert((e.has<Eats, Apples>()));
+    test_assert((e.has<EatsApples>()));
+
+    const Eats *ptr = e.get<EatsApples>();
+    test_int(ptr->amount, 10);
+
+    test_assert((ptr == e.get<Eats, Apples>()));
+}
+
+void Pairs_has_pair_type() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().add<Eats, Apples>();
+    test_assert((e.has<Eats, Apples>()));
+    test_assert((e.has<EatsApples>()));
+}
+
+void Pairs_get_1_pair_arg() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().set<EatsApples>({10});
+    test_assert((e.has<Eats, Apples>()));
+    test_assert((e.has<EatsApples>()));
+
+    test_bool(e.get([](const EatsApples& a) {
+        test_int(a->amount, 10);
+    }), true);
+}
+
+void Pairs_get_2_pair_arg() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<EatsApples>({10})
+        .set<EatsPears>({20});
+
+    test_assert((e.has<Eats, Apples>()));
+    test_assert((e.has<Eats, Pears>()));
+    test_assert((e.has<EatsApples>()));
+    test_assert((e.has<EatsPears>()));
+
+    test_bool(e.get([](const EatsApples& a, const EatsPears& p) {
+        test_int(a->amount, 10);
+        test_int(p->amount, 20);
+    }), true);
+}
+
+void Pairs_set_1_pair_arg() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set([](EatsApples&& a) {
+            a->amount = 10;
+        });
+
+    auto eats = e.get<EatsApples>();
+    test_int(eats->amount, 10);
+}
+
+void Pairs_set_2_pair_arg() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set([](EatsApples&& a, EatsPears&& p) {
+            a->amount = 10;
+            p->amount = 20;
+        });
+
+    auto eats = e.get<EatsApples>();
+    test_int(eats->amount, 10);
+
+    eats = e.get<EatsPears>();
+    test_int(eats->amount, 20);
+}
+
+void Pairs_get_inline_pair_type() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().set<EatsApples>({10});
+    test_assert((e.has<Eats, Apples>()));
+    test_assert((e.has<EatsApples>()));
+
+    test_bool(e.get([](const flecs::pair<Eats, Apples>& a) {
+        test_int(a->amount, 10);
+    }), true);
+}
+
+void Pairs_set_inline_pair_type() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set([](flecs::pair<Eats, Apples>&& a) {
+            a->amount = 10;
+        });
+
+    auto eats = e.get<EatsApples>();
+    test_int(eats->amount, 10);
+}
+
+void Pairs_get_pair_type_object() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().set_object<Apples, Eats>({10});
+    test_assert((e.has<Apples, Eats>()));
+
+    test_bool(e.get([](const flecs::pair_object<Apples, Eats>& a) {
+        test_int(a->amount, 10);
+    }), true);
+}
+
+void Pairs_set_pair_type_object() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set([](flecs::pair_object<Apples, Eats>&& a) {
+            a->amount = 10;
+        });
+
+    auto eats = e.get_object<Apples, Eats>();
+    test_int(eats->amount, 10);
 }

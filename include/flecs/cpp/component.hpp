@@ -142,20 +142,20 @@ struct symbol_helper
     }
 };
 
-// If type is trivial, don't register lifecycle actions.
-template<typename T, typename std::enable_if<
-    std::is_trivial<T>::value == true, void>::type* = nullptr>
-void register_lifecycle_actions(
-    ecs_world_t *world,
-    ecs_entity_t component)
-{
-    (void)world; (void)component;
-}
+// If type is trivial, don't register lifecycle actions. While the functions
+// that obtain the lifecycle callback do detect whether the callback is required
+// adding a special case for trivial types eases the burden a bit on the
+// compiler as it reduces the number of templates to evaluate.
+template<typename T, enable_if_t<
+    std::is_trivial<T>::value == true
+        >* = nullptr>
+void register_lifecycle_actions(ecs_world_t*, ecs_entity_t) { }
 
 // If the component is non-trivial, register component lifecycle actions. 
 // Depending on the type not all callbacks may be available.
-template<typename T, typename std::enable_if<
-    std::is_trivial<T>::value == false, void>::type* = nullptr>
+template<typename T, enable_if_t<
+    std::is_trivial<T>::value == false
+        >* = nullptr>
 void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
@@ -199,7 +199,7 @@ public:
         if (allow_tag && std::is_empty<T>::value) {
             return 0;
         } else {
-            return sizeof(typename base_type<T>::type);
+            return sizeof(T);
         }
     }
 
@@ -207,7 +207,7 @@ public:
         if (size(allow_tag) == 0) {
             return 0;
         } else {
-            return alignof(typename base_type<T>::type);
+            return alignof(T);
         }        
     }
 };
@@ -326,8 +326,8 @@ public:
     // automatically registers lifecycle callbacks.
     // Additionally, implicit registration temporarily resets the scope & with
     // state of the world, so that the component is not implicitly created with
-    // the scope/with of the code it happens to be first used in.
-    static entity_t id(world_t *world = nullptr, const char *name = nullptr, 
+    // the scope/with of the code it happens to be first used by.
+    static id_t id(world_t *world = nullptr, const char *name = nullptr, 
         bool allow_tag = true) 
     {
         // If no id has been registered yet, do it now.
@@ -454,13 +454,31 @@ private:
 };
 
 // Global templated variables that hold component identifier and other info
-template <typename T> entity_t cpp_type_impl<T>::s_id( 0 );
-template <typename T> type_t cpp_type_impl<T>::s_type( nullptr );
+template <typename T> entity_t      cpp_type_impl<T>::s_id( 0 );
+template <typename T> type_t        cpp_type_impl<T>::s_type( nullptr );
 template <typename T> flecs::string cpp_type_impl<T>::s_name;
-template <typename T> bool cpp_type_impl<T>::s_allow_tag( true );
+template <typename T> bool          cpp_type_impl<T>::s_allow_tag( true );
 
+// Front facing class for implicitly registering a component & obtaining 
+// static component data
+
+// Regular type
 template <typename T>
-class cpp_type final : public cpp_type_impl<typename base_type<T>::type> { };
+class cpp_type<T, if_not_t< is_pair<T>::value >> 
+    : public cpp_type_impl<base_type_t<T>> { };
+
+// Pair type
+template <typename T>
+class cpp_type<T, if_t< is_pair<T>::value >>
+{
+public:
+    // Override id method to return id of pair
+    static id_t id(world_t *world = nullptr) {
+        return ecs_pair(
+            cpp_type< pair_relation_t<T> >::id(world),
+            cpp_type< pair_object_t<T> >::id(world));
+    }
+};
 
 } // namespace _
 

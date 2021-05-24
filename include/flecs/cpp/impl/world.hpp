@@ -152,12 +152,6 @@ inline entity world::lookup(const char *name) const {
 }
 
 template <typename T>
-void world::set(T value) const {
-    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
-    e.set<T>(value);
-}
-
-template <typename T>
 T* world::get_mut() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.get_mut<T>();

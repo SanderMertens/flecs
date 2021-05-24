@@ -1,3 +1,8 @@
+////////////////////////////////////////////////////////////////////////////////
+//// Flecs STL (FTL?)
+//// Minimalistic utilities that allow for STL like functionality without having
+//// to depend on the actual STL.
+////////////////////////////////////////////////////////////////////////////////
 
 // Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
 // Rationale:
@@ -45,11 +50,58 @@ inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      n
 namespace flecs
 {
 
-////////////////////////////////////////////////////////////////////////////////
-//// Flecs STL (FTL?)
-//// Minimalistic utilities that allow for STL like functionality without having
-//// to depend on the actual STL.
-////////////////////////////////////////////////////////////////////////////////
+// C++11/C++14 convenience template replacements
+
+template <bool V, typename T, typename F>
+using conditional_t = typename std::conditional<V, T, F>::type;
+
+template <typename T>
+using decay_t = typename std::decay<T>::type;
+
+template <bool V, typename T = void>
+using enable_if_t = typename std::enable_if<V, T>::type;
+
+template <typename T>
+using remove_pointer_t = typename std::remove_pointer<T>::type;
+
+template <typename T>
+using remove_reference_t = typename std::remove_reference<T>::type;
+
+using std::is_base_of;
+using std::is_const;
+using std::is_pointer;
+using std::is_reference;
+using std::is_volatile;
+
+
+// Apply cv modifiers from source type to destination type
+// (from: https://stackoverflow.com/questions/52559336/add-const-to-type-if-template-arg-is-const)
+template<class Src, class Dst>
+using transcribe_const_t = conditional_t<is_const<Src>::value, Dst const, Dst>;
+
+template<class Src, class Dst>
+using transcribe_volatile_t = conditional_t<is_volatile<Src>::value, Dst volatile, Dst>;
+
+template<class Src, class Dst>
+using transcribe_cv_t = transcribe_const_t< Src, transcribe_volatile_t< Src, Dst> >;
+
+
+// More convenience templates. The if_*_t templates use int as default type
+// instead of void. This enables writing code that's a bit less cluttered when
+// the templates are used in a template declaration:
+//
+//     enable_if_t<true>* = nullptr
+// vs:
+//     if_t<true> = 0
+
+template <bool V>
+using if_t = enable_if_t<V, int>;
+
+template <bool V>
+using if_not_t = enable_if_t<false == V, int>;
+
+
+// String handling
 
 class string_view;
 
@@ -223,7 +275,7 @@ template <typename T, size_t Size, class Enable = void>
 class array { };
 
 template <typename T, size_t Size>
-class array<T, Size, typename std::enable_if<Size != 0>::type> {
+class array<T, Size, enable_if_t<Size != 0>> {
 public:
     array() {};
 
@@ -259,7 +311,7 @@ private:
 
 // Specialized class for zero-sized array
 template <typename T, size_t Size>
-class array<T, Size, typename std::enable_if<Size == 0>::type> {
+class array<T, Size, enable_if_t<Size == 0>> {
 public:
     array() {};
     array(const T* (&elems)) { (void)elems; }
@@ -285,25 +337,11 @@ struct always_false {
     static const bool value = false;
 };
 
-// Utility to get actual type
-template<typename Type>
-struct base_type {
-    typedef typename std::remove_pointer<
-        typename std::decay<Type>::type>::type type;
-};
-
-// Utility to get actual argument type (doesn't remove const)
-template<typename Type>
-struct base_arg_type {
-    typedef typename std::remove_pointer<
-        typename std::remove_reference<Type>::type>::type type;
-};    
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility to convert template argument pack to array of term ptrs
 ////////////////////////////////////////////////////////////////////////////////
 
-struct TermPtr {
+struct term_ptr {
     void *ptr;
     bool is_ref;
 };
@@ -311,19 +349,21 @@ struct TermPtr {
 template <typename ... Components>
 class term_ptrs {
 public:
-    using Terms = flecs::array<_::TermPtr, sizeof...(Components)>;
+    using array = flecs::array<_::term_ptr, sizeof...(Components)>;
 
     void populate(const ecs_iter_t *iter) {
-        populate(iter, 0, static_cast<typename std::remove_reference<
-            typename std::remove_pointer<Components>
-                ::type>::type*>(nullptr)...);
+        populate(iter, 0, static_cast<
+            remove_reference_t<
+                remove_pointer_t<Components>>
+                    *>(nullptr)...);
     }
 
     bool populate_w_refs(const ecs_iter_t *iter) {
         if (iter->table->references) {
-            populate_w_refs(iter, 0, static_cast<typename std::remove_reference<
-                typename std::remove_pointer<Components>
-                    ::type>::type*>(nullptr)...);
+            populate_w_refs(iter, 0, static_cast<
+                remove_reference_t<
+                    remove_pointer_t<Components>>
+                        *>(nullptr)...);
             return true;
         } else {
             this->populate(iter);
@@ -331,7 +371,7 @@ public:
         }
     }
 
-    Terms m_terms;
+    array m_terms;
 
 private:
     /* Populate terms array without checking for references */
@@ -369,32 +409,29 @@ private:
 //// Utility to convert type trait to flecs signature syntax */
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename T,
-    typename std::enable_if< std::is_const<T>::value == true, void>::type* = nullptr>
+template <typename T, if_t< is_const<T>::value> = 0>
 constexpr const char *inout_modifier() {
     return "[in] ";
 }
 
-template <typename T,
-    typename std::enable_if< std::is_reference<T>::value == true, void>::type* = nullptr>
+template <typename T, if_t< is_reference<T>::value> = 0>
 constexpr const char *inout_modifier() {
     return "[out] ";
 }
 
-template <typename T,
-    typename std::enable_if<std::is_const<T>::value == false && std::is_reference<T>::value == false, void>::type* = nullptr>
+template <typename T, if_t< 
+    is_const<T>::value && 
+    ! is_reference<T>::value> = 0>
 constexpr const char *inout_modifier() {
     return "";
 }
 
-template <typename T,
-    typename std::enable_if< std::is_pointer<T>::value == true, void>::type* = nullptr>
+template <typename T, if_t< is_pointer<T>::value> = 0>
 constexpr const char *optional_modifier() {
     return "?";
 }
 
-template <typename T,
-    typename std::enable_if< std::is_pointer<T>::value == false, void>::type* = nullptr>
+template <typename T, if_not_t< is_pointer<T>::value> = 0>
 constexpr const char *optional_modifier() {
     return "";
 } 

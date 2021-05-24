@@ -413,9 +413,6 @@ typedef struct ecs_trigger_desc_t {
     /* Term specifying the id to subscribe for */
     ecs_term_t term;
 
-    /* Optional name. */
-    const char *name;
-
     /* Filter expression. May only contain a single term. If this field is set,
      * the term field is ignored. */
     const char *expr;
@@ -438,6 +435,7 @@ typedef struct ecs_trigger_desc_t {
     /* Callback to free binding_ctx */     
     ecs_ctx_free_t binding_ctx_free;
 } ecs_trigger_desc_t;
+
 
 /** @} */
 

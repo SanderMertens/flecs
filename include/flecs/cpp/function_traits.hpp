@@ -88,34 +88,24 @@ struct function_traits_no_cv<T, decltype((void)&T::operator())>
 // Front facing template that decays T before ripping it apart.
 template <typename T>
 struct function_traits
-    : function_traits_no_cv<typename std::decay<T>::type> {};
+    : function_traits_no_cv< decay_t<T> > {};
 
-// SFINAE utility to test if object is function
-template <typename T, typename U = void>
-struct is_function;
+} // _
 
 template <typename T>
-struct is_function<T, typename std::enable_if<function_traits<T>::is_callable>::type> {
-    using type = void;
+struct is_callable {
+    static constexpr bool value = _::function_traits<T>::is_callable;
 };
-
-// SFINAE utility to test if object is not a function
-template <typename T, typename U = void>
-struct no_function;
 
 template <typename T>
-struct no_function<T, typename std::enable_if<function_traits<T>::is_callable == false>::type> {
-    using type = void;
+struct arity {
+    static constexpr bool value = _::function_traits<T>::arity;
 };
 
-// SFINAE utility to check argument count
-template <typename T, size_t N, typename U = void>
-struct if_function_arity;
+template <typename T>
+using return_type_t = typename _::function_traits<T>::return_type;
 
-template <typename T, size_t N>
-struct if_function_arity<T, N, typename std::enable_if<function_traits<T>::arity == N>::type> {
-    using type = void;
-};
+template <typename T>
+using arg_list_t = typename _::function_traits<T>::args;
 
-}
-}
+} // flecs

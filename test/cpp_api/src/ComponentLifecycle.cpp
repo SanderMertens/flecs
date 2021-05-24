@@ -387,7 +387,7 @@ void ComponentLifecycle_implicit_after_query() {
 }
 
 template <typename T, typename std::enable_if<
-    !flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+    !flecs::has_flecs_ctor<T>::value, void>::type* = nullptr>
 static void try_add(flecs::world& ecs) {
     flecs::entity e = ecs.entity().add<T>();
     
@@ -401,7 +401,7 @@ static void try_add(flecs::world& ecs) {
 }
 
 template <typename T, typename std::enable_if<
-    flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+    flecs::has_flecs_ctor<T>::value, void>::type* = nullptr>
 static void try_add(flecs::world& ecs) {
     flecs::entity e = ecs.entity().add<T>();
     test_assert(e.has<T>());
@@ -443,7 +443,7 @@ static void try_add_object(flecs::world& ecs) {
 }
 
 template <typename T, typename std::enable_if<
-    !flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+    !flecs::has_flecs_ctor<T>::value, void>::type* = nullptr>
 static void try_set(flecs::world& ecs) {
     flecs::entity e = ecs.entity().set<T>({10});
 
@@ -452,7 +452,7 @@ static void try_set(flecs::world& ecs) {
 }
 
 template <typename T, typename std::enable_if<
-    flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+    flecs::has_flecs_ctor<T>::value, void>::type* = nullptr>
 static void try_set(flecs::world& ecs) {
     flecs::entity e = ecs.entity().set<T>({10});
 
@@ -464,7 +464,7 @@ static void try_set(flecs::world& ecs) {
 }
 
 template <typename T, typename std::enable_if<
-    !flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+    !flecs::has_flecs_ctor<T>::value, void>::type* = nullptr>
 static void try_set_default(flecs::world& ecs) {
     flecs::entity e = ecs.entity().set(T());
 
@@ -475,7 +475,7 @@ static void try_set_default(flecs::world& ecs) {
 }
 
 template <typename T, typename std::enable_if<
-    flecs::_::has_flecs_ctor<T>::value, void>::type* = nullptr>
+    flecs::has_flecs_ctor<T>::value, void>::type* = nullptr>
 static void try_set_default(flecs::world& ecs) {
     flecs::entity e = ecs.entity().set(T());
 

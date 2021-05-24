@@ -123,10 +123,12 @@ struct lifecycle_callback_result {
 };
 
 template <typename T>
-const lifecycle_callback_result<T> lifecycle_callback_result<T>::is_illegal = {nullptr, true};
+const lifecycle_callback_result<T> 
+    lifecycle_callback_result<T>::is_illegal = {nullptr, true};
 
 template <typename T>
-const lifecycle_callback_result<T> lifecycle_callback_result<T>::not_set = {nullptr, false};
+const lifecycle_callback_result<T> 
+    lifecycle_callback_result<T>::not_set = {nullptr, false};
 
 using ctor_result = lifecycle_callback_result<ecs_xtor_t>;
 using dtor_result = lifecycle_callback_result<ecs_xtor_t>;
@@ -136,71 +138,73 @@ using copy_ctor_result = lifecycle_callback_result<ecs_copy_ctor_t>;
 using move_ctor_result = lifecycle_callback_result<ecs_move_ctor_t>;
 using merge_result = lifecycle_callback_result<ecs_move_ctor_t>;
 
+} // _
+
+// Trait to test if type has flecs constructor
 template <typename T>
 struct has_flecs_ctor {
     static constexpr bool value = 
-        std::is_constructible<T, flecs::world&, flecs::entity>::value;
+        std::is_constructible<actual_type_t<T>, 
+            flecs::world&, flecs::entity>::value;
 };
 
+// Trait to test if type is constructible by flecs
 template <typename T>
 struct is_flecs_constructible {
     static constexpr bool value = 
-        std::is_default_constructible<T>::value ||
-        std::is_constructible<T, flecs::world&, flecs::entity>::value;
+        std::is_default_constructible<actual_type_t<T>>::value ||
+        std::is_constructible<actual_type_t<T>, 
+            flecs::world&, flecs::entity>::value;
 };
 
+namespace _
+{
+
 // Trivially constructible
-template <typename T, typename std::enable_if<
-    std::is_trivially_constructible<T>::value, void>::type* = nullptr>
+template <typename T, if_t< std::is_trivially_constructible<T>::value > = 0>
 ctor_result ctor() {
     return ctor_result::not_set;
 }
 
 // Not constructible by flecs
-template <typename T, typename std::enable_if<
+template <typename T, if_t< 
     ! std::is_default_constructible<T>::value &&
-    ! has_flecs_ctor<T>::value,
-        void>::type* = nullptr>
+    ! has_flecs_ctor<T>::value > = 0>
 ctor_result ctor() {
     return ctor_result::is_illegal;
 }
 
 // Default constructible
-template <typename T, typename std::enable_if<
+template <typename T, if_t<
     ! std::is_trivially_constructible<T>::value &&
     std::is_default_constructible<T>::value &&
-    ! has_flecs_ctor<T>::value, 
-        void>::type* = nullptr>
+    ! has_flecs_ctor<T>::value > = 0>
 ctor_result ctor() {
     return {ctor_impl<T>, false};
 }
 
 // Flecs constructible: T(flecs::world, flecs::entity)
-template <typename T, typename std::enable_if<
-    has_flecs_ctor<T>::value, 
-        void>::type* = nullptr>
+template <typename T, if_t< has_flecs_ctor<T>::value > = 0>
 ctor_result ctor() {
     return {ctor_world_entity_impl<T>, false};
 }
 
 // No dtor
-template <typename T, typename std::enable_if<
-    std::is_trivially_destructible<T>::value, void>::type* = nullptr>
+template <typename T, if_t< std::is_trivially_destructible<T>::value > = 0>
 dtor_result dtor() {
     return dtor_result::not_set;
 }
 
 // Dtor
-template <typename T, typename std::enable_if<
+template <typename T, if_t<
     std::is_destructible<T>::value &&
-    ! std::is_trivially_destructible<T>::value, void>::type* = nullptr>
+    ! std::is_trivially_destructible<T>::value > = 0>
 dtor_result dtor() {
     return {dtor_impl<T>, false};
 }
 
 // Assert when the type cannot be destructed
-template <typename T, typename std::enable_if<
-    ! std::is_destructible<T>::value, void>::type* = nullptr>
+template <typename T, if_not_t< std::is_destructible<T>::value > = 0>
 dtor_result dtor() {
     flecs_static_assert(always_false<T>::value, 
         "component type must be destructible");
@@ -208,38 +212,35 @@ dtor_result dtor() {
 }
 
 // Trivially copyable
-template <typename T, typename std::enable_if<
-    std::is_trivially_copyable<T>::value, void>::type* = nullptr>
+template <typename T, if_t< std::is_trivially_copyable<T>::value > = 0>
 copy_result copy() {
     return copy_result::not_set;
 }
 
 // Not copyable
-template <typename T, typename std::enable_if<
+template <typename T, if_t<
     ! std::is_trivially_copyable<T>::value &&
-    ! std::is_copy_assignable<T>::value, void>::type* = nullptr>
+    ! std::is_copy_assignable<T>::value > = 0>
 copy_result copy() {
     return copy_result::is_illegal;
 }
 
 // Copy assignment
-template <typename T, typename std::enable_if<
+template <typename T, if_t<
     std::is_copy_assignable<T>::value &&
-    ! std::is_trivially_copyable<T>::value, void>::type* = nullptr>
+    ! std::is_trivially_copyable<T>::value > = 0>
 copy_result copy() {
     return {copy_impl<T>, false};
 }
 
 // Trivially move assignable
-template <typename T, typename std::enable_if<
-    std::is_trivially_move_assignable<T>::value, void>::type* = nullptr>
+template <typename T, if_t< std::is_trivially_move_assignable<T>::value > = 0>
 move_result move() {
     return move_result::not_set;
 }
 
 // Component types must be move assignable
-template <typename T, typename std::enable_if<
-    ! std::is_move_assignable<T>::value, void>::type* = nullptr>
+template <typename T, if_not_t< std::is_move_assignable<T>::value > = 0>
 move_result move() {
     flecs_static_assert(always_false<T>::value,
         "component type must be move assignable");
@@ -247,45 +248,43 @@ move_result move() {
 }
 
 // Move assignment
-template <typename T, typename std::enable_if<
+template <typename T, if_t<
     std::is_move_assignable<T>::value &&
-    ! std::is_trivially_move_assignable<T>::value, void>::type* = nullptr>
+    ! std::is_trivially_move_assignable<T>::value > = 0>
 move_result move() {
     return {move_impl<T>, false};
 }
 
 // Trivially copy constructible
-template <typename T, typename std::enable_if<
-    std::is_trivially_copy_constructible<T>::value, void>::type* = nullptr>
+template <typename T, if_t<
+    std::is_trivially_copy_constructible<T>::value > = 0>
 copy_ctor_result copy_ctor() {
     return copy_ctor_result::not_set;
 }
 
 // No copy ctor
-template <typename T, typename std::enable_if<
-    ! std::is_copy_constructible<T>::value, void>::type* = nullptr>
+template <typename T, if_t< ! std::is_copy_constructible<T>::value > = 0>
 copy_ctor_result copy_ctor() {
     return copy_ctor_result::is_illegal;
 }
 
 // Copy ctor
-template <typename T, typename std::enable_if<
+template <typename T, if_t<
     std::is_copy_constructible<T>::value &&
-    ! std::is_trivially_copy_constructible<T>::value, void>::type* = nullptr>
+    ! std::is_trivially_copy_constructible<T>::value > = 0>
 copy_ctor_result copy_ctor() {
     return {copy_ctor_impl<T>, false};
 }
 
 // Trivially move constructible
-template <typename T, typename std::enable_if<
-    std::is_trivially_move_constructible<T>::value, void>::type* = nullptr>
+template <typename T, if_t<
+    std::is_trivially_move_constructible<T>::value > = 0>
 move_ctor_result move_ctor() {
     return move_ctor_result::not_set;
 }
 
 // Component types must be move constructible
-template <typename T, typename std::enable_if<
-    ! std::is_move_constructible<T>::value, void>::type* = nullptr>
+template <typename T, if_not_t< std::is_move_constructible<T>::value > = 0>
 move_ctor_result move_ctor() {
     flecs_static_assert(always_false<T>::value,
         "component type must be move constructible");    
@@ -293,25 +292,25 @@ move_ctor_result move_ctor() {
 }
 
 // Move ctor
-template <typename T, typename std::enable_if<
+template <typename T, if_t<
     std::is_move_constructible<T>::value &&
-    ! std::is_trivially_move_constructible<T>::value, void>::type* = nullptr>
+    ! std::is_trivially_move_constructible<T>::value > = 0>
 move_ctor_result move_ctor() {
     return {move_ctor_impl<T>, false};
 }
 
 // Trivial merge (move assign + dtor)
-template <typename T, typename std::enable_if<
+template <typename T, if_t<
     std::is_trivially_move_constructible<T>::value  &&
-    std::is_trivially_destructible<T>::value, void>::type* = nullptr>
+    std::is_trivially_destructible<T>::value > = 0>
 move_ctor_result merge() {
     return move_ctor_result::not_set;
 }
 
 // Component types must be move constructible and destructible
-template <typename T, typename std::enable_if<
+template <typename T, if_t<
     ! std::is_move_constructible<T>::value ||
-    ! std::is_destructible<T>::value, void>::type* = nullptr>
+    ! std::is_destructible<T>::value > = 0>
 move_ctor_result merge() {
     flecs_static_assert(always_false<T>::value,
         "component type must be move constructible and destructible");
@@ -319,11 +318,11 @@ move_ctor_result merge() {
 }
 
 // Merge (move assign + dtor)
-template <typename T, typename std::enable_if<
+template <typename T, if_t<
     !(std::is_trivially_move_constructible<T>::value  &&
       std::is_trivially_destructible<T>::value) &&
     std::is_move_constructible<T>::value &&
-    std::is_destructible<T>::value, void>::type* = nullptr>
+    std::is_destructible<T>::value > = 0>
 move_ctor_result merge() {
     return {merge_impl<T>, false};
 }
