@@ -80,7 +80,7 @@ auto q = world.query_builder<>()
   .build();
 ```
 
-This example just shows a simple relation query. Relation queries are much more powerful than this as they provide the ability to match against entity graphs of arbitrary size. For more information on relation queries see the [Query manual](Query.md).
+This example just shows a simple relation query. Relation queries are much more powerful than this as they provide the ability to match against entity graphs of arbitrary size. For more information on relation queries see the [Query manual](Queries.md).
 
 ## Relation components
 So far we've just seen relations with regular entities. When used in combination with components, relations can be associated with data:
