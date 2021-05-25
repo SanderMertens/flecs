@@ -325,7 +325,247 @@ bob.each(Eats, [](flecs::entity obj) {
 })
 ```
 
-## Relation cleanup
+## Builtin relations
+Flecs comes with a few builtin relations that have special meaning within the framework. While they are implemented as regular relationships and therefore obey the same rules as any custom relation, they are used to enhance the features of different parts of the framework. The following two sections describe the builtin relations of Flecs.
+
+### The IsA relationship
+The `IsA` relationship is a builtin relationship that allows applications to express that one entity is equivalent to another. This relationship is at the core of component sharing and plays a large role in queries. The `IsA` relationship can be used like any other relationship, as is shown here:
+
+```c
+ecs_entity_t Apple = ecs_new_id(world);
+ecs_entity_t Fruit = ecs_new_id(world);
+ecs_add_pair(world, Apple, EcsIsA, Fruit);
+```
+```cpp
+auto Apple = world.entity();
+auto Fruit = world.entity();
+Apple.add(flecs::IsA, Fruit);
+```
+
+In C++, adding an `IsA` relationship has a shortcut:
+
+```cpp
+Apple.is_a(Fruit);
+```
+
+This indicates to Flecs that an `Apple` is equivalent to a `Fruit` and should be treated as such. This equivalence is one-way, as a `Fruit` is not equivalent to an `Apple`. Another way to think about this is that `IsA` allows an application to express subsets and supersets. An `Apple` is a subset of `Fruit`. `Fruit` is a superset of `Apple`.
+
+We can also add `IsA` relations to `Apple`:
+
+```c
+ecs_entity_t GrannySmith = ecs_new_id(world);
+ecs_add_pair(world, GrannySmith, EcsIsA, Apple);
+```
+```cpp
+auto GrannySmith = world.entity();
+GrannySmith.add(flecs::IsA, Apple);
+```
+
+This specifies that `GrannySmith` is a subset of `Apple`. A key thing to note here is that because `Apple` is a subset of `Fruit`, `GrannySmith` is a subset of `Fruit` as well. This means that if an application were to query for `(IsA, Fruit)` it would both match `Apple` and `GrannySmith`. This property of the `IsA` relationhip is called "transitivity" and it is a feature that can be applied to any relationship. See the [section on Transitivity](#transitive_relations) for more details.
+
+#### Component sharing
+An entity with an `IsA` relationship to another entity is equivalent to the other entity. So far the examples showed how querying for an `IsA` relation will find the subsets of the thing that was queried for. In order for entities to be treated as true equivalents though, everything the supserset contains (its components, tags, relationships) must also be found on the subsets. Consider:
+
+```c
+ecs_entity_t Spaceship = ecs_new_id(world);
+ecs_set(world, Spaceship, MaxSpeed, {100});
+ecs_set(world, SpaceShip, Defense, {50});
+
+ecs_entity_t Frigate = ecs_new_id(world);
+ecs_add(world, Frigate, EcsIsA, Spaceship);
+ecs_set(world, Frigate, Defense, {100});
+```
+```cpp
+auto Spaceship = world.entity()
+  .set<MaxSpeed>({100})
+  .set<Defense>({50});
+
+auto Frigate = world.entity()
+  .is_a(SpaceShip) // shorthand for .add(flecs::IsA, Spaceship)
+  .set<Defense>({75});
+```
+
+Here, the `Frigate` "inherits" the contents of `SpaceShip`. Even though `MaxSpeed` was never added directly to `Frigate`, an application can do this:
+
+```c
+// Obtain the inherited component from Spaceship
+const MaxSpeed *v = ecs_get(world, Frigate, MaxSpeed);
+v->value == 100; // true
+```
+```cpp
+// Obtain the inherited component from Spaceship
+const MaxSpeed *v = Frigate.get<MaxSpeed>();
+v->value == 100; // true
+```
+
+While the `Frigate` entity also inherited the `Defense` component, it overrode this with its own value, so that the following example works:
+
+```c
+// Obtain the overridden component from Frigate
+const Defense *v = ecs_get(world, Frigate, Defense);
+v->value == 75; // true
+```
+```cpp
+// Obtain the overridden component from Frigate
+const Defense *v = Frigate.get<Defense>();
+v->value == 75; // true
+```
+
+The ability to share components is also applied transitively, so `Frigate` could be specialized further into a `FastFrigate`:
+
+```c
+ecs_entity_t FastFrigate = ecs_new_id(world);
+ecs_add(world, FastFrigate, EcsIsA, Frigate);
+ecs_set(world, FastFrigate, MaxSpeed, {200});
+
+// Obtain the overridden component from FastFrigate
+const MaxSpeed *s = ecs_get(world, Frigate, MaxSpeed);
+s->value == 200; // true
+
+// Obtain the inherited component from Frigate
+const Defense *d = Frigate.get<Defense>();
+d->value == 75; // true
+```
+```cpp
+auto FastFrigate = world.entity()
+  .is_a(Frigate)
+  .set<MaxSpeed>({200});
+
+// Obtain the overridden component from FastFrigate
+const MaxSpeed *s = Frigate.get<MaxSpeed>();
+s->value == 200; // true
+
+// Obtain the inherited component from Frigate
+const Defense *d = Frigate.get<Defense>();
+d->value == 75; // true  
+```
+
+This ability to inherit and override components is one of the key enabling features of Flecs prefabs, and is further explained in the [Inheritance section](Manual.md#Inheritance) of the manual.
+
+#### Final entities
+Entities can be annotated with the `Final` property, which prevents using them with the `IsA` relationship. This is similar to the concept of a final class as something that cannot be extended. The following example shows how to add final to an entity:
+
+```c
+ecs_entity_t e = ecs_new_id(world);
+ecs_add_id(world, e, EcsFinal);
+
+ecs_entity_t i = ecs_new_id(world);
+ecs_add_pair(world, e, i, EcsIsA, e); // not allowed
+```
+```cpp
+auto e = ecs.entity()
+  .add(flecs::Final);
+
+auto i = ecs.entity()
+  .is_a(e); // not allowed
+```
+
+Queries may use the final property to optimize, as they do not have to explore subsets of a final entity. For more information on how queries interpret final, see the [Query manual](Queries.md). By default, all components are created final.
+
+### The ChildOf relationship
+The `ChildOf` relation is the builtin relationship that allows for the creation of entity hierarchies. The following example shows how hierarchies can be created with `ChildOf`:
+
+```c
+ecs_entity_t Spaceship = ecs_new_id(world);
+ecs_entity_t Cockpit = ecs_new_id(world);
+
+ecs_add_pair(world, Cockpit, EcsChildOf, Spaceship);
+```
+```cpp
+auto Spaceship = world.entity();
+auto Cockpit = world.entity();
+
+Cockpit.add(flecs::ChildOf, Spaceship);
+```
+
+In C++, adding a `ChildOf` relationship has a shortcut:
+
+```cpp
+Cockpit.child_of(Spaceship);
+```
+
+The `ChildOf` relation is defined so that when a parent is deleted, its children are also deleted. For more information on specifying cleanup behavior for relations, see the `[Relation cleanup properties](#relation_cleanup_properties) section.
+
+The `ChildOf` relation is defined as a regular relation in Flecs. There are however a number of features that interact with `ChildOf`. The following sections describe these features.
+
+#### Namespacing
+Entities in flecs can have names, and name lookups can be relative to a parent. Relative name lookups can be used as a namespacing mechanism to prevent clashes between entity names. This example shows a few examples of name lookups in combination with hierarchies:
+
+```c
+// Create two entities with a parent/child name
+ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t){
+  .name = "Parent"
+});
+
+ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
+  .name = "Child"
+});
+
+// Create the hierarchy
+ecs_add_pair(world, child, EcsChildOf, parent);
+
+child = ecs_lookup_fullpath(world, "Parent::Child"); // true
+child = ecs_lookup_path(world, parent, "Child"); // true
+```
+```cpp
+auto parent = world.entity("Parent");
+auto child = world.entity("Child")
+  .child_of(parent);
+
+child == world.lookup("Parent::Child"); // true
+child == parent.lookup("Child"); // true
+```
+
+#### Scoping
+In some scenarios a number of entities all need to be created with the same parent. Rather than adding the relation to each entity, it is possible to configure the parent as a scope, which ensures that all entities created afterwards are created in the scope. The following example shows how:
+
+```c
+ecs_entity_t parent = ecs_new_id(world);
+ecs_entity_t prev = ecs_set_scope(world, parent);
+
+// Note that we're not using the ecs_new_id function for the children. This 
+// function only generates a new id, and does not add the scope to the entity. 
+ecs_entity_t child_a = ecs_new(world, 0);
+ecs_entity_t child_b = ecs_new(world, 0);
+
+// Restore the previous scope
+ecs_set_scope(world, prev);
+
+ecs_has_pair(world, child_a, EcsChildOf, parent); // true
+ecs_has_pair(world, child_b, EcsChildOf, parent); // true
+```
+```cpp
+auto parent = world.entity();
+auto prev = world.set_scope(parent);
+
+auto child_a = world.entity();
+auto child_b = world.entity();
+
+// Restore the previous scope
+world.set_scope(prev);
+
+child_a.has(flecs::ChildOf, parent); // true
+child_b.has(flecs::ChildOf, parent); // true
+```
+
+Scopes in C++ can also be used with the `scope` function on an entity, which accepts a (typcially lambda) function:
+
+```cpp
+auto parent = world.entity().scope([&]{
+  auto child_a = world.entity();
+  auto child_b = world.entity();
+
+  child_a.has(flecs::ChildOf, parent); // true
+  child_b.has(flecs::ChildOf, parent); // true
+});
+```
+
+Scopes are the mechanism that ensure contents of a module are created as children of the module, without having to explicitly add the module as a parent.
+
+## Relation properties
+Relations can be assigned properties that change the way they are treated by flecs. Properties are modelled as components, tags and relations that you can add to the relation entity.
+
+### Relation cleanup properties
 When either the relation or object entity of a relation is deleted, by default all of the instances of the relation are removed from the store. Consider the following example:
 
 ```c
@@ -351,7 +591,7 @@ Bob.add(Likes, Alice);
 Alice.destruct();
 ```
 
-This behavior can be customized with cleanup policies as the above behavior is not always what you want. A typical example is the builtin `ChildOf` relation, where child entities should be deleted when the parent is deleted:
+This behavior can be customized with cleanup properties as the above behavior is not always what you want. A typical example is the builtin `ChildOf` relation, where child entities should be deleted when the parent is deleted:
 
 ```c
 ecs_entity_t Spaceship = ecs_new_id(world);
@@ -443,6 +683,59 @@ Likes.add(flecs::OnDelete, flecs::Throw);
 ```
 
 By default, components are created with the `(OnDelete, Throw)` policy.
+
+### Transitive relations
+Relations can be marked as transitive. A formal-ish definition if transitivity in the context of relations is:
+
+```
+If Relation(EntityA, EntityB) And Relation(EntityB, EntityC) Then Relation(EntityA, EntityC)
+```
+
+What this means becomes more obvious when translated to a real-life example:
+
+```
+If Manhattan is located in New York, and New York is located in the USA, then Manhattan is located in the USA.
+```
+
+In this example, `LocatedIn` is the relationship and `Manhattan`, `New York` and `USA` are entities `A`, `B` and `C`. Another common example of transitivity is found in OOP inheritance:
+
+```
+If a Square is a Rectangle and a Rectangle is a Shape, then a Square is a Shape.
+```
+
+In this example `IsA` is the relationship and `Square`, `Rectangle` and `Shape` are the entities.
+
+When relations in Flecs are marked as transitive, queries can follow the transitive relationship to see if an entity matches. Consider this example dataset:
+
+```c
+ecs_entity_t LocatedIn = ecs_new_id(world);
+ecs_entity_t Manhattan = ecs_new_id(world);
+ecs_entity_t NewYork = ecs_new_id(world);
+ecs_entity_t USA = ecs_new_id(world);
+
+ecs_add_pair(world, Manhattan, LocatedIn, NewYork);
+ecs_add_pair(world, NewYork, LocatedIn, USA);
+```
+```cpp
+auto LocatedIn = world.entity();
+auto Manhattan = world.entity();
+auto NewYork = world.entity();
+auto USA = world.entity();
+
+ManHattan.add(LocatedIn, NewYork);
+NewYork.add(LocatedIn, USA);
+```
+
+If we were now to query for `(LocatedIn, USA)` we would only match `NewYork`, because we never added `(LocatedIn, USA)` to `Manhattan`. To make sure queries `Manhattan` as well we have to make the `LocatedIn` relation transitive. We can simply do this by adding the transitive property to the relation entity:
+
+```c
+ecs_add_id(world, LocatedIn, Transitive);
+```
+```cpp
+LocatedIn.add(flecs::Transitive);
+```
+
+When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relationship and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the section in the query manual on transitivity: [Query transitivity](Queries.md#Transitivity).
 
 ## Relation performance
 A relation that does not have any data has the same performance as a regular tag. A relation that does have data has the same performance as a component.

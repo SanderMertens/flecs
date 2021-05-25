@@ -63,7 +63,6 @@ ecs_entity_t ecs_import(
  * @param world The world.
  * @param library_name The name of the library to load.
  * @param module_name The name of the module to load.
- * @param flags The flags to pass to the module.
  */
 FLECS_API
 ecs_entity_t ecs_import_from_library(

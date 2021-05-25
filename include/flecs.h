@@ -417,7 +417,7 @@ typedef struct ecs_trigger_desc_t {
      * the term field is ignored. */
     const char *expr;
 
-    /* Events to trigger on (OnAdd, OnRemove) */
+    /* Events to trigger on (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
 
     /* Callback to invoke on a trigger */
@@ -435,7 +435,6 @@ typedef struct ecs_trigger_desc_t {
     /* Callback to free binding_ctx */     
     ecs_ctx_free_t binding_ctx_free;
 } ecs_trigger_desc_t;
-
 
 /** @} */
 
