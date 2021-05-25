@@ -349,6 +349,9 @@ ecs_entity_t ecs_trigger_init(
             if (desc->ctx) {
                 ((ecs_trigger_t*)comp->trigger)->ctx = desc->ctx;
             }
+            if (desc->binding_ctx) {
+                ((ecs_trigger_t*)comp->trigger)->binding_ctx = desc->binding_ctx;
+            }
         }
     }
 
@@ -369,6 +372,18 @@ void* ecs_get_trigger_ctx(
     } else {
         return NULL;
     }     
+}
+
+void* ecs_get_trigger_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t trigger)
+{
+    const EcsTrigger *t = ecs_get(world, trigger, EcsTrigger);
+    if (t) {
+        return t->trigger->binding_ctx;
+    } else {
+        return NULL;
+    }      
 }
 
 void ecs_trigger_fini(

@@ -246,7 +246,7 @@ ecs_entity_t ecs_run_w_filter(
  * @return The query.
  */
 FLECS_API
-ecs_query_t* ecs_get_query(
+ecs_query_t* ecs_get_system_query(
     const ecs_world_t *world,
     ecs_entity_t system);
 
@@ -262,6 +262,20 @@ FLECS_API
 void* ecs_get_system_ctx(
     const ecs_world_t *world,
     ecs_entity_t system);
+
+/** Get system binding context.
+ * The binding context is a context typically used to attach any language 
+ * binding specific data that is needed when invoking a callback that is 
+ * implemented in another language.
+ *
+ * @param world The world.
+ * @param system The system from which to obtain the context.
+ * @return The context.
+ */
+FLECS_API
+void* ecs_get_system_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t system);    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// System debug API

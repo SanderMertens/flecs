@@ -57,7 +57,7 @@ int main(void) {
     /* Create system. To enable sorting for a system, we need to access its
      * underlying query object */
     ECS_SYSTEM(world, PrintSystem, 0, Position);
-    ecs_query_t *q_system = ecs_get_query(world, PrintSystem);
+    ecs_query_t *q_system = ecs_get_system_query(world, PrintSystem);
 
     /* We can now invoke the order_by operation on the query */
     ecs_query_order_by(world, q_system, ecs_typeid(Position), compare_position);

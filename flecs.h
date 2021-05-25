@@ -2871,7 +2871,7 @@ typedef struct ecs_trigger_desc_t {
      * the term field is ignored. */
     const char *expr;
 
-    /* Events to trigger on (OnAdd, OnRemove) */
+    /* Events to trigger on (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
 
     /* Callback to invoke on a trigger */
@@ -2889,13 +2889,6 @@ typedef struct ecs_trigger_desc_t {
     /* Callback to free binding_ctx */     
     ecs_ctx_free_t binding_ctx_free;
 } ecs_trigger_desc_t;
-
-
-/** Used with ecs_observer_init. */
-typedef struct ecs_observer_desc_t {
-    /* Entity to associate with trigger */
-    ecs_entity_desc_t entity;
-} ecs_observer_desc_t;
 
 /** @} */
 
@@ -6134,6 +6127,20 @@ void* ecs_get_trigger_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger);
 
+/** Same as ecs_get_trigger_ctx, but for binding ctx. 
+ * The binding context is a context typically used to attach any language 
+ * binding specific data that is needed when invoking a callback that is 
+ * implemented in another language.
+ * 
+ * @param world The world.
+ * @param trigger The trigger from which to obtain the context.
+ * @return The context.
+ */
+FLECS_API
+void* ecs_get_trigger_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t trigger);
+
 /** @} */
 
 
@@ -6832,7 +6839,6 @@ ecs_entity_t ecs_import(
  * @param world The world.
  * @param library_name The name of the library to load.
  * @param module_name The name of the module to load.
- * @param flags The flags to pass to the module.
  */
 FLECS_API
 ecs_entity_t ecs_import_from_library(
@@ -7172,7 +7178,7 @@ ecs_entity_t ecs_run_w_filter(
  * @return The query.
  */
 FLECS_API
-ecs_query_t* ecs_get_query(
+ecs_query_t* ecs_get_system_query(
     const ecs_world_t *world,
     ecs_entity_t system);
 
@@ -7188,6 +7194,20 @@ FLECS_API
 void* ecs_get_system_ctx(
     const ecs_world_t *world,
     ecs_entity_t system);
+
+/** Get system binding context.
+ * The binding context is a context typically used to attach any language 
+ * binding specific data that is needed when invoking a callback that is 
+ * implemented in another language.
+ *
+ * @param world The world.
+ * @param system The system from which to obtain the context.
+ * @return The context.
+ */
+FLECS_API
+void* ecs_get_system_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t system);    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// System debug API
@@ -9820,7 +9840,6 @@ void ctor_impl(
 }
 
 // T(flecs::world, flecs::entity)
-// Can't coexist with T() or T(flecs::entity)
 template <typename T>
 void ctor_world_entity_impl(
     ecs_world_t* world, ecs_entity_t, const ecs_entity_t* ids, void *ptr, 
@@ -9930,7 +9949,7 @@ const lifecycle_callback_result<T>
 
 template <typename T>
 const lifecycle_callback_result<T> 
-    lifecycle_callback_result<T>::not_set = {nullptr, true};
+    lifecycle_callback_result<T>::not_set = {nullptr, false};
 
 using ctor_result = lifecycle_callback_result<ecs_xtor_t>;
 using dtor_result = lifecycle_callback_result<ecs_xtor_t>;
@@ -12202,6 +12221,10 @@ public:
     void each(const Func& func) const { 
         return each(_::cpp_type<Rel>::id(m_world), func);
     }
+
+    /** Find all contents of an entity matching a pattern. */
+    template <typename Func>
+    void match(id_t pattern, const Func& func) const;
 
     /** Get component value.
      * 
@@ -16419,7 +16442,7 @@ public:
     }
 
     query_base query() const {
-        return query_base(m_world, ecs_get_query(m_world, m_id));
+        return query_base(m_world, ecs_get_system_query(m_world, m_id));
     }
 
     system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
@@ -16714,43 +16737,32 @@ inline void entity_view::each(const Func& func) const {
 }
 
 template <typename Func>
-inline void entity_view::each(const flecs::entity_view& rel, const Func& func) const {
+inline void entity_view::match(id_t pattern, const Func& func) const {
     const ecs_vector_t *type = ecs_get_type(m_world, m_id);
     if (!type) {
         return;
     }
 
-    flecs::entity_t rel_id = rel.remove_generation().id();
-
-    const ecs_id_t *ids = static_cast<ecs_id_t*>(
+    id_t *ids = static_cast<ecs_id_t*>(
         _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
-    int32_t count = ecs_vector_count(type);
+    int32_t cur = 0;
 
-    // First, skip to the point where the relationship starts
-    // TODO: replace this with an O(1) search when the new table lookup
-    //       datastructures land
-    int i;
-    for (i = 0; i < count; i ++) {
-        ecs_id_t id = ids[i];
-        if (ECS_PAIR_RELATION(id) == rel_id) {
-            break;
-        }
-    }
-
-    // Iterate all entries until the relationship stops
-    for (; i < count; i ++) {
-        ecs_id_t id = ids[i];
-        if (ECS_PAIR_RELATION(id) != rel_id) {
-            break;
-        }
-
-        flecs::id id_cl(m_world, ids[i]);
-        flecs::entity ent(m_world, id_cl.object());
-        func(ent);         
+    while (-1 != (cur = ecs_type_match(type, cur, pattern))) {
+        flecs::entity ent(m_world, ids[cur]);
+        func(ent);
+        cur ++;
     }
 }
 
-template <typename Func, if_t< is_callable<Func>::value > = 0>
+template <typename Func>
+inline void entity_view::each(const flecs::entity_view& rel, const Func& func) const {
+    return this->match(ecs_pair(rel, flecs::Wildcard), [&](flecs::id id) {
+        flecs::entity obj = id.object();
+        func(obj);
+    });
+}
+
+template <typename Func, if_t< is_callable<Func>::value > >
 inline bool entity_view::get(const Func& func) const {
     return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
 }

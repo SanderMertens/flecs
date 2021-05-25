@@ -411,7 +411,7 @@ void ecs_run_monitor(
     system_data->action(&it);
 }
 
-ecs_query_t* ecs_get_query(
+ecs_query_t* ecs_get_system_query(
     const ecs_world_t *world,
     ecs_entity_t system)
 {
@@ -435,6 +435,18 @@ void* ecs_get_system_ctx(
     const EcsSystem *s = ecs_get(world, system, EcsSystem);
     if (s) {
         return s->ctx;
+    } else {
+        return NULL;
+    }   
+}
+
+void* ecs_get_system_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t system)
+{
+    const EcsSystem *s = ecs_get(world, system, EcsSystem);
+    if (s) {
+        return s->binding_ctx;
     } else {
         return NULL;
     }   
@@ -702,6 +714,9 @@ ecs_entity_t ecs_system_init(
         }
         if (desc->ctx) {
             system->ctx = desc->ctx;
+        }
+        if (desc->binding_ctx) {
+            system->binding_ctx = desc->binding_ctx;
         }
     }
 

@@ -850,6 +850,8 @@ void SystemMisc_rw_out_explicit_from_empty(void);
 void SystemMisc_rw_out_explicit_from_entity(void);
 void SystemMisc_activate_system_for_table_w_n_pairs(void);
 void SystemMisc_get_query(void);
+void SystemMisc_set_get_context(void);
+void SystemMisc_set_get_binding_context(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -994,6 +996,8 @@ void Trigger_clear_in_trigger(void);
 void Trigger_delete_in_trigger(void);
 void Trigger_trigger_w_named_entity(void);
 void Trigger_on_remove_tree(void);
+void Trigger_set_get_context(void);
+void Trigger_set_get_binding_context(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -5027,6 +5031,14 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "get_query",
         SystemMisc_get_query
+    },
+    {
+        "set_get_context",
+        SystemMisc_set_get_context
+    },
+    {
+        "set_get_binding_context",
+        SystemMisc_set_get_binding_context
     }
 };
 
@@ -5583,6 +5595,14 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_remove_tree",
         Trigger_on_remove_tree
+    },
+    {
+        "set_get_context",
+        Trigger_set_get_context
+    },
+    {
+        "set_get_binding_context",
+        Trigger_set_get_binding_context
     }
 };
 
@@ -8904,7 +8924,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         SystemMisc_setup,
         NULL,
-        83,
+        85,
         SystemMisc_testcases
     },
     {
@@ -8932,7 +8952,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        31,
+        33,
         Trigger_testcases
     },
     {

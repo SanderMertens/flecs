@@ -3112,6 +3112,20 @@ void* ecs_get_trigger_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger);
 
+/** Same as ecs_get_trigger_ctx, but for binding ctx. 
+ * The binding context is a context typically used to attach any language 
+ * binding specific data that is needed when invoking a callback that is 
+ * implemented in another language.
+ * 
+ * @param world The world.
+ * @param trigger The trigger from which to obtain the context.
+ * @return The context.
+ */
+FLECS_API
+void* ecs_get_trigger_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t trigger);
+
 /** @} */
 
 

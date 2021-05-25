@@ -908,7 +908,9 @@
                 "rw_out_explicit_from_empty",
                 "rw_out_explicit_from_entity",
                 "activate_system_for_table_w_n_pairs",
-                "get_query"
+                "get_query",
+                "set_get_context",
+                "set_get_binding_context"
             ]
         }, {
             "id": "Sorting",
@@ -1060,7 +1062,9 @@
                "clear_in_trigger",
                "delete_in_trigger",
                "trigger_w_named_entity",
-               "on_remove_tree"
+               "on_remove_tree",
+               "set_get_context",
+               "set_get_binding_context"
            ]
         }, {
             "id": "TriggerOnAdd",

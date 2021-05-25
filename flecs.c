@@ -23515,6 +23515,9 @@ ecs_entity_t ecs_trigger_init(
             if (desc->ctx) {
                 ((ecs_trigger_t*)comp->trigger)->ctx = desc->ctx;
             }
+            if (desc->binding_ctx) {
+                ((ecs_trigger_t*)comp->trigger)->binding_ctx = desc->binding_ctx;
+            }
         }
     }
 
@@ -23535,6 +23538,18 @@ void* ecs_get_trigger_ctx(
     } else {
         return NULL;
     }     
+}
+
+void* ecs_get_trigger_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t trigger)
+{
+    const EcsTrigger *t = ecs_get(world, trigger, EcsTrigger);
+    if (t) {
+        return t->trigger->binding_ctx;
+    } else {
+        return NULL;
+    }      
 }
 
 void ecs_trigger_fini(
@@ -25601,7 +25616,7 @@ void ecs_run_monitor(
     system_data->action(&it);
 }
 
-ecs_query_t* ecs_get_query(
+ecs_query_t* ecs_get_system_query(
     const ecs_world_t *world,
     ecs_entity_t system)
 {
@@ -25625,6 +25640,18 @@ void* ecs_get_system_ctx(
     const EcsSystem *s = ecs_get(world, system, EcsSystem);
     if (s) {
         return s->ctx;
+    } else {
+        return NULL;
+    }   
+}
+
+void* ecs_get_system_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t system)
+{
+    const EcsSystem *s = ecs_get(world, system, EcsSystem);
+    if (s) {
+        return s->binding_ctx;
     } else {
         return NULL;
     }   
@@ -25892,6 +25919,9 @@ ecs_entity_t ecs_system_init(
         }
         if (desc->ctx) {
             system->ctx = desc->ctx;
+        }
+        if (desc->binding_ctx) {
+            system->binding_ctx = desc->binding_ctx;
         }
     }
 

@@ -1875,7 +1875,7 @@ void SystemMisc_get_query() {
     ecs_set(world, 0, Position, {1, 0});
     ecs_set(world, 0, Position, {2, 0});
 
-    ecs_query_t *q = ecs_get_query(world, Dummy);
+    ecs_query_t *q = ecs_get_system_query(world, Dummy);
     test_assert(q != NULL);
 
     int32_t count = 0;
@@ -1893,6 +1893,60 @@ void SystemMisc_get_query() {
     }
 
     test_int(count, 3);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_set_get_context() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    int32_t ctx_a, ctx_b;
+
+    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity.name = "MySystem",
+        .query.filter.terms = {{Tag}},
+        .callback = Dummy,
+        .ctx = &ctx_a
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_get_system_ctx(world, s) == &ctx_a);
+
+    test_assert(ecs_system_init(world, &(ecs_system_desc_t){
+        .entity.entity = s,
+        .ctx = &ctx_b
+    }) == s);
+
+    test_assert(ecs_get_system_ctx(world, s) == &ctx_b);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_set_get_binding_context() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    int32_t ctx_a, ctx_b;
+
+    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity.name = "MySystem",
+        .query.filter.terms = {{Tag}},
+        .callback = Dummy,
+        .binding_ctx = &ctx_a
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_get_system_binding_ctx(world, s) == &ctx_a);
+
+    test_assert(ecs_system_init(world, &(ecs_system_desc_t){
+        .entity.entity = s,
+        .binding_ctx = &ctx_b
+    }) == s);
+
+    test_assert(ecs_get_system_binding_ctx(world, s) == &ctx_b);
 
     ecs_fini(world);
 }

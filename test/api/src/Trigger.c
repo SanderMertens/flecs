@@ -1013,3 +1013,57 @@ void Trigger_on_remove_tree() {
     
     ecs_fini(world);
 }
+
+void Trigger_set_get_context() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    int32_t ctx_a, ctx_b;
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity.name = "MyTrigger",
+        .term.id = Tag,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_a
+    });
+    test_assert(t != 0);
+
+    test_assert(ecs_get_trigger_ctx(world, t) == &ctx_a);
+
+    test_assert(ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity.entity = t,
+        .ctx = &ctx_b
+    }) == t);
+
+    test_assert(ecs_get_trigger_ctx(world, t) == &ctx_b);
+
+    ecs_fini(world);
+}
+
+void Trigger_set_get_binding_context() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    int32_t ctx_a, ctx_b;
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity.name = "MyTrigger",
+        .term.id = Tag,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .binding_ctx = &ctx_a
+    });
+    test_assert(t != 0);
+
+    test_assert(ecs_get_trigger_binding_ctx(world, t) == &ctx_a);
+
+    test_assert(ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity.entity = t,
+        .binding_ctx = &ctx_b
+    }) == t);
+
+    test_assert(ecs_get_trigger_binding_ctx(world, t) == &ctx_b);
+
+    ecs_fini(world);
+}
