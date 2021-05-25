@@ -1,5 +1,5 @@
 # Relations
-The relationships feature allows for the creation of entity graphs, by specifying which relations entities have to each other. Relations are similar to regular components and tags, in that they can contain data or no data, and can be added and removed. The following example demonstrates a simple example that uses relations:
+The relationships feature allows for the creation of entity graphs, by specifying which relations entities have to each other. Relations are similar to regular components and tags, in that they can contain data or no data, and can be added and removed. The following code is a simple example that uses relations:
 
 ```c
 ecs_entity_t Likes = ecs_new_id(world);
