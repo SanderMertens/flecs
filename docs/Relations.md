@@ -74,6 +74,9 @@ auto q = world.query("(Eats, Apples)");
 // Find all entities that eat anything
 auto q = world.query("(Eats, *)");
 
+// When using pair types:
+auto q = world.query<flecs::pair<Eats, Apples>>();
+
 // Or with the query builder API:
 auto q = world.query_builder<>()
   .term(Eats, Apples)
