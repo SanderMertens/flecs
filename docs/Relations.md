@@ -74,13 +74,13 @@ auto q = world.query("(Eats, Apples)");
 // Find all entities that eat anything
 auto q = world.query("(Eats, *)");
 
-// When using pair types:
-auto q = world.query<flecs::pair<Eats, Apples>>();
-
-// Or with the query builder API:
+// With the query builder API:
 auto q = world.query_builder<>()
   .term(Eats, Apples)
   .build();
+  
+// Or when using pair types, when both relation & object are compile time types:
+auto q = world.query<flecs::pair<Eats, Apples>>();  
 ```
 
 This example just shows a simple relation query. Relation queries are much more powerful than this as they provide the ability to match against entity graphs of arbitrary size. For more information on relation queries see the [Query manual](Queries.md).
