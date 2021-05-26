@@ -848,8 +848,9 @@ void Query_comp_to_str() {
     test_str(q.str(), "Position, Velocity");
 }
 
-struct Eats { };
+struct Eats { int amount; };
 struct Apples { };
+struct Pears { };
 
 void Query_pair_to_str() {
     flecs::world ecs;
@@ -887,4 +888,95 @@ void Query_oper_or_to_str() {
         .term<Velocity>().oper(flecs::Or)
         .build();
     test_str(q.str(), "Position || Velocity");
+}
+
+using EatsApples = flecs::pair<Eats, Apples>;
+using EatsPears = flecs::pair<Eats, Pears>;
+
+void Query_each_pair_type() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity()
+        .set<EatsApples>({10});
+
+    ecs.entity()
+        .set<EatsPears>({20});
+
+    auto q = ecs.query<EatsApples>();
+
+    int count = 0;
+    q.each([&](flecs::entity e, EatsApples&& a) {
+        test_int(a->amount, 10);
+        test_assert(e == e1);
+        a->amount ++;
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    auto v = e1.get<EatsApples>();
+    test_assert(v != NULL);
+    test_int(v->amount, 11);
+}
+
+void Query_iter_pair_type() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity()
+        .set<EatsApples>({10});
+
+    ecs.entity()
+        .set<EatsPears>({20});
+
+    auto q = ecs.query<EatsApples>();
+
+    int count = 0;
+    q.iter([&](flecs::iter& it, Eats* a) {
+        test_int(it.count(), 1);
+
+        test_int(a->amount, 10);
+        test_assert(it.entity(0) == e1);
+
+        a->amount ++;
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    auto v = e1.get<EatsApples>();
+    test_assert(v != NULL);
+    test_int(v->amount, 11);
+}
+
+void Query_term_pair_type() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity()
+        .set<EatsApples>({10});
+
+    ecs.entity()
+        .set<EatsPears>({20});
+
+    auto q = ecs.query_builder<>()
+        .term<EatsApples>()
+        .build();
+
+    int count = 0;
+    q.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+
+        auto a = it.term<EatsApples>(1);
+
+        test_int(a->amount, 10);
+        test_assert(it.entity(0) == e1);
+
+        a->amount ++;
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    auto v = e1.get<EatsApples>();
+    test_assert(v != NULL);
+    test_int(v->amount, 11);
 }

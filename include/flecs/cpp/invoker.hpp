@@ -9,6 +9,71 @@ namespace flecs
 namespace _ 
 {
 
+
+// Utility to convert template argument pack to array of term ptrs
+struct term_ptr {
+    void *ptr;
+    bool is_ref;
+};
+
+template <typename ... Components>
+class term_ptrs {
+public:
+    using array = flecs::array<_::term_ptr, sizeof...(Components)>;
+
+    void populate(const ecs_iter_t *iter) {
+        populate(iter, 0, static_cast<
+            remove_reference_t<
+                remove_pointer_t<Components>>
+                    *>(nullptr)...);
+    }
+
+    bool populate_w_refs(const ecs_iter_t *iter) {
+        if (iter->table->references) {
+            populate_w_refs(iter, 0, static_cast<
+                remove_reference_t<
+                    remove_pointer_t<Components>>
+                        *>(nullptr)...);
+            return true;
+        } else {
+            this->populate(iter);
+            return false;
+        }
+    }
+
+    array m_terms;
+
+private:
+    /* Populate terms array without checking for references */
+    void populate(const ecs_iter_t *iter, size_t index) { 
+        (void)iter;
+        (void)index;
+    }
+
+    template <typename T, typename... Targs>
+    void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
+        int32_t term = static_cast<int32_t>(index + 1);
+        void *ptr = ecs_term_w_size(iter, sizeof(actual_type_t<remove_pointer_t<T>>), term);
+        m_terms[index].ptr = ptr;
+        populate(iter, index + 1, comps ...);
+    }
+
+    /* Populate terms array, check for references */
+    void populate_w_refs(const ecs_iter_t *iter, size_t index) { 
+        (void)iter;
+        (void)index;
+    }
+
+    template <typename T, typename... Targs>
+    void populate_w_refs(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
+        int32_t term = static_cast<int32_t>(index + 1);
+        void *ptr = ecs_term_w_size(iter, sizeof(actual_type_t<remove_pointer_t<T>>), term);
+        m_terms[index].ptr = ptr;
+        m_terms[index].is_ref = !ecs_term_is_owned(iter, term) && ptr != nullptr;
+        populate_w_refs(iter, index + 1, comps ...);
+    }   
+};    
+
 class invoker { };
 
 // Template that figures out from the template parameters of a query/system
@@ -28,7 +93,7 @@ protected:
 
 // If type is not a pointer, return a reference to the type (default case)
 template <typename T>
-struct each_column<T, if_not_t< is_pointer<T>::value > > 
+struct each_column<T, if_t< !is_pointer<T>::value && is_actual<T>::value > > 
     : public each_column_base 
 {
     each_column(const _::term_ptr& term, size_t row) 
@@ -36,7 +101,22 @@ struct each_column<T, if_not_t< is_pointer<T>::value > >
 
     T& get_row() {
         return static_cast<T*>(this->m_term.ptr)[this->m_row];
-    }
+    }  
+};
+
+// If argument type is not the same as actual component type, return by value.
+// This requires that the actual type can be converted to the type.
+// A typical scenario where this happens is when using flecs::pair types.
+template <typename T>
+struct each_column<T, if_t< !is_pointer<T>::value && !is_actual<T>::value> > 
+    : public each_column_base 
+{
+    each_column(const _::term_ptr& term, size_t row) 
+        : each_column_base(term, row) { }
+
+    T get_row() {
+        return static_cast<actual_type_t<T>*>(this->m_term.ptr)[this->m_row];
+    }  
 };
 
 // If type is a pointer (indicating an optional value) return the type as is
@@ -49,7 +129,7 @@ struct each_column<T, if_t< is_pointer<T>::value > >
 
     T get_row() {
         if (this->m_term.ptr) {
-            return &static_cast<T>(this->m_term.ptr)[this->m_row];
+            return &static_cast<actual_type_t<T>>(this->m_term.ptr)[this->m_row];
         } else {
             // optional argument doesn't hava a value
             return nullptr;
@@ -176,7 +256,7 @@ private:
     {
         flecs::iter iter_wrapper(iter);
         func(iter_wrapper, (
-            static_cast< remove_reference_t< remove_pointer_t<Components> >* >
+            static_cast< remove_reference_t< remove_pointer_t< actual_type_t<Components> > >* >
                 (comps.ptr))...);
     }
 

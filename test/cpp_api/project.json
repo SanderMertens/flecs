@@ -300,7 +300,10 @@
                 "pair_to_str",
                 "oper_not_to_str",
                 "oper_optional_to_str",
-                "oper_or_to_str"
+                "oper_or_to_str",
+                "each_pair_type",
+                "iter_pair_type",
+                "term_pair_type"
             ]
         }, {
             "id": "QueryBuilder",

@@ -351,9 +351,11 @@ public:
      * @param index The term index.
      * @return The term data.
      */
-    template <typename T, if_t< is_const<T>::value > = 0>         
-    flecs::column<T> term(int32_t index) const {
-        return get_term<T>(index);
+    template <typename T, typename A = actual_type_t<T>,
+        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
+        
+    flecs::column<A> term(int32_t index) const {
+        return get_term<A>(index);
     }
 
     /** Obtain term with non-const type.
@@ -364,11 +366,14 @@ public:
      * @param index The term index.
      * @return The term data.
      */
-    template <typename T, if_not_t< is_const<T>::value > = 0>
-    flecs::column<T> term(int32_t index) const {
+    template <typename T, typename A = actual_type_t<T>,
+        typename std::enable_if<
+            std::is_const<T>::value == false, void>::type* = nullptr>
+
+    flecs::column<A> term(int32_t index) const {
         ecs_assert(!ecs_term_is_readonly(m_iter, index), 
             ECS_COLUMN_ACCESS_VIOLATION, NULL);
-        return get_term<T>(index);
+        return get_term<A>(index);
     }
 
     /** Obtain unsafe term.
@@ -388,10 +393,10 @@ public:
      * @param index The term index.
      * @return The term data.
      */
-    template <typename T>
-    flecs::column<T> term_owned(int32_t index) const {
+    template <typename T, typename A = actual_type_t<T>>
+    flecs::column<A> term_owned(int32_t index) const {
         ecs_assert(!!ecs_is_owned(m_iter, index), ECS_COLUMN_IS_SHARED, NULL);
-        return this->term<T>(index);
+        return this->term<A>(index);
     }
 
     /** Obtain shared term.
@@ -401,7 +406,7 @@ public:
      * @param index The term index.
      * @return The component term.
      */
-    template <typename T>
+    template <typename T, typename A = actual_type_t<T>>
     const T& term_shared(int32_t index) const {
         ecs_assert(
             ecs_term_id(m_iter, index) == 
@@ -411,7 +416,7 @@ public:
         ecs_assert(!ecs_term_is_owned(m_iter, index), 
             ECS_COLUMN_IS_NOT_SHARED, NULL);
 
-        return *static_cast<T*>(ecs_term_w_size(m_iter, sizeof(T), index));
+        return *static_cast<A*>(ecs_term_w_size(m_iter, sizeof(A), index));
     }
 
     /** Obtain the total number of tables the iterator will iterate over.
@@ -435,18 +440,18 @@ public:
      *
      * @tparam T Type of the table column.
      */
-    template <typename T>
+    template <typename T, typename A = actual_type_t<T>>
     flecs::column<T> table_column() const {
         auto col = ecs_iter_find_column(m_iter, _::cpp_type<T>::id());
         ecs_assert(col != -1, ECS_INVALID_PARAMETER, NULL);
 
-        return flecs::column<T>(static_cast<T*>(ecs_iter_column_w_size(m_iter, 
-            sizeof(T), col)), static_cast<std::size_t>(m_iter->count), false);
+        return flecs::column<A>(static_cast<A*>(ecs_iter_column_w_size(m_iter,
+            sizeof(A), col)), static_cast<std::size_t>(m_iter->count), false);
     }
 
 private:
     /* Get term, check if correct type is used */
-    template <typename T>
+    template <typename T, typename A = actual_type_t<T>>
     flecs::column<T> get_term(int32_t index) const {
 
 #ifndef NDEBUG
@@ -471,10 +476,10 @@ private:
             count = static_cast<size_t>(m_iter->count);
         }
         
-        return flecs::column<T>(
-            static_cast<T*>(ecs_term_w_size(m_iter, sizeof(T), index)), 
+        return flecs::column<A>(
+            static_cast<T*>(ecs_term_w_size(m_iter, sizeof(A), index)), 
             count, is_shared);
-    } 
+    }
 
     flecs::unsafe_column get_unsafe_term(int32_t index) const {
         size_t count;
@@ -497,13 +502,13 @@ private:
     }       
 
     /* Get single field, check if correct type is used */
-    template <typename T>
-    T& get_element(int32_t index, int32_t row) const {
+    template <typename T, typename A = actual_type_t<T>>
+    A& get_element(int32_t index, int32_t row) const {
         ecs_assert(
             ecs_term_id(m_iter, index) == _::cpp_type<T>::id(m_iter->world),
                 ECS_COLUMN_TYPE_MISMATCH, NULL);
-        return *static_cast<T*>(
-            ecs_element_w_size(m_iter, sizeof(T), index, row));
+        return *static_cast<A*>(
+            ecs_element_w_size(m_iter, sizeof(A), index, row));
     }       
 
     const flecs::iter_t *m_iter;

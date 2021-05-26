@@ -1,5 +1,5 @@
 # Relations
-The relationships feature allows for the creation of entity graphs, by specifying which relations entities have to each other. Relations are similar to regular components and tags, in that they can contain data or no data, and can be added and removed. The following code is a simple example that uses relations:
+The relations feature allows for the creation of entity graphs, by specifying which relations entities have to each other. Relations are similar to regular components and tags, in that they can contain data or no data, and can be added and removed. The following code is a simple example that uses relations:
 
 ```c
 ecs_entity_t Likes = ecs_new_id(world);
@@ -53,7 +53,7 @@ Bob.has(Eats, Apples); // true
 Bob.has(Eats, Pears); // true
 ```
 
-An application can query for relationships with the `(Relation, Object)` notation:
+An application can query for relations with the `(Relation, Object)` notation:
 
 ```c
 // Find all entities that eat apples
@@ -281,7 +281,7 @@ Wildcards may used for the relation or object part of a pair, or both:
 ```
 
 ## Inspecting relations
-An application can use pair wildcard expressions to find all instances of a relationship for an entity. The following example shows how to find all `Eats` relationships for an entity:
+An application can use pair wildcard expressions to find all instances of a relation for an entity. The following example shows how to find all `Eats` relations for an entity:
 
 ```c
 // Bob eats apples and pears
@@ -326,10 +326,10 @@ bob.each(Eats, [](flecs::entity obj) {
 ```
 
 ## Builtin relations
-Flecs comes with a few builtin relations that have special meaning within the framework. While they are implemented as regular relationships and therefore obey the same rules as any custom relation, they are used to enhance the features of different parts of the framework. The following two sections describe the builtin relations of Flecs.
+Flecs comes with a few builtin relations that have special meaning within the framework. While they are implemented as regular relations and therefore obey the same rules as any custom relation, they are used to enhance the features of different parts of the framework. The following two sections describe the builtin relations of Flecs.
 
-### The IsA relationship
-The `IsA` relationship is a builtin relationship that allows applications to express that one entity is equivalent to another. This relationship is at the core of component sharing and plays a large role in queries. The `IsA` relationship can be used like any other relationship, as is shown here:
+### The IsA relation
+The `IsA` relation is a builtin relation that allows applications to express that one entity is equivalent to another. This relation is at the core of component sharing and plays a large role in queries. The `IsA` relation can be used like any other relation, as is shown here:
 
 ```c
 ecs_entity_t Apple = ecs_new_id(world);
@@ -342,7 +342,7 @@ auto Fruit = world.entity();
 Apple.add(flecs::IsA, Fruit);
 ```
 
-In C++, adding an `IsA` relationship has a shortcut:
+In C++, adding an `IsA` relation has a shortcut:
 
 ```cpp
 Apple.is_a(Fruit);
@@ -361,10 +361,10 @@ auto GrannySmith = world.entity();
 GrannySmith.add(flecs::IsA, Apple);
 ```
 
-This specifies that `GrannySmith` is a subset of `Apple`. A key thing to note here is that because `Apple` is a subset of `Fruit`, `GrannySmith` is a subset of `Fruit` as well. This means that if an application were to query for `(IsA, Fruit)` it would both match `Apple` and `GrannySmith`. This property of the `IsA` relationhip is called "transitivity" and it is a feature that can be applied to any relationship. See the [section on Transitivity](#transitive-relations) for more details.
+This specifies that `GrannySmith` is a subset of `Apple`. A key thing to note here is that because `Apple` is a subset of `Fruit`, `GrannySmith` is a subset of `Fruit` as well. This means that if an application were to query for `(IsA, Fruit)` it would both match `Apple` and `GrannySmith`. This property of the `IsA` relationhip is called "transitivity" and it is a feature that can be applied to any relation. See the [section on Transitivity](#transitive-relations) for more details.
 
 #### Component sharing
-An entity with an `IsA` relationship to another entity is equivalent to the other entity. So far the examples showed how querying for an `IsA` relation will find the subsets of the thing that was queried for. In order for entities to be treated as true equivalents though, everything the supserset contains (its components, tags, relationships) must also be found on the subsets. Consider:
+An entity with an `IsA` relation to another entity is equivalent to the other entity. So far the examples showed how querying for an `IsA` relation will find the subsets of the thing that was queried for. In order for entities to be treated as true equivalents though, everything the supserset contains (its components, tags, relations) must also be found on the subsets. Consider:
 
 ```c
 ecs_entity_t Spaceship = ecs_new_id(world);
@@ -443,7 +443,7 @@ d->value == 75; // true
 This ability to inherit and override components is one of the key enabling features of Flecs prefabs, and is further explained in the [Inheritance section](Manual.md#Inheritance) of the manual.
 
 #### Final entities
-Entities can be annotated with the `Final` property, which prevents using them with the `IsA` relationship. This is similar to the concept of a final class as something that cannot be extended. The following example shows how to add final to an entity:
+Entities can be annotated with the `Final` property, which prevents using them with the `IsA` relation. This is similar to the concept of a final class as something that cannot be extended. The following example shows how to add final to an entity:
 
 ```c
 ecs_entity_t e = ecs_new_id(world);
@@ -462,8 +462,8 @@ auto i = ecs.entity()
 
 Queries may use the final property to optimize, as they do not have to explore subsets of a final entity. For more information on how queries interpret final, see the [Query manual](Queries.md). By default, all components are created final.
 
-### The ChildOf relationship
-The `ChildOf` relation is the builtin relationship that allows for the creation of entity hierarchies. The following example shows how hierarchies can be created with `ChildOf`:
+### The ChildOf relation
+The `ChildOf` relation is the builtin relation that allows for the creation of entity hierarchies. The following example shows how hierarchies can be created with `ChildOf`:
 
 ```c
 ecs_entity_t Spaceship = ecs_new_id(world);
@@ -478,7 +478,7 @@ auto Cockpit = world.entity();
 Cockpit.add(flecs::ChildOf, Spaceship);
 ```
 
-In C++, adding a `ChildOf` relationship has a shortcut:
+In C++, adding a `ChildOf` relation has a shortcut:
 
 ```cpp
 Cockpit.child_of(Spaceship);
@@ -612,7 +612,7 @@ Cockpit.child_of(Spaceship);
 Spaceship.destruct();
 ```
 
-To customize this behavior, an application can add the `OnDeleteObject` policy to the relationship. The following examples show how:
+To customize this behavior, an application can add the `OnDeleteObject` policy to the relation. The following examples show how:
 
 ```c
 ecs_entity_t Likes = ecs_new_id(world);
@@ -697,15 +697,15 @@ What this means becomes more obvious when translated to a real-life example:
 If Manhattan is located in New York, and New York is located in the USA, then Manhattan is located in the USA.
 ```
 
-In this example, `LocatedIn` is the relationship and `Manhattan`, `New York` and `USA` are entities `A`, `B` and `C`. Another common example of transitivity is found in OOP inheritance:
+In this example, `LocatedIn` is the relation and `Manhattan`, `New York` and `USA` are entities `A`, `B` and `C`. Another common example of transitivity is found in OOP inheritance:
 
 ```
 If a Square is a Rectangle and a Rectangle is a Shape, then a Square is a Shape.
 ```
 
-In this example `IsA` is the relationship and `Square`, `Rectangle` and `Shape` are the entities.
+In this example `IsA` is the relation and `Square`, `Rectangle` and `Shape` are the entities.
 
-When relations in Flecs are marked as transitive, queries can follow the transitive relationship to see if an entity matches. Consider this example dataset:
+When relations in Flecs are marked as transitive, queries can follow the transitive relation to see if an entity matches. Consider this example dataset:
 
 ```c
 ecs_entity_t LocatedIn = ecs_new_id(world);
@@ -735,7 +735,7 @@ ecs_add_id(world, LocatedIn, Transitive);
 LocatedIn.add(flecs::Transitive);
 ```
 
-When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relationship and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the section in the query manual on transitivity: [Query transitivity](Queries.md#Transitivity).
+When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relation and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the section in the query manual on transitivity: [Query transitivity](Queries.md#Transitivity).
 
 ## Relation performance
 A relation that does not have any data has the same performance as a regular tag. A relation that does have data has the same performance as a component.

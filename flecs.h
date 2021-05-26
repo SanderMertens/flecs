@@ -9453,141 +9453,6 @@ struct always_false {
     static const bool value = false;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// Utility to convert template argument pack to array of term ptrs
-////////////////////////////////////////////////////////////////////////////////
-
-struct term_ptr {
-    void *ptr;
-    bool is_ref;
-};
-
-template <typename ... Components>
-class term_ptrs {
-public:
-    using array = flecs::array<_::term_ptr, sizeof...(Components)>;
-
-    void populate(const ecs_iter_t *iter) {
-        populate(iter, 0, static_cast<
-            remove_reference_t<
-                remove_pointer_t<Components>>
-                    *>(nullptr)...);
-    }
-
-    bool populate_w_refs(const ecs_iter_t *iter) {
-        if (iter->table->references) {
-            populate_w_refs(iter, 0, static_cast<
-                remove_reference_t<
-                    remove_pointer_t<Components>>
-                        *>(nullptr)...);
-            return true;
-        } else {
-            this->populate(iter);
-            return false;
-        }
-    }
-
-    array m_terms;
-
-private:
-    /* Populate terms array without checking for references */
-    void populate(const ecs_iter_t *iter, size_t index) { 
-        (void)iter;
-        (void)index;
-    }
-
-    template <typename T, typename... Targs>
-    void populate(const ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
-        int32_t term = static_cast<int32_t>(index + 1);
-        void *ptr = ecs_term_w_size(iter, sizeof(*comp), term);
-        m_terms[index].ptr = ptr;
-        populate(iter, index + 1, comps ...);
-    } 
-
-    /* Populate terms array, check for references */
-    void populate_w_refs(const ecs_iter_t *iter, size_t index) { 
-        (void)iter;
-        (void)index;
-    }
-
-    template <typename T, typename... Targs>
-    void populate_w_refs(const ecs_iter_t *iter, size_t index, T comp, Targs... comps) {
-        int32_t term = static_cast<int32_t>(index + 1);
-        void *ptr = ecs_term_w_size(iter, sizeof(*comp), term);
-        m_terms[index].ptr = ptr;
-        m_terms[index].is_ref = !ecs_term_is_owned(iter, term) && ptr != nullptr;
-        populate_w_refs(iter, index + 1, comps ...);
-    }   
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utility to convert type trait to flecs signature syntax */
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename T, if_t< is_const<T>::value> = 0>
-constexpr const char *inout_modifier() {
-    return "[in] ";
-}
-
-template <typename T, if_t< is_reference<T>::value> = 0>
-constexpr const char *inout_modifier() {
-    return "[out] ";
-}
-
-template <typename T, if_t< 
-    is_const<T>::value && 
-    ! is_reference<T>::value> = 0>
-constexpr const char *inout_modifier() {
-    return "";
-}
-
-template <typename T, if_t< is_pointer<T>::value> = 0>
-constexpr const char *optional_modifier() {
-    return "?";
-}
-
-template <typename T, if_not_t< is_pointer<T>::value> = 0>
-constexpr const char *optional_modifier() {
-    return "";
-} 
-
-/** Convert template arguments to string */
-template <typename ...Components>
-bool pack_args_to_string(world_t *world, flecs::stringstream& str, bool is_each = false) {
-    (void)world;
-
-    flecs::array<const char*, sizeof...(Components)> ids ({
-        (_::cpp_type<Components>::name(world))...
-    });
-    
-    flecs::array<const char*, sizeof...(Components)> inout_modifiers ({
-        (inout_modifier<Components>())...
-    });
-
-    flecs::array<const char*, sizeof...(Components)> optional_modifiers ({
-        (optional_modifier<Components>())...
-    });
-
-    size_t i = 0;
-    for (auto id : ids) {
-        if (i) {
-            str << ",";
-        }
-        
-        str << inout_modifiers[i];
-        str << optional_modifiers[i];
-
-        if (is_each) {
-            str << "ANY:";
-        }
-        str << id;
-        i ++;
-    }  
-
-    return i != 0;
-}
-
 } // namespace _
 
 } // namespace flecs
@@ -10588,9 +10453,11 @@ public:
      * @param index The term index.
      * @return The term data.
      */
-    template <typename T, if_t< is_const<T>::value > = 0>         
-    flecs::column<T> term(int32_t index) const {
-        return get_term<T>(index);
+    template <typename T, typename A = actual_type_t<T>,
+        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
+        
+    flecs::column<A> term(int32_t index) const {
+        return get_term<A>(index);
     }
 
     /** Obtain term with non-const type.
@@ -10601,11 +10468,14 @@ public:
      * @param index The term index.
      * @return The term data.
      */
-    template <typename T, if_not_t< is_const<T>::value > = 0>
-    flecs::column<T> term(int32_t index) const {
+    template <typename T, typename A = actual_type_t<T>,
+        typename std::enable_if<
+            std::is_const<T>::value == false, void>::type* = nullptr>
+
+    flecs::column<A> term(int32_t index) const {
         ecs_assert(!ecs_term_is_readonly(m_iter, index), 
             ECS_COLUMN_ACCESS_VIOLATION, NULL);
-        return get_term<T>(index);
+        return get_term<A>(index);
     }
 
     /** Obtain unsafe term.
@@ -10625,10 +10495,10 @@ public:
      * @param index The term index.
      * @return The term data.
      */
-    template <typename T>
-    flecs::column<T> term_owned(int32_t index) const {
+    template <typename T, typename A = actual_type_t<T>>
+    flecs::column<A> term_owned(int32_t index) const {
         ecs_assert(!!ecs_is_owned(m_iter, index), ECS_COLUMN_IS_SHARED, NULL);
-        return this->term<T>(index);
+        return this->term<A>(index);
     }
 
     /** Obtain shared term.
@@ -10638,7 +10508,7 @@ public:
      * @param index The term index.
      * @return The component term.
      */
-    template <typename T>
+    template <typename T, typename A = actual_type_t<T>>
     const T& term_shared(int32_t index) const {
         ecs_assert(
             ecs_term_id(m_iter, index) == 
@@ -10648,7 +10518,7 @@ public:
         ecs_assert(!ecs_term_is_owned(m_iter, index), 
             ECS_COLUMN_IS_NOT_SHARED, NULL);
 
-        return *static_cast<T*>(ecs_term_w_size(m_iter, sizeof(T), index));
+        return *static_cast<A*>(ecs_term_w_size(m_iter, sizeof(A), index));
     }
 
     /** Obtain the total number of tables the iterator will iterate over.
@@ -10672,18 +10542,18 @@ public:
      *
      * @tparam T Type of the table column.
      */
-    template <typename T>
+    template <typename T, typename A = actual_type_t<T>>
     flecs::column<T> table_column() const {
         auto col = ecs_iter_find_column(m_iter, _::cpp_type<T>::id());
         ecs_assert(col != -1, ECS_INVALID_PARAMETER, NULL);
 
-        return flecs::column<T>(static_cast<T*>(ecs_iter_column_w_size(m_iter, 
-            sizeof(T), col)), static_cast<std::size_t>(m_iter->count), false);
+        return flecs::column<A>(static_cast<A*>(ecs_iter_column_w_size(m_iter,
+            sizeof(A), col)), static_cast<std::size_t>(m_iter->count), false);
     }
 
 private:
     /* Get term, check if correct type is used */
-    template <typename T>
+    template <typename T, typename A = actual_type_t<T>>
     flecs::column<T> get_term(int32_t index) const {
 
 #ifndef NDEBUG
@@ -10708,10 +10578,10 @@ private:
             count = static_cast<size_t>(m_iter->count);
         }
         
-        return flecs::column<T>(
-            static_cast<T*>(ecs_term_w_size(m_iter, sizeof(T), index)), 
+        return flecs::column<A>(
+            static_cast<T*>(ecs_term_w_size(m_iter, sizeof(A), index)), 
             count, is_shared);
-    } 
+    }
 
     flecs::unsafe_column get_unsafe_term(int32_t index) const {
         size_t count;
@@ -10734,13 +10604,13 @@ private:
     }       
 
     /* Get single field, check if correct type is used */
-    template <typename T>
-    T& get_element(int32_t index, int32_t row) const {
+    template <typename T, typename A = actual_type_t<T>>
+    A& get_element(int32_t index, int32_t row) const {
         ecs_assert(
             ecs_term_id(m_iter, index) == _::cpp_type<T>::id(m_iter->world),
                 ECS_COLUMN_TYPE_MISMATCH, NULL);
-        return *static_cast<T*>(
-            ecs_element_w_size(m_iter, sizeof(T), index, row));
+        return *static_cast<A*>(
+            ecs_element_w_size(m_iter, sizeof(A), index, row));
     }       
 
     const flecs::iter_t *m_iter;
@@ -14042,6 +13912,71 @@ namespace flecs
 namespace _ 
 {
 
+
+// Utility to convert template argument pack to array of term ptrs
+struct term_ptr {
+    void *ptr;
+    bool is_ref;
+};
+
+template <typename ... Components>
+class term_ptrs {
+public:
+    using array = flecs::array<_::term_ptr, sizeof...(Components)>;
+
+    void populate(const ecs_iter_t *iter) {
+        populate(iter, 0, static_cast<
+            remove_reference_t<
+                remove_pointer_t<Components>>
+                    *>(nullptr)...);
+    }
+
+    bool populate_w_refs(const ecs_iter_t *iter) {
+        if (iter->table->references) {
+            populate_w_refs(iter, 0, static_cast<
+                remove_reference_t<
+                    remove_pointer_t<Components>>
+                        *>(nullptr)...);
+            return true;
+        } else {
+            this->populate(iter);
+            return false;
+        }
+    }
+
+    array m_terms;
+
+private:
+    /* Populate terms array without checking for references */
+    void populate(const ecs_iter_t *iter, size_t index) { 
+        (void)iter;
+        (void)index;
+    }
+
+    template <typename T, typename... Targs>
+    void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
+        int32_t term = static_cast<int32_t>(index + 1);
+        void *ptr = ecs_term_w_size(iter, sizeof(actual_type_t<remove_pointer_t<T>>), term);
+        m_terms[index].ptr = ptr;
+        populate(iter, index + 1, comps ...);
+    }
+
+    /* Populate terms array, check for references */
+    void populate_w_refs(const ecs_iter_t *iter, size_t index) { 
+        (void)iter;
+        (void)index;
+    }
+
+    template <typename T, typename... Targs>
+    void populate_w_refs(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
+        int32_t term = static_cast<int32_t>(index + 1);
+        void *ptr = ecs_term_w_size(iter, sizeof(actual_type_t<remove_pointer_t<T>>), term);
+        m_terms[index].ptr = ptr;
+        m_terms[index].is_ref = !ecs_term_is_owned(iter, term) && ptr != nullptr;
+        populate_w_refs(iter, index + 1, comps ...);
+    }   
+};    
+
 class invoker { };
 
 // Template that figures out from the template parameters of a query/system
@@ -14061,7 +13996,7 @@ protected:
 
 // If type is not a pointer, return a reference to the type (default case)
 template <typename T>
-struct each_column<T, if_not_t< is_pointer<T>::value > > 
+struct each_column<T, if_t< !is_pointer<T>::value && is_actual<T>::value > > 
     : public each_column_base 
 {
     each_column(const _::term_ptr& term, size_t row) 
@@ -14069,7 +14004,22 @@ struct each_column<T, if_not_t< is_pointer<T>::value > >
 
     T& get_row() {
         return static_cast<T*>(this->m_term.ptr)[this->m_row];
-    }
+    }  
+};
+
+// If argument type is not the same as actual component type, return by value.
+// This requires that the actual type can be converted to the type.
+// A typical scenario where this happens is when using flecs::pair types.
+template <typename T>
+struct each_column<T, if_t< !is_pointer<T>::value && !is_actual<T>::value> > 
+    : public each_column_base 
+{
+    each_column(const _::term_ptr& term, size_t row) 
+        : each_column_base(term, row) { }
+
+    T get_row() {
+        return static_cast<actual_type_t<T>*>(this->m_term.ptr)[this->m_row];
+    }  
 };
 
 // If type is a pointer (indicating an optional value) return the type as is
@@ -14082,7 +14032,7 @@ struct each_column<T, if_t< is_pointer<T>::value > >
 
     T get_row() {
         if (this->m_term.ptr) {
-            return &static_cast<T>(this->m_term.ptr)[this->m_row];
+            return &static_cast<actual_type_t<T>>(this->m_term.ptr)[this->m_row];
         } else {
             // optional argument doesn't hava a value
             return nullptr;
@@ -14209,7 +14159,7 @@ private:
     {
         flecs::iter iter_wrapper(iter);
         func(iter_wrapper, (
-            static_cast< remove_reference_t< remove_pointer_t<Components> >* >
+            static_cast< remove_reference_t< remove_pointer_t< actual_type_t<Components> > >* >
                 (comps.ptr))...);
     }
 

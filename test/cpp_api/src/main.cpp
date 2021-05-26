@@ -280,6 +280,9 @@ void Query_pair_to_str(void);
 void Query_oper_not_to_str(void);
 void Query_oper_optional_to_str(void);
 void Query_oper_or_to_str(void);
+void Query_each_pair_type(void);
+void Query_iter_pair_type(void);
+void Query_term_pair_type(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1549,6 +1552,18 @@ bake_test_case Query_testcases[] = {
     {
         "oper_or_to_str",
         Query_oper_or_to_str
+    },
+    {
+        "each_pair_type",
+        Query_each_pair_type
+    },
+    {
+        "iter_pair_type",
+        Query_iter_pair_type
+    },
+    {
+        "term_pair_type",
+        Query_term_pair_type
     }
 };
 
@@ -2432,7 +2447,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        33,
+        36,
         Query_testcases
     },
     {
