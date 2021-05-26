@@ -99,7 +99,7 @@ struct is_callable {
 
 template <typename T>
 struct arity {
-    static constexpr bool value = _::function_traits<T>::arity;
+    static constexpr int value = _::function_traits<T>::arity;
 };
 
 template <typename T>

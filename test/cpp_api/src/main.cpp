@@ -283,6 +283,11 @@ void Query_oper_or_to_str(void);
 void Query_each_pair_type(void);
 void Query_iter_pair_type(void);
 void Query_term_pair_type(void);
+void Query_each_no_entity_1_comp(void);
+void Query_each_no_entity_2_comps(void);
+void Query_iter_no_comps_1_comp(void);
+void Query_iter_no_comps_2_comps(void);
+void Query_iter_no_comps_no_comps(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1564,6 +1569,26 @@ bake_test_case Query_testcases[] = {
     {
         "term_pair_type",
         Query_term_pair_type
+    },
+    {
+        "each_no_entity_1_comp",
+        Query_each_no_entity_1_comp
+    },
+    {
+        "each_no_entity_2_comps",
+        Query_each_no_entity_2_comps
+    },
+    {
+        "iter_no_comps_1_comp",
+        Query_iter_no_comps_1_comp
+    },
+    {
+        "iter_no_comps_2_comps",
+        Query_iter_no_comps_2_comps
+    },
+    {
+        "iter_no_comps_no_comps",
+        Query_iter_no_comps_no_comps
     }
 };
 
@@ -2447,7 +2472,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        36,
+        41,
         Query_testcases
     },
     {

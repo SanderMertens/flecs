@@ -275,7 +275,7 @@ template <typename T, size_t Size, class Enable = void>
 class array { };
 
 template <typename T, size_t Size>
-class array<T, Size, enable_if_t<Size != 0>> {
+class array<T, Size, enable_if_t<Size != 0> > {
 public:
     array() {};
 

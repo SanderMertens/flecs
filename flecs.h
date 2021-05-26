@@ -9391,7 +9391,7 @@ template <typename T, size_t Size, class Enable = void>
 class array { };
 
 template <typename T, size_t Size>
-class array<T, Size, enable_if_t<Size != 0>> {
+class array<T, Size, enable_if_t<Size != 0> > {
 public:
     array() {};
 
@@ -9674,7 +9674,7 @@ struct is_callable {
 
 template <typename T>
 struct arity {
-    static constexpr bool value = _::function_traits<T>::arity;
+    static constexpr int value = _::function_traits<T>::arity;
 };
 
 template <typename T>
@@ -14062,9 +14062,17 @@ struct each_ref_column : public each_column<T> {
 
 template <typename Func, typename ... Components>
 class each_invoker : public invoker {
+public:    
+    // If the number of arguments in the function signature is one more than the
+    // number of components in the query, an extra entity arg is required.
+    static constexpr bool PassEntity = 
+        sizeof...(Components) == (arity<Func>::value - 1);
+
+    static_assert(arity<Func>::value > 0, 
+        "each() must have at least one argument");
+
     using Terms = typename term_ptrs<Components ...>::array;
 
-public:
     explicit each_invoker(Func&& func) noexcept 
         : m_func(std::move(func)) { }
 
@@ -14092,11 +14100,14 @@ public:
     }
 
 private:
-    template <template<typename Ta, typename = int> class ColumnType, 
-        typename... Targs,
-            if_t< sizeof...(Targs) == sizeof...(Components) > = 0>
+
+    // Number of function arguments is one more than number of components, pass
+    // entity as argument.
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< 
+            sizeof...(Components) == sizeof...(Args) && PassEntity> = 0>
     static void invoke_callback(
-        ecs_iter_t *iter, const Func& func, size_t, Terms&, Targs... comps) 
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
         flecs::iter it(iter);
         for (auto row : it) {
@@ -14106,11 +14117,24 @@ private:
         }
     }
 
-    template <template<typename Ta, typename = int> class ColumnType, 
-        typename... Targs,
-            if_t< sizeof...(Targs) != sizeof...(Components) > = 0>
+    // Number of function arguments is equal to number of components, no entity
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< 
+            sizeof...(Components) == sizeof...(Args) && !PassEntity> = 0>
+    static void invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+    {
+        flecs::iter it(iter);
+        for (auto row : it) {
+            func( (ColumnType< remove_reference_t<Components> >(comps, row)
+                .get_row())...);
+        }
+    }
+
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< sizeof...(Components) != sizeof...(Args) > = 0>
     static void invoke_callback(ecs_iter_t *iter, const Func& func, 
-        size_t index, Terms& columns, Targs... comps) 
+        size_t index, Terms& columns, Args... comps) 
     {
         invoke_callback<ColumnType>(
             iter, func, index + 1, columns, comps..., columns[index]);
@@ -14126,6 +14150,8 @@ private:
 
 template <typename Func, typename ... Components>
 class iter_invoker : public invoker {
+    static constexpr bool IterOnly = arity<Func>::value == 1;
+
     using Terms = typename term_ptrs<Components ...>::array;
 
 public:
@@ -14152,19 +14178,29 @@ public:
     }
 
 private:
-    template <typename... Targs,
-        if_t<sizeof...(Targs) == sizeof...(Components)> = 0>
+    template <typename... Args, if_t<!sizeof...(Args) && IterOnly> = 0>
+    static void invoke_callback(ecs_iter_t *iter, const Func& func, 
+        size_t, Terms&, Args...) 
+    {
+        flecs::iter it(iter);
+        func(it);
+    }
+
+    template <typename... Targs, if_t<!IterOnly &&
+        (sizeof...(Targs) == sizeof...(Components))> = 0>
     static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t, 
         Terms&, Targs... comps) 
     {
-        flecs::iter iter_wrapper(iter);
-        func(iter_wrapper, (
-            static_cast< remove_reference_t< remove_pointer_t< actual_type_t<Components> > >* >
-                (comps.ptr))...);
+        flecs::iter it(iter);
+        func(it, ( static_cast< 
+            remove_reference_t< 
+                remove_pointer_t< 
+                    actual_type_t<Components> > >* >
+                        (comps.ptr))...);
     }
 
-    template <typename... Targs,
-        if_t<sizeof...(Targs) != sizeof...(Components)> = 0>
+    template <typename... Targs, if_t<!IterOnly &&
+        (sizeof...(Targs) != sizeof...(Components)) > = 0>
     static void invoke_callback(ecs_iter_t *iter, const Func& func, 
         size_t index, Terms& columns, Targs... comps) 
     {

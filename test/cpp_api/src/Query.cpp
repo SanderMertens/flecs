@@ -980,3 +980,120 @@ void Query_term_pair_type() {
     test_assert(v != NULL);
     test_int(v->amount, 11);
 }
+
+void Query_each_no_entity_1_comp() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set(Position{1, 2});
+
+    auto q = ecs.query<Position>();
+
+    int32_t count = 0;
+    q.each([&](Position& p) {
+        test_int(p.x, 1);
+        test_int(p.y, 2);
+        p.x += 1;
+        p.y += 2;
+        count ++;
+    });
+
+    test_int(count, 1);
+    
+    auto pos = e.get<Position>();
+    test_int(pos->x, 2);
+    test_int(pos->y, 4);
+}
+
+void Query_each_no_entity_2_comps() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set(Position{1, 2})
+        .set(Velocity{10, 20});
+
+    auto q = ecs.query<Position, Velocity>();
+
+    int32_t count = 0;
+    q.each([&](Position& p, Velocity& v) {
+        test_int(p.x, 1);
+        test_int(p.y, 2);
+        test_int(v.x, 10);
+        test_int(v.y, 20);
+
+        p.x += 1;
+        p.y += 2;
+        v.x += 1;
+        v.y += 2;
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    test_bool(e.get([](const Position& p, const Velocity& v) {
+        test_int(p.x, 2);
+        test_int(p.y, 4);
+
+        test_int(v.x, 11);
+        test_int(v.y, 22);
+    }), true);
+
+    test_int(count, 1);
+}
+
+void Query_iter_no_comps_1_comp() {
+    flecs::world ecs;
+
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Velocity>();
+
+    auto q = ecs.query<Position>();
+
+    int32_t count = 0;
+    q.iter([&](flecs::iter& it) {
+        count += it.count();
+    });
+
+    test_int(count, 3);
+}
+
+void Query_iter_no_comps_2_comps() {
+    flecs::world ecs;
+
+    ecs.entity().add<Velocity>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>().add<Velocity>();
+
+    auto q = ecs.query<Position, Velocity>();
+
+    int32_t count = 0;
+    q.iter([&](flecs::iter& it) {
+
+        count += it.count();
+    });
+
+    test_int(count, 2);
+}
+
+void Query_iter_no_comps_no_comps() {
+    flecs::world ecs;
+
+    ecs.entity().add<Velocity>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>().add<Velocity>();
+
+    auto q = ecs.query_builder<>()
+        .term<Position>()
+        .build();
+
+    int32_t count = 0;
+    q.iter([&](flecs::iter& it) {
+        count += it.count();
+    });
+
+    test_int(count, 3);
+}

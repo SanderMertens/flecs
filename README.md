@@ -83,12 +83,9 @@ int main(int argc, char *argv[]) {
   ECS_COMPONENT(ecs, Position);
   ECS_COMPONENT(ecs, Velocity);
 
-  ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, [in] Velocity);
+  ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);
 
-  ecs_entity_t e = ecs_entity_init(ecs, &(ecs_entity_desc_t){
-    .name = "MyEntity"
-  });
-
+  ecs_entity_t e = ecs_new_id(ecs);
   ecs_set(ecs, e, Position, {10, 20});
   ecs_set(ecs, e, Velocity, {1, 2});
 
@@ -111,15 +108,16 @@ int main(int argc, char *argv[]) {
   flecs::world ecs;
 
   ecs.system<Position, const Velocity>()
-    .each([](flecs::entity e, Position& p, const Velocity& v) {
+    .each([](Position& p, const Velocity& v) {
       p.x += v.x;
       p.y += v.y;
     });
 
-  ecs.entity("MyEntity").set([](Position& p, Velocity& v) {
-    p = {10, 20};
-    v = {1, 2};
-  });
+  auto e = ecs.entity()
+    .set([](Position& p, Velocity& v) {
+      p = {10, 20};
+      v = {1, 2};
+    });
     
   while (ecs.progress()) { }
 }
@@ -152,10 +150,8 @@ int main(int argc, char *argv[]) {
     .callback = Move,
   });
 
-  // Create a named entity
-  ecs_entity_t e = ecs_entity_init(ecs, &(ecs_entity_desc_t){
-    .name = "MyEntity"
-  });
+  // Create entity
+  ecs_entity_t e = ecs_new_id(ecs);
 
   // Set components
   ecs_set_id(ecs, e, pos, sizeof(Position), &(Position){10, 20});

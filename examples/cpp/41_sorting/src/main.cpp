@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     // Create a system with sorting enabled
     auto sys = ecs.system<Position>()
         .order_by(compare_position)
-        .each([](flecs::entity, Position &p) {
+        .each([](Position &p) {
             std::cout << "{" << p.x << "," << p.y << "}" << std::endl;
         });
 

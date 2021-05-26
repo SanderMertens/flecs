@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
     /* Define a system with an empty signature. Systems that do not match with
      * any entities are invoked once per frame */
     ecs.system<>()
-        .iter([](const flecs::iter&) {
+        .iter([](flecs::iter&) {
             std::cout << "System invoked!" << std::endl;
         });
 

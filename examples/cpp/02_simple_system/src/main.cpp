@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
     ecs.system<Message>()
-        .each([](flecs::entity, Message& messages) {
+        .each([](Message& messages) {
             std::cout << messages.text << std::endl;
         });
 

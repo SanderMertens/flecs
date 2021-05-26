@@ -11,7 +11,7 @@ int main(int, char *[]) {
     /* Create OnSet system so we can see when Velocity is actually set */
     ecs.system<Position>()
         .kind(flecs::OnSet)
-        .each([](flecs::entity, Position& p) {
+        .each([](Position& p) {
             std::cout << "Position set to {" << p.x << ", " << p.y << "}" 
                       << std::endl;
         });

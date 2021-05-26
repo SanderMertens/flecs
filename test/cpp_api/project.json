@@ -303,7 +303,12 @@
                 "oper_or_to_str",
                 "each_pair_type",
                 "iter_pair_type",
-                "term_pair_type"
+                "term_pair_type",
+                "each_no_entity_1_comp",
+                "each_no_entity_2_comps",
+                "iter_no_comps_1_comp",
+                "iter_no_comps_2_comps",
+                "iter_no_comps_no_comps"
             ]
         }, {
             "id": "QueryBuilder",
