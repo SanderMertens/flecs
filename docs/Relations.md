@@ -175,8 +175,8 @@ using EndEvent = flecs::pair<End, Event>;
 
 // Set data on the Event object, instead of the Begin, End relations:
 auto universe = world.entity();
-  .set_object<Begin, Event>({"Big Bang"})
-  .set_object<End, Event>({"Heat Death"});
+  .set<Begin, Event>({"Big Bang"})
+  .set<End, Event>({"Heat Death"});
 
 universe.get([](const BeginEvent& e) {
   cout << "In the beginning there was the " << e.value << endl;

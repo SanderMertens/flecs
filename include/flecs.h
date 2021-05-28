@@ -2143,7 +2143,7 @@ ecs_type_t ecs_get_type(
 FLECS_API
 ecs_entity_t ecs_get_typeid(
     const ecs_world_t *world,
-    ecs_entity_t e);
+    ecs_id_t e);
 
 /** Get the name of an entity.
  * This will return the name as specified in the EcsName component.

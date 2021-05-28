@@ -45,10 +45,7 @@ public:
 
 private:
     /* Populate terms array without checking for references */
-    void populate(const ecs_iter_t *iter, size_t index) { 
-        (void)iter;
-        (void)index;
-    }
+    void populate(const ecs_iter_t*, size_t) { }
 
     template <typename T, typename... Targs>
     void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
@@ -59,10 +56,7 @@ private:
     }
 
     /* Populate terms array, check for references */
-    void populate_w_refs(const ecs_iter_t *iter, size_t index) { 
-        (void)iter;
-        (void)index;
-    }
+    void populate_w_refs(const ecs_iter_t*, size_t) { }
 
     template <typename T, typename... Targs>
     void populate_w_refs(const ecs_iter_t *iter, size_t index, T, Targs... comps) {

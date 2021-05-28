@@ -311,9 +311,10 @@ public:
      * @tparam R the relation type.
      * @tparam O the object type.
      */
-    template <typename R, typename O, if_not_t< flecs::is_pair<R>::value > = 0>
-    const R* get() const {
-        return this->get<flecs::pair<R, O>>();
+    template <typename R, typename O, typename P = pair<R, O>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<R>::value > = 0>
+    const A* get() const {
+        return this->get<P>();
     }
 
     /** Get a pair.
@@ -1044,9 +1045,10 @@ public:
      * @tparam O The object part of the pair.
      * @param value The value to set.
      */
-    template <typename R, typename O, if_not_t< is_pair<R>::value> = 0>
-    const Base& set(const R& value) const {
-        flecs::set<pair<R, O>>(this->base_world(), this->base_id(), value);
+    template <typename R, typename O, typename P = pair<R, O>, 
+        typename A = actual_type_t<P>, if_not_t< is_pair<R>::value> = 0>
+    const Base& set(const A& value) const {
+        flecs::set<P>(this->base_world(), this->base_id(), value);
         return *this;
     }
 

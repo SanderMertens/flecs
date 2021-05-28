@@ -7,19 +7,23 @@ namespace _ {
 
 
 // Type that represents a pair and can encapsulate a temporary value
-template <typename R, typename O, typename Type = R>
+template <typename R, typename O>
 struct pair : _::pair_base { 
     // Traits used to deconstruct the pair
-    using type = Type;
+
+    // The actual type of the pair is determined by which type of the pair is
+    // empty. If both types are empty or not empty, the pair assumes the type
+    // of the relation.
+    using type = conditional_t<!is_empty<R>::value || is_empty<O>::value, R, O>;
     using relation = R;
     using object = O;
 
-    pair(Type& v) : ref_(v) { }
+    pair(type& v) : ref_(v) { }
 
     // This allows the class to be used as a temporary object
-    pair(const Type& v) : ref_(const_cast<Type&>(v)) { }
+    pair(const type& v) : ref_(const_cast<type&>(v)) { }
 
-    operator Type&() { 
+    operator type&() { 
         return ref_;
     }
 
@@ -27,29 +31,28 @@ struct pair : _::pair_base {
         return ref_;
     }    
 
-    Type* operator->() {
+    type* operator->() {
         return &ref_;
     }
 
-    const Type* operator->() const {
+    const type* operator->() const {
         return &ref_;
     }
 
-    Type& operator*() {
+    type& operator*() {
         return &ref_;
     }
 
-    const Type& operator*() const {
+    const type& operator*() const {
         return ref_;
     }
     
 private:
-    Type& ref_;
+    type& ref_;
 };
 
-// A pair_object is a pair where the type is determined by the object
-template <typename R, typename O>
-using pair_object = pair<R, O, O>;
+template <typename R, typename O, if_t<is_empty<R>::value> = 0>
+using pair_object = pair<R, O>;
 
 
 // Utilities to test if type is a pair

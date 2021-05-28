@@ -164,6 +164,7 @@ void Pairs_get_inline_pair_type(void);
 void Pairs_set_inline_pair_type(void);
 void Pairs_get_pair_type_object(void);
 void Pairs_set_pair_type_object(void);
+void Pairs_set_get_object_variants(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -288,6 +289,8 @@ void Query_each_no_entity_2_comps(void);
 void Query_iter_no_comps_1_comp(void);
 void Query_iter_no_comps_2_comps(void);
 void Query_iter_no_comps_no_comps(void);
+void Query_each_pair_object(void);
+void Query_iter_pair_object(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1123,6 +1126,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "set_pair_type_object",
         Pairs_set_pair_type_object
+    },
+    {
+        "set_get_object_variants",
+        Pairs_set_get_object_variants
     }
 };
 
@@ -1589,6 +1596,14 @@ bake_test_case Query_testcases[] = {
     {
         "iter_no_comps_no_comps",
         Query_iter_no_comps_no_comps
+    },
+    {
+        "each_pair_object",
+        Query_each_pair_object
+    },
+    {
+        "iter_pair_object",
+        Query_iter_pair_object
     }
 };
 
@@ -2430,7 +2445,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        51,
+        52,
         Pairs_testcases
     },
     {
@@ -2472,7 +2487,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        41,
+        43,
         Query_testcases
     },
     {

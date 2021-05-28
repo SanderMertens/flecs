@@ -1027,7 +1027,16 @@
                 "api_pair_w_obj_wildcard",
                 "api_pair_w_both_wildcard",
                 "api_pair_w_explicit_subj_this",
-                "api_pair_w_explicit_subj"                         
+                "api_pair_w_explicit_subj",
+                "typeid_from_tag",
+                "typeid_from_component",
+                "typeid_from_pair",
+                "typeid_from_pair_w_rel_type",
+                "typeid_from_pair_w_obj_type",
+                "typeid_from_pair_w_rel_obj_type",
+                "typeid_from_pair_w_rel_0_obj_type",
+                "typeid_from_pair_w_rel_obj_0_type",
+                "typeid_from_pair_w_rel_0_obj_0_type"
             ]
         }, {
            "id": "Trigger",

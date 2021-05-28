@@ -1097,3 +1097,57 @@ void Query_iter_no_comps_no_comps() {
 
     test_int(count, 3);
 }
+
+#include <iostream>
+
+struct Event {
+    const char *value;
+};
+
+struct Begin { };
+struct End { };
+
+using BeginEvent = flecs::pair<Begin, Event>;
+using EndEvent = flecs::pair<End, Event>;
+
+void Query_each_pair_object() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity()
+        .set_object<Begin, Event>({"Big Bang"})
+        .set<EndEvent>({"Heat Death"});
+
+    auto q = ecs.query<BeginEvent, EndEvent>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, BeginEvent b_e, EndEvent e_e) {
+        test_assert(e == e1);
+        test_str(b_e->value, "Big Bang");
+        test_str(e_e->value, "Heat Death");
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void Query_iter_pair_object() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity()
+        .set_object<Begin, Event>({"Big Bang"})
+        .set<EndEvent>({"Heat Death"});
+
+    auto q = ecs.query<BeginEvent, EndEvent>();
+
+    int32_t count = 0;
+    q.iter([&](flecs::iter it, Event *b_e, Event *e_e) {
+        for (auto i : it) {
+            test_assert(it.entity(i) == e1);
+            test_str(b_e[i].value, "Big Bang");
+            test_str(e_e[i].value, "Heat Death");
+            count ++;
+        }
+    });
+
+    test_int(count, 1);
+}

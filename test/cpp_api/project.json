@@ -172,7 +172,8 @@
                 "get_inline_pair_type",
                 "set_inline_pair_type",
                 "get_pair_type_object",
-                "set_pair_type_object"
+                "set_pair_type_object",
+                "set_get_object_variants"
             ]
         }, {
             "id": "Switch",
@@ -308,7 +309,9 @@
                 "each_no_entity_2_comps",
                 "iter_no_comps_1_comp",
                 "iter_no_comps_2_comps",
-                "iter_no_comps_no_comps"
+                "iter_no_comps_no_comps",
+                "each_pair_object",
+                "iter_pair_object"
             ]
         }, {
             "id": "QueryBuilder",

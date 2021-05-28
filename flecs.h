@@ -5158,7 +5158,7 @@ ecs_type_t ecs_get_type(
 FLECS_API
 ecs_entity_t ecs_get_typeid(
     const ecs_world_t *world,
-    ecs_entity_t e);
+    ecs_id_t e);
 
 /** Get the name of an entity.
  * This will return the name as specified in the EcsName component.
@@ -9184,6 +9184,7 @@ template <typename T>
 using remove_reference_t = typename std::remove_reference<T>::type;
 
 using std::is_base_of;
+using std::is_empty;
 using std::is_const;
 using std::is_pointer;
 using std::is_reference;
@@ -9465,19 +9466,23 @@ namespace _ {
 
 
 // Type that represents a pair and can encapsulate a temporary value
-template <typename R, typename O, typename Type = R>
+template <typename R, typename O>
 struct pair : _::pair_base { 
     // Traits used to deconstruct the pair
-    using type = Type;
+
+    // The actual type of the pair is determined by which type of the pair is
+    // empty. If both types are empty or not empty, the pair assumes the type
+    // of the relation.
+    using type = conditional_t<!is_empty<R>::value || is_empty<O>::value, R, O>;
     using relation = R;
     using object = O;
 
-    pair(Type& v) : ref_(v) { }
+    pair(type& v) : ref_(v) { }
 
     // This allows the class to be used as a temporary object
-    pair(const Type& v) : ref_(const_cast<Type&>(v)) { }
+    pair(const type& v) : ref_(const_cast<type&>(v)) { }
 
-    operator Type&() { 
+    operator type&() { 
         return ref_;
     }
 
@@ -9485,29 +9490,28 @@ struct pair : _::pair_base {
         return ref_;
     }    
 
-    Type* operator->() {
+    type* operator->() {
         return &ref_;
     }
 
-    const Type* operator->() const {
+    const type* operator->() const {
         return &ref_;
     }
 
-    Type& operator*() {
+    type& operator*() {
         return &ref_;
     }
 
-    const Type& operator*() const {
+    const type& operator*() const {
         return ref_;
     }
     
 private:
-    Type& ref_;
+    type& ref_;
 };
 
-// A pair_object is a pair where the type is determined by the object
-template <typename R, typename O>
-using pair_object = pair<R, O, O>;
+template <typename R, typename O, if_t<is_empty<R>::value> = 0>
+using pair_object = pair<R, O>;
 
 
 // Utilities to test if type is a pair
@@ -12131,9 +12135,10 @@ public:
      * @tparam R the relation type.
      * @tparam O the object type.
      */
-    template <typename R, typename O, if_not_t< flecs::is_pair<R>::value > = 0>
-    const R* get() const {
-        return this->get<flecs::pair<R, O>>();
+    template <typename R, typename O, typename P = pair<R, O>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<R>::value > = 0>
+    const A* get() const {
+        return this->get<P>();
     }
 
     /** Get a pair.
@@ -12864,9 +12869,10 @@ public:
      * @tparam O The object part of the pair.
      * @param value The value to set.
      */
-    template <typename R, typename O, if_not_t< is_pair<R>::value> = 0>
-    const Base& set(const R& value) const {
-        flecs::set<pair<R, O>>(this->base_world(), this->base_id(), value);
+    template <typename R, typename O, typename P = pair<R, O>, 
+        typename A = actual_type_t<P>, if_not_t< is_pair<R>::value> = 0>
+    const Base& set(const A& value) const {
+        flecs::set<P>(this->base_world(), this->base_id(), value);
         return *this;
     }
 
@@ -13948,10 +13954,7 @@ public:
 
 private:
     /* Populate terms array without checking for references */
-    void populate(const ecs_iter_t *iter, size_t index) { 
-        (void)iter;
-        (void)index;
-    }
+    void populate(const ecs_iter_t*, size_t) { }
 
     template <typename T, typename... Targs>
     void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
@@ -13962,10 +13965,7 @@ private:
     }
 
     /* Populate terms array, check for references */
-    void populate_w_refs(const ecs_iter_t *iter, size_t index) { 
-        (void)iter;
-        (void)index;
-    }
+    void populate_w_refs(const ecs_iter_t*, size_t) { }
 
     template <typename T, typename... Targs>
     void populate_w_refs(const ecs_iter_t *iter, size_t index, T, Targs... comps) {

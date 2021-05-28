@@ -12,6 +12,10 @@ typedef struct RelB {
     float value;
 } RelB;
 
+typedef struct Obj {
+    float value;
+} Obj;
+
 void ProcessTraits(ecs_iter_t *it) {
     Rel *tr = ecs_term(it, Rel, 1);
 
@@ -1853,6 +1857,165 @@ void Pairs_api_pair_w_explicit_subj() {
     test_int(ecs_term_source(&it, 1), Subj);
 
     test_bool(ecs_query_next(&it), false); 
+
+    ecs_fini(world);
+}
+
+void Pairs_typeid_from_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_new_id(world);
+    test_assert(tag != 0);
+
+    ecs_entity_t id = ecs_get_typeid(world, tag);
+    test_assert(id != 0);
+    test_assert(id == tag);
+
+    ecs_fini(world);
+}
+
+void Pairs_typeid_from_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Rel);
+    ecs_id_t rel_id = ecs_id(Rel);
+    test_assert(rel_id != 0);
+
+    ecs_entity_t id = ecs_get_typeid(world, rel_id);
+    test_assert(id != 0);
+    test_assert(id == rel_id);
+
+    ecs_fini(world);
+}
+
+void Pairs_typeid_from_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel_id = ecs_new_id(world);
+    test_assert(rel_id != 0);
+
+    ecs_entity_t obj_id = ecs_new_id(world);
+    test_assert(obj_id != 0);
+
+    ecs_id_t pair_id = ecs_pair(rel_id, obj_id);
+
+    ecs_entity_t id = ecs_get_typeid(world, pair_id);
+    test_assert(id != 0);
+    test_assert(id == rel_id);
+
+    ecs_fini(world);
+}
+
+void Pairs_typeid_from_pair_w_rel_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Rel);
+    ecs_id_t rel_id = ecs_id(Rel);
+    test_assert(rel_id != 0);
+
+    ecs_entity_t obj_id = ecs_new_id(world);
+    test_assert(obj_id != 0);
+
+    ecs_id_t pair_id = ecs_pair(rel_id, obj_id);
+
+    ecs_entity_t id = ecs_get_typeid(world, pair_id);
+    test_assert(id != 0);
+    test_assert(id == rel_id);
+
+    ecs_fini(world);
+}
+
+void Pairs_typeid_from_pair_w_obj_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Obj);
+    ecs_id_t obj_id = ecs_id(Obj);
+    test_assert(obj_id != 0);
+
+    ecs_entity_t rel_id = ecs_new_id(world);
+    test_assert(rel_id != 0);
+
+    ecs_id_t pair_id = ecs_pair(rel_id, obj_id);
+
+    ecs_entity_t id = ecs_get_typeid(world, pair_id);
+    test_assert(id != 0);
+    test_assert(id == obj_id);
+
+    ecs_fini(world);
+}
+
+void Pairs_typeid_from_pair_w_rel_obj_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Rel);
+    ecs_id_t rel_id = ecs_id(Rel);
+    test_assert(rel_id != 0);
+
+    ECS_COMPONENT(world, Obj);
+    ecs_id_t obj_id = ecs_id(Obj);
+    test_assert(obj_id != 0);
+
+    ecs_id_t pair_id = ecs_pair(rel_id, obj_id);
+
+    ecs_entity_t id = ecs_get_typeid(world, pair_id);
+    test_assert(id != 0);
+    test_assert(id == rel_id);
+
+    ecs_fini(world);
+}
+
+void Pairs_typeid_from_pair_w_rel_0_obj_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t rel_id = ecs_set(world, 0, EcsComponent, {0});
+    test_assert(rel_id != 0);
+
+    ECS_COMPONENT(world, Obj);
+    ecs_id_t obj_id = ecs_id(Obj);
+    test_assert(obj_id != 0);
+
+    ecs_id_t pair_id = ecs_pair(rel_id, obj_id);
+
+    ecs_entity_t id = ecs_get_typeid(world, pair_id);
+    test_assert(id != 0);
+    test_assert(id == obj_id);
+
+    ecs_fini(world);
+}
+
+void Pairs_typeid_from_pair_w_rel_obj_0_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Rel);
+    ecs_id_t rel_id = ecs_id(Rel);
+    test_assert(rel_id != 0);
+
+    ecs_id_t obj_id = ecs_set(world, 0, EcsComponent, {0});
+    test_assert(obj_id != 0);
+
+    ecs_id_t pair_id = ecs_pair(rel_id, obj_id);
+
+    ecs_entity_t id = ecs_get_typeid(world, pair_id);
+    test_assert(id != 0);
+    test_assert(id == rel_id);
+
+    ecs_fini(world);
+}
+
+void Pairs_typeid_from_pair_w_rel_0_obj_0_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t rel_id = ecs_set(world, 0, EcsComponent, {0});
+    test_assert(rel_id != 0);
+
+    ecs_id_t obj_id = ecs_set(world, 0, EcsComponent, {0});
+    test_assert(obj_id != 0);
+
+    ecs_id_t pair_id = ecs_pair(rel_id, obj_id);
+
+    ecs_entity_t id = ecs_get_typeid(world, pair_id);
+    test_assert(id != 0);
+    test_assert(id == rel_id);
 
     ecs_fini(world);
 }

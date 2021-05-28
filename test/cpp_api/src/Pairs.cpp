@@ -1002,3 +1002,41 @@ void Pairs_set_pair_type_object() {
     auto eats = e.get_object<Apples, Eats>();
     test_int(eats->amount, 10);
 }
+
+struct Event {
+    const char *value;
+};
+
+struct Begin { };
+struct End { };
+
+using BeginEvent = flecs::pair<Begin, Event>;
+using EndEvent = flecs::pair<End, Event>;
+
+void Pairs_set_get_object_variants() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().set_object<Begin, Event>({"Big Bang"});
+    test_assert((e1.has<Begin, Event>()));
+    const Event* v = e1.get_object<Begin, Event>();
+    test_assert(v != NULL);
+    test_str(v->value, "Big Bang");
+
+    auto e2 = ecs.entity().set<Begin, Event>({"Big Bang"});
+    test_assert((e2.has<Begin, Event>()));
+    v = e2.get<Begin, Event>();
+    test_assert(v != NULL);
+    test_str(v->value, "Big Bang");
+
+    auto e3 = ecs.entity().set<flecs::pair<Begin, Event>>({"Big Bang"});
+    test_assert((e3.has<flecs::pair<Begin, Event>>()));
+    v = e3.get<flecs::pair<Begin, Event>>();
+    test_assert(v != NULL);
+    test_str(v->value, "Big Bang");  
+
+    auto e4 = ecs.entity().set<BeginEvent>({"Big Bang"});
+    test_assert((e4.has<BeginEvent>()));
+    v = e4.get<BeginEvent>();
+    test_assert(v != NULL);
+    test_str(v->value, "Big Bang");            
+}

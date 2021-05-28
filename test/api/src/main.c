@@ -963,6 +963,15 @@ void Pairs_api_pair_w_obj_wildcard(void);
 void Pairs_api_pair_w_both_wildcard(void);
 void Pairs_api_pair_w_explicit_subj_this(void);
 void Pairs_api_pair_w_explicit_subj(void);
+void Pairs_typeid_from_tag(void);
+void Pairs_typeid_from_component(void);
+void Pairs_typeid_from_pair(void);
+void Pairs_typeid_from_pair_w_rel_type(void);
+void Pairs_typeid_from_pair_w_obj_type(void);
+void Pairs_typeid_from_pair_w_rel_obj_type(void);
+void Pairs_typeid_from_pair_w_rel_0_obj_type(void);
+void Pairs_typeid_from_pair_w_rel_obj_0_type(void);
+void Pairs_typeid_from_pair_w_rel_0_obj_0_type(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -5468,6 +5477,42 @@ bake_test_case Pairs_testcases[] = {
     {
         "api_pair_w_explicit_subj",
         Pairs_api_pair_w_explicit_subj
+    },
+    {
+        "typeid_from_tag",
+        Pairs_typeid_from_tag
+    },
+    {
+        "typeid_from_component",
+        Pairs_typeid_from_component
+    },
+    {
+        "typeid_from_pair",
+        Pairs_typeid_from_pair
+    },
+    {
+        "typeid_from_pair_w_rel_type",
+        Pairs_typeid_from_pair_w_rel_type
+    },
+    {
+        "typeid_from_pair_w_obj_type",
+        Pairs_typeid_from_pair_w_obj_type
+    },
+    {
+        "typeid_from_pair_w_rel_obj_type",
+        Pairs_typeid_from_pair_w_rel_obj_type
+    },
+    {
+        "typeid_from_pair_w_rel_0_obj_type",
+        Pairs_typeid_from_pair_w_rel_0_obj_type
+    },
+    {
+        "typeid_from_pair_w_rel_obj_0_type",
+        Pairs_typeid_from_pair_w_rel_obj_0_type
+    },
+    {
+        "typeid_from_pair_w_rel_0_obj_0_type",
+        Pairs_typeid_from_pair_w_rel_0_obj_0_type
     }
 };
 
@@ -8945,7 +8990,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        42,
+        51,
         Pairs_testcases
     },
     {
