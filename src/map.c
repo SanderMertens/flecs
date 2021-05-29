@@ -7,11 +7,11 @@
 #define GET_ELEM(array, elem_size, index) \
     ECS_OFFSET(array, (elem_size) * (index))
 
-struct ecs_bucket_t {
+typedef struct ecs_bucket_t {
     ecs_map_key_t *keys;    /* Array with keys */
     void *payload;          /* Payload array */
     int32_t count;          /* Number of elements in bucket */
-};
+} ecs_bucket_t;
 
 struct ecs_map_t {
     ecs_bucket_t *buckets;

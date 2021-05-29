@@ -1060,6 +1060,19 @@
                "on_remove_pair_pred_wildcard",
                "on_remove_pair_wildcard",
                "on_add_remove",
+               "on_set_component",
+               "on_set_wildcard",
+               "on_set_pair",
+               "on_set_pair_w_obj_wildcard",
+               "on_set_pair_pred_wildcard",
+               "on_set_pair_wildcard",
+               "on_set_component_after_modified",
+               "un_set_component",
+               "un_set_wildcard",
+               "un_set_pair",
+               "un_set_pair_w_obj_wildcard",
+               "un_set_pair_pred_wildcard",
+               "un_set_pair_wildcard",           
                "add_twice",
                "remove_twice",
                "on_remove_w_clear",
@@ -1075,6 +1088,27 @@
                "set_get_context",
                "set_get_binding_context"
            ]
+        }, {
+            "id": "Observer",
+            "testcases": [
+                "2_terms_w_on_add",
+                "2_terms_w_on_remove",
+                "2_terms_w_on_add_2nd",
+                "2_terms_w_on_remove_2nd",
+                "2_pair_terms_w_on_add",
+                "2_pair_terms_w_on_remove",
+                "2_wildcard_pair_terms_w_on_add",
+                "2_wildcard_pair_terms_w_on_remove",
+                "2_terms_1_not_w_on_add",
+                "2_terms_1_not_w_on_remove",
+                "2_terms_w_on_set",
+                "2_terms_w_un_set",
+                "3_terms_2_or_on_add",
+                "3_terms_2_or_on_remove",
+                "2_terms_w_from_entity_on_add",
+                "2_terms_on_remove_on_clear",
+                "2_terms_on_remove_on_delete"
+            ]                
         }, {
             "id": "TriggerOnAdd",
             "setup": true,

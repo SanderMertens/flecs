@@ -83,7 +83,7 @@ void DeferredActions_defer_bulk_new_w_data() {
     ecs_defer_begin(world);
     
     const ecs_entity_t *temp_ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){ecs_typeid(Position)},
             .count = 1
         },
@@ -151,7 +151,7 @@ void DeferredActions_defer_bulk_new_w_data_pair() {
     ecs_entity_t pair_id = ecs_pair(Pair, ecs_typeid(Position));
     
     const ecs_entity_t *temp_ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){pair_id},
             .count = 1
         },
@@ -275,7 +275,7 @@ void DeferredActions_defer_bulk_new_w_data_two() {
     ecs_defer_begin(world);
     
     const ecs_entity_t *temp_ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_typeid(Velocity)},
             .count = 2
         },

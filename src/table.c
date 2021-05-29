@@ -106,13 +106,7 @@ ecs_flags32_t get_component_action_flags(
     }
     if (c_info->lifecycle.move) {
         flags |= EcsTableHasMove;
-    }
-    if (c_info->on_add) {
-        flags |= EcsTableHasOnAdd;
-    }
-    if (c_info->on_remove) {
-        flags |= EcsTableHasOnRemove;
-    }    
+    }  
 
     return flags;  
 }
@@ -193,6 +187,10 @@ void notify_trigger(
             table->flags |= EcsTableHasOnAdd;
         } else if (event == EcsOnRemove) {
             table->flags |= EcsTableHasOnRemove;
+        } else if (event == EcsOnSet) {
+            table->flags |= EcsTableHasOnSet;
+        } else if (event == EcsUnSet) {
+            table->flags |= EcsTableHasUnSet;
         }
     }
 }
@@ -210,7 +208,7 @@ void run_remove_actions(
         int32_t i, type_count = ecs_vector_count(table->type);
         ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
         for (i = 0; i < type_count; i ++) {
-            ecs_entities_t removed = {
+            ecs_ids_t removed = {
                 .array = &ids[i],
                 .count = 1
             };
@@ -508,7 +506,7 @@ void unregister_query(
         ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
 
         /* Remove query */
-        ecs_vector_remove_index(table->queries, ecs_query_t*, i);        
+        ecs_vector_remove(table->queries, ecs_query_t*, i);        
     }
 }
 
@@ -1266,7 +1264,7 @@ void fast_delete(
         int16_t size = column->size;
         if (size) {
             int16_t alignment = column->alignment;
-            ecs_vector_remove_index_t(column->data, size, alignment, index);
+            ecs_vector_remove_t(column->data, size, alignment, index);
         } 
     }
 }
@@ -1383,7 +1381,7 @@ void ecs_table_delete(
                         ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
                 }
 
-                ecs_vector_remove_index_t(column->data, size, alignment, index);
+                ecs_vector_remove_t(column->data, size, alignment, index);
             }
         }
     }

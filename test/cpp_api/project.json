@@ -388,7 +388,15 @@
                 "const_type",
                 "string_term",
                 "singleton_term"
-            ]         
+            ]  
+        }, {
+            "id": "Observer",
+            "testcases": [
+                "2_terms_on_add",
+                "2_terms_on_remove",
+                "2_terms_on_set",
+                "2_terms_un_set"
+            ]
         }, {
             "id": "ComponentLifecycle",
             "testcases": [

@@ -1641,7 +1641,7 @@ int32_t move_table(
         ecs_assert(ecs_vector_count(*dst_array) == (new_index + 1), 
             ECS_INTERNAL_ERROR, NULL);  
     } else {
-        ecs_vector_remove_index(src_array, ecs_matched_table_t, index);
+        ecs_vector_remove(src_array, ecs_matched_table_t, index);
     }
 
     /* Ensure that src array has now one element less */
@@ -1980,6 +1980,36 @@ void rematch_table(
     }
 }
 
+static
+bool satisfy_constraints(
+    ecs_world_t *world,
+    const ecs_filter_t *filter)
+{
+    ecs_term_t *terms = filter->terms;
+    int32_t i, count = filter->term_count;
+
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_term_id_t *subj = &term->args[0];
+        ecs_oper_kind_t oper = term->oper;
+
+        if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
+            ecs_type_t type = ecs_get_type(world, subj->entity);
+            if (ecs_type_has_id(world, type, term->id)) {
+                if (oper == EcsNot) {
+                    return false;
+                }
+            } else {
+                if (oper != EcsNot) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 /* Rematch system with tables after a change happened to a watched entity */
 static
 void rematch_tables(
@@ -2017,8 +2047,7 @@ void rematch_tables(
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
-    query->constraints_satisfied = ecs_filter_match_entity(
-        world, &query->filter, 0);      
+    query->constraints_satisfied = satisfy_constraints(world, &query->filter);      
 }
 
 static
@@ -2039,7 +2068,7 @@ void remove_subquery(
         }
     }
 
-    ecs_vector_remove_index(parent->subqueries, ecs_query_t*, i);
+    ecs_vector_remove(parent->subqueries, ecs_query_t*, i);
 }
 
 /* -- Private API -- */
@@ -2163,8 +2192,7 @@ ecs_query_t* ecs_query_init(
         result->parent = desc->parent;
     }
 
-    result->constraints_satisfied = ecs_filter_match_entity(
-        world, &result->filter, 0);
+    result->constraints_satisfied = satisfy_constraints(world, &result->filter);
 
     if (result->cascade_by) {
         result->group_table = rank_by_depth;

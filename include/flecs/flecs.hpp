@@ -76,11 +76,17 @@ class query;
 template<typename ... Components>
 class system;
 
+template<typename ... Components>
+class observer;
+
 template <typename ... Components>
 class query_builder;
 
 template <typename ... Components>
 class system_builder;
+
+template <typename ... Components>
+class observer_builder;
 
 namespace _
 {
@@ -189,6 +195,7 @@ static const flecs::entity_t Throw = EcsThrow;
 #include <flecs/cpp/filter_iterator.hpp>
 #include <flecs/cpp/query.hpp>
 #include <flecs/cpp/system.hpp>
+#include <flecs/cpp/observer.hpp>
 #include <flecs/cpp/reader_writer.hpp>
 #include <flecs/cpp/impl.hpp>
 

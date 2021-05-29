@@ -993,6 +993,19 @@ void Trigger_on_remove_pair_obj_wildcard(void);
 void Trigger_on_remove_pair_pred_wildcard(void);
 void Trigger_on_remove_pair_wildcard(void);
 void Trigger_on_add_remove(void);
+void Trigger_on_set_component(void);
+void Trigger_on_set_wildcard(void);
+void Trigger_on_set_pair(void);
+void Trigger_on_set_pair_w_obj_wildcard(void);
+void Trigger_on_set_pair_pred_wildcard(void);
+void Trigger_on_set_pair_wildcard(void);
+void Trigger_on_set_component_after_modified(void);
+void Trigger_un_set_component(void);
+void Trigger_un_set_wildcard(void);
+void Trigger_un_set_pair(void);
+void Trigger_un_set_pair_w_obj_wildcard(void);
+void Trigger_un_set_pair_pred_wildcard(void);
+void Trigger_un_set_pair_wildcard(void);
 void Trigger_add_twice(void);
 void Trigger_remove_twice(void);
 void Trigger_on_remove_w_clear(void);
@@ -1007,6 +1020,25 @@ void Trigger_trigger_w_named_entity(void);
 void Trigger_on_remove_tree(void);
 void Trigger_set_get_context(void);
 void Trigger_set_get_binding_context(void);
+
+// Testsuite 'Observer'
+void Observer_2_terms_w_on_add(void);
+void Observer_2_terms_w_on_remove(void);
+void Observer_2_terms_w_on_add_2nd(void);
+void Observer_2_terms_w_on_remove_2nd(void);
+void Observer_2_pair_terms_w_on_add(void);
+void Observer_2_pair_terms_w_on_remove(void);
+void Observer_2_wildcard_pair_terms_w_on_add(void);
+void Observer_2_wildcard_pair_terms_w_on_remove(void);
+void Observer_2_terms_1_not_w_on_add(void);
+void Observer_2_terms_1_not_w_on_remove(void);
+void Observer_2_terms_w_on_set(void);
+void Observer_2_terms_w_un_set(void);
+void Observer_3_terms_2_or_on_add(void);
+void Observer_3_terms_2_or_on_remove(void);
+void Observer_2_terms_w_from_entity_on_add(void);
+void Observer_2_terms_on_remove_on_clear(void);
+void Observer_2_terms_on_remove_on_delete(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -5595,6 +5627,58 @@ bake_test_case Trigger_testcases[] = {
         Trigger_on_add_remove
     },
     {
+        "on_set_component",
+        Trigger_on_set_component
+    },
+    {
+        "on_set_wildcard",
+        Trigger_on_set_wildcard
+    },
+    {
+        "on_set_pair",
+        Trigger_on_set_pair
+    },
+    {
+        "on_set_pair_w_obj_wildcard",
+        Trigger_on_set_pair_w_obj_wildcard
+    },
+    {
+        "on_set_pair_pred_wildcard",
+        Trigger_on_set_pair_pred_wildcard
+    },
+    {
+        "on_set_pair_wildcard",
+        Trigger_on_set_pair_wildcard
+    },
+    {
+        "on_set_component_after_modified",
+        Trigger_on_set_component_after_modified
+    },
+    {
+        "un_set_component",
+        Trigger_un_set_component
+    },
+    {
+        "un_set_wildcard",
+        Trigger_un_set_wildcard
+    },
+    {
+        "un_set_pair",
+        Trigger_un_set_pair
+    },
+    {
+        "un_set_pair_w_obj_wildcard",
+        Trigger_un_set_pair_w_obj_wildcard
+    },
+    {
+        "un_set_pair_pred_wildcard",
+        Trigger_un_set_pair_pred_wildcard
+    },
+    {
+        "un_set_pair_wildcard",
+        Trigger_un_set_pair_wildcard
+    },
+    {
         "add_twice",
         Trigger_add_twice
     },
@@ -5649,6 +5733,77 @@ bake_test_case Trigger_testcases[] = {
     {
         "set_get_binding_context",
         Trigger_set_get_binding_context
+    }
+};
+
+bake_test_case Observer_testcases[] = {
+    {
+        "2_terms_w_on_add",
+        Observer_2_terms_w_on_add
+    },
+    {
+        "2_terms_w_on_remove",
+        Observer_2_terms_w_on_remove
+    },
+    {
+        "2_terms_w_on_add_2nd",
+        Observer_2_terms_w_on_add_2nd
+    },
+    {
+        "2_terms_w_on_remove_2nd",
+        Observer_2_terms_w_on_remove_2nd
+    },
+    {
+        "2_pair_terms_w_on_add",
+        Observer_2_pair_terms_w_on_add
+    },
+    {
+        "2_pair_terms_w_on_remove",
+        Observer_2_pair_terms_w_on_remove
+    },
+    {
+        "2_wildcard_pair_terms_w_on_add",
+        Observer_2_wildcard_pair_terms_w_on_add
+    },
+    {
+        "2_wildcard_pair_terms_w_on_remove",
+        Observer_2_wildcard_pair_terms_w_on_remove
+    },
+    {
+        "2_terms_1_not_w_on_add",
+        Observer_2_terms_1_not_w_on_add
+    },
+    {
+        "2_terms_1_not_w_on_remove",
+        Observer_2_terms_1_not_w_on_remove
+    },
+    {
+        "2_terms_w_on_set",
+        Observer_2_terms_w_on_set
+    },
+    {
+        "2_terms_w_un_set",
+        Observer_2_terms_w_un_set
+    },
+    {
+        "3_terms_2_or_on_add",
+        Observer_3_terms_2_or_on_add
+    },
+    {
+        "3_terms_2_or_on_remove",
+        Observer_3_terms_2_or_on_remove
+    },
+    {
+        "2_terms_w_from_entity_on_add",
+        Observer_2_terms_w_from_entity_on_add
+    },
+    {
+        "2_terms_on_remove_on_clear",
+        Observer_2_terms_on_remove_on_clear
+    },
+    {
+        "2_terms_on_remove_on_delete",
+        Observer_2_terms_on_remove_on_delete
     }
 };
 
@@ -9002,8 +9157,15 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        33,
+        46,
         Trigger_testcases
+    },
+    {
+        "Observer",
+        NULL,
+        NULL,
+        17,
+        Observer_testcases
     },
     {
         "TriggerOnAdd",
@@ -9240,5 +9402,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 64);
+    return bake_test_run("api", argc, argv, suites, 65);
 }

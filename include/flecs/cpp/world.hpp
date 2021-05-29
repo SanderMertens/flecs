@@ -857,14 +857,19 @@ public:
     template <typename Module>
     flecs::entity import(); // Cannot be const because modules accept a non-const world
 
-    /** Create an system from an entity
+    /** Create a system from an entity
      */
     flecs::system<> system(flecs::entity e) const;
 
-    /** Create an system.
+    /** Create a system.
      */
     template <typename... Comps, typename... Args>
     flecs::system_builder<Comps...> system(Args &&... args) const;
+
+    /** Create an observer.
+     */
+    template <typename... Comps, typename... Args>
+    flecs::observer_builder<Comps...> observer(Args &&... args) const;
 
     /** Create a query.
      */

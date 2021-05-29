@@ -546,37 +546,72 @@ void ecs_filter_fini(
     ecs_os_free(filter->expr);
 }
 
-bool ecs_filter_match_entity(
+bool ecs_filter_match_type(
     const ecs_world_t *world,
     const ecs_filter_t *filter,
-    ecs_entity_t e)
+    ecs_type_t type)
 {
-    ecs_assert(e == 0, ECS_UNSUPPORTED, NULL);
-    (void)e;
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(filter != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
+
+    bool is_or = false;
+    bool or_result = false;
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
         ecs_term_id_t *subj = &term->args[0];
         ecs_oper_kind_t oper = term->oper;
+        ecs_type_t match_type = type;
 
-        if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
-            ecs_type_t type = ecs_get_type(world, subj->entity);
-            if (ecs_type_has_id(world, type, term->id)) {
-                if (oper == EcsNot) {
-                    return false;
-                }
-            } else {
-                if (oper != EcsNot) {
-                    return false;
-                }
+        if (!is_or && oper == EcsOr) {
+            is_or = true;
+            or_result = false;
+        } else if (is_or && oper != EcsOr) {
+            if (!or_result) {
+                return false;
             }
-        }        
+
+            is_or = false;
+        }
+
+        ecs_entity_t subj_entity = subj->entity;
+        if (!subj_entity) {
+            continue;
+        }
+
+        if (subj_entity != EcsThis) {
+            match_type = ecs_get_type(world, subj_entity);
+        }
+
+        bool result = ecs_type_find_id(world, match_type, term->id, 
+            subj->set.relation, subj->set.min_depth, subj->set.max_depth, NULL);
+        if (oper == EcsNot) {
+            result = !result;
+        }
+
+        if (is_or) {
+            or_result |= result;
+        } else if (!result) {
+            return false;
+        }
     }
 
-    return true;    
+    return !is_or || or_result;
+}
+
+bool ecs_filter_match_entity(
+    const ecs_world_t *world,
+    const ecs_filter_t *filter,
+    ecs_entity_t e)
+{
+    if (e) {
+        return ecs_filter_match_type(world, filter, ecs_get_type(world, e));
+    } else {
+        return ecs_filter_match_type(world, filter, NULL);
+    }
 }
 
 ecs_iter_t ecs_filter_iter(

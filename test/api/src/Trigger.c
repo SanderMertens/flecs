@@ -603,6 +603,190 @@ void Trigger_on_remove_pair_wildcard() {
     ecs_fini(world);
 }
 
+void Trigger_on_set_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .events = {EcsOnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_id(Position)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = EcsWildcard,
+        .events = {EcsOnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_id(Position)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Obj);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(ecs_id(Position), Obj),
+        .events = {EcsOnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_pair(ecs_id(Position), Obj)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_set_pair(world, e, Position, Obj, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), Obj));
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_pair_w_obj_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Obj);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(ecs_id(Position), EcsWildcard),
+        .events = {EcsOnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_pair(ecs_id(Position), Obj)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_set_pair(world, e, Position, Obj, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), Obj));
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_pair_pred_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Obj);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(EcsWildcard, Obj),
+        .events = {EcsOnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_pair(ecs_id(Position), Obj)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_set_pair(world, e, Position, Obj, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), Obj));
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_pair_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Obj);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(EcsWildcard, EcsWildcard),
+        .events = {EcsOnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_pair(ecs_id(Position), Obj)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_set_pair(world, e, Position, Obj, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), Obj));
+
+    ecs_fini(world);
+}
+
 void Trigger_on_add_remove() {
     ecs_world_t *world = ecs_init();
 
@@ -634,6 +818,220 @@ void Trigger_on_add_remove() {
     test_int(ctx.event, EcsOnRemove);
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_component_after_modified() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .events = {EcsOnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_id(Position)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_modified(world, e, Position);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void Trigger_un_set_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .events = {EcsUnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_id(Position)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Position);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void Trigger_un_set_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = EcsWildcard,
+        .events = {EcsUnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_id(Position)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Position);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void Trigger_un_set_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(Rel, Obj),
+        .events = {EcsUnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_pair(Rel, Obj)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, Rel, Obj);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(Rel, Obj));
+
+    ecs_fini(world);
+}
+
+void Trigger_un_set_pair_w_obj_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(Rel, EcsWildcard),
+        .events = {EcsUnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_pair(Rel, Obj)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, Rel, Obj);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(Rel, Obj));
+
+    ecs_fini(world);
+}
+
+void Trigger_un_set_pair_pred_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(EcsWildcard, Obj),
+        .events = {EcsUnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_pair(Rel, Obj)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, Rel, Obj);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(Rel, Obj));
+
+    ecs_fini(world);
+}
+
+void Trigger_un_set_pair_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(EcsWildcard, EcsWildcard),
+        .events = {EcsUnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .add = {ecs_pair(Rel, Obj)}
+    });
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, Rel, Obj);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(Rel, Obj));
 
     ecs_fini(world);
 }

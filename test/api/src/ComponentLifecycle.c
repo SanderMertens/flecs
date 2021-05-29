@@ -292,7 +292,7 @@ void ComponentLifecycle_copy_on_new_w_data() {
     });
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 2, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){
                 ecs_typeid(Position)
             }, 

@@ -58,33 +58,33 @@ void register_trigger(
 
     int i;
     for (i = 0; i < trigger->event_count; i ++) {
+        ecs_map_t **set = NULL;
         if (trigger->events[i] == EcsOnAdd) {
-            ecs_map_t *set = idt->on_add_triggers;
-            if (!set) {
-                set = idt->on_add_triggers = ecs_map_new(ecs_trigger_t*, 1);
-
-                // First OnAdd trigger, send table notification
-                ecs_notify_tables(world, id, &(ecs_table_event_t){
-                    .kind = EcsTableTriggerMatch,
-                    .event = EcsOnAdd
-                });
-            }
-            register_id_trigger(set, trigger);
-        } else
-        if (trigger->events[i] == EcsOnRemove) {
-            ecs_map_t *set = idt->on_remove_triggers;
-            if (!set) {
-                set = idt->on_remove_triggers = ecs_map_new(ecs_trigger_t*, 1);
-
-                // First OnRemove trigger, send table notification
-                ecs_notify_tables(world, id, &(ecs_table_event_t){
-                    .kind = EcsTableTriggerMatch,
-                    .event = EcsOnRemove
-                });
-            }
-
-            register_id_trigger(set, trigger);            
+            set = &idt->on_add_triggers;
+        } else if (trigger->events[i] == EcsOnRemove) {
+            set = &idt->on_remove_triggers;
+        } else if (trigger->events[i] == EcsOnSet) {
+            set = &idt->on_set_triggers;
+        } else if (trigger->events[i] == EcsUnSet) {
+            set = &idt->un_set_triggers;            
+        } else {
+            /* Invalid event provided */
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
+
+        ecs_assert(set != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!*set) {
+            *set = ecs_map_new(ecs_trigger_t*, 1);
+
+            // First trigger of its kind, send table notification
+            ecs_notify_tables(world, id, &(ecs_table_event_t){
+                .kind = EcsTableTriggerMatch,
+                .event = trigger->events[i]
+            });            
+        }
+
+        register_id_trigger(*set, trigger);
     }
 }
 
@@ -107,20 +107,24 @@ void unregister_trigger(
 
     int i;
     for (i = 0; i < trigger->event_count; i ++) {
+        ecs_map_t **set = NULL;
         if (trigger->events[i] == EcsOnAdd) {
-            ecs_map_t *set = idt->on_add_triggers;
-            if (!set) {
-                return;
-            }
-            idt->on_add_triggers = unregister_id_trigger(set, trigger);
-        } else
-        if (trigger->events[i] == EcsOnRemove) {
-            ecs_map_t *set = idt->on_remove_triggers;
-            if (!set) {
-                return;
-            }
-            idt->on_remove_triggers = unregister_id_trigger(set, trigger);
-        }          
+            set = &idt->on_add_triggers;
+        } else if (trigger->events[i] == EcsOnRemove) {
+            set = &idt->on_remove_triggers;
+        } else if (trigger->events[i] == EcsOnSet) {
+            set = &idt->on_set_triggers;
+        } else if (trigger->events[i] == EcsUnSet) {
+            set = &idt->un_set_triggers;            
+        } else {
+            /* Invalid event provided */
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+        if (!*set) {
+            return;
+        }
+
+        *set = unregister_id_trigger(*set, trigger);                
     }  
 }
 
@@ -140,17 +144,23 @@ ecs_map_t* ecs_triggers_get(
         return NULL;
     }
 
+    ecs_map_t *set = NULL;
+
     if (event == EcsOnAdd) {
-        if (idt->on_add_triggers && ecs_map_count(idt->on_add_triggers)) {
-            return idt->on_add_triggers;
-        }
+        set = idt->on_add_triggers;
     } else if (event == EcsOnRemove) {
-        if (idt->on_remove_triggers && ecs_map_count(idt->on_remove_triggers)) {
-            return idt->on_remove_triggers;
-        }
+        set = idt->on_remove_triggers;
+    } else if (event == EcsOnSet) {
+        set = idt->on_set_triggers;
+    } else if (event == EcsUnSet) {
+        set = idt->un_set_triggers;
     }
 
-    return NULL;
+    if (ecs_map_count(set)) {
+        return set;
+    } else {
+        return NULL;
+    }
 }
 
 static
@@ -318,6 +328,7 @@ ecs_entity_t ecs_trigger_init(
         ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
 
         ecs_trigger_t *trigger = ecs_sparse_add(world->triggers, ecs_trigger_t);
+        trigger->id = ecs_sparse_last_id(world->triggers);
         trigger->term = ecs_term_move(&term);
         trigger->action = desc->callback;
         trigger->ctx = desc->ctx;
@@ -327,7 +338,6 @@ ecs_entity_t ecs_trigger_init(
         trigger->event_count = count_events(desc->events);
         ecs_os_memcpy(trigger->events, desc->events, 
             trigger->event_count * ECS_SIZEOF(ecs_entity_t));
-        trigger->id = ecs_sparse_last_id(world->triggers);
         trigger->entity = entity;
 
         comp->trigger = trigger;

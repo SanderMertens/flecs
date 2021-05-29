@@ -211,6 +211,7 @@ typedef int32_t ecs_size_t;
 
 /** System module component ids */
 #define FLECS__EEcsTrigger (4)
+#define FLECS__EEcsObserver (11)
 #define FLECS__EEcsSystem (5)
 #define FLECS__EEcsTickSource (7)
 #define FLECS__EEcsQuery (10)
@@ -676,17 +677,17 @@ int32_t _ecs_vector_move_index(
 
 /** Remove element at specified index. Moves the last value to the index. */
 FLECS_API
-int32_t _ecs_vector_remove_index(
+int32_t _ecs_vector_remove(
     ecs_vector_t *vector,
     ecs_size_t elem_size,
     int16_t offset,
     int32_t index);
 
-#define ecs_vector_remove_index(vector, T, index) \
-    _ecs_vector_remove_index(vector, ECS_VECTOR_T(T), index)
+#define ecs_vector_remove(vector, T, index) \
+    _ecs_vector_remove(vector, ECS_VECTOR_T(T), index)
 
-#define ecs_vector_remove_index_t(vector, size, alignment, index) \
-    _ecs_vector_remove_index(vector, ECS_VECTOR_U(size, alignment), index)
+#define ecs_vector_remove_t(vector, size, alignment, index) \
+    _ecs_vector_remove(vector, ECS_VECTOR_U(size, alignment), index)
 
 /** Shrink vector to make the size match the count. */
 FLECS_API
@@ -982,12 +983,11 @@ extern "C" {
 #endif
 
 typedef struct ecs_map_t ecs_map_t;
-typedef struct ecs_bucket_t ecs_bucket_t;
 typedef uint64_t ecs_map_key_t;
 
 typedef struct ecs_map_iter_t {
     const ecs_map_t *map;
-    ecs_bucket_t *bucket;
+    struct ecs_bucket_t *bucket;
     int32_t bucket_index;
     int32_t element_index;
     void *payload;
@@ -1820,14 +1820,20 @@ typedef ecs_id_t ecs_entity_t;
 /** A vector containing component identifiers used to describe a type. */
 typedef const ecs_vector_t* ecs_type_t;
 
-/** An ECS world is the container for all ECS data and supporting features. */
+/** A world is the container for all ECS data and supporting features. */
 typedef struct ecs_world_t ecs_world_t;
 
-/** An ECS world is the container for all ECS data and supporting features. */
+/** A query allows for cached iteration over ECS data */
 typedef struct ecs_query_t ecs_query_t;
 
-/** An ECS world is the container for all ECS data and supporting features. */
+/** A filter allows for uncached, ad hoc iteration over ECS data */
+typedef struct ecs_filter_t ecs_filter_t;
+
+/** A trigger reacts to events matching a single filter term */
 typedef struct ecs_trigger_t ecs_trigger_t;
+
+/** An observer reacts to events matching multiple filter terms */
+typedef struct ecs_observer_t ecs_observer_t;
 
 /* An iterator lets an application iterate entities across tables. */
 typedef struct ecs_iter_t ecs_iter_t;
@@ -1866,16 +1872,9 @@ typedef void (*ecs_iter_action_t)(
     ecs_iter_t *it);
 
 typedef bool (*ecs_iter_next_action_t)(
-    ecs_iter_t *it);
+    ecs_iter_t *it);  
 
-/** Compare callback used for sorting */
-typedef int (*ecs_compare_action_t)(
-    ecs_entity_t e1,
-    const void *ptr1,
-    ecs_entity_t e2,
-    const void *ptr2);    
-
-/** Compare callback used for sorting */
+/** Callback used for ranking types */
 typedef int32_t (*ecs_rank_type_action_t)(
     ecs_world_t *world,
     ecs_entity_t rank_component,
@@ -1893,6 +1892,22 @@ typedef void (*ecs_fini_action_t)(
 /** Function to cleanup context data */
 typedef void (*ecs_ctx_free_t)(
     void *ctx);
+
+/** Callback used for sorting values */
+typedef int (*ecs_compare_value_action_t)(
+    const void *ptr1,
+    const void *ptr2);
+
+/** Callback used for hashing values */
+typedef uint64_t (*ecs_hash_value_action_t)(
+    const void *ptr);
+
+/** Callback used for sorting components */
+typedef int (*ecs_compare_action_t)(
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
+    const void *ptr2);  
 
 /** @} */
 
@@ -1988,7 +2003,7 @@ typedef enum ecs_match_kind_t {
 } ecs_match_kind_t;
 
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
-typedef struct ecs_filter_t {
+struct ecs_filter_t {
     ecs_term_t *terms;         /* Array containing terms for filter */
     int32_t term_count;        /* Number of elements in terms array */
 
@@ -2002,19 +2017,20 @@ typedef struct ecs_filter_t {
     ecs_type_t exclude;
     ecs_match_kind_t include_kind;
     ecs_match_kind_t exclude_kind;
-} ecs_filter_t;
+};
 
-/** A trigger invokes a callback on a single-term event */
+
+/** A trigger reacts to events matching a single term */
 struct ecs_trigger_t {
     ecs_term_t term;            /* Term describing the trigger condition id */
 
-    /* Trigger condition events */
+    /* Trigger events */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
     int32_t event_count;
 
-    ecs_iter_action_t action;   /* Trigger callback */
+    ecs_iter_action_t action;   /* Callback */
 
-    void *ctx;                  /* Trigger callback context */
+    void *ctx;                  /* Callback context */
     void *binding_ctx;          /* Binding context (for language bindings) */
 
     ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
@@ -2024,6 +2040,32 @@ struct ecs_trigger_t {
 
     uint64_t id;                /* Internal id */
 };
+
+
+/* An observer reacts to events matching a filter */
+struct ecs_observer_t {
+    ecs_filter_t filter;
+
+    /* Triggers created by observer (array size same as number of terms) */
+    ecs_entity_t *triggers;
+
+    /* Observer events */
+    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
+    int32_t event_count;   
+    
+    ecs_iter_action_t action;   /* Callback */
+
+    void *ctx;                  /* Callback context */
+    void *binding_ctx;          /* Binding context (for language bindings) */
+
+    ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
+    
+    ecs_entity_t entity;        /* Entity associated with observer */
+
+    uint64_t id;                /* Internal id */    
+};
+
 /** @} */
 
 
@@ -2091,10 +2133,10 @@ struct ecs_ref_t {
 };
 
 /** Array of entity ids that, other than a type, can live on the stack */
-typedef struct ecs_entities_t {
+typedef struct ecs_ids_t {
     ecs_entity_t *array;    /**< An array with entity ids */
     int32_t count;          /**< The number of entities in the array */
-} ecs_entities_t;
+} ecs_ids_t;
 
 typedef struct ecs_page_cursor_t {
     int32_t first;
@@ -2192,7 +2234,7 @@ struct ecs_iter_t {
     int32_t count;                /**< Number of entities to process by system */
     int32_t total_count;          /**< Total number of entities in table */
 
-    ecs_entities_t *triggered_by; /**< Component(s) that triggered the system */
+    ecs_ids_t *triggered_by; /**< Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
 
     union {
@@ -2742,6 +2784,7 @@ int32_t ecs_type_match(
 
 #endif
 
+
 /**
  * @defgroup desc_types Types used for creating API constructs
  * @{
@@ -2874,7 +2917,7 @@ typedef struct ecs_trigger_desc_t {
     /* Events to trigger on (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
 
-    /* Callback to invoke on a trigger */
+    /* Callback to invoke on an event */
     ecs_iter_action_t callback;
 
     /* User context to pass to callback */
@@ -2889,6 +2932,34 @@ typedef struct ecs_trigger_desc_t {
     /* Callback to free binding_ctx */     
     ecs_ctx_free_t binding_ctx_free;
 } ecs_trigger_desc_t;
+
+
+/** Used with ecs_observer_init. */
+typedef struct ecs_observer_desc_t {
+    /* Entity to associate with observer */
+    ecs_entity_desc_t entity;
+
+    /* Filter for observer */
+    ecs_filter_desc_t filter;
+
+    /* Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
+    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
+
+    /* Callback to invoke on an event */
+    ecs_iter_action_t callback;
+
+    /* User context to pass to callback */
+    void *ctx;
+
+    /* Context to be used for language bindings */
+    void *binding_ctx;
+    
+    /* Callback to free ctx */
+    ecs_ctx_free_t ctx_free;
+
+    /* Callback to free binding_ctx */     
+    ecs_ctx_free_t binding_ctx_free;    
+} ecs_observer_desc_t;
 
 /** @} */
 
@@ -2946,6 +3017,11 @@ struct EcsComponentLifecycle {
 typedef struct EcsTrigger {
     const ecs_trigger_t *trigger;
 } EcsTrigger;
+
+/** Component that stores reference to observer */
+typedef struct EcsObserver {
+    const ecs_observer_t *observer;
+} EcsObserver;
 
 /** Component for storing a query */
 typedef struct EcsQuery {
@@ -3191,6 +3267,8 @@ extern "C" {
 
 #define ecs_owns_entity(world, entity, id, owned)\
     ecs_type_owns_id(world, ecs_get_type(world, entity), id, owned)
+
+typedef ecs_ids_t ecs_entities_t;
 
 ECS_DEPRECATED("deprecated functionality")
 FLECS_API
@@ -4372,7 +4450,7 @@ FLECS_API
 const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
-    const ecs_entities_t *component_ids,
+    const ecs_ids_t *component_ids,
     void *data);
 
 /** Create N new entities.
@@ -5875,6 +5953,18 @@ bool ecs_filter_match_entity(
     const ecs_filter_t *filter,
     ecs_entity_t e);
 
+/** Same as ecs_filter_match_entity, but for a type.
+ * 
+ * @param world The world.
+ * @param filter The filter to evaluate.
+ * @param type The type to match.
+ * @return True if the filter matches, false if it doesn't match.
+ */ 
+bool ecs_filter_match_type(
+    const ecs_world_t *world,
+    const ecs_filter_t *filter,
+    ecs_type_t type);
+
 /** Return a filter iterator.
  * A filter iterator lets an application iterate over entities that match the
  * specified filter. If NULL is provided for the filter, the iterator will
@@ -5901,7 +5991,6 @@ ecs_iter_t ecs_filter_iter(
 FLECS_API
 bool ecs_filter_next(
     ecs_iter_t *iter);
-
 
 /** @} */
 
@@ -6140,6 +6229,37 @@ FLECS_API
 void* ecs_get_trigger_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger);
+
+/** @} */
+
+
+/**
+ * @defgroup observer Observers
+ */
+
+/** Create observer.
+ * Observers are like triggers, but can subscribe for multiple terms. An 
+ * observer only triggers when the source of the event meets all terms.
+ *
+ * See the documentation for ecs_observer_desc_t for more details.
+ *
+ * @param world The world.
+ * @param desc The observer creation parameters.
+ */
+FLECS_API
+ecs_entity_t ecs_observer_init(
+    ecs_world_t *world,
+    const ecs_observer_desc_t *desc);
+
+FLECS_API
+void* ecs_get_observer_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t observer);
+
+FLECS_API
+void* ecs_get_observer_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t observer);
 
 /** @} */
 
@@ -9018,11 +9138,17 @@ class query;
 template<typename ... Components>
 class system;
 
+template<typename ... Components>
+class observer;
+
 template <typename ... Components>
 class query_builder;
 
 template <typename ... Components>
 class system_builder;
+
+template <typename ... Components>
+class observer_builder;
 
 namespace _
 {
@@ -11482,14 +11608,19 @@ public:
     template <typename Module>
     flecs::entity import(); // Cannot be const because modules accept a non-const world
 
-    /** Create an system from an entity
+    /** Create a system from an entity
      */
     flecs::system<> system(flecs::entity e) const;
 
-    /** Create an system.
+    /** Create a system.
      */
     template <typename... Comps, typename... Args>
     flecs::system_builder<Comps...> system(Args &&... args) const;
+
+    /** Create an observer.
+     */
+    template <typename... Comps, typename... Args>
+    flecs::observer_builder<Comps...> observer(Args &&... args) const;
 
     /** Create a query.
      */
@@ -15177,6 +15308,55 @@ private:
     int32_t m_add_count;
 };
 
+// Observer builder interface
+template<typename Base, typename ... Components>
+class observer_builder_i : public filter_builder_i<Base, Components ...> {
+    using BaseClass = filter_builder_i<Base, Components ...>;
+public:
+    observer_builder_i()
+        : BaseClass(nullptr)
+        , m_desc(nullptr)
+        , m_event_count(0) { }
+
+    observer_builder_i(ecs_observer_desc_t *desc) 
+        : BaseClass(&desc->filter)
+        , m_desc(desc)
+        , m_event_count(0) { }
+
+    /** Specify when the system should be ran.
+     * Use this function to set in which phase the system should run or whether
+     * the system is reactive. Valid values for reactive systems are:
+     *
+     * flecs::OnAdd
+     * flecs::OnRemove
+     * flecs::OnSet
+     * flecs::UnSet
+     *
+     * @param kind The kind that specifies when the system should be ran.
+     */
+    Base& event(entity_t kind) {
+        m_desc->events[m_event_count ++] = kind;
+        return *this;
+    }
+
+    /** Set system context */
+    Base& ctx(void *ptr) {
+        m_desc->ctx = ptr;
+        return *this;
+    }    
+
+protected:
+    virtual flecs::world_t* world() = 0;
+
+private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+
+    ecs_observer_desc_t *m_desc;
+    int32_t m_event_count;
+};
+
 // Query builder
 template<typename ... Components>
 class query_builder_base
@@ -15313,6 +15493,57 @@ private:
         }
 
         return e;
+    }
+};
+
+template<typename ... Components>
+class observer_builder final
+    : public observer_builder_i<observer_builder<Components ...>, Components ...>
+{
+    using Class = observer_builder<Components ...>;
+public:
+    explicit observer_builder(flecs::world_t* world, const char *name = nullptr, const char *expr = nullptr) 
+        : observer_builder_i<Class, Components ...>(&m_desc)
+        , m_desc({})
+        , m_world(world)
+        { 
+            m_desc.entity.name = name;
+            m_desc.entity.sep = "::";
+            m_desc.entity.add[0] = flecs::OnUpdate;
+            m_desc.filter.expr = expr;
+            this->populate_filter_from_pack();
+        }
+
+    /* Iter (or each) is mandatory and always the last thing that 
+     * is added in the fluent method chain. Create system signature from both 
+     * template parameters and anything provided by the signature method. */
+    template <typename Func>
+    observer<Components...> iter(Func&& func) const;
+
+    /* Each is similar to action, but accepts a function that operates on a
+     * single entity */
+    template <typename Func>
+    observer<Components...> each(Func&& func) const;
+
+    ecs_observer_desc_t m_desc;
+
+protected:
+    flecs::world_t* world() override { return m_world; }
+    flecs::world_t *m_world;
+
+private:
+    template <typename Invoker, typename Func>
+    entity_t build(Func&& func, bool is_each) const {
+        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
+
+        ecs_observer_desc_t desc = m_desc;
+        desc.callback = Invoker::run;
+        desc.filter.substitute_default = is_each;
+        desc.binding_ctx = ctx;
+        desc.binding_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Invoker>);
+
+        return ecs_observer_init(m_world, &desc);
     }
 };
 
@@ -16451,6 +16682,33 @@ public:
 namespace flecs 
 {
 
+template<typename ... Components>
+class observer : public entity
+{
+public:
+    explicit observer() 
+        : entity() { }
+
+    explicit observer(flecs::world_t *world, flecs::entity_t id)
+        : entity(world, id) { }
+
+    void ctx(void *ctx) {
+        ecs_observer_desc_t desc = {};
+        desc.entity.entity = m_id;
+        desc.ctx = ctx;
+        ecs_observer_init(m_world, &desc);
+    }
+
+    void* ctx() const {
+        return ecs_get_observer_ctx(m_world, m_id);
+    }
+};
+
+} // namespace flecs
+
+namespace flecs 
+{
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Reader for world/snapshot serialization
 ////////////////////////////////////////////////////////////////////////////////
@@ -17033,6 +17291,11 @@ inline flecs::system_builder<Comps...> world::system(Args &&... args) const {
 }
 
 template <typename... Comps, typename... Args>
+inline flecs::observer_builder<Comps...> world::observer(Args &&... args) const {
+    return flecs::observer_builder<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Comps, typename... Args>
 inline flecs::query<Comps...> world::query(Args &&... args) const {
     return flecs::query<Comps...>(*this, std::forward<Args>(args)...);
 }
@@ -17146,6 +17409,24 @@ inline system<Components ...> system_builder<Components...>::each(Func&& func) c
         typename std::decay<Func>::type, Components...>;
     flecs::entity_t system = build<Invoker>(std::forward<Func>(func), true);
     return flecs::system<Components...>(m_world, system);
+}
+
+template <typename ... Components>    
+template <typename Func>
+inline observer<Components ...> observer_builder<Components...>::iter(Func&& func) const {
+    using Invoker = typename _::iter_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t observer = build<Invoker>(std::forward<Func>(func), false);
+    return flecs::observer<Components...>(m_world, observer);
+}
+
+template <typename ... Components>    
+template <typename Func>
+inline observer<Components ...> observer_builder<Components...>::each(Func&& func) const {
+    using Invoker = typename _::each_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t observer = build<Invoker>(std::forward<Func>(func), true);
+    return flecs::observer<Components...>(m_world, observer);
 }
 
 }

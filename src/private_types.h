@@ -30,6 +30,7 @@
 #include "flecs/private/bitset.h"
 #include "flecs/private/sparse.h"
 #include "flecs/private/switch_list.h"
+#include "flecs/private/hashmap.h"
 #include "flecs/type.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
@@ -47,11 +48,16 @@
 /* Maximum length of an entity name, including 0 terminator */
 #define ECS_MAX_NAME_LENGTH (64)
 
+/** Type used for internal string hashmap */
+typedef struct ecs_string_t {
+    char *value;
+    ecs_size_t length;
+    uint64_t hash;
+} ecs_string_t;
+
 /** Component-specific data */
 typedef struct ecs_type_info_t {
     ecs_entity_t component;
-    ecs_vector_t *on_add;       /* Systems ran after adding this component */
-    ecs_vector_t *on_remove;    /* Systems ran after removing this component */
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
     bool lifecycle_set;
 } ecs_type_info_t;
@@ -323,6 +329,8 @@ struct ecs_query_t {
 typedef struct ecs_id_trigger_t {
     ecs_map_t *on_add_triggers;
     ecs_map_t *on_remove_triggers;
+    ecs_map_t *on_set_triggers;
+    ecs_map_t *un_set_triggers;
 } ecs_id_trigger_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -370,7 +378,7 @@ typedef struct ecs_op_n_t {
 typedef struct ecs_op_t {
     ecs_op_kind_t kind;         /* Operation kind */    
     ecs_entity_t component;     /* Single component (components.count = 1) */
-    ecs_entities_t components;  /* Multiple components */
+    ecs_ids_t components;  /* Multiple components */
     union {
         ecs_op_1_t _1;
         ecs_op_n_t _n;
@@ -436,6 +444,7 @@ typedef struct ecs_table_record_t {
 typedef struct ecs_id_record_t {
     /* All tables that contain the id */
     ecs_map_t *table_index;         /* map<table_id, ecs_table_record_t> */
+
     ecs_entity_t on_delete;         /* Cleanup action for removing id */
     ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
 } ecs_id_record_t;
@@ -448,7 +457,7 @@ typedef struct ecs_store_t {
     ecs_sparse_t *tables; /* sparse<table_id, ecs_table_t> */
 
     /* Table lookup by hash */
-    ecs_map_t *table_map; /* map<component_hash, vector<ecs_table_t*>> */  
+    ecs_hashmap_t table_map; /* hashmap<ecs_ids_t, ecs_table_t*> */
 
     /* Root table */
     ecs_table_t root;
@@ -505,10 +514,11 @@ struct ecs_world_t {
     ecs_store_t store;
 
 
-    /* --  Storages for opaque API objects -- */
+    /* --  Storages for API objects -- */
 
     ecs_sparse_t *queries; /* sparse<query_id, ecs_query_t> */
-    ecs_sparse_t *triggers; /* sparse<query_id, ecs_query_t> */
+    ecs_sparse_t *triggers; /* sparse<query_id, ecs_trigger_t> */
+    ecs_sparse_t *observers; /* sparse<query_id, ecs_observer_t> */
     
 
     /* Keep track of components that were added/removed to/from monitored

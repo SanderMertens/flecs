@@ -232,7 +232,7 @@ void ecs_snapshot_restore(
                 data = ecs_table_merge(world, table, table, data, leaf->data);
 
                 /* Run OnSet systems for merged entities */
-                ecs_entities_t components = ecs_type_to_entities(table->type);
+                ecs_ids_t components = ecs_type_to_entities(table->type);
                 ecs_run_set_systems(world, &components, table, data,
                     old_count, new_count, true);
 
@@ -270,7 +270,7 @@ void ecs_snapshot_restore(
                 continue;
             }
 
-            ecs_entities_t components = ecs_type_to_entities(table->type);
+            ecs_ids_t components = ecs_type_to_entities(table->type);
             ecs_data_t *table_data = ecs_table_get_data(table);
             int32_t entity_count = ecs_table_data_count(table_data);
 
