@@ -54,9 +54,11 @@ ecs_entity_t ecs_observer_init(
         int i;
         for (i = 0; i < observer->filter.term_count; i ++) {
             const ecs_term_t *t = &desc->filter.terms[i];
-            if (t->oper == EcsNot) {
+            if (t->oper == EcsNot || 
+                observer->filter.terms[i].args[0].entity != EcsThis) 
+            {
                 /* No need to trigger on components that the entity should not
-                 * have. */
+                 * have, or on components that are not defined on the entity */
                 continue;
             }
 

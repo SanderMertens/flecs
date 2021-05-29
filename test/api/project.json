@@ -1104,7 +1104,10 @@
                 "2_terms_w_on_set",
                 "2_terms_w_un_set",
                 "3_terms_2_or_on_add",
-                "3_terms_2_or_on_remove"
+                "3_terms_2_or_on_remove",
+                "2_terms_w_from_entity_on_add",
+                "2_terms_on_remove_on_clear",
+                "2_terms_on_remove_on_delete"
             ]                
         }, {
             "id": "TriggerOnAdd",

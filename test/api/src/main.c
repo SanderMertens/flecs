@@ -1036,6 +1036,9 @@ void Observer_2_terms_w_on_set(void);
 void Observer_2_terms_w_un_set(void);
 void Observer_3_terms_2_or_on_add(void);
 void Observer_3_terms_2_or_on_remove(void);
+void Observer_2_terms_w_from_entity_on_add(void);
+void Observer_2_terms_on_remove_on_clear(void);
+void Observer_2_terms_on_remove_on_delete(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -5789,6 +5792,18 @@ bake_test_case Observer_testcases[] = {
     {
         "3_terms_2_or_on_remove",
         Observer_3_terms_2_or_on_remove
+    },
+    {
+        "2_terms_w_from_entity_on_add",
+        Observer_2_terms_w_from_entity_on_add
+    },
+    {
+        "2_terms_on_remove_on_clear",
+        Observer_2_terms_on_remove_on_clear
+    },
+    {
+        "2_terms_on_remove_on_delete",
+        Observer_2_terms_on_remove_on_delete
     }
 };
 
@@ -9149,7 +9164,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        14,
+        17,
         Observer_testcases
     },
     {

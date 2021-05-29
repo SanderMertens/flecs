@@ -431,3 +431,98 @@ void Observer_3_terms_2_or_on_remove() {
 
     ecs_fini(world);
 }
+
+void Observer_2_terms_w_from_entity_on_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    
+    ecs_entity_t x = ecs_new_id(world);
+    
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{TagA}, {TagB, .oper = EcsOr, .args[0].entity = x}},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, e, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_clear(world, e);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, x, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_remove_on_clear() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{TagA}, {TagB}},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, e, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_clear(world, e);
+    test_int(ctx.invoked, 2);    
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_remove_on_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{TagA}, {TagB}},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, e, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_delete(world, e);
+    test_int(ctx.invoked, 2);    
+
+    ecs_fini(world);
+}
