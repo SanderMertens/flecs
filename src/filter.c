@@ -553,7 +553,6 @@ bool ecs_filter_match_type(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(filter != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
@@ -579,7 +578,11 @@ bool ecs_filter_match_type(
         }
 
         ecs_entity_t subj_entity = subj->entity;
-        if (subj->entity != EcsThis) {
+        if (!subj_entity) {
+            continue;
+        }
+
+        if (subj_entity != EcsThis) {
             match_type = ecs_get_type(world, subj_entity);
         }
 
@@ -604,32 +607,11 @@ bool ecs_filter_match_entity(
     const ecs_filter_t *filter,
     ecs_entity_t e)
 {
-    ecs_assert(e == 0, ECS_UNSUPPORTED, NULL);
-    (void)e;
-
-    ecs_term_t *terms = filter->terms;
-    int32_t i, count = filter->term_count;
-
-    for (i = 0; i < count; i ++) {
-        ecs_term_t *term = &terms[i];
-        ecs_term_id_t *subj = &term->args[0];
-        ecs_oper_kind_t oper = term->oper;
-
-        if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
-            ecs_type_t type = ecs_get_type(world, subj->entity);
-            if (ecs_type_has_id(world, type, term->id)) {
-                if (oper == EcsNot) {
-                    return false;
-                }
-            } else {
-                if (oper != EcsNot) {
-                    return false;
-                }
-            }
-        }        
+    if (e) {
+        return ecs_filter_match_type(world, filter, ecs_get_type(world, e));
+    } else {
+        return ecs_filter_match_type(world, filter, NULL);
     }
-
-    return true;    
 }
 
 ecs_iter_t ecs_filter_iter(

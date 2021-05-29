@@ -17181,10 +17181,12 @@ bool ecs_filter_match_type(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(filter != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
+
+    bool is_or = false;
+    bool or_result = false;
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -17192,8 +17194,23 @@ bool ecs_filter_match_type(
         ecs_oper_kind_t oper = term->oper;
         ecs_type_t match_type = type;
 
+        if (!is_or && oper == EcsOr) {
+            is_or = true;
+            or_result = false;
+        } else if (is_or && oper != EcsOr) {
+            if (!or_result) {
+                return false;
+            }
+
+            is_or = false;
+        }
+
         ecs_entity_t subj_entity = subj->entity;
-        if (subj->entity != EcsThis) {
+        if (!subj_entity) {
+            continue;
+        }
+
+        if (subj_entity != EcsThis) {
             match_type = ecs_get_type(world, subj_entity);
         }
 
@@ -17203,12 +17220,14 @@ bool ecs_filter_match_type(
             result = !result;
         }
 
-        if (!result) {
+        if (is_or) {
+            or_result |= result;
+        } else if (!result) {
             return false;
         }
     }
 
-    return true;    
+    return !is_or || or_result;
 }
 
 bool ecs_filter_match_entity(
@@ -17216,32 +17235,11 @@ bool ecs_filter_match_entity(
     const ecs_filter_t *filter,
     ecs_entity_t e)
 {
-    ecs_assert(e == 0, ECS_UNSUPPORTED, NULL);
-    (void)e;
-
-    ecs_term_t *terms = filter->terms;
-    int32_t i, count = filter->term_count;
-
-    for (i = 0; i < count; i ++) {
-        ecs_term_t *term = &terms[i];
-        ecs_term_id_t *subj = &term->args[0];
-        ecs_oper_kind_t oper = term->oper;
-
-        if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
-            ecs_type_t type = ecs_get_type(world, subj->entity);
-            if (ecs_type_has_id(world, type, term->id)) {
-                if (oper == EcsNot) {
-                    return false;
-                }
-            } else {
-                if (oper != EcsNot) {
-                    return false;
-                }
-            }
-        }        
+    if (e) {
+        return ecs_filter_match_type(world, filter, ecs_get_type(world, e));
+    } else {
+        return ecs_filter_match_type(world, filter, NULL);
     }
-
-    return true;    
 }
 
 ecs_iter_t ecs_filter_iter(
@@ -17348,8 +17346,15 @@ ecs_entity_t ecs_observer_init(
         
         int i;
         for (i = 0; i < observer->filter.term_count; i ++) {
+            const ecs_term_t *t = &desc->filter.terms[i];
+            if (t->oper == EcsNot) {
+                /* No need to trigger on components that the entity should not
+                 * have. */
+                continue;
+            }
+
             ecs_trigger_desc_t trigger_desc = {
-                .term = desc->filter.terms[i],
+                .term = *t,
                 .callback = observer_callback,
                 .ctx = observer,
                 .binding_ctx = desc->binding_ctx
@@ -20801,6 +20806,36 @@ void rematch_table(
     }
 }
 
+static
+bool satisfy_constraints(
+    ecs_world_t *world,
+    const ecs_filter_t *filter)
+{
+    ecs_term_t *terms = filter->terms;
+    int32_t i, count = filter->term_count;
+
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_term_id_t *subj = &term->args[0];
+        ecs_oper_kind_t oper = term->oper;
+
+        if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
+            ecs_type_t type = ecs_get_type(world, subj->entity);
+            if (ecs_type_has_id(world, type, term->id)) {
+                if (oper == EcsNot) {
+                    return false;
+                }
+            } else {
+                if (oper != EcsNot) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 /* Rematch system with tables after a change happened to a watched entity */
 static
 void rematch_tables(
@@ -20838,8 +20873,7 @@ void rematch_tables(
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
-    query->constraints_satisfied = ecs_filter_match_entity(
-        world, &query->filter, 0);      
+    query->constraints_satisfied = satisfy_constraints(world, &query->filter);      
 }
 
 static
@@ -20984,8 +21018,7 @@ ecs_query_t* ecs_query_init(
         result->parent = desc->parent;
     }
 
-    result->constraints_satisfied = ecs_filter_match_entity(
-        world, &result->filter, 0);
+    result->constraints_satisfied = satisfy_constraints(world, &result->filter);
 
     if (result->cascade_by) {
         result->group_table = rank_by_depth;
