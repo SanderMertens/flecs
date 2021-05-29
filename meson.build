@@ -38,6 +38,7 @@ flecs_src = files(
     'src/log.c',
     'src/map.c',
     'src/misc.c',
+    'src/observer.c'
     'src/os_api.c',
     'src/query.c',
     'src/sparse.c',

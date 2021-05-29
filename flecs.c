@@ -17178,20 +17178,20 @@ ecs_entity_t ecs_observer_init(
         }
 
         /* Create a trigger for each term in the filter */
-        observer->triggers = ecs_os_malloc(sizeof(ecs_entity_t) * 
+        observer->triggers = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * 
             observer->filter.term_count);
         
         int i;
         for (i = 0; i < observer->filter.term_count; i ++) {
             ecs_trigger_desc_t trigger_desc = {
-                .term = observer->filter.terms[i],
+                .term = desc->filter.terms[i],
                 .callback = observer_callback,
                 .ctx = observer,
                 .binding_ctx = desc->binding_ctx
             };
 
-            memcpy(trigger_desc.events, desc->events, 
-                sizeof(ecs_entity_t) * ECS_TRIGGER_DESC_EVENT_COUNT_MAX);
+            ecs_os_memcpy(trigger_desc.events, desc->events, 
+                ECS_SIZEOF(ecs_entity_t) * ECS_TRIGGER_DESC_EVENT_COUNT_MAX);
             observer->triggers[i] = ecs_trigger_init(world, &trigger_desc);
         }
 

@@ -1076,6 +1076,22 @@
                "set_get_binding_context"
            ]
         }, {
+            "id": "Observer",
+            "testcases": [
+                "2_terms_w_on_add",
+                "2_terms_w_on_remove",
+                "2_terms_w_on_add_2nd",
+                "2_terms_w_on_remove_2nd",
+                "2_pair_terms_w_on_add",
+                "2_pair_terms_w_on_remove",
+                "2_wildcard_pair_terms_w_on_add",
+                "2_wildcard_pair_terms_w_on_remove",
+                "2_terms_1_not_w_on_add",
+                "2_terms_1_not_w_on_remove",
+                "2_terms_w_on_set",
+                "2_terms_w_un_set"
+            ]                
+        }, {
             "id": "TriggerOnAdd",
             "setup": true,
             "testcases": [

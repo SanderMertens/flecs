@@ -1008,6 +1008,20 @@ void Trigger_on_remove_tree(void);
 void Trigger_set_get_context(void);
 void Trigger_set_get_binding_context(void);
 
+// Testsuite 'Observer'
+void Observer_2_terms_w_on_add(void);
+void Observer_2_terms_w_on_remove(void);
+void Observer_2_terms_w_on_add_2nd(void);
+void Observer_2_terms_w_on_remove_2nd(void);
+void Observer_2_pair_terms_w_on_add(void);
+void Observer_2_pair_terms_w_on_remove(void);
+void Observer_2_wildcard_pair_terms_w_on_add(void);
+void Observer_2_wildcard_pair_terms_w_on_remove(void);
+void Observer_2_terms_1_not_w_on_add(void);
+void Observer_2_terms_1_not_w_on_remove(void);
+void Observer_2_terms_w_on_set(void);
+void Observer_2_terms_w_un_set(void);
+
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -5652,6 +5666,57 @@ bake_test_case Trigger_testcases[] = {
     }
 };
 
+bake_test_case Observer_testcases[] = {
+    {
+        "2_terms_w_on_add",
+        Observer_2_terms_w_on_add
+    },
+    {
+        "2_terms_w_on_remove",
+        Observer_2_terms_w_on_remove
+    },
+    {
+        "2_terms_w_on_add_2nd",
+        Observer_2_terms_w_on_add_2nd
+    },
+    {
+        "2_terms_w_on_remove_2nd",
+        Observer_2_terms_w_on_remove_2nd
+    },
+    {
+        "2_pair_terms_w_on_add",
+        Observer_2_pair_terms_w_on_add
+    },
+    {
+        "2_pair_terms_w_on_remove",
+        Observer_2_pair_terms_w_on_remove
+    },
+    {
+        "2_wildcard_pair_terms_w_on_add",
+        Observer_2_wildcard_pair_terms_w_on_add
+    },
+    {
+        "2_wildcard_pair_terms_w_on_remove",
+        Observer_2_wildcard_pair_terms_w_on_remove
+    },
+    {
+        "2_terms_1_not_w_on_add",
+        Observer_2_terms_1_not_w_on_add
+    },
+    {
+        "2_terms_1_not_w_on_remove",
+        Observer_2_terms_1_not_w_on_remove
+    },
+    {
+        "2_terms_w_on_set",
+        Observer_2_terms_w_on_set
+    },
+    {
+        "2_terms_w_un_set",
+        Observer_2_terms_w_un_set
+    }
+};
+
 bake_test_case TriggerOnAdd_testcases[] = {
     {
         "new_match_1_of_1",
@@ -9006,6 +9071,13 @@ static bake_test_suite suites[] = {
         Trigger_testcases
     },
     {
+        "Observer",
+        NULL,
+        NULL,
+        12,
+        Observer_testcases
+    },
+    {
         "TriggerOnAdd",
         TriggerOnAdd_setup,
         NULL,
@@ -9240,5 +9312,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 64);
+    return bake_test_run("api", argc, argv, suites, 65);
 }
