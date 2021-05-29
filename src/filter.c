@@ -546,6 +546,43 @@ void ecs_filter_fini(
     ecs_os_free(filter->expr);
 }
 
+bool ecs_filter_match_type(
+    const ecs_world_t *world,
+    const ecs_filter_t *filter,
+    ecs_type_t type)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_term_t *terms = filter->terms;
+    int32_t i, count = filter->term_count;
+
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_term_id_t *subj = &term->args[0];
+        ecs_oper_kind_t oper = term->oper;
+        ecs_type_t match_type = type;
+
+        ecs_entity_t subj_entity = subj->entity;
+        if (subj->entity != EcsThis) {
+            match_type = ecs_get_type(world, subj_entity);
+        }
+
+        bool result = ecs_type_find_id(world, match_type, term->id, 
+            subj->set.relation, subj->set.min_depth, subj->set.max_depth, NULL);
+        if (oper == EcsNot) {
+            result = !result;
+        }
+
+        if (!result) {
+            return false;
+        }
+    }
+
+    return true;    
+}
+
 bool ecs_filter_match_entity(
     const ecs_world_t *world,
     const ecs_filter_t *filter,

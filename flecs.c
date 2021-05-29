@@ -1006,10 +1006,11 @@ struct ecs_world_t {
     ecs_store_t store;
 
 
-    /* --  Storages for opaque API objects -- */
+    /* --  Storages for API objects -- */
 
     ecs_sparse_t *queries; /* sparse<query_id, ecs_query_t> */
-    ecs_sparse_t *triggers; /* sparse<query_id, ecs_query_t> */
+    ecs_sparse_t *triggers; /* sparse<query_id, ecs_trigger_t> */
+    ecs_sparse_t *observers; /* sparse<query_id, ecs_observer_t> */
     
 
     /* Keep track of components that were added/removed to/from monitored
@@ -1257,6 +1258,10 @@ ecs_map_t* ecs_triggers_get(
 void ecs_trigger_fini(
     ecs_world_t *world,
     ecs_trigger_t *trigger);
+
+void ecs_observer_fini(
+    ecs_world_t *world,
+    ecs_observer_t *observer);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
@@ -14359,7 +14364,7 @@ void ecs_record_move_to(
 
 #endif
 
-/* Builtin roles */
+/* Roles */
 const ecs_id_t ECS_CASE =  (ECS_ROLE | (0x7Cull << 56));
 const ecs_id_t ECS_SWITCH =  (ECS_ROLE | (0x7Bull << 56));
 const ecs_id_t ECS_PAIR =  (ECS_ROLE | (0x7Aull << 56));
@@ -14367,32 +14372,50 @@ const ecs_id_t ECS_OWNED =  (ECS_ROLE | (0x75ull << 56));
 const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 
 /* Builtin entity ids */
+
+/* Builtin modules that contain all builtin entities */
 const ecs_entity_t EcsFlecs = (ECS_HI_COMPONENT_ID + 0);
 const ecs_entity_t EcsFlecsCore = (ECS_HI_COMPONENT_ID + 1);
+
+/* Singleton to attach data to a world */
 const ecs_entity_t EcsWorld = (ECS_HI_COMPONENT_ID + 2);
+
+/* Relations support */
 const ecs_entity_t EcsWildcard = (ECS_HI_COMPONENT_ID + 3);
 const ecs_entity_t EcsThis = (ECS_HI_COMPONENT_ID + 4);
 const ecs_entity_t EcsTransitive = (ECS_HI_COMPONENT_ID + 5);
 const ecs_entity_t EcsFinal = (ECS_HI_COMPONENT_ID + 6);
+
+/* Builtin relations */
 const ecs_entity_t EcsChildOf = (ECS_HI_COMPONENT_ID + 7);
 const ecs_entity_t EcsIsA = (ECS_HI_COMPONENT_ID + 8) ;
+
+/* Misc tags */
 const ecs_entity_t EcsModule = (ECS_HI_COMPONENT_ID + 9);
 const ecs_entity_t EcsPrefab = (ECS_HI_COMPONENT_ID + 10);
 const ecs_entity_t EcsDisabled = (ECS_HI_COMPONENT_ID + 11);
 const ecs_entity_t EcsHidden = (ECS_HI_COMPONENT_ID + 12);
+
+/* Trigger/observer Events */
 const ecs_entity_t EcsOnAdd = (ECS_HI_COMPONENT_ID + 13);
 const ecs_entity_t EcsOnRemove = (ECS_HI_COMPONENT_ID + 14);
 const ecs_entity_t EcsOnSet = (ECS_HI_COMPONENT_ID + 15);
 const ecs_entity_t EcsUnSet = (ECS_HI_COMPONENT_ID + 16);
+
+/* Deletion policies */
 const ecs_entity_t EcsOnDelete = (ECS_HI_COMPONENT_ID + 17);
 const ecs_entity_t EcsOnDeleteObject = (ECS_HI_COMPONENT_ID + 18);
 const ecs_entity_t EcsRemove =  (ECS_HI_COMPONENT_ID + 19);
 const ecs_entity_t EcsDelete =  (ECS_HI_COMPONENT_ID + 20);
 const ecs_entity_t EcsThrow =  (ECS_HI_COMPONENT_ID + 21);
+
+/* System tags */
 const ecs_entity_t EcsOnDemand = (ECS_HI_COMPONENT_ID + 22);
 const ecs_entity_t EcsMonitor = (ECS_HI_COMPONENT_ID + 23);
 const ecs_entity_t EcsDisabledIntern = (ECS_HI_COMPONENT_ID + 24);
 const ecs_entity_t EcsInactive = (ECS_HI_COMPONENT_ID + 25);
+
+/* Pipelines & builtin pipeline phases */
 const ecs_entity_t EcsPipeline = (ECS_HI_COMPONENT_ID + 26);
 const ecs_entity_t EcsPreFrame = (ECS_HI_COMPONENT_ID + 27);
 const ecs_entity_t EcsOnLoad = (ECS_HI_COMPONENT_ID + 28);
@@ -14404,6 +14427,7 @@ const ecs_entity_t EcsPostUpdate = (ECS_HI_COMPONENT_ID + 33);
 const ecs_entity_t EcsPreStore = (ECS_HI_COMPONENT_ID + 34);
 const ecs_entity_t EcsOnStore = (ECS_HI_COMPONENT_ID + 35);
 const ecs_entity_t EcsPostFrame = (ECS_HI_COMPONENT_ID + 36);
+
 
 /* -- Private functions -- */
 
@@ -14671,6 +14695,7 @@ ecs_world_t *ecs_mini(void) {
 
     world->queries = ecs_sparse_new(ecs_query_t);
     world->triggers = ecs_sparse_new(ecs_trigger_t);
+    world->observers = ecs_sparse_new(ecs_observer_t);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->name_prefix = NULL;
 
@@ -16984,6 +17009,43 @@ void ecs_filter_fini(
     ecs_os_free(filter->expr);
 }
 
+bool ecs_filter_match_type(
+    const ecs_world_t *world,
+    const ecs_filter_t *filter,
+    ecs_type_t type)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_term_t *terms = filter->terms;
+    int32_t i, count = filter->term_count;
+
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_term_id_t *subj = &term->args[0];
+        ecs_oper_kind_t oper = term->oper;
+        ecs_type_t match_type = type;
+
+        ecs_entity_t subj_entity = subj->entity;
+        if (subj->entity != EcsThis) {
+            match_type = ecs_get_type(world, subj_entity);
+        }
+
+        bool result = ecs_type_find_id(world, match_type, term->id, 
+            subj->set.relation, subj->set.min_depth, subj->set.max_depth, NULL);
+        if (oper == EcsNot) {
+            result = !result;
+        }
+
+        if (!result) {
+            return false;
+        }
+    }
+
+    return true;    
+}
+
 bool ecs_filter_match_entity(
     const ecs_world_t *world,
     const ecs_filter_t *filter,
@@ -17068,6 +17130,119 @@ bool ecs_filter_next(
     return false;
 }
 
+static
+void observer_callback(ecs_iter_t *it) {
+    ecs_observer_t *o = it->ctx;
+    ecs_world_t *world = it->world;
+    
+    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_type_t type = it->table->table->type;
+    if (ecs_filter_match_type(world, &o->filter, type)) {
+        ecs_iter_t user_it = *it;
+        user_it.ctx = o->ctx;
+        o->action(&user_it);
+    }
+}
+
+ecs_entity_t ecs_observer_init(
+    ecs_world_t *world,
+    const ecs_observer_desc_t *desc)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    /* If entity is provided, create it */
+    ecs_entity_t existing = desc->entity.entity;
+    ecs_entity_t entity = ecs_entity_init(world, &desc->entity);
+
+    bool added = false;
+    EcsObserver *comp = ecs_get_mut(world, entity, EcsObserver, &added);
+    if (added) {
+        ecs_observer_t *observer = ecs_sparse_add(
+            world->observers, ecs_observer_t);
+        ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
+        observer->id = ecs_sparse_last_id(world->observers);
+
+        /* Make writeable copy of filter desc so that we can set name. This will
+         * make debugging easier, as any error messages related to creating the
+         * filter will have the name of the observer. */
+        ecs_filter_desc_t filter_desc = desc->filter;
+        filter_desc.name = desc->entity.name;
+
+        /* Parse filter */
+        if (ecs_filter_init(world, &observer->filter, &filter_desc)) {
+            ecs_observer_fini(world, observer);
+            return 0;
+        }
+
+        /* Create a trigger for each term in the filter */
+        observer->triggers = ecs_os_malloc(sizeof(ecs_entity_t) * 
+            observer->filter.term_count);
+        
+        int i;
+        for (i = 0; i < observer->filter.term_count; i ++) {
+            ecs_trigger_desc_t trigger_desc = {
+                .term = observer->filter.terms[i],
+                .callback = observer_callback,
+                .ctx = observer,
+                .binding_ctx = desc->binding_ctx
+            };
+
+            memcpy(trigger_desc.events, desc->events, 
+                sizeof(ecs_entity_t) * ECS_TRIGGER_DESC_EVENT_COUNT_MAX);
+            observer->triggers[i] = ecs_trigger_init(world, &trigger_desc);
+        }
+
+        observer->action = desc->callback;
+        observer->ctx = desc->ctx;
+        observer->binding_ctx = desc->binding_ctx;
+        observer->ctx_free = desc->ctx_free;
+        observer->binding_ctx_free = desc->binding_ctx_free;
+        observer->event_count = 0;
+        ecs_os_memcpy(observer->events, desc->events, 
+            observer->event_count * ECS_SIZEOF(ecs_entity_t));
+        observer->entity = entity;        
+
+        comp->observer = observer;
+    } else {
+        ecs_assert(comp->observer != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* If existing entity handle was provided, override existing params */
+        if (existing) {
+            if (desc->callback) {
+                ((ecs_observer_t*)comp->observer)->action = desc->callback;
+            }
+            if (desc->ctx) {
+                ((ecs_observer_t*)comp->observer)->ctx = desc->ctx;
+            }
+            if (desc->binding_ctx) {
+                ((ecs_observer_t*)comp->observer)->binding_ctx = 
+                    desc->binding_ctx;
+            }
+        }        
+    }
+
+    return entity; 
+}
+
+void ecs_observer_fini(
+    ecs_world_t *world,
+    ecs_observer_t *observer)
+{
+    ecs_filter_fini(&observer->filter);
+
+    if (observer->ctx_free) {
+        observer->ctx_free(observer->ctx);
+    }
+
+    if (observer->binding_ctx_free) {
+        observer->binding_ctx_free(observer->binding_ctx);
+    }
+
+    ecs_sparse_remove(world->observers, observer->id);
+}
 
 static
 void ensure(
@@ -23492,6 +23667,7 @@ ecs_entity_t ecs_trigger_init(
         ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
 
         ecs_trigger_t *trigger = ecs_sparse_add(world->triggers, ecs_trigger_t);
+        trigger->id = ecs_sparse_last_id(world->triggers);
         trigger->term = ecs_term_move(&term);
         trigger->action = desc->callback;
         trigger->ctx = desc->ctx;
@@ -23501,7 +23677,6 @@ ecs_entity_t ecs_trigger_init(
         trigger->event_count = count_events(desc->events);
         ecs_os_memcpy(trigger->events, desc->events, 
             trigger->event_count * ECS_SIZEOF(ecs_entity_t));
-        trigger->id = ecs_sparse_last_id(world->triggers);
         trigger->entity = entity;
 
         comp->trigger = trigger;
@@ -26344,6 +26519,7 @@ ecs_type_t ecs_type(EcsType);
 ecs_type_t ecs_type(EcsName);
 ecs_type_t ecs_type(EcsQuery);
 ecs_type_t ecs_type(EcsTrigger);
+ecs_type_t ecs_type(EcsObserver);
 ecs_type_t ecs_type(EcsPrefab);
 
 /* Component lifecycle actions for EcsName */
@@ -26421,6 +26597,27 @@ static ECS_MOVE(EcsTrigger, dst, src, {
     }
     dst->trigger = src->trigger;
     src->trigger = NULL;
+})
+
+/* Component lifecycle actions for EcsObserver */
+static ECS_CTOR(EcsObserver, ptr, {
+    ptr->observer = NULL;
+})
+
+static ECS_DTOR(EcsObserver, ptr, {
+    ecs_observer_fini(world, (ecs_observer_t*)ptr->observer);
+})
+
+static ECS_COPY(EcsObserver, dst, src, {
+    ecs_abort(ECS_INVALID_OPERATION, "Observer component cannot be copied");
+})
+
+static ECS_MOVE(EcsObserver, dst, src, {
+    if (dst->observer) {
+        ecs_observer_fini(world, (ecs_observer_t*)dst->observer);
+    }
+    dst->observer = src->observer;
+    src->observer = NULL;
 })
 
 static
@@ -26595,6 +26792,7 @@ void ecs_bootstrap(
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);
     bootstrap_component(world, table, EcsTrigger);
+    bootstrap_component(world, table, EcsObserver);
 
     ecs_set_component_actions(world, EcsName, {
         .ctor = ecs_ctor(EcsName),
@@ -26608,7 +26806,14 @@ void ecs_bootstrap(
         .dtor = ecs_dtor(EcsTrigger),
         .copy = ecs_copy(EcsTrigger),
         .move = ecs_move(EcsTrigger)
-    });        
+    }); 
+
+    ecs_set_component_actions(world, EcsObserver, {
+        .ctor = ecs_ctor(EcsObserver),
+        .dtor = ecs_dtor(EcsObserver),
+        .copy = ecs_copy(EcsObserver),
+        .move = ecs_move(EcsObserver)
+    });            
 
     world->stats.last_component_id = EcsFirstUserComponentId;
     world->stats.last_id = EcsFirstUserEntityId;

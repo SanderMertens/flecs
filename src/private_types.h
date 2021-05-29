@@ -505,10 +505,11 @@ struct ecs_world_t {
     ecs_store_t store;
 
 
-    /* --  Storages for opaque API objects -- */
+    /* --  Storages for API objects -- */
 
     ecs_sparse_t *queries; /* sparse<query_id, ecs_query_t> */
-    ecs_sparse_t *triggers; /* sparse<query_id, ecs_query_t> */
+    ecs_sparse_t *triggers; /* sparse<query_id, ecs_trigger_t> */
+    ecs_sparse_t *observers; /* sparse<query_id, ecs_observer_t> */
     
 
     /* Keep track of components that were added/removed to/from monitored

@@ -318,6 +318,7 @@ ecs_entity_t ecs_trigger_init(
         ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
 
         ecs_trigger_t *trigger = ecs_sparse_add(world->triggers, ecs_trigger_t);
+        trigger->id = ecs_sparse_last_id(world->triggers);
         trigger->term = ecs_term_move(&term);
         trigger->action = desc->callback;
         trigger->ctx = desc->ctx;
@@ -327,7 +328,6 @@ ecs_entity_t ecs_trigger_init(
         trigger->event_count = count_events(desc->events);
         ecs_os_memcpy(trigger->events, desc->events, 
             trigger->event_count * ECS_SIZEOF(ecs_entity_t));
-        trigger->id = ecs_sparse_last_id(world->triggers);
         trigger->entity = entity;
 
         comp->trigger = trigger;

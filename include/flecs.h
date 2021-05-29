@@ -76,14 +76,20 @@ typedef ecs_id_t ecs_entity_t;
 /** A vector containing component identifiers used to describe a type. */
 typedef const ecs_vector_t* ecs_type_t;
 
-/** An ECS world is the container for all ECS data and supporting features. */
+/** A world is the container for all ECS data and supporting features. */
 typedef struct ecs_world_t ecs_world_t;
 
-/** An ECS world is the container for all ECS data and supporting features. */
+/** A query allows for cached iteration over ECS data */
 typedef struct ecs_query_t ecs_query_t;
 
-/** An ECS world is the container for all ECS data and supporting features. */
+/** A filter allows for uncached, ad hoc iteration over ECS data */
+typedef struct ecs_filter_t ecs_filter_t;
+
+/** A trigger reacts to events matching a single filter term */
 typedef struct ecs_trigger_t ecs_trigger_t;
+
+/** An observer reacts to events matching multiple filter terms */
+typedef struct ecs_observer_t ecs_observer_t;
 
 /* An iterator lets an application iterate entities across tables. */
 typedef struct ecs_iter_t ecs_iter_t;
@@ -244,7 +250,7 @@ typedef enum ecs_match_kind_t {
 } ecs_match_kind_t;
 
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
-typedef struct ecs_filter_t {
+struct ecs_filter_t {
     ecs_term_t *terms;         /* Array containing terms for filter */
     int32_t term_count;        /* Number of elements in terms array */
 
@@ -258,19 +264,20 @@ typedef struct ecs_filter_t {
     ecs_type_t exclude;
     ecs_match_kind_t include_kind;
     ecs_match_kind_t exclude_kind;
-} ecs_filter_t;
+};
 
-/** A trigger invokes a callback on a single-term event */
+
+/** A trigger reacts to events matching a single term */
 struct ecs_trigger_t {
     ecs_term_t term;            /* Term describing the trigger condition id */
 
-    /* Trigger condition events */
+    /* Trigger events */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
     int32_t event_count;
 
-    ecs_iter_action_t action;   /* Trigger callback */
+    ecs_iter_action_t action;   /* Callback */
 
-    void *ctx;                  /* Trigger callback context */
+    void *ctx;                  /* Callback context */
     void *binding_ctx;          /* Binding context (for language bindings) */
 
     ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
@@ -280,6 +287,32 @@ struct ecs_trigger_t {
 
     uint64_t id;                /* Internal id */
 };
+
+
+/* An observer reacts to events matching a filter */
+struct ecs_observer_t {
+    ecs_filter_t filter;
+
+    /* Triggers created by observer (array size same as number of terms) */
+    ecs_entity_t *triggers;
+
+    /* Observer events */
+    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
+    int32_t event_count;   
+    
+    ecs_iter_action_t action;   /* Callback */
+
+    void *ctx;                  /* Callback context */
+    void *binding_ctx;          /* Binding context (for language bindings) */
+
+    ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
+    
+    ecs_entity_t entity;        /* Entity associated with observer */
+
+    uint64_t id;                /* Internal id */    
+};
+
 /** @} */
 
 
@@ -287,6 +320,7 @@ struct ecs_trigger_t {
 #include "flecs/private/api_support.h"      /* Supporting API functions */
 #include "flecs/private/log.h"              /* Logging API */
 #include "flecs/type.h"                     /* Type API */
+
 
 /**
  * @defgroup desc_types Types used for creating API constructs
@@ -420,7 +454,7 @@ typedef struct ecs_trigger_desc_t {
     /* Events to trigger on (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
 
-    /* Callback to invoke on a trigger */
+    /* Callback to invoke on an event */
     ecs_iter_action_t callback;
 
     /* User context to pass to callback */
@@ -435,6 +469,34 @@ typedef struct ecs_trigger_desc_t {
     /* Callback to free binding_ctx */     
     ecs_ctx_free_t binding_ctx_free;
 } ecs_trigger_desc_t;
+
+
+/** Used with ecs_observer_init. */
+typedef struct ecs_observer_desc_t {
+    /* Entity to associate with observer */
+    ecs_entity_desc_t entity;
+
+    /* Filter for observer */
+    ecs_filter_desc_t filter;
+
+    /* Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
+    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
+
+    /* Callback to invoke on an event */
+    ecs_iter_action_t callback;
+
+    /* User context to pass to callback */
+    void *ctx;
+
+    /* Context to be used for language bindings */
+    void *binding_ctx;
+    
+    /* Callback to free ctx */
+    ecs_ctx_free_t ctx_free;
+
+    /* Callback to free binding_ctx */     
+    ecs_ctx_free_t binding_ctx_free;    
+} ecs_observer_desc_t;
 
 /** @} */
 
@@ -492,6 +554,11 @@ struct EcsComponentLifecycle {
 typedef struct EcsTrigger {
     const ecs_trigger_t *trigger;
 } EcsTrigger;
+
+/** Component that stores reference to observer */
+typedef struct EcsObserver {
+    const ecs_observer_t *observer;
+} EcsObserver;
 
 /** Component for storing a query */
 typedef struct EcsQuery {
@@ -2860,6 +2927,18 @@ bool ecs_filter_match_entity(
     const ecs_filter_t *filter,
     ecs_entity_t e);
 
+/** Same as ecs_filter_match_entity, but for a type.
+ * 
+ * @param world The world.
+ * @param filter The filter to evaluate.
+ * @param type The type to match.
+ * @return True if the filter matches, false if it doesn't match.
+ */ 
+bool ecs_filter_match_type(
+    const ecs_world_t *world,
+    const ecs_filter_t *filter,
+    ecs_type_t type);
+
 /** Return a filter iterator.
  * A filter iterator lets an application iterate over entities that match the
  * specified filter. If NULL is provided for the filter, the iterator will
@@ -2886,7 +2965,6 @@ ecs_iter_t ecs_filter_iter(
 FLECS_API
 bool ecs_filter_next(
     ecs_iter_t *iter);
-
 
 /** @} */
 
@@ -3125,6 +3203,27 @@ FLECS_API
 void* ecs_get_trigger_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger);
+
+/** @} */
+
+
+/**
+ * @defgroup observer Observers
+ */
+
+/** Create observer.
+ * Observers are like triggers, but can subscribe for multiple terms. An 
+ * observer only triggers when the source of the event meets all terms.
+ *
+ * See the documentation for ecs_observer_desc_t for more details.
+ *
+ * @param world The world.
+ * @param desc The observer creation parameters.
+ */
+FLECS_API
+ecs_entity_t ecs_observer_init(
+    ecs_world_t *world,
+    const ecs_observer_desc_t *desc);
 
 /** @} */
 
