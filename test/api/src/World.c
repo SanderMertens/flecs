@@ -1007,3 +1007,32 @@ void World_get_stats() {
 
     ecs_fini(world);
 }
+
+static int zero_time_scale_invoked = 0;
+
+void ZeroTimeScale(ecs_iter_t *it) {
+    test_assert(it->delta_time == 0.0);
+    zero_time_scale_invoked ++;
+}
+
+void World_system_time_scale() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_new_w_id(world, Tag);
+
+    ecs_set_time_scale(world, 0);
+
+    ECS_SYSTEM(world, ZeroTimeScale, EcsOnUpdate, Tag);
+
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    test_assert(info->delta_time == 0.0);
+
+    test_int(zero_time_scale_invoked, 2);
+
+    ecs_fini(world);
+}

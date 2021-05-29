@@ -1173,7 +1173,7 @@ FLECS_FLOAT ecs_frame_begin(
 
     ecs_eval_component_monitors(world);
 
-    return user_delta_time;
+    return world->stats.delta_time;
 }
 
 void ecs_frame_end(

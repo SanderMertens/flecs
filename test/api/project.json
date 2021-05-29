@@ -1492,6 +1492,7 @@
                 "control_fps_random_app",
                 "measure_fps_vs_actual",
                 "measure_delta_time_vs_actual",
+                "system_time_scale",
                 "quit",
                 "get_delta_time",
                 "get_delta_time_auto",
