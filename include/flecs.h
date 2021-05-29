@@ -3234,6 +3234,16 @@ ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
     const ecs_observer_desc_t *desc);
 
+FLECS_API
+void* ecs_get_observer_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t observer);
+
+FLECS_API
+void* ecs_get_observer_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t observer);
+
 /** @} */
 
 

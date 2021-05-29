@@ -1,6 +1,56 @@
 #include "private_api.h"
 
 static
+void populate_columns(
+    ecs_world_t *world,
+    ecs_observer_t *o,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    ecs_id_t *ids,
+    int32_t *columns,
+    ecs_type_t *types)
+{
+    int32_t i, count = o->filter.term_count;
+
+    ids[0] = 0;
+    columns[0] = 0;
+    types[0] = NULL;
+
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *t = &o->filter.terms[i];
+        ids[i] = 0;
+        columns[i] = 0;
+        types[i] = NULL;
+
+        ecs_id_t id = ids[i] = t->id;
+        types[i] = ecs_type_from_id(world, id);
+
+        if (t->oper != EcsAnd) {
+            continue;
+        }
+
+        if (t->args[0].entity != EcsThis) {
+            continue;
+        }
+
+        int32_t index = ecs_type_match(table->type, 0, id);
+        ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+        index ++;
+
+        columns[i] = index;
+
+        if (table->column_count < index) {
+            columns[i] = 0;
+        } else {
+            ecs_column_t *column = &data->columns[index - 1];
+            if (!column->size) {
+                columns[i] = 0;
+            }
+        }
+    } 
+}
+
+static
 void observer_callback(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     ecs_world_t *world = it->world;
@@ -8,10 +58,30 @@ void observer_callback(ecs_iter_t *it) {
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_type_t type = it->table->table->type;
+    ecs_table_t *table = it->table->table;
+    ecs_type_t type = table->type;
     if (ecs_filter_match_type(world, &o->filter, type)) {
+        ecs_data_t *data = ecs_table_get_data(table);
+        ecs_id_t ids[ECS_FILTER_DESC_TERM_ARRAY_MAX];
+        int32_t columns[ECS_FILTER_DESC_TERM_ARRAY_MAX];
+        ecs_type_t types[ECS_FILTER_DESC_TERM_ARRAY_MAX];
         ecs_iter_t user_it = *it;
+
+        ecs_iter_table_t table_data = {
+            .table = table,
+            .columns = columns,
+            .components = ids,
+            .types = types
+        };
+
+        user_it.table = &table_data;
+
+        populate_columns(world, o, table, data, ids, columns, types);
+
+        user_it.system = o->entity;
         user_it.ctx = o->ctx;
+        user_it.column_count = o->filter.term_count,
+        user_it.table_columns = data->columns,
         o->action(&user_it);
     }
 }
@@ -123,4 +193,28 @@ void ecs_observer_fini(
     ecs_os_free(observer->triggers);
 
     ecs_sparse_remove(world->observers, observer->id);
+}
+
+void* ecs_get_observer_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t observer)
+{
+    const EcsObserver *o = ecs_get(world, observer, EcsObserver);
+    if (o) {
+        return o->observer->ctx;
+    } else {
+        return NULL;
+    }     
+}
+
+void* ecs_get_observer_binding_ctx(
+    const ecs_world_t *world,
+    ecs_entity_t observer)
+{
+    const EcsObserver *o = ecs_get(world, observer, EcsObserver);
+    if (o) {
+        return o->observer->binding_ctx;
+    } else {
+        return NULL;
+    }      
 }

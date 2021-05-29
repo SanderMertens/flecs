@@ -217,6 +217,11 @@ inline flecs::system_builder<Comps...> world::system(Args &&... args) const {
 }
 
 template <typename... Comps, typename... Args>
+inline flecs::observer_builder<Comps...> world::observer(Args &&... args) const {
+    return flecs::observer_builder<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Comps, typename... Args>
 inline flecs::query<Comps...> world::query(Args &&... args) const {
     return flecs::query<Comps...>(*this, std::forward<Args>(args)...);
 }

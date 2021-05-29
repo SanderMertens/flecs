@@ -364,6 +364,12 @@ void SystemBuilder_const_type(void);
 void SystemBuilder_string_term(void);
 void SystemBuilder_singleton_term(void);
 
+// Testsuite 'Observer'
+void Observer_2_terms_on_add(void);
+void Observer_2_terms_on_remove(void);
+void Observer_2_terms_on_set(void);
+void Observer_2_terms_un_set(void);
+
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_dtor_on_remove(void);
@@ -1885,6 +1891,25 @@ bake_test_case SystemBuilder_testcases[] = {
     }
 };
 
+bake_test_case Observer_testcases[] = {
+    {
+        "2_terms_on_add",
+        Observer_2_terms_on_add
+    },
+    {
+        "2_terms_on_remove",
+        Observer_2_terms_on_remove
+    },
+    {
+        "2_terms_on_set",
+        Observer_2_terms_on_set
+    },
+    {
+        "2_terms_un_set",
+        Observer_2_terms_un_set
+    }
+};
+
 bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_on_add",
@@ -2505,6 +2530,13 @@ static bake_test_suite suites[] = {
         SystemBuilder_testcases
     },
     {
+        "Observer",
+        NULL,
+        NULL,
+        4,
+        Observer_testcases
+    },
+    {
         "ComponentLifecycle",
         NULL,
         NULL,
@@ -2564,5 +2596,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 18);
+    return bake_test_run("cpp_api", argc, argv, suites, 19);
 }
