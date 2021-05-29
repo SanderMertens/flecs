@@ -229,8 +229,8 @@ void ecs_switch_remove(
     }
 
     /* Remove element from arrays */
-    ecs_vector_remove_index(sw->nodes, ecs_switch_node_t, element);
-    ecs_vector_remove_index(sw->values, uint64_t, element);
+    ecs_vector_remove(sw->nodes, ecs_switch_node_t, element);
+    ecs_vector_remove(sw->values, uint64_t, element);
 
     /* When the element was removed and the list was not empty, the last element
      * of the list got moved to the location of the removed node. Update the

@@ -386,7 +386,7 @@ ecs_entity_t ecs_set_scope(
     ecs_stage_t *stage = ecs_stage_from_world(&world);
 
     ecs_entity_t e = ecs_pair(EcsChildOf, scope);
-    ecs_entities_t to_add = {
+    ecs_ids_t to_add = {
         .array = &e,
         .count = 1
     };

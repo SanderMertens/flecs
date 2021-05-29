@@ -263,7 +263,7 @@ void New_w_Count_new_w_data_1_comp() {
     ECS_COMPONENT(world, Position);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){ecs_typeid(Position)},
             .count = 1
         },
@@ -302,7 +302,7 @@ void New_w_Count_new_w_data_2_comp() {
     ECS_COMPONENT(world, Velocity);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_typeid(Velocity)},
             .count = 2
         },
@@ -363,7 +363,7 @@ void New_w_Count_new_w_data_w_tag() {
     ECS_COMPONENT(world, Position);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){Tag},
             .count = 1
         },
@@ -385,7 +385,7 @@ void New_w_Count_new_w_data_w_comp_and_tag() {
     ECS_COMPONENT(world, Position);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){ecs_typeid(Position), Tag},
             .count = 2
         },
@@ -431,7 +431,7 @@ void New_w_Count_new_w_data_pair() {
     ecs_entity_t pair_id = ecs_pair(Pair, ecs_typeid(Position));
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){pair_id},
             .count = 1
         },
@@ -473,7 +473,7 @@ void New_w_Count_new_w_data_pair_tag() {
     ecs_entity_t pair_id = ecs_pair(Pair, Tag);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){pair_id},
             .count = 1
         },
@@ -504,7 +504,7 @@ void New_w_Count_new_w_data_2_comp_1_not_set() {
     });
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_typeid(Velocity)},
             .count = 2
         },
@@ -580,7 +580,7 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
     });
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){
                 ecs_typeid(Position)
             }, 
@@ -628,7 +628,7 @@ void New_w_Count_new_w_data_override_set_comp() {
     ecs_entity_t base = ecs_set(world, 0, Position, {100, 200});
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_pair(EcsIsA, base)},
             .count = 2
         },
@@ -680,7 +680,7 @@ void New_w_Count_new_w_data_override_set_pair() {
     ptr->y = 200;
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_entities_t){
+        &(ecs_ids_t){
             .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_pair(EcsIsA, base)},
             .count = 2
         },

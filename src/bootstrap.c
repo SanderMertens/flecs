@@ -186,7 +186,7 @@ ecs_type_t ecs_bootstrap_type(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_table_t *table = ecs_table_find_or_create(world, &(ecs_entities_t){
+    ecs_table_t *table = ecs_table_find_or_create(world, &(ecs_ids_t){
         .array = (ecs_entity_t[]){entity},
         .count = 1
     });
@@ -218,7 +218,7 @@ ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
     ecs_entity_t entities[] = {ecs_id(EcsComponent), ecs_id(EcsName), ecs_pair(EcsChildOf, EcsFlecsCore)};
-    ecs_entities_t array = {
+    ecs_ids_t array = {
         .array = entities,
         .count = 3
     };
@@ -361,7 +361,7 @@ void ecs_bootstrap(
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
         .callback = register_on_delete_object,
         .events = {EcsOnAdd}
-    });  
+    });
 
     /* Removal of ChildOf objects (parents) deletes the subject (child) */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);  

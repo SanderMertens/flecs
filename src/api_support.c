@@ -145,7 +145,7 @@ ecs_table_t* table_from_ids(
     ecs_world_t *world,
     ecs_vector_t *ids)
 {
-    ecs_entities_t ids_array = ecs_type_to_entities(ids);
+    ecs_ids_t ids_array = ecs_type_to_entities(ids);
     ecs_table_t *result = ecs_table_find_or_create(world, &ids_array);
     return result;
 }

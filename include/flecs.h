@@ -53,7 +53,7 @@
 
 #include "flecs/private/api_defines.h"
 #include "flecs/private/vector.h"        /* Vector datatype */
-#include "flecs/private/map.h"           /* Hashmap */
+#include "flecs/private/map.h"           /* Map */
 #include "flecs/private/strbuf.h"        /* String builder */
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
 
@@ -128,16 +128,9 @@ typedef void (*ecs_iter_action_t)(
     ecs_iter_t *it);
 
 typedef bool (*ecs_iter_next_action_t)(
-    ecs_iter_t *it);
+    ecs_iter_t *it);  
 
-/** Compare callback used for sorting */
-typedef int (*ecs_compare_action_t)(
-    ecs_entity_t e1,
-    const void *ptr1,
-    ecs_entity_t e2,
-    const void *ptr2);    
-
-/** Compare callback used for sorting */
+/** Callback used for ranking types */
 typedef int32_t (*ecs_rank_type_action_t)(
     ecs_world_t *world,
     ecs_entity_t rank_component,
@@ -155,6 +148,22 @@ typedef void (*ecs_fini_action_t)(
 /** Function to cleanup context data */
 typedef void (*ecs_ctx_free_t)(
     void *ctx);
+
+/** Callback used for sorting values */
+typedef int (*ecs_compare_value_action_t)(
+    const void *ptr1,
+    const void *ptr2);
+
+/** Callback used for hashing values */
+typedef uint64_t (*ecs_hash_value_action_t)(
+    const void *ptr);
+
+/** Callback used for sorting components */
+typedef int (*ecs_compare_action_t)(
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
+    const void *ptr2);  
 
 /** @} */
 
@@ -1424,7 +1433,7 @@ FLECS_API
 const ecs_entity_t* ecs_bulk_new_w_data(
     ecs_world_t *world,
     int32_t count,
-    const ecs_entities_t *component_ids,
+    const ecs_ids_t *component_ids,
     void *data);
 
 /** Create N new entities.

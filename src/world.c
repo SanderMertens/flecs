@@ -258,7 +258,7 @@ void init_store(
     world->store.tables = ecs_sparse_new(ecs_table_t);
 
     /* Initialize table map */
-    world->store.table_map = ecs_map_new(ecs_vector_t*, 8);
+    world->store.table_map = ecs_table_hashmap_new();
 
     /* Initialize one root table per stage */
     ecs_init_root_table(world);
@@ -287,14 +287,7 @@ void fini_store(ecs_world_t *world) {
     ecs_sparse_free(world->store.tables);
     ecs_table_free(world, &world->store.root);
     ecs_sparse_free(world->store.entity_index);
-
-    ecs_map_iter_t it = ecs_map_iter(world->store.table_map);
-    ecs_vector_t *tables;
-    while ((tables = ecs_map_next_ptr(&it, ecs_vector_t*, NULL))) {
-        ecs_vector_free(tables);
-    }
-    
-    ecs_map_free(world->store.table_map);
+    ecs_hashmap_free(world->store.table_map);
 }
 
 /* -- Public functions -- */
@@ -720,16 +713,6 @@ static
 void fini_component_lifecycle(
     ecs_world_t *world)
 {
-    int32_t i, count = ecs_sparse_count(world->type_info);
-    for (i = 0; i < count; i ++) {
-        ecs_type_info_t *type_info = ecs_sparse_get(
-            world->type_info, ecs_type_info_t, i);
-        ecs_assert(type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_vector_free(type_info->on_add);
-        ecs_vector_free(type_info->on_remove);
-    }
-
     ecs_sparse_free(world->type_info);
 }
 
@@ -744,6 +727,13 @@ void fini_queries(
         ecs_query_fini(query);
     }
     ecs_sparse_free(world->queries);
+}
+
+static
+void fini_observers(
+    ecs_world_t *world)
+{
+    ecs_sparse_free(world->observers);
 }
 
 /* Cleanup stages */
@@ -778,6 +768,8 @@ void fini_id_triggers(
     while ((t = ecs_map_next(&it, ecs_id_trigger_t, NULL))) {
         ecs_map_free(t->on_add_triggers);
         ecs_map_free(t->on_remove_triggers);
+        ecs_map_free(t->on_set_triggers);
+        ecs_map_free(t->un_set_triggers);
     }
     ecs_map_free(world->id_triggers);
     ecs_sparse_free(world->triggers);
@@ -836,6 +828,8 @@ int ecs_fini(
     fini_component_lifecycle(world);
 
     fini_queries(world);
+
+    fini_observers(world);
 
     fini_id_index(world);
 
@@ -1298,6 +1292,12 @@ void register_table_for_id(
         if (ecs_triggers_get(world, id, EcsOnRemove)) {
             table->flags |= EcsTableHasOnRemove;
         }
+        if (ecs_triggers_get(world, id, EcsOnSet)) {
+            table->flags |= EcsTableHasOnSet;
+        }
+        if (ecs_triggers_get(world, id, EcsUnSet)) {
+            table->flags |= EcsTableHasUnSet;
+        }                
     }
 }
 
@@ -1400,7 +1400,16 @@ void ecs_unregister_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    /* Remove table from id indices */
     do_register_each_id(world, table, true);
+
+    /* Remove table from table map */
+    ecs_ids_t key = {
+        .array = ecs_vector_first(table->type, ecs_id_t),
+        .count = ecs_vector_count(table->type)
+    };
+
+    ecs_hashmap_remove(world->store.table_map, &key, ecs_table_t*);
 }
 
 ecs_id_record_t* ecs_ensure_id_record(

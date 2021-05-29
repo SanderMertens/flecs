@@ -34,12 +34,11 @@ extern "C" {
 #endif
 
 typedef struct ecs_map_t ecs_map_t;
-typedef struct ecs_bucket_t ecs_bucket_t;
 typedef uint64_t ecs_map_key_t;
 
 typedef struct ecs_map_iter_t {
     const ecs_map_t *map;
-    ecs_bucket_t *bucket;
+    struct ecs_bucket_t *bucket;
     int32_t bucket_index;
     int32_t element_index;
     void *payload;

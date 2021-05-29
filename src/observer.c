@@ -111,5 +111,7 @@ void ecs_observer_fini(
         observer->binding_ctx_free(observer->binding_ctx);
     }
 
+    ecs_os_free(observer->triggers);
+
     ecs_sparse_remove(world->observers, observer->id);
 }
