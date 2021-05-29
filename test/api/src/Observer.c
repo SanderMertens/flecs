@@ -362,3 +362,72 @@ void Observer_2_terms_w_un_set() {
 
     ecs_fini(world);
 }
+
+void Observer_3_terms_2_or_on_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC, .oper = EcsOr}},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, e, TagB);
+    test_int(ctx.invoked, 1);
+
+    ecs_add_id(world, e, TagC);
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_3_terms_2_or_on_remove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC, .oper = EcsOr}},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, e, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, e, TagC);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_id(world, e, TagC);
+    test_int(ctx.invoked, 1);
+
+    ecs_remove_id(world, e, TagB);
+    test_int(ctx.invoked, 2);
+
+    ecs_remove_id(world, e, TagA);
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}

@@ -558,11 +558,25 @@ bool ecs_filter_match_type(
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
 
+    bool is_or = false;
+    bool or_result = false;
+
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
         ecs_term_id_t *subj = &term->args[0];
         ecs_oper_kind_t oper = term->oper;
         ecs_type_t match_type = type;
+
+        if (!is_or && oper == EcsOr) {
+            is_or = true;
+            or_result = false;
+        } else if (is_or && oper != EcsOr) {
+            if (!or_result) {
+                return false;
+            }
+
+            is_or = false;
+        }
 
         ecs_entity_t subj_entity = subj->entity;
         if (subj->entity != EcsThis) {
@@ -575,12 +589,14 @@ bool ecs_filter_match_type(
             result = !result;
         }
 
-        if (!result) {
+        if (is_or) {
+            or_result |= result;
+        } else if (!result) {
             return false;
         }
     }
 
-    return true;    
+    return !is_or || or_result;
 }
 
 bool ecs_filter_match_entity(

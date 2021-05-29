@@ -1102,7 +1102,9 @@
                 "2_terms_1_not_w_on_add",
                 "2_terms_1_not_w_on_remove",
                 "2_terms_w_on_set",
-                "2_terms_w_un_set"
+                "2_terms_w_un_set",
+                "3_terms_2_or_on_add",
+                "3_terms_2_or_on_remove"
             ]                
         }, {
             "id": "TriggerOnAdd",
