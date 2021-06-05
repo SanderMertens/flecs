@@ -1363,3 +1363,129 @@ void Sorting_sort_4_entities_4_types() {
 
     ecs_fini(world);
 }
+
+void Sorting_sort_w_tags_only() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.terms = {{Tag}},
+        .order_by = compare_entity
+    });
+
+    ecs_entity_t root = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, root);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, root);
+
+    ecs_add(world, e2, Tag);
+    ecs_add(world, e1, Tag);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e1);
+    test_int(it.entities[1], e2);
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_childof_marked() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.terms = {{Tag}},
+        .order_by = compare_entity
+    });
+
+    ecs_entity_t root = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, root);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, root);
+
+    ecs_add(world, e3, Tag);
+    ecs_add(world, e1, Tag);
+
+    // Trigger sorting
+    ecs_query_iter(q);
+
+    ecs_delete(world, root);
+
+    test_assert(!ecs_is_alive(world, root));
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e3));
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_isa_marked() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.terms = {{Tag}},
+        .order_by = compare_entity
+    });
+
+    ecs_entity_t root = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, root);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, root);
+
+    ecs_add(world, e3, Tag);
+    ecs_add(world, e1, Tag);
+
+    // Trigger sorting
+    ecs_query_iter(q);
+
+    ecs_delete(world, root);
+
+    test_assert(!ecs_is_alive(world, root));
+    test_int(1, ecs_vector_count(ecs_get_type(world, e1)));
+    test_assert(ecs_has(world, e1, Tag));
+    test_int(1, ecs_vector_count(ecs_get_type(world, e2)));
+    test_assert(ecs_has_pair(world, e2, EcsIsA, e1));
+    test_int(1, ecs_vector_count(ecs_get_type(world, e3)));
+    test_assert(ecs_has(world, e3, Tag));
+
+    ecs_fini(world);
+}
+
+void Sorting_sort_relation_marked() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.terms = {{Tag}},
+        .order_by = compare_entity
+    });
+
+    ecs_entity_t root = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, root);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, root);
+
+    ecs_add(world, e3, Tag);
+    ecs_add(world, e1, Tag);
+
+    // Trigger sorting
+    ecs_query_iter(q);
+
+    ecs_delete(world, root);
+
+    test_assert(!ecs_is_alive(world, root));
+    test_int(1, ecs_vector_count(ecs_get_type(world, e1)));
+    test_assert(ecs_has(world, e1, Tag));
+    test_int(1, ecs_vector_count(ecs_get_type(world, e2)));
+    test_assert(ecs_has_pair(world, e2, Rel, e1));
+    test_int(1, ecs_vector_count(ecs_get_type(world, e3)));
+    test_assert(ecs_has(world, e3, Tag));
+
+    ecs_fini(world);
+}

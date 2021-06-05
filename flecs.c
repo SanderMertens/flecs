@@ -4035,15 +4035,15 @@ void ecs_table_swap(
     (void)world;
 
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_column_t *columns = data->columns;
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
     ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
     
     if (row_1 == row_2) {
         return;
     }
+
+    /* If the table is monitored indicate that there has been a change */
+    mark_table_dirty(table, 0);    
 
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
     ecs_entity_t e1 = entities[row_1];
@@ -4056,24 +4056,25 @@ void ecs_table_swap(
     ecs_assert(record_ptr_1 != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(record_ptr_2 != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Swap entities */
+    /* Keep track of whether entity is watched */
+    bool watched_1 = record_ptr_1->row < 0;
+    bool watched_2 = record_ptr_2->row < 0;
+
+    /* Swap entities & records */
     entities[row_1] = e2;
     entities[row_2] = e1;
-    record_ptr_1->row = row_2;
-    record_ptr_2->row = row_1;
+    record_ptr_1->row = ecs_row_to_record(row_2, watched_1);
+    record_ptr_2->row = ecs_row_to_record(row_1, watched_2);
     record_ptrs[row_1] = record_ptr_2;
     record_ptrs[row_2] = record_ptr_1;
 
-    if (row_2 < 0) {
-        record_ptr_1->row --;
-    } else {
-        record_ptr_1->row ++;
+    swap_switch_columns(table, data, row_1, row_2);
+    swap_bitset_columns(table, data, row_1, row_2);  
+
+    ecs_column_t *columns = data->columns;
+    if (!columns) {
+        return;
     }
-    if (row_1 < 0) {
-        record_ptr_2->row --;
-    } else {
-        record_ptr_2->row ++;
-    }    
 
     /* Swap columns */
     int32_t i, column_count = table->column_count;
@@ -4093,13 +4094,7 @@ void ecs_table_swap(
             ecs_os_memcpy(el_1, el_2, size);
             ecs_os_memcpy(el_2, tmp, size);
         }
-    }
-
-    swap_switch_columns(table, data, row_1, row_2);
-    swap_bitset_columns(table, data, row_1, row_2);
-
-    /* If the table is monitored indicate that there has been a change */
-    mark_table_dirty(table, 0);    
+    }  
 }
 
 static
@@ -8175,7 +8170,8 @@ size_t ecs_id_str(
             bytes_left = append_to_str(&ptr, hi_path, bytes_left, &required);
             ecs_os_free(hi_path);
             bytes_left = append_to_str(&ptr, ",", bytes_left, &required);
-        }            
+        }
+
         char *lo_path = ecs_get_fullpath(world, lo);
         bytes_left = append_to_str(&ptr, lo_path, bytes_left, &required);
         ecs_os_free(lo_path);

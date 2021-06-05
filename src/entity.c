@@ -3626,7 +3626,8 @@ size_t ecs_id_str(
             bytes_left = append_to_str(&ptr, hi_path, bytes_left, &required);
             ecs_os_free(hi_path);
             bytes_left = append_to_str(&ptr, ",", bytes_left, &required);
-        }            
+        }
+
         char *lo_path = ecs_get_fullpath(world, lo);
         bytes_left = append_to_str(&ptr, lo_path, bytes_left, &required);
         ecs_os_free(lo_path);

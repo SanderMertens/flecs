@@ -880,6 +880,10 @@ void Sorting_sort_4_entities_4_types(void);
 void Sorting_sort_1000_entities_2_types_again(void);
 void Sorting_sort_1000_entities_add_type_after_sort(void);
 void Sorting_sort_shared_component(void);
+void Sorting_sort_w_tags_only(void);
+void Sorting_sort_childof_marked(void);
+void Sorting_sort_isa_marked(void);
+void Sorting_sort_relation_marked(void);
 
 // Testsuite 'Queries'
 void Queries_query_changed_after_new(void);
@@ -5188,6 +5192,22 @@ bake_test_case Sorting_testcases[] = {
     {
         "sort_shared_component",
         Sorting_sort_shared_component
+    },
+    {
+        "sort_w_tags_only",
+        Sorting_sort_w_tags_only
+    },
+    {
+        "sort_childof_marked",
+        Sorting_sort_childof_marked
+    },
+    {
+        "sort_isa_marked",
+        Sorting_sort_isa_marked
+    },
+    {
+        "sort_relation_marked",
+        Sorting_sort_relation_marked
     }
 };
 
@@ -9136,7 +9156,7 @@ static bake_test_suite suites[] = {
         "Sorting",
         NULL,
         NULL,
-        26,
+        30,
         Sorting_testcases
     },
     {
