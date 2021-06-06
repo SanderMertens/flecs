@@ -40,6 +40,14 @@ void Entity_remove_role(void);
 void Entity_has_role(void);
 void Entity_pair_role(void);
 void Entity_equals(void);
+void Entity_compare_0(void);
+void Entity_compare_id_t(void);
+void Entity_compare_id(void);
+void Entity_compare_literal(void);
+void Entity_greater_than(void);
+void Entity_less_than(void);
+void Entity_not_0_or_1(void);
+void Entity_not_true_or_false(void);
 void Entity_has_childof(void);
 void Entity_has_instanceof(void);
 void Entity_has_instanceof_indirect(void);
@@ -641,6 +649,38 @@ bake_test_case Entity_testcases[] = {
     {
         "equals",
         Entity_equals
+    },
+    {
+        "compare_0",
+        Entity_compare_0
+    },
+    {
+        "compare_id_t",
+        Entity_compare_id_t
+    },
+    {
+        "compare_id",
+        Entity_compare_id
+    },
+    {
+        "compare_literal",
+        Entity_compare_literal
+    },
+    {
+        "greater_than",
+        Entity_greater_than
+    },
+    {
+        "less_than",
+        Entity_less_than
+    },
+    {
+        "not_0_or_1",
+        Entity_not_0_or_1
+    },
+    {
+        "not_true_or_false",
+        Entity_not_true_or_false
     },
     {
         "has_childof",
@@ -2463,7 +2503,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        102,
+        110,
         Entity_testcases
     },
     {

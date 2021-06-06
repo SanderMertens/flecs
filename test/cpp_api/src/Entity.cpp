@@ -4,14 +4,14 @@ void Entity_new() {
     flecs::world world;
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 }
 
 void Entity_new_named() {
     flecs::world world;
 
     auto entity = flecs::entity(world, "Foo");
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_str(entity.name().c_str(), "Foo");
 }
 
@@ -19,13 +19,13 @@ void Entity_new_named_from_scope() {
     flecs::world world;
 
     auto entity = flecs::entity(world, "Foo");
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_str(entity.name().c_str(), "Foo");
 
     auto prev = world.set_scope(entity);
 
     auto child = world.entity("Bar");
-    test_assert(child.id() != 0);
+    test_assert(child != 0);
 
     world.set_scope(prev);
 
@@ -37,13 +37,13 @@ void Entity_new_nested_named_from_scope() {
     flecs::world world;
 
     auto entity = flecs::entity(world, "Foo");
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_str(entity.name().c_str(), "Foo");
 
     auto prev = world.set_scope(entity);
 
     auto child = world.entity("Bar::Hello");
-    test_assert(child.id() != 0);
+    test_assert(child != 0);
 
     world.set_scope(prev);
 
@@ -55,14 +55,14 @@ void Entity_new_nested_named_from_nested_scope() {
     flecs::world world;
 
     auto entity = flecs::entity(world, "Foo::Bar");
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_str(entity.name().c_str(), "Bar");
     test_str(entity.path().c_str(), "::Foo::Bar");
 
     auto prev = world.set_scope(entity);
 
     auto child = world.entity("Hello::World");
-    test_assert(child.id() != 0);
+    test_assert(child != 0);
 
     world.set_scope(prev);
 
@@ -78,7 +78,7 @@ void Entity_new_add() {
     auto entity = world.entity()
         .add<Position>();
 
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_assert(entity.has<Position>());
 }
 
@@ -92,7 +92,7 @@ void Entity_new_add_2() {
         .add<Position>()
         .add<Velocity>();
 
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_assert(entity.has<Position>());
     test_assert(entity.has<Velocity>());
 }
@@ -105,7 +105,7 @@ void Entity_new_set() {
     auto entity = world.entity()
         .set<Position>({10, 20});
 
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_assert(entity.has<Position>());
 
     const Position *p = entity.get<Position>();
@@ -123,7 +123,7 @@ void Entity_new_set_2() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_assert(entity.has<Position>());
     test_assert(entity.has<Velocity>());
 
@@ -142,7 +142,7 @@ void Entity_add() {
     world.component<Position>();
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.add<Position>();
     test_assert(entity.has<Position>());
@@ -154,7 +154,7 @@ void Entity_remove() {
     world.component<Position>();
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.add<Position>();
     test_assert(entity.has<Position>());
@@ -169,7 +169,7 @@ void Entity_set() {
     world.component<Position>();
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.set<Position>({10, 20});
     test_assert(entity.has<Position>());
@@ -186,7 +186,7 @@ void Entity_replace() {
     world.component<Velocity>();
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.patch<Position>([](Position& p) {
         p.x = 10;
@@ -211,7 +211,7 @@ void Entity_add_2() {
     world.component<Velocity>();
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.add<Position>()
           .add<Velocity>();
@@ -224,10 +224,10 @@ void Entity_add_entity() {
     flecs::world world;
 
     auto tag = world.entity();
-    test_assert(tag.id() != 0);
+    test_assert(tag != 0);
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.add(tag);
     test_assert(entity.has(tag));
@@ -237,26 +237,26 @@ void Entity_add_childof() {
     flecs::world world;
 
     auto parent = world.entity();
-    test_assert(parent.id() != 0);
+    test_assert(parent != 0);
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.add(flecs::ChildOf, parent);
-    test_assert(entity.has(flecs::ChildOf, parent.id()));
+    test_assert(entity.has(flecs::ChildOf, parent));
 }
 
 void Entity_add_instanceof() {
     flecs::world world;
 
     auto base = world.entity();
-    test_assert(base.id() != 0);
+    test_assert(base != 0);
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.add(flecs::IsA, base);
-    test_assert(entity.has(flecs::IsA, base.id()));
+    test_assert(entity.has(flecs::IsA, base));
 }
 
 void Entity_remove_2() {
@@ -266,7 +266,7 @@ void Entity_remove_2() {
     world.component<Velocity>();
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.add<Position>()
           .add<Velocity>();
@@ -288,7 +288,7 @@ void Entity_set_2() {
     world.component<Velocity>();
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.set<Position>({10, 20})
         .set<Velocity>({1, 2});    
@@ -308,10 +308,10 @@ void Entity_remove_entity() {
     flecs::world world;
 
     auto tag = world.entity();
-    test_assert(tag.id() != 0);
+    test_assert(tag != 0);
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.add(tag);
     test_assert(entity.has(tag));
@@ -324,32 +324,32 @@ void Entity_remove_childof() {
     flecs::world world;
 
     auto parent = world.entity();
-    test_assert(parent.id() != 0);
+    test_assert(parent != 0);
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.add(flecs::ChildOf, parent);
-    test_assert(entity.has(flecs::ChildOf, parent.id()));
+    test_assert(entity.has(flecs::ChildOf, parent));
 
     entity.remove(flecs::ChildOf, parent);
-    test_assert(!entity.has(flecs::ChildOf, parent.id()));
+    test_assert(!entity.has(flecs::ChildOf, parent));
 }
 
 void Entity_remove_instanceof() {
     flecs::world world;
 
     auto base = world.entity();
-    test_assert(base.id() != 0);
+    test_assert(base != 0);
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     entity.add(flecs::IsA, base);
-    test_assert(entity.has(flecs::IsA, base.id()));
+    test_assert(entity.has(flecs::IsA, base));
     
     entity.remove(flecs::IsA, base);
-    test_assert(!entity.has(flecs::IsA, base.id()));
+    test_assert(!entity.has(flecs::IsA, base));
 }
 
 void Entity_get_generic() {
@@ -360,7 +360,7 @@ void Entity_get_generic() {
     auto entity = world.entity()
         .set<Position>({10, 20});
 
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_assert(entity.has<Position>());
 
     const void *void_p = entity.get(position);
@@ -379,7 +379,7 @@ void Entity_get_mut_generic() {
     auto entity = world.entity()
         .set<Position>({10, 20});
 
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_assert(entity.has<Position>());
 
     bool invoked;
@@ -408,10 +408,10 @@ void Entity_get_generic_w_id() {
     auto entity = world.entity()
         .set<Position>({10, 20});
 
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_assert(entity.has<Position>());
 
-    const void *void_p = entity.get(position.id());
+    const void *void_p = entity.get(position);
     test_assert(void_p != nullptr);
 
     const Position *p = static_cast<const Position*>(void_p);
@@ -427,7 +427,7 @@ void Entity_get_mut_generic_w_id() {
     auto entity = world.entity()
         .set<Position>({10, 20});
 
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_assert(entity.has<Position>());
 
     bool invoked;
@@ -437,14 +437,14 @@ void Entity_get_mut_generic_w_id() {
             invoked = true;
         });
 
-    void *void_p = entity.get_mut(position.id());
+    void *void_p = entity.get_mut(position);
     test_assert(void_p != nullptr);
 
     Position *p = static_cast<Position*>(void_p);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    entity.modified(position.id());
+    entity.modified(position);
     test_bool(invoked, true);
 }
 
@@ -455,7 +455,7 @@ void Entity_add_role() {
 
     entity = entity.add_role(flecs::Pair);
 
-    test_assert(entity.id() & ECS_PAIR);
+    test_assert(entity & ECS_PAIR);
 }
 
 void Entity_remove_role() {
@@ -463,15 +463,15 @@ void Entity_remove_role() {
 
     auto entity = world.entity();
 
-    flecs::entity_t id = entity.id();
+    flecs::entity_t id = entity;
 
     entity = entity.add_role(flecs::Pair);
 
-    test_assert(entity.id() & ECS_PAIR);
+    test_assert(entity & ECS_PAIR);
 
     entity = entity.remove_role();
 
-    test_assert(entity.id() == id);
+    test_assert(entity == id);
 }
 
 void Entity_has_role() {
@@ -512,12 +512,202 @@ void Entity_equals() {
     auto e1 = world.entity();
     auto e2 = world.entity();
 
-    auto id1 = flecs::entity(world, e1.id());
-    auto id2 = flecs::entity(world, e2.id());
+    auto e1_2 = world.entity(e1);
+    auto e2_2 = world.entity(e2);
+
+    test_assert(e1 == e1_2);
+    test_assert(e2 == e2_2);
+    test_assert(e1 >= e1_2);
+    test_assert(e1 <= e1_2);
+    test_assert(e2 >= e2_2);
+    test_assert(e2 <= e2_2);
+    test_assert(e1 != e2);
+
+    test_assert(!(e2 == e1_2));
+    test_assert(!(e1 == e2_2));
+    test_assert(!(e2 <= e1_2));
+    test_assert(!(e1 >= e2_2));
+    test_assert(!(e2 != e2));
+}
+
+void Entity_compare_0() {
+    flecs::world world;
+
+    auto e = world.entity();
+    auto e0 = world.entity(0);
+    auto e0_2 = world.entity(0);
+
+    test_assert(e != e0);
+    test_assert(e > e0);
+    test_assert(e >= e0);
+    test_assert(e0 < e);
+    test_assert(e0 <= e);
+
+    test_assert(e0 == e0_2);
+    test_assert(e0 >= e0_2);
+    test_assert(e0 <= e0_2);
+}
+
+void Entity_compare_id_t() {
+    flecs::world world;
+
+    auto e1 = world.entity();
+    auto e2 = world.entity();
+
+    flecs::id_t id1 = e1;
+    flecs::id_t id2 = e2;
 
     test_assert(e1 == id1);
     test_assert(e2 == id2);
-    test_assert(e1 != e2);
+
+    test_assert(e1 != id2);
+    test_assert(e2 != id1);
+
+    test_assert(e1 >= id1);
+    test_assert(e2 >= id2);
+
+    test_assert(e1 <= id1);
+    test_assert(e2 <= id2);
+
+    test_assert(e1 <= id2);
+    test_assert(e2 >= id1);
+
+    test_assert(e1 < id2);
+    test_assert(e2 > id1); 
+    
+
+    test_assert(!(e2 == id1));
+    test_assert(!(e1 == id2));
+
+    test_assert(!(e2 != id2));
+    test_assert(!(e1 != id1));
+
+    test_assert(!(e1 >= id2));
+    test_assert(!(e2 <= id1));
+
+    test_assert(!(e2 < id2));
+    test_assert(!(e1 > id1)); 
+}
+
+void Entity_compare_id() {
+    flecs::world world;
+
+    auto e1 = world.entity();
+    auto e2 = world.entity();
+
+    flecs::id id1 = e1;
+    flecs::id id2 = e2;
+
+    test_assert(e1 == id1);
+    test_assert(e2 == id2);
+
+    test_assert(e1 != id2);
+    test_assert(e2 != id1);
+
+    test_assert(e1 >= id1);
+    test_assert(e2 >= id2);
+
+    test_assert(e1 <= id1);
+    test_assert(e2 <= id2);
+
+    test_assert(e1 <= id2);
+    test_assert(e2 >= id1);
+
+    test_assert(e1 < id2);
+    test_assert(e2 > id1); 
+    
+
+    test_assert(!(e2 == id1));
+    test_assert(!(e1 == id2));
+
+    test_assert(!(e2 != id2));
+    test_assert(!(e1 != id1));
+
+    test_assert(!(e1 >= id2));
+    test_assert(!(e2 <= id1));
+
+    test_assert(!(e2 < id2));
+    test_assert(!(e1 > id1)); 
+}
+
+void Entity_compare_literal() {
+    flecs::world world;
+
+    auto e1 = world.entity(500);
+    auto e2 = world.entity(600);
+
+    test_assert(e1 == 500);
+    test_assert(e2 == 600);
+
+    test_assert(e1 != 600);
+    test_assert(e2 != 500);
+
+    test_assert(e1 >= 500);
+    test_assert(e2 >= 600);
+
+    test_assert(e1 <= 500);
+    test_assert(e2 <= 600);
+
+    test_assert(e1 <= 600);
+    test_assert(e2 >= 500);
+
+    test_assert(e1 < 600);
+    test_assert(e2 > 500); 
+    
+
+    test_assert(!(e2 == 500));
+    test_assert(!(e1 == 600));
+
+    test_assert(!(e2 != 600));
+    test_assert(!(e1 != 500));
+
+    test_assert(!(e1 >= 600));
+    test_assert(!(e2 <= 500));
+
+    test_assert(!(e2 < 600));
+    test_assert(!(e1 > 500));
+}
+
+void Entity_greater_than() {
+    flecs::world world;
+
+    auto e1 = world.entity();
+    auto e2 = world.entity();
+
+    test_assert(e2 > e1);
+    test_assert(e2 >= e1);
+}
+
+void Entity_less_than() {
+    flecs::world world;
+
+    auto e1 = world.entity();
+    auto e2 = world.entity();
+
+    test_assert(e1 < e2);
+    test_assert(e1 <= e2);
+}
+
+void Entity_not_0_or_1() {
+    flecs::world world;
+
+    auto e = world.entity();
+
+    flecs::id_t id = e;
+
+    test_assert(id != 0);
+    test_assert(id != 1);
+}
+
+void Entity_not_true_or_false() {
+    flecs::world world;
+
+    auto e = world.entity();
+
+    flecs::id_t id = e;
+
+    test_assert(id != true);
+    test_assert(id != false);
 }
 
 void Entity_has_childof() {
@@ -598,8 +788,8 @@ void Entity_delete() {
     auto e2 = world.entity();
 
     // Entity ids should be equal without the generation
-    test_assert((int32_t)e2.id() == (int32_t)e.id());
-    test_assert(e2.id() != e.id());
+    test_assert((uint32_t)e2 == (uint32_t)e);
+    test_assert(e2 != e);
 }
 
 void Entity_clear() {
@@ -615,7 +805,7 @@ void Entity_clear() {
     test_assert(!e.has<Velocity>());
 
     auto e2 = world.entity();
-    test_assert(e2.id() > e.id());
+    test_assert(e2 > e);
 }
 
 void Entity_foce_owned() {
@@ -761,8 +951,8 @@ void Entity_get_parent() {
         .add(flecs::ChildOf, parent3);
 
     auto p = child.get_parent<Velocity>();
-    test_assert(p.id() != 0);
-    test_int(p.id(), parent2.id());
+    test_assert(p != 0);
+    test_int(p, parent2);
     test_assert(p == parent2);
 }
 
@@ -788,7 +978,7 @@ void Entity_get_parent_w_tag() {
         .add(flecs::ChildOf, parent3);
 
     auto p = child.get_parent(TagB);
-    test_assert(p.id() != 0);
+    test_assert(p != 0);
     test_assert(p == parent2);
 }
 
@@ -825,7 +1015,7 @@ void Entity_get_type() {
     flecs::world world;
 
     auto entity = world.entity();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     auto type_1 = entity.type();
     test_assert(type_1.id() == 0);
@@ -841,7 +1031,7 @@ void Entity_get_nonempty_type() {
 
     auto entity = world.entity()
         .add<Position>();
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     auto type_1 = entity.type();
     test_assert(type_1.id() == 0);
@@ -932,7 +1122,7 @@ void Entity_implicit_name_to_char() {
     flecs::world world;
 
     auto entity = flecs::entity(world, "Foo");
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_str(entity.name().c_str(), "Foo");
 
     test_str(entity.name(), "Foo");
@@ -942,7 +1132,7 @@ void Entity_implicit_path_to_char() {
     flecs::world world;
 
     auto entity = flecs::entity(world, "Foo::Bar");
-    test_assert(entity.id() != 0);
+    test_assert(entity);
     test_str(entity.name().c_str(), "Bar");
 
     test_str(entity.path(), "::Foo::Bar");
@@ -952,7 +1142,7 @@ void Entity_implicit_type_str_to_char() {
     flecs::world world;
 
     auto entity = flecs::entity(world, "Foo");
-    test_assert(entity.id() != 0);
+    test_assert(entity);
 
     test_str(entity.type().str(), "Name");
 }
@@ -962,11 +1152,11 @@ void Entity_entity_to_entity_view() {
 
     flecs::entity e = world.entity()
         .set<Position>({10, 20});
-    test_assert(e.id() != 0);
+    test_assert(e != 0);
 
     flecs::entity_view ev = e;
-    test_assert(ev.id() != 0);
-    test_assert(e.id() == ev.id());
+    test_assert(ev != 0);
+    test_assert(e == ev);
 
     const Position *p = ev.get<Position>();
     test_assert(p != NULL);
@@ -979,11 +1169,11 @@ void Entity_entity_view_to_entity_world() {
 
     flecs::entity e = world.entity()
         .set<Position>({10, 20});
-    test_assert(e.id() != 0);
+    test_assert(e != 0);
 
     flecs::entity_view ev = e;
-    test_assert(ev.id() != 0);
-    test_assert(e.id() == ev.id());
+    test_assert(ev != 0);
+    test_assert(e == ev);
 
     flecs::entity ew = ev.mut(world);
     ew.set<Position>({10, 20});
@@ -2050,4 +2240,3 @@ void Entity_scope_before_builder_method() {
     auto C = ecs.lookup("P::C");
     test_assert(C != 0);
 }
-
