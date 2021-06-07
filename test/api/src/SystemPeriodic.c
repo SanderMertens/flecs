@@ -1495,7 +1495,7 @@ void SystemPeriodic_filter_disabled() {
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, Entity1, Position);
-    ECS_ENTITY(world, Entity2, Position, EcsDisabled);
+    ECS_ENTITY(world, Entity2, Position, Disabled);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
@@ -1520,9 +1520,9 @@ void SystemPeriodic_match_disabled() {
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, Entity1, Position);
-    ECS_ENTITY(world, Entity2, Position, EcsDisabled);
+    ECS_ENTITY(world, Entity2, Position, Disabled);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, EcsDisabled);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Disabled);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1547,9 +1547,9 @@ void SystemPeriodic_match_disabled_and_enabled() {
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, Entity1, Position);
-    ECS_ENTITY(world, Entity2, Position, EcsDisabled);
+    ECS_ENTITY(world, Entity2, Position, Disabled);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?EcsDisabled);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Disabled);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1575,9 +1575,9 @@ void SystemPeriodic_match_prefab() {
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, Entity1, Position);
-    ECS_ENTITY(world, Entity2, Position, EcsPrefab);
+    ECS_ENTITY(world, Entity2, Position, Prefab);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, EcsPrefab);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Prefab);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1602,9 +1602,9 @@ void SystemPeriodic_match_prefab_and_normal() {
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, Entity1, Position);
-    ECS_ENTITY(world, Entity2, Position, EcsPrefab);
+    ECS_ENTITY(world, Entity2, Position, Prefab);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?EcsPrefab);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Prefab);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);

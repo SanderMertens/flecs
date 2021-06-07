@@ -252,7 +252,7 @@ int id_test(int buffer_size) {
     test_str( ecs_get_name(world, e7), "E7E7E7E");
     test_str( ecs_get_name(world, e8), "E8E8E8E8");
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, EcsName);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, flecs.core.Name);
     Probe ctx = {0};
     ecs_set_context(world, &ctx);      
     ecs_progress(world, 0);
@@ -410,7 +410,7 @@ int id_w_simple_test(int buffer_size) {
         test_str( ecs_get_name(world, e7), "E7E7E7E");
         test_str( ecs_get_name(world, e8), "E8E8E8E8");
 
-        ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position, EcsName);
+        ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position, flecs.core.Name);
         Probe ctx = {0};
         ecs_set_context(world, &ctx);      
         ecs_progress(world, 0);
@@ -1396,7 +1396,7 @@ void ReaderWriter_snapshot_reader_id() {
         test_str( ecs_get_name(world, e7), "E7E7E7E");
         test_str( ecs_get_name(world, e8), "E8E8E8E8");
 
-        ECS_SYSTEM(world, Dummy, EcsOnUpdate, EcsName);
+        ECS_SYSTEM(world, Dummy, EcsOnUpdate, flecs.core.Name);
         Probe ctx = {0};
         ecs_set_context(world, &ctx);      
         ecs_progress(world, 0);

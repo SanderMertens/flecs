@@ -2,7 +2,7 @@
 #include <flecs/type.h>
 
 void Prefab_setup() {
-    ecs_tracing_enable(-3);
+    // ecs_tracing_enable(-3);
 }
 
 static
@@ -1052,8 +1052,8 @@ void Prefab_ignore_prefab_parent_component() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, parent, EcsPrefab, Position);
-    ECS_ENTITY(world, child, EcsPrefab, CHILDOF | parent, Velocity);
+    ECS_ENTITY(world, parent, Prefab, Position);
+    ECS_ENTITY(world, child, Prefab, CHILDOF | parent, Velocity);
 
     test_assert( ecs_has_pair(world, child, EcsChildOf, parent));
     test_assert( !ecs_has(world, child, Position));
@@ -1179,13 +1179,13 @@ void Prefab_prefab_w_2_children() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+    ECS_ENTITY(world, Parent, Prefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child1, EcsPrefab, CHILDOF | Parent, Position);
+        ECS_ENTITY(world, Child1, Prefab, CHILDOF | Parent, Position);
             ecs_set(world, Child1, Position, {2, 3});
 
-        ECS_ENTITY(world, Child2, EcsPrefab, CHILDOF | Parent, Position);
+        ECS_ENTITY(world, Child2, Prefab, CHILDOF | Parent, Position);
             ecs_set(world, Child2, Position, {3, 4});
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Parent);
@@ -1226,13 +1226,13 @@ void Prefab_prefab_w_grandchild() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+    ECS_ENTITY(world, Parent, Prefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, Position);
+        ECS_ENTITY(world, Child, Prefab, CHILDOF | Parent, Position);
             ecs_set(world, Child, Position, {2, 3});
 
-            ECS_ENTITY(world, GrandChild, EcsPrefab, CHILDOF | Parent.Child, Position, Rotation);
+            ECS_ENTITY(world, GrandChild, Prefab, CHILDOF | Parent.Child, Position, Rotation);
                 ecs_set(world, GrandChild, Position, {3, 4});
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Parent);
@@ -1273,16 +1273,16 @@ void Prefab_prefab_tree_1_2_1() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, parent, EcsPrefab, Position);
+    ECS_ENTITY(world, parent, Prefab, Position);
         ecs_set(world, parent, Position, {1, 2});
 
-        ECS_ENTITY(world, child_1, EcsPrefab, CHILDOF | parent, Position);
+        ECS_ENTITY(world, child_1, Prefab, CHILDOF | parent, Position);
             ecs_set(world, child_1, Position, {2, 3});
 
-        ECS_ENTITY(world, child_2, EcsPrefab, CHILDOF | parent, Position);
+        ECS_ENTITY(world, child_2, Prefab, CHILDOF | parent, Position);
             ecs_set(world, child_2, Position, {4, 5});
 
-            ECS_ENTITY(world, grandchild, EcsPrefab, CHILDOF | parent.child_2, Position);
+            ECS_ENTITY(world, grandchild, Prefab, CHILDOF | parent.child_2, Position);
                 ecs_set(world, grandchild, Position, {6, 7});
 
     test_assert(ecs_has_pair(world, child_1, EcsChildOf, parent));
@@ -1337,13 +1337,13 @@ void Prefab_prefab_w_base_w_child() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, Base, EcsPrefab, Velocity);
+    ECS_ENTITY(world, Base, Prefab, Velocity);
         ecs_set(world, Base, Velocity, {3, 4});
 
-    ECS_ENTITY(world, Parent, EcsPrefab, INSTANCEOF | Base, Position);
+    ECS_ENTITY(world, Parent, Prefab, INSTANCEOF | Base, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, Position);
+        ECS_ENTITY(world, Child, Prefab, CHILDOF | Parent, Position);
             ecs_set(world, Child, Position, {2, 3});
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Parent);
@@ -1381,13 +1381,13 @@ void Prefab_prefab_w_child_w_base() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, Base, EcsPrefab, Velocity);
+    ECS_ENTITY(world, Base, Prefab, Velocity);
         ecs_set(world, Base, Velocity, {3, 4});
 
-    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+    ECS_ENTITY(world, Parent, Prefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, INSTANCEOF | Base, Position);
+        ECS_ENTITY(world, Child, Prefab, CHILDOF | Parent, INSTANCEOF | Base, Position);
             ecs_set(world, Child, Position, {2, 3});
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Parent);
@@ -1424,16 +1424,16 @@ void Prefab_prefab_w_child_w_base_w_children() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, Base, EcsPrefab, Velocity);
+    ECS_ENTITY(world, Base, Prefab, Velocity);
         ecs_set(world, Base, Velocity, {3, 4});
 
-        ECS_ENTITY(world, BaseChild, EcsPrefab, CHILDOF | Base, Position);
+        ECS_ENTITY(world, BaseChild, Prefab, CHILDOF | Base, Position);
             ecs_set(world, BaseChild, Position, {4, 5});
 
-    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+    ECS_ENTITY(world, Parent, Prefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, INSTANCEOF | Base, Position);
+        ECS_ENTITY(world, Child, Prefab, CHILDOF | Parent, INSTANCEOF | Base, Position);
             ecs_set(world, Child, Position, {2, 3});
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Parent);
@@ -1481,10 +1481,10 @@ void Prefab_prefab_w_child_new_w_count() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+    ECS_ENTITY(world, Parent, Prefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, Position);
+        ECS_ENTITY(world, Child, Prefab, CHILDOF | Parent, Position);
             ecs_set(world, Child, Position, {2, 3});
 
     const ecs_entity_t *ids = ecs_bulk_new_w_entity(world, ecs_pair(EcsIsA, Parent), 3);
@@ -1520,14 +1520,14 @@ void Prefab_prefab_auto_override_child_component() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+    ECS_ENTITY(world, Parent, Prefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, ChildPrefab, EcsPrefab, Position, Velocity);
+        ECS_ENTITY(world, ChildPrefab, Prefab, Position, Velocity);
             ecs_set(world, ChildPrefab, Position, {2, 3});
             ecs_set(world, ChildPrefab, Velocity, {4, 5});
 
-        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, INSTANCEOF | ChildPrefab, Velocity);
+        ECS_ENTITY(world, Child, Prefab, CHILDOF | Parent, INSTANCEOF | ChildPrefab, Velocity);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, Parent);
     test_assert(e1 != 0);

@@ -2337,7 +2337,7 @@ void SingleThreadStaging_override_after_remove_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, base, Position, EcsDisabled);
+    ECS_ENTITY(world, base, Position, Disabled);
 
     ECS_ENTITY(world, e, Position, INSTANCEOF | base);
 

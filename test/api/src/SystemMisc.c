@@ -1,7 +1,7 @@
 #include <api.h>
 
 void SystemMisc_setup() {
-    ecs_tracing_enable(-3);
+    // ecs_tracing_enable(-3);
 }
 
 static
@@ -422,7 +422,7 @@ void SystemMisc_system_w_or_prefab() {
     ECS_COMPONENT(world, Position);
     ECS_PREFAB(world, Prefab, Position);
 
-    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab || EcsDisabled);
+    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, flecs.core.Prefab || Disabled);
 
     test_int(is_invoked, 0);
 
@@ -437,9 +437,9 @@ void SystemMisc_system_w_or_disabled() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Entity, Position, EcsDisabled);
+    ECS_ENTITY(world, Entity, Position, Disabled);
 
-    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab || EcsDisabled);
+    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, Prefab || Disabled);
 
     test_int(is_invoked, 0);
 
@@ -455,9 +455,9 @@ void SystemMisc_system_w_or_disabled_and_prefab() {
 
     ECS_COMPONENT(world, Position);
     ECS_PREFAB(world, Prefab, Position);
-    ECS_ENTITY(world, Entity, Position, EcsDisabled);
+    ECS_ENTITY(world, Entity, Position, Disabled);
 
-    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab || EcsDisabled);
+    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, flecs.core.Prefab || Disabled);
 
     test_int(is_invoked, 0);
 
