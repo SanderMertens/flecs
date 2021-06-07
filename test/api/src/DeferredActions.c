@@ -1587,3 +1587,33 @@ void DeferredActions_register_component_while_deferred() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_defer_enable() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+    ecs_enable(world, e, false);
+    test_assert(!ecs_has_id(world, e, EcsDisabled));
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_id(world, e, EcsDisabled));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_disable() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_w_id(world, EcsDisabled);
+
+    ecs_defer_begin(world);
+    ecs_enable(world, e, true);
+    test_assert(ecs_has_id(world, e, EcsDisabled));
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has_id(world, e, EcsDisabled));
+
+    ecs_fini(world);
+}

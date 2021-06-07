@@ -1753,7 +1753,9 @@
                 "async_stage_is_async",
                 "register_component_while_in_progress",
                 "register_component_while_staged",
-                "register_component_while_deferred"
+                "register_component_while_deferred",
+                "defer_enable",
+                "defer_disable"
             ]
         }, {
             "id": "SingleThreadStaging",

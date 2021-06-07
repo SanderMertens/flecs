@@ -1641,6 +1641,8 @@ void DeferredActions_async_stage_is_async(void);
 void DeferredActions_register_component_while_in_progress(void);
 void DeferredActions_register_component_while_staged(void);
 void DeferredActions_register_component_while_deferred(void);
+void DeferredActions_defer_enable(void);
+void DeferredActions_defer_disable(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -8074,6 +8076,14 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "register_component_while_deferred",
         DeferredActions_register_component_while_deferred
+    },
+    {
+        "defer_enable",
+        DeferredActions_defer_enable
+    },
+    {
+        "defer_disable",
+        DeferredActions_defer_disable
     }
 };
 
@@ -9338,7 +9348,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        47,
+        49,
         DeferredActions_testcases
     },
     {
