@@ -21,48 +21,49 @@ const ecs_entity_t EcsWildcard = (ECS_HI_COMPONENT_ID + 3);
 const ecs_entity_t EcsThis = (ECS_HI_COMPONENT_ID + 4);
 const ecs_entity_t EcsTransitive = (ECS_HI_COMPONENT_ID + 5);
 const ecs_entity_t EcsFinal = (ECS_HI_COMPONENT_ID + 6);
+const ecs_entity_t EcsTag = (ECS_HI_COMPONENT_ID + 7);
+
+/* Relation deletion policies */
+const ecs_entity_t EcsOnDelete = (ECS_HI_COMPONENT_ID + 8);
+const ecs_entity_t EcsOnDeleteObject = (ECS_HI_COMPONENT_ID + 9);
+const ecs_entity_t EcsRemove =  (ECS_HI_COMPONENT_ID + 10);
+const ecs_entity_t EcsDelete =  (ECS_HI_COMPONENT_ID + 11);
+const ecs_entity_t EcsThrow =  (ECS_HI_COMPONENT_ID + 12);
 
 /* Builtin relations */
-const ecs_entity_t EcsChildOf = (ECS_HI_COMPONENT_ID + 7);
-const ecs_entity_t EcsIsA = (ECS_HI_COMPONENT_ID + 8) ;
+const ecs_entity_t EcsChildOf = (ECS_HI_COMPONENT_ID + 20);
+const ecs_entity_t EcsIsA = (ECS_HI_COMPONENT_ID + 21) ;
 
 /* Misc tags */
-const ecs_entity_t EcsModule = (ECS_HI_COMPONENT_ID + 9);
-const ecs_entity_t EcsPrefab = (ECS_HI_COMPONENT_ID + 10);
-const ecs_entity_t EcsDisabled = (ECS_HI_COMPONENT_ID + 11);
-const ecs_entity_t EcsHidden = (ECS_HI_COMPONENT_ID + 12);
+const ecs_entity_t EcsModule = (ECS_HI_COMPONENT_ID + 22);
+const ecs_entity_t EcsPrefab = (ECS_HI_COMPONENT_ID + 23);
+const ecs_entity_t EcsDisabled = (ECS_HI_COMPONENT_ID + 24);
+const ecs_entity_t EcsHidden = (ECS_HI_COMPONENT_ID + 25);
 
 /* Trigger/observer Events */
-const ecs_entity_t EcsOnAdd = (ECS_HI_COMPONENT_ID + 13);
-const ecs_entity_t EcsOnRemove = (ECS_HI_COMPONENT_ID + 14);
-const ecs_entity_t EcsOnSet = (ECS_HI_COMPONENT_ID + 15);
-const ecs_entity_t EcsUnSet = (ECS_HI_COMPONENT_ID + 16);
-
-/* Deletion policies */
-const ecs_entity_t EcsOnDelete = (ECS_HI_COMPONENT_ID + 17);
-const ecs_entity_t EcsOnDeleteObject = (ECS_HI_COMPONENT_ID + 18);
-const ecs_entity_t EcsRemove =  (ECS_HI_COMPONENT_ID + 19);
-const ecs_entity_t EcsDelete =  (ECS_HI_COMPONENT_ID + 20);
-const ecs_entity_t EcsThrow =  (ECS_HI_COMPONENT_ID + 21);
+const ecs_entity_t EcsOnAdd = (ECS_HI_COMPONENT_ID + 26);
+const ecs_entity_t EcsOnRemove = (ECS_HI_COMPONENT_ID + 27);
+const ecs_entity_t EcsOnSet = (ECS_HI_COMPONENT_ID + 28);
+const ecs_entity_t EcsUnSet = (ECS_HI_COMPONENT_ID + 29);
 
 /* System tags */
-const ecs_entity_t EcsOnDemand = (ECS_HI_COMPONENT_ID + 22);
-const ecs_entity_t EcsMonitor = (ECS_HI_COMPONENT_ID + 23);
-const ecs_entity_t EcsDisabledIntern = (ECS_HI_COMPONENT_ID + 24);
-const ecs_entity_t EcsInactive = (ECS_HI_COMPONENT_ID + 25);
+const ecs_entity_t EcsOnDemand = (ECS_HI_COMPONENT_ID + 40);
+const ecs_entity_t EcsMonitor = (ECS_HI_COMPONENT_ID + 41);
+const ecs_entity_t EcsDisabledIntern = (ECS_HI_COMPONENT_ID + 42);
+const ecs_entity_t EcsInactive = (ECS_HI_COMPONENT_ID + 43);
 
 /* Pipelines & builtin pipeline phases */
-const ecs_entity_t EcsPipeline = (ECS_HI_COMPONENT_ID + 26);
-const ecs_entity_t EcsPreFrame = (ECS_HI_COMPONENT_ID + 27);
-const ecs_entity_t EcsOnLoad = (ECS_HI_COMPONENT_ID + 28);
-const ecs_entity_t EcsPostLoad = (ECS_HI_COMPONENT_ID + 29);
-const ecs_entity_t EcsPreUpdate = (ECS_HI_COMPONENT_ID + 30);
-const ecs_entity_t EcsOnUpdate = (ECS_HI_COMPONENT_ID + 31);
-const ecs_entity_t EcsOnValidate = (ECS_HI_COMPONENT_ID + 32);
-const ecs_entity_t EcsPostUpdate = (ECS_HI_COMPONENT_ID + 33);
-const ecs_entity_t EcsPreStore = (ECS_HI_COMPONENT_ID + 34);
-const ecs_entity_t EcsOnStore = (ECS_HI_COMPONENT_ID + 35);
-const ecs_entity_t EcsPostFrame = (ECS_HI_COMPONENT_ID + 36);
+const ecs_entity_t EcsPipeline = (ECS_HI_COMPONENT_ID + 44);
+const ecs_entity_t EcsPreFrame = (ECS_HI_COMPONENT_ID + 45);
+const ecs_entity_t EcsOnLoad = (ECS_HI_COMPONENT_ID + 46);
+const ecs_entity_t EcsPostLoad = (ECS_HI_COMPONENT_ID + 47);
+const ecs_entity_t EcsPreUpdate = (ECS_HI_COMPONENT_ID + 48);
+const ecs_entity_t EcsOnUpdate = (ECS_HI_COMPONENT_ID + 49);
+const ecs_entity_t EcsOnValidate = (ECS_HI_COMPONENT_ID + 50);
+const ecs_entity_t EcsPostUpdate = (ECS_HI_COMPONENT_ID + 51);
+const ecs_entity_t EcsPreStore = (ECS_HI_COMPONENT_ID + 52);
+const ecs_entity_t EcsOnStore = (ECS_HI_COMPONENT_ID + 53);
+const ecs_entity_t EcsPostFrame = (ECS_HI_COMPONENT_ID + 54);
 
 
 /* -- Private functions -- */

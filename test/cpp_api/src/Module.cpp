@@ -188,6 +188,8 @@ public:
     Module_w_dtor(flecs::world& world) {
         world.module<Module_w_dtor>();
         module_ctor_invoked ++;
+
+        world.system<>().iter([](flecs::iter& it) { });
     }
 
     ~Module_w_dtor() {

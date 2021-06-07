@@ -976,6 +976,14 @@ void Pairs_typeid_from_pair_w_rel_obj_type(void);
 void Pairs_typeid_from_pair_w_rel_0_obj_type(void);
 void Pairs_typeid_from_pair_w_rel_obj_0_type(void);
 void Pairs_typeid_from_pair_w_rel_0_obj_0_type(void);
+void Pairs_tag_pair_w_rel_comp(void);
+void Pairs_tag_pair_w_obj_comp(void);
+void Pairs_tag_pair_w_rel_obj_comp(void);
+void Pairs_get_tag_pair_w_rel_comp(void);
+void Pairs_get_tag_pair_w_obj_comp(void);
+void Pairs_get_tag_pair_w_rel_obj_comp(void);
+void Pairs_tag_pair_w_childof_w_comp(void);
+void Pairs_tag_pair_w_isa_w_comp(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -5568,6 +5576,38 @@ bake_test_case Pairs_testcases[] = {
     {
         "typeid_from_pair_w_rel_0_obj_0_type",
         Pairs_typeid_from_pair_w_rel_0_obj_0_type
+    },
+    {
+        "tag_pair_w_rel_comp",
+        Pairs_tag_pair_w_rel_comp
+    },
+    {
+        "tag_pair_w_obj_comp",
+        Pairs_tag_pair_w_obj_comp
+    },
+    {
+        "tag_pair_w_rel_obj_comp",
+        Pairs_tag_pair_w_rel_obj_comp
+    },
+    {
+        "get_tag_pair_w_rel_comp",
+        Pairs_get_tag_pair_w_rel_comp
+    },
+    {
+        "get_tag_pair_w_obj_comp",
+        Pairs_get_tag_pair_w_obj_comp
+    },
+    {
+        "get_tag_pair_w_rel_obj_comp",
+        Pairs_get_tag_pair_w_rel_obj_comp
+    },
+    {
+        "tag_pair_w_childof_w_comp",
+        Pairs_tag_pair_w_childof_w_comp
+    },
+    {
+        "tag_pair_w_isa_w_comp",
+        Pairs_tag_pair_w_isa_w_comp
     }
 };
 
@@ -9180,7 +9220,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        51,
+        59,
         Pairs_testcases
     },
     {

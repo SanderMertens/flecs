@@ -3422,8 +3422,13 @@ ecs_id_t ecs_get_typeid(
         world = ecs_get_world(world);
 
         ecs_entity_t rel = ecs_get_alive(world, ECS_PAIR_RELATION(id));
-        const EcsComponent *ptr = ecs_get(world, rel, EcsComponent);
 
+        /* If relation is marked as a tag, it never has data. Return relation */
+        if (ecs_has_id(world, rel, EcsTag)) {
+            return 0;
+        }
+
+        const EcsComponent *ptr = ecs_get(world, rel, EcsComponent);
         if (ptr && ptr->size != 0) {
             return rel;
         } else {
@@ -3434,7 +3439,8 @@ ecs_id_t ecs_get_typeid(
                 return obj;
             }
 
-            return rel;
+            /* Neither relation nor object have data */
+            return 0;
         }
 
     } else if (id & ECS_ROLE_MASK) {

@@ -1040,7 +1040,15 @@
                 "typeid_from_pair_w_rel_obj_type",
                 "typeid_from_pair_w_rel_0_obj_type",
                 "typeid_from_pair_w_rel_obj_0_type",
-                "typeid_from_pair_w_rel_0_obj_0_type"
+                "typeid_from_pair_w_rel_0_obj_0_type",
+                "tag_pair_w_rel_comp",
+                "tag_pair_w_obj_comp",
+                "tag_pair_w_rel_obj_comp",
+                "get_tag_pair_w_rel_comp",
+                "get_tag_pair_w_obj_comp",
+                "get_tag_pair_w_rel_obj_comp",
+                "tag_pair_w_childof_w_comp",
+                "tag_pair_w_isa_w_comp"
             ]
         }, {
            "id": "Trigger",

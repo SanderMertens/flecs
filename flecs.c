@@ -7966,8 +7966,13 @@ ecs_id_t ecs_get_typeid(
         world = ecs_get_world(world);
 
         ecs_entity_t rel = ecs_get_alive(world, ECS_PAIR_RELATION(id));
-        const EcsComponent *ptr = ecs_get(world, rel, EcsComponent);
 
+        /* If relation is marked as a tag, it never has data. Return relation */
+        if (ecs_has_id(world, rel, EcsTag)) {
+            return 0;
+        }
+
+        const EcsComponent *ptr = ecs_get(world, rel, EcsComponent);
         if (ptr && ptr->size != 0) {
             return rel;
         } else {
@@ -7978,7 +7983,8 @@ ecs_id_t ecs_get_typeid(
                 return obj;
             }
 
-            return rel;
+            /* Neither relation nor object have data */
+            return 0;
         }
 
     } else if (id & ECS_ROLE_MASK) {
@@ -14537,48 +14543,49 @@ const ecs_entity_t EcsWildcard = (ECS_HI_COMPONENT_ID + 3);
 const ecs_entity_t EcsThis = (ECS_HI_COMPONENT_ID + 4);
 const ecs_entity_t EcsTransitive = (ECS_HI_COMPONENT_ID + 5);
 const ecs_entity_t EcsFinal = (ECS_HI_COMPONENT_ID + 6);
+const ecs_entity_t EcsTag = (ECS_HI_COMPONENT_ID + 7);
+
+/* Relation deletion policies */
+const ecs_entity_t EcsOnDelete = (ECS_HI_COMPONENT_ID + 8);
+const ecs_entity_t EcsOnDeleteObject = (ECS_HI_COMPONENT_ID + 9);
+const ecs_entity_t EcsRemove =  (ECS_HI_COMPONENT_ID + 10);
+const ecs_entity_t EcsDelete =  (ECS_HI_COMPONENT_ID + 11);
+const ecs_entity_t EcsThrow =  (ECS_HI_COMPONENT_ID + 12);
 
 /* Builtin relations */
-const ecs_entity_t EcsChildOf = (ECS_HI_COMPONENT_ID + 7);
-const ecs_entity_t EcsIsA = (ECS_HI_COMPONENT_ID + 8) ;
+const ecs_entity_t EcsChildOf = (ECS_HI_COMPONENT_ID + 20);
+const ecs_entity_t EcsIsA = (ECS_HI_COMPONENT_ID + 21) ;
 
 /* Misc tags */
-const ecs_entity_t EcsModule = (ECS_HI_COMPONENT_ID + 9);
-const ecs_entity_t EcsPrefab = (ECS_HI_COMPONENT_ID + 10);
-const ecs_entity_t EcsDisabled = (ECS_HI_COMPONENT_ID + 11);
-const ecs_entity_t EcsHidden = (ECS_HI_COMPONENT_ID + 12);
+const ecs_entity_t EcsModule = (ECS_HI_COMPONENT_ID + 22);
+const ecs_entity_t EcsPrefab = (ECS_HI_COMPONENT_ID + 23);
+const ecs_entity_t EcsDisabled = (ECS_HI_COMPONENT_ID + 24);
+const ecs_entity_t EcsHidden = (ECS_HI_COMPONENT_ID + 25);
 
 /* Trigger/observer Events */
-const ecs_entity_t EcsOnAdd = (ECS_HI_COMPONENT_ID + 13);
-const ecs_entity_t EcsOnRemove = (ECS_HI_COMPONENT_ID + 14);
-const ecs_entity_t EcsOnSet = (ECS_HI_COMPONENT_ID + 15);
-const ecs_entity_t EcsUnSet = (ECS_HI_COMPONENT_ID + 16);
-
-/* Deletion policies */
-const ecs_entity_t EcsOnDelete = (ECS_HI_COMPONENT_ID + 17);
-const ecs_entity_t EcsOnDeleteObject = (ECS_HI_COMPONENT_ID + 18);
-const ecs_entity_t EcsRemove =  (ECS_HI_COMPONENT_ID + 19);
-const ecs_entity_t EcsDelete =  (ECS_HI_COMPONENT_ID + 20);
-const ecs_entity_t EcsThrow =  (ECS_HI_COMPONENT_ID + 21);
+const ecs_entity_t EcsOnAdd = (ECS_HI_COMPONENT_ID + 26);
+const ecs_entity_t EcsOnRemove = (ECS_HI_COMPONENT_ID + 27);
+const ecs_entity_t EcsOnSet = (ECS_HI_COMPONENT_ID + 28);
+const ecs_entity_t EcsUnSet = (ECS_HI_COMPONENT_ID + 29);
 
 /* System tags */
-const ecs_entity_t EcsOnDemand = (ECS_HI_COMPONENT_ID + 22);
-const ecs_entity_t EcsMonitor = (ECS_HI_COMPONENT_ID + 23);
-const ecs_entity_t EcsDisabledIntern = (ECS_HI_COMPONENT_ID + 24);
-const ecs_entity_t EcsInactive = (ECS_HI_COMPONENT_ID + 25);
+const ecs_entity_t EcsOnDemand = (ECS_HI_COMPONENT_ID + 40);
+const ecs_entity_t EcsMonitor = (ECS_HI_COMPONENT_ID + 41);
+const ecs_entity_t EcsDisabledIntern = (ECS_HI_COMPONENT_ID + 42);
+const ecs_entity_t EcsInactive = (ECS_HI_COMPONENT_ID + 43);
 
 /* Pipelines & builtin pipeline phases */
-const ecs_entity_t EcsPipeline = (ECS_HI_COMPONENT_ID + 26);
-const ecs_entity_t EcsPreFrame = (ECS_HI_COMPONENT_ID + 27);
-const ecs_entity_t EcsOnLoad = (ECS_HI_COMPONENT_ID + 28);
-const ecs_entity_t EcsPostLoad = (ECS_HI_COMPONENT_ID + 29);
-const ecs_entity_t EcsPreUpdate = (ECS_HI_COMPONENT_ID + 30);
-const ecs_entity_t EcsOnUpdate = (ECS_HI_COMPONENT_ID + 31);
-const ecs_entity_t EcsOnValidate = (ECS_HI_COMPONENT_ID + 32);
-const ecs_entity_t EcsPostUpdate = (ECS_HI_COMPONENT_ID + 33);
-const ecs_entity_t EcsPreStore = (ECS_HI_COMPONENT_ID + 34);
-const ecs_entity_t EcsOnStore = (ECS_HI_COMPONENT_ID + 35);
-const ecs_entity_t EcsPostFrame = (ECS_HI_COMPONENT_ID + 36);
+const ecs_entity_t EcsPipeline = (ECS_HI_COMPONENT_ID + 44);
+const ecs_entity_t EcsPreFrame = (ECS_HI_COMPONENT_ID + 45);
+const ecs_entity_t EcsOnLoad = (ECS_HI_COMPONENT_ID + 46);
+const ecs_entity_t EcsPostLoad = (ECS_HI_COMPONENT_ID + 47);
+const ecs_entity_t EcsPreUpdate = (ECS_HI_COMPONENT_ID + 48);
+const ecs_entity_t EcsOnUpdate = (ECS_HI_COMPONENT_ID + 49);
+const ecs_entity_t EcsOnValidate = (ECS_HI_COMPONENT_ID + 50);
+const ecs_entity_t EcsPostUpdate = (ECS_HI_COMPONENT_ID + 51);
+const ecs_entity_t EcsPreStore = (ECS_HI_COMPONENT_ID + 52);
+const ecs_entity_t EcsOnStore = (ECS_HI_COMPONENT_ID + 53);
+const ecs_entity_t EcsPostFrame = (ECS_HI_COMPONENT_ID + 54);
 
 
 /* -- Private functions -- */
@@ -21934,6 +21941,10 @@ const EcsComponent* ecs_component_from_id(
     if (ECS_HAS_ROLE(e, PAIR)) {
         pair = e;
         e = ecs_get_alive(world, ECS_PAIR_RELATION(e));
+
+        if (ecs_has_id(world, e, EcsTag)) {
+            return NULL;
+        }
     }
 
     const EcsComponent *component = ecs_get(world, e, EcsComponent);
@@ -27363,18 +27374,26 @@ void ecs_bootstrap(
     bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
     bootstrap_entity(world, EcsTransitive, "Transitive", EcsFlecsCore);
     bootstrap_entity(world, EcsFinal, "Final", EcsFlecsCore);
-    bootstrap_entity(world, EcsIsA, "IsA", EcsFlecsCore);
-    bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
+    bootstrap_entity(world, EcsTag, "Tag", EcsFlecsCore);
+
     bootstrap_entity(world, EcsOnDelete, "OnDelete", EcsFlecsCore);
     bootstrap_entity(world, EcsOnDeleteObject, "OnDeleteObject", EcsFlecsCore);
     bootstrap_entity(world, EcsRemove, "Remove", EcsFlecsCore);
     bootstrap_entity(world, EcsDelete, "Delete", EcsFlecsCore);
     bootstrap_entity(world, EcsThrow, "Throw", EcsFlecsCore);
 
-    /* Mark entities as transitive */
+    bootstrap_entity(world, EcsIsA, "IsA", EcsFlecsCore);
+    bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
+
+
+    /* Transitive relations */
     ecs_add_id(world, EcsIsA, EcsTransitive);
 
-    /* Mark entities as final */
+    /* Tag relations (relations that cannot have data) */
+    ecs_add_id(world, EcsIsA, EcsTag);
+    ecs_add_id(world, EcsChildOf, EcsTag);
+
+    /* Final components/relations */
     ecs_add_id(world, ecs_id(EcsComponent), EcsFinal);
     ecs_add_id(world, ecs_id(EcsName), EcsFinal);
     ecs_add_id(world, EcsTransitive, EcsFinal);
@@ -27382,6 +27401,7 @@ void ecs_bootstrap(
     ecs_add_id(world, EcsIsA, EcsFinal);
     ecs_add_id(world, EcsOnDelete, EcsFinal);
     ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
+
 
     /* Define triggers for when relationship cleanup rules are assigned */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
@@ -27395,6 +27415,7 @@ void ecs_bootstrap(
         .callback = register_on_delete_object,
         .events = {EcsOnAdd}
     });
+
 
     /* Removal of ChildOf objects (parents) deletes the subject (child) */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);  

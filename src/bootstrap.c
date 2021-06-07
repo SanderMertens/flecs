@@ -330,18 +330,26 @@ void ecs_bootstrap(
     bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
     bootstrap_entity(world, EcsTransitive, "Transitive", EcsFlecsCore);
     bootstrap_entity(world, EcsFinal, "Final", EcsFlecsCore);
-    bootstrap_entity(world, EcsIsA, "IsA", EcsFlecsCore);
-    bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
+    bootstrap_entity(world, EcsTag, "Tag", EcsFlecsCore);
+
     bootstrap_entity(world, EcsOnDelete, "OnDelete", EcsFlecsCore);
     bootstrap_entity(world, EcsOnDeleteObject, "OnDeleteObject", EcsFlecsCore);
     bootstrap_entity(world, EcsRemove, "Remove", EcsFlecsCore);
     bootstrap_entity(world, EcsDelete, "Delete", EcsFlecsCore);
     bootstrap_entity(world, EcsThrow, "Throw", EcsFlecsCore);
 
-    /* Mark entities as transitive */
+    bootstrap_entity(world, EcsIsA, "IsA", EcsFlecsCore);
+    bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
+
+
+    /* Transitive relations */
     ecs_add_id(world, EcsIsA, EcsTransitive);
 
-    /* Mark entities as final */
+    /* Tag relations (relations that cannot have data) */
+    ecs_add_id(world, EcsIsA, EcsTag);
+    ecs_add_id(world, EcsChildOf, EcsTag);
+
+    /* Final components/relations */
     ecs_add_id(world, ecs_id(EcsComponent), EcsFinal);
     ecs_add_id(world, ecs_id(EcsName), EcsFinal);
     ecs_add_id(world, EcsTransitive, EcsFinal);
@@ -349,6 +357,7 @@ void ecs_bootstrap(
     ecs_add_id(world, EcsIsA, EcsFinal);
     ecs_add_id(world, EcsOnDelete, EcsFinal);
     ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
+
 
     /* Define triggers for when relationship cleanup rules are assigned */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
@@ -362,6 +371,7 @@ void ecs_bootstrap(
         .callback = register_on_delete_object,
         .events = {EcsOnAdd}
     });
+
 
     /* Removal of ChildOf objects (parents) deletes the subject (child) */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);  

@@ -681,6 +681,10 @@ FLECS_API extern const ecs_entity_t EcsTransitive;
  * final. */
 FLECS_API extern const ecs_entity_t EcsFinal;
 
+/* Can be added to relation to indicate that it should never hold data, even
+ * when it or the relation object is a component. */
+FLECS_API extern const ecs_entity_t EcsTag;
+
 /* Used to express parent-child relations. */
 FLECS_API extern const ecs_entity_t EcsChildOf;
 

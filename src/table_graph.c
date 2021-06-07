@@ -52,6 +52,10 @@ const EcsComponent* ecs_component_from_id(
     if (ECS_HAS_ROLE(e, PAIR)) {
         pair = e;
         e = ecs_get_alive(world, ECS_PAIR_RELATION(e));
+
+        if (ecs_has_id(world, e, EcsTag)) {
+            return NULL;
+        }
     }
 
     const EcsComponent *component = ecs_get(world, e, EcsComponent);
