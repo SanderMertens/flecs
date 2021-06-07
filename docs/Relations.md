@@ -740,6 +740,83 @@ LocatedIn.add(flecs::Transitive);
 
 When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relation and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the section in the query manual on transitivity: [Query transitivity](Queries.md#Transitivity).
 
+### Tag relations
+A relation can be marked as a tag in which case it will never contain data. By default the data associated with a pair is determined by whether either the relation or object are components. For some relations however, even if the object is a component, no data should be added to the relation. Consider the following example:
+
+```c
+typedef struct {
+  float x;
+  float y;
+} Position;
+
+ECS_TAG(world, Serializable);
+ECS_COMPONENT(world, Position);
+
+ecs_entity_t e = ecs_new_id(world);
+ecs_set(world, e, Position, {10, 20});
+ecs_add_pair(world, e, Serializable, ecs_id(Position));
+
+// Gets value from Position component
+const Position *p = ecs_get(world, e, Position);
+
+// Gets (unintended) value from (Serializable, Position) pair
+const Position *p = ecs_get_pair_object(world, e, Serializable, Position);
+```
+```cpp
+struct Serializable { }; // Tag, contains no data
+
+struct Position {
+  float x, y;
+};
+
+auto e = ecs.entity()
+  .set<Position>({10, 20})
+  .add<Serializable, Position>(); // Because Serializable is a tag, the pair 
+                                  // has a value of type Position
+
+// Gets value from Position component
+const Position *p = e.get<Position>();
+
+// Gets (unintended) value from (Serializable, Position) pair
+const Position *p = e.get<Serializable, Position>();
+```
+
+To prevent data from being associated with pairs that can apply to components, the `Tag` property can be added to relations:
+
+```c
+// Ensure that Serializable never contains data
+ecs_add_id(world, Serializable, EcsTag);
+
+// Because Serializable is marked as a Tag, no data is added for the pair
+// even though Position is a component
+ecs_add_pair(world, e, Serializable, ecs_id(Position));
+
+// This is still OK
+const Position *p = ecs_get(world, e, Position);
+
+// This no longer works, the pair has no data
+const Position *p = ecs_get_pair_object(world, e, Serializable, Position);
+```
+```cpp
+// Ensure that Serializable never contains data
+ecs.component<Serializable>()
+  .add<flecs::Tag>();
+
+auto e = ecs.entity()
+  .set<Position>({10, 20})
+  .add<Serializable, Position>(); // Because Serializable marked as a Tag, no
+                                  // data is added for the pair even though
+                                  // Position is a component
+
+// Gets value from Position component
+const Position *p = e.get<Position>();
+
+// This no longer works, the pair has no data
+const Position *p = e.get<Serializable, Position>();
+```
+
+The `Tag` property is only interpreted when it is added to the relation part of a pair.
+
 ## Relation performance
 A relation that does not have any data has the same performance as a regular tag. A relation that does have data has the same performance as a component.
 

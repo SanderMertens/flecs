@@ -252,7 +252,11 @@ void bootstrap_entity(
     const char *name,
     ecs_entity_t parent)
 {
-    ecs_set(world, id, EcsName, {.value = name});
+    char symbol[256];
+    strcpy(symbol, "flecs.core.");
+    strcat(symbol, name);
+
+    ecs_set(world, id, EcsName, {.value = name, .symbol = symbol});
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_add_pair(world, id, EcsChildOf, parent);
 

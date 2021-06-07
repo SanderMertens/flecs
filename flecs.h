@@ -9230,6 +9230,7 @@ static const flecs::entity_t Wildcard = EcsWildcard;
 static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
 static const flecs::entity_t Final = EcsFinal;
+static const flecs::entity_t Tag = EcsTag;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;

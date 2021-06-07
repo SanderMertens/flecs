@@ -553,7 +553,9 @@
                 "with_tag_nested",
                 "with_scope",
                 "with_scope_nested",
-                "recursive_lookup"
+                "recursive_lookup",
+                "type_w_tag_name",
+                "entity_w_tag_name"
             ]
         }, {
             "id": "Singleton",

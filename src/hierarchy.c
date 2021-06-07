@@ -89,7 +89,8 @@ ecs_entity_t name_to_id(
 static
 ecs_entity_t find_child_in_table(
     const ecs_table_t *table,
-    const char *name)
+    const char *name,
+    const char *symbol)
 {
     /* If table doesn't have EcsName, then don't bother */
     int32_t name_index = ecs_type_index_of(table->type, ecs_id(EcsName));
@@ -107,19 +108,27 @@ ecs_entity_t find_child_in_table(
         return 0;
     }
 
-    if (is_number(name)) {
-        return name_to_id(name);
-    }
-
     ecs_column_t *column = &data->columns[name_index];
     EcsName *names = ecs_vector_first(column->data, EcsName);
 
-    for (i = 0; i < count; i ++) {
-        const char *cur_name = names[i].value;
-        const char *cur_sym = names[i].symbol;
-        if ((cur_name && !strcmp(cur_name, name)) || (cur_sym && !strcmp(cur_sym, name))) {
-            return *ecs_vector_get(data->entities, ecs_entity_t, i);
+    if (name) {
+        if (is_number(name)) {
+            return name_to_id(name);
         }
+ 
+        for (i = 0; i < count; i ++) {
+            const char *cur_name = names[i].value;
+            if (cur_name && !strcmp(cur_name, name)) {
+                return *ecs_vector_get(data->entities, ecs_entity_t, i);
+            }
+        }        
+    } else if (symbol) {
+        for (i = 0; i < count; i ++) {
+            const char *cur_name = names[i].symbol;
+            if (cur_name && !strcmp(cur_name, symbol)) {
+                return *ecs_vector_get(data->entities, ecs_entity_t, i);
+            }
+        }         
     }
 
     return 0;
@@ -129,7 +138,7 @@ static
 ecs_entity_t find_child(
     const ecs_world_t *world,
     ecs_entity_t parent,
-    const char *name)
+    const char *symbol)
 {        
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
@@ -137,7 +146,7 @@ ecs_entity_t find_child(
     (void)parent;
     
     ecs_sparse_each(world->store.tables, ecs_table_t, table, {
-        ecs_entity_t result = find_child_in_table(table, name);
+        ecs_entity_t result = find_child_in_table(table, NULL, symbol);
         if (result) {
             return result;
         }
@@ -262,7 +271,7 @@ ecs_entity_t ecs_lookup_child(
         ecs_map_iter_t it = ecs_map_iter(r->table_index);
         ecs_table_record_t *tr;
         while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-            result = find_child_in_table(tr->table, name);
+            result = find_child_in_table(tr->table, name, NULL);
             if (result) {
                 return result;
             }            

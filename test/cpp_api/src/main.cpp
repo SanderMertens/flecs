@@ -513,6 +513,8 @@ void World_with_tag_nested(void);
 void World_with_scope(void);
 void World_with_scope_nested(void);
 void World_recursive_lookup(void);
+void World_type_w_tag_name(void);
+void World_entity_w_tag_name(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -2456,6 +2458,14 @@ bake_test_case World_testcases[] = {
     {
         "recursive_lookup",
         World_recursive_lookup
+    },
+    {
+        "type_w_tag_name",
+        World_type_w_tag_name
+    },
+    {
+        "entity_w_tag_name",
+        World_entity_w_tag_name
     }
 };
 
@@ -2622,7 +2632,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        30,
+        32,
         World_testcases
     },
     {
