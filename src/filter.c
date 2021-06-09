@@ -473,7 +473,7 @@ char* ecs_filter_str(
                 ecs_strbuf_appendstr(&buf, "[in] ");
             } else if (term->inout == EcsInOut) {
                 ecs_strbuf_appendstr(&buf, "[inout] ");
-            } else if (term->inout == EcsInOut) {
+            } else if (term->inout == EcsOut) {
                 ecs_strbuf_appendstr(&buf, "[out] ");
             }
         }
