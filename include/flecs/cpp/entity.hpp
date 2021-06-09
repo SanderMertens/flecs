@@ -141,14 +141,6 @@ public:
     operator flecs::id_t() const {
         return m_id;
     }
-  
-    bool operator==(const id& other) const {
-        return m_id == other.m_id;
-    }
-    
-    bool operator!=(const id& other) const {
-        return !(*this == other);
-    }
 
     /* World is optional, but guarantees that entity identifiers extracted from
      * the id are valid */
