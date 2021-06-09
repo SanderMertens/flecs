@@ -74,7 +74,7 @@ void stdcpp_mutex_unlock(ecs_os_mutex_t m) {
 static
 ecs_os_cond_t stdcpp_cond_new(void) {
     std::condition_variable_any* cond = new std::condition_variable_any{};
-    return (ecs_os_cond_t)cond;
+   return reinterpret_cast<ecs_os_cond_t>(cond);
 }
 
 static 
