@@ -30,9 +30,9 @@ int32_t stdcpp_ainc(int32_t *count) {
     value = __sync_add_and_fetch (count, 1);
     return value;
 #else
-    /* Unsupported */
-    abort();
+    return InterlockedIncrement(reinterpret_cast<LONG*>(count));
 #endif
+    return value;
 }
 
 static
@@ -42,9 +42,9 @@ int32_t stdcpp_adec(int32_t *count) {
     value = __sync_sub_and_fetch (count, 1);
     return value;
 #else
-    /* Unsupported */
-    abort();
+    return InterlockedDecrement(reinterpret_cast<LONG*>(count));
 #endif
+    return value;
 }
 
 static
