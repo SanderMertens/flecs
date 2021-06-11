@@ -207,15 +207,19 @@ public:
      *
      * @return True if the entity is alive, false otherwise.
      */
-    bool is_valid() {
+    bool is_valid() const {
         return m_world && ecs_is_valid(m_world, m_id);
+    }
+  
+    explicit operator bool() const {
+        return is_valid();
     }
 
     /** Check is entity is alive.
      *
      * @return True if the entity is alive, false otherwise.
      */
-    bool is_alive() {
+    bool is_alive() const {
         return m_world && ecs_is_alive(m_world, m_id);
     }
 
