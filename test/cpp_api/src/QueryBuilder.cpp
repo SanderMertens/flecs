@@ -1252,3 +1252,25 @@ void QueryBuilder_1_term_to_empty() {
     test_int(q.term(0).id(), ecs.id<Position>());
     test_int(q.term(1).id(), ecs.pair(Likes, Apples));
 }
+
+void QueryBuilder_2_subsequent_args() {
+    flecs::world ecs;
+
+    struct Rel { int foo; };
+
+    int32_t count = 0;
+
+    auto s = ecs.system<Rel, const Velocity>()
+        .arg(1).object(flecs::Wildcard)
+        .arg(2).singleton()
+        .iter([&](flecs::iter it){
+            count += it.count();
+        });
+    
+    ecs.entity().add<Rel, Tag>();
+    ecs.set<Velocity>({});
+
+    s.run();
+
+    test_int(count, 1);
+}
