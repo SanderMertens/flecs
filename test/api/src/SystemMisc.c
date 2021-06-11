@@ -1950,3 +1950,25 @@ void SystemMisc_set_get_binding_context() {
 
     ecs_fini(world);
 }
+
+void SystemMisc_deactivate_after_disable() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Tag);
+
+    ecs_entity_t e = ecs_new_w_id(world, Tag);
+    test_assert(!ecs_has_id(world, Dummy, EcsInactive));
+
+    ecs_enable(world, Dummy, false);
+    test_assert(!ecs_has_id(world, Dummy, EcsInactive));
+    test_assert(ecs_has_id(world, Dummy, EcsDisabled));
+
+    ecs_delete(world, e);
+
+    test_assert(!ecs_has_id(world, Dummy, EcsInactive));
+    test_assert(ecs_has_id(world, Dummy, EcsDisabled));
+
+    ecs_fini(world);
+}

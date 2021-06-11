@@ -852,6 +852,7 @@ void SystemMisc_activate_system_for_table_w_n_pairs(void);
 void SystemMisc_get_query(void);
 void SystemMisc_set_get_context(void);
 void SystemMisc_set_get_binding_context(void);
+void SystemMisc_deactivate_after_disable(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -5095,6 +5096,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "set_get_binding_context",
         SystemMisc_set_get_binding_context
+    },
+    {
+        "deactivate_after_disable",
+        SystemMisc_deactivate_after_disable
     }
 };
 
@@ -9199,7 +9204,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         SystemMisc_setup,
         NULL,
-        85,
+        86,
         SystemMisc_testcases
     },
     {

@@ -25875,6 +25875,13 @@ void ecs_system_activate(
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     if (activate) {
+        /* If activating system, ensure that it doesn't have the Inactive tag.
+         * Systems are implicitly activated so they are kept out of the main
+         * loop as long as they aren't used. They are not implicitly deactivated
+         * to prevent overhead in case of oscillating app behavior. 
+         * After activation, systems that aren't matched with anything can be
+         * deactivated again by explicitly calling ecs_deactivate_systems.
+         */
         ecs_remove_id(world, system, EcsInactive);
     }
 
@@ -25883,6 +25890,18 @@ void ecs_system_activate(
     }
     if (!system_data || !system_data->query) {
         return;
+    }
+
+    if (!activate) {
+        if (ecs_has_id(world, system, EcsDisabled) || 
+            ecs_has_id(world, system, EcsDisabledIntern)) 
+        {
+            if (!ecs_vector_count(system_data->query->tables)) {
+                /* If deactivating a disabled system that isn't matched with
+                 * any active tables, there is nothing to deactivate. */
+                return;
+            }
+        }            
     }
 
     /* If system contains in columns, signal that they are now in use */
