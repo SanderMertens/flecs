@@ -522,6 +522,7 @@ ecs_data_t* ecs_table_get_or_create_data(
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
     ecs_data_t *data = table->data;
     if (!data) {
@@ -605,6 +606,8 @@ void ecs_table_clear_data(
     ecs_table_t *table,
     ecs_data_t *data)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     if (!data) {
         return;
     }
@@ -656,6 +659,8 @@ void ecs_table_clear_silent(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     ecs_data_t *data = ecs_table_get_data(table);
     if (!data) {
         return;
@@ -674,6 +679,8 @@ void ecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     ecs_data_t *data = ecs_table_get_data(table);
 
     if (data) {
@@ -696,6 +703,8 @@ void ecs_table_clear(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     ecs_data_t *data = ecs_table_get_data(table);
 
     if (data) {
@@ -730,6 +739,8 @@ void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
@@ -772,6 +783,8 @@ void ecs_table_reset(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+    
     (void)world;
     ecs_os_free(table->lo_edges);
     ecs_map_free(table->hi_edges);
@@ -793,7 +806,9 @@ void ecs_table_mark_dirty(
     ecs_table_t *table,
     ecs_entity_t component)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (table->dirty_state) {
         int32_t index = ecs_type_index_of(table->type, component);
         ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
@@ -1142,6 +1157,7 @@ int32_t ecs_table_append(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
     /* Get count & size before growing entities array. This tells us whether the
      * arrays will realloc */
@@ -1279,6 +1295,7 @@ void ecs_table_delete(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
     ecs_vector_t *entity_column = data->entities;
     int32_t count = ecs_vector_count(entity_column);
@@ -1459,6 +1476,8 @@ void ecs_table_move(
 {
     ecs_assert(new_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!new_table->lock, ECS_LOCKED_STORAGE, NULL);
+    ecs_assert(!old_table->lock, ECS_LOCKED_STORAGE, NULL);
 
     ecs_assert(old_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_index >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -1565,6 +1584,8 @@ int32_t ecs_table_appendn(
     int32_t to_add,
     const ecs_entity_t *ids)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     int32_t cur_count = ecs_table_data_count(data);
     return grow_data(world, table, data, to_add, cur_count + to_add, ids);
 }
@@ -1575,6 +1596,8 @@ void ecs_table_set_size(
     ecs_data_t * data,
     int32_t size)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     int32_t cur_count = ecs_table_data_count(data);
 
     if (cur_count < size) {
@@ -1642,12 +1665,13 @@ void swap_bitset_columns(
 void ecs_table_swap(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     int32_t row_1,
     int32_t row_2)
 {    
     (void)world;
 
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -1975,12 +1999,16 @@ ecs_data_t* ecs_table_merge(
     ecs_data_t *old_data)
 {
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!old_table->lock, ECS_LOCKED_STORAGE, NULL);
+    
     bool move_data = false;
     
     /* If there is nothing to merge to, just clear the old table */
     if (!new_table) {
         ecs_table_clear_data(world, old_table, old_data);
         return NULL;
+    } else {
+        ecs_assert(!new_table->lock, ECS_LOCKED_STORAGE, NULL);
     }
 
     /* If there is no data to merge, drop out */
@@ -2044,6 +2072,7 @@ void ecs_table_replace_data(
     int32_t prev_count = 0;
     ecs_data_t *table_data = table->data;
     ecs_assert(!data || data != table_data, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
     if (table_data) {
         prev_count = ecs_vector_count(table_data->entities);
@@ -2114,6 +2143,8 @@ bool ecs_table_match_filter(
 int32_t* ecs_table_get_dirty_state(
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+    
     if (!table->dirty_state) {
         table->dirty_state = ecs_os_calloc(ECS_SIZEOF(int32_t) * (table->column_count + 1));
         ecs_assert(table->dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2155,5 +2186,24 @@ void ecs_table_notify(
     case EcsTableTriggerMatch:
         notify_trigger(world, table, event->event);
         break;
+    }
+}
+
+void ecs_table_lock(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    if (world->magic == ECS_WORLD_MAGIC && !world->is_readonly) {
+        table->lock ++;
+    }
+}
+
+void ecs_table_unlock(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    if (world->magic == ECS_WORLD_MAGIC && !world->is_readonly) {
+        table->lock --;
+        ecs_assert(table->lock >= 0, ECS_INVALID_OPERATION, NULL);
     }
 }

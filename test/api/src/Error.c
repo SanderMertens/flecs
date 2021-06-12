@@ -60,21 +60,13 @@ void Error_assert_false_w_param() {
 }
 
 void Error_error_codes() {
-    test_assert(ecs_strerror(ECS_INVALID_ENTITY) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_PARAMETER) != NULL);
-    test_assert(ecs_strerror(ECS_INVALID_COMPONENT_ID) != NULL);
-    test_assert(ecs_strerror(ECS_INVALID_EXPRESSION) != NULL);
-    test_assert(ecs_strerror(ECS_INVALID_TYPE_EXPRESSION) != NULL);
-    test_assert(ecs_strerror(ECS_INVALID_SIGNATURE) != NULL);
-    test_assert(ecs_strerror(ECS_UNKNOWN_COMPONENT_ID) != NULL);
-    test_assert(ecs_strerror(ECS_UNKNOWN_TYPE_ID) != NULL);
-    test_assert(ecs_strerror(ECS_TYPE_NOT_AN_ENTITY) != NULL);
-    test_assert(ecs_strerror(ECS_MISSING_SYSTEM_CONTEXT) != NULL);
     test_assert(ecs_strerror(ECS_NOT_A_COMPONENT) != NULL);
+    test_assert(ecs_strerror(ECS_TYPE_NOT_AN_ENTITY) != NULL);
     test_assert(ecs_strerror(ECS_INTERNAL_ERROR) != NULL);
-    test_assert(ecs_strerror(ECS_MORE_THAN_ONE_PREFAB) != NULL);
     test_assert(ecs_strerror(ECS_ALREADY_DEFINED) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_COMPONENT_SIZE) != NULL);
+    test_assert(ecs_strerror(ECS_INVALID_COMPONENT_ALIGNMENT) != NULL);
     test_assert(ecs_strerror(ECS_OUT_OF_MEMORY) != NULL);
     test_assert(ecs_strerror(ECS_MODULE_UNDEFINED) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_INDEX_OUT_OF_RANGE) != NULL);
@@ -82,22 +74,14 @@ void Error_error_codes() {
     test_assert(ecs_strerror(ECS_COLUMN_IS_SHARED) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_HAS_NO_DATA) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_TYPE_MISMATCH) != NULL);
-    test_assert(ecs_strerror(ECS_INVALID_WHILE_MERGING) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_WHILE_ITERATING) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_FROM_WORKER) != NULL);
-    test_assert(ecs_strerror(ECS_UNRESOLVED_IDENTIFIER) != NULL);
     test_assert(ecs_strerror(ECS_OUT_OF_RANGE) != NULL);
-    test_assert(ecs_strerror(ECS_COLUMN_IS_NOT_SET) != NULL);
-    test_assert(ecs_strerror(ECS_UNRESOLVED_REFERENCE) != NULL);
     test_assert(ecs_strerror(ECS_THREAD_ERROR) != NULL);
     test_assert(ecs_strerror(ECS_MISSING_OS_API) != NULL);
-    test_assert(ecs_strerror(ECS_TYPE_TOO_LARGE) != NULL);
-    test_assert(ecs_strerror(ECS_INVALID_PREFAB_CHILD_TYPE) != NULL);
     test_assert(ecs_strerror(ECS_UNSUPPORTED) != NULL);
     test_assert(ecs_strerror(ECS_NO_OUT_COLUMNS) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_ACCESS_VIOLATION) != NULL);
-    test_assert(ecs_strerror(ECS_DESERIALIZE_COMPONENT_ID_CONFLICT) != NULL);
-    test_assert(ecs_strerror(ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT) != NULL);
     test_assert(ecs_strerror(ECS_DESERIALIZE_FORMAT_ERROR) != NULL);
 }
 

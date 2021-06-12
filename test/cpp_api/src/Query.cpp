@@ -717,64 +717,44 @@ void Query_compare_term_id() {
     test_int(count, 1);
 }
 
-void Query_test_auto_defer_each() {
+void Query_test_no_defer_each() {
+    install_test_abort();
+
     flecs::world world;
 
     struct Value { int value; };
 
-    auto e1 = world.entity().add<Tag>().set<Value>({10});
-    auto e2 = world.entity().add<Tag>().set<Value>({20});
-    auto e3 = world.entity().add<Tag>().set<Value>({30});
+    world.entity().add<Tag>().set<Value>({10});
 
     auto q = world.query_builder<Value>().term<Tag>().build();
 
     q.each([](flecs::entity e, Value& v) {
-        v.value ++;
+        test_expect_abort();
         e.remove<Tag>();
     });
 
-    test_assert(!e1.has<Tag>());
-    test_assert(!e2.has<Tag>());
-    test_assert(!e3.has<Tag>());
-
-    test_assert(e1.has<Value>());
-    test_assert(e2.has<Value>());
-    test_assert(e3.has<Value>());
-
-    test_int(e1.get<Value>()->value, 11);
-    test_int(e2.get<Value>()->value, 21);
-    test_int(e3.get<Value>()->value, 31);
+    test_assert(false); // Should never get here
 }
 
-void Query_test_auto_defer_iter() {
+void Query_test_no_defer_iter() {
+    install_test_abort();
+
     flecs::world world;
 
     struct Value { int value; };
 
-    auto e1 = world.entity().add<Tag>().set<Value>({10});
-    auto e2 = world.entity().add<Tag>().set<Value>({20});
-    auto e3 = world.entity().add<Tag>().set<Value>({30});
+    world.entity().add<Tag>().set<Value>({10});
 
     auto q = world.query_builder<Value>().term<Tag>().build();
 
     q.iter([](flecs::iter& it, Value *v) {
         for (auto i : it) {
-            v[i].value ++;
+            test_expect_abort();
             it.entity(i).remove<Tag>();
         }
     });
 
-    test_assert(!e1.has<Tag>());
-    test_assert(!e2.has<Tag>());
-    test_assert(!e3.has<Tag>());
-
-    test_assert(e1.has<Value>());
-    test_assert(e2.has<Value>());
-    test_assert(e3.has<Value>());
-
-    test_int(e1.get<Value>()->value, 11);
-    test_int(e2.get<Value>()->value, 21);
-    test_int(e3.get<Value>()->value, 31);
+    test_assert(false); // Should never get here
 }
 
 void Query_inspect_terms() {
@@ -1149,5 +1129,25 @@ void Query_iter_pair_object() {
         }
     });
 
+    test_int(count, 1);
+}
+
+void Query_iter_query_in_system() {
+    flecs::world ecs;
+
+    ecs.entity().add<Position>().add<Velocity>();
+
+    auto q = ecs.query<Velocity>();
+
+    int32_t count = 0;
+    ecs.system<Position>()
+        .each([&](flecs::entity e1, Position&) {
+            q.each([&](flecs::entity e2, Velocity&) {
+                count ++;
+            });
+        });
+
+    ecs.progress();
+ 
     test_int(count, 1);
 }

@@ -1719,6 +1719,9 @@ void SingleThreadStaging_new_type_from_entity(void);
 void SingleThreadStaging_existing_type_from_entity(void);
 void SingleThreadStaging_new_type_add(void);
 void SingleThreadStaging_existing_type_add(void);
+void SingleThreadStaging_lock_table(void);
+void SingleThreadStaging_recursive_lock_table(void);
+void SingleThreadStaging_modify_after_lock(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -8388,6 +8391,18 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "existing_type_add",
         SingleThreadStaging_existing_type_add
+    },
+    {
+        "lock_table",
+        SingleThreadStaging_lock_table
+    },
+    {
+        "recursive_lock_table",
+        SingleThreadStaging_recursive_lock_table
+    },
+    {
+        "modify_after_lock",
+        SingleThreadStaging_modify_after_lock
     }
 };
 
@@ -9400,7 +9415,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        64,
+        67,
         SingleThreadStaging_testcases
     },
     {

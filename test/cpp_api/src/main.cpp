@@ -280,8 +280,8 @@ void Query_default_ctor(void);
 void Query_expr_w_template(void);
 void Query_query_type_w_template(void);
 void Query_compare_term_id(void);
-void Query_test_auto_defer_each(void);
-void Query_test_auto_defer_iter(void);
+void Query_test_no_defer_each(void);
+void Query_test_no_defer_iter(void);
 void Query_inspect_terms(void);
 void Query_inspect_terms_w_each(void);
 void Query_comp_to_str(void);
@@ -299,6 +299,7 @@ void Query_iter_no_comps_2_comps(void);
 void Query_iter_no_comps_no_comps(void);
 void Query_each_pair_object(void);
 void Query_iter_pair_object(void);
+void Query_iter_query_in_system(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1579,12 +1580,12 @@ bake_test_case Query_testcases[] = {
         Query_compare_term_id
     },
     {
-        "test_auto_defer_each",
-        Query_test_auto_defer_each
+        "test_no_defer_each",
+        Query_test_no_defer_each
     },
     {
-        "test_auto_defer_iter",
-        Query_test_auto_defer_iter
+        "test_no_defer_iter",
+        Query_test_no_defer_iter
     },
     {
         "inspect_terms",
@@ -1653,6 +1654,10 @@ bake_test_case Query_testcases[] = {
     {
         "iter_pair_object",
         Query_iter_pair_object
+    },
+    {
+        "iter_query_in_system",
+        Query_iter_query_in_system
     }
 };
 
@@ -2567,7 +2572,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        43,
+        44,
         Query_testcases
     },
     {

@@ -20,7 +20,7 @@ void* get_component_w_index(
 
     ecs_column_t *columns = data->columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(index < info->table->column_count, ECS_INVALID_COMPONENT_ID, NULL);
+    ecs_assert(index < info->table->column_count, ECS_NOT_A_COMPONENT, NULL);
 
     ecs_column_t *column = &columns[index];
     ecs_vector_t *data_vec = column->data;
@@ -2166,7 +2166,7 @@ ecs_entity_t ecs_component_init(
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
         }
         if (ptr->alignment != ecs_from_size_t(desc->alignment)) {
-            ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
+            ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, desc->entity.name);
         }
     }
 

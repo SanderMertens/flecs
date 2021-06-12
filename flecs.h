@@ -2424,58 +2424,46 @@ bool ecs_identifier_is_0(
 bool ecs_identifier_is_var(
     const char *id);
 
-#define ECS_INVALID_ENTITY (1)
+#define ECS_INVALID_OPERATION (1)
 #define ECS_INVALID_PARAMETER (2)
-#define ECS_INVALID_COMPONENT_ID (3)
-#define ECS_INVALID_EXPRESSION (4)
-#define ECS_INVALID_TYPE_EXPRESSION (5)
-#define ECS_INVALID_SIGNATURE (6)
-#define ECS_UNKNOWN_COMPONENT_ID (7)
-#define ECS_UNKNOWN_TYPE_ID (8)
-#define ECS_TYPE_NOT_AN_ENTITY (9)
-#define ECS_MISSING_SYSTEM_CONTEXT (10)
-#define ECS_NOT_A_COMPONENT (11)
-#define ECS_INTERNAL_ERROR (12)
-#define ECS_MORE_THAN_ONE_PREFAB (13)
-#define ECS_ALREADY_DEFINED (14)
-#define ECS_INVALID_COMPONENT_SIZE (15)
-#define ECS_INVALID_COMPONENT_ALIGNMENT (16)
-#define ECS_OUT_OF_MEMORY (17)
-#define ECS_MODULE_UNDEFINED (18)
-#define ECS_COLUMN_INDEX_OUT_OF_RANGE (19)
-#define ECS_COLUMN_IS_NOT_SHARED (20)
-#define ECS_COLUMN_IS_SHARED (21)
-#define ECS_COLUMN_HAS_NO_DATA (22)
-#define ECS_COLUMN_TYPE_MISMATCH (23)
-#define ECS_INVALID_WHILE_MERGING (24)
-#define ECS_INVALID_WHILE_ITERATING (25)
-#define ECS_INVALID_FROM_WORKER (26)
-#define ECS_UNRESOLVED_IDENTIFIER (27)
-#define ECS_OUT_OF_RANGE (28)
-#define ECS_COLUMN_IS_NOT_SET (29)
-#define ECS_UNRESOLVED_REFERENCE (30)
-#define ECS_THREAD_ERROR (31)
-#define ECS_MISSING_OS_API (32)
-#define ECS_TYPE_TOO_LARGE (33)
-#define ECS_INVALID_PREFAB_CHILD_TYPE (34)
-#define ECS_UNSUPPORTED (35)
-#define ECS_NO_OUT_COLUMNS (36)
-#define ECS_COLUMN_ACCESS_VIOLATION (37)
-#define ECS_DESERIALIZE_COMPONENT_ID_CONFLICT (38)
-#define ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT (39)
-#define ECS_DESERIALIZE_FORMAT_ERROR (40)
-#define ECS_INVALID_REACTIVE_SIGNATURE (41)
-#define ECS_INCONSISTENT_COMPONENT_NAME (42)
-#define ECS_TYPE_CONSTRAINT_VIOLATION (43)
-#define ECS_COMPONENT_NOT_REGISTERED (44)
-#define ECS_INCONSISTENT_COMPONENT_ID (45)
-#define ECS_INVALID_CASE (46)
-#define ECS_COMPONENT_NAME_IN_USE (47)
-#define ECS_INCONSISTENT_NAME (48)
-#define ECS_INCONSISTENT_COMPONENT_ACTION (49)
-#define ECS_INVALID_OPERATION (50)
-#define ECS_INVALID_DELETE (51)
-#define ECS_CYCLE_DETECTED (52)
+#define ECS_INVALID_DELETE (3)
+#define ECS_OUT_OF_MEMORY (4)
+#define ECS_OUT_OF_RANGE (5)
+#define ECS_UNSUPPORTED (6)
+#define ECS_INTERNAL_ERROR (7)
+#define ECS_ALREADY_DEFINED (8)
+#define ECS_MISSING_OS_API (9)
+#define ECS_THREAD_ERROR (10)
+#define ECS_CYCLE_DETECTED (11)
+
+#define ECS_INCONSISTENT_NAME (20)
+#define ECS_NAME_IN_USE (21)
+#define ECS_NOT_A_COMPONENT (22)
+#define ECS_INVALID_COMPONENT_SIZE (23)
+#define ECS_INVALID_COMPONENT_ALIGNMENT (24)
+#define ECS_COMPONENT_NOT_REGISTERED (25)
+#define ECS_INCONSISTENT_COMPONENT_ID (26)
+#define ECS_INCONSISTENT_COMPONENT_ACTION (27)
+#define ECS_MODULE_UNDEFINED (28)
+
+#define ECS_COLUMN_ACCESS_VIOLATION (40)
+#define ECS_COLUMN_INDEX_OUT_OF_RANGE (41)
+#define ECS_COLUMN_IS_NOT_SHARED (42)
+#define ECS_COLUMN_IS_SHARED (43)
+#define ECS_COLUMN_HAS_NO_DATA (44)
+#define ECS_COLUMN_TYPE_MISMATCH (45)
+#define ECS_NO_OUT_COLUMNS (46)
+
+#define ECS_TYPE_NOT_AN_ENTITY (60)
+#define ECS_TYPE_CONSTRAINT_VIOLATION (61)
+#define ECS_TYPE_INVALID_CASE (62)
+
+#define ECS_INVALID_WHILE_ITERATING (70)
+#define ECS_LOCKED_STORAGE (71)
+#define ECS_INVALID_FROM_WORKER (72)
+
+#define ECS_DESERIALIZE_FORMAT_ERROR (80)
+
 
 /** Calculate offset from address */
 #ifdef __cplusplus
@@ -6847,6 +6835,37 @@ ecs_table_t* ecs_table_remove_id(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id);
+
+/** Lock or unlock table.
+ * When a table is locked, modifications to it will trigger an assert. When the 
+ * table is locked recursively, it will take an equal amount of unlock
+ * operations to actually unlock the table.
+ *
+ * Table locks can be used to build safe iterators where it is guaranteed that
+ * the contents of a table are not modified while it is being iterated.
+ *
+ * The operation only works when called on the world, and has no side effects 
+ * when called on a stage. The assumption is that when called on a stage,
+ * operations are deferred already.
+ *
+ * @param world The world.
+ * @param table The table to lock.
+ */
+FLECS_API
+void ecs_table_lock(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+/** Unlock a table.
+ * Must be called after calling ecs_table_lock.
+ *
+ * @param world The world.
+ * @param table The table to unlock.
+ */
+FLECS_API
+void ecs_table_unlock(
+    ecs_world_t *world,
+    ecs_table_t *table);    
 
 /** Commit (move) entity to a table.
  * This operation moves an entity from its current table to the specified
@@ -13947,7 +13966,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
                 char *path = ecs_get_path_w_sep(
                     world_ptr, 0, id, 0, "::", nullptr);
                 ecs_assert(!strcmp(path, n), 
-                    ECS_INCONSISTENT_COMPONENT_NAME, name);
+                    ECS_INCONSISTENT_NAME, name);
                 ecs_os_free(path);
             }
         } else {
@@ -13998,7 +14017,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
 
             char *symbol = _::symbol_helper<T>::symbol();
             ecs_assert(!strcmp(name_comp->symbol, symbol), 
-                ECS_COMPONENT_NAME_IN_USE, n);
+                ECS_NAME_IN_USE, n);
             ecs_os_free(symbol);
 
             (void)name_comp;
@@ -14240,7 +14259,6 @@ public:
     }
 
 private:
-
     // Number of function arguments is one more than number of components, pass
     // entity as argument.
     template <template<typename X, typename = int> class ColumnType, 
@@ -14249,12 +14267,28 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
+#ifndef NDEBUG
+        ecs_table_t *table = nullptr;
+        if (iter->table) {
+            table = iter->table->table;
+            if (table) {
+                ecs_table_lock(iter->world, table);
+            }
+        }
+#endif
+
         flecs::iter it(iter);
         for (auto row : it) {
             func(it.entity(row),
                 (ColumnType< remove_reference_t<Components> >(comps, row)
                     .get_row())...);
         }
+
+#ifndef NDEBUG
+        if (table) {
+            ecs_table_unlock(iter->world, table);
+        }
+#endif        
     }
 
     // Number of function arguments is equal to number of components, no entity
@@ -14332,11 +14366,28 @@ private:
         Terms&, Targs... comps) 
     {
         flecs::iter it(iter);
+
+#ifndef NDEBUG
+        ecs_table_t *table = nullptr;
+        if (iter->table) {
+            table = iter->table->table;
+            if (table) {
+                ecs_table_lock(iter->world, table);
+            }
+        }
+#endif
+
         func(it, ( static_cast< 
             remove_reference_t< 
                 remove_pointer_t< 
                     actual_type_t<Components> > >* >
                         (comps.ptr))...);
+
+#ifndef NDEBUG
+        if (table) {
+            ecs_table_unlock(iter->world, table);
+        }
+#endif                        
     }
 
     template <typename... Targs, if_t<!IterOnly &&
@@ -14980,9 +15031,7 @@ public:
     }
     
     Base& arg(int32_t term_index) {
-        printf("m_term_index = %d, term_index = %d\n", m_term_index, term_index);
         ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_term_index <= term_index, ECS_INVALID_PARAMETER, NULL);
         m_term_index = term_index - 1;
         this->term();
         ecs_assert(ecs_term_is_set(this->m_term), ECS_INVALID_PARAMETER, NULL);
@@ -16458,11 +16507,9 @@ private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_query_iter(m_query);
-        ecs_defer_begin(it.world);
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }
-        ecs_defer_end(it.world);
     }
 };
 

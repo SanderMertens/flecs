@@ -517,7 +517,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
                 char *path = ecs_get_path_w_sep(
                     world_ptr, 0, id, 0, "::", nullptr);
                 ecs_assert(!strcmp(path, n), 
-                    ECS_INCONSISTENT_COMPONENT_NAME, name);
+                    ECS_INCONSISTENT_NAME, name);
                 ecs_os_free(path);
             }
         } else {
@@ -568,7 +568,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
 
             char *symbol = _::symbol_helper<T>::symbol();
             ecs_assert(!strcmp(name_comp->symbol, symbol), 
-                ECS_COMPONENT_NAME_IN_USE, n);
+                ECS_NAME_IN_USE, n);
             ecs_os_free(symbol);
 
             (void)name_comp;

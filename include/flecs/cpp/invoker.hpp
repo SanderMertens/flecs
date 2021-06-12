@@ -191,7 +191,6 @@ public:
     }
 
 private:
-
     // Number of function arguments is one more than number of components, pass
     // entity as argument.
     template <template<typename X, typename = int> class ColumnType, 
@@ -200,12 +199,28 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
+#ifndef NDEBUG
+        ecs_table_t *table = nullptr;
+        if (iter->table) {
+            table = iter->table->table;
+            if (table) {
+                ecs_table_lock(iter->world, table);
+            }
+        }
+#endif
+
         flecs::iter it(iter);
         for (auto row : it) {
             func(it.entity(row),
                 (ColumnType< remove_reference_t<Components> >(comps, row)
                     .get_row())...);
         }
+
+#ifndef NDEBUG
+        if (table) {
+            ecs_table_unlock(iter->world, table);
+        }
+#endif        
     }
 
     // Number of function arguments is equal to number of components, no entity
@@ -283,11 +298,28 @@ private:
         Terms&, Targs... comps) 
     {
         flecs::iter it(iter);
+
+#ifndef NDEBUG
+        ecs_table_t *table = nullptr;
+        if (iter->table) {
+            table = iter->table->table;
+            if (table) {
+                ecs_table_lock(iter->world, table);
+            }
+        }
+#endif
+
         func(it, ( static_cast< 
             remove_reference_t< 
                 remove_pointer_t< 
                     actual_type_t<Components> > >* >
                         (comps.ptr))...);
+
+#ifndef NDEBUG
+        if (table) {
+            ecs_table_unlock(iter->world, table);
+        }
+#endif                        
     }
 
     template <typename... Targs, if_t<!IterOnly &&

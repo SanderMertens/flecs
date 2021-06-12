@@ -820,6 +820,8 @@ struct ecs_table_t {
     int32_t sw_column_offset;
     int32_t bs_column_count;
     int32_t bs_column_offset;
+
+    int32_t lock;
 };
 
 /* Sparse query column */
@@ -2279,36 +2281,20 @@ const char* ecs_strerror(
     int32_t error_code)
 {
     switch (error_code) {
-    case ECS_INVALID_ENTITY:
-        return "invalid entity";
     case ECS_INVALID_PARAMETER:
         return "invalid parameter";
-    case ECS_INVALID_COMPONENT_ID:
-        return "invalid component id";
-    case ECS_INVALID_TYPE_EXPRESSION:
-        return "invalid type expression";
-    case ECS_INVALID_SIGNATURE:
-        return "invalid system signature";
-    case ECS_INVALID_EXPRESSION:
-        return "invalid type expression/signature";
-    case ECS_MISSING_SYSTEM_CONTEXT:
-        return "missing system context";
-    case ECS_UNKNOWN_COMPONENT_ID:
-        return "unknown component id";
-    case ECS_UNKNOWN_TYPE_ID:
-        return "unknown type id";
+    case ECS_NOT_A_COMPONENT:
+        return "provided id/type is not a component (is it a tag, relation or empty type?)";
     case ECS_TYPE_NOT_AN_ENTITY:
         return "type contains more than one entity";
-    case ECS_NOT_A_COMPONENT:
-        return "handle is not a component";
     case ECS_INTERNAL_ERROR:
         return "internal error";
-    case ECS_MORE_THAN_ONE_PREFAB:
-        return "more than one prefab added to entity";
     case ECS_ALREADY_DEFINED:
         return "already defined with conflicting parameters";
     case ECS_INVALID_COMPONENT_SIZE:
         return "the specified size does not match the component";
+    case ECS_INVALID_COMPONENT_ALIGNMENT:
+        return "the specified alignment does not match the component";
     case ECS_OUT_OF_MEMORY:
         return "out of memory";
     case ECS_MODULE_UNDEFINED:
@@ -2323,54 +2309,34 @@ const char* ecs_strerror(
         return "column has no data";
     case ECS_COLUMN_TYPE_MISMATCH:
         return "column retrieved with mismatching type";
-    case ECS_INVALID_WHILE_MERGING:
-        return "operation is invalid while merging";
     case ECS_INVALID_WHILE_ITERATING:
         return "operation is invalid while iterating";    
     case ECS_INVALID_FROM_WORKER:
         return "operation is invalid from worker thread";
-    case ECS_UNRESOLVED_IDENTIFIER:
-        return "unresolved identifier";
     case ECS_OUT_OF_RANGE:
         return "index is out of range";
-    case ECS_COLUMN_IS_NOT_SET:
-        return "column is not set (use ecs_column_test for optional columns)";
-    case ECS_UNRESOLVED_REFERENCE:
-        return "unresolved reference for system";
     case ECS_THREAD_ERROR:
         return "failed to create thread";
     case ECS_MISSING_OS_API:
         return "missing implementation for OS API function";
-    case ECS_TYPE_TOO_LARGE:
-        return "type contains too many entities";
-    case ECS_INVALID_PREFAB_CHILD_TYPE:
-        return "a prefab child type must have at least one INSTANCEOF element";
     case ECS_UNSUPPORTED:
         return "operation is unsupported";
     case ECS_NO_OUT_COLUMNS:
         return "on demand system has no out columns";
     case ECS_COLUMN_ACCESS_VIOLATION:
-        return "invalid access to readonly column (use const)";
-    case ECS_DESERIALIZE_COMPONENT_ID_CONFLICT:
-        return "serialized data contains conflicting component id";
-    case ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT:
-        return "serialized data contains conflicting component size";   
+        return "invalid access to readonly column (use const)";  
     case ECS_DESERIALIZE_FORMAT_ERROR:
         return "serialized data has invalid format";
-    case ECS_INVALID_REACTIVE_SIGNATURE:
-        return "signature is not valid for reactive system (must contain at least one ANY column)";
-    case ECS_INCONSISTENT_COMPONENT_NAME:
-        return "component redefined with a different name";
     case ECS_TYPE_CONSTRAINT_VIOLATION:
         return "type constraint violated";
     case ECS_COMPONENT_NOT_REGISTERED:
         return "component is not registered";
     case ECS_INCONSISTENT_COMPONENT_ID:
         return "component redefined with a different id";
-    case ECS_INVALID_CASE:
+    case ECS_TYPE_INVALID_CASE:
         return "case not supported for type";
-    case ECS_COMPONENT_NAME_IN_USE:
-        return "component name is already in use";
+    case ECS_NAME_IN_USE:
+        return "name is already in use";
     case ECS_INCONSISTENT_NAME:
         return "entity redefined with different name";
     case ECS_INCONSISTENT_COMPONENT_ACTION:
@@ -2381,6 +2347,8 @@ const char* ecs_strerror(
         return "invalid delete of entity/pair";
     case ECS_CYCLE_DETECTED:
         return "possible cycle detected";
+    case ECS_LOCKED_STORAGE:
+        return "cannot modify locked storage (defer operation / don't use readonly world)";
     }
 
     return "unknown error code";
@@ -2908,6 +2876,7 @@ ecs_data_t* ecs_table_get_or_create_data(
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
     ecs_data_t *data = table->data;
     if (!data) {
@@ -2991,6 +2960,8 @@ void ecs_table_clear_data(
     ecs_table_t *table,
     ecs_data_t *data)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     if (!data) {
         return;
     }
@@ -3042,6 +3013,8 @@ void ecs_table_clear_silent(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     ecs_data_t *data = ecs_table_get_data(table);
     if (!data) {
         return;
@@ -3060,6 +3033,8 @@ void ecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     ecs_data_t *data = ecs_table_get_data(table);
 
     if (data) {
@@ -3082,6 +3057,8 @@ void ecs_table_clear(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     ecs_data_t *data = ecs_table_get_data(table);
 
     if (data) {
@@ -3116,6 +3093,8 @@ void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
@@ -3158,6 +3137,8 @@ void ecs_table_reset(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+    
     (void)world;
     ecs_os_free(table->lo_edges);
     ecs_map_free(table->hi_edges);
@@ -3179,7 +3160,9 @@ void ecs_table_mark_dirty(
     ecs_table_t *table,
     ecs_entity_t component)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (table->dirty_state) {
         int32_t index = ecs_type_index_of(table->type, component);
         ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
@@ -3528,6 +3511,7 @@ int32_t ecs_table_append(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
     /* Get count & size before growing entities array. This tells us whether the
      * arrays will realloc */
@@ -3665,6 +3649,7 @@ void ecs_table_delete(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
     ecs_vector_t *entity_column = data->entities;
     int32_t count = ecs_vector_count(entity_column);
@@ -3845,6 +3830,8 @@ void ecs_table_move(
 {
     ecs_assert(new_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!new_table->lock, ECS_LOCKED_STORAGE, NULL);
+    ecs_assert(!old_table->lock, ECS_LOCKED_STORAGE, NULL);
 
     ecs_assert(old_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_index >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -3951,6 +3938,8 @@ int32_t ecs_table_appendn(
     int32_t to_add,
     const ecs_entity_t *ids)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     int32_t cur_count = ecs_table_data_count(data);
     return grow_data(world, table, data, to_add, cur_count + to_add, ids);
 }
@@ -3961,6 +3950,8 @@ void ecs_table_set_size(
     ecs_data_t * data,
     int32_t size)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+
     int32_t cur_count = ecs_table_data_count(data);
 
     if (cur_count < size) {
@@ -4028,12 +4019,13 @@ void swap_bitset_columns(
 void ecs_table_swap(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     int32_t row_1,
     int32_t row_2)
 {    
     (void)world;
 
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -4361,12 +4353,16 @@ ecs_data_t* ecs_table_merge(
     ecs_data_t *old_data)
 {
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!old_table->lock, ECS_LOCKED_STORAGE, NULL);
+    
     bool move_data = false;
     
     /* If there is nothing to merge to, just clear the old table */
     if (!new_table) {
         ecs_table_clear_data(world, old_table, old_data);
         return NULL;
+    } else {
+        ecs_assert(!new_table->lock, ECS_LOCKED_STORAGE, NULL);
     }
 
     /* If there is no data to merge, drop out */
@@ -4430,6 +4426,7 @@ void ecs_table_replace_data(
     int32_t prev_count = 0;
     ecs_data_t *table_data = table->data;
     ecs_assert(!data || data != table_data, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
     if (table_data) {
         prev_count = ecs_vector_count(table_data->entities);
@@ -4500,6 +4497,8 @@ bool ecs_table_match_filter(
 int32_t* ecs_table_get_dirty_state(
     ecs_table_t *table)
 {
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+    
     if (!table->dirty_state) {
         table->dirty_state = ecs_os_calloc(ECS_SIZEOF(int32_t) * (table->column_count + 1));
         ecs_assert(table->dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -4544,6 +4543,25 @@ void ecs_table_notify(
     }
 }
 
+void ecs_table_lock(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    if (world->magic == ECS_WORLD_MAGIC && !world->is_readonly) {
+        table->lock ++;
+    }
+}
+
+void ecs_table_unlock(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    if (world->magic == ECS_WORLD_MAGIC && !world->is_readonly) {
+        table->lock --;
+        ecs_assert(table->lock >= 0, ECS_INVALID_OPERATION, NULL);
+    }
+}
+
 
 static
 const ecs_entity_t* new_w_data(
@@ -4564,7 +4582,7 @@ void* get_component_w_index(
 
     ecs_column_t *columns = data->columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(index < info->table->column_count, ECS_INVALID_COMPONENT_ID, NULL);
+    ecs_assert(index < info->table->column_count, ECS_NOT_A_COMPONENT, NULL);
 
     ecs_column_t *column = &columns[index];
     ecs_vector_t *data_vec = column->data;
@@ -6710,7 +6728,7 @@ ecs_entity_t ecs_component_init(
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
         }
         if (ptr->alignment != ecs_from_size_t(desc->alignment)) {
-            ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
+            ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, desc->entity.name);
         }
     }
 
@@ -22196,6 +22214,7 @@ void init_table(
     table->on_set_override = NULL;
     table->un_set_all = NULL;
     table->alloc_count = 0;
+    table->lock = 0;
 
     /* Ensure the component ids for the table exist */
     ensure_columns(world, table);
@@ -22408,7 +22427,7 @@ int32_t ecs_table_switch_from_case(
     }
 
     /* If a table was not found, this is an invalid switch case */
-    ecs_abort(ECS_INVALID_CASE, NULL);
+    ecs_abort(ECS_TYPE_INVALID_CASE, NULL);
 
     return -1;
 }
@@ -22422,7 +22441,7 @@ ecs_table_t *find_or_create_table_include(
     /* If table has one or more switches and this is a case, return self */
     if (ECS_HAS_ROLE(add, CASE)) {
         ecs_assert((node->flags & EcsTableHasSwitch) != 0, 
-            ECS_INVALID_CASE, NULL);
+            ECS_TYPE_INVALID_CASE, NULL);
         return node;
     } else {
         ecs_type_t type = node->type;

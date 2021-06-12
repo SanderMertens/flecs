@@ -1833,7 +1833,10 @@
                 "new_type_from_entity",
                 "existing_type_from_entity",
                 "new_type_add",
-                "existing_type_add"
+                "existing_type_add",
+                "lock_table",
+                "recursive_lock_table",
+                "modify_after_lock"
             ]
         }, {
             "id": "MultiThreadStaging",

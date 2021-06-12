@@ -307,6 +307,7 @@ void init_table(
     table->on_set_override = NULL;
     table->un_set_all = NULL;
     table->alloc_count = 0;
+    table->lock = 0;
 
     /* Ensure the component ids for the table exist */
     ensure_columns(world, table);
@@ -519,7 +520,7 @@ int32_t ecs_table_switch_from_case(
     }
 
     /* If a table was not found, this is an invalid switch case */
-    ecs_abort(ECS_INVALID_CASE, NULL);
+    ecs_abort(ECS_TYPE_INVALID_CASE, NULL);
 
     return -1;
 }
@@ -533,7 +534,7 @@ ecs_table_t *find_or_create_table_include(
     /* If table has one or more switches and this is a case, return self */
     if (ECS_HAS_ROLE(add, CASE)) {
         ecs_assert((node->flags & EcsTableHasSwitch) != 0, 
-            ECS_INVALID_CASE, NULL);
+            ECS_TYPE_INVALID_CASE, NULL);
         return node;
     } else {
         ecs_type_t type = node->type;

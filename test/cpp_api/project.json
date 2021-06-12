@@ -301,8 +301,8 @@
                 "expr_w_template",
                 "query_type_w_template",
                 "compare_term_id",
-                "test_auto_defer_each",
-                "test_auto_defer_iter",
+                "test_no_defer_each",
+                "test_no_defer_iter",
                 "inspect_terms",
                 "inspect_terms_w_each",
                 "comp_to_str",
@@ -319,7 +319,8 @@
                 "iter_no_comps_2_comps",
                 "iter_no_comps_no_comps",
                 "each_pair_object",
-                "iter_pair_object"
+                "iter_pair_object",
+                "iter_query_in_system"
             ]
         }, {
             "id": "QueryBuilder",

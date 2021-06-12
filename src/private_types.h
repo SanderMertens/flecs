@@ -196,6 +196,8 @@ struct ecs_table_t {
     int32_t sw_column_offset;
     int32_t bs_column_count;
     int32_t bs_column_offset;
+
+    int32_t lock;
 };
 
 /* Sparse query column */

@@ -2800,3 +2800,90 @@ void SingleThreadStaging_existing_type_add() {
 
     ecs_fini(world);
 }
+
+void SingleThreadStaging_lock_table() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.terms = {{ecs_id(Position)}}
+    });
+
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        ecs_table_t *table = it.table->table;
+        test_assert(table != NULL);
+        
+        ecs_table_lock(world, table);
+
+        test_expect_abort();
+        ecs_remove(world, e, Position);
+    }
+
+    test_assert(false); // Should never get here
+}
+
+void SingleThreadStaging_recursive_lock_table() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.terms = {{ecs_id(Position)}}
+    });
+
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {
+        ecs_table_t *table = it.table->table;
+        test_assert(table != NULL);
+        
+        ecs_table_lock(world, table);
+        ecs_table_lock(world, table);
+        ecs_table_unlock(world, table);
+
+        test_expect_abort();
+        ecs_remove(world, e, Position);
+    }
+
+    test_assert(false); // Should never get here
+}
+
+void SingleThreadStaging_modify_after_lock() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.terms = {{ecs_id(Position)}}
+    });
+
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next(&it)) {    
+        ecs_table_t *table = it.table->table;
+        test_assert(table != NULL);
+                    
+        ecs_table_lock(world, table);
+        count ++;
+        ecs_table_unlock(world, table);
+    }
+
+    test_int(count, 1);
+
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
