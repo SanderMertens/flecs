@@ -1750,6 +1750,7 @@ void SystemMisc_rw_in_implicit_from_entity() {
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_is_readonly(&it, 1) == false);
     test_assert(ecs_is_readonly(&it, 2) == true);
+    test_assert(it.count == 2);
 
     ecs_fini(world);
 }
