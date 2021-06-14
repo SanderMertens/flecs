@@ -618,6 +618,11 @@ public:
     template <typename T>
     bool has() const;
 
+    /** Add singleton component.
+     */
+    template <typename T>
+    void add() const;
+
     /** Remove singleton component.
      */
     template <typename T>

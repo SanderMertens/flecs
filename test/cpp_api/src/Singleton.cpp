@@ -58,6 +58,23 @@ void Singleton_patch_singleton() {
     test_int(p->y, 20);
 }
 
+void Singleton_add_singleton() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.system<Position>()
+        .kind(flecs::OnAdd)
+        .iter([&](flecs::iter it, Position *p) {
+            invoked ++;
+        });
+
+    world.add<Position>();
+
+    test_int(invoked, 1);
+}
+
+
 void Singleton_remove_singleton() {
     flecs::world world;
 
@@ -136,3 +153,4 @@ void Singleton_type_id_from_world() {
     test_assert(s.id() == flecs::type_id<Position>());
     test_assert(s.id() == flecs::type_id<Position>());
 }
+

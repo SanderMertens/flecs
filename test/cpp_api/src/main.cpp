@@ -523,6 +523,7 @@ void Singleton_set_get_singleton(void);
 void Singleton_get_mut_singleton(void);
 void Singleton_modified_singleton(void);
 void Singleton_patch_singleton(void);
+void Singleton_add_singleton(void);
 void Singleton_remove_singleton(void);
 void Singleton_has_singleton(void);
 void Singleton_singleton_system(void);
@@ -2497,6 +2498,10 @@ bake_test_case Singleton_testcases[] = {
         Singleton_patch_singleton
     },
     {
+        "add_singleton",
+        Singleton_add_singleton
+    },
+    {
         "remove_singleton",
         Singleton_remove_singleton
     },
@@ -2649,7 +2654,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        9,
+        10,
         Singleton_testcases
     }
 };

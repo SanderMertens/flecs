@@ -182,6 +182,12 @@ bool world::has() const {
 }
 
 template <typename T>
+void world::add() const {
+    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    e.add<T>();
+}
+
+template <typename T>
 void world::remove() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     e.remove<T>();

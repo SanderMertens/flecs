@@ -566,6 +566,7 @@
                 "get_mut_singleton",
                 "modified_singleton",
                 "patch_singleton",
+                "add_singleton",
                 "remove_singleton",
                 "has_singleton",
                 "singleton_system",
