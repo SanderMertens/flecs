@@ -178,12 +178,21 @@ const char *path_elem(
 {
     const char *ptr;
     char *bptr, ch;
+    int32_t template_nesting = 0;
 
     for (bptr = buff, ptr = path; (ch = *ptr); ptr ++) {
         ecs_assert(bptr - buff < ECS_MAX_NAME_LENGTH, ECS_INVALID_PARAMETER, 
             NULL);
+
+        if (ch == '<') {
+            template_nesting ++;
+        } else if (ch == '>') {
+            template_nesting --;
+        }
+
+        ecs_assert(template_nesting >= 0, ECS_INVALID_PARAMETER, path);
             
-        if (is_sep(&ptr, sep)) {
+        if (!template_nesting && is_sep(&ptr, sep)) {
             *bptr = '\0';
             return ptr + 1;
         } else {

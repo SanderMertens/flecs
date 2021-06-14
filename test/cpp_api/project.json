@@ -557,7 +557,12 @@
                 "with_scope_nested",
                 "recursive_lookup",
                 "type_w_tag_name",
-                "entity_w_tag_name"
+                "entity_w_tag_name",
+                "template_component_name",
+                "template_component_w_namespace_name",
+                "template_component_w_same_namespace_name",
+                "template_component_w_namespace_name_and_namespaced_arg",
+                "template_component_w_same_namespace_name_and_namespaced_arg"
             ]
         }, {
             "id": "Singleton",

@@ -699,3 +699,58 @@ void World_entity_w_tag_name() {
     test_str(c.path().c_str(), "::Tag");
     test_assert(c != flecs::Tag);
 }
+
+template <typename T>
+struct TemplateType { };
+
+void World_template_component_name() {
+    flecs::world ecs;
+
+    auto c = ecs.component<TemplateType<Position>>();
+    test_str(c.name().c_str(), "TemplateType<Position>");
+    test_str(c.path().c_str(), "::TemplateType<Position>");
+}
+
+namespace ns {
+template <typename T>
+struct TemplateType { };
+struct foo { };
+}
+
+void World_template_component_w_namespace_name() {
+    flecs::world ecs;
+
+    auto c = ecs.component<ns::TemplateType<Position>>();
+    test_str(c.name().c_str(), "TemplateType<Position>");
+    test_str(c.path().c_str(), "::ns::TemplateType<Position>");
+}
+
+void World_template_component_w_namespace_name_and_namespaced_arg() {
+    flecs::world ecs;
+
+    auto c = ecs.component<ns::TemplateType<ns::foo>>();
+    test_str(c.name().c_str(), "TemplateType<ns::foo>");
+    test_str(c.path().c_str(), "::ns::TemplateType<ns::foo>");
+}
+
+namespace foo {
+template <typename T>
+struct foo { };
+struct bar { };
+}
+
+void World_template_component_w_same_namespace_name() {
+    flecs::world ecs;
+
+    auto c = ecs.component<foo::foo<Position>>();
+    test_str(c.name().c_str(), "foo<Position>");
+    test_str(c.path().c_str(), "::foo::foo<Position>");
+}
+
+void World_template_component_w_same_namespace_name_and_namespaced_arg() {
+    flecs::world ecs;
+
+    auto c = ecs.component<foo::foo<foo::bar>>();
+    test_str(c.name().c_str(), "foo<foo::bar>");
+    test_str(c.path().c_str(), "::foo::foo<foo::bar>");
+}

@@ -11393,6 +11393,11 @@ public:
     template <typename T>
     bool has() const;
 
+    /** Add singleton component.
+     */
+    template <typename T>
+    void add() const;
+
     /** Remove singleton component.
      */
     template <typename T>
@@ -17310,6 +17315,12 @@ template <typename T>
 bool world::has() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.has<T>();
+}
+
+template <typename T>
+void world::add() const {
+    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    e.add<T>();
 }
 
 template <typename T>

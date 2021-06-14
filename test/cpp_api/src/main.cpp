@@ -517,6 +517,11 @@ void World_with_scope_nested(void);
 void World_recursive_lookup(void);
 void World_type_w_tag_name(void);
 void World_entity_w_tag_name(void);
+void World_template_component_name(void);
+void World_template_component_w_namespace_name(void);
+void World_template_component_w_same_namespace_name(void);
+void World_template_component_w_namespace_name_and_namespaced_arg(void);
+void World_template_component_w_same_namespace_name_and_namespaced_arg(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -2477,6 +2482,26 @@ bake_test_case World_testcases[] = {
     {
         "entity_w_tag_name",
         World_entity_w_tag_name
+    },
+    {
+        "template_component_name",
+        World_template_component_name
+    },
+    {
+        "template_component_w_namespace_name",
+        World_template_component_w_namespace_name
+    },
+    {
+        "template_component_w_same_namespace_name",
+        World_template_component_w_same_namespace_name
+    },
+    {
+        "template_component_w_namespace_name_and_namespaced_arg",
+        World_template_component_w_namespace_name_and_namespaced_arg
+    },
+    {
+        "template_component_w_same_namespace_name_and_namespaced_arg",
+        World_template_component_w_same_namespace_name_and_namespaced_arg
     }
 };
 
@@ -2647,7 +2672,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        32,
+        37,
         World_testcases
     },
     {
