@@ -3,7 +3,7 @@ name: build
 on: [ push, pull_request ]
 
 jobs:
-  build:
+  linux:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     env:
@@ -13,6 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        config: [debug, release]
         compiler:
           - cc: gcc-7
             cxx: g++-7
@@ -44,12 +45,41 @@ jobs:
 
       - name: build flecs
         run: |
-          bake --strict
-          bake --strict --cfg release
+          bake --strict --cfg ${{ matrix.config }}
 
       - name: build examples
         run: |
-          bake examples/c --strict
-          bake examples/cpp --strict
-          bake examples/c --strict --cfg release
-          bake examples/cpp --strict --cfg release
+          bake examples/c --strict --cfg ${{ matrix.config }}
+          bake examples/cpp --strict --cfg ${{ matrix.config }}
+          bake examples/os_api --strict --cfg ${{ matrix.config }}
+          bake examples/os_api/bake --strict --cfg ${{ matrix.config }}
+          
+  windows:
+    timeout-minutes: 10
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [debug, release]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          cd bake\build-Windows
+          nmake
+          cd ..
+          ./bake setup --local
+
+      - name: build flecs
+        run: bake/bake --strict --cfg ${{ matrix.config }}
+        
+      - name: build examples
+        run: |
+          bake/bake examples/c --strict --cfg ${{ matrix.config }}
+          bake/bake examples/cpp --strict --cfg ${{ matrix.config }}
+          bake/bake examples/os_api/stdcpp --strict --cfg ${{ matrix.config }}
+          bake/bake examples/os_api/bake --strict --cfg ${{ matrix.config }}
