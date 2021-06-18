@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: |
+        compiler:
           - cc: gcc-7
             cxx: g++7
           - cc: gcc-8
