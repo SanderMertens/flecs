@@ -159,7 +159,7 @@ jobs:
 
       - name: Build Flecs
         run: |
-          scan-build bake
+          scan-build --status-bugs bake
   
   sanitized:
     timeout-minutes: 20
