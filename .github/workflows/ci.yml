@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install GCC
+      - name: Install gcc
         run: |
           sudo apt-get install -y gcc-${{ matrix.compiler-version }}
           sudo apt-get install -y g++-${{ matrix.compiler-version }}
@@ -106,7 +106,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install Clang
+      - name: Install clang
         run: |
           sudo apt-get install -y clang-${{ matrix.compiler-version }}
           sudo apt-get install -y clang++-${{ matrix.compiler-version }}      
@@ -143,9 +143,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install Clang
+      - name: Install clang
         run: |
-          sudo apt-get install -y clang-${{ matrix.compiler-version }}    
+          sudo apt-get install -y clang-${{ matrix.compiler-version }}
+          
+      - name: Install clang-build
+        run: |
+          sudo apt-get install -y clang-tools   
       
       - name: Install bake
         run: |
