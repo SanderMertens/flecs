@@ -15,13 +15,13 @@ jobs:
       matrix:
         compiler:
           - cc: gcc-7
-            cxx: g++7
+            cxx: g++-7
           - cc: gcc-8
-            cxx: g++8
+            cxx: g++-8
           - cc: gcc-9
-            cxx: g++9
+            cxx: g++-9
           - cc: gcc-10
-            cxx: g++10
+            cxx: g++-10
           - cc: clang-8
             cxx: clang++-8
           - cc: clang-9
