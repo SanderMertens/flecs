@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install GCC
+      - name: Install gcc
         run: |
           sudo apt-get install -y gcc-${{ matrix.compiler-version }}
           sudo apt-get install -y g++-${{ matrix.compiler-version }}
@@ -102,11 +102,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        compiler-version: [ 8, 9 ]
+        compiler-version: [ 8, 9, 10 ]
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install Clang
+      - name: Install clang
         run: |
           sudo apt-get install -y clang-${{ matrix.compiler-version }}
           sudo apt-get install -y clang++-${{ matrix.compiler-version }}      
@@ -129,6 +129,38 @@ jobs:
           bake examples/c --strict --cfg release
           bake examples/cpp --strict --cfg release
 
+  scan-build:
+    timeout-minutes: 10
+    runs-on: ${{ matrix.os }}
+    env:
+      CC: clang-${{ matrix.compiler-version }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+        compiler-version: [ 10 ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install clang
+        run: |
+          sudo apt-get install -y clang-${{ matrix.compiler-version }}
+          
+      - name: Install clang-build
+        run: |
+          sudo apt-get install -y clang-tools   
+      
+      - name: Install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: Run scan-build
+        run: |
+          scan-build --status-bugs bake
+  
   sanitized:
     timeout-minutes: 20
     runs-on: ${{ matrix.os }}

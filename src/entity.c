@@ -163,7 +163,7 @@ const ecs_type_info_t *get_c_info(
     }
 }
 
-void ecs_get_column_info(
+int ecs_get_column_info(
     ecs_world_t * world,
     ecs_table_t * table,
     ecs_ids_t * components,
@@ -181,6 +181,8 @@ void ecs_get_column_info(
             cinfo[i].ci = get_c_info(world, id);
             cinfo[i].column = i;            
         }
+
+        return count;
     } else {
         ecs_entity_t *array = components->array;
         int32_t i, cur, count = components->count;
@@ -197,6 +199,8 @@ void ecs_get_column_info(
                 }
             }
         }
+
+        return count;
     }
 }
 
@@ -652,6 +656,7 @@ void ecs_components_override(
 {
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(component_count != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(component_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_t *table_without_base = table;
     ecs_column_t *columns = data->columns;
@@ -788,11 +793,11 @@ void ecs_run_add_actions(
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(added->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_column_info_t cinfo[ECS_MAX_ADD_REMOVE];
-    ecs_get_column_info(world, table, added, cinfo, get_all);
-    int added_count = added->count;
-
     if (table->flags & EcsTableHasBase) {
+        ecs_column_info_t cinfo[ECS_MAX_ADD_REMOVE];
+        int added_count = ecs_get_column_info(
+            world, table, added, cinfo, get_all);
+
         ecs_components_override(
             world, table, data, row, count, cinfo, 
             added_count, run_on_set);
@@ -2428,8 +2433,7 @@ void remove_from_table(
             }
 
             ecs_data_t *dst_data = ecs_table_get_data(dst_table);
-            dst_data = ecs_table_merge(
-                world, dst_table, src_table, dst_data, src_data);
+            ecs_table_merge(world, dst_table, src_table, dst_data, src_data);
         }
     }
 }
@@ -3639,11 +3643,11 @@ size_t ecs_id_str(
         ecs_os_free(lo_path);
 
         if (hi) {
-            bytes_left = append_to_str(&ptr, ")", bytes_left, &required);
+            append_to_str(&ptr, ")", bytes_left, &required);
         }
     } else {
         char *path = ecs_get_fullpath(world, e);
-        bytes_left = append_to_str(&ptr, path, bytes_left, &required);
+        append_to_str(&ptr, path, bytes_left, &required);
         ecs_os_free(path);
     }
 

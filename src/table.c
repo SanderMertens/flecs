@@ -963,6 +963,10 @@ void ensure_data(
         *sw_columns_out = sw_columns;
         *bs_columns_out = bs_columns;
     }
+
+    ecs_assert(!column_count || columns, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!sw_column_count || sw_columns, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!bs_column_count || bs_columns, ECS_INTERNAL_ERROR, NULL);
 }
 
 static
@@ -1835,7 +1839,7 @@ void merge_table_data(
     ecs_data_t * old_data,
     ecs_data_t * new_data)
 {
-    int32_t i_new, new_component_count = new_table->column_count;
+    int32_t i_new = 0, new_component_count = new_table->column_count;
     int32_t i_old = 0, old_component_count = old_table->column_count;
     ecs_entity_t *new_components = ecs_vector_first(new_table->type, ecs_entity_t);
     ecs_entity_t *old_components = ecs_vector_first(old_table->type, ecs_entity_t);
@@ -1847,6 +1851,8 @@ void merge_table_data(
         ecs_init_data(world, new_table, new_data);
         new_columns = new_data->columns;
     }
+    
+    ecs_assert(!new_component_count || new_columns, ECS_INTERNAL_ERROR, NULL);
 
     if (!old_count) {
         return;
@@ -1866,7 +1872,7 @@ void merge_table_data(
         ECS_SIZEOF(ecs_record_t*), ECS_ALIGNOF(ecs_record_t*));
     old_data->record_ptrs = NULL;        
 
-    for (i_new = 0; (i_new < new_component_count) && (i_old < old_component_count); ) {
+    for (; (i_new < new_component_count) && (i_old < old_component_count); ) {
         ecs_entity_t new_component = new_components[i_new];
         ecs_entity_t old_component = old_components[i_old];
         int16_t size = new_columns[i_new].size;
@@ -1897,11 +1903,8 @@ void merge_table_data(
                     old_count + new_count);
 
                 /* Construct new values */
-                ecs_type_info_t *c_info;
-                ecs_xtor_t ctor;
-                if ((c_info = new_table->c_info[i_new]) && 
-                    (ctor = c_info->lifecycle.ctor)) 
-                {
+                ecs_type_info_t *c_info = new_table->c_info[i_new];
+                if (c_info) {
                     ctor_component(world, c_info, column, 
                         entities, 0, old_count + new_count);
                 }
@@ -1913,11 +1916,8 @@ void merge_table_data(
                 ecs_column_t *column = &old_columns[i_old];
                 
                 /* Destruct old values */
-                ecs_type_info_t *c_info;
-                ecs_xtor_t dtor;
-                if ((c_info = old_table->c_info[i_old]) && 
-                    (dtor = c_info->lifecycle.dtor)) 
-                {
+                ecs_type_info_t *c_info = old_table->c_info[i_old];
+                if (c_info) {
                     dtor_component(world, c_info, column, 
                         entities, 0, old_count);
                 }
@@ -1945,11 +1945,8 @@ void merge_table_data(
                 old_count + new_count);
 
             /* Construct new values */
-            ecs_type_info_t *c_info;
-            ecs_xtor_t ctor;
-            if ((c_info = new_table->c_info[i_new]) && 
-                (ctor = c_info->lifecycle.ctor)) 
-            {
+            ecs_type_info_t *c_info = new_table->c_info[i_new];
+            if (c_info) {
                 ctor_component(world, c_info, column, 
                     entities, 0, old_count + new_count);
             }
@@ -1959,13 +1956,10 @@ void merge_table_data(
     /* Destroy remaining columns */
     for (; i_old < old_component_count; i_old ++) {
         ecs_column_t *column = &old_columns[i_old];
-                
+
         /* Destruct old values */
-        ecs_type_info_t *c_info;
-        ecs_xtor_t dtor;
-        if ((c_info = old_table->c_info[i_old]) && 
-            (dtor = c_info->lifecycle.dtor)) 
-        {
+        ecs_type_info_t *c_info = old_table->c_info[i_old];
+        if (c_info) {
             dtor_component(world, c_info, column, entities, 
                 0, old_count);
         }

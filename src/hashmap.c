@@ -100,7 +100,6 @@ ecs_hashmap_result_t _ecs_hashmap_ensure(
     } else {
         int32_t index = find_key(map, keys, key_size, key);
         if (index == -1) {
-            index = ecs_vector_count(bucket->keys);
             key_ptr = ecs_vector_add_t(&bucket->keys, key_size, 8);
             ecs_os_memcpy(key_ptr, key, key_size);
             value_ptr = ecs_vector_add_t(&bucket->values, value_size, 8);

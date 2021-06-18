@@ -814,7 +814,6 @@ bool match_term(
     (void)failure_info;
 
     ecs_term_id_t *subj = &term->args[0];
-    uint8_t set = subj->set.mask;
 
     /* If term has no subject, there's nothing to match */
     if (!subj->entity) {
@@ -823,10 +822,6 @@ bool match_term(
 
     if (term->args[0].entity != EcsThis) {
         type = ecs_get_type(world, subj->entity);
-    }
-
-    if (!set) {
-        set = EcsSelf;
     }
 
     return ecs_type_find_id(
