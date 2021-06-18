@@ -266,7 +266,7 @@ void SystemMisc_invalid_0_w_from_empty() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, .0);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, :0);
 
     ecs_fini(world);
 }
@@ -278,7 +278,7 @@ void SystemMisc_invalid_0_w_from_singleton() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, $.0);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, $:0);
 
     ecs_fini(world);
 }

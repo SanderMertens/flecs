@@ -157,7 +157,7 @@ jobs:
           make -C bake/build-$(uname)
           bake/bake setup
 
-      - name: Build Flecs
+      - name: Run scan-build
         run: |
           scan-build --status-bugs bake
   

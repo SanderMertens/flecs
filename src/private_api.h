@@ -301,7 +301,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_entity_t component,
     ecs_entity_t previous);
 
-void ecs_get_column_info(
+int ecs_get_column_info(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_ids_t *components,

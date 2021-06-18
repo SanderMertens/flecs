@@ -12,6 +12,8 @@ void new_defer_component_ids(
     ecs_op_t *op, 
     const ecs_ids_t *components)
 {
+    ecs_assert(components != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     int32_t components_count = components->count;
     if (components_count == 1) {
         ecs_entity_t component = components->array[0];

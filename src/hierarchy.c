@@ -63,18 +63,22 @@ static
 bool is_number(
     const char *name)
 {
+    ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     if (!isdigit(name[0])) {
         return false;
     }
 
-    ecs_size_t i, s = ecs_os_strlen(name);
-    for (i = 1; i < s; i ++) {
-        if (!isdigit(name[i])) {
+    ecs_size_t i, length = ecs_os_strlen(name);
+    for (i = 1; i < length; i ++) {
+        char ch = name[i];
+
+        if (!isdigit(ch)) {
             break;
         }
     }
 
-    return i >= s;
+    return i >= length;
 }
 
 static 
@@ -177,12 +181,15 @@ const char *path_elem(
     const char *sep)
 {
     const char *ptr;
-    char *bptr, ch;
+    char *bptr = buff, ch;
     int32_t template_nesting = 0;
 
-    for (bptr = buff, ptr = path; (ch = *ptr); ptr ++) {
-        ecs_assert(bptr - buff < ECS_MAX_NAME_LENGTH, ECS_INVALID_PARAMETER, 
-            NULL);
+    memset(buff, 0, 1); /* silence scan-build warning in is_number, see below */
+
+    for (ptr = path; (ch = *ptr); ptr ++) {
+        /* Ensure we're never writing past the end of the buffer */
+        ecs_assert(bptr - buff < ECS_MAX_NAME_LENGTH, 
+            ECS_INVALID_PARAMETER, NULL);
 
         if (ch == '<') {
             template_nesting ++;
@@ -191,14 +198,18 @@ const char *path_elem(
         }
 
         ecs_assert(template_nesting >= 0, ECS_INVALID_PARAMETER, path);
-            
+
         if (!template_nesting && is_sep(&ptr, sep)) {
-            *bptr = '\0';
-            return ptr + 1;
-        } else {
-            *bptr = ch;
-            bptr ++;
+            ptr ++;
+            
+            /* if bptr != buff, string will be 0 terminated at 214, otherwise
+             * function will return NULL */
+            break;
         }
+
+        /* Unconditionally assign a valid value to bptr */
+        *bptr = ch;
+        bptr ++;
     }
 
     if (bptr != buff) {

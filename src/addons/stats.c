@@ -206,8 +206,6 @@ void ecs_get_query_stats(
     ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    world = ecs_get_world(world);
-
     int32_t t = s->t = t_next(s->t);
 
     int32_t i, entity_count = 0, count = ecs_vector_count(query->tables);
