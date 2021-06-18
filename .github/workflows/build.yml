@@ -7,34 +7,47 @@ jobs:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
+      CC: ${{ matrix.compiler.cc }}
+      CXX: ${{ matrix.compiler.cxx }}
 
     strategy:
       fail-fast: false
       matrix:
-        cc: [ gcc-7, gcc-8, gcc-9, gcc-10, clang-8, clang-9, clang-10 ]
-        cxx: [ g++-7, g++-8, g++-9, g++-10, clang++-8, clang++-9, clang++-10 ]
+        compiler: |
+          - cc: gcc-7
+            cxx: g++7
+          - cc: gcc-8
+            cxx: g++8
+          - cc: gcc-9
+            cxx: g++9
+          - cc: gcc-10
+            cxx: g++10
+          - cc: clang-8
+            cxx: clang++-8
+          - cc: clang-9
+            cxx: clang++-9
+          - cc: clang-10
+            cxx: clang++-10
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install gcc
+      - name: install compiler
         run: |
-          sudo apt-get install -y $${{ matrix.cc }}
-          sudo apt-get install -y $${{ matrix.cxx }}
+          sudo apt-get install -y ${{ matrix.compiler.cc }}
+          sudo apt-get install -y ${{ matrix.compiler.cxx }}
       
-      - name: Install bake
+      - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
-      - name: Build Flecs
+      - name: build flecs
         run: |
           bake --strict
           bake --strict --cfg release
 
-      - name: Build examples
+      - name: build examples
         run: |
           bake examples/c --strict
           bake examples/cpp --strict
