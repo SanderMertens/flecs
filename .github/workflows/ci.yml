@@ -3,39 +3,78 @@ name: CI
 on: [ push, pull_request ]
 
 jobs:
-  unix:
-    timeout-minutes: 20
-    runs-on: ${{ matrix.os }}
+  build-linux:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    env:
+      CC: ${{ matrix.compiler.cc }}
+      CXX: ${{ matrix.compiler.cxx }}
+
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macOS-latest ]
-        compiler: [ gcc, clang ]
+        compiler:
+          - cc: gcc-7
+            cxx: g++-7
+          - cc: gcc-8
+            cxx: g++-8
+          - cc: gcc-9
+            cxx: g++-9
+          - cc: gcc-10
+            cxx: g++-10
+          - cc: clang-8
+            cxx: clang++-8
+          - cc: clang-9
+            cxx: clang++-9
+          - cc: clang-10
+            cxx: clang++-10
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install bake
+      - name: install compiler
+        run: |
+          sudo apt-get install -y ${{ matrix.compiler.cc }}
+          sudo apt-get install -y ${{ matrix.compiler.cxx }}
+      
+      - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
-      - name: Build Flecs
-        run: bake --strict
-
-      - name: Run tests
+      - name: build flecs (debug)
         run: |
-          bake examples/os_api/flecs-os_api-bake
-          bake test
+          bake --strict --cfg debug
 
-  windows:
+      - name: build flecs (release)
+        run: |          
+          bake --strict --cfg release
+
+      - name: build examples (debug)
+        run: |
+          bake examples/c --strict --cfg debug
+          bake examples/cpp --strict --cfg debug
+          bake examples/os_api --strict --cfg debug
+          bake examples/os_api/bake --strict --cfg debug
+
+      - name: build examples (release)
+        run: |
+          bake examples/c --strict --cfg release
+          bake examples/cpp --strict --cfg release
+          bake examples/os_api --strict --cfg release
+          bake examples/os_api/bake --strict --cfg release
+
+  build-windows:
     timeout-minutes: 10
     runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
-      - name: Install bake
+      - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
           cd bake\build-Windows
@@ -43,173 +82,229 @@ jobs:
           cd ..
           ./bake setup --local
 
-      - name: Build Flecs
+      - name: build flecs (debug)
+        run: bake/bake --strict --cfg debug
+        
+      - name: build flecs (release)
+        run: bake/bake --strict --cfg release        
+
+      - name: build examples (debug)
+        run: |
+          bake/bake examples/c --strict --cfg debug
+          bake/bake examples/cpp --strict --cfg debug
+          bake/bake examples/os_api/stdcpp --strict --cfg debug
+          bake/bake examples/os_api/bake --strict --cfg debug
+
+      - name: build examples (release)
+        run: |
+          bake/bake examples/c --strict --cfg release
+          bake/bake examples/cpp --strict --cfg release
+          bake/bake examples/os_api/stdcpp --strict --cfg release
+          bake/bake examples/os_api/bake --strict --cfg release
+
+  build-icc:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    env:
+      CC: icc
+      CXX: icc
+
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: install icc
+        run: |
+          wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
+          sudo apt-get update
+          sudo apt-get install intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
+
+      - name: install bake
+        run: |
+          export CC=gcc
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs (debug)
+        run: |
+          source /opt/intel/oneapi/setvars.sh intel64
+          bake --strict --cfg debug
+
+      - name: build flecs (release)
+        run: |
+          source /opt/intel/oneapi/setvars.sh intel64
+          bake --strict --cfg release
+
+  test-unix:
+    timeout-minutes: 20
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macOS-latest ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --strict
+
+      - name: run tests
+        run: |
+          bake examples/os_api/bake
+          bake test
+
+  test-windows:
+    timeout-minutes: 10
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          cd bake\build-Windows
+          nmake
+          cd ..
+          ./bake setup --local
+
+      - name: build flecs
         run: bake/bake --strict
 
-      - name: Run tests
+      - name: run tests
         run: |
-          bake/bake examples/os_api/flecs-os_api-bake
+          bake/bake examples/os_api/bake
           bake/bake run test\cpp_api
           bake/bake run test\api
           bake/bake run test\collections
 
-  gcc-warnings:
-    timeout-minutes: 20
-    runs-on: ${{ matrix.os }}
-    env:
-      CC: gcc-${{ matrix.compiler-version }}
-      CXX: g++-${{ matrix.compiler-version }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-        compiler-version: [ 7, 8, 9, 10 ]
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install gcc
-        run: |
-          sudo apt-get install -y gcc-${{ matrix.compiler-version }}
-          sudo apt-get install -y g++-${{ matrix.compiler-version }}
-      
-      - name: Install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: Build Flecs
-        run: |
-          bake --strict
-          bake --strict --cfg release
-
-      - name: Build examples
-        run: |
-          bake examples/c --strict
-          bake examples/cpp --strict
-          bake examples/c --strict --cfg release
-          bake examples/cpp --strict --cfg release
-
-  clang-warnings:
-    timeout-minutes: 20
-    runs-on: ${{ matrix.os }}
-    env:
-      CC: clang-${{ matrix.compiler-version }}
-      CXX: clang++-${{ matrix.compiler-version }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-        compiler-version: [ 8, 9, 10 ]
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install clang
-        run: |
-          sudo apt-get install -y clang-${{ matrix.compiler-version }}
-          sudo apt-get install -y clang++-${{ matrix.compiler-version }}      
-      
-      - name: Install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: Build Flecs
-        run: |
-          bake --strict
-          bake --strict --cfg release
-
-      - name: Build examples
-        run: |
-          bake examples/c --strict
-          bake examples/cpp --strict
-          bake examples/c --strict --cfg release
-          bake examples/cpp --strict --cfg release
-
-  scan-build:
+  analyze-scan-build:
     timeout-minutes: 10
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     env:
-      CC: clang-${{ matrix.compiler-version }}
+      CC: clang-10
 
     strategy:
       fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-        compiler-version: [ 10 ]
 
     steps:
       - uses: actions/checkout@v2
       - name: Install clang
         run: |
-          sudo apt-get install -y clang-${{ matrix.compiler-version }}
+          sudo apt-get install -y clang-10
           
-      - name: Install clang-build
+      - name: install clang-build
         run: |
           sudo apt-get install -y clang-tools   
       
-      - name: Install bake
+      - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
-      - name: Run scan-build
+      - name: run scan-build
         run: |
           scan-build --status-bugs bake
-  
-  sanitized:
+
+  analyze-sanitized:
     timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ macOS-latest ]
-        compiler: [ clang ]
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install bake
+      - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
-      - name: Build Flecs
+      - name: build flecs
         run: bake --strict
 
-      - name: Run tests
+      - name: run tests
         run: |
-          bake examples/os_api/flecs-os_api-bake
+          bake examples/os_api/bake
           bake run test/api --cfg sanitize
           bake run test/cpp_api --cfg sanitize
           bake run test/collections --cfg sanitize
 
-  amalgamated:
+  buildsystem-cmake:
     timeout-minutes: 5
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-        compiler: [ gcc, clang ]
 
     steps:
       - uses: actions/checkout@v2
-      - name: Build Flecs
-        run: ${{ matrix.compiler }} flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
 
-  custom_build:
+      - name: "msvc dev"
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: create build folder
+        run: mkdir cmake_build
+
+      - name: build flecs
+        working-directory: cmake_build
+        run: |
+          cmake ..
+          cmake --build .
+
+      - name: create examples build folder
+        working-directory: examples
+        run: mkdir cmake_build
+
+      - name: build examples
+        working-directory: examples/cmake_build
+        run: |
+          cmake ..
+          cmake --build .
+
+  buildsystem-meson:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install meson
+        run: |
+          pip3 install meson
+          pip3 install ninja
+        
+      - name: create build folder
+        run: meson meson_build
+
+      - name: build flecs
+        working-directory: meson_build
+        run: |
+          meson compile
+
+  flecs-custom-builds:
     timeout-minutes: 5
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
         compiler: [ gcc, clang ]
 
     steps:
@@ -220,7 +315,7 @@ jobs:
           make -C bake/build-$(uname)
           bake/bake setup
 
-      - name: No extensions
+      - name: no extensions
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD
@@ -275,83 +370,15 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_STATS
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_STATS
 
-  cmake-unix:
-    timeout-minutes: 20
-    runs-on: ${{ matrix.os }}
+  flecs-amalgamated:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macOS-latest ]
-        compiler: [ gcc ]
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Create Flecs build folder
-        run: mkdir cmake_build
-
-      - name: Build Flecs
-        working-directory: cmake_build
-        run: |
-          cmake ..
-          cmake --build .
-
-      - name: Create examples build folder
-        working-directory: examples
-        run: mkdir cmake_build
-
-      - name: Build examples
-        working-directory: examples/cmake_build
-        run: |
-          cmake ..
-          cmake --build .
-
-  cmake-windows:
-    timeout-minutes: 20
-    runs-on: windows-latest
+        compiler: [ gcc, clang ]
 
     steps:
       - uses: actions/checkout@v2
-      - uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Create Flecs build folder
-        run: mkdir cmake_build
-
-      - name: Build Flecs
-        working-directory: cmake_build
-        run: |
-          cmake ..
-          cmake --build .
-
-      - name: Create examples build folder
-        working-directory: examples
-        run: mkdir cmake_build
-
-      - name: Build examples
-        working-directory: examples/cmake_build
-        run: | 
-          cmake ..
-          cmake --build .
-
-  meson:
-    timeout-minutes: 20
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-        compiler: [ gcc ]
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Install meson
-        run: |
-          pip3 install meson
-          pip3 install ninja
-        
-      - name: Create build folder
-        run: meson meson_build
-
-      - name: Build Flecs
-        working-directory: meson_build
-        run: |
-          meson compile
+      - name: build flecs
+        run: ${{ matrix.compiler }} flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
