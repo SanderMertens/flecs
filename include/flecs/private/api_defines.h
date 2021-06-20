@@ -84,9 +84,9 @@ typedef int32_t ecs_size_t;
 #endif
 
 #if defined(__GNUC__)
-#define ECS_UNUSED __attribute__((unused))
+#define ECS_UNUSED(v) __attribute__((unused)) v
 #else
-#define ECS_UNUSED
+#define ECS_UNUSED(v) (void)v
 #endif
 
 #ifndef FLECS_NO_DEPRECATED_WARNINGS

@@ -47,7 +47,11 @@ struct ecs_vector_t {
 };
 
 /* Compute the header size of the vector from size & alignment */
-#define ECS_VECTOR_U(size, alignment) size, ECS_MAX(ECS_SIZEOF(ecs_vector_t), alignment)
+#ifndef __cplusplus
+#define ECS_VECTOR_U(size, alignment) size, (int16_t)ECS_MAX(ECS_SIZEOF(ecs_vector_t), alignment)
+#else
+#define ECS_VECTOR_U(size, alignment) size, static_cast<int16_t>(ECS_MAX(ECS_SIZEOF(ecs_vector_t), alignment))
+#endif
 
 /* Compute the header size of the vector from a provided compile-time type */
 #define ECS_VECTOR_T(T) ECS_VECTOR_U(ECS_SIZEOF(T), ECS_ALIGNOF(T))

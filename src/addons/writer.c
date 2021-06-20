@@ -224,7 +224,7 @@ void ecs_table_writer_next(
             ecs_table_writer_finalize_table(stream);
             stream->state = EcsStreamHeader;
             writer->column_written = 0;
-            writer->state = 0;
+            writer->state = EcsStreamHeader;
             writer->column_index = 0;
             writer->row_index = 0;
         } else {

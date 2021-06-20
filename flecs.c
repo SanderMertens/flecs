@@ -10537,7 +10537,7 @@ void ecs_table_writer_next(
             ecs_table_writer_finalize_table(stream);
             stream->state = EcsStreamHeader;
             writer->column_written = 0;
-            writer->state = 0;
+            writer->state = EcsStreamHeader;
             writer->column_index = 0;
             writer->row_index = 0;
         } else {
@@ -16471,7 +16471,7 @@ void hashlittle2(
   u.ptr = key;
   if (HASH_LITTLE_ENDIAN && ((u.i & 0x3) == 0)) {
     const uint32_t *k = (const uint32_t *)key;         /* read 32-bit chunks */
-    const uint8_t  *k8;
+    const uint8_t  *k8 = NULL;
     (void)k8;
 
     /*------ all but last block: aligned reads and affect 32 bits of (a,b,c) */
@@ -17053,7 +17053,7 @@ int ecs_filter_finalize(
 {
     int32_t i, term_count = f->term_count, index = 0;
     ecs_term_t *terms = f->terms;
-    ecs_oper_kind_t prev_oper = 0;
+    ecs_oper_kind_t prev_oper = EcsAnd;
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];

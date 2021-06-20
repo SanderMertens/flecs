@@ -406,7 +406,7 @@ int ecs_filter_finalize(
 {
     int32_t i, term_count = f->term_count, index = 0;
     ecs_term_t *terms = f->terms;
-    ecs_oper_kind_t prev_oper = 0;
+    ecs_oper_kind_t prev_oper = EcsAnd;
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
