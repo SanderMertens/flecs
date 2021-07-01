@@ -25266,7 +25266,7 @@ ecs_query_t* build_pipeline_query(
 }
 
 static 
-void EcsOnAddPipeline(
+void EcsOnUpdatePipeline(
     ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
@@ -25298,9 +25298,22 @@ void EcsOnAddPipeline(
             world, pipeline, "BuiltinPipelineBuildQuery", false);
         ecs_assert(build_query != NULL, ECS_INTERNAL_ERROR, NULL);
 
+        bool added = false;
         EcsPipelineQuery *pq = ecs_get_mut(
-            world, pipeline, EcsPipelineQuery, NULL);
+            world, pipeline, EcsPipelineQuery, &added);
         ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (added) {
+            /* Should not modify pipeline after it has been used */
+            ecs_assert(pq->ops == NULL, ECS_INVALID_OPERATION, NULL);
+
+            if (pq->query) {
+                ecs_query_fini(pq->query);
+            }
+            if (pq->build_query) {
+                ecs_query_fini(pq->build_query);
+            }
+        }
 
         pq->query = query;
         pq->build_query = build_query;
@@ -25441,7 +25454,7 @@ void FlecsPipelineImport(
     });
 
     /* When the Pipeline tag is added a pipeline will be created */
-    ECS_SYSTEM(world, EcsOnAddPipeline, EcsOnSet, Pipeline, Type);
+    ECS_SYSTEM(world, EcsOnUpdatePipeline, EcsOnSet, Pipeline, Type);
 
     /* Create the builtin pipeline */
     world->pipeline = ecs_type_init(world, &(ecs_type_desc_t){

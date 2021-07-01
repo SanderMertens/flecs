@@ -13,75 +13,76 @@ namespace flecs
 //// A collection of component ids used to describe the contents of a table
 ////////////////////////////////////////////////////////////////////////////////
 
-class type final : public type_deprecated<type> {
+template <typename Base>
+class type_base : public type_deprecated<type> {
 public:
-    explicit type(world_t *world, const char *name = nullptr, const char *expr = nullptr)
+    explicit type_base(
+        world_t *world, const char *name = nullptr, const char *expr = nullptr)
     { 
         ecs_type_desc_t desc = {};
         desc.entity.name = name;
         desc.ids_expr = expr;
-        m_entity = flecs::entity_view(world, ecs_type_init(world, &desc));
+        m_entity = flecs::entity(world, ecs_type_init(world, &desc));
         sync_from_flecs();
     }
 
-    explicit type(world_t *world, type_t t)
-        : m_entity( world, 0 )
+    explicit type_base(world_t *world, type_t t)
+        : m_entity( world, static_cast<flecs::id_t>(0) )
         , m_type( t )
         , m_normalized( t ) { }
 
-    type(type_t t)
-        : m_entity( 0 )
-        , m_type( t )
+    type_base(type_t t)
+        : m_type( t )
         , m_normalized( t ) { }
 
-    type& add(const type& t) {
-        m_type = ecs_type_add(world().c_ptr(), m_type, t.id());
-        m_normalized = ecs_type_merge(world().c_ptr(), m_normalized, t.c_ptr(), nullptr);
+    Base& add(const Base& t) {
+        m_type = ecs_type_add(world(), m_type, t.id());
+        m_normalized = ecs_type_merge(world(), m_normalized, t, nullptr);
         sync_from_me();
         return *this;
     }
 
-    type& add(entity_t e) {
-        m_type = ecs_type_add(world().c_ptr(), m_type, e);
-        m_normalized = ecs_type_add(world().c_ptr(), m_normalized, e);
+    Base& add(id_t e) {
+        m_type = ecs_type_add(world(), m_type, e);
+        m_normalized = ecs_type_add(world(), m_normalized, e);
         sync_from_me();
         return *this;
     }
 
     template <typename T>
-    type& add() {
-        return this->add(_::cpp_type<T>::id(world().c_ptr()));
+    Base& add() {
+        return this->add(_::cpp_type<T>::id(world()));
     }
 
-    type& add(entity_t relation, entity_t object) {
+    Base& add(entity_t relation, entity_t object) {
         return this->add(ecs_pair(relation, object));
     }
 
     template <typename Relation, typename Object>
-    type& add() {
-        return this->add<Relation>(_::cpp_type<Object>::id(world().c_ptr()));
+    Base& add() {
+        return this->add<Relation>(_::cpp_type<Object>::id(world()));
     }
 
-    type& is_a(entity_t object) {
+    Base& is_a(entity_t object) {
         return this->add(flecs::IsA, object);
     }
 
-    type& child_of(entity_t object) {
+    Base& child_of(entity_t object) {
         return this->add(flecs::ChildOf, object);
     }    
 
     template <typename Relation>
-    type& add(entity_t object) {
-        return this->add(_::cpp_type<Relation>::id(world().c_ptr()), object);
+    Base& add(entity_t object) {
+        return this->add(_::cpp_type<Relation>::id(world()), object);
     }     
 
     template <typename Object>
-    type& add_object(entity_t relation) {
-        return this->add(relation, _::cpp_type<Object>::id(world().c_ptr()));
+    Base& add_object(entity_t relation) {
+        return this->add(relation, _::cpp_type<Object>::id(world()));
     }
 
     flecs::string str() const {
-        char *str = ecs_type_str(world().c_ptr(), m_type);
+        char *str = ecs_type_str(world(), m_type);
         return flecs::string(str);
     }
 
@@ -89,8 +90,12 @@ public:
         return m_type;
     }
 
-    flecs::entity_t id() const { 
+    flecs::id_t id() const { 
         return m_entity.id(); 
+    }
+
+    flecs::entity entity() const {
+        return m_entity;
     }
 
     flecs::world world() const { 
@@ -102,39 +107,70 @@ public:
     }
 
     void enable() const {
-        ecs_enable(world().c_ptr(), id(), true);
+        ecs_enable(world(), id(), true);
     }
 
     void disable() const {
-        ecs_enable(world().c_ptr(), id(), false);
+        ecs_enable(world(), id(), false);
     }
 
     flecs::vector<entity_t> vector() {
         return flecs::vector<entity_t>( const_cast<ecs_vector_t*>(m_normalized));
     }
 
+    /* Implicit conversion to type_t */
+    operator type_t() const { return m_normalized; }
+
+    operator Base&() { return *static_cast<Base*>(this); }
+
 private:
     void sync_from_me() {
-        EcsType *tc = static_cast<EcsType*>(
-            ecs_get_mut_w_id(world().c_ptr(), id(), ecs_id(EcsType), NULL));
-        if (tc) {
-            tc->type = m_type;
-            tc->normalized = m_normalized;
+        if (!id()) {
+            return;
         }
+
+        EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
+        ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);
+        tc->type = m_type;
+        tc->normalized = m_normalized;
+        ecs_modified(world(), id(), EcsType);
+
     }
 
     void sync_from_flecs() {
-        EcsType *tc = static_cast<EcsType*>(
-            ecs_get_mut_w_id(world().c_ptr(), id(), ecs_id(EcsType), NULL));
-        if (tc) {
-            m_type = tc->type;
-            m_normalized = tc->normalized;
+        if (!id()) {
+            return;
         }
+
+        EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
+        ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);            
+        m_type = tc->type;
+        m_normalized = tc->normalized;
+        ecs_modified(world(), id(), EcsType);
     }   
 
-    flecs::entity_view m_entity;
+    flecs::entity m_entity;
     type_t m_type;
     type_t m_normalized;
+};
+
+class type : public type_base<type> { 
+public:
+    explicit type(
+        world_t *world, const char *name = nullptr, const char *expr = nullptr)
+    : type_base(world, name, expr) { }
+
+    explicit type(world_t *world, type_t t) : type_base(world, t) { }
+
+    type(type_t t) : type_base(t) { }
+};
+
+class pipeline : public type_base<pipeline> {
+public:
+    explicit pipeline(world_t *world, const char *name) : type_base(world, name)
+    { 
+        this->entity().add(flecs::Pipeline);
+    }
 };
 
 } // namespace flecs

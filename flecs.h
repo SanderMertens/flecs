@@ -158,11 +158,7 @@ typedef uint64_t ecs_flags64_t;
 /* Keep unsigned integers out of the codebase as they do more harm than good */
 typedef int32_t ecs_size_t;
 
-#ifdef __cplusplus
-#define ECS_SIZEOF(T) static_cast<ecs_size_t>(sizeof(T))
-#else
-#define ECS_SIZEOF(T) (ecs_size_t)sizeof(T)
-#endif
+#define ECS_SIZEOF(T) ECS_CAST(ecs_size_t, sizeof(T))
 
 /* Use alignof in C++, or a trick in C. */
 #ifdef __cplusplus
@@ -198,6 +194,13 @@ typedef int32_t ecs_size_t;
 /* Simple utility for determining the max of two values */
 #define ECS_MAX(a, b) ((a > b) ? a : b)
 
+/* Abstraction on top of C-style casts so that C functions can be used in C++
+ * code without producing warnings */
+#ifndef __cplusplus
+#define ECS_CAST(T, V) ((T)(V))
+#else
+#define ECS_CAST(T, V) (static_cast<T>(V))
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Reserved component ids
@@ -280,21 +283,16 @@ typedef int32_t ecs_size_t;
 //// Utilities for working with pair identifiers
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef __cplusplus
-#define ecs_entity_t_lo(value) (static_cast<uint32_t>(value))
-#define ecs_entity_t_hi(value) (static_cast<uint32_t>((value) >> 32))
-#define ecs_entity_t_comb(lo, hi) ((static_cast<uint64_t>(hi) << 32) + static_cast<uint32_t>(lo))
-#else
-#define ecs_entity_t_lo(value) ((uint32_t)(value))
-#define ecs_entity_t_hi(value) ((uint32_t)((value) >> 32))
-#define ecs_entity_t_comb(lo, hi) (((uint64_t)(hi) << 32) + (uint32_t)(lo))
-#endif
+#define ecs_entity_t_lo(value) ECS_CAST(uint32_t, value)
+#define ecs_entity_t_hi(value) ECS_CAST(uint32_t, (value) >> 32)
+#define ecs_entity_t_comb(lo, hi) ((ECS_CAST(uint64_t, hi) << 32) + ECS_CAST(uint32_t, lo))
 
 #define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
 
 /* Get object from pair with the correct (current) generation count */
 #define ecs_pair_relation(world, pair) ecs_get_alive(world, ECS_PAIR_RELATION(pair))
 #define ecs_pair_object(world, pair) ecs_get_alive(world, ECS_PAIR_OBJECT(pair))
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macro's for ctor, dtor, move and copy
@@ -470,11 +468,7 @@ struct ecs_vector_t {
 };
 
 /* Compute the header size of the vector from size & alignment */
-#ifndef __cplusplus
-#define ECS_VECTOR_U(size, alignment) size, (int16_t)ECS_MAX(ECS_SIZEOF(ecs_vector_t), alignment)
-#else
-#define ECS_VECTOR_U(size, alignment) size, static_cast<int16_t>(ECS_MAX(ECS_SIZEOF(ecs_vector_t), alignment))
-#endif
+#define ECS_VECTOR_U(size, alignment) size, ECS_CAST(int16_t, ECS_MAX(ECS_SIZEOF(ecs_vector_t), alignment))
 
 /* Compute the header size of the vector from a provided compile-time type */
 #define ECS_VECTOR_T(T) ECS_VECTOR_U(ECS_SIZEOF(T), ECS_ALIGNOF(T))
@@ -4742,12 +4736,12 @@ ecs_id_t ecs_make_pair(
         sizeof(object), &(object)__VA_ARGS__)
 
 #define ecs_get_mut_pair(world, subject, relation, object, is_added)\
-    ((relation*)ecs_get_mut_w_id(world, subject,\
-        ecs_pair(ecs_id(relation), object), is_added))
+    (ECS_CAST(relation*, ecs_get_mut_w_id(world, subject,\
+        ecs_pair(ecs_id(relation), object), is_added)))
 
 #define ecs_get_mut_pair_object(world, subject, relation, object, is_added)\
-    ((object*)ecs_get_mut_w_id(world, subject,\
-        ecs_pair(relation, ecs_id(object)), is_added))
+    (ECS_CAST(object*, ecs_get_mut_w_id(world, subject,\
+        ecs_pair(relation, ecs_id(object)), is_added)))
 
 #define ecs_modified_pair(world, subject, relation, object)\
     ecs_modified_w_id(world, subject, ecs_pair(relation, object))
@@ -4774,8 +4768,8 @@ ecs_id_t ecs_make_pair(
  * @param object The object part of the pair.
  */
 #define ecs_get_pair(world, subject, relation, object)\
-    ((relation*)ecs_get_id(world, subject,\
-        ecs_pair(ecs_id(relation), object)))
+    (ECS_CAST(relation*, ecs_get_id(world, subject,\
+        ecs_pair(ecs_id(relation), object))))
 
 /** Get object of pair. 
  * This operation obtains the value of a pair, where the object determines the
@@ -4797,8 +4791,8 @@ ecs_id_t ecs_make_pair(
  * @param object The object part of the pair.
  */
 #define ecs_get_pair_object(world, subject, relation, object)\
-    ((object*)ecs_get_id(world, subject,\
-        ecs_pair(relation, ecs_id(object))))
+    (ECS_CAST(object*, ecs_get_id(world, subject,\
+        ecs_pair(relation, ecs_id(object)))))
 
 /** @} */
 
@@ -4880,7 +4874,7 @@ const void* ecs_get_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 #define ecs_get(world, entity, component)\
-    ((const component*)ecs_get_id(world, entity, ecs_id(component)))
+    (ECS_CAST(const component*, ecs_get_id(world, entity, ecs_id(component))))
 
 /* -- Get cached pointer -- */
 
@@ -4912,7 +4906,7 @@ const void* ecs_get_ref_w_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 #define ecs_get_ref(world, ref, entity, component)\
-    ((const component*)ecs_get_ref_w_id(world, ref, entity, ecs_id(component)))
+    (ECS_CAST(const component*, ecs_get_ref_w_id(world, ref, entity, ecs_id(component))))
 
 /** Get case for switch.
  * This operation gets the current case for the specified switch. If the current
@@ -4968,7 +4962,7 @@ void* ecs_get_mut_w_id(
  * @return The component pointer.
  */
 #define ecs_get_mut(world, entity, component, is_added)\
-    ((component*)ecs_get_mut_w_id(world, entity, ecs_id(component), is_added))
+    (ECS_CAST(component*, ecs_get_mut_w_id(world, entity, ecs_id(component), is_added)))
 
 /** Signal that a component has been modified.
  * This operation allows an application to signal to Flecs that a component has
@@ -9150,6 +9144,7 @@ class id;
 class entity;
 class entity_view;
 class type;
+class pipeline;
 class iter;
 class term;
 class filter;
@@ -10933,6 +10928,8 @@ public:
         ecs_tracing_enable(level);
     }
 
+    void set_pipeline(const flecs::pipeline& pipeline) const;
+
     /** Progress world, run all systems.
      *
      * @param delta_time Custom delta_time. If 0 is provided, Flecs will automatically measure delta_tiem.
@@ -11630,6 +11627,11 @@ public:
      */
     template <typename... Args>
     flecs::type type(Args &&... args) const;
+
+    /** Create a pipeline.
+     */
+    template <typename... Args>
+    flecs::pipeline pipeline(Args &&... args) const;
 
     /** Create a module.
      */
@@ -15684,75 +15686,76 @@ namespace flecs
 //// A collection of component ids used to describe the contents of a table
 ////////////////////////////////////////////////////////////////////////////////
 
-class type final : public type_deprecated<type> {
+template <typename Base>
+class type_base : public type_deprecated<type> {
 public:
-    explicit type(world_t *world, const char *name = nullptr, const char *expr = nullptr)
+    explicit type_base(
+        world_t *world, const char *name = nullptr, const char *expr = nullptr)
     { 
         ecs_type_desc_t desc = {};
         desc.entity.name = name;
         desc.ids_expr = expr;
-        m_entity = flecs::entity_view(world, ecs_type_init(world, &desc));
+        m_entity = flecs::entity(world, ecs_type_init(world, &desc));
         sync_from_flecs();
     }
 
-    explicit type(world_t *world, type_t t)
-        : m_entity( world, 0 )
+    explicit type_base(world_t *world, type_t t)
+        : m_entity( world, static_cast<flecs::id_t>(0) )
         , m_type( t )
         , m_normalized( t ) { }
 
-    type(type_t t)
-        : m_entity( 0 )
-        , m_type( t )
+    type_base(type_t t)
+        : m_type( t )
         , m_normalized( t ) { }
 
-    type& add(const type& t) {
-        m_type = ecs_type_add(world().c_ptr(), m_type, t.id());
-        m_normalized = ecs_type_merge(world().c_ptr(), m_normalized, t.c_ptr(), nullptr);
+    Base& add(const Base& t) {
+        m_type = ecs_type_add(world(), m_type, t.id());
+        m_normalized = ecs_type_merge(world(), m_normalized, t, nullptr);
         sync_from_me();
         return *this;
     }
 
-    type& add(entity_t e) {
-        m_type = ecs_type_add(world().c_ptr(), m_type, e);
-        m_normalized = ecs_type_add(world().c_ptr(), m_normalized, e);
+    Base& add(id_t e) {
+        m_type = ecs_type_add(world(), m_type, e);
+        m_normalized = ecs_type_add(world(), m_normalized, e);
         sync_from_me();
         return *this;
     }
 
     template <typename T>
-    type& add() {
-        return this->add(_::cpp_type<T>::id(world().c_ptr()));
+    Base& add() {
+        return this->add(_::cpp_type<T>::id(world()));
     }
 
-    type& add(entity_t relation, entity_t object) {
+    Base& add(entity_t relation, entity_t object) {
         return this->add(ecs_pair(relation, object));
     }
 
     template <typename Relation, typename Object>
-    type& add() {
-        return this->add<Relation>(_::cpp_type<Object>::id(world().c_ptr()));
+    Base& add() {
+        return this->add<Relation>(_::cpp_type<Object>::id(world()));
     }
 
-    type& is_a(entity_t object) {
+    Base& is_a(entity_t object) {
         return this->add(flecs::IsA, object);
     }
 
-    type& child_of(entity_t object) {
+    Base& child_of(entity_t object) {
         return this->add(flecs::ChildOf, object);
     }    
 
     template <typename Relation>
-    type& add(entity_t object) {
-        return this->add(_::cpp_type<Relation>::id(world().c_ptr()), object);
+    Base& add(entity_t object) {
+        return this->add(_::cpp_type<Relation>::id(world()), object);
     }     
 
     template <typename Object>
-    type& add_object(entity_t relation) {
-        return this->add(relation, _::cpp_type<Object>::id(world().c_ptr()));
+    Base& add_object(entity_t relation) {
+        return this->add(relation, _::cpp_type<Object>::id(world()));
     }
 
     flecs::string str() const {
-        char *str = ecs_type_str(world().c_ptr(), m_type);
+        char *str = ecs_type_str(world(), m_type);
         return flecs::string(str);
     }
 
@@ -15760,8 +15763,12 @@ public:
         return m_type;
     }
 
-    flecs::entity_t id() const { 
+    flecs::id_t id() const { 
         return m_entity.id(); 
+    }
+
+    flecs::entity entity() const {
+        return m_entity;
     }
 
     flecs::world world() const { 
@@ -15773,39 +15780,70 @@ public:
     }
 
     void enable() const {
-        ecs_enable(world().c_ptr(), id(), true);
+        ecs_enable(world(), id(), true);
     }
 
     void disable() const {
-        ecs_enable(world().c_ptr(), id(), false);
+        ecs_enable(world(), id(), false);
     }
 
     flecs::vector<entity_t> vector() {
         return flecs::vector<entity_t>( const_cast<ecs_vector_t*>(m_normalized));
     }
 
+    /* Implicit conversion to type_t */
+    operator type_t() const { return m_normalized; }
+
+    operator Base&() { return *static_cast<Base*>(this); }
+
 private:
     void sync_from_me() {
-        EcsType *tc = static_cast<EcsType*>(
-            ecs_get_mut_w_id(world().c_ptr(), id(), ecs_id(EcsType), NULL));
-        if (tc) {
-            tc->type = m_type;
-            tc->normalized = m_normalized;
+        if (!id()) {
+            return;
         }
+
+        EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
+        ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);
+        tc->type = m_type;
+        tc->normalized = m_normalized;
+        ecs_modified(world(), id(), EcsType);
+
     }
 
     void sync_from_flecs() {
-        EcsType *tc = static_cast<EcsType*>(
-            ecs_get_mut_w_id(world().c_ptr(), id(), ecs_id(EcsType), NULL));
-        if (tc) {
-            m_type = tc->type;
-            m_normalized = tc->normalized;
+        if (!id()) {
+            return;
         }
+
+        EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
+        ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);            
+        m_type = tc->type;
+        m_normalized = tc->normalized;
+        ecs_modified(world(), id(), EcsType);
     }   
 
-    flecs::entity_view m_entity;
+    flecs::entity m_entity;
     type_t m_type;
     type_t m_normalized;
+};
+
+class type : public type_base<type> { 
+public:
+    explicit type(
+        world_t *world, const char *name = nullptr, const char *expr = nullptr)
+    : type_base(world, name, expr) { }
+
+    explicit type(world_t *world, type_t t) : type_base(world, t) { }
+
+    type(type_t t) : type_base(t) { }
+};
+
+class pipeline : public type_base<pipeline> {
+public:
+    explicit pipeline(world_t *world, const char *name) : type_base(world, name)
+    { 
+        this->entity().add(flecs::Pipeline);
+    }
 };
 
 } // namespace flecs
@@ -17333,8 +17371,12 @@ void world::remove() const {
     e.remove<T>();
 }
 
+inline void world::set_pipeline(const flecs::pipeline& pipeline) const {
+    ecs_set_pipeline(m_world, pipeline.id());
+}
+
 template <typename T>
-flecs::entity world::singleton() {
+inline flecs::entity world::singleton() {
     return flecs::entity(m_world, _::cpp_type<T>::id(m_world));
 }
 
@@ -17351,6 +17393,11 @@ inline flecs::entity world::prefab(Args &&... args) const {
 template <typename... Args>
 inline flecs::type world::type(Args &&... args) const {
     return flecs::type(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+inline flecs::pipeline world::pipeline(Args &&... args) const {
+    return flecs::pipeline(*this, std::forward<Args>(args)...);
 }
 
 inline flecs::system<> world::system(flecs::entity e) const {

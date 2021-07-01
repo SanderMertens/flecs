@@ -247,6 +247,7 @@ void System_update_rate_filter(void);
 void System_default_ctor(void);
 void System_test_auto_defer_each(void);
 void System_test_auto_defer_iter(void);
+void System_custom_pipeline(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -1462,6 +1463,10 @@ bake_test_case System_testcases[] = {
     {
         "test_auto_defer_iter",
         System_test_auto_defer_iter
+    },
+    {
+        "custom_pipeline",
+        System_custom_pipeline
     }
 };
 
@@ -2588,7 +2593,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        40,
+        41,
         System_testcases
     },
     {

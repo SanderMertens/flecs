@@ -66,11 +66,7 @@ typedef uint64_t ecs_flags64_t;
 /* Keep unsigned integers out of the codebase as they do more harm than good */
 typedef int32_t ecs_size_t;
 
-#ifdef __cplusplus
-#define ECS_SIZEOF(T) static_cast<ecs_size_t>(sizeof(T))
-#else
-#define ECS_SIZEOF(T) (ecs_size_t)sizeof(T)
-#endif
+#define ECS_SIZEOF(T) ECS_CAST(ecs_size_t, sizeof(T))
 
 /* Use alignof in C++, or a trick in C. */
 #ifdef __cplusplus
@@ -106,6 +102,13 @@ typedef int32_t ecs_size_t;
 /* Simple utility for determining the max of two values */
 #define ECS_MAX(a, b) ((a > b) ? a : b)
 
+/* Abstraction on top of C-style casts so that C functions can be used in C++
+ * code without producing warnings */
+#ifndef __cplusplus
+#define ECS_CAST(T, V) ((T)(V))
+#else
+#define ECS_CAST(T, V) (static_cast<T>(V))
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Reserved component ids
@@ -188,21 +191,16 @@ typedef int32_t ecs_size_t;
 //// Utilities for working with pair identifiers
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef __cplusplus
-#define ecs_entity_t_lo(value) (static_cast<uint32_t>(value))
-#define ecs_entity_t_hi(value) (static_cast<uint32_t>((value) >> 32))
-#define ecs_entity_t_comb(lo, hi) ((static_cast<uint64_t>(hi) << 32) + static_cast<uint32_t>(lo))
-#else
-#define ecs_entity_t_lo(value) ((uint32_t)(value))
-#define ecs_entity_t_hi(value) ((uint32_t)((value) >> 32))
-#define ecs_entity_t_comb(lo, hi) (((uint64_t)(hi) << 32) + (uint32_t)(lo))
-#endif
+#define ecs_entity_t_lo(value) ECS_CAST(uint32_t, value)
+#define ecs_entity_t_hi(value) ECS_CAST(uint32_t, (value) >> 32)
+#define ecs_entity_t_comb(lo, hi) ((ECS_CAST(uint64_t, hi) << 32) + ECS_CAST(uint32_t, lo))
 
 #define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
 
 /* Get object from pair with the correct (current) generation count */
 #define ecs_pair_relation(world, pair) ecs_get_alive(world, ECS_PAIR_RELATION(pair))
 #define ecs_pair_object(world, pair) ecs_get_alive(world, ECS_PAIR_OBJECT(pair))
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macro's for ctor, dtor, move and copy

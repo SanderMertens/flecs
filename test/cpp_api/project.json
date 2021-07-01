@@ -263,7 +263,8 @@
                 "update_rate_filter",
                 "default_ctor",
                 "test_auto_defer_each",
-                "test_auto_defer_iter"
+                "test_auto_defer_iter",
+                "custom_pipeline"
             ]
         }, {
             "id": "Trigger",

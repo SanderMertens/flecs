@@ -1194,3 +1194,46 @@ void System_test_auto_defer_iter() {
     test_int(e2.get<Value>()->value, 21);
     test_int(e3.get<Value>()->value, 31);
 }
+
+void System_custom_pipeline() {
+    flecs::world world;
+
+    auto PreFrame = world.entity();
+    auto OnFrame = world.entity();
+    auto PostFrame = world.entity();
+
+    flecs::pipeline pip = world.pipeline("FooPipeline")
+        .add(PreFrame)
+        .add(OnFrame)
+        .add(PostFrame);
+
+    int count = 0;
+
+    world.system<>()
+        .kind(PostFrame)
+        .iter([&](flecs::iter it) {
+            test_int(count, 2);
+            count ++;
+        });
+
+    world.system<>()
+        .kind(OnFrame)
+        .iter([&](flecs::iter it) {
+            test_int(count, 1);
+            count ++;
+        });
+
+    world.system<>()
+        .kind(PreFrame)
+        .iter([&](flecs::iter it) {
+            test_int(count, 0);
+            count ++;
+        });
+
+    test_int(count, 0);
+
+    world.set_pipeline(pip);
+    world.progress();
+
+    test_int(count, 3);
+}

@@ -1733,12 +1733,12 @@ ecs_id_t ecs_make_pair(
         sizeof(object), &(object)__VA_ARGS__)
 
 #define ecs_get_mut_pair(world, subject, relation, object, is_added)\
-    ((relation*)ecs_get_mut_w_id(world, subject,\
-        ecs_pair(ecs_id(relation), object), is_added))
+    (ECS_CAST(relation*, ecs_get_mut_w_id(world, subject,\
+        ecs_pair(ecs_id(relation), object), is_added)))
 
 #define ecs_get_mut_pair_object(world, subject, relation, object, is_added)\
-    ((object*)ecs_get_mut_w_id(world, subject,\
-        ecs_pair(relation, ecs_id(object)), is_added))
+    (ECS_CAST(object*, ecs_get_mut_w_id(world, subject,\
+        ecs_pair(relation, ecs_id(object)), is_added)))
 
 #define ecs_modified_pair(world, subject, relation, object)\
     ecs_modified_w_id(world, subject, ecs_pair(relation, object))
@@ -1765,8 +1765,8 @@ ecs_id_t ecs_make_pair(
  * @param object The object part of the pair.
  */
 #define ecs_get_pair(world, subject, relation, object)\
-    ((relation*)ecs_get_id(world, subject,\
-        ecs_pair(ecs_id(relation), object)))
+    (ECS_CAST(relation*, ecs_get_id(world, subject,\
+        ecs_pair(ecs_id(relation), object))))
 
 /** Get object of pair. 
  * This operation obtains the value of a pair, where the object determines the
@@ -1788,8 +1788,8 @@ ecs_id_t ecs_make_pair(
  * @param object The object part of the pair.
  */
 #define ecs_get_pair_object(world, subject, relation, object)\
-    ((object*)ecs_get_id(world, subject,\
-        ecs_pair(relation, ecs_id(object))))
+    (ECS_CAST(object*, ecs_get_id(world, subject,\
+        ecs_pair(relation, ecs_id(object)))))
 
 /** @} */
 
@@ -1871,7 +1871,7 @@ const void* ecs_get_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 #define ecs_get(world, entity, component)\
-    ((const component*)ecs_get_id(world, entity, ecs_id(component)))
+    (ECS_CAST(const component*, ecs_get_id(world, entity, ecs_id(component))))
 
 /* -- Get cached pointer -- */
 
@@ -1903,7 +1903,7 @@ const void* ecs_get_ref_w_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 #define ecs_get_ref(world, ref, entity, component)\
-    ((const component*)ecs_get_ref_w_id(world, ref, entity, ecs_id(component)))
+    (ECS_CAST(const component*, ecs_get_ref_w_id(world, ref, entity, ecs_id(component))))
 
 /** Get case for switch.
  * This operation gets the current case for the specified switch. If the current
@@ -1959,7 +1959,7 @@ void* ecs_get_mut_w_id(
  * @return The component pointer.
  */
 #define ecs_get_mut(world, entity, component, is_added)\
-    ((component*)ecs_get_mut_w_id(world, entity, ecs_id(component), is_added))
+    (ECS_CAST(component*, ecs_get_mut_w_id(world, entity, ecs_id(component), is_added)))
 
 /** Signal that a component has been modified.
  * This operation allows an application to signal to Flecs that a component has

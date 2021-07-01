@@ -154,6 +154,8 @@ public:
         ecs_tracing_enable(level);
     }
 
+    void set_pipeline(const flecs::pipeline& pipeline) const;
+
     /** Progress world, run all systems.
      *
      * @param delta_time Custom delta_time. If 0 is provided, Flecs will automatically measure delta_tiem.
@@ -851,6 +853,11 @@ public:
      */
     template <typename... Args>
     flecs::type type(Args &&... args) const;
+
+    /** Create a pipeline.
+     */
+    template <typename... Args>
+    flecs::pipeline pipeline(Args &&... args) const;
 
     /** Create a module.
      */

@@ -193,8 +193,12 @@ void world::remove() const {
     e.remove<T>();
 }
 
+inline void world::set_pipeline(const flecs::pipeline& pipeline) const {
+    ecs_set_pipeline(m_world, pipeline.id());
+}
+
 template <typename T>
-flecs::entity world::singleton() {
+inline flecs::entity world::singleton() {
     return flecs::entity(m_world, _::cpp_type<T>::id(m_world));
 }
 
@@ -211,6 +215,11 @@ inline flecs::entity world::prefab(Args &&... args) const {
 template <typename... Args>
 inline flecs::type world::type(Args &&... args) const {
     return flecs::type(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+inline flecs::pipeline world::pipeline(Args &&... args) const {
+    return flecs::pipeline(*this, std::forward<Args>(args)...);
 }
 
 inline flecs::system<> world::system(flecs::entity e) const {

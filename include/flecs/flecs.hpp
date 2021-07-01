@@ -61,6 +61,7 @@ class id;
 class entity;
 class entity_view;
 class type;
+class pipeline;
 class iter;
 class term;
 class filter;
