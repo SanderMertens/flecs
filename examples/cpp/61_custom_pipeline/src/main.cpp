@@ -19,8 +19,8 @@ int main(int, char *[]) {
     // no longer be modified.
     ecs.set_pipeline(pip);
 
-    // Define a system for each of the phases. Define them in opposite order to
-    // make sure that the pipeline orders them correctly.
+    // Define a system for each of the phases. Define them in opposite order so
+    // we can see the pipeline orders them correctly.
     ecs.system<>()
         .kind(PostFrame)
         .iter([&](flecs::iter) {

@@ -30,8 +30,8 @@ int main(int argc, char *argv[]) {
      * no longer be modified. */
     ecs_set_pipeline(world, MyPipeline);
 
-    /* Define a system for each of the phases. Define them in opposite order to
-     * make sure that the pipeline orders them correctly. */
+    /* Define a system for each of the phases. Define them in opposite order so
+     * we can see the pipeline orders them correctly. */
     ECS_SYSTEM(world, PreFrameSystem, PreFrame, 0);
     ECS_SYSTEM(world, OnFrameSystem, OnFrame, 0);
     ECS_SYSTEM(world, PostFrameSystem, PostFrame, 0);
