@@ -193,8 +193,8 @@ void world::remove() const {
     e.remove<T>();
 }
 
-inline void world::set_pipeline(const flecs::pipeline& pipeline) const {
-    ecs_set_pipeline(m_world, pipeline.id());
+inline void world::set_pipeline(const flecs::pipeline& pip) const {
+    ecs_set_pipeline(m_world, pip.id());
 }
 
 template <typename T>

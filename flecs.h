@@ -10928,7 +10928,7 @@ public:
         ecs_tracing_enable(level);
     }
 
-    void set_pipeline(const flecs::pipeline& pipeline) const;
+    void set_pipeline(const flecs::pipeline& pip) const;
 
     /** Progress world, run all systems.
      *
@@ -14021,8 +14021,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         /* If entity exists, compare symbol name to ensure that the component
          * we are trying to register under this name is the same */
         if (entity) {
-            const EcsName *name_comp = static_cast<EcsName*>(ecs_get_mut_w_id(
-                world.c_ptr(), entity, ecs_id(EcsName), NULL));
+            const EcsName *name_comp = ecs_get_mut(world, entity, EcsName, NULL);
             ecs_assert(name_comp != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(name_comp->symbol != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -15902,9 +15901,8 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // Set module singleton component
 
     T* module_ptr = static_cast<T*>(
-        ecs_get_mut_w_id( world.c_ptr(), m,
-            _::cpp_type<T>::id_explicit(world.c_ptr(), nullptr, false), 
-                NULL));
+        ecs_get_mut_w_id(world, m, 
+            _::cpp_type<T>::id_explicit(world, nullptr, false), NULL));
 
     *module_ptr = std::move(*module_data);
 
@@ -17371,8 +17369,8 @@ void world::remove() const {
     e.remove<T>();
 }
 
-inline void world::set_pipeline(const flecs::pipeline& pipeline) const {
-    ecs_set_pipeline(m_world, pipeline.id());
+inline void world::set_pipeline(const flecs::pipeline& pip) const {
+    ecs_set_pipeline(m_world, pip.id());
 }
 
 template <typename T>

@@ -154,7 +154,7 @@ public:
         ecs_tracing_enable(level);
     }
 
-    void set_pipeline(const flecs::pipeline& pipeline) const;
+    void set_pipeline(const flecs::pipeline& pip) const;
 
     /** Progress world, run all systems.
      *

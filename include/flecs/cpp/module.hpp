@@ -53,9 +53,8 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // Set module singleton component
 
     T* module_ptr = static_cast<T*>(
-        ecs_get_mut_w_id( world.c_ptr(), m,
-            _::cpp_type<T>::id_explicit(world.c_ptr(), nullptr, false), 
-                NULL));
+        ecs_get_mut_w_id(world, m, 
+            _::cpp_type<T>::id_explicit(world, nullptr, false), NULL));
 
     *module_ptr = std::move(*module_data);
 
