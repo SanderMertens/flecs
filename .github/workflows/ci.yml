@@ -102,44 +102,6 @@ jobs:
           bake/bake examples/os_api/stdcpp --strict --cfg release
           bake/bake examples/os_api/bake --strict --cfg release
 
-  build-icc:
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
-    env:
-      CC: icc
-      CXX: icc
-
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: install icc
-        run: |
-          wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
-          sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
-          echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
-          sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
-          sudo apt-get update
-          sudo apt-get install intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
-
-      - name: install bake
-        run: |
-          export CC=gcc
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs (debug)
-        run: |
-          source /opt/intel/oneapi/setvars.sh intel64
-          bake --strict --cfg debug
-
-      - name: build flecs (release)
-        run: |
-          source /opt/intel/oneapi/setvars.sh intel64
-          bake --strict --cfg release
-
   test-unix:
     timeout-minutes: 20
     runs-on: ${{ matrix.os }}
