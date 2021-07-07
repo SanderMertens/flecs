@@ -201,6 +201,8 @@ void Get_component_get_both_from_2_add_remove_in_progress() {
 }
 
 void Get_component_get_childof_component() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -208,8 +210,6 @@ void Get_component_get_childof_component() {
     const EcsComponent *ptr = ecs_get(world, ecs_typeid(Position), EcsComponent);
     test_assert(ptr != NULL);
 
-    ptr = ecs_get(world, ECS_CHILDOF | ecs_typeid(Position), EcsComponent);
-    test_assert(ptr == NULL);
-    
-    ecs_fini(world);
+    test_expect_abort();
+    ecs_get(world, ECS_CHILDOF | ecs_typeid(Position), EcsComponent);
 }

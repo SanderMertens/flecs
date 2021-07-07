@@ -1536,6 +1536,8 @@ void Type_role_xor_str(void);
 void Type_role_not_str(void);
 void Type_role_owned_str(void);
 void Type_role_disabled_str(void);
+void Type_large_type_expr(void);
+void Type_large_type_expr_limit(void);
 
 // Testsuite 'Run'
 void Run_setup(void);
@@ -7691,6 +7693,14 @@ bake_test_case Type_testcases[] = {
     {
         "role_disabled_str",
         Type_role_disabled_str
+    },
+    {
+        "large_type_expr",
+        Type_large_type_expr
+    },
+    {
+        "large_type_expr_limit",
+        Type_large_type_expr_limit
     }
 };
 
@@ -9387,7 +9397,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        89,
+        91,
         Type_testcases
     },
     {

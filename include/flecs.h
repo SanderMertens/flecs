@@ -1861,6 +1861,7 @@ const void* ecs_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
+  
 
 /** Get an immutable pointer to a component.
  * Same as ecs_get_id, but accepts the typename of a component.

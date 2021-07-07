@@ -170,13 +170,16 @@ typedef struct ecs_matched_query_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing queries */
 struct ecs_table_t {
+    uint64_t id;                     /**< Table id in sparse set */
     ecs_type_t type;                 /**< Identifies table type in type_index */
-    ecs_type_info_t **c_info;           /**< Cached pointers to component info */
+    ecs_flags32_t flags;             /**< Flags for testing table properties */
+    int32_t column_count;            /**< Number of data columns in table */
+
+    ecs_data_t *data;                /**< Component storage */
+    ecs_type_info_t **c_info;        /**< Cached pointers to component info */
 
     ecs_edge_t *lo_edges;            /**< Edges to other tables */
     ecs_map_t *hi_edges;
-
-    ecs_data_t *data;                /**< Component storage */
 
     ecs_vector_t *queries;           /**< Queries matched with table */
     ecs_vector_t *monitors;          /**< Monitor systems matched with table */
@@ -187,11 +190,7 @@ struct ecs_table_t {
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
     int32_t alloc_count;             /**< Increases when columns are reallocd */
-    uint64_t id;                     /**< Table id in sparse set */
 
-    ecs_flags32_t flags;             /**< Flags for testing table properties */
-    
-    int32_t column_count;            /**< Number of data columns in table */
     int32_t sw_column_count;
     int32_t sw_column_offset;
     int32_t bs_column_count;
@@ -440,6 +439,7 @@ typedef struct ecs_relation_monitor_t {
 typedef struct ecs_table_record_t {
     ecs_table_t *table;
     int32_t column;
+    int32_t count;
 } ecs_table_record_t;
 
 /* Payload for id index which contains all datastructures for an id. */
@@ -497,18 +497,15 @@ typedef struct ecs_alias_t {
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
-    void *context;               /* Application context */
-    ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
-
-    /* Is entity range checking enabled? */
-    bool range_check_enabled;
-
 
     /* --  Type metadata -- */
 
-    ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
     ecs_map_t *id_index;         /* map<id, ecs_id_record_t> */
     ecs_map_t *id_triggers;      /* map<id, ecs_id_trigger_t> */
+    ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
+
+    /* Is entity range checking enabled? */
+    bool range_check_enabled;
 
 
     /* --  Data storage -- */
@@ -616,7 +613,10 @@ struct ecs_world_t {
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */
     bool should_quit;             /* Did a system signal that app should quit */
-    bool locking_enabled;         /* Lock world when in progress */    
+    bool locking_enabled;         /* Lock world when in progress */ 
+
+    void *context;               /* Application context */
+    ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
 };
 
 #endif

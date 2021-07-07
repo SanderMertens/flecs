@@ -2,7 +2,7 @@
 #include <flecs/type.h>
 
 void Type_setup() {
-    ecs_tracing_enable(-3);
+    ecs_tracing_enable(-2);
 }
 
 void Type_type_of_1_tostr() {
@@ -1325,4 +1325,87 @@ void Type_role_owned_str() {
 void Type_role_disabled_str() {
     ecs_entity_t e = ECS_DISABLED;
     test_str(ecs_role_str(e), "DISABLED");
+}
+
+void Type_large_type_expr() {
+    ecs_world_t *world = ecs_init();
+
+    int i;
+    for (i = 0; i < 64; i ++) {
+        char buff[4] = { 'e' };
+        sprintf(&buff[1], "%d", i + 1);
+        ecs_entity_init(world, &(ecs_entity_desc_t) {
+            .name = buff
+        });
+    }
+
+    ecs_entity_t type_ent = ecs_type_init(world, &(ecs_type_desc_t) {
+        .ids_expr = "e1, e2, e3, e4, e5, e6, e7, e8, e9, e10,"
+                "e11, e12, e13, e14, e15, e16, e17, e18, e19, e20,"
+                "e21, e22, e23, e24, e25, e26, e27, e28, e29, e30,"
+                "e31, e32, e33, e34, e35, e36, e37, e38, e39, e40,"
+                "e41, e42, e43, e44, e45, e46, e47, e48, e49, e50,"
+                "e51, e52, e53, e54, e55, e56, e57, e58, e59, e60,"
+                "e61, e62, e63, e64"
+    });
+
+    test_assert(type_ent != 0);
+
+    const EcsType *ptr = ecs_get(world, type_ent, EcsType);
+    test_assert(ptr != NULL);
+    test_assert(ecs_vector_count(ptr->type) == 64);
+    test_assert(ecs_vector_count(ptr->normalized) == 64);
+
+    for (i = 0; i < 64; i ++) {
+        char buff[4] = { 'e' };
+        sprintf(&buff[1], "%d", i + 1);
+        ecs_entity_t e = ecs_lookup(world, buff);
+        test_assert(e != 0);
+        test_str(ecs_get_name(world, e), buff);
+
+        test_assert(ecs_type_index_of(ptr->type, e) == i);
+    }
+
+    ecs_fini(world);
+}
+
+void Type_large_type_expr_limit() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ECS_MAX_ADD_REMOVE == 32);
+
+    int i;
+    for (i = 0; i < 32; i ++) {
+        char buff[4] = { 'e' };
+        sprintf(&buff[1], "%d", i + 1);
+        ecs_entity_init(world, &(ecs_entity_desc_t) {
+            .name = buff
+        });
+    }
+
+    ecs_entity_t type_ent = ecs_type_init(world, &(ecs_type_desc_t) {
+        .ids_expr = "e1, e2, e3, e4, e5, e6, e7, e8, e9, e10,"
+                "e11, e12, e13, e14, e15, e16, e17, e18, e19, e20,"
+                "e21, e22, e23, e24, e25, e26, e27, e28, e29, e30,"
+                "e31, e32"
+    });
+
+    test_assert(type_ent != 0);
+
+    const EcsType *ptr = ecs_get(world, type_ent, EcsType);
+    test_assert(ptr != NULL);
+    test_assert(ecs_vector_count(ptr->type) == 32);
+    test_assert(ecs_vector_count(ptr->normalized) == 32);
+
+    for (i = 0; i < 32; i ++) {
+        char buff[4] = { 'e' };
+        sprintf(&buff[1], "%d", i + 1);
+        ecs_entity_t e = ecs_lookup(world, buff);
+        test_assert(e != 0);
+        test_str(ecs_get_name(world, e), buff);
+
+        test_assert(ecs_type_index_of(ptr->type, e) == i);
+    }
+
+    ecs_fini(world);
 }

@@ -1642,7 +1642,9 @@
                 "role_xor_str",
                 "role_not_str",
                 "role_owned_str",
-                "role_disabled_str"
+                "role_disabled_str",
+                "large_type_expr",
+                "large_type_expr_limit"
             ]
         }, {
             "id": "Run",

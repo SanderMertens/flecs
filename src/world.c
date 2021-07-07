@@ -1283,6 +1283,7 @@ void register_table_for_id(
     if (!tr->table || column < tr->column) {
         tr->table = table;
         tr->column = column;
+        tr->count ++;
     }
 
     /* Set flags if triggers are registered for table */
@@ -1377,10 +1378,12 @@ void do_register_each_id(
                 ecs_set_watch(world, ecs_pair_object(world, id));
             }
         } else {
-            do_register_id(world, table, EcsWildcard, i, unregister);
+            if (!(id & ECS_ROLE_MASK)) {
+                do_register_id(world, table, EcsWildcard, i, unregister);
 
-            if (!unregister) {
-                ecs_set_watch(world, id);
+                if (!unregister) {
+                    ecs_set_watch(world, id);
+                }
             }
         }
     }
