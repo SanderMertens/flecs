@@ -458,9 +458,7 @@ ecs_vector_t* add_ref(
     ecs_term_t *term,
     ecs_entity_t component,
     ecs_entity_t entity)
-{
-    const EcsComponent *c_info = ecs_get(world, component, EcsComponent);
-    
+{    
     ecs_ref_t *ref = ecs_vector_add(&references, ecs_ref_t);
     ecs_term_id_t *subj = &term->args[0];
 
@@ -472,7 +470,8 @@ ecs_vector_t* add_ref(
     ref->entity = entity;
     ref->component = component;
 
-    if (ecs_has(world, term->id, EcsComponent)) {
+    const EcsComponent *c_info = ecs_component_from_id(world, component);
+    if (c_info) {
         if (c_info->size && subj->entity != 0) {
             if (entity) {
                 ecs_get_ref_w_id(world, ref, entity, component);

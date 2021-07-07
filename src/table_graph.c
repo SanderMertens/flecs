@@ -58,6 +58,10 @@ const EcsComponent* ecs_component_from_id(
         }
     }
 
+    if (e & ECS_ROLE_MASK) {
+        return NULL;
+    }
+
     const EcsComponent *component = ecs_get(world, e, EcsComponent);
     if ((!component || !component->size) && pair) {
         /* If this is a pair column and the pair is not a component, use

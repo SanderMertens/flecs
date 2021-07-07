@@ -119,6 +119,9 @@ uint64_t strip_generation(
 {
     uint64_t index = *index_out;
     uint64_t gen = index & ECS_GENERATION_MASK;
+    /* Make sure there's no junk in the id */
+    ecs_assert(gen == (index & (0xFFFFFFFFull << 32)),
+        ECS_INVALID_PARAMETER, NULL);
     *index_out -= gen;
     return gen;
 }
