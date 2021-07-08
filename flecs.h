@@ -172,9 +172,9 @@ typedef int32_t ecs_size_t;
 #endif
 
 #if defined(__GNUC__)
-#define ECS_UNUSED(v) __attribute__((unused)) v
+#define ECS_UNUSED __attribute__((unused))
 #else
-#define ECS_UNUSED(v) (void)v
+#define ECS_UNUSED
 #endif
 
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
@@ -9193,6 +9193,9 @@ using RateFilter = EcsRateFilter;
 using TickSource = EcsTickSource;
 using Query = EcsQuery;
 using Trigger = EcsTrigger;
+
+/* Builtin opaque components */
+static const flecs::entity_t System = ecs_id(EcsSystem);
 
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;
