@@ -433,6 +433,9 @@ void Hierarchies_add_child_to_recycled_parent(void);
 void Hierarchies_get_type_after_recycled_parent_add(void);
 void Hierarchies_rematch_after_add_to_recycled_parent(void);
 void Hierarchies_cascade_after_recycled_parent_change(void);
+void Hierarchies_long_name_depth_0(void);
+void Hierarchies_long_name_depth_1(void);
+void Hierarchies_long_name_depth_2(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -3538,6 +3541,18 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "cascade_after_recycled_parent_change",
         Hierarchies_cascade_after_recycled_parent_change
+    },
+    {
+        "long_name_depth_0",
+        Hierarchies_long_name_depth_0
+    },
+    {
+        "long_name_depth_1",
+        Hierarchies_long_name_depth_1
+    },
+    {
+        "long_name_depth_2",
+        Hierarchies_long_name_depth_2
     }
 };
 
@@ -9110,7 +9125,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        81,
+        84,
         Hierarchies_testcases
     },
     {

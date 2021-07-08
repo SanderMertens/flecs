@@ -457,7 +457,10 @@
                 "add_child_to_recycled_parent",
                 "get_type_after_recycled_parent_add",
                 "rematch_after_add_to_recycled_parent",
-                "cascade_after_recycled_parent_change"
+                "cascade_after_recycled_parent_change",
+                "long_name_depth_0",
+                "long_name_depth_1",
+                "long_name_depth_2"
             ]
         }, {
             "id": "Add_bulk",

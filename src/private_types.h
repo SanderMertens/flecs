@@ -45,9 +45,6 @@
  * Increasing this value will increase consumption of stack space. */
 #define ECS_MAX_ADD_REMOVE (32)
 
-/* Maximum length of an entity name, including 0 terminator */
-#define ECS_MAX_NAME_LENGTH (64)
-
 /** Type used for internal string hashmap */
 typedef struct ecs_string_t {
     char *value;

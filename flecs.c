@@ -669,9 +669,6 @@ void* _ecs_hashmap_next(
  * Increasing this value will increase consumption of stack space. */
 #define ECS_MAX_ADD_REMOVE (32)
 
-/* Maximum length of an entity name, including 0 terminator */
-#define ECS_MAX_NAME_LENGTH (64)
-
 /** Type used for internal string hashmap */
 typedef struct ecs_string_t {
     char *value;
@@ -27519,6 +27516,8 @@ void ecs_bootstrap(
 }
 
 
+#define ECS_NAME_BUFFER_LENGTH (64)
+
 static
 bool path_append(
     const ecs_world_t *world, 
@@ -27685,7 +27684,7 @@ bool is_sep(
     ecs_size_t len = ecs_os_strlen(sep);
 
     if (!ecs_os_strncmp(*ptr, sep, len)) {
-        *ptr += len - 1;
+        *ptr += len;
         return true;
     } else {
         return false;
@@ -27693,22 +27692,17 @@ bool is_sep(
 }
 
 static
-const char *path_elem(
+const char* path_elem(
     const char *path,
-    char *buff,
-    const char *sep)
+    const char *sep,
+    int32_t *len)
 {
     const char *ptr;
-    char *bptr = buff, ch;
+    char ch;
     int32_t template_nesting = 0;
-
-    memset(buff, 0, 1); /* silence scan-build warning in is_number, see below */
+    int32_t count = 0;
 
     for (ptr = path; (ch = *ptr); ptr ++) {
-        /* Ensure we're never writing past the end of the buffer */
-        ecs_assert(bptr - buff < ECS_MAX_NAME_LENGTH, 
-            ECS_INVALID_PARAMETER, NULL);
-
         if (ch == '<') {
             template_nesting ++;
         } else if (ch == '>') {
@@ -27718,20 +27712,17 @@ const char *path_elem(
         ecs_assert(template_nesting >= 0, ECS_INVALID_PARAMETER, path);
 
         if (!template_nesting && is_sep(&ptr, sep)) {
-            ptr ++;
-            
-            /* if bptr != buff, string will be 0 terminated at 214, otherwise
-             * function will return NULL */
             break;
         }
 
-        /* Unconditionally assign a valid value to bptr */
-        *bptr = ch;
-        bptr ++;
+        count ++;
     }
 
-    if (bptr != buff) {
-        *bptr = '\0';
+    if (len) {
+        *len = count;
+    }
+
+    if (count) {
         return ptr;
     } else {
         return NULL;
@@ -27887,9 +27878,11 @@ ecs_entity_t ecs_lookup_path_w_sep(
     if (e) {
         return e;
     }      
-    
-    char buff[ECS_MAX_NAME_LENGTH];
-    const char *ptr;
+
+    char buff[ECS_NAME_BUFFER_LENGTH];
+    const char *ptr, *ptr_start;
+    char *elem = buff;
+    int32_t len, size = ECS_NAME_BUFFER_LENGTH;
     ecs_entity_t cur;
     bool core_searched = false;
 
@@ -27901,10 +27894,25 @@ ecs_entity_t ecs_lookup_path_w_sep(
 
 retry:
     cur = parent;
-    ptr = path;
+    ptr_start = ptr = path;
 
-    while ((ptr = path_elem(ptr, buff, sep))) {
-        cur = ecs_lookup_child(world, cur, buff);
+    while ((ptr = path_elem(ptr, sep, &len))) {
+        if (len < size) {
+            ecs_os_memcpy(elem, ptr_start, len);
+        } else {
+            if (size == ECS_NAME_BUFFER_LENGTH) {
+                elem = NULL;
+            }
+
+            elem = ecs_os_realloc(elem, len + 1);
+            ecs_os_memcpy(elem, ptr_start, len);
+            size = len + 1;
+        }
+
+        elem[len] = '\0';
+        ptr_start = ptr;
+
+        cur = ecs_lookup_child(world, cur, elem);
         if (!cur) {
             goto tail;
         }
@@ -27921,6 +27929,10 @@ tail:
             }
             goto retry;
         }
+    }
+
+    if (elem != buff) {
+        ecs_os_free(elem);
     }
 
     return cur;
@@ -28088,20 +28100,38 @@ ecs_entity_t ecs_add_path_w_sep(
         return entity;
     }
 
-    char buff[ECS_MAX_NAME_LENGTH];
+    char buff[ECS_NAME_BUFFER_LENGTH];
     const char *ptr = path;
+    const char *ptr_start = path;
+    char *elem = buff;
+    int32_t len, size = ECS_NAME_BUFFER_LENGTH;
 
     parent = get_parent_from_path(world, parent, &path, prefix, entity == 0);
 
     ecs_entity_t cur = parent;
 
-    while ((ptr = path_elem(ptr, buff, sep))) {
-        ecs_entity_t e = ecs_lookup_child(world, cur, buff);
+    while ((ptr = path_elem(ptr, sep, &len))) {
+        if (len < size) {
+            ecs_os_memcpy(elem, ptr_start, len);
+        } else {
+            if (size == ECS_NAME_BUFFER_LENGTH) {
+                elem = NULL;
+            }
+
+            elem = ecs_os_realloc(elem, len + 1);
+            ecs_os_memcpy(elem, ptr_start, len);
+            size = len + 1;          
+        }
+
+        elem[len] = '\0';
+        ptr_start = ptr;
+        
+        ecs_entity_t e = ecs_lookup_child(world, cur, elem);
         if (!e) {
-            char *name = ecs_os_strdup(buff);
+            char *name = ecs_os_strdup(elem);
 
             /* If this is the last entity in the path, use the provided id */
-            if (entity && !path_elem(ptr, buff, sep)) {
+            if (entity && !path_elem(ptr, sep, NULL)) {
                 e = entity;
             }
 
@@ -28122,6 +28152,10 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         cur = e;
+    }
+
+    if (elem != buff) {
+        ecs_os_free(elem);
     }
 
     return cur;
