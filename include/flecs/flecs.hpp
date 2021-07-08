@@ -110,6 +110,9 @@ using TickSource = EcsTickSource;
 using Query = EcsQuery;
 using Trigger = EcsTrigger;
 
+/* Builtin opaque components */
+static const flecs::entity_t System = ecs_id(EcsSystem);
+
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;
 static const uint8_t Self = EcsSelf;
