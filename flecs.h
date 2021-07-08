@@ -15757,6 +15757,25 @@ public:
         return this->add(relation, _::cpp_type<Object>::id(world()));
     }
 
+    bool has(id_t id) {
+        return ecs_type_has_id(world(), m_normalized, id);
+    }
+
+    bool has(id_t relation, id_t object) {
+        return ecs_type_has_id(world(), m_normalized, 
+            ecs_pair(relation, object));
+    }    
+
+    template <typename T>
+    bool has() {
+        return this->has(_::cpp_type<T>::id(world()));
+    }
+
+    template <typename Relation, typename Object>
+    bool has() {
+        return this->has(_::cpp_type<flecs::pair<Relation, Object>>::id(world()));
+    }
+
     flecs::string str() const {
         char *str = ecs_type_str(world(), m_type);
         return flecs::string(str);
@@ -17175,6 +17194,11 @@ inline flecs::entity iter::term_source(int32_t index) const {
 
 inline flecs::entity iter::term_id(int32_t index) const {
     return flecs::entity(m_iter->world, ecs_term_id(m_iter, index));
+}
+
+/* Obtain type of iter */
+inline flecs::type iter::type() const {
+    return flecs::type(m_iter->world, ecs_iter_type(m_iter));
 }
 
 } // namespace flecs

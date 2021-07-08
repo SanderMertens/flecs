@@ -124,3 +124,65 @@ void Type_null_args() {
     // Make sure code didn't crash
     test_assert(true);
 }
+
+void Type_has_type() {
+    flecs::world world;
+
+    auto type = world.type()
+        .add<Position>()
+        .add<Velocity>();
+
+    test_assert(type.has<Position>());
+    test_assert(type.has<Velocity>());
+    test_assert(!type.has<Mass>());
+}
+
+void Type_has_entity() {
+    flecs::world world;
+
+    auto e1 = world.entity();
+    auto e2 = world.entity();
+    auto e3 = world.entity();
+
+    auto type = world.type()
+        .add(e1)
+        .add(e2);
+
+    test_assert(type.has(e1));
+    test_assert(type.has(e2));
+    test_assert(!type.has(e3));
+}
+
+void Type_has_pair_type() {
+    flecs::world world;
+
+    struct Eats {};
+    struct Apples {};
+    struct Pears {};
+    struct Bananas {};
+
+    auto type = world.type()
+        .add<Eats, Apples>()
+        .add<Eats, Pears>();
+
+    test_assert((type.has<Eats, Apples>()));
+    test_assert((type.has<Eats, Pears>()));
+    test_assert((!type.has<Eats, Bananas>()));
+}
+
+void Type_has_pair_entity() {
+    flecs::world world;
+
+    auto eats = world.entity();
+    auto apples = world.entity();
+    auto pears = world.entity();
+    auto bananas = world.entity();
+
+    auto type = world.type()
+        .add(eats, apples)
+        .add(eats, pears);
+
+    test_assert(type.has(eats, apples));
+    test_assert(type.has(eats, pears));
+    test_assert(!type.has(eats, bananas));
+}

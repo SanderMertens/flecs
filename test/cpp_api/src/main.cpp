@@ -205,6 +205,10 @@ void Type_1_component_signature(void);
 void Type_2_component_signature(void);
 void Type_type_no_name(void);
 void Type_null_args(void);
+void Type_has_type(void);
+void Type_has_entity(void);
+void Type_has_pair_type(void);
+void Type_has_pair_entity(void);
 
 // Testsuite 'System'
 void System_action(void);
@@ -301,6 +305,7 @@ void Query_iter_no_comps_no_comps(void);
 void Query_each_pair_object(void);
 void Query_iter_pair_object(void);
 void Query_iter_query_in_system(void);
+void Query_iter_type(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -1300,6 +1305,22 @@ bake_test_case Type_testcases[] = {
     {
         "null_args",
         Type_null_args
+    },
+    {
+        "has_type",
+        Type_has_type
+    },
+    {
+        "has_entity",
+        Type_has_entity
+    },
+    {
+        "has_pair_type",
+        Type_has_pair_type
+    },
+    {
+        "has_pair_entity",
+        Type_has_pair_entity
     }
 };
 
@@ -1669,6 +1690,10 @@ bake_test_case Query_testcases[] = {
     {
         "iter_query_in_system",
         Query_iter_query_in_system
+    },
+    {
+        "iter_type",
+        Query_iter_type
     }
 };
 
@@ -2586,7 +2611,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        9,
+        13,
         Type_testcases
     },
     {
@@ -2607,7 +2632,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        44,
+        45,
         Query_testcases
     },
     {

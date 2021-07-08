@@ -1151,3 +1151,17 @@ void Query_iter_query_in_system() {
  
     test_int(count, 1);
 }
+
+void Query_iter_type() {
+    flecs::world ecs;
+
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>().add<Velocity>();
+
+    auto q = ecs.query<Position>();
+
+    q.iter([&](flecs::iter it) {
+        test_assert(it.type().vector().count() >= 1);
+        test_assert(it.type().has<Position>());
+    });
+}

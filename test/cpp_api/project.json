@@ -219,7 +219,11 @@
                 "1_component_signature",
                 "2_component_signature",
                 "type_no_name",
-                "null_args"
+                "null_args",
+                "has_type",
+                "has_entity",
+                "has_pair_type",
+                "has_pair_entity"
             ]
         }, {
             "id": "System",
@@ -321,7 +325,8 @@
                 "iter_no_comps_no_comps",
                 "each_pair_object",
                 "iter_pair_object",
-                "iter_query_in_system"
+                "iter_query_in_system",
+                "iter_type"
             ]
         }, {
             "id": "QueryBuilder",

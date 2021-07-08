@@ -81,6 +81,25 @@ public:
         return this->add(relation, _::cpp_type<Object>::id(world()));
     }
 
+    bool has(id_t id) {
+        return ecs_type_has_id(world(), m_normalized, id);
+    }
+
+    bool has(id_t relation, id_t object) {
+        return ecs_type_has_id(world(), m_normalized, 
+            ecs_pair(relation, object));
+    }    
+
+    template <typename T>
+    bool has() {
+        return this->has(_::cpp_type<T>::id(world()));
+    }
+
+    template <typename Relation, typename Object>
+    bool has() {
+        return this->has(_::cpp_type<flecs::pair<Relation, Object>>::id(world()));
+    }
+
     flecs::string str() const {
         char *str = ecs_type_str(world(), m_type);
         return flecs::string(str);
