@@ -30,6 +30,8 @@ void Entity_remove_childof(void);
 void Entity_remove_instanceof(void);
 void Entity_set(void);
 void Entity_set_2(void);
+void Entity_emplace(void);
+void Entity_emplace_2(void);
 void Entity_replace(void);
 void Entity_get_generic(void);
 void Entity_get_mut_generic(void);
@@ -422,6 +424,10 @@ void ComponentLifecycle_flecs_ctor_w_default_ctor(void);
 void ComponentLifecycle_default_ctor_w_value_ctor(void);
 void ComponentLifecycle_flecs_ctor_w_value_ctor(void);
 void ComponentLifecycle_no_default_ctor_move_ctor_on_set(void);
+void ComponentLifecycle_emplace(void);
+void ComponentLifecycle_emplace_no_default_ctor(void);
+void ComponentLifecycle_emplace_existing(void);
+void ComponentLifecycle_emplace_singleton(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref(void);
@@ -533,6 +539,7 @@ void World_template_component_w_same_namespace_name_and_namespaced_arg(void);
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
 void Singleton_get_mut_singleton(void);
+void Singleton_emplace_singleton(void);
 void Singleton_modified_singleton(void);
 void Singleton_patch_singleton(void);
 void Singleton_add_singleton(void);
@@ -626,6 +633,14 @@ bake_test_case Entity_testcases[] = {
     {
         "set_2",
         Entity_set_2
+    },
+    {
+        "emplace",
+        Entity_emplace
+    },
+    {
+        "emplace_2",
+        Entity_emplace_2
     },
     {
         "replace",
@@ -2139,6 +2154,22 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "no_default_ctor_move_ctor_on_set",
         ComponentLifecycle_no_default_ctor_move_ctor_on_set
+    },
+    {
+        "emplace",
+        ComponentLifecycle_emplace
+    },
+    {
+        "emplace_no_default_ctor",
+        ComponentLifecycle_emplace_no_default_ctor
+    },
+    {
+        "emplace_existing",
+        ComponentLifecycle_emplace_existing
+    },
+    {
+        "emplace_singleton",
+        ComponentLifecycle_emplace_singleton
     }
 };
 
@@ -2550,6 +2581,10 @@ bake_test_case Singleton_testcases[] = {
         Singleton_get_mut_singleton
     },
     {
+        "emplace_singleton",
+        Singleton_emplace_singleton
+    },
+    {
         "modified_singleton",
         Singleton_modified_singleton
     },
@@ -2588,7 +2623,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        110,
+        112,
         Entity_testcases
     },
     {
@@ -2665,7 +2700,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        35,
+        39,
         ComponentLifecycle_testcases
     },
     {
@@ -2714,7 +2749,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        10,
+        11,
         Singleton_testcases
     }
 };

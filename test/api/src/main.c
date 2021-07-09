@@ -641,6 +641,8 @@ void Set_modified_w_on_set(void);
 void Set_modified_no_component(void);
 void Set_get_mut_w_add_in_on_add(void);
 void Set_get_mut_w_remove_in_on_add(void);
+void Set_emplace(void);
+void Set_emplace_existing(void);
 
 // Testsuite 'Lookup'
 void Lookup_setup(void);
@@ -738,6 +740,7 @@ void ComponentLifecycle_prevent_lifecycle_overwrite_null_callbacks(void);
 void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks(void);
 void ComponentLifecycle_set_lifecycle_after_trigger(void);
 void ComponentLifecycle_valid_entity_in_dtor_after_delete(void);
+void ComponentLifecycle_ctor_w_emplace(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_setup(void);
@@ -1084,6 +1087,7 @@ void TriggerOnAdd_on_add_in_on_add(void);
 void TriggerOnAdd_on_remove_in_on_add(void);
 void TriggerOnAdd_on_set_in_on_add(void);
 void TriggerOnAdd_on_add_in_on_update(void);
+void TriggerOnAdd_emplace(void);
 
 // Testsuite 'TriggerOnRemove'
 void TriggerOnRemove_remove_match_1_of_1(void);
@@ -1108,6 +1112,7 @@ void TriggerOnSet_on_set_after_override_w_new(void);
 void TriggerOnSet_on_set_after_override_w_new_w_count(void);
 void TriggerOnSet_on_set_after_override_1_of_2_overridden(void);
 void TriggerOnSet_on_set_after_snapshot_restore(void);
+void TriggerOnSet_emplace(void);
 
 // Testsuite 'Monitor'
 void Monitor_1_comp(void);
@@ -4307,6 +4312,14 @@ bake_test_case Set_testcases[] = {
     {
         "get_mut_w_remove_in_on_add",
         Set_get_mut_w_remove_in_on_add
+    },
+    {
+        "emplace",
+        Set_emplace
+    },
+    {
+        "emplace_existing",
+        Set_emplace_existing
     }
 };
 
@@ -4667,6 +4680,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "valid_entity_in_dtor_after_delete",
         ComponentLifecycle_valid_entity_in_dtor_after_delete
+    },
+    {
+        "ctor_w_emplace",
+        ComponentLifecycle_ctor_w_emplace
     }
 };
 
@@ -5999,6 +6016,10 @@ bake_test_case TriggerOnAdd_testcases[] = {
     {
         "on_add_in_on_update",
         TriggerOnAdd_on_add_in_on_update
+    },
+    {
+        "emplace",
+        TriggerOnAdd_emplace
     }
 };
 
@@ -6085,6 +6106,10 @@ bake_test_case TriggerOnSet_testcases[] = {
     {
         "on_set_after_snapshot_restore",
         TriggerOnSet_on_set_after_snapshot_restore
+    },
+    {
+        "emplace",
+        TriggerOnSet_emplace
     }
 };
 
@@ -9207,7 +9232,7 @@ static bake_test_suite suites[] = {
         "Set",
         NULL,
         NULL,
-        25,
+        27,
         Set_testcases
     },
     {
@@ -9235,7 +9260,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        42,
+        43,
         ComponentLifecycle_testcases
     },
     {
@@ -9291,7 +9316,7 @@ static bake_test_suite suites[] = {
         "TriggerOnAdd",
         TriggerOnAdd_setup,
         NULL,
-        26,
+        27,
         TriggerOnAdd_testcases
     },
     {
@@ -9305,7 +9330,7 @@ static bake_test_suite suites[] = {
         "TriggerOnSet",
         NULL,
         NULL,
-        11,
+        12,
         TriggerOnSet_testcases
     },
     {

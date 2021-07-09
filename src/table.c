@@ -1476,7 +1476,8 @@ void ecs_table_move(
     int32_t new_index,
     ecs_table_t *old_table,
     ecs_data_t *old_data,
-    int32_t old_index)
+    int32_t old_index,
+    bool construct)
 {
     ecs_assert(new_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1557,7 +1558,7 @@ void ecs_table_move(
                 }
             }
         } else {
-            if (new_component < old_component) {
+            if (construct && new_component < old_component) {
                 ctor_component(world, new_table->c_info[i_new],
                     &new_columns[i_new], &dst_entity, new_index, 1);
             } else {
@@ -1570,9 +1571,11 @@ void ecs_table_move(
         i_old += new_component >= old_component;
     }
 
-    for (; (i_new < new_column_count); i_new ++) {
-        ctor_component(world, new_table->c_info[i_new],
-            &new_columns[i_new], &dst_entity, new_index, 1);
+    if (construct) {
+        for (; (i_new < new_column_count); i_new ++) {
+            ctor_component(world, new_table->c_info[i_new],
+                &new_columns[i_new], &dst_entity, new_index, 1);
+        }
     }
 
     for (; (i_old < old_column_count); i_old ++) {

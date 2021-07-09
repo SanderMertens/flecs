@@ -179,6 +179,27 @@ void Entity_set() {
     test_int(p->y, 20);
 }
 
+void Entity_emplace_2() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .emplace<Position>(10.0f, 20.0f)
+        .emplace<Velocity>(30.0f, 40.0f);
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+
+    const Position *p = e.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = e.get<Velocity>();
+    test_assert(v != NULL);
+    test_int(v->x, 30);
+    test_int(v->y, 40);
+}
+
 void Entity_replace() {
     flecs::world world;
 
@@ -2239,4 +2260,18 @@ void Entity_scope_before_builder_method() {
 
     auto C = ecs.lookup("P::C");
     test_assert(C != 0);
+}
+
+void Entity_emplace() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .emplace<Position>(10.0f, 20.0f);
+
+    test_assert(e.has<Position>());
+
+    const Position *p = e.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 }

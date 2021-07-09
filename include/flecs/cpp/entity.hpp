@@ -1112,6 +1112,23 @@ public:
     template <typename Func, if_t< is_callable<Func>::value > = 0>
     const Base& set(const Func& func) const;
 
+    /** Emplace component.
+     * Emplace constructs a component in the storage, which prevents calling the
+     * destructor on the object passed into the function.
+     *
+     * Emplace may only be called for components that have not yet been added
+     * to the entity.
+     *
+     * @tparam T the component to emplace
+     * @param args The arguments to pass to the constructor of T
+     */
+    template <typename T, typename ... Args>
+    const Base& emplace(Args&&... args) const {
+        flecs::emplace<T>(this->base_world(), this->base_id(), 
+            std::forward<Args>(args)...);
+        return *this;
+    }
+
     /** Entities created in function will have the current entity.
      *
      * @param func The function to call.

@@ -574,3 +574,56 @@ void Set_get_mut_w_remove_in_on_add() {
     bool added = false;
     ecs_get_mut(world, e, Position, &added);
 }
+
+void Set_emplace() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    Position *p = ecs_emplace(world, e, Position);
+    test_assert(p != NULL);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(p == ecs_get(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Set_emplace_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    Position *p = ecs_emplace(world, e, Position);
+    test_assert(p != NULL);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(p == ecs_get(world, e, Position));
+
+    Velocity *v = ecs_emplace(world, e, Velocity);
+    test_assert(v != NULL);
+    test_assert(ecs_has(world, e, Velocity));
+    test_assert(v == ecs_get(world, e, Velocity));  
+
+    ecs_fini(world);
+}
+
+void Set_emplace_existing() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(e != 0);
+
+    test_expect_abort();
+    ecs_emplace(world, e, Position);
+}

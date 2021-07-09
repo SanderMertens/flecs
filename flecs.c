@@ -1662,7 +1662,8 @@ void ecs_table_move(
     int32_t new_index,
     ecs_table_t *old_table,
     ecs_data_t *old_data,
-    int32_t old_index);
+    int32_t old_index,
+    bool construct);
 
 /* Grow table with specified number of records. Populate table with entities,
  * starting from specified entity id. */
@@ -3827,7 +3828,8 @@ void ecs_table_move(
     int32_t new_index,
     ecs_table_t *old_table,
     ecs_data_t *old_data,
-    int32_t old_index)
+    int32_t old_index,
+    bool construct)
 {
     ecs_assert(new_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -3908,7 +3910,7 @@ void ecs_table_move(
                 }
             }
         } else {
-            if (new_component < old_component) {
+            if (construct && new_component < old_component) {
                 ctor_component(world, new_table->c_info[i_new],
                     &new_columns[i_new], &dst_entity, new_index, 1);
             } else {
@@ -3921,9 +3923,11 @@ void ecs_table_move(
         i_old += new_component >= old_component;
     }
 
-    for (; (i_new < new_column_count); i_new ++) {
-        ctor_component(world, new_table->c_info[i_new],
-            &new_columns[i_new], &dst_entity, new_index, 1);
+    if (construct) {
+        for (; (i_new < new_column_count); i_new ++) {
+            ctor_component(world, new_table->c_info[i_new],
+                &new_columns[i_new], &dst_entity, new_index, 1);
+        }
     }
 
     for (; (i_old < old_column_count); i_old ++) {
@@ -5416,7 +5420,8 @@ int32_t new_entity(
     ecs_entity_t entity,
     ecs_entity_info_t * info,
     ecs_table_t * new_table,
-    ecs_ids_t * added)
+    ecs_ids_t * added,
+    bool construct)
 {
     ecs_record_t *record = info->record;
     ecs_data_t *new_data = ecs_table_get_or_create_data(new_table);
@@ -5429,7 +5434,7 @@ int32_t new_entity(
     }
 
     new_row = ecs_table_append(
-        world, new_table, new_data, entity, record, true);
+        world, new_table, new_data, entity, record, construct);
 
     record->table = new_table;
     record->row = ecs_row_to_record(new_row, info->is_watched);
@@ -5463,7 +5468,8 @@ int32_t move_entity(
     int32_t src_row,
     ecs_table_t * dst_table,
     ecs_ids_t * added,
-    ecs_ids_t * removed)
+    ecs_ids_t * removed,
+    bool construct)
 {    
     ecs_data_t *dst_data = ecs_table_get_or_create_data(dst_table);
     ecs_assert(src_data != dst_data, ECS_INTERNAL_ERROR, NULL);
@@ -5501,7 +5507,7 @@ int32_t move_entity(
         }
 
         ecs_table_move(world, entity, entity, dst_table, dst_data, dst_row, 
-            src_table, src_data, src_row);                
+            src_table, src_data, src_row, construct);                
     }
     
     ecs_table_delete(world, src_table, src_data, src_row, false);
@@ -5624,7 +5630,8 @@ void commit(
     ecs_entity_info_t * info,
     ecs_table_t * dst_table,   
     ecs_ids_t * added,
-    ecs_ids_t * removed)
+    ecs_ids_t * removed,
+    bool construct)
 {
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
     
@@ -5641,7 +5648,7 @@ void commit(
         }
 
         return;
-    }  
+    }
 
     if (src_table) {
         ecs_data_t *src_data = info->data;
@@ -5649,12 +5656,10 @@ void commit(
 
         if (dst_table->type) { 
             info->row = move_entity(world, entity, info, src_table, 
-                src_data, info->row, dst_table, added, removed);
+                src_data, info->row, dst_table, added, removed, construct);
             info->table = dst_table;
         } else {
-            delete_entity(
-                world, src_table, src_data, info->row, 
-                removed);
+            delete_entity(world, src_table, src_data, info->row, removed);
 
             ecs_eis_set(world, entity, &(ecs_record_t){
                 NULL, (info->is_watched == true) * -1
@@ -5662,16 +5667,17 @@ void commit(
         }      
     } else {        
         if (dst_table->type) {
-            info->row = new_entity(world, entity, info, dst_table, added);
+            info->row = new_entity(
+                world, entity, info, dst_table, added, construct);
             info->table = dst_table;
         }        
     }
 
     /* If the entity is being watched, it is being monitored for changes and
-    * requires rematching systems when components are added or removed. This
-    * ensures that systems that rely on components from containers or prefabs
-    * update the matched tables when the application adds or removes a 
-    * component from, for example, a container. */
+     * requires rematching systems when components are added or removed. This
+     * ensures that systems that rely on components from containers or prefabs
+     * update the matched tables when the application adds or removes a 
+     * component from, for example, a container. */
     if (info->is_watched) {
         update_component_monitors(world, entity, added, removed);
     }
@@ -5691,7 +5697,7 @@ void new(
     ecs_entity_info_t info = {0};
     ecs_table_t *table = ecs_table_traverse_add(
         world, &world->store.root, to_add, NULL);
-    new_entity(world, entity, &info, table, to_add);
+    new_entity(world, entity, &info, table, to_add, true);
 }
 
 static
@@ -5849,7 +5855,7 @@ void add_remove(
     dst_table = ecs_table_traverse_add(
         world, dst_table, to_add, &added);    
 
-    commit(world, entity, &info, dst_table, &added, &removed);
+    commit(world, entity, &info, dst_table, &added, &removed, true);
 }
 
 static
@@ -5857,7 +5863,8 @@ void add_ids_w_info(
     ecs_world_t * world,
     ecs_entity_t entity,
     ecs_entity_info_t * info,
-    ecs_ids_t * components)
+    ecs_ids_t * components,
+    bool construct)
 {
     ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
     ecs_entity_t buffer[ECS_MAX_ADD_REMOVE];
@@ -5867,7 +5874,7 @@ void add_ids_w_info(
     ecs_table_t *dst_table = ecs_table_traverse_add(
         world, src_table, components, &added);
 
-    commit(world, entity, info, dst_table, &added, NULL);
+    commit(world, entity, info, dst_table, &added, NULL, construct);
 }
 
 static
@@ -5885,7 +5892,7 @@ void remove_ids_w_info(
     ecs_table_t *dst_table = ecs_table_traverse_remove(
         world, src_table, components, &removed);
 
-    commit(world, entity, info, dst_table, NULL, &removed);
+    commit(world, entity, info, dst_table, NULL, &removed, true);
 }
 
 static
@@ -5912,7 +5919,7 @@ void add_ids(
     ecs_table_t *dst_table = ecs_table_traverse_add(
         world, src_table, components, &added);
 
-    commit(world, entity, &info, dst_table, &added, NULL);
+    commit(world, entity, &info, dst_table, &added, NULL, true);
 
     ecs_defer_flush(world, stage);
 }
@@ -5941,7 +5948,7 @@ void remove_ids(
     ecs_table_t *dst_table = ecs_table_traverse_remove(
         world, src_table, components, &removed);
 
-    commit(world, entity, &info, dst_table, NULL, &removed);
+    commit(world, entity, &info, dst_table, NULL, &removed, true);
 
     ecs_defer_flush(world, stage);
 }
@@ -5972,7 +5979,7 @@ void *get_mutable(
             .count = 1
         };
 
-        add_ids_w_info(world, entity, info, &to_add);
+        add_ids_w_info(world, entity, info, &to_add, true);
 
         ecs_get_info(world, entity, info);
         ecs_assert(info->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -6068,7 +6075,7 @@ bool ecs_commit(
         set_info_from_record(&info, record);
     }
 
-    commit(world, entity, &info, table, added, removed);
+    commit(world, entity, &info, table, added, removed, true);
 
     return src_table != table;
 }
@@ -6507,7 +6514,7 @@ void traverse_add_remove(
 
     /* Commit entity to destination table */
     if (src_table != table) {
-        commit(world, result, &info, table, &added, &removed);
+        commit(world, result, &info, table, &added, &removed, true);
     }
 
     /* Set name */
@@ -7341,11 +7348,11 @@ ecs_entity_t ecs_clone(
     ecs_ids_t to_add = ecs_type_to_entities(src_type);
 
     ecs_entity_info_t dst_info = {0};
-    dst_info.row = new_entity(world, dst, &dst_info, src_table, &to_add);
+    dst_info.row = new_entity(world, dst, &dst_info, src_table, &to_add, true);
 
     if (copy_value) {
         ecs_table_move(world, dst, src, src_table, dst_info.data, 
-            dst_info.row, src_table, src_info.data, src_info.row);
+            dst_info.row, src_table, src_info.data, src_info.row, true);
 
         int i;
         for (i = 0; i < to_add.count; i ++) {
@@ -7455,7 +7462,7 @@ const void* ecs_get_ref_w_id(
     return ref->ptr;
 }
 
-void* ecs_get_mut_w_id(
+void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -7509,7 +7516,40 @@ void* ecs_get_mut_w_id(
     return result;
 }
 
-void ecs_modified_w_id(
+void* ecs_emplace_w_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    void *result;
+
+    if (ecs_defer_set(
+        world, stage, EcsOpMut, entity, id, 0, NULL, &result, NULL))
+    {
+        return result;
+    }
+
+    ecs_entity_info_t info;
+    ecs_get_info(world, entity, &info);
+
+    ecs_ids_t to_add = {
+        .array = &id,
+        .count = 1
+    };
+
+    add_ids_w_info(world, entity, &info, &to_add, 
+        false /* Add component without constructing it */ );
+
+    return get_component(world, info.table, info.row, id);
+}
+
+void ecs_modified_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -8394,7 +8434,7 @@ bool ecs_defer_flush(
                         op->is._1.value, true, false);
                     break;
                 case EcsOpModified:
-                    ecs_modified_w_id(world, e, op->component);
+                    ecs_modified_id(world, e, op->component);
                     break;
                 case EcsOpDelete: {
                     ecs_delete(world, e);
@@ -10877,7 +10917,16 @@ void* ecs_get_mut_w_entity(
     ecs_id_t id,
     bool *is_added)
 {
-    return ecs_get_mut_w_id(world, entity, id, is_added);
+    return ecs_get_mut_id(world, entity, id, is_added);
+}
+
+void* ecs_get_mut_w_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    bool *is_added)
+{
+    return ecs_get_mut_id(world, entity, id, is_added);
 }
 
 void ecs_modified_w_entity(
@@ -10885,7 +10934,7 @@ void ecs_modified_w_entity(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_modified_w_id(world, entity, id);
+    ecs_modified_id(world, entity, id);
 }
 
 ecs_entity_t ecs_set_ptr_w_entity(
@@ -11172,7 +11221,7 @@ ecs_entity_t ecs_import(
 
     /* Copy value of module component in handles_out parameter */
     if (handles_size && handles_out) {
-        void *handles_ptr = ecs_get_mut_w_id(world, e, e, NULL);
+        void *handles_ptr = ecs_get_mut_id(world, e, e, NULL);
         ecs_os_memcpy(handles_out, handles_ptr, ecs_from_size_t(handles_size));   
     }
 

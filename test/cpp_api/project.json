@@ -37,6 +37,8 @@
                 "remove_instanceof",
                 "set",
                 "set_2",
+                "emplace",
+                "emplace_2",
                 "replace",
                 "get_generic",
                 "get_mut_generic",
@@ -450,7 +452,11 @@
                 "flecs_ctor_w_default_ctor",
                 "default_ctor_w_value_ctor",
                 "flecs_ctor_w_value_ctor",
-                "no_default_ctor_move_ctor_on_set"
+                "no_default_ctor_move_ctor_on_set",
+                "emplace",
+                "emplace_no_default_ctor",
+                "emplace_existing",
+                "emplace_singleton"
             ]
         }, {
             "id": "Refs",
@@ -576,6 +582,7 @@
             "testcases": [
                 "set_get_singleton",
                 "get_mut_singleton",
+                "emplace_singleton",
                 "modified_singleton",
                 "patch_singleton",
                 "add_singleton",

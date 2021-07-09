@@ -687,7 +687,9 @@
                 "modified_w_on_set",
                 "modified_no_component",
                 "get_mut_w_add_in_on_add",
-                "get_mut_w_remove_in_on_add"
+                "get_mut_w_remove_in_on_add",
+                "emplace",
+                "emplace_existing"
             ]
         }, {
             "id": "Lookup",
@@ -720,6 +722,7 @@
             "testcases": [
                 "set",
                 "set_ptr",
+                "emplace",
                 "system_w_singleton",
                 "system_w_singleton_no_match",
                 "system_w_not_singleton",
@@ -792,7 +795,8 @@
                 "prevent_lifecycle_overwrite_null_callbacks",
                 "allow_lifecycle_overwrite_equal_callbacks",
                 "set_lifecycle_after_trigger",
-                "valid_entity_in_dtor_after_delete"
+                "valid_entity_in_dtor_after_delete",
+                "ctor_w_emplace"
             ]
         }, {
             "id": "Pipeline",
@@ -1154,7 +1158,8 @@
                 "on_add_in_on_add",
                 "on_remove_in_on_add",
                 "on_set_in_on_add",
-                "on_add_in_on_update"
+                "on_add_in_on_update",
+                "emplace"
             ]
         }, {
             "id": "TriggerOnRemove",
@@ -1182,7 +1187,8 @@
                 "on_set_after_override_w_new",
                 "on_set_after_override_w_new_w_count",
                 "on_set_after_override_1_of_2_overridden",
-                "on_set_after_snapshot_restore"
+                "on_set_after_snapshot_restore",
+                "emplace"
             ]
         }, {
             "id": "Monitor",

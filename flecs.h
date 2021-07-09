@@ -3380,7 +3380,7 @@ const void* ecs_get_ref_w_entity(
     ecs_entity_t entity,
     ecs_id_t id);
 
-ECS_DEPRECATED("use ecs_get_mut_w_id")
+ECS_DEPRECATED("use ecs_get_mut_id")
 FLECS_API
 void* ecs_get_mut_w_entity(
     ecs_world_t *world,
@@ -3388,7 +3388,15 @@ void* ecs_get_mut_w_entity(
     ecs_id_t id,
     bool *is_added); 
 
-ECS_DEPRECATED("use ecs_modified_w_id")
+ECS_DEPRECATED("use ecs_get_mut_id")
+FLECS_API
+void* ecs_get_mut_w_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    bool *is_added);     
+
+ECS_DEPRECATED("use ecs_modified_id")
 FLECS_API 
 void ecs_modified_w_entity(
     ecs_world_t *world,
@@ -4736,15 +4744,15 @@ ecs_id_t ecs_make_pair(
         sizeof(object), &(object)__VA_ARGS__)
 
 #define ecs_get_mut_pair(world, subject, relation, object, is_added)\
-    (ECS_CAST(relation*, ecs_get_mut_w_id(world, subject,\
+    (ECS_CAST(relation*, ecs_get_mut_id(world, subject,\
         ecs_pair(ecs_id(relation), object), is_added)))
 
 #define ecs_get_mut_pair_object(world, subject, relation, object, is_added)\
-    (ECS_CAST(object*, ecs_get_mut_w_id(world, subject,\
+    (ECS_CAST(object*, ecs_get_mut_id(world, subject,\
         ecs_pair(relation, ecs_id(object)), is_added)))
 
 #define ecs_modified_pair(world, subject, relation, object)\
-    ecs_modified_w_id(world, subject, ecs_pair(relation, object))
+    ecs_modified_id(world, subject, ecs_pair(relation, object))
 
 #endif
 
@@ -4947,23 +4955,54 @@ ecs_entity_t ecs_get_case(
  * @return The component pointer.
  */
 FLECS_API
-void* ecs_get_mut_w_id(
+void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
     bool *is_added); 
 
 /** Get a mutable pointer to a component.
- * Same as ecs_get_mut_w_id but accepts a component typename.
+ * Same as ecs_get_mut_id but accepts a component typename.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param T The component type to obtain.
+ * @param is_added Out parameter that returns true if the component was added.
+ * @return The component pointer.
+ */
+#define ecs_get_mut(world, entity, T, is_added)\
+    (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T), is_added)))
+
+/** Emplace a component.
+ * Emplace is similar to get_mut except that the component constructor is not
+ * invoked for the returned pointer, allowing the component to be "constructed"
+ * directly in the storage.
+ *
+ * Emplace can only be used if the entity does not yet have the component. If
+ * the entity has the component, the operation will fail.
  *
  * @param world The world.
  * @param entity The entity.
  * @param id The component to obtain.
- * @param is_added Out parameter that returns true if the component was added.
- * @return The component pointer.
+ * @return The (uninitialized) component pointer.
  */
-#define ecs_get_mut(world, entity, component, is_added)\
-    (ECS_CAST(component*, ecs_get_mut_w_id(world, entity, ecs_id(component), is_added)))
+FLECS_API
+void* ecs_emplace_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id); 
+
+/** Emplace a component.
+ * Same as ecs_emplace_id but accepts a typename.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The component to obtain.
+ * @return The (uninitialized) component pointer.
+ */
+#define ecs_emplace(world, entity, T)\
+    (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
+
 
 /** Signal that a component has been modified.
  * This operation allows an application to signal to Flecs that a component has
@@ -4976,20 +5015,20 @@ void* ecs_get_mut_w_id(
  * @param component The entity id of the component that was modified.
  */
 FLECS_API 
-void ecs_modified_w_id(
+void ecs_modified_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
 
 /** Signal that a component has been modified.
- * Same as ecs_modified_w_id but accepts a component typename.
+ * Same as ecs_modified_id but accepts a component typename.
  *
  * @param world The world.
  * @param entity The entity.
  * @param id The component that was modified.
  */
 #define ecs_modified(world, entity, component)\
-    ecs_modified_w_id(world, entity, ecs_id(component))
+    ecs_modified_id(world, entity, ecs_id(component))
 
 /** Set the value of a component.
  * This operation allows an application to set the value of a component. The
@@ -10814,11 +10853,10 @@ template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(
-        ecs_get_mut_w_id(world, entity, id, NULL));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, NULL));
     dst = std::move(value);
 
-    ecs_modified_w_id(world, entity, id);
+    ecs_modified_id(world, entity, id);
 }
 
 // set(const T&), T = constructible
@@ -10826,11 +10864,10 @@ template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(
-        ecs_get_mut_w_id(world, entity, id, NULL));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, NULL));
     dst = value;
 
-    ecs_modified_w_id(world, entity, id);
+    ecs_modified_id(world, entity, id);
 }
 
 // set(T&&), T = not constructible
@@ -10839,15 +10876,14 @@ inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     bool is_new = false;
-    T& dst = *static_cast<T*>(
-        ecs_get_mut_w_id(world, entity, id, &is_new));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
     if (is_new) {
         FLECS_PLACEMENT_NEW(&dst, T(std::move(value)));
     } else {
         dst = std::move(value);
     }
 
-    ecs_modified_w_id(world, entity, id);
+    ecs_modified_id(world, entity, id);
 }
 
 // set(const T&), T = not constructible
@@ -10856,15 +10892,29 @@ inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     bool is_new = false;
-    T& dst = *static_cast<T*>(
-        ecs_get_mut_w_id(world, entity, id, &is_new));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
     if (is_new) {
         FLECS_PLACEMENT_NEW(&dst, T(std::move(value)));
     } else {
         dst = value;
     }
 
-    ecs_modified_w_id(world, entity, id);
+    ecs_modified_id(world, entity, id);
+}
+
+// emplace
+template <typename T, typename ... Args>
+inline void emplace(world_t *world, entity_t entity, Args&&... args) {
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+
+    id_t id = _::cpp_type<T>::id(world);
+    bool is_new = false;
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
+    ecs_assert(is_new == true, ECS_INVALID_PARAMETER, NULL);
+    
+    FLECS_PLACEMENT_NEW(&dst, T(std::forward<Args>(args)...));
+
+    ecs_modified_id(world, entity, id);    
 }
 
 // set(T&&)
@@ -13133,6 +13183,23 @@ public:
     template <typename Func, if_t< is_callable<Func>::value > = 0>
     const Base& set(const Func& func) const;
 
+    /** Emplace component.
+     * Emplace constructs a component in the storage, which prevents calling the
+     * destructor on the object passed into the function.
+     *
+     * Emplace may only be called for components that have not yet been added
+     * to the entity.
+     *
+     * @tparam T the component to emplace
+     * @param args The arguments to pass to the constructor of T
+     */
+    template <typename T, typename ... Args>
+    const Base& emplace(Args&&... args) {
+        flecs::emplace<T>(this->base_world(), this->base_id(), 
+            std::forward<Args>(args)...);
+        return *this;
+    }
+
     /** Entities created in function will have the current entity.
      *
      * @param func The function to call.
@@ -14549,7 +14616,7 @@ public:
         /* Get pointers w/get_mut */
         size_t i = 0;
         DummyArray dummy ({
-            (ptrs[i ++] = ecs_get_mut_w_id(world, e, w.id<Args>(), NULL), 0)...
+            (ptrs[i ++] = ecs_get_mut_id(world, e, w.id<Args>(), NULL), 0)...
         });
 
         return true;
@@ -14645,7 +14712,7 @@ public:
 
         // Call modified on each component
         DummyArray dummy_after ({
-            ( ecs_modified_w_id(world, id, w.id<Args>()), 0)...
+            ( ecs_modified_id(world, id, w.id<Args>()), 0)...
         });
         (void)dummy_after;
 
@@ -15951,7 +16018,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // Set module singleton component
 
     T* module_ptr = static_cast<T*>(
-        ecs_get_mut_w_id(world, m, 
+        ecs_get_mut_id(world, m, 
             _::cpp_type<T>::id_explicit(world, nullptr, false), NULL));
 
     *module_ptr = std::move(*module_data);

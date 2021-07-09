@@ -440,7 +440,7 @@ public:
         /* Get pointers w/get_mut */
         size_t i = 0;
         DummyArray dummy ({
-            (ptrs[i ++] = ecs_get_mut_w_id(world, e, w.id<Args>(), NULL), 0)...
+            (ptrs[i ++] = ecs_get_mut_id(world, e, w.id<Args>(), NULL), 0)...
         });
 
         return true;
@@ -536,7 +536,7 @@ public:
 
         // Call modified on each component
         DummyArray dummy_after ({
-            ( ecs_modified_w_id(world, id, w.id<Args>()), 0)...
+            ( ecs_modified_id(world, id, w.id<Args>()), 0)...
         });
         (void)dummy_after;
 

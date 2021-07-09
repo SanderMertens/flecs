@@ -9,11 +9,10 @@ template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(
-        ecs_get_mut_w_id(world, entity, id, NULL));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, NULL));
     dst = std::move(value);
 
-    ecs_modified_w_id(world, entity, id);
+    ecs_modified_id(world, entity, id);
 }
 
 // set(const T&), T = constructible
@@ -21,11 +20,10 @@ template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(
-        ecs_get_mut_w_id(world, entity, id, NULL));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, NULL));
     dst = value;
 
-    ecs_modified_w_id(world, entity, id);
+    ecs_modified_id(world, entity, id);
 }
 
 // set(T&&), T = not constructible
@@ -34,15 +32,14 @@ inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     bool is_new = false;
-    T& dst = *static_cast<T*>(
-        ecs_get_mut_w_id(world, entity, id, &is_new));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
     if (is_new) {
         FLECS_PLACEMENT_NEW(&dst, T(std::move(value)));
     } else {
         dst = std::move(value);
     }
 
-    ecs_modified_w_id(world, entity, id);
+    ecs_modified_id(world, entity, id);
 }
 
 // set(const T&), T = not constructible
@@ -51,15 +48,27 @@ inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     bool is_new = false;
-    T& dst = *static_cast<T*>(
-        ecs_get_mut_w_id(world, entity, id, &is_new));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
     if (is_new) {
         FLECS_PLACEMENT_NEW(&dst, T(std::move(value)));
     } else {
         dst = value;
     }
 
-    ecs_modified_w_id(world, entity, id);
+    ecs_modified_id(world, entity, id);
+}
+
+// emplace
+template <typename T, typename ... Args>
+inline void emplace(world_t *world, entity_t entity, Args&&... args) {
+    id_t id = _::cpp_type<T>::id(world);
+
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
+    
+    FLECS_PLACEMENT_NEW(&dst, T{std::forward<Args>(args)...});
+
+    ecs_modified_id(world, entity, id);    
 }
 
 // set(T&&)
@@ -592,8 +601,15 @@ public:
 
     template <typename T>
     void set(T&& value) const {
-        flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), std::forward<T&&>(value));
-    }    
+        flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), 
+            std::forward<T&&>(value));
+    } 
+
+    template <typename T, typename ... Args>
+    void emplace(Args&&... args) const {
+        flecs::emplace<T>(m_world, _::cpp_type<T>::id(m_world), 
+            std::forward<Args>(args)...);
+    }        
 
     /** Get mut singleton component.
      */
