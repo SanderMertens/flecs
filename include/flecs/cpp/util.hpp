@@ -156,6 +156,42 @@ public:
     string& operator=(const string& str) = delete;
     string(const string& str) = delete;
 
+    bool operator==(const flecs::string& str) const {
+        if (str.m_const_str == m_const_str) {
+            return true;
+        }
+
+        if (!m_const_str || !str.m_const_str) {
+            return false;
+        }
+
+        if (str.m_length != m_length) {
+            return false;
+        }
+
+        return ecs_os_strcmp(str, m_const_str) == 0;
+    }
+
+    bool operator!=(const flecs::string& str) const {
+        return !(*this == str);
+    }    
+
+    bool operator==(const char *str) const {
+        if (m_const_str == str) {
+            return true;
+        }
+
+        if (!m_const_str || !str) {
+            return false;
+        }
+
+        return ecs_os_strcmp(str, m_const_str) == 0;
+    }
+
+    bool operator!=(const char *str) const {
+        return !(*this == str);
+    }    
+
     const char* c_str() const {
         return m_const_str;
     }

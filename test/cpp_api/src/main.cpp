@@ -560,6 +560,17 @@ void Singleton_singleton_system(void);
 void Singleton_get_singleton(void);
 void Singleton_type_id_from_world(void);
 
+// Testsuite 'Misc'
+void Misc_setup(void);
+void Misc_string_compare_w_char_ptr(void);
+void Misc_string_compare_w_char_ptr_length_diff(void);
+void Misc_string_compare_w_string(void);
+void Misc_string_view_compare_w_char_ptr(void);
+void Misc_string_view_compare_w_string(void);
+void Misc_string_compare_nullptr(void);
+void Misc_nullptr_string_compare(void);
+void Misc_nullptr_string_compare_nullptr(void);
+
 bake_test_case Entity_testcases[] = {
     {
         "new",
@@ -2673,6 +2684,41 @@ bake_test_case Singleton_testcases[] = {
     }
 };
 
+bake_test_case Misc_testcases[] = {
+    {
+        "string_compare_w_char_ptr",
+        Misc_string_compare_w_char_ptr
+    },
+    {
+        "string_compare_w_char_ptr_length_diff",
+        Misc_string_compare_w_char_ptr_length_diff
+    },
+    {
+        "string_compare_w_string",
+        Misc_string_compare_w_string
+    },
+    {
+        "string_view_compare_w_char_ptr",
+        Misc_string_view_compare_w_char_ptr
+    },
+    {
+        "string_view_compare_w_string",
+        Misc_string_view_compare_w_string
+    },
+    {
+        "string_compare_nullptr",
+        Misc_string_compare_nullptr
+    },
+    {
+        "nullptr_string_compare",
+        Misc_nullptr_string_compare
+    },
+    {
+        "nullptr_string_compare_nullptr",
+        Misc_nullptr_string_compare_nullptr
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -2806,10 +2852,17 @@ static bake_test_suite suites[] = {
         NULL,
         11,
         Singleton_testcases
+    },
+    {
+        "Misc",
+        Misc_setup,
+        NULL,
+        8,
+        Misc_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 19);
+    return bake_test_run("cpp_api", argc, argv, suites, 20);
 }
