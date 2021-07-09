@@ -532,6 +532,7 @@
         }, {
             "id": "World",
             "testcases": [
+                "builtin_components",
                 "multi_world_empty",
                 "multi_world_component",
                 "multi_world_component_namespace",

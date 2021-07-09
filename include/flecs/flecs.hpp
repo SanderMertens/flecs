@@ -30,6 +30,7 @@ using filter_t = ecs_filter_t;
 using query_t = ecs_query_t;
 using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
+using ComponentLifecycle = EcsComponentLifecycle;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
@@ -101,7 +102,6 @@ class cpp_type;
 
 /* Builtin components */
 using Component = EcsComponent;
-using ComponentLifecycle = EcsComponentLifecycle;
 using Type = EcsType;
 using Name = EcsName;
 using Timer = EcsTimer;
@@ -109,6 +109,7 @@ using RateFilter = EcsRateFilter;
 using TickSource = EcsTickSource;
 using Query = EcsQuery;
 using Trigger = EcsTrigger;
+using Observer = EcsObserver;
 
 /* Builtin opaque components */
 static const flecs::entity_t System = ecs_id(EcsSystem);

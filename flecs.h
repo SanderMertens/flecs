@@ -9135,6 +9135,7 @@ using filter_t = ecs_filter_t;
 using query_t = ecs_query_t;
 using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
+using ComponentLifecycle = EcsComponentLifecycle;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
@@ -9206,7 +9207,6 @@ class cpp_type;
 
 /* Builtin components */
 using Component = EcsComponent;
-using ComponentLifecycle = EcsComponentLifecycle;
 using Type = EcsType;
 using Name = EcsName;
 using Timer = EcsTimer;
@@ -9214,6 +9214,7 @@ using RateFilter = EcsRateFilter;
 using TickSource = EcsTickSource;
 using Query = EcsQuery;
 using Trigger = EcsTrigger;
+using Observer = EcsObserver;
 
 /* Builtin opaque components */
 static const flecs::entity_t System = ecs_id(EcsSystem);
@@ -17336,6 +17337,13 @@ inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");
     pod_component<Type>("flecs::core::Type");
     pod_component<Name>("flecs::core::Name");
+    pod_component<Trigger>("flecs::core::Trigger");
+    pod_component<Observer>("flecs::core::Observer");
+    pod_component<Query>("flecs::core::Query");
+
+    pod_component<TickSource>("flecs::system::TickSource");
+    pod_component<RateFilter>("flecs::timer::RateFilter");
+    pod_component<Timer>("flecs::timer::Timer");
 }
 
 template <typename T>

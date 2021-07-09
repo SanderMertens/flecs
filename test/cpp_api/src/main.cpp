@@ -491,6 +491,7 @@ void WorldFactory_module(void);
 void WorldFactory_module_w_name(void);
 
 // Testsuite 'World'
+void World_builtin_components(void);
 void World_multi_world_empty(void);
 void World_multi_world_component(void);
 void World_multi_world_component_namespace(void);
@@ -2386,6 +2387,10 @@ bake_test_case WorldFactory_testcases[] = {
 
 bake_test_case World_testcases[] = {
     {
+        "builtin_components",
+        World_builtin_components
+    },
+    {
         "multi_world_empty",
         World_multi_world_empty
     },
@@ -2702,7 +2707,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        37,
+        38,
         World_testcases
     },
     {

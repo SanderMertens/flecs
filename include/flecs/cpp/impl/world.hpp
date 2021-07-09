@@ -106,6 +106,13 @@ inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");
     pod_component<Type>("flecs::core::Type");
     pod_component<Name>("flecs::core::Name");
+    pod_component<Trigger>("flecs::core::Trigger");
+    pod_component<Observer>("flecs::core::Observer");
+    pod_component<Query>("flecs::core::Query");
+
+    pod_component<TickSource>("flecs::system::TickSource");
+    pod_component<RateFilter>("flecs::timer::RateFilter");
+    pod_component<Timer>("flecs::timer::Timer");
 }
 
 template <typename T>
