@@ -16,6 +16,8 @@ typedef struct EcsSystem {
     FLECS_FLOAT time_spent;         /* Time spent on running system */
     FLECS_FLOAT time_passed;        /* Time passed since last invocation */
 
+    ecs_entity_t self;              /* Entity associated with system */
+
     void *ctx;                      /* Userdata for system */
     void *status_ctx;               /* User data for status action */ 
     void *binding_ctx;              /* Optional language binding context */

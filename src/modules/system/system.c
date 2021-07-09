@@ -305,13 +305,14 @@ ecs_entity_t ecs_run_intern(
     if (measure_time) {
         ecs_os_get_time(&time_start);
     }
-    
+
     ecs_defer_begin(stage->thread_ctx);
 
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
     it.world = stage->thread_ctx;
     it.system = system;
+    it.self = system_data->self;
     it.delta_time = delta_time;
     it.delta_system_time = time_elapsed;
     it.world_time = world->stats.world_time_total;
@@ -625,6 +626,7 @@ ecs_entity_t ecs_system_init(
         system->action = desc->callback;
         system->status_action = desc->status_callback;
 
+        system->self = desc->self;
         system->ctx = desc->ctx;
         system->status_ctx = desc->status_ctx;
         system->binding_ctx = desc->binding_ctx;

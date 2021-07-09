@@ -79,6 +79,7 @@ void observer_callback(ecs_iter_t *it) {
         populate_columns(world, o, table, data, ids, columns, types);
 
         user_it.system = o->entity;
+        user_it.self = o->self;
         user_it.ctx = o->ctx;
         user_it.column_count = o->filter.term_count,
         user_it.table_columns = data->columns,
@@ -145,6 +146,7 @@ ecs_entity_t ecs_observer_init(
         }
 
         observer->action = desc->callback;
+        observer->self = desc->self;
         observer->ctx = desc->ctx;
         observer->binding_ctx = desc->binding_ctx;
         observer->ctx_free = desc->ctx_free;

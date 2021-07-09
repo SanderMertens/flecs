@@ -526,3 +526,27 @@ void Observer_2_terms_on_remove_on_delete() {
 
     ecs_fini(world);
 }
+
+void Observer_observer_w_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t self = ecs_new_id(world);
+
+    Probe ctx = {0};
+    ecs_entity_t system = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{Tag}},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .self = self
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, Tag);
+
+    test_int(ctx.count, 1);
+    test_assert(ctx.system == system);
+    test_assert(ctx.self == self);
+}

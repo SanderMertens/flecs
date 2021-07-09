@@ -262,6 +262,7 @@ void System_default_ctor(void);
 void System_test_auto_defer_each(void);
 void System_test_auto_defer_iter(void);
 void System_custom_pipeline(void);
+void System_system_w_self(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -269,6 +270,7 @@ void Trigger_on_remove(void);
 void Trigger_on_add_tag_action(void);
 void Trigger_on_add_tag_iter(void);
 void Trigger_on_add_tag_each(void);
+void Trigger_trigger_w_self(void);
 
 // Testsuite 'Query'
 void Query_action(void);
@@ -395,6 +397,7 @@ void Observer_2_terms_on_add(void);
 void Observer_2_terms_on_remove(void);
 void Observer_2_terms_on_set(void);
 void Observer_2_terms_un_set(void);
+void Observer_observer_w_self(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -1544,6 +1547,10 @@ bake_test_case System_testcases[] = {
     {
         "custom_pipeline",
         System_custom_pipeline
+    },
+    {
+        "system_w_self",
+        System_system_w_self
     }
 };
 
@@ -1567,6 +1574,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_add_tag_each",
         Trigger_on_add_tag_each
+    },
+    {
+        "trigger_w_self",
+        Trigger_trigger_w_self
     }
 };
 
@@ -2051,6 +2062,10 @@ bake_test_case Observer_testcases[] = {
     {
         "2_terms_un_set",
         Observer_2_terms_un_set
+    },
+    {
+        "observer_w_self",
+        Observer_observer_w_self
     }
 };
 
@@ -2698,14 +2713,14 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        41,
+        42,
         System_testcases
     },
     {
         "Trigger",
         NULL,
         NULL,
-        5,
+        6,
         Trigger_testcases
     },
     {
@@ -2733,7 +2748,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        4,
+        5,
         Observer_testcases
     },
     {

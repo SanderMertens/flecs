@@ -278,7 +278,8 @@
                 "default_ctor",
                 "test_auto_defer_each",
                 "test_auto_defer_iter",
-                "custom_pipeline"
+                "custom_pipeline",
+                "system_w_self"
             ]
         }, {
             "id": "Trigger",
@@ -287,7 +288,8 @@
                 "on_remove",
                 "on_add_tag_action",
                 "on_add_tag_iter",
-                "on_add_tag_each"
+                "on_add_tag_each",
+                "trigger_w_self"
             ]
         }, {
             "id": "Query",
@@ -421,7 +423,8 @@
                 "2_terms_on_add",
                 "2_terms_on_remove",
                 "2_terms_on_set",
-                "2_terms_un_set"
+                "2_terms_un_set",
+                "observer_w_self"
             ]
         }, {
             "id": "ComponentLifecycle",

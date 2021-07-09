@@ -6,6 +6,10 @@ inline flecs::entity iter::system() const {
     return flecs::entity(m_iter->world, m_iter->system);
 }
 
+ inline flecs::entity iter::self() const {
+    return flecs::entity(m_iter->world, m_iter->self);
+}
+
 inline flecs::world iter::world() const {
     return flecs::world(m_iter->world);
 }

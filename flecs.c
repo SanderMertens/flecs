@@ -11554,6 +11554,8 @@ typedef struct EcsSystem {
     FLECS_FLOAT time_spent;         /* Time spent on running system */
     FLECS_FLOAT time_passed;        /* Time passed since last invocation */
 
+    ecs_entity_t self;              /* Entity associated with system */
+
     void *ctx;                      /* Userdata for system */
     void *status_ctx;               /* User data for status action */ 
     void *binding_ctx;              /* Optional language binding context */
@@ -17510,6 +17512,7 @@ void observer_callback(ecs_iter_t *it) {
         populate_columns(world, o, table, data, ids, columns, types);
 
         user_it.system = o->entity;
+        user_it.self = o->self;
         user_it.ctx = o->ctx;
         user_it.column_count = o->filter.term_count,
         user_it.table_columns = data->columns,
@@ -17576,6 +17579,7 @@ ecs_entity_t ecs_observer_init(
         }
 
         observer->action = desc->callback;
+        observer->self = desc->self;
         observer->ctx = desc->ctx;
         observer->binding_ctx = desc->binding_ctx;
         observer->ctx_free = desc->ctx_free;
@@ -24044,6 +24048,7 @@ void notify_trigger_set(
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
         it.system = t->entity;
+        it.self = t->self;
         it.ctx = t->ctx;
         it.binding_ctx = t->binding_ctx;
         t->action(&it);                   
@@ -24153,6 +24158,7 @@ ecs_entity_t ecs_trigger_init(
         ecs_os_memcpy(trigger->events, desc->events, 
             trigger->event_count * ECS_SIZEOF(ecs_entity_t));
         trigger->entity = entity;
+        trigger->self = desc->self;
 
         comp->trigger = trigger;
 
@@ -26181,13 +26187,14 @@ ecs_entity_t ecs_run_intern(
     if (measure_time) {
         ecs_os_get_time(&time_start);
     }
-    
+
     ecs_defer_begin(stage->thread_ctx);
 
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
     it.world = stage->thread_ctx;
     it.system = system;
+    it.self = system_data->self;
     it.delta_time = delta_time;
     it.delta_system_time = time_elapsed;
     it.world_time = world->stats.world_time_total;
@@ -26501,6 +26508,7 @@ ecs_entity_t ecs_system_init(
         system->action = desc->callback;
         system->status_action = desc->status_callback;
 
+        system->self = desc->self;
         system->ctx = desc->ctx;
         system->status_ctx = desc->status_ctx;
         system->binding_ctx = desc->binding_ctx;

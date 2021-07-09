@@ -722,7 +722,6 @@
             "testcases": [
                 "set",
                 "set_ptr",
-                "emplace",
                 "system_w_singleton",
                 "system_w_singleton_no_match",
                 "system_w_not_singleton",
@@ -918,7 +917,8 @@
                 "get_query",
                 "set_get_context",
                 "set_get_binding_context",
-                "deactivate_after_disable"
+                "deactivate_after_disable",
+                "system_w_self"
             ]
         }, {
             "id": "Sorting",
@@ -1106,7 +1106,8 @@
                "trigger_w_named_entity",
                "on_remove_tree",
                "set_get_context",
-               "set_get_binding_context"
+               "set_get_binding_context",
+               "trigger_w_self"
            ]
         }, {
             "id": "Observer",
@@ -1127,7 +1128,8 @@
                 "3_terms_2_or_on_remove",
                 "2_terms_w_from_entity_on_add",
                 "2_terms_on_remove_on_clear",
-                "2_terms_on_remove_on_delete"
+                "2_terms_on_remove_on_delete",
+                "observer_w_self"
             ]                
         }, {
             "id": "TriggerOnAdd",

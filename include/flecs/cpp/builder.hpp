@@ -691,11 +691,17 @@ public:
         return *this;
     }
 
+    /** Associate system with entity */
+    Base& self(flecs::entity self) {
+        m_desc->self = self;
+        return *this;
+    }
+
     /** Set system context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;
         return *this;
-    }    
+    }
 
     ECS_DEPRECATED("use interval")
     Base& period(FLECS_FLOAT period) {
@@ -748,6 +754,12 @@ public:
      */
     Base& event(entity_t kind) {
         m_desc->events[m_event_count ++] = kind;
+        return *this;
+    }
+
+    /** Associate observer with entity */
+    Base& self(flecs::entity self) {
+        m_desc->self = self;
         return *this;
     }
 
@@ -887,6 +899,7 @@ private:
             desc.entity.entity = m_desc.entity.entity;
             desc.events[0] = kind;
             desc.callback = Invoker::run;
+            desc.self = m_desc.self;
             desc.ctx = m_desc.ctx;
             desc.binding_ctx = ctx;
             desc.binding_ctx_free = reinterpret_cast<
@@ -896,6 +909,7 @@ private:
         } else {
             ecs_system_desc_t desc = m_desc;
             desc.callback = Invoker::run;
+            desc.self = m_desc.self;
             desc.query.filter.substitute_default = is_each;
             desc.binding_ctx = ctx;
             desc.binding_ctx_free = reinterpret_cast<

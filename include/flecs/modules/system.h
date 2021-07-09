@@ -94,6 +94,9 @@ typedef struct ecs_system_desc_t {
     /* System status callback, invoked when system status changes */
     ecs_system_status_action_t status_callback;
 
+    /* Associate with entity */
+    ecs_entity_t self;    
+
     /* Context to be passed to callback (as ecs_iter_t::param) */
     void *ctx;
 

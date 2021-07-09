@@ -191,3 +191,4 @@ void Singleton_singleton_system() {
 
     ecs_fini(world);    
 }
+

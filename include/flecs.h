@@ -292,7 +292,8 @@ struct ecs_trigger_t {
     ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
     
-    ecs_entity_t entity;        /* Entity associated with trigger */
+    ecs_entity_t entity;        /* Trigger entity */
+    ecs_entity_t self;          /* Entity associated with observer */
 
     uint64_t id;                /* Internal id */
 };
@@ -317,7 +318,8 @@ struct ecs_observer_t {
     ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
     
-    ecs_entity_t entity;        /* Entity associated with observer */
+    ecs_entity_t entity;        /* Observer entity */
+    ecs_entity_t self;          /* Entity associated with observer */
 
     uint64_t id;                /* Internal id */    
 };
@@ -466,6 +468,9 @@ typedef struct ecs_trigger_desc_t {
     /* Callback to invoke on an event */
     ecs_iter_action_t callback;
 
+    /* Associate with entity */
+    ecs_entity_t self;
+
     /* User context to pass to callback */
     void *ctx;
 
@@ -493,6 +498,9 @@ typedef struct ecs_observer_desc_t {
 
     /* Callback to invoke on an event */
     ecs_iter_action_t callback;
+
+    /* Associate with entity */
+    ecs_entity_t self;
 
     /* User context to pass to callback */
     void *ctx;

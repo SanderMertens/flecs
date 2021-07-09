@@ -2034,7 +2034,8 @@ struct ecs_trigger_t {
     ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
     
-    ecs_entity_t entity;        /* Entity associated with trigger */
+    ecs_entity_t entity;        /* Trigger entity */
+    ecs_entity_t self;          /* Entity associated with observer */
 
     uint64_t id;                /* Internal id */
 };
@@ -2059,7 +2060,8 @@ struct ecs_observer_t {
     ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
     
-    ecs_entity_t entity;        /* Entity associated with observer */
+    ecs_entity_t entity;        /* Observer entity */
+    ecs_entity_t self;          /* Entity associated with observer */
 
     uint64_t id;                /* Internal id */    
 };
@@ -2209,6 +2211,7 @@ struct ecs_iter_t {
     ecs_world_t *real_world;      /**< Actual world. This differs from world when using threads.  */
     ecs_entity_t system;          /**< The current system (if applicable) */
     ecs_entity_t event;           /**< The event (if applicable) */
+    ecs_entity_t self;            /**< Self entity (if set) */
     ecs_query_iter_kind_t kind;
 
     ecs_iter_table_t *table;      /**< Table related data */
@@ -2906,6 +2909,9 @@ typedef struct ecs_trigger_desc_t {
     /* Callback to invoke on an event */
     ecs_iter_action_t callback;
 
+    /* Associate with entity */
+    ecs_entity_t self;
+
     /* User context to pass to callback */
     void *ctx;
 
@@ -2933,6 +2939,9 @@ typedef struct ecs_observer_desc_t {
 
     /* Callback to invoke on an event */
     ecs_iter_action_t callback;
+
+    /* Associate with entity */
+    ecs_entity_t self;
 
     /* User context to pass to callback */
     void *ctx;
@@ -7234,6 +7243,9 @@ typedef struct ecs_system_desc_t {
     /* System status callback, invoked when system status changes */
     ecs_system_status_action_t status_callback;
 
+    /* Associate with entity */
+    ecs_entity_t self;    
+
     /* Context to be passed to callback (as ecs_iter_t::param) */
     void *ctx;
 
@@ -10605,6 +10617,11 @@ public:
     bool has_module() const {
         return ecs_table_has_module(ecs_iter_table(m_iter));
     }
+
+    /** Access self.
+     * 'self' is an entity that can be associated with a trigger, observer or
+     * system when they are created. */
+    flecs::entity self() const;
 
     /** Access ctx. 
      * ctx contains the context pointer assigned to a system.
@@ -15489,11 +15506,17 @@ public:
         return *this;
     }
 
+    /** Associate system with entity */
+    Base& self(flecs::entity self) {
+        m_desc->self = self;
+        return *this;
+    }
+
     /** Set system context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;
         return *this;
-    }    
+    }
 
     ECS_DEPRECATED("use interval")
     Base& period(FLECS_FLOAT period) {
@@ -15546,6 +15569,12 @@ public:
      */
     Base& event(entity_t kind) {
         m_desc->events[m_event_count ++] = kind;
+        return *this;
+    }
+
+    /** Associate observer with entity */
+    Base& self(flecs::entity self) {
+        m_desc->self = self;
         return *this;
     }
 
@@ -15685,6 +15714,7 @@ private:
             desc.entity.entity = m_desc.entity.entity;
             desc.events[0] = kind;
             desc.callback = Invoker::run;
+            desc.self = m_desc.self;
             desc.ctx = m_desc.ctx;
             desc.binding_ctx = ctx;
             desc.binding_ctx_free = reinterpret_cast<
@@ -15694,6 +15724,7 @@ private:
         } else {
             ecs_system_desc_t desc = m_desc;
             desc.callback = Invoker::run;
+            desc.self = m_desc.self;
             desc.query.filter.substitute_default = is_each;
             desc.binding_ctx = ctx;
             desc.binding_ctx_free = reinterpret_cast<
@@ -17280,6 +17311,10 @@ namespace flecs
 
 inline flecs::entity iter::system() const {
     return flecs::entity(m_iter->world, m_iter->system);
+}
+
+ inline flecs::entity iter::self() const {
+    return flecs::entity(m_iter->world, m_iter->self);
 }
 
 inline flecs::world iter::world() const {

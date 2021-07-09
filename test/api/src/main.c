@@ -859,6 +859,7 @@ void SystemMisc_get_query(void);
 void SystemMisc_set_get_context(void);
 void SystemMisc_set_get_binding_context(void);
 void SystemMisc_deactivate_after_disable(void);
+void SystemMisc_system_w_self(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -1039,6 +1040,7 @@ void Trigger_trigger_w_named_entity(void);
 void Trigger_on_remove_tree(void);
 void Trigger_set_get_context(void);
 void Trigger_set_get_binding_context(void);
+void Trigger_trigger_w_self(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -1058,6 +1060,7 @@ void Observer_3_terms_2_or_on_remove(void);
 void Observer_2_terms_w_from_entity_on_add(void);
 void Observer_2_terms_on_remove_on_clear(void);
 void Observer_2_terms_on_remove_on_delete(void);
+void Observer_observer_w_self(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -5138,6 +5141,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "deactivate_after_disable",
         SystemMisc_deactivate_after_disable
+    },
+    {
+        "system_w_self",
+        SystemMisc_system_w_self
     }
 };
 
@@ -5838,6 +5845,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "set_get_binding_context",
         Trigger_set_get_binding_context
+    },
+    {
+        "trigger_w_self",
+        Trigger_trigger_w_self
     }
 };
 
@@ -5909,6 +5920,10 @@ bake_test_case Observer_testcases[] = {
     {
         "2_terms_on_remove_on_delete",
         Observer_2_terms_on_remove_on_delete
+    },
+    {
+        "observer_w_self",
+        Observer_observer_w_self
     }
 };
 
@@ -9274,7 +9289,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         SystemMisc_setup,
         NULL,
-        86,
+        87,
         SystemMisc_testcases
     },
     {
@@ -9302,14 +9317,14 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        46,
+        47,
         Trigger_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        17,
+        18,
         Observer_testcases
     },
     {
