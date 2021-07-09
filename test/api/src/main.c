@@ -1873,6 +1873,7 @@ void DirectAccess_get_records_empty_table(void);
 void DirectAccess_get_column_empty_table(void);
 void DirectAccess_delete_column_empty_table(void);
 void DirectAccess_get_record_column_empty_table(void);
+void DirectAccess_has_module(void);
 
 // Testsuite 'Internals'
 void Internals_setup(void);
@@ -8965,6 +8966,10 @@ bake_test_case DirectAccess_testcases[] = {
     {
         "get_record_column_empty_table",
         DirectAccess_get_record_column_empty_table
+    },
+    {
+        "has_module",
+        DirectAccess_has_module
     }
 };
 
@@ -9489,7 +9494,7 @@ static bake_test_suite suites[] = {
         "DirectAccess",
         NULL,
         NULL,
-        23,
+        24,
         DirectAccess_testcases
     },
     {

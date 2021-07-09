@@ -645,3 +645,41 @@ void DirectAccess_get_record_column_empty_table() {
 
     ecs_fini(world);
 }
+
+void DirectAccess_has_module() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_entity_t m = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .add = {EcsModule}
+    });
+
+    ecs_entity_t m_e = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .add = {ecs_pair(EcsChildOf, m)}
+    });
+
+    ecs_record_t *r = ecs_record_find(world, e);
+    test_assert(r != NULL);
+    test_assert(r->table != NULL);
+    test_assert(ecs_table_has_module(r->table) == false);
+
+    r = ecs_record_find(world, ecs_id(Position));
+    test_assert(r != NULL);
+    test_assert(r->table != NULL);
+    test_assert(ecs_table_has_module(r->table) == false);
+
+    r = ecs_record_find(world, m);
+    test_assert(r != NULL);
+    test_assert(r->table != NULL);
+    test_assert(ecs_table_has_module(r->table) == true);
+
+    r = ecs_record_find(world, m_e);
+    test_assert(r != NULL);
+    test_assert(r->table != NULL);
+    test_assert(ecs_table_has_module(r->table) == true);
+
+    ecs_fini(world);
+}

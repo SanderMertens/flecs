@@ -2201,3 +2201,9 @@ void ecs_table_unlock(
         ecs_assert(table->lock >= 0, ECS_INVALID_OPERATION, NULL);
     }
 }
+
+bool ecs_table_has_module(
+    ecs_table_t *table)
+{
+    return table->flags & EcsTableHasModule;
+}

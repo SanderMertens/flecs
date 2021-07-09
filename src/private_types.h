@@ -123,7 +123,7 @@ typedef struct ecs_table_leaf_t {
 #define EcsTableHasBuiltins         1u    /**< Does table have builtin components */
 #define EcsTableIsPrefab            2u    /**< Does the table store prefabs */
 #define EcsTableHasBase             4u    /**< Does the table type has IsA */
-#define EcsTableHasParent           8u    /**< Does the table type has ChildOf */
+#define EcsTableHasModule           8u    /**< Does the table have module data */
 #define EcsTableHasComponentData    16u   /**< Does the table have component data */
 #define EcsTableHasXor              32u   /**< Does the table type has XOR */
 #define EcsTableIsDisabled          64u   /**< Does the table type has EcsDisabled */

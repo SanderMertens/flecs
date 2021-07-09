@@ -267,6 +267,11 @@ public:
      */
     flecs::type type() const;
 
+    /** Is current type a module or does it contain module contents? */
+    bool has_module() const {
+        return ecs_table_has_module(ecs_iter_table(m_iter));
+    }
+
     /** Access ctx. 
      * ctx contains the context pointer assigned to a system.
      */

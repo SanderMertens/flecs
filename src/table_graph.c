@@ -234,8 +234,13 @@ void init_edges(
          * flags. These allow us to quickly determine if the table contains
          * data that needs to be handled in a special way, like prefabs or 
          * containers */
-        if (e <= EcsLastInternalComponentId || e == EcsModule) {
+        if (e <= EcsLastInternalComponentId) {
             table->flags |= EcsTableHasBuiltins;
+        }
+
+        if (e == EcsModule) {
+            table->flags |= EcsTableHasBuiltins;
+            table->flags |= EcsTableHasModule;
         }
 
         if (e == EcsPrefab) {
@@ -275,10 +280,10 @@ void init_edges(
                 ecs_has_id(world, obj, EcsModule)) 
             {
                 table->flags |= EcsTableHasBuiltins;
+                table->flags |= EcsTableHasModule;
             }
 
             e = ecs_pair(EcsChildOf, obj);
-            table->flags |= EcsTableHasParent;
         }       
 
         if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {

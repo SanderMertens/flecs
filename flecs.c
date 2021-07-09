@@ -747,7 +747,7 @@ typedef struct ecs_table_leaf_t {
 #define EcsTableHasBuiltins         1u    /**< Does table have builtin components */
 #define EcsTableIsPrefab            2u    /**< Does the table store prefabs */
 #define EcsTableHasBase             4u    /**< Does the table type has IsA */
-#define EcsTableHasParent           8u    /**< Does the table type has ChildOf */
+#define EcsTableHasModule           8u    /**< Does the table have module data */
 #define EcsTableHasComponentData    16u   /**< Does the table have component data */
 #define EcsTableHasXor              32u   /**< Does the table type has XOR */
 #define EcsTableIsDisabled          64u   /**< Does the table type has EcsDisabled */
@@ -4551,6 +4551,12 @@ void ecs_table_unlock(
         table->lock --;
         ecs_assert(table->lock >= 0, ECS_INVALID_OPERATION, NULL);
     }
+}
+
+bool ecs_table_has_module(
+    ecs_table_t *table)
+{
+    return table->flags & EcsTableHasModule;
 }
 
 
@@ -22173,8 +22179,13 @@ void init_edges(
          * flags. These allow us to quickly determine if the table contains
          * data that needs to be handled in a special way, like prefabs or 
          * containers */
-        if (e <= EcsLastInternalComponentId || e == EcsModule) {
+        if (e <= EcsLastInternalComponentId) {
             table->flags |= EcsTableHasBuiltins;
+        }
+
+        if (e == EcsModule) {
+            table->flags |= EcsTableHasBuiltins;
+            table->flags |= EcsTableHasModule;
         }
 
         if (e == EcsPrefab) {
@@ -22214,10 +22225,10 @@ void init_edges(
                 ecs_has_id(world, obj, EcsModule)) 
             {
                 table->flags |= EcsTableHasBuiltins;
+                table->flags |= EcsTableHasModule;
             }
 
             e = ecs_pair(EcsChildOf, obj);
-            table->flags |= EcsTableHasParent;
         }       
 
         if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
@@ -23644,6 +23655,13 @@ size_t ecs_term_size(
     return ecs_iter_column_size(it, table_column - 1);
 }
 
+ecs_table_t* ecs_iter_table(
+    const ecs_iter_t *it)
+{
+    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
+    return it->table->table;    
+}
+
 ecs_type_t ecs_iter_type(
     const ecs_iter_t *it)
 {
@@ -23651,8 +23669,8 @@ ecs_type_t ecs_iter_type(
      * yet. The most likely cause for this is that the operation is invoked on
      * a new iterator for which "next" hasn't been invoked yet, or on an
      * iterator that is out of elements. */
-    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_table_t *table = it->table->table;
+    ecs_table_t *table = ecs_iter_table(it);
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     return table->type;
 }
 

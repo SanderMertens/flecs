@@ -2001,7 +2001,8 @@
                 "get_records_empty_table",
                 "get_column_empty_table",
                 "delete_column_empty_table",
-                "get_record_column_empty_table"
+                "get_record_column_empty_table",
+                "has_module"
             ]
         }, {
             "id": "Internals",

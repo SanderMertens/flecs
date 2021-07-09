@@ -3361,7 +3361,7 @@ bool ecs_term_is_owned(
     const ecs_iter_t *it,
     int32_t index);
 
-/** Get the type of the currently entity/entities.
+/** Get the type of the currently entities.
  * This operation returns the type of the current iterated entity/entities. A
  * type is a vector that contains all ids of the components that an entity has.
  *
@@ -3370,6 +3370,16 @@ bool ecs_term_is_owned(
  */
 FLECS_API
 ecs_type_t ecs_iter_type(
+    const ecs_iter_t *it);
+
+/** Get the table for the current entities. 
+ * This operation returns the table of the current iterated entities
+ *
+ * @param it The iterator.
+ * @return The table of the currently iterated entity/entities.
+ */
+FLECS_API
+ecs_table_t* ecs_iter_table(
     const ecs_iter_t *it);
 
 /** Find the column index for a given id.
@@ -3862,6 +3872,17 @@ FLECS_API
 void ecs_table_unlock(
     ecs_world_t *world,
     ecs_table_t *table);    
+
+/** Returns whether table is a module or contains module contents
+ * Returns true for tables that have module contents. Can be used to filter out
+ * tables that do not contain application data.
+ *
+ * @param table The table.
+ * @return true if table contains module contents, false if not.
+ */
+FLECS_API
+bool ecs_table_has_module(
+    ecs_table_t *table);
 
 /** Commit (move) entity to a table.
  * This operation moves an entity from its current table to the specified

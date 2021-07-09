@@ -200,6 +200,13 @@ size_t ecs_term_size(
     return ecs_iter_column_size(it, table_column - 1);
 }
 
+ecs_table_t* ecs_iter_table(
+    const ecs_iter_t *it)
+{
+    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
+    return it->table->table;    
+}
+
 ecs_type_t ecs_iter_type(
     const ecs_iter_t *it)
 {
@@ -207,8 +214,8 @@ ecs_type_t ecs_iter_type(
      * yet. The most likely cause for this is that the operation is invoked on
      * a new iterator for which "next" hasn't been invoked yet, or on an
      * iterator that is out of elements. */
-    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_table_t *table = it->table->table;
+    ecs_table_t *table = ecs_iter_table(it);
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     return table->type;
 }
 
