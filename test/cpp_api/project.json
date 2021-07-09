@@ -129,7 +129,12 @@
                 "defer_new_w_scope",
                 "defer_new_w_with",
                 "defer_new_w_name_scope_with",
-                "defer_w_with_implicit_component"
+                "defer_w_with_implicit_component",
+                "entity_id_str",
+                "pair_id_str",
+                "role_id_str",
+                "id_str_from_entity_view",
+                "id_str_from_entity"
             ]
         }, {
             "id": "Pairs",

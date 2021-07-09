@@ -12201,7 +12201,16 @@ public:
      */
     flecs::entity object() const;
 
-    /** Convert id to string. */
+    /* Convert id to string */
+    flecs::string str() const {
+        size_t size = ecs_id_str(m_world, m_id, NULL, 0);
+        char *result = static_cast<char*>(ecs_os_malloc(
+            static_cast<ecs_size_t>(size) + 1));
+        ecs_id_str(m_world, m_id, result, size + 1);
+        return flecs::string(result);
+    }
+
+    /** Convert role of id to string. */
     flecs::string role_str() const {
         return flecs::string_view( ecs_role_str(m_id & ECS_ROLE_MASK));
     }

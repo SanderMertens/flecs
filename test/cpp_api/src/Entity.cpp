@@ -2309,3 +2309,43 @@ void Entity_emplace() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
+
+void Entity_entity_id_str() {
+    flecs::world ecs;
+
+    flecs::id id = ecs.entity("Foo");
+
+    test_str("Foo", id.str());
+}
+
+void Entity_pair_id_str() {
+    flecs::world ecs;
+
+    flecs::id id = ecs.pair( ecs.entity("Rel"), ecs.entity("Obj") );
+
+    test_str("(Rel,Obj)", id.str());
+}
+
+void Entity_role_id_str() {
+    flecs::world ecs;
+
+    flecs::id id = flecs::id(ecs, ECS_SWITCH | ecs.entity("Foo"));
+
+    test_str("SWITCH|Foo", id.str());
+}
+
+void Entity_id_str_from_entity_view() {
+    flecs::world ecs;
+
+    flecs::entity_view id = ecs.entity("Foo");
+
+    test_str("Foo", id.str());
+}
+
+void Entity_id_str_from_entity() {
+    flecs::world ecs;
+
+    flecs::entity id = ecs.entity("Foo");
+
+    test_str("Foo", id.str());
+}

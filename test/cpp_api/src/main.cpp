@@ -123,6 +123,11 @@ void Entity_defer_new_w_scope(void);
 void Entity_defer_new_w_with(void);
 void Entity_defer_new_w_name_scope_with(void);
 void Entity_defer_w_with_implicit_component(void);
+void Entity_entity_id_str(void);
+void Entity_pair_id_str(void);
+void Entity_role_id_str(void);
+void Entity_id_str_from_entity_view(void);
+void Entity_id_str_from_entity(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1007,6 +1012,26 @@ bake_test_case Entity_testcases[] = {
     {
         "defer_w_with_implicit_component",
         Entity_defer_w_with_implicit_component
+    },
+    {
+        "entity_id_str",
+        Entity_entity_id_str
+    },
+    {
+        "pair_id_str",
+        Entity_pair_id_str
+    },
+    {
+        "role_id_str",
+        Entity_role_id_str
+    },
+    {
+        "id_str_from_entity_view",
+        Entity_id_str_from_entity_view
+    },
+    {
+        "id_str_from_entity",
+        Entity_id_str_from_entity
     }
 };
 
@@ -2633,7 +2658,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        114,
+        119,
         Entity_testcases
     },
     {

@@ -3616,7 +3616,10 @@ size_t append_to_str(
     size_t bytes_left,
     size_t *required)
 {
-    char *ptr = *buffer;
+    char *ptr = NULL;
+    if (buffer) {
+        ptr = *buffer;
+    }
 
     size_t len = strlen(str);
     size_t to_write;
@@ -3628,12 +3631,15 @@ size_t append_to_str(
         bytes_left -= len;
     }
     
-    if (to_write) {
+    if (to_write && ptr) {
         ecs_os_memcpy(ptr, str, to_write);
     }
 
     (*required) += len;
-    (*buffer) += to_write;
+
+    if (buffer) {
+        (*buffer) += to_write;
+    }
 
     return bytes_left;
 }
@@ -3685,17 +3691,20 @@ size_t ecs_id_str(
     size_t buffer_len)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(buffer != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(buffer_len > 0, ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
 
     char *ptr = buffer;
+    char **pptr = NULL;
+    if (ptr) {
+        pptr = &ptr;
+    }
+
     size_t bytes_left = buffer_len - 1, required = 0;
     if (id & ECS_ROLE_MASK && !ECS_HAS_ROLE(id, PAIR)) {
         const char *role = ecs_role_str(id);
-        bytes_left = append_to_str(&ptr, role, bytes_left, &required);
-        bytes_left = append_to_str(&ptr, "|", bytes_left, &required);
+        bytes_left = append_to_str(pptr, role, bytes_left, &required);
+        bytes_left = append_to_str(pptr, "|", bytes_left, &required);
     }
 
     ecs_entity_t e = id & ECS_COMPONENT_MASK;
@@ -3709,26 +3718,29 @@ size_t ecs_id_str(
 
         if (hi) {
             char *hi_path = ecs_get_fullpath(world, hi);
-            bytes_left = append_to_str(&ptr, "(", bytes_left, &required);
-            bytes_left = append_to_str(&ptr, hi_path, bytes_left, &required);
+            bytes_left = append_to_str(pptr, "(", bytes_left, &required);
+            bytes_left = append_to_str(pptr, hi_path, bytes_left, &required);
             ecs_os_free(hi_path);
-            bytes_left = append_to_str(&ptr, ",", bytes_left, &required);
+            bytes_left = append_to_str(pptr, ",", bytes_left, &required);
         }
 
         char *lo_path = ecs_get_fullpath(world, lo);
-        bytes_left = append_to_str(&ptr, lo_path, bytes_left, &required);
+        bytes_left = append_to_str(pptr, lo_path, bytes_left, &required);
         ecs_os_free(lo_path);
 
         if (hi) {
-            append_to_str(&ptr, ")", bytes_left, &required);
+            append_to_str(pptr, ")", bytes_left, &required);
         }
     } else {
         char *path = ecs_get_fullpath(world, e);
-        append_to_str(&ptr, path, bytes_left, &required);
+        append_to_str(pptr, path, bytes_left, &required);
         ecs_os_free(path);
     }
 
-    ptr[0] = '\0';
+    if (ptr) {
+        ptr[0] = '\0';
+    }
+    
     return required;
 }
 
