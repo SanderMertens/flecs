@@ -22,6 +22,13 @@ void OnSet(ecs_iter_t *it) {
     }
 }
 
+static bool dummy_called = false;
+
+static
+void Dummy(ecs_iter_t *it) {
+    dummy_called = true;
+}
+
 void TriggerOnSet_set() {
     ecs_world_t *world = ecs_init();
 
@@ -538,6 +545,31 @@ void TriggerOnSet_on_set_after_snapshot_restore() {
     for (i = 0; i < 10; i ++) {
         test_int(ctx.e[i], id_arr[i]);
     }
+
+    ecs_fini(world);
+}
+
+void TriggerOnSet_emplace() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .events = {EcsOnSet},
+        .callback = Dummy
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    test_int(dummy_called, 0);
+
+    Position *p = ecs_emplace(world, e, Position);
+    test_assert(p != NULL);
+    test_int(dummy_called, 0);
+
+    ecs_modified(world, e, Position);
+    test_bool(dummy_called, true);
 
     ecs_fini(world);
 }

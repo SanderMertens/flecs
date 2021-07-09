@@ -24,6 +24,17 @@ void Singleton_get_mut_singleton() {
     test_int(p->y, 20);
 }
 
+void Singleton_emplace_singleton() {
+    flecs::world world;
+
+    world.emplace<Position>(10.0f, 20.0f);
+
+    const Position *p = world.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
 void Singleton_modified_singleton() {
     flecs::world world;
 
@@ -153,4 +164,3 @@ void Singleton_type_id_from_world() {
     test_assert(s.id() == flecs::type_id<Position>());
     test_assert(s.id() == flecs::type_id<Position>());
 }
-

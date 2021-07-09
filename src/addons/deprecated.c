@@ -89,7 +89,16 @@ void* ecs_get_mut_w_entity(
     ecs_id_t id,
     bool *is_added)
 {
-    return ecs_get_mut_w_id(world, entity, id, is_added);
+    return ecs_get_mut_id(world, entity, id, is_added);
+}
+
+void* ecs_get_mut_w_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    bool *is_added)
+{
+    return ecs_get_mut_id(world, entity, id, is_added);
 }
 
 void ecs_modified_w_entity(
@@ -97,7 +106,15 @@ void ecs_modified_w_entity(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_modified_w_id(world, entity, id);
+    ecs_modified_id(world, entity, id);
+}
+
+void ecs_modified_w_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_modified_id(world, entity, id);
 }
 
 ecs_entity_t ecs_set_ptr_w_entity(

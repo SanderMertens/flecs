@@ -57,7 +57,7 @@ ecs_entity_t ecs_import(
 
     /* Copy value of module component in handles_out parameter */
     if (handles_size && handles_out) {
-        void *handles_ptr = ecs_get_mut_w_id(world, e, e, NULL);
+        void *handles_ptr = ecs_get_mut_id(world, e, e, NULL);
         ecs_os_memcpy(handles_out, handles_ptr, ecs_from_size_t(handles_size));   
     }
 

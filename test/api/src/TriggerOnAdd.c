@@ -79,6 +79,13 @@ void Set_current(ecs_iter_t *it) {
     }
 }
 
+static bool dummy_called = false;
+
+static
+void Dummy(ecs_iter_t *it) {
+    dummy_called = true;
+}
+
 void TriggerOnAdd_new_match_1_of_1() {
     ecs_world_t *world = ecs_init();
 
@@ -825,13 +832,6 @@ void TriggerOnAdd_on_add_in_on_add() {
     ecs_fini(world);
 }
 
-static bool dummy_called = false;
-
-static
-void Dummy(ecs_iter_t *it) {
-    dummy_called = true;
-}
-
 void TriggerOnAdd_on_remove_in_on_add() {
     ecs_world_t *world = ecs_init();
 
@@ -936,6 +936,28 @@ void TriggerOnAdd_on_add_in_on_update() {
     test_assert( ecs_has(world, e1, Mass));
     test_assert( ecs_has(world, e2, Mass));
     test_assert( ecs_has(world, e3, Mass));
+
+    ecs_fini(world);
+}
+
+void TriggerOnAdd_emplace() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .events = {EcsOnAdd},
+        .callback = Dummy
+    });    
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    test_int(dummy_called, 0);
+
+    Position *p = ecs_emplace(world, e, Position);
+    test_assert(p != NULL);
+    test_bool(dummy_called, true);
 
     ecs_fini(world);
 }

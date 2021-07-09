@@ -329,7 +329,7 @@ const void* ecs_get_ref_w_entity(
     ecs_entity_t entity,
     ecs_id_t id);
 
-ECS_DEPRECATED("use ecs_get_mut_w_id")
+ECS_DEPRECATED("use ecs_get_mut_id")
 FLECS_API
 void* ecs_get_mut_w_entity(
     ecs_world_t *world,
@@ -337,9 +337,23 @@ void* ecs_get_mut_w_entity(
     ecs_id_t id,
     bool *is_added); 
 
-ECS_DEPRECATED("use ecs_modified_w_id")
+ECS_DEPRECATED("use ecs_get_mut_id")
+FLECS_API
+void* ecs_get_mut_w_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    bool *is_added);     
+
+ECS_DEPRECATED("use ecs_modified_id")
 FLECS_API 
 void ecs_modified_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+ECS_DEPRECATED("use ecs_modified_id")
+void ecs_modified_w_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);

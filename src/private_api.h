@@ -423,7 +423,8 @@ void ecs_table_move(
     int32_t new_index,
     ecs_table_t *old_table,
     ecs_data_t *old_data,
-    int32_t old_index);
+    int32_t old_index,
+    bool construct);
 
 /* Grow table with specified number of records. Populate table with entities,
  * starting from specified entity id. */

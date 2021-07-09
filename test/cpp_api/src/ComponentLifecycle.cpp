@@ -698,3 +698,72 @@ void ComponentLifecycle_no_default_ctor_move_ctor_on_set() {
     test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
     test_int(CountNoDefaultCtor::move_ctor_invoked, 1);    
 }
+
+void ComponentLifecycle_emplace() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .emplace<Pod>(10);
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 0);
+
+    const Pod *ptr = e.get<Pod>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 0);    
+}
+
+void ComponentLifecycle_emplace_no_default_ctor() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .emplace<CountNoDefaultCtor>(10);
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 0);
+
+    const CountNoDefaultCtor *ptr = e.get<CountNoDefaultCtor>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 0); 
+}
+
+void ComponentLifecycle_emplace_existing() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .emplace<Pod>(10);
+
+    const Pod *ptr = e.get<Pod>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);    
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 0);
+
+    test_expect_abort();
+    e.emplace<Pod>(20);
+}
+
+void ComponentLifecycle_emplace_singleton() {
+    flecs::world ecs;
+
+    ecs.emplace<Pod>(10);
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 0);
+
+    const Pod *ptr = ecs.get<Pod>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 0); 
+}
