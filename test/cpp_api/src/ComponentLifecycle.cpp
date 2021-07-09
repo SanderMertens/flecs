@@ -699,7 +699,7 @@ void ComponentLifecycle_no_default_ctor_move_ctor_on_set() {
     test_int(CountNoDefaultCtor::move_ctor_invoked, 1);    
 }
 
-void ComponentLifecycle_emplace() {
+void ComponentLifecycle_emplace_w_ctor() {
     flecs::world ecs;
 
     auto e = ecs.entity()

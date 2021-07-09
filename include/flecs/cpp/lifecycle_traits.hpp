@@ -157,6 +157,14 @@ struct is_flecs_constructible {
             flecs::world&, flecs::entity>::value;
 };
 
+// Trait to test if type has a self constructor (flecs::entity, Args...)
+template <typename T, typename ... Args>
+struct is_self_constructible {
+    static constexpr bool value = 
+        std::is_constructible<actual_type_t<T>, 
+            flecs::entity, Args...>::value;
+};
+
 namespace _
 {
 

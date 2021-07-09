@@ -1125,6 +1125,14 @@ public:
      * Emplace constructs a component in the storage, which prevents calling the
      * destructor on the object passed into the function.
      *
+     * Emplace attempts the following signatures to construct the component:
+     *  T{Args...}
+     *  T{flecs::entity, Args...}
+     *
+     * If the second signature matches, emplace will pass in the current entity 
+     * as argument to the constructor, which is useful if the component needs
+     * to be aware of the entity to which it has been added.
+     *
      * Emplace may only be called for components that have not yet been added
      * to the entity.
      *

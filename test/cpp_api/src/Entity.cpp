@@ -234,6 +234,28 @@ void Entity_emplace_after_add_pair() {
     test_int(v->y, 40);
 }
 
+class SelfCtor {
+public:
+    SelfCtor(flecs::entity e, int x, int y) : e_(e), x_(x), y_(y) { }
+
+    flecs::entity e_;
+    int x_;
+    int y_;
+};
+
+void Entity_emplace_w_self_ctor() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .emplace<SelfCtor>(10, 20);
+
+    const SelfCtor *ptr = e.get<SelfCtor>();
+    test_assert(ptr != NULL);
+    test_int(ptr->x_, 10);
+    test_int(ptr->y_, 20);
+    test_assert(ptr->e_ == e);
+}
+
 void Entity_replace() {
     flecs::world world;
 

@@ -41,6 +41,7 @@
                 "emplace_2",
                 "emplace_after_add",
                 "emplace_after_add_pair",
+                "emplace_w_self_ctor",
                 "replace",
                 "get_generic",
                 "get_mut_generic",
@@ -460,7 +461,7 @@
                 "default_ctor_w_value_ctor",
                 "flecs_ctor_w_value_ctor",
                 "no_default_ctor_move_ctor_on_set",
-                "emplace",
+                "emplace_w_ctor",
                 "emplace_no_default_ctor",
                 "emplace_existing",
                 "emplace_singleton"

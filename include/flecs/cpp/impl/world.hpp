@@ -2,6 +2,14 @@
 namespace flecs 
 {
 
+// emplace for T(flecs::entity, Args...)
+template <typename T, typename ... Args, if_t<
+    std::is_constructible<actual_type_t<T>, flecs::entity, Args...>::value >>
+inline void emplace(world_t *world, id_t entity, Args&&... args) {
+    flecs::entity self(world, entity);
+    emplace<T>(world, entity, self, std::forward<Args>(args)...);
+}
+
 /** Get id from a type. */
 template <typename T>
 inline flecs::id world::id() const {

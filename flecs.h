@@ -10067,6 +10067,14 @@ struct is_flecs_constructible {
             flecs::world&, flecs::entity>::value;
 };
 
+// Trait to test if type has a self constructor (flecs::entity, Args...)
+template <typename T, typename ... Args>
+struct is_self_constructible {
+    static constexpr bool value = 
+        std::is_constructible<actual_type_t<T>, 
+            flecs::entity, Args...>::value;
+};
+
 namespace _
 {
 
@@ -10894,7 +10902,7 @@ inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
 
 // set(const T&), T = not constructible
 template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
-inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
+inline void set(world_t *world, id_t entity, const T& value, id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     bool is_new = false;
@@ -10908,9 +10916,11 @@ inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
     ecs_modified_id(world, entity, id);
 }
 
-// emplace
-template <typename T, typename ... Args>
-inline void emplace(world_t *world, entity_t entity, Args&&... args) {
+// emplace for T(Args...)
+template <typename T, typename ... Args, if_t< 
+    std::is_constructible<actual_type_t<T>, Args...>::value ||
+    std::is_default_constructible<actual_type_t<T>>::value > = 0>
+inline void emplace(world_t *world, id_t entity, Args&&... args) {
     id_t id = _::cpp_type<T>::id(world);
 
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
@@ -10920,6 +10930,11 @@ inline void emplace(world_t *world, entity_t entity, Args&&... args) {
 
     ecs_modified_id(world, entity, id);    
 }
+
+// emplace for T(flecs::entity, Args...)
+template <typename T, typename ... Args, if_t<
+    std::is_constructible<actual_type_t<T>, flecs::entity, Args...>::value > = 0>
+inline void emplace(world_t *world, id_t entity, Args&&... args);
 
 // set(T&&)
 template <typename T, typename A>
@@ -13206,6 +13221,14 @@ public:
     /** Emplace component.
      * Emplace constructs a component in the storage, which prevents calling the
      * destructor on the object passed into the function.
+     *
+     * Emplace attempts the following signatures to construct the component:
+     *  T{Args...}
+     *  T{flecs::entity, Args...}
+     *
+     * If the second signature matches, emplace will pass in the current entity 
+     * as argument to the constructor, which is useful if the component needs
+     * to be aware of the entity to which it has been added.
      *
      * Emplace may only be called for components that have not yet been added
      * to the entity.
@@ -17319,6 +17342,14 @@ inline flecs::type iter::type() const {
 
 namespace flecs 
 {
+
+// emplace for T(flecs::entity, Args...)
+template <typename T, typename ... Args, if_t<
+    std::is_constructible<actual_type_t<T>, flecs::entity, Args...>::value >>
+inline void emplace(world_t *world, id_t entity, Args&&... args) {
+    flecs::entity self(world, entity);
+    emplace<T>(world, entity, self, std::forward<Args>(args)...);
+}
 
 /** Get id from a type. */
 template <typename T>

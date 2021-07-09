@@ -34,6 +34,7 @@ void Entity_emplace(void);
 void Entity_emplace_2(void);
 void Entity_emplace_after_add(void);
 void Entity_emplace_after_add_pair(void);
+void Entity_emplace_w_self_ctor(void);
 void Entity_replace(void);
 void Entity_get_generic(void);
 void Entity_get_mut_generic(void);
@@ -431,7 +432,7 @@ void ComponentLifecycle_flecs_ctor_w_default_ctor(void);
 void ComponentLifecycle_default_ctor_w_value_ctor(void);
 void ComponentLifecycle_flecs_ctor_w_value_ctor(void);
 void ComponentLifecycle_no_default_ctor_move_ctor_on_set(void);
-void ComponentLifecycle_emplace(void);
+void ComponentLifecycle_emplace_w_ctor(void);
 void ComponentLifecycle_emplace_no_default_ctor(void);
 void ComponentLifecycle_emplace_existing(void);
 void ComponentLifecycle_emplace_singleton(void);
@@ -656,6 +657,10 @@ bake_test_case Entity_testcases[] = {
     {
         "emplace_after_add_pair",
         Entity_emplace_after_add_pair
+    },
+    {
+        "emplace_w_self_ctor",
+        Entity_emplace_w_self_ctor
     },
     {
         "replace",
@@ -2191,8 +2196,8 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_no_default_ctor_move_ctor_on_set
     },
     {
-        "emplace",
-        ComponentLifecycle_emplace
+        "emplace_w_ctor",
+        ComponentLifecycle_emplace_w_ctor
     },
     {
         "emplace_no_default_ctor",
@@ -2658,7 +2663,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        119,
+        120,
         Entity_testcases
     },
     {
