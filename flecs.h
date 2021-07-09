@@ -3403,6 +3403,12 @@ void ecs_modified_w_entity(
     ecs_entity_t entity,
     ecs_id_t id);
 
+ECS_DEPRECATED("use ecs_modified_id")
+void ecs_modified_w_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
 ECS_DEPRECATED("use ecs_set_id")
 FLECS_API
 ecs_entity_t ecs_set_ptr_w_entity(
@@ -5001,7 +5007,7 @@ void* ecs_emplace_id(
  * @return The (uninitialized) component pointer.
  */
 #define ecs_emplace(world, entity, T)\
-    (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
+    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T))))
 
 
 /** Signal that a component has been modified.
@@ -10905,14 +10911,12 @@ inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
 // emplace
 template <typename T, typename ... Args>
 inline void emplace(world_t *world, entity_t entity, Args&&... args) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-
     id_t id = _::cpp_type<T>::id(world);
-    bool is_new = false;
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
-    ecs_assert(is_new == true, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
     
-    FLECS_PLACEMENT_NEW(&dst, T(std::forward<Args>(args)...));
+    FLECS_PLACEMENT_NEW(&dst, T{std::forward<Args>(args)...});
 
     ecs_modified_id(world, entity, id);    
 }
@@ -11447,8 +11451,15 @@ public:
 
     template <typename T>
     void set(T&& value) const {
-        flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), std::forward<T&&>(value));
-    }    
+        flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), 
+            std::forward<T&&>(value));
+    } 
+
+    template <typename T, typename ... Args>
+    void emplace(Args&&... args) const {
+        flecs::emplace<T>(m_world, _::cpp_type<T>::id(m_world), 
+            std::forward<Args>(args)...);
+    }        
 
     /** Get mut singleton component.
      */
@@ -13194,7 +13205,7 @@ public:
      * @param args The arguments to pass to the constructor of T
      */
     template <typename T, typename ... Args>
-    const Base& emplace(Args&&... args) {
+    const Base& emplace(Args&&... args) const {
         flecs::emplace<T>(this->base_world(), this->base_id(), 
             std::forward<Args>(args)...);
         return *this;

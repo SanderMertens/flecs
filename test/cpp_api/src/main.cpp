@@ -32,6 +32,8 @@ void Entity_set(void);
 void Entity_set_2(void);
 void Entity_emplace(void);
 void Entity_emplace_2(void);
+void Entity_emplace_after_add(void);
+void Entity_emplace_after_add_pair(void);
 void Entity_replace(void);
 void Entity_get_generic(void);
 void Entity_get_mut_generic(void);
@@ -641,6 +643,14 @@ bake_test_case Entity_testcases[] = {
     {
         "emplace_2",
         Entity_emplace_2
+    },
+    {
+        "emplace_after_add",
+        Entity_emplace_after_add
+    },
+    {
+        "emplace_after_add_pair",
+        Entity_emplace_after_add_pair
     },
     {
         "replace",
@@ -2623,7 +2633,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        112,
+        114,
         Entity_testcases
     },
     {

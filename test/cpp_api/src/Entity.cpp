@@ -200,6 +200,40 @@ void Entity_emplace_2() {
     test_int(v->y, 40);
 }
 
+void Entity_emplace_after_add() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .add<Position>()
+        .emplace<Velocity>(30.0f, 40.0f);
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+
+    const Velocity *v = e.get<Velocity>();
+    test_assert(v != NULL);
+    test_int(v->x, 30);
+    test_int(v->y, 40);
+}
+
+void Entity_emplace_after_add_pair() {
+    flecs::world ecs;
+
+    auto dummy = ecs.entity();
+
+    auto e = ecs.entity()
+        .add(flecs::ChildOf, dummy)
+        .emplace<Velocity>(30.0f, 40.0f);
+
+    test_assert(e.has(flecs::ChildOf, dummy));
+    test_assert(e.has<Velocity>());
+
+    const Velocity *v = e.get<Velocity>();
+    test_assert(v != NULL);
+    test_int(v->x, 30);
+    test_int(v->y, 40);
+}
+
 void Entity_replace() {
     flecs::world world;
 

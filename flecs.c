@@ -7516,7 +7516,7 @@ void* ecs_get_mut_id(
     return result;
 }
 
-void* ecs_emplace_w_id(
+void* ecs_emplace_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -7546,7 +7546,11 @@ void* ecs_emplace_w_id(
     add_ids_w_info(world, entity, &info, &to_add, 
         false /* Add component without constructing it */ );
 
-    return get_component(world, info.table, info.row, id);
+    void *ptr = get_component(world, info.table, info.row, id);
+
+    ecs_defer_flush(world, stage);
+
+    return ptr;
 }
 
 void ecs_modified_id(
@@ -10930,6 +10934,14 @@ void* ecs_get_mut_w_id(
 }
 
 void ecs_modified_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_modified_id(world, entity, id);
+}
+
+void ecs_modified_w_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)

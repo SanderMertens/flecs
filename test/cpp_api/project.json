@@ -39,6 +39,8 @@
                 "set_2",
                 "emplace",
                 "emplace_2",
+                "emplace_after_add",
+                "emplace_after_add_pair",
                 "replace",
                 "get_generic",
                 "get_mut_generic",
