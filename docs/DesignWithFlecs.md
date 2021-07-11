@@ -9,7 +9,7 @@ One other note: this document is very light on feature documentation. The point 
 Entities are probably the easiest thing to get used to. They typically map to in-game objects the same way you would create them in other game engines. 
 
 ### Entity Initialization
-When creating entities, you typically want to iniitalize them with a set of default components, and maybe even default values. Flecs introduced prefabs for this use case. Prefabs let you create entity templates that contain components with default values. Creating entities from prefabs is not just an easy way to initialize entities, it is also faster, and helps with classifying the different kinds of entities you have.
+When creating entities, you typically want to initialize them with a set of default components, and maybe even default values. Flecs introduced prefabs for this use case. Prefabs let you create entity templates that contain components with default values. Creating entities from prefabs is not just an easy way to initialize entities, it is also faster, and helps with classifying the different kinds of entities you have.
 
 ### Entity Lifecycle
 Entities can be created and deleted dynamically. When entities are deleted, the existing handles to that entity are no longer valid. When you are working with entity handles, it is often good practice to make sure they are still alive. You can do this with the `is_alive()` function. Other than that, entity handles are stable, which means that you can safely store them in your components or elsewhere.
