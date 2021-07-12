@@ -1488,4 +1488,6 @@ void Trigger_trigger_w_self() {
     test_int(ctx.count, 1);
     test_assert(ctx.system == system);
     test_assert(ctx.self == self);
+
+    ecs_fini(world);
 }

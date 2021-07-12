@@ -39,7 +39,7 @@ void bulk_delete(
         if (is_delete) {
             ecs_table_delete_entities(world, table);
         } else {
-            ecs_table_clear_silent(world, table);
+            ecs_table_clear_entities_silent(world, table);
         }
     }
 }
@@ -54,7 +54,7 @@ void merge_table(
 {    
     if (!dst_table->type) {
         /* If this removes all components, clear table */
-        ecs_table_clear(world, src_table);
+        ecs_table_clear_entities(world, src_table);
     } else {
         /* Merge table into dst_table */
         if (dst_table != src_table) {

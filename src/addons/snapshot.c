@@ -250,8 +250,8 @@ void ecs_snapshot_restore(
              * If a table is found that was not in the snapshot, and the
              * snapshot was not filtered, clear the table. */
             if (!is_filtered) {
-                /* Use clear_silent so no triggers are fired */
-                ecs_table_clear_silent(world, table);
+                /* Clear data of old table. */
+                ecs_table_clear_data(world, table, ecs_table_get_data(table));
             }
         }
 

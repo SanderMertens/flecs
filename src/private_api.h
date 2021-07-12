@@ -372,7 +372,7 @@ void ecs_table_activate(
     bool activate);
 
 /* Clear all entities from a table. */
-void ecs_table_clear(
+void ecs_table_clear_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
@@ -382,7 +382,7 @@ void ecs_table_reset(
     ecs_table_t *table);
 
 /* Clear all entities from the table. Do not invoke OnRemove systems */
-void ecs_table_clear_silent(
+void ecs_table_clear_entities_silent(
     ecs_world_t *world,
     ecs_table_t *table);
 
@@ -469,6 +469,10 @@ void ecs_table_remove_actions(
 void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table); 
+
+/* Free table */
+void ecs_table_free_type(
+    ecs_table_t *table);     
 
 /* Merge table data */
 void ecs_table_merge_data(

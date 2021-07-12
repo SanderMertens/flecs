@@ -673,7 +673,6 @@ void Hierarchies_lookup_in_root_from_scope() {
     ecs_fini(world);
 }
 
-
 void Hierarchies_scope_component() {
     ecs_world_t *world = ecs_init();
 
@@ -686,7 +685,7 @@ void Hierarchies_scope_component() {
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "Position");
     test_assert(e != 0);
-    test_assert(e == ecs_typeid(Position));
+    test_assert(e == ecs_id(Position));
 
     old_scope = ecs_set_scope(world, 0);
     test_assert(old_scope == Scope);
@@ -694,7 +693,32 @@ void Hierarchies_scope_component() {
     e = ecs_lookup_fullpath(world, "Position");
     test_assert(e == 0);
 
+    e = ecs_lookup_fullpath(world, "Scope.Position");
+    test_assert(e == ecs_id(Position));
+
     ecs_fini(world);
+}
+
+void Hierarchies_scope_component_no_macro() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Scope = ecs_new_id(world);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, Scope);
+    test_assert(old_scope == 0);
+
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .use_low_id = true
+    });
+
+    test_assert(e2 != 0);
+    test_assert(ecs_has_pair(world, e2, EcsChildOf, Scope));
+
+
+    ecs_fini(world);
+    
+    /* The real purpose of this test is to catch an issue where a component was
+     * added to multiple tables, which caused a crash during ecs_fini */
 }
 
 void Hierarchies_fullpath_for_core() {
@@ -709,7 +733,6 @@ void Hierarchies_fullpath_for_core() {
 
     ecs_fini(world);
 }
-
 
 void Hierarchies_new_from_path_depth_0() {
     ecs_world_t *world = ecs_init();

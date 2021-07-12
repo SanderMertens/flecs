@@ -1973,7 +1973,6 @@ void SystemMisc_deactivate_after_disable() {
     ecs_fini(world);
 }
 
-
 void SystemMisc_system_w_self() {
     ecs_world_t *world = ecs_init();
 
@@ -1998,4 +1997,6 @@ void SystemMisc_system_w_self() {
     test_int(ctx.count, 1);
     test_assert(ctx.system == system);
     test_assert(ctx.self == self);
+
+    ecs_fini(world);
 }
