@@ -189,22 +189,6 @@ public:
     entity_view(entity_t id) 
         : flecs::id( nullptr, id ) { }
 
-    /** Entity id 0.
-     * This function is useful when the API must provide an entity object that
-     * belongs to a world, but the entity id is 0.
-     *
-     * @param world The world.
-     */
-    static
-    flecs::entity_view null(const flecs::world& world) {
-        return flecs::entity_view(world.get_world().c_ptr(), static_cast<entity_t>(0));
-    }
-
-    static
-    flecs::entity_view null() {
-        return flecs::entity_view(static_cast<entity_t>(0));
-    }
-
     /** Get entity id.
      * @return The integer entity id.
      */
@@ -1488,7 +1472,24 @@ public:
     template <typename Func>
     void invoke(Func&& action) const {
         action(m_world, m_id);
-    }   
+    }
+
+    /** Entity id 0.
+     * This function is useful when the API must provide an entity object that
+     * belongs to a world, but the entity id is 0.
+     *
+     * @param world The world.
+     */
+    static
+    flecs::entity null(const flecs::world& world) {
+        return flecs::entity(world.get_world().c_ptr(), 
+            static_cast<entity_t>(0));
+    }
+
+    static
+    flecs::entity null() {
+        return flecs::entity(static_cast<entity_t>(0));
+    }     
 };
 
 /** Prefab class */

@@ -2371,3 +2371,30 @@ void Entity_id_str_from_entity() {
 
     test_str("Foo", id.str());
 }
+
+void Entity_null_entity() {
+    flecs::entity e = flecs::entity::null();
+    test_assert(e.id() == 0);
+}
+
+void Entity_null_entity_w_world() {
+    flecs::world ecs;
+
+    flecs::entity e = flecs::entity::null(ecs);
+    test_assert(e.id() == 0);
+    test_assert(e.world().c_ptr() == ecs.c_ptr());
+}
+
+void Entity_null_entity_w_0() {
+    flecs::entity e = flecs::entity(static_cast<flecs::id_t>(0));
+    test_assert(e.id() == 0);
+    test_assert(e.world().c_ptr() == nullptr);
+}
+
+void Entity_null_entity_w_world_w_0() {
+    flecs::world ecs;
+
+    flecs::entity e = flecs::entity(ecs, static_cast<flecs::id_t>(0));
+    test_assert(e.id() == 0);
+    test_assert(e.world().c_ptr() == ecs.c_ptr());
+}

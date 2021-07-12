@@ -129,6 +129,10 @@ void Entity_pair_id_str(void);
 void Entity_role_id_str(void);
 void Entity_id_str_from_entity_view(void);
 void Entity_id_str_from_entity(void);
+void Entity_null_entity(void);
+void Entity_null_entity_w_world(void);
+void Entity_null_entity_w_0(void);
+void Entity_null_entity_w_world_w_0(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1053,6 +1057,22 @@ bake_test_case Entity_testcases[] = {
     {
         "id_str_from_entity",
         Entity_id_str_from_entity
+    },
+    {
+        "null_entity",
+        Entity_null_entity
+    },
+    {
+        "null_entity_w_world",
+        Entity_null_entity_w_world
+    },
+    {
+        "null_entity_w_0",
+        Entity_null_entity_w_0
+    },
+    {
+        "null_entity_w_world_w_0",
+        Entity_null_entity_w_world_w_0
     }
 };
 
@@ -2734,7 +2754,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        120,
+        124,
         Entity_testcases
     },
     {

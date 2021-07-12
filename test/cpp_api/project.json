@@ -135,7 +135,11 @@
                 "pair_id_str",
                 "role_id_str",
                 "id_str_from_entity_view",
-                "id_str_from_entity"
+                "id_str_from_entity",
+                "null_entity",
+                "null_entity_w_world",
+                "null_entity_w_0",
+                "null_entity_w_world_w_0"                
             ]
         }, {
             "id": "Pairs",
