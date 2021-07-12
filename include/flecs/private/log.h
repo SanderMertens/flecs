@@ -8,8 +8,6 @@
 #ifndef FLECS_LOG_H
 #define FLECS_LOG_H
 
-#include "api_types.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

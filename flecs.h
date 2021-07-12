@@ -399,6 +399,52 @@ typedef int32_t ecs_size_t;
     
 #endif
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Error codes
+////////////////////////////////////////////////////////////////////////////////
+
+#define ECS_INVALID_OPERATION (1)
+#define ECS_INVALID_PARAMETER (2)
+#define ECS_INVALID_DELETE (3)
+#define ECS_OUT_OF_MEMORY (4)
+#define ECS_OUT_OF_RANGE (5)
+#define ECS_UNSUPPORTED (6)
+#define ECS_INTERNAL_ERROR (7)
+#define ECS_ALREADY_DEFINED (8)
+#define ECS_MISSING_OS_API (9)
+#define ECS_THREAD_ERROR (10)
+#define ECS_CYCLE_DETECTED (11)
+
+#define ECS_INCONSISTENT_NAME (20)
+#define ECS_NAME_IN_USE (21)
+#define ECS_NOT_A_COMPONENT (22)
+#define ECS_INVALID_COMPONENT_SIZE (23)
+#define ECS_INVALID_COMPONENT_ALIGNMENT (24)
+#define ECS_COMPONENT_NOT_REGISTERED (25)
+#define ECS_INCONSISTENT_COMPONENT_ID (26)
+#define ECS_INCONSISTENT_COMPONENT_ACTION (27)
+#define ECS_MODULE_UNDEFINED (28)
+
+#define ECS_COLUMN_ACCESS_VIOLATION (40)
+#define ECS_COLUMN_INDEX_OUT_OF_RANGE (41)
+#define ECS_COLUMN_IS_NOT_SHARED (42)
+#define ECS_COLUMN_IS_SHARED (43)
+#define ECS_COLUMN_HAS_NO_DATA (44)
+#define ECS_COLUMN_TYPE_MISMATCH (45)
+#define ECS_NO_OUT_COLUMNS (46)
+
+#define ECS_TYPE_NOT_AN_ENTITY (60)
+#define ECS_TYPE_CONSTRAINT_VIOLATION (61)
+#define ECS_TYPE_INVALID_CASE (62)
+
+#define ECS_INVALID_WHILE_ITERATING (70)
+#define ECS_LOCKED_STORAGE (71)
+#define ECS_INVALID_FROM_WORKER (72)
+
+#define ECS_DESERIALIZE_FORMAT_ERROR (80)
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Deprecated constants
 ////////////////////////////////////////////////////////////////////////////////
@@ -414,6 +460,181 @@ typedef int32_t ecs_size_t;
 #define ECS_TRAIT ECS_PAIR
 
 #define EcsSingleton   (ECS_HI_COMPONENT_ID + 37)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+/**
+ * @file log.h
+ * @brief Internal logging API.
+ *
+ * Internal utility functions for tracing, warnings and errors. 
+ */
+
+#ifndef FLECS_LOG_H
+#define FLECS_LOG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Color macro's
+////////////////////////////////////////////////////////////////////////////////
+
+#define ECS_BLACK   "\033[1;30m"
+#define ECS_RED     "\033[0;31m"
+#define ECS_GREEN   "\033[0;32m"
+#define ECS_YELLOW  "\033[0;33m"
+#define ECS_BLUE    "\033[0;34m"
+#define ECS_MAGENTA "\033[0;35m"
+#define ECS_CYAN    "\033[0;36m"
+#define ECS_WHITE   "\033[1;37m"
+#define ECS_GREY    "\033[0;37m"
+#define ECS_NORMAL  "\033[0;49m"
+#define ECS_BOLD    "\033[1;49m"
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Tracing
+////////////////////////////////////////////////////////////////////////////////
+
+FLECS_API
+void _ecs_trace(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+FLECS_API
+void _ecs_warn(
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+FLECS_API
+void _ecs_err(
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+FLECS_API
+void _ecs_deprecated(
+    const char *file, 
+    int32_t line, 
+    const char *msg);
+
+FLECS_API
+void ecs_log_push(void);
+
+FLECS_API
+void ecs_log_pop(void);
+
+#ifndef FLECS_LEGACY
+
+#define ecs_trace(lvl, ...)\
+    _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
+
+#define ecs_warn(...)\
+    _ecs_warn(__FILE__, __LINE__, __VA_ARGS__)
+
+#define ecs_err(...)\
+    _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
+
+#ifndef FLECS_NO_DEPRECATED_WARNINGS
+#define ecs_deprecated(...)\
+    _ecs_deprecated(__FILE__, __LINE__, __VA_ARGS__)
+#else
+#define ecs_deprecated(...)
+#endif
+
+/* If in debug mode and no tracing verbosity is defined, compile all tracing */
+#if !defined(NDEBUG) && !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
+#define ECS_TRACE_3
+#endif
+
+#ifndef NDEBUG
+#if defined(ECS_TRACE_3)
+#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
+#define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
+#define ecs_trace_3(...) ecs_trace(3, __VA_ARGS__);
+
+#elif defined(ECS_TRACE_2)
+#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
+#define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
+#define ecs_trace_3(...)
+
+#elif defined(ECS_TRACE_1)
+#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
+#define ecs_trace_2(...)
+#define ecs_trace_3(...)
+#endif
+#else
+#define ecs_trace_1(...)
+#define ecs_trace_2(...)
+#define ecs_trace_3(...)
+#endif
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//// Exceptions
+////////////////////////////////////////////////////////////////////////////////
+
+/** Get description for error code */
+FLECS_API
+const char* ecs_strerror(
+    int32_t error_code);
+
+/** Abort */
+FLECS_API
+void _ecs_abort(
+    int32_t error_code,
+    const char *param,
+    const char *file,
+    int32_t line);
+
+#define ecs_abort(error_code, param)\
+    _ecs_abort(error_code, param, __FILE__, __LINE__); abort()
+
+/** Assert */
+FLECS_API
+void _ecs_assert(
+    bool condition,
+    int32_t error_code,
+    const char *param,
+    const char *condition_str,
+    const char *file,
+    int32_t line);
+
+#ifdef NDEBUG
+#define ecs_assert(condition, error_code, param)
+#else
+#define ecs_assert(condition, error_code, param)\
+    _ecs_assert(condition, error_code, param, #condition, __FILE__, __LINE__);\
+    assert(condition)
+#endif
+
+FLECS_API
+void _ecs_parser_error(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    ...);
+
+#ifndef FLECS_LEGACY
+
+#define ecs_parser_error(name, expr, column, ...)\
+    _ecs_parser_error(name, expr, column, __VA_ARGS__);\
+    abort()
+
+#endif
 
 #ifdef __cplusplus
 }
@@ -905,6 +1126,7 @@ public:
     }
 
     T& get(int32_t index) {
+        ecs_assert(index < ecs_vector_count(m_vector), ECS_OUT_OF_RANGE, NULL);
         return *static_cast<T*>(_ecs_vector_get(m_vector, ECS_VECTOR_T(T), index));
     }
 
@@ -2425,228 +2647,11 @@ bool ecs_identifier_is_0(
 bool ecs_identifier_is_var(
     const char *id);
 
-#define ECS_INVALID_OPERATION (1)
-#define ECS_INVALID_PARAMETER (2)
-#define ECS_INVALID_DELETE (3)
-#define ECS_OUT_OF_MEMORY (4)
-#define ECS_OUT_OF_RANGE (5)
-#define ECS_UNSUPPORTED (6)
-#define ECS_INTERNAL_ERROR (7)
-#define ECS_ALREADY_DEFINED (8)
-#define ECS_MISSING_OS_API (9)
-#define ECS_THREAD_ERROR (10)
-#define ECS_CYCLE_DETECTED (11)
-
-#define ECS_INCONSISTENT_NAME (20)
-#define ECS_NAME_IN_USE (21)
-#define ECS_NOT_A_COMPONENT (22)
-#define ECS_INVALID_COMPONENT_SIZE (23)
-#define ECS_INVALID_COMPONENT_ALIGNMENT (24)
-#define ECS_COMPONENT_NOT_REGISTERED (25)
-#define ECS_INCONSISTENT_COMPONENT_ID (26)
-#define ECS_INCONSISTENT_COMPONENT_ACTION (27)
-#define ECS_MODULE_UNDEFINED (28)
-
-#define ECS_COLUMN_ACCESS_VIOLATION (40)
-#define ECS_COLUMN_INDEX_OUT_OF_RANGE (41)
-#define ECS_COLUMN_IS_NOT_SHARED (42)
-#define ECS_COLUMN_IS_SHARED (43)
-#define ECS_COLUMN_HAS_NO_DATA (44)
-#define ECS_COLUMN_TYPE_MISMATCH (45)
-#define ECS_NO_OUT_COLUMNS (46)
-
-#define ECS_TYPE_NOT_AN_ENTITY (60)
-#define ECS_TYPE_CONSTRAINT_VIOLATION (61)
-#define ECS_TYPE_INVALID_CASE (62)
-
-#define ECS_INVALID_WHILE_ITERATING (70)
-#define ECS_LOCKED_STORAGE (71)
-#define ECS_INVALID_FROM_WORKER (72)
-
-#define ECS_DESERIALIZE_FORMAT_ERROR (80)
-
-
 /** Calculate offset from address */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))
 #else
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-/**
- * @file log.h
- * @brief Internal logging API.
- *
- * Internal utility functions for tracing, warnings and errors. 
- */
-
-#ifndef FLECS_LOG_H
-#define FLECS_LOG_H
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Color macro's
-////////////////////////////////////////////////////////////////////////////////
-
-#define ECS_BLACK   "\033[1;30m"
-#define ECS_RED     "\033[0;31m"
-#define ECS_GREEN   "\033[0;32m"
-#define ECS_YELLOW  "\033[0;33m"
-#define ECS_BLUE    "\033[0;34m"
-#define ECS_MAGENTA "\033[0;35m"
-#define ECS_CYAN    "\033[0;36m"
-#define ECS_WHITE   "\033[1;37m"
-#define ECS_GREY    "\033[0;37m"
-#define ECS_NORMAL  "\033[0;49m"
-#define ECS_BOLD    "\033[1;49m"
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Tracing
-////////////////////////////////////////////////////////////////////////////////
-
-FLECS_API
-void _ecs_trace(
-    int level,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...);
-
-FLECS_API
-void _ecs_warn(
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...);
-
-FLECS_API
-void _ecs_err(
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...);
-
-FLECS_API
-void _ecs_deprecated(
-    const char *file, 
-    int32_t line, 
-    const char *msg);
-
-FLECS_API
-void ecs_log_push(void);
-
-FLECS_API
-void ecs_log_pop(void);
-
-#ifndef FLECS_LEGACY
-
-#define ecs_trace(lvl, ...)\
-    _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
-
-#define ecs_warn(...)\
-    _ecs_warn(__FILE__, __LINE__, __VA_ARGS__)
-
-#define ecs_err(...)\
-    _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
-
-#ifndef FLECS_NO_DEPRECATED_WARNINGS
-#define ecs_deprecated(...)\
-    _ecs_deprecated(__FILE__, __LINE__, __VA_ARGS__)
-#else
-#define ecs_deprecated(...)
-#endif
-
-/* If in debug mode and no tracing verbosity is defined, compile all tracing */
-#if !defined(NDEBUG) && !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
-#define ECS_TRACE_3
-#endif
-
-#ifndef NDEBUG
-#if defined(ECS_TRACE_3)
-#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
-#define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
-#define ecs_trace_3(...) ecs_trace(3, __VA_ARGS__);
-
-#elif defined(ECS_TRACE_2)
-#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
-#define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
-#define ecs_trace_3(...)
-
-#elif defined(ECS_TRACE_1)
-#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
-#define ecs_trace_2(...)
-#define ecs_trace_3(...)
-#endif
-#else
-#define ecs_trace_1(...)
-#define ecs_trace_2(...)
-#define ecs_trace_3(...)
-#endif
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-//// Exceptions
-////////////////////////////////////////////////////////////////////////////////
-
-/** Get description for error code */
-FLECS_API
-const char* ecs_strerror(
-    int32_t error_code);
-
-/** Abort */
-FLECS_API
-void _ecs_abort(
-    int32_t error_code,
-    const char *param,
-    const char *file,
-    int32_t line);
-
-#define ecs_abort(error_code, param)\
-    _ecs_abort(error_code, param, __FILE__, __LINE__); abort()
-
-/** Assert */
-FLECS_API
-void _ecs_assert(
-    bool condition,
-    int32_t error_code,
-    const char *param,
-    const char *condition_str,
-    const char *file,
-    int32_t line);
-
-#ifdef NDEBUG
-#define ecs_assert(condition, error_code, param)
-#else
-#define ecs_assert(condition, error_code, param)\
-    _ecs_assert(condition, error_code, param, #condition, __FILE__, __LINE__);\
-    assert(condition)
-#endif
-
-FLECS_API
-void _ecs_parser_error(
-    const char *name,
-    const char *expr, 
-    int64_t column,
-    const char *fmt,
-    ...);
-
-#ifndef FLECS_LEGACY
-
-#define ecs_parser_error(name, expr, column, ...)\
-    _ecs_parser_error(name, expr, column, __VA_ARGS__);\
-    abort()
-
 #endif
 
 #ifdef __cplusplus
@@ -16013,8 +16018,12 @@ public:
         ecs_enable(world(), id(), false);
     }
 
-    flecs::vector<entity_t> vector() {
-        return flecs::vector<entity_t>( const_cast<ecs_vector_t*>(m_normalized));
+    flecs::vector<flecs::id_t> vector() {
+        return flecs::vector<flecs::id_t>( const_cast<ecs_vector_t*>(m_normalized));
+    }
+
+    flecs::id get(int32_t index) {
+        return flecs::id(world(), vector().get(index));
     }
 
     /* Implicit conversion to type_t */

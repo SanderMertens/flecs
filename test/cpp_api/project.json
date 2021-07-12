@@ -233,7 +233,9 @@
                 "has_type",
                 "has_entity",
                 "has_pair_type",
-                "has_pair_entity"
+                "has_pair_entity",
+                "get",
+                "get_out_of_range"
             ]
         }, {
             "id": "System",

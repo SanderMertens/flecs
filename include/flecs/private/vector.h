@@ -484,6 +484,7 @@ public:
     }
 
     T& get(int32_t index) {
+        ecs_assert(index < ecs_vector_count(m_vector), ECS_OUT_OF_RANGE, NULL);
         return *static_cast<T*>(_ecs_vector_get(m_vector, ECS_VECTOR_T(T), index));
     }
 

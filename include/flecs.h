@@ -52,6 +52,7 @@
 #endif // FLECS_FLOAT
 
 #include "flecs/private/api_defines.h"
+#include "flecs/private/log.h"              /* Logging API */
 #include "flecs/private/vector.h"        /* Vector datatype */
 #include "flecs/private/map.h"           /* Map */
 #include "flecs/private/strbuf.h"        /* String builder */
@@ -329,7 +330,6 @@ struct ecs_observer_t {
 
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
-#include "flecs/private/log.h"              /* Logging API */
 #include "flecs/type.h"                     /* Type API */
 
 

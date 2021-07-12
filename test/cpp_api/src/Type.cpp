@@ -186,3 +186,46 @@ void Type_has_pair_entity() {
     test_assert(type.has(eats, pears));
     test_assert(!type.has(eats, bananas));
 }
+
+void Type_get() {
+    flecs::world world;
+
+    auto apples = world.entity();
+    auto pears = world.entity();
+    auto bananas = world.entity();
+
+    auto type = world.type()
+        .add(apples)
+        .add(pears)
+        .add(bananas);
+
+    test_assert(type.has(apples));
+    test_assert(type.has(pears));
+    test_assert(type.has(bananas));
+
+    test_assert(type.get(0) == apples);
+    test_assert(type.get(1) == pears);
+    test_assert(type.get(2) == bananas);
+}
+
+void Type_get_out_of_range() {
+    install_test_abort();
+
+    flecs::world world;
+
+    auto apples = world.entity();
+    auto pears = world.entity();
+
+    auto type = world.type()
+        .add(apples)
+        .add(pears);
+
+    test_assert(type.has(apples));
+    test_assert(type.has(pears));
+
+    test_assert(type.get(0) == apples);
+    test_assert(type.get(1) == pears);
+
+    test_expect_abort();
+    type.get(2);
+}

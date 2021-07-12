@@ -133,8 +133,12 @@ public:
         ecs_enable(world(), id(), false);
     }
 
-    flecs::vector<entity_t> vector() {
-        return flecs::vector<entity_t>( const_cast<ecs_vector_t*>(m_normalized));
+    flecs::vector<flecs::id_t> vector() {
+        return flecs::vector<flecs::id_t>( const_cast<ecs_vector_t*>(m_normalized));
+    }
+
+    flecs::id get(int32_t index) {
+        return flecs::id(world(), vector().get(index));
     }
 
     /* Implicit conversion to type_t */
