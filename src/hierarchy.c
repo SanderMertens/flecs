@@ -16,23 +16,30 @@ bool path_append(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_type_t type = ecs_get_type(world, child);
-    ecs_entity_t cur;
-    ecs_type_find_id(world, type, component, EcsChildOf, 1, 0, &cur);
-    
-    if (cur) {
-        cur = ecs_get_alive(world, cur);
-        if (cur != parent && cur != EcsFlecsCore) {
-            path_append(world, parent, cur, component, sep, prefix, buf);
-            ecs_strbuf_appendstr(buf, sep);
-        }
-    } else if (prefix) {
-        ecs_strbuf_appendstr(buf, prefix);
-    }
-
+    ecs_entity_t cur = 0;
     char buff[22];
-    const char *name = ecs_get_name(world, child);
-    if (!name) {
+    const char *name;
+
+    if (ecs_is_valid(world, child)) {
+        ecs_type_t type = ecs_get_type(world, child);
+        ecs_type_find_id(world, type, component, EcsChildOf, 1, 0, &cur);
+        
+        if (cur) {
+            cur = ecs_get_alive(world, cur);
+            if (cur != parent && cur != EcsFlecsCore) {
+                path_append(world, parent, cur, component, sep, prefix, buf);
+                ecs_strbuf_appendstr(buf, sep);
+            }
+        } else if (prefix) {
+            ecs_strbuf_appendstr(buf, prefix);
+        }
+
+        name = ecs_get_name(world, child);
+        if (!name) {
+            ecs_os_sprintf(buff, "%u", (uint32_t)child);
+            name = buff;
+        }        
+    } else {
         ecs_os_sprintf(buff, "%u", (uint32_t)child);
         name = buff;
     }

@@ -398,6 +398,7 @@ void Hierarchies_scope_set_w_new(void);
 void Hierarchies_scope_set_w_new_staged(void);
 void Hierarchies_scope_set_w_lookup(void);
 void Hierarchies_scope_component(void);
+void Hierarchies_scope_component_no_macro(void);
 void Hierarchies_new_from_path_depth_0(void);
 void Hierarchies_new_from_path_depth_1(void);
 void Hierarchies_new_from_path_depth_2(void);
@@ -741,6 +742,21 @@ void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks(void);
 void ComponentLifecycle_set_lifecycle_after_trigger(void);
 void ComponentLifecycle_valid_entity_in_dtor_after_delete(void);
 void ComponentLifecycle_ctor_w_emplace(void);
+void ComponentLifecycle_dtor_on_fini(void);
+void ComponentLifecycle_valid_type_in_dtor_on_fini(void);
+void ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini(void);
+void ComponentLifecycle_valid_same_type_comp_of_entity_in_dtor_on_fini(void);
+void ComponentLifecycle_valid_same_type_comp_of_entity_in_dtor_on_delete_parent(void);
+void ComponentLifecycle_valid_entity_bulk_remove_all_components(void);
+void ComponentLifecycle_delete_in_dtor_same_type_on_fini(void);
+void ComponentLifecycle_delete_in_dtor_other_type_on_fini(void);
+void ComponentLifecycle_delete_self_in_dtor_on_fini(void);
+void ComponentLifecycle_delete_in_dtor_same_type_on_delete_parent(void);
+void ComponentLifecycle_delete_in_dtor_other_type_on_delete_parent(void);
+void ComponentLifecycle_delete_self_in_dtor_on_delete_parent(void);
+void ComponentLifecycle_delete_in_dtor_same_type_on_delete(void);
+void ComponentLifecycle_delete_in_dtor_other_type_on_delete(void);
+void ComponentLifecycle_delete_self_in_dtor_on_delete(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_setup(void);
@@ -3412,6 +3428,10 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_scope_component
     },
     {
+        "scope_component_no_macro",
+        Hierarchies_scope_component_no_macro
+    },
+    {
         "new_from_path_depth_0",
         Hierarchies_new_from_path_depth_0
     },
@@ -4687,6 +4707,66 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_w_emplace",
         ComponentLifecycle_ctor_w_emplace
+    },
+    {
+        "dtor_on_fini",
+        ComponentLifecycle_dtor_on_fini
+    },
+    {
+        "valid_type_in_dtor_on_fini",
+        ComponentLifecycle_valid_type_in_dtor_on_fini
+    },
+    {
+        "valid_other_type_of_entity_in_dtor_on_fini",
+        ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini
+    },
+    {
+        "valid_same_type_comp_of_entity_in_dtor_on_fini",
+        ComponentLifecycle_valid_same_type_comp_of_entity_in_dtor_on_fini
+    },
+    {
+        "valid_same_type_comp_of_entity_in_dtor_on_delete_parent",
+        ComponentLifecycle_valid_same_type_comp_of_entity_in_dtor_on_delete_parent
+    },
+    {
+        "valid_entity_bulk_remove_all_components",
+        ComponentLifecycle_valid_entity_bulk_remove_all_components
+    },
+    {
+        "delete_in_dtor_same_type_on_fini",
+        ComponentLifecycle_delete_in_dtor_same_type_on_fini
+    },
+    {
+        "delete_in_dtor_other_type_on_fini",
+        ComponentLifecycle_delete_in_dtor_other_type_on_fini
+    },
+    {
+        "delete_self_in_dtor_on_fini",
+        ComponentLifecycle_delete_self_in_dtor_on_fini
+    },
+    {
+        "delete_in_dtor_same_type_on_delete_parent",
+        ComponentLifecycle_delete_in_dtor_same_type_on_delete_parent
+    },
+    {
+        "delete_in_dtor_other_type_on_delete_parent",
+        ComponentLifecycle_delete_in_dtor_other_type_on_delete_parent
+    },
+    {
+        "delete_self_in_dtor_on_delete_parent",
+        ComponentLifecycle_delete_self_in_dtor_on_delete_parent
+    },
+    {
+        "delete_in_dtor_same_type_on_delete",
+        ComponentLifecycle_delete_in_dtor_same_type_on_delete
+    },
+    {
+        "delete_in_dtor_other_type_on_delete",
+        ComponentLifecycle_delete_in_dtor_other_type_on_delete
+    },
+    {
+        "delete_self_in_dtor_on_delete",
+        ComponentLifecycle_delete_self_in_dtor_on_delete
     }
 };
 
@@ -9170,7 +9250,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        84,
+        85,
         Hierarchies_testcases
     },
     {
@@ -9275,7 +9355,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        43,
+        58,
         ComponentLifecycle_testcases
     },
     {

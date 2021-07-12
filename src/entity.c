@@ -1598,12 +1598,6 @@ ecs_entity_t ecs_new_component_id(
         id = ecs_new_id(unsafe_world);
     }
 
-    /* Add scope to component */
-    ecs_entity_t scope = unsafe_world->stage.scope;
-    if (scope) {
-        ecs_add_pair(world, id, EcsChildOf, scope);
-    }    
-
     return id;
 }
 
@@ -2111,6 +2105,8 @@ ecs_entity_t ecs_entity_init(
                 result = ecs_new_id(world);
             }
             new_entity = true;
+            ecs_assert(ecs_get_type(world, result) == NULL, 
+                ECS_INTERNAL_ERROR, NULL);
         }
     } else {
         ecs_assert(ecs_is_valid(world, result), ECS_INVALID_PARAMETER, NULL);
@@ -2450,7 +2446,7 @@ void remove_from_table(
 
     if (!dst_table->type) {
         /* If this removes all components, clear table */
-        ecs_table_clear(world, src_table);
+        ecs_table_clear_entities(world, src_table);
     } else {
         /* Otherwise, merge table into dst_table */
         if (dst_table != src_table) {
@@ -2648,11 +2644,23 @@ void ecs_delete(
              * deleted entity (as a component, or as part of a relation) */
             on_delete_action(world, entity);
 
+            /* Refetch data. In case of circular relations, the entity may have
+             * moved to a different table. */
+            set_info_from_record(&info, r);
+            table = info.table;
+            if (table) {
+                table_id = table->id;
+            } else {
+                table_id = 0;
+            }
+
             if (r->table) {
                 ecs_ids_t to_remove = ecs_type_to_entities(r->table->type);
                 update_component_monitors(world, entity, NULL, &to_remove);
             }
         }
+
+        ecs_assert(!table_id || table, ECS_INTERNAL_ERROR, NULL);
 
         /* If entity has components, remove them. Check if table is still alive,
          * as delete actions could have deleted the table already. */
@@ -2715,7 +2723,6 @@ void ecs_remove_id(
     ecs_id_t id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     ecs_entities_t components = { .array = &id, .count = 1 };
@@ -2810,7 +2817,6 @@ const void* ecs_get_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_stage_from_readonly_world(world)->asynchronous == false, 
         ECS_INVALID_PARAMETER, NULL);
 
@@ -3247,7 +3253,6 @@ bool ecs_has_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!id || ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);

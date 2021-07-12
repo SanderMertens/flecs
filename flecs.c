@@ -1611,7 +1611,7 @@ void ecs_table_activate(
     bool activate);
 
 /* Clear all entities from a table. */
-void ecs_table_clear(
+void ecs_table_clear_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
@@ -1621,7 +1621,7 @@ void ecs_table_reset(
     ecs_table_t *table);
 
 /* Clear all entities from the table. Do not invoke OnRemove systems */
-void ecs_table_clear_silent(
+void ecs_table_clear_entities_silent(
     ecs_world_t *world,
     ecs_table_t *table);
 
@@ -1708,6 +1708,10 @@ void ecs_table_remove_actions(
 void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table); 
+
+/* Free table */
+void ecs_table_free_type(
+    ecs_table_t *table);     
 
 /* Merge table data */
 void ecs_table_merge_data(
@@ -2548,7 +2552,7 @@ void notify_trigger(
 }
 
 static
-void run_remove_actions(
+void run_on_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data)
@@ -2929,7 +2933,7 @@ void dtor_component(
         void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        dtor(world, cdata->component, entities, ptr,
+        dtor(world, cdata->component, &entities[row], ptr,
             ecs_to_size_t(size), count, ctx);
     }
 }
@@ -2940,23 +2944,104 @@ void dtor_all_components(
     ecs_table_t *table,
     ecs_data_t * data,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    bool update_entity_index,
+    bool is_delete)
 {
+    /* Can't delete and not update the entity index */
+    ecs_assert(!is_delete || update_entity_index, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_record_t **records = ecs_vector_first(data->record_ptrs, ecs_record_t*);
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-    int32_t column_count = table->column_count;
-    int32_t i;
-    for (i = 0; i < column_count; i ++) {
-        ecs_column_t *column = &data->columns[i];
-        dtor_component(
-            world, table->c_info[i], column, entities, row, 
-            count);
+    int32_t i, c, column_count = table->column_count, end = row + count;
+
+    (void)records;
+
+    /* If table has components with destructors, iterate component columns */
+    if (table->flags & EcsTableHasDtors) {
+        /* Prevent the storage from getting modified while deleting */
+        ecs_defer_begin(world);
+
+        /* Throw up a lock just to be sure */
+        table->lock = true;
+
+        /* Iterate entities first, then components. This ensures that only one
+         * entity is invalidated at a time, which ensures that destructors can
+         * safely access other entities. */
+        for (i = row; i < end; i ++) {
+            for (c = 0; c < column_count; c++) {
+                ecs_column_t *column = &data->columns[c];
+                dtor_component(world, table->c_info[c], column, entities, i, 1);
+            }
+
+            /* Update entity index after invoking destructors so that entity can
+             * be safely used in destructor callbacks. */
+            if (update_entity_index) {
+                ecs_entity_t e = entities[i];
+                ecs_assert(!e || ecs_is_valid(world, e), 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i] == ecs_eis_get(world, e), 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i]->table == table, 
+                    ECS_INTERNAL_ERROR, NULL);
+
+                if (is_delete) {
+                    ecs_eis_delete(world, e);
+                    ecs_assert(ecs_is_valid(world, e) == false, 
+                        ECS_INTERNAL_ERROR, NULL);
+                } else {
+                    // If this is not a delete, clear the entity index record
+                    ecs_record_t r = {NULL, 0};
+                    ecs_eis_set(world, e, &r);                
+                }
+            } else {
+                /* This should only happen in rare cases, such as when the data
+                 * cleaned up is not part of the world (like with snapshots) */
+            }
+        }
+
+        table->lock = false;
+    
+        ecs_defer_end(world);
+
+    /* If table does not have destructors, just update entity index */
+    } else if (update_entity_index) {
+        if (is_delete) {
+            for (i = row; i < end; i ++) {
+                ecs_entity_t e = entities[i];
+                ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i] == ecs_eis_get(world, e), 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i]->table == table, 
+                    ECS_INTERNAL_ERROR, NULL);
+
+                ecs_eis_delete(world, e);
+                ecs_assert(!ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
+            } 
+        } else {
+            for (i = row; i < end; i ++) {
+                ecs_entity_t e = entities[i];
+                ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i] == ecs_eis_get(world, e), 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i]->table == table, 
+                    ECS_INTERNAL_ERROR, NULL);                
+                ecs_record_t r = {NULL, 0};
+                ecs_eis_set(world, e, &r);
+            }
+        }      
     }
 }
 
-void ecs_table_clear_data(
+static
+void fini_data(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data)
+    ecs_data_t *data,
+    bool do_on_remove,
+    bool update_entity_index,
+    bool is_delete,
+    bool deactivate)
 {
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
@@ -2964,8 +3049,15 @@ void ecs_table_clear_data(
         return;
     }
 
+    if (do_on_remove) {
+        run_on_remove(world, table, data);        
+    }
+
     int32_t count = ecs_table_data_count(data);
-    dtor_all_components(world, table, data, 0, count);
+    if (count) {
+        dtor_all_components(world, table, data, 0, count, 
+            update_entity_index, is_delete);
+    }
     
     ecs_column_t *columns = data->columns;
     if (columns) {
@@ -2995,82 +3087,51 @@ void ecs_table_clear_data(
         }
         ecs_os_free(bs_columns);
         data->bs_columns = NULL;
-    }    
+    }
 
     ecs_vector_free(data->entities);
     ecs_vector_free(data->record_ptrs);
 
     data->entities = NULL;
     data->record_ptrs = NULL;
-}
 
-/* Clear columns. Deactivate table in systems if necessary, but do not invoke
- * OnRemove handlers. This is typically used when restoring a table to a
- * previous state. */
-void ecs_table_clear_silent(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-
-    ecs_data_t *data = ecs_table_get_data(table);
-    if (!data) {
-        return;
-    }
-
-    int32_t count = ecs_vector_count(data->entities);
-    
-    ecs_table_clear_data(world, table, data);
-
-    if (count) {
+    if (deactivate && count) {
         ecs_table_activate(world, table, 0, false);
     }
 }
 
+/* Cleanup, no OnRemove, don't update entity index, don't deactivate table */
+void ecs_table_clear_data(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data)
+{
+    fini_data(world, table, data, false, false, false, false);
+}
+
+/* Cleanup, no OnRemove, clear entity index, deactivate table */
+void ecs_table_clear_entities_silent(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    fini_data(world, table, ecs_table_get_data(table), 
+        false, true, false, true);
+}
+
+/* Cleanup, run OnRemove, clear entity index, deactivate table */
+void ecs_table_clear_entities(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    fini_data(world, table, ecs_table_get_data(table), true, true, false, true);
+}
+
+/* Cleanup, run OnRemove, delete from entity index, deactivate table */
 void ecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-
-    ecs_data_t *data = ecs_table_get_data(table);
-
-    if (data) {
-        run_remove_actions(world, table, data);
-
-        ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-        int32_t i, count = ecs_vector_count(data->entities);
-        for(i = 0; i < count; i ++) {
-            ecs_eis_delete(world, entities[i]);
-        }        
-
-        ecs_table_clear_silent(world, table);
-    }
-}
-
-/* Delete all entities in table, invoke OnRemove handlers. This function is used
- * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as 
- * the table may have to be deactivated with systems. */
-void ecs_table_clear(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-
-    ecs_data_t *data = ecs_table_get_data(table);
-
-    if (data) {
-        run_remove_actions(world, table, data);
-
-        ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-        int32_t i, count = ecs_vector_count(data->entities);
-        for(i = 0; i < count; i ++) {
-            ecs_record_t r = {NULL, 0};
-            ecs_eis_set(world, entities[i], &r);
-        } 
-
-        ecs_table_clear_silent(world, table);
-    }
+    fini_data(world, table, ecs_table_get_data(table), true, true, true, true);
 }
 
 /* Unset all components in table. This function is called before a table is 
@@ -3082,7 +3143,7 @@ void ecs_table_remove_actions(
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
-        run_remove_actions(world, table, data);
+        run_on_remove(world, table, data);
     }   
 }
 
@@ -3092,12 +3153,11 @@ void ecs_table_free(
     ecs_table_t *table)
 {
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-
     (void)world;
+
+    /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
     ecs_data_t *data = ecs_table_get_data(table);
-    if (data) {
-        ecs_table_clear_data(world, table, data);
-    }
+    fini_data(world, table, data, false, true, true, false);
 
     ecs_table_clear_edges(world, table);
 
@@ -3106,7 +3166,6 @@ void ecs_table_free(
     ecs_os_free(table->lo_edges);
     ecs_map_free(table->hi_edges);
     ecs_vector_free(table->queries);
-    ecs_vector_free((ecs_vector_t*)table->type);
     ecs_os_free(table->dirty_state);
     ecs_vector_free(table->monitors);
     ecs_vector_free(table->on_set_all);
@@ -3128,6 +3187,14 @@ void ecs_table_free(
     table->id = 0;
 
     ecs_os_free(table->data);
+}
+
+/* Free table type. Do this separately from freeing the table as types can be
+ * in use by application destructors. */
+void ecs_table_free_type(
+    ecs_table_t *table)
+{
+    ecs_vector_free((ecs_vector_t*)table->type);
 }
 
 /* Reset a table to its initial state. */
@@ -3680,7 +3747,7 @@ void ecs_table_delete(
     ecs_record_t *record_to_move = records[count];
 
     records[index] = record_to_move;
-    ecs_vector_remove_last(record_column);    
+    ecs_vector_remove_last(record_column); 
 
     /* Update record of moved entity in entity index */
     if (index != count) {
@@ -3711,6 +3778,7 @@ void ecs_table_delete(
         } else {
             fast_delete(columns, column_count, index);
         }
+
         return;
     }
 
@@ -3771,7 +3839,7 @@ void ecs_table_delete(
     int32_t bs_column_count = table->bs_column_count;
     for (i = 0; i < bs_column_count; i ++) {
         ecs_bitset_remove(&bs_columns[i].data, index);
-    }    
+    }
 }
 
 static
@@ -4425,7 +4493,7 @@ void ecs_table_replace_data(
 
     if (table_data) {
         prev_count = ecs_vector_count(table_data->entities);
-        run_remove_actions(world, table, table_data);
+        run_on_remove(world, table, table_data);
         ecs_table_clear_data(world, table, table_data);
     }
 
@@ -6161,12 +6229,6 @@ ecs_entity_t ecs_new_component_id(
         id = ecs_new_id(unsafe_world);
     }
 
-    /* Add scope to component */
-    ecs_entity_t scope = unsafe_world->stage.scope;
-    if (scope) {
-        ecs_add_pair(world, id, EcsChildOf, scope);
-    }    
-
     return id;
 }
 
@@ -6674,6 +6736,8 @@ ecs_entity_t ecs_entity_init(
                 result = ecs_new_id(world);
             }
             new_entity = true;
+            ecs_assert(ecs_get_type(world, result) == NULL, 
+                ECS_INTERNAL_ERROR, NULL);
         }
     } else {
         ecs_assert(ecs_is_valid(world, result), ECS_INVALID_PARAMETER, NULL);
@@ -7013,7 +7077,7 @@ void remove_from_table(
 
     if (!dst_table->type) {
         /* If this removes all components, clear table */
-        ecs_table_clear(world, src_table);
+        ecs_table_clear_entities(world, src_table);
     } else {
         /* Otherwise, merge table into dst_table */
         if (dst_table != src_table) {
@@ -7211,11 +7275,23 @@ void ecs_delete(
              * deleted entity (as a component, or as part of a relation) */
             on_delete_action(world, entity);
 
+            /* Refetch data. In case of circular relations, the entity may have
+             * moved to a different table. */
+            set_info_from_record(&info, r);
+            table = info.table;
+            if (table) {
+                table_id = table->id;
+            } else {
+                table_id = 0;
+            }
+
             if (r->table) {
                 ecs_ids_t to_remove = ecs_type_to_entities(r->table->type);
                 update_component_monitors(world, entity, NULL, &to_remove);
             }
         }
+
+        ecs_assert(!table_id || table, ECS_INTERNAL_ERROR, NULL);
 
         /* If entity has components, remove them. Check if table is still alive,
          * as delete actions could have deleted the table already. */
@@ -7278,7 +7354,6 @@ void ecs_remove_id(
     ecs_id_t id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     ecs_entities_t components = { .array = &id, .count = 1 };
@@ -7373,7 +7448,6 @@ const void* ecs_get_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_stage_from_readonly_world(world)->asynchronous == false, 
         ECS_INVALID_PARAMETER, NULL);
 
@@ -7810,7 +7884,6 @@ bool ecs_has_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!id || ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
@@ -12278,8 +12351,8 @@ void ecs_snapshot_restore(
              * If a table is found that was not in the snapshot, and the
              * snapshot was not filtered, clear the table. */
             if (!is_filtered) {
-                /* Use clear_silent so no triggers are fired */
-                ecs_table_clear_silent(world, table);
+                /* Clear data of old table. */
+                ecs_table_clear_data(world, table, ecs_table_get_data(table));
             }
         }
 
@@ -12938,7 +13011,7 @@ void bulk_delete(
         if (is_delete) {
             ecs_table_delete_entities(world, table);
         } else {
-            ecs_table_clear_silent(world, table);
+            ecs_table_clear_entities_silent(world, table);
         }
     }
 }
@@ -12953,7 +13026,7 @@ void merge_table(
 {    
     if (!dst_table->type) {
         /* If this removes all components, clear table */
-        ecs_table_clear(world, src_table);
+        ecs_table_clear_entities(world, src_table);
     } else {
         /* Merge table into dst_table */
         if (dst_table != src_table) {
@@ -14932,6 +15005,13 @@ void clean_tables(
         ecs_table_free(world, t);
     }
 
+    /* Free table types separately so that if application destructors rely on
+     * a type it's still valid. */
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *t = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_free_type(t);
+    }    
+
     /* Clear the root table */
     if (count) {
         ecs_table_reset(world, &world->store.root);
@@ -15471,16 +15551,16 @@ int ecs_fini(
     world->is_fini = true;
 
     fini_unset_tables(world);
+    
+    fini_store(world);
 
-    fini_actions(world);    
+    fini_actions(world);
 
     if (world->locking_enabled) {
         ecs_os_mutex_free(world->mutex);
     }
 
     fini_stages(world);
-
-    fini_store(world);
 
     fini_component_lifecycle(world);
 
@@ -15910,6 +15990,7 @@ void ecs_delete_table(
 
     /* Free resources associated with table */
     ecs_table_free(world, table);
+    ecs_table_free_type(table);
 
     /* Remove table from sparse set */
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
@@ -22365,7 +22446,7 @@ ecs_table_t *create_table(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, result->type);
-    ecs_trace_2("table #[green][%s]#[normal] created", expr);
+    ecs_trace_2("table #[green][%s]#[normal] created [%p]", expr, result);
     ecs_os_free(expr);
 #endif
     ecs_log_push();
@@ -24848,11 +24929,6 @@ void ecs_set_threads(
             world->sync_mutex = ecs_os_mutex_new();
             start_workers(world, threads);
         }
-
-        /* Iterate tables, make sure the ecs_data_t arrays are large enough */
-        ecs_sparse_each(world->store.tables, ecs_table_t, table, {
-            ecs_table_get_data(table);
-        });
     }
 }
 
@@ -27630,23 +27706,30 @@ bool path_append(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_type_t type = ecs_get_type(world, child);
-    ecs_entity_t cur;
-    ecs_type_find_id(world, type, component, EcsChildOf, 1, 0, &cur);
-    
-    if (cur) {
-        cur = ecs_get_alive(world, cur);
-        if (cur != parent && cur != EcsFlecsCore) {
-            path_append(world, parent, cur, component, sep, prefix, buf);
-            ecs_strbuf_appendstr(buf, sep);
-        }
-    } else if (prefix) {
-        ecs_strbuf_appendstr(buf, prefix);
-    }
-
+    ecs_entity_t cur = 0;
     char buff[22];
-    const char *name = ecs_get_name(world, child);
-    if (!name) {
+    const char *name;
+
+    if (ecs_is_valid(world, child)) {
+        ecs_type_t type = ecs_get_type(world, child);
+        ecs_type_find_id(world, type, component, EcsChildOf, 1, 0, &cur);
+        
+        if (cur) {
+            cur = ecs_get_alive(world, cur);
+            if (cur != parent && cur != EcsFlecsCore) {
+                path_append(world, parent, cur, component, sep, prefix, buf);
+                ecs_strbuf_appendstr(buf, sep);
+            }
+        } else if (prefix) {
+            ecs_strbuf_appendstr(buf, prefix);
+        }
+
+        name = ecs_get_name(world, child);
+        if (!name) {
+            ecs_os_sprintf(buff, "%u", (uint32_t)child);
+            name = buff;
+        }        
+    } else {
         ecs_os_sprintf(buff, "%u", (uint32_t)child);
         name = buff;
     }

@@ -196,7 +196,7 @@ void notify_trigger(
 }
 
 static
-void run_remove_actions(
+void run_on_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data)
@@ -577,7 +577,7 @@ void dtor_component(
         void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        dtor(world, cdata->component, entities, ptr,
+        dtor(world, cdata->component, &entities[row], ptr,
             ecs_to_size_t(size), count, ctx);
     }
 }
@@ -588,23 +588,104 @@ void dtor_all_components(
     ecs_table_t *table,
     ecs_data_t * data,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    bool update_entity_index,
+    bool is_delete)
 {
+    /* Can't delete and not update the entity index */
+    ecs_assert(!is_delete || update_entity_index, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_record_t **records = ecs_vector_first(data->record_ptrs, ecs_record_t*);
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-    int32_t column_count = table->column_count;
-    int32_t i;
-    for (i = 0; i < column_count; i ++) {
-        ecs_column_t *column = &data->columns[i];
-        dtor_component(
-            world, table->c_info[i], column, entities, row, 
-            count);
+    int32_t i, c, column_count = table->column_count, end = row + count;
+
+    (void)records;
+
+    /* If table has components with destructors, iterate component columns */
+    if (table->flags & EcsTableHasDtors) {
+        /* Prevent the storage from getting modified while deleting */
+        ecs_defer_begin(world);
+
+        /* Throw up a lock just to be sure */
+        table->lock = true;
+
+        /* Iterate entities first, then components. This ensures that only one
+         * entity is invalidated at a time, which ensures that destructors can
+         * safely access other entities. */
+        for (i = row; i < end; i ++) {
+            for (c = 0; c < column_count; c++) {
+                ecs_column_t *column = &data->columns[c];
+                dtor_component(world, table->c_info[c], column, entities, i, 1);
+            }
+
+            /* Update entity index after invoking destructors so that entity can
+             * be safely used in destructor callbacks. */
+            if (update_entity_index) {
+                ecs_entity_t e = entities[i];
+                ecs_assert(!e || ecs_is_valid(world, e), 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i] == ecs_eis_get(world, e), 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i]->table == table, 
+                    ECS_INTERNAL_ERROR, NULL);
+
+                if (is_delete) {
+                    ecs_eis_delete(world, e);
+                    ecs_assert(ecs_is_valid(world, e) == false, 
+                        ECS_INTERNAL_ERROR, NULL);
+                } else {
+                    // If this is not a delete, clear the entity index record
+                    ecs_record_t r = {NULL, 0};
+                    ecs_eis_set(world, e, &r);                
+                }
+            } else {
+                /* This should only happen in rare cases, such as when the data
+                 * cleaned up is not part of the world (like with snapshots) */
+            }
+        }
+
+        table->lock = false;
+    
+        ecs_defer_end(world);
+
+    /* If table does not have destructors, just update entity index */
+    } else if (update_entity_index) {
+        if (is_delete) {
+            for (i = row; i < end; i ++) {
+                ecs_entity_t e = entities[i];
+                ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i] == ecs_eis_get(world, e), 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i]->table == table, 
+                    ECS_INTERNAL_ERROR, NULL);
+
+                ecs_eis_delete(world, e);
+                ecs_assert(!ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
+            } 
+        } else {
+            for (i = row; i < end; i ++) {
+                ecs_entity_t e = entities[i];
+                ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i] == ecs_eis_get(world, e), 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(!e || records[i]->table == table, 
+                    ECS_INTERNAL_ERROR, NULL);                
+                ecs_record_t r = {NULL, 0};
+                ecs_eis_set(world, e, &r);
+            }
+        }      
     }
 }
 
-void ecs_table_clear_data(
+static
+void fini_data(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data)
+    ecs_data_t *data,
+    bool do_on_remove,
+    bool update_entity_index,
+    bool is_delete,
+    bool deactivate)
 {
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
@@ -612,8 +693,15 @@ void ecs_table_clear_data(
         return;
     }
 
+    if (do_on_remove) {
+        run_on_remove(world, table, data);        
+    }
+
     int32_t count = ecs_table_data_count(data);
-    dtor_all_components(world, table, data, 0, count);
+    if (count) {
+        dtor_all_components(world, table, data, 0, count, 
+            update_entity_index, is_delete);
+    }
     
     ecs_column_t *columns = data->columns;
     if (columns) {
@@ -643,82 +731,51 @@ void ecs_table_clear_data(
         }
         ecs_os_free(bs_columns);
         data->bs_columns = NULL;
-    }    
+    }
 
     ecs_vector_free(data->entities);
     ecs_vector_free(data->record_ptrs);
 
     data->entities = NULL;
     data->record_ptrs = NULL;
-}
 
-/* Clear columns. Deactivate table in systems if necessary, but do not invoke
- * OnRemove handlers. This is typically used when restoring a table to a
- * previous state. */
-void ecs_table_clear_silent(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-
-    ecs_data_t *data = ecs_table_get_data(table);
-    if (!data) {
-        return;
-    }
-
-    int32_t count = ecs_vector_count(data->entities);
-    
-    ecs_table_clear_data(world, table, data);
-
-    if (count) {
+    if (deactivate && count) {
         ecs_table_activate(world, table, 0, false);
     }
 }
 
+/* Cleanup, no OnRemove, don't update entity index, don't deactivate table */
+void ecs_table_clear_data(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data)
+{
+    fini_data(world, table, data, false, false, false, false);
+}
+
+/* Cleanup, no OnRemove, clear entity index, deactivate table */
+void ecs_table_clear_entities_silent(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    fini_data(world, table, ecs_table_get_data(table), 
+        false, true, false, true);
+}
+
+/* Cleanup, run OnRemove, clear entity index, deactivate table */
+void ecs_table_clear_entities(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    fini_data(world, table, ecs_table_get_data(table), true, true, false, true);
+}
+
+/* Cleanup, run OnRemove, delete from entity index, deactivate table */
 void ecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-
-    ecs_data_t *data = ecs_table_get_data(table);
-
-    if (data) {
-        run_remove_actions(world, table, data);
-
-        ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-        int32_t i, count = ecs_vector_count(data->entities);
-        for(i = 0; i < count; i ++) {
-            ecs_eis_delete(world, entities[i]);
-        }        
-
-        ecs_table_clear_silent(world, table);
-    }
-}
-
-/* Delete all entities in table, invoke OnRemove handlers. This function is used
- * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as 
- * the table may have to be deactivated with systems. */
-void ecs_table_clear(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-
-    ecs_data_t *data = ecs_table_get_data(table);
-
-    if (data) {
-        run_remove_actions(world, table, data);
-
-        ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-        int32_t i, count = ecs_vector_count(data->entities);
-        for(i = 0; i < count; i ++) {
-            ecs_record_t r = {NULL, 0};
-            ecs_eis_set(world, entities[i], &r);
-        } 
-
-        ecs_table_clear_silent(world, table);
-    }
+    fini_data(world, table, ecs_table_get_data(table), true, true, true, true);
 }
 
 /* Unset all components in table. This function is called before a table is 
@@ -730,7 +787,7 @@ void ecs_table_remove_actions(
     (void)world;
     ecs_data_t *data = ecs_table_get_data(table);
     if (data) {
-        run_remove_actions(world, table, data);
+        run_on_remove(world, table, data);
     }   
 }
 
@@ -740,12 +797,11 @@ void ecs_table_free(
     ecs_table_t *table)
 {
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-
     (void)world;
+
+    /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
     ecs_data_t *data = ecs_table_get_data(table);
-    if (data) {
-        ecs_table_clear_data(world, table, data);
-    }
+    fini_data(world, table, data, false, true, true, false);
 
     ecs_table_clear_edges(world, table);
 
@@ -754,7 +810,6 @@ void ecs_table_free(
     ecs_os_free(table->lo_edges);
     ecs_map_free(table->hi_edges);
     ecs_vector_free(table->queries);
-    ecs_vector_free((ecs_vector_t*)table->type);
     ecs_os_free(table->dirty_state);
     ecs_vector_free(table->monitors);
     ecs_vector_free(table->on_set_all);
@@ -776,6 +831,14 @@ void ecs_table_free(
     table->id = 0;
 
     ecs_os_free(table->data);
+}
+
+/* Free table type. Do this separately from freeing the table as types can be
+ * in use by application destructors. */
+void ecs_table_free_type(
+    ecs_table_t *table)
+{
+    ecs_vector_free((ecs_vector_t*)table->type);
 }
 
 /* Reset a table to its initial state. */
@@ -1328,7 +1391,7 @@ void ecs_table_delete(
     ecs_record_t *record_to_move = records[count];
 
     records[index] = record_to_move;
-    ecs_vector_remove_last(record_column);    
+    ecs_vector_remove_last(record_column); 
 
     /* Update record of moved entity in entity index */
     if (index != count) {
@@ -1359,6 +1422,7 @@ void ecs_table_delete(
         } else {
             fast_delete(columns, column_count, index);
         }
+
         return;
     }
 
@@ -1419,7 +1483,7 @@ void ecs_table_delete(
     int32_t bs_column_count = table->bs_column_count;
     for (i = 0; i < bs_column_count; i ++) {
         ecs_bitset_remove(&bs_columns[i].data, index);
-    }    
+    }
 }
 
 static
@@ -2073,7 +2137,7 @@ void ecs_table_replace_data(
 
     if (table_data) {
         prev_count = ecs_vector_count(table_data->entities);
-        run_remove_actions(world, table, table_data);
+        run_on_remove(world, table, table_data);
         ecs_table_clear_data(world, table, table_data);
     }
 

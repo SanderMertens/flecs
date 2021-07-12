@@ -423,6 +423,7 @@
                 "scope_set_w_new_staged",
                 "scope_set_w_lookup",
                 "scope_component",
+                "scope_component_no_macro",
                 "new_from_path_depth_0",
                 "new_from_path_depth_1",
                 "new_from_path_depth_2",
@@ -795,7 +796,22 @@
                 "allow_lifecycle_overwrite_equal_callbacks",
                 "set_lifecycle_after_trigger",
                 "valid_entity_in_dtor_after_delete",
-                "ctor_w_emplace"
+                "ctor_w_emplace",
+                "dtor_on_fini",
+                "valid_type_in_dtor_on_fini",
+                "valid_other_type_of_entity_in_dtor_on_fini",
+                "valid_same_type_comp_of_entity_in_dtor_on_fini",
+                "valid_same_type_comp_of_entity_in_dtor_on_delete_parent",
+                "valid_entity_bulk_remove_all_components",
+                "delete_in_dtor_same_type_on_fini",
+                "delete_in_dtor_other_type_on_fini",
+                "delete_self_in_dtor_on_fini",
+                "delete_in_dtor_same_type_on_delete_parent",
+                "delete_in_dtor_other_type_on_delete_parent",
+                "delete_self_in_dtor_on_delete_parent",
+                "delete_in_dtor_same_type_on_delete",
+                "delete_in_dtor_other_type_on_delete",
+                "delete_self_in_dtor_on_delete"
             ]
         }, {
             "id": "Pipeline",

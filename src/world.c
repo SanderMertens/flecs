@@ -276,6 +276,13 @@ void clean_tables(
         ecs_table_free(world, t);
     }
 
+    /* Free table types separately so that if application destructors rely on
+     * a type it's still valid. */
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *t = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_free_type(t);
+    }    
+
     /* Clear the root table */
     if (count) {
         ecs_table_reset(world, &world->store.root);
@@ -815,16 +822,16 @@ int ecs_fini(
     world->is_fini = true;
 
     fini_unset_tables(world);
+    
+    fini_store(world);
 
-    fini_actions(world);    
+    fini_actions(world);
 
     if (world->locking_enabled) {
         ecs_os_mutex_free(world->mutex);
     }
 
     fini_stages(world);
-
-    fini_store(world);
 
     fini_component_lifecycle(world);
 
@@ -1254,6 +1261,7 @@ void ecs_delete_table(
 
     /* Free resources associated with table */
     ecs_table_free(world, table);
+    ecs_table_free_type(table);
 
     /* Remove table from sparse set */
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
