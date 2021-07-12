@@ -133,6 +133,10 @@ void Entity_null_entity(void);
 void Entity_null_entity_w_world(void);
 void Entity_null_entity_w_0(void);
 void Entity_null_entity_w_world_w_0(void);
+void Entity_entity_view_null_entity(void);
+void Entity_entity_view_null_entity_w_world(void);
+void Entity_entity_view_null_entity_w_0(void);
+void Entity_entity_view_null_entity_w_world_w_0(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1073,6 +1077,22 @@ bake_test_case Entity_testcases[] = {
     {
         "null_entity_w_world_w_0",
         Entity_null_entity_w_world_w_0
+    },
+    {
+        "entity_view_null_entity",
+        Entity_entity_view_null_entity
+    },
+    {
+        "entity_view_null_entity_w_world",
+        Entity_entity_view_null_entity_w_world
+    },
+    {
+        "entity_view_null_entity_w_0",
+        Entity_entity_view_null_entity_w_0
+    },
+    {
+        "entity_view_null_entity_w_world_w_0",
+        Entity_entity_view_null_entity_w_world_w_0
     }
 };
 
@@ -2754,7 +2774,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        124,
+        128,
         Entity_testcases
     },
     {

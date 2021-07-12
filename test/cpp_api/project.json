@@ -139,7 +139,11 @@
                 "null_entity",
                 "null_entity_w_world",
                 "null_entity_w_0",
-                "null_entity_w_world_w_0"                
+                "null_entity_w_world_w_0",
+                "entity_view_null_entity",
+                "entity_view_null_entity_w_world",
+                "entity_view_null_entity_w_0",
+                "entity_view_null_entity_w_world_w_0"                                
             ]
         }, {
             "id": "Pairs",
