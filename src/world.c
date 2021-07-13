@@ -822,7 +822,7 @@ int ecs_fini(
     world->is_fini = true;
 
     /* Run UnSet/OnRemove actions for components while the store is still
-     * unmodified. */
+     * unmodified by cleanup. */
     fini_unset_tables(world);
     
     /* Run fini actions (simple callbacks ran when world is deleted) before

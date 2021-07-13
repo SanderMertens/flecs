@@ -600,6 +600,7 @@ void OnDelete_stresstest_many_objects(void);
 void OnDelete_stresstest_many_relations(void);
 void OnDelete_stresstest_many_objects_on_delete(void);
 void OnDelete_stresstest_many_relations_on_delete(void);
+void OnDelete_on_delete_empty_table_w_on_remove(void);
 
 // Testsuite 'Delete_w_filter'
 void Delete_w_filter_delete_1(void);
@@ -4177,6 +4178,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "stresstest_many_relations_on_delete",
         OnDelete_stresstest_many_relations_on_delete
+    },
+    {
+        "on_delete_empty_table_w_on_remove",
+        OnDelete_on_delete_empty_table_w_on_remove
     }
 };
 
@@ -9313,7 +9318,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        42,
+        43,
         OnDelete_testcases
     },
     {

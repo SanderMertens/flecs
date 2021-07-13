@@ -182,6 +182,7 @@ void notify_trigger_set(
 
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
     ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
     ecs_assert((row + count) <= ecs_vector_count(data->entities), 
         ECS_INTERNAL_ERROR, NULL);

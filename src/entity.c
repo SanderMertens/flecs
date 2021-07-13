@@ -299,6 +299,8 @@ void notify(
     ecs_ids_t *ids)
 {
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
+
     ecs_id_t *arr = ids->array;
     int32_t arr_count = ids->count;
 
@@ -843,12 +845,14 @@ void ecs_run_remove_actions(
     ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(removed->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
-    if (table->flags & EcsTableHasUnSet) {
-        notify(world, table, data, row, count, EcsUnSet, removed);
-    } 
-    if (table->flags & EcsTableHasOnRemove) {
-        notify(world, table, data, row, count, EcsOnRemove, removed);
-    }  
+    if (count) {
+        if (table->flags & EcsTableHasUnSet) {
+            notify(world, table, data, row, count, EcsUnSet, removed);
+        } 
+        if (table->flags & EcsTableHasOnRemove) {
+            notify(world, table, data, row, count, EcsOnRemove, removed);
+        }
+    }
 }
 
 static
@@ -2571,6 +2575,7 @@ void on_delete_relation_action(
     ecs_id_t id)
 {
     ecs_id_record_t *idr = ecs_get_id_record(world, id);
+
     if (idr) {
         ecs_entity_t on_delete = idr->on_delete;
         if (on_delete == EcsThrow) {
@@ -2583,6 +2588,7 @@ void on_delete_relation_action(
         while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
             ecs_table_t *table = tr->table;
             ecs_entity_t action = idr->on_delete;
+
             if (!action || action == EcsRemove) {
                 remove_from_table(world, table, id, tr->column);
             } else if (action == EcsDelete) {

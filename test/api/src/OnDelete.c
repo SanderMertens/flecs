@@ -950,3 +950,47 @@ void OnDelete_stresstest_many_relations_on_delete() {
 
     ecs_fini(world);
 }
+
+static ecs_entity_t trigger_entity;
+static int trigger_count;
+
+static
+void on_remove_after_delete_after_on_remove(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    trigger_entity = it->entities[0];
+
+    trigger_count ++;
+    test_int(trigger_count, 1);
+}
+
+void OnDelete_on_delete_empty_table_w_on_remove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+
+    ecs_add_id(world, e1, e2);
+    ecs_add_id(world, e1, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .events = {EcsOnRemove},
+        .term.id = e2,
+        .callback = on_remove_after_delete_after_on_remove
+    });
+
+    ecs_delete(world, e1);
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(trigger_entity != 0);
+    test_assert(trigger_entity == e1);
+    test_int(trigger_count, 1);
+
+    // Will delete table of e1, which is now empty. Should not call trigger
+    ecs_delete(world, e2);
+
+    test_int(trigger_count, 1);
+
+    ecs_fini(world);
+}

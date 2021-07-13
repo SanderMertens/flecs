@@ -642,7 +642,8 @@
                 "stresstest_many_objects",
                 "stresstest_many_relations",
                 "stresstest_many_objects_on_delete",
-                "stresstest_many_relations_on_delete"
+                "stresstest_many_relations_on_delete",
+                "on_delete_empty_table_w_on_remove"
             ]
         }, {
             "id": "Delete_w_filter",
