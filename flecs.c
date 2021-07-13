@@ -15550,11 +15550,17 @@ int ecs_fini(
 
     world->is_fini = true;
 
+    /* Run UnSet/OnRemove actions for components while the store is still
+     * unmodified. */
     fini_unset_tables(world);
     
-    fini_store(world);
-
+    /* Run fini actions (simple callbacks ran when world is deleted) before
+     * destroying the storage */
     fini_actions(world);
+
+    /* This will destroy all entities and components. After this point no more
+     * user code is executed. */
+    fini_store(world);
 
     if (world->locking_enabled) {
         ecs_os_mutex_free(world->mutex);
