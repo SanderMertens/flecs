@@ -679,6 +679,8 @@ typedef struct ecs_string_t {
 /** Component-specific data */
 typedef struct ecs_type_info_t {
     ecs_entity_t component;
+    ecs_size_t size;
+    ecs_size_t alignment;
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
     bool lifecycle_set;
 } ecs_type_info_t;
@@ -1502,6 +1504,10 @@ bool ecs_defer_set(
     bool *is_added);
 
 bool ecs_defer_flush(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
+
+bool ecs_defer_purge(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
@@ -7141,16 +7147,19 @@ void delete_tables_for_id_record(
      * map, remove the map pointer from the id record. This will prevent the
      * table from removing itself from the map as it is deleted, which
      * allows for iterating the map without changing it. */
-    ecs_map_t *table_index = idr->table_index;
-    idr->table_index = NULL;
-    ecs_map_iter_t it = ecs_map_iter(table_index);
-    ecs_table_record_t *tr;
-    while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-        ecs_delete_table(world, tr->table);
-    }
-    ecs_map_free(table_index);
+    
+    if (!world->is_fini) {
+        ecs_map_t *table_index = idr->table_index;
+        idr->table_index = NULL;
+        ecs_map_iter_t it = ecs_map_iter(table_index);
+        ecs_table_record_t *tr;
+        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+            ecs_delete_table(world, tr->table);
+        }
+        ecs_map_free(table_index);
 
-    ecs_clear_id_record(world, id);
+        ecs_clear_id_record(world, id);
+    }
 }
 
 static
@@ -7284,6 +7293,7 @@ void ecs_delete(
             /* Refetch data. In case of circular relations, the entity may have
              * moved to a different table. */
             set_info_from_record(&info, r);
+            
             table = info.table;
             if (table) {
                 table_id = table->id;
@@ -8425,20 +8435,57 @@ void flush_bulk_new(
 }
 
 static
+void free_value(
+    ecs_world_t *world,
+    ecs_entity_t *entities,
+    ecs_id_t id,
+    void *value,
+    int32_t count)
+{
+    ecs_entity_t real_id = ecs_get_typeid(world, id);
+    const ecs_type_info_t *info = ecs_get_c_info(world, real_id);
+    ecs_xtor_t dtor;
+    
+    if (info && (dtor = info->lifecycle.dtor)) {
+        ecs_size_t size = info->size;
+        void *ptr;
+        int i;
+        for (i = 0, ptr = value; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
+            dtor(world, id, &entities[i], ptr, ecs_to_size_t(size), 1, 
+                info->lifecycle.ctx);
+        }
+    }
+}
+
+static
 void discard_op(
+    ecs_world_t *world,
     ecs_op_t * op)
 {
-    ecs_assert(op->kind != EcsOpBulkNew, ECS_INTERNAL_ERROR, NULL);
-
-    void *value = op->is._1.value;
-    if (value) {
-        ecs_os_free(value);
+    if (op->kind == EcsOpBulkNew) {
+        void **bulk_data = op->is._n.bulk_data;
+        if (bulk_data) {
+            ecs_entity_t *entities = op->is._n.entities;
+            ecs_entity_t *components = op->components.array;
+            int c, c_count = op->components.count;
+            for (c = 0; c < c_count; c ++) {
+                free_value(world, entities, components[c], bulk_data[c], 
+                    op->is._n.count);
+                ecs_os_free(bulk_data[c]);
+            }
+        }
+    } else {
+        void *value = op->is._1.value;
+        if (value) {
+            free_value(world, &op->is._1.entity, op->component, op->is._1.value, 1);
+            ecs_os_free(value);
+        }
     }
 
     ecs_entity_t *components = op->components.array;
     if (components) {
         ecs_os_free(components);
-    }
+    }    
 }
 
 static
@@ -8494,7 +8541,7 @@ bool ecs_defer_flush(
                     ecs_assert(op->kind != EcsOpNew && op->kind != EcsOpClone, 
                         ECS_INTERNAL_ERROR, NULL);
                     world->discard_count ++;
-                    discard_op(op);
+                    discard_op(world, op);
                     continue;
                 }
 
@@ -8578,6 +8625,39 @@ bool ecs_defer_flush(
     return false;
 }
 
+/* Delete operations from queue without executing them. */
+bool ecs_defer_purge(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!--stage->defer) {
+        ecs_vector_t *defer_queue = stage->defer_queue;
+        stage->defer_queue = NULL;
+
+        if (defer_queue) {
+            ecs_op_t *ops = ecs_vector_first(defer_queue, ecs_op_t);
+            int32_t i, count = ecs_vector_count(defer_queue);
+            for (i = 0; i < count; i ++) {
+                discard_op(world, &ops[i]);
+            }
+
+            if (stage->defer_queue) {
+                ecs_vector_free(stage->defer_queue);
+            }
+
+            /* Restore defer queue */
+            ecs_vector_clear(defer_queue);
+            stage->defer_queue = defer_queue;
+        }
+
+        return true;
+    }
+
+    return false;
+}
 static
 ecs_op_t* new_defer_op(ecs_stage_t *stage) {
     ecs_op_t *result = ecs_vector_add(&stage->defer_queue, ecs_op_t);
@@ -15029,7 +15109,7 @@ void fini_store(ecs_world_t *world) {
     clean_tables(world);
     ecs_sparse_free(world->store.tables);
     ecs_table_free(world, &world->store.root);
-    ecs_sparse_free(world->store.entity_index);
+    ecs_sparse_clear(world->store.entity_index);
     ecs_hashmap_free(world->store.table_map);
 }
 
@@ -15332,6 +15412,8 @@ void ecs_set_component_actions_w_id(
         c_info->component = component;
         c_info->lifecycle = *lifecycle;
         c_info->lifecycle_set = true;
+        c_info->size = component_ptr->size;
+        c_info->alignment = component_ptr->alignment;
 
         /* If no constructor is set, invoking any of the other lifecycle actions 
          * is not safe as they will potentially access uninitialized memory. For 
@@ -15432,9 +15514,11 @@ static
 void fini_unset_tables(
     ecs_world_t *world)
 {
-    int32_t i, count = ecs_sparse_count(world->store.tables);
+    ecs_sparse_t *tables = world->store.tables;
+    int32_t i, count = ecs_sparse_count(tables);
+
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         ecs_table_remove_actions(world, table);
     }
 }
@@ -15556,6 +15640,10 @@ int ecs_fini(
 
     world->is_fini = true;
 
+    /* Operations invoked during UnSet/OnRemove/destructors are deferred and
+     * will be discarded after world cleanup */
+    ecs_defer_begin(world);
+
     /* Run UnSet/OnRemove actions for components while the store is still
      * unmodified by cleanup. */
     fini_unset_tables(world);
@@ -15568,6 +15656,15 @@ int ecs_fini(
      * user code is executed. */
     fini_store(world);
 
+    /* Purge deferred operations from the queue. This discards operations but
+     * makes sure that any resources in the queue are freed */
+    ecs_defer_purge(world, &world->stage);
+
+    /* Entity index is kept alive until this point so that user code can do
+     * validity checks on entity ids, even though after store cleanup the index
+     * will be empty, so all entity ids are invalid. */
+    ecs_sparse_free(world->store.entity_index);
+    
     if (world->locking_enabled) {
         ecs_os_mutex_free(world->mutex);
     }
@@ -17619,6 +17716,7 @@ ecs_entity_t ecs_observer_init(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     /* If entity is provided, create it */
     ecs_entity_t existing = desc->entity.entity;
@@ -21276,6 +21374,9 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world,
     const ecs_query_desc_t *desc)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+
     ecs_filter_t f;
     if (ecs_filter_init(world, &f, &desc->filter)) {
         return NULL;
@@ -24190,6 +24291,7 @@ ecs_entity_t ecs_trigger_init(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     char *name = NULL;
     const char *expr = desc->expr;

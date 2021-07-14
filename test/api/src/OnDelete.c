@@ -955,7 +955,7 @@ static ecs_entity_t trigger_entity;
 static int trigger_count;
 
 static
-void on_remove_after_delete_after_on_remove(ecs_iter_t *it) {
+void dummy_on_remove(ecs_iter_t *it) {
     test_int(it->count, 1);
     trigger_entity = it->entities[0];
 
@@ -977,7 +977,7 @@ void OnDelete_on_delete_empty_table_w_on_remove() {
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .events = {EcsOnRemove},
         .term.id = e2,
-        .callback = on_remove_after_delete_after_on_remove
+        .callback = dummy_on_remove
     });
 
     ecs_delete(world, e1);
@@ -993,4 +993,94 @@ void OnDelete_on_delete_empty_table_w_on_remove() {
     test_int(trigger_count, 1);
 
     ecs_fini(world);
+}
+
+typedef struct {
+    ecs_entity_t other;
+} Entity;
+
+static 
+void delete_on_remove(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    Entity *comp = ecs_term(it, Entity, 1);
+    test_assert(comp != NULL);
+    test_assert(comp->other != 0);
+    ecs_delete(it->world, comp->other);
+    trigger_count ++;
+}
+
+static 
+void delete_self_on_remove(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    ecs_delete(it->world, it->self);
+    trigger_count ++;
+}
+
+void OnDelete_delete_table_in_on_remove_during_fini() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    /* Setup scenario so that the order in which tables are deleted doesn't
+     * matter for reproducing the issue */
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+
+    /* Add entities to each other so that deleting one will delete the table of
+     * the other. */
+    ecs_add_id(world, e1, e2);
+    ecs_add_id(world, e2, e1);
+    
+    /* Make sure entities are in different tables */
+    ecs_add_id(world, e1, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .events = {EcsOnRemove},
+        .term.id = e1,
+        .callback = delete_self_on_remove,
+        .self = e2
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .events = {EcsOnRemove},
+        .term.id = e2,
+        .callback = delete_self_on_remove,
+        .self = e1
+    });    
+
+    ecs_fini(world);
+
+    /* Trigger must have been called for both entities */
+    test_int(trigger_count, 2);
+}
+
+void OnDelete_delete_other_in_on_remove_during_fini() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Entity);
+    ECS_TAG(world, Tag);
+
+    /* Setup scenario so that the order in which tables are deleted doesn't
+     * matter for reproducing the issue */
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+
+    /* Removing Entity from one will delete the other */
+    ecs_set(world, e1, Entity, {e2});
+    ecs_set(world, e2, Entity, {e1});
+
+    /* Make sure entities are in different tables */
+    ecs_add_id(world, e1, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .events = {EcsOnRemove},
+        .term.id = ecs_id(Entity),
+        .callback = delete_on_remove
+    });
+
+    ecs_fini(world);
+
+    /* Trigger must have been called for both entities */
+    test_int(trigger_count, 2);
 }

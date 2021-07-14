@@ -294,7 +294,7 @@ void fini_store(ecs_world_t *world) {
     clean_tables(world);
     ecs_sparse_free(world->store.tables);
     ecs_table_free(world, &world->store.root);
-    ecs_sparse_free(world->store.entity_index);
+    ecs_sparse_clear(world->store.entity_index);
     ecs_hashmap_free(world->store.table_map);
 }
 
@@ -597,6 +597,8 @@ void ecs_set_component_actions_w_id(
         c_info->component = component;
         c_info->lifecycle = *lifecycle;
         c_info->lifecycle_set = true;
+        c_info->size = component_ptr->size;
+        c_info->alignment = component_ptr->alignment;
 
         /* If no constructor is set, invoking any of the other lifecycle actions 
          * is not safe as they will potentially access uninitialized memory. For 
@@ -697,9 +699,11 @@ static
 void fini_unset_tables(
     ecs_world_t *world)
 {
-    int32_t i, count = ecs_sparse_count(world->store.tables);
+    ecs_sparse_t *tables = world->store.tables;
+    int32_t i, count = ecs_sparse_count(tables);
+
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         ecs_table_remove_actions(world, table);
     }
 }
@@ -821,6 +825,10 @@ int ecs_fini(
 
     world->is_fini = true;
 
+    /* Operations invoked during UnSet/OnRemove/destructors are deferred and
+     * will be discarded after world cleanup */
+    ecs_defer_begin(world);
+
     /* Run UnSet/OnRemove actions for components while the store is still
      * unmodified by cleanup. */
     fini_unset_tables(world);
@@ -833,6 +841,15 @@ int ecs_fini(
      * user code is executed. */
     fini_store(world);
 
+    /* Purge deferred operations from the queue. This discards operations but
+     * makes sure that any resources in the queue are freed */
+    ecs_defer_purge(world, &world->stage);
+
+    /* Entity index is kept alive until this point so that user code can do
+     * validity checks on entity ids, even though after store cleanup the index
+     * will be empty, so all entity ids are invalid. */
+    ecs_sparse_free(world->store.entity_index);
+    
     if (world->locking_enabled) {
         ecs_os_mutex_free(world->mutex);
     }

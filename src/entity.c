@@ -2510,16 +2510,19 @@ void delete_tables_for_id_record(
      * map, remove the map pointer from the id record. This will prevent the
      * table from removing itself from the map as it is deleted, which
      * allows for iterating the map without changing it. */
-    ecs_map_t *table_index = idr->table_index;
-    idr->table_index = NULL;
-    ecs_map_iter_t it = ecs_map_iter(table_index);
-    ecs_table_record_t *tr;
-    while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-        ecs_delete_table(world, tr->table);
-    }
-    ecs_map_free(table_index);
+    
+    if (!world->is_fini) {
+        ecs_map_t *table_index = idr->table_index;
+        idr->table_index = NULL;
+        ecs_map_iter_t it = ecs_map_iter(table_index);
+        ecs_table_record_t *tr;
+        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+            ecs_delete_table(world, tr->table);
+        }
+        ecs_map_free(table_index);
 
-    ecs_clear_id_record(world, id);
+        ecs_clear_id_record(world, id);
+    }
 }
 
 static
@@ -2653,6 +2656,7 @@ void ecs_delete(
             /* Refetch data. In case of circular relations, the entity may have
              * moved to a different table. */
             set_info_from_record(&info, r);
+            
             table = info.table;
             if (table) {
                 table_id = table->id;
@@ -3794,20 +3798,57 @@ void flush_bulk_new(
 }
 
 static
+void free_value(
+    ecs_world_t *world,
+    ecs_entity_t *entities,
+    ecs_id_t id,
+    void *value,
+    int32_t count)
+{
+    ecs_entity_t real_id = ecs_get_typeid(world, id);
+    const ecs_type_info_t *info = ecs_get_c_info(world, real_id);
+    ecs_xtor_t dtor;
+    
+    if (info && (dtor = info->lifecycle.dtor)) {
+        ecs_size_t size = info->size;
+        void *ptr;
+        int i;
+        for (i = 0, ptr = value; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
+            dtor(world, id, &entities[i], ptr, ecs_to_size_t(size), 1, 
+                info->lifecycle.ctx);
+        }
+    }
+}
+
+static
 void discard_op(
+    ecs_world_t *world,
     ecs_op_t * op)
 {
-    ecs_assert(op->kind != EcsOpBulkNew, ECS_INTERNAL_ERROR, NULL);
-
-    void *value = op->is._1.value;
-    if (value) {
-        ecs_os_free(value);
+    if (op->kind == EcsOpBulkNew) {
+        void **bulk_data = op->is._n.bulk_data;
+        if (bulk_data) {
+            ecs_entity_t *entities = op->is._n.entities;
+            ecs_entity_t *components = op->components.array;
+            int c, c_count = op->components.count;
+            for (c = 0; c < c_count; c ++) {
+                free_value(world, entities, components[c], bulk_data[c], 
+                    op->is._n.count);
+                ecs_os_free(bulk_data[c]);
+            }
+        }
+    } else {
+        void *value = op->is._1.value;
+        if (value) {
+            free_value(world, &op->is._1.entity, op->component, op->is._1.value, 1);
+            ecs_os_free(value);
+        }
     }
 
     ecs_entity_t *components = op->components.array;
     if (components) {
         ecs_os_free(components);
-    }
+    }    
 }
 
 static
@@ -3863,7 +3904,7 @@ bool ecs_defer_flush(
                     ecs_assert(op->kind != EcsOpNew && op->kind != EcsOpClone, 
                         ECS_INTERNAL_ERROR, NULL);
                     world->discard_count ++;
-                    discard_op(op);
+                    discard_op(world, op);
                     continue;
                 }
 
@@ -3930,6 +3971,40 @@ bool ecs_defer_flush(
                 if (op->is._1.value) {
                     ecs_os_free(op->is._1.value);
                 }                  
+            }
+
+            if (stage->defer_queue) {
+                ecs_vector_free(stage->defer_queue);
+            }
+
+            /* Restore defer queue */
+            ecs_vector_clear(defer_queue);
+            stage->defer_queue = defer_queue;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+/* Delete operations from queue without executing them. */
+bool ecs_defer_purge(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!--stage->defer) {
+        ecs_vector_t *defer_queue = stage->defer_queue;
+        stage->defer_queue = NULL;
+
+        if (defer_queue) {
+            ecs_op_t *ops = ecs_vector_first(defer_queue, ecs_op_t);
+            int32_t i, count = ecs_vector_count(defer_queue);
+            for (i = 0; i < count; i ++) {
+                discard_op(world, &ops[i]);
             }
 
             if (stage->defer_queue) {

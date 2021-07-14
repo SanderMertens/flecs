@@ -2119,6 +2119,9 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world,
     const ecs_query_desc_t *desc)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+
     ecs_filter_t f;
     if (ecs_filter_init(world, &f, &desc->filter)) {
         return NULL;
