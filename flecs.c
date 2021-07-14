@@ -15385,7 +15385,6 @@ void ecs_set_component_actions_w_id(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_from_world(&world);
 
-#ifndef NDEBUG
     const EcsComponent *component_ptr = ecs_get(world, component, EcsComponent);
 
     /* Cannot register lifecycle actions for things that aren't a component */
@@ -15393,7 +15392,6 @@ void ecs_set_component_actions_w_id(
 
     /* Cannot register lifecycle actions for components with size 0 */
     ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
-#endif
 
     ecs_type_info_t *c_info = ecs_get_or_create_c_info(world, component);
     ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
