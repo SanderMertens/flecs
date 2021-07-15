@@ -183,6 +183,15 @@ void ecs_observer_fini(
     ecs_world_t *world,
     ecs_observer_t *observer)
 {
+    int i, count = observer->filter.term_count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t trigger = observer->triggers[i];
+        if (trigger) {
+            ecs_delete(world, trigger);
+        }
+    }
+    ecs_os_free(observer->triggers);
+
     ecs_filter_fini(&observer->filter);
 
     if (observer->ctx_free) {
@@ -192,8 +201,6 @@ void ecs_observer_fini(
     if (observer->binding_ctx_free) {
         observer->binding_ctx_free(observer->binding_ctx);
     }
-
-    ecs_os_free(observer->triggers);
 
     ecs_sparse_remove(world->observers, observer->id);
 }

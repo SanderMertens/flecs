@@ -8658,6 +8658,7 @@ bool ecs_defer_purge(
 
     return false;
 }
+
 static
 ecs_op_t* new_defer_op(ecs_stage_t *stage) {
     ecs_op_t *result = ecs_vector_add(&stage->defer_queue, ecs_op_t);
@@ -17804,6 +17805,15 @@ void ecs_observer_fini(
     ecs_world_t *world,
     ecs_observer_t *observer)
 {
+    int i, count = observer->filter.term_count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t trigger = observer->triggers[i];
+        if (trigger) {
+            ecs_delete(world, trigger);
+        }
+    }
+    ecs_os_free(observer->triggers);
+
     ecs_filter_fini(&observer->filter);
 
     if (observer->ctx_free) {
@@ -17813,8 +17823,6 @@ void ecs_observer_fini(
     if (observer->binding_ctx_free) {
         observer->binding_ctx_free(observer->binding_ctx);
     }
-
-    ecs_os_free(observer->triggers);
 
     ecs_sparse_remove(world->observers, observer->id);
 }
@@ -24053,7 +24061,6 @@ ecs_map_t* unregister_id_trigger(
 static
 void register_trigger(
     ecs_world_t *world,
-    ecs_id_t id,
     ecs_trigger_t *trigger)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -24063,7 +24070,7 @@ void register_trigger(
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_trigger_t *idt = ecs_map_ensure(triggers, 
-        ecs_id_trigger_t, id);
+        ecs_id_trigger_t, trigger->term.id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int i;
@@ -24088,7 +24095,7 @@ void register_trigger(
             *set = ecs_map_new(ecs_trigger_t*, 1);
 
             // First trigger of its kind, send table notification
-            ecs_notify_tables(world, id, &(ecs_table_event_t){
+            ecs_notify_tables(world, trigger->term.id, &(ecs_table_event_t){
                 .kind = EcsTableTriggerMatch,
                 .event = trigger->events[i]
             });            
@@ -24110,7 +24117,7 @@ void unregister_trigger(
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_trigger_t *idt = ecs_map_get(
-        triggers, ecs_id_trigger_t, trigger->id);
+        triggers, ecs_id_trigger_t, trigger->term.id);
     if (!idt) {
         return;
     }
@@ -24135,7 +24142,9 @@ void unregister_trigger(
         }
 
         *set = unregister_id_trigger(*set, trigger);                
-    }  
+    }
+
+    ecs_map_remove(triggers, trigger->id);
 }
 
 ecs_map_t* ecs_triggers_get(
@@ -24359,7 +24368,7 @@ ecs_entity_t ecs_trigger_init(
         /* Trigger must have at least one event */
         ecs_assert(trigger->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
-        register_trigger(world, trigger->term.id, trigger);
+        register_trigger(world, trigger);
 
         ecs_term_fini(&term);        
     } else {
@@ -26607,7 +26616,11 @@ void ecs_colsystem_dtor(
 
         if (system->binding_ctx_free) {
             system->binding_ctx_free(system->binding_ctx);
-        }                
+        }  
+
+        if (system->query) {
+            ecs_query_free(system->query);
+        }
     }
 }
 

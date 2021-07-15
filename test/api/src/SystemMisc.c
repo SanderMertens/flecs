@@ -1986,6 +1986,7 @@ void SystemMisc_system_w_self() {
         .callback = Dummy,
         .self = self
     });
+    test_assert(system != 0);
 
     ecs_set_context(world, &ctx);
 
@@ -1997,6 +1998,128 @@ void SystemMisc_system_w_self() {
     test_int(ctx.count, 1);
     test_assert(ctx.system == system);
     test_assert(ctx.self == self);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_delete_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+        .query.filter.terms = {{.id = Tag}},
+        .callback = Dummy
+    });
+    test_assert(system != 0);
+
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, Tag);
+
+    ecs_run(world, system, 0, NULL);
+    test_int(ctx.count, 1);
+    test_assert(ctx.system == system);
+
+    ecs_delete(world, system);
+    test_assert(!ecs_is_alive(world, system));
+
+    ecs_fini(world);
+}
+
+void SystemMisc_delete_pipeline_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+
+    // Create system before
+    test_assert(ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.add = {EcsOnUpdate},
+        .query.filter.terms = {{.id = Tag}},
+        .callback = Dummy
+    }) != 0);
+
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.add = {EcsOnUpdate},
+        .query.filter.terms = {{.id = Tag}},
+        .callback = Dummy
+    });
+    test_assert(system != 0);
+
+    // Create system after
+    test_assert(ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.add = {EcsOnUpdate},
+        .query.filter.terms = {{.id = Tag}},
+        .callback = Dummy
+    }) != 0);
+
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, Tag);
+
+    ecs_progress(world, 0);
+    test_int(ctx.count, 3);
+
+    ctx.count = 0;
+
+    ecs_delete(world, system);
+
+    ecs_progress(world, 0);
+    test_int(ctx.count, 2);
+
+    ecs_fini(world);
+}
+
+static int ctx_value;
+static
+void ctx_free(void *ctx) {
+    test_assert(&ctx_value == ctx);
+    ctx_value ++;
+}
+
+static int binding_ctx_value;
+static
+void binding_ctx_free(void *ctx) {
+    test_assert(&binding_ctx_value == ctx);
+    binding_ctx_value ++;
+}
+
+void SystemMisc_delete_system_w_ctx() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+        .query.filter.terms = {{.id = Tag}},
+        .callback = Dummy,
+        .ctx = &ctx_value,
+        .ctx_free = ctx_free,
+        .binding_ctx = &binding_ctx_value,
+        .binding_ctx_free = binding_ctx_free
+    });
+    test_assert(system != 0);
+
+    test_assert(ecs_get_system_ctx(world, system) == &ctx_value);
+    test_assert(ecs_get_system_binding_ctx(world, system) 
+        == &binding_ctx_value);
+
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, Tag);
+
+    ecs_run(world, system, 0, NULL);
+    test_int(ctx.count, 1);
+    test_assert(ctx.system == system);
+
+    ecs_delete(world, system);
+    test_assert(!ecs_is_alive(world, system));
 
     ecs_fini(world);
 }

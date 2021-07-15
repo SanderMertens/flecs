@@ -1,7 +1,15 @@
 #include <api.h>
 
+static
 void Observer(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
+}
+
+static bool dummy_called = false;
+
+static
+void Dummy(ecs_iter_t *it) {
+    dummy_called = true;
 }
 
 void Observer_2_terms_w_on_add() {
@@ -549,6 +557,111 @@ void Observer_observer_w_self() {
     test_int(ctx.count, 1);
     test_assert(ctx.system == system);
     test_assert(ctx.self == self);
+
+    ecs_fini(world);
+}
+
+void Observer_add_after_delete_observer() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{.id = ecs_id(Position) }},
+        .events = {EcsOnAdd},
+        .callback = Dummy
+    });
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    test_assert(e1 != 0);
+    test_assert(ecs_has(world, e1, Position));
+    test_int(dummy_called, 1);
+
+    dummy_called = 0;
+
+    ecs_delete(world, observer);
+    test_int(dummy_called, 0);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    test_assert(e2 != 0);
+    test_assert(ecs_has(world, e2, Position));
+    test_int(dummy_called, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_remove_after_delete_observer() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{.id = ecs_id(Position) }},
+        .events = {EcsOnRemove},
+        .callback = Dummy
+    });
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    test_assert(e1 != 0);
+    test_assert(ecs_has(world, e1, Position));
+    test_int(dummy_called, 0);
+
+    ecs_remove(world, e1, Position);
+    test_int(dummy_called, 1);
+
+    dummy_called = 0;
+
+    ecs_delete(world, observer);
+    test_int(dummy_called, 0);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    test_assert(e2 != 0);
+    test_assert(ecs_has(world, e2, Position));
+    test_int(dummy_called, 0);
+
+    ecs_remove(world, e2, Position);
+    test_int(dummy_called, 0);
+
+    ecs_fini(world);
+}
+
+static int ctx_value;
+static
+void ctx_free(void *ctx) {
+    test_assert(&ctx_value == ctx);
+    ctx_value ++;
+}
+
+static int binding_ctx_value;
+static
+void binding_ctx_free(void *ctx) {
+    test_assert(&binding_ctx_value == ctx);
+    binding_ctx_value ++;
+}
+
+void Observer_delete_observer_w_ctx() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms =  {{ Tag }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx_value,
+        .ctx_free = ctx_free,
+        .binding_ctx = &binding_ctx_value,
+        .binding_ctx_free = binding_ctx_free
+    });
+    test_assert(o != 0);
+
+    test_assert(ecs_get_observer_ctx(world, o) == &ctx_value);
+    test_assert(ecs_get_observer_binding_ctx(world, o) == &binding_ctx_value);
+
+    ecs_delete(world, o);
+
+    test_int(ctx_value, 1);
+    test_int(binding_ctx_value, 1);
 
     ecs_fini(world);
 }

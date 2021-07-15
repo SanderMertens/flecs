@@ -43,7 +43,6 @@ ecs_map_t* unregister_id_trigger(
 static
 void register_trigger(
     ecs_world_t *world,
-    ecs_id_t id,
     ecs_trigger_t *trigger)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -53,7 +52,7 @@ void register_trigger(
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_trigger_t *idt = ecs_map_ensure(triggers, 
-        ecs_id_trigger_t, id);
+        ecs_id_trigger_t, trigger->term.id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int i;
@@ -78,7 +77,7 @@ void register_trigger(
             *set = ecs_map_new(ecs_trigger_t*, 1);
 
             // First trigger of its kind, send table notification
-            ecs_notify_tables(world, id, &(ecs_table_event_t){
+            ecs_notify_tables(world, trigger->term.id, &(ecs_table_event_t){
                 .kind = EcsTableTriggerMatch,
                 .event = trigger->events[i]
             });            
@@ -100,7 +99,7 @@ void unregister_trigger(
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_trigger_t *idt = ecs_map_get(
-        triggers, ecs_id_trigger_t, trigger->id);
+        triggers, ecs_id_trigger_t, trigger->term.id);
     if (!idt) {
         return;
     }
@@ -125,7 +124,9 @@ void unregister_trigger(
         }
 
         *set = unregister_id_trigger(*set, trigger);                
-    }  
+    }
+
+    ecs_map_remove(triggers, trigger->id);
 }
 
 ecs_map_t* ecs_triggers_get(
@@ -349,7 +350,7 @@ ecs_entity_t ecs_trigger_init(
         /* Trigger must have at least one event */
         ecs_assert(trigger->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
-        register_trigger(world, trigger->term.id, trigger);
+        register_trigger(world, trigger);
 
         ecs_term_fini(&term);        
     } else {

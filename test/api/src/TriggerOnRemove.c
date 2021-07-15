@@ -326,3 +326,75 @@ void TriggerOnRemove_valid_entity_after_delete() {
 
     ecs_fini(world); 
 }
+
+void TriggerOnRemove_remove_after_delete_trigger() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t trigger = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .events = {EcsOnRemove},
+        .callback = Dummy
+    });
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    test_assert(e1 != 0);
+    test_assert(ecs_has(world, e1, Position));
+    test_int(dummy_called, 0);
+
+    ecs_remove(world, e1, Position);
+    test_int(dummy_called, 1);
+
+    dummy_called = 0;
+
+    ecs_delete(world, trigger);
+    test_int(dummy_called, 0);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    test_assert(e2 != 0);
+    test_assert(ecs_has(world, e2, Position));
+    test_int(dummy_called, 0);
+
+    ecs_remove(world, e2, Position);
+    test_int(dummy_called, 0);
+
+    ecs_fini(world);
+}
+
+void TriggerOnRemove_remove_after_delete_wildcard_id_trigger() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t trigger = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = EcsWildcard,
+        .events = {EcsOnRemove},
+        .callback = Dummy
+    });
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    test_assert(e1 != 0);
+    test_assert(ecs_has(world, e1, Position));
+    test_int(dummy_called, 0);
+
+    ecs_remove(world, e1, Position);
+    test_int(dummy_called, 1);
+
+    dummy_called = 0;
+
+    ecs_delete(world, trigger);
+    test_int(dummy_called, 1);
+
+    dummy_called = 0;
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    test_assert(e2 != 0);
+    test_assert(ecs_has(world, e2, Position));
+    test_int(dummy_called, 0);
+
+    ecs_remove(world, e2, Position);
+    test_int(dummy_called, 0);
+
+    ecs_fini(world);
+}

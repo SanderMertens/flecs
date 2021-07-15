@@ -1491,3 +1491,44 @@ void Trigger_trigger_w_self() {
 
     ecs_fini(world);
 }
+
+static int ctx_value;
+static
+void ctx_free(void *ctx) {
+    test_assert(&ctx_value == ctx);
+    ctx_value ++;
+}
+
+static int binding_ctx_value;
+static
+void binding_ctx_free(void *ctx) {
+    test_assert(&binding_ctx_value == ctx);
+    binding_ctx_value ++;
+}
+
+void Trigger_delete_trigger_w_delete_ctx() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = Tag,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_value,
+        .ctx_free = ctx_free,
+        .binding_ctx = &binding_ctx_value,
+        .binding_ctx_free = binding_ctx_free
+    });
+    test_assert(t != 0);
+
+    test_assert(ecs_get_trigger_ctx(world, t) == &ctx_value);
+    test_assert(ecs_get_trigger_binding_ctx(world, t) == &binding_ctx_value);
+
+    ecs_delete(world, t);
+
+    test_int(ctx_value, 1);
+    test_int(binding_ctx_value, 1);
+
+    ecs_fini(world);
+}

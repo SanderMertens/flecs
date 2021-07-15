@@ -536,7 +536,11 @@ void ecs_colsystem_dtor(
 
         if (system->binding_ctx_free) {
             system->binding_ctx_free(system->binding_ctx);
-        }                
+        }  
+
+        if (system->query) {
+            ecs_query_free(system->query);
+        }
     }
 }
 

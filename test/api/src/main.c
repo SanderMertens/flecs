@@ -879,6 +879,9 @@ void SystemMisc_set_get_context(void);
 void SystemMisc_set_get_binding_context(void);
 void SystemMisc_deactivate_after_disable(void);
 void SystemMisc_system_w_self(void);
+void SystemMisc_delete_system(void);
+void SystemMisc_delete_pipeline_system(void);
+void SystemMisc_delete_system_w_ctx(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -1060,6 +1063,7 @@ void Trigger_on_remove_tree(void);
 void Trigger_set_get_context(void);
 void Trigger_set_get_binding_context(void);
 void Trigger_trigger_w_self(void);
+void Trigger_delete_trigger_w_delete_ctx(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -1080,6 +1084,9 @@ void Observer_2_terms_w_from_entity_on_add(void);
 void Observer_2_terms_on_remove_on_clear(void);
 void Observer_2_terms_on_remove_on_delete(void);
 void Observer_observer_w_self(void);
+void Observer_add_after_delete_observer(void);
+void Observer_remove_after_delete_observer(void);
+void Observer_delete_observer_w_ctx(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -1110,6 +1117,8 @@ void TriggerOnAdd_on_remove_in_on_add(void);
 void TriggerOnAdd_on_set_in_on_add(void);
 void TriggerOnAdd_on_add_in_on_update(void);
 void TriggerOnAdd_emplace(void);
+void TriggerOnAdd_add_after_delete_trigger(void);
+void TriggerOnAdd_add_after_delete_wildcard_id_trigger(void);
 
 // Testsuite 'TriggerOnRemove'
 void TriggerOnRemove_remove_match_1_of_1(void);
@@ -1121,6 +1130,8 @@ void TriggerOnRemove_delete_no_match_1(void);
 void TriggerOnRemove_remove_watched(void);
 void TriggerOnRemove_delete_watched(void);
 void TriggerOnRemove_valid_entity_after_delete(void);
+void TriggerOnRemove_remove_after_delete_trigger(void);
+void TriggerOnRemove_remove_after_delete_wildcard_id_trigger(void);
 
 // Testsuite 'TriggerOnSet'
 void TriggerOnSet_set(void);
@@ -5240,6 +5251,18 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "system_w_self",
         SystemMisc_system_w_self
+    },
+    {
+        "delete_system",
+        SystemMisc_delete_system
+    },
+    {
+        "delete_pipeline_system",
+        SystemMisc_delete_pipeline_system
+    },
+    {
+        "delete_system_w_ctx",
+        SystemMisc_delete_system_w_ctx
     }
 };
 
@@ -5944,6 +5967,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "trigger_w_self",
         Trigger_trigger_w_self
+    },
+    {
+        "delete_trigger_w_delete_ctx",
+        Trigger_delete_trigger_w_delete_ctx
     }
 };
 
@@ -6019,6 +6046,18 @@ bake_test_case Observer_testcases[] = {
     {
         "observer_w_self",
         Observer_observer_w_self
+    },
+    {
+        "add_after_delete_observer",
+        Observer_add_after_delete_observer
+    },
+    {
+        "remove_after_delete_observer",
+        Observer_remove_after_delete_observer
+    },
+    {
+        "delete_observer_w_ctx",
+        Observer_delete_observer_w_ctx
     }
 };
 
@@ -6130,6 +6169,14 @@ bake_test_case TriggerOnAdd_testcases[] = {
     {
         "emplace",
         TriggerOnAdd_emplace
+    },
+    {
+        "add_after_delete_trigger",
+        TriggerOnAdd_add_after_delete_trigger
+    },
+    {
+        "add_after_delete_wildcard_id_trigger",
+        TriggerOnAdd_add_after_delete_wildcard_id_trigger
     }
 };
 
@@ -6169,6 +6216,14 @@ bake_test_case TriggerOnRemove_testcases[] = {
     {
         "valid_entity_after_delete",
         TriggerOnRemove_valid_entity_after_delete
+    },
+    {
+        "remove_after_delete_trigger",
+        TriggerOnRemove_remove_after_delete_trigger
+    },
+    {
+        "remove_after_delete_wildcard_id_trigger",
+        TriggerOnRemove_remove_after_delete_wildcard_id_trigger
     }
 };
 
@@ -9384,7 +9439,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         SystemMisc_setup,
         NULL,
-        87,
+        90,
         SystemMisc_testcases
     },
     {
@@ -9412,28 +9467,28 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        47,
+        48,
         Trigger_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        18,
+        21,
         Observer_testcases
     },
     {
         "TriggerOnAdd",
         TriggerOnAdd_setup,
         NULL,
-        27,
+        29,
         TriggerOnAdd_testcases
     },
     {
         "TriggerOnRemove",
         NULL,
         NULL,
-        9,
+        11,
         TriggerOnRemove_testcases
     },
     {
