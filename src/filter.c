@@ -260,7 +260,10 @@ int ecs_term_finalize(
 
     term->id |= term->role;
 
-    if (!term->args[0].entity && term->args[0].set.mask != EcsNothing) {
+    if (!term->args[0].entity && 
+        term->args[0].set.mask != EcsNothing && 
+        term->args[0].var != EcsVarIsVariable) 
+    {
         term->args[0].entity = EcsThis;
     }
 
