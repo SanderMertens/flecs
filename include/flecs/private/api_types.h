@@ -149,6 +149,9 @@ struct ecs_iter_t {
     int32_t table_count;          /**< Active table count for query */
     int32_t inactive_table_count; /**< Inactive table count for query */
     int32_t column_count;         /**< Number of columns for system */
+    int32_t term_index;           /**< Index of term that triggered an event.
+                                   * This field will be set to the 'index' field
+                                   * of a trigger/observer term. */
     
     void *table_columns;          /**< Table component data */
     ecs_entity_t *entities;       /**< Entity identifiers */

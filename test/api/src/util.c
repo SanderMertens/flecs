@@ -14,6 +14,7 @@ void probe_system_w_ctx(
     ctx->event = it->event;
     ctx->offset = 0;
     ctx->column_count = it->column_count;
+    ctx->term_index = it->term_index;
 
     int i;
     for (i = 0; i < ctx->column_count; i ++) {
@@ -24,7 +25,7 @@ void probe_system_w_ctx(
         ecs_type_t t = ecs_column_type(it, i + 1);
         test_assert(t != 0);
 
-        ecs_entity_t e = ecs_term_id(it, i + 1);
+        ecs_id_t e = ecs_term_id(it, i + 1);
         test_assert(e != 0);
     }
 

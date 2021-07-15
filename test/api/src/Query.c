@@ -1,6 +1,6 @@
 #include <api.h>
 
-void Queries_query_changed_after_new() {
+void Query_query_changed_after_new() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -23,7 +23,7 @@ void Queries_query_changed_after_new() {
     ecs_fini(world);
 }
 
-void Queries_query_changed_after_delete() {
+void Query_query_changed_after_delete() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -46,7 +46,7 @@ void Queries_query_changed_after_delete() {
     ecs_fini(world);
 }
 
-void Queries_query_changed_after_add() {
+void Query_query_changed_after_add() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -69,7 +69,7 @@ void Queries_query_changed_after_add() {
     ecs_fini(world);
 }
 
-void Queries_query_changed_after_remove() {
+void Query_query_changed_after_remove() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -92,7 +92,7 @@ void Queries_query_changed_after_remove() {
     ecs_fini(world);
 }
 
-void Queries_query_changed_after_set() {
+void Query_query_changed_after_set() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -115,7 +115,7 @@ void Queries_query_changed_after_set() {
     ecs_fini(world);
 }
 
-void Queries_query_change_after_modified() {
+void Query_query_change_after_modified() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -140,7 +140,7 @@ void Queries_query_change_after_modified() {
 
 void Sys(ecs_iter_t *it) { }
 
-void Queries_query_change_after_out_system() {
+void Query_query_change_after_out_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -165,7 +165,7 @@ void Queries_query_change_after_out_system() {
     ecs_fini(world);
 }
 
-void Queries_query_change_after_in_system() {
+void Query_query_change_after_in_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -190,7 +190,7 @@ void Queries_query_change_after_in_system() {
     ecs_fini(world);
 }
 
-void Queries_subquery_match_existing() {
+void Query_subquery_match_existing() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -243,7 +243,7 @@ void Queries_subquery_match_existing() {
     ecs_fini(world);
 }
 
-void Queries_subquery_match_new() {
+void Query_subquery_match_new() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -296,7 +296,7 @@ void Queries_subquery_match_new() {
     ecs_fini(world);
 }
 
-void Queries_subquery_inactive() {
+void Query_subquery_inactive() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -349,7 +349,7 @@ void Queries_subquery_inactive() {
     ecs_fini(world);
 }
 
-void Queries_subquery_unmatch() {
+void Query_subquery_unmatch() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -404,7 +404,7 @@ void Queries_subquery_unmatch() {
     test_int(table_count, 1);
     test_int(entity_count, 1);
 
-    /* Queries now no longer match */
+    /* Query now no longer match */
     ecs_remove(world, parent, Position);
 
     /* Force rematching */
@@ -422,7 +422,7 @@ void Queries_subquery_unmatch() {
     ecs_fini(world);
 }
 
-void Queries_subquery_rematch() {
+void Query_subquery_rematch() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -477,7 +477,7 @@ void Queries_subquery_rematch() {
     test_int(table_count, 1);
     test_int(entity_count, 1);
 
-    /* Queries now no longer match */
+    /* Query now no longer match */
     ecs_remove(world, parent, Position);
 
     /* Force unmatching */
@@ -508,7 +508,7 @@ void Queries_subquery_rematch() {
     ecs_fini(world);
 }
 
-void Queries_subquery_rematch_w_parent_optional() {
+void Query_subquery_rematch_w_parent_optional() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -554,7 +554,7 @@ void Queries_subquery_rematch_w_parent_optional() {
     ecs_fini(world);
 }
 
-void Queries_subquery_rematch_w_sub_optional() {
+void Query_subquery_rematch_w_sub_optional() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -601,7 +601,7 @@ void Queries_subquery_rematch_w_sub_optional() {
     ecs_fini(world);
 }
 
-void Queries_query_single_pairs() {
+void Query_query_single_pairs() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -633,7 +633,7 @@ void Queries_query_single_pairs() {
     ecs_fini(world);
 }
 
-void Queries_query_single_instanceof() {
+void Query_query_single_instanceof() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, BaseA, 0);
@@ -661,7 +661,7 @@ void Queries_query_single_instanceof() {
     ecs_fini(world);
 }
 
-void Queries_query_single_childof() {
+void Query_query_single_childof() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, BaseA, 0);
@@ -689,7 +689,7 @@ void Queries_query_single_childof() {
     ecs_fini(world);
 }
 
-void Queries_query_w_filter() {
+void Query_query_w_filter() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -725,7 +725,7 @@ void Queries_query_w_filter() {
     ecs_fini(world);
 }
 
-void Queries_query_optional_owned() {
+void Query_query_optional_owned() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -770,7 +770,7 @@ void Queries_query_optional_owned() {
     ecs_fini(world);
 }
 
-void Queries_query_optional_shared() {
+void Query_query_optional_shared() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -815,7 +815,7 @@ void Queries_query_optional_shared() {
     ecs_fini(world);
 }
 
-void Queries_query_optional_shared_nested() {
+void Query_query_optional_shared_nested() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -862,7 +862,7 @@ void Queries_query_optional_shared_nested() {
     ecs_fini(world);
 }
 
-void Queries_query_optional_any() {
+void Query_query_optional_any() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -909,7 +909,7 @@ void Queries_query_optional_any() {
     ecs_fini(world);
 }
 
-void Queries_query_rematch_optional_after_add() {
+void Query_query_rematch_optional_after_add() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -984,7 +984,7 @@ void Queries_query_rematch_optional_after_add() {
     ecs_fini(world);    
 }
 
-void Queries_get_owned_tag() {
+void Query_get_owned_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1007,7 +1007,7 @@ void Queries_get_owned_tag() {
     ecs_fini(world);
 }
 
-void Queries_get_shared_tag() {
+void Query_get_shared_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1031,7 +1031,7 @@ void Queries_get_shared_tag() {
     ecs_fini(world);
 }
 
-void Queries_explicit_delete() {
+void Query_explicit_delete() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1045,7 +1045,7 @@ void Queries_explicit_delete() {
     ecs_fini(world);
 }
 
-void Queries_get_column_size() {
+void Query_get_column_size() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1062,7 +1062,7 @@ void Queries_get_column_size() {
     ecs_fini(world);    
 }
 
-void Queries_orphaned_query() {
+void Query_orphaned_query() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1087,7 +1087,7 @@ void Queries_orphaned_query() {
     ecs_fini(world);
 }
 
-void Queries_nested_orphaned_query() {
+void Query_nested_orphaned_query() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1118,7 +1118,7 @@ void Queries_nested_orphaned_query() {
     ecs_fini(world);
 }
 
-void Queries_invalid_access_orphaned_query() {
+void Query_invalid_access_orphaned_query() {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -1143,7 +1143,7 @@ void Queries_invalid_access_orphaned_query() {
     ecs_query_iter(sq);  
 }
 
-void Queries_stresstest_query_free() {
+void Query_stresstest_query_free() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Foo);
@@ -1169,7 +1169,7 @@ void Queries_stresstest_query_free() {
     ecs_fini(world);
 }
 
-void Queries_only_from_entity() {
+void Query_only_from_entity() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1190,7 +1190,7 @@ void Queries_only_from_entity() {
     ecs_fini(world);
 }
 
-void Queries_only_from_singleton() {
+void Query_only_from_singleton() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1211,7 +1211,7 @@ void Queries_only_from_singleton() {
     ecs_fini(world);
 }
 
-void Queries_only_not_from_entity() {
+void Query_only_not_from_entity() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1232,7 +1232,7 @@ void Queries_only_not_from_entity() {
     ecs_fini(world);
 }
 
-void Queries_only_not_from_singleton() {
+void Query_only_not_from_singleton() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1253,7 +1253,7 @@ void Queries_only_not_from_singleton() {
     ecs_fini(world);
 }
 
-void Queries_get_filter() {
+void Query_get_filter() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

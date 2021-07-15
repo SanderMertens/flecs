@@ -112,8 +112,6 @@ int term_resolve_ids(
         term->id = term->pred.entity;
     }
 
-    term->id |= term->role;
-
     return 0;
 }
 
@@ -155,6 +153,19 @@ bool ecs_id_match(
         if ((ECS_COMPONENT_MASK & pattern) == EcsWildcard) {
             return true;
         }
+    }
+
+    return false;
+}
+
+bool ecs_id_is_wildcard(
+    ecs_id_t id)
+{
+    if (id == EcsWildcard) {
+        return true;
+    } else if (ECS_HAS_ROLE(id, PAIR)) {
+        return ECS_PAIR_RELATION(id) == EcsWildcard || 
+               ECS_PAIR_OBJECT(id) == EcsWildcard;
     }
 
     return false;
@@ -206,8 +217,17 @@ int ecs_term_finalize(
             }
         }
 
+        /* If other fields are set, make sure they are consistent with id */
         if (term->args[1].entity) {
-            term->id = ecs_pair(term->id, term->args[1].entity);
+            ecs_assert(term->pred.entity != 0, ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(term->id == 
+                ecs_pair(term->pred.entity, term->args[1].entity), 
+                    ECS_INVALID_PARAMETER, NULL);
+        } else if (term->pred.entity) {
+            /* If only predicate is set (not object) it must match the id
+             * without any roles set. */
+            ecs_assert(term->pred.entity == (term->id & ECS_COMPONENT_MASK), 
+                ECS_INVALID_PARAMETER, NULL);
         }
 
         /* If id is set, check for pair and derive predicate and object */
@@ -218,22 +238,30 @@ int ecs_term_finalize(
             term->pred.entity = term->id & ECS_COMPONENT_MASK;
         }
 
-        if (!term->args[0].entity) {
-            term->args[0].entity = EcsThis;
-        }
-
         if (!term->role) {
             term->role = term->id & ECS_ROLE_MASK;
         } else {
-            ecs_assert(!(term->id & ECS_ROLE_MASK), 
-                ECS_INVALID_PARAMETER, NULL);
-            term->id |= term->role;
-        }
+            /* If id already has a role set it should be equal to the provided
+             * role */
+            ecs_assert(!(term->id & ECS_ROLE_MASK) || 
+                        (term->id & ECS_ROLE_MASK) == term->role, 
+                            ECS_INVALID_PARAMETER, NULL);
+        }      
     } else {
         if (term_resolve_ids(world, name, expr, term)) {
             /* One or more identifiers could not be resolved */
             return -1;
         }
+    }
+
+    /* role field should only set role bits */
+    ecs_assert(term->role == (term->role & ECS_ROLE_MASK), 
+        ECS_INVALID_PARAMETER, NULL);    
+
+    term->id |= term->role;
+
+    if (!term->args[0].entity && term->args[0].set.mask != EcsNothing) {
+        term->args[0].entity = EcsThis;
     }
 
     return 0;
@@ -404,9 +432,9 @@ int ecs_filter_finalize(
     const ecs_world_t *world,
     ecs_filter_t *f)
 {
-    int32_t i, term_count = f->term_count, index = 0;
+    int32_t i, term_count = f->term_count, actual_count = 0;
     ecs_term_t *terms = f->terms;
-    ecs_oper_kind_t prev_oper = EcsAnd;
+    bool is_or = false, prev_or = false;
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -415,17 +443,13 @@ int ecs_filter_finalize(
             return -1;
         }
 
-        term->index = index;
-
-        /* Fold OR terms */
-        if (prev_oper != EcsOr || term->oper != EcsOr) {
-            index ++;
-        }
-
-        prev_oper = term->oper;
+        is_or = term->oper == EcsOr;
+        actual_count += !(is_or && prev_or);
+        term->index = actual_count - 1;
+        prev_or = is_or;
     }
 
-    f->term_count_actual = index;
+    f->term_count_actual = actual_count;
 
     return 0;
 }

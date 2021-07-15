@@ -235,6 +235,7 @@ void notify_trigger_set(
         it.self = t->self;
         it.ctx = t->ctx;
         it.binding_ctx = t->binding_ctx;
+        it.term_index = t->term.index;
         t->action(&it);                   
     }
 }

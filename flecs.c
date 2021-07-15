@@ -17069,8 +17069,6 @@ int term_resolve_ids(
         term->id = term->pred.entity;
     }
 
-    term->id |= term->role;
-
     return 0;
 }
 
@@ -17112,6 +17110,19 @@ bool ecs_id_match(
         if ((ECS_COMPONENT_MASK & pattern) == EcsWildcard) {
             return true;
         }
+    }
+
+    return false;
+}
+
+bool ecs_id_is_wildcard(
+    ecs_id_t id)
+{
+    if (id == EcsWildcard) {
+        return true;
+    } else if (ECS_HAS_ROLE(id, PAIR)) {
+        return ECS_PAIR_RELATION(id) == EcsWildcard || 
+               ECS_PAIR_OBJECT(id) == EcsWildcard;
     }
 
     return false;
@@ -17163,8 +17174,17 @@ int ecs_term_finalize(
             }
         }
 
+        /* If other fields are set, make sure they are consistent with id */
         if (term->args[1].entity) {
-            term->id = ecs_pair(term->id, term->args[1].entity);
+            ecs_assert(term->pred.entity != 0, ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(term->id == 
+                ecs_pair(term->pred.entity, term->args[1].entity), 
+                    ECS_INVALID_PARAMETER, NULL);
+        } else if (term->pred.entity) {
+            /* If only predicate is set (not object) it must match the id
+             * without any roles set. */
+            ecs_assert(term->pred.entity == (term->id & ECS_COMPONENT_MASK), 
+                ECS_INVALID_PARAMETER, NULL);
         }
 
         /* If id is set, check for pair and derive predicate and object */
@@ -17175,22 +17195,30 @@ int ecs_term_finalize(
             term->pred.entity = term->id & ECS_COMPONENT_MASK;
         }
 
-        if (!term->args[0].entity) {
-            term->args[0].entity = EcsThis;
-        }
-
         if (!term->role) {
             term->role = term->id & ECS_ROLE_MASK;
         } else {
-            ecs_assert(!(term->id & ECS_ROLE_MASK), 
-                ECS_INVALID_PARAMETER, NULL);
-            term->id |= term->role;
-        }
+            /* If id already has a role set it should be equal to the provided
+             * role */
+            ecs_assert(!(term->id & ECS_ROLE_MASK) || 
+                        (term->id & ECS_ROLE_MASK) == term->role, 
+                            ECS_INVALID_PARAMETER, NULL);
+        }      
     } else {
         if (term_resolve_ids(world, name, expr, term)) {
             /* One or more identifiers could not be resolved */
             return -1;
         }
+    }
+
+    /* role field should only set role bits */
+    ecs_assert(term->role == (term->role & ECS_ROLE_MASK), 
+        ECS_INVALID_PARAMETER, NULL);    
+
+    term->id |= term->role;
+
+    if (!term->args[0].entity && term->args[0].set.mask != EcsNothing) {
+        term->args[0].entity = EcsThis;
     }
 
     return 0;
@@ -17361,9 +17389,9 @@ int ecs_filter_finalize(
     const ecs_world_t *world,
     ecs_filter_t *f)
 {
-    int32_t i, term_count = f->term_count, index = 0;
+    int32_t i, term_count = f->term_count, actual_count = 0;
     ecs_term_t *terms = f->terms;
-    ecs_oper_kind_t prev_oper = EcsAnd;
+    bool is_or = false, prev_or = false;
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -17372,17 +17400,13 @@ int ecs_filter_finalize(
             return -1;
         }
 
-        term->index = index;
-
-        /* Fold OR terms */
-        if (prev_oper != EcsOr || term->oper != EcsOr) {
-            index ++;
-        }
-
-        prev_oper = term->oper;
+        is_or = term->oper == EcsOr;
+        actual_count += !(is_or && prev_or);
+        term->index = actual_count - 1;
+        prev_or = is_or;
     }
 
-    f->term_count_actual = index;
+    f->term_count_actual = actual_count;
 
     return 0;
 }
@@ -17630,7 +17654,8 @@ void populate_columns(
     ecs_data_t *data,
     ecs_id_t *ids,
     int32_t *columns,
-    ecs_type_t *types)
+    ecs_type_t *types,
+    int32_t term_index)
 {
     int32_t i, count = o->filter.term_count;
 
@@ -17639,34 +17664,64 @@ void populate_columns(
     types[0] = NULL;
 
     for (i = 0; i < count; i ++) {
+        ecs_type_t type = table->type;
         ecs_term_t *t = &o->filter.terms[i];
-        ids[i] = 0;
-        columns[i] = 0;
-        types[i] = NULL;
+        int32_t index, ti = t->index;
 
-        ecs_id_t id = ids[i] = t->id;
-        types[i] = ecs_type_from_id(world, id);
-
-        if (t->oper != EcsAnd) {
-            continue;
-        }
-
+        ecs_id_t id = t->id;
         if (t->args[0].entity != EcsThis) {
+            columns[ti] = 0;
+            ids[ti] = id;
+            types[ti] = ecs_type_from_id(world, id);
             continue;
+        
+        } else if (i == term_index) {
+            /* If current term is the one that triggered the event, use its
+             * id to populate the iterator */
+            index = ecs_type_match(type, 0, id);
+
+        } else {
+            index = ecs_type_match(type, 0, id);
+
+            /* If id was not found, this must be an Or/Not expression */
+            if (index == -1) {
+                if (t->oper == EcsNot) {
+                    ids[ti] = id;
+                    types[ti] = ecs_type_from_id(world, id);
+                    columns[ti] = 0;
+                } else {
+                    /* If id is not found and operator isn't Not, must be Or */
+                    ecs_assert(t->oper == EcsOr, ECS_INTERNAL_ERROR, NULL);
+                }
+
+                continue;
+            }
         }
 
-        int32_t index = ecs_type_match(table->type, 0, id);
-        ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-        index ++;
+        columns[ti] = index + 1;
+        types[ti] = ecs_type_from_id(world, id);
 
-        columns[i] = index;
+        /* If id is wildcard, find a matching id in the table type */
+        if (ecs_id_is_wildcard(id)) {
+            ecs_assert(index < ecs_vector_count(type), 
+                ECS_INTERNAL_ERROR, NULL);
 
-        if (table->column_count < index) {
-            columns[i] = 0;
+            /* Get actual id from type */
+            id = ecs_vector_get(type, ecs_id_t, index)[0];
+        }
+
+        ids[ti] = id;
+
+        if (table->column_count <= index) {
+            /* If index is larger than column_count (the number of table columns
+             * that can contain data) set index to 0, so iter functions know
+             * no data is associated with term */
+            columns[ti] = 0;
         } else {
-            ecs_column_t *column = &data->columns[index - 1];
+            ecs_column_t *column = &data->columns[index];
             if (!column->size) {
-                columns[i] = 0;
+                /* If table column has o size, term has no data */
+                columns[ti] = 0;
             }
         }
     } 
@@ -17698,12 +17753,14 @@ void observer_callback(ecs_iter_t *it) {
 
         user_it.table = &table_data;
 
-        populate_columns(world, o, table, data, ids, columns, types);
+        populate_columns(world, o, table, data, ids, 
+            columns, types, it->term_index);
 
         user_it.system = o->entity;
+        user_it.term_index = it->term_index;
         user_it.self = o->self;
         user_it.ctx = o->ctx;
-        user_it.column_count = o->filter.term_count,
+        user_it.column_count = o->filter.term_count_actual,
         user_it.table_columns = data->columns,
         o->action(&user_it);
     }
@@ -17741,18 +17798,21 @@ ecs_entity_t ecs_observer_init(
             return 0;
         }
 
+        ecs_filter_t *filter = &observer->filter;
+
         /* Create a trigger for each term in the filter */
         observer->triggers = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * 
             observer->filter.term_count);
         
         int i;
-        for (i = 0; i < observer->filter.term_count; i ++) {
-            const ecs_term_t *t = &desc->filter.terms[i];
-            if (t->oper == EcsNot || 
-                observer->filter.terms[i].args[0].entity != EcsThis) 
-            {
+        for (i = 0; i < filter->term_count; i ++) {
+            const ecs_term_t *terms = filter->terms;
+            const ecs_term_t *t = &terms[i];
+
+            if (t->oper == EcsNot || terms[i].args[0].entity != EcsThis) {
                 /* No need to trigger on components that the entity should not
                  * have, or on components that are not defined on the entity */
+                observer->triggers[i] = 0;
                 continue;
             }
 
@@ -24253,6 +24313,7 @@ void notify_trigger_set(
         it.self = t->self;
         it.ctx = t->ctx;
         it.binding_ctx = t->binding_ctx;
+        it.term_index = t->term.index;
         t->action(&it);                   
     }
 }

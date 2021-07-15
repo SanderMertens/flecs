@@ -20,6 +20,7 @@ typedef struct Probe {
     int32_t count;
     int32_t invoked;
     int32_t column_count;
+    int32_t term_index;
     ecs_entity_t e[MAX_ENTITIES];
     ecs_entity_t c[MAX_INVOCATIONS][MAX_SYS_COLUMNS];
     ecs_entity_t s[MAX_INVOCATIONS][MAX_SYS_COLUMNS];

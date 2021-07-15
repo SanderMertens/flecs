@@ -2441,6 +2441,9 @@ struct ecs_iter_t {
     int32_t table_count;          /**< Active table count for query */
     int32_t inactive_table_count; /**< Inactive table count for query */
     int32_t column_count;         /**< Number of columns for system */
+    int32_t term_index;           /**< Index of term that triggered an event.
+                                   * This field will be set to the 'index' field
+                                   * of a trigger/observer term. */
     
     void *table_columns;          /**< Table component data */
     ecs_entity_t *entities;       /**< Entity identifiers */
@@ -5911,6 +5914,15 @@ FLECS_API
 bool ecs_id_match(
     ecs_id_t id,
     ecs_id_t pattern);
+
+/** Utility to check if id is a wildcard.
+ *
+ * @param id The id.
+ * @return True if id is a wildcard or a pair containing a wildcard.
+ */
+FLECS_API
+bool ecs_id_is_wildcard(
+    ecs_id_t id);
 
 /** @} */
 
@@ -14952,30 +14964,29 @@ public:
     template<typename T>
     Base& id() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->id = _::cpp_type<T>::id(world());
+        m_term->pred.entity = _::cpp_type<T>::id(world());
         return *this;
     }
 
     template<typename R, typename O>
     Base& id() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->id = ecs_pair(
-            _::cpp_type<R>::id(world()),
-            _::cpp_type<O>::id(world()));
+        m_term->pred.entity = _::cpp_type<R>::id(world());
+        m_term->args[1].entity = _::cpp_type<O>::id(world());
         return *this;
     }
 
     template<typename R>
     Base& id(id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->id = ecs_pair(
-            _::cpp_type<R>::id(world()), o);
+        m_term->pred.entity = _::cpp_type<R>::id(world());
+        m_term->args[1].entity = o;
         return *this;
     }    
 
     Base& id(id_t id) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->id = id;
+        m_term->pred.entity = id;
         return *this;
     }
 
@@ -14983,7 +14994,8 @@ public:
 
     Base& id(id_t r, id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->id = ecs_pair(r, o);
+        m_term->pred.entity = r;
+        m_term->args[1].entity = o;
         return *this;
     }
 
@@ -17736,7 +17748,7 @@ namespace flecs
 template<typename Base>
 inline Base& term_builder_i<Base>::id(const flecs::type& type) {
     ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-    m_term->id = type.id();
+    m_term->pred.entity = type.id();
     return *this;
 }      
 

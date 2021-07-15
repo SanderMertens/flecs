@@ -5,7 +5,7 @@ namespace flecs
 template<typename Base>
 inline Base& term_builder_i<Base>::id(const flecs::type& type) {
     ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-    m_term->id = type.id();
+    m_term->pred.entity = type.id();
     return *this;
 }      
 

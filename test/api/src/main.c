@@ -915,44 +915,59 @@ void Sorting_sort_childof_marked(void);
 void Sorting_sort_isa_marked(void);
 void Sorting_sort_relation_marked(void);
 
-// Testsuite 'Queries'
-void Queries_query_changed_after_new(void);
-void Queries_query_changed_after_delete(void);
-void Queries_query_changed_after_add(void);
-void Queries_query_changed_after_remove(void);
-void Queries_query_changed_after_set(void);
-void Queries_query_change_after_modified(void);
-void Queries_query_change_after_out_system(void);
-void Queries_query_change_after_in_system(void);
-void Queries_subquery_match_existing(void);
-void Queries_subquery_match_new(void);
-void Queries_subquery_inactive(void);
-void Queries_subquery_unmatch(void);
-void Queries_subquery_rematch(void);
-void Queries_subquery_rematch_w_parent_optional(void);
-void Queries_subquery_rematch_w_sub_optional(void);
-void Queries_query_single_pairs(void);
-void Queries_query_single_instanceof(void);
-void Queries_query_single_childof(void);
-void Queries_query_w_filter(void);
-void Queries_query_optional_owned(void);
-void Queries_query_optional_shared(void);
-void Queries_query_optional_shared_nested(void);
-void Queries_query_optional_any(void);
-void Queries_query_rematch_optional_after_add(void);
-void Queries_get_owned_tag(void);
-void Queries_get_shared_tag(void);
-void Queries_explicit_delete(void);
-void Queries_get_column_size(void);
-void Queries_orphaned_query(void);
-void Queries_nested_orphaned_query(void);
-void Queries_invalid_access_orphaned_query(void);
-void Queries_stresstest_query_free(void);
-void Queries_only_from_entity(void);
-void Queries_only_from_singleton(void);
-void Queries_only_not_from_entity(void);
-void Queries_only_not_from_singleton(void);
-void Queries_get_filter(void);
+// Testsuite 'Filter'
+void Filter_filter_1_term(void);
+void Filter_filter_2_terms(void);
+void Filter_filter_3_terms(void);
+void Filter_filter_3_terms_w_or(void);
+void Filter_filter_4_terms_w_or_at_1(void);
+void Filter_filter_w_pair_id(void);
+void Filter_filter_w_pred_obj(void);
+void Filter_term_w_id(void);
+void Filter_term_w_pair_id(void);
+void Filter_term_w_pred_obj(void);
+void Filter_term_w_pair_finalize_twice(void);
+void Filter_term_w_role(void);
+void Filter_term_w_pred_role(void);
+
+// Testsuite 'Query'
+void Query_query_changed_after_new(void);
+void Query_query_changed_after_delete(void);
+void Query_query_changed_after_add(void);
+void Query_query_changed_after_remove(void);
+void Query_query_changed_after_set(void);
+void Query_query_change_after_modified(void);
+void Query_query_change_after_out_system(void);
+void Query_query_change_after_in_system(void);
+void Query_subquery_match_existing(void);
+void Query_subquery_match_new(void);
+void Query_subquery_inactive(void);
+void Query_subquery_unmatch(void);
+void Query_subquery_rematch(void);
+void Query_subquery_rematch_w_parent_optional(void);
+void Query_subquery_rematch_w_sub_optional(void);
+void Query_query_single_pairs(void);
+void Query_query_single_instanceof(void);
+void Query_query_single_childof(void);
+void Query_query_w_filter(void);
+void Query_query_optional_owned(void);
+void Query_query_optional_shared(void);
+void Query_query_optional_shared_nested(void);
+void Query_query_optional_any(void);
+void Query_query_rematch_optional_after_add(void);
+void Query_get_owned_tag(void);
+void Query_get_shared_tag(void);
+void Query_explicit_delete(void);
+void Query_get_column_size(void);
+void Query_orphaned_query(void);
+void Query_nested_orphaned_query(void);
+void Query_invalid_access_orphaned_query(void);
+void Query_stresstest_query_free(void);
+void Query_only_from_entity(void);
+void Query_only_from_singleton(void);
+void Query_only_not_from_entity(void);
+void Query_only_not_from_singleton(void);
+void Query_get_filter(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -1064,10 +1079,13 @@ void Trigger_set_get_context(void);
 void Trigger_set_get_binding_context(void);
 void Trigger_trigger_w_self(void);
 void Trigger_delete_trigger_w_delete_ctx(void);
+void Trigger_trigger_w_index(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
 void Observer_2_terms_w_on_remove(void);
+void Observer_2_terms_w_on_set_value(void);
+void Observer_2_terms_w_on_remove_value(void);
 void Observer_2_terms_w_on_add_2nd(void);
 void Observer_2_terms_w_on_remove_2nd(void);
 void Observer_2_pair_terms_w_on_add(void);
@@ -5389,154 +5407,209 @@ bake_test_case Sorting_testcases[] = {
     }
 };
 
-bake_test_case Queries_testcases[] = {
+bake_test_case Filter_testcases[] = {
+    {
+        "filter_1_term",
+        Filter_filter_1_term
+    },
+    {
+        "filter_2_terms",
+        Filter_filter_2_terms
+    },
+    {
+        "filter_3_terms",
+        Filter_filter_3_terms
+    },
+    {
+        "filter_3_terms_w_or",
+        Filter_filter_3_terms_w_or
+    },
+    {
+        "filter_4_terms_w_or_at_1",
+        Filter_filter_4_terms_w_or_at_1
+    },
+    {
+        "filter_w_pair_id",
+        Filter_filter_w_pair_id
+    },
+    {
+        "filter_w_pred_obj",
+        Filter_filter_w_pred_obj
+    },
+    {
+        "term_w_id",
+        Filter_term_w_id
+    },
+    {
+        "term_w_pair_id",
+        Filter_term_w_pair_id
+    },
+    {
+        "term_w_pred_obj",
+        Filter_term_w_pred_obj
+    },
+    {
+        "term_w_pair_finalize_twice",
+        Filter_term_w_pair_finalize_twice
+    },
+    {
+        "term_w_role",
+        Filter_term_w_role
+    },
+    {
+        "term_w_pred_role",
+        Filter_term_w_pred_role
+    }
+};
+
+bake_test_case Query_testcases[] = {
     {
         "query_changed_after_new",
-        Queries_query_changed_after_new
+        Query_query_changed_after_new
     },
     {
         "query_changed_after_delete",
-        Queries_query_changed_after_delete
+        Query_query_changed_after_delete
     },
     {
         "query_changed_after_add",
-        Queries_query_changed_after_add
+        Query_query_changed_after_add
     },
     {
         "query_changed_after_remove",
-        Queries_query_changed_after_remove
+        Query_query_changed_after_remove
     },
     {
         "query_changed_after_set",
-        Queries_query_changed_after_set
+        Query_query_changed_after_set
     },
     {
         "query_change_after_modified",
-        Queries_query_change_after_modified
+        Query_query_change_after_modified
     },
     {
         "query_change_after_out_system",
-        Queries_query_change_after_out_system
+        Query_query_change_after_out_system
     },
     {
         "query_change_after_in_system",
-        Queries_query_change_after_in_system
+        Query_query_change_after_in_system
     },
     {
         "subquery_match_existing",
-        Queries_subquery_match_existing
+        Query_subquery_match_existing
     },
     {
         "subquery_match_new",
-        Queries_subquery_match_new
+        Query_subquery_match_new
     },
     {
         "subquery_inactive",
-        Queries_subquery_inactive
+        Query_subquery_inactive
     },
     {
         "subquery_unmatch",
-        Queries_subquery_unmatch
+        Query_subquery_unmatch
     },
     {
         "subquery_rematch",
-        Queries_subquery_rematch
+        Query_subquery_rematch
     },
     {
         "subquery_rematch_w_parent_optional",
-        Queries_subquery_rematch_w_parent_optional
+        Query_subquery_rematch_w_parent_optional
     },
     {
         "subquery_rematch_w_sub_optional",
-        Queries_subquery_rematch_w_sub_optional
+        Query_subquery_rematch_w_sub_optional
     },
     {
         "query_single_pairs",
-        Queries_query_single_pairs
+        Query_query_single_pairs
     },
     {
         "query_single_instanceof",
-        Queries_query_single_instanceof
+        Query_query_single_instanceof
     },
     {
         "query_single_childof",
-        Queries_query_single_childof
+        Query_query_single_childof
     },
     {
         "query_w_filter",
-        Queries_query_w_filter
+        Query_query_w_filter
     },
     {
         "query_optional_owned",
-        Queries_query_optional_owned
+        Query_query_optional_owned
     },
     {
         "query_optional_shared",
-        Queries_query_optional_shared
+        Query_query_optional_shared
     },
     {
         "query_optional_shared_nested",
-        Queries_query_optional_shared_nested
+        Query_query_optional_shared_nested
     },
     {
         "query_optional_any",
-        Queries_query_optional_any
+        Query_query_optional_any
     },
     {
         "query_rematch_optional_after_add",
-        Queries_query_rematch_optional_after_add
+        Query_query_rematch_optional_after_add
     },
     {
         "get_owned_tag",
-        Queries_get_owned_tag
+        Query_get_owned_tag
     },
     {
         "get_shared_tag",
-        Queries_get_shared_tag
+        Query_get_shared_tag
     },
     {
         "explicit_delete",
-        Queries_explicit_delete
+        Query_explicit_delete
     },
     {
         "get_column_size",
-        Queries_get_column_size
+        Query_get_column_size
     },
     {
         "orphaned_query",
-        Queries_orphaned_query
+        Query_orphaned_query
     },
     {
         "nested_orphaned_query",
-        Queries_nested_orphaned_query
+        Query_nested_orphaned_query
     },
     {
         "invalid_access_orphaned_query",
-        Queries_invalid_access_orphaned_query
+        Query_invalid_access_orphaned_query
     },
     {
         "stresstest_query_free",
-        Queries_stresstest_query_free
+        Query_stresstest_query_free
     },
     {
         "only_from_entity",
-        Queries_only_from_entity
+        Query_only_from_entity
     },
     {
         "only_from_singleton",
-        Queries_only_from_singleton
+        Query_only_from_singleton
     },
     {
         "only_not_from_entity",
-        Queries_only_not_from_entity
+        Query_only_not_from_entity
     },
     {
         "only_not_from_singleton",
-        Queries_only_not_from_singleton
+        Query_only_not_from_singleton
     },
     {
         "get_filter",
-        Queries_get_filter
+        Query_get_filter
     }
 };
 
@@ -5971,6 +6044,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "delete_trigger_w_delete_ctx",
         Trigger_delete_trigger_w_delete_ctx
+    },
+    {
+        "trigger_w_index",
+        Trigger_trigger_w_index
     }
 };
 
@@ -5982,6 +6059,14 @@ bake_test_case Observer_testcases[] = {
     {
         "2_terms_w_on_remove",
         Observer_2_terms_w_on_remove
+    },
+    {
+        "2_terms_w_on_set_value",
+        Observer_2_terms_w_on_set_value
+    },
+    {
+        "2_terms_w_on_remove_value",
+        Observer_2_terms_w_on_remove_value
     },
     {
         "2_terms_w_on_add_2nd",
@@ -9450,11 +9535,18 @@ static bake_test_suite suites[] = {
         Sorting_testcases
     },
     {
-        "Queries",
+        "Filter",
+        NULL,
+        NULL,
+        13,
+        Filter_testcases
+    },
+    {
+        "Query",
         NULL,
         NULL,
         37,
-        Queries_testcases
+        Query_testcases
     },
     {
         "Pairs",
@@ -9467,14 +9559,14 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        48,
+        49,
         Trigger_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        21,
+        23,
         Observer_testcases
     },
     {
@@ -9712,5 +9804,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 65);
+    return bake_test_run("api", argc, argv, suites, 66);
 }

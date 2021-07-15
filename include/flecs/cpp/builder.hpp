@@ -95,30 +95,29 @@ public:
     template<typename T>
     Base& id() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->id = _::cpp_type<T>::id(world());
+        m_term->pred.entity = _::cpp_type<T>::id(world());
         return *this;
     }
 
     template<typename R, typename O>
     Base& id() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->id = ecs_pair(
-            _::cpp_type<R>::id(world()),
-            _::cpp_type<O>::id(world()));
+        m_term->pred.entity = _::cpp_type<R>::id(world());
+        m_term->args[1].entity = _::cpp_type<O>::id(world());
         return *this;
     }
 
     template<typename R>
     Base& id(id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->id = ecs_pair(
-            _::cpp_type<R>::id(world()), o);
+        m_term->pred.entity = _::cpp_type<R>::id(world());
+        m_term->args[1].entity = o;
         return *this;
     }    
 
     Base& id(id_t id) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->id = id;
+        m_term->pred.entity = id;
         return *this;
     }
 
@@ -126,7 +125,8 @@ public:
 
     Base& id(id_t r, id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->id = ecs_pair(r, o);
+        m_term->pred.entity = r;
+        m_term->args[1].entity = o;
         return *this;
     }
 

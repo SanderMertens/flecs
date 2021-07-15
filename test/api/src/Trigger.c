@@ -45,7 +45,7 @@ void Trigger_on_add_trigger_before_table() {
 
     /* Create trigger before table */
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -59,6 +59,14 @@ void Trigger_on_add_trigger_before_table() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
 
     ecs_fini(world);
 }
@@ -75,7 +83,7 @@ void Trigger_on_add_trigger_after_table() {
 
     /* Create trigger after table, should send notification to table */
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -88,6 +96,14 @@ void Trigger_on_add_trigger_after_table() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
 
     ecs_fini(world);
 }
@@ -99,7 +115,7 @@ void Trigger_on_remove_trigger_before_table() {
 
     /* Create trigger after table */
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -117,6 +133,14 @@ void Trigger_on_remove_trigger_before_table() {
     ecs_remove_id(world, e, TagA);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
 
     ecs_fini(world);
 }
@@ -134,7 +158,7 @@ void Trigger_on_remove_trigger_after_table() {
 
     /* Create trigger after table, should send notification to table */
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -144,6 +168,14 @@ void Trigger_on_remove_trigger_after_table() {
     ecs_remove_id(world, e, TagA);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
 
     ecs_fini(world);
 }
@@ -154,7 +186,7 @@ void Trigger_on_add_tag() {
     ECS_TAG(world, TagA);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -167,7 +199,12 @@ void Trigger_on_add_tag() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
@@ -180,7 +217,7 @@ void Trigger_on_add_component() {
     ECS_COMPONENT(world, Position);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_id(Position),
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -193,7 +230,12 @@ void Trigger_on_add_component() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
 
@@ -207,7 +249,7 @@ void Trigger_on_add_wildcard() {
     ECS_TAG(world, TagB);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = EcsWildcard,
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -220,7 +262,12 @@ void Trigger_on_add_wildcard() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
@@ -229,7 +276,12 @@ void Trigger_on_add_wildcard() {
     ecs_add_id(world, e, TagB);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagB);
 
@@ -243,7 +295,7 @@ void Trigger_on_add_pair() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(Pred, Obj),
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -256,7 +308,12 @@ void Trigger_on_add_pair() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Pred, Obj));
 
@@ -271,7 +328,7 @@ void Trigger_on_add_pair_obj_wildcard() {
     ECS_TAG(world, ObjB);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(Pred, EcsWildcard),
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -284,7 +341,12 @@ void Trigger_on_add_pair_obj_wildcard() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Pred, ObjA));
 
@@ -293,7 +355,12 @@ void Trigger_on_add_pair_obj_wildcard() {
     ecs_add_pair(world, e, Pred, ObjB);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Pred, ObjB));
 
@@ -308,7 +375,7 @@ void Trigger_on_add_pair_pred_wildcard() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(EcsWildcard, Obj),
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -321,7 +388,12 @@ void Trigger_on_add_pair_pred_wildcard() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(PredA, Obj));
 
@@ -330,7 +402,12 @@ void Trigger_on_add_pair_pred_wildcard() {
     ecs_add_pair(world, e, PredB, Obj);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(PredB, Obj));
 
@@ -344,7 +421,7 @@ void Trigger_on_add_pair_wildcard() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(EcsWildcard, EcsWildcard),
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -357,7 +434,12 @@ void Trigger_on_add_pair_wildcard() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Pred, Obj));
 
@@ -370,7 +452,7 @@ void Trigger_on_remove_tag() {
     ECS_TAG(world, TagA);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -386,7 +468,12 @@ void Trigger_on_remove_tag() {
     ecs_remove_id(world, e, TagA);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
@@ -399,7 +486,7 @@ void Trigger_on_remove_component() {
     ECS_COMPONENT(world, Position);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_id(Position),
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -415,7 +502,12 @@ void Trigger_on_remove_component() {
     ecs_remove(world, e, Position);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
 
@@ -429,7 +521,7 @@ void Trigger_on_remove_wildcard() {
     ECS_TAG(world, TagB);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = EcsWildcard,
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -445,7 +537,12 @@ void Trigger_on_remove_wildcard() {
     ecs_remove(world, e, TagA);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
@@ -454,7 +551,12 @@ void Trigger_on_remove_wildcard() {
     ecs_remove_id(world, e, TagB);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagB);
 
@@ -468,7 +570,7 @@ void Trigger_on_remove_pair() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(Pred, Obj),
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -484,7 +586,12 @@ void Trigger_on_remove_pair() {
     ecs_remove_pair(world, e, Pred, Obj);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Pred, Obj));
 
@@ -499,7 +606,7 @@ void Trigger_on_remove_pair_obj_wildcard() {
     ECS_TAG(world, ObjB);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(Pred, EcsWildcard),
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -515,7 +622,12 @@ void Trigger_on_remove_pair_obj_wildcard() {
     ecs_remove_pair(world, e, Pred, ObjA);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Pred, ObjA));
 
@@ -526,7 +638,12 @@ void Trigger_on_remove_pair_obj_wildcard() {
     ecs_remove_pair(world, e, Pred, ObjB);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Pred, ObjB));
 
@@ -541,7 +658,7 @@ void Trigger_on_remove_pair_pred_wildcard() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(EcsWildcard, Obj),
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -557,7 +674,12 @@ void Trigger_on_remove_pair_pred_wildcard() {
     ecs_remove_pair(world, e, PredA, Obj);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(PredA, Obj));
 
@@ -566,7 +688,12 @@ void Trigger_on_remove_pair_pred_wildcard() {
     ecs_remove_pair(world, e, PredB, Obj);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(PredB, Obj));
 
@@ -580,7 +707,7 @@ void Trigger_on_remove_pair_wildcard() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(EcsWildcard, EcsWildcard),
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -596,7 +723,12 @@ void Trigger_on_remove_pair_wildcard() {
     ecs_remove_pair(world, e, Pred, Obj);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Pred, Obj));
 
@@ -609,7 +741,7 @@ void Trigger_on_set_component() {
     ECS_COMPONENT(world, Position);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_id(Position),
         .events = {EcsOnSet},
         .callback = Trigger,
@@ -624,9 +756,13 @@ void Trigger_on_set_component() {
     test_int(ctx.invoked, 0);
 
     ecs_set(world, e, Position, {10, 20});
-
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
 
@@ -639,7 +775,7 @@ void Trigger_on_set_wildcard() {
     ECS_COMPONENT(world, Position);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = EcsWildcard,
         .events = {EcsOnSet},
         .callback = Trigger,
@@ -656,7 +792,12 @@ void Trigger_on_set_wildcard() {
     ecs_set(world, e, Position, {10, 20});
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
 
@@ -670,7 +811,7 @@ void Trigger_on_set_pair() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(ecs_id(Position), Obj),
         .events = {EcsOnSet},
         .callback = Trigger,
@@ -687,7 +828,12 @@ void Trigger_on_set_pair() {
     ecs_set_pair(world, e, Position, Obj, {10, 20});
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), Obj));
 
@@ -701,7 +847,7 @@ void Trigger_on_set_pair_w_obj_wildcard() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(ecs_id(Position), EcsWildcard),
         .events = {EcsOnSet},
         .callback = Trigger,
@@ -718,7 +864,12 @@ void Trigger_on_set_pair_w_obj_wildcard() {
     ecs_set_pair(world, e, Position, Obj, {10, 20});
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), Obj));
 
@@ -732,7 +883,7 @@ void Trigger_on_set_pair_pred_wildcard() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(EcsWildcard, Obj),
         .events = {EcsOnSet},
         .callback = Trigger,
@@ -749,7 +900,12 @@ void Trigger_on_set_pair_pred_wildcard() {
     ecs_set_pair(world, e, Position, Obj, {10, 20});
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), Obj));
 
@@ -763,7 +919,7 @@ void Trigger_on_set_pair_wildcard() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(EcsWildcard, EcsWildcard),
         .events = {EcsOnSet},
         .callback = Trigger,
@@ -780,7 +936,12 @@ void Trigger_on_set_pair_wildcard() {
     ecs_set_pair(world, e, Position, Obj, {10, 20});
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), Obj));
 
@@ -793,7 +954,7 @@ void Trigger_on_add_remove() {
     ECS_TAG(world, TagA);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Trigger,
@@ -806,7 +967,12 @@ void Trigger_on_add_remove() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
@@ -815,7 +981,12 @@ void Trigger_on_add_remove() {
     ecs_remove_id(world, e, TagA);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
@@ -828,7 +999,7 @@ void Trigger_on_set_component_after_modified() {
     ECS_COMPONENT(world, Position);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_id(Position),
         .events = {EcsOnSet},
         .callback = Trigger,
@@ -845,7 +1016,12 @@ void Trigger_on_set_component_after_modified() {
     ecs_modified(world, e, Position);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
 
@@ -858,7 +1034,7 @@ void Trigger_un_set_component() {
     ECS_COMPONENT(world, Position);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_id(Position),
         .events = {EcsUnSet},
         .callback = Trigger,
@@ -875,7 +1051,12 @@ void Trigger_un_set_component() {
     ecs_remove(world, e, Position);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
 
@@ -888,7 +1069,7 @@ void Trigger_un_set_wildcard() {
     ECS_COMPONENT(world, Position);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = EcsWildcard,
         .events = {EcsUnSet},
         .callback = Trigger,
@@ -905,7 +1086,12 @@ void Trigger_un_set_wildcard() {
     ecs_remove(world, e, Position);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
 
@@ -919,7 +1105,7 @@ void Trigger_un_set_pair() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(Rel, Obj),
         .events = {EcsUnSet},
         .callback = Trigger,
@@ -936,7 +1122,12 @@ void Trigger_un_set_pair() {
     ecs_remove_pair(world, e, Rel, Obj);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Rel, Obj));
 
@@ -950,7 +1141,7 @@ void Trigger_un_set_pair_w_obj_wildcard() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(Rel, EcsWildcard),
         .events = {EcsUnSet},
         .callback = Trigger,
@@ -967,7 +1158,12 @@ void Trigger_un_set_pair_w_obj_wildcard() {
     ecs_remove_pair(world, e, Rel, Obj);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Rel, Obj));
 
@@ -981,7 +1177,7 @@ void Trigger_un_set_pair_pred_wildcard() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(EcsWildcard, Obj),
         .events = {EcsUnSet},
         .callback = Trigger,
@@ -998,7 +1194,12 @@ void Trigger_un_set_pair_pred_wildcard() {
     ecs_remove_pair(world, e, Rel, Obj);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Rel, Obj));
 
@@ -1012,7 +1213,7 @@ void Trigger_un_set_pair_wildcard() {
     ECS_TAG(world, Obj);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(EcsWildcard, EcsWildcard),
         .events = {EcsUnSet},
         .callback = Trigger,
@@ -1029,7 +1230,12 @@ void Trigger_un_set_pair_wildcard() {
     ecs_remove_pair(world, e, Rel, Obj);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Rel, Obj));
 
@@ -1042,7 +1248,7 @@ void Trigger_add_twice() {
     ECS_TAG(world, TagA);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -1055,7 +1261,12 @@ void Trigger_add_twice() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
@@ -1074,7 +1285,7 @@ void Trigger_remove_twice() {
     ECS_TAG(world, TagA);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -1088,9 +1299,13 @@ void Trigger_remove_twice() {
     test_int(ctx.invoked, 0);
 
     ecs_remove_id(world, e, TagA);
-
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
@@ -1109,7 +1324,7 @@ void Trigger_on_remove_w_clear() {
     ECS_TAG(world, TagA);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -1125,7 +1340,12 @@ void Trigger_on_remove_w_clear() {
     ecs_clear(world, e);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
     
@@ -1138,7 +1358,7 @@ void Trigger_on_remove_w_delete() {
     ECS_TAG(world, TagA);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -1154,7 +1374,12 @@ void Trigger_on_remove_w_delete() {
     ecs_delete(world, e);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
     
@@ -1167,7 +1392,7 @@ void Trigger_on_remove_w_world_fini() {
     ECS_TAG(world, TagA);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -1183,7 +1408,12 @@ void Trigger_on_remove_w_world_fini() {
     ecs_fini(world);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 }
@@ -1194,7 +1424,7 @@ void Trigger_on_add_w_clone() {
     ECS_TAG(world, TagA);
 
     Probe ctx = {0};
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -1207,7 +1437,12 @@ void Trigger_on_add_w_clone() {
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
@@ -1216,7 +1451,12 @@ void Trigger_on_add_w_clone() {
     ecs_entity_t e2 = ecs_clone(world, 0, e, true);
 
     test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
     test_int(ctx.e[0], e2);
     test_int(ctx.c[0][0], TagA);
 
@@ -1530,5 +1770,28 @@ void Trigger_delete_trigger_w_delete_ctx() {
     test_int(ctx_value, 1);
     test_int(binding_ctx_value, 1);
 
+    ecs_fini(world);
+}
+
+void Trigger_trigger_w_index() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = Tag,
+        .term.index = 50,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+    test_assert(t != 0);
+
+    ecs_new(world, Tag);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.term_index, 50);
+    
     ecs_fini(world);
 }
