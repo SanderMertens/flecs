@@ -539,7 +539,7 @@ public:
      */      
     template <typename T>
     Base& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
-        ecs_compare_action_t cmp = reinterpret_cast<ecs_compare_action_t>(compare);
+        ecs_order_by_action_t cmp = reinterpret_cast<ecs_order_by_action_t>(compare);
         return this->order_by(_::cpp_type<T>::id(world()), cmp);
     }
 
@@ -550,8 +550,8 @@ public:
      * @param compare The compare function used to sort the components.
      */    
     Base& order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
-        m_desc->order_by = reinterpret_cast<ecs_compare_action_t>(compare);
-        m_desc->order_by_id = component;
+        m_desc->order_by = reinterpret_cast<ecs_order_by_action_t>(compare);
+        m_desc->order_by_component = component;
         return *this;
     }
 
@@ -574,7 +574,7 @@ public:
      */
     template <typename T>
     Base& group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
-        ecs_rank_type_action_t rnk = reinterpret_cast<ecs_rank_type_action_t>(rank);
+        ecs_group_by_action_t rnk = reinterpret_cast<ecs_group_by_action_t>(rank);
         return this->group_by(_::cpp_type<T>::id(this->m_world), rnk);
     }
 
@@ -585,7 +585,7 @@ public:
      * @param rank The rank action.
      */
     Base& group_by(flecs::entity_t component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
-        m_desc->group_by = reinterpret_cast<ecs_rank_type_action_t>(rank);
+        m_desc->group_by = reinterpret_cast<ecs_group_by_action_t>(rank);
         m_desc->group_by_id = component;
         return *this;
     } 

@@ -27,7 +27,7 @@ ecs_hashmap_t _ecs_hashmap_new(
     ecs_size_t key_size,
     ecs_size_t value_size,
     ecs_hash_value_action_t hash,
-    ecs_compare_value_action_t compare)
+    ecs_compare_action_t compare)
 {
     return (ecs_hashmap_t){
         .key_size = key_size,

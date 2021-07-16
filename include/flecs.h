@@ -131,11 +131,19 @@ typedef void (*ecs_iter_action_t)(
 typedef bool (*ecs_iter_next_action_t)(
     ecs_iter_t *it);  
 
+/** Callback used for sorting components */
+typedef int (*ecs_order_by_action_t)(
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
+    const void *ptr2);
+
 /** Callback used for ranking types */
-typedef int32_t (*ecs_rank_type_action_t)(
+typedef int32_t (*ecs_group_by_action_t)(
     ecs_world_t *world,
-    ecs_entity_t rank_component,
-    ecs_type_t type);
+    ecs_type_t type,
+    ecs_id_t id,
+    void *ctx);
 
 /** Initialization action for modules */
 typedef void (*ecs_module_action_t)(
@@ -151,20 +159,13 @@ typedef void (*ecs_ctx_free_t)(
     void *ctx);
 
 /** Callback used for sorting values */
-typedef int (*ecs_compare_value_action_t)(
+typedef int (*ecs_compare_action_t)(
     const void *ptr1,
     const void *ptr2);
 
 /** Callback used for hashing values */
 typedef uint64_t (*ecs_hash_value_action_t)(
-    const void *ptr);
-
-/** Callback used for sorting components */
-typedef int (*ecs_compare_action_t)(
-    ecs_entity_t e1,
-    const void *ptr1,
-    ecs_entity_t e2,
-    const void *ptr2);  
+    const void *ptr); 
 
 /** @} */
 
@@ -421,20 +422,31 @@ typedef struct ecs_query_desc_t {
     /* Filter for the query */
     ecs_filter_desc_t filter;
 
-    /* Id (component) to be used by order_by */
-    ecs_id_t order_by_id;
+    /* Component to be used by order_by */
+    ecs_entity_t order_by_component;
 
     /* Callback used for ordering query results. If order_by_id is 0, the 
      * pointer provided to the callback will be NULL. If the callback is not
      * set, results will not be ordered. */
-    ecs_compare_action_t order_by;
+    ecs_order_by_action_t order_by;
 
-    /* Id (component) to be used by group_by */
+    /* Id to be used by group_by. This id is passed to the group_by function and
+     * can be used identify the part of an entity type that should be used for
+     * grouping. */
     ecs_id_t group_by_id;
 
     /* Callback used for grouping results. If the callback is not set, results
-     * will not be grouped. */
-    ecs_rank_type_action_t group_by;
+     * will not be grouped. When set, this callback will be used to calculate a
+     * "rank" for each entity (table) based on its components. This rank is then
+     * used to sort entities (tables), so that entities (tables) of the same
+     * rank are "grouped" together when iterated. */
+    ecs_group_by_action_t group_by;
+
+    /* Context to pass to group_by */
+    void *group_by_ctx;
+
+    /* Function to free group_by_ctx */
+    ecs_ctx_free_t group_by_ctx_free;
 
     /* If set, the query will be created as a subquery. A subquery matches at
      * most a subset of its parent query. Subqueries do not directly receive

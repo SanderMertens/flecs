@@ -447,10 +447,12 @@ const char* parse_set_expr(
         }
     } while (true);
 
-    if (id->set.mask & EcsCascade && !(id->set.mask & EcsSuperSet) && !(id->set.mask & EcsSubSet)){
-        ecs_parser_error(name, expr, column, 
-            "invalid 'all' token without superset or subset");
-        return NULL;
+    if (id->set.mask & EcsCascade && !(id->set.mask & EcsSuperSet) && 
+        !(id->set.mask & EcsSubSet))
+    {
+        /* If cascade is used without specifying superset or subset, assume
+         * superset */
+        id->set.mask |= EcsSuperSet;
     }
 
     if (id->set.mask & EcsSelf && id->set.min_depth != 0) {
@@ -499,6 +501,9 @@ const char* parse_arguments(
             {
                 ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, 
                     token, &term->args[arg]);
+                if (!ptr) {
+                    return NULL;
+                }
 
             /* Regular identifier */
             } else if (parse_identifier(token, &term->args[arg])) {

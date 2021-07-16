@@ -267,6 +267,12 @@ int ecs_term_finalize(
         term->args[0].entity = EcsThis;
     }
 
+    if (term->args[0].set.mask & (EcsSuperSet | EcsSubSet)) {
+        if (!term->args[0].set.relation) {
+            term->args[0].set.relation = EcsIsA;
+        }
+    }
+
     return 0;
 }
 

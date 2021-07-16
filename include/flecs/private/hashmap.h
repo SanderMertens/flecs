@@ -17,7 +17,7 @@ extern "C" {
 
 typedef struct {
     ecs_hash_value_action_t hash;
-    ecs_compare_value_action_t compare;
+    ecs_compare_action_t compare;
     ecs_size_t key_size;
     ecs_size_t value_size;
     ecs_map_t *impl;
@@ -40,7 +40,7 @@ ecs_hashmap_t _ecs_hashmap_new(
     ecs_size_t key_size,
     ecs_size_t value_size,
     ecs_hash_value_action_t hash,
-    ecs_compare_value_action_t compare);
+    ecs_compare_action_t compare);
 
 #define ecs_hashmap_new(K, V, compare, hash)\
     _ecs_hashmap_new(ECS_SIZEOF(K), ECS_SIZEOF(V), compare, hash)
