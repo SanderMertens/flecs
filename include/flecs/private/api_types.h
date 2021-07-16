@@ -105,14 +105,6 @@ typedef struct ecs_filter_iter_t {
     ecs_iter_table_t table;
 } ecs_filter_iter_t;
 
-/** Iterator flags used to quickly select the optimal iterator algorithm */
-typedef enum ecs_query_iter_kind_t {
-    EcsQuerySimpleIter,     /**< No paging, sorting or sparse columns */
-    EcsQueryPagedIter,      /**< Regular iterator with paging */
-    EcsQuerySortedIter,     /**< Sorted iterator */
-    EcsQuerySwitchIter      /**< Switch type iterator */
-} ecs_query_iter_kind_t;
-
 /** Query-iterator specific data */
 typedef struct ecs_query_iter_t {
     ecs_page_iter_t page_iter;
@@ -141,8 +133,8 @@ struct ecs_iter_t {
     ecs_world_t *real_world;      /**< Actual world. This differs from world when using threads.  */
     ecs_entity_t system;          /**< The current system (if applicable) */
     ecs_entity_t event;           /**< The event (if applicable) */
+    ecs_id_t event_id;            /**< The (component) id for the event */
     ecs_entity_t self;            /**< Self entity (if set) */
-    ecs_query_iter_kind_t kind;
 
     ecs_iter_table_t *table;      /**< Table related data */
     ecs_query_t *query;           /**< Current query being evaluated */

@@ -171,7 +171,7 @@ The Flecs source has a modular design which makes it easy to strip out code you 
 ## Software Quality
 To ensure stability of Flecs, the code is thoroughly tested on every commit:
 
-- More than 2200 testcases and 50.000 lines of test code
+- More than 2400 testcases and 60.000 lines of test code
 - Over 90% code coverage
 - All tests run without memory leaks & memory corruption
 - All examples are compiled warning free

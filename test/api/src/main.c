@@ -1097,6 +1097,8 @@ void Observer_2_terms_w_on_remove_2nd(void);
 void Observer_2_pair_terms_w_on_add(void);
 void Observer_2_pair_terms_w_on_remove(void);
 void Observer_2_wildcard_pair_terms_w_on_add(void);
+void Observer_2_wildcard_pair_terms_w_on_add_2_matching(void);
+void Observer_2_wildcard_pair_terms_w_on_add_3_matching(void);
 void Observer_2_wildcard_pair_terms_w_on_remove(void);
 void Observer_2_terms_1_not_w_on_add(void);
 void Observer_2_terms_1_not_w_on_remove(void);
@@ -6125,6 +6127,14 @@ bake_test_case Observer_testcases[] = {
         Observer_2_wildcard_pair_terms_w_on_add
     },
     {
+        "2_wildcard_pair_terms_w_on_add_2_matching",
+        Observer_2_wildcard_pair_terms_w_on_add_2_matching
+    },
+    {
+        "2_wildcard_pair_terms_w_on_add_3_matching",
+        Observer_2_wildcard_pair_terms_w_on_add_3_matching
+    },
+    {
         "2_wildcard_pair_terms_w_on_remove",
         Observer_2_wildcard_pair_terms_w_on_remove
     },
@@ -9626,7 +9636,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        23,
+        25,
         Observer_testcases
     },
     {

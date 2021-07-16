@@ -17671,6 +17671,7 @@ void populate_columns(
     ecs_id_t *ids,
     int32_t *columns,
     ecs_type_t *types,
+    ecs_id_t event_id,
     int32_t term_index)
 {
     int32_t i, count = o->filter.term_count;
@@ -17697,6 +17698,7 @@ void populate_columns(
             index = ecs_type_match(type, 0, id);
 
         } else {
+            id = event_id;
             index = ecs_type_match(type, 0, id);
 
             /* If id was not found, this must be an Or/Not expression */
@@ -17770,7 +17772,7 @@ void observer_callback(ecs_iter_t *it) {
         user_it.table = &table_data;
 
         populate_columns(world, o, table, data, ids, 
-            columns, types, it->term_index);
+            columns, types, it->event_id, it->term_index);
 
         user_it.system = o->entity;
         user_it.term_index = it->term_index;
@@ -24348,6 +24350,7 @@ void notify_trigger_set(
     ecs_iter_t it = {
         .world = world,
         .event = event,
+        .event_id = id,
         .table = &table_data,
         .table_count = 1,
         .inactive_table_count = 0,

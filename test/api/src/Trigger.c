@@ -62,6 +62,7 @@ void Trigger_on_add_trigger_before_table() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -99,6 +100,7 @@ void Trigger_on_add_trigger_after_table() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -136,6 +138,7 @@ void Trigger_on_remove_trigger_before_table() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -171,6 +174,7 @@ void Trigger_on_remove_trigger_after_table() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -202,6 +206,7 @@ void Trigger_on_add_tag() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -233,6 +238,7 @@ void Trigger_on_add_component() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_id(Position));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -265,6 +271,7 @@ void Trigger_on_add_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -279,6 +286,7 @@ void Trigger_on_add_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagB);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -311,6 +319,7 @@ void Trigger_on_add_pair() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Pred, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -344,6 +353,7 @@ void Trigger_on_add_pair_obj_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Pred, ObjA));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -358,6 +368,7 @@ void Trigger_on_add_pair_obj_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Pred, ObjB));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -391,6 +402,7 @@ void Trigger_on_add_pair_pred_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(PredA, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -405,6 +417,7 @@ void Trigger_on_add_pair_pred_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(PredB, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -437,6 +450,7 @@ void Trigger_on_add_pair_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Pred, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -471,6 +485,7 @@ void Trigger_on_remove_tag() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -505,6 +520,7 @@ void Trigger_on_remove_component() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, ecs_id(Position));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -540,6 +556,7 @@ void Trigger_on_remove_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -554,6 +571,7 @@ void Trigger_on_remove_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagB);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -589,6 +607,7 @@ void Trigger_on_remove_pair() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, ecs_pair(Pred, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -625,6 +644,7 @@ void Trigger_on_remove_pair_obj_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, ecs_pair(Pred, ObjA));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -641,6 +661,7 @@ void Trigger_on_remove_pair_obj_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, ecs_pair(Pred, ObjB));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -677,6 +698,7 @@ void Trigger_on_remove_pair_pred_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, ecs_pair(PredA, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -691,6 +713,7 @@ void Trigger_on_remove_pair_pred_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, ecs_pair(PredB, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -726,6 +749,7 @@ void Trigger_on_remove_pair_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, ecs_pair(Pred, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -760,6 +784,7 @@ void Trigger_on_set_component() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -795,6 +820,7 @@ void Trigger_on_set_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -831,6 +857,7 @@ void Trigger_on_set_pair() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -867,6 +894,7 @@ void Trigger_on_set_pair_w_obj_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -903,6 +931,7 @@ void Trigger_on_set_pair_pred_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -939,6 +968,7 @@ void Trigger_on_set_pair_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -970,6 +1000,7 @@ void Trigger_on_add_remove() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -984,6 +1015,7 @@ void Trigger_on_add_remove() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1019,6 +1051,7 @@ void Trigger_on_set_component_after_modified() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1054,6 +1087,7 @@ void Trigger_un_set_component() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event_id, ecs_id(Position));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1089,6 +1123,7 @@ void Trigger_un_set_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event_id, ecs_id(Position));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1125,6 +1160,7 @@ void Trigger_un_set_pair() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event_id, ecs_pair(Rel, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1161,6 +1197,7 @@ void Trigger_un_set_pair_w_obj_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event_id, ecs_pair(Rel, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1197,6 +1234,7 @@ void Trigger_un_set_pair_pred_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event_id, ecs_pair(Rel, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1233,6 +1271,7 @@ void Trigger_un_set_pair_wildcard() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event_id, ecs_pair(Rel, Obj));
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1264,6 +1303,7 @@ void Trigger_add_twice() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1303,6 +1343,7 @@ void Trigger_remove_twice() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1343,6 +1384,7 @@ void Trigger_on_remove_w_clear() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1377,6 +1419,7 @@ void Trigger_on_remove_w_delete() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1411,6 +1454,7 @@ void Trigger_on_remove_w_world_fini() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1440,6 +1484,7 @@ void Trigger_on_add_w_clone() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1454,6 +1499,7 @@ void Trigger_on_add_w_clone() {
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 

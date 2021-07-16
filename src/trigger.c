@@ -218,6 +218,7 @@ void notify_trigger_set(
     ecs_iter_t it = {
         .world = world,
         .event = event,
+        .event_id = id,
         .table = &table_data,
         .table_count = 1,
         .inactive_table_count = 0,

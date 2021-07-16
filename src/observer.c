@@ -9,6 +9,7 @@ void populate_columns(
     ecs_id_t *ids,
     int32_t *columns,
     ecs_type_t *types,
+    ecs_id_t event_id,
     int32_t term_index)
 {
     int32_t i, count = o->filter.term_count;
@@ -32,6 +33,7 @@ void populate_columns(
         } else if (i == term_index) {
             /* If current term is the one that triggered the event, use its
              * id to populate the iterator */
+            id = event_id;
             index = ecs_type_match(type, 0, id);
 
         } else {
@@ -108,7 +110,7 @@ void observer_callback(ecs_iter_t *it) {
         user_it.table = &table_data;
 
         populate_columns(world, o, table, data, ids, 
-            columns, types, it->term_index);
+            columns, types, it->event_id, it->term_index);
 
         user_it.system = o->entity;
         user_it.term_index = it->term_index;

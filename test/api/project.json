@@ -1168,6 +1168,8 @@
                 "2_pair_terms_w_on_add",
                 "2_pair_terms_w_on_remove",
                 "2_wildcard_pair_terms_w_on_add",
+                "2_wildcard_pair_terms_w_on_add_2_matching",
+                "2_wildcard_pair_terms_w_on_add_3_matching",                
                 "2_wildcard_pair_terms_w_on_remove",
                 "2_terms_1_not_w_on_add",
                 "2_terms_1_not_w_on_remove",

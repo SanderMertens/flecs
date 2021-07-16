@@ -12,6 +12,7 @@ void probe_system_w_ctx(
     ctx->system = it->system;
     ctx->self = it->self;
     ctx->event = it->event;
+    ctx->event_id = it->event_id;
     ctx->offset = 0;
     ctx->column_count = it->column_count;
     ctx->term_index = it->term_index;

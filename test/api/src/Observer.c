@@ -371,6 +371,121 @@ void Observer_2_wildcard_pair_terms_w_on_add() {
     ecs_fini(world);
 }
 
+void Observer_2_wildcard_pair_terms_w_on_add_2_matching() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ecs_pair(RelA, ObjA)}, {ecs_pair(RelB, EcsWildcard)}},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_pair(world, e, RelA, ObjA);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, e, RelB, ObjA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, ObjA));
+    test_int(ctx.c[0][1], ecs_pair(RelB, ObjA));
+
+    ctx = (Probe){ 0 };
+    ecs_add_pair(world, e, RelB, ObjB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, ObjA));
+    test_int(ctx.c[0][1], ecs_pair(RelB, ObjB));
+
+    ecs_fini(world);
+}
+
+void Observer_2_wildcard_pair_terms_w_on_add_3_matching() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+    ECS_TAG(world, ObjC);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ecs_pair(RelA, ObjA)}, {ecs_pair(RelB, EcsWildcard)}},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_pair(world, e, RelA, ObjA);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, e, RelB, ObjA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, ObjA));
+    test_int(ctx.c[0][1], ecs_pair(RelB, ObjA));
+
+    ctx = (Probe){ 0 };
+    ecs_add_pair(world, e, RelB, ObjC);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, ObjA));
+    test_int(ctx.c[0][1], ecs_pair(RelB, ObjC));
+
+    ctx = (Probe){ 0 };
+    ecs_add_pair(world, e, RelB, ObjB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, ObjA));
+    test_int(ctx.c[0][1], ecs_pair(RelB, ObjB));
+
+    ecs_fini(world);
+}
+
+
 void Observer_2_wildcard_pair_terms_w_on_remove() {
     ecs_world_t *world = ecs_init();
 

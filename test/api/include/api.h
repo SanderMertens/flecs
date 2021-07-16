@@ -16,6 +16,7 @@ typedef struct Probe {
     ecs_entity_t system;
     ecs_entity_t self;
     ecs_entity_t event;
+    ecs_id_t event_id;
     int32_t offset;
     int32_t count;
     int32_t invoked;
