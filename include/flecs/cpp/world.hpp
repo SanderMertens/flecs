@@ -198,6 +198,11 @@ public:
     template <typename T>
     flecs::id id() const;
 
+    /** Id factory.
+     */
+    template <typename ... Args>
+    flecs::id id(Args&&... args) const;
+
     /** Get pair id from relation, object
      */
     template <typename R, typename O>

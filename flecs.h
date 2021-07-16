@@ -254,9 +254,9 @@ typedef int32_t ecs_size_t;
 #define ECS_HAS_PAIR_OBJECT(e, rel, obj)\
     (ECS_HAS_RELATION(e, rel) && ECS_PAIR_OBJECT(e) == obj)
 
-#define ECS_HAS(e, type_id)(\
-    (e == type_id) ||\
-    (ECS_HAS_PAIR_OBJECT(e, ECS_PAIR_RELATION(type_id), ECS_PAIR_OBJECT(type_id))))
+#define ECS_HAS(id, has_id)(\
+    (id == has_id) ||\
+    (ECS_HAS_PAIR_OBJECT(id, ECS_PAIR_RELATION(has_id), ECS_PAIR_OBJECT(has_id))))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -11130,6 +11130,11 @@ public:
     template <typename T>
     flecs::id id() const;
 
+    /** Id factory.
+     */
+    template <typename ... Args>
+    flecs::id id(Args&&... args) const;
+
     /** Get pair id from relation, object
      */
     template <typename R, typename O>
@@ -11914,15 +11919,11 @@ namespace flecs {
  */
 class id : public world_base<id> {
 public:
-    explicit id() 
-        : m_world(nullptr)
-        , m_id(0) { }
-
-    explicit id(flecs::id_t value) 
+    explicit id(flecs::id_t value = 0) 
         : m_world(nullptr)
         , m_id(value) { }
 
-    explicit id(flecs::world_t *world, flecs::id_t value) 
+    explicit id(flecs::world_t *world, flecs::id_t value = 0)
         : m_world(world)
         , m_id(value) { }
 
@@ -12618,8 +12619,8 @@ public:
      * @param entity The entity to check.
      * @return True if the entity has the provided entity, false otherwise.
      */
-    bool has(const flecs::entity_view& e) const {
-        return ecs_has_entity(m_world, m_id, e.id());
+    bool has(flecs::id_t e) const {
+        return ecs_has_id(m_world, m_id, e);
     }     
 
     /** Check if entity has the provided component.
@@ -12629,7 +12630,7 @@ public:
      */
     template <typename T>
     bool has() const {
-        return ecs_has_entity(m_world, m_id, _::cpp_type<T>::id(m_world));
+        return ecs_has_id(m_world, m_id, _::cpp_type<T>::id(m_world));
     }
 
     /** Check if entity has the provided pair.
@@ -12650,10 +12651,9 @@ public:
      * @return True if the entity has the provided component, false otherwise.
      */
     template <typename Relation>
-    bool has(const flecs::entity_view& object) const {
+    bool has(flecs::id_t object) const {
         auto comp_id = _::cpp_type<Relation>::id(m_world);
-        return ecs_has_entity(m_world, m_id, 
-            ecs_pair(comp_id, object.id()));
+        return ecs_has_id(m_world, m_id, ecs_pair(comp_id, object));
     }
 
     /** Check if entity has the provided pair.
@@ -12662,9 +12662,8 @@ public:
      * @param object The object.
      * @return True if the entity has the provided component, false otherwise.
      */
-    bool has(const flecs::entity_view& relation, const flecs::entity_view& object) const {
-        return ecs_has_entity(m_world, m_id, 
-            ecs_pair(relation.id(), object.id()));
+    bool has(flecs::id_t relation, flecs::id_t object) const {
+        return ecs_has_id(m_world, m_id, ecs_pair(relation, object));
     }
 
     /** Check if entity has the provided pair.
@@ -12674,10 +12673,9 @@ public:
      * @return True if the entity has the provided component, false otherwise.
      */
     template <typename Object>
-    bool has_object(const flecs::entity_view& relation) const {
+    bool has_object(flecs::id_t relation) const {
         auto comp_id = _::cpp_type<Object>::id(m_world);
-        return ecs_has_entity(m_world, m_id, 
-            ecs_pair(relation.id(), comp_id));
+        return ecs_has_id(m_world, m_id, ecs_pair(relation, comp_id));
     }
 
     /** Check if entity owns the provided type.
@@ -12697,8 +12695,30 @@ public:
      * @param entity The entity to check.
      * @return True if the entity owns the provided entity, false otherwise.
      */
-    bool owns(const flecs::entity_view& e) const {
-        return ecs_owns_entity(m_world, m_id, e.id(), true);
+    bool owns(flecs::id_t e) const {
+        return ecs_owns_entity(m_world, m_id, e, true);
+    }
+
+    /** Check if entity owns the provided pair.
+     *
+     * @tparam Relation The relation type.
+     * @param object The object.
+     * @return True if the entity owns the provided component, false otherwise.
+     */
+    template <typename Relation>
+    bool owns(flecs::id_t object) const {
+        auto comp_id = _::cpp_type<Relation>::id(m_world);
+        return owns(ecs_pair(comp_id, object));
+    }
+
+    /** Check if entity owns the provided pair.
+     *
+     * @param relation The relation.
+     * @param object The object.
+     * @return True if the entity owns the provided component, false otherwise.
+     */
+    bool owns(flecs::id_t relation, flecs::id_t object) const {
+        return owns(ecs_pair(relation, object));
     }
 
     /** Check if entity owns the provided component.
@@ -12724,8 +12744,8 @@ public:
      * @param sw_case The case to check.
      * @return True if the entity has the provided case, false otherwise.
      */
-    bool has_case(const flecs::entity_view& sw_case) const {
-        return ecs_has_entity(m_world, m_id, flecs::Case | sw_case.id());
+    bool has_case(flecs::id_t sw_case) const {
+        return ecs_has_entity(m_world, m_id, flecs::Case | sw_case);
     }
 
     template<typename T>
@@ -12745,8 +12765,8 @@ public:
      * @param sw The switch for which to obtain the case.
      * @return True if the entity has the provided case, false otherwise.
      */
-    flecs::entity_view get_case(const flecs::entity_view& sw) const {
-        return flecs::entity_view(m_world, ecs_get_case(m_world, m_id, sw.id()));
+    flecs::entity_view get_case(flecs::id_t sw) const {
+        return flecs::entity_view(m_world, ecs_get_case(m_world, m_id, sw));
     }
 
     /** Test if component is enabled.
@@ -17461,6 +17481,11 @@ inline void emplace(world_t *world, id_t entity, Args&&... args) {
 template <typename T>
 inline flecs::id world::id() const {
     return flecs::id(m_world, _::cpp_type<T>::id(m_world));
+}
+
+template <typename ... Args>
+inline flecs::id world::id(Args&&... args) const {
+    return flecs::id(m_world, std::forward<Args>(args)...);
 }
 
 template <typename R, typename O>

@@ -162,9 +162,9 @@ typedef int32_t ecs_size_t;
 #define ECS_HAS_PAIR_OBJECT(e, rel, obj)\
     (ECS_HAS_RELATION(e, rel) && ECS_PAIR_OBJECT(e) == obj)
 
-#define ECS_HAS(e, type_id)(\
-    (e == type_id) ||\
-    (ECS_HAS_PAIR_OBJECT(e, ECS_PAIR_RELATION(type_id), ECS_PAIR_OBJECT(type_id))))
+#define ECS_HAS(id, has_id)(\
+    (id == has_id) ||\
+    (ECS_HAS_PAIR_OBJECT(id, ECS_PAIR_RELATION(has_id), ECS_PAIR_OBJECT(has_id))))
 
 
 ////////////////////////////////////////////////////////////////////////////////

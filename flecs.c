@@ -18758,6 +18758,10 @@ int match_id(
         } else {
             return 0;
         }
+    } else {
+        if (match_with == EcsWildcard) {
+            return true;
+        }
     }
 
     if (ECS_HAS(id, match_with)) {
