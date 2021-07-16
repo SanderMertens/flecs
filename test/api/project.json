@@ -350,7 +350,11 @@
                 "pred_implicit_subject_superset_cascade",
                 "pred_implicit_subject_subset_cascade",
                 "pred_implicit_subject_superset_inclusive_cascade",
-                "pred_implicit_subject_subset_inclusive_cascade",            
+                "pred_implicit_subject_subset_inclusive_cascade",
+                "pred_implicit_subject_implicit_superset_cascade",         
+                "pred_implicit_subject_implicit_superset_inclusive_cascade",
+                "pred_implicit_subject_implicit_superset_cascade_w_rel",         
+                "pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel",
                 "pred_implicit_subject_superset_depth_1_digit",
                 "pred_implicit_subject_subset_depth_1_digit",
                 "pred_implicit_subject_superset_depth_2_digits",
@@ -1032,7 +1036,9 @@
                 "only_from_singleton",
                 "only_not_from_entity",
                 "only_not_from_singleton",
-                "get_filter"
+                "get_filter",
+                "group_by",
+                "group_by_w_ctx"
             ]
         }, {
             "id": "Pairs",
@@ -1414,10 +1420,16 @@
             "testcases": [
                 "cascade_depth_1",
                 "cascade_depth_2",
+                "cascade_depth_2_new_syntax",
                 "add_after_match",
                 "adopt_after_match",
                 "rematch_w_empty_table",
-                "query_w_only_cascade"
+                "query_w_only_cascade",
+                "custom_relation_cascade_depth_1",
+                "custom_relation_cascade_depth_2",
+                "custom_relation_add_after_match",
+                "custom_relation_adopt_after_match",
+                "custom_relation_rematch_w_empty_table"
             ]
         }, {
             "id": "SystemManual",

@@ -559,7 +559,7 @@ void ecs_query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t component,
-    ecs_compare_action_t compare);
+    ecs_order_by_action_t compare);
 
 ECS_DEPRECATED("use ecs_query_init") 
 FLECS_API
@@ -567,7 +567,7 @@ void ecs_query_group_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t component,
-    ecs_rank_type_action_t rank_action);
+    ecs_group_by_action_t rank_action);
 
 #ifdef __cplusplus
 }

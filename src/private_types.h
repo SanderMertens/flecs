@@ -297,13 +297,15 @@ struct ecs_query_t {
     ecs_entity_t system;   
 
     /* Used for sorting */
-    ecs_entity_t sort_on_component;
-    ecs_compare_action_t compare;   
+    ecs_entity_t order_by_component;
+    ecs_order_by_action_t order_by;
     ecs_vector_t *table_slices;     
 
     /* Used for table sorting */
-    ecs_entity_t rank_on_component;
-    ecs_rank_type_action_t group_table;
+    ecs_entity_t group_by_id;
+    ecs_group_by_action_t group_by;
+    void *group_by_ctx;
+    ecs_ctx_free_t group_by_ctx_free;
 
     /* Subqueries */
     ecs_query_t *parent;

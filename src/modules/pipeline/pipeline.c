@@ -27,12 +27,15 @@ int compare_entity(
 }
 
 static
-int rank_phase(
+int group_by_phase(
     ecs_world_t *world,
-    ecs_entity_t rank_component,
-    ecs_type_t type) 
+    ecs_type_t type,
+    ecs_entity_t pipeline,
+    void *ctx) 
 {
-    const EcsType *pipeline_type = ecs_get(world, rank_component, EcsType);
+    (void)ctx;
+    
+    const EcsType *pipeline_type = ecs_get(world, pipeline, EcsType);
     ecs_assert(pipeline_type != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Find tag in system that belongs to pipeline */
@@ -537,7 +540,7 @@ ecs_query_t* build_pipeline_query(
             .terms_buffer_count = term_count + type_count
         },
         .order_by = compare_entity,
-        .group_by = rank_phase,
+        .group_by = group_by_phase,
         .group_by_id = pipeline
     });
 

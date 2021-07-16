@@ -86,7 +86,7 @@ public:
     template <typename T>
     void order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
         this->order_by(flecs::_::cpp_type<T>::id(m_world),
-            reinterpret_cast<ecs_compare_action_t>(compare));
+            reinterpret_cast<ecs_order_by_action_t>(compare));
     }
 
     void order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {

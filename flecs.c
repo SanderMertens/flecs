@@ -550,7 +550,7 @@ extern "C" {
 
 typedef struct {
     ecs_hash_value_action_t hash;
-    ecs_compare_value_action_t compare;
+    ecs_compare_action_t compare;
     ecs_size_t key_size;
     ecs_size_t value_size;
     ecs_map_t *impl;
@@ -573,7 +573,7 @@ ecs_hashmap_t _ecs_hashmap_new(
     ecs_size_t key_size,
     ecs_size_t value_size,
     ecs_hash_value_action_t hash,
-    ecs_compare_value_action_t compare);
+    ecs_compare_action_t compare);
 
 #define ecs_hashmap_new(K, V, compare, hash)\
     _ecs_hashmap_new(ECS_SIZEOF(K), ECS_SIZEOF(V), compare, hash)
@@ -921,13 +921,15 @@ struct ecs_query_t {
     ecs_entity_t system;   
 
     /* Used for sorting */
-    ecs_entity_t sort_on_component;
-    ecs_compare_action_t compare;   
+    ecs_entity_t order_by_component;
+    ecs_order_by_action_t order_by;
     ecs_vector_t *table_slices;     
 
     /* Used for table sorting */
-    ecs_entity_t rank_on_component;
-    ecs_rank_type_action_t group_table;
+    ecs_entity_t group_by_id;
+    ecs_group_by_action_t group_by;
+    void *group_by_ctx;
+    ecs_ctx_free_t group_by_ctx_free;
 
     /* Subqueries */
     ecs_query_t *parent;
@@ -13836,10 +13838,12 @@ const char* parse_set_expr(
         }
     } while (true);
 
-    if (id->set.mask & EcsCascade && !(id->set.mask & EcsSuperSet) && !(id->set.mask & EcsSubSet)){
-        ecs_parser_error(name, expr, column, 
-            "invalid 'all' token without superset or subset");
-        return NULL;
+    if (id->set.mask & EcsCascade && !(id->set.mask & EcsSuperSet) && 
+        !(id->set.mask & EcsSubSet))
+    {
+        /* If cascade is used without specifying superset or subset, assume
+         * superset */
+        id->set.mask |= EcsSuperSet;
     }
 
     if (id->set.mask & EcsSelf && id->set.min_depth != 0) {
@@ -13888,6 +13892,9 @@ const char* parse_arguments(
             {
                 ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, 
                     token, &term->args[arg]);
+                if (!ptr) {
+                    return NULL;
+                }
 
             /* Regular identifier */
             } else if (parse_identifier(token, &term->args[arg])) {
@@ -17224,6 +17231,12 @@ int ecs_term_finalize(
         term->args[0].entity = EcsThis;
     }
 
+    if (term->args[0].set.mask & (EcsSuperSet | EcsSubSet)) {
+        if (!term->args[0].set.relation) {
+            term->args[0].set.relation = EcsIsA;
+        }
+    }
+
     return 0;
 }
 
@@ -19335,35 +19348,51 @@ void activate_table(
     ecs_table_t *table,
     bool active);
 
-#ifndef NDEBUG
+/* Builtin group_by callback for Cascade terms.
+ * This function traces the hierarchy depth of an entity type by following a
+ * relation upwards (to its 'parents') for as long as those parents have the
+ * specified component id. 
+ * The result of the function is the number of parents with the provided 
+ * component for a given relation. */
 static
-ecs_entity_t get_cascade_component(
-    ecs_query_t *query)
-{
-    return query->filter.terms[query->cascade_by - 1].id;
-}
-#endif
-
-static
-int32_t rank_by_depth(
+int32_t group_by_cascade(
     ecs_world_t *world,
-    ecs_entity_t rank_by_component,
-    ecs_type_t type)
+    ecs_type_t type,
+    ecs_entity_t component,
+    void *ctx)
 {
     int32_t result = 0;
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
+    ecs_term_t *term = ctx;
+    ecs_entity_t relation = term->args[0].set.relation;
 
+    /* Cascade needs a relation to calculate depth from */
+    ecs_assert(relation != 0, ECS_INVALID_PARAMETER, NULL);
+
+    /* Should only be used with cascade terms */
+    ecs_assert(term->args[0].set.mask & EcsCascade, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    /* Iterate back to front as relations are more likely to occur near the
+     * end of a type. */
     for (i = count - 1; i >= 0; i --) {
-        if (ECS_HAS_RELATION(array[i], EcsChildOf)) {
-            ecs_type_t c_type = ecs_get_type(world, ecs_pair_object(world, array[i]));
-            int32_t j, c_count = ecs_vector_count(c_type);
-            ecs_entity_t *c_array = ecs_vector_first(c_type, ecs_entity_t);
+        /* Find relation & relation object in entity type */
+        if (ECS_HAS_RELATION(array[i], relation)) {
+            ecs_type_t obj_type = ecs_get_type(world,     
+                ecs_pair_object(world, array[i]));
+            int32_t j, c_count = ecs_vector_count(obj_type);
+            ecs_entity_t *c_array = ecs_vector_first(obj_type, ecs_entity_t);
 
+            /* Iterate object type, check if it has the specified component */
             for (j = 0; j < c_count; j ++) {
-                if (c_array[j] == rank_by_component) {
+                /* If it has the component, it is part of the tree matched by
+                 * the query, increase depth */
+                if (c_array[j] == component) {
                     result ++;
-                    result += rank_by_depth(world, rank_by_component, c_type);
+
+                    /* Recurse to test if the object has matching parents */
+                    result += group_by_cascade(world, obj_type, component, ctx);
                     break;
                 }
             }
@@ -19371,8 +19400,9 @@ int32_t rank_by_depth(
             if (j != c_count) {
                 break;
             }
+
+        /* If the id doesn't have a role set, we'll find no more relations */
         } else if (!(array[i] & ECS_ROLE_MASK)) {
-            /* No more parents after this */
             break;
         }
     }
@@ -19400,11 +19430,11 @@ bool has_auto_activation(
 }
 
 static
-void order_ranked_tables(
+void order_grouped_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    if (query->group_table) {
+    if (query->group_by) {
         ecs_vector_sort(query->tables, ecs_matched_table_t, table_compare);       
 
         /* Recompute the table indices by first resetting all indices, and then
@@ -19464,10 +19494,10 @@ void group_table(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (query->group_table) {
+    if (query->group_by) {
         ecs_assert(table->iter_data.table != NULL, ECS_INTERNAL_ERROR, NULL);
-        table->rank = query->group_table(
-            world, query->rank_on_component, table->iter_data.table->type);
+        table->rank = query->group_by(world, table->iter_data.table->type, 
+            query->group_by_id, query->group_by_ctx);
     } else {
         table->rank = 0;
     }
@@ -19480,7 +19510,7 @@ void group_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    if (query->group_table) {
+    if (query->group_by) {
         ecs_vector_each(query->tables, ecs_matched_table_t, table, {
             group_table(world, query, table);
         });
@@ -20284,7 +20314,7 @@ void match_tables(
         }
     }
 
-    order_ranked_tables(world, query);
+    order_grouped_tables(world, query);
 }
 
 #define ELEM(ptr, size, index) ECS_OFFSET(ptr, size * index)
@@ -20299,7 +20329,7 @@ int32_t qsort_partition(
     int32_t elem_size,
     int32_t lo,
     int32_t hi,
-    ecs_compare_action_t compare)
+    ecs_order_by_action_t compare)
 {
     int32_t p = (hi + lo) / 2;
     void *pivot = ELEM(ptr, elem_size, p);
@@ -20347,7 +20377,7 @@ void qsort_array(
     int32_t size,
     int32_t lo,
     int32_t hi,
-    ecs_compare_action_t compare)
+    ecs_order_by_action_t compare)
 {   
     if ((hi - lo) < 1)  {
         return;
@@ -20366,7 +20396,7 @@ void sort_table(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column_index,
-    ecs_compare_action_t compare)
+    ecs_order_by_action_t compare)
 {
     ecs_data_t *data = ecs_table_get_data(table);
     if (!data || !data->entities) {
@@ -20435,8 +20465,8 @@ void build_sorted_table_range(
     int32_t end)
 {
     ecs_world_t *world = query->world;
-    ecs_entity_t component = query->sort_on_component;
-    ecs_compare_action_t compare = query->compare;
+    ecs_entity_t component = query->order_by_component;
+    ecs_order_by_action_t compare = query->order_by;
 
     /* Fetch data from all matched tables */
     ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
@@ -20574,7 +20604,7 @@ bool tables_dirty(
     ecs_query_t *query)
 {
     if (query->needs_reorder) {
-        order_ranked_tables(query->world, query);
+        order_grouped_tables(query->world, query);
     }
 
     int32_t i, count = ecs_vector_count(query->tables);
@@ -20636,12 +20666,12 @@ void sort_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    ecs_compare_action_t compare = query->compare;
+    ecs_order_by_action_t compare = query->order_by;
     if (!compare) {
         return;
     }
     
-    ecs_entity_t sort_on_component = query->sort_on_component;
+    ecs_entity_t order_by_component = query->order_by_component;
 
     /* Iterate over active tables. Don't bother with inactive tables, since
      * they're empty */
@@ -20668,10 +20698,10 @@ void sort_tables(
         is_dirty = is_dirty || (dirty_state[0] != table_data->monitor[0]);
 
         int32_t index = -1;
-        if (sort_on_component) {
+        if (order_by_component) {
             /* Get index of sorted component. We only care if the component we're
             * sorting on has changed or if entities have been added / re(moved) */
-            index = ecs_type_index_of(table->type, sort_on_component);
+            index = ecs_type_index_of(table->type, order_by_component);
             if (index != -1) {
                 ecs_assert(index < ecs_vector_count(table->type), ECS_INTERNAL_ERROR, NULL); 
                 is_dirty = is_dirty || (dirty_state[index + 1] != table_data->monitor[index + 1]);
@@ -20854,8 +20884,9 @@ void process_signature(
         }
 
         if (subj->set.mask & EcsCascade && term->oper == EcsOptional) {
+            /* Query can only have one cascade column */
+            ecs_assert(query->cascade_by == 0, ECS_INVALID_PARAMETER, NULL);
             query->cascade_by = i + 1;
-            query->rank_on_component = term->id;
         }
 
         if (subj->entity && subj->entity != EcsThis && 
@@ -21143,12 +21174,16 @@ ecs_table_indices_t* get_table_indices(
 }
 
 static
-void resolve_cascade_container(
+void resolve_cascade_subject(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_table_indices_t *ti,
     ecs_type_t table_type)
 {
+    int32_t term_index = query->cascade_by - 1;
+    ecs_term_t *term = &query->filter.terms[term_index];
+
+    /* For each table entry, find the correct subject of a cascade term */
     int32_t i, count = ti->count;
     for (i = 0; i < count; i ++) {
         int32_t table_data_index = ti->indices[i];
@@ -21163,29 +21198,28 @@ void resolve_cascade_container(
                     -1 * table_data_index - 1);
         }
         
-        ecs_assert(table_data->iter_data.references != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(table_data->iter_data.references != 0, 
+            ECS_INTERNAL_ERROR, NULL);
 
         /* Obtain reference index */
         int32_t *column_indices = table_data->iter_data.columns;
-        int32_t column = query->cascade_by - 1;
-        int32_t ref_index = -column_indices[column] - 1;
+        int32_t ref_index = -column_indices[term_index] - 1;
 
         /* Obtain pointer to the reference data */
         ecs_ref_t *references = table_data->iter_data.references;
-        ecs_ref_t *ref = &references[ref_index];
-        ecs_assert(ref->component == get_cascade_component(query), 
-            ECS_INTERNAL_ERROR, NULL);
 
-        /* Resolve container entity */
-        ecs_entity_t container;
-        ecs_type_find_id(world, table_type, ref->component, 
-            EcsChildOf, 1, 0, &container);
+        /* Find source for component */
+        ecs_entity_t subject;
+        ecs_type_find_id(world, table_type, term->id, 
+            term->args[0].set.relation, 1, 0, &subject);
 
         /* If container was found, update the reference */
-        if (container) {
-            references[ref_index].entity = ecs_get_alive(world, container);
-            ecs_get_ref_w_id(world, &references[ref_index], container, 
-                ref->component);
+        if (subject) {
+            ecs_ref_t *ref = &references[ref_index];
+            ecs_assert(ref->component == term->id, ECS_INTERNAL_ERROR, NULL);
+
+            references[ref_index].entity = ecs_get_alive(world, subject);
+            ecs_get_ref_w_id(world, ref, subject, term->id);
         } else {
             references[ref_index].entity = 0;
         }
@@ -21264,8 +21298,7 @@ void rematch_table(
          * sources of references. This may have changed in case 
          * components were added/removed to container entities */ 
         } else if (query->cascade_by) {
-            resolve_cascade_container(
-                world, query, match, table->type);
+            resolve_cascade_subject(world, query, match, table->type);
 
         /* If query has optional columns, it is possible that a column that
          * previously had data no longer has data, or vice versa. Do a full
@@ -21361,7 +21394,7 @@ void rematch_tables(
     }
 
     group_tables(world, query);
-    order_ranked_tables(world, query);
+    order_grouped_tables(world, query);
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
@@ -21515,16 +21548,25 @@ ecs_query_t* ecs_query_init(
 
     result->constraints_satisfied = satisfy_constraints(world, &result->filter);
 
-    if (result->cascade_by) {
-        result->group_table = rank_by_depth;
+    int32_t cascade_by = result->cascade_by;
+    if (cascade_by) {
+        result->group_by = group_by_cascade;
+        result->group_by_id = result->filter.terms[cascade_by - 1].id;
+        result->group_by_ctx = &result->filter.terms[cascade_by - 1];
     }
 
     if (desc->order_by) {
-        ecs_query_order_by(world, result, desc->order_by_id, desc->order_by);
+        ecs_query_order_by(
+            world, result, desc->order_by_component, desc->order_by);
     }
 
     if (desc->group_by) {
+        /* Can't have a cascade term and group by at the same time, as cascade
+         * uses the group_by mechanism */
+        ecs_assert(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
         ecs_query_group_by(world, result, desc->group_by_id, desc->group_by);
+        result->group_by_ctx = desc->group_by_ctx;
+        result->group_by_ctx_free = desc->group_by_ctx_free;
     }
 
     ecs_log_pop();
@@ -21536,7 +21578,14 @@ void ecs_query_fini(
     ecs_query_t *query)
 {
     ecs_world_t *world = query->world;
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (query->group_by_ctx_free) {
+        if (query->group_by_ctx) {
+            query->group_by_ctx_free(query->group_by_ctx);
+        }
+    }
 
     if ((query->flags & EcsQueryIsSubquery) &&
         !(query->flags & EcsQueryIsOrphaned))
@@ -21603,7 +21652,7 @@ ecs_iter_t ecs_query_iter_page(
     ecs_world_t *world = query->world;
 
     if (query->needs_reorder) {
-        order_ranked_tables(world, query);
+        order_grouped_tables(world, query);
     }
     
     sort_tables(world, query);
@@ -22080,7 +22129,7 @@ bool ecs_query_next(
     ecs_matched_table_t *tables = ecs_vector_first(
         query->tables, ecs_matched_table_t);
 
-    ecs_assert(!slice || query->compare, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!slice || query->order_by, ECS_INTERNAL_ERROR, NULL);
     
     ecs_page_cursor_t cur;
     int32_t table_count = it->table_count;
@@ -22230,15 +22279,15 @@ bool ecs_query_next_worker(
 void ecs_query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
-    ecs_entity_t sort_component,
-    ecs_compare_action_t compare)
+    ecs_entity_t order_by_component,
+    ecs_order_by_action_t order_by)
 {
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
     ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
-    query->sort_on_component = sort_component;
-    query->compare = compare;
+    query->order_by_component = order_by_component;
+    query->order_by = order_by;
 
     ecs_vector_free(query->table_slices);
     query->table_slices = NULL;
@@ -22254,18 +22303,18 @@ void ecs_query_group_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t sort_component,
-    ecs_rank_type_action_t group_table_action)
+    ecs_group_by_action_t group_by)
 {
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
     ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
-    query->rank_on_component = sort_component;
-    query->group_table = group_table_action;
+    query->group_by_id = sort_component;
+    query->group_by = group_by;
 
     group_tables(world, query);
 
-    order_ranked_tables(world, query);
+    order_grouped_tables(world, query);
 
     build_sorted_tables(query);
 }
@@ -25146,12 +25195,15 @@ int compare_entity(
 }
 
 static
-int rank_phase(
+int group_by_phase(
     ecs_world_t *world,
-    ecs_entity_t rank_component,
-    ecs_type_t type) 
+    ecs_type_t type,
+    ecs_entity_t pipeline,
+    void *ctx) 
 {
-    const EcsType *pipeline_type = ecs_get(world, rank_component, EcsType);
+    (void)ctx;
+    
+    const EcsType *pipeline_type = ecs_get(world, pipeline, EcsType);
     ecs_assert(pipeline_type != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Find tag in system that belongs to pipeline */
@@ -25656,7 +25708,7 @@ ecs_query_t* build_pipeline_query(
             .terms_buffer_count = term_count + type_count
         },
         .order_by = compare_entity,
-        .group_by = rank_phase,
+        .group_by = group_by_phase,
         .group_by_id = pipeline
     });
 
@@ -27321,7 +27373,7 @@ ecs_hashmap_t _ecs_hashmap_new(
     ecs_size_t key_size,
     ecs_size_t value_size,
     ecs_hash_value_action_t hash,
-    ecs_compare_value_action_t compare)
+    ecs_compare_action_t compare)
 {
     return (ecs_hashmap_t){
         .key_size = key_size,

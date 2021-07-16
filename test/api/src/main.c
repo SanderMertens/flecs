@@ -330,6 +330,10 @@ void Parser_pred_implicit_subject_superset_cascade(void);
 void Parser_pred_implicit_subject_subset_cascade(void);
 void Parser_pred_implicit_subject_superset_inclusive_cascade(void);
 void Parser_pred_implicit_subject_subset_inclusive_cascade(void);
+void Parser_pred_implicit_subject_implicit_superset_cascade(void);
+void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade(void);
+void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel(void);
+void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel(void);
 void Parser_pred_implicit_subject_superset_depth_1_digit(void);
 void Parser_pred_implicit_subject_subset_depth_1_digit(void);
 void Parser_pred_implicit_subject_superset_depth_2_digits(void);
@@ -968,6 +972,8 @@ void Query_only_from_singleton(void);
 void Query_only_not_from_entity(void);
 void Query_only_not_from_singleton(void);
 void Query_get_filter(void);
+void Query_group_by(void);
+void Query_group_by_w_ctx(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -1323,10 +1329,16 @@ void SystemOnDemand_enable_after_user_disable(void);
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
 void SystemCascade_cascade_depth_2(void);
+void SystemCascade_cascade_depth_2_new_syntax(void);
 void SystemCascade_add_after_match(void);
 void SystemCascade_adopt_after_match(void);
 void SystemCascade_rematch_w_empty_table(void);
 void SystemCascade_query_w_only_cascade(void);
+void SystemCascade_custom_relation_cascade_depth_1(void);
+void SystemCascade_custom_relation_cascade_depth_2(void);
+void SystemCascade_custom_relation_add_after_match(void);
+void SystemCascade_custom_relation_adopt_after_match(void);
+void SystemCascade_custom_relation_rematch_w_empty_table(void);
 
 // Testsuite 'SystemManual'
 void SystemManual_setup(void);
@@ -3200,6 +3212,22 @@ bake_test_case Parser_testcases[] = {
     {
         "pred_implicit_subject_subset_inclusive_cascade",
         Parser_pred_implicit_subject_subset_inclusive_cascade
+    },
+    {
+        "pred_implicit_subject_implicit_superset_cascade",
+        Parser_pred_implicit_subject_implicit_superset_cascade
+    },
+    {
+        "pred_implicit_subject_implicit_superset_inclusive_cascade",
+        Parser_pred_implicit_subject_implicit_superset_inclusive_cascade
+    },
+    {
+        "pred_implicit_subject_implicit_superset_cascade_w_rel",
+        Parser_pred_implicit_subject_implicit_superset_cascade_w_rel
+    },
+    {
+        "pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel",
+        Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel
     },
     {
         "pred_implicit_subject_superset_depth_1_digit",
@@ -5610,6 +5638,14 @@ bake_test_case Query_testcases[] = {
     {
         "get_filter",
         Query_get_filter
+    },
+    {
+        "group_by",
+        Query_group_by
+    },
+    {
+        "group_by_w_ctx",
+        Query_group_by_w_ctx
     }
 };
 
@@ -6963,6 +6999,10 @@ bake_test_case SystemCascade_testcases[] = {
         SystemCascade_cascade_depth_2
     },
     {
+        "cascade_depth_2_new_syntax",
+        SystemCascade_cascade_depth_2_new_syntax
+    },
+    {
         "add_after_match",
         SystemCascade_add_after_match
     },
@@ -6977,6 +7017,26 @@ bake_test_case SystemCascade_testcases[] = {
     {
         "query_w_only_cascade",
         SystemCascade_query_w_only_cascade
+    },
+    {
+        "custom_relation_cascade_depth_1",
+        SystemCascade_custom_relation_cascade_depth_1
+    },
+    {
+        "custom_relation_cascade_depth_2",
+        SystemCascade_custom_relation_cascade_depth_2
+    },
+    {
+        "custom_relation_add_after_match",
+        SystemCascade_custom_relation_add_after_match
+    },
+    {
+        "custom_relation_adopt_after_match",
+        SystemCascade_custom_relation_adopt_after_match
+    },
+    {
+        "custom_relation_rematch_w_empty_table",
+        SystemCascade_custom_relation_rematch_w_empty_table
     }
 };
 
@@ -9391,7 +9451,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        103,
+        107,
         Parser_testcases
     },
     {
@@ -9545,7 +9605,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        37,
+        39,
         Query_testcases
     },
     {
@@ -9636,7 +9696,7 @@ static bake_test_suite suites[] = {
         "SystemCascade",
         NULL,
         NULL,
-        6,
+        12,
         SystemCascade_testcases
     },
     {

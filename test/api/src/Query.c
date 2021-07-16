@@ -1271,3 +1271,110 @@ void Query_get_filter() {
 
     ecs_fini(world);
 }
+
+static
+int32_t group_by_first_id(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_id_t id,
+    void *ctx)
+{
+    ecs_id_t *second = ecs_vector_get(type, ecs_id_t, 1);
+    if (!second) {
+        return 0;
+    }
+
+    return second[0];
+}
+
+void Query_group_by() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_COMPONENT(world, Position);    
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ecs_id(Position)}},
+        .group_by = group_by_first_id
+    });
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_add_id(world, e1, TagC);
+    ecs_add_id(world, e2, TagB);
+    ecs_add_id(world, e3, TagA);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);    
+
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_fini(world);
+}
+
+static int ctx_value;
+static int ctx_value_free_invoked = 0;
+static
+void ctx_value_free(void *ctx) {
+    test_assert(ctx == &ctx_value);
+    ctx_value_free_invoked ++;
+}
+
+void Query_group_by_w_ctx() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_COMPONENT(world, Position);    
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ecs_id(Position)}},
+        .group_by = group_by_first_id,
+        .group_by_ctx = &ctx_value,
+        .group_by_ctx_free = ctx_value_free
+    });
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_add_id(world, e1, TagC);
+    ecs_add_id(world, e2, TagB);
+    ecs_add_id(world, e3, TagA);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);    
+
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_query_fini(q);
+
+    test_int(ctx_value_free_invoked, 1);
+
+    ecs_fini(world);
+}
