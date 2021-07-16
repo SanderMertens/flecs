@@ -2425,3 +2425,24 @@ void Entity_entity_view_null_entity_w_world_w_0() {
     test_assert(e.id() == 0);
     test_assert(e.world().c_ptr() == ecs.c_ptr());
 }
+
+void Entity_is_wildcard() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity();
+    auto e2 = ecs.entity();
+
+    auto p0 = e1;
+    auto p1 = ecs.pair(e1, e2);
+    auto p2 = ecs.pair(e1, flecs::Wildcard);
+    auto p3 = ecs.pair(flecs::Wildcard, e2);
+    auto p4 = ecs.pair(flecs::Wildcard, flecs::Wildcard);
+
+    test_bool(e1.is_wildcard(), false);
+    test_bool(e2.is_wildcard(), false);
+    test_bool(p0.is_wildcard(), false);
+    test_bool(p1.is_wildcard(), false);
+    test_bool(p2.is_wildcard(), true);
+    test_bool(p3.is_wildcard(), true);
+    test_bool(p4.is_wildcard(), true);   
+}

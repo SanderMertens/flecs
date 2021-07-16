@@ -137,6 +137,7 @@ void Entity_entity_view_null_entity(void);
 void Entity_entity_view_null_entity_w_world(void);
 void Entity_entity_view_null_entity_w_0(void);
 void Entity_entity_view_null_entity_w_world_w_0(void);
+void Entity_is_wildcard(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1093,6 +1094,10 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_view_null_entity_w_world_w_0",
         Entity_entity_view_null_entity_w_world_w_0
+    },
+    {
+        "is_wildcard",
+        Entity_is_wildcard
     }
 };
 
@@ -2774,7 +2779,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        128,
+        129,
         Entity_testcases
     },
     {

@@ -190,6 +190,7 @@ static const flecs::entity_t Throw = EcsThrow;
 #include <flecs/cpp/lifecycle_traits.hpp>
 #include <flecs/cpp/iter.hpp>
 #include <flecs/cpp/world.hpp>
+#include <flecs/cpp/id.hpp>
 #include <flecs/cpp/entity.hpp>
 #include <flecs/cpp/component.hpp>
 #include <flecs/cpp/invoker.hpp>
