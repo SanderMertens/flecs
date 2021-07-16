@@ -276,3 +276,67 @@ void Lookup_lookup_symbol_null() {
 
     ecs_fini(world);
 }
+
+void Lookup_lookup_this() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t lookup = ecs_lookup(world, ".");
+    test_assert(lookup != 0);
+    test_assert(lookup == EcsThis);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t lookup = ecs_lookup(world, "*");
+    test_assert(lookup != 0);
+    test_assert(lookup == EcsWildcard);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_this() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t lookup = ecs_lookup_path_w_sep(world, 0, ".", NULL, NULL, false);
+    test_assert(lookup != 0);
+    test_assert(lookup == EcsThis);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t lookup = ecs_lookup_path_w_sep(world, 0, "*", NULL, NULL, false);
+    test_assert(lookup != 0);
+    test_assert(lookup == EcsWildcard);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_this_from_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t scope = ecs_new_id(world);
+
+    ecs_entity_t lookup = ecs_lookup_path_w_sep(world, scope, ".", NULL, NULL, false);
+    test_assert(lookup != 0);
+    test_assert(lookup == EcsThis);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_wildcard_from_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t scope = ecs_new_id(world);
+
+    ecs_entity_t lookup = ecs_lookup_path_w_sep(world, scope, ".", NULL, NULL, false);
+    test_assert(lookup != 0);
+    test_assert(lookup == EcsThis);
+
+    ecs_fini(world);
+}

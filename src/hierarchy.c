@@ -100,6 +100,19 @@ ecs_entity_t name_to_id(
 }
 
 static
+ecs_entity_t get_builtin(
+    const char *name)
+{
+    if (name[0] == '.' && name[1] == '\0') {
+        return EcsThis;
+    } else if (name[0] == '*' && name[1] == '\0') {
+        return EcsWildcard;
+    }
+
+    return 0;
+}
+
+static
 ecs_entity_t find_child_in_table(
     const ecs_table_t *table,
     const char *name,
@@ -311,13 +324,18 @@ ecs_entity_t ecs_lookup(
     }
 
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);    
+    world = ecs_get_world(world);
+
+    ecs_entity_t e = get_builtin(name);
+    if (e) {
+        return e;
+    }
 
     if (is_number(name)) {
         return name_to_id(name);
     }
 
-    ecs_entity_t e = find_as_alias(world, name);
+    e = find_as_alias(world, name);
     if (e) {
         return e;
     }    
@@ -331,6 +349,11 @@ ecs_entity_t ecs_lookup_symbol(
 {   
     if (!name) {
         return 0;
+    }
+
+    ecs_entity_t e = get_builtin(name);
+    if (e) {
+        return e;
     }
 
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -362,11 +385,12 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
 
-    if (path[0] == '.' && !path[1]) {
-        return EcsThis;
+    ecs_entity_t e = get_builtin(path);
+    if (e) {
+        return e;
     }
 
-    ecs_entity_t e = find_as_alias(world, path);
+    e = find_as_alias(world, path);
     if (e) {
         return e;
     }      

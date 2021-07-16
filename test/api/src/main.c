@@ -675,6 +675,12 @@ void Lookup_define_duplicate_alias(void);
 void Lookup_define_alias_in_scope(void);
 void Lookup_lookup_null(void);
 void Lookup_lookup_symbol_null(void);
+void Lookup_lookup_this(void);
+void Lookup_lookup_wildcard(void);
+void Lookup_lookup_path_this(void);
+void Lookup_lookup_path_wildcard(void);
+void Lookup_lookup_path_this_from_scope(void);
+void Lookup_lookup_path_wildcard_from_scope(void);
 
 // Testsuite 'Singleton'
 void Singleton_set(void);
@@ -4504,6 +4510,30 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_symbol_null",
         Lookup_lookup_symbol_null
+    },
+    {
+        "lookup_this",
+        Lookup_lookup_this
+    },
+    {
+        "lookup_wildcard",
+        Lookup_lookup_wildcard
+    },
+    {
+        "lookup_path_this",
+        Lookup_lookup_path_this
+    },
+    {
+        "lookup_path_wildcard",
+        Lookup_lookup_path_wildcard
+    },
+    {
+        "lookup_path_this_from_scope",
+        Lookup_lookup_path_this_from_scope
+    },
+    {
+        "lookup_path_wildcard_from_scope",
+        Lookup_lookup_path_wildcard_from_scope
     }
 };
 
@@ -9559,7 +9589,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        21,
+        27,
         Lookup_testcases
     },
     {

@@ -723,7 +723,13 @@
                 "define_duplicate_alias",
                 "define_alias_in_scope",
                 "lookup_null",
-                "lookup_symbol_null"
+                "lookup_symbol_null",
+                "lookup_this",
+                "lookup_wildcard",
+                "lookup_path_this",
+                "lookup_path_wildcard",
+                "lookup_path_this_from_scope",
+                "lookup_path_wildcard_from_scope"                
             ]
         }, {
             "id": "Singleton",

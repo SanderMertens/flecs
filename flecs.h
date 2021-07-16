@@ -15424,7 +15424,7 @@ public:
      */    
     Base& order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
         m_desc->order_by = reinterpret_cast<ecs_order_by_action_t>(compare);
-        m_desc->order_by_id = component;
+        m_desc->order_by_component = component;
         return *this;
     }
 
@@ -16633,9 +16633,9 @@ public:
      * @param rank The rank action.
      */
     template <typename T>
-    void group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+    void group_by(ecs_group_by_action_t callback) {
         ecs_query_group_by(m_world, m_query, 
-            flecs::_::cpp_type<T>::id(m_world), rank);
+            flecs::_::cpp_type<T>::id(m_world), callback);
     }
 
     /** Group and sort matched tables.
@@ -16644,8 +16644,8 @@ public:
      * @param component The component used to determine the group rank.
      * @param rank The rank action.
      */
-    void group_by(flecs::entity component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
-        ecs_query_group_by(m_world, m_query, component.id(), rank);
+    void group_by(flecs::entity component, ecs_group_by_action_t callback) {
+        ecs_query_group_by(m_world, m_query, component.id(), callback);
     }
 
     /** Returns whether the query data changed since the last iteration.
