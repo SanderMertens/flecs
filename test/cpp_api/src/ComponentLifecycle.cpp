@@ -767,3 +767,126 @@ void ComponentLifecycle_emplace_singleton() {
     test_int(Pod::ctor_invoked, 1);
     test_int(Pod::dtor_invoked, 0); 
 }
+
+class CtorDtorNonTrivial {
+public:
+    CtorDtorNonTrivial(int x) : x_(x) {
+        ctor_invoked ++;
+    }
+
+    ~CtorDtorNonTrivial() {
+        dtor_invoked ++;
+        dtor_value = x_;
+    }
+
+    int x_;
+    std::string str_;
+
+    static int ctor_invoked;
+    static int dtor_invoked;
+    static int dtor_value;
+};
+
+int CtorDtorNonTrivial::ctor_invoked;
+int CtorDtorNonTrivial::dtor_invoked;
+int CtorDtorNonTrivial::dtor_value;
+
+void ComponentLifecycle_dtor_w_non_trivial_implicit_move() {
+    flecs::world ecs;
+
+    test_bool(std::is_trivially_move_assignable<CtorDtorNonTrivial>::value, false);
+    test_bool(std::is_move_assignable<CtorDtorNonTrivial>::value, true);
+
+    auto e_1 = ecs.entity().emplace<CtorDtorNonTrivial>(10);
+    auto e_2 = ecs.entity().emplace<CtorDtorNonTrivial>(20);
+
+    const CtorDtorNonTrivial *ptr = e_1.get<CtorDtorNonTrivial>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->x_, 10);
+
+    ptr = e_2.get<CtorDtorNonTrivial>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->x_, 20);
+
+    test_int(CtorDtorNonTrivial::ctor_invoked, 2);
+
+    // Moves e_2 to e_1
+    e_1.destruct();
+
+    test_int(CtorDtorNonTrivial::ctor_invoked, 2);
+    test_int(CtorDtorNonTrivial::dtor_invoked, 1);
+
+    // Counter intuitive but correct. The class is not trivially movable, so
+    // the move assignment should take care of cleaning up e_1 (10). That still
+    // leaves the original e_2 which was moved from, but not destructed.
+    //
+    // In a real application the class should probably implement its own move
+    // assignment to ensure correct destructor behavior.
+    test_int(CtorDtorNonTrivial::dtor_value, 20);
+}
+
+class CtorDtor_w_MoveAssign {
+public:
+    CtorDtor_w_MoveAssign(int x) : x_(x) {
+        ctor_invoked ++;
+    }
+
+    ~CtorDtor_w_MoveAssign() {
+        dtor_invoked ++;
+        dtor_value = x_;
+    }
+
+    CtorDtor_w_MoveAssign(const CtorDtor_w_MoveAssign& obj) = default;
+    CtorDtor_w_MoveAssign(CtorDtor_w_MoveAssign&& obj) = default;
+    CtorDtor_w_MoveAssign& operator=(const CtorDtor_w_MoveAssign& obj) = default;
+
+    CtorDtor_w_MoveAssign& operator=(CtorDtor_w_MoveAssign&& obj) {
+        move_value = this->x_;
+
+        this->x_ = obj.x_;
+        obj.x_ = 0;
+        return *this;
+    }    
+
+    int x_;
+    std::string str_;
+
+    static int ctor_invoked;
+    static int dtor_invoked;
+    static int dtor_value;
+    static int move_value;
+};
+
+int CtorDtor_w_MoveAssign::ctor_invoked;
+int CtorDtor_w_MoveAssign::dtor_invoked;
+int CtorDtor_w_MoveAssign::dtor_value;
+int CtorDtor_w_MoveAssign::move_value;
+
+void ComponentLifecycle_dtor_w_non_trivial_explicit_move() {
+    flecs::world ecs;
+
+    test_bool(std::is_trivially_move_assignable<CtorDtor_w_MoveAssign>::value, false);
+    test_bool(std::is_move_assignable<CtorDtor_w_MoveAssign>::value, true);
+
+    auto e_1 = ecs.entity().emplace<CtorDtor_w_MoveAssign>(10);
+    auto e_2 = ecs.entity().emplace<CtorDtor_w_MoveAssign>(20);
+
+    const CtorDtor_w_MoveAssign *ptr = e_1.get<CtorDtor_w_MoveAssign>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->x_, 10);
+
+    ptr = e_2.get<CtorDtor_w_MoveAssign>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->x_, 20);
+
+    test_int(CtorDtor_w_MoveAssign::ctor_invoked, 2);
+
+    // Moves e_2 to e_1
+    e_1.destruct();
+
+    test_int(CtorDtor_w_MoveAssign::ctor_invoked, 2);
+    test_int(CtorDtor_w_MoveAssign::dtor_invoked, 1);
+
+    test_int(CtorDtor_w_MoveAssign::move_value, 10);
+    test_int(CtorDtor_w_MoveAssign::dtor_value, 0);
+}

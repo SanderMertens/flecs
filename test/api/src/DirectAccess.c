@@ -321,22 +321,22 @@ static int dtor_position = 0;
 static int copy_position = 0;
 static int move_position = 0;
 
-ECS_CTOR(Position, ptr, {
+static ECS_CTOR(Position, ptr, {
     ctor_position ++;
     *ptr = (Position){0, 0};
 });
 
-ECS_DTOR(Position, ptr, {
+static ECS_DTOR(Position, ptr, {
     dtor_position ++;
     *ptr = (Position){0, 0};
 });
 
-ECS_COPY(Position, dst, src, {
+static ECS_COPY(Position, dst, src, {
     copy_position ++;
     *dst = *src;
 });
 
-ECS_MOVE(Position, dst, src, {
+static ECS_MOVE(Position, dst, src, {
     move_position ++;
     *dst = *src;
 });
@@ -389,6 +389,9 @@ void DirectAccess_delete_column_w_dtor() {
 
     test_assert(ecs_table_get_column(t, 0) == NULL);
     test_assert(ecs_table_get_column(t, 1) != NULL);
+
+    /* Delete velocity column to ensure consistency */
+    ecs_table_delete_column(world, t, 1, NULL);
 
     ecs_fini(world);
 }

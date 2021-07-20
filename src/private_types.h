@@ -54,10 +54,10 @@ typedef struct ecs_string_t {
 
 /** Component-specific data */
 typedef struct ecs_type_info_t {
+    EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
     ecs_entity_t component;
     ecs_size_t size;
     ecs_size_t alignment;
-    EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
     bool lifecycle_set;
 } ecs_type_info_t;
 

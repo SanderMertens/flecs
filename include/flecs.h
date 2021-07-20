@@ -566,9 +566,23 @@ struct EcsComponentLifecycle {
 
     void *ctx;                  /* User defined context */
 
-    ecs_copy_ctor_t copy_ctor;  /* copy ctor (optional, ctor+copy) */
-    ecs_move_ctor_t move_ctor;  /* move ctor (optional, ctor+move) */
-    ecs_move_ctor_t merge;      /* move ctor (optional, ctor+move+dtor) */
+    /* Ctor + copy */
+    ecs_copy_ctor_t copy_ctor;
+
+    /* Ctor + move */  
+    ecs_move_ctor_t move_ctor;
+
+    /* Ctor + move + dtor (or move_ctor + dtor).
+     * This combination is typically used when a component is moved from one
+     * location to a new location, like when it is moved to a new table. If
+     * not set explicitly it will be derived from other callbacks. */
+    ecs_move_ctor_t ctor_move_dtor;
+
+    /* Move + dtor.
+     * This combination is typically used when a component is moved from one
+     * location to an existing location, like what happens during a remove. If
+     * not set explicitly it will be derived from other callbacks. */
+    ecs_move_ctor_t move_dtor;
 
     bool ctor_illegal;          /* cannot default construct */
     bool copy_illegal;          /* cannot copy assign */

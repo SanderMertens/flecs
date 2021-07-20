@@ -547,3 +547,146 @@ void Delete_get_alive_for_nonexistent() {
 
     ecs_fini(world);
 }
+
+static int move_invoked = 0;
+static int dtor_invoked = 0;
+
+static int dtor_x;
+static int dtor_y;
+
+static int move_dst_x;
+static int move_dst_y;
+
+static int move_src_x;
+static int move_src_y;
+
+static ECS_DTOR(Position, ptr, {
+    dtor_invoked ++;
+    dtor_x = ptr->x;
+    dtor_y = ptr->y;
+});
+
+static ECS_MOVE(Position, dst, src, {
+    move_dst_x = dst->x;
+    move_dst_y = dst->y; 
+    move_src_x = src->x;
+    move_src_y = src->y;         
+    *dst = *src;
+    move_invoked ++;   
+});
+
+void Delete_move_w_dtor_move() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .dtor = ecs_dtor(Position),
+        .move = ecs_move(Position),
+    });
+
+    ecs_entity_t e_1 = ecs_new_id(world);
+    test_assert(e_1 != 0);
+
+    ecs_entity_t e_2 = ecs_new_id(world);
+    test_assert(e_2 != 0);
+
+    ecs_set(world, e_1, Position, {10, 20});
+    ecs_set(world, e_2, Position, {30, 40}); // append after e_1
+
+    ecs_delete(world, e_1); // move e_2 to e_1
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+
+    // counter intuitive, but this is because in this case the move is
+    // responsible for cleaning up e_1, because e_2 is moved into e_1
+    test_int(dtor_invoked, 1);
+    test_int(dtor_x, 30);
+    test_int(dtor_y, 40);
+
+    test_int(move_invoked, 1);
+    test_int(move_dst_x, 10);
+    test_int(move_dst_y, 20);
+    test_int(move_src_x, 30);
+    test_int(move_src_y, 40);
+
+    const Position *p = ecs_get(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void Delete_move_w_dtor_no_move() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_entity_t e_1 = ecs_new_id(world);
+    test_assert(e_1 != 0);
+
+    ecs_entity_t e_2 = ecs_new_id(world);
+    test_assert(e_2 != 0);
+
+    ecs_set(world, e_1, Position, {10, 20});
+    ecs_set(world, e_2, Position, {30, 40}); // append after e_1
+
+    ecs_delete(world, e_1); // move e_2 to e_1
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+
+    test_int(dtor_invoked, 1);
+    test_int(dtor_x, 10);
+    test_int(dtor_y, 20);
+
+    const Position *p = ecs_get(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void Delete_move_w_no_dtor_move() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .move = ecs_move(Position)
+    });
+
+    ecs_entity_t e_1 = ecs_new_id(world);
+    test_assert(e_1 != 0);
+
+    ecs_entity_t e_2 = ecs_new_id(world);
+    test_assert(e_2 != 0);
+
+    ecs_set(world, e_1, Position, {10, 20});
+    ecs_set(world, e_2, Position, {30, 40}); // append after e_1
+
+    ecs_delete(world, e_1); // move e_2 to e_1
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+
+    test_int(move_invoked, 1);
+    test_int(move_dst_x, 10);
+    test_int(move_dst_y, 20);
+    test_int(move_src_x, 30);
+    test_int(move_src_y, 40);    
+
+    const Position *p = ecs_get(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}

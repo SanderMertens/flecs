@@ -544,21 +544,6 @@ void ecs_colsystem_dtor(
     }
 }
 
-/* System that registers component lifecycle callbacks */
-static
-void OnSetComponentLifecycle(
-    ecs_iter_t *it)
-{
-    EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
-    ecs_world_t *world = it->world;
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        ecs_set_component_actions_w_id(world, e, &cl[i]);   
-    }
-}
-
 /* Disable system when EcsDisabled is added */
 static 
 void DisableSystem(
@@ -755,7 +740,6 @@ void FlecsSystemImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    ecs_bootstrap_component(world, EcsComponentLifecycle);
     ecs_bootstrap_component(world, EcsSystem);
     ecs_bootstrap_component(world, EcsTickSource);
 
@@ -783,10 +767,6 @@ void FlecsSystemImport(
             .ctor = sys_ctor_init_zero,
             .dtor = ecs_colsystem_dtor
         });
-
-    /* Register OnSet system for EcsComponentLifecycle */
-    ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, 
-        ComponentLifecycle, SYSTEM:Hidden);
 
     /* Monitors that trigger when a system is enabled or disabled */
     ECS_SYSTEM(world, DisableSystem, EcsMonitor, 
