@@ -170,7 +170,8 @@ void register_lifecycle_actions(
         cl.move = move<T>().callback;
         cl.move_ctor = move_ctor<T>().callback;
 
-        cl.merge = merge<T>().callback;
+        cl.ctor_move_dtor = ctor_move_dtor<T>().callback;
+        cl.move_dtor = move_dtor<T>().callback;
 
         ecs_set_component_actions_w_entity( world, component, &cl);
     }

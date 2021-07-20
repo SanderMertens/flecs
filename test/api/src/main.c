@@ -562,6 +562,9 @@ void Delete_get_alive_w_generation_for_recycled_alive(void);
 void Delete_get_alive_w_generation_for_recycled_not_alive(void);
 void Delete_get_alive_for_0(void);
 void Delete_get_alive_for_nonexistent(void);
+void Delete_move_w_dtor_move(void);
+void Delete_move_w_dtor_no_move(void);
+void Delete_move_w_no_dtor_move(void);
 
 // Testsuite 'OnDelete'
 void OnDelete_on_delete_id_default(void);
@@ -747,6 +750,7 @@ void ComponentLifecycle_move_on_realloc(void);
 void ComponentLifecycle_move_on_dim(void);
 void ComponentLifecycle_move_on_bulk_new(void);
 void ComponentLifecycle_move_on_delete(void);
+void ComponentLifecycle_move_dtor_on_delete(void);
 void ComponentLifecycle_copy_on_override_pair(void);
 void ComponentLifecycle_copy_on_override_pair_tag(void);
 void ComponentLifecycle_copy_on_set_pair(void);
@@ -4084,6 +4088,18 @@ bake_test_case Delete_testcases[] = {
     {
         "get_alive_for_nonexistent",
         Delete_get_alive_for_nonexistent
+    },
+    {
+        "move_w_dtor_move",
+        Delete_move_w_dtor_move
+    },
+    {
+        "move_w_dtor_no_move",
+        Delete_move_w_dtor_no_move
+    },
+    {
+        "move_w_no_dtor_move",
+        Delete_move_w_no_dtor_move
     }
 };
 
@@ -4781,6 +4797,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "move_on_delete",
         ComponentLifecycle_move_on_delete
+    },
+    {
+        "move_dtor_on_delete",
+        ComponentLifecycle_move_dtor_on_delete
     },
     {
         "copy_on_override_pair",
@@ -9571,7 +9591,7 @@ static bake_test_suite suites[] = {
         "Delete",
         Delete_setup,
         NULL,
-        26,
+        29,
         Delete_testcases
     },
     {
@@ -9620,7 +9640,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        58,
+        59,
         ComponentLifecycle_testcases
     },
     {

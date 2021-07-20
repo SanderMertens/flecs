@@ -538,7 +538,7 @@ void default_move_ctor(
 }
 
 static
-void default_merge(
+void default_ctor_w_move_w_dtor(
     ecs_world_t *world, ecs_entity_t component,
     const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
     const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
@@ -551,13 +551,56 @@ void default_merge(
 }
 
 static
-void default_merge_w_move_ctor(
+void default_move_ctor_w_dtor(
     ecs_world_t *world, ecs_entity_t component,
     const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
     const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
     int32_t count, void *ctx)
 {
     callbacks->move_ctor(world, component, callbacks, dst_entity, src_entity, 
+        dst_ptr, src_ptr, size, count, ctx);
+    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
+}
+
+static
+void default_move(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    callbacks->move(world, component, dst_entity, src_entity, 
+        dst_ptr, src_ptr, size, count, ctx);
+}
+
+static
+void default_dtor(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    (void)callbacks;
+    (void)src_entity;
+
+    /* When there is no move, destruct the destination component & memcpy the
+     * component to dst. The src component does not have to be destructed when
+     * a component has a trivial move. */
+    callbacks->dtor(world, component, dst_entity, dst_ptr, size, count, ctx);
+    ecs_os_memcpy(dst_ptr, src_ptr, ecs_from_size_t(size) * count);
+}
+
+static
+void default_move_w_dtor(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    /* If a component has a move, the move will take care of memcpying the data
+     * and destroying any data in dst. Because this is not a trivial move, the
+     * src component must also be destructed. */
+    callbacks->move(world, component, dst_entity, src_entity, 
         dst_ptr, src_ptr, size, count, ctx);
     callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
 }
@@ -617,19 +660,40 @@ void ecs_set_component_actions_w_id(
             c_info->lifecycle.move_ctor = default_move_ctor;
         }
 
-        if (lifecycle->move && !lifecycle->merge) {
-            if (lifecycle->dtor) {
-                if (lifecycle->move_ctor) {
-                    /* If an explicit move ctor has been set, use a merge that
-                     * uses the move ctor vs. using a ctor+move */
-                    c_info->lifecycle.merge = default_merge_w_move_ctor;
+        if (!lifecycle->ctor_move_dtor) {
+            if (lifecycle->move) {
+                if (lifecycle->dtor) {
+                    if (lifecycle->move_ctor) {
+                        /* If an explicit move ctor has been set, use callback 
+                         * that uses the move ctor vs. using a ctor+move */
+                        c_info->lifecycle.ctor_move_dtor = 
+                            default_move_ctor_w_dtor;
+                    } else {
+                        /* If no explicit move_ctor has been set, use
+                         * combination of ctor + move + dtor */
+                        c_info->lifecycle.ctor_move_dtor = 
+                            default_ctor_w_move_w_dtor;
+                    }
                 } else {
-                    c_info->lifecycle.merge = default_merge;
+                    /* If no dtor has been set, this is just a move ctor */
+                    c_info->lifecycle.ctor_move_dtor = 
+                        c_info->lifecycle.move_ctor;
+                }            
+            }
+        }
+
+        if (!lifecycle->move_dtor) {
+            if (lifecycle->move) {
+                if (lifecycle->dtor) {
+                    c_info->lifecycle.move_dtor = default_move_w_dtor;
+                } else {
+                    c_info->lifecycle.move_dtor = default_move;
                 }
             } else {
-                /* If no dtor has been set, this is the same as a move ctor */
-                c_info->lifecycle.merge = c_info->lifecycle.move_ctor;
-            }            
+                if (lifecycle->dtor) {
+                    c_info->lifecycle.move_dtor = default_dtor;
+                }
+            }
         }
 
         /* Broadcast to all tables since we need to register a ctor for every

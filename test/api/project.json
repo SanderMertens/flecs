@@ -602,7 +602,10 @@
                 "get_alive_w_generation_for_recycled_alive",
                 "get_alive_w_generation_for_recycled_not_alive",
                 "get_alive_for_0",
-                "get_alive_for_nonexistent"
+                "get_alive_for_nonexistent",
+                "move_w_dtor_move",
+                "move_w_dtor_no_move",
+                "move_w_no_dtor_move"
             ]
         }, {
             "id": "OnDelete",
@@ -802,6 +805,7 @@
                 "move_on_dim",
                 "move_on_bulk_new",
                 "move_on_delete",
+                "move_dtor_on_delete",
                 "copy_on_override_pair",
                 "copy_on_override_pair_tag",
                 "copy_on_set_pair",

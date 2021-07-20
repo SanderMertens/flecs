@@ -469,6 +469,8 @@ void ComponentLifecycle_emplace_w_ctor(void);
 void ComponentLifecycle_emplace_no_default_ctor(void);
 void ComponentLifecycle_emplace_existing(void);
 void ComponentLifecycle_emplace_singleton(void);
+void ComponentLifecycle_dtor_w_non_trivial_implicit_move(void);
+void ComponentLifecycle_dtor_w_non_trivial_explicit_move(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref(void);
@@ -2386,6 +2388,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "emplace_singleton",
         ComponentLifecycle_emplace_singleton
+    },
+    {
+        "dtor_w_non_trivial_implicit_move",
+        ComponentLifecycle_dtor_w_non_trivial_implicit_move
+    },
+    {
+        "dtor_w_non_trivial_explicit_move",
+        ComponentLifecycle_dtor_w_non_trivial_explicit_move
     }
 };
 
@@ -2951,7 +2961,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        39,
+        41,
         ComponentLifecycle_testcases
     },
     {

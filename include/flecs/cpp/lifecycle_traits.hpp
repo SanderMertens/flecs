@@ -98,7 +98,7 @@ void move_ctor_impl(
 // T(T&&), ~T()
 // Typically used when moving to a new table, and removing from the old table
 template <typename T>
-void merge_impl(
+void ctor_move_dtor_impl(
     ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
     const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
     void *src_ptr, size_t size, int32_t count, void*)
@@ -109,6 +109,50 @@ void merge_impl(
     for (int i = 0; i < count; i ++) {
         FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
         src_arr[i].~T();
+    }
+}
+
+// Move assign + dtor (non-trivial move assigmnment)
+// Typically used when moving a component to a deleted component
+template <typename T, if_not_t<
+    std::is_trivially_move_assignable<T>::value > = 0>
+void move_dtor_impl(
+    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
+    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    T *src_arr = static_cast<T*>(src_ptr);
+    for (int i = 0; i < count; i ++) {
+        // Move assignment should free dst & assign dst to src
+        dst_arr[i] = std::move(src_arr[i]);
+        // Destruct src. Move should have left object in a state where it no
+        // longer holds resources, but it still needs to be destructed.
+        src_arr[i].~T();
+    }
+}
+
+// Move assign + dtor (trivial move assigmnment)
+// Typically used when moving a component to a deleted component
+template <typename T, if_t<
+    std::is_trivially_move_assignable<T>::value > = 0>
+void move_dtor_impl(
+    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
+    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, size_t size, int32_t count, void*)
+{
+    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    T *dst_arr = static_cast<T*>(dst_ptr);
+    T *src_arr = static_cast<T*>(src_ptr);
+    for (int i = 0; i < count; i ++) {
+        // Cleanup resources of dst
+        dst_arr[i].~T();
+        // Copy src to dst
+        dst_arr[i] = std::move(src_arr[i]);
+        // No need to destruct src. Since this is a trivial move the code
+        // should be agnostic to the address of the component which means we
+        // can pretend nothing got destructed.
     }
 }
 
@@ -311,7 +355,7 @@ move_ctor_result move_ctor() {
 template <typename T, if_t<
     std::is_trivially_move_constructible<T>::value  &&
     std::is_trivially_destructible<T>::value > = 0>
-move_ctor_result merge() {
+move_ctor_result ctor_move_dtor() {
     return move_ctor_result::not_set;
 }
 
@@ -319,20 +363,48 @@ move_ctor_result merge() {
 template <typename T, if_t<
     ! std::is_move_constructible<T>::value ||
     ! std::is_destructible<T>::value > = 0>
-move_ctor_result merge() {
+move_ctor_result ctor_move_dtor() {
     flecs_static_assert(always_false<T>::value,
         "component type must be move constructible and destructible");
     return move_ctor_result::is_illegal;
 }
 
-// Merge (move assign + dtor)
+// Merge ctor + dtor
 template <typename T, if_t<
-    !(std::is_trivially_move_constructible<T>::value  &&
+    !(std::is_trivially_move_constructible<T>::value &&
       std::is_trivially_destructible<T>::value) &&
     std::is_move_constructible<T>::value &&
     std::is_destructible<T>::value > = 0>
-move_ctor_result merge() {
-    return {merge_impl<T>, false};
+move_ctor_result ctor_move_dtor() {
+    return {ctor_move_dtor_impl<T>, false};
+}
+
+// Trivial merge (move assign + dtor)
+template <typename T, if_t<
+    std::is_trivially_move_assignable<T>::value  &&
+    std::is_trivially_destructible<T>::value > = 0>
+move_ctor_result move_dtor() {
+    return move_ctor_result::not_set;
+}
+
+// Component types must be move constructible and destructible
+template <typename T, if_t<
+    ! std::is_move_assignable<T>::value ||
+    ! std::is_destructible<T>::value > = 0>
+move_ctor_result move_dtor() {
+    flecs_static_assert(always_false<T>::value,
+        "component type must be move constructible and destructible");
+    return move_ctor_result::is_illegal;
+}
+
+// Merge assign + dtor
+template <typename T, if_t<
+    !(std::is_trivially_move_assignable<T>::value &&
+      std::is_trivially_destructible<T>::value) &&
+    std::is_move_assignable<T>::value &&
+    std::is_destructible<T>::value > = 0>
+move_ctor_result move_dtor() {
+    return {move_dtor_impl<T>, false};
 }
 
 } // _

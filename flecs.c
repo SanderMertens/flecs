@@ -678,10 +678,10 @@ typedef struct ecs_string_t {
 
 /** Component-specific data */
 typedef struct ecs_type_info_t {
+    EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
     ecs_entity_t component;
     ecs_size_t size;
     ecs_size_t alignment;
-    EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
     bool lifecycle_set;
 } ecs_type_info_t;
 
@@ -3066,11 +3066,19 @@ void fini_data(
         dtor_all_components(world, table, data, 0, count, 
             update_entity_index, is_delete);
     }
+
+    /* Sanity check */
+    ecs_assert(ecs_vector_count(data->record_ptrs) == 
+        ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
     
     ecs_column_t *columns = data->columns;
     if (columns) {
         int32_t c, column_count = table->column_count;
         for (c = 0; c < column_count; c ++) {
+            /* Sanity check */
+            ecs_assert(!columns[c].data || (ecs_vector_count(columns[c].data) == 
+                ecs_vector_count(data->entities)), ECS_INTERNAL_ERROR, NULL);
+
             ecs_vector_free(columns[c].data);
         }
         ecs_os_free(columns);
@@ -3728,34 +3736,28 @@ void ecs_table_delete(
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
-    ecs_vector_t *entity_column = data->entities;
-    int32_t count = ecs_vector_count(entity_column);
+    ecs_vector_t *v_entities = data->entities;
+    int32_t count = ecs_vector_count(v_entities);
 
     ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
     count --;
-    
     ecs_assert(index <= count, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_type_info_t **c_info_array = table->c_info;
-    int32_t column_count = table->column_count;
-    int32_t i;
-
-    ecs_entity_t *entities = ecs_vector_first(entity_column, ecs_entity_t);
-    ecs_entity_t entity_to_move = entities[count];
-
     /* Move last entity id to index */
+    ecs_entity_t *entities = ecs_vector_first(v_entities, ecs_entity_t);
+    ecs_entity_t entity_to_move = entities[count];
+    ecs_entity_t entity_to_delete = entities[index];
     entities[index] = entity_to_move;
-    ecs_vector_remove_last(entity_column);
+    ecs_vector_remove_last(v_entities);
 
     /* Move last record ptr to index */
-    ecs_vector_t *record_column = data->record_ptrs;     
-    ecs_record_t **records = ecs_vector_first(record_column, ecs_record_t*);
+    ecs_vector_t *v_records = data->record_ptrs;     
+    ecs_assert(count < ecs_vector_count(v_records), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_assert(count < ecs_vector_count(record_column), ECS_INTERNAL_ERROR, NULL);
+    ecs_record_t **records = ecs_vector_first(v_records, ecs_record_t*);
     ecs_record_t *record_to_move = records[count];
-
     records[index] = record_to_move;
-    ecs_vector_remove_last(record_column); 
+    ecs_vector_remove_last(v_records); 
 
     /* Update record of moved entity in entity index */
     if (index != count) {
@@ -3768,18 +3770,24 @@ void ecs_table_delete(
             ecs_assert(record_to_move->table != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(record_to_move->table == table, ECS_INTERNAL_ERROR, NULL);
         }
-    } 
+    }     
 
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(table, 0);    
 
+    /* If table is empty, deactivate it */
     if (!count) {
         ecs_table_activate(world, table, NULL, false);
     }
 
-    /* Move each component value in array to index */
+    /* Destruct component data */
+    ecs_type_info_t **c_info_array = table->c_info;
     ecs_column_t *columns = data->columns;
+    int32_t column_count = table->column_count;
+    int32_t i;
 
+    /* If this is a table without lifecycle callbacks or special columns, take
+     * fast path that just remove an element from the array(s) */
     if (!(table->flags & EcsTableIsComplex)) {
         if (index == count) {
             fast_delete_last(columns, column_count);
@@ -3790,48 +3798,56 @@ void ecs_table_delete(
         return;
     }
 
-    for (i = 0; i < column_count; i ++) {
-        ecs_column_t *column = &columns[i];
-        int16_t size = column->size;
-        int16_t alignment = column->alignment;
-        if (size) {
-            ecs_type_info_t *c_info = c_info_array ? c_info_array[i] : NULL;
-            ecs_xtor_t dtor;
-
-            void *dst = ecs_vector_get_t(column->data, size, alignment, index);
-
-            ecs_move_t move;
-            if (c_info && (count != index) && (move = c_info->lifecycle.move)) {
-                void *ctx = c_info->lifecycle.ctx;
-                void *src = ecs_vector_get_t(column->data, size, alignment, count);
-                ecs_entity_t component = c_info->component;
-
-                /* If the delete is not destructing the component, the component
-                * was already deleted, most likely by a move. In that case we
-                * still need to move, but we need to make sure we're moving
-                * into an element that is initialized with valid memory, so
-                * call the constructor. */
-                if (!destruct) {
-                    ecs_xtor_t ctor = c_info->lifecycle.ctor;
-                    ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
-                    ctor(world, c_info->component, &entity_to_move, dst,
-                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);   
-                }
-
-                /* Move last element into deleted element */
-                move(world, component, &entity_to_move, &entity_to_move, dst, src,
-                    ecs_to_size_t(size), 1, ctx);
-
-                /* Memory has been copied, we can now simply remove last */
-                ecs_vector_remove_last(column->data);                              
-            } else {
-                if (destruct && c_info && (dtor = c_info->lifecycle.dtor)) {
-                    dtor(world, c_info->component, &entities[index], dst, 
+    /* Last element, destruct & remove */
+    if (index == count) {
+        /* If table has component destructors, invoke */
+        if (destruct && (table->flags & EcsTableHasDtors)) {
+            ecs_assert(c_info_array != NULL, ECS_INTERNAL_ERROR, NULL);
+            
+            for (i = 0; i < column_count; i ++) {
+                ecs_type_info_t *c_info = c_info_array[i];
+                ecs_xtor_t dtor;
+                if (c_info && (dtor = c_info->lifecycle.dtor)) {
+                    ecs_size_t size = c_info->size;
+                    ecs_size_t alignment = c_info->alignment;
+                    dtor(world, c_info->component, &entity_to_delete,
+                        ecs_vector_last_t(columns[i].data, size, alignment),
                         ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+                }        
+            }
+        }
+
+        fast_delete_last(columns, column_count);
+
+    /* Not last element, move last element to deleted element & destruct */
+    } else {
+        /* If table has component destructors, invoke */
+        if (destruct && (table->flags & (EcsTableHasDtors | EcsTableHasMove))) {
+            ecs_assert(c_info_array != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            for (i = 0; i < column_count; i ++) {
+                ecs_column_t *column = &columns[i];
+                ecs_size_t size = column->size;
+                ecs_size_t align = column->alignment;
+                ecs_vector_t *vec = column->data;
+                void *dst = ecs_vector_get_t(vec, size, align, index);
+                void *src = ecs_vector_last_t(vec, size, align);
+                
+                ecs_type_info_t *c_info = c_info_array[i];
+                ecs_move_ctor_t move_dtor;
+                if (c_info && (move_dtor = c_info->lifecycle.move_dtor)) {
+                    move_dtor(world, c_info->component, &c_info->lifecycle,
+                        &entity_to_move, &entity_to_delete, dst, src, 
+                        ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+                } else {
+                    ecs_os_memcpy(dst, src, size);
                 }
 
-                ecs_vector_remove_t(column->data, size, alignment, index);
+                ecs_vector_remove_last(vec);
             }
+
+        } else {
+            fast_delete(columns, column_count, index);
         }
     }
 
@@ -3881,8 +3897,10 @@ void fast_move(
 
             if (size) {
                 int16_t alignment = new_column->alignment;
-                void *dst = ecs_vector_get_t(new_column->data, size, alignment, new_index);
-                void *src = ecs_vector_get_t(old_column->data, size, alignment, old_index);
+                void *dst = ecs_vector_get_t(
+                    new_column->data, size, alignment, new_index);
+                void *src = ecs_vector_get_t(
+                    old_column->data, size, alignment, old_index);
 
                 ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -3963,11 +3981,11 @@ void ecs_table_move(
 
                 ecs_type_info_t *cdata = new_table->c_info[i_new];
                 if (same_entity) {
-                    ecs_move_ctor_t merge;
-                    if (cdata && (merge = cdata->lifecycle.merge)) {
+                    ecs_move_ctor_t callback;
+                    if (cdata && (callback = cdata->lifecycle.ctor_move_dtor)) {
                         void *ctx = cdata->lifecycle.ctx;
                         /* ctor + move + dtor */
-                        merge(world, new_component, &cdata->lifecycle, 
+                        callback(world, new_component, &cdata->lifecycle, 
                             &dst_entity, &src_entity, 
                             dst, src, ecs_to_size_t(size), 1, ctx);
                     } else {
@@ -15361,7 +15379,7 @@ void default_move_ctor(
 }
 
 static
-void default_merge(
+void default_ctor_w_move_w_dtor(
     ecs_world_t *world, ecs_entity_t component,
     const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
     const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
@@ -15374,13 +15392,56 @@ void default_merge(
 }
 
 static
-void default_merge_w_move_ctor(
+void default_move_ctor_w_dtor(
     ecs_world_t *world, ecs_entity_t component,
     const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
     const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
     int32_t count, void *ctx)
 {
     callbacks->move_ctor(world, component, callbacks, dst_entity, src_entity, 
+        dst_ptr, src_ptr, size, count, ctx);
+    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
+}
+
+static
+void default_move(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    callbacks->move(world, component, dst_entity, src_entity, 
+        dst_ptr, src_ptr, size, count, ctx);
+}
+
+static
+void default_dtor(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    (void)callbacks;
+    (void)src_entity;
+
+    /* When there is no move, destruct the destination component & memcpy the
+     * component to dst. The src component does not have to be destructed when
+     * a component has a trivial move. */
+    callbacks->dtor(world, component, dst_entity, dst_ptr, size, count, ctx);
+    ecs_os_memcpy(dst_ptr, src_ptr, ecs_from_size_t(size) * count);
+}
+
+static
+void default_move_w_dtor(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    /* If a component has a move, the move will take care of memcpying the data
+     * and destroying any data in dst. Because this is not a trivial move, the
+     * src component must also be destructed. */
+    callbacks->move(world, component, dst_entity, src_entity, 
         dst_ptr, src_ptr, size, count, ctx);
     callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
 }
@@ -15440,19 +15501,40 @@ void ecs_set_component_actions_w_id(
             c_info->lifecycle.move_ctor = default_move_ctor;
         }
 
-        if (lifecycle->move && !lifecycle->merge) {
-            if (lifecycle->dtor) {
-                if (lifecycle->move_ctor) {
-                    /* If an explicit move ctor has been set, use a merge that
-                     * uses the move ctor vs. using a ctor+move */
-                    c_info->lifecycle.merge = default_merge_w_move_ctor;
+        if (!lifecycle->ctor_move_dtor) {
+            if (lifecycle->move) {
+                if (lifecycle->dtor) {
+                    if (lifecycle->move_ctor) {
+                        /* If an explicit move ctor has been set, use callback 
+                         * that uses the move ctor vs. using a ctor+move */
+                        c_info->lifecycle.ctor_move_dtor = 
+                            default_move_ctor_w_dtor;
+                    } else {
+                        /* If no explicit move_ctor has been set, use
+                         * combination of ctor + move + dtor */
+                        c_info->lifecycle.ctor_move_dtor = 
+                            default_ctor_w_move_w_dtor;
+                    }
                 } else {
-                    c_info->lifecycle.merge = default_merge;
+                    /* If no dtor has been set, this is just a move ctor */
+                    c_info->lifecycle.ctor_move_dtor = 
+                        c_info->lifecycle.move_ctor;
+                }            
+            }
+        }
+
+        if (!lifecycle->move_dtor) {
+            if (lifecycle->move) {
+                if (lifecycle->dtor) {
+                    c_info->lifecycle.move_dtor = default_move_w_dtor;
+                } else {
+                    c_info->lifecycle.move_dtor = default_move;
                 }
             } else {
-                /* If no dtor has been set, this is the same as a move ctor */
-                c_info->lifecycle.merge = c_info->lifecycle.move_ctor;
-            }            
+                if (lifecycle->dtor) {
+                    c_info->lifecycle.move_dtor = default_dtor;
+                }
+            }
         }
 
         /* Broadcast to all tables since we need to register a ctor for every
@@ -26747,21 +26829,6 @@ void ecs_colsystem_dtor(
     }
 }
 
-/* System that registers component lifecycle callbacks */
-static
-void OnSetComponentLifecycle(
-    ecs_iter_t *it)
-{
-    EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
-    ecs_world_t *world = it->world;
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        ecs_set_component_actions_w_id(world, e, &cl[i]);   
-    }
-}
-
 /* Disable system when EcsDisabled is added */
 static 
 void DisableSystem(
@@ -26958,7 +27025,6 @@ void FlecsSystemImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    ecs_bootstrap_component(world, EcsComponentLifecycle);
     ecs_bootstrap_component(world, EcsSystem);
     ecs_bootstrap_component(world, EcsTickSource);
 
@@ -26986,10 +27052,6 @@ void FlecsSystemImport(
             .ctor = sys_ctor_init_zero,
             .dtor = ecs_colsystem_dtor
         });
-
-    /* Register OnSet system for EcsComponentLifecycle */
-    ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, 
-        ComponentLifecycle, SYSTEM:Hidden);
 
     /* Monitors that trigger when a system is enabled or disabled */
     ECS_SYSTEM(world, DisableSystem, EcsMonitor, 
@@ -27693,6 +27755,18 @@ void register_on_delete_object(ecs_iter_t *it) {
     }    
 }
 
+static
+void on_set_component_lifecycle( ecs_iter_t *it) {
+    EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
+    ecs_world_t *world = it->world;
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_set_component_actions_w_id(world, e, &cl[i]);   
+    }
+}
+
 /* -- Bootstrapping -- */
 
 #define bootstrap_component(world, table, name)\
@@ -27834,6 +27908,7 @@ void ecs_bootstrap(
 
     bootstrap_component(world, table, EcsName);
     bootstrap_component(world, table, EcsComponent);
+    bootstrap_component(world, table, EcsComponentLifecycle);
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);
     bootstrap_component(world, table, EcsTrigger);
@@ -27928,6 +28003,14 @@ void ecs_bootstrap(
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
         .callback = register_on_delete_object,
         .events = {EcsOnAdd}
+    });
+
+
+    /* Define trigger for when component lifecycle is set for component */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_id(EcsComponentLifecycle)},
+        .callback = on_set_component_lifecycle,
+        .events = {EcsOnSet}
     });
 
 

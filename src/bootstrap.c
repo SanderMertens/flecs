@@ -139,6 +139,18 @@ void register_on_delete_object(ecs_iter_t *it) {
     }    
 }
 
+static
+void on_set_component_lifecycle( ecs_iter_t *it) {
+    EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
+    ecs_world_t *world = it->world;
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_set_component_actions_w_id(world, e, &cl[i]);   
+    }
+}
+
 /* -- Bootstrapping -- */
 
 #define bootstrap_component(world, table, name)\
@@ -280,6 +292,7 @@ void ecs_bootstrap(
 
     bootstrap_component(world, table, EcsName);
     bootstrap_component(world, table, EcsComponent);
+    bootstrap_component(world, table, EcsComponentLifecycle);
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);
     bootstrap_component(world, table, EcsTrigger);
@@ -374,6 +387,14 @@ void ecs_bootstrap(
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
         .callback = register_on_delete_object,
         .events = {EcsOnAdd}
+    });
+
+
+    /* Define trigger for when component lifecycle is set for component */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_id(EcsComponentLifecycle)},
+        .callback = on_set_component_lifecycle,
+        .events = {EcsOnSet}
     });
 
 

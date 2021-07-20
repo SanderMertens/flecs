@@ -200,6 +200,9 @@ void* _ecs_vector_last(
 #define ecs_vector_last(vector, T) \
     (T*)_ecs_vector_last(vector, ECS_VECTOR_T(T))
 
+#define ecs_vector_last_t(vector, size, alignment) \
+    _ecs_vector_last(vector, ECS_VECTOR_U(size, alignment))
+
 /** Set minimum size for vector. If the current size of the vector is larger, 
  * the function will have no side effects. */
 FLECS_API

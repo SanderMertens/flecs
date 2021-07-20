@@ -497,7 +497,9 @@
                 "emplace_w_ctor",
                 "emplace_no_default_ctor",
                 "emplace_existing",
-                "emplace_singleton"
+                "emplace_singleton",
+                "dtor_w_non_trivial_implicit_move",
+                "dtor_w_non_trivial_explicit_move"
             ]
         }, {
             "id": "Refs",
