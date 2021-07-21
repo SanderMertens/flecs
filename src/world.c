@@ -307,7 +307,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_log_push();
 
     if (!ecs_os_has_heap()) {
-        ecs_abort(ECS_MISSING_OS_API, NULL);
+        ecs_abort(ECS_MISSING_IMPLEMENTATION, "OS API heap management");
     }
 
     if (!ecs_os_has_threading()) {
@@ -969,7 +969,7 @@ void ecs_measure_frame_time(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_IMPLEMENTATION, "OS API time");
 
     if (world->stats.target_fps == 0.0f || enable) {
         world->measure_frame_time = enable;
@@ -982,7 +982,7 @@ void ecs_measure_system_time(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_IMPLEMENTATION, "OS API time");
     world->measure_system_time = enable;
 }
 
@@ -1001,7 +1001,7 @@ void ecs_set_target_fps(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_IMPLEMENTATION, "OS API time");
 
     if (!world->arg_fps) {
         ecs_measure_frame_time(world, true);
@@ -1260,7 +1260,9 @@ FLECS_FLOAT ecs_frame_begin(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
     ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
-    ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
+    ecs_assert(
+        user_delta_time != 0 || ecs_os_has_time(), 
+        ECS_MISSING_IMPLEMENTATION, "get_time");
 
     if (world->locking_enabled) {
         ecs_lock(world);

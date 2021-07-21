@@ -391,8 +391,8 @@ const char* ecs_strerror(
         return "index is out of range";
     case ECS_THREAD_ERROR:
         return "failed to create thread";
-    case ECS_MISSING_OS_API:
-        return "missing implementation for OS API function";
+    case ECS_MISSING_IMPLEMENTATION:
+        return "missing implementation for interface function";
     case ECS_UNSUPPORTED:
         return "operation is unsupported";
     case ECS_NO_OUT_COLUMNS:

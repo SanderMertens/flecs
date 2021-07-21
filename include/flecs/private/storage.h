@@ -18,6 +18,9 @@ typedef struct ecs_storage_t ecs_storage_t;
 
 typedef struct ecs_storage_iter_t {
     void *data;
+    ecs_size_t size;
+    ecs_size_t alignment;
+    int32_t offset;
     int32_t count;
 } ecs_storage_iter_t;
 
@@ -30,22 +33,24 @@ typedef void (*ecs_storage_fini_action_t)(
     ecs_storage_t *storage);
 
 typedef void* (*ecs_storage_push_action_t)(
+    ecs_storage_t *storage);
+
+typedef void (*ecs_storage_push_n_action_t)(
     ecs_storage_t *storage,
-    ecs_size_t size,
-    ecs_size_t alignment,
-    uint64_t id);
+    int32_t count);
 
 typedef void (*ecs_storage_erase_action_t)(
     ecs_storage_t *storage,
-    ecs_size_t size,
-    ecs_size_t alignment,
     int32_t index,
     uint64_t id);
 
+typedef void (*ecs_storage_ensure_action_t)(
+    ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id);    
+
 typedef void (*ecs_storage_swap_action_t)(
     ecs_storage_t *storage,
-    ecs_size_t size,
-    ecs_size_t alignment,
     int32_t index_a,
     int32_t index_b,
     uint64_t id_a,
@@ -53,15 +58,17 @@ typedef void (*ecs_storage_swap_action_t)(
 
 typedef void* (*ecs_storage_get_action_t)(
     const ecs_storage_t *storage,
-    ecs_size_t size,
-    ecs_size_t alignment,
     int32_t index,
     uint64_t id);
 
+typedef void (*ecs_storage_copy_action_t)(
+    const ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id,
+    const void *value); 
+
 typedef bool (*ecs_storage_has_action_t)(
     const ecs_storage_t *storage,
-    ecs_size_t size,
-    ecs_size_t alignment,
     int32_t index,
     uint64_t id);    
 
@@ -69,25 +76,88 @@ typedef void* (*ecs_storage_count_action_t)(
     ecs_storage_t *storage);   
 
 typedef ecs_storage_iter_t (*ecs_storage_iter_action_t)(
-    ecs_storage_t *storage);
+    const ecs_storage_t *storage);
 
 typedef bool (*ecs_storage_next_action_t)(
-    ecs_storage_t *storage,
-    ecs_storage_iter_t *iter,
-    int32_t offset);
+    const ecs_storage_t *storage,
+    ecs_storage_iter_t *iter);
 
 typedef struct ecs_storage_plugin_t {
     ecs_storage_init_action_t init;
     ecs_storage_fini_action_t fini;
     ecs_storage_push_action_t push;
+    ecs_storage_push_n_action_t push_n;
     ecs_storage_erase_action_t erase;
+    ecs_storage_ensure_action_t ensure;
     ecs_storage_swap_action_t swap;
     ecs_storage_has_action_t has;
     ecs_storage_get_action_t get;
+    ecs_storage_get_action_t copy;
     ecs_storage_count_action_t count;
     ecs_storage_iter_action_t iter;
     ecs_storage_next_action_t next;
+    ecs_size_t storage_size;
 } ecs_storage_plugin_t;
+
+typedef struct ecs_storage_t {
+    const ecs_storage_plugin_t *plugin;
+    ecs_size_t size;
+    ecs_size_t alignment;
+    int32_t index;
+} ecs_storage_t;
+
+ecs_storage_t* ecs_storage_init(
+    const ecs_storage_plugin_t *plugin,
+    ecs_world_t *world,
+    ecs_size_t size,
+    ecs_size_t alignment);
+
+void ecs_storage_fini(
+    ecs_storage_t *storage);
+
+void* ecs_storage_push(
+    ecs_storage_t *storage);
+
+void ecs_storage_push_n(
+    ecs_storage_t *storage,
+    int32_t count);
+
+void ecs_storage_erase(
+    ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id);
+
+void ecs_storage_ensure(
+    ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id);    
+
+void ecs_storage_swap(
+    ecs_storage_t *storage,
+    int32_t index_a,
+    int32_t index_b,
+    uint64_t id_a,
+    uint64_t id_b);
+
+void* ecs_storage_get(
+    const ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id);
+
+bool ecs_storage_has(
+    const ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id);
+
+void* ecs_storage_count(
+    ecs_storage_t *storage);   
+
+ecs_storage_iter_t ecs_storage_iter(
+    const ecs_storage_t *storage);
+
+bool ecs_storage_next(
+    const ecs_storage_t *storage,
+    ecs_storage_iter_t *iter);
 
 #ifdef __cplusplus
 }

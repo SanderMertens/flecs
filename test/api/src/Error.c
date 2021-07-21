@@ -78,7 +78,7 @@ void Error_error_codes() {
     test_assert(ecs_strerror(ECS_INVALID_FROM_WORKER) != NULL);
     test_assert(ecs_strerror(ECS_OUT_OF_RANGE) != NULL);
     test_assert(ecs_strerror(ECS_THREAD_ERROR) != NULL);
-    test_assert(ecs_strerror(ECS_MISSING_OS_API) != NULL);
+    test_assert(ecs_strerror(ECS_MISSING_IMPLEMENTATION) != NULL);
     test_assert(ecs_strerror(ECS_UNSUPPORTED) != NULL);
     test_assert(ecs_strerror(ECS_NO_OUT_COLUMNS) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_ACCESS_VIOLATION) != NULL);

@@ -155,16 +155,16 @@ int32_t switch_column_count(
 
 /* Count number of bitset columns */
 static
-int32_t bitset_column_count(
+int32_t storage_count(
     ecs_table_t *table)
 {
     int32_t count = 0;
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
+    ecs_vector_each(table->type, ecs_id_t, c_ptr, {
+        ecs_id_t id = *c_ptr;
 
-        if (ECS_HAS_ROLE(component, DISABLED)) {
+        if (ECS_HAS_ROLE(id, DISABLED)) {
             if (!count) {
-                table->bs_column_offset = c_ptr_i;
+                table->storage_offset = c_ptr_i;
             }
             count ++;
         }
@@ -324,7 +324,8 @@ void init_table(
     table->queries = NULL;
     table->column_count = data_column_count(world, table);
     table->sw_column_count = switch_column_count(table);
-    table->bs_column_count = bitset_column_count(table);
+    table->storage_count = storage_count(table);
+    table->storage_ids = ecs_os_calloc(table->storage_count * ecs_id_t);
 
     init_edges(world, table);
 }

@@ -112,6 +112,8 @@ struct ecs_data_t {
     ecs_column_t *columns;       /**< Component columns */
     ecs_sw_column_t *sw_columns; /**< Switch columns */
     ecs_bs_column_t *bs_columns; /**< Bitset columns */
+
+    ecs_storage_t **storages;    /**< Pluggable storages */
 };
 
 /** Small footprint data structure for storing data associated with a table. */
@@ -192,8 +194,9 @@ struct ecs_table_t {
 
     int32_t sw_column_count;
     int32_t sw_column_offset;
-    int32_t bs_column_count;
-    int32_t bs_column_offset;
+
+    int32_t storage_count;           /**< Number of custom storages for table */
+    int32_t *storage_map;            /**< Mapping from storages to type ids */
 
     int32_t lock;
 };

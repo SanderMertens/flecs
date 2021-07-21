@@ -288,7 +288,8 @@ void ecs_set_threads(
     ecs_world_t *world,
     int32_t threads)
 {
-    ecs_assert(threads <= 1 || ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
+    ecs_assert(threads <= 1 || ecs_os_has_threading(), 
+        ECS_MISSING_IMPLEMENTATION, "OS API threading");
 
     int32_t stage_count = ecs_get_stage_count(world);
 

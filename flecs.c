@@ -736,6 +736,8 @@ struct ecs_data_t {
     ecs_column_t *columns;       /**< Component columns */
     ecs_sw_column_t *sw_columns; /**< Switch columns */
     ecs_bs_column_t *bs_columns; /**< Bitset columns */
+
+    ecs_storage_t **storages;    /**< Pluggable storages */
 };
 
 /** Small footprint data structure for storing data associated with a table. */
@@ -816,8 +818,9 @@ struct ecs_table_t {
 
     int32_t sw_column_count;
     int32_t sw_column_offset;
-    int32_t bs_column_count;
-    int32_t bs_column_offset;
+
+    int32_t storage_count;           /**< Number of custom storages for table */
+    int32_t *storage_map;            /**< Mapping from storages to type ids */
 
     int32_t lock;
 };
@@ -2327,8 +2330,8 @@ const char* ecs_strerror(
         return "index is out of range";
     case ECS_THREAD_ERROR:
         return "failed to create thread";
-    case ECS_MISSING_OS_API:
-        return "missing implementation for OS API function";
+    case ECS_MISSING_IMPLEMENTATION:
+        return "missing implementation for interface function";
     case ECS_UNSUPPORTED:
         return "operation is unsupported";
     case ECS_NO_OUT_COLUMNS:
@@ -2373,32 +2376,32 @@ ecs_data_t* ecs_init_data(
     int32_t i, 
     count = table->column_count, 
     sw_count = table->sw_column_count,
-    bs_count = table->bs_column_count;
+    storage_count = table->storage_count;
 
     /* Root tables don't have columns */
-    if (!count && !sw_count && !bs_count) {
+    if (!count && !sw_count && !storage_count) {
         result->columns = NULL;
         return result;
     }
 
-    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
 
     if (count && !sw_count) {
-        result->columns = ecs_os_calloc(ECS_SIZEOF(ecs_column_t) * count);    
+        result->columns = ecs_os_calloc_n(ecs_column_t, count);    
     } else if (count || sw_count) {
         /* If a table has switch columns, store vector with the case values
             * as a regular column, so it's easier to access for systems. To
             * enable this, we need to allocate more space. */
         int32_t type_count = ecs_vector_count(type);
-        result->columns = ecs_os_calloc(ECS_SIZEOF(ecs_column_t) * type_count);
+        result->columns = ecs_os_calloc_n(ecs_column_t, type_count);
     }
 
     if (count) {
         for (i = 0; i < count; i ++) {
-            ecs_entity_t e = entities[i];
+            ecs_id_t id = ids[i];
 
             /* Is the column a component? */
-            const EcsComponent *component = ecs_component_from_id(world, e);
+            const EcsComponent *component = ecs_component_from_id(world, id);
             if (component) {
                 /* Is the component associated wit a (non-empty) type? */
                 if (component->size) {
@@ -2414,15 +2417,36 @@ ecs_data_t* ecs_init_data(
         }
     }
 
+    if (storage_count) {
+        result->storages = ecs_os_calloc_n(ecs_storage_t*, storage_count);
+
+        int32_t storage_index = 0;
+        for (i = 0; i < storage_count; i ++) {
+            ecs_id_t id = ids[i];
+            if (ECS_HAS_ROLE(id, DISABLED)) {
+                id = id & ECS_COMPONENT_MASK;
+                const EcsComponent *comp = ecs_component_from_id(world, id);
+                if (comp) {
+                    result->storages[storage_index] = ecs_bitset_storage_init(
+                        world, comp->size, comp->alignment);
+                } else {
+                    result->storages[storage_index] = 
+                        ecs_bitset_storage_init(world, 0, 0);
+                }
+                storage_index ++;
+            }
+        }       
+    }
+
     if (sw_count) {
         int32_t sw_offset = table->sw_column_offset;
         result->sw_columns = ecs_os_calloc(ECS_SIZEOF(ecs_sw_column_t) * sw_count);
 
         for (i = 0; i < sw_count; i ++) {
-            ecs_entity_t e = entities[i + sw_offset];
-            ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
-            e = e & ECS_COMPONENT_MASK;
-            const EcsType *type_ptr = ecs_get(world, e, EcsType);
+            ecs_entity_t id = ids[i + sw_offset];
+            ecs_assert(ECS_HAS_ROLE(id, SWITCH), ECS_INTERNAL_ERROR, NULL);
+            id = id & ECS_COMPONENT_MASK;
+            const EcsType *type_ptr = ecs_get(world, id, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_type_t sw_type = type_ptr->normalized;
 
@@ -2443,13 +2467,6 @@ ecs_data_t* ecs_init_data(
         }
     }
     
-    if (bs_count) {
-        result->bs_columns = ecs_os_calloc(ECS_SIZEOF(ecs_bs_column_t) * bs_count);
-        for (i = 0; i < bs_count; i ++) {
-            ecs_bitset_init(&result->bs_columns[i].data);
-        }
-    }
-
     return result;
 }
 
@@ -3085,6 +3102,16 @@ void fini_data(
         data->columns = NULL;
     }
 
+    ecs_storage_t **storages = data->storages;
+    if (storages) {
+        int32_t c, column_count = table->storage_count;
+        for (c = 0; c < column_count; c ++) {
+            ecs_bitset_storage_fini(storages[c]);
+        }
+        ecs_os_free(storages);
+        data->storages = NULL;
+    }
+
     ecs_sw_column_t *sw_columns = data->sw_columns;
     if (sw_columns) {
         int32_t c, column_count = table->sw_column_count;
@@ -3093,16 +3120,6 @@ void fini_data(
         }
         ecs_os_free(sw_columns);
         data->sw_columns = NULL;
-    }
-
-    ecs_bs_column_t *bs_columns = data->bs_columns;
-    if (bs_columns) {
-        int32_t c, column_count = table->bs_column_count;
-        for (c = 0; c < column_count; c ++) {
-            ecs_bitset_fini(&bs_columns[c].data);
-        }
-        ecs_os_free(bs_columns);
-        data->bs_columns = NULL;
     }
 
     ecs_vector_free(data->entities);
@@ -3303,7 +3320,7 @@ void move_switch_columns(
 }
 
 static
-void move_bitset_columns(
+void move_storages(
     ecs_table_t * new_table, 
     ecs_data_t * new_data, 
     int32_t new_index,
@@ -3312,44 +3329,44 @@ void move_bitset_columns(
     int32_t old_index,
     int32_t count)
 {
-    int32_t i_old = 0, old_column_count = old_table->bs_column_count;
-    int32_t i_new = 0, new_column_count = new_table->bs_column_count;
+    int32_t i_old = 0, old_storage_count = old_table->storage_count;
+    int32_t i_new = 0, new_storage_count = new_table->storage_count;
 
-    if (!old_column_count || !new_column_count) {
+    if (!old_storage_count || !new_storage_count) {
         return;
     }
 
-    ecs_bs_column_t *old_columns = old_data->bs_columns;
-    ecs_bs_column_t *new_columns = new_data->bs_columns;
+    ecs_storage_t **old_storages = old_data->storages;
+    ecs_storage_t **new_storages = new_data->storages;
 
     ecs_type_t new_type = new_table->type;
     ecs_type_t old_type = old_table->type;
 
-    int32_t offset_new = new_table->bs_column_offset;
-    int32_t offset_old = old_table->bs_column_offset;
+    int32_t offset_new = new_table->column_count;
+    int32_t offset_old = old_table->column_count;
 
-    ecs_entity_t *new_components = ecs_vector_first(new_type, ecs_entity_t);
-    ecs_entity_t *old_components = ecs_vector_first(old_type, ecs_entity_t);
+    ecs_id_t *new_ids = ecs_vector_first(new_type, ecs_id_t);
+    ecs_id_t *old_ids = ecs_vector_first(old_type, ecs_id_t);
 
-    for (; (i_new < new_column_count) && (i_old < old_column_count);) {
-        ecs_entity_t new_component = new_components[i_new + offset_new];
-        ecs_entity_t old_component = old_components[i_old + offset_old];
+    for (; (i_new < new_storage_count) && (i_old < old_storage_count);) {
+        ecs_id_t new_id = new_ids[i_new + offset_new];
+        ecs_id_t old_id = old_ids[i_old + offset_old];
 
-        if (new_component == old_component) {
-            ecs_bitset_t *old_bs = &old_columns[i_old].data;
-            ecs_bitset_t *new_bs = &new_columns[i_new].data;
+        if (new_id == old_id) {
+            ecs_storage_t *old_storage = old_storages[i_old];
+            ecs_storage_t *new_storage = new_storages[i_new];
 
-            ecs_bitset_ensure(new_bs, new_index + count);
+            ecs_storage_ensure(new_storage, new_index + count);
 
             int i;
             for (i = 0; i < count; i ++) {
-                uint64_t value = ecs_bitset_get(old_bs, old_index + i);
-                ecs_bitset_set(new_bs, new_index + i, value);
+                void *value = ecs_storage_get(old_storage, old_index + i);
+                ecs_storage_set(new_storage, new_index + i, value);
             }
         }
 
-        i_new += new_component <= old_component;
-        i_old += new_component >= old_component;
+        i_new += new_id <= old_id;
+        i_old += new_id >= old_id;
     }
 }
 
@@ -3360,48 +3377,48 @@ void ensure_data(
     ecs_data_t * data,
     int32_t * column_count_out,
     int32_t * sw_column_count_out,
-    int32_t * bs_column_count_out,
+    int32_t * storage_count_out,
     ecs_column_t ** columns_out,
     ecs_sw_column_t ** sw_columns_out,
-    ecs_bs_column_t ** bs_columns_out)
+    ecs_storage_t *** storages_out)
 {
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
-    int32_t bs_column_count = table->bs_column_count;
+    int32_t storage_count = table->storage_count;
     ecs_column_t *columns = NULL;
     ecs_sw_column_t *sw_columns = NULL;
-    ecs_bs_column_t *bs_columns = NULL;
+    ecs_storages_t **storages = NULL;
 
     /* It is possible that the table data was created without content. 
      * Now that data is going to be written to the table, initialize */ 
     if (column_count | sw_column_count | bs_column_count) {
         columns = data->columns;
         sw_columns = data->sw_columns;
-        bs_columns = data->bs_columns;
+        storages = data->storages;
 
         if (!columns && !sw_columns && !bs_columns) {
             ecs_init_data(world, table, data);
             columns = data->columns;
             sw_columns = data->sw_columns;
-            bs_columns = data->bs_columns;
+            storages = data->storages;
 
             ecs_assert(sw_column_count == 0 || sw_columns != NULL, 
                 ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(bs_column_count == 0 || bs_columns != NULL, 
+            ecs_assert(storage_count == 0 || storages != NULL, 
                 ECS_INTERNAL_ERROR, NULL);
         }
 
         *column_count_out = column_count;
         *sw_column_count_out = sw_column_count;
-        *bs_column_count_out = bs_column_count;
+        *storage_count_out = storage_count;
         *columns_out = columns;
         *sw_columns_out = sw_columns;
-        *bs_columns_out = bs_columns;
+        *storages = storages;
     }
 
     ecs_assert(!column_count || columns, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!sw_column_count || sw_columns, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!bs_column_count || bs_columns, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!storage_count_out || storages, ECS_INTERNAL_ERROR, NULL);
 }
 
 static
@@ -3493,12 +3510,12 @@ int32_t grow_data(
     int32_t cur_count = ecs_table_data_count(data);
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
-    int32_t bs_column_count = table->bs_column_count;
+    int32_t storage_count = table->storage_count;
     ecs_column_t *columns = NULL;
     ecs_sw_column_t *sw_columns = NULL;
-    ecs_bs_column_t *bs_columns = NULL;
+    ecs_storage_t **storages = NULL;
     ensure_data(world, table, data, &column_count, &sw_column_count, 
-        &bs_column_count, &columns, &sw_columns, &bs_columns);    
+        &storages, &columns, &sw_columns, &bs_columns);    
 
     /* Add record to record ptr array */
     ecs_vector_set_size(&data->record_ptrs, ecs_record_t*, size);
@@ -3550,10 +3567,10 @@ int32_t grow_data(
         ecs_switch_addn(sw, to_add);
     }
 
-    /* Add elements to each bitset column */
+    /* Add elements to each storage */
     for (i = 0; i < bs_column_count; i ++) {
-        ecs_bitset_t *bs = &bs_columns[i].data;
-        ecs_bitset_addn(bs, to_add);
+        ecs_storage_t *bs = storages[i];
+        ecs_storage_push_n(bs, to_add);
     }
 
     /* If the table is monitored indicate that there has been a change */
@@ -3605,13 +3622,13 @@ int32_t ecs_table_append(
 
     int32_t column_count = table->column_count;
     int32_t sw_column_count = table->sw_column_count;
-    int32_t bs_column_count = table->bs_column_count;
+    int32_t storage_count = table->storage_count;
     ecs_column_t *columns = NULL;
     ecs_sw_column_t *sw_columns = NULL;
-    ecs_bs_column_t *bs_columns = NULL;
+    ecs_storage_t **storages = NULL;
 
     ensure_data(world, table, data, &column_count, &sw_column_count,
-        &bs_column_count, &columns, &sw_columns, &bs_columns);
+        &storage_count, &columns, &sw_columns, &storages);
 
     /* Grow buffer with entity ids, set new element to new entity */
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
@@ -3677,20 +3694,19 @@ int32_t ecs_table_append(
             ECS_INTERNAL_ERROR, NULL);                        
     }
 
+    /* Add element to each storage */
+    for (i = 0; i < storage_count; i ++) {
+        ecs_assert(storages != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_storage_push(storages[i]);
+    }   
+
     /* Add element to each switch column */
     for (i = 0; i < sw_column_count; i ++) {
         ecs_assert(sw_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_switch_t *sw = sw_columns[i].data;
         ecs_switch_add(sw);
         columns[i + table->sw_column_offset].data = ecs_switch_values(sw);
-    }
-
-    /* Add element to each bitset column */
-    for (i = 0; i < bs_column_count; i ++) {
-        ecs_assert(bs_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_bitset_t *bs = &bs_columns[i].data;
-        ecs_bitset_addn(bs, 1);
-    }    
+    } 
 
     return count;
 }
@@ -3851,18 +3867,18 @@ void ecs_table_delete(
         }
     }
 
+    /* Remove elements from storages */
+    ecs_storage_t **storages = data->storages;
+    int32_t storage_count = table->storage_count;
+    for (i = 0; i < storage_count; i ++) {
+        ecs_storage_erase(storages[i], index, entity_to_delete);
+    }
+
     /* Remove elements from switch columns */
     ecs_sw_column_t *sw_columns = data->sw_columns;
     int32_t sw_column_count = table->sw_column_count;
     for (i = 0; i < sw_column_count; i ++) {
         ecs_switch_remove(sw_columns[i].data, index);
-    }
-
-    /* Remove elements from bitset columns */
-    ecs_bs_column_t *bs_columns = data->bs_columns;
-    int32_t bs_column_count = table->bs_column_count;
-    for (i = 0; i < bs_column_count; i ++) {
-        ecs_bitset_remove(&bs_columns[i].data, index);
     }
 }
 
@@ -3944,7 +3960,7 @@ void ecs_table_move(
     move_switch_columns(
         new_table, new_data, new_index, old_table, old_data, old_index, 1);
 
-    move_bitset_columns(
+    move_storages(
         new_table, new_data, new_index, old_table, old_data, old_index, 1);
 
     bool same_entity = dst_entity == src_entity;
@@ -4096,22 +4112,24 @@ void swap_switch_columns(
 }
 
 static
-void swap_bitset_columns(
+void swap_storages(
     ecs_table_t *table,
     ecs_data_t * data,
     int32_t row_1,
     int32_t row_2)
 {
-    int32_t i = 0, column_count = table->bs_column_count;
-    if (!column_count) {
+    int32_t i = 0, storage_count = table->storage_count;
+    if (!storage_count) {
         return;
     }
 
-    ecs_bs_column_t *columns = data->bs_columns;
+    ecs_storage_t **storages = data->storages;
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
 
-    for (i = 0; i < column_count; i ++) {
-        ecs_bitset_t *bs = &columns[i].data;
-        ecs_bitset_swap(bs, row_1, row_2);
+    for (i = 0; i < storage_count; i ++) {
+        ecs_storage_swap(storages[i], row_1, row_2, 
+            entities[row_1], 
+            entities[row_2]);
     }
 }
 
@@ -4160,7 +4178,7 @@ void ecs_table_swap(
     record_ptrs[row_2] = record_ptr_1;
 
     swap_switch_columns(table, data, row_1, row_2);
-    swap_bitset_columns(table, data, row_1, row_2);  
+    swap_storages(table, data, row_1, row_2);  
 
     ecs_column_t *columns = data->columns;
     if (!columns) {
@@ -4381,6 +4399,9 @@ void merge_table_data(
     }
 
     move_switch_columns(
+        new_table, new_data, new_count, old_table, old_data, 0, old_count);
+
+    move_storages(
         new_table, new_data, new_count, old_table, old_data, 0, old_count);
 
     /* Initialize remaining columns */
@@ -4655,6 +4676,145 @@ bool ecs_table_has_module(
     ecs_table_t *table)
 {
     return table->flags & EcsTableHasModule;
+}
+
+ecs_storage_t* ecs_storage_init(
+    const ecs_storage_plugin_t *plugin,
+    ecs_world_t *world,
+    ecs_size_t size,
+    ecs_size_t alignment)
+{
+    ecs_assert(plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_storage_t *storage = plugin->init(world, size, alignment);
+    ecs_assert(storage->plugin == plugin, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->size == size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->alignment == alignment, ECS_INVALID_PARAMETER, NULL);
+    return storage;
+}
+
+void ecs_storage_fini(
+    ecs_storage_t *storage)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->fini != NULL, ECS_MISSING_IMPLEMENTATION, NULL);
+    storage->plugin->fini();
+}
+
+void* ecs_storage_push(
+    ecs_storage_t *storage)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->push != NULL, ECS_MISSING_IMPLEMENTATION, NULL);
+    return storage->plugin->push(storage);
+}
+
+void ecs_storage_push_n(
+    ecs_storage_t *storage
+    int32_t count)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->push_n != NULL, ECS_MISSING_IMPLEMENTATION, NULL);
+    storage->plugin->push_n(storage, count);
+}
+
+void ecs_storage_erase(
+    ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->erase != NULL, ECS_MISSING_IMPLEMENTATION, NULL);
+    storage->plugin->erase(storage, index, id);
+}
+
+void ecs_storage_ensure(
+    ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->ensure != NULL, ECS_MISSING_IMPLEMENTATION, NULL);
+    storage->plugin->ensure(storage, index, id);
+}
+
+void ecs_storage_swap(
+    ecs_storage_t *storage,
+    int32_t index_a,
+    int32_t index_b,
+    uint64_t id_a,
+    uint64_t id_b)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->swap != NULL, ECS_MISSING_IMPLEMENTATION, NULL);
+    storage->plugin->swap(storage, index_a, index_b, id_a, id_b);
+}
+
+void* ecs_storage_get(
+    const ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->get != NULL, ECS_MISSING_IMPLEMENTATION, NULL);
+    return storage->plugin->get(storage, index, id);
+}
+
+void ecs_storage_copy(
+    const ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id,
+    const void *src)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->copy != NULL, ECS_MISSING_IMPLEMENTATION, NULL);
+    return storage->plugin->copy(storage, index, id, src);
+}
+
+bool ecs_storage_has(
+    const ecs_storage_t *storage,
+    int32_t index,
+    uint64_t id)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->has != NULL, ECS_INVALID_PARAMETER, NULL);
+    return storage->plugin->has(storage, index, id);
+}
+
+void* ecs_storage_count(
+    ecs_storage_t *storage)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->count != NULL, ECS_INVALID_PARAMETER, NULL);
+    return storage->plugin->count(storage);
+}  
+
+ecs_storage_iter_t ecs_storage_iter(
+    const ecs_storage_t *storage)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->iter != NULL, ECS_INVALID_PARAMETER, NULL);
+    return storage->plugin->iter(storage);
+}
+
+bool ecs_storage_next(
+    const ecs_storage_t *storage,
+    ecs_storage_iter_t *iter)
+{
+    ecs_assert(storage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(storage->plugin->next != NULL, ECS_INVALID_PARAMETER, NULL);
+    return storage->plugin->next(storage, iter);
 }
 
 
@@ -15148,7 +15308,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_log_push();
 
     if (!ecs_os_has_heap()) {
-        ecs_abort(ECS_MISSING_OS_API, NULL);
+        ecs_abort(ECS_MISSING_IMPLEMENTATION, "OS API heap management");
     }
 
     if (!ecs_os_has_threading()) {
@@ -15810,7 +15970,7 @@ void ecs_measure_frame_time(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_IMPLEMENTATION, "OS API time");
 
     if (world->stats.target_fps == 0.0f || enable) {
         world->measure_frame_time = enable;
@@ -15823,7 +15983,7 @@ void ecs_measure_system_time(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_IMPLEMENTATION, "OS API time");
     world->measure_system_time = enable;
 }
 
@@ -15842,7 +16002,7 @@ void ecs_set_target_fps(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_assert(ecs_os_has_time(), ECS_MISSING_IMPLEMENTATION, "OS API time");
 
     if (!world->arg_fps) {
         ecs_measure_frame_time(world, true);
@@ -16101,7 +16261,9 @@ FLECS_FLOAT ecs_frame_begin(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
     ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
-    ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
+    ecs_assert(
+        user_delta_time != 0 || ecs_os_has_time(), 
+        ECS_MISSING_IMPLEMENTATION, "get_time");
 
     if (world->locking_enabled) {
         ecs_lock(world);
@@ -16714,17 +16876,25 @@ int32_t ecs_switch_next(
 }
 
 typedef struct ecs_bitset_storage_t {
+    ecs_storage_t *storage;
     ecs_bitset_t bitset;
     ecs_vector_t *data;
 } ecs_bitset_storage_t;
 
-ecs_storage_plugin_t ecs_bitset_storage_plugin(void) 
-{
-    return (ecs_storage_plugin_t) {
-        .init = ecs_bitset_storage_init,
-        .fini = ecs_bitset_storage_fini
-    };
-}
+static const
+ecs_storage_plugin_t plugin = {
+    .init = ecs_bitset_storage_init,
+    .fini = ecs_bitset_storage_fini,
+    .push = ecs_bitset_storage_push,
+    .push_n = ecs_bitset_storage_push_n,
+    .erase = ecs_bitset_storage_erase,
+    .swap = ecs_bitset_storage_swap,
+    .get = ecs_bitset_storage_get,
+    .has = ecs_bitset_storage_has,
+    .iter = ecs_bitset_storage_iter,
+    .next = ecs_bitset_storage_next,
+    .storage_size = ECS_SIZEOF(ecs_bitset_storage_t)
+};
 
 ecs_storage_t* ecs_bitset_storage_init(
     ecs_world_t *world,
@@ -16736,6 +16906,10 @@ ecs_storage_t* ecs_bitset_storage_init(
     ecs_bitset_storage_t *result = ecs_os_calloc_t(ecs_bitset_storage_t);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
+    result->storage.plugin = &plugin;
+    result->storage.size = size;
+    result->storage.alignment = alignment;
+
     ecs_bitset_init(&result->bitset);
 
     if (size) {
@@ -16746,53 +16920,73 @@ ecs_storage_t* ecs_bitset_storage_init(
 }
 
 void ecs_bitset_storage_fini(
-    ecs_storage_t *storage)
+    ecs_storage_t *s)
 {
-    ecs_bitset_storage_t *ptr = (ecs_bitset_storage_t*)storage;
-    ecs_bitset_fini(&ptr->bitset);
-    ecs_vector_free(ptr->data);
+    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+    ecs_bitset_fini(&bs->bitset);
+    ecs_vector_free(bs->data);
     ecs_os_free(ptr);
 }
 
+static
 void* ecs_bitset_storage_push(
-    ecs_storage_t *storage,
-    ecs_size_t size,
-    ecs_size_t alignment,
-    uint64_t id)
+    ecs_storage_t *s)
 {
-    (void)id;
-
-    ecs_bitset_storage_t *ptr = (ecs_bitset_storage_t*)storage;
-    ecs_bitset_addn(&ptr->bitset, 1);
+    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+    ecs_bitset_addn(&bs->bitset, 1);
     
     if (size) {
-        return ecs_vector_add_t(&ptr->data, size, alignment);
+        return ecs_vector_add_t(&bs->data, s->size, s->alignment);
     }
 
     return NULL;
 }
 
+static
+void ecs_bitset_storage_push_n(
+    ecs_storage_t *s,
+    int32_t count)
+{
+    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+    ecs_bitset_addn(&bs->bitset, count);
+    
+    if (size) {
+        ecs_vector_addn_t(&bs->data, s->size, s->alignment, count);
+    }
+}
+
 void ecs_bitset_storage_erase(
-    ecs_storage_t *storage,
-    ecs_size_t size,
-    ecs_size_t alignment,
+    ecs_storage_t *s,
     int32_t index,
     uint64_t id)
 {
     (void)id;
 
-    ecs_bitset_storage_t *ptr = (ecs_bitset_storage_t*)storage;
-    ecs_bitset_remove(&ptr->bitset, index);
+    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+    ecs_bitset_remove(&bs->bitset, index);
     
     if (size) {
-        ecs_vector_remove_t(ptr->data, size, alignment, index);
+        ecs_vector_remove_t(bs->data, s->size, s->alignment, index);
+    }
+}
+
+void ecs_bitset_storage_ensure(
+    ecs_storage_t *s,
+    int32_t index,
+    uint64_t id)
+{
+    (void)id;
+
+    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+    ecs_bitset_ensure(&bs->bitset, index + 1);
+
+    if (size) {
+        ecs_vector_set_count_t(bs->data, s->size, s->alignment, index + 1);
     }
 }
 
 void ecs_bitset_storage_swap(
-    ecs_storage_t *storage,
-    ecs_size_t size,
-    ecs_size_t alignment,
+    ecs_storage_t *s,
     int32_t index_a,
     int32_t index_b,
     uint64_t id_a,
@@ -16801,12 +16995,14 @@ void ecs_bitset_storage_swap(
     (void)id_a;
     (void)id_b;
 
-    ecs_bitset_storage_t *ptr = (ecs_bitset_storage_t*)storage;
-    ecs_bitset_swap(&ptr->bitset, index_a, index_b);
+    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+    ecs_bitset_swap(&bs->bitset, index_a, index_b);
+    
+    ecs_size_t size = s->size;
 
     if (size) {
         void *tmp = ecs_os_alloca(size);
-        void *arr = ecs_vector_first_t(ptr->data, size, alignment);
+        void *arr = ecs_vector_first_t(bs->data, size, s->alignment);
         void *el_a = ECS_OFFSET(arr, size * index_a);
         void *el_b = ECS_OFFSET(arr, size * index_b);
 
@@ -16817,9 +17013,7 @@ void ecs_bitset_storage_swap(
 }
 
 void* ecs_bitset_storage_get(
-    const ecs_storage_t *storage,
-    ecs_size_t size,
-    ecs_size_t alignment,
+    const ecs_storage_t *s,
     int32_t index,
     uint64_t id)
 {
@@ -16827,27 +17021,180 @@ void* ecs_bitset_storage_get(
 
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_bitset_storage_t *ptr = (ecs_bitset_storage_t*)storage;
-    if (ecs_bitset_get(&ptr->bitset, index)) {
-        return ecs_vector_get_t(ptr->data, size, alignment, index);
+    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+    if (ecs_bitset_get(&bs->bitset, index)) {
+        return ecs_vector_get_t(bs->data, s->size, s->alignment, index);
     }
 
     return NULL;
 }
 
 bool ecs_bitset_storage_has(
-    const ecs_storage_t *storage,
-    ecs_size_t size,
-    ecs_size_t alignment,
+    const ecs_storage_t *s,
     int32_t index,
     uint64_t id)
 {
     (void)id;
-    (void)size;
-    (void)alignment;
 
-    ecs_bitset_storage_t *ptr = (ecs_bitset_storage_t*)storage;
-    return ecs_bitset_get(&ptr->bitset, index);
+    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+    return ecs_bitset_get(&bs->bitset, index);
+}
+
+ecs_storage_iter_t ecs_bitset_storage_iter(
+    const ecs_storage_t *s)
+{
+    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+
+    return (ecs_storage_iter_t){
+        .size = s->size,
+        .alignment = s->alignment,
+        .data = ecs_vector_first_t(bs->data, s->size, s->alignment)
+    };
+}
+
+#define BS_MAX ((uint64_t)0xFFFFFFFFFFFFFFFF)
+
+bool ecs_bitset_storage_next(
+    const ecs_storage_t *s,
+    ecs_storage_iter_t *iter)
+{
+    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+
+    /* Precomputed single-bit test */
+    static const uint64_t bitmask[64] = {
+    (uint64_t)1 << 0, (uint64_t)1 << 1, (uint64_t)1 << 2, (uint64_t)1 << 3,
+    (uint64_t)1 << 4, (uint64_t)1 << 5, (uint64_t)1 << 6, (uint64_t)1 << 7,
+    (uint64_t)1 << 8, (uint64_t)1 << 9, (uint64_t)1 << 10, (uint64_t)1 << 11,
+    (uint64_t)1 << 12, (uint64_t)1 << 13, (uint64_t)1 << 14, (uint64_t)1 << 15,
+    (uint64_t)1 << 16, (uint64_t)1 << 17, (uint64_t)1 << 18, (uint64_t)1 << 19,
+    (uint64_t)1 << 20, (uint64_t)1 << 21, (uint64_t)1 << 22, (uint64_t)1 << 23,
+    (uint64_t)1 << 24, (uint64_t)1 << 25, (uint64_t)1 << 26, (uint64_t)1 << 27,  
+    (uint64_t)1 << 28, (uint64_t)1 << 29, (uint64_t)1 << 30, (uint64_t)1 << 31,
+    (uint64_t)1 << 32, (uint64_t)1 << 33, (uint64_t)1 << 34, (uint64_t)1 << 35,  
+    (uint64_t)1 << 36, (uint64_t)1 << 37, (uint64_t)1 << 38, (uint64_t)1 << 39,
+    (uint64_t)1 << 40, (uint64_t)1 << 41, (uint64_t)1 << 42, (uint64_t)1 << 43,
+    (uint64_t)1 << 44, (uint64_t)1 << 45, (uint64_t)1 << 46, (uint64_t)1 << 47,  
+    (uint64_t)1 << 48, (uint64_t)1 << 49, (uint64_t)1 << 50, (uint64_t)1 << 51,
+    (uint64_t)1 << 52, (uint64_t)1 << 53, (uint64_t)1 << 54, (uint64_t)1 << 55,  
+    (uint64_t)1 << 56, (uint64_t)1 << 57, (uint64_t)1 << 58, (uint64_t)1 << 59,
+    (uint64_t)1 << 60, (uint64_t)1 << 61, (uint64_t)1 << 62, (uint64_t)1 << 63
+    };
+
+    /* Precomputed test to verify if remainder of block is set (or not) */
+    static const uint64_t bitmask_remain[64] = {
+    BS_MAX, BS_MAX - (BS_MAX >> 63), BS_MAX - (BS_MAX >> 62),
+    BS_MAX - (BS_MAX >> 61), BS_MAX - (BS_MAX >> 60), BS_MAX - (BS_MAX >> 59),
+    BS_MAX - (BS_MAX >> 58), BS_MAX - (BS_MAX >> 57), BS_MAX - (BS_MAX >> 56), 
+    BS_MAX - (BS_MAX >> 55), BS_MAX - (BS_MAX >> 54), BS_MAX - (BS_MAX >> 53), 
+    BS_MAX - (BS_MAX >> 52), BS_MAX - (BS_MAX >> 51), BS_MAX - (BS_MAX >> 50), 
+    BS_MAX - (BS_MAX >> 49), BS_MAX - (BS_MAX >> 48), BS_MAX - (BS_MAX >> 47), 
+    BS_MAX - (BS_MAX >> 46), BS_MAX - (BS_MAX >> 45), BS_MAX - (BS_MAX >> 44), 
+    BS_MAX - (BS_MAX >> 43), BS_MAX - (BS_MAX >> 42), BS_MAX - (BS_MAX >> 41), 
+    BS_MAX - (BS_MAX >> 40), BS_MAX - (BS_MAX >> 39), BS_MAX - (BS_MAX >> 38), 
+    BS_MAX - (BS_MAX >> 37), BS_MAX - (BS_MAX >> 36), BS_MAX - (BS_MAX >> 35), 
+    BS_MAX - (BS_MAX >> 34), BS_MAX - (BS_MAX >> 33), BS_MAX - (BS_MAX >> 32), 
+    BS_MAX - (BS_MAX >> 31), BS_MAX - (BS_MAX >> 30), BS_MAX - (BS_MAX >> 29), 
+    BS_MAX - (BS_MAX >> 28), BS_MAX - (BS_MAX >> 27), BS_MAX - (BS_MAX >> 26), 
+    BS_MAX - (BS_MAX >> 25), BS_MAX - (BS_MAX >> 24), BS_MAX - (BS_MAX >> 23), 
+    BS_MAX - (BS_MAX >> 22), BS_MAX - (BS_MAX >> 21), BS_MAX - (BS_MAX >> 20), 
+    BS_MAX - (BS_MAX >> 19), BS_MAX - (BS_MAX >> 18), BS_MAX - (BS_MAX >> 17), 
+    BS_MAX - (BS_MAX >> 16), BS_MAX - (BS_MAX >> 15), BS_MAX - (BS_MAX >> 14), 
+    BS_MAX - (BS_MAX >> 13), BS_MAX - (BS_MAX >> 12), BS_MAX - (BS_MAX >> 11), 
+    BS_MAX - (BS_MAX >> 10), BS_MAX - (BS_MAX >> 9), BS_MAX - (BS_MAX >> 8), 
+    BS_MAX - (BS_MAX >> 7), BS_MAX - (BS_MAX >> 6), BS_MAX - (BS_MAX >> 5), 
+    BS_MAX - (BS_MAX >> 4), BS_MAX - (BS_MAX >> 3), BS_MAX - (BS_MAX >> 2),
+    BS_MAX - (BS_MAX >> 1)
+    };
+
+    int32_t first = iter->offset;
+    int32_t last = 0;
+    ecs_bitset_t *bs = &bs->bitset;
+
+    int32_t bs_count = bs->count;
+    int32_t bs_block = first >> 6;
+    int32_t bs_block_count = ((bs_count - 1) >> 6) + 1;
+
+    if (bs_block >= bs_block_count) {
+        goto done;
+    }
+
+    uint64_t *bs_data = bs->data;
+    int32_t bs_start = first & 0x3F;
+
+    /* Step 1: find the first non-empty block */
+    uint64_t v = bs_data[bs_block];
+    uint64_t remain = bitmask_remain[bs_start];
+    while (!(v & remain)) {
+        /* If no elements are remaining, move to next block */
+        if ((++bs_block) >= bs_block_count) {
+            /* No non-empty blocks left */
+            goto done;
+        }
+
+        bs_start = 0;
+        remain = BS_MAX; /* Test the full block */
+        v = bs_data[bs_block];
+    }
+
+    /* Step 2: find the first non-empty element in the block */
+    while (!(v & bitmask[bs_start])) {
+        bs_start ++;
+
+        /* Block was not empty, so bs_start must be smaller than 64 */
+        ecs_assert(bs_start < 64, ECS_INTERNAL_ERROR, NULL);
+    }
+    
+    /* Step 3: Find number of contiguous enabled elements after start */
+    int32_t bs_end = bs_start, bs_block_end = bs_block;
+    
+    remain = bitmask_remain[bs_end];
+    while ((v & remain) == remain) {
+        bs_end = 0;
+        bs_block_end ++;
+
+        if (bs_block_end == bs_block_count) {
+            break;
+        }
+
+        v = bs_data[bs_block_end];
+        remain = BS_MAX; /* Test the full block */
+    }
+
+    /* Step 4: find remainder of enabled elements in current block */
+    if (bs_block_end != bs_block_count) {
+        while ((v & bitmask[bs_end])) {
+            bs_end ++;
+        }
+    }
+
+    /* Block was not 100% occupied, so bs_start must be smaller than 64 */
+    ecs_assert(bs_end < 64, ECS_INTERNAL_ERROR, NULL);
+
+    /* Step 5: translate to element start/end and make sure that each column
+        * range is a subset of the previous one. */
+    first = bs_block * 64 + bs_start;
+    int32_t cur_last = bs_block_end * 64 + bs_end;
+    
+    /* No enabled elements found in table */
+    if (first == cur_last) {
+        goto done;
+    }
+    
+    last = cur_last;
+    int32_t elem_count = last - first;
+
+    /* Make sure last element doesn't exceed total number of elements in 
+        * the table */
+    if (elem_count > bs_count) {
+        elem_count = bs_count;
+    }
+    
+    iter->offset = first;
+    iter->count = elem_count;
+
+    return true;
+done:
+    return false;
 }
 
 #ifndef _MSC_VER
@@ -22718,16 +23065,16 @@ int32_t switch_column_count(
 
 /* Count number of bitset columns */
 static
-int32_t bitset_column_count(
+int32_t storage_count(
     ecs_table_t *table)
 {
     int32_t count = 0;
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
+    ecs_vector_each(table->type, ecs_id_t, c_ptr, {
+        ecs_id_t id = *c_ptr;
 
-        if (ECS_HAS_ROLE(component, DISABLED)) {
+        if (ECS_HAS_ROLE(id, DISABLED)) {
             if (!count) {
-                table->bs_column_offset = c_ptr_i;
+                table->storage_offset = c_ptr_i;
             }
             count ++;
         }
@@ -22887,7 +23234,8 @@ void init_table(
     table->queries = NULL;
     table->column_count = data_column_count(world, table);
     table->sw_column_count = switch_column_count(table);
-    table->bs_column_count = bitset_column_count(table);
+    table->storage_count = storage_count(table);
+    table->storage_ids = ecs_os_calloc(table->storage_count * ecs_id_t);
 
     init_edges(world, table);
 }
@@ -25373,7 +25721,8 @@ void ecs_set_threads(
     ecs_world_t *world,
     int32_t threads)
 {
-    ecs_assert(threads <= 1 || ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
+    ecs_assert(threads <= 1 || ecs_os_has_threading(), 
+        ECS_MISSING_IMPLEMENTATION, "OS API threading");
 
     int32_t stage_count = ecs_get_stage_count(world);
 

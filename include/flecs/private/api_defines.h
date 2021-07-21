@@ -320,7 +320,7 @@ typedef int32_t ecs_size_t;
 #define ECS_UNSUPPORTED (6)
 #define ECS_INTERNAL_ERROR (7)
 #define ECS_ALREADY_DEFINED (8)
-#define ECS_MISSING_OS_API (9)
+#define ECS_MISSING_IMPLEMENTATION (9)
 #define ECS_THREAD_ERROR (10)
 #define ECS_CYCLE_DETECTED (11)
 
