@@ -157,7 +157,7 @@ ecs_entity_t ecs_observer_init(
         ecs_filter_t *filter = &observer->filter;
 
         /* Create a trigger for each term in the filter */
-        observer->triggers = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * 
+        observer->triggers = ecs_os_malloc_n(ecs_entity_t, 
             observer->filter.term_count);
         
         int i;

@@ -37,7 +37,7 @@ void ecs_bitset_ensure(
     }
 }
 
-void ecs_bitset_deinit(
+void ecs_bitset_fini(
     ecs_bitset_t *bs)
 {
     ecs_os_free(bs->data);

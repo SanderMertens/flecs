@@ -64,12 +64,12 @@ ecs_switch_t* ecs_switch_new(
      * therefore never occur as case id */
     ecs_assert(min > 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_switch_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_switch_t));
+    ecs_switch_t *result = ecs_os_malloc_t(ecs_switch_t);
     result->min = (uint32_t)min;
     result->max = (uint32_t)max;
 
     int32_t count = (int32_t)(max - min) + 1;
-    result->headers = ecs_os_calloc(ECS_SIZEOF(ecs_switch_header_t) * count);
+    result->headers = ecs_os_calloc_n(ecs_switch_header_t, count);
     result->nodes = ecs_vector_new(ecs_switch_node_t, elements);
     result->values = ecs_vector_new(uint64_t, elements);
 

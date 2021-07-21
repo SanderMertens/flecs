@@ -28,7 +28,7 @@ void ecs_bitset_init(
 
 /** Deinialize bitset. */
 FLECS_DBG_API
-void ecs_bitset_deinit(
+void ecs_bitset_fini(
     ecs_bitset_t *bs);
 
 /** Add n elements to bitset. */

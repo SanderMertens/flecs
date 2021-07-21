@@ -599,8 +599,10 @@ void add_table(
     ecs_table_t *table)
 {
     ecs_type_t table_type = NULL;
-    ecs_term_t *terms = query->filter.terms;
-    int32_t t, c, term_count = query->filter.term_count;
+    ecs_filter_t *filter = &query->filter;
+    ecs_term_t *terms = filter->terms;
+    int32_t t, c, term_count = filter->term_count;
+    int32_t term_count_actual = filter->term_count_actual;
 
     if (table) {
         table_type = table->type;
@@ -633,22 +635,24 @@ add_pair:
         table_type = table->type;
     }
 
+    ecs_iter_table_t *iter_data = &table_data.iter_data;
+
     /* If grouping is enabled for query, assign the group rank to the table */
     group_table(world, query, &table_data);
 
-    if (term_count) {
+    if (term_count_actual) {
         /* Array that contains the system column to table column mapping */
-        table_data.iter_data.columns = ecs_os_malloc(ECS_SIZEOF(int32_t) * query->filter.term_count_actual);
-        ecs_assert(table_data.iter_data.columns != NULL, ECS_OUT_OF_MEMORY, NULL);
+        iter_data->columns = ecs_os_malloc_n(int32_t, term_count_actual);
+        ecs_assert(iter_data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Store the components of the matched table. In the case of OR expressions,
         * components may differ per matched table. */
-        table_data.iter_data.components = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * query->filter.term_count_actual);
-        ecs_assert(table_data.iter_data.components != NULL, ECS_OUT_OF_MEMORY, NULL);
+        iter_data->components = ecs_os_malloc_n(ecs_entity_t, term_count_actual);
+        ecs_assert(iter_data->components != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Also cache types, so no lookup is needed while iterating */
-        table_data.iter_data.types = ecs_os_malloc(ECS_SIZEOF(ecs_type_t) * query->filter.term_count_actual);
-        ecs_assert(table_data.iter_data.types != NULL, ECS_OUT_OF_MEMORY, NULL);        
+        iter_data->types = ecs_os_malloc_n(ecs_type_t, term_count_actual);
+        ecs_assert(iter_data->types != NULL, ECS_OUT_OF_MEMORY, NULL);
     }
 
     /* Walk columns parsed from the system signature */
@@ -663,7 +667,7 @@ add_pair:
             subj.entity = 0;
         }
 
-        table_data.iter_data.columns[c] = 0;
+        iter_data->columns[c] = 0;
 
         /* Get actual component and component source for current column */
         t = get_comp_and_src(world, query, t, table_type, &component, &entity);
@@ -683,7 +687,7 @@ add_pair:
                 }
             }
 
-            table_data.iter_data.columns[c] = index;
+            iter_data->columns[c] = index;
 
             /* If the column is a case, we should only iterate the entities in
              * the column for this specific case. Add a sparse column with the
@@ -713,19 +717,19 @@ add_pair:
             }
         }
 
-        if ((entity || table_data.iter_data.columns[c] == -1 || subj.set.mask & EcsCascade)) {
+        if ((entity || iter_data->columns[c] == -1 || subj.set.mask & EcsCascade)) {
             references = add_ref(world, query, references, term,
                 component, entity);
-            table_data.iter_data.columns[c] = -ecs_vector_count(references);
+            iter_data->columns[c] = -ecs_vector_count(references);
         }
 
         ecs_entity_t type_id = ecs_get_typeid(world, component);
         if (type_id) {
             const EcsComponent *cptr = ecs_get(world, type_id, EcsComponent);
             if (!cptr || !cptr->size) {
-                int32_t column = table_data.iter_data.columns[c];
+                int32_t column = iter_data->columns[c];
                 if (column > 0) {
-                    table_data.iter_data.columns[c] = 0;
+                    iter_data->columns[c] = 0;
                 } else if (column) {
                     ecs_ref_t *r = ecs_vector_get(
                         references, ecs_ref_t, -column - 1);
@@ -734,8 +738,8 @@ add_pair:
             }
         }
 
-        table_data.iter_data.components[c] = component;
-        table_data.iter_data.types[c] = get_term_type(world, term, component);
+        iter_data->components[c] = component;
+        iter_data->types[c] = get_term_type(world, term, component);
 
         c ++;
     }

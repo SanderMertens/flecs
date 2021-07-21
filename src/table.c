@@ -735,7 +735,7 @@ void fini_data(
     if (bs_columns) {
         int32_t c, column_count = table->bs_column_count;
         for (c = 0; c < column_count; c ++) {
-            ecs_bitset_deinit(&bs_columns[c].data);
+            ecs_bitset_fini(&bs_columns[c].data);
         }
         ecs_os_free(bs_columns);
         data->bs_columns = NULL;
