@@ -497,7 +497,7 @@ There are 16 bits reserved for generation in the entity id, which means that an 
 
 ```c
 ecs_entity_t generation = ECS_GENERATION(e);
-ecs_entity_t id = e | ECS_ENTITY_MASK;
+ecs_entity_t id = e & ECS_ENTITY_MASK;
 ```
 
 ### Manual id generation
@@ -1374,13 +1374,13 @@ Position, Velocity
 OR expressions allow a signature to match with one of the components in the OR expression. An example of a signature with an `OR` operator is:
 
 ```
-Postion, Velocity || Speed
+Position, Velocity || Speed
 ```
 
 In this example, any entity that has `Position`, and `Velocity` OR `Speed` will match the signature. Components in an OR expression may contain SOURCE modifiers, but the source modifier must be the same for all elements:
 
 ```
-Postion, PARENT:Velocity || PARENT:Speed
+Position, PARENT:Velocity || PARENT:Speed
 ```
 
 #### NOT
@@ -1447,7 +1447,7 @@ ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
 This will sort the query by the `Position` component. The function also accepts a compare function, which looks like this:
 
 ```c
-int compare_position(ecs_entity_t e1, Posiiton *p1, ecs_entity_t e2, Position *p2) {
+int compare_position(ecs_entity_t e1, Position *p1, ecs_entity_t e2, Position *p2) {
     return p1->x - p2->x;
 }
 ```
@@ -1515,7 +1515,7 @@ ecs_query_order_by(world, q, 0, compare_entity);
 The compare function would look like this:
 
 ```c
-int compare_position(ecs_entity_t e1, Posiiton *p1, ecs_entity_t e2, Position *p2) {
+int compare_position(ecs_entity_t e1, Position *p1, ecs_entity_t e2, Position *p2) {
     return e1 - e2;
 }
 ```
@@ -2277,7 +2277,7 @@ By default this means that an application will not see the effects of an operati
 // Sets velocity using ecs_set
 ECS_SYSTEM(world, SetVelocity, EcsOnUpdate, Position, :Velocity);
 
-// Adds Velocity to Posiiton
+// Adds Velocity to Position
 ECS_SYSTEM(world, Move, EcsOnUpdate, Position, [in] Velocity);
 ```
 
