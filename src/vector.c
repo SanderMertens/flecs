@@ -132,6 +132,40 @@ void* _ecs_vector_addn(
     return ECS_OFFSET(vector, offset + elem_size * old_count);
 }
 
+void _ecs_vector_merge(
+    ecs_vector_t **dst_out,
+    ecs_vector_t *src,
+    ecs_size_t elem_size,
+    int16_t offset)
+{
+    ecs_vector_t *dst = *dst_out;
+    int32_t dst_count = ecs_vector_count(dst);
+
+    if (!dst_count) {
+        if (dst) {
+            ecs_vector_free(dst);
+        }
+
+        *dst_out = src;
+    
+    /* If the new table is not empty, copy the contents from the
+     * src into the dst. */
+    } else {
+        int32_t src_count = ecs_vector_count(src);
+        _ecs_vector_set_count(&dst, elem_size, offset, dst_count + src_count);
+        
+        void *dst_ptr = _ecs_vector_first(dst, elem_size, offset);
+        void *src_ptr = _ecs_vector_first(src, elem_size, offset);
+
+        dst_ptr = ECS_OFFSET(dst_ptr, elem_size * dst_count);
+        
+        ecs_os_memcpy(dst_ptr, src_ptr, elem_size * src_count);
+
+        ecs_vector_free(src);
+        *dst_out = dst;
+    }
+}
+
 void* _ecs_vector_add(
     ecs_vector_t **array_inout,
     ecs_size_t elem_size,

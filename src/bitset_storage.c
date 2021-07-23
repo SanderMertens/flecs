@@ -3,157 +3,182 @@
 typedef struct ecs_bitset_storage_t {
     ecs_storage_t *storage;
     ecs_bitset_t bitset;
-    ecs_vector_t *data;
+    ecs_storage_t *data;
 } ecs_bitset_storage_t;
 
-static const
-ecs_storage_plugin_t plugin = {
-    .init = ecs_bitset_storage_init,
-    .fini = ecs_bitset_storage_fini,
-    .push = ecs_bitset_storage_push,
-    .push_n = ecs_bitset_storage_push_n,
-    .erase = ecs_bitset_storage_erase,
-    .swap = ecs_bitset_storage_swap,
-    .get = ecs_bitset_storage_get,
-    .has = ecs_bitset_storage_has,
-    .iter = ecs_bitset_storage_iter,
-    .next = ecs_bitset_storage_next,
-    .storage_size = ECS_SIZEOF(ecs_bitset_storage_t)
-};
-
-ecs_storage_t* ecs_bitset_storage_init(
-    ecs_world_t *world,
-    ecs_size_t size,
-    ecs_size_t alignment)
-{
-    (void)world;
-    
-    ecs_bitset_storage_t *result = ecs_os_calloc_t(ecs_bitset_storage_t);
-    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
-
-    result->storage.plugin = &plugin;
-    result->storage.size = size;
-    result->storage.alignment = alignment;
-
-    ecs_bitset_init(&result->bitset);
-
-    if (size) {
-        result->data = ecs_vector_new_t(size, alignment, 0);
-    }
-
-    return (ecs_storage_t*)result;
-}
-
+static
 void ecs_bitset_storage_fini(
     ecs_storage_t *s)
 {
-    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
-    ecs_bitset_fini(&bs->bitset);
-    ecs_vector_free(bs->data);
-    ecs_os_free(ptr);
+    ecs_bitset_storage_t *impl = s->impl;
+    ecs_bitset_fini(&impl->bitset);
+    ecs_os_free(impl);
 }
 
 static
 void* ecs_bitset_storage_push(
-    ecs_storage_t *s)
+    ecs_world_t *world,
+    ecs_storage_t *s,
+    ecs_entity_t id)
 {
-    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
-    ecs_bitset_addn(&bs->bitset, 1);
-    
-    if (size) {
-        return ecs_vector_add_t(&bs->data, s->size, s->alignment);
-    }
-
+    ecs_bitset_storage_t *impl = s->impl;
+    ecs_bitset_push_n(&impl->bitset, 1);
     return NULL;
 }
 
 static
 void ecs_bitset_storage_push_n(
-    ecs_storage_t *s,
-    int32_t count)
+    ecs_world_t *world,
+    ecs_storage_t *dst,
+    int32_t count,
+    const ecs_entity_t *ids,
+    const ecs_storage_t *src,
+    int32_t src_index)
 {
-    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
-    ecs_bitset_addn(&bs->bitset, count);
-    
-    if (size) {
-        ecs_vector_addn_t(&bs->data, s->size, s->alignment, count);
+    ecs_bitset_storage_t *dst_impl = dst->impl;
+    ecs_bitset_push_n(&dst_impl->bitset, count);
+
+    if (src) {
+        ecs_bitset_storage_t *src_impl = src->impl;
+        ecs_bitset_t *dst_bs = &dst_impl->bitset;
+        ecs_bitset_t *src_bs = &src_impl->bitset;
+
+        int i;
+        for (i = 0; i < count; i ++) {
+            ecs_bitset_set(dst_bs, i, ecs_bitset_get(src_bs, i + src_index));
+        }
     }
 }
 
+static
+void* ecs_bitset_storage_emplace(
+    ecs_world_t *world,
+    ecs_storage_t *s)
+{
+    ecs_bitset_storage_t *impl = s->impl;
+    ecs_bitset_push_n(&impl->bitset, 1);
+    return NULL;
+}
+
+static
 void ecs_bitset_storage_erase(
+    ecs_world_t *world,
     ecs_storage_t *s,
     int32_t index,
     uint64_t id)
 {
     (void)id;
-
-    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
-    ecs_bitset_remove(&bs->bitset, index);
-    
-    if (size) {
-        ecs_vector_remove_t(bs->data, s->size, s->alignment, index);
-    }
+    ecs_bitset_storage_t *impl = s->impl;
+    ecs_bitset_erase(&impl->bitset, index);
 }
 
-void ecs_bitset_storage_ensure(
-    ecs_storage_t *s,
-    int32_t index,
-    uint64_t id)
+static
+void ecs_bitset_storage_pop(
+    ecs_world_t *world,
+    ecs_storage_t *s)
 {
-    (void)id;
-
-    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
-    ecs_bitset_ensure(&bs->bitset, index + 1);
-
-    if (size) {
-        ecs_vector_set_count_t(bs->data, s->size, s->alignment, index + 1);
-    }
+    ecs_bitset_storage_t *impl = s->impl;
+    ecs_bitset_pop(&impl->bitset);
 }
 
+static
 void ecs_bitset_storage_swap(
+    ecs_world_t *world,
     ecs_storage_t *s,
     int32_t index_a,
-    int32_t index_b,
-    uint64_t id_a,
-    uint64_t id_b)
+    int32_t index_b)
 {
-    (void)id_a;
-    (void)id_b;
-
-    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
-    ecs_bitset_swap(&bs->bitset, index_a, index_b);
-    
-    ecs_size_t size = s->size;
-
-    if (size) {
-        void *tmp = ecs_os_alloca(size);
-        void *arr = ecs_vector_first_t(bs->data, size, s->alignment);
-        void *el_a = ECS_OFFSET(arr, size * index_a);
-        void *el_b = ECS_OFFSET(arr, size * index_b);
-
-        ecs_os_memcpy(tmp, el_a, size);
-        ecs_os_memcpy(el_a, el_b, size);
-        ecs_os_memcpy(el_b, tmp, size);
-    }
+    ecs_bitset_storage_t *impl = s->impl;
+    ecs_bitset_swap(&impl->bitset, index_a, index_b);
 }
 
+static
+void ecs_bitset_storage_merge(
+    ecs_world_t *world,
+    ecs_storage_t *dst,
+    ecs_storage_t *src)
+{
+    ecs_bitset_storage_t *dst_impl = dst->impl;
+    ecs_bitset_storage_t *src_impl = src->impl;
+
+    ecs_bitset_t *dst_bs = &dst_impl->bitset;
+    ecs_bitset_t *src_bs = &src_impl->bitset;
+
+    if (!ecs_bitset_count(dst_bs)) {
+        ecs_bitset_fini(dst_bs);
+        dst_impl->bitset = *src_bs;
+    } else {
+        int32_t dst_count = ecs_bitset_count(dst_bs); 
+        int32_t i, src_count = ecs_bitset_count(src_bs);
+        ecs_bitset_push_n(dst_bs, src_count);
+
+        for (i = 0; i < src_count; i ++) {
+            ecs_bitset_set(dst_bs, i + dst_count,
+                ecs_bitset_get(src_bs, i));
+        }
+
+        ecs_bitset_fini(src_bs);
+    }
+
+    *src_bs = (ecs_bitset_t){ 0 };
+}
+
+static
+void ecs_bitset_storage_clear(
+    ecs_world_t *world,
+    ecs_storage_t *s)
+{
+    ecs_bitset_storage_t *impl = s->impl;
+    ecs_bitset_clear(&impl->bitset);
+}
+
+static
+void ecs_bitset_storage_destruct(
+    ecs_world_t *world,
+    ecs_storage_t *s)
+{
+    ecs_bitset_storage_t *impl = s->impl;
+    ecs_bitset_fini(&impl->bitset);
+}
+
+static
+void ecs_bitset_storage_reserve(
+    ecs_world_t *world,
+    ecs_storage_t *s,
+    ecs_size_t size)
+{
+    ecs_bitset_storage_t *impl = s->impl;
+    ecs_bitset_reserve(&impl->bitset, size);
+}
+
+static
+void ecs_bitset_storage_grow(
+    ecs_world_t *world,
+    ecs_storage_t *s,
+    ecs_size_t count)
+{
+    ecs_bitset_storage_t *impl = s->impl;
+    ecs_bitset_grow(&impl->bitset, count);
+}
+
+static
 void* ecs_bitset_storage_get(
     const ecs_storage_t *s,
     int32_t index,
     uint64_t id)
 {
-    (void)id;
+    ecs_bitset_storage_t *impl = s->impl;
 
-    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
-    if (ecs_bitset_get(&bs->bitset, index)) {
-        return ecs_vector_get_t(bs->data, s->size, s->alignment, index);
+    if (ecs_bitset_get(&impl->bitset, index)) {
+        if (impl->data) {
+            return ecs_storage_get(impl->data, index, id);
+        }
     }
 
     return NULL;
 }
 
+static
 bool ecs_bitset_storage_has(
     const ecs_storage_t *s,
     int32_t index,
@@ -161,29 +186,99 @@ bool ecs_bitset_storage_has(
 {
     (void)id;
 
-    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
-    return ecs_bitset_get(&bs->bitset, index);
+    ecs_bitset_storage_t *impl = s->impl;
+    return ecs_bitset_get(&impl->bitset, index);
 }
 
+static
+int32_t ecs_bitset_storage_count(
+    const ecs_storage_t *s)
+{
+    ecs_bitset_storage_t *impl = s->impl;
+    return ecs_bitset_count(&impl->bitset);
+}
+
+static
+void ecs_bitset_storage_ctor(
+    ecs_world_t *world,
+    ecs_storage_t *storage,
+    int32_t index,
+    ecs_entity_t id)
+{
+    (void)world;
+    (void)storage;
+    (void)index;
+    (void)id;
+}
+
+static
+void ecs_bitset_storage_dtor(
+    ecs_world_t *world,
+    ecs_storage_t *storage,
+    int32_t index)
+{
+    (void)world;
+    (void)storage;
+    (void)index;
+}
+
+static
+void ecs_bitset_storage_copy(
+    ecs_world_t *world,
+    ecs_storage_t *storage,
+    int32_t index,
+    const void *ptr)
+{
+    (void)world;
+    (void)storage;
+    (void)index;
+    (void)ptr;
+}
+
+static
+void ecs_bitset_storage_ctor_move_dtor(
+    ecs_world_t *world,
+    ecs_storage_t *storage,
+    int32_t index,
+    void *ptr)
+{
+    (void)world;
+    (void)storage;
+    (void)index;
+    (void)ptr;
+}
+
+static
+void ecs_bitset_storage_ctor_copy(
+    ecs_world_t *world,
+    ecs_storage_t *storage,
+    int32_t index,
+    ecs_entity_t id,
+    const void *ptr)
+{
+    (void)world;
+    (void)storage;
+    (void)index;
+    (void)id;
+    (void)ptr;
+}
+
+static
 ecs_storage_iter_t ecs_bitset_storage_iter(
     const ecs_storage_t *s)
 {
-    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
-
-    return (ecs_storage_iter_t){
-        .size = s->size,
-        .alignment = s->alignment,
-        .data = ecs_vector_first_t(bs->data, s->size, s->alignment)
-    };
+    ecs_bitset_storage_t *impl = s->impl;
+    return ecs_storage_iter(impl->data);
 }
 
 #define BS_MAX ((uint64_t)0xFFFFFFFFFFFFFFFF)
 
+static
 bool ecs_bitset_storage_next(
     const ecs_storage_t *s,
     ecs_storage_iter_t *iter)
 {
-    ecs_bitset_storage_t *bs = (ecs_bitset_storage_t*)s;
+    ecs_bitset_storage_t *impl = s->impl;
 
     /* Precomputed single-bit test */
     static const uint64_t bitmask[64] = {
@@ -233,7 +328,7 @@ bool ecs_bitset_storage_next(
 
     int32_t first = iter->offset;
     int32_t last = 0;
-    ecs_bitset_t *bs = &bs->bitset;
+    ecs_bitset_t *bs = &impl->bitset;
 
     int32_t bs_count = bs->count;
     int32_t bs_block = first >> 6;
@@ -320,4 +415,55 @@ bool ecs_bitset_storage_next(
     return true;
 done:
     return false;
+}
+
+static const
+ecs_storage_plugin_t plugin = {
+    .fini = ecs_bitset_storage_fini,
+    .push = ecs_bitset_storage_push,
+    .push_n = ecs_bitset_storage_push_n,
+    .emplace = ecs_bitset_storage_emplace,
+    .erase = ecs_bitset_storage_erase,
+    .pop = ecs_bitset_storage_pop,
+    .swap = ecs_bitset_storage_swap,
+    .merge = ecs_bitset_storage_merge,
+    .clear = ecs_bitset_storage_clear,
+    .destruct = ecs_bitset_storage_destruct,
+
+    .reserve = ecs_bitset_storage_reserve,
+    .grow = ecs_bitset_storage_grow,
+
+    .get = ecs_bitset_storage_get,
+    .has = ecs_bitset_storage_has,
+    .count = ecs_bitset_storage_count,
+
+    .ctor = ecs_bitset_storage_ctor,
+    .dtor = ecs_bitset_storage_dtor,
+    .copy = ecs_bitset_storage_copy,
+    .ctor_move_dtor = ecs_bitset_storage_ctor_move_dtor,
+    .ctor_copy = ecs_bitset_storage_ctor_copy,
+
+    .iter = ecs_bitset_storage_iter,
+    .next = ecs_bitset_storage_next,
+
+    .is_sparse = true
+};
+
+
+/* Public functions */
+
+void ecs_bitset_storage_init(
+    ecs_world_t *world,
+    ecs_storage_t *storage)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(storage != NULL, ECS_INTERNAL_ERROR, NULL);
+    (void)world;
+    
+    ecs_bitset_storage_t *result = ecs_os_calloc_t(ecs_bitset_storage_t);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+    ecs_bitset_init(&result->bitset);
+
+    storage->plugin = &plugin;
+    storage->impl = result;
 }

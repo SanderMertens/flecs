@@ -176,6 +176,19 @@ void* _ecs_vector_addn(
 #define ecs_vector_addn_t(vector, size, alignment, elem_count) \
     _ecs_vector_addn(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
+FLECS_API
+void _ecs_vector_merge(
+    ecs_vector_t **dst_out,
+    ecs_vector_t *src,
+    ecs_size_t elem_size,
+    int16_t offset);
+
+#define ecs_vector_merge(dst, src, T) \
+    _ecs_vector_merge(dst, src, ECS_VECTOR_T(T))
+
+#define ecs_vector_merge_t(dst, src, size, alignment) \
+    _ecs_vector_merge(dst, src, ECS_VECTOR_U(size, alignment))
+
 /** Get element from vector. */
 FLECS_API
 void* _ecs_vector_get(
@@ -226,6 +239,9 @@ int32_t _ecs_vector_set_min_count(
 
 #define ecs_vector_set_min_count(vector, T, size) \
     _ecs_vector_set_min_count(vector, ECS_VECTOR_T(T), size)
+
+#define ecs_vector_set_min_count_t(vector, size, alignment, elem_count) \
+    _ecs_vector_set_min_count_t(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
 /** Remove last element. This operation requires no swapping of values. */
 FLECS_API

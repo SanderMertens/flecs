@@ -42,6 +42,9 @@ typedef struct ecs_sparse_t ecs_sparse_t;
 /* Switch list */
 typedef struct ecs_switch_t ecs_switch_t;
 
+/* Type information */
+typedef struct ecs_type_info_t ecs_type_info_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,10 +204,10 @@ typedef struct ecs_match_failure_t {
 //// Function types
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct EcsComponentLifecycle EcsComponentLifecycle;
+typedef struct ecs_type_lifecycle_t ecs_type_lifecycle_t;
 
 /** Constructor/destructor. Used for initializing / deinitializing components. */
-typedef void (*ecs_xtor_t)(
+typedef void (*ecs_ctor_t)(
     ecs_world_t *world,
     ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
@@ -213,12 +216,18 @@ typedef void (*ecs_xtor_t)(
     int32_t count,
     void *ctx);
 
+typedef void (*ecs_dtor_t)(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx);
+
 /** Copy is invoked when a component is copied into another component. */
 typedef void (*ecs_copy_t)(
     ecs_world_t *world,
-    ecs_entity_t component,    
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
+    ecs_entity_t component,  
     void *dst_ptr,
     const void *src_ptr,
     size_t size,
@@ -229,8 +238,6 @@ typedef void (*ecs_copy_t)(
 typedef void (*ecs_move_t)(
     ecs_world_t *world,
     ecs_entity_t component,
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
     void *dst_ptr,
     void *src_ptr,
     size_t size,
@@ -241,9 +248,8 @@ typedef void (*ecs_move_t)(
 typedef void (*ecs_copy_ctor_t)(
     ecs_world_t *world,
     ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks,
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
+    const ecs_type_lifecycle_t *callbacks,
+    const ecs_entity_t *dst_entity_ptr,
     void *dst_ptr,
     const void *src_ptr,
     size_t size,
@@ -254,9 +260,7 @@ typedef void (*ecs_copy_ctor_t)(
 typedef void (*ecs_move_ctor_t)(
     ecs_world_t *world,
     ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks,
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
+    const ecs_type_lifecycle_t *callbacks,
     void *dst_ptr,
     void *src_ptr,
     size_t size,

@@ -89,7 +89,7 @@ const ecs_stage_t* ecs_stage_from_readonly_world(
     const ecs_world_t *world);
 
 /* Get component callbacks */
-const ecs_type_info_t *ecs_get_c_info(
+const ecs_type_info_t *ecs_get_type_info(
     const ecs_world_t *world,
     ecs_entity_t component);
 
@@ -305,13 +305,6 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_entity_t component,
     ecs_entity_t previous);
 
-int ecs_get_column_info(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_ids_t *components,
-    ecs_column_info_t *cinfo,
-    bool get_all);
-
 void ecs_run_add_actions(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -349,16 +342,16 @@ ecs_table_t* ecs_table_find_or_create(
     ecs_world_t *world,
     ecs_ids_t *type);   
 
-/* Get table data */
-ecs_data_t *ecs_table_get_data(
+/* Get table storage */
+const ecs_data_t *ecs_table_storage_get(
     const ecs_table_t *table);
 
-/* Get or create data */
-ecs_data_t *ecs_table_get_or_create_data(
+/* Get mutable table storage */
+ecs_data_t *ecs_table_storage_get_mut(
     ecs_table_t *table);
 
-/* Initialize columns for data */
-ecs_data_t* ecs_init_data(
+/* Initialize table storage */
+void ecs_table_storage_init(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *result); 
@@ -397,7 +390,7 @@ void ecs_table_clear_data(
     ecs_data_t *data);    
 
 /* Return number of entities in data */
-int32_t ecs_table_data_count(
+int32_t ecs_table_storage_count(
     const ecs_data_t *data);
 
 /* Add a new entry to the table for the specified entity */
@@ -435,9 +428,11 @@ void ecs_table_move(
 int32_t ecs_table_appendn(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data,
+    ecs_data_t *dst_data,
     int32_t count,
-    const ecs_entity_t *ids);
+    const ecs_entity_t *ids,
+    ecs_data_t *src_data,
+    int32_t src_row);
 
 /* Set table to a fixed size. Useful for preallocating memory in advance. */
 void ecs_table_set_size(

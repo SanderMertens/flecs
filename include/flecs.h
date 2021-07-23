@@ -29,13 +29,9 @@
 
 /* Addons */
 #define FLECS_BULK
-#define FLECS_DBG
 #define FLECS_MODULE
 #define FLECS_PARSER
-#define FLECS_QUEUE
-#define FLECS_READER_WRITER
 #define FLECS_SNAPSHOT
-#define FLECS_DIRECT_ACCESS
 #define FLECS_STATS
 #endif // ifndef FLECS_CUSTOM_BUILD
 
@@ -379,6 +375,41 @@ typedef struct ecs_entity_desc_t {
     const char *remove_expr;
 } ecs_entity_desc_t;
 
+/** Stores lifecycle actions for a (component) type */
+struct ecs_type_lifecycle_t {
+    ecs_ctor_t ctor;            /* ctor */
+    ecs_dtor_t dtor;            /* dtor */
+    ecs_copy_t copy;            /* copy assignment */
+    ecs_move_t move;            /* move assignment */
+
+    void *ctx;                  /* User defined context */
+
+    /* Ctor + copy */
+    ecs_copy_ctor_t copy_ctor;
+
+    /* Ctor + move */  
+    ecs_move_ctor_t move_ctor;
+
+    /* Ctor + move + dtor (or move_ctor + dtor).
+     * This combination is typically used when a component is moved from one
+     * location to a new location, like when it is moved to a new table. If
+     * not set explicitly it will be derived from other callbacks. */
+    ecs_move_ctor_t ctor_move_dtor;
+
+    /* Move + dtor.
+     * This combination is typically used when a component is moved from one
+     * location to an existing location, like what happens during a remove. If
+     * not set explicitly it will be derived from other callbacks. */
+    ecs_move_ctor_t move_dtor;
+
+    bool ctor_illegal;          /* cannot default construct */
+    bool copy_illegal;          /* cannot copy assign */
+    bool move_illegal;          /* cannot move assign */
+    bool copy_ctor_illegal;     /* cannot copy construct */
+    bool move_ctor_illegal;     /* cannot move construct (or merge) */
+
+    /* Note that a type must be destructible */
+};
 
 /** Used with ecs_component_init. */
 typedef struct ecs_component_desc_t {
@@ -560,40 +591,7 @@ typedef struct EcsType {
 } EcsType;
 
 /** Component that contains lifecycle callbacks for a component. */
-struct EcsComponentLifecycle {
-    ecs_xtor_t ctor;            /* ctor */
-    ecs_xtor_t dtor;            /* dtor */
-    ecs_copy_t copy;            /* copy assignment */
-    ecs_move_t move;            /* move assignment */
-
-    void *ctx;                  /* User defined context */
-
-    /* Ctor + copy */
-    ecs_copy_ctor_t copy_ctor;
-
-    /* Ctor + move */  
-    ecs_move_ctor_t move_ctor;
-
-    /* Ctor + move + dtor (or move_ctor + dtor).
-     * This combination is typically used when a component is moved from one
-     * location to a new location, like when it is moved to a new table. If
-     * not set explicitly it will be derived from other callbacks. */
-    ecs_move_ctor_t ctor_move_dtor;
-
-    /* Move + dtor.
-     * This combination is typically used when a component is moved from one
-     * location to an existing location, like what happens during a remove. If
-     * not set explicitly it will be derived from other callbacks. */
-    ecs_move_ctor_t move_dtor;
-
-    bool ctor_illegal;          /* cannot default construct */
-    bool copy_illegal;          /* cannot copy assign */
-    bool move_illegal;          /* cannot move assign */
-    bool copy_ctor_illegal;     /* cannot copy construct */
-    bool move_ctor_illegal;     /* cannot move construct (or merge) */
-
-    /* Note that a type must be destructible */
-};
+typedef ecs_type_lifecycle_t EcsComponentLifecycle;
 
 /** Component that stores reference to trigger */
 typedef struct EcsTrigger {
@@ -961,14 +959,14 @@ FLECS_API extern const ecs_entity_t EcsPostFrame;
  *   ECS_CTOR(MyType, ptr, { ptr->value = NULL; });
  */
 #define ECS_CTOR(type, var, ...)\
-    ECS_XTOR_IMPL(type, ctor, var, __VA_ARGS__)
+    ECS_CTOR_IMPL(type, ctor, var, __VA_ARGS__)
 
 /** Declare a destructor.
  * Example:
  *   ECS_DTOR(MyType, ptr, { free(ptr->value); });
  */
 #define ECS_DTOR(type, var, ...)\
-    ECS_XTOR_IMPL(type, dtor, var, __VA_ARGS__)
+    ECS_DTOR_IMPL(type, dtor, var, __VA_ARGS__)
 
 /** Declare a copy action.
  * Example:
@@ -3846,34 +3844,53 @@ FLECS_API
 ecs_type_t ecs_table_get_type(
     const ecs_table_t *table);
 
-/** Insert record into table.
- * This will create a new record for the table, which inserts a value for each
- * component. An optional entity and record can be provided.
+/** Get storage type for table.
+ * The storage type of a table contains only the ids that have data (a storage)
+ * associated with them.
  *
- * If a non-zero entity id is provided, a record must also be provided and vice
- * versa. The record must be created by the entity index. If the provided record 
- * is not created for the specified entity, the behavior will be undefined.
- *
- * If the provided record is not managed by the entity index, the behavior will
- * be undefined.
- *
- * The returned record contains a reference to the table and the table row. The
- * data pointed to by the record is guaranteed not to move unless one or more
- * rows are removed from this table. A row can be removed as result of a delete,
- * or by adding/removing components from an entity stored in the table.
- *
- * @param world The world.
  * @param table The table.
- * @param entity The entity.
- * @param record The entity-index record for the specified entity.
- * @return A record containing the table and table row.
+ * @return The storage type of the table.
  */
 FLECS_API
-ecs_record_t ecs_table_insert(
+ecs_type_t ecs_table_get_storage_type(
+    const ecs_table_t *table);
+
+/** Find a record for a given entity.
+ * This operation finds an existing record in the entity index for a given
+ * entity. The returned pointer is stable for the lifecycle of the world and can
+ * be used as argument for the ecs_record_update operation.
+ *
+ * The returned record (if found) points to the adminstration that relates an
+ * entity id to a table. Updating the value of the returned record will cause
+ * operations like ecs_get and ecs_has to look in the updated table.
+ *
+ * Updating this record to a table in which the entity is not stored causes
+ * undefined behavior.
+ *
+ * When the entity has never been created or is not alive this operation will
+ * return NULL.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return The record that belongs to the entity, or NULL if not found.
+ */
+FLECS_API
+ecs_record_t* ecs_record_find(
     ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t entity,
-    ecs_record_t *record);
+    ecs_entity_t entity);
+
+/** Get value from record.
+ * This operation gets a component value from a record. The provided column
+ * index must match the table of the record.
+ *
+ * @param r The record.
+ * @param column The column index of the component to get.
+ */ 
+FLECS_API
+void* ecs_record_get_component(
+    ecs_record_t *r,
+    int32_t column,
+    size_t size);
 
 /** Returns the number of records in the table. 
  * This operation returns the number of records that have been populated through
@@ -3988,8 +4005,8 @@ bool ecs_commit(
     ecs_entity_t entity,
     ecs_record_t *record,
     ecs_table_t *table,
-    ecs_entities_t *added,
-    ecs_entities_t *removed);
+    ecs_ids_t *added,
+    ecs_ids_t *removed);
 
 /** @} */
 
@@ -4008,26 +4025,14 @@ bool ecs_commit(
 #ifdef FLECS_BULK
 #include "flecs/addons/bulk.h"
 #endif
-#ifdef FLECS_DBG
-#include "flecs/addons/dbg.h"
-#endif
 #ifdef FLECS_MODULE
 #include "flecs/addons/module.h"
 #endif
 #ifdef FLECS_PARSER
 #include "flecs/addons/parser.h"
 #endif
-#ifdef FLECS_QUEUE
-#include "flecs/addons/queue.h"
-#endif
-#ifdef FLECS_READER_WRITER
-#include "flecs/addons/reader_writer.h"
-#endif
 #ifdef FLECS_SNAPSHOT
 #include "flecs/addons/snapshot.h"
-#endif
-#ifdef FLECS_DIRECT_ACCESS
-#include "flecs/addons/direct_access.h"
 #endif
 #ifdef FLECS_STATS
 #include "flecs/addons/stats.h"

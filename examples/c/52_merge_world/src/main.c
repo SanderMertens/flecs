@@ -56,8 +56,8 @@ int main(void) {
 
     /* -- Step 2: Obtain the table from the source world */
     ecs_table_t *src_table = ecs_table_from_str(src, "Position, Velocity");
-    int32_t src_pos_column = ecs_table_find_column(src_table, ecs_typeid(Position));
-    int32_t src_vel_column = ecs_table_find_column(src_table, ecs_typeid(Velocity));
+    int32_t src_pos_column = ecs_table_find_storage_index(src_table, ecs_typeid(Position));
+    int32_t src_vel_column = ecs_table_find_storage_index(src_table, ecs_typeid(Velocity));
 
 
     /* -- Step 3: find or create the table in the destination world. 
@@ -65,9 +65,9 @@ int main(void) {
      * flexibility of the API, the data will be moved to a table that does not
      * have the same number of columns as the source table. */    
     ecs_table_t *dst_table = ecs_table_from_str(dst, "Position, Velocity, Mass");
-    int32_t dst_pos_column = ecs_table_find_column(dst_table, ecs_typeid(Position));
-    int32_t dst_vel_column = ecs_table_find_column(dst_table, ecs_typeid(Velocity));
-    int32_t dst_mass_column = ecs_table_find_column(dst_table, ecs_typeid(Mass));
+    int32_t dst_pos_column = ecs_table_find_storage_index(dst_table, ecs_typeid(Position));
+    int32_t dst_vel_column = ecs_table_find_storage_index(dst_table, ecs_typeid(Velocity));
+    int32_t dst_mass_column = ecs_table_find_storage_index(dst_table, ecs_typeid(Mass));
     
 
     /* -- Step 4: In addition to data columns, a table also has a column with
@@ -102,11 +102,11 @@ int main(void) {
 
 
     /* -- Step 7: Set the columns from the source table to the dst table */
-    ecs_vector_t *src_pos = ecs_table_get_column(src_table, src_pos_column);
+    ecs_vector_t *src_pos = ecs_table_get_storage(src_table, src_pos_column);
     ecs_table_set_column(dst, dst_table, dst_pos_column, src_pos);
     ecs_table_set_column(src, src_table, src_pos_column, NULL);
 
-    ecs_vector_t *src_vel = ecs_table_get_column(src_table, src_vel_column);
+    ecs_vector_t *src_vel = ecs_table_get_storage(src_table, src_vel_column);
     ecs_table_set_column(dst, dst_table, dst_vel_column, src_vel);
     ecs_table_set_column(src, src_table, src_vel_column, NULL);
 

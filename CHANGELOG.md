@@ -124,7 +124,7 @@ Thanks to the new Flecs sponsors ❤️ :
 - Fixed issue with shared tags and queries using each() in the C++ API
 - Fixed issue with instantiating empty child table
 - Fixed issue with ecs_bulk_new and traits
-- Fixed issue when using ecs_entity_str with small buffers
+- Fixed issue when using ecs_id_str with small buffers
 - Fixed bug when adding trait to entity with switch
 - Fixed name conflicts in amalgamated source
 - Fixed path lookup in ecs_import

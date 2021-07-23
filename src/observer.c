@@ -94,7 +94,7 @@ void observer_callback(ecs_iter_t *it) {
     ecs_table_t *table = it->table->table;
     ecs_type_t type = table->type;
     if (ecs_filter_match_type(world, &o->filter, type)) {
-        ecs_data_t *data = ecs_table_get_data(table);
+        ecs_data_t *data = ecs_table_storage_get(table);
         ecs_id_t ids[ECS_FILTER_DESC_TERM_ARRAY_MAX];
         int32_t columns[ECS_FILTER_DESC_TERM_ARRAY_MAX];
         ecs_type_t types[ECS_FILTER_DESC_TERM_ARRAY_MAX];

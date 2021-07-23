@@ -23,8 +23,8 @@ int main(void) {
     /* Find the table for Position, Velocity components, and find the columns
      * for the Position and Velocity components. */
     ecs_table_t *table = ecs_table_from_type(world, ecs_type(PV));
-    int32_t pos_column = ecs_table_find_column(table, ecs_typeid(Position));
-    int32_t vel_column = ecs_table_find_column(table, ecs_typeid(Velocity));
+    int32_t pos_column = ecs_table_find_storage_index(table, ecs_typeid(Position));
+    int32_t vel_column = ecs_table_find_storage_index(table, ecs_typeid(Velocity));
 
     /* Create a new entity id */
     ecs_entity_t e1 = ecs_new_id(world);
@@ -40,11 +40,11 @@ int main(void) {
 
     /* Initialize Position and Velocity values for the entity by looking up the
      * pointers for the entity in each respective column */
-    Position *p_mut = ecs_record_get_column(r1, pos_column, sizeof(Position));
+    Position *p_mut = ecs_record_get_component(r1, pos_column, sizeof(Position));
     p_mut->x = 10;
     p_mut->y = 20;
 
-    Velocity *v_mut = ecs_record_get_column(r1, vel_column, sizeof(Velocity));
+    Velocity *v_mut = ecs_record_get_component(r1, vel_column, sizeof(Velocity));
     v_mut->x = 1;
     v_mut->y = 1;
 
@@ -54,11 +54,11 @@ int main(void) {
     ecs_record_t *r2 = ecs_record_find(world, e2);
     ecs_table_insert(world, table, e2, r2);
 
-    p_mut = ecs_record_get_column(r2, pos_column, sizeof(Position));
+    p_mut = ecs_record_get_component(r2, pos_column, sizeof(Position));
     p_mut->x = 20;
     p_mut->y = 30;
 
-    v_mut = ecs_record_get_column(r2, vel_column, sizeof(Velocity));
+    v_mut = ecs_record_get_component(r2, vel_column, sizeof(Velocity));
     v_mut->x = 2;
     v_mut->y = 2;
 

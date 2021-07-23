@@ -174,8 +174,8 @@ template <typename T>
 const lifecycle_callback_result<T> 
     lifecycle_callback_result<T>::not_set = {nullptr, false};
 
-using ctor_result = lifecycle_callback_result<ecs_xtor_t>;
-using dtor_result = lifecycle_callback_result<ecs_xtor_t>;
+using ctor_result = lifecycle_callback_result<ecs_ctor_t>;
+using dtor_result = lifecycle_callback_result<ecs_dtor_t>;
 using copy_result = lifecycle_callback_result<ecs_copy_t>;
 using move_result = lifecycle_callback_result<ecs_move_t>;
 using copy_ctor_result = lifecycle_callback_result<ecs_copy_ctor_t>;

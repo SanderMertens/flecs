@@ -58,6 +58,10 @@ const EcsComponent* ecs_component_from_id(
         }
     }
 
+    if (ECS_HAS_ROLE(e, DISABLED)) {
+        e &= ECS_COMPONENT_MASK;
+    }
+
     if (e & ECS_ROLE_MASK) {
         return NULL;
     }
@@ -79,32 +83,6 @@ const EcsComponent* ecs_component_from_id(
     }
 
     return component;
-}
-
-/* Count number of columns with data (excluding tags) */
-static
-int32_t data_column_count(
-    ecs_world_t * world,
-    ecs_table_t * table)
-{
-    int32_t count = 0;
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
-
-        /* Typically all components will be clustered together at the start of
-         * the type as components are created from a separate id pool, and type
-         * vectors are sorted. 
-         * Explicitly check for EcsComponent and EcsName since the ecs_has check
-         * doesn't work during bootstrap. */
-        if ((component == ecs_id(EcsComponent)) || 
-            (component == ecs_id(EcsName)) || 
-            ecs_component_from_id(world, component) != NULL) 
-        {
-            count = c_ptr_i + 1;
-        }
-    });
-
-    return count;
 }
 
 /* Ensure the ids used in the columns exist */
@@ -133,48 +111,9 @@ int32_t ensure_columns(
     return count;
 }
 
-/* Count number of switch columns */
+/* Utility to convert id array to a type */
 static
-int32_t switch_column_count(
-    ecs_table_t *table)
-{
-    int32_t count = 0;
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
-
-        if (ECS_HAS_ROLE(component, SWITCH)) {
-            if (!count) {
-                table->sw_column_offset = c_ptr_i;
-            }
-            count ++;
-        }
-    });
-
-    return count;
-}
-
-/* Count number of bitset columns */
-static
-int32_t storage_count(
-    ecs_table_t *table)
-{
-    int32_t count = 0;
-    ecs_vector_each(table->type, ecs_id_t, c_ptr, {
-        ecs_id_t id = *c_ptr;
-
-        if (ECS_HAS_ROLE(id, DISABLED)) {
-            if (!count) {
-                table->storage_offset = c_ptr_i;
-            }
-            count ++;
-        }
-    });
-
-    return count;
-}
-
-static
-ecs_type_t entities_to_type(
+ecs_type_t ids_to_type(
     ecs_ids_t *entities)
 {
     if (entities->count) {
@@ -305,27 +244,12 @@ void init_table(
     ecs_table_t * table,
     ecs_ids_t * entities)
 {
-    table->type = entities_to_type(entities);
-    table->c_info = NULL;
-    table->data = NULL;
-    table->flags = 0;
-    table->dirty_state = NULL;
-    table->monitors = NULL;
-    table->on_set = NULL;
-    table->on_set_all = NULL;
-    table->on_set_override = NULL;
-    table->un_set_all = NULL;
-    table->alloc_count = 0;
-    table->lock = 0;
+    table->type = ids_to_type(entities);
 
     /* Ensure the component ids for the table exist */
     ensure_columns(world, table);
 
-    table->queries = NULL;
-    table->column_count = data_column_count(world, table);
-    table->sw_column_count = switch_column_count(table);
-    table->storage_count = storage_count(table);
-    table->storage_ids = ecs_os_calloc(table->storage_count * ecs_id_t);
+    ecs_table_storage_init(world, table, &table->data);
 
     init_edges(world, table);
 }
@@ -337,17 +261,10 @@ ecs_table_t *create_table(
     ecs_hashmap_result_t table_elem)
 {
     ecs_table_t *result = ecs_sparse_add(world->store.tables, ecs_table_t);
-    result->id = ecs_sparse_last_id(world->store.tables);
-
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-    init_table(world, result, entities);
+    ecs_os_memset_t(result, 0, ecs_table_t);
 
-#ifndef NDEBUG
-    char *expr = ecs_type_str(world, result->type);
-    ecs_trace_2("table #[green][%s]#[normal] created [%p]", expr, result);
-    ecs_os_free(expr);
-#endif
-    ecs_log_push();
+    result->id = ecs_sparse_last_id(world->store.tables);
 
     /* Store table in table hashmap */
     *(ecs_table_t**)table_elem.value = result;
@@ -358,6 +275,15 @@ ecs_table_t *create_table(
         .count = ecs_vector_count(result->type)
     };
     *(ecs_ids_t*)table_elem.key = key;
+
+    init_table(world, result, entities);
+
+#ifndef NDEBUG
+    char *expr = ecs_type_str(world, result->type);
+    ecs_trace_2("table #[green][%s]#[normal] created [%p]", expr, result);
+    ecs_os_free(expr);
+#endif
+    ecs_log_push();
 
     ecs_notify_queries(world, &(ecs_query_event_t) {
         .kind = EcsQueryTableMatch,
@@ -492,7 +418,7 @@ int32_t ecs_table_switch_from_case(
     ecs_entity_t add)
 {
     ecs_type_t type = table->type;
-    ecs_data_t *data = ecs_table_get_data(table);
+    ecs_data_t *data = ecs_table_storage_get(table);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     int32_t i, count = table->sw_column_count;
@@ -991,7 +917,7 @@ ecs_table_t* ecs_table_add_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_entities_t arr = { .array = &id, .count = 1 };
+    ecs_ids_t arr = { .array = &id, .count = 1 };
     return ecs_table_traverse_add(world, table, &arr, NULL);
 }
 
@@ -1000,6 +926,6 @@ ecs_table_t* ecs_table_remove_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_entities_t arr = { .array = &id, .count = 1 };
+    ecs_ids_t arr = { .array = &id, .count = 1 };
     return ecs_table_traverse_remove(world, table, &arr, NULL);
 }

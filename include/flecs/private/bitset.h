@@ -33,15 +33,21 @@ void ecs_bitset_fini(
 
 /** Add n elements to bitset. */
 FLECS_DBG_API
-void ecs_bitset_addn(
+void ecs_bitset_push_n(
     ecs_bitset_t *bs,
     int32_t count);
 
-/** Ensure element exists. */
+/** Reserve n elements in bitset. */
 FLECS_DBG_API
-void ecs_bitset_ensure(
+void ecs_bitset_reserve(
     ecs_bitset_t *bs,
-    int32_t count);
+    ecs_size_t size);
+
+/** Add n elements to bitset. */
+FLECS_DBG_API
+void ecs_bitset_grow(
+    ecs_bitset_t *bs,
+    ecs_size_t count);
 
 /** Set element. */
 FLECS_DBG_API
@@ -63,9 +69,19 @@ int32_t ecs_bitset_count(
 
 /** Remove from bitset. */
 FLECS_DBG_API
-void ecs_bitset_remove(
+void ecs_bitset_erase(
     ecs_bitset_t *bs,
     int32_t elem);
+
+/** Remove last element from bitset. */
+FLECS_DBG_API
+void ecs_bitset_pop(
+    ecs_bitset_t *bs);
+
+/** Remove last element from bitset. */
+FLECS_DBG_API
+void ecs_bitset_clear(
+    ecs_bitset_t *bs);
 
 /** Swap values in bitset. */
 FLECS_DBG_API

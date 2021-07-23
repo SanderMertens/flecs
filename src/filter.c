@@ -674,20 +674,16 @@ bool ecs_filter_next(
     for (i = iter->index; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        
-        ecs_data_t *data = ecs_table_get_data(table);
-
-        if (!data) {
-            continue;
-        }
 
         if (!ecs_table_match_filter(it->world, table, &iter->filter)) {
             continue;
         }
 
+        ecs_data_t *data = &table->storage;
+
         iter->table.table = table;
         it->table = &iter->table;
-        it->table_columns = data->columns;
+        // it->table_columns = data->columns; // TODO
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
         iter->index = i + 1;

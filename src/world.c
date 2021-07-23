@@ -517,92 +517,79 @@ static
 void default_copy_ctor(
     ecs_world_t *world, ecs_entity_t component,
     const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, const void *src_ptr,
-    size_t size, int32_t count, void *ctx)
+    void *dst_ptr, const void *src_ptr, size_t size, int32_t count, void *ctx)
 {
     callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
-    callbacks->copy(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
-        size, count, ctx);
+    callbacks->copy(world, component, dst_ptr, src_ptr, size, count, ctx);
 }
 
 static
 void default_move_ctor(
     ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    const EcsComponentLifecycle *callbacks, void *dst_ptr, void *src_ptr, 
+    size_t size, int32_t count, void *ctx)
 {
-    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
-    callbacks->move(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
-        size, count, ctx);
+    callbacks->ctor(world, component, NULL, dst_ptr, size, count, ctx);
+    callbacks->move(world, component, dst_ptr, src_ptr, size, count, ctx);
 }
 
 static
 void default_ctor_w_move_w_dtor(
     ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    const EcsComponentLifecycle *callbacks, void *dst_ptr, void *src_ptr, 
+    size_t size, int32_t count, void *ctx)
 {
-    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
-    callbacks->move(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
-        size, count, ctx);
-    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
+    callbacks->ctor(world, component, NULL, dst_ptr, size, count, ctx);
+    callbacks->move(world, component, dst_ptr, src_ptr, size, count, ctx);
+    callbacks->dtor(world, component, src_ptr, size, count, ctx);
 }
 
 static
 void default_move_ctor_w_dtor(
     ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    const EcsComponentLifecycle *callbacks, void *dst_ptr, void *src_ptr, 
+    size_t size, int32_t count, void *ctx)
 {
-    callbacks->move_ctor(world, component, callbacks, dst_entity, src_entity, 
+    callbacks->move_ctor(world, component, callbacks, 
         dst_ptr, src_ptr, size, count, ctx);
-    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
+    callbacks->dtor(world, component, src_ptr, size, count, ctx);
 }
 
 static
 void default_move(
     ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    const EcsComponentLifecycle *callbacks, void *dst_ptr, void *src_ptr, 
+    size_t size, int32_t count, void *ctx)
 {
-    callbacks->move(world, component, dst_entity, src_entity, 
-        dst_ptr, src_ptr, size, count, ctx);
+    callbacks->move(world, component, dst_ptr, src_ptr, size, count, ctx);
 }
 
 static
 void default_dtor(
     ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    const EcsComponentLifecycle *callbacks, void *dst_ptr, void *src_ptr, 
+    size_t size, int32_t count, void *ctx)
 {
     (void)callbacks;
-    (void)src_entity;
 
     /* When there is no move, destruct the destination component & memcpy the
      * component to dst. The src component does not have to be destructed when
      * a component has a trivial move. */
-    callbacks->dtor(world, component, dst_entity, dst_ptr, size, count, ctx);
+    callbacks->dtor(world, component, dst_ptr, size, count, ctx);
     ecs_os_memcpy(dst_ptr, src_ptr, ecs_from_size_t(size) * count);
 }
 
 static
 void default_move_w_dtor(
     ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    const EcsComponentLifecycle *callbacks, void *dst_ptr, void *src_ptr, 
+    size_t size, int32_t count, void *ctx)
 {
     /* If a component has a move, the move will take care of memcpying the data
      * and destroying any data in dst. Because this is not a trivial move, the
      * src component must also be destructed. */
-    callbacks->move(world, component, dst_entity, src_entity, 
-        dst_ptr, src_ptr, size, count, ctx);
-    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
+    callbacks->move(world, component, dst_ptr, src_ptr, size, count, ctx);
+    callbacks->dtor(world, component, src_ptr, size, count, ctx);
 }
 
 void ecs_set_component_actions_w_id(
@@ -717,7 +704,7 @@ bool ecs_component_has_actions(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     world = ecs_get_world(world);
 
-    const ecs_type_info_t *c_info = ecs_get_c_info(world, component);
+    const ecs_type_info_t *c_info = ecs_get_type_info(world, component);
     return (c_info != NULL) && c_info->lifecycle_set;
 }
 
@@ -1125,7 +1112,7 @@ void ecs_end_wait(
     ecs_os_mutex_unlock(world->thr_sync);
 }
 
-const ecs_type_info_t * ecs_get_c_info(
+const ecs_type_info_t * ecs_get_type_info(
     const ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -1145,7 +1132,7 @@ ecs_type_info_t * ecs_get_or_create_c_info(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
 
-    const ecs_type_info_t *c_info = ecs_get_c_info(world, component);
+    const ecs_type_info_t *c_info = ecs_get_type_info(world, component);
     ecs_type_info_t *c_info_mut = NULL;
     if (!c_info) {
         c_info_mut = ecs_sparse_ensure(
@@ -1416,6 +1403,45 @@ void unregister_table_for_id(
 }
 
 static
+void register_storage_for_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    int32_t column)
+{
+    ecs_id_record_t *r = ecs_get_id_record(world, id);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!r->storage_index) {
+        r->storage_index = ecs_map_new(ecs_storage_record_t, 1);
+    }
+
+    ecs_storage_record_t *tr = ecs_map_ensure(
+        r->storage_index, ecs_storage_record_t, table->id);
+
+    /* A storage can only be registered once per id */
+    ecs_assert(tr->table == NULL, ECS_INTERNAL_ERROR, NULL);
+
+    tr->table = table;
+    tr->storage = &table->storage.storages[column];
+    tr->column = column;
+}
+
+static
+void unregister_storage_for_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_id_record_t *r = ecs_get_id_record(world, id);
+    if (!r || !r->storage_index) {
+        return;
+    }
+
+    ecs_map_remove(r->storage_index, table->id);
+}
+
+static
 void do_register_id(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1427,6 +1453,21 @@ void do_register_id(
         unregister_table_for_id(world, table, id);
     } else {
         register_table_for_id(world, table, id, column);
+    }
+}
+
+static
+void do_register_storage_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    int32_t column,
+    bool unregister)
+{
+    if (unregister) {
+        unregister_storage_for_id(world, table, id);
+    } else {
+        register_storage_for_id(world, table, id, column);
     }
 }
 
@@ -1488,11 +1529,27 @@ void do_register_each_id(
     }
 }
 
+static
+void do_register_each_storage_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    bool unregister)
+{
+    int32_t i, count = ecs_vector_count(table->storage.type);
+    ecs_id_t *ids = ecs_vector_first(table->storage.type, ecs_id_t);
+    
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t id = ids[i];
+        do_register_storage_id(world, table, id, i, unregister);
+    }
+}
+
 void ecs_register_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
     do_register_each_id(world, table, false);
+    do_register_each_storage_id(world, table, false);
 }
 
 void ecs_unregister_table(
@@ -1501,6 +1558,7 @@ void ecs_unregister_table(
 {
     /* Remove table from id indices */
     do_register_each_id(world, table, true);
+    do_register_each_storage_id(world, table, false);
 
     /* Remove table from table map */
     ecs_ids_t key = {
@@ -1535,5 +1593,6 @@ void ecs_clear_id_record(
     }
 
     ecs_map_free(r->table_index);
+    ecs_map_free(r->storage_index);
     ecs_map_remove(world->id_index, id);
 }

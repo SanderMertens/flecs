@@ -2,7 +2,7 @@
 #include "private_api.h"
 
 static
-void ensure(
+void reserve(
     ecs_bitset_t *bs,
     ecs_size_t size)
 {
@@ -27,28 +27,34 @@ void ecs_bitset_init(
     bs->data = NULL;
 }
 
-void ecs_bitset_ensure(
-    ecs_bitset_t *bs,
-    int32_t count)
-{
-    if (count > bs->count) {
-        bs->count = count;
-        ensure(bs, count);
-    }
-}
-
 void ecs_bitset_fini(
     ecs_bitset_t *bs)
 {
     ecs_os_free(bs->data);
 }
 
-void ecs_bitset_addn(
+void ecs_bitset_push_n(
     ecs_bitset_t *bs,
     int32_t count)
 {
-    int32_t elem = bs->count += count;
-    ensure(bs, elem);
+    int32_t new_count = bs->count += count;
+    reserve(bs, new_count);
+    bs->count = new_count;
+}
+
+void ecs_bitset_reserve(
+    ecs_bitset_t *bs,
+    ecs_size_t size)
+{
+    reserve(bs, size);
+}
+
+void ecs_bitset_grow(
+    ecs_bitset_t *bs,
+    ecs_size_t count)
+{
+    int32_t new_count = bs->count += count;
+    reserve(bs, new_count);
 }
 
 void ecs_bitset_set(
@@ -77,7 +83,7 @@ int32_t ecs_bitset_count(
     return bs->count;
 }
 
-void ecs_bitset_remove(
+void ecs_bitset_erase(
     ecs_bitset_t *bs,
     int32_t elem)
 {
@@ -85,6 +91,12 @@ void ecs_bitset_remove(
     int32_t last = bs->count - 1;
     bool last_value = ecs_bitset_get(bs, last);
     ecs_bitset_set(bs, elem, last_value);
+    bs->count --;
+}
+
+void ecs_bitset_pop(
+    ecs_bitset_t *bs)
+{
     bs->count --;
 }
 
@@ -100,4 +112,10 @@ void ecs_bitset_swap(
     bool b = ecs_bitset_get(bs, elem_b);
     ecs_bitset_set(bs, elem_a, b);
     ecs_bitset_set(bs, elem_b, a);
+}
+
+void ecs_bitset_clear(
+    ecs_bitset_t *bs)
+{
+    bs->count = 0;
 }

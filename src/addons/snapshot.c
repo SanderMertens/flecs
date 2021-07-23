@@ -4,7 +4,13 @@
 
 #include "../private_api.h"
 
-/* World snapshot */
+/** Small footprint data structure for storing data associated with a table. */
+typedef struct ecs_snapshot_table_t {
+    ecs_table_t *table;
+    ecs_type_t type;
+    ecs_data_t storage;
+} ecs_snapshot_table_t;
+
 struct ecs_snapshot_t {
     ecs_world_t *world;
     ecs_sparse_t *entity_index;
@@ -14,65 +20,30 @@ struct ecs_snapshot_t {
 };
 
 static
-ecs_data_t* duplicate_data(
+void copy_storage(
     ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *main_data)
+    ecs_snapshot_table_t *snapshot_table,
+    ecs_data_t *src_data)
 {
-    ecs_data_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_data_t));
+    ecs_table_t *table = snapshot_table->table;
+    ecs_data_t *dst_data = &snapshot_table->storage;
+    ecs_table_storage_init(world, table, dst_data);
 
-    int32_t i, column_count = table->column_count;
-    ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
+    int32_t count = ecs_table_storage_count(src_data);
+    ecs_entity_t *ids = ecs_vector_first(src_data->entities, ecs_entity_t);
 
-    result->columns = ecs_os_memdup(
-        main_data->columns, ECS_SIZEOF(ecs_column_t) * column_count);
+    ecs_table_appendn(world, table, dst_data, count, ids, src_data, 0);
 
-    /* Copy entities */
-    result->entities = ecs_vector_copy(main_data->entities, ecs_entity_t);
-    ecs_entity_t *entities = ecs_vector_first(result->entities, ecs_entity_t);
+    ecs_vector_t *dst_r_vec = dst_data->record_ptrs;
+    ecs_vector_t *src_r_vec = src_data->record_ptrs;
+    ecs_assert(ecs_vector_count(dst_r_vec) == ecs_vector_count(src_r_vec), 
+        ECS_INTERNAL_ERROR, NULL);
 
     /* Copy record ptrs */
-    result->record_ptrs = ecs_vector_copy(main_data->record_ptrs, ecs_record_t*);
+    ecs_record_t **dst_r = ecs_vector_first(dst_r_vec, ecs_record_t*);
+    ecs_record_t **src_r = ecs_vector_first(src_r_vec, ecs_record_t*);
 
-    /* Copy each column */
-    for (i = 0; i < column_count; i ++) {
-        ecs_entity_t component = components[i];
-        ecs_column_t *column = &result->columns[i];
-
-        if (component > ECS_HI_COMPONENT_ID) {
-            column->data = NULL;
-            continue;
-        }
-
-        const ecs_type_info_t *cdata = ecs_get_c_info(world, component);
-        int16_t size = column->size;
-        int16_t alignment = column->alignment;
-        ecs_copy_t copy;
-
-        if (cdata && (copy = cdata->lifecycle.copy)) {
-            int32_t count = ecs_vector_count(column->data);
-            ecs_vector_t *dst_vec = ecs_vector_new_t(size, alignment, count);
-            ecs_vector_set_count_t(&dst_vec, size, alignment, count);
-            void *dst_ptr = ecs_vector_first_t(dst_vec, size, alignment);
-            void *ctx = cdata->lifecycle.ctx;
-            
-            ecs_xtor_t ctor = cdata->lifecycle.ctor;
-            if (ctor) {
-                ctor(world, component, entities, dst_ptr, ecs_to_size_t(size), 
-                    count, ctx);
-            }
-
-            void *src_ptr = ecs_vector_first_t(column->data, size, alignment);
-            copy(world, component, entities, entities, dst_ptr, src_ptr, 
-                ecs_to_size_t(size), count, ctx);
-
-            column->data = dst_vec;
-        } else {
-            column->data = ecs_vector_copy_t(column->data, size, alignment);
-        }
-    }
-
-    return result;
+    ecs_os_memcpy_n(dst_r, src_r, ecs_record_t*, count);
 }
 
 static
@@ -82,7 +53,7 @@ ecs_snapshot_t* snapshot_create(
     ecs_iter_t *iter,
     ecs_iter_next_action_t next)
 {
-    ecs_snapshot_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_snapshot_t));
+    ecs_snapshot_t *result = ecs_os_calloc_t(ecs_snapshot_t);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->world = world;
@@ -92,7 +63,7 @@ ecs_snapshot_t* snapshot_create(
      * entirely upon snapshote restore. */
     if (!iter && entity_index) {
         result->entity_index = ecs_sparse_copy(entity_index);
-        result->tables = ecs_vector_new(ecs_table_leaf_t, 0);
+        result->tables = ecs_vector_new(ecs_snapshot_table_t, 0);
     }
 
     ecs_iter_t iter_stack;
@@ -111,22 +82,22 @@ ecs_snapshot_t* snapshot_create(
 
     /* Iterate tables in iterator */
     while (next(iter)) {
-        ecs_table_t *t = iter->table->table;
+        ecs_table_t *table = iter->table->table;
 
-        if (t->flags & EcsTableHasBuiltins) {
+        if (table->flags & EcsTableHasBuiltins) {
             continue;
         }
 
-        ecs_data_t *data = ecs_table_get_data(t);
-        if (!data || !data->entities || !ecs_vector_count(data->entities)) {
+        if (!ecs_table_count(table)) {
             continue;
         }
 
-        ecs_table_leaf_t *l = ecs_vector_add(&result->tables, ecs_table_leaf_t);
+        ecs_snapshot_table_t *snapshot_table = ecs_vector_add(
+            &result->tables, ecs_snapshot_table_t);
 
-        l->table = t;
-        l->type = t->type;
-        l->data = duplicate_data(world, t, data);
+        snapshot_table->table = table;
+        snapshot_table->type = table->type;
+        copy_storage(world, snapshot_table, &table->storage);
     }
 
     return result;
@@ -183,65 +154,61 @@ void ecs_snapshot_restore(
         world->stats.last_id = snapshot->last_id;
     }
 
-    ecs_table_leaf_t *leafs = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
+    ecs_snapshot_table_t *snapshot_tables = ecs_vector_first(
+        snapshot->tables, ecs_snapshot_table_t);
     int32_t l = 0, count = ecs_vector_count(snapshot->tables);
     int32_t t, table_count = ecs_sparse_count(world->store.tables);
 
     for (t = 0; t < table_count; t ++) {
-        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, t);
+        ecs_table_t *table = ecs_sparse_get(
+            world->store.tables, ecs_table_t, t);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
         }
 
-        ecs_table_leaf_t *leaf = NULL;
+        ecs_snapshot_table_t *snapshot_table = NULL;
         if (l < count) {
-            leaf = &leafs[l];
+            snapshot_table = &snapshot_tables[l];
         }
 
-        if (leaf && leaf->table == table) {
+        if (snapshot_table && snapshot_table->table == table) {
+            ecs_data_t *src_data = &snapshot_table->storage;
+
             /* If the snapshot is filtered, update the entity index for the
              * entities in the snapshot. If the snapshot was not filtered
              * the entity index would have been replaced entirely, and this
              * is not necessary. */
             if (is_filtered) {
-                ecs_vector_each(leaf->data->entities, ecs_entity_t, e_ptr, {
+                /* Always delete entity, so that even if the entity is
+                 * in the current table, there won't be duplicates */
+                ecs_vector_each(src_data->entities, ecs_entity_t, e_ptr, {
                     ecs_record_t *r = ecs_eis_get(world, *e_ptr);
-                    if (r && r->table) {
-                        ecs_data_t *data = ecs_table_get_data(r->table);
-                        
-                        /* Data must be not NULL, otherwise entity index could
-                         * not point to it */
-                        ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                        bool is_monitored;
-                        int32_t row = ecs_record_to_row(r->row, &is_monitored);
-                        
-                        /* Always delete entity, so that even if the entity is
-                        * in the current table, there won't be duplicates */
-                        ecs_table_delete(world, r->table, data, row, true);
+                    ecs_table_t *r_table;
+                    if (r && (r_table = r->table)) {
+                        ecs_data_t *r_data = &r_table->storage;
+                        bool dummy;
+                        int32_t r_row = ecs_record_to_row(r->row, &dummy);
+                        ecs_table_delete(world, r_table, r_data, r_row, true);
                     } else {
                         ecs_eis_set_generation(world, *e_ptr);
                     }
                 });
 
-                int32_t old_count = ecs_table_count(table);
-                int32_t new_count = ecs_table_data_count(leaf->data);
+                ecs_data_t *dst_data = &table->storage;
+                int32_t old_count = ecs_table_storage_count(dst_data);
+                int32_t new_count = ecs_table_storage_count(src_data);
 
-                ecs_data_t *data = ecs_table_get_data(table);
-                data = ecs_table_merge(world, table, table, data, leaf->data);
+                ecs_table_merge(world, table, table, dst_data, src_data);
 
                 /* Run OnSet systems for merged entities */
                 ecs_ids_t components = ecs_type_to_entities(table->type);
-                ecs_run_set_systems(world, &components, table, data,
+                ecs_run_set_systems(world, &components, table, dst_data,
                     old_count, new_count, true);
-
-                ecs_os_free(leaf->data->columns);
             } else {
-                ecs_table_replace_data(world, table, leaf->data);
+                ecs_table_replace_data(world, table, src_data);
             }
             
-            ecs_os_free(leaf->data);
             l ++;
         } else {
             /* If the snapshot is not filtered, the snapshot should restore the
@@ -251,7 +218,7 @@ void ecs_snapshot_restore(
              * snapshot was not filtered, clear the table. */
             if (!is_filtered) {
                 /* Clear data of old table. */
-                ecs_table_clear_data(world, table, ecs_table_get_data(table));
+                ecs_table_clear_data(world, table, &table->storage);
             }
         }
 
@@ -265,17 +232,17 @@ void ecs_snapshot_restore(
      * restoring safe */
     if (!is_filtered) {
         for (t = 0; t < table_count; t ++) {
-            ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, t);
+            ecs_table_t *table = ecs_sparse_get(
+                world->store.tables, ecs_table_t, t);
+
             if (table->flags & EcsTableHasBuiltins) {
                 continue;
             }
 
             ecs_ids_t components = ecs_type_to_entities(table->type);
-            ecs_data_t *table_data = ecs_table_get_data(table);
-            int32_t entity_count = ecs_table_data_count(table_data);
 
-            ecs_run_set_systems(world, &components, table, 
-                table_data, 0, entity_count, true);            
+            ecs_run_set_systems(world, &components, table, &table->storage, 0, 
+                ecs_table_count(table), true);            
         }
     }
 
@@ -305,27 +272,24 @@ bool ecs_snapshot_next(
     ecs_iter_t *it)
 {
     ecs_snapshot_iter_t *iter = &it->iter.snapshot;
-    ecs_table_leaf_t *tables = ecs_vector_first(iter->tables, ecs_table_leaf_t);
+    ecs_snapshot_table_t *tables = ecs_vector_first(iter->tables, ecs_snapshot_table_t);
     int32_t count = ecs_vector_count(iter->tables);
     int32_t i;
 
     for (i = iter->index; i < count; i ++) {
-        ecs_table_t *table = tables[i].table;
+        ecs_snapshot_table_t *snapshot_table = &tables[i];
+        ecs_table_t *table = snapshot_table->table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_data_t *data = tables[i].data;
-
-        /* Table must have data or it wouldn't have been added */
-        ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
+        ecs_data_t *data = &snapshot_table->storage;
         if (!ecs_table_match_filter(it->world, table, &iter->filter)) {
             continue;
         }
 
         iter->table.table = table;
         it->table = &iter->table;
-        it->table_columns = data->columns;
-        it->count = ecs_table_data_count(data);
+        // it->table_columns = data->columns; // TODO
+        it->count = ecs_table_storage_count(data);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
         iter->index = i + 1;
 
@@ -341,12 +305,12 @@ void ecs_snapshot_free(
 {
     ecs_sparse_free(snapshot->entity_index);
 
-    ecs_table_leaf_t *tables = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
+    ecs_snapshot_table_t *tables = ecs_vector_first(snapshot->tables, ecs_snapshot_table_t);
     int32_t i, count = ecs_vector_count(snapshot->tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_leaf_t *leaf = &tables[i];
-        ecs_table_clear_data(snapshot->world, leaf->table, leaf->data);
-        ecs_os_free(leaf->data);
+        ecs_snapshot_table_t *snapshot_table = &tables[i];
+        ecs_table_clear_data(snapshot->world, 
+            snapshot_table->table, &snapshot_table->storage);
     }    
 
     ecs_vector_free(snapshot->tables);

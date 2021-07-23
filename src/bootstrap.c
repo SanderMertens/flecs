@@ -168,7 +168,7 @@ void _bootstrap_component(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *data = ecs_table_get_or_create_data(table);
+    ecs_data_t *data = ecs_table_storage_get(table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *columns = data->columns;
@@ -236,7 +236,7 @@ ecs_table_t* bootstrap_component_table(
     };
 
     ecs_table_t *result = ecs_table_find_or_create(world, &array);
-    ecs_data_t *data = ecs_table_get_or_create_data(result);
+    ecs_data_t *data = ecs_table_storage_get(result);
 
     /* Preallocate enough memory for initial components */
     data->entities = ecs_vector_new(ecs_entity_t, EcsFirstUserComponentId);

@@ -390,7 +390,7 @@ int32_t get_component_index(
                         table_type, ecs_entity_t, result);
                     *component_out = *pair;
 
-                    char buf[256]; ecs_entity_str(world, *pair, buf, 256);
+                    char buf[256]; ecs_id_str(world, *pair, buf, 256);
 
                     /* Check if the pair is a tag or whether it has data */
                     if (ecs_get(world, rel, EcsComponent) == NULL) {
@@ -1065,13 +1065,13 @@ void sort_table(
     int32_t column_index,
     ecs_order_by_action_t compare)
 {
-    ecs_data_t *data = ecs_table_get_data(table);
+    ecs_data_t *data = ecs_table_storage_get(table);
     if (!data || !data->entities) {
         /* Nothing to sort */
         return;
     }
 
-    int32_t count = ecs_table_data_count(data);
+    int32_t count = ecs_table_storage_count(data);
     if (count < 2) {
         return;
     }
@@ -1143,7 +1143,7 @@ void build_sorted_table_range(
     for (i = start; i < end; i ++) {
         ecs_matched_table_t *table_data = &tables[i];
         ecs_table_t *table = table_data->iter_data.table;
-        ecs_data_t *data = ecs_table_get_data(table);
+        ecs_data_t *data = ecs_table_storage_get(table);
         ecs_vector_t *entities;
         if (!data || !(entities = data->entities) || !ecs_table_count(table)) {
             continue;
@@ -2380,7 +2380,7 @@ void ecs_query_set_iter(
     ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_t *table = table_data->iter_data.table;
-    ecs_data_t *data = ecs_table_get_data(table);
+    ecs_data_t *data = ecs_table_storage_get(table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     
     ecs_entity_t *entity_buffer = ecs_vector_first(data->entities, ecs_entity_t);  
@@ -2468,7 +2468,7 @@ int find_smallest_column(
             ecs_assert(table_column_index >= 1, ECS_INTERNAL_ERROR, NULL);
 
             /* Get the sparse column */
-            ecs_data_t *data = ecs_table_get_data(table);
+            ecs_data_t *data = ecs_table_storage_get(table);
             sc = sparse_column->sw_column = 
                 &data->sw_columns[table_column_index - 1];
         }
@@ -2813,7 +2813,7 @@ bool ecs_query_next(
         if (table) {
             ecs_vector_t *bitset_columns = table_data->bitset_columns;
             ecs_vector_t *sparse_columns = table_data->sparse_columns;
-            data = ecs_table_get_data(table);
+            data = ecs_table_storage_get(table);
             ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
             it->table_columns = data->columns;
             

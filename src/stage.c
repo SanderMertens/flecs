@@ -277,15 +277,15 @@ bool ecs_defer_bulk_new(
                 const ecs_type_info_t *cinfo = NULL;
                 ecs_entity_t real_id = ecs_get_typeid(world, comp);
                 if (real_id) {
-                    cinfo = ecs_get_c_info(world, real_id);
+                    cinfo = ecs_get_type_info(world, real_id);
                 }
-                ecs_xtor_t ctor;
+                ecs_ctor_t ctor;
                 if (cinfo && (ctor = cinfo->lifecycle.ctor)) {
                     void *ctx = cinfo->lifecycle.ctx;
                     ctor(world, comp, ids, data, ecs_to_size_t(size), count, ctx);
                     ecs_move_t move;
                     if ((move = cinfo->lifecycle.move)) {
-                        move(world, comp, ids, ids, data, component_data[c], 
+                        move(world, comp, data, component_data[c], 
                             ecs_to_size_t(size), count, ctx);
                     } else {
                         ecs_os_memcpy(data, component_data[c], size * count);
@@ -376,20 +376,20 @@ bool ecs_defer_set(
         const ecs_type_info_t *c_info = NULL;
         ecs_entity_t real_id = ecs_get_typeid(world, component);
         if (real_id) {
-            c_info = ecs_get_c_info(world, real_id);
+            c_info = ecs_get_type_info(world, real_id);
         }
 
         if (value) {
             ecs_copy_ctor_t copy;
             if (c_info && (copy = c_info->lifecycle.copy_ctor)) {
-                copy(world, component, &c_info->lifecycle, &entity, &entity, 
+                copy(world, component, &c_info->lifecycle, &entity,
                     op->is._1.value, value, ecs_to_size_t(size), 1, 
                         c_info->lifecycle.ctx);
             } else {
                 ecs_os_memcpy(op->is._1.value, value, size);
             }
         } else {
-            ecs_xtor_t ctor;
+            ecs_ctor_t ctor;
             if (c_info && (ctor = c_info->lifecycle.ctor)) {
                 ctor(world, component, &entity, op->is._1.value, 
                     ecs_to_size_t(size), 1, c_info->lifecycle.ctx);

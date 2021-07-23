@@ -131,8 +131,8 @@ void DirectAccess_find_column() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
     ecs_fini(world);
 }
@@ -159,10 +159,10 @@ void DirectAccess_get_column() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
-    ecs_vector_t *v_p = ecs_table_get_column(t, 0);
+    ecs_vector_t *v_p = ecs_table_get_storage(t, 0);
     test_assert(v_p != NULL);
 
     Position *p = ecs_vector_first(v_p, Position);
@@ -176,7 +176,7 @@ void DirectAccess_get_column() {
     test_int(p[2].x, 50);
     test_int(p[2].y, 60);
 
-    ecs_vector_t *v_v = ecs_table_get_column(t, 1);
+    ecs_vector_t *v_v = ecs_table_get_storage(t, 1);
     test_assert(v_v != NULL);
 
     Velocity *v = ecs_vector_first(v_v, Velocity);
@@ -202,11 +202,11 @@ void DirectAccess_get_empty_column() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
-    test_assert(ecs_table_get_column(t, 0) == NULL);
-    test_assert(ecs_table_get_column(t, 1) == NULL);
+    test_assert(ecs_table_get_storage(t, 0) == NULL);
+    test_assert(ecs_table_get_storage(t, 1) == NULL);
 
     ecs_fini(world);
 }
@@ -220,7 +220,7 @@ void DirectAccess_set_column() {
     ecs_table_t *t = ecs_table_from_str(world, "Position");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
 
     ecs_vector_t *v_e = ecs_vector_new(ecs_entity_t, 3);
     ecs_vector_add(&v_e, ecs_entity_t)[0] = 0;
@@ -242,7 +242,7 @@ void DirectAccess_set_column() {
     test_int(ecs_table_count(t), 3);
     test_assert(ecs_table_get_entities(t) == v_e);
     test_assert(ecs_table_get_records(t) == v_r);
-    test_assert(ecs_table_get_column(t, 0) == v_p);
+    test_assert(ecs_table_get_storage(t, 0) == v_p);
 
     ecs_fini(world);
 }
@@ -269,16 +269,16 @@ void DirectAccess_delete_column() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
-    ecs_vector_t *v_p = ecs_table_get_column(t, 0);
+    ecs_vector_t *v_p = ecs_table_get_storage(t, 0);
     test_assert(v_p != NULL);
 
     ecs_table_delete_column(world, t, 0, NULL);
 
-    test_assert(ecs_table_get_column(t, 0) == NULL);
-    test_assert(ecs_table_get_column(t, 1) != NULL);
+    test_assert(ecs_table_get_storage(t, 0) == NULL);
+    test_assert(ecs_table_get_storage(t, 1) != NULL);
 
     ecs_fini(world);
 }
@@ -305,10 +305,10 @@ void DirectAccess_delete_column_explicit() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
-    ecs_vector_t *v_p = ecs_table_get_column(t, 0);
+    ecs_vector_t *v_p = ecs_table_get_storage(t, 0);
     test_assert(v_p != NULL);
 
     ecs_table_delete_column(world, t, 0, v_p);
@@ -363,10 +363,10 @@ void DirectAccess_delete_column_w_dtor() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
-    ecs_vector_t *v_p = ecs_table_get_column(t, 0);
+    ecs_vector_t *v_p = ecs_table_get_storage(t, 0);
     test_assert(v_p != NULL);
 
     ecs_set_component_actions(world, Position, {
@@ -387,8 +387,8 @@ void DirectAccess_delete_column_w_dtor() {
     ecs_vector_free(ecs_table_get_records(t));
     ecs_table_set_entities(t, NULL, NULL);
 
-    test_assert(ecs_table_get_column(t, 0) == NULL);
-    test_assert(ecs_table_get_column(t, 1) != NULL);
+    test_assert(ecs_table_get_storage(t, 0) == NULL);
+    test_assert(ecs_table_get_storage(t, 1) != NULL);
 
     /* Delete velocity column to ensure consistency */
     ecs_table_delete_column(world, t, 1, NULL);
@@ -405,8 +405,8 @@ void DirectAccess_copy_to() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
     ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
     test_assert(r.table == t);
@@ -427,7 +427,7 @@ void DirectAccess_copy_to() {
     test_int(copy_position, 1);
     test_int(move_position, 0);
 
-    Position *p = ecs_record_get_column(&r, 0, sizeof(Position));
+    Position *p = ecs_record_get_component(&r, 0, sizeof(Position));
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -444,8 +444,8 @@ void DirectAccess_copy_pod_to() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
     ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
     test_assert(r.table == t);
@@ -470,7 +470,7 @@ void DirectAccess_copy_pod_to() {
     test_int(copy_position, 0);
     test_int(move_position, 0);
 
-    Position *p = ecs_record_get_column(&r, 0, sizeof(Position));
+    Position *p = ecs_record_get_component(&r, 0, sizeof(Position));
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -487,8 +487,8 @@ void DirectAccess_move_to() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
     ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
     test_assert(r.table == t);
@@ -509,7 +509,7 @@ void DirectAccess_move_to() {
     test_int(copy_position, 0);
     test_int(move_position, 1);
 
-    Position *p = ecs_record_get_column(&r, 0, sizeof(Position));
+    Position *p = ecs_record_get_component(&r, 0, sizeof(Position));
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -526,8 +526,8 @@ void DirectAccess_copy_to_no_copy() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
     ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
     test_assert(r.table == t);
@@ -537,7 +537,7 @@ void DirectAccess_copy_to_no_copy() {
 
     ecs_record_copy_to(world, &r, 0, sizeof(Position), &(Position){10, 20}, 1);
 
-    Position *p = ecs_record_get_column(&r, 0, sizeof(Position));
+    Position *p = ecs_record_get_component(&r, 0, sizeof(Position));
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -554,8 +554,8 @@ void DirectAccess_move_to_no_move() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_storage_index(t, ecs_typeid(Velocity)), 1);
 
     ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
     test_assert(r.table == t);
@@ -565,7 +565,7 @@ void DirectAccess_move_to_no_move() {
 
     ecs_record_move_to(world, &r, 0, sizeof(Position), &(Position){10, 20}, 1);
 
-    Position *p = ecs_record_get_column(&r, 0, sizeof(Position));
+    Position *p = ecs_record_get_component(&r, 0, sizeof(Position));
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -616,7 +616,7 @@ void DirectAccess_get_column_empty_table() {
     ecs_table_t *t = ecs_table_from_str(world, "Position");
     test_assert(t != NULL);
 
-    test_assert(ecs_table_get_column(t, 0) == NULL);
+    test_assert(ecs_table_get_storage(t, 0) == NULL);
 
     ecs_fini(world);
 }
@@ -644,7 +644,7 @@ void DirectAccess_get_record_column_empty_table() {
 
     ecs_record_t r = {.table = t, .row = 0};
 
-    test_assert(ecs_record_get_column(&r, 0, sizeof(Position)) == NULL);
+    test_assert(ecs_record_get_component(&r, 0, sizeof(Position)) == NULL);
 
     ecs_fini(world);
 }

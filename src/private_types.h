@@ -53,13 +53,13 @@ typedef struct ecs_string_t {
 } ecs_string_t;
 
 /** Component-specific data */
-typedef struct ecs_type_info_t {
-    EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
+struct ecs_type_info_t {
+    ecs_type_lifecycle_t lifecycle; /* Component lifecycle callbacks */
     ecs_entity_t component;
     ecs_size_t size;
     ecs_size_t alignment;
     bool lifecycle_set;
-} ecs_type_info_t;
+};
 
 /* Table event type for notifying tables of world events */
 typedef enum ecs_table_eventkind_t {
@@ -105,23 +105,13 @@ typedef struct ecs_bs_column_t {
     ecs_bitset_t data;   /**< Column data */
 } ecs_bs_column_t;
 
-/** Stage-specific component data */
+/** Table storage */
 struct ecs_data_t {
-    ecs_vector_t *entities;      /**< Entity identifiers */
-    ecs_vector_t *record_ptrs;   /**< Ptrs to records in main entity index */
-    ecs_column_t *columns;       /**< Component columns */
-    ecs_sw_column_t *sw_columns; /**< Switch columns */
-    ecs_bs_column_t *bs_columns; /**< Bitset columns */
-
-    ecs_storage_t **storages;    /**< Pluggable storages */
+    ecs_type_t type;               /**< Type w/o tags/zero sized components */
+    ecs_vector_t *entities;        /**< Entity identifiers */
+    ecs_vector_t *record_ptrs;     /**< Cached record ptrs in entity index */
+    ecs_storage_t *storages;       /**< Component storages */
 };
-
-/** Small footprint data structure for storing data associated with a table. */
-typedef struct ecs_table_leaf_t {
-    ecs_table_t *table;
-    ecs_type_t type;
-    ecs_data_t *data;
-} ecs_table_leaf_t;
 
 /** Flags for quickly checking for special properties of a table. */
 #define EcsTableHasBuiltins         1u    /**< Does table have builtin components */
@@ -172,12 +162,10 @@ typedef struct ecs_matched_query_t {
  * table is created, it is automatically matched with existing queries */
 struct ecs_table_t {
     uint64_t id;                     /**< Table id in sparse set */
-    ecs_type_t type;                 /**< Identifies table type in type_index */
+    ecs_type_t type;                 /**< Vector with component ids of table */
     ecs_flags32_t flags;             /**< Flags for testing table properties */
-    int32_t column_count;            /**< Number of data columns in table */
 
-    ecs_data_t *data;                /**< Component storage */
-    ecs_type_info_t **c_info;        /**< Cached pointers to component info */
+    ecs_data_t storage;              /**< Table component storages */
 
     ecs_edge_t *lo_edges;            /**< Edges to other tables */
     ecs_map_t *hi_edges;
@@ -191,12 +179,6 @@ struct ecs_table_t {
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
     int32_t alloc_count;             /**< Increases when columns are reallocd */
-
-    int32_t sw_column_count;
-    int32_t sw_column_offset;
-
-    int32_t storage_count;           /**< Number of custom storages for table */
-    int32_t *storage_map;            /**< Mapping from storages to type ids */
 
     int32_t lock;
 };
@@ -446,10 +428,18 @@ typedef struct ecs_table_record_t {
     int32_t count;
 } ecs_table_record_t;
 
+/* Storage record for finding the storage for a given component/table */
+typedef struct ecs_storage_record_t {
+    ecs_table_t *table;
+    ecs_storage_t *storage;
+    int32_t column;
+} ecs_storage_record_t;
+
 /* Payload for id index which contains all datastructures for an id. */
 typedef struct ecs_id_record_t {
     /* All tables that contain the id */
     ecs_map_t *table_index;         /* map<table_id, ecs_table_record_t> */
+    ecs_map_t *storage_index;       /* map<table_id, ecs_storage_record_t> */
 
     ecs_entity_t on_delete;         /* Cleanup action for removing id */
     ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
@@ -477,13 +467,6 @@ typedef struct ecs_entity_info_t {
     int32_t row;                /* Actual row (stripped from is_watched bit) */
     bool is_watched;            /* Is entity being watched */
 } ecs_entity_info_t;
-
-/** Supporting type to store looked up component data in specific table */
-typedef struct ecs_column_info_t {
-    ecs_entity_t id;
-    const ecs_type_info_t *ci;
-    int32_t column;
-} ecs_column_info_t;
 
 /* fini actions */
 typedef struct ecs_action_elem_t {

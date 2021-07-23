@@ -124,7 +124,7 @@ ecs_entity_t find_child_in_table(
         return 0;
     }
 
-    ecs_data_t *data = ecs_table_get_data(table);
+    ecs_data_t *data = ecs_table_storage_get(table);
     if (!data || !data->columns) {
         return 0;
     }
@@ -550,7 +550,7 @@ bool ecs_scope_next(
 
         iter->index ++;
 
-        ecs_data_t *data = ecs_table_get_data(table);
+        ecs_data_t *data = ecs_table_storage_get(table);
         if (!data) {
             continue;
         }

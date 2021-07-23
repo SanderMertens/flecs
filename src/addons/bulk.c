@@ -28,13 +28,6 @@ void bulk_delete(
             continue;
         }
 
-        /* Remove entities from index */
-        ecs_data_t *data = ecs_table_get_data(table);
-        if (!data) {
-            /* If table has no data, there's nothing to delete */
-            continue;
-        }
-
         /* Both filters passed, clear table */
         if (is_delete) {
             ecs_table_delete_entities(world, table);
@@ -58,20 +51,20 @@ void merge_table(
     } else {
         /* Merge table into dst_table */
         if (dst_table != src_table) {
-            ecs_data_t *src_data = ecs_table_get_data(src_table);
+            ecs_data_t *src_data = &src_table->storage;
             int32_t dst_count = ecs_table_count(dst_table);
             int32_t src_count = ecs_table_count(src_table);
 
-            if (to_remove && to_remove->count && src_data) {
+            if (to_remove && to_remove->count) {
                 ecs_run_remove_actions(world, src_table, 
                     src_data, 0, src_count, to_remove);
             }
 
-            ecs_data_t *dst_data = ecs_table_get_data(dst_table);
-            dst_data = ecs_table_merge(
+            ecs_data_t *dst_data = &dst_table->storage;
+            ecs_table_merge(
                 world, dst_table, src_table, dst_data, src_data);
 
-            if (to_add && to_add->count && dst_data) {
+            if (to_add && to_add->count) {
                 ecs_run_add_actions(world, dst_table, dst_data, 
                     dst_count, src_count, to_add, false, true);
             }
