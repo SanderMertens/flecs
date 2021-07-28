@@ -160,6 +160,8 @@ struct ecs_iter_t {
     int32_t count;                /**< Number of entities to process by system */
     int32_t total_count;          /**< Total number of entities in table */
 
+    bool is_valid;                /**< Set to true after first next() */
+
     ecs_ids_t *triggered_by; /**< Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
 

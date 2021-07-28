@@ -327,12 +327,17 @@ bool ecs_snapshot_next(
         it->table_columns = data->columns;
         it->count = ecs_table_data_count(data);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
+        it->is_valid = true;
         iter->index = i + 1;
-
-        return true;
+        goto yield;
     }
 
-    return false;    
+    it->is_valid = false;
+    return false;
+
+yield:
+    it->is_valid = true;
+    return true;    
 }
 
 /** Cleanup snapshot */

@@ -544,6 +544,7 @@ bool ecs_scope_next(
     ecs_map_iter_t *tables = &iter->tables;
     ecs_filter_t filter = iter->filter;
     ecs_table_record_t *tr;
+
     while ((tr = ecs_map_next(tables, ecs_table_record_t, NULL))) {
         ecs_table_t *table = tr->table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -571,11 +572,17 @@ bool ecs_scope_next(
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
+        it->is_valid = true;
 
-        return true;
+        goto yield;
     }
 
-    return false;    
+    it->is_valid = false;
+    return false;
+
+yield:
+    it->is_valid = true;
+    return true;   
 }
 
 const char* ecs_set_name_prefix(

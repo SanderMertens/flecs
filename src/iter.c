@@ -107,6 +107,7 @@ void* ecs_term_w_size(
     size_t size,
     int32_t term)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     return get_term(it, ecs_from_size_t(size), term, 0);
 }
 
@@ -114,8 +115,9 @@ bool ecs_term_is_owned(
     const ecs_iter_t *it,
     int32_t term)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    
     int32_t table_column;
-
     if (!get_table_column(it, term, &table_column)) {
         return true;
     }
@@ -127,6 +129,8 @@ bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t term_index)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+
     ecs_query_t *query = it->query;
 
     /* If this is not a query iterator, readonly is meaningless */
@@ -161,6 +165,7 @@ ecs_entity_t ecs_term_source(
     const ecs_iter_t *it,
     int32_t index)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -181,6 +186,7 @@ ecs_id_t ecs_term_id(
     const ecs_iter_t *it,
     int32_t index)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -192,6 +198,7 @@ size_t ecs_term_size(
     const ecs_iter_t *it,
     int32_t index)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -203,6 +210,7 @@ size_t ecs_term_size(
 ecs_table_t* ecs_iter_table(
     const ecs_iter_t *it)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     return it->table->table;    
 }
@@ -210,6 +218,8 @@ ecs_table_t* ecs_iter_table(
 ecs_type_t ecs_iter_type(
     const ecs_iter_t *it)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+
     /* If no table is set it means that the iterator isn't pointing to anything
      * yet. The most likely cause for this is that the operation is invoked on
      * a new iterator for which "next" hasn't been invoked yet, or on an
@@ -223,7 +233,7 @@ int32_t ecs_iter_find_column(
     const ecs_iter_t *it,
     ecs_entity_t component)
 {
-    /* See ecs_iter_type */    
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_type_index_of(it->table->table->type, component);
@@ -234,7 +244,7 @@ void* ecs_iter_column_w_size(
     size_t size,
     int32_t column_index)
 {
-    /* See ecs_iter_type */ 
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
     (void)size;
@@ -258,7 +268,7 @@ size_t ecs_iter_column_size(
     const ecs_iter_t *it,
     int32_t column_index)
 {
-    /* See ecs_iter_type */
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
     
@@ -283,5 +293,6 @@ void* ecs_element_w_size(
     int32_t column,
     int32_t row)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     return get_term(it, ecs_from_size_t(size), column, row);
 }

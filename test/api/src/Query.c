@@ -1378,3 +1378,25 @@ void Query_group_by_w_ctx() {
 
     ecs_fini(world);
 }
+
+void Query_iter_valid() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_bool(it.is_valid, false);
+
+    test_bool(ecs_query_next(&it), true);
+    test_bool(it.is_valid, true);
+
+    test_bool(ecs_query_next(&it), false);
+    test_bool(it.is_valid, false);
+
+    ecs_fini(world);
+}

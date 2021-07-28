@@ -686,14 +686,20 @@ bool ecs_filter_next(
         }
 
         iter->table.table = table;
+        iter->index = i + 1;
         it->table = &iter->table;
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
-        iter->index = i + 1;
+        it->is_valid = true;
 
-        return true;
+        goto yield;
     }
 
+    it->is_valid = false;
     return false;
+    
+yield:
+    it->is_valid = true;
+    return true;  
 }

@@ -2784,7 +2784,7 @@ bool ecs_query_next(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
     if (!query->constraints_satisfied) {
-        return false;
+        goto done;
     }
 
     ecs_table_slice_t *slice = ecs_vector_first(
@@ -2847,7 +2847,7 @@ bool ecs_query_next(
 
                 int ret = ecs_page_iter_next(piter, &cur);
                 if (ret < 0) {
-                    return false;
+                    goto done;
                 } else if (ret > 0) {
                     continue;
                 }
@@ -2862,7 +2862,8 @@ bool ecs_query_next(
             it->count = cur.count;
             it->total_count = cur.count;
         }
-
+        
+        it->is_valid = true;
         it->table = &table_data->iter_data;
         it->frame_offset += prev_count;
 
@@ -2872,10 +2873,16 @@ bool ecs_query_next(
             }
         }
 
-        return true;
+        goto yield;
     }
 
+done:
+    it->is_valid = false;
     return false;
+    
+yield:
+    it->is_valid = true;
+    return true;  
 }
 
 bool ecs_query_next_w_filter(

@@ -420,6 +420,7 @@ void ecs_run_monitor(
 
     it.world = world;
     it.triggered_by = components;
+    it.is_valid = true;
     it.ctx = system_data->ctx;
     it.binding_ctx = system_data->binding_ctx;
 

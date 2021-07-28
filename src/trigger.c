@@ -226,7 +226,8 @@ void notify_trigger_set(
         .table_columns = data->columns,
         .entities = entities,
         .offset = row,
-        .count = count
+        .count = count,
+        .is_valid = true
     }; 
 
     ecs_map_iter_t mit = ecs_map_iter(triggers);

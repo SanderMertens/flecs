@@ -1053,7 +1053,8 @@
                 "only_not_from_singleton",
                 "get_filter",
                 "group_by",
-                "group_by_w_ctx"
+                "group_by_w_ctx",
+                "iter_valid"
             ]
         }, {
             "id": "Pairs",

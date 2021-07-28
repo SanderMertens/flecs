@@ -989,6 +989,7 @@ void Query_only_not_from_singleton(void);
 void Query_get_filter(void);
 void Query_group_by(void);
 void Query_group_by_w_ctx(void);
+void Query_iter_valid(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -5723,6 +5724,10 @@ bake_test_case Query_testcases[] = {
     {
         "group_by_w_ctx",
         Query_group_by_w_ctx
+    },
+    {
+        "iter_valid",
+        Query_iter_valid
     }
 };
 
@@ -9690,7 +9695,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        39,
+        40,
         Query_testcases
     },
     {

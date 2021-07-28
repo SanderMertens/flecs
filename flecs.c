@@ -12535,12 +12535,17 @@ bool ecs_snapshot_next(
         it->table_columns = data->columns;
         it->count = ecs_table_data_count(data);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
+        it->is_valid = true;
         iter->index = i + 1;
-
-        return true;
+        goto yield;
     }
 
-    return false;    
+    it->is_valid = false;
+    return false;
+
+yield:
+    it->is_valid = true;
+    return true;    
 }
 
 /** Cleanup snapshot */
@@ -17754,16 +17759,22 @@ bool ecs_filter_next(
         }
 
         iter->table.table = table;
+        iter->index = i + 1;
         it->table = &iter->table;
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
-        iter->index = i + 1;
+        it->is_valid = true;
 
-        return true;
+        goto yield;
     }
 
+    it->is_valid = false;
     return false;
+    
+yield:
+    it->is_valid = true;
+    return true;  
 }
 
 static
@@ -22231,7 +22242,7 @@ bool ecs_query_next(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
     if (!query->constraints_satisfied) {
-        return false;
+        goto done;
     }
 
     ecs_table_slice_t *slice = ecs_vector_first(
@@ -22294,7 +22305,7 @@ bool ecs_query_next(
 
                 int ret = ecs_page_iter_next(piter, &cur);
                 if (ret < 0) {
-                    return false;
+                    goto done;
                 } else if (ret > 0) {
                     continue;
                 }
@@ -22309,7 +22320,8 @@ bool ecs_query_next(
             it->count = cur.count;
             it->total_count = cur.count;
         }
-
+        
+        it->is_valid = true;
         it->table = &table_data->iter_data;
         it->frame_offset += prev_count;
 
@@ -22319,10 +22331,16 @@ bool ecs_query_next(
             }
         }
 
-        return true;
+        goto yield;
     }
 
+done:
+    it->is_valid = false;
     return false;
+    
+yield:
+    it->is_valid = true;
+    return true;  
 }
 
 bool ecs_query_next_w_filter(
@@ -24061,6 +24079,7 @@ void* ecs_term_w_size(
     size_t size,
     int32_t term)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     return get_term(it, ecs_from_size_t(size), term, 0);
 }
 
@@ -24068,8 +24087,9 @@ bool ecs_term_is_owned(
     const ecs_iter_t *it,
     int32_t term)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    
     int32_t table_column;
-
     if (!get_table_column(it, term, &table_column)) {
         return true;
     }
@@ -24081,6 +24101,8 @@ bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t term_index)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+
     ecs_query_t *query = it->query;
 
     /* If this is not a query iterator, readonly is meaningless */
@@ -24115,6 +24137,7 @@ ecs_entity_t ecs_term_source(
     const ecs_iter_t *it,
     int32_t index)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -24135,6 +24158,7 @@ ecs_id_t ecs_term_id(
     const ecs_iter_t *it,
     int32_t index)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -24146,6 +24170,7 @@ size_t ecs_term_size(
     const ecs_iter_t *it,
     int32_t index)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -24157,6 +24182,7 @@ size_t ecs_term_size(
 ecs_table_t* ecs_iter_table(
     const ecs_iter_t *it)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     return it->table->table;    
 }
@@ -24164,6 +24190,8 @@ ecs_table_t* ecs_iter_table(
 ecs_type_t ecs_iter_type(
     const ecs_iter_t *it)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+
     /* If no table is set it means that the iterator isn't pointing to anything
      * yet. The most likely cause for this is that the operation is invoked on
      * a new iterator for which "next" hasn't been invoked yet, or on an
@@ -24177,7 +24205,7 @@ int32_t ecs_iter_find_column(
     const ecs_iter_t *it,
     ecs_entity_t component)
 {
-    /* See ecs_iter_type */    
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_type_index_of(it->table->table->type, component);
@@ -24188,7 +24216,7 @@ void* ecs_iter_column_w_size(
     size_t size,
     int32_t column_index)
 {
-    /* See ecs_iter_type */ 
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
     (void)size;
@@ -24212,7 +24240,7 @@ size_t ecs_iter_column_size(
     const ecs_iter_t *it,
     int32_t column_index)
 {
-    /* See ecs_iter_type */
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
     
@@ -24237,6 +24265,7 @@ void* ecs_element_w_size(
     int32_t column,
     int32_t row)
 {
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     return get_term(it, ecs_from_size_t(size), column, row);
 }
 
@@ -24466,7 +24495,8 @@ void notify_trigger_set(
         .table_columns = data->columns,
         .entities = entities,
         .offset = row,
-        .count = count
+        .count = count,
+        .is_valid = true
     }; 
 
     ecs_map_iter_t mit = ecs_map_iter(triggers);
@@ -26727,6 +26757,7 @@ void ecs_run_monitor(
 
     it.world = world;
     it.triggered_by = components;
+    it.is_valid = true;
     it.ctx = system_data->ctx;
     it.binding_ctx = system_data->binding_ctx;
 
@@ -28588,6 +28619,7 @@ bool ecs_scope_next(
     ecs_map_iter_t *tables = &iter->tables;
     ecs_filter_t filter = iter->filter;
     ecs_table_record_t *tr;
+
     while ((tr = ecs_map_next(tables, ecs_table_record_t, NULL))) {
         ecs_table_t *table = tr->table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -28615,11 +28647,17 @@ bool ecs_scope_next(
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
+        it->is_valid = true;
 
-        return true;
+        goto yield;
     }
 
-    return false;    
+    it->is_valid = false;
+    return false;
+
+yield:
+    it->is_valid = true;
+    return true;   
 }
 
 const char* ecs_set_name_prefix(
