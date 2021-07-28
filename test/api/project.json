@@ -196,7 +196,8 @@
                 "add_pair_to_entity_w_switch",
                 "sort",
                 "recycled_tags",
-                "query_recycled_tags"
+                "query_recycled_tags",
+                "single_case"
             ]
         }, {
             "id": "EnabledComponents",

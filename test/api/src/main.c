@@ -182,6 +182,7 @@ void Switch_add_pair_to_entity_w_switch(void);
 void Switch_sort(void);
 void Switch_recycled_tags(void);
 void Switch_query_recycled_tags(void);
+void Switch_single_case(void);
 
 // Testsuite 'EnabledComponents'
 void EnabledComponents_is_component_enabled(void);
@@ -2653,6 +2654,10 @@ bake_test_case Switch_testcases[] = {
     {
         "query_recycled_tags",
         Switch_query_recycled_tags
+    },
+    {
+        "single_case",
+        Switch_single_case
     }
 };
 
@@ -9520,7 +9525,7 @@ static bake_test_suite suites[] = {
         "Switch",
         Switch_setup,
         NULL,
-        32,
+        33,
         Switch_testcases
     },
     {

@@ -85,7 +85,7 @@ ecs_switch_t* ecs_switch_new(
     uint64_t max,
     int32_t elements)
 {
-    ecs_assert(min != max, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(min <= max, ECS_INVALID_PARAMETER, NULL);
 
     /* Min must be larger than 0, as 0 is an invalid entity id, and should
      * therefore never occur as case id */
