@@ -16377,6 +16377,30 @@ void ecs_clear_id_record(
     ecs_map_remove(world->id_index, id);
 }
 
+#ifdef FLECS_SANITIZE
+static 
+void verify_nodes(
+    ecs_switch_header_t *hdr,
+    ecs_switch_node_t *nodes)
+{
+    if (!hdr) {
+        return;
+    }
+
+    int32_t prev = -1, elem = hdr->element, count = 0;
+    while (elem != -1) {
+        ecs_assert(prev == nodes[elem].prev, ECS_INTERNAL_ERROR, NULL);
+        prev = elem;
+        elem = nodes[elem].next;
+        count ++;
+    }
+
+    ecs_assert(count == hdr->count, ECS_INTERNAL_ERROR, NULL);
+}
+#else
+#define verify_nodes(hdr, nodes)
+#endif
+
 static
 ecs_switch_header_t *get_header(
     const ecs_switch_t *sw,
@@ -16402,8 +16426,10 @@ void remove_node(
     ecs_switch_node_t *nodes,
     ecs_switch_node_t *node,
     int32_t element)
-{    
-    /* The node is currently assigned to a value */
+{
+    ecs_assert(&nodes[element] == node, ECS_INTERNAL_ERROR, NULL);
+
+    /* Update previous node/header */
     if (hdr->element == element) {
         ecs_assert(node->prev == -1, ECS_INVALID_PARAMETER, NULL);
         /* If this is the first node, update the header */
@@ -16416,6 +16442,7 @@ void remove_node(
         prev_node->next = node->next;
     }
 
+    /* Update next node */
     int32_t next = node->next;
     if (next != -1) {
         ecs_assert(next >= 0, ECS_INVALID_PARAMETER, NULL);
@@ -16557,6 +16584,9 @@ void ecs_switch_set(
     ecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
     ecs_switch_header_t *dst_hdr = get_header(sw, value);
 
+    verify_nodes(cur_hdr, nodes);
+    verify_nodes(dst_hdr, nodes);
+
     /* If value is not 0, and dst_hdr is NULL, then this is not a valid value
      * for this switch */
     ecs_assert(dst_hdr != NULL || !value, ECS_INVALID_PARAMETER, NULL);
@@ -16602,44 +16632,36 @@ void ecs_switch_remove(
     if (value != 0) {
         ecs_switch_header_t *hdr = get_header(sw, value);
         ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        verify_nodes(hdr, nodes);
         remove_node(hdr, nodes, node, element);
+    }
+
+    int32_t last_elem = ecs_vector_count(sw->nodes) - 1;
+    if (last_elem != element) {
+        ecs_switch_node_t *last = ecs_vector_last(sw->nodes, ecs_switch_node_t);
+        int32_t next = last->next, prev = last->prev;
+        if (next != -1) {
+            ecs_switch_node_t *n = &nodes[next];
+            n->prev = element;
+        }
+
+        if (prev != -1) {
+            ecs_switch_node_t *n = &nodes[prev];
+            n->next = element;
+        } else {
+            ecs_switch_header_t *hdr = get_header(sw, values[last_elem]);
+            if (hdr && hdr->element != -1) {
+                ecs_assert(hdr->element == last_elem, 
+                    ECS_INTERNAL_ERROR, NULL);
+                hdr->element = element;
+            }
+        }
     }
 
     /* Remove element from arrays */
     ecs_vector_remove(sw->nodes, ecs_switch_node_t, element);
     ecs_vector_remove(sw->values, uint64_t, element);
-
-    /* When the element was removed and the list was not empty, the last element
-     * of the list got moved to the location of the removed node. Update the
-     * linked list so that nodes that previously pointed to the last element
-     * point to the moved node. 
-     *
-     * The 'node' variable is guaranteed to point to the moved element, if the
-     * nodes list is not empty.
-     *
-     * If count is equal to the removed index, nothing needs to be done.
-     */
-    int32_t count = ecs_vector_count(sw->nodes);
-    if (count != 0 && count != element) {
-        int32_t prev = node->prev;
-        if (prev != -1) {
-            /* If the former last node was not the first node, update its
-             * prev to point to its new index, which is the index of the removed
-             * element. */
-            ecs_assert(prev >= 0, ECS_INVALID_PARAMETER, NULL);
-            nodes[prev].next = element;
-        } else {
-            /* If the former last node was the first node of its kind, find the
-             * header for the value of the node. The header should have at
-             * least one element. */
-            ecs_switch_header_t *hdr = get_header(sw, values[element]);
-            if (hdr && hdr->element != -1) {
-                ecs_assert(hdr->element == ecs_vector_count(sw->nodes), 
-                    ECS_INTERNAL_ERROR, NULL);
-                hdr->element = element;
-            }             
-        }
-    }
 }
 
 uint64_t ecs_switch_get(

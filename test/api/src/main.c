@@ -157,6 +157,9 @@ void Switch_get_case_set(void);
 void Switch_get_case_change(void);
 void Switch_remove_case(void);
 void Switch_remove_last(void);
+void Switch_delete_first(void);
+void Switch_delete_last(void);
+void Switch_delete_first_last(void);
 void Switch_3_entities_same_case(void);
 void Switch_2_entities_1_change_case(void);
 void Switch_3_entities_change_case(void);
@@ -2549,6 +2552,18 @@ bake_test_case Switch_testcases[] = {
     {
         "remove_last",
         Switch_remove_last
+    },
+    {
+        "delete_first",
+        Switch_delete_first
+    },
+    {
+        "delete_last",
+        Switch_delete_last
+    },
+    {
+        "delete_first_last",
+        Switch_delete_first_last
     },
     {
         "3_entities_same_case",
@@ -9500,7 +9515,7 @@ static bake_test_suite suites[] = {
         "Switch",
         Switch_setup,
         NULL,
-        29,
+        32,
         Switch_testcases
     },
     {

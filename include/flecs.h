@@ -20,6 +20,11 @@
 /* FLECS_CUSTOM_BUILD should be defined when manually selecting features */
 // #define FLECS_CUSTOM_BUILD
 
+/* FLECS_SANITIZE enables expensive checks that can detect issues early */
+#ifndef NDEBUG
+#define FLECS_SANITIZE
+#endif
+
 /* If this is a regular, non-custom build, build all modules and addons. */
 #ifndef FLECS_CUSTOM_BUILD
 /* Modules */

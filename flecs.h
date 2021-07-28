@@ -21,6 +21,11 @@
 /* FLECS_CUSTOM_BUILD should be defined when manually selecting features */
 // #define FLECS_CUSTOM_BUILD
 
+/* FLECS_SANITIZE enables expensive checks that can detect issues early */
+#ifndef NDEBUG
+#define FLECS_SANITIZE
+#endif
+
 /* If this is a regular, non-custom build, build all modules and addons. */
 #ifndef FLECS_CUSTOM_BUILD
 /* Modules */
@@ -11195,10 +11200,17 @@ public:
 
     /** Progress world, run all systems.
      *
-     * @param delta_time Custom delta_time. If 0 is provided, Flecs will automatically measure delta_tiem.
+     * @param delta_time Custom delta_time. If 0 is provided, Flecs will automatically measure delta_time.
      */
     bool progress(FLECS_FLOAT delta_time = 0.0) const {
         return ecs_progress(m_world, delta_time);
+    }
+
+    /** Get last delta_time.
+     */
+    FLECS_FLOAT delta_time() const {
+        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
+        return stats->delta_time;
     }
 
     /** Signal application should quit.
