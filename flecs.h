@@ -13311,8 +13311,8 @@ public:
      *
      * @param component The component to enable.
      */   
-    const Base& enable(entity_t component) const {
-        ecs_enable_component_w_entity(this->base_world(), this->base_id(), component, true);
+    const Base& enable(entity_t comp) const {
+        ecs_enable_component_w_entity(this->base_world(), this->base_id(), comp, true);
         return *this;       
     }
 
@@ -13321,8 +13321,8 @@ public:
      *
      * @param component The component to disable.
      */   
-    const Base& disable(entity_t component) const {
-        ecs_enable_component_w_entity(this->base_world(), this->base_id(), component, false);
+    const Base& disable(entity_t comp) const {
+        ecs_enable_component_w_entity(this->base_world(), this->base_id(), comp, false);
         return *this;       
     }
 
@@ -13662,8 +13662,8 @@ public:
      * @param is_added If provided, this parameter will be set to true if the component was added.
      * @return Pointer to the component value.
      */
-    void* get_mut(entity_t component, bool *is_added = nullptr) const {
-        return ecs_get_mut_w_entity(m_world, m_id, component, is_added);
+    void* get_mut(entity_t comp, bool *is_added = nullptr) const {
+        return ecs_get_mut_w_entity(m_world, m_id, comp, is_added);
     }
 
     /** Get mutable pointer for a pair.
@@ -13768,8 +13768,8 @@ public:
      *
      * @param component component that was modified.
      */
-    void modified(entity_t component) const {
-        ecs_modified_w_entity(m_world, m_id, component);
+    void modified(entity_t comp) const {
+        ecs_modified_w_entity(m_world, m_id, comp);
     }
 
     /** Get reference to component.
