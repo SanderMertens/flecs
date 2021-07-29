@@ -247,7 +247,7 @@ void* _ecs_sparse_add(
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
 
 FLECS_API
-int32_t ecs_sparse_last_id(
+uint64_t ecs_sparse_last_id(
     const ecs_sparse_t *sparse);
 
 FLECS_API

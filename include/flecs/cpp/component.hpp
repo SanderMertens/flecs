@@ -278,7 +278,7 @@ public:
 
     // Obtain a component identifier for explicit component registration.
     static entity_t id_explicit(world_t *world = nullptr, 
-        const char *name = nullptr, bool allow_tag = true) 
+        const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0)
     {
         if (!s_id) {
             // If no world was provided the component cannot be registered
@@ -293,6 +293,10 @@ public:
         // across more than one binary), or if the id does not exists in the 
         // world (indicating a multi-world application), register it. */
         if (!s_id || (world && !ecs_exists(world, s_id))) {
+            if (!s_id) {
+                s_id = id;
+            }
+
             if (!name) {
                 // If no name was provided, retrieve the name implicitly from
                 // the name_helper class.
@@ -568,6 +572,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
             ecs_assert(name_comp != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(name_comp->symbol != NULL, ECS_INTERNAL_ERROR, NULL);
 
+
             char *symbol = _::symbol_helper<T>::symbol();
             ecs_assert(!strcmp(name_comp->symbol, symbol), 
                 ECS_NAME_IN_USE, n);
@@ -591,7 +596,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     return world.entity(id);
 }
 
-/** Regular component with ctor, dtor copy and move actions */
+/** Register component */
 template <typename T>
 flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);

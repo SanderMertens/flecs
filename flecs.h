@@ -12695,16 +12695,9 @@ public:
      * @return The parent entity.
      */
     template <typename T>
-    flecs::entity_view get_parent() {
-        return flecs::entity_view(m_world, 
-            ecs_get_parent_w_entity(m_world, m_id, 
-                _::cpp_type<T>::id(m_world)));
-    }
+    flecs::entity get_parent();
 
-    flecs::entity_view get_parent(flecs::entity_view e) {
-        return flecs::entity_view(m_world, 
-            ecs_get_parent_w_entity(m_world, m_id, e.id()));
-    }    
+    flecs::entity get_parent(flecs::entity_view e);
 
     /** Lookup an entity by name.
      * Lookup an entity in the scope of this entity. The provided path may
@@ -12713,10 +12706,7 @@ public:
      * @param path The name of the entity to lookup.
      * @return The found entity, or entity::null if no entity matched.
      */
-    flecs::entity_view lookup(const char *path) const {
-        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
-        return flecs::entity_view(m_world, id);
-    }
+    flecs::entity lookup(const char *path) const;
 
     /** Check if entity has the provided type.
      *
@@ -12871,16 +12861,14 @@ public:
      * @param sw The switch for which to obtain the case.
      * @return True if the entity has the provided case, false otherwise.
      */
-    flecs::entity_view get_case(const flecs::type& sw) const;
+    flecs::entity get_case(const flecs::type& sw) const;
 
     /** Get case for switch.
      *
      * @param sw The switch for which to obtain the case.
      * @return True if the entity has the provided case, false otherwise.
      */
-    flecs::entity_view get_case(flecs::id_t sw) const {
-        return flecs::entity_view(m_world, ecs_get_case(m_world, m_id, sw));
-    }
+    flecs::entity get_case(flecs::id_t sw) const;
 
     /** Test if component is enabled.
      *
@@ -14096,7 +14084,7 @@ public:
 
     // Obtain a component identifier for explicit component registration.
     static entity_t id_explicit(world_t *world = nullptr, 
-        const char *name = nullptr, bool allow_tag = true) 
+        const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0)
     {
         if (!s_id) {
             // If no world was provided the component cannot be registered
@@ -14111,6 +14099,10 @@ public:
         // across more than one binary), or if the id does not exists in the 
         // world (indicating a multi-world application), register it. */
         if (!s_id || (world && !ecs_exists(world, s_id))) {
+            if (!s_id) {
+                s_id = id;
+            }
+
             if (!name) {
                 // If no name was provided, retrieve the name implicitly from
                 // the name_helper class.
@@ -14386,6 +14378,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
             ecs_assert(name_comp != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(name_comp->symbol != NULL, ECS_INTERNAL_ERROR, NULL);
 
+
             char *symbol = _::symbol_helper<T>::symbol();
             ecs_assert(!strcmp(name_comp->symbol, symbol), 
                 ECS_NAME_IN_USE, n);
@@ -14409,7 +14402,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
     return world.entity(id);
 }
 
-/** Regular component with ctor, dtor copy and move actions */
+/** Register component */
 template <typename T>
 flecs::entity component(const flecs::world& world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
@@ -17344,8 +17337,12 @@ inline bool entity_view::has_switch(const flecs::type& type) const {
     return ecs_has_entity(m_world, m_id, flecs::Switch | type.id());
 }
 
-inline flecs::entity_view entity_view::get_case(const flecs::type& sw) const {
+inline flecs::entity entity_view::get_case(const flecs::type& sw) const {
     return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw.id()));
+}
+
+inline flecs::entity entity_view::get_case(flecs::id_t sw) const {
+    return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw));
 }
 
 inline flecs::entity id::role() const {
@@ -17509,6 +17506,22 @@ inline void entity_view::each(const flecs::entity_view& rel, const Func& func) c
 template <typename Func, if_t< is_callable<Func>::value > >
 inline bool entity_view::get(const Func& func) const {
     return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
+}
+
+template <typename T>
+inline flecs::entity entity_view::get_parent() {
+    return flecs::entity(m_world, ecs_get_parent_w_entity(m_world, m_id, 
+            _::cpp_type<T>::id(m_world)));
+}
+
+inline flecs::entity entity_view::get_parent(flecs::entity_view e) {
+    return flecs::entity(m_world, 
+        ecs_get_parent_w_entity(m_world, m_id, e.id()));
+}    
+
+inline flecs::entity entity_view::lookup(const char *path) const {
+    auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
+    return flecs::entity(m_world, id);
 }
 
 }

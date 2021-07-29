@@ -272,16 +272,9 @@ public:
      * @return The parent entity.
      */
     template <typename T>
-    flecs::entity_view get_parent() {
-        return flecs::entity_view(m_world, 
-            ecs_get_parent_w_entity(m_world, m_id, 
-                _::cpp_type<T>::id(m_world)));
-    }
+    flecs::entity get_parent();
 
-    flecs::entity_view get_parent(flecs::entity_view e) {
-        return flecs::entity_view(m_world, 
-            ecs_get_parent_w_entity(m_world, m_id, e.id()));
-    }    
+    flecs::entity get_parent(flecs::entity_view e);
 
     /** Lookup an entity by name.
      * Lookup an entity in the scope of this entity. The provided path may
@@ -290,10 +283,7 @@ public:
      * @param path The name of the entity to lookup.
      * @return The found entity, or entity::null if no entity matched.
      */
-    flecs::entity_view lookup(const char *path) const {
-        auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
-        return flecs::entity_view(m_world, id);
-    }
+    flecs::entity lookup(const char *path) const;
 
     /** Check if entity has the provided type.
      *
@@ -448,16 +438,14 @@ public:
      * @param sw The switch for which to obtain the case.
      * @return True if the entity has the provided case, false otherwise.
      */
-    flecs::entity_view get_case(const flecs::type& sw) const;
+    flecs::entity get_case(const flecs::type& sw) const;
 
     /** Get case for switch.
      *
      * @param sw The switch for which to obtain the case.
      * @return True if the entity has the provided case, false otherwise.
      */
-    flecs::entity_view get_case(flecs::id_t sw) const {
-        return flecs::entity_view(m_world, ecs_get_case(m_world, m_id, sw));
-    }
+    flecs::entity get_case(flecs::id_t sw) const;
 
     /** Test if component is enabled.
      *
