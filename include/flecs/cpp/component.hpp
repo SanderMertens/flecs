@@ -612,9 +612,9 @@ flecs::entity pod_component(
             } else {
                 const EcsComponent *comp = ecs_get(world, entity, EcsComponent);
                 if (comp) {
-                    ecs_assert(comp->size == sizeof(T),
+                    ecs_assert(comp->size == ECS_SIZEOF(T),
                         ECS_INVALID_COMPONENT_SIZE, NULL);
-                    ecs_assert(comp->alignment == alignof(T),
+                    ecs_assert(comp->alignment == ECS_ALIGNOF(T),
                         ECS_INVALID_COMPONENT_ALIGNMENT, NULL);
                 } else {
                     /* If the existing id is not a component, no checking is

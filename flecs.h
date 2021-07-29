@@ -14452,9 +14452,9 @@ flecs::entity pod_component(
             } else {
                 const EcsComponent *comp = ecs_get(world, entity, EcsComponent);
                 if (comp) {
-                    ecs_assert(comp->size == sizeof(T),
+                    ecs_assert(comp->size == ECS_SIZEOF(T),
                         ECS_INVALID_COMPONENT_SIZE, NULL);
-                    ecs_assert(comp->alignment == alignof(T),
+                    ecs_assert(comp->alignment == ECS_ALIGNOF(T),
                         ECS_INVALID_COMPONENT_ALIGNMENT, NULL);
                 } else {
                     /* If the existing id is not a component, no checking is
@@ -17135,10 +17135,10 @@ public:
             reinterpret_cast<ecs_order_by_action_t>(compare));
     }
 
-    void order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
+    void order_by(flecs::entity_t comp, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
         ecs_query_t *q = query().c_ptr();
         ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_query_order_by(m_world, q, component, compare);
+        ecs_query_order_by(m_world, q, comp, compare);
     }    
 
     template <typename T>
@@ -17146,10 +17146,10 @@ public:
         this->group_by(flecs::_::cpp_type<T>::id(m_world), rank);
     }
 
-    void group_by(flecs::entity_t component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+    void group_by(flecs::entity_t comp, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
         ecs_query_t *q = query().c_ptr();
         ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_query_group_by(m_world, q, component, rank);
+        ecs_query_group_by(m_world, q, comp, rank);
     }
 
     /** Set system interval.
