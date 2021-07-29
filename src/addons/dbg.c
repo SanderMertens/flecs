@@ -99,7 +99,7 @@ ecs_table_t* ecs_dbg_get_table(
         return NULL;
     }
 
-    return flecs_sparse_get(
+    return flecs_sparse_get_dense(
         world->store.tables, ecs_table_t, index);
 }
 

@@ -672,7 +672,7 @@ bool ecs_filter_next(
     int32_t i;
 
     for (i = iter->index; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
         ecs_data_t *data = flecs_table_get_data(table);

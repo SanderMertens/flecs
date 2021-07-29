@@ -14,14 +14,14 @@
 extern "C" {
 #endif
 
-#define ecs_eis_get(world, entity) flecs_sparse_get_sparse((world->store).entity_index, ecs_record_t, entity)
-#define ecs_eis_get_any(world, entity) flecs_sparse_get_sparse_any((world->store).entity_index, ecs_record_t, entity)
+#define ecs_eis_get(world, entity) flecs_sparse_get((world->store).entity_index, ecs_record_t, entity)
+#define ecs_eis_get_any(world, entity) flecs_sparse_get_any((world->store).entity_index, ecs_record_t, entity)
 #define ecs_eis_set(world, entity, ...) (flecs_sparse_set((world->store).entity_index, ecs_record_t, entity, (__VA_ARGS__)))
 #define ecs_eis_ensure(world, entity) flecs_sparse_ensure((world->store).entity_index, ecs_record_t, entity)
 #define ecs_eis_delete(world, entity) flecs_sparse_remove((world->store).entity_index, entity)
 #define ecs_eis_set_generation(world, entity) flecs_sparse_set_generation((world->store).entity_index, entity)
 #define ecs_eis_is_alive(world, entity) flecs_sparse_is_alive((world->store).entity_index, entity)
-#define ecs_eis_get_current(world, entity) flecs_sparse_get_current((world->store).entity_index, entity)
+#define ecs_eis_get_current(world, entity) flecs_sparse_get_alive((world->store).entity_index, entity)
 #define ecs_eis_exists(world, entity) flecs_sparse_exists((world->store).entity_index, entity)
 #define ecs_eis_recycle(world) flecs_sparse_new_id((world->store).entity_index)
 #define ecs_eis_clear_entity(world, entity, is_watched) ecs_eis_set((world->store).entity_index, entity, &(ecs_record_t){NULL, is_watched})

@@ -47,14 +47,14 @@
 extern "C" {
 #endif
 
-#define ecs_eis_get(world, entity) flecs_sparse_get_sparse((world->store).entity_index, ecs_record_t, entity)
-#define ecs_eis_get_any(world, entity) flecs_sparse_get_sparse_any((world->store).entity_index, ecs_record_t, entity)
+#define ecs_eis_get(world, entity) flecs_sparse_get((world->store).entity_index, ecs_record_t, entity)
+#define ecs_eis_get_any(world, entity) flecs_sparse_get_any((world->store).entity_index, ecs_record_t, entity)
 #define ecs_eis_set(world, entity, ...) (flecs_sparse_set((world->store).entity_index, ecs_record_t, entity, (__VA_ARGS__)))
 #define ecs_eis_ensure(world, entity) flecs_sparse_ensure((world->store).entity_index, ecs_record_t, entity)
 #define ecs_eis_delete(world, entity) flecs_sparse_remove((world->store).entity_index, entity)
 #define ecs_eis_set_generation(world, entity) flecs_sparse_set_generation((world->store).entity_index, entity)
 #define ecs_eis_is_alive(world, entity) flecs_sparse_is_alive((world->store).entity_index, entity)
-#define ecs_eis_get_current(world, entity) flecs_sparse_get_current((world->store).entity_index, entity)
+#define ecs_eis_get_current(world, entity) flecs_sparse_get_alive((world->store).entity_index, entity)
 #define ecs_eis_exists(world, entity) flecs_sparse_exists((world->store).entity_index, entity)
 #define ecs_eis_recycle(world) flecs_sparse_new_id((world->store).entity_index)
 #define ecs_eis_clear_entity(world, entity, is_watched) ecs_eis_set((world->store).entity_index, entity, &(ecs_record_t){NULL, is_watched})
@@ -230,7 +230,7 @@ void* _flecs_sparse_add(
 /** Get last issued id. */
 FLECS_DBG_API
 uint64_t flecs_sparse_last_id(
-    ecs_sparse_t *sparse);
+    const ecs_sparse_t *sparse);
 
 /** Generate or recycle a new id. */
 FLECS_DBG_API
@@ -249,14 +249,14 @@ const uint64_t* flecs_sparse_new_ids(
 FLECS_DBG_API
 void flecs_sparse_remove(
     ecs_sparse_t *sparse,
-    uint64_t index);
+    uint64_t id);
 
 /** Remove an element, return pointer to the value in the sparse array */
 FLECS_DBG_API
 void* _flecs_sparse_remove_get(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
-    uint64_t index);    
+    uint64_t id);    
 
 #define flecs_sparse_remove_get(sparse, type, index)\
     ((type*)_flecs_sparse_remove_get(sparse, sizeof(type), index))
@@ -265,36 +265,36 @@ void* _flecs_sparse_remove_get(
 FLECS_DBG_API
 void flecs_sparse_set_generation(
     ecs_sparse_t *sparse,
-    uint64_t index);    
+    uint64_t id);    
 
 /** Check whether an id has ever been issued. */
 FLECS_DBG_API
 bool flecs_sparse_exists(
     const ecs_sparse_t *sparse,
-    uint64_t index);
+    uint64_t id);
 
 /** Test if id is alive, which requires the generation count tp match. */
 FLECS_DBG_API
 bool flecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
-    uint64_t index);
+    uint64_t id);
 
 /** Return identifier with current generation set. */
 FLECS_DBG_API
-uint64_t flecs_sparse_get_current(
+uint64_t flecs_sparse_get_alive(
     const ecs_sparse_t *sparse,
-    uint64_t index);
+    uint64_t id);
 
 /** Get value from sparse set by dense id. This function is useful in 
  * combination with flecs_sparse_count for iterating all values in the set. */
 FLECS_DBG_API
-void* _flecs_sparse_get(
+void* _flecs_sparse_get_dense(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     int32_t index);
 
-#define flecs_sparse_get(sparse, type, index)\
-    ((type*)_flecs_sparse_get(sparse, sizeof(type), index))
+#define flecs_sparse_get_dense(sparse, type, index)\
+    ((type*)_flecs_sparse_get_dense(sparse, sizeof(type), index))
 
 /** Get the number of alive elements in the sparse set. */
 FLECS_DBG_API
@@ -309,30 +309,30 @@ int32_t flecs_sparse_size(
 /** Get element by (sparse) id. The returned pointer is stable for the duration
  * of the sparse set, as it is stored in the sparse array. */
 FLECS_DBG_API
-void* _flecs_sparse_get_sparse(
+void* _flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
-    uint64_t index);
+    uint64_t id);
 
-#define flecs_sparse_get_sparse(sparse, type, index)\
-    ((type*)_flecs_sparse_get_sparse(sparse, sizeof(type), index))
+#define flecs_sparse_get(sparse, type, index)\
+    ((type*)_flecs_sparse_get(sparse, sizeof(type), index))
 
 /** Like get_sparse, but don't care whether element is alive or not. */
 FLECS_DBG_API
-void* _flecs_sparse_get_sparse_any(
+void* _flecs_sparse_get_any(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
-    uint64_t index);
+    uint64_t id);
 
-#define flecs_sparse_get_sparse_any(sparse, type, index)\
-    ((type*)_flecs_sparse_get_sparse_any(sparse, sizeof(type), index))
+#define flecs_sparse_get_any(sparse, type, index)\
+    ((type*)_flecs_sparse_get_any(sparse, sizeof(type), index))
 
 /** Get or create element by (sparse) id. */
 FLECS_DBG_API
 void* _flecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
-    uint64_t index);
+    uint64_t id);
 
 #define flecs_sparse_ensure(sparse, type, index)\
     ((type*)_flecs_sparse_ensure(sparse, sizeof(type), index))
@@ -342,7 +342,7 @@ FLECS_DBG_API
 void* _flecs_sparse_set(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
-    uint64_t index,
+    uint64_t id,
     void *value);
 
 #define flecs_sparse_set(sparse, type, index, value)\
@@ -376,6 +376,52 @@ void flecs_sparse_memory(
     ecs_sparse_t *sparse,
     int32_t *allocd,
     int32_t *used);
+
+
+/* Publicly exposed APIs 
+ * The flecs_ functions aren't exposed directly as this can cause some
+ * optimizers to not consider them for link time optimization. */
+
+FLECS_API
+ecs_sparse_t* _ecs_sparse_new(
+    ecs_size_t elem_size);
+
+#define ecs_sparse_new(type)\
+    _ecs_sparse_new(sizeof(type))
+
+FLECS_API
+void* _ecs_sparse_add(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size);
+
+#define ecs_sparse_add(sparse, type)\
+    ((type*)_ecs_sparse_add(sparse, sizeof(type)))
+
+FLECS_API
+int32_t ecs_sparse_last_id(
+    const ecs_sparse_t *sparse);
+
+FLECS_API
+int32_t ecs_sparse_count(
+    const ecs_sparse_t *sparse);
+
+FLECS_API
+void* _ecs_sparse_get_dense(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    int32_t index);
+
+#define ecs_sparse_get_dense(sparse, type, index)\
+    ((type*)_ecs_sparse_get_dense(sparse, sizeof(type), index))
+
+FLECS_API
+void* _ecs_sparse_get(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id);
+
+#define ecs_sparse_get(sparse, type, index)\
+    ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
 
 #ifdef __cplusplus
 }
@@ -7080,7 +7126,7 @@ void delete_objects(
         int32_t i, count = ecs_vector_count(data->entities);
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = entities[i];
-            ecs_record_t *r = flecs_sparse_get_sparse(
+            ecs_record_t *r = flecs_sparse_get(
                 world->store.entity_index, ecs_record_t, e);
             
             /* If row is negative, it means the entity is being monitored. Only
@@ -7232,7 +7278,7 @@ void ecs_delete(
         return;
     }
 
-    ecs_record_t *r = flecs_sparse_get_sparse(
+    ecs_record_t *r = flecs_sparse_get(
         world->store.entity_index, ecs_record_t, entity);
     if (r) {
         ecs_entity_info_t info = {0};
@@ -8199,7 +8245,7 @@ int32_t ecs_count_filter(
     int32_t result = 0;
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
         if (!filter || flecs_table_match_filter(world, table, filter)) {
             result += ecs_table_count(table);
         }
@@ -10195,7 +10241,7 @@ void* _flecs_sparse_add(
 }
 
 uint64_t flecs_sparse_last_id(
-    ecs_sparse_t *sparse)
+    const ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
     uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
@@ -10379,7 +10425,7 @@ bool flecs_sparse_exists(
     return dense != 0;
 }
 
-void* _flecs_sparse_get(
+void* _flecs_sparse_get_dense(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
     int32_t dense_index)
@@ -10402,7 +10448,7 @@ bool flecs_sparse_is_alive(
     return try_sparse(sparse, index) != NULL;
 }
 
-uint64_t flecs_sparse_get_current(
+uint64_t flecs_sparse_get_alive(
     const ecs_sparse_t *sparse,
     uint64_t index)
 {
@@ -10419,7 +10465,7 @@ uint64_t flecs_sparse_get_current(
     return dense_array[dense];
 }
 
-void* _flecs_sparse_get_sparse(
+void* _flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -10431,7 +10477,7 @@ void* _flecs_sparse_get_sparse(
     return try_sparse(sparse, index);
 }
 
-void* _flecs_sparse_get_sparse_any(
+void* _flecs_sparse_get_any(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -10491,7 +10537,7 @@ void sparse_copy(
 
     for (i = 0; i < count - 1; i ++) {
         uint64_t index = indices[i];
-        void *src_ptr = _flecs_sparse_get_sparse(src, size, index);
+        void *src_ptr = _flecs_sparse_get(src, size, index);
         void *dst_ptr = _flecs_sparse_ensure(dst, size, index);
         flecs_sparse_set_generation(dst, index);
         ecs_os_memcpy(dst_ptr, src_ptr, size);
@@ -10536,6 +10582,46 @@ void flecs_sparse_memory(
     (void)used;
 }
 
+ecs_sparse_t* _ecs_sparse_new(
+    ecs_size_t elem_size)
+{
+    return _flecs_sparse_new(elem_size);
+}
+
+void* _ecs_sparse_add(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size)
+{
+    return _flecs_sparse_add(sparse, elem_size);
+}
+
+int32_t ecs_sparse_last_id(
+    const ecs_sparse_t *sparse)
+{
+    return flecs_sparse_last_id(sparse);
+}
+
+int32_t ecs_sparse_count(
+    const ecs_sparse_t *sparse)
+{
+    return flecs_sparse_count(sparse);
+}
+
+void* _ecs_sparse_get_dense(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    int32_t index)
+{
+    return _flecs_sparse_get_dense(sparse, elem_size, index);
+}
+
+void* _ecs_sparse_get(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id)
+{
+    return _flecs_sparse_get(sparse, elem_size, id);
+}
 #ifdef FLECS_READER_WRITER
 
 
@@ -11922,7 +12008,7 @@ void ecs_get_world_stats(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
         int32_t entity_count = ecs_table_count(table);
 
         if (!entity_count) {
@@ -12332,7 +12418,7 @@ void ecs_snapshot_restore(
     int32_t t, table_count = flecs_sparse_count(world->store.tables);
 
     for (t = 0; t < table_count; t ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, t);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, t);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -12409,7 +12495,7 @@ void ecs_snapshot_restore(
      * restoring safe */
     if (!is_filtered) {
         for (t = 0; t < table_count; t ++) {
-            ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, t);
+            ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, t);
             if (table->flags & EcsTableHasBuiltins) {
                 continue;
             }
@@ -12602,7 +12688,7 @@ ecs_table_t* ecs_dbg_get_table(
         return NULL;
     }
 
-    return flecs_sparse_get(
+    return flecs_sparse_get_dense(
         world->store.tables, ecs_table_t, index);
 }
 
@@ -13038,7 +13124,7 @@ void bulk_delete(
     int32_t i, count = flecs_sparse_count(world->store.tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -13134,7 +13220,7 @@ void ecs_bulk_add_remove_type(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -13185,7 +13271,7 @@ void ecs_bulk_add_type(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -13232,7 +13318,7 @@ void ecs_bulk_add_entity(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -13277,7 +13363,7 @@ void ecs_bulk_remove_type(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -13324,7 +13410,7 @@ void ecs_bulk_remove_entity(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -15054,14 +15140,14 @@ void clean_tables(
     int32_t i, count = flecs_sparse_count(world->store.tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
         flecs_table_free(world, t);
     }
 
     /* Free table types separately so that if application destructors rely on
      * a type it's still valid. */
     for (i = 0; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
         flecs_table_free_type(t);
     }    
 
@@ -15265,7 +15351,7 @@ void flecs_notify_tables(
         ecs_sparse_t *tables = world->store.tables;
         int32_t i, count = flecs_sparse_count(tables);
         for (i = 0; i < count; i ++) {
-            ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
+            ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
             flecs_table_notify(world, table, event);
         }
 
@@ -15545,7 +15631,7 @@ void fini_unset_tables(
     int32_t i, count = flecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
         flecs_table_remove_actions(world, table);
     }
 }
@@ -15577,7 +15663,7 @@ void fini_queries(
 {
     int32_t i, count = flecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
-        ecs_query_t *query = flecs_sparse_get(world->queries, ecs_query_t, 0);
+        ecs_query_t *query = flecs_sparse_get_dense(world->queries, ecs_query_t, 0);
         ecs_query_fini(query);
     }
     flecs_sparse_free(world->queries);
@@ -15931,7 +16017,7 @@ const ecs_type_info_t * flecs_get_c_info(
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
 
-    return flecs_sparse_get_sparse(world->type_info, ecs_type_info_t, component);
+    return flecs_sparse_get(world->type_info, ecs_type_info_t, component);
 }
 
 ecs_type_info_t * flecs_get_or_create_c_info(
@@ -16120,7 +16206,7 @@ void flecs_notify_queries(
     int32_t i, count = flecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
         flecs_query_notify(world, 
-            flecs_sparse_get(world->queries, ecs_query_t, i), event);
+            flecs_sparse_get_dense(world->queries, ecs_query_t, i), event);
     }    
 }
 
@@ -17695,7 +17781,7 @@ bool ecs_filter_next(
     int32_t i;
 
     for (i = iter->index; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
         ecs_data_t *data = flecs_table_get_data(table);
@@ -20377,7 +20463,7 @@ void match_tables(
     int32_t i, count = flecs_sparse_count(world->store.tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(
+        ecs_table_t *table = flecs_sparse_get_dense(
             world->store.tables, ecs_table_t, i);
 
         if (flecs_query_match(world, table, query, NULL)) {
@@ -21459,7 +21545,7 @@ void rematch_tables(
 
         for (i = 0; i < count; i ++) {
             /* Is the system currently matched with the table? */
-            ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
+            ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
             rematch_table(world, query, table);
         }
     }

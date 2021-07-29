@@ -2485,7 +2485,7 @@ void delete_objects(
         int32_t i, count = ecs_vector_count(data->entities);
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = entities[i];
-            ecs_record_t *r = flecs_sparse_get_sparse(
+            ecs_record_t *r = flecs_sparse_get(
                 world->store.entity_index, ecs_record_t, e);
             
             /* If row is negative, it means the entity is being monitored. Only
@@ -2637,7 +2637,7 @@ void ecs_delete(
         return;
     }
 
-    ecs_record_t *r = flecs_sparse_get_sparse(
+    ecs_record_t *r = flecs_sparse_get(
         world->store.entity_index, ecs_record_t, entity);
     if (r) {
         ecs_entity_info_t info = {0};
@@ -3604,7 +3604,7 @@ int32_t ecs_count_filter(
     int32_t result = 0;
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
         if (!filter || flecs_table_match_filter(world, table, filter)) {
             result += ecs_table_count(table);
         }

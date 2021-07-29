@@ -18,7 +18,7 @@ void bulk_delete(
     int32_t i, count = flecs_sparse_count(world->store.tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -114,7 +114,7 @@ void ecs_bulk_add_remove_type(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -165,7 +165,7 @@ void ecs_bulk_add_type(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -212,7 +212,7 @@ void ecs_bulk_add_entity(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -257,7 +257,7 @@ void ecs_bulk_remove_type(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -304,7 +304,7 @@ void ecs_bulk_remove_entity(
 
     int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;

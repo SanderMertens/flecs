@@ -188,7 +188,7 @@ void ecs_snapshot_restore(
     int32_t t, table_count = flecs_sparse_count(world->store.tables);
 
     for (t = 0; t < table_count; t ++) {
-        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, t);
+        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, t);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -265,7 +265,7 @@ void ecs_snapshot_restore(
      * restoring safe */
     if (!is_filtered) {
         for (t = 0; t < table_count; t ++) {
-            ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, t);
+            ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, t);
             if (table->flags & EcsTableHasBuiltins) {
                 continue;
             }

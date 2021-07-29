@@ -272,14 +272,14 @@ void clean_tables(
     int32_t i, count = flecs_sparse_count(world->store.tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
         flecs_table_free(world, t);
     }
 
     /* Free table types separately so that if application destructors rely on
      * a type it's still valid. */
     for (i = 0; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
         flecs_table_free_type(t);
     }    
 
@@ -483,7 +483,7 @@ void flecs_notify_tables(
         ecs_sparse_t *tables = world->store.tables;
         int32_t i, count = flecs_sparse_count(tables);
         for (i = 0; i < count; i ++) {
-            ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
+            ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
             flecs_table_notify(world, table, event);
         }
 
@@ -763,7 +763,7 @@ void fini_unset_tables(
     int32_t i, count = flecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
         flecs_table_remove_actions(world, table);
     }
 }
@@ -795,7 +795,7 @@ void fini_queries(
 {
     int32_t i, count = flecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
-        ecs_query_t *query = flecs_sparse_get(world->queries, ecs_query_t, 0);
+        ecs_query_t *query = flecs_sparse_get_dense(world->queries, ecs_query_t, 0);
         ecs_query_fini(query);
     }
     flecs_sparse_free(world->queries);
@@ -1149,7 +1149,7 @@ const ecs_type_info_t * flecs_get_c_info(
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
 
-    return flecs_sparse_get_sparse(world->type_info, ecs_type_info_t, component);
+    return flecs_sparse_get(world->type_info, ecs_type_info_t, component);
 }
 
 ecs_type_info_t * flecs_get_or_create_c_info(
@@ -1338,7 +1338,7 @@ void flecs_notify_queries(
     int32_t i, count = flecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
         flecs_query_notify(world, 
-            flecs_sparse_get(world->queries, ecs_query_t, i), event);
+            flecs_sparse_get_dense(world->queries, ecs_query_t, i), event);
     }    
 }
 

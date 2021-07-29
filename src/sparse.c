@@ -406,7 +406,7 @@ void* _flecs_sparse_add(
 }
 
 uint64_t flecs_sparse_last_id(
-    ecs_sparse_t *sparse)
+    const ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
     uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
@@ -590,7 +590,7 @@ bool flecs_sparse_exists(
     return dense != 0;
 }
 
-void* _flecs_sparse_get(
+void* _flecs_sparse_get_dense(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
     int32_t dense_index)
@@ -613,7 +613,7 @@ bool flecs_sparse_is_alive(
     return try_sparse(sparse, index) != NULL;
 }
 
-uint64_t flecs_sparse_get_current(
+uint64_t flecs_sparse_get_alive(
     const ecs_sparse_t *sparse,
     uint64_t index)
 {
@@ -630,7 +630,7 @@ uint64_t flecs_sparse_get_current(
     return dense_array[dense];
 }
 
-void* _flecs_sparse_get_sparse(
+void* _flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -642,7 +642,7 @@ void* _flecs_sparse_get_sparse(
     return try_sparse(sparse, index);
 }
 
-void* _flecs_sparse_get_sparse_any(
+void* _flecs_sparse_get_any(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -702,7 +702,7 @@ void sparse_copy(
 
     for (i = 0; i < count - 1; i ++) {
         uint64_t index = indices[i];
-        void *src_ptr = _flecs_sparse_get_sparse(src, size, index);
+        void *src_ptr = _flecs_sparse_get(src, size, index);
         void *dst_ptr = _flecs_sparse_ensure(dst, size, index);
         flecs_sparse_set_generation(dst, index);
         ecs_os_memcpy(dst_ptr, src_ptr, size);
@@ -745,4 +745,45 @@ void flecs_sparse_memory(
     (void)sparse;
     (void)allocd;
     (void)used;
+}
+
+ecs_sparse_t* _ecs_sparse_new(
+    ecs_size_t elem_size)
+{
+    return _flecs_sparse_new(elem_size);
+}
+
+void* _ecs_sparse_add(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size)
+{
+    return _flecs_sparse_add(sparse, elem_size);
+}
+
+int32_t ecs_sparse_last_id(
+    const ecs_sparse_t *sparse)
+{
+    return flecs_sparse_last_id(sparse);
+}
+
+int32_t ecs_sparse_count(
+    const ecs_sparse_t *sparse)
+{
+    return flecs_sparse_count(sparse);
+}
+
+void* _ecs_sparse_get_dense(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    int32_t index)
+{
+    return _flecs_sparse_get_dense(sparse, elem_size, index);
+}
+
+void* _ecs_sparse_get(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id)
+{
+    return _flecs_sparse_get(sparse, elem_size, id);
 }
