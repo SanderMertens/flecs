@@ -2829,3 +2829,34 @@ void Parser_pred_implicit_subject_superset_cascade_childof_optional() {
 
     ecs_fini(world);
 }
+
+void Parser_expr_w_symbol() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_entity_t comp = ecs_component_init(world, &(ecs_component_desc_t) {
+        .entity = {
+            .name = "Foo",
+            .symbol = "FooBar"
+        }
+    });
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "FooBar"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], comp, EcsDefaultSet);
+    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);  
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

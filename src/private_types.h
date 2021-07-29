@@ -547,6 +547,7 @@ struct ecs_world_t {
     /* -- Aliasses -- */
 
     ecs_vector_t *aliases;
+    ecs_vector_t *symbols;
 
 
     /* -- Staging -- */

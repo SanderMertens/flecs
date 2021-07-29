@@ -51,14 +51,11 @@ bool path_append(
 
 static
 ecs_entity_t find_as_alias(
-    const ecs_world_t *world,
-    const char *name)
+    const char *name,
+    ecs_vector_t *alias_vector)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t i, count = ecs_vector_count(world->aliases);
-    ecs_alias_t *aliases = ecs_vector_first(world->aliases, ecs_alias_t);
+    int32_t i, count = ecs_vector_count(alias_vector);
+    ecs_alias_t *aliases = ecs_vector_first(alias_vector, ecs_alias_t);
     for (i = 0; i < count; i ++) {
         if (!strcmp(aliases[i].name, name)) {
             return aliases[i].entity;
@@ -156,27 +153,6 @@ ecs_entity_t find_child_in_table(
             }
         }         
     }
-
-    return 0;
-}
-
-static
-ecs_entity_t find_child(
-    const ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *symbol)
-{        
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
-
-    (void)parent;
-    
-    ecs_sparse_each(world->store.tables, ecs_table_t, table, {
-        ecs_entity_t result = find_child_in_table(table, NULL, symbol);
-        if (result) {
-            return result;
-        }
-    });    
 
     return 0;
 }
@@ -335,7 +311,7 @@ ecs_entity_t ecs_lookup(
         return name_to_id(name);
     }
 
-    e = find_as_alias(world, name);
+    e = find_as_alias(name, world->aliases);
     if (e) {
         return e;
     }    
@@ -351,19 +327,15 @@ ecs_entity_t ecs_lookup_symbol(
         return 0;
     }
 
-    ecs_entity_t e = get_builtin(name);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);
+
+    ecs_entity_t e = find_as_alias(name, world->symbols);
     if (e) {
         return e;
     }
 
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);    
-
-    if (is_number(name)) {
-        return name_to_id(name);
-    }   
-    
-    return find_child(world, 0, name);
+    return ecs_lookup_fullpath(world, name);
 }
 
 ecs_entity_t ecs_lookup_path_w_sep(
@@ -390,7 +362,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
         return e;
     }
 
-    e = find_as_alias(world, path);
+    e = find_as_alias(path, world->aliases);
     if (e) {
         return e;
     }      
@@ -698,10 +670,11 @@ ecs_entity_t ecs_new_from_path_w_sep(
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 
-void ecs_use(
+void ecs_use_intern(
     ecs_world_t *world,
     ecs_entity_t entity,
-    const char *name)
+    const char *name,
+    ecs_vector_t **alias_vector)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
@@ -710,11 +683,19 @@ void ecs_use(
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     
     ecs_stage_t *stage = ecs_stage_from_world(&world);
-    ecs_assert(stage->scope == 0 , ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(find_as_alias(world, name) == 0, ECS_ALREADY_DEFINED, NULL);
+    ecs_assert(find_as_alias(name, *alias_vector) == 0, 
+        ECS_ALREADY_DEFINED, NULL);
     (void)stage;
     
-    ecs_alias_t *al = ecs_vector_add(&world->aliases, ecs_alias_t);
+    ecs_alias_t *al = ecs_vector_add(alias_vector, ecs_alias_t);
     al->name = ecs_os_strdup(name);
     al->entity = entity;
+}
+
+void ecs_use(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_use_intern(world, entity, name, &world->aliases);
 }

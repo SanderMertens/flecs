@@ -348,6 +348,7 @@ void Parser_pred_implicit_subject_superset_childof(void);
 void Parser_pred_implicit_subject_cascade_superset_childof(void);
 void Parser_pred_implicit_subject_superset_cascade_childof(void);
 void Parser_pred_implicit_subject_superset_cascade_childof_optional(void);
+void Parser_expr_w_symbol(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -681,7 +682,6 @@ void Lookup_change_name_of_existing(void);
 void Lookup_lookup_alias(void);
 void Lookup_lookup_scoped_alias(void);
 void Lookup_define_duplicate_alias(void);
-void Lookup_define_alias_in_scope(void);
 void Lookup_lookup_null(void);
 void Lookup_lookup_symbol_null(void);
 void Lookup_lookup_this(void);
@@ -3303,6 +3303,10 @@ bake_test_case Parser_testcases[] = {
     {
         "pred_implicit_subject_superset_cascade_childof_optional",
         Parser_pred_implicit_subject_superset_cascade_childof_optional
+    },
+    {
+        "expr_w_symbol",
+        Parser_expr_w_symbol
     }
 };
 
@@ -4545,10 +4549,6 @@ bake_test_case Lookup_testcases[] = {
     {
         "define_duplicate_alias",
         Lookup_define_duplicate_alias
-    },
-    {
-        "define_alias_in_scope",
-        Lookup_define_alias_in_scope
     },
     {
         "lookup_null",
@@ -9546,7 +9546,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        107,
+        108,
         Parser_testcases
     },
     {
@@ -9644,7 +9644,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        27,
+        26,
         Lookup_testcases
     },
     {

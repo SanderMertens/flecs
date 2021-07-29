@@ -1964,6 +1964,7 @@ void traverse_add_remove(
                 ECS_INCONSISTENT_NAME, desc->symbol);
         } else {
             name_ptr->symbol = ecs_os_strdup(desc->symbol);
+            ecs_modified(world, result, EcsName);
         }
     }
 

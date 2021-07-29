@@ -245,22 +245,6 @@ void Lookup_define_duplicate_alias() {
 
 }
 
-void Lookup_define_alias_in_scope() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t scope = ecs_new(world, 0);
-    ecs_set_scope(world, scope);
-
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"MyEntity"});
-    test_assert(e != 0);
-
-    test_expect_abort(); /* Not allowed to create alias in scope */
-
-    ecs_use(world, e, "MyAlias");
-}
-
 void Lookup_lookup_null() {
     ecs_world_t *world = ecs_init();
 

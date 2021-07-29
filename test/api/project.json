@@ -368,7 +368,8 @@
                 "pred_implicit_subject_superset_childof",
                 "pred_implicit_subject_cascade_superset_childof",
                 "pred_implicit_subject_superset_cascade_childof",
-                "pred_implicit_subject_superset_cascade_childof_optional"
+                "pred_implicit_subject_superset_cascade_childof_optional",
+                "expr_w_symbol"
             ]
         }, {
             "id": "GlobalComponentIds",
@@ -730,7 +731,6 @@
                 "lookup_alias",
                 "lookup_scoped_alias",
                 "define_duplicate_alias",
-                "define_alias_in_scope",
                 "lookup_null",
                 "lookup_symbol_null",
                 "lookup_this",

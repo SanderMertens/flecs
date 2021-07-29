@@ -151,6 +151,21 @@ void on_set_component_lifecycle( ecs_iter_t *it) {
     }
 }
 
+static
+void on_set_name( ecs_iter_t *it) {
+    EcsName *n = ecs_term(it, EcsName, 1);
+    ecs_world_t *world = it->world;
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        const char *symbol = n[i].symbol;
+        if (symbol) {
+            ecs_use_intern(world, e, symbol, &world->symbols);
+        }
+    }
+}
+
 /* -- Bootstrapping -- */
 
 #define bootstrap_component(world, table, name)\
@@ -396,6 +411,13 @@ void ecs_bootstrap(
         .callback = on_set_component_lifecycle,
         .events = {EcsOnSet}
     });
+
+    /* Define trigger for when name is set */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_id(EcsName)},
+        .callback = on_set_name,
+        .events = {EcsOnSet}
+    });    
 
 
     /* Removal of ChildOf objects (parents) deletes the subject (child) */
