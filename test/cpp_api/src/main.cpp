@@ -218,6 +218,8 @@ void Switch_get_case(void);
 void Switch_system_w_case(void);
 void Switch_system_w_switch(void);
 void Switch_add_case_w_type(void);
+void Switch_add_switch_w_type(void);
+void Switch_add_switch_w_type_component_first(void);
 
 // Testsuite 'Paths'
 void Paths_name(void);
@@ -578,6 +580,14 @@ void World_template_component_w_namespace_name(void);
 void World_template_component_w_same_namespace_name(void);
 void World_template_component_w_namespace_name_and_namespaced_arg(void);
 void World_template_component_w_same_namespace_name_and_namespaced_arg(void);
+void World_entity_as_tag(void);
+void World_entity_w_name_as_tag(void);
+void World_type_as_tag(void);
+void World_entity_as_component(void);
+void World_entity_w_name_as_component(void);
+void World_type_as_component(void);
+void World_type_w_name_as_component(void);
+void World_component_as_component(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -1429,6 +1439,14 @@ bake_test_case Switch_testcases[] = {
     {
         "add_case_w_type",
         Switch_add_case_w_type
+    },
+    {
+        "add_switch_w_type",
+        Switch_add_switch_w_type
+    },
+    {
+        "add_switch_w_type_component_first",
+        Switch_add_switch_w_type_component_first
     }
 };
 
@@ -2794,6 +2812,38 @@ bake_test_case World_testcases[] = {
     {
         "template_component_w_same_namespace_name_and_namespaced_arg",
         World_template_component_w_same_namespace_name_and_namespaced_arg
+    },
+    {
+        "entity_as_tag",
+        World_entity_as_tag
+    },
+    {
+        "entity_w_name_as_tag",
+        World_entity_w_name_as_tag
+    },
+    {
+        "type_as_tag",
+        World_type_as_tag
+    },
+    {
+        "entity_as_component",
+        World_entity_as_component
+    },
+    {
+        "entity_w_name_as_component",
+        World_entity_w_name_as_component
+    },
+    {
+        "type_as_component",
+        World_type_as_component
+    },
+    {
+        "type_w_name_as_component",
+        World_type_w_name_as_component
+    },
+    {
+        "component_as_component",
+        World_component_as_component
     }
 };
 
@@ -2898,7 +2948,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        5,
+        7,
         Switch_testcases
     },
     {
@@ -3003,7 +3053,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        38,
+        46,
         World_testcases
     },
     {

@@ -61,6 +61,13 @@ inline const Base& entity_builder<Base>::set(const Func& func) const {
     return *this;
 }
 
+template <typename Base>
+template <typename T>
+inline const Base& entity_builder<Base>::component() const {
+    component_for_id<T>(this->base_world(), this->base_id());
+    return *this;
+}
+
 inline bool entity_view::has_switch(const flecs::type& type) const {
     return ecs_has_entity(m_world, m_id, flecs::Switch | type.id());
 }

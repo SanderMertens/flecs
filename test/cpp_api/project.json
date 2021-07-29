@@ -228,7 +228,9 @@
                 "get_case",
                 "system_w_case",
                 "system_w_switch",
-                "add_case_w_type"
+                "add_case_w_type",
+                "add_switch_w_type",
+                "add_switch_w_type_component_first"
             ]
         }, {
             "id": "Paths",
@@ -618,7 +620,15 @@
                 "template_component_w_namespace_name",
                 "template_component_w_same_namespace_name",
                 "template_component_w_namespace_name_and_namespaced_arg",
-                "template_component_w_same_namespace_name_and_namespaced_arg"
+                "template_component_w_same_namespace_name_and_namespaced_arg",
+                "entity_as_tag",
+                "entity_w_name_as_tag",
+                "type_as_tag",
+                "entity_as_component",
+                "entity_w_name_as_component",
+                "type_as_component",
+                "type_w_name_as_component",
+                "component_as_component"
             ]
         }, {
             "id": "Singleton",

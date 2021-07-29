@@ -12842,6 +12842,12 @@ public:
      */
     bool has_switch(const flecs::type& sw) const;
 
+    template <typename T>
+    bool has_switch() const {
+        return ecs_has_entity(m_world, m_id, 
+            flecs::Switch | _::cpp_type<T>::id(m_world));
+    }
+
     /** Check if entity has the provided case.
      *
      * @param sw_case The case to check.
@@ -13182,6 +13188,19 @@ public:
         return *this;  
     }
 
+    /** Add a switch to an entity by id.
+     * The switch entity must be a type, that is it must have the EcsType
+     * component. Entities created with flecs::type are valid here.
+     *
+     * @param sw The switch entity id to add.
+     */ 
+    template <typename T>
+    const Base& add_switch() const {
+        ecs_add_id(this->base_world(), this->base_id(), 
+            ECS_SWITCH | _::cpp_type<T>::id());
+        return *this;  
+    }
+
     /** Add a switch to an entity.
      * Any instance of flecs::type can be used as a switch.
      *
@@ -13476,7 +13495,22 @@ public:
         func();
         ecs_set_scope(this->base_world(), prev);
         return *this;
-    }    
+    }
+
+    /** Associate entity with type.
+     * This operation enables using a type to refer to an entity, as it
+     * associates the entity id with the provided type.
+     *
+     * If the entity does not have a name, a name will be derived from the type.
+     * If the entity already is a component, the provided type must match in
+     * size with the component size of the entity. After this operation the
+     * entity will be a component (it will have the EcsComponent component) if
+     * the type has a non-zero size.
+     *
+     * @tparam T the type to associate with the entity.
+     */
+    template <typename T>
+    const Base& component() const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -14103,13 +14137,29 @@ public:
                 s_id = id;
             }
 
-            if (!name) {
-                // If no name was provided, retrieve the name implicitly from
-                // the name_helper class.
-                name = strip_module(world);
+            // One type can only be associated with a single type
+            ecs_assert(!id || s_id == id, ECS_INTERNAL_ERROR, NULL);
+
+            char *symbol = nullptr;
+
+            // If an explicit id is provided, it is possible that the symbol and
+            // name differ from the actual type, as the application may alias
+            // one type to another.
+            if (!id) {
+                symbol = symbol_helper<T>::symbol();
+                if (!name) {
+                    // If no name was provided, retrieve the name implicitly from
+                    // the name_helper class.
+                    name = strip_module(world);
+                }
+            } else {
+                // If an explicit id is provided but it has no name, inherit
+                // the name from the type.
+                if (!ecs_get_name(world, id)) {
+                    name = strip_module(world);
+                }
             }
 
-            char *symbol = symbol_helper<T>::symbol();
             ecs_component_desc_t desc = {};
             desc.entity.entity = s_id;
             desc.entity.name = name;
@@ -14301,7 +14351,12 @@ public:
 
 /** Plain old datatype, no lifecycle actions are registered */
 template <typename T>
-flecs::entity pod_component(const flecs::world& world, const char *name = nullptr, bool allow_tag = true) {
+flecs::entity pod_component(
+    flecs::world_t *world, 
+    const char *name = nullptr, 
+    bool allow_tag = true, 
+    flecs::id_t id = 0) 
+{
     const char *n = name;
     bool implicit_name = false;
     if (!n) {
@@ -14316,19 +14371,16 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         implicit_name = true;
     }
 
-    world_t *world_ptr = world.c_ptr();
-    entity_t id = 0;
-
     if (_::cpp_type<T>::registered()) {
         /* Obtain component id. Because the component is already registered,
          * this operation does nothing besides returning the existing id */
-        id = _::cpp_type<T>::id_explicit(world_ptr, name, allow_tag);
+        id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
 
         /* If entity is not empty check if the name matches */
-        if (ecs_get_type(world_ptr, id) != nullptr) {
+        if (ecs_get_type(world, id) != nullptr) {
             if (!implicit_name && id >= EcsFirstUserComponentId) {
                 char *path = ecs_get_path_w_sep(
-                    world_ptr, 0, id, 0, "::", nullptr);
+                    world, 0, id, 0, "::", nullptr);
                 ecs_assert(!strcmp(path, n), 
                     ECS_INCONSISTENT_NAME, name);
                 ecs_os_free(path);
@@ -14337,7 +14389,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
             /* Register name with entity, so that when the entity is created the
              * correct id will be resolved from the name. Only do this when the
              * entity is empty.*/
-            ecs_add_path_w_sep(world_ptr, id, 0, n, "::", "::");
+            ecs_add_path_w_sep(world, id, 0, n, "::", "::");
         }
 
         /* If a component was already registered with this id but with a 
@@ -14352,7 +14404,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         desc.entity.entity = id;
         desc.size = _::cpp_type<T>::size();
         desc.alignment = _::cpp_type<T>::alignment();
-        ecs_entity_t entity = ecs_component_init(world.c_ptr(), &desc);
+        ecs_entity_t entity = ecs_component_init(world, &desc);
         (void)entity;
         
         ecs_assert(entity == id, ECS_INTERNAL_ERROR, NULL);
@@ -14366,52 +14418,88 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
         /* If the component is not yet registered, ensure no other component
          * or entity has been registered with this name. Ensure component is 
          * looked up from root. */
-        ecs_entity_t prev_scope = ecs_set_scope(world_ptr, 0);
-        ecs_entity_t entity = ecs_lookup_path_w_sep(world_ptr, 0, n,
-            "::", "::", false);
-        ecs_set_scope(world_ptr, prev_scope);
+        ecs_entity_t prev_scope = ecs_set_scope(world, 0);
+        ecs_entity_t entity;
+        if (id) {
+            entity = id;
+        } else {
+            entity = ecs_lookup_path_w_sep(world, 0, n, "::", "::", false);
+        }
+
+        ecs_set_scope(world, prev_scope);
 
         /* If entity exists, compare symbol name to ensure that the component
          * we are trying to register under this name is the same */
         if (entity) {
-            const EcsName *name_comp = ecs_get_mut(world, entity, EcsName, NULL);
-            ecs_assert(name_comp != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(name_comp->symbol != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (!id) {
+                const EcsName *name_comp = ecs_get_mut(world, entity, EcsName, NULL);
+                ecs_assert(name_comp != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(name_comp->symbol != NULL, ECS_INTERNAL_ERROR, NULL);
 
+                char *symbol = _::symbol_helper<T>::symbol();
+                ecs_assert(!ecs_os_strcmp(name_comp->symbol, symbol), 
+                    ECS_NAME_IN_USE, n);
+                ecs_os_free(symbol);
 
-            char *symbol = _::symbol_helper<T>::symbol();
-            ecs_assert(!strcmp(name_comp->symbol, symbol), 
-                ECS_NAME_IN_USE, n);
-            ecs_os_free(symbol);
+                (void)name_comp;
 
-            (void)name_comp;
+            /* If an existing id was provided, it's possible that this id was
+             * registered with another type. Make sure that in this case at
+             * least the component size/alignment matches.
+             * This allows applications to alias two different types to the same
+             * id, which enables things like redefining a C type in C++ by
+             * inheriting from it & adding utility functions etc. */
+            } else {
+                const EcsComponent *comp = ecs_get(world, entity, EcsComponent);
+                if (comp) {
+                    ecs_assert(comp->size == sizeof(T),
+                        ECS_INVALID_COMPONENT_SIZE, NULL);
+                    ecs_assert(comp->alignment == alignof(T),
+                        ECS_INVALID_COMPONENT_ALIGNMENT, NULL);
+                } else {
+                    /* If the existing id is not a component, no checking is
+                     * needed. */
+                }
+            }
 
-        /* If no entity is found, lookup symbol to verify if the component was
+        /* If no entity is found, lookup symbol to check if the component was
          * registered under a different name. */
         } else {
             char *symbol = _::symbol_helper<T>::symbol();
-            entity = ecs_lookup_symbol(world_ptr, symbol, false);
+            entity = ecs_lookup_symbol(world, symbol, false);
             ecs_assert(entity == 0, ECS_INCONSISTENT_COMPONENT_ID, symbol);
             ecs_os_free(symbol);
         }
 
         /* Register id as usual */
-        id = _::cpp_type<T>::id_explicit(world_ptr, name, allow_tag);
+        id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
     }
     
-    return world.entity(id);
+    return flecs::entity(world, id);
 }
 
 /** Register component */
 template <typename T>
-flecs::entity component(const flecs::world& world, const char *name = nullptr) {
+flecs::entity component(flecs::world_t *world, const char *name = nullptr) {
     flecs::entity result = pod_component<T>(world, name);
 
     if (_::cpp_type<T>::size()) {
-        _::register_lifecycle_actions<T>(world.c_ptr(), result.id());
+        _::register_lifecycle_actions<T>(world, result);
     }
 
     return result;
+}
+
+/* Register component with existing entity id */
+template <typename T>
+void component_for_id(flecs::world_t *world, flecs::id_t id) {
+    flecs::entity result = pod_component<T>(world, nullptr, true, id);
+
+    ecs_assert(result.id() == id, ECS_INTERNAL_ERROR, NULL);
+
+    if (_::cpp_type<T>::size()) {
+        _::register_lifecycle_actions<T>(world, result);
+    }
 }
 
 ECS_DEPRECATED("API detects automatically whether type is trivial")
@@ -16140,6 +16228,12 @@ public:
         return this->has(_::cpp_type<flecs::pair<Relation, Object>>::id(world()));
     }
 
+    template <typename T>
+    Base& component() {
+        component_for_id<T>(world(), m_entity);
+        return *this;
+    }
+
     flecs::string str() const {
         char *str = ecs_type_str(world(), m_type);
         return flecs::string(str);
@@ -17330,6 +17424,13 @@ template <typename Func, if_t< is_callable<Func>::value > >
 inline const Base& entity_builder<Base>::set(const Func& func) const {
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->base_world(), this->base_id(), func);
+    return *this;
+}
+
+template <typename Base>
+template <typename T>
+inline const Base& entity_builder<Base>::component() const {
+    component_for_id<T>(this->base_world(), this->base_id());
     return *this;
 }
 

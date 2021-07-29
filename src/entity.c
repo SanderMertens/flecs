@@ -1955,7 +1955,9 @@ void traverse_add_remove(
 
     /* Set name */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);   
+        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);
+        ecs_assert(ecs_get_name(world, result) != NULL,
+            ECS_INTERNAL_ERROR, NULL);
     }
 
     if (desc->symbol) {
@@ -2134,6 +2136,9 @@ ecs_entity_t ecs_entity_init(
             }
         }
     }
+
+    ecs_assert(name_assigned == ecs_has(world, result, EcsName),
+        ECS_INTERNAL_ERROR, NULL);
 
     if (stage->defer) {
         deferred_add_remove(world, result, name, desc, 

@@ -100,6 +100,12 @@ public:
         return this->has(_::cpp_type<flecs::pair<Relation, Object>>::id(world()));
     }
 
+    template <typename T>
+    Base& component() {
+        component_for_id<T>(world(), m_entity);
+        return *this;
+    }
+
     flecs::string str() const {
         char *str = ecs_type_str(world(), m_type);
         return flecs::string(str);

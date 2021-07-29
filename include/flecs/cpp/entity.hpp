@@ -419,6 +419,12 @@ public:
      */
     bool has_switch(const flecs::type& sw) const;
 
+    template <typename T>
+    bool has_switch() const {
+        return ecs_has_entity(m_world, m_id, 
+            flecs::Switch | _::cpp_type<T>::id(m_world));
+    }
+
     /** Check if entity has the provided case.
      *
      * @param sw_case The case to check.
@@ -759,6 +765,19 @@ public:
         return *this;  
     }
 
+    /** Add a switch to an entity by id.
+     * The switch entity must be a type, that is it must have the EcsType
+     * component. Entities created with flecs::type are valid here.
+     *
+     * @param sw The switch entity id to add.
+     */ 
+    template <typename T>
+    const Base& add_switch() const {
+        ecs_add_id(this->base_world(), this->base_id(), 
+            ECS_SWITCH | _::cpp_type<T>::id());
+        return *this;  
+    }
+
     /** Add a switch to an entity.
      * Any instance of flecs::type can be used as a switch.
      *
@@ -1053,7 +1072,22 @@ public:
         func();
         ecs_set_scope(this->base_world(), prev);
         return *this;
-    }    
+    }
+
+    /** Associate entity with type.
+     * This operation enables using a type to refer to an entity, as it
+     * associates the entity id with the provided type.
+     *
+     * If the entity does not have a name, a name will be derived from the type.
+     * If the entity already is a component, the provided type must match in
+     * size with the component size of the entity. After this operation the
+     * entity will be a component (it will have the EcsComponent component) if
+     * the type has a non-zero size.
+     *
+     * @tparam T the type to associate with the entity.
+     */
+    template <typename T>
+    const Base& component() const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

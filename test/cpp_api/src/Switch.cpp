@@ -119,28 +119,68 @@ void Switch_system_w_switch() {
     test_int(count, 3);
 }
 
-struct Standing { };
-struct Walking { };
+struct Movement {
+    struct Standing { };
+    struct Walking { };
+};
 
 void Switch_add_case_w_type() {
     flecs::world world;
 
-    flecs::component<Standing>(world);
-    flecs::component<Walking>(world);
-
-    auto Movement = flecs::type(world, "Movement", 
-        "Standing, Walking");
+    auto Movement = world.type()
+        .add<Movement::Standing>()
+        .add<Movement::Walking>();
 
     auto e = flecs::entity(world)
         .add_switch(Movement)
-        .add_case<Standing>();
+        .add_case<Movement::Standing>();
 
     test_assert(e.has_switch(Movement));
-    test_assert(e.has_case<Standing>());
+    test_assert(e.has_case<Movement::Standing>());
 
-    e.add_case<Walking>();
+    e.add_case<Movement::Walking>();
 
-    test_assert(e.has_case<Walking>());
-    test_assert(!e.has_case<Standing>());
+    test_assert(e.has_case<Movement::Walking>());
+    test_assert(!e.has_case<Movement::Standing>());
 }
 
+void Switch_add_switch_w_type() {
+    flecs::world world;
+
+    world.type()
+        .add<Movement::Standing>()
+        .add<Movement::Walking>()
+        .component<Movement>();
+
+    auto e = world.entity()
+        .add_switch<Movement>()
+        .add_case<Movement::Standing>();
+
+    test_assert(e.has_switch<Movement>());
+    test_assert(e.has_case<Movement::Standing>());
+
+    e.add_case<Movement::Walking>();
+
+    test_assert(e.has_case<Movement::Walking>());
+    test_assert(!e.has_case<Movement::Standing>());
+}
+
+void Switch_add_switch_w_type_component_first() {
+    flecs::world world;
+
+    world.type().component<Movement>()
+        .add<Movement::Standing>()
+        .add<Movement::Walking>();
+
+    auto e = world.entity()
+        .add_switch<Movement>()
+        .add_case<Movement::Standing>();
+
+    test_assert(e.has_switch<Movement>());
+    test_assert(e.has_case<Movement::Standing>());
+
+    e.add_case<Movement::Walking>();
+
+    test_assert(e.has_case<Movement::Walking>());
+    test_assert(!e.has_case<Movement::Standing>());
+}

@@ -6596,7 +6596,9 @@ void traverse_add_remove(
 
     /* Set name */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);   
+        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);
+        ecs_assert(ecs_get_name(world, result) != NULL,
+            ECS_INTERNAL_ERROR, NULL);
     }
 
     if (desc->symbol) {
@@ -6775,6 +6777,9 @@ ecs_entity_t ecs_entity_init(
             }
         }
     }
+
+    ecs_assert(name_assigned == ecs_has(world, result, EcsName),
+        ECS_INTERNAL_ERROR, NULL);
 
     if (stage->defer) {
         deferred_add_remove(world, result, name, desc, 
@@ -10622,6 +10627,7 @@ void* _ecs_sparse_get(
 {
     return _flecs_sparse_get(sparse, elem_size, id);
 }
+
 #ifdef FLECS_READER_WRITER
 
 
@@ -28681,6 +28687,8 @@ ecs_entity_t ecs_add_path_w_sep(
 
     ecs_entity_t cur = parent;
 
+    char *name = NULL;
+
     while ((ptr = path_elem(ptr, sep, &len))) {
         if (len < size) {
             ecs_os_memcpy(elem, ptr_start, len);
@@ -28696,10 +28704,14 @@ ecs_entity_t ecs_add_path_w_sep(
 
         elem[len] = '\0';
         ptr_start = ptr;
-        
+
         ecs_entity_t e = ecs_lookup_child(world, cur, elem);
         if (!e) {
-            char *name = ecs_os_strdup(elem);
+            if (name) {
+                ecs_os_free(name);
+            }
+
+            name = ecs_os_strdup(elem);
 
             /* If this is the last entity in the path, use the provided id */
             if (entity && !path_elem(ptr, sep, NULL)) {
@@ -28709,13 +28721,11 @@ ecs_entity_t ecs_add_path_w_sep(
             if (!e) {
                 e = ecs_new_id(world);
             }
-            
+
             ecs_set(world, e, EcsName, {
                 .value = name,
                 .alloc_value = name
             });
-
-            ecs_os_free(name);
 
             if (cur) {
                 ecs_add_pair(world, e, EcsChildOf, cur);
@@ -28723,6 +28733,23 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         cur = e;
+    }
+
+    if (entity && (cur != entity)) {
+        if (name) {
+            ecs_os_free(name);
+        }
+
+        name = ecs_os_strdup(elem);
+
+        ecs_set(world, entity, EcsName, {
+            .value = name,
+            .alloc_value = name
+        });
+    }
+
+    if (name) {
+        ecs_os_free(name);
     }
 
     if (elem != buff) {

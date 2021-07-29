@@ -58,15 +58,11 @@ int main(int argc, char *argv[]) {
         SWITCH | Direction, CASE | Left);
 
     ECS_ENTITY(world, e3, 
-        SWITCH | Movement, CASE | Walking,
+        SWITCH | Movement, CASE | Running,
         SWITCH | Direction, CASE | Right);
 
-    ECS_ENTITY(world, e4, 
-        SWITCH | Movement, CASE | Running,
-        SWITCH | Direction, CASE | Back);
-
     /* Add Walking to e4. This will remove the Running case */
-    ecs_add_id(world, e4, ECS_CASE | Walking);
+    ecs_add_id(world, e3, ECS_CASE | Walking);
 
     /* Set target FPS for main loop */
     ecs_set_target_fps(world, 1);
