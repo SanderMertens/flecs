@@ -440,7 +440,7 @@ class vector {
 public:
     explicit vector(ecs_vector_t *v) : m_vector( v ) { }
 
-    vector(int32_t count = 0) : m_vector( nullptr ) { 
+    vector(size_t count = 0) : m_vector( nullptr ) { 
         if (count) {
             init(count);
         }
@@ -516,8 +516,8 @@ public:
     }
 
 private:
-    void init(int32_t count) {
-        m_vector = ecs_vector_new(T, count);
+    void init(size_t count) {
+        m_vector = ecs_vector_new(T, static_cast<ecs_size_t>(count));
     }
 
     ecs_vector_t *m_vector;

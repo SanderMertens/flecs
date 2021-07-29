@@ -195,7 +195,7 @@ namespace flecs {
 template <typename K, typename T>
 class map {
 public:
-    map(int32_t count = 0) {
+    map(size_t count = 0) {
         init(count);
     }
 
@@ -228,8 +228,8 @@ public:
     }
 
 private:
-    void init(int32_t count) {
-        m_map = ecs_map_new(T, count);
+    void init(size_t count) {
+        m_map = ecs_map_new(T, static_cast<ecs_size_t>(count));
     }
 
     ecs_map_t *m_map;
