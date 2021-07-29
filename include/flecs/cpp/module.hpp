@@ -34,19 +34,19 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_trace_1("import %s", _::name_helper<T>::name());
     ecs_log_push();
 
-    ecs_entity_t scope = ecs_get_scope(world.c_ptr());
+    ecs_entity_t scope = ecs_get_scope(world);
 
     // Create custom storage to prevent object destruction
     T* module_data = static_cast<T*>(ecs_os_malloc(sizeof(T)));
     FLECS_PLACEMENT_NEW(module_data, T(world));
 
-    ecs_set_scope(world.c_ptr(), scope);
+    ecs_set_scope(world, scope);
 
     // It should now be possible to lookup the module
-    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
+    ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
     ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
 
-    _::cpp_type<T>::init(world.c_ptr(), m, false);
+    _::cpp_type<T>::init(world, m, false);
 
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -63,7 +63,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_os_free(module_data);
 
     // Add module tag        
-    ecs_add_id(world.c_ptr(), m, flecs::Module);
+    ecs_add_id(world, m, flecs::Module);
 
     ecs_log_pop();     
 
@@ -74,7 +74,7 @@ template <typename T>
 flecs::entity import(world& world) {
     char *symbol = _::symbol_helper<T>::symbol();
 
-    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
+    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol, true);
     
     if (!_::cpp_type<T>::registered()) {
 

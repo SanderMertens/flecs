@@ -29,7 +29,7 @@ int resolve_identifier(
         if (ecs_identifier_is_0(identifier->name)) {
             identifier->entity = 0;
         } else {
-            ecs_entity_t e = ecs_lookup_symbol(world, identifier->name);
+            ecs_entity_t e = ecs_lookup_symbol(world, identifier->name, true);
             if (!e) {
                 ecs_parser_error(name, expr, 0,
                     "unresolved identifier '%s'", identifier->name);

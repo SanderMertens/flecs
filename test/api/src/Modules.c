@@ -342,15 +342,15 @@ void Modules_lookup_by_symbol() {
 
     ECS_IMPORT(world, SimpleModule);
 
-    ecs_entity_t e = ecs_lookup_symbol(world, "Position");
+    ecs_entity_t e = ecs_lookup_symbol(world, "Position", true);
     test_assert(e != 0);
     test_assert(e == ecs_typeid(Position));
 
-    e = ecs_lookup_symbol(world, "SimpleFooComponent");
+    e = ecs_lookup_symbol(world, "SimpleFooComponent", true);
     test_assert(e != 0);
     test_assert(e == ecs_typeid(SimpleFooComponent));
     
-    e = ecs_lookup_symbol(world, "Simple_underscore");
+    e = ecs_lookup_symbol(world, "Simple_underscore", true);
     test_assert(e != 0);
     test_assert(e == Simple_underscore);
 
@@ -401,4 +401,12 @@ void Modules_module_tag_on_namespace() {
     test_assert(ecs_has_id(world, nid, EcsModule));
 
     ecs_fini(world);
+}
+
+void Modules_lookup_by_fullpath() {
+    // Implement testcase
+}
+
+void Modules_lookup_by_fullpath_no_recursion() {
+    // Implement testcase
 }

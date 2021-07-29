@@ -133,7 +133,7 @@ void Lookup_lookup_name_w_digit() {
 void Lookup_lookup_symbol_by_id() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_lookup_symbol(world, "1000");
+    ecs_entity_t e = ecs_lookup_symbol(world, "1000", true);
     test_int(e, 1000);
 
     ecs_fini(world);
@@ -147,7 +147,7 @@ void Lookup_lookup_symbol_w_digit() {
         .symbol = "10_id"
     });
     
-    ecs_entity_t e2 = ecs_lookup_symbol(world, "10_id");
+    ecs_entity_t e2 = ecs_lookup_symbol(world, "10_id", true);
     test_assert(e == e2);
 
     ecs_fini(world);
@@ -256,7 +256,7 @@ void Lookup_lookup_null() {
 void Lookup_lookup_symbol_null() {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_lookup_symbol(world, NULL) == 0);
+    test_assert(ecs_lookup_symbol(world, NULL, true) == 0);
 
     ecs_fini(world);
 }

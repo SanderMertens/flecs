@@ -2069,6 +2069,8 @@ ecs_entity_t ecs_entity_init(
         sep = ".";
     }
 
+    const char *root_sep = desc->root_sep;
+
     bool new_entity = false;
     bool name_assigned = false;
 
@@ -2097,7 +2099,8 @@ ecs_entity_t ecs_entity_init(
     ecs_entity_t result = desc->entity;
     if (!result) {
         if (name) {
-            result = ecs_lookup_path_w_sep(world, 0, name, sep, NULL, false);
+            result = ecs_lookup_path_w_sep(
+                world, scope, name, sep, root_sep, false);
             if (result) {
                 name_assigned = true;
             }

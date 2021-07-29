@@ -2800,6 +2800,7 @@ typedef struct ecs_entity_desc_t {
                           * with the existing entity. */
 
     const char *sep;     /* Optional custom separator for hierarchical names */
+    const char *root_sep; /* Optional, used for identifiers relative to root */
 
     const char *symbol;  /* Optional entity symbol. A symbol is an unscoped
                           * identifier that can be used to lookup an entity. The
@@ -5536,7 +5537,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
 FLECS_API
 ecs_entity_t ecs_lookup_symbol(
     const ecs_world_t *world,
-    const char *name);
+    const char *symbol,
+    bool lookup_as_path);
 
 /* Add alias for entity to global scope */
 FLECS_API
@@ -14112,9 +14114,11 @@ public:
             desc.entity.entity = s_id;
             desc.entity.name = name;
             desc.entity.sep = "::";
+            desc.entity.root_sep = "::";
             desc.entity.symbol = symbol;
             desc.size = cpp_type_size<T>::size(allow_tag);
             desc.alignment = cpp_type_size<T>::alignment(allow_tag);
+
             ecs_entity_t entity = ecs_component_init(world, &desc);
             ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(!s_id || s_id == entity, ECS_INTERNAL_ERROR, NULL);
@@ -14385,7 +14389,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
          * registered under a different name. */
         } else {
             char *symbol = _::symbol_helper<T>::symbol();
-            entity = ecs_lookup_symbol(world_ptr, symbol);
+            entity = ecs_lookup_symbol(world_ptr, symbol, false);
             ecs_assert(entity == 0, ECS_INCONSISTENT_COMPONENT_ID, symbol);
             ecs_os_free(symbol);
         }
@@ -16268,19 +16272,19 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_trace_1("import %s", _::name_helper<T>::name());
     ecs_log_push();
 
-    ecs_entity_t scope = ecs_get_scope(world.c_ptr());
+    ecs_entity_t scope = ecs_get_scope(world);
 
     // Create custom storage to prevent object destruction
     T* module_data = static_cast<T*>(ecs_os_malloc(sizeof(T)));
     FLECS_PLACEMENT_NEW(module_data, T(world));
 
-    ecs_set_scope(world.c_ptr(), scope);
+    ecs_set_scope(world, scope);
 
     // It should now be possible to lookup the module
-    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
+    ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
     ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
 
-    _::cpp_type<T>::init(world.c_ptr(), m, false);
+    _::cpp_type<T>::init(world, m, false);
 
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -16297,7 +16301,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_os_free(module_data);
 
     // Add module tag        
-    ecs_add_id(world.c_ptr(), m, flecs::Module);
+    ecs_add_id(world, m, flecs::Module);
 
     ecs_log_pop();     
 
@@ -16308,7 +16312,7 @@ template <typename T>
 flecs::entity import(world& world) {
     char *symbol = _::symbol_helper<T>::symbol();
 
-    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol);
+    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol, true);
     
     if (!_::cpp_type<T>::registered()) {
 

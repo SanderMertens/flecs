@@ -1408,7 +1408,6 @@ void ecs_observer_fini(
     ecs_observer_t *observer);
 
 void ecs_use_intern(
-    ecs_world_t *world,
     ecs_entity_t entity,
     const char *name,
     ecs_vector_t **alias_vector);
@@ -6733,6 +6732,8 @@ ecs_entity_t ecs_entity_init(
         sep = ".";
     }
 
+    const char *root_sep = desc->root_sep;
+
     bool new_entity = false;
     bool name_assigned = false;
 
@@ -6761,7 +6762,8 @@ ecs_entity_t ecs_entity_init(
     ecs_entity_t result = desc->entity;
     if (!result) {
         if (name) {
-            result = ecs_lookup_path_w_sep(world, 0, name, sep, NULL, false);
+            result = ecs_lookup_path_w_sep(
+                world, scope, name, sep, root_sep, false);
             if (result) {
                 name_assigned = true;
             }
@@ -17110,7 +17112,7 @@ int resolve_identifier(
         if (ecs_identifier_is_0(identifier->name)) {
             identifier->entity = 0;
         } else {
-            ecs_entity_t e = ecs_lookup_symbol(world, identifier->name);
+            ecs_entity_t e = ecs_lookup_symbol(world, identifier->name, true);
             if (!e) {
                 ecs_parser_error(name, expr, 0,
                     "unresolved identifier '%s'", identifier->name);
@@ -27838,7 +27840,7 @@ void on_set_name( ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         const char *symbol = n[i].symbol;
         if (symbol) {
-            ecs_use_intern(world, e, symbol, &world->symbols);
+            ecs_use_intern(e, symbol, &world->symbols);
         }
     }
 }
@@ -28426,7 +28428,8 @@ ecs_entity_t ecs_lookup(
 
 ecs_entity_t ecs_lookup_symbol(
     const ecs_world_t *world,
-    const char *name)
+    const char *name,
+    bool lookup_as_path)
 {   
     if (!name) {
         return 0;
@@ -28440,7 +28443,11 @@ ecs_entity_t ecs_lookup_symbol(
         return e;
     }
 
-    return ecs_lookup_fullpath(world, name);
+    if (lookup_as_path) {
+        return ecs_lookup_fullpath(world, name);
+    }
+
+    return 0;
 }
 
 ecs_entity_t ecs_lookup_path_w_sep(
@@ -28776,21 +28783,16 @@ ecs_entity_t ecs_new_from_path_w_sep(
 }
 
 void ecs_use_intern(
-    ecs_world_t *world,
     ecs_entity_t entity,
     const char *name,
     ecs_vector_t **alias_vector)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
-    ecs_assert(find_as_alias(name, *alias_vector) == 0, 
-        ECS_ALREADY_DEFINED, NULL);
-    (void)stage;
+    ecs_entity_t existing = find_as_alias(name, *alias_vector);
+    ecs_assert(!existing || existing == entity, ECS_ALREADY_DEFINED, name);
+    (void)existing;
     
     ecs_alias_t *al = ecs_vector_add(alias_vector, ecs_alias_t);
     al->name = ecs_os_strdup(name);
@@ -28802,5 +28804,5 @@ void ecs_use(
     ecs_entity_t entity,
     const char *name)
 {
-    ecs_use_intern(world, entity, name, &world->aliases);
+    ecs_use_intern(entity, name, &world->aliases);
 }

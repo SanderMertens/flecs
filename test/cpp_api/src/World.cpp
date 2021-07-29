@@ -43,7 +43,7 @@ public:
 
         ecs.module<test::interop::module>();
 
-        ecs.component<Position>("test::interop::module::Position");
+        ecs.component<Position>("::test::interop::module::Position");
     }
 };
 

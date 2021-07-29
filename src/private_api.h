@@ -164,7 +164,6 @@ void ecs_observer_fini(
     ecs_observer_t *observer);
 
 void ecs_use_intern(
-    ecs_world_t *world,
     ecs_entity_t entity,
     const char *name,
     ecs_vector_t **alias_vector);

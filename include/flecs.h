@@ -354,6 +354,7 @@ typedef struct ecs_entity_desc_t {
                           * with the existing entity. */
 
     const char *sep;     /* Optional custom separator for hierarchical names */
+    const char *root_sep; /* Optional, used for identifiers relative to root */
 
     const char *symbol;  /* Optional entity symbol. A symbol is an unscoped
                           * identifier that can be used to lookup an entity. The
@@ -2513,7 +2514,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
 FLECS_API
 ecs_entity_t ecs_lookup_symbol(
     const ecs_world_t *world,
-    const char *name);
+    const char *symbol,
+    bool lookup_as_path);
 
 /* Add alias for entity to global scope */
 FLECS_API

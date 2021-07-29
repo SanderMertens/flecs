@@ -161,7 +161,7 @@ void on_set_name( ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         const char *symbol = n[i].symbol;
         if (symbol) {
-            ecs_use_intern(world, e, symbol, &world->symbols);
+            ecs_use_intern(e, symbol, &world->symbols);
         }
     }
 }

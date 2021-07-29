@@ -304,9 +304,11 @@ public:
             desc.entity.entity = s_id;
             desc.entity.name = name;
             desc.entity.sep = "::";
+            desc.entity.root_sep = "::";
             desc.entity.symbol = symbol;
             desc.size = cpp_type_size<T>::size(allow_tag);
             desc.alignment = cpp_type_size<T>::alignment(allow_tag);
+
             ecs_entity_t entity = ecs_component_init(world, &desc);
             ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(!s_id || s_id == entity, ECS_INTERNAL_ERROR, NULL);
@@ -577,7 +579,7 @@ flecs::entity pod_component(const flecs::world& world, const char *name = nullpt
          * registered under a different name. */
         } else {
             char *symbol = _::symbol_helper<T>::symbol();
-            entity = ecs_lookup_symbol(world_ptr, symbol);
+            entity = ecs_lookup_symbol(world_ptr, symbol, false);
             ecs_assert(entity == 0, ECS_INCONSISTENT_COMPONENT_ID, symbol);
             ecs_os_free(symbol);
         }

@@ -321,7 +321,8 @@ ecs_entity_t ecs_lookup(
 
 ecs_entity_t ecs_lookup_symbol(
     const ecs_world_t *world,
-    const char *name)
+    const char *name,
+    bool lookup_as_path)
 {   
     if (!name) {
         return 0;
@@ -335,7 +336,11 @@ ecs_entity_t ecs_lookup_symbol(
         return e;
     }
 
-    return ecs_lookup_fullpath(world, name);
+    if (lookup_as_path) {
+        return ecs_lookup_fullpath(world, name);
+    }
+
+    return 0;
 }
 
 ecs_entity_t ecs_lookup_path_w_sep(
@@ -671,21 +676,16 @@ ecs_entity_t ecs_new_from_path_w_sep(
 }
 
 void ecs_use_intern(
-    ecs_world_t *world,
     ecs_entity_t entity,
     const char *name,
     ecs_vector_t **alias_vector)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
-    ecs_assert(find_as_alias(name, *alias_vector) == 0, 
-        ECS_ALREADY_DEFINED, NULL);
-    (void)stage;
+    ecs_entity_t existing = find_as_alias(name, *alias_vector);
+    ecs_assert(!existing || existing == entity, ECS_ALREADY_DEFINED, name);
+    (void)existing;
     
     ecs_alias_t *al = ecs_vector_add(alias_vector, ecs_alias_t);
     al->name = ecs_os_strdup(name);
@@ -697,5 +697,5 @@ void ecs_use(
     ecs_entity_t entity,
     const char *name)
 {
-    ecs_use_intern(world, entity, name, &world->aliases);
+    ecs_use_intern(entity, name, &world->aliases);
 }
