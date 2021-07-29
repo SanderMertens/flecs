@@ -199,17 +199,17 @@ struct ecs_table_t {
 };
 
 /* Sparse query column */
-typedef struct ecs_sparse_column_t {
+typedef struct flecs_sparse_column_t {
     ecs_sw_column_t *sw_column;
     ecs_entity_t sw_case; 
     int32_t signature_column_index;
-} ecs_sparse_column_t;
+} flecs_sparse_column_t;
 
 /* Bitset query column */
-typedef struct ecs_bitset_column_t {
+typedef struct flecs_bitset_column_t {
     ecs_bs_column_t *bs_column;
     int32_t column_index;
-} ecs_bitset_column_t;
+} flecs_bitset_column_t;
 
 /** Type containing data for a table matched with a query. */
 typedef struct ecs_matched_table_t {

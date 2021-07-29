@@ -19,7 +19,7 @@ void ensure(
     }
 }
 
-void ecs_bitset_init(
+void flecs_bitset_init(
     ecs_bitset_t* bs)
 {
     bs->size = 0;
@@ -27,7 +27,7 @@ void ecs_bitset_init(
     bs->data = NULL;
 }
 
-void ecs_bitset_ensure(
+void flecs_bitset_ensure(
     ecs_bitset_t *bs,
     int32_t count)
 {
@@ -37,13 +37,13 @@ void ecs_bitset_ensure(
     }
 }
 
-void ecs_bitset_deinit(
+void flecs_bitset_deinit(
     ecs_bitset_t *bs)
 {
     ecs_os_free(bs->data);
 }
 
-void ecs_bitset_addn(
+void flecs_bitset_addn(
     ecs_bitset_t *bs,
     int32_t count)
 {
@@ -51,7 +51,7 @@ void ecs_bitset_addn(
     ensure(bs, elem);
 }
 
-void ecs_bitset_set(
+void flecs_bitset_set(
     ecs_bitset_t *bs,
     int32_t elem,
     bool value)
@@ -63,7 +63,7 @@ void ecs_bitset_set(
     bs->data[hi] = (v & ~((uint64_t)1 << lo)) | ((uint64_t)value << lo);
 }
 
-bool ecs_bitset_get(
+bool flecs_bitset_get(
     const ecs_bitset_t *bs,
     int32_t elem)
 {
@@ -71,24 +71,24 @@ bool ecs_bitset_get(
     return !!(bs->data[elem >> 6] & ((uint64_t)1 << ((uint64_t)elem & 0x3F)));
 }
 
-int32_t ecs_bitset_count(
+int32_t flecs_bitset_count(
     const ecs_bitset_t *bs)
 {
     return bs->count;
 }
 
-void ecs_bitset_remove(
+void flecs_bitset_remove(
     ecs_bitset_t *bs,
     int32_t elem)
 {
     ecs_assert(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
     int32_t last = bs->count - 1;
-    bool last_value = ecs_bitset_get(bs, last);
-    ecs_bitset_set(bs, elem, last_value);
+    bool last_value = flecs_bitset_get(bs, last);
+    flecs_bitset_set(bs, elem, last_value);
     bs->count --;
 }
 
-void ecs_bitset_swap(
+void flecs_bitset_swap(
     ecs_bitset_t *bs,
     int32_t elem_a,
     int32_t elem_b)
@@ -96,8 +96,8 @@ void ecs_bitset_swap(
     ecs_assert(elem_a < bs->count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(elem_b < bs->count, ECS_INVALID_PARAMETER, NULL);
 
-    bool a = ecs_bitset_get(bs, elem_a);
-    bool b = ecs_bitset_get(bs, elem_b);
-    ecs_bitset_set(bs, elem_a, b);
-    ecs_bitset_set(bs, elem_b, a);
+    bool a = flecs_bitset_get(bs, elem_a);
+    bool b = flecs_bitset_get(bs, elem_b);
+    flecs_bitset_set(bs, elem_a, b);
+    flecs_bitset_set(bs, elem_b, a);
 }

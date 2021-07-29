@@ -23,7 +23,7 @@ int32_t find_key(
     return -1;
 }
 
-ecs_hashmap_t _ecs_hashmap_new(
+ecs_hashmap_t _flecs_hashmap_new(
     ecs_size_t key_size,
     ecs_size_t value_size,
     ecs_hash_value_action_t hash,
@@ -38,7 +38,7 @@ ecs_hashmap_t _ecs_hashmap_new(
     };
 }
 
-void ecs_hashmap_free(
+void flecs_hashmap_free(
     ecs_hashmap_t map)
 {
     ecs_map_iter_t it = ecs_map_iter(map.impl);
@@ -51,7 +51,7 @@ void ecs_hashmap_free(
     ecs_map_free(map.impl);
 }
 
-void* _ecs_hashmap_get(
+void* _flecs_hashmap_get(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
     const void *key,
@@ -74,7 +74,7 @@ void* _ecs_hashmap_get(
     return ecs_vector_get_t(bucket->values, value_size, 8, index);
 }
 
-ecs_hashmap_result_t _ecs_hashmap_ensure(
+flecs_hashmap_result_t _flecs_hashmap_ensure(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
     void *key,
@@ -111,26 +111,26 @@ ecs_hashmap_result_t _ecs_hashmap_ensure(
         }
     }
 
-    return (ecs_hashmap_result_t){
+    return (flecs_hashmap_result_t){
         .key = key_ptr,
         .value = value_ptr,
         .hash = hash
     };
 }
 
-void _ecs_hashmap_set(
+void _flecs_hashmap_set(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
     void *key,
     ecs_size_t value_size,
     const void *value)
 {
-    void *value_ptr = _ecs_hashmap_ensure(map, key_size, key, value_size).value;
+    void *value_ptr = _flecs_hashmap_ensure(map, key_size, key, value_size).value;
     ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_os_memcpy(value_ptr, value, value_size);
 }
 
-void _ecs_hashmap_remove_w_hash(
+void _flecs_hashmap_remove_w_hash(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
     const void *key,
@@ -157,7 +157,7 @@ void _ecs_hashmap_remove_w_hash(
     }
 }
 
-void _ecs_hashmap_remove(
+void _flecs_hashmap_remove(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
     const void *key,
@@ -167,19 +167,19 @@ void _ecs_hashmap_remove(
     ecs_assert(map.value_size == value_size, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t hash = map.hash(key);
-    _ecs_hashmap_remove_w_hash(map, key_size, key, value_size, hash);
+    _flecs_hashmap_remove_w_hash(map, key_size, key, value_size, hash);
 }
 
-ecs_hashmap_iter_t ecs_hashmap_iter(
+flecs_hashmap_iter_t flecs_hashmap_iter(
     ecs_hashmap_t map)
 {
-    return (ecs_hashmap_iter_t){
+    return (flecs_hashmap_iter_t){
         .it = ecs_map_iter(map.impl)
     };
 }
 
-void* _ecs_hashmap_next(
-    ecs_hashmap_iter_t *it,
+void* _flecs_hashmap_next(
+    flecs_hashmap_iter_t *it,
     ecs_size_t key_size,
     void *key_out,
     ecs_size_t value_size)

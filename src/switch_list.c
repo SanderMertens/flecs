@@ -3,8 +3,8 @@
 #ifdef FLECS_SANITIZE
 static 
 void verify_nodes(
-    ecs_switch_header_t *hdr,
-    ecs_switch_node_t *nodes)
+    flecs_switch_header_t *hdr,
+    flecs_switch_node_t *nodes)
 {
     if (!hdr) {
         return;
@@ -25,7 +25,7 @@ void verify_nodes(
 #endif
 
 static
-ecs_switch_header_t *get_header(
+flecs_switch_header_t *get_header(
     const ecs_switch_t *sw,
     uint64_t value)
 {
@@ -45,9 +45,9 @@ ecs_switch_header_t *get_header(
 
 static
 void remove_node(
-    ecs_switch_header_t *hdr,
-    ecs_switch_node_t *nodes,
-    ecs_switch_node_t *node,
+    flecs_switch_header_t *hdr,
+    flecs_switch_node_t *nodes,
+    flecs_switch_node_t *node,
     int32_t element)
 {
     ecs_assert(&nodes[element] == node, ECS_INTERNAL_ERROR, NULL);
@@ -61,7 +61,7 @@ void remove_node(
         /* If this is not the first node, update the previous node to the 
          * removed node's next ptr */
         ecs_assert(node->prev != -1, ECS_INVALID_PARAMETER, NULL);
-        ecs_switch_node_t *prev_node = &nodes[node->prev];
+        flecs_switch_node_t *prev_node = &nodes[node->prev];
         prev_node->next = node->next;
     }
 
@@ -71,7 +71,7 @@ void remove_node(
         ecs_assert(next >= 0, ECS_INVALID_PARAMETER, NULL);
         /* If this is not the last node, update the next node to point to the
          * removed node's prev ptr */
-        ecs_switch_node_t *next_node = &nodes[next];
+        flecs_switch_node_t *next_node = &nodes[next];
         next_node->prev = node->prev;
     }
 
@@ -80,7 +80,7 @@ void remove_node(
     ecs_assert(hdr->count >= 0, ECS_INTERNAL_ERROR, NULL);
 }
 
-ecs_switch_t* ecs_switch_new(
+ecs_switch_t* flecs_switch_new(
     uint64_t min, 
     uint64_t max,
     int32_t elements)
@@ -96,8 +96,8 @@ ecs_switch_t* ecs_switch_new(
     result->max = (uint32_t)max;
 
     int32_t count = (int32_t)(max - min) + 1;
-    result->headers = ecs_os_calloc(ECS_SIZEOF(ecs_switch_header_t) * count);
-    result->nodes = ecs_vector_new(ecs_switch_node_t, elements);
+    result->headers = ecs_os_calloc(ECS_SIZEOF(flecs_switch_header_t) * count);
+    result->nodes = ecs_vector_new(flecs_switch_node_t, elements);
     result->values = ecs_vector_new(uint64_t, elements);
 
     int64_t i;
@@ -106,8 +106,8 @@ ecs_switch_t* ecs_switch_new(
         result->headers[i].count = 0;
     }
 
-    ecs_switch_node_t *nodes = ecs_vector_first(
-        result->nodes, ecs_switch_node_t);
+    flecs_switch_node_t *nodes = ecs_vector_first(
+        result->nodes, flecs_switch_node_t);
     uint64_t *values = ecs_vector_first(
         result->values, uint64_t);        
 
@@ -120,7 +120,7 @@ ecs_switch_t* ecs_switch_new(
     return result;
 }
 
-void ecs_switch_free(
+void flecs_switch_free(
     ecs_switch_t *sw)
 {
     ecs_os_free(sw->headers);
@@ -129,17 +129,17 @@ void ecs_switch_free(
     ecs_os_free(sw);
 }
 
-void ecs_switch_add(
+void flecs_switch_add(
     ecs_switch_t *sw)
 {
-    ecs_switch_node_t *node = ecs_vector_add(&sw->nodes, ecs_switch_node_t);
+    flecs_switch_node_t *node = ecs_vector_add(&sw->nodes, flecs_switch_node_t);
     uint64_t *value = ecs_vector_add(&sw->values, uint64_t);
     node->prev = -1;
     node->next = -1;
     *value = 0;
 }
 
-void ecs_switch_set_count(
+void flecs_switch_set_count(
     ecs_switch_t *sw,
     int32_t count)
 {
@@ -148,22 +148,22 @@ void ecs_switch_set_count(
         return;
     }
 
-    ecs_vector_set_count(&sw->nodes, ecs_switch_node_t, count);
+    ecs_vector_set_count(&sw->nodes, flecs_switch_node_t, count);
     ecs_vector_set_count(&sw->values, uint64_t, count);
 
-    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
+    flecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, flecs_switch_node_t);
     uint64_t *values = ecs_vector_first(sw->values, uint64_t);
 
     int32_t i;
     for (i = old_count; i < count; i ++) {
-        ecs_switch_node_t *node = &nodes[i];
+        flecs_switch_node_t *node = &nodes[i];
         node->prev = -1;
         node->next = -1;
         values[i] = 0;
     }
 }
 
-void ecs_switch_ensure(
+void flecs_switch_ensure(
     ecs_switch_t *sw,
     int32_t count)
 {
@@ -172,18 +172,18 @@ void ecs_switch_ensure(
         return;
     }
 
-    ecs_switch_set_count(sw, count);
+    flecs_switch_set_count(sw, count);
 }
 
-void ecs_switch_addn(
+void flecs_switch_addn(
     ecs_switch_t *sw,
     int32_t count)
 {
     int32_t old_count = ecs_vector_count(sw->nodes);
-    ecs_switch_set_count(sw, old_count + count);
+    flecs_switch_set_count(sw, old_count + count);
 }
 
-void ecs_switch_set(
+void flecs_switch_set(
     ecs_switch_t *sw,
     int32_t element,
     uint64_t value)
@@ -201,11 +201,11 @@ void ecs_switch_set(
         return;
     }
 
-    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
-    ecs_switch_node_t *node = &nodes[element];
+    flecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, flecs_switch_node_t);
+    flecs_switch_node_t *node = &nodes[element];
 
-    ecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
-    ecs_switch_header_t *dst_hdr = get_header(sw, value);
+    flecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
+    flecs_switch_header_t *dst_hdr = get_header(sw, value);
 
     verify_nodes(cur_hdr, nodes);
     verify_nodes(dst_hdr, nodes);
@@ -229,7 +229,7 @@ void ecs_switch_set(
         int32_t first = dst_hdr->element;
         if (first != -1) {
             ecs_assert(first >= 0, ECS_INTERNAL_ERROR, NULL);
-            ecs_switch_node_t *first_node = &nodes[first];
+            flecs_switch_node_t *first_node = &nodes[first];
             first_node->prev = element;
         }
 
@@ -238,7 +238,7 @@ void ecs_switch_set(
     }
 }
 
-void ecs_switch_remove(
+void flecs_switch_remove(
     ecs_switch_t *sw,
     int32_t element)
 {
@@ -248,12 +248,12 @@ void ecs_switch_remove(
 
     uint64_t *values = ecs_vector_first(sw->values, uint64_t);
     uint64_t value = values[element];
-    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
-    ecs_switch_node_t *node = &nodes[element];
+    flecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, flecs_switch_node_t);
+    flecs_switch_node_t *node = &nodes[element];
 
     /* If node is currently assigned to a case, remove it from the list */
     if (value != 0) {
-        ecs_switch_header_t *hdr = get_header(sw, value);
+        flecs_switch_header_t *hdr = get_header(sw, value);
         ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         verify_nodes(hdr, nodes);
@@ -262,18 +262,18 @@ void ecs_switch_remove(
 
     int32_t last_elem = ecs_vector_count(sw->nodes) - 1;
     if (last_elem != element) {
-        ecs_switch_node_t *last = ecs_vector_last(sw->nodes, ecs_switch_node_t);
+        flecs_switch_node_t *last = ecs_vector_last(sw->nodes, flecs_switch_node_t);
         int32_t next = last->next, prev = last->prev;
         if (next != -1) {
-            ecs_switch_node_t *n = &nodes[next];
+            flecs_switch_node_t *n = &nodes[next];
             n->prev = element;
         }
 
         if (prev != -1) {
-            ecs_switch_node_t *n = &nodes[prev];
+            flecs_switch_node_t *n = &nodes[prev];
             n->next = element;
         } else {
-            ecs_switch_header_t *hdr = get_header(sw, values[last_elem]);
+            flecs_switch_header_t *hdr = get_header(sw, values[last_elem]);
             if (hdr && hdr->element != -1) {
                 ecs_assert(hdr->element == last_elem, 
                     ECS_INTERNAL_ERROR, NULL);
@@ -283,11 +283,11 @@ void ecs_switch_remove(
     }
 
     /* Remove element from arrays */
-    ecs_vector_remove(sw->nodes, ecs_switch_node_t, element);
+    ecs_vector_remove(sw->nodes, flecs_switch_node_t, element);
     ecs_vector_remove(sw->values, uint64_t, element);
 }
 
-uint64_t ecs_switch_get(
+uint64_t flecs_switch_get(
     const ecs_switch_t *sw,
     int32_t element)
 {
@@ -300,17 +300,17 @@ uint64_t ecs_switch_get(
     return values[element];
 }
 
-ecs_vector_t* ecs_switch_values(
+ecs_vector_t* flecs_switch_values(
     const ecs_switch_t *sw)
 {
     return sw->values;
 }
 
-int32_t ecs_switch_case_count(
+int32_t flecs_switch_case_count(
     const ecs_switch_t *sw,
     uint64_t value)
 {
-    ecs_switch_header_t *hdr = get_header(sw, value);
+    flecs_switch_header_t *hdr = get_header(sw, value);
     if (!hdr) {
         return 0;
     }
@@ -318,19 +318,19 @@ int32_t ecs_switch_case_count(
     return hdr->count;
 }
 
-void ecs_switch_swap(
+void flecs_switch_swap(
     ecs_switch_t *sw,
     int32_t elem_1,
     int32_t elem_2)
 {
-    uint64_t v1 = ecs_switch_get(sw, elem_1);
-    uint64_t v2 = ecs_switch_get(sw, elem_2);
+    uint64_t v1 = flecs_switch_get(sw, elem_1);
+    uint64_t v2 = flecs_switch_get(sw, elem_2);
 
-    ecs_switch_set(sw, elem_2, v1);
-    ecs_switch_set(sw, elem_1, v2);
+    flecs_switch_set(sw, elem_2, v1);
+    flecs_switch_set(sw, elem_1, v2);
 }
 
-int32_t ecs_switch_first(
+int32_t flecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value)
 {
@@ -338,13 +338,13 @@ int32_t ecs_switch_first(
     ecs_assert((uint32_t)value <= sw->max, ECS_INVALID_PARAMETER, NULL);
     ecs_assert((uint32_t)value >= sw->min, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_switch_header_t *hdr = get_header(sw, value);
+    flecs_switch_header_t *hdr = get_header(sw, value);
     ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     return hdr->element;
 }
 
-int32_t ecs_switch_next(
+int32_t flecs_switch_next(
     const ecs_switch_t *sw,
     int32_t element)
 {
@@ -352,8 +352,8 @@ int32_t ecs_switch_next(
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_switch_node_t *nodes = ecs_vector_first(
-        sw->nodes, ecs_switch_node_t);
+    flecs_switch_node_t *nodes = ecs_vector_first(
+        sw->nodes, flecs_switch_node_t);
 
     return nodes[element].next;
 }

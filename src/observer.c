@@ -137,10 +137,10 @@ ecs_entity_t ecs_observer_init(
     bool added = false;
     EcsObserver *comp = ecs_get_mut(world, entity, EcsObserver, &added);
     if (added) {
-        ecs_observer_t *observer = ecs_sparse_add(
+        ecs_observer_t *observer = flecs_sparse_add(
             world->observers, ecs_observer_t);
         ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
-        observer->id = ecs_sparse_last_id(world->observers);
+        observer->id = flecs_sparse_last_id(world->observers);
 
         /* Make writeable copy of filter desc so that we can set name. This will
          * make debugging easier, as any error messages related to creating the
@@ -240,7 +240,7 @@ void flecs_observer_fini(
         observer->binding_ctx_free(observer->binding_ctx);
     }
 
-    ecs_sparse_remove(world->observers, observer->id);
+    flecs_sparse_remove(world->observers, observer->id);
 }
 
 void* ecs_get_observer_ctx(

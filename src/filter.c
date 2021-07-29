@@ -668,11 +668,11 @@ bool ecs_filter_next(
 {
     ecs_filter_iter_t *iter = &it->iter.filter;
     ecs_sparse_t *tables = iter->tables;
-    int32_t count = ecs_sparse_count(tables);
+    int32_t count = flecs_sparse_count(tables);
     int32_t i;
 
     for (i = iter->index; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
         ecs_data_t *data = flecs_table_get_data(table);

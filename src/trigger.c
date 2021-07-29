@@ -334,8 +334,8 @@ ecs_entity_t ecs_trigger_init(
         /* Currently triggers are not supported for specific entities */
         ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
 
-        ecs_trigger_t *trigger = ecs_sparse_add(world->triggers, ecs_trigger_t);
-        trigger->id = ecs_sparse_last_id(world->triggers);
+        ecs_trigger_t *trigger = flecs_sparse_add(world->triggers, ecs_trigger_t);
+        trigger->id = flecs_sparse_last_id(world->triggers);
         trigger->term = ecs_term_move(&term);
         trigger->action = desc->callback;
         trigger->ctx = desc->ctx;
@@ -419,5 +419,5 @@ void flecs_trigger_fini(
         trigger->binding_ctx_free(trigger->binding_ctx);
     }
 
-    ecs_sparse_remove(world->triggers, trigger->id);
+    flecs_sparse_remove(world->triggers, trigger->id);
 }

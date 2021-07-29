@@ -65,7 +65,7 @@ ecs_data_t* flecs_init_data(
             ecs_entity_t *sw_array = ecs_vector_first(sw_type, ecs_entity_t);
             int32_t sw_array_count = ecs_vector_count(sw_type);
 
-            ecs_switch_t *sw = ecs_switch_new(
+            ecs_switch_t *sw = flecs_switch_new(
                 sw_array[0], 
                 sw_array[sw_array_count - 1], 
                 0);
@@ -73,7 +73,7 @@ ecs_data_t* flecs_init_data(
             result->sw_columns[i].type = sw_type;
 
             int32_t column_id = i + table->sw_column_offset;
-            result->columns[column_id].data = ecs_switch_values(sw);
+            result->columns[column_id].data = flecs_switch_values(sw);
             result->columns[column_id].size = sizeof(ecs_entity_t);
             result->columns[column_id].alignment = ECS_ALIGNOF(ecs_entity_t);
         }
@@ -82,7 +82,7 @@ ecs_data_t* flecs_init_data(
     if (bs_count) {
         result->bs_columns = ecs_os_calloc(ECS_SIZEOF(ecs_bs_column_t) * bs_count);
         for (i = 0; i < bs_count; i ++) {
-            ecs_bitset_init(&result->bs_columns[i].data);
+            flecs_bitset_init(&result->bs_columns[i].data);
         }
     }
 
@@ -726,7 +726,7 @@ void fini_data(
     if (sw_columns) {
         int32_t c, column_count = table->sw_column_count;
         for (c = 0; c < column_count; c ++) {
-            ecs_switch_free(sw_columns[c].data);
+            flecs_switch_free(sw_columns[c].data);
         }
         ecs_os_free(sw_columns);
         data->sw_columns = NULL;
@@ -736,7 +736,7 @@ void fini_data(
     if (bs_columns) {
         int32_t c, column_count = table->bs_column_count;
         for (c = 0; c < column_count; c ++) {
-            ecs_bitset_deinit(&bs_columns[c].data);
+            flecs_bitset_deinit(&bs_columns[c].data);
         }
         ecs_os_free(bs_columns);
         data->bs_columns = NULL;
@@ -925,12 +925,12 @@ void move_switch_columns(
             ecs_switch_t *old_switch = old_columns[i_old].data;
             ecs_switch_t *new_switch = new_columns[i_new].data;
 
-            ecs_switch_ensure(new_switch, new_index + count);
+            flecs_switch_ensure(new_switch, new_index + count);
 
             int i;
             for (i = 0; i < count; i ++) {
-                uint64_t value = ecs_switch_get(old_switch, old_index + i);
-                ecs_switch_set(new_switch, new_index + i, value);
+                uint64_t value = flecs_switch_get(old_switch, old_index + i);
+                flecs_switch_set(new_switch, new_index + i, value);
             }
         }
 
@@ -976,12 +976,12 @@ void move_bitset_columns(
             ecs_bitset_t *old_bs = &old_columns[i_old].data;
             ecs_bitset_t *new_bs = &new_columns[i_new].data;
 
-            ecs_bitset_ensure(new_bs, new_index + count);
+            flecs_bitset_ensure(new_bs, new_index + count);
 
             int i;
             for (i = 0; i < count; i ++) {
-                uint64_t value = ecs_bitset_get(old_bs, old_index + i);
-                ecs_bitset_set(new_bs, new_index + i, value);
+                uint64_t value = flecs_bitset_get(old_bs, old_index + i);
+                flecs_bitset_set(new_bs, new_index + i, value);
             }
         }
 
@@ -1184,13 +1184,13 @@ int32_t grow_data(
     /* Add elements to each switch column */
     for (i = 0; i < sw_column_count; i ++) {
         ecs_switch_t *sw = sw_columns[i].data;
-        ecs_switch_addn(sw, to_add);
+        flecs_switch_addn(sw, to_add);
     }
 
     /* Add elements to each bitset column */
     for (i = 0; i < bs_column_count; i ++) {
         ecs_bitset_t *bs = &bs_columns[i].data;
-        ecs_bitset_addn(bs, to_add);
+        flecs_bitset_addn(bs, to_add);
     }
 
     /* If the table is monitored indicate that there has been a change */
@@ -1318,15 +1318,15 @@ int32_t flecs_table_append(
     for (i = 0; i < sw_column_count; i ++) {
         ecs_assert(sw_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_switch_t *sw = sw_columns[i].data;
-        ecs_switch_add(sw);
-        columns[i + table->sw_column_offset].data = ecs_switch_values(sw);
+        flecs_switch_add(sw);
+        columns[i + table->sw_column_offset].data = flecs_switch_values(sw);
     }
 
     /* Add element to each bitset column */
     for (i = 0; i < bs_column_count; i ++) {
         ecs_assert(bs_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_bitset_t *bs = &bs_columns[i].data;
-        ecs_bitset_addn(bs, 1);
+        flecs_bitset_addn(bs, 1);
     }    
 
     return count;
@@ -1492,14 +1492,14 @@ void flecs_table_delete(
     ecs_sw_column_t *sw_columns = data->sw_columns;
     int32_t sw_column_count = table->sw_column_count;
     for (i = 0; i < sw_column_count; i ++) {
-        ecs_switch_remove(sw_columns[i].data, index);
+        flecs_switch_remove(sw_columns[i].data, index);
     }
 
     /* Remove elements from bitset columns */
     ecs_bs_column_t *bs_columns = data->bs_columns;
     int32_t bs_column_count = table->bs_column_count;
     for (i = 0; i < bs_column_count; i ++) {
-        ecs_bitset_remove(&bs_columns[i].data, index);
+        flecs_bitset_remove(&bs_columns[i].data, index);
     }
 }
 
@@ -1728,7 +1728,7 @@ void swap_switch_columns(
 
     for (i = 0; i < column_count; i ++) {
         ecs_switch_t *sw = columns[i].data;
-        ecs_switch_swap(sw, row_1, row_2);
+        flecs_switch_swap(sw, row_1, row_2);
     }
 }
 
@@ -1748,7 +1748,7 @@ void swap_bitset_columns(
 
     for (i = 0; i < column_count; i ++) {
         ecs_bitset_t *bs = &columns[i].data;
-        ecs_bitset_swap(bs, row_1, row_2);
+        flecs_bitset_swap(bs, row_1, row_2);
     }
 }
 

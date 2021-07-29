@@ -95,11 +95,11 @@ ecs_table_t* ecs_dbg_get_table(
     const ecs_world_t *world,
     int32_t index)
 {
-    if (ecs_sparse_count(world->store.tables) <= index) {
+    if (flecs_sparse_count(world->store.tables) <= index) {
         return NULL;
     }
 
-    return ecs_sparse_get(
+    return flecs_sparse_get(
         world->store.tables, ecs_table_t, index);
 }
 

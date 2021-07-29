@@ -39,7 +39,7 @@ int ids_compare(const void *ptr_1, const void *ptr_2) {
 }
 
 ecs_hashmap_t flecs_table_hashmap_new(void) {
-    return ecs_hashmap_new(ecs_ids_t, ecs_table_t*, ids_hash, ids_compare);
+    return flecs_hashmap_new(ecs_ids_t, ecs_table_t*, ids_hash, ids_compare);
 }
 
 const EcsComponent* flecs_component_from_id(
@@ -333,10 +333,10 @@ static
 ecs_table_t *create_table(
     ecs_world_t * world,
     ecs_ids_t * entities,
-    ecs_hashmap_result_t table_elem)
+    flecs_hashmap_result_t table_elem)
 {
-    ecs_table_t *result = ecs_sparse_add(world->store.tables, ecs_table_t);
-    result->id = ecs_sparse_last_id(world->store.tables);
+    ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
+    result->id = flecs_sparse_last_id(world->store.tables);
 
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     init_table(world, result, entities);
@@ -883,7 +883,7 @@ ecs_table_t* find_or_create(
     };
 
     ecs_table_t *table;
-    ecs_hashmap_result_t elem = ecs_hashmap_ensure(
+    flecs_hashmap_result_t elem = flecs_hashmap_ensure(
         world->store.table_map, &ordered_ids, ecs_table_t*);
     if ((table = *(ecs_table_t**)elem.value)) {
         return table;

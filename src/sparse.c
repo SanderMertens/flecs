@@ -307,7 +307,7 @@ void swap_dense(
     assign_index(chunk_b, dense_array, index_b, a);
 }
 
-ecs_sparse_t* _ecs_sparse_new(
+ecs_sparse_t* _flecs_sparse_new(
     ecs_size_t size)
 {
     ecs_sparse_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_sparse_t));
@@ -326,7 +326,7 @@ ecs_sparse_t* _ecs_sparse_new(
     return result;
 }
 
-void ecs_sparse_set_id_source(
+void flecs_sparse_set_id_source(
     ecs_sparse_t * sparse,
     uint64_t * id_source)
 {
@@ -334,7 +334,7 @@ void ecs_sparse_set_id_source(
     sparse->max_id = id_source;
 }
 
-void ecs_sparse_clear(
+void flecs_sparse_clear(
     ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -351,24 +351,24 @@ void ecs_sparse_clear(
     sparse->max_id_local = 0;
 }
 
-void ecs_sparse_free(
+void flecs_sparse_free(
     ecs_sparse_t *sparse)
 {
     if (sparse) {
-        ecs_sparse_clear(sparse);
+        flecs_sparse_clear(sparse);
         ecs_vector_free(sparse->dense);
         ecs_os_free(sparse);
     }
 }
 
-uint64_t ecs_sparse_new_id(
+uint64_t flecs_sparse_new_id(
     ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     return new_index(sparse);
 }
 
-const uint64_t* ecs_sparse_new_ids(
+const uint64_t* flecs_sparse_new_ids(
     ecs_sparse_t *sparse,
     int32_t new_count)
 {
@@ -379,7 +379,7 @@ const uint64_t* ecs_sparse_new_ids(
     int32_t i, to_create = new_count - remaining;
 
     if (to_create > 0) {
-        ecs_sparse_set_size(sparse, dense_count + to_create);
+        flecs_sparse_set_size(sparse, dense_count + to_create);
         uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
 
         for (i = 0; i < to_create; i ++) {
@@ -393,7 +393,7 @@ const uint64_t* ecs_sparse_new_ids(
     return ecs_vector_get(sparse->dense, uint64_t, count);
 }
 
-void* _ecs_sparse_add(
+void* _flecs_sparse_add(
     ecs_sparse_t *sparse,
     ecs_size_t size)
 {
@@ -405,7 +405,7 @@ void* _ecs_sparse_add(
     return DATA(chunk->data, size, OFFSET(index));
 }
 
-uint64_t ecs_sparse_last_id(
+uint64_t flecs_sparse_last_id(
     ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -413,7 +413,7 @@ uint64_t ecs_sparse_last_id(
     return dense_array[sparse->count - 1];
 }
 
-void* _ecs_sparse_ensure(
+void* _flecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -484,18 +484,18 @@ void* _ecs_sparse_ensure(
     return DATA(chunk->data, sparse->size, offset);
 }
 
-void* _ecs_sparse_set(
+void* _flecs_sparse_set(
     ecs_sparse_t * sparse,
     ecs_size_t elem_size,
     uint64_t index,
     void * value)
 {
-    void *ptr = _ecs_sparse_ensure(sparse, elem_size, index);
+    void *ptr = _flecs_sparse_ensure(sparse, elem_size, index);
     ecs_os_memcpy(ptr, value, elem_size);
     return ptr;
 }
 
-void* _ecs_sparse_remove_get(
+void* _flecs_sparse_remove_get(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -542,17 +542,17 @@ void* _ecs_sparse_remove_get(
     }
 }
 
-void ecs_sparse_remove(
+void flecs_sparse_remove(
     ecs_sparse_t *sparse,
     uint64_t index)
 {
-    void *ptr = _ecs_sparse_remove_get(sparse, 0, index);
+    void *ptr = _flecs_sparse_remove_get(sparse, 0, index);
     if (ptr) {
         ecs_os_memset(ptr, 0, sparse->size);
     }
 }
 
-void ecs_sparse_set_generation(
+void flecs_sparse_set_generation(
     ecs_sparse_t *sparse,
     uint64_t index)
 {
@@ -573,7 +573,7 @@ void ecs_sparse_set_generation(
     }
 }
 
-bool ecs_sparse_exists(
+bool flecs_sparse_exists(
     const ecs_sparse_t *sparse,
     uint64_t index)
 {
@@ -590,7 +590,7 @@ bool ecs_sparse_exists(
     return dense != 0;
 }
 
-void* _ecs_sparse_get(
+void* _flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
     int32_t dense_index)
@@ -606,14 +606,14 @@ void* _ecs_sparse_get(
     return get_sparse(sparse, dense_index, dense_array[dense_index]);
 }
 
-bool ecs_sparse_is_alive(
+bool flecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
     uint64_t index)
 {
     return try_sparse(sparse, index) != NULL;
 }
 
-uint64_t ecs_sparse_get_current(
+uint64_t flecs_sparse_get_current(
     const ecs_sparse_t *sparse,
     uint64_t index)
 {
@@ -630,7 +630,7 @@ uint64_t ecs_sparse_get_current(
     return dense_array[dense];
 }
 
-void* _ecs_sparse_get_sparse(
+void* _flecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -642,7 +642,7 @@ void* _ecs_sparse_get_sparse(
     return try_sparse(sparse, index);
 }
 
-void* _ecs_sparse_get_sparse_any(
+void* _flecs_sparse_get_sparse_any(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -654,7 +654,7 @@ void* _ecs_sparse_get_sparse_any(
     return try_sparse_any(sparse, index);
 }
 
-int32_t ecs_sparse_count(
+int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse)
 {
     if (!sparse) {
@@ -664,7 +664,7 @@ int32_t ecs_sparse_count(
     return sparse->count - 1;
 }
 
-int32_t ecs_sparse_size(
+int32_t flecs_sparse_size(
     const ecs_sparse_t *sparse)
 {
     if (!sparse) {
@@ -674,14 +674,14 @@ int32_t ecs_sparse_size(
     return ecs_vector_count(sparse->dense) - 1;
 }
 
-const uint64_t* ecs_sparse_ids(
+const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     return &(ecs_vector_first(sparse->dense, uint64_t)[1]);
 }
 
-void ecs_sparse_set_size(
+void flecs_sparse_set_size(
     ecs_sparse_t *sparse,
     int32_t elem_count)
 {
@@ -694,17 +694,17 @@ void sparse_copy(
     ecs_sparse_t * dst,
     const ecs_sparse_t * src)
 {
-    ecs_sparse_set_size(dst, ecs_sparse_size(src));
-    const uint64_t *indices = ecs_sparse_ids(src);
+    flecs_sparse_set_size(dst, flecs_sparse_size(src));
+    const uint64_t *indices = flecs_sparse_ids(src);
     
     ecs_size_t size = src->size;
     int32_t i, count = src->count;
 
     for (i = 0; i < count - 1; i ++) {
         uint64_t index = indices[i];
-        void *src_ptr = _ecs_sparse_get_sparse(src, size, index);
-        void *dst_ptr = _ecs_sparse_ensure(dst, size, index);
-        ecs_sparse_set_generation(dst, index);
+        void *src_ptr = _flecs_sparse_get_sparse(src, size, index);
+        void *dst_ptr = _flecs_sparse_ensure(dst, size, index);
+        flecs_sparse_set_generation(dst, index);
         ecs_os_memcpy(dst_ptr, src_ptr, size);
     }
 
@@ -713,20 +713,20 @@ void sparse_copy(
     ecs_assert(src->count == dst->count, ECS_INTERNAL_ERROR, NULL);
 }
 
-ecs_sparse_t* ecs_sparse_copy(
+ecs_sparse_t* flecs_sparse_copy(
     const ecs_sparse_t *src)
 {
     if (!src) {
         return NULL;
     }
 
-    ecs_sparse_t *dst = _ecs_sparse_new(src->size);
+    ecs_sparse_t *dst = _flecs_sparse_new(src->size);
     sparse_copy(dst, src);
 
     return dst;
 }
 
-void ecs_sparse_restore(
+void flecs_sparse_restore(
     ecs_sparse_t * dst,
     const ecs_sparse_t * src)
 {
@@ -737,7 +737,7 @@ void ecs_sparse_restore(
     }
 }
 
-void ecs_sparse_memory(
+void flecs_sparse_memory(
     ecs_sparse_t *sparse,
     int32_t *allocd,
     int32_t *used)

@@ -91,7 +91,7 @@ ecs_snapshot_t* snapshot_create(
      * world, and we can simply copy the entity index as it will be restored
      * entirely upon snapshote restore. */
     if (!iter && entity_index) {
-        result->entity_index = ecs_sparse_copy(entity_index);
+        result->entity_index = flecs_sparse_copy(entity_index);
         result->tables = ecs_vector_new(ecs_table_leaf_t, 0);
     }
 
@@ -174,8 +174,8 @@ void ecs_snapshot_restore(
     bool is_filtered = true;
 
     if (snapshot->entity_index) {
-        ecs_sparse_restore(world->store.entity_index, snapshot->entity_index);
-        ecs_sparse_free(snapshot->entity_index);
+        flecs_sparse_restore(world->store.entity_index, snapshot->entity_index);
+        flecs_sparse_free(snapshot->entity_index);
         is_filtered = false;
     }
 
@@ -185,10 +185,10 @@ void ecs_snapshot_restore(
 
     ecs_table_leaf_t *leafs = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
     int32_t l = 0, count = ecs_vector_count(snapshot->tables);
-    int32_t t, table_count = ecs_sparse_count(world->store.tables);
+    int32_t t, table_count = flecs_sparse_count(world->store.tables);
 
     for (t = 0; t < table_count; t ++) {
-        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, t);
+        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, t);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -265,7 +265,7 @@ void ecs_snapshot_restore(
      * restoring safe */
     if (!is_filtered) {
         for (t = 0; t < table_count; t ++) {
-            ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, t);
+            ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, t);
             if (table->flags & EcsTableHasBuiltins) {
                 continue;
             }
@@ -344,7 +344,7 @@ yield:
 void ecs_snapshot_free(
     ecs_snapshot_t *snapshot)
 {
-    ecs_sparse_free(snapshot->entity_index);
+    flecs_sparse_free(snapshot->entity_index);
 
     ecs_table_leaf_t *tables = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
     int32_t i, count = ecs_vector_count(snapshot->tables);

@@ -642,7 +642,7 @@ void set_switch(
             
             int32_t r;
             for (r = 0; r < count; r ++) {
-                ecs_switch_set(sw, row + r, sw_case);
+                flecs_switch_set(sw, row + r, sw_case);
             }
         }
     }
@@ -966,7 +966,7 @@ const ecs_entity_t* new_w_data(
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
     
     int32_t sparse_count = ecs_eis_count(world);
-    const ecs_entity_t *ids = ecs_sparse_new_ids(world->store.entity_index, count);
+    const ecs_entity_t *ids = flecs_sparse_new_ids(world->store.entity_index, count);
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_type_t type = table->type;   
 
@@ -1050,7 +1050,7 @@ const ecs_entity_t* new_w_data(
         *row_out = row;
     }
 
-    ids = ecs_sparse_ids(world->store.entity_index);
+    ids = flecs_sparse_ids(world->store.entity_index);
 
     return &ids[sparse_count];
 }
@@ -2485,7 +2485,7 @@ void delete_objects(
         int32_t i, count = ecs_vector_count(data->entities);
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = entities[i];
-            ecs_record_t *r = ecs_sparse_get_sparse(
+            ecs_record_t *r = flecs_sparse_get_sparse(
                 world->store.entity_index, ecs_record_t, e);
             
             /* If row is negative, it means the entity is being monitored. Only
@@ -2637,7 +2637,7 @@ void ecs_delete(
         return;
     }
 
-    ecs_record_t *r = ecs_sparse_get_sparse(
+    ecs_record_t *r = flecs_sparse_get_sparse(
         world->store.entity_index, ecs_record_t, entity);
     if (r) {
         ecs_entity_info_t info = {0};
@@ -2679,7 +2679,7 @@ void ecs_delete(
 
         /* If entity has components, remove them. Check if table is still alive,
          * as delete actions could have deleted the table already. */
-        if (table_id && ecs_sparse_is_alive(world->store.tables, table_id)) {
+        if (table_id && flecs_sparse_is_alive(world->store.tables, table_id)) {
             ecs_type_t type = table->type;
             ecs_ids_t to_remove = flecs_type_to_ids(type);
             delete_entity(world, table, info.data, info.row, &to_remove);
@@ -2689,7 +2689,7 @@ void ecs_delete(
         r->row = 0;
 
         /* Remove (and invalidate) entity after executing handlers */
-        ecs_sparse_remove(world->store.entity_index, entity);
+        flecs_sparse_remove(world->store.entity_index, entity);
     }
 
     flecs_defer_flush(world, stage);
@@ -3171,7 +3171,7 @@ ecs_entity_t ecs_get_case(
     /* Data cannot be NULl, since entity is stored in the table */
     ecs_assert(info.data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_switch_t *sw = info.data->sw_columns[index].data;  
-    return ecs_switch_get(sw, info.row);  
+    return flecs_switch_get(sw, info.row);  
 }
 
 void ecs_enable_component_w_id(
@@ -3220,7 +3220,7 @@ void ecs_enable_component_w_id(
     ecs_bitset_t *bs = &info.data->bs_columns[index].data;
     ecs_assert(bs != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_bitset_set(bs, info.row, enable);
+    flecs_bitset_set(bs, info.row, enable);
 }
 
 bool ecs_is_component_enabled_w_id(
@@ -3258,7 +3258,7 @@ bool ecs_is_component_enabled_w_id(
     ecs_assert(info.data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_bitset_t *bs = &info.data->bs_columns[index].data;  
 
-    return ecs_bitset_get(bs, info.row);
+    return flecs_bitset_get(bs, info.row);
 }
 
 bool ecs_has_id(
@@ -3284,7 +3284,7 @@ bool ecs_has_id(
         
         ecs_data_t *data = info.data;
         ecs_switch_t *sw = data->sw_columns[index].data;
-        ecs_entity_t value = ecs_switch_get(sw, info.row);
+        ecs_entity_t value = flecs_switch_get(sw, info.row);
 
         return value == (id & ECS_COMPONENT_MASK);
     } else {
@@ -3600,11 +3600,11 @@ int32_t ecs_count_filter(
     world = ecs_get_world(world);
 
     ecs_sparse_t *tables = world->store.tables;
-    int32_t i, count = ecs_sparse_count(tables);
+    int32_t i, count = flecs_sparse_count(tables);
     int32_t result = 0;
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get(tables, ecs_table_t, i);
         if (!filter || flecs_table_match_filter(world, table, filter)) {
             result += ecs_table_count(table);
         }

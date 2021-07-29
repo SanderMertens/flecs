@@ -15,10 +15,10 @@ void bulk_delete(
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
     (void)stage;
 
-    int32_t i, count = ecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(world->store.tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -112,9 +112,9 @@ void ecs_bulk_add_remove_type(
         .count = 0
     };
 
-    int32_t i, count = ecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -163,9 +163,9 @@ void ecs_bulk_add_type(
         .count = 0
     };
 
-    int32_t i, count = ecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -210,9 +210,9 @@ void ecs_bulk_add_entity(
         .count = 0
     };
 
-    int32_t i, count = ecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -255,9 +255,9 @@ void ecs_bulk_remove_type(
         .count = 0
     };
 
-    int32_t i, count = ecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -302,9 +302,9 @@ void ecs_bulk_remove_entity(
         .count = 0
     };
 
-    int32_t i, count = ecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get(world->store.tables, ecs_table_t, i);
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
