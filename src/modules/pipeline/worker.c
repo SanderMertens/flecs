@@ -175,7 +175,7 @@ bool ecs_stop_threads(
 void ecs_worker_begin(
     ecs_world_t *world)
 {
-    ecs_stage_from_world(&world);
+    flecs_stage_from_world(&world);
     int32_t stage_count = ecs_get_stage_count(world);
     ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
     
@@ -187,7 +187,7 @@ void ecs_worker_begin(
 bool ecs_worker_sync(
     ecs_world_t *world)
 {
-    ecs_stage_from_world(&world);
+    flecs_stage_from_world(&world);
 
     int32_t build_count = world->stats.pipeline_build_count_total;
     int32_t stage_count = ecs_get_stage_count(world);
@@ -211,7 +211,7 @@ bool ecs_worker_sync(
 void ecs_worker_end(
     ecs_world_t *world)
 {
-    ecs_stage_from_world(&world);
+    flecs_stage_from_world(&world);
 
     int32_t stage_count = ecs_get_stage_count(world);
     ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);

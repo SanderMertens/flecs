@@ -94,7 +94,7 @@ void observer_callback(ecs_iter_t *it) {
     ecs_table_t *table = it->table->table;
     ecs_type_t type = table->type;
     if (ecs_filter_match_type(world, &o->filter, type)) {
-        ecs_data_t *data = ecs_table_get_data(table);
+        ecs_data_t *data = flecs_table_get_data(table);
         ecs_id_t ids[ECS_FILTER_DESC_TERM_ARRAY_MAX];
         int32_t columns[ECS_FILTER_DESC_TERM_ARRAY_MAX];
         ecs_type_t types[ECS_FILTER_DESC_TERM_ARRAY_MAX];
@@ -150,7 +150,7 @@ ecs_entity_t ecs_observer_init(
 
         /* Parse filter */
         if (ecs_filter_init(world, &observer->filter, &filter_desc)) {
-            ecs_observer_fini(world, observer);
+            flecs_observer_fini(world, observer);
             return 0;
         }
 
@@ -217,7 +217,7 @@ ecs_entity_t ecs_observer_init(
     return entity; 
 }
 
-void ecs_observer_fini(
+void flecs_observer_fini(
     ecs_world_t *world,
     ecs_observer_t *observer)
 {

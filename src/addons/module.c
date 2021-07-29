@@ -13,7 +13,7 @@ char* ecs_module_path_from_c(
 
     for (ptr = c_name; (ch = *ptr); ptr++) {
         if (isupper(ch)) {
-            ch = ecs_to_i8(tolower(ch));
+            ch = flflecs_to_i8(tolower(ch));
             if (ptr != c_name) {
                 ecs_strbuf_appendstrn(&str, ".", 1);
             }
@@ -58,7 +58,7 @@ ecs_entity_t ecs_import(
     /* Copy value of module component in handles_out parameter */
     if (handles_size && handles_out) {
         void *handles_ptr = ecs_get_mut_id(world, e, e, NULL);
-        ecs_os_memcpy(handles_out, handles_ptr, ecs_from_size_t(handles_size));   
+        ecs_os_memcpy(handles_out, handles_ptr, flecs_from_size_t(handles_size));   
     }
 
     /* Restore to previous state */
@@ -99,11 +99,11 @@ ecs_entity_t ecs_import_from_library(
                 capitalize = true;
             } else {
                 if (capitalize) {
-                    *bptr = ecs_to_i8(toupper(ch));
+                    *bptr = flflecs_to_i8(toupper(ch));
                     bptr ++;
                     capitalize = false;
                 } else {
-                    *bptr = ecs_to_i8(tolower(ch));
+                    *bptr = flflecs_to_i8(tolower(ch));
                     bptr ++;
                 }
             }
@@ -198,47 +198,40 @@ void ecs_add_module_tag(
     } while (true);
 }
 
-ecs_entity_t ecs_new_module(
+ecs_entity_t ecs_module_init(
     ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    size_t size,
-    size_t alignment)
+    const ecs_component_desc_t *desc)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
-    if (!e) {
-        char *module_path = ecs_module_path_from_c(name);
-        e = ecs_new_from_fullpath(world, module_path);
+    const char *name = desc->entity.name;
 
-        EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
-        ecs_os_free(name_ptr->symbol);
+    char *module_path = ecs_module_path_from_c(name);
+    ecs_entity_t e = ecs_new_from_fullpath(world, module_path);
 
-        /* Assign full path to symbol. This allows for modules to be redefined
-         * in C++ without causing name conflicts */
-        name_ptr->symbol = module_path;
-    }
+    EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
+    ecs_os_free(name_ptr->symbol);
 
-    ecs_entity_t result = ecs_component_init(world, &(ecs_component_desc_t){
-        .entity = {
-            .entity = e
-        },
-        .size = size,
-        .alignment = alignment
-    });
-    
+    /* Assign full path to symbol. This allows for modules to be redefined
+     * in C++ without causing name conflicts */
+    name_ptr->symbol = module_path;
+
+    ecs_component_desc_t private_desc = *desc;
+    private_desc.entity.entity = e;
+    private_desc.entity.name = NULL;
+
+    ecs_entity_t result = ecs_component_init(world, &private_desc);
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
 
     /* Add module tag */
     ecs_add_module_tag(world, result);
 
     /* Add module to itself. This way we have all the module information stored
      * in a single contained entity that we can use for namespacing */
-    ecs_set_id(world, result, result, size, NULL);
-
-    /* Set the current scope to the module */
-    ecs_set_scope(world, result);
+    ecs_set_id(world, result, result, desc->size, NULL);
 
     return result;
 }

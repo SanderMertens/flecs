@@ -49,14 +49,6 @@ extern ecs_type_t
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_API
-ecs_entity_t ecs_new_module(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    size_t size,
-    size_t alignment);
-
-FLECS_API
 char* ecs_module_path_from_c(
     const char *c_name);
 

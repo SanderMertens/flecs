@@ -108,7 +108,7 @@ void* ecs_term_w_size(
     int32_t term)
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    return get_term(it, ecs_from_size_t(size), term, 0);
+    return get_term(it, flecs_from_size_t(size), term, 0);
 }
 
 bool ecs_term_is_owned(
@@ -283,7 +283,7 @@ size_t ecs_iter_column_size(
     ecs_column_t *columns = it->table_columns;
     ecs_column_t *column = &columns[column_index];
     
-    return ecs_to_size_t(column->size);
+    return flecs_to_size_t(column->size);
 }
 
 // DEPRECATED
@@ -294,5 +294,5 @@ void* ecs_element_w_size(
     int32_t row)
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    return get_term(it, ecs_from_size_t(size), column, row);
+    return get_term(it, flecs_from_size_t(size), column, row);
 }

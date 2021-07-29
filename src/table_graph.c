@@ -6,7 +6,7 @@ uint64_t ids_hash(const void *ptr) {
     ecs_id_t *ids = type->array;
     int32_t count = type->count;
     uint64_t hash = 0;
-    ecs_hash(ids, count * ECS_SIZEOF(ecs_id_t), &hash);
+    flecs_hash(ids, count * ECS_SIZEOF(ecs_id_t), &hash);
     return hash;
 }
 
@@ -38,11 +38,11 @@ int ids_compare(const void *ptr_1, const void *ptr_2) {
     return 0;
 }
 
-ecs_hashmap_t ecs_table_hashmap_new(void) {
+ecs_hashmap_t flecs_table_hashmap_new(void) {
     return ecs_hashmap_new(ecs_ids_t, ecs_table_t*, ids_hash, ids_compare);
 }
 
-const EcsComponent* ecs_component_from_id(
+const EcsComponent* flecs_component_from_id(
     const ecs_world_t *world,
     ecs_entity_t e)
 {
@@ -98,7 +98,7 @@ int32_t data_column_count(
          * doesn't work during bootstrap. */
         if ((component == ecs_id(EcsComponent)) || 
             (component == ecs_id(EcsName)) || 
-            ecs_component_from_id(world, component) != NULL) 
+            flecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;
         }
@@ -287,14 +287,14 @@ void init_edges(
         }       
 
         if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
-            ecs_set_watch(world, ecs_pair_object(world, e));
+            flecs_set_watch(world, ecs_pair_object(world, e));
         }        
     }
 
-    ecs_register_table(world, table);
+    flecs_register_table(world, table);
 
     /* Register component info flags for all columns */
-    ecs_table_notify(world, table, &(ecs_table_event_t){
+    flecs_table_notify(world, table, &(ecs_table_event_t){
         .kind = EcsTableComponentInfo
     });
 }
@@ -358,7 +358,7 @@ ecs_table_t *create_table(
     };
     *(ecs_ids_t*)table_elem.key = key;
 
-    ecs_notify_queries(world, &(ecs_query_event_t) {
+    flecs_notify_queries(world, &(ecs_query_event_t) {
         .kind = EcsQueryTableMatch,
         .table = result
     });
@@ -485,13 +485,13 @@ ecs_entity_t find_xor_replace(
     return 0;
 }
 
-int32_t ecs_table_switch_from_case(
+int32_t flecs_table_switch_from_case(
     const ecs_world_t * world,
     const ecs_table_t * table,
     ecs_entity_t add)
 {
     ecs_type_t type = table->type;
-    ecs_data_t *data = ecs_table_get_data(table);
+    ecs_data_t *data = flecs_table_get_data(table);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     int32_t i, count = table->sw_column_count;
@@ -563,7 +563,7 @@ ecs_table_t *find_or_create_table_include(
 
         add_entity_to_type(type, add, replace, &entities);
 
-        ecs_table_t *result = ecs_table_find_or_create(world, &entities);
+        ecs_table_t *result = flecs_table_find_or_create(world, &entities);
         
         if (result != node) {
             create_backlink_after_add(result, node, add);
@@ -589,7 +589,7 @@ ecs_table_t *find_or_create_table_exclude(
 
     remove_entity_from_type(type, remove, &entities);
 
-    ecs_table_t *result = ecs_table_find_or_create(world, &entities);
+    ecs_table_t *result = flecs_table_find_or_create(world, &entities);
     if (!result) {
         return NULL;
     }
@@ -601,7 +601,7 @@ ecs_table_t *find_or_create_table_exclude(
     return result;    
 }
 
-ecs_table_t* ecs_table_traverse_remove(
+ecs_table_t* flecs_table_traverse_remove(
     ecs_world_t * world,
     ecs_table_t * node,
     ecs_ids_t * to_remove,
@@ -687,7 +687,7 @@ void find_owned_components(
     }
 }
 
-ecs_table_t* ecs_table_traverse_add(
+ecs_table_t* flecs_table_traverse_add(
     ecs_world_t * world,
     ecs_table_t * node,
     ecs_ids_t * to_add,
@@ -736,7 +736,7 @@ ecs_table_t* ecs_table_traverse_add(
 
     /* In case OWNED components were found, add them as well */
     if (owned.count) {
-        node = ecs_table_traverse_add(world, node, &owned, added);
+        node = flecs_table_traverse_add(world, node, &owned, added);
     }
 
     return node;
@@ -871,7 +871,7 @@ ecs_table_t* find_or_create(
         ordered = ecs_os_alloca(size);
         ecs_os_memcpy(ordered, ids->array, size);
         qsort(ordered, (size_t)type_count, sizeof(ecs_entity_t), 
-            ecs_entity_compare_qsort);
+            flecs_entity_compare_qsort);
         type_count = ecs_entity_array_dedup(ordered, type_count);        
     } else {
         ordered = ids->array;
@@ -907,7 +907,7 @@ ecs_table_t* find_or_create(
     return result;
 }
 
-ecs_table_t* ecs_table_find_or_create(
+ecs_table_t* flecs_table_find_or_create(
     ecs_world_t * world,
     ecs_ids_t * components)
 {
@@ -920,12 +920,12 @@ ecs_table_t* ecs_table_from_type(
     ecs_world_t *world,
     ecs_type_t type)
 {
-    ecs_ids_t components = ecs_type_to_entities(type);
-    return ecs_table_find_or_create(
+    ecs_ids_t components = flecs_type_to_ids(type);
+    return flecs_table_find_or_create(
         world, &components);
 }
 
-void ecs_init_root_table(
+void flecs_init_root_table(
     ecs_world_t *world)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -939,7 +939,7 @@ void ecs_init_root_table(
     init_table(world, &world->store.root, &entities);
 }
 
-void ecs_table_clear_edges(
+void flecs_table_clear_edges(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -991,7 +991,7 @@ ecs_table_t* ecs_table_add_id(
     ecs_id_t id)
 {
     ecs_entities_t arr = { .array = &id, .count = 1 };
-    return ecs_table_traverse_add(world, table, &arr, NULL);
+    return flecs_table_traverse_add(world, table, &arr, NULL);
 }
 
 ecs_table_t* ecs_table_remove_id(
@@ -1000,5 +1000,5 @@ ecs_table_t* ecs_table_remove_id(
     ecs_id_t id)
 {
     ecs_entities_t arr = { .array = &id, .count = 1 };
-    return ecs_table_traverse_remove(world, table, &arr, NULL);
+    return flecs_table_traverse_remove(world, table, &arr, NULL);
 }

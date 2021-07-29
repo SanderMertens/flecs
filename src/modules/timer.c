@@ -254,8 +254,8 @@ void FlecsTimerImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    ecs_bootstrap_component(world, EcsTimer);
-    ecs_bootstrap_component(world, EcsRateFilter);
+    flecs_bootstrap_component(world, EcsTimer);
+    flecs_bootstrap_component(world, EcsRateFilter);
 
     /* Add EcsTickSource to timers and rate filters */
     ECS_SYSTEM(world, AddTickSource, EcsPreFrame, [in] Timer || RateFilter, [out] !flecs.system.TickSource);

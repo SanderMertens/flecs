@@ -316,7 +316,7 @@ void hashlittle2(
   *pc=c; *pb=b;
 }
 
-void ecs_hash(
+void flecs_hash(
     const void *data,
     ecs_size_t length,
     uint64_t *result)
@@ -326,7 +326,7 @@ void ecs_hash(
 
     hashlittle2(
         data,
-        ecs_to_size_t(length),
+        flecs_to_size_t(length),
         &h_1,
         &h_2);
 

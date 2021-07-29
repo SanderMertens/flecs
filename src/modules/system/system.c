@@ -356,7 +356,7 @@ ecs_entity_t ecs_run_w_filter(
     const ecs_filter_t *filter,
     void *param)
 {
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     EcsSystem *system_data = (EcsSystem*)ecs_get(
         world, system, EcsSystem);
@@ -375,7 +375,7 @@ ecs_entity_t ecs_run_worker(
     FLECS_FLOAT delta_time,
     void *param)
 {
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     EcsSystem *system_data = (EcsSystem*)ecs_get(
         world, system, EcsSystem);
@@ -395,7 +395,7 @@ ecs_entity_t ecs_run(
     return ecs_run_w_filter(world, system, delta_time, 0, 0, NULL, param);
 }
 
-void ecs_run_monitor(
+void flecs_run_monitor(
     ecs_world_t *world,
     ecs_matched_query_t *monitor,
     ecs_ids_t *components,
@@ -415,7 +415,7 @@ void ecs_run_monitor(
     }
 
     ecs_iter_t it = {0};
-    ecs_query_set_iter( world, query, &it, 
+    flecs_query_set_iter( world, query, &it, 
         monitor->matched_table_index, row, count);
 
     it.world = world;
@@ -741,21 +741,21 @@ void FlecsSystemImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    ecs_bootstrap_component(world, EcsSystem);
-    ecs_bootstrap_component(world, EcsTickSource);
+    flecs_bootstrap_component(world, EcsSystem);
+    flecs_bootstrap_component(world, EcsTickSource);
 
-    ecs_bootstrap_tag(world, EcsOnAdd);
-    ecs_bootstrap_tag(world, EcsOnRemove);
-    ecs_bootstrap_tag(world, EcsOnSet);
-    ecs_bootstrap_tag(world, EcsUnSet);
+    flecs_bootstrap_tag(world, EcsOnAdd);
+    flecs_bootstrap_tag(world, EcsOnRemove);
+    flecs_bootstrap_tag(world, EcsOnSet);
+    flecs_bootstrap_tag(world, EcsUnSet);
 
     /* Put following tags in flecs.core so they can be looked up
      * without using the flecs.systems prefix. */
     ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
-    ecs_bootstrap_tag(world, EcsDisabledIntern);
-    ecs_bootstrap_tag(world, EcsInactive);
-    ecs_bootstrap_tag(world, EcsOnDemand);
-    ecs_bootstrap_tag(world, EcsMonitor);
+    flecs_bootstrap_tag(world, EcsDisabledIntern);
+    flecs_bootstrap_tag(world, EcsInactive);
+    flecs_bootstrap_tag(world, EcsOnDemand);
+    flecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
 
     ECS_TYPE_IMPL(EcsComponentLifecycle);

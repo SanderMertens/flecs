@@ -76,7 +76,7 @@ void merge_stages(
     bool force_merge)
 {
     bool is_stage = world->magic == ECS_STAGE_MAGIC;
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     bool measure_frame_time = world->measure_frame_time;
 
@@ -105,7 +105,7 @@ void merge_stages(
         }
     }
 
-    ecs_eval_component_monitors(world);
+    flecs_eval_component_monitors(world);
 
     if (measure_frame_time) {
         world->stats.merge_time_total += 
@@ -134,7 +134,7 @@ void do_manual_merge(
     merge_stages(world, true);
 }
 
-bool ecs_defer_none(
+bool flecs_defer_none(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
@@ -142,7 +142,7 @@ bool ecs_defer_none(
     return (++ stage->defer) == 1;
 }
 
-bool ecs_defer_modified(
+bool flecs_defer_modified(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -162,7 +162,7 @@ bool ecs_defer_modified(
     return false;
 }
 
-bool ecs_defer_clone(
+bool flecs_defer_clone(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -184,7 +184,7 @@ bool ecs_defer_clone(
     return false;   
 }
 
-bool ecs_defer_delete(
+bool flecs_defer_delete(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity)
@@ -202,7 +202,7 @@ bool ecs_defer_delete(
     return false;
 }
 
-bool ecs_defer_clear(
+bool flecs_defer_clear(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity)
@@ -220,7 +220,7 @@ bool ecs_defer_clear(
     return false;
 }
 
-bool ecs_defer_enable(
+bool flecs_defer_enable(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -240,7 +240,7 @@ bool ecs_defer_enable(
     return false;
 }
 
-bool ecs_defer_bulk_new(
+bool flecs_defer_bulk_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     int32_t count,
@@ -267,7 +267,7 @@ bool ecs_defer_bulk_new(
             defer_data = ecs_os_malloc(ECS_SIZEOF(void*) * c_count);
             for (c = 0; c < c_count; c ++) {
                 ecs_entity_t comp = components[c];
-                const EcsComponent *cptr = ecs_component_from_id(world, comp);
+                const EcsComponent *cptr = flecs_component_from_id(world, comp);
                 ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
                 ecs_size_t size = cptr->size;
@@ -277,16 +277,16 @@ bool ecs_defer_bulk_new(
                 const ecs_type_info_t *cinfo = NULL;
                 ecs_entity_t real_id = ecs_get_typeid(world, comp);
                 if (real_id) {
-                    cinfo = ecs_get_c_info(world, real_id);
+                    cinfo = flecs_get_c_info(world, real_id);
                 }
                 ecs_xtor_t ctor;
                 if (cinfo && (ctor = cinfo->lifecycle.ctor)) {
                     void *ctx = cinfo->lifecycle.ctx;
-                    ctor(world, comp, ids, data, ecs_to_size_t(size), count, ctx);
+                    ctor(world, comp, ids, data, flecs_to_size_t(size), count, ctx);
                     ecs_move_t move;
                     if ((move = cinfo->lifecycle.move)) {
                         move(world, comp, ids, ids, data, component_data[c], 
-                            ecs_to_size_t(size), count, ctx);
+                            flecs_to_size_t(size), count, ctx);
                     } else {
                         ecs_os_memcpy(data, component_data[c], size * count);
                     }
@@ -313,7 +313,7 @@ bool ecs_defer_bulk_new(
     return false;
 }
 
-bool ecs_defer_new(
+bool flecs_defer_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -322,7 +322,7 @@ bool ecs_defer_new(
     return defer_add_remove(world, stage, EcsOpNew, entity, components);
 }
 
-bool ecs_defer_add(
+bool flecs_defer_add(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -331,7 +331,7 @@ bool ecs_defer_add(
     return defer_add_remove(world, stage, EcsOpAdd, entity, components);
 }
 
-bool ecs_defer_remove(
+bool flecs_defer_remove(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -340,7 +340,7 @@ bool ecs_defer_remove(
     return defer_add_remove(world, stage, EcsOpRemove, entity, components);
 }
 
-bool ecs_defer_set(
+bool flecs_defer_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_op_kind_t op_kind,
@@ -354,7 +354,7 @@ bool ecs_defer_set(
     if (stage->defer) {
         world->set_count ++;
         if (!size) {
-            const EcsComponent *cptr = ecs_component_from_id(world, component);
+            const EcsComponent *cptr = flecs_component_from_id(world, component);
             ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
             size = cptr->size;
         }
@@ -376,14 +376,14 @@ bool ecs_defer_set(
         const ecs_type_info_t *c_info = NULL;
         ecs_entity_t real_id = ecs_get_typeid(world, component);
         if (real_id) {
-            c_info = ecs_get_c_info(world, real_id);
+            c_info = flecs_get_c_info(world, real_id);
         }
 
         if (value) {
             ecs_copy_ctor_t copy;
             if (c_info && (copy = c_info->lifecycle.copy_ctor)) {
                 copy(world, component, &c_info->lifecycle, &entity, &entity, 
-                    op->is._1.value, value, ecs_to_size_t(size), 1, 
+                    op->is._1.value, value, flecs_to_size_t(size), 1, 
                         c_info->lifecycle.ctx);
             } else {
                 ecs_os_memcpy(op->is._1.value, value, size);
@@ -392,7 +392,7 @@ bool ecs_defer_set(
             ecs_xtor_t ctor;
             if (c_info && (ctor = c_info->lifecycle.ctor)) {
                 ctor(world, component, &entity, op->is._1.value, 
-                    ecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+                    flecs_to_size_t(size), 1, c_info->lifecycle.ctx);
             }
         }
 
@@ -408,7 +408,7 @@ bool ecs_defer_set(
     return false;
 }
 
-void ecs_stage_merge_post_frame(
+void flecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
@@ -421,7 +421,7 @@ void ecs_stage_merge_post_frame(
     stage->post_frame_actions = NULL;
 }
 
-void ecs_stage_init(
+void flecs_stage_init(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
@@ -437,7 +437,7 @@ void ecs_stage_init(
     stage->asynchronous = false;
 }
 
-void ecs_stage_deinit(
+void flecs_stage_deinit(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
@@ -476,7 +476,7 @@ void ecs_set_stages(
             ecs_assert(stages[i].magic == ECS_STAGE_MAGIC, 
                 ECS_INTERNAL_ERROR, NULL);
             ecs_assert(stages[i].thread == 0, ECS_INVALID_OPERATION, NULL);
-            ecs_stage_deinit(world, &stages[i]);
+            flecs_stage_deinit(world, &stages[i]);
         }
 
         ecs_vector_free(world->worker_stages);
@@ -488,7 +488,7 @@ void ecs_set_stages(
         for (i = 0; i < stage_count; i ++) {
             ecs_stage_t *stage = ecs_vector_add(
                 &world->worker_stages, ecs_stage_t);
-            ecs_stage_init(world, stage);
+            flecs_stage_init(world, stage);
             stage->id = 1 + i; /* 0 is reserved for main/temp stage */
 
             /* Set thread_ctx to stage, as this stage might be used in a
@@ -646,7 +646,7 @@ ecs_world_t* ecs_async_stage_new(
     ecs_world_t *world)
 {
     ecs_stage_t *stage = ecs_os_calloc(sizeof(ecs_stage_t));
-    ecs_stage_init(world, stage);
+    flecs_stage_init(world, stage);
 
     stage->id = -1;
     stage->auto_merge = false;
@@ -663,7 +663,7 @@ void ecs_async_stage_free(
     ecs_assert(world->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = (ecs_stage_t*)world;
     ecs_assert(stage->asynchronous == true, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_deinit(stage->world, stage);
+    flecs_stage_deinit(stage->world, stage);
     ecs_os_free(stage);
 }
 
@@ -685,6 +685,6 @@ bool ecs_is_deferred(
     const ecs_world_t *world)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    const ecs_stage_t *stage = ecs_stage_from_readonly_world(world);
+    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
     return stage->defer != 0;
 }

@@ -84,7 +84,7 @@ void ecs_dbg_table(
         }
     }
 
-    ecs_data_t *data = ecs_table_get_data(table);
+    ecs_data_t *data = flecs_table_get_data(table);
     if (data) {
         dbg_out->entities = ecs_vector_first(data->entities, ecs_entity_t);
         dbg_out->entities_count = ecs_vector_count(data->entities);
@@ -108,7 +108,7 @@ bool ecs_dbg_filter_table(
     const ecs_table_t *table,
     const ecs_filter_t *filter)
 {
-    return ecs_table_match_filter(world, table, filter);
+    return flecs_table_match_filter(world, table, filter);
 }
 
 void ecs_dbg_entity(
@@ -119,7 +119,7 @@ void ecs_dbg_entity(
     *dbg_out = (ecs_dbg_entity_t){.entity = entity};
     
     ecs_entity_info_t info = { 0 };
-    if (ecs_get_info(world, entity, &info)) {
+    if (flecs_get_info(world, entity, &info)) {
         dbg_out->table = info.table;
         dbg_out->row = info.row;
         dbg_out->is_watched = info.is_watched;

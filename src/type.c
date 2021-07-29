@@ -1,6 +1,6 @@
 #include "private_api.h"
 
-ecs_entity_t ecs_find_entity_in_prefabs(
+ecs_entity_t flecs_find_entity_in_prefabs(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type,
@@ -28,7 +28,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
             {
                 return prefab;
             } else {
-                prefab = ecs_find_entity_in_prefabs(
+                prefab = flecs_find_entity_in_prefabs(
                     world, prefab, prefab_type, component, entity);
                 if (prefab) {
                     return prefab;
@@ -43,7 +43,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
 /* -- Private functions -- */
 
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
-ecs_entity_t ecs_type_contains(
+ecs_entity_t flecs_type_contains(
     const ecs_world_t *world,
     ecs_type_t type_1,
     ecs_type_t type_2,
@@ -98,7 +98,7 @@ ecs_entity_t ecs_type_contains(
                 ecs_id(EcsName) && 
                 e2 != EcsPrefab && e2 != EcsDisabled) 
             {
-                if (ecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
+                if (flecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
                     e1 = e2;
                 }
             }
@@ -153,13 +153,13 @@ ecs_type_t ecs_type_merge(
     ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
     
     ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
-    ecs_ids_t add_array = ecs_type_to_entities(to_add);
-    ecs_ids_t remove_array = ecs_type_to_entities(to_remove);
+    ecs_ids_t add_array = flecs_type_to_ids(to_add);
+    ecs_ids_t remove_array = flecs_type_to_ids(to_remove);
     
-    table = ecs_table_traverse_remove(
+    table = flecs_table_traverse_remove(
         unsafe_world, table, &remove_array, NULL); 
 
-    table = ecs_table_traverse_add(
+    table = flecs_table_traverse_add(
         unsafe_world, table, &add_array, NULL); 
 
     if (!table) {
@@ -186,7 +186,7 @@ ecs_type_t ecs_type_find(
         .count = count
     };
 
-    ecs_table_t *table = ecs_table_find_or_create(unsafe_world, &entities);
+    ecs_table_t *table = flecs_table_find_or_create(unsafe_world, &entities);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return table->type;
@@ -387,7 +387,7 @@ bool ecs_type_has_type(
     ecs_type_t type,
     ecs_type_t has)
 {
-    return ecs_type_contains(world, type, has, true, false) != 0;
+    return flecs_type_contains(world, type, has, true, false) != 0;
 }
 
 bool ecs_type_owns_type(
@@ -396,7 +396,7 @@ bool ecs_type_owns_type(
     ecs_type_t has,
     bool owned)
 {
-    return ecs_type_contains(world, type, has, true, !owned) != 0;
+    return flecs_type_contains(world, type, has, true, !owned) != 0;
 }
 
 ecs_type_t ecs_type_add(
@@ -418,7 +418,7 @@ ecs_type_t ecs_type_add(
         .count = 1
     };
 
-    table = ecs_table_traverse_add(unsafe_world, table, &entities, NULL);
+    table = flecs_table_traverse_add(unsafe_world, table, &entities, NULL);
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -444,7 +444,7 @@ ecs_type_t ecs_type_remove(
         .count = 1
     };
 
-    table = ecs_table_traverse_remove(unsafe_world, table, &entities, NULL);
+    table = flecs_table_traverse_remove(unsafe_world, table, &entities, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return table->type;    
@@ -477,7 +477,7 @@ char* ecs_type_str(
             ecs_os_strcpy(buffer, "EcsComponent");
             len = ecs_os_strlen("EcsComponent");
         } else {
-            len = ecs_from_size_t(ecs_id_str(world, e, buffer, 256));
+            len = flecs_from_size_t(ecs_id_str(world, e, buffer, 256));
         }
 
         dst = ecs_vector_addn(&chbuf, char, len);

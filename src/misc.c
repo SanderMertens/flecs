@@ -1,41 +1,41 @@
 #include "private_api.h"
 
-int8_t ecs_to_i8(
+int8_t flflecs_to_i8(
     int64_t v)
 {
     ecs_assert(v < INT8_MAX, ECS_INTERNAL_ERROR, NULL);
     return (int8_t)v;
 }
 
-int16_t ecs_to_i16(
+int16_t flecs_to_i16(
     int64_t v)
 {
     ecs_assert(v < INT16_MAX, ECS_INTERNAL_ERROR, NULL);
     return (int16_t)v;
 }
 
-uint32_t ecs_to_u32(
+uint32_t flecs_to_u32(
     uint64_t v)
 {
     ecs_assert(v < UINT32_MAX, ECS_INTERNAL_ERROR, NULL);
     return (uint32_t)v;    
 }
 
-size_t ecs_to_size_t(
+size_t flecs_to_size_t(
     int64_t size)
 {
     ecs_assert(size >= 0, ECS_INTERNAL_ERROR, NULL);
     return (size_t)size;
 }
 
-ecs_size_t ecs_from_size_t(
+ecs_size_t flecs_from_size_t(
     size_t size)
 {
    ecs_assert(size < INT32_MAX, ECS_INTERNAL_ERROR, NULL); 
    return (ecs_size_t)size;
 }
 
-int32_t ecs_next_pow_of_2(
+int32_t flecs_next_pow_of_2(
     int32_t n)
 {
     n --;
@@ -110,7 +110,7 @@ void* ecs_os_memdup(
     return dst;  
 }
 
-int ecs_entity_compare(
+int flecs_entity_compare(
     ecs_entity_t e1, 
     const void *ptr1, 
     ecs_entity_t e2, 
@@ -121,13 +121,13 @@ int ecs_entity_compare(
     return (e1 > e2) - (e1 < e2);
 }
 
-int ecs_entity_compare_qsort(
+int flecs_entity_compare_qsort(
     const void *e1,
     const void *e2)
 {
     ecs_entity_t v1 = *(ecs_entity_t*)e1;
     ecs_entity_t v2 = *(ecs_entity_t*)e2;
-    return ecs_entity_compare(v1, NULL, v2, NULL);
+    return flecs_entity_compare(v1, NULL, v2, NULL);
 }
 
 /*
@@ -182,7 +182,7 @@ int64_t int64_muldiv(int64_t value, int64_t numer, int64_t denom) {
 }
 #endif
 
-void ecs_os_time_setup(void) {
+void flecs_os_time_setup(void) {
     if ( ecs_os_time_initialized) {
         return;
     }
@@ -203,7 +203,7 @@ void ecs_os_time_setup(void) {
     #endif
 }
 
-uint64_t ecs_os_time_now(void) {
+uint64_t flecs_os_time_now(void) {
     ecs_assert(ecs_os_time_initialized != 0, ECS_INTERNAL_ERROR, NULL);
 
     uint64_t now;
@@ -223,7 +223,7 @@ uint64_t ecs_os_time_now(void) {
     return now;
 }
 
-void ecs_os_time_sleep(
+void flecs_os_time_sleep(
     int32_t sec, 
     int32_t nanosec) 
 {
@@ -255,7 +255,7 @@ void ecs_os_time_sleep(
 
 static ULONG win32_current_resolution;
 
-void ecs_increase_timer_resolution(bool enable)
+void flecs_increase_timer_resolution(bool enable)
 {
     HMODULE hntdll = GetModuleHandle((LPCTSTR)"ntdll.dll");
     if (!hntdll) {
@@ -300,7 +300,7 @@ void ecs_increase_timer_resolution(bool enable)
 }
 
 #else
-void ecs_increase_timer_resolution(bool enable)
+void flecs_increase_timer_resolution(bool enable)
 {
     (void)enable;
     return;

@@ -19,7 +19,7 @@ bool iter_table(
         reader->table = table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_data_t *data = ecs_table_get_data(table);
+        ecs_data_t *data = flecs_table_get_data(table);
         reader->data = data;
         reader->table_index ++;
 

@@ -362,7 +362,7 @@ int32_t ecs_pipeline_update(
      * notify appropriate queries so caches are up to date. This includes the
      * pipeline query. */
     if (start_of_frame) {
-        ecs_eval_component_monitors(world);
+        flecs_eval_component_monitors(world);
     }
 
     bool added = false;
@@ -404,7 +404,7 @@ void ecs_pipeline_run(
         ecs_assert(world->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
     }
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);  
+    ecs_stage_t *stage = flecs_stage_from_world(&world);  
     
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -654,7 +654,7 @@ void ecs_deactivate_systems(
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
-    ecs_defer_none(world, &world->stage);
+    flecs_defer_none(world, &world->stage);
 
     while( ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
@@ -670,7 +670,7 @@ void ecs_deactivate_systems(
         }
     }
 
-    ecs_defer_flush(world, &world->stage);
+    flecs_defer_flush(world, &world->stage);
 }
 
 void ecs_set_pipeline(
@@ -715,21 +715,21 @@ void FlecsPipelineImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    ecs_bootstrap_tag(world, EcsPipeline);
-    ecs_bootstrap_component(world, EcsPipelineQuery);
+    flecs_bootstrap_tag(world, EcsPipeline);
+    flecs_bootstrap_component(world, EcsPipelineQuery);
 
     /* Phases of the builtin pipeline are regular entities. Names are set so
      * they can be resolved by type expressions. */
-    ecs_bootstrap_tag(world, EcsPreFrame);
-    ecs_bootstrap_tag(world, EcsOnLoad);
-    ecs_bootstrap_tag(world, EcsPostLoad);
-    ecs_bootstrap_tag(world, EcsPreUpdate);
-    ecs_bootstrap_tag(world, EcsOnUpdate);
-    ecs_bootstrap_tag(world, EcsOnValidate);
-    ecs_bootstrap_tag(world, EcsPostUpdate);
-    ecs_bootstrap_tag(world, EcsPreStore);
-    ecs_bootstrap_tag(world, EcsOnStore);
-    ecs_bootstrap_tag(world, EcsPostFrame);
+    flecs_bootstrap_tag(world, EcsPreFrame);
+    flecs_bootstrap_tag(world, EcsOnLoad);
+    flecs_bootstrap_tag(world, EcsPostLoad);
+    flecs_bootstrap_tag(world, EcsPreUpdate);
+    flecs_bootstrap_tag(world, EcsOnUpdate);
+    flecs_bootstrap_tag(world, EcsOnValidate);
+    flecs_bootstrap_tag(world, EcsPostUpdate);
+    flecs_bootstrap_tag(world, EcsPreStore);
+    flecs_bootstrap_tag(world, EcsOnStore);
+    flecs_bootstrap_tag(world, EcsPostFrame);
 
     ECS_TYPE_IMPL(EcsPipelineQuery);
 

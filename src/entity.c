@@ -18,7 +18,7 @@ void* get_component_w_index(
 {
     ecs_assert(column_index < table->column_count, ECS_NOT_A_COMPONENT, NULL);
 
-    ecs_data_t *data = ecs_table_get_data(table);
+    ecs_data_t *data = flecs_table_get_data(table);
     ecs_column_t *column = &data->columns[column_index];
 
     /* If size is 0, component does not have a value. This is likely caused by
@@ -37,7 +37,7 @@ void* get_component(
     int32_t row,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = ecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (!idr) {
         return NULL;
     }
@@ -76,7 +76,7 @@ void* get_base_component(
     /* Should always be an id record for IsA, otherwise a table with a 
      * HasBase flag set should not exist. */
     if (!table_index_isa) {
-        ecs_id_record_t *idr = ecs_get_id_record(world, ecs_pair(EcsIsA, EcsWildcard));
+        ecs_id_record_t *idr = flecs_get_id_record(world, ecs_pair(EcsIsA, EcsWildcard));
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
         table_index_isa = idr->table_index;
     }
@@ -113,7 +113,7 @@ void* get_base_component(
                 table_index_isa, recur_depth + 1);
         } else {
             bool is_monitored;
-            int32_t row = ecs_record_to_row(r->row, &is_monitored);
+            int32_t row = flecs_record_to_row(r->row, &is_monitored);
             ptr = get_component_w_index(table, tr->column, row);
         }
         i ++;
@@ -128,7 +128,7 @@ int32_t set_row_info(
     ecs_entity_info_t *info,
     int32_t row)
 {
-    return info->row = ecs_record_to_row(row, &info->is_watched);
+    return info->row = flecs_record_to_row(row, &info->is_watched);
 }
 
 /* Utility to set info from main stage record */
@@ -150,39 +150,13 @@ void set_info_from_record(
         return;
     }
 
-    ecs_data_t *data = ecs_table_get_data(table);
+    ecs_data_t *data = flecs_table_get_data(table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     info->data = data;
 
     ecs_assert(ecs_vector_count(data->entities) > info->row, 
         ECS_INTERNAL_ERROR, NULL);
-}
-
-/* Get info from main stage */
-bool ecs_get_info(
-    const ecs_world_t * world,
-    ecs_entity_t entity,
-    ecs_entity_info_t * info)
-{
-    info->table = NULL;
-    info->record = NULL;
-    info->data = NULL;
-    info->is_watched = false;
-
-    if (entity & ECS_ROLE) {
-        return false;
-    }
-    
-    ecs_record_t *record = ecs_eis_get(world, entity);
-
-    if (!record) {
-        return false;
-    }
-
-    set_info_from_record(info, record);
-
-    return true;
 }
 
 static
@@ -192,13 +166,14 @@ const ecs_type_info_t *get_c_info(
 {
     ecs_entity_t real_id = ecs_get_typeid(world, component);
     if (real_id) {
-        return ecs_get_c_info(world, real_id);
+        return flecs_get_c_info(world, real_id);
     } else {
         return NULL;
     }
 }
 
-int ecs_get_column_info(
+static
+int get_column_info(
     ecs_world_t * world,
     ecs_table_t * table,
     ecs_ids_t * components,
@@ -255,7 +230,7 @@ void run_set_systems_for_entities(
          * happens when an entity is created directly in its target table. */
         ecs_vector_t *queries = table->on_set_all;
         ecs_vector_each(queries, ecs_matched_query_t, m, {
-            ecs_run_monitor(world, m, components, row, count, entities);
+            flecs_run_monitor(world, m, components, row, count, entities);
         });
     } else {
         /* Run OnSet systems for a specific component. This usually happens when
@@ -281,7 +256,7 @@ void run_set_systems_for_entities(
 
             ecs_vector_t *queries = on_set_systems[index];
             ecs_vector_each(queries, ecs_matched_query_t, m, {
-                ecs_run_monitor(world, m, components, row, count, entities);
+                flecs_run_monitor(world, m, components, row, count, entities);
             });
         }
     }
@@ -306,119 +281,8 @@ void notify(
 
     int i;
     for (i = 0; i < arr_count; i ++) {
-        ecs_triggers_notify(world, arr[i], event, table, data, row, count);
+        flecs_triggers_notify(world, arr[i], event, table, data, row, count);
     }
-}
-
-void ecs_run_set_systems(
-    ecs_world_t * world,
-    ecs_ids_t * components,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count,
-    bool set_all)
-{
-#ifdef FLECS_SYSTEM    
-    if (!count || !data) {
-        return;
-    }
-    
-    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
-    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert((row + count) <= ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
-
-    entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
-
-    run_set_systems_for_entities(world, components, table, row, 
-        count, entities, set_all);
-#endif
-
-    if (table->flags & EcsTableHasOnSet) {
-        if (!set_all) {
-            notify(world, table, data, row, count, EcsOnSet, components);
-        } else {
-            ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
-            int32_t i, column_count = table->column_count;
-            for (i = 0; i < column_count; i ++) {
-                ecs_column_t *column = &data->columns[i];
-                if (column->size) {
-                    ecs_ids_t component = {
-                        .array = &ids[i],
-                        .count = 1
-                    };
-
-                    notify( world, table, data, row, count, EcsOnSet, 
-                        &component);
-                }
-            }
-        }
-    }
-}
-
-void ecs_run_monitors(
-    ecs_world_t * world, 
-    ecs_table_t * dst_table,
-    ecs_vector_t * v_dst_monitors, 
-    int32_t dst_row, 
-    int32_t count, 
-    ecs_vector_t *v_src_monitors)
-{
-    (void)world;
-    (void)dst_table;
-    (void)v_dst_monitors;
-    (void)dst_row;
-    (void)count;
-    (void)v_src_monitors;
-
-#ifdef FLECS_SYSTEM    
-    if (v_dst_monitors == v_src_monitors) {
-        return;
-    }
-
-    if (!v_dst_monitors) {
-        return;
-    }
-
-    ecs_assert(!(dst_table->flags & EcsTableIsPrefab), ECS_INTERNAL_ERROR, NULL);
-    
-    if (!v_src_monitors) {
-        ecs_vector_each(v_dst_monitors, ecs_matched_query_t, monitor, {
-            ecs_run_monitor(world, monitor, NULL, dst_row, count, NULL);
-        });
-    } else {
-        /* If both tables have monitors, run the ones that dst_table has and
-         * src_table doesn't have */
-        int32_t i, m_count = ecs_vector_count(v_dst_monitors);
-        int32_t j = 0, src_count = ecs_vector_count(v_src_monitors);
-        ecs_matched_query_t *dst_monitors = ecs_vector_first(v_dst_monitors, ecs_matched_query_t);
-        ecs_matched_query_t *src_monitors = ecs_vector_first(v_src_monitors, ecs_matched_query_t);
-
-        for (i = 0; i < m_count; i ++) {
-            ecs_matched_query_t *dst = &dst_monitors[i];
-
-            ecs_entity_t system = dst->query->system;
-            ecs_assert(system != 0, ECS_INTERNAL_ERROR, NULL);
-
-            ecs_matched_query_t *src = 0;
-            while (j < src_count) {
-                src = &src_monitors[j];
-                if (src->query->system < system) {
-                    j ++;
-                } else {
-                    break;
-                }
-            }
-
-            if (src && src->query->system == system) {
-                continue;
-            }
-
-            ecs_run_monitor(world, dst, NULL, dst_row, count, NULL);
-        }
-    }
-#endif
 }
 
 static
@@ -441,8 +305,8 @@ void instantiate_children(
     ecs_table_t * child_table)
 {
     ecs_type_t type = child_table->type;
-    ecs_data_t *child_data = ecs_table_get_data(child_table);
-    if (!child_data || !ecs_table_data_count(child_data)) {
+    ecs_data_t *child_data = flecs_table_get_data(child_table);
+    if (!child_data || !flecs_table_data_count(child_data)) {
         return;
     }
 
@@ -511,7 +375,7 @@ void instantiate_children(
         components.array[base_index] = ecs_pair(EcsChildOf, instance);
 
         /* Find or create table */
-        ecs_table_t *i_table = ecs_table_find_or_create(world, &components);
+        ecs_table_t *i_table = flecs_table_find_or_create(world, &components);
         ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL); 
 
         /* The instance is trying to instantiate from a base that is also
@@ -532,7 +396,7 @@ void instantiate_children(
         new_w_data(world, i_table, NULL, child_count, c_info, &child_row);       
 
         /* If prefab child table has children itself, recursively instantiate */
-        ecs_data_t *i_data = ecs_table_get_data(i_table);
+        ecs_data_t *i_data = flecs_table_get_data(i_table);
         for (j = 0; j < child_count; j ++) {
             ecs_entity_t child = children[j];
             instantiate(world, child, i_table, i_data, child_row + j, 1);
@@ -550,7 +414,7 @@ void instantiate(
     int32_t count)
 {    
     /* If base is a parent, instantiate children of base for instances */
-    const ecs_id_record_t *r = ecs_get_id_record(
+    const ecs_id_record_t *r = flecs_get_id_record(
         world, ecs_pair(EcsChildOf, base));
 
     if (r && r->table_index) {
@@ -588,7 +452,7 @@ bool override_from_base(
     ecs_entity_info_t base_info;
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (!ecs_get_info(world, base, &base_info) || !base_info.table) {
+    if (!flecs_get_info(world, base, &base_info) || !base_info.table) {
         return false;
     }
 
@@ -601,7 +465,7 @@ bool override_from_base(
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
         component = ecs_get_typeid(world, component);
-        const ecs_type_info_t *cdata = ecs_get_c_info(world, component);
+        const ecs_type_info_t *cdata = flecs_get_c_info(world, component);
         int32_t index;
 
         ecs_copy_t copy = cdata ? cdata->lifecycle.copy : NULL;
@@ -612,7 +476,7 @@ bool override_from_base(
             void *ctx = cdata->lifecycle.ctx;
             for (index = 0; index < count; index ++) {
                 copy(world, component, &entities[row], &base,
-                    data_ptr, base_ptr, ecs_to_size_t(data_size), 1, ctx);
+                    data_ptr, base_ptr, flecs_to_size_t(data_size), 1, ctx);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
             }
         } else {
@@ -666,7 +530,7 @@ bool override_component(
 }
 
 static
-void ecs_components_override(
+void components_override(
     ecs_world_t * world,
     ecs_table_t * table,
     ecs_data_t * data,
@@ -707,7 +571,7 @@ void ecs_components_override(
                     .count = 1
                 };
 
-                table_without_base = ecs_table_traverse_remove(world, 
+                table_without_base = flecs_table_traverse_remove(world, 
                     table_without_base, &to_remove, NULL);
             }
         }
@@ -733,7 +597,7 @@ void ecs_components_override(
                 .array = &component,
                 .count = 1
             };
-            table_without_base = ecs_table_traverse_remove(world, 
+            table_without_base = flecs_table_traverse_remove(world, 
                 table_without_base, &to_remove, NULL);
         }
     }
@@ -741,7 +605,7 @@ void ecs_components_override(
     /* Run OnSet actions when a base entity is added to the entity for 
      * components not overridden by the entity. */
     if (run_on_set && table_without_base != table) {
-        ecs_run_monitors(world, table, table->on_set_all, row, count, 
+        flecs_run_monitors(world, table, table->on_set_all, row, count, 
             table_without_base->on_set_all);
     }
 }
@@ -771,7 +635,7 @@ void set_switch(
                 ecs_assert(sw_case != 0, ECS_INTERNAL_ERROR, NULL);
             }
 
-            int32_t sw_index = ecs_table_switch_from_case(world, table, e);
+            int32_t sw_index = flecs_table_switch_from_case(world, table, e);
             ecs_assert(sw_index != -1, ECS_INTERNAL_ERROR, NULL);
             ecs_switch_t *sw = data->sw_columns[sw_index].data;
             ecs_assert(sw != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -802,59 +666,6 @@ void ecs_components_switch(
     } 
 }
 
-void ecs_run_add_actions(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count,
-    ecs_ids_t * added,
-    bool get_all,
-    bool run_on_set)
-{
-    ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(added->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
-
-    if (table->flags & EcsTableHasBase) {
-        ecs_column_info_t cinfo[ECS_MAX_ADD_REMOVE];
-        int added_count = ecs_get_column_info(
-            world, table, added, cinfo, get_all);
-
-        ecs_components_override(
-            world, table, data, row, count, cinfo, 
-            added_count, run_on_set);
-    }
-
-    if (table->flags & EcsTableHasSwitch) {
-        ecs_components_switch(world, table, data, row, count, added, NULL);
-    }
-
-    if (table->flags & EcsTableHasOnAdd) {
-        notify(world, table, data, row, count, EcsOnAdd, added);
-    }
-}
-
-void ecs_run_remove_actions(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
-    int32_t row,
-    int32_t count,
-    ecs_ids_t * removed)
-{
-    ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(removed->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
-
-    if (count) {
-        if (table->flags & EcsTableHasUnSet) {
-            notify(world, table, data, row, count, EcsUnSet, removed);
-        } 
-        if (table->flags & EcsTableHasOnRemove) {
-            notify(world, table, data, row, count, EcsOnRemove, removed);
-        }
-    }
-}
-
 static
 int32_t new_entity(
     ecs_world_t * world,
@@ -865,7 +676,7 @@ int32_t new_entity(
     bool construct)
 {
     ecs_record_t *record = info->record;
-    ecs_data_t *new_data = ecs_table_get_or_create_data(new_table);
+    ecs_data_t *new_data = flecs_table_get_or_create_data(new_table);
     int32_t new_row;
 
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -874,22 +685,22 @@ int32_t new_entity(
         record = ecs_eis_ensure(world, entity);
     }
 
-    new_row = ecs_table_append(
+    new_row = flecs_table_append(
         world, new_table, new_data, entity, record, construct);
 
     record->table = new_table;
-    record->row = ecs_row_to_record(new_row, info->is_watched);
+    record->row = flecs_row_to_record(new_row, info->is_watched);
 
     ecs_assert(
         ecs_vector_count(new_data[0].entities) > new_row, 
         ECS_INTERNAL_ERROR, NULL);
 
     if (new_table->flags & EcsTableHasAddActions) {
-        ecs_run_add_actions(
+        flecs_run_add_actions(
             world, new_table, new_data, new_row, 1, added, true, true);
 
         if (new_table->flags & EcsTableHasMonitors) {
-            ecs_run_monitors(
+            flecs_run_monitors(
                 world, new_table, new_table->monitors, new_row, 1, NULL);              
         }        
     }
@@ -912,7 +723,7 @@ int32_t move_entity(
     ecs_ids_t * removed,
     bool construct)
 {    
-    ecs_data_t *dst_data = ecs_table_get_or_create_data(dst_table);
+    ecs_data_t *dst_data = flecs_table_get_or_create_data(dst_table);
     ecs_assert(src_data != dst_data, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -925,11 +736,11 @@ int32_t move_entity(
     ecs_assert(!record || record == ecs_eis_get(world, entity), 
         ECS_INTERNAL_ERROR, NULL);
 
-    int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, 
+    int32_t dst_row = flecs_table_append(world, dst_table, dst_data, entity, 
         record, false);
 
     record->table = dst_table;
-    record->row = ecs_row_to_record(dst_row, info->is_watched);
+    record->row = flecs_row_to_record(dst_row, info->is_watched);
 
     ecs_assert(ecs_vector_count(src_data->entities) > src_row, 
         ECS_INTERNAL_ERROR, NULL);
@@ -940,29 +751,29 @@ int32_t move_entity(
         if (removed && (src_table->flags & EcsTableHasRemoveActions)) {
             /* If entity was moved, invoke UnSet monitors for each component that
              * the entity no longer has */
-            ecs_run_monitors(world, dst_table, src_table->un_set_all, 
+            flecs_run_monitors(world, dst_table, src_table->un_set_all, 
                 src_row, 1, dst_table->un_set_all);
 
-            ecs_run_remove_actions(
+            flecs_run_remove_actions(
                 world, src_table, src_data, src_row, 1, removed);
         }
 
-        ecs_table_move(world, entity, entity, dst_table, dst_data, dst_row, 
+        flecs_table_move(world, entity, entity, dst_table, dst_data, dst_row, 
             src_table, src_data, src_row, construct);                
     }
     
-    ecs_table_delete(world, src_table, src_data, src_row, false);
+    flecs_table_delete(world, src_table, src_data, src_row, false);
 
     /* If components were added, invoke add actions */
     if (src_table != dst_table || (added && added->count)) {
         if (added && (dst_table->flags & EcsTableHasAddActions)) {
-            ecs_run_add_actions(
+            flecs_run_add_actions(
                 world, dst_table, dst_data, dst_row, 1, added, false, true);
         }
 
         /* Run monitors */
         if (dst_table->flags & EcsTableHasMonitors) {
-            ecs_run_monitors(world, dst_table, dst_table->monitors, dst_row, 
+            flecs_run_monitors(world, dst_table, dst_table->monitors, dst_row, 
                 1, src_table->monitors);
         }
 
@@ -970,7 +781,7 @@ int32_t move_entity(
          * the value of those components changed from the removed component to 
          * the value of component on the base entity */
         if (removed && dst_table->flags & EcsTableHasBase) {
-            ecs_run_monitors(world, dst_table, src_table->on_set_override, 
+            flecs_run_monitors(world, dst_table, src_table->on_set_override, 
                 dst_row, 1, dst_table->on_set_override);          
         }
     }
@@ -989,17 +800,17 @@ void delete_entity(
     ecs_ids_t * removed)
 {
     if (removed) {
-        ecs_run_monitors(world, src_table, src_table->un_set_all, 
+        flecs_run_monitors(world, src_table, src_table->un_set_all, 
             src_row, 1, NULL);
 
         /* Invoke remove actions before deleting */
         if (src_table->flags & EcsTableHasRemoveActions) {   
-            ecs_run_remove_actions(
+            flecs_run_remove_actions(
                 world, src_table, src_data, src_row, 1, removed);
         } 
     }
 
-    ecs_table_delete(world, src_table, src_data, src_row, true);
+    flecs_table_delete(world, src_table, src_data, src_row, true);
 }
 
 /* Updating component monitors is a relatively expensive operation that only
@@ -1028,7 +839,7 @@ void update_component_monitor_w_array(
             /* If a relationship has changed, check if it could have impacted
              * the shape of the graph for that relationship. If so, mark the
              * relationship as dirty */        
-            if (rel != relation && ecs_get_id_record(world, ecs_pair(rel, entity))) {
+            if (rel != relation && flecs_get_id_record(world, ecs_pair(rel, entity))) {
                 update_component_monitor_w_array(world, entity, rel, entities);
             }
 
@@ -1040,7 +851,7 @@ void update_component_monitor_w_array(
              * evaluated for the components of the prefab. */
             ecs_entity_t base = ecs_pair_object(world, id);
             ecs_type_t type = ecs_get_type(world, base);
-            ecs_ids_t base_entities = ecs_type_to_entities(type);
+            ecs_ids_t base_entities = flecs_type_to_ids(type);
 
             /* This evaluates the component monitor for all components of the
              * base entity. If the base entity contains IsA relationships
@@ -1048,7 +859,7 @@ void update_component_monitor_w_array(
             update_component_monitor_w_array(
                 world, entity, relation, &base_entities);               
         } else {
-            ecs_monitor_mark_dirty(world, relation, id);
+            flecs_monitor_mark_dirty(world, relation, id);
         }
     }
 }
@@ -1136,7 +947,7 @@ void new(
     ecs_ids_t * to_add)
 {
     ecs_entity_info_t info = {0};
-    ecs_table_t *table = ecs_table_traverse_add(
+    ecs_table_t *table = flecs_table_traverse_add(
         world, &world->store.root, to_add, NULL);
     new_entity(world, entity, &info, table, to_add, true);
 }
@@ -1170,9 +981,9 @@ const ecs_entity_t* new_w_data(
         component_array.count = ecs_vector_count(type);
     }
 
-    ecs_data_t *data = ecs_table_get_or_create_data(table);
-    int32_t row = ecs_table_appendn(world, table, data, count, ids);
-    ecs_ids_t added = ecs_type_to_entities(type);
+    ecs_data_t *data = flecs_table_get_or_create_data(table);
+    int32_t row = flecs_table_appendn(world, table, data, count, ids);
+    ecs_ids_t added = flecs_type_to_ids(type);
     
     /* Update entity index. */
     int i;
@@ -1185,9 +996,9 @@ const ecs_entity_t* new_w_data(
         });
     }
 
-    ecs_defer_none(world, &world->stage);
+    flecs_defer_none(world, &world->stage);
 
-    ecs_run_add_actions(world, table, data, row, count, &added, 
+    flecs_run_add_actions(world, table, data, row, count, &added, 
         true, component_data == NULL);
 
     if (component_data) {
@@ -1222,18 +1033,18 @@ const ecs_entity_t* new_w_data(
             if (cdata && (copy = cdata->lifecycle.copy)) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
                 copy(world, c, entities, entities, ptr, src_ptr, 
-                    ecs_to_size_t(size), count, cdata->lifecycle.ctx);
+                    flecs_to_size_t(size), count, cdata->lifecycle.ctx);
             } else {
                 ecs_os_memcpy(ptr, src_ptr, size * count);
             }
         };
 
-        ecs_run_set_systems(world, &added, table, data, row, count, true);        
+        flecs_run_set_systems(world, &added, table, data, row, count, true);        
     }
 
-    ecs_run_monitors(world, table, table->monitors, row, count, NULL);
+    flecs_run_monitors(world, table, table->monitors, row, count, NULL);
 
-    ecs_defer_flush(world, &world->stage);
+    flecs_defer_flush(world, &world->stage);
 
     if (row_out) {
         *row_out = row;
@@ -1264,7 +1075,7 @@ bool has_type(
 
     ecs_type_t entity_type = ecs_get_type(world, entity);
 
-    return ecs_type_contains(
+    return flecs_type_contains(
         world, entity_type, type, match_any, match_prefabs) != 0;
 }
 
@@ -1281,7 +1092,7 @@ void add_remove(
     ecs_assert(to_remove->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_info_t info;
-    ecs_get_info(world, entity, &info);
+    flecs_get_info(world, entity, &info);
 
     ecs_entity_t add_buffer[ECS_MAX_ADD_REMOVE];
     ecs_entity_t remove_buffer[ECS_MAX_ADD_REMOVE];
@@ -1290,10 +1101,10 @@ void add_remove(
 
     ecs_table_t *src_table = info.table;
 
-    ecs_table_t *dst_table = ecs_table_traverse_remove(
+    ecs_table_t *dst_table = flecs_table_traverse_remove(
         world, src_table, to_remove, &removed);
 
-    dst_table = ecs_table_traverse_add(
+    dst_table = flecs_table_traverse_add(
         world, dst_table, to_add, &added);    
 
     commit(world, entity, &info, dst_table, &added, &removed, true);
@@ -1312,7 +1123,7 @@ void add_ids_w_info(
     ecs_ids_t added = { .array = buffer };
 
     ecs_table_t *src_table = info->table;
-    ecs_table_t *dst_table = ecs_table_traverse_add(
+    ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, components, &added);
 
     commit(world, entity, info, dst_table, &added, NULL, construct);
@@ -1330,7 +1141,7 @@ void remove_ids_w_info(
     ecs_ids_t removed = { .array = buffer };
 
     ecs_table_t *src_table = info->table;
-    ecs_table_t *dst_table = ecs_table_traverse_remove(
+    ecs_table_t *dst_table = flecs_table_traverse_remove(
         world, src_table, components, &removed);
 
     commit(world, entity, info, dst_table, NULL, &removed, true);
@@ -1344,25 +1155,25 @@ void add_ids(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    if (ecs_defer_add(world, stage, entity, components)) {
+    if (flecs_defer_add(world, stage, entity, components)) {
         return;
     }
 
     ecs_entity_info_t info;
-    ecs_get_info(world, entity, &info);
+    flecs_get_info(world, entity, &info);
 
     ecs_entity_t buffer[ECS_MAX_ADD_REMOVE];
     ecs_ids_t added = { .array = buffer };
 
     ecs_table_t *src_table = info.table;
-    ecs_table_t *dst_table = ecs_table_traverse_add(
+    ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, components, &added);
 
     commit(world, entity, &info, dst_table, &added, NULL, true);
 
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
 }
 
 static
@@ -1373,25 +1184,25 @@ void remove_ids(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);    
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    if (ecs_defer_remove(world, stage, entity, components)) {
+    if (flecs_defer_remove(world, stage, entity, components)) {
         return;
     }
 
     ecs_entity_info_t info;
-    ecs_get_info(world, entity, &info);
+    flecs_get_info(world, entity, &info);
 
     ecs_entity_t buffer[ECS_MAX_ADD_REMOVE];
     ecs_ids_t removed = { .array = buffer };
 
     ecs_table_t *src_table = info.table;
-    ecs_table_t *dst_table = ecs_table_traverse_remove(
+    ecs_table_t *dst_table = flecs_table_traverse_remove(
         world, src_table, components, &removed);
 
     commit(world, entity, &info, dst_table, NULL, &removed, true);
 
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
 }
 
 static
@@ -1408,7 +1219,7 @@ void *get_mutable(
         ECS_HAS_ROLE(component, PAIR), ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
-    if (ecs_get_info(world, entity, info) && info->table) {
+    if (flecs_get_info(world, entity, info) && info->table) {
         dst = get_component(world, info->table, info->row, component);
     }
 
@@ -1422,7 +1233,7 @@ void *get_mutable(
 
         add_ids_w_info(world, entity, info, &to_add, true);
 
-        ecs_get_info(world, entity, info);
+        flecs_get_info(world, entity, info);
         ecs_assert(info->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         dst = get_component(world, info->table, info->row, component);
@@ -1441,9 +1252,199 @@ void *get_mutable(
     }
 }
 
+
 /* -- Private functions -- */
 
-int32_t ecs_record_to_row(
+void flecs_run_add_actions(
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
+    int32_t row,
+    int32_t count,
+    ecs_ids_t * added,
+    bool get_all,
+    bool run_on_set)
+{
+    ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(added->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
+
+    if (table->flags & EcsTableHasBase) {
+        ecs_column_info_t cinfo[ECS_MAX_ADD_REMOVE];
+        int added_count = get_column_info(
+            world, table, added, cinfo, get_all);
+
+        components_override(
+            world, table, data, row, count, cinfo, 
+            added_count, run_on_set);
+    }
+
+    if (table->flags & EcsTableHasSwitch) {
+        ecs_components_switch(world, table, data, row, count, added, NULL);
+    }
+
+    if (table->flags & EcsTableHasOnAdd) {
+        notify(world, table, data, row, count, EcsOnAdd, added);
+    }
+}
+
+void flecs_run_remove_actions(
+    ecs_world_t * world,
+    ecs_table_t * table,
+    ecs_data_t * data,
+    int32_t row,
+    int32_t count,
+    ecs_ids_t * removed)
+{
+    ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(removed->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
+
+    if (count) {
+        if (table->flags & EcsTableHasUnSet) {
+            notify(world, table, data, row, count, EcsUnSet, removed);
+        } 
+        if (table->flags & EcsTableHasOnRemove) {
+            notify(world, table, data, row, count, EcsOnRemove, removed);
+        }
+    }
+}
+
+bool flecs_get_info(
+    const ecs_world_t * world,
+    ecs_entity_t entity,
+    ecs_entity_info_t * info)
+{
+    info->table = NULL;
+    info->record = NULL;
+    info->data = NULL;
+    info->is_watched = false;
+
+    if (entity & ECS_ROLE) {
+        return false;
+    }
+    
+    ecs_record_t *record = ecs_eis_get(world, entity);
+
+    if (!record) {
+        return false;
+    }
+
+    set_info_from_record(info, record);
+
+    return true;
+}
+
+void flecs_run_set_systems(
+    ecs_world_t * world,
+    ecs_ids_t * components,
+    ecs_table_t * table,
+    ecs_data_t * data,
+    int32_t row,
+    int32_t count,
+    bool set_all)
+{
+#ifdef FLECS_SYSTEM    
+    if (!count || !data) {
+        return;
+    }
+    
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
+    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert((row + count) <= ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
+
+    entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
+
+    run_set_systems_for_entities(world, components, table, row, 
+        count, entities, set_all);
+#endif
+
+    if (table->flags & EcsTableHasOnSet) {
+        if (!set_all) {
+            notify(world, table, data, row, count, EcsOnSet, components);
+        } else {
+            ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+            int32_t i, column_count = table->column_count;
+            for (i = 0; i < column_count; i ++) {
+                ecs_column_t *column = &data->columns[i];
+                if (column->size) {
+                    ecs_ids_t component = {
+                        .array = &ids[i],
+                        .count = 1
+                    };
+
+                    notify( world, table, data, row, count, EcsOnSet, 
+                        &component);
+                }
+            }
+        }
+    }
+}
+
+void flecs_run_monitors(
+    ecs_world_t * world, 
+    ecs_table_t * dst_table,
+    ecs_vector_t * v_dst_monitors, 
+    int32_t dst_row, 
+    int32_t count, 
+    ecs_vector_t *v_src_monitors)
+{
+    (void)world;
+    (void)dst_table;
+    (void)v_dst_monitors;
+    (void)dst_row;
+    (void)count;
+    (void)v_src_monitors;
+
+#ifdef FLECS_SYSTEM    
+    if (v_dst_monitors == v_src_monitors) {
+        return;
+    }
+
+    if (!v_dst_monitors) {
+        return;
+    }
+
+    ecs_assert(!(dst_table->flags & EcsTableIsPrefab), ECS_INTERNAL_ERROR, NULL);
+    
+    if (!v_src_monitors) {
+        ecs_vector_each(v_dst_monitors, ecs_matched_query_t, monitor, {
+            flecs_run_monitor(world, monitor, NULL, dst_row, count, NULL);
+        });
+    } else {
+        /* If both tables have monitors, run the ones that dst_table has and
+         * src_table doesn't have */
+        int32_t i, m_count = ecs_vector_count(v_dst_monitors);
+        int32_t j = 0, src_count = ecs_vector_count(v_src_monitors);
+        ecs_matched_query_t *dst_monitors = ecs_vector_first(v_dst_monitors, ecs_matched_query_t);
+        ecs_matched_query_t *src_monitors = ecs_vector_first(v_src_monitors, ecs_matched_query_t);
+
+        for (i = 0; i < m_count; i ++) {
+            ecs_matched_query_t *dst = &dst_monitors[i];
+
+            ecs_entity_t system = dst->query->system;
+            ecs_assert(system != 0, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_matched_query_t *src = 0;
+            while (j < src_count) {
+                src = &src_monitors[j];
+                if (src->query->system < system) {
+                    j ++;
+                } else {
+                    break;
+                }
+            }
+
+            if (src && src->query->system == system) {
+                continue;
+            }
+
+            flecs_run_monitor(world, dst, NULL, dst_row, count, NULL);
+        }
+    }
+#endif
+}
+
+int32_t flecs_record_to_row(
     int32_t row, 
     bool *is_watched_out) 
 {
@@ -1453,14 +1454,14 @@ int32_t ecs_record_to_row(
     return row;
 }
 
-int32_t ecs_row_to_record(
+int32_t flecs_row_to_record(
     int32_t row, 
     bool is_watched) 
 {
     return (row + 1) * -(is_watched * 2 - 1);
 }
 
-ecs_ids_t ecs_type_to_entities(
+ecs_ids_t flecs_type_to_ids(
     ecs_type_t type)
 {
     return (ecs_ids_t){
@@ -1469,7 +1470,7 @@ ecs_ids_t ecs_type_to_entities(
     };
 }
 
-void ecs_set_watch(
+void flecs_set_watch(
     ecs_world_t *world,
     ecs_entity_t entity)
 {    
@@ -1526,7 +1527,7 @@ ecs_entity_t ecs_new_id(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_stage_t *stage = ecs_stage_from_readonly_world(world);
+    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
 
     /* It is possible that the world passed to this function is a stage, so
      * make sure we have the actual world. Cast away const since this is one of
@@ -1559,7 +1560,7 @@ ecs_entity_t ecs_set_with(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_id_t prev = stage->with;
     stage->with = id;
     return prev;
@@ -1568,7 +1569,7 @@ ecs_entity_t ecs_set_with(
 ecs_entity_t ecs_get_with(
     const ecs_world_t *world)
 {
-    const ecs_stage_t *stage = ecs_stage_from_readonly_world(world);
+    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
     return stage->with;
 }
 
@@ -1614,13 +1615,13 @@ ecs_entity_t ecs_new_w_type(
         return ecs_new_w_id(world, 0);
     }
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);    
+    ecs_stage_t *stage = flecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new_id(world);
     ecs_id_t with = stage->with;
     ecs_entity_t scope = stage->scope;
 
-    ecs_ids_t to_add = ecs_type_to_entities(type);
-    if (ecs_defer_new(world, stage, entity, &to_add)) {
+    ecs_ids_t to_add = flecs_type_to_ids(type);
+    if (flecs_defer_new(world, stage, entity, &to_add)) {
         if (with) {
             ecs_add_id(world, entity, with);
         }
@@ -1647,7 +1648,7 @@ ecs_entity_t ecs_new_w_type(
         add_ids(world, entity, &to_add);
     }
 
-    ecs_defer_flush(world, stage);    
+    flecs_defer_flush(world, stage);    
 
     return entity;
 }
@@ -1658,7 +1659,7 @@ ecs_entity_t ecs_new_w_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);    
+    ecs_stage_t *stage = flecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new_id(world);
 
     ecs_id_t ids[3];
@@ -1680,7 +1681,7 @@ ecs_entity_t ecs_new_w_id(
         }
     }
 
-    if (ecs_defer_new(world, stage, entity, &to_add)) {
+    if (flecs_defer_new(world, stage, entity, &to_add)) {
         return entity;
     } 
 
@@ -1690,7 +1691,7 @@ ecs_entity_t ecs_new_w_id(
         ecs_eis_set(world, entity, &(ecs_record_t){ 0 });
     }
 
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
 
     return entity;
 }
@@ -1749,10 +1750,10 @@ ecs_table_t *traverse_from_expr(
                 /* Regular AND expression */
                 ecs_ids_t arr = { .array = &term.id, .count = 1 };
                 if (is_add) {
-                    table = ecs_table_traverse_add(
+                    table = flecs_table_traverse_add(
                         world, table, &arr, modified);
                 } else {
-                    table = ecs_table_traverse_remove(
+                    table = flecs_table_traverse_remove(
                         world, table, &arr, modified);
                 }
 
@@ -1771,10 +1772,10 @@ ecs_table_t *traverse_from_expr(
                 for (i = 0; i < count; i ++) {
                     ecs_ids_t arr = { .array = &ids[i], .count = 1 };
                     if (is_add) {
-                        table = ecs_table_traverse_add(
+                        table = flecs_table_traverse_add(
                             world, table, &arr, modified);
                     } else {
-                        table = ecs_table_traverse_remove(
+                        table = flecs_table_traverse_remove(
                             world, table, &arr, modified);
                     }
                     
@@ -1870,7 +1871,7 @@ void traverse_add_remove(
     ecs_entity_info_t info = {0};
     ecs_table_t *src_table = NULL, *table = NULL;
     if (!new_entity) {
-        if (ecs_get_info(world, result, &info)) {
+        if (flecs_get_info(world, result, &info)) {
             table = info.table;
         }
     }
@@ -1889,13 +1890,13 @@ void traverse_add_remove(
         if (new_entity && scope && !name && !name_assigned) {
             ecs_entity_t id = ecs_pair(EcsChildOf, scope);
             ecs_entities_t arr = { .array = &id, .count = 1 };
-            table = ecs_table_traverse_add(world, table, &arr, &added);
+            table = flecs_table_traverse_add(world, table, &arr, &added);
             ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
         }
 
         if (with) {
             ecs_entities_t arr = { .array = &with, .count = 1 };
-            table = ecs_table_traverse_add(world, table, &arr, &added);
+            table = flecs_table_traverse_add(world, table, &arr, &added);
             ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
         }
     }
@@ -1904,7 +1905,7 @@ void traverse_add_remove(
     if (name && !name_assigned) {
         ecs_entity_t id = ecs_id(EcsName);
         ecs_ids_t arr = { .array = &id, .count = 1 };
-        table = ecs_table_traverse_add(world, table, &arr, &added);
+        table = flecs_table_traverse_add(world, table, &arr, &added);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
     }
 
@@ -1914,7 +1915,7 @@ void traverse_add_remove(
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         ecs_ids_t arr = { .array = &id, .count = 1 };
-        table = ecs_table_traverse_add(world, table, &arr, &added);
+        table = flecs_table_traverse_add(world, table, &arr, &added);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
 
@@ -1923,7 +1924,7 @@ void traverse_add_remove(
     ids = desc->remove;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         ecs_entities_t arr = { .array = &id, .count = 1 };
-        table = ecs_table_traverse_remove(world, table, &arr, &removed);
+        table = flecs_table_traverse_remove(world, table, &arr, &removed);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
 
@@ -2059,7 +2060,7 @@ ecs_entity_t ecs_entity_init(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t scope = ecs_get_scope(world);
     ecs_id_t with = ecs_get_with(world);
 
@@ -2170,7 +2171,7 @@ ecs_entity_t ecs_component_init(
 
         /* Hack around safety checks (this ought to look ugly) */
         ecs_world_t *temp_world = world;
-        stage = ecs_stage_from_world(&temp_world);
+        stage = flecs_stage_from_world(&temp_world);
         defer_count = stage->defer;
         defer_queue = stage->defer_queue;
         stage->defer = 0;
@@ -2193,13 +2194,13 @@ ecs_entity_t ecs_component_init(
     EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent, &added);
 
     if (added) {
-        ptr->size = ecs_from_size_t(desc->size);
-        ptr->alignment = ecs_from_size_t(desc->alignment);
+        ptr->size = flecs_from_size_t(desc->size);
+        ptr->alignment = flecs_from_size_t(desc->alignment);
     } else {
-        if (ptr->size != ecs_from_size_t(desc->size)) {
+        if (ptr->size != flecs_from_size_t(desc->size)) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
         }
-        if (ptr->alignment != ecs_from_size_t(desc->alignment)) {
+        if (ptr->alignment != flecs_from_size_t(desc->alignment)) {
             ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, desc->entity.name);
         }
     }
@@ -2248,8 +2249,8 @@ ecs_entity_t ecs_type_init(
     const ecs_id_t *ids = desc->ids;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         ecs_ids_t arr = { .array = &id, .count = 1 };
-        normalized = ecs_table_traverse_add(world, normalized, &arr, &added);
-        table = ecs_table_traverse_add(world, table, &arr, &added);
+        normalized = flecs_table_traverse_add(world, normalized, &arr, &added);
+        table = flecs_table_traverse_add(world, table, &arr, &added);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
 
@@ -2314,15 +2315,15 @@ const ecs_entity_t* ecs_bulk_new_w_data(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     const ecs_entity_t *ids;
-    if (ecs_defer_bulk_new(world, stage, count, components, data, &ids)) {
+    if (flecs_defer_bulk_new(world, stage, count, components, data, &ids)) {
         return ids;
     }
     ecs_type_t type = ecs_type_find(world, components->array, components->count);
     ecs_table_t *table = ecs_table_from_type(world, type);    
     ids = new_w_data(world, table, NULL, count, data, NULL);
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
     return ids;
 }
 
@@ -2333,15 +2334,15 @@ const ecs_entity_t* ecs_bulk_new_w_type(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     const ecs_entity_t *ids;
-    ecs_ids_t components = ecs_type_to_entities(type);
-    if (ecs_defer_bulk_new(world, stage, count, &components, NULL, &ids)) {
+    ecs_ids_t components = flecs_type_to_ids(type);
+    if (flecs_defer_bulk_new(world, stage, count, &components, NULL, &ids)) {
         return ids;
     }
     ecs_table_t *table = ecs_table_from_type(world, type);
     ids = new_w_data(world, table, NULL, count, NULL, NULL);
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
     return ids;
 }
 
@@ -2353,18 +2354,18 @@ const ecs_entity_t* ecs_bulk_new_w_id(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_ids_t components = {
         .array = &id,
         .count = 1
     };
     const ecs_entity_t *ids;
-    if (ecs_defer_bulk_new(world, stage, count, &components, NULL, &ids)) {
+    if (flecs_defer_bulk_new(world, stage, count, &components, NULL, &ids)) {
         return ids;
     }
-    ecs_table_t *table = ecs_table_find_or_create(world, &components);
+    ecs_table_t *table = flecs_table_find_or_create(world, &components);
     ids = new_w_data(world, table, NULL, count, NULL, NULL);
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
     return ids;
 }
 
@@ -2375,26 +2376,26 @@ void ecs_clear(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
-    if (ecs_defer_clear(world, stage, entity)) {
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    if (flecs_defer_clear(world, stage, entity)) {
         return;
     }
 
     ecs_entity_info_t info;
     info.table = NULL;
 
-    ecs_get_info(world, entity, &info);
+    flecs_get_info(world, entity, &info);
 
     ecs_table_t *table = info.table;
     if (table) {
         ecs_type_t type = table->type;
 
         /* Remove all components */
-        ecs_entities_t to_remove = ecs_type_to_entities(type);
+        ecs_entities_t to_remove = flecs_type_to_ids(type);
         remove_ids_w_info(world, entity, &info, &to_remove);
     }    
 
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
 }
 
 static
@@ -2435,7 +2436,7 @@ void remove_from_table(
             }
 
             ecs_ids_t to_remove = { .array = &e, .count = 1 };
-            dst_table = ecs_table_traverse_remove(
+            dst_table = flecs_table_traverse_remove(
                 world, dst_table, &to_remove, &removed);
         }
     } else {
@@ -2446,7 +2447,7 @@ void remove_from_table(
             id = ids[column];
         }
         ecs_ids_t to_remove = { .array = &id, .count = 1 };
-        dst_table = ecs_table_traverse_remove(
+        dst_table = flecs_table_traverse_remove(
             world, dst_table, &to_remove, &removed);
     }
 
@@ -2454,19 +2455,19 @@ void remove_from_table(
 
     if (!dst_table->type) {
         /* If this removes all components, clear table */
-        ecs_table_clear_entities(world, src_table);
+        flecs_table_clear_entities(world, src_table);
     } else {
         /* Otherwise, merge table into dst_table */
         if (dst_table != src_table) {
-            ecs_data_t *src_data = ecs_table_get_data(src_table);
+            ecs_data_t *src_data = flecs_table_get_data(src_table);
             int32_t src_count = ecs_table_count(src_table);
             if (removed.count && src_data) {
-                ecs_run_remove_actions(world, src_table, 
+                flecs_run_remove_actions(world, src_table, 
                     src_data, 0, src_count, &removed);
             }
 
-            ecs_data_t *dst_data = ecs_table_get_data(dst_table);
-            ecs_table_merge(world, dst_table, src_table, dst_data, src_data);
+            ecs_data_t *dst_data = flecs_table_get_data(dst_table);
+            flecs_table_merge(world, dst_table, src_table, dst_data, src_data);
         }
     }
 }
@@ -2476,7 +2477,7 @@ void delete_objects(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_data_t *data = ecs_table_get_data(table);
+    ecs_data_t *data = flecs_table_get_data(table);
     if (data) {
         ecs_entity_t *entities = ecs_vector_first(
             data->entities, ecs_entity_t);
@@ -2500,7 +2501,7 @@ void delete_objects(
         }
 
         /* Clear components from table (invokes destructors, OnRemove) */
-        ecs_table_delete_entities(world, table);            
+        flecs_table_delete_entities(world, table);            
     } 
 }
 
@@ -2521,11 +2522,11 @@ void delete_tables_for_id_record(
         ecs_map_iter_t it = ecs_map_iter(table_index);
         ecs_table_record_t *tr;
         while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-            ecs_delete_table(world, tr->table);
+            flecs_delete_table(world, tr->table);
         }
         ecs_map_free(table_index);
 
-        ecs_clear_id_record(world, id);
+        flecs_clear_id_record(world, id);
     }
 }
 
@@ -2534,7 +2535,7 @@ void on_delete_object_action(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = ecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (idr) {
         ecs_map_t *table_index = idr->table_index;
         ecs_map_iter_t it = ecs_map_iter(table_index);
@@ -2555,7 +2556,7 @@ void on_delete_object_action(
             ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
 
             /* Get the record for the relation, to find the delete action */
-            ecs_id_record_t *idrr = ecs_get_id_record(world, rel);
+            ecs_id_record_t *idrr = flecs_get_id_record(world, rel);
             if (idrr) {
                 ecs_entity_t action = idrr->on_delete_object;
                 if (!action || action == EcsRemove) {
@@ -2581,7 +2582,7 @@ void on_delete_relation_action(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = ecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
 
     if (idr) {
         ecs_entity_t on_delete = idr->on_delete;
@@ -2631,8 +2632,8 @@ void ecs_delete(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
-    if (ecs_defer_delete(world, stage, entity)) {
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    if (flecs_defer_delete(world, stage, entity)) {
         return;
     }
 
@@ -2669,7 +2670,7 @@ void ecs_delete(
             }
 
             if (r->table) {
-                ecs_ids_t to_remove = ecs_type_to_entities(r->table->type);
+                ecs_ids_t to_remove = flecs_type_to_ids(r->table->type);
                 update_component_monitors(world, entity, NULL, &to_remove);
             }
         }
@@ -2680,7 +2681,7 @@ void ecs_delete(
          * as delete actions could have deleted the table already. */
         if (table_id && ecs_sparse_is_alive(world->store.tables, table_id)) {
             ecs_type_t type = table->type;
-            ecs_ids_t to_remove = ecs_type_to_entities(type);
+            ecs_ids_t to_remove = flecs_type_to_ids(type);
             delete_entity(world, table, info.data, info.row, &to_remove);
             r->table = NULL;
         }
@@ -2691,7 +2692,7 @@ void ecs_delete(
         ecs_sparse_remove(world->store.entity_index, entity);
     }
 
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
 }
 
 void ecs_add_type(
@@ -2702,7 +2703,7 @@ void ecs_add_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entities_t components = ecs_type_to_entities(type);
+    ecs_entities_t components = flecs_type_to_ids(type);
     add_ids(world, entity, &components);
 }
 
@@ -2727,7 +2728,7 @@ void ecs_remove_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entities_t components = ecs_type_to_entities(type);
+    ecs_entities_t components = flecs_type_to_ids(type);
     remove_ids(world, entity, &components);
 }
 
@@ -2769,8 +2770,8 @@ void ecs_add_remove_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_ids_t components_add = ecs_type_to_entities(to_add);
-    ecs_ids_t components_remove = ecs_type_to_entities(to_remove);
+    ecs_ids_t components_add = flecs_type_to_ids(to_add);
+    ecs_ids_t components_remove = flecs_type_to_ids(to_remove);
     add_remove(world, entity, &components_add, &components_remove);
 }
 
@@ -2784,18 +2785,18 @@ ecs_entity_t ecs_clone(
     ecs_assert(src != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, src), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     
     if (!dst) {
         dst = ecs_new_id(world);
     }
 
-    if (ecs_defer_clone(world, stage, dst, src, copy_value)) {
+    if (flecs_defer_clone(world, stage, dst, src, copy_value)) {
         return dst;
     }
 
     ecs_entity_info_t src_info;
-    bool found = ecs_get_info(world, src, &src_info);
+    bool found = flecs_get_info(world, src, &src_info);
     ecs_table_t *src_table = src_info.table;
 
     if (!found || !src_table) {
@@ -2803,23 +2804,23 @@ ecs_entity_t ecs_clone(
     }
 
     ecs_type_t src_type = src_table->type;
-    ecs_ids_t to_add = ecs_type_to_entities(src_type);
+    ecs_ids_t to_add = flecs_type_to_ids(src_type);
 
     ecs_entity_info_t dst_info = {0};
     dst_info.row = new_entity(world, dst, &dst_info, src_table, &to_add, true);
 
     if (copy_value) {
-        ecs_table_move(world, dst, src, src_table, dst_info.data, 
+        flecs_table_move(world, dst, src, src_table, dst_info.data, 
             dst_info.row, src_table, src_info.data, src_info.row, true);
 
         int i;
         for (i = 0; i < to_add.count; i ++) {
-            ecs_run_set_systems(world, &to_add, 
+            flecs_run_set_systems(world, &to_add, 
                 src_table, src_info.data, dst_info.row, 1, true);
         }
     }
 
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
 
     return dst;
 }
@@ -2831,7 +2832,7 @@ const void* ecs_get_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_stage_from_readonly_world(world)->asynchronous == false, 
+    ecs_assert(flecs_stage_from_readonly_world(world)->asynchronous == false, 
         ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
@@ -2846,7 +2847,7 @@ const void* ecs_get_id(
         return NULL;
     }
 
-    ecs_id_record_t *idr = ecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (!idr) {
         return NULL;
     }
@@ -2858,7 +2859,7 @@ const void* ecs_get_id(
     }
 
     bool is_monitored;
-    int32_t row = ecs_record_to_row(r->row, &is_monitored);
+    int32_t row = flecs_record_to_row(r->row, &is_monitored);
 
     return get_component_w_index(table, tr->column, row);
 }
@@ -2910,7 +2911,7 @@ const void* ecs_get_ref_w_id(
 
     if (table) {
         bool is_monitored;
-        row = ecs_record_to_row(row, &is_monitored);
+        row = flecs_record_to_row(row, &is_monitored);
         ref->ptr = get_component(world, table, row, id);
     }
 
@@ -2929,10 +2930,10 @@ void* ecs_get_mut_id(
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     void *result;
 
-    if (ecs_defer_set(
+    if (flecs_defer_set(
         world, stage, EcsOpMut, entity, id, 0, NULL, &result, is_added))
     {
         return result;
@@ -2952,7 +2953,7 @@ void* ecs_get_mut_id(
     int32_t alloc_count = table->alloc_count;
     int32_t row = info.record->row;
     
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
 
     /* Ensure that after flushing, the pointer is still valid. Flushing may
      * trigger callbacks, which could do anything with the entity */
@@ -2960,7 +2961,7 @@ void* ecs_get_mut_id(
         alloc_count != info.record->table->alloc_count ||
         row != info.record->row) 
     {
-        if (ecs_get_info(world, entity, &info) && info.table) {
+        if (flecs_get_info(world, entity, &info) && info.table) {
             result = get_component(world, info.table, info.row, id);
         } else {
             /* A trigger has removed the component we just added. This is not
@@ -2983,17 +2984,17 @@ void* ecs_emplace_id(
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     void *result;
 
-    if (ecs_defer_set(
+    if (flecs_defer_set(
         world, stage, EcsOpMut, entity, id, 0, NULL, &result, NULL))
     {
         return result;
     }
 
     ecs_entity_info_t info;
-    ecs_get_info(world, entity, &info);
+    flecs_get_info(world, entity, &info);
 
     ecs_ids_t to_add = {
         .array = &id,
@@ -3005,7 +3006,7 @@ void* ecs_emplace_id(
 
     void *ptr = get_component(world, info.table, info.row, id);
 
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
 
     return ptr;
 }
@@ -3019,9 +3020,9 @@ void ecs_modified_id(
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    if (ecs_defer_modified(world, stage, entity, id)) {
+    if (flecs_defer_modified(world, stage, entity, id)) {
         return;
     }
 
@@ -3033,18 +3034,18 @@ void ecs_modified_id(
         ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_info_t info = {0};
-    if (ecs_get_info(world, entity, &info)) {
+    if (flecs_get_info(world, entity, &info)) {
         ecs_ids_t added = {
             .array = &id,
             .count = 1
         };
-        ecs_run_set_systems(world, &added, 
+        flecs_run_set_systems(world, &added, 
             info.table, info.data, info.row, 1, false);
     }
 
-    ecs_table_mark_dirty(info.table, id);
+    flecs_table_mark_dirty(info.table, id);
     
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
 }
 
 static
@@ -3057,7 +3058,7 @@ ecs_entity_t assign_ptr_w_id(
     bool is_move,
     bool notify)
 {
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     ecs_ids_t added = {
         .array = &id,
@@ -3072,8 +3073,8 @@ ecs_entity_t assign_ptr_w_id(
         }
     }
 
-    if (ecs_defer_set(world, stage, EcsOpSet, entity, id, 
-        ecs_from_size_t(size), ptr, NULL, NULL))
+    if (flecs_defer_set(world, stage, EcsOpSet, entity, id, 
+        flecs_from_size_t(size), ptr, NULL, NULL))
     {
         return entity;
     }
@@ -3095,7 +3096,7 @@ ecs_entity_t assign_ptr_w_id(
                     move(world, real_id, &entity, &entity, dst, ptr, size, 1, 
                         cdata->lifecycle.ctx);
                 } else {
-                    ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
+                    ecs_os_memcpy(dst, ptr, flecs_from_size_t(size));
                 }
             } else {
                 ecs_copy_t copy = cdata->lifecycle.copy;
@@ -3103,24 +3104,24 @@ ecs_entity_t assign_ptr_w_id(
                     copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
                         cdata->lifecycle.ctx);
                 } else {
-                    ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
+                    ecs_os_memcpy(dst, ptr, flecs_from_size_t(size));
                 }
             }
         } else {
-            ecs_os_memcpy(dst, ptr, ecs_from_size_t(size));
+            ecs_os_memcpy(dst, ptr, flecs_from_size_t(size));
         }
     } else {
         memset(dst, 0, size);
     }
 
-    ecs_table_mark_dirty(info.table, id);
+    flecs_table_mark_dirty(info.table, id);
 
     if (notify) {
-        ecs_run_set_systems(world, &added, 
+        flecs_run_set_systems(world, &added, 
             info.table, info.data, info.row, 1, false);
     }
 
-    ecs_defer_flush(world, stage);
+    flecs_defer_flush(world, stage);
 
     return entity;
 }
@@ -3152,7 +3153,7 @@ ecs_entity_t ecs_get_case(
 
     ecs_entity_info_t info;
     ecs_table_t *table;
-    if (!ecs_get_info(world, entity, &info) || !(table = info.table)) {
+    if (!flecs_get_info(world, entity, &info) || !(table = info.table)) {
         return 0;
     }
 
@@ -3183,9 +3184,9 @@ void ecs_enable_component_w_id(
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    if (ecs_defer_enable(
+    if (flecs_defer_enable(
         world, stage, entity, id, enable))
     {
         return;
@@ -3195,7 +3196,7 @@ void ecs_enable_component_w_id(
     }
 
     ecs_entity_info_t info;
-    ecs_get_info(world, entity, &info);
+    flecs_get_info(world, entity, &info);
 
     ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_DISABLED;
     
@@ -3236,7 +3237,7 @@ bool ecs_is_component_enabled_w_id(
 
     ecs_entity_info_t info;
     ecs_table_t *table;
-    if (!ecs_get_info(world, entity, &info) || !(table = info.table)) {
+    if (!flecs_get_info(world, entity, &info) || !(table = info.table)) {
         return false;
     }
 
@@ -3274,11 +3275,11 @@ bool ecs_has_id(
     if (ECS_HAS_ROLE(id, CASE)) {
         ecs_entity_info_t info;
         ecs_table_t *table;
-        if (!ecs_get_info(world, entity, &info) || !(table = info.table)) {
+        if (!flecs_get_info(world, entity, &info) || !(table = info.table)) {
             return false;
         }
 
-        int32_t index = ecs_table_switch_from_case(world, table, id);
+        int32_t index = flecs_table_switch_from_case(world, table, id);
         ecs_assert(index < table->sw_column_count, ECS_INTERNAL_ERROR, NULL);
         
         ecs_data_t *data = info.data;
@@ -3604,7 +3605,7 @@ int32_t ecs_count_filter(
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
-        if (!filter || ecs_table_match_filter(world, table, filter)) {
+        if (!filter || flecs_table_match_filter(world, table, filter)) {
             result += ecs_table_count(table);
         }
     }
@@ -3616,16 +3617,16 @@ bool ecs_defer_begin(
     ecs_world_t *world)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
-    return ecs_defer_none(world, stage);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    return flecs_defer_none(world, stage);
 }
 
 bool ecs_defer_end(
     ecs_world_t *world)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
-    return ecs_defer_flush(world, stage);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    return flecs_defer_flush(world, stage);
 }
 
 static
@@ -3775,9 +3776,9 @@ void flush_bulk_new(
         int c, c_count = op->components.count;
         for (c = 0; c < c_count; c ++) {
             ecs_entity_t component = components[c];
-            const EcsComponent *cptr = ecs_component_from_id(world, component);
+            const EcsComponent *cptr = flecs_component_from_id(world, component);
             ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
-            size_t size = ecs_to_size_t(cptr->size);
+            size_t size = flecs_to_size_t(cptr->size);
             void *ptr, *data = bulk_data[c];
             int i, count = op->is._n.count;
             for (i = 0, ptr = data; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
@@ -3810,7 +3811,7 @@ void free_value(
     int32_t count)
 {
     ecs_entity_t real_id = ecs_get_typeid(world, id);
-    const ecs_type_info_t *info = ecs_get_c_info(world, real_id);
+    const ecs_type_info_t *info = flecs_get_c_info(world, real_id);
     ecs_xtor_t dtor;
     
     if (info && (dtor = info->lifecycle.dtor)) {
@@ -3818,7 +3819,7 @@ void free_value(
         void *ptr;
         int i;
         for (i = 0, ptr = value; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
-            dtor(world, id, &entities[i], ptr, ecs_to_size_t(size), 1, 
+            dtor(world, id, &entities[i], ptr, flecs_to_size_t(size), 1, 
                 info->lifecycle.ctx);
         }
     }
@@ -3875,7 +3876,7 @@ bool valid_components(
 }
 
 /* Leave safe section. Run all deferred commands. */
-bool ecs_defer_flush(
+bool flecs_defer_flush(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
@@ -3934,12 +3935,12 @@ bool ecs_defer_flush(
                     break;
                 case EcsOpSet:
                     assign_ptr_w_id(world, e, 
-                        op->component, ecs_to_size_t(op->is._1.size), 
+                        op->component, flecs_to_size_t(op->is._1.size), 
                         op->is._1.value, true, true);
                     break;
                 case EcsOpMut:
                     assign_ptr_w_id(world, e, 
-                        op->component, ecs_to_size_t(op->is._1.size), 
+                        op->component, flecs_to_size_t(op->is._1.size), 
                         op->is._1.value, true, false);
                     break;
                 case EcsOpModified:
@@ -3993,7 +3994,7 @@ bool ecs_defer_flush(
 }
 
 /* Delete operations from queue without executing them. */
-bool ecs_defer_purge(
+bool flecs_defer_purge(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {

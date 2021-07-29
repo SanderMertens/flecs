@@ -71,7 +71,7 @@ static ECS_CTOR(EcsTrigger, ptr, {
 })
 
 static ECS_DTOR(EcsTrigger, ptr, {
-    ecs_trigger_fini(world, (ecs_trigger_t*)ptr->trigger);
+    flecs_trigger_fini(world, (ecs_trigger_t*)ptr->trigger);
 })
 
 static ECS_COPY(EcsTrigger, dst, src, {
@@ -80,7 +80,7 @@ static ECS_COPY(EcsTrigger, dst, src, {
 
 static ECS_MOVE(EcsTrigger, dst, src, {
     if (dst->trigger) {
-        ecs_trigger_fini(world, (ecs_trigger_t*)dst->trigger);
+        flecs_trigger_fini(world, (ecs_trigger_t*)dst->trigger);
     }
     dst->trigger = src->trigger;
     src->trigger = NULL;
@@ -92,7 +92,7 @@ static ECS_CTOR(EcsObserver, ptr, {
 })
 
 static ECS_DTOR(EcsObserver, ptr, {
-    ecs_observer_fini(world, (ecs_observer_t*)ptr->observer);
+    flecs_observer_fini(world, (ecs_observer_t*)ptr->observer);
 })
 
 static ECS_COPY(EcsObserver, dst, src, {
@@ -101,7 +101,7 @@ static ECS_COPY(EcsObserver, dst, src, {
 
 static ECS_MOVE(EcsObserver, dst, src, {
     if (dst->observer) {
-        ecs_observer_fini(world, (ecs_observer_t*)dst->observer);
+        flecs_observer_fini(world, (ecs_observer_t*)dst->observer);
     }
     dst->observer = src->observer;
     src->observer = NULL;
@@ -113,15 +113,15 @@ void register_on_delete(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_id_record_t *r = ecs_ensure_id_record(it->world, e);
+        ecs_id_record_t *r = flecs_ensure_id_record(it->world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete = ECS_PAIR_OBJECT(id);
 
-        r = ecs_ensure_id_record(it->world, ecs_pair(e, EcsWildcard));
+        r = flecs_ensure_id_record(it->world, ecs_pair(e, EcsWildcard));
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete = ECS_PAIR_OBJECT(id);
 
-        ecs_set_watch(it->world, e);
+        flecs_set_watch(it->world, e);
     }
 }
 
@@ -131,11 +131,11 @@ void register_on_delete_object(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_id_record_t *r = ecs_ensure_id_record(it->world, e);
+        ecs_id_record_t *r = flecs_ensure_id_record(it->world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete_object = ECS_PAIR_OBJECT(id);
 
-        ecs_set_watch(it->world, e);
+        flecs_set_watch(it->world, e);
     }    
 }
 
@@ -161,7 +161,7 @@ void on_set_name( ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         const char *symbol = n[i].symbol;
         if (symbol) {
-            ecs_use_intern(e, symbol, &world->symbols);
+            flecs_use_intern(e, symbol, &world->symbols);
         }
     }
 }
@@ -183,7 +183,7 @@ void _bootstrap_component(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *data = ecs_table_get_or_create_data(table);
+    ecs_data_t *data = flecs_table_get_or_create_data(table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *columns = data->columns;
@@ -194,7 +194,7 @@ void _bootstrap_component(
     record->table = table;
 
     /* Insert row into table to store EcsComponent itself */
-    int32_t index = ecs_table_append(world, table, data, entity, record, false);
+    int32_t index = flecs_table_append(world, table, data, entity, record, false);
     record->row = index + 1;
 
     /* Set size and id */
@@ -209,11 +209,11 @@ void _bootstrap_component(
 }
 
 /** Create type for component */
-ecs_type_t ecs_bootstrap_type(
+ecs_type_t flecs_bootstrap_type(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_table_t *table = ecs_table_find_or_create(world, &(ecs_ids_t){
+    ecs_table_t *table = flecs_table_find_or_create(world, &(ecs_ids_t){
         .array = (ecs_entity_t[]){entity},
         .count = 1
     });
@@ -229,9 +229,9 @@ static
 void bootstrap_types(
     ecs_world_t *world)
 {
-    ecs_type(EcsComponent) = ecs_bootstrap_type(world, ecs_id(EcsComponent));
-    ecs_type(EcsType) = ecs_bootstrap_type(world, ecs_id(EcsType));
-    ecs_type(EcsName) = ecs_bootstrap_type(world, ecs_id(EcsName));
+    ecs_type(EcsComponent) = flecs_bootstrap_type(world, ecs_id(EcsComponent));
+    ecs_type(EcsType) = flecs_bootstrap_type(world, ecs_id(EcsType));
+    ecs_type(EcsName) = flecs_bootstrap_type(world, ecs_id(EcsName));
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -250,8 +250,8 @@ ecs_table_t* bootstrap_component_table(
         .count = 3
     };
 
-    ecs_table_t *result = ecs_table_find_or_create(world, &array);
-    ecs_data_t *data = ecs_table_get_or_create_data(result);
+    ecs_table_t *result = flecs_table_find_or_create(world, &array);
+    ecs_data_t *data = flecs_table_get_or_create_data(result);
 
     /* Preallocate enough memory for initial components */
     data->entities = ecs_vector_new(ecs_entity_t, EcsFirstUserComponentId);
@@ -293,7 +293,7 @@ void bootstrap_entity(
     }
 }
 
-void ecs_bootstrap(
+void flecs_bootstrap(
     ecs_world_t *world)
 {
     ecs_type(EcsComponent) = NULL;
@@ -343,10 +343,10 @@ void ecs_bootstrap(
 
     ecs_set_scope(world, EcsFlecsCore);
 
-    ecs_bootstrap_tag(world, EcsModule);
-    ecs_bootstrap_tag(world, EcsPrefab);
-    ecs_bootstrap_tag(world, EcsHidden);
-    ecs_bootstrap_tag(world, EcsDisabled);
+    flecs_bootstrap_tag(world, EcsModule);
+    flecs_bootstrap_tag(world, EcsPrefab);
+    flecs_bootstrap_tag(world, EcsHidden);
+    flecs_bootstrap_tag(world, EcsDisabled);
 
     /* Initialize scopes */
     ecs_set(world, EcsFlecs, EcsName, {.value = "flecs"});

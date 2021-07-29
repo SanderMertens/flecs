@@ -70,12 +70,27 @@ ecs_entity_t ecs_import_from_library(
     const char *library_name,
     const char *module_name);
 
+/** Register a new module.
+ */
+FLECS_API
+ecs_entity_t ecs_module_init(
+    ecs_world_t *world,
+    const ecs_component_desc_t *desc);
+
 /** Define module
  */
 #define ECS_MODULE(world, id)\
-    ecs_id_t ecs_id(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_entity_t ecs_id(id) = ecs_module_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .name = #id,\
+            .add = {EcsModule}\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id *handles = (id*)ecs_get_mut(world, ecs_id(id), id, NULL);\
+    ecs_set_scope(world, ecs_id(id));\
     (void)ecs_id(id);\
     (void)ecs_type(id);\
     (void)handles;

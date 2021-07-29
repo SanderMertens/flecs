@@ -653,6 +653,7 @@ typedef struct ecs_world_info_t {
 #endif
 
 
+
 /**
  * @defgroup type_roles Type Roles
  * @{

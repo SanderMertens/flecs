@@ -80,7 +80,7 @@ const ecs_world_t* ecs_get_world(
     }
 }
 
-const ecs_stage_t* ecs_stage_from_readonly_world(
+const ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC ||
@@ -98,7 +98,7 @@ const ecs_stage_t* ecs_stage_from_readonly_world(
     return NULL;    
 }
 
-ecs_stage_t *ecs_stage_from_world(
+ecs_stage_t *flecs_stage_from_world(
     ecs_world_t **world_ptr)
 {
     ecs_world_t *world = *world_ptr;
@@ -152,7 +152,7 @@ void eval_component_monitor(
                 }
 
                 ecs_vector_each(m->queries, ecs_query_t*, q_ptr, {
-                    ecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
+                    flecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
                         .kind = EcsQueryTableRematch
                     });
                 });
@@ -167,7 +167,7 @@ void eval_component_monitor(
     rm->is_dirty = false;
 }
 
-void ecs_monitor_mark_dirty(
+void flecs_monitor_mark_dirty(
     ecs_world_t *world,
     ecs_entity_t relation,
     ecs_entity_t id)
@@ -189,7 +189,7 @@ void ecs_monitor_mark_dirty(
     }
 }
 
-void ecs_monitor_register(
+void flecs_monitor_register(
     ecs_world_t *world,
     ecs_entity_t relation,
     ecs_entity_t id,
@@ -259,10 +259,10 @@ void init_store(
     world->store.tables = ecs_sparse_new(ecs_table_t);
 
     /* Initialize table map */
-    world->store.table_map = ecs_table_hashmap_new();
+    world->store.table_map = flecs_table_hashmap_new();
 
     /* Initialize one root table per stage */
-    ecs_init_root_table(world);
+    flecs_init_root_table(world);
 }
 
 static
@@ -273,19 +273,19 @@ void clean_tables(
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *t = ecs_sparse_get(world->store.tables, ecs_table_t, i);
-        ecs_table_free(world, t);
+        flecs_table_free(world, t);
     }
 
     /* Free table types separately so that if application destructors rely on
      * a type it's still valid. */
     for (i = 0; i < count; i ++) {
         ecs_table_t *t = ecs_sparse_get(world->store.tables, ecs_table_t, i);
-        ecs_table_free_type(t);
+        flecs_table_free_type(t);
     }    
 
     /* Clear the root table */
     if (count) {
-        ecs_table_reset(world, &world->store.root);
+        flecs_table_reset(world, &world->store.root);
     }
 }
 
@@ -293,7 +293,7 @@ static
 void fini_store(ecs_world_t *world) {
     clean_tables(world);
     ecs_sparse_free(world->store.tables);
-    ecs_table_free(world, &world->store.root);
+    flecs_table_free(world, &world->store.root);
     ecs_sparse_clear(world->store.entity_index);
     ecs_hashmap_free(world->store.table_map);
 }
@@ -327,8 +327,6 @@ ecs_world_t *ecs_mini(void) {
     world->type_info = ecs_sparse_new(ecs_type_info_t);
     world->id_index = ecs_map_new(ecs_id_record_t, 8);
     world->id_triggers = ecs_map_new(ecs_id_trigger_t, 8);
-
-    world->aliases = NULL;
 
     world->queries = ecs_sparse_new(ecs_query_t);
     world->triggers = ecs_sparse_new(ecs_trigger_t);
@@ -383,12 +381,12 @@ ecs_world_t *ecs_mini(void) {
     world->arg_fps = 0;
     world->arg_threads = 0;
 
-    ecs_stage_init(world, &world->stage);
+    flecs_stage_init(world, &world->stage);
     ecs_set_stages(world, 1);
 
     init_store(world);
 
-    ecs_bootstrap(world);
+    flecs_bootstrap(world);
 
     ecs_log_pop();
 
@@ -446,7 +444,7 @@ void ecs_quit(
     ecs_world_t *world)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_from_world(&world);
+    flecs_stage_from_world(&world);
     world->should_quit = true;
 }
 
@@ -472,7 +470,7 @@ void on_demand_in_map_fini(
     ecs_map_free(map);
 }
 
-void ecs_notify_tables(
+void flecs_notify_tables(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_table_event_t *event)
@@ -486,12 +484,12 @@ void ecs_notify_tables(
         int32_t i, count = ecs_sparse_count(tables);
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
-            ecs_table_notify(world, table, event);
+            flecs_table_notify(world, table, event);
         }
 
     /* If id is specified, only broadcast to tables with id */
     } else {
-        ecs_id_record_t *r = ecs_get_id_record(world, id);
+        ecs_id_record_t *r = flecs_get_id_record(world, id);
         if (!r) {
             return;
         }
@@ -499,7 +497,7 @@ void ecs_notify_tables(
         ecs_table_record_t *tr;
         ecs_map_iter_t it = ecs_map_iter(r->table_index);
         while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-            ecs_table_notify(world, tr->table, event);
+            flecs_table_notify(world, tr->table, event);
         }
     }
 }
@@ -510,7 +508,7 @@ void default_ctor(
     void *ptr, size_t size, int32_t count, void *ctx)
 {
     (void)world; (void)component; (void)entity_ptr; (void)ctx;
-    ecs_os_memset(ptr, 0, ecs_from_size_t(size) * count);
+    ecs_os_memset(ptr, 0, flecs_from_size_t(size) * count);
 }
 
 static
@@ -587,7 +585,7 @@ void default_dtor(
      * component to dst. The src component does not have to be destructed when
      * a component has a trivial move. */
     callbacks->dtor(world, component, dst_entity, dst_ptr, size, count, ctx);
-    ecs_os_memcpy(dst_ptr, src_ptr, ecs_from_size_t(size) * count);
+    ecs_os_memcpy(dst_ptr, src_ptr, flecs_from_size_t(size) * count);
 }
 
 static
@@ -611,7 +609,7 @@ void ecs_set_component_actions_w_id(
     EcsComponentLifecycle *lifecycle)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_from_world(&world);
+    flecs_stage_from_world(&world);
 
     const EcsComponent *component_ptr = ecs_get(world, component, EcsComponent);
 
@@ -621,7 +619,7 @@ void ecs_set_component_actions_w_id(
     /* Cannot register lifecycle actions for components with size 0 */
     ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_type_info_t *c_info = ecs_get_or_create_c_info(world, component);
+    ecs_type_info_t *c_info = flecs_get_or_create_c_info(world, component);
     ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (c_info->lifecycle_set) {
@@ -703,7 +701,7 @@ void ecs_set_component_actions_w_id(
          * as the component type or not. 
          * A more selective approach requires a more expressive notification
          * framework. */
-        ecs_notify_tables(world, 0, &(ecs_table_event_t) {
+        flecs_notify_tables(world, 0, &(ecs_table_event_t) {
             .kind = EcsTableComponentInfo,
             .component = component
         });
@@ -717,7 +715,7 @@ bool ecs_component_has_actions(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     world = ecs_get_world(world);
 
-    const ecs_type_info_t *c_info = ecs_get_c_info(world, component);
+    const ecs_type_info_t *c_info = flecs_get_c_info(world, component);
     return (c_info != NULL) && c_info->lifecycle_set;
 }
 
@@ -746,7 +744,7 @@ void ecs_run_post_frame(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(action != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     ecs_action_elem_t *elem = ecs_vector_add(&stage->post_frame_actions, 
         ecs_action_elem_t);
@@ -766,7 +764,7 @@ void fini_unset_tables(
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
-        ecs_table_remove_actions(world, table);
+        flecs_table_remove_actions(world, table);
     }
 }
 
@@ -815,7 +813,7 @@ static
 void fini_stages(
     ecs_world_t *world)
 {
-    ecs_stage_deinit(world, &world->stage);
+    flecs_stage_deinit(world, &world->stage);
     ecs_set_stages(world, 0);
 }
 
@@ -849,7 +847,7 @@ void fini_id_triggers(
     ecs_sparse_free(world->triggers);
 }
 
-/* Cleanup aliases */
+/* Cleanup aliases & symbols */
 static
 void fini_aliases(
     ecs_world_t *world)
@@ -862,6 +860,20 @@ void fini_aliases(
     }
 
     ecs_vector_free(world->aliases);
+}
+
+static
+void fini_symbols(
+    ecs_world_t *world)
+{
+    int32_t i, count = ecs_vector_count(world->symbols);
+    ecs_alias_t *symbols = ecs_vector_first(world->symbols, ecs_alias_t);
+
+    for (i = 0; i < count; i ++) {
+        ecs_os_free(symbols[i].name);
+    }
+
+    ecs_vector_free(world->symbols);
 }
 
 /* Cleanup misc structures */
@@ -905,7 +917,7 @@ int ecs_fini(
 
     /* Purge deferred operations from the queue. This discards operations but
      * makes sure that any resources in the queue are freed */
-    ecs_defer_purge(world, &world->stage);
+    flecs_defer_purge(world, &world->stage);
 
     /* Entity index is kept alive until this point so that user code can do
      * validity checks on entity ids, even though after store cleanup the index
@@ -929,6 +941,8 @@ int ecs_fini(
     fini_id_triggers(world);
 
     fini_aliases(world);
+    
+    fini_symbols(world);
 
     fini_misc(world);
 
@@ -936,7 +950,7 @@ int ecs_fini(
      * will trigger an assert */
     world->magic = 0;
 
-    ecs_increase_timer_resolution(0);
+    flecs_increase_timer_resolution(0);
 
     /* End of the world */
     ecs_os_free(world);
@@ -955,7 +969,7 @@ void ecs_dim(
     ecs_eis_set_size(world, entity_count + ECS_HI_COMPONENT_ID);
 }
 
-void ecs_eval_component_monitors(
+void flecs_eval_component_monitors(
     ecs_world_t *world)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -991,8 +1005,8 @@ static
 void set_timer_resolution(
     FLECS_FLOAT fps)
 {
-    if(fps >= 60.0f) ecs_increase_timer_resolution(1);
-    else ecs_increase_timer_resolution(0);
+    if(fps >= 60.0f) flecs_increase_timer_resolution(1);
+    else flecs_increase_timer_resolution(0);
 }
 
 void ecs_set_target_fps(
@@ -1125,7 +1139,7 @@ void ecs_end_wait(
     ecs_os_mutex_unlock(world->thr_sync);
 }
 
-const ecs_type_info_t * ecs_get_c_info(
+const ecs_type_info_t * flecs_get_c_info(
     const ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -1138,14 +1152,14 @@ const ecs_type_info_t * ecs_get_c_info(
     return ecs_sparse_get_sparse(world->type_info, ecs_type_info_t, component);
 }
 
-ecs_type_info_t * ecs_get_or_create_c_info(
+ecs_type_info_t * flecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
 
-    const ecs_type_info_t *c_info = ecs_get_c_info(world, component);
+    const ecs_type_info_t *c_info = flecs_get_c_info(world, component);
     ecs_type_info_t *c_info_mut = NULL;
     if (!c_info) {
         c_info_mut = ecs_sparse_ensure(
@@ -1278,7 +1292,7 @@ FLECS_FLOAT ecs_frame_begin(
     /* Keep track of total scaled time passed in world */
     world->stats.world_time_total += world->stats.delta_time;
 
-    ecs_eval_component_monitors(world);
+    flecs_eval_component_monitors(world);
 
     return world->stats.delta_time;
 }
@@ -1293,7 +1307,7 @@ void ecs_frame_end(
     world->stats.frame_count_total ++;
 
     ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
-        ecs_stage_merge_post_frame(world, stage);
+        flecs_stage_merge_post_frame(world, stage);
     });        
 
     if (world->locking_enabled) {
@@ -1314,7 +1328,7 @@ const ecs_world_info_t* ecs_get_world_info(
     return &world->stats;
 }
 
-void ecs_notify_queries(
+void flecs_notify_queries(
     ecs_world_t *world,
     ecs_query_event_t *event)
 {
@@ -1323,12 +1337,12 @@ void ecs_notify_queries(
 
     int32_t i, count = ecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
-        ecs_query_notify(world, 
+        flecs_query_notify(world, 
             ecs_sparse_get(world->queries, ecs_query_t, i), event);
     }    
 }
 
-void ecs_delete_table(
+void flecs_delete_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -1336,7 +1350,7 @@ void ecs_delete_table(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL); 
 
     /* Notify queries that table is to be removed */
-    ecs_notify_queries(
+    flecs_notify_queries(
         world, &(ecs_query_event_t){
             .kind = EcsQueryTableUnmatch,
             .table = table
@@ -1345,8 +1359,8 @@ void ecs_delete_table(
     uint64_t id = table->id;
 
     /* Free resources associated with table */
-    ecs_table_free(world, table);
-    ecs_table_free_type(table);
+    flecs_table_free(world, table);
+    flecs_table_free_type(table);
 
     /* Remove table from sparse set */
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
@@ -1360,7 +1374,7 @@ void register_table_for_id(
     ecs_id_t id,
     int32_t column)
 {
-    ecs_id_record_t *r = ecs_ensure_id_record(world, id);
+    ecs_id_record_t *r = flecs_ensure_id_record(world, id);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!r->table_index) {
@@ -1381,16 +1395,16 @@ void register_table_for_id(
 
     /* Set flags if triggers are registered for table */
     if (!(table->flags & EcsTableIsDisabled)) {
-        if (ecs_triggers_get(world, id, EcsOnAdd)) {
+        if (flecs_triggers_get(world, id, EcsOnAdd)) {
             table->flags |= EcsTableHasOnAdd;
         }
-        if (ecs_triggers_get(world, id, EcsOnRemove)) {
+        if (flecs_triggers_get(world, id, EcsOnRemove)) {
             table->flags |= EcsTableHasOnRemove;
         }
-        if (ecs_triggers_get(world, id, EcsOnSet)) {
+        if (flecs_triggers_get(world, id, EcsOnSet)) {
             table->flags |= EcsTableHasOnSet;
         }
-        if (ecs_triggers_get(world, id, EcsUnSet)) {
+        if (flecs_triggers_get(world, id, EcsUnSet)) {
             table->flags |= EcsTableHasUnSet;
         }                
     }
@@ -1402,14 +1416,14 @@ void unregister_table_for_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_id_record_t *r = ecs_get_id_record(world, id);
+    ecs_id_record_t *r = flecs_get_id_record(world, id);
     if (!r || !r->table_index) {
         return;
     }
 
     ecs_map_remove(r->table_index, table->id);
     if (!ecs_map_count(r->table_index)) {
-        ecs_clear_id_record(world, id);
+        flecs_clear_id_record(world, id);
     }
 }
 
@@ -1467,15 +1481,15 @@ void do_register_each_id(
             do_register_id(world, table, all_wildcard, i, unregister);
 
             if (!unregister) {
-                ecs_set_watch(world, ecs_pair_relation(world, id));
-                ecs_set_watch(world, ecs_pair_object(world, id));
+                flecs_set_watch(world, ecs_pair_relation(world, id));
+                flecs_set_watch(world, ecs_pair_object(world, id));
             }
         } else {
             if (!(id & ECS_ROLE_MASK)) {
                 do_register_id(world, table, EcsWildcard, i, unregister);
 
                 if (!unregister) {
-                    ecs_set_watch(world, id);
+                    flecs_set_watch(world, id);
                 }
             }
         }
@@ -1486,14 +1500,14 @@ void do_register_each_id(
     }
 }
 
-void ecs_register_table(
+void flecs_register_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
     do_register_each_id(world, table, false);
 }
 
-void ecs_unregister_table(
+void flecs_unregister_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -1509,25 +1523,25 @@ void ecs_unregister_table(
     ecs_hashmap_remove(world->store.table_map, &key, ecs_table_t*);
 }
 
-ecs_id_record_t* ecs_ensure_id_record(
+ecs_id_record_t* flecs_ensure_id_record(
     const ecs_world_t *world,
     ecs_id_t id)
 {
     return ecs_map_ensure(world->id_index, ecs_id_record_t, id);
 }
 
-ecs_id_record_t* ecs_get_id_record(
+ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id)
 {
     return ecs_map_get(world->id_index, ecs_id_record_t, id);
 }
 
-void ecs_clear_id_record(
+void flecs_clear_id_record(
     const ecs_world_t *world,
     ecs_id_t id)    
 {
-    ecs_id_record_t *r = ecs_get_id_record(world, id);
+    ecs_id_record_t *r = flecs_get_id_record(world, id);
     if (!r) {
         return;
     }

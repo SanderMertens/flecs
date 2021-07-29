@@ -44,7 +44,7 @@ ecs_data_t* duplicate_data(
             continue;
         }
 
-        const ecs_type_info_t *cdata = ecs_get_c_info(world, component);
+        const ecs_type_info_t *cdata = flecs_get_c_info(world, component);
         int16_t size = column->size;
         int16_t alignment = column->alignment;
         ecs_copy_t copy;
@@ -58,13 +58,13 @@ ecs_data_t* duplicate_data(
             
             ecs_xtor_t ctor = cdata->lifecycle.ctor;
             if (ctor) {
-                ctor(world, component, entities, dst_ptr, ecs_to_size_t(size), 
+                ctor(world, component, entities, dst_ptr, flecs_to_size_t(size), 
                     count, ctx);
             }
 
             void *src_ptr = ecs_vector_first_t(column->data, size, alignment);
             copy(world, component, entities, entities, dst_ptr, src_ptr, 
-                ecs_to_size_t(size), count, ctx);
+                flecs_to_size_t(size), count, ctx);
 
             column->data = dst_vec;
         } else {
@@ -117,7 +117,7 @@ ecs_snapshot_t* snapshot_create(
             continue;
         }
 
-        ecs_data_t *data = ecs_table_get_data(t);
+        ecs_data_t *data = flecs_table_get_data(t);
         if (!data || !data->entities || !ecs_vector_count(data->entities)) {
             continue;
         }
@@ -208,37 +208,37 @@ void ecs_snapshot_restore(
                 ecs_vector_each(leaf->data->entities, ecs_entity_t, e_ptr, {
                     ecs_record_t *r = ecs_eis_get(world, *e_ptr);
                     if (r && r->table) {
-                        ecs_data_t *data = ecs_table_get_data(r->table);
+                        ecs_data_t *data = flecs_table_get_data(r->table);
                         
                         /* Data must be not NULL, otherwise entity index could
                          * not point to it */
                         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
                         bool is_monitored;
-                        int32_t row = ecs_record_to_row(r->row, &is_monitored);
+                        int32_t row = flecs_record_to_row(r->row, &is_monitored);
                         
                         /* Always delete entity, so that even if the entity is
                         * in the current table, there won't be duplicates */
-                        ecs_table_delete(world, r->table, data, row, true);
+                        flecs_table_delete(world, r->table, data, row, true);
                     } else {
                         ecs_eis_set_generation(world, *e_ptr);
                     }
                 });
 
                 int32_t old_count = ecs_table_count(table);
-                int32_t new_count = ecs_table_data_count(leaf->data);
+                int32_t new_count = flecs_table_data_count(leaf->data);
 
-                ecs_data_t *data = ecs_table_get_data(table);
-                data = ecs_table_merge(world, table, table, data, leaf->data);
+                ecs_data_t *data = flecs_table_get_data(table);
+                data = flecs_table_merge(world, table, table, data, leaf->data);
 
                 /* Run OnSet systems for merged entities */
-                ecs_ids_t components = ecs_type_to_entities(table->type);
-                ecs_run_set_systems(world, &components, table, data,
+                ecs_ids_t components = flecs_type_to_ids(table->type);
+                flecs_run_set_systems(world, &components, table, data,
                     old_count, new_count, true);
 
                 ecs_os_free(leaf->data->columns);
             } else {
-                ecs_table_replace_data(world, table, leaf->data);
+                flecs_table_replace_data(world, table, leaf->data);
             }
             
             ecs_os_free(leaf->data);
@@ -251,7 +251,7 @@ void ecs_snapshot_restore(
              * snapshot was not filtered, clear the table. */
             if (!is_filtered) {
                 /* Clear data of old table. */
-                ecs_table_clear_data(world, table, ecs_table_get_data(table));
+                flecs_table_clear_data(world, table, flecs_table_get_data(table));
             }
         }
 
@@ -270,11 +270,11 @@ void ecs_snapshot_restore(
                 continue;
             }
 
-            ecs_ids_t components = ecs_type_to_entities(table->type);
-            ecs_data_t *table_data = ecs_table_get_data(table);
-            int32_t entity_count = ecs_table_data_count(table_data);
+            ecs_ids_t components = flecs_type_to_ids(table->type);
+            ecs_data_t *table_data = flecs_table_get_data(table);
+            int32_t entity_count = flecs_table_data_count(table_data);
 
-            ecs_run_set_systems(world, &components, table, 
+            flecs_run_set_systems(world, &components, table, 
                 table_data, 0, entity_count, true);            
         }
     }
@@ -318,14 +318,14 @@ bool ecs_snapshot_next(
         /* Table must have data or it wouldn't have been added */
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (!ecs_table_match_filter(it->world, table, &iter->filter)) {
+        if (!flecs_table_match_filter(it->world, table, &iter->filter)) {
             continue;
         }
 
         iter->table.table = table;
         it->table = &iter->table;
         it->table_columns = data->columns;
-        it->count = ecs_table_data_count(data);
+        it->count = flecs_table_data_count(data);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
         it->is_valid = true;
         iter->index = i + 1;
@@ -350,7 +350,7 @@ void ecs_snapshot_free(
     int32_t i, count = ecs_vector_count(snapshot->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_leaf_t *leaf = &tables[i];
-        ecs_table_clear_data(snapshot->world, leaf->table, leaf->data);
+        flecs_table_clear_data(snapshot->world, leaf->table, leaf->data);
         ecs_os_free(leaf->data);
     }    
 

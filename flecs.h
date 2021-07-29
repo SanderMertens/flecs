@@ -1087,7 +1087,7 @@ class vector {
 public:
     explicit vector(ecs_vector_t *v) : m_vector( v ) { }
 
-    vector(int32_t count = 0) : m_vector( nullptr ) { 
+    vector(size_t count = 0) : m_vector( nullptr ) { 
         if (count) {
             init(count);
         }
@@ -1163,8 +1163,8 @@ public:
     }
 
 private:
-    void init(int32_t count) {
-        m_vector = ecs_vector_new(T, count);
+    void init(size_t count) {
+        m_vector = ecs_vector_new(T, static_cast<ecs_size_t>(count));
     }
 
     ecs_vector_t *m_vector;
@@ -1372,7 +1372,7 @@ namespace flecs {
 template <typename K, typename T>
 class map {
 public:
-    map(int32_t count = 0) {
+    map(size_t count = 0) {
         init(count);
     }
 
@@ -1405,8 +1405,8 @@ public:
     }
 
 private:
-    void init(int32_t count) {
-        m_map = ecs_map_new(T, count);
+    void init(size_t count) {
+        m_map = ecs_map_new(T, static_cast<ecs_size_t>(count));
     }
 
     ecs_map_t *m_map;
@@ -2622,14 +2622,6 @@ extern ecs_type_t
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_API
-ecs_entity_t ecs_new_module(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name,
-    size_t size,
-    size_t alignment);
-
-FLECS_API
 char* ecs_module_path_from_c(
     const char *c_name);
 
@@ -3674,6 +3666,7 @@ void ecs_query_group_by(
 
 #endif
 #endif
+
 
 
 /**
@@ -7110,12 +7103,27 @@ ecs_entity_t ecs_import_from_library(
     const char *library_name,
     const char *module_name);
 
+/** Register a new module.
+ */
+FLECS_API
+ecs_entity_t ecs_module_init(
+    ecs_world_t *world,
+    const ecs_component_desc_t *desc);
+
 /** Define module
  */
 #define ECS_MODULE(world, id)\
-    ecs_id_t ecs_id(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ecs_entity_t ecs_id(id) = ecs_module_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .name = #id,\
+            .add = {EcsModule}\
+        },\
+        .size = sizeof(id),\
+        .alignment = ECS_ALIGNOF(id)\
+    });\
     ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id *handles = (id*)ecs_get_mut(world, ecs_id(id), id, NULL);\
+    ecs_set_scope(world, ecs_id(id));\
     (void)ecs_id(id);\
     (void)ecs_type(id);\
     (void)handles;

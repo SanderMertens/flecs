@@ -5,7 +5,7 @@ ecs_vector_t* sort_and_dedup(
     ecs_vector_t *result)
 {
     /* Sort vector */
-    ecs_vector_sort(result, ecs_id_t, ecs_entity_compare_qsort);
+    ecs_vector_sort(result, ecs_id_t, flecs_entity_compare_qsort);
 
     /* Ensure vector doesn't contain duplicates */
     ecs_id_t *ids = ecs_vector_first(result, ecs_id_t);
@@ -145,8 +145,8 @@ ecs_table_t* table_from_ids(
     ecs_world_t *world,
     ecs_vector_t *ids)
 {
-    ecs_ids_t ids_array = ecs_type_to_entities(ids);
-    ecs_table_t *result = ecs_table_find_or_create(world, &ids_array);
+    ecs_ids_t ids_array = flecs_type_to_ids(ids);
+    ecs_table_t *result = flecs_table_find_or_create(world, &ids_array);
     return result;
 }
 
@@ -154,7 +154,7 @@ ecs_table_t* table_from_ids(
  * has the prefix, and if so remove it. This enables using prefixed names in C
  * for components / systems while storing a canonical / language independent 
  * identifier. */
-const char* ecs_name_from_symbol(
+const char* flecs_name_from_symbol(
     ecs_world_t *world,
     const char *type_name)
 {
@@ -173,68 +173,6 @@ const char* ecs_name_from_symbol(
     }
 
     return type_name;
-}
-
-void ecs_set_symbol(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name)
-{
-    if (!name) {
-        return;
-    }
-    
-    const char *e_name = ecs_name_from_symbol(world, name);
-
-    EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
-    name_ptr->value = e_name;
-
-    if (name_ptr->symbol) {
-        ecs_os_free(name_ptr->symbol);
-    }
-
-    name_ptr->symbol = ecs_os_strdup(name);
-}
-
-ecs_entity_t ecs_lookup_w_id(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    const char *name)
-{
-    if (e) {
-        /* If explicit id was provided but it does not exist in the world, make
-         * sure it has the proper scope. This can happen when an entity was 
-         * defined in another world. */
-        if (!ecs_exists(world, e)) {
-            ecs_entity_t scope = world->stage.scope;
-            if (scope) {
-                ecs_add_pair(world, e, EcsChildOf, scope);
-            }
-        }
-
-        if (name) {
-            /* Make sure name is the same */
-            const char *existing = ecs_get_name(world, e);
-            if (existing && strcmp(existing, name)) {
-                ecs_abort(ECS_INCONSISTENT_NAME, name);
-            }
-            if (!existing) {
-                ecs_set_symbol(world, e, name);
-            }
-        }
-    }
-    
-    ecs_entity_t result = e;
-    if (!result) {
-        if (!name) {
-            /* If neither an id nor name is specified, return 0 */
-            return 0;
-        }
-
-        result = ecs_lookup(world, name);
-    }
-    
-    return result;
 }
 
 /* -- Public functions -- */

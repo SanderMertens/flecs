@@ -77,7 +77,7 @@ void register_trigger(
             *set = ecs_map_new(ecs_trigger_t*, 1);
 
             // First trigger of its kind, send table notification
-            ecs_notify_tables(world, trigger->term.id, &(ecs_table_event_t){
+            flecs_notify_tables(world, trigger->term.id, &(ecs_table_event_t){
                 .kind = EcsTableTriggerMatch,
                 .event = trigger->events[i]
             });            
@@ -129,7 +129,7 @@ void unregister_trigger(
     ecs_map_remove(triggers, trigger->id);
 }
 
-ecs_map_t* ecs_triggers_get(
+ecs_map_t* flecs_triggers_get(
     const ecs_world_t *world,
     ecs_id_t id,
     ecs_entity_t event)
@@ -242,7 +242,7 @@ void notify_trigger_set(
     }
 }
 
-void ecs_triggers_notify(
+void flecs_triggers_notify(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_entity_t event,
@@ -252,7 +252,7 @@ void ecs_triggers_notify(
     int32_t count)
 {
     notify_trigger_set(world, id, event,
-        ecs_triggers_get(world, id, event), 
+        flecs_triggers_get(world, id, event), 
             table, data, row, count);
 
     if (ECS_HAS_ROLE(id, PAIR)) {
@@ -260,19 +260,19 @@ void ecs_triggers_notify(
         ecs_entity_t obj = ECS_PAIR_OBJECT(id);
 
         notify_trigger_set(world, id, event,
-            ecs_triggers_get(world, ecs_pair(pred, EcsWildcard), event), 
+            flecs_triggers_get(world, ecs_pair(pred, EcsWildcard), event), 
                 table, data, row, count);
 
         notify_trigger_set(world, id, event, 
-            ecs_triggers_get(world, ecs_pair(EcsWildcard, obj), event), 
+            flecs_triggers_get(world, ecs_pair(EcsWildcard, obj), event), 
                 table, data, row, count);
 
         notify_trigger_set(world, id, event, 
-            ecs_triggers_get(world, ecs_pair(EcsWildcard, EcsWildcard), event), 
+            flecs_triggers_get(world, ecs_pair(EcsWildcard, EcsWildcard), event), 
                 table, data, row, count);                                
     } else {
         notify_trigger_set(world, id, event, 
-            ecs_triggers_get(world, EcsWildcard, event), 
+            flecs_triggers_get(world, EcsWildcard, event), 
                 table, data, row, count);
     }
 }
@@ -404,7 +404,7 @@ void* ecs_get_trigger_binding_ctx(
     }      
 }
 
-void ecs_trigger_fini(
+void flecs_trigger_fini(
     ecs_world_t *world,
     ecs_trigger_t *trigger)
 {

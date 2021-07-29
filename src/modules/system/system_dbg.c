@@ -50,7 +50,7 @@ bool ecs_dbg_match_entity(
         return false;
     }
 
-    return ecs_query_match(
+    return flecs_query_match(
         world, dbg.table, system_data->query, failure_info_out);
 }
 

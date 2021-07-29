@@ -29,8 +29,8 @@ ecs_column_t *da_get_or_create_column(
 {
     ecs_column_t *c = da_get_column(table, column);
     if (!c && (!table->data || !table->data->columns)) {
-        ecs_data_t *data = ecs_table_get_or_create_data(table);
-        ecs_init_data(world, table, data);
+        ecs_data_t *data = flecs_table_get_or_create_data(table);
+        flecs_init_data(world, table, data);
         c = da_get_column(table, column);
     }
     ecs_assert(c != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -84,8 +84,8 @@ ecs_record_t ecs_table_insert(
     ecs_entity_t entity,
     ecs_record_t *record)
 {
-    ecs_data_t *data = ecs_table_get_or_create_data(table);
-    int32_t index = ecs_table_append(world, table, data, entity, record, true);
+    ecs_data_t *data = flecs_table_get_or_create_data(table);
+    int32_t index = flecs_table_append(world, table, data, entity, record, true);
     if (record) {
         record->table = table;
         record->row = index + 1;
@@ -170,7 +170,7 @@ void ecs_table_set_entities(
 
     ecs_data_t *data = table->data;
     if (!data) {
-        data = ecs_table_get_or_create_data(table);
+        data = flecs_table_get_or_create_data(table);
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -241,7 +241,7 @@ void ecs_table_delete_column(
         int16_t alignment = c->alignment;
         int32_t count = ecs_vector_count(vector);
         void *ptr = ecs_vector_first_t(vector, c->size, alignment);
-        dtor(world, c_info->component, entities, ptr, ecs_to_size_t(c->size), 
+        dtor(world, c_info->component, entities, ptr, flecs_to_size_t(c->size), 
             count, c_info->lifecycle.ctx);
     }
 
@@ -265,12 +265,12 @@ void* ecs_record_get_column(
     }
 
     int16_t size = c->size;
-    ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
+    ecs_assert(!flecs_from_size_t(c_size) || flecs_from_size_t(c_size) == c->size, 
         ECS_INVALID_PARAMETER, NULL);
 
     void *array = ecs_vector_first_t(c->data, c->size, c->alignment);
     bool is_watched;
-    int32_t row = ecs_record_to_row(r->row, &is_watched);
+    int32_t row = flecs_record_to_row(r->row, &is_watched);
     return ECS_OFFSET(array, size * row);
 }
 
@@ -291,12 +291,12 @@ void ecs_record_copy_to(
     ecs_table_t *table = r->table;
     ecs_column_t *c = da_get_or_create_column(world, table, column);
     int16_t size = c->size;
-    ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
+    ecs_assert(!flecs_from_size_t(c_size) || flecs_from_size_t(c_size) == c->size, 
         ECS_INVALID_PARAMETER, NULL);
 
     int16_t alignment = c->alignment;
     bool is_monitored;
-    int32_t row = ecs_record_to_row(r->row, &is_monitored);
+    int32_t row = flecs_record_to_row(r->row, &is_monitored);
     void *ptr = ecs_vector_get_t(c->data, size, alignment, row);
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -329,12 +329,12 @@ void ecs_record_copy_pod_to(
     ecs_table_t *table = r->table;
     ecs_column_t *c = da_get_or_create_column(world, table, column);
     int16_t size = c->size;
-    ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
+    ecs_assert(!flecs_from_size_t(c_size) || flecs_from_size_t(c_size) == c->size, 
         ECS_INVALID_PARAMETER, NULL);
 
     int16_t alignment = c->alignment;
     bool is_monitored;
-    int32_t row = ecs_record_to_row(r->row, &is_monitored);
+    int32_t row = flecs_record_to_row(r->row, &is_monitored);
     void *ptr = ecs_vector_get_t(c->data, size, alignment, row);
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -358,12 +358,12 @@ void ecs_record_move_to(
     ecs_table_t *table = r->table;
     ecs_column_t *c = da_get_or_create_column(world, table, column);
     int16_t size = c->size;
-    ecs_assert(!ecs_from_size_t(c_size) || ecs_from_size_t(c_size) == c->size, 
+    ecs_assert(!flecs_from_size_t(c_size) || flecs_from_size_t(c_size) == c->size, 
         ECS_INVALID_PARAMETER, NULL);
 
     int16_t alignment = c->alignment;
     bool is_monitored;
-    int32_t row = ecs_record_to_row(r->row, &is_monitored);
+    int32_t row = flecs_record_to_row(r->row, &is_monitored);
     void *ptr = ecs_vector_get_t(c->data, size, alignment, row);
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 

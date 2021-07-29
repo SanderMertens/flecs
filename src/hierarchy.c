@@ -121,7 +121,7 @@ ecs_entity_t find_child_in_table(
         return 0;
     }
 
-    ecs_data_t *data = ecs_table_get_data(table);
+    ecs_data_t *data = flecs_table_get_data(table);
     if (!data || !data->columns) {
         return 0;
     }
@@ -276,7 +276,7 @@ ecs_entity_t ecs_lookup_child(
     world = ecs_get_world(world);
     ecs_entity_t result = 0;
 
-    ecs_id_record_t *r = ecs_get_id_record(world, ecs_pair(EcsChildOf, parent));
+    ecs_id_record_t *r = flecs_get_id_record(world, ecs_pair(EcsChildOf, parent));
     if (r && r->table_index) {        
         ecs_map_iter_t it = ecs_map_iter(r->table_index);
         ecs_table_record_t *tr;
@@ -435,7 +435,7 @@ ecs_entity_t ecs_set_scope(
     ecs_world_t *world,
     ecs_entity_t scope)
 {
-    ecs_stage_t *stage = ecs_stage_from_world(&world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     ecs_entity_t e = ecs_pair(EcsChildOf, scope);
     ecs_ids_t to_add = {
@@ -447,7 +447,7 @@ ecs_entity_t ecs_set_scope(
     stage->scope = scope;
 
     if (scope) {
-        stage->scope_table = ecs_table_traverse_add(
+        stage->scope_table = flecs_table_traverse_add(
             world, &world->store.root, &to_add, NULL);
     } else {
         stage->scope_table = &world->store.root;
@@ -459,7 +459,7 @@ ecs_entity_t ecs_set_scope(
 ecs_entity_t ecs_get_scope(
     const ecs_world_t *world)
 {
-    const ecs_stage_t *stage = ecs_stage_from_readonly_world(world);
+    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
     return stage->scope;
 }
 
@@ -472,7 +472,7 @@ int32_t ecs_get_child_count(
 
     int32_t count = 0;
 
-    ecs_id_record_t *r = ecs_get_id_record(world, ecs_pair(EcsChildOf, parent));
+    ecs_id_record_t *r = flecs_get_id_record(world, ecs_pair(EcsChildOf, parent));
     if (r && r->table_index) {
         ecs_map_iter_t it = ecs_map_iter(r->table_index);
         ecs_table_record_t *tr;
@@ -495,7 +495,7 @@ ecs_iter_t ecs_scope_iter_w_filter(
         .world = iter_world
     };
 
-    ecs_id_record_t *r = ecs_get_id_record(world, ecs_pair(EcsChildOf, parent));
+    ecs_id_record_t *r = flecs_get_id_record(world, ecs_pair(EcsChildOf, parent));
     if (r && r->table_index) {
         it.iter.parent.tables = ecs_map_iter(r->table_index);
         it.table_count = ecs_map_count(r->table_index);
@@ -528,7 +528,7 @@ bool ecs_scope_next(
 
         iter->index ++;
 
-        ecs_data_t *data = ecs_table_get_data(table);
+        ecs_data_t *data = flecs_table_get_data(table);
         if (!data) {
             continue;
         }
@@ -539,7 +539,7 @@ bool ecs_scope_next(
         }
 
         if (filter.include || filter.exclude) {
-            if (!ecs_table_match_filter(it->world, table, &filter)) {
+            if (!flecs_table_match_filter(it->world, table, &filter)) {
                 continue;
             }
         }
@@ -675,7 +675,7 @@ ecs_entity_t ecs_new_from_path_w_sep(
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 
-void ecs_use_intern(
+void flecs_use_intern(
     ecs_entity_t entity,
     const char *name,
     ecs_vector_t **alias_vector)
@@ -697,5 +697,5 @@ void ecs_use(
     ecs_entity_t entity,
     const char *name)
 {
-    ecs_use_intern(entity, name, &world->aliases);
+    flecs_use_intern(entity, name, &world->aliases);
 }

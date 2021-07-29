@@ -109,7 +109,7 @@ void ecs_os_err(const char *fmt, ...) {
 static
 void ecs_os_gettime(ecs_time_t *time)
 {
-    uint64_t now = ecs_os_time_now();
+    uint64_t now = flecs_os_time_now();
     uint64_t sec = now / 1000000000;
 
     assert(sec < UINT32_MAX);
@@ -229,7 +229,7 @@ void ecs_os_set_api_defaults(void)
         return;
     }
 
-    ecs_os_time_setup();
+    flecs_os_time_setup();
     
     /* Memory management */
     ecs_os_api.malloc_ = ecs_os_api_malloc;
@@ -241,7 +241,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.strdup_ = ecs_os_api_strdup;
 
     /* Time */
-    ecs_os_api.sleep_ = ecs_os_time_sleep;
+    ecs_os_api.sleep_ = flecs_os_time_sleep;
     ecs_os_api.get_time_ = ecs_os_gettime;
 
     /* Logging */

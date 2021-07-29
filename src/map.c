@@ -25,7 +25,7 @@ static
 int32_t get_bucket_count(
     int32_t element_count)
 {
-    return ecs_next_pow_of_2((int32_t)((float)element_count * LOAD_FACTOR));
+    return flecs_next_pow_of_2((int32_t)((float)element_count * LOAD_FACTOR));
 }
 
 /* Get bucket index for provided map key */
@@ -64,7 +64,7 @@ void ensure_buckets(
     int32_t new_count)
 {
     int32_t bucket_count = map->bucket_count;
-    new_count = ecs_next_pow_of_2(new_count);
+    new_count = flecs_next_pow_of_2(new_count);
     if (new_count && new_count > bucket_count) {
         map->buckets = ecs_os_realloc(map->buckets, new_count * ECS_SIZEOF(ecs_bucket_t));
         map->bucket_count = new_count;
