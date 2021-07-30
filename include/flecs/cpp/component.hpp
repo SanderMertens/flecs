@@ -162,16 +162,16 @@ void register_lifecycle_actions(
 {
     if (!ecs_component_has_actions(world, component)) {
         EcsComponentLifecycle cl{};
-        cl.ctor = ctor<T>().callback;
-        cl.dtor = dtor<T>().callback;
+        cl.ctor = ctor<T>();
+        cl.dtor = dtor<T>();
 
-        cl.copy = copy<T>().callback;
-        cl.copy_ctor = copy_ctor<T>().callback;
-        cl.move = move<T>().callback;
-        cl.move_ctor = move_ctor<T>().callback;
+        cl.copy = copy<T>();
+        cl.copy_ctor = copy_ctor<T>();
+        cl.move = move<T>();
+        cl.move_ctor = move_ctor<T>();
 
-        cl.ctor_move_dtor = ctor_move_dtor<T>().callback;
-        cl.move_dtor = move_dtor<T>().callback;
+        cl.ctor_move_dtor = ctor_move_dtor<T>();
+        cl.move_dtor = move_dtor<T>();
 
         ecs_set_component_actions_w_entity( world, component, &cl);
     }

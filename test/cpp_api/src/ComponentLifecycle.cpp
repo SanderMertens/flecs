@@ -463,6 +463,14 @@ static void try_set(flecs::world& ecs) {
     e.remove<T>();
 }
 
+template <typename T>
+static void try_emplace(flecs::world& ecs) {
+    flecs::entity e = ecs.entity().emplace<T>(10);
+
+    const T *ptr = e.get<T>();
+    test_int(ptr->x_, 10);
+}
+
 template <typename T, typename std::enable_if<
     !flecs::has_flecs_ctor<T>::value, void>::type* = nullptr>
 static void try_set_default(flecs::world& ecs) {
@@ -496,12 +504,12 @@ void ComponentLifecycle_deleted_copy() {
     try_set<NoCopy>(ecs);
 }
 
-void ComponentLifecycle_no_default_ctor() {
+void ComponentLifecycle_no_default_ctor_emplace() {
     flecs::world ecs;
 
     ecs.component<NoDefaultCtor>();
 
-    try_set<NoDefaultCtor>(ecs);    
+    try_emplace<NoDefaultCtor>(ecs);
 }
 
 void ComponentLifecycle_default_init() {
@@ -551,9 +559,13 @@ void ComponentLifecycle_no_default_ctor_add_object() {
 }
 
 void ComponentLifecycle_no_default_ctor_set() {
+    install_test_abort();
+
     flecs::world ecs;
 
     ecs.component<NoDefaultCtor>();
+
+    test_expect_abort();
 
     try_set<NoDefaultCtor>(ecs);  
 }
@@ -673,8 +685,8 @@ void ComponentLifecycle_no_default_ctor_move_ctor_on_set() {
 
     ecs.component<CountNoDefaultCtor>();
 
-    // First set, move construct
-    auto e = ecs.entity().set<CountNoDefaultCtor>({10});
+    // Emplace, construct
+    auto e = ecs.entity().emplace<CountNoDefaultCtor>(10);
     test_assert(e.has<CountNoDefaultCtor>());
 
     const CountNoDefaultCtor* ptr = e.get<CountNoDefaultCtor>();
@@ -682,21 +694,21 @@ void ComponentLifecycle_no_default_ctor_move_ctor_on_set() {
     test_int(ptr->value, 10);
 
     test_int(CountNoDefaultCtor::ctor_invoked, 1);
-    test_int(CountNoDefaultCtor::dtor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 0);
     test_int(CountNoDefaultCtor::copy_invoked, 0);
     test_int(CountNoDefaultCtor::move_invoked, 0);
     test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
-    test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
 
-    // Second set, move assign
+    // Set, move assign
     e.set<CountNoDefaultCtor>({10});
 
     test_int(CountNoDefaultCtor::ctor_invoked, 2);
-    test_int(CountNoDefaultCtor::dtor_invoked, 2);
+    test_int(CountNoDefaultCtor::dtor_invoked, 1);
     test_int(CountNoDefaultCtor::copy_invoked, 0);
     test_int(CountNoDefaultCtor::move_invoked, 1);
     test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
-    test_int(CountNoDefaultCtor::move_ctor_invoked, 1);    
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 0);    
 }
 
 void ComponentLifecycle_emplace_w_ctor() {
@@ -890,3 +902,4 @@ void ComponentLifecycle_dtor_w_non_trivial_explicit_move() {
     test_int(CtorDtor_w_MoveAssign::move_value, 10);
     test_int(CtorDtor_w_MoveAssign::dtor_value, 0);
 }
+

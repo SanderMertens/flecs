@@ -589,14 +589,6 @@ struct EcsComponentLifecycle {
      * location to an existing location, like what happens during a remove. If
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_ctor_t move_dtor;
-
-    bool ctor_illegal;          /* cannot default construct */
-    bool copy_illegal;          /* cannot copy assign */
-    bool move_illegal;          /* cannot move assign */
-    bool copy_ctor_illegal;     /* cannot copy construct */
-    bool move_ctor_illegal;     /* cannot move construct (or merge) */
-
-    /* Note that a type must be destructible */
 };
 
 /** Component that stores reference to trigger */

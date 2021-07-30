@@ -914,6 +914,7 @@ void World_type_w_name_as_component() {
 }
 
 struct PositionDerived : Position {
+    PositionDerived() { }
     PositionDerived(float x, float y) : Position{x, y} { }
 };
 

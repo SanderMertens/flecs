@@ -2084,7 +2084,7 @@ void ecs_log_print(
     const char *file,
     int32_t line,
     const char *fmt,
-    va_list valist)
+    va_list args)
 {
     (void)level;
     (void)line;
@@ -2094,18 +2094,15 @@ void ecs_log_print(
     }
 
     /* Massage filename so it doesn't take up too much space */
-    char filebuff[256];
-    ecs_os_strcpy(filebuff, file);
-    file = filebuff;
+    char file_buf[256];
+    ecs_os_strcpy(file_buf, file);
+    file = file_buf;
+
     char *file_ptr = strrchr(file, '/');
     if (file_ptr) {
         file = file_ptr + 1;
-    }
-
-    /* Extension is likely the same for all files */
-    file_ptr = strrchr(file, '.');
-    if (file_ptr) {
-        *file_ptr = '\0';
+    } else {
+        file = file_buf;
     }
 
     char indent[32];
@@ -2116,18 +2113,25 @@ void ecs_log_print(
     }
     indent[i * 2] = '\0';
 
-    char *msg = ecs_vasprintf(fmt, valist);
+    char *msg = ecs_vasprintf(fmt, args);
     char *color_msg = ecs_colorize(msg);
 
     if (level >= 0) {
-        ecs_os_log("%sinfo%s: %s%s%s%s",
-            ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+        ecs_os_log("%sinfo%s: %s%s%s%s:%s%d%s: %s", ECS_MAGENTA, ECS_NORMAL, 
+            ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
+            color_msg);
     } else if (level == -2) {
-        ecs_os_warn("%swarn%s: %s%s%s%s",
-            ECS_YELLOW, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
-    } else if (level <= -2) {
-        ecs_os_err("%serr %s: %s%s%s%s",
-            ECS_RED, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+        ecs_os_warn("%swarn%s: %s%s%s%s:%s%d%s: %s", ECS_YELLOW, ECS_NORMAL, 
+            ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
+            color_msg);
+    } else if (level == -3) {
+        ecs_os_err("%serr%s:  %s%s%s%s:%s%d%s: %s", ECS_RED, ECS_NORMAL, 
+            ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
+            color_msg);
+    } else if (level == -4) {
+        ecs_os_err("%sfatal%s:  %s%s%s%s:%s%d%s: %s", ECS_RED, ECS_NORMAL, 
+            ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
+            color_msg);
     }
 
     ecs_os_free(color_msg);
@@ -2141,10 +2145,10 @@ void _ecs_trace(
     const char *fmt,
     ...)
 {
-    va_list valist;
-    va_start(valist, fmt);
-
-    ecs_log_print(level, file, line, fmt, valist);
+    va_list args;
+    va_start(args, fmt);
+    ecs_log_print(level, file, line, fmt, args);
+    va_end(args);    
 }
 
 void _ecs_warn(
@@ -2153,10 +2157,10 @@ void _ecs_warn(
     const char *fmt,
     ...)
 {
-    va_list valist;
-    va_start(valist, fmt);
-
-    ecs_log_print(-2, file, line, fmt, valist);
+    va_list args;
+    va_start(args, fmt);
+    ecs_log_print(-2, file, line, fmt, args);
+    va_end(args);
 }
 
 void _ecs_err(
@@ -2165,10 +2169,22 @@ void _ecs_err(
     const char *fmt,
     ...)
 {
-    va_list valist;
-    va_start(valist, fmt);
+    va_list args;
+    va_start(args, fmt);
+    ecs_log_print(-3, file, line, fmt, args);
+    va_end(args);
+}
 
-    ecs_log_print(-3, file, line, fmt, valist);
+void _ecs_fatal(
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    ecs_log_print(-4, file, line, fmt, args);
+    va_end(args);
 }
 
 void ecs_log_push(void) {
@@ -2193,9 +2209,9 @@ void _ecs_parser_error(
     ...)
 {
     if (trace_level >= -2) {
-        va_list valist;
-        va_start(valist, fmt);
-        char *msg = ecs_vasprintf(fmt, valist);
+        va_list args;
+        va_start(args, fmt);
+        char *msg = ecs_vasprintf(fmt, args);
 
         if (column != -1) {
             if (name) {
@@ -2226,16 +2242,21 @@ void _ecs_parser_error(
 }
 
 void _ecs_abort(
-    int32_t error_code,
-    const char *param,
+    int32_t err,
     const char *file,
-    int32_t line)
+    int32_t line,
+    const char *fmt,
+    ...)
 {
-    if (param) {
-        ecs_err("abort %s:%d: %s (%s)",
-            file, line, ecs_strerror(error_code), param);
+    if (fmt) {
+        va_list args;
+        va_start(args, fmt);
+        char *msg = ecs_vasprintf(fmt, args);
+        va_end(args);
+        _ecs_fatal(file, line, "%s (%s)", msg, ecs_strerror(err));
+        ecs_os_free(msg);
     } else {
-        ecs_err("abort %s:%d: %s", file, line, ecs_strerror(error_code));
+        _ecs_fatal(file, line, "%s", ecs_strerror(err));
     }
 
     ecs_os_abort();
@@ -2243,19 +2264,25 @@ void _ecs_abort(
 
 void _ecs_assert(
     bool condition,
-    int32_t error_code,
-    const char *param,
-    const char *condition_str,
+    int32_t err,
+    const char *cond_str,
     const char *file,
-    int32_t line)
+    int32_t line,
+    const char *fmt,
+    ...)
 {
     if (!condition) {
-        if (param) {
-            ecs_err("assert(%s) %s:%d: %s (%s)",
-                condition_str, file, line, ecs_strerror(error_code), param);
+        if (fmt) {
+            va_list args;
+            va_start(args, fmt);
+            char *msg = ecs_vasprintf(fmt, args);
+            va_end(args);            
+            _ecs_fatal(file, line, "assert(%s) %s (%s)", 
+                cond_str, msg, ecs_strerror(err));
+            ecs_os_free(msg);
         } else {
-            ecs_err("assert(%s) %s:%d: %s",
-                condition_str, file, line, ecs_strerror(error_code));
+            _ecs_fatal(file, line, "assert(%s) %s", 
+                cond_str, ecs_strerror(err));
         }
 
         ecs_os_abort();
@@ -2267,81 +2294,48 @@ void _ecs_deprecated(
     int32_t line,
     const char *msg)
 {
-    ecs_err("%s:%d: %s", file, line, msg);
+    _ecs_err(file, line, "%s", msg);
 }
+
+#define ECS_ERR_STR(code) case code: return &(#code[4])
 
 const char* ecs_strerror(
     int32_t error_code)
 {
     switch (error_code) {
-    case ECS_INVALID_PARAMETER:
-        return "invalid parameter";
-    case ECS_NOT_A_COMPONENT:
-        return "provided id/type is not a component (is it a tag, relation or empty type?)";
-    case ECS_TYPE_NOT_AN_ENTITY:
-        return "type contains more than one entity";
-    case ECS_INTERNAL_ERROR:
-        return "internal error";
-    case ECS_ALREADY_DEFINED:
-        return "already defined with conflicting parameters";
-    case ECS_INVALID_COMPONENT_SIZE:
-        return "the specified size does not match the component";
-    case ECS_INVALID_COMPONENT_ALIGNMENT:
-        return "the specified alignment does not match the component";
-    case ECS_OUT_OF_MEMORY:
-        return "out of memory";
-    case ECS_MODULE_UNDEFINED:
-        return "module is undefined (register the module in the ctor/import)";
-    case ECS_COLUMN_INDEX_OUT_OF_RANGE:
-        return "column index out of range";
-    case ECS_COLUMN_IS_NOT_SHARED:
-        return "column is not shared";
-    case ECS_COLUMN_IS_SHARED:
-        return "column is shared";
-    case ECS_COLUMN_HAS_NO_DATA:
-        return "column has no data";
-    case ECS_COLUMN_TYPE_MISMATCH:
-        return "column retrieved with mismatching type";
-    case ECS_INVALID_WHILE_ITERATING:
-        return "operation is invalid while iterating";    
-    case ECS_INVALID_FROM_WORKER:
-        return "operation is invalid from worker thread";
-    case ECS_OUT_OF_RANGE:
-        return "index is out of range";
-    case ECS_THREAD_ERROR:
-        return "failed to create thread";
-    case ECS_MISSING_OS_API:
-        return "missing implementation for OS API function";
-    case ECS_UNSUPPORTED:
-        return "operation is unsupported";
-    case ECS_NO_OUT_COLUMNS:
-        return "on demand system has no out columns";
-    case ECS_COLUMN_ACCESS_VIOLATION:
-        return "invalid access to readonly column (use const)";  
-    case ECS_DESERIALIZE_FORMAT_ERROR:
-        return "serialized data has invalid format";
-    case ECS_TYPE_CONSTRAINT_VIOLATION:
-        return "type constraint violated";
-    case ECS_COMPONENT_NOT_REGISTERED:
-        return "component is not registered";
-    case ECS_INCONSISTENT_COMPONENT_ID:
-        return "component redefined with a different id";
-    case ECS_TYPE_INVALID_CASE:
-        return "case not supported for type";
-    case ECS_NAME_IN_USE:
-        return "name is already in use";
-    case ECS_INCONSISTENT_NAME:
-        return "entity redefined with different name";
-    case ECS_INCONSISTENT_COMPONENT_ACTION:
-        return "registered mismatching component action";
-    case ECS_INVALID_OPERATION:
-        return "invalid operation";
-    case ECS_INVALID_DELETE:
-        return "invalid delete of entity/pair";
-    case ECS_CYCLE_DETECTED:
-        return "possible cycle detected";
-    case ECS_LOCKED_STORAGE:
-        return "cannot modify locked storage (defer operation / don't use readonly world)";
+    ECS_ERR_STR(ECS_INVALID_PARAMETER);
+    ECS_ERR_STR(ECS_NOT_A_COMPONENT);
+    ECS_ERR_STR(ECS_TYPE_NOT_AN_ENTITY);
+    ECS_ERR_STR(ECS_INTERNAL_ERROR);
+    ECS_ERR_STR(ECS_ALREADY_DEFINED);
+    ECS_ERR_STR(ECS_INVALID_COMPONENT_SIZE);
+    ECS_ERR_STR(ECS_INVALID_COMPONENT_ALIGNMENT);
+    ECS_ERR_STR(ECS_OUT_OF_MEMORY);
+    ECS_ERR_STR(ECS_MODULE_UNDEFINED);
+    ECS_ERR_STR(ECS_COLUMN_INDEX_OUT_OF_RANGE);
+    ECS_ERR_STR(ECS_COLUMN_IS_NOT_SHARED);
+    ECS_ERR_STR(ECS_COLUMN_IS_SHARED);
+    ECS_ERR_STR(ECS_COLUMN_HAS_NO_DATA);
+    ECS_ERR_STR(ECS_COLUMN_TYPE_MISMATCH);
+    ECS_ERR_STR(ECS_INVALID_WHILE_ITERATING);
+    ECS_ERR_STR(ECS_INVALID_FROM_WORKER);
+    ECS_ERR_STR(ECS_OUT_OF_RANGE);
+    ECS_ERR_STR(ECS_THREAD_ERROR);
+    ECS_ERR_STR(ECS_MISSING_OS_API);
+    ECS_ERR_STR(ECS_UNSUPPORTED);
+    ECS_ERR_STR(ECS_NO_OUT_COLUMNS);
+    ECS_ERR_STR(ECS_COLUMN_ACCESS_VIOLATION);
+    ECS_ERR_STR(ECS_DESERIALIZE_FORMAT_ERROR);
+    ECS_ERR_STR(ECS_TYPE_CONSTRAINT_VIOLATION);
+    ECS_ERR_STR(ECS_COMPONENT_NOT_REGISTERED);
+    ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ID);
+    ECS_ERR_STR(ECS_TYPE_INVALID_CASE);
+    ECS_ERR_STR(ECS_INCONSISTENT_NAME);
+    ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ACTION);
+    ECS_ERR_STR(ECS_INVALID_OPERATION);
+    ECS_ERR_STR(ECS_INVALID_DELETE);
+    ECS_ERR_STR(ECS_CYCLE_DETECTED);
+    ECS_ERR_STR(ECS_LOCKED_STORAGE);
     }
 
     return "unknown error code";

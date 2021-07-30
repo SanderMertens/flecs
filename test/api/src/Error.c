@@ -5,8 +5,7 @@ void Error_setup() {
     ecs_os_api_t os_api = ecs_os_api;
     os_api.abort_ = test_abort;
     ecs_os_set_api(&os_api);
-
-    ecs_tracing_enable(-4);
+    ecs_tracing_enable(-5);
 }
 
 void Error_abort() {
@@ -32,7 +31,7 @@ void Error_override_abort() {
 
     /* hack, because the setup already set the OS API */
     ((ecs_os_api_t*)&ecs_os_api)->abort_ = my_abort;
-    _ecs_abort(ECS_INTERNAL_ERROR, NULL, __FILE__, __LINE__);
+    _ecs_abort(ECS_INTERNAL_ERROR, __FILE__, __LINE__, NULL);
     test_assert(my_abort_called == true);
 }
 

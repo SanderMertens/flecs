@@ -33,11 +33,11 @@ inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
 
     bool is_new = false;
     T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
-    if (is_new) {
-        FLECS_PLACEMENT_NEW(&dst, T(std::move(value)));
-    } else {
-        dst = std::move(value);
-    }
+
+    /* If type is not constructible get_mut should assert on new values */
+    ecs_assert(!is_new, ECS_INTERNAL_ERROR, NULL);
+
+    dst = std::move(value);
 
     ecs_modified_id(world, entity, id);
 }
@@ -49,11 +49,10 @@ inline void set(world_t *world, id_t entity, const T& value, id_t id) {
 
     bool is_new = false;
     T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
-    if (is_new) {
-        FLECS_PLACEMENT_NEW(&dst, T(std::move(value)));
-    } else {
-        dst = value;
-    }
+
+    /* If type is not constructible get_mut should assert on new values */
+    ecs_assert(!is_new, ECS_INTERNAL_ERROR, NULL);
+    dst = value;
 
     ecs_modified_id(world, entity, id);
 }

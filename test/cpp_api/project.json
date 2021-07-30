@@ -482,7 +482,7 @@
                 "implicit_component",
                 "implicit_after_query",
                 "deleted_copy",
-                "no_default_ctor",
+                "no_default_ctor_emplace",
                 "default_init",
                 "no_default_ctor_add",
                 "no_default_ctor_add_relation",

@@ -453,7 +453,7 @@ void ComponentLifecycle_relocatable_component(void);
 void ComponentLifecycle_implicit_component(void);
 void ComponentLifecycle_implicit_after_query(void);
 void ComponentLifecycle_deleted_copy(void);
-void ComponentLifecycle_no_default_ctor(void);
+void ComponentLifecycle_no_default_ctor_emplace(void);
 void ComponentLifecycle_default_init(void);
 void ComponentLifecycle_no_default_ctor_add(void);
 void ComponentLifecycle_no_default_ctor_add_relation(void);
@@ -2340,8 +2340,8 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_deleted_copy
     },
     {
-        "no_default_ctor",
-        ComponentLifecycle_no_default_ctor
+        "no_default_ctor_emplace",
+        ComponentLifecycle_no_default_ctor_emplace
     },
     {
         "default_init",

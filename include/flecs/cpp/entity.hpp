@@ -557,8 +557,7 @@ public:
     template <typename T>
     const Base& add() const {
         flecs_static_assert(is_flecs_constructible<T>::value,
-            "add<T>() cannot construct type: add T() or "
-                "T(flecs::world&, flecs::entity)");
+            "cannot default construct type: add T::T() or use emplace<T>()");
         ecs_add_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(this->base_world()));
         return *this;
     }
@@ -613,8 +612,7 @@ public:
     template<typename R>
     const Base& add(entity_t object) const {
         flecs_static_assert(is_flecs_constructible<R>::value,
-            "add<T>(entity_t) cannot construct type: add T() or "
-                "T(flecs::world&, flecs::entity)");        
+            "cannot default construct type: add T::T() or use emplace<T>()");      
         return this->add(_::cpp_type<R>::id(this->base_world()), object);
     }
 
@@ -648,7 +646,6 @@ public:
         return this->add(flecs::ChildOf, _::cpp_type<T>::id(this->base_world()));
     }
  
-
     /** Add a pair with object type.
      * This operation adds a pair to the entity. The relation part of the pair
      * should not be a component.
@@ -659,8 +656,7 @@ public:
     template<typename O>
     const Base& add_object(entity_t relation) const {
         flecs_static_assert(is_flecs_constructible<O>::value,
-            "add_object<T>(entity_t) cannot construct type: add T() or "
-                "T(flecs::world&, flecs::entity)");        
+            "cannot default construct type: add T::T() or use emplace<T>()");      
         return this->add(relation,  _::cpp_type<O>::id(this->base_world()));
     }
 

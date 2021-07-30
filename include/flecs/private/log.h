@@ -57,6 +57,13 @@ void _ecs_err(
     ...);
 
 FLECS_API
+void _ecs_fatal(
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+FLECS_API
 void _ecs_deprecated(
     const char *file, 
     int32_t line, 
@@ -78,6 +85,9 @@ void ecs_log_pop(void);
 
 #define ecs_err(...)\
     _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
+
+#define ecs_fatal(...)\
+    _ecs_fatal(__FILE__, __LINE__, __VA_ARGS__)
 
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #define ecs_deprecated(...)\
@@ -127,28 +137,30 @@ const char* ecs_strerror(
 FLECS_API
 void _ecs_abort(
     int32_t error_code,
-    const char *param,
     const char *file,
-    int32_t line);
+    int32_t line,
+    const char *fmt,
+    ...);
 
-#define ecs_abort(error_code, param)\
-    _ecs_abort(error_code, param, __FILE__, __LINE__); abort()
+#define ecs_abort(error_code, ...)\
+    _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__); abort()
 
 /** Assert */
 FLECS_API
 void _ecs_assert(
     bool condition,
     int32_t error_code,
-    const char *param,
     const char *condition_str,
     const char *file,
-    int32_t line);
+    int32_t line,
+    const char *fmt,
+    ...);
 
 #ifdef NDEBUG
-#define ecs_assert(condition, error_code, param)
+#define ecs_assert(condition, error_code, ...)
 #else
-#define ecs_assert(condition, error_code, param)\
-    _ecs_assert(condition, error_code, param, #condition, __FILE__, __LINE__);\
+#define ecs_assert(condition, error_code, ...)\
+    _ecs_assert(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
     assert(condition)
 #endif
 
