@@ -575,6 +575,7 @@ void Delete_get_alive_for_nonexistent(void);
 void Delete_move_w_dtor_move(void);
 void Delete_move_w_dtor_no_move(void);
 void Delete_move_w_no_dtor_move(void);
+void Delete_wrap_generation_count(void);
 
 // Testsuite 'OnDelete'
 void OnDelete_on_delete_id_default(void);
@@ -4166,6 +4167,10 @@ bake_test_case Delete_testcases[] = {
     {
         "move_w_no_dtor_move",
         Delete_move_w_no_dtor_move
+    },
+    {
+        "wrap_generation_count",
+        Delete_wrap_generation_count
     }
 };
 
@@ -9721,7 +9726,7 @@ static bake_test_suite suites[] = {
         "Delete",
         Delete_setup,
         NULL,
-        29,
+        30,
         Delete_testcases
     },
     {

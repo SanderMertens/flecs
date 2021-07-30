@@ -690,3 +690,34 @@ void Delete_move_w_no_dtor_move() {
 
     ecs_fini(world);
 }
+
+void Delete_wrap_generation_count() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t start = ecs_new_id(world);
+    ecs_entity_t e = start;
+
+    for (int i = 0; i < 65535; i ++) {
+        ecs_delete(world, e);
+        e = ecs_new_id(world);
+        test_assert(e != start);
+        test_assert((uint32_t)e == start);
+    }
+
+    ecs_delete(world, e);
+    e = ecs_new_id(world);
+    test_assert(e == start);
+
+    for (int i = 0; i < 65535; i ++) {
+        ecs_delete(world, e);
+        e = ecs_new_id(world);
+        test_assert(e != start);
+        test_assert((uint32_t)e == start);
+    }
+
+    ecs_delete(world, e);
+    e = ecs_new_id(world);
+    test_assert(e == start);
+
+    ecs_fini(world);
+}

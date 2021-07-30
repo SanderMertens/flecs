@@ -615,7 +615,8 @@
                 "get_alive_for_nonexistent",
                 "move_w_dtor_move",
                 "move_w_dtor_no_move",
-                "move_w_no_dtor_move"
+                "move_w_no_dtor_move",
+                "wrap_generation_count"
             ]
         }, {
             "id": "OnDelete",

@@ -7384,6 +7384,9 @@ void ecs_add_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    if (!ecs_is_valid(world, entity)) {
+        printf("INVALID: %lu, exists=%d, alive=%d\n", entity, ecs_exists(world, entity), ecs_is_alive(world, entity));
+    }
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     ecs_entities_t components = { .array = &id, .count = 1 };
