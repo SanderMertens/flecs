@@ -543,9 +543,8 @@ typedef struct ecs_observer_desc_t {
 
 /** Entity name. */
 typedef struct EcsName {
-    const char *value;     /* Entity name */
-    char *symbol;          /* Optional symbol name, if it differs from name */
-    char *alloc_value;     /* If set, value will be freed on destruction */
+    char *value;     /* Entity name */
+    char *symbol;    /* Optional symbol name, if it differs from name */
 } EcsName;
 
 /** Component information. */

@@ -1895,6 +1895,8 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_strdup(str) ecs_os_api.strdup_(str)
 #endif
 
+#define ecs_os_strset(dst, src) ecs_os_free(*dst); *dst = ecs_os_strdup(src)
+
 #ifdef __cplusplus
 #define ecs_os_strlen(str) static_cast<ecs_size_t>(strlen(str))
 #define ecs_os_strncmp(str1, str2, num) strncmp(str1, str2, static_cast<size_t>(num))
@@ -2993,9 +2995,8 @@ typedef struct ecs_observer_desc_t {
 
 /** Entity name. */
 typedef struct EcsName {
-    const char *value;     /* Entity name */
-    char *symbol;          /* Optional symbol name, if it differs from name */
-    char *alloc_value;     /* If set, value will be freed on destruction */
+    char *value;     /* Entity name */
+    char *symbol;    /* Optional symbol name, if it differs from name */
 } EcsName;
 
 /** Component information. */
@@ -10053,7 +10054,7 @@ inline void ecs_dtor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
 }
 
 inline void ecs_copy_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
-    const ecs_entity_t*, void *, const void *, size_t size, int32_t count, void*)
+    const ecs_entity_t*, void *, const void *, size_t, int32_t, void*)
 {
     char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
@@ -10063,7 +10064,7 @@ inline void ecs_copy_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
 }
 
 inline void ecs_move_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
-    const ecs_entity_t*, void *, void *, size_t size, int32_t count, void*)
+    const ecs_entity_t*, void *, void *, size_t, int32_t, void*)
 {
     char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
@@ -10072,10 +10073,9 @@ inline void ecs_move_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
     ecs_os_free(path);
 }
 
-inline void ecs_copy_ctor_illegal(
-    ecs_world_t* w, ecs_entity_t id, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    const void *src_ptr, size_t size, int32_t count, void*)
+inline void ecs_copy_ctor_illegal(ecs_world_t* w, ecs_entity_t id, 
+    const EcsComponentLifecycle*, const ecs_entity_t*, const ecs_entity_t*, 
+    void *, const void *, size_t, int32_t, void*)
 {
     char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
@@ -10084,10 +10084,9 @@ inline void ecs_copy_ctor_illegal(
     ecs_os_free(path);
 }
 
-inline void ecs_move_ctor_illegal(
-    ecs_world_t* w, ecs_entity_t id, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, size_t size, int32_t count, void*)
+inline void ecs_move_ctor_illegal(ecs_world_t* w, ecs_entity_t id, 
+    const EcsComponentLifecycle*, const ecs_entity_t*, const ecs_entity_t*, 
+    void *, void *, size_t, int32_t, void*)
 {
     char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 

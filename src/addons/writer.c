@@ -344,13 +344,8 @@ ecs_size_t ecs_table_writer(
         written = ECS_SIZEOF(int32_t);
         if (!ecs_name_writer_write(&writer->name, buffer)) {
             EcsName *name_ptr = &((EcsName*)writer->column_data)[writer->row_index];
-            name_ptr->value = writer->name.name;
-
-            if (name_ptr->alloc_value) {
-                ecs_os_free(name_ptr->alloc_value);
-            }
-
-            name_ptr->alloc_value = writer->name.name;
+            
+            ecs_os_strset(&name_ptr->value, writer->name.name);
 
             /* Don't overwrite entity name */
             ecs_name_writer_reset(&writer->name);   

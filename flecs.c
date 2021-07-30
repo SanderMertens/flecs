@@ -11046,13 +11046,8 @@ ecs_size_t ecs_table_writer(
         written = ECS_SIZEOF(int32_t);
         if (!ecs_name_writer_write(&writer->name, buffer)) {
             EcsName *name_ptr = &((EcsName*)writer->column_data)[writer->row_index];
-            name_ptr->value = writer->name.name;
-
-            if (name_ptr->alloc_value) {
-                ecs_os_free(name_ptr->alloc_value);
-            }
-
-            name_ptr->alloc_value = writer->name.name;
+            
+            ecs_os_strset(&name_ptr->value, writer->name.name);
 
             /* Don't overwrite entity name */
             ecs_name_writer_reset(&writer->name);   
@@ -27740,56 +27735,27 @@ ecs_type_t ecs_type(EcsPrefab);
 /* Component lifecycle actions for EcsName */
 static ECS_CTOR(EcsName, ptr, {
     ptr->value = NULL;
-    ptr->alloc_value = NULL;
     ptr->symbol = NULL;
 })
 
 static ECS_DTOR(EcsName, ptr, {
-    ecs_os_free(ptr->alloc_value);
-    ecs_os_free(ptr->symbol);
-    ptr->value = NULL;
-    ptr->alloc_value = NULL;
-    ptr->symbol = NULL;
+    ecs_os_strset(&ptr->value, NULL);
+    ecs_os_strset(&ptr->symbol, NULL);
 })
 
 static ECS_COPY(EcsName, dst, src, {
-    if (dst->alloc_value) {
-        ecs_os_free(dst->alloc_value);
-        dst->alloc_value = NULL;
-    }
-
-    if (dst->symbol) {
-        ecs_os_free(dst->symbol);
-        dst->symbol = NULL;
-    }
-    
-    if (src->alloc_value) {
-        dst->alloc_value = ecs_os_strdup(src->alloc_value);
-        dst->value = dst->alloc_value;
-    } else {
-        dst->alloc_value = NULL;
-        dst->value = src->value;
-    }
-
-    if (src->symbol) {
-        dst->symbol = ecs_os_strdup(src->symbol);
-    }
+    ecs_os_strset(&dst->value, src->value);
+    ecs_os_strset(&dst->symbol, src->symbol);
 })
 
 static ECS_MOVE(EcsName, dst, src, {
-    if (dst->alloc_value) {
-        ecs_os_free(dst->alloc_value);
-    }
-    if (dst->symbol) {
-        ecs_os_free(dst->symbol);
-    }
+    ecs_os_strset(&dst->value, NULL);
+    ecs_os_strset(&dst->symbol, NULL);
 
     dst->value = src->value;
-    dst->alloc_value = src->alloc_value;
     dst->symbol = src->symbol;
 
     src->value = NULL;
-    src->alloc_value = NULL;
     src->symbol = NULL;
 })
 
@@ -27931,9 +27897,8 @@ void _bootstrap_component(
     
     c_info[index].size = size;
     c_info[index].alignment = alignment;
-    id_data[index].value = &id[ecs_os_strlen("Ecs")]; /* Skip prefix */
+    id_data[index].value = ecs_os_strdup(&id[ecs_os_strlen("Ecs")]); /* Skip prefix */
     id_data[index].symbol = ecs_os_strdup(id);
-    id_data[index].alloc_value = NULL;
 }
 
 /** Create type for component */
@@ -28011,7 +27976,7 @@ void bootstrap_entity(
     ecs_os_strcpy(symbol, "flecs.core.");
     ecs_os_strcat(symbol, name);
 
-    ecs_set(world, id, EcsName, {.value = name, .symbol = symbol});
+    ecs_set(world, id, EcsName, {.value = (char*)name, .symbol = symbol});
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_add_pair(world, id, EcsChildOf, parent);
 
@@ -28802,8 +28767,7 @@ ecs_entity_t ecs_add_path_w_sep(
             }
 
             ecs_set(world, e, EcsName, {
-                .value = name,
-                .alloc_value = name
+                .value = name
             });
 
             if (cur) {
@@ -28822,8 +28786,7 @@ ecs_entity_t ecs_add_path_w_sep(
         name = ecs_os_strdup(elem);
 
         ecs_set(world, entity, EcsName, {
-            .value = name,
-            .alloc_value = name
+            .value = name
         });
     }
 

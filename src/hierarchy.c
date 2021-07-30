@@ -646,8 +646,7 @@ ecs_entity_t ecs_add_path_w_sep(
             }
 
             ecs_set(world, e, EcsName, {
-                .value = name,
-                .alloc_value = name
+                .value = name
             });
 
             if (cur) {
@@ -666,8 +665,7 @@ ecs_entity_t ecs_add_path_w_sep(
         name = ecs_os_strdup(elem);
 
         ecs_set(world, entity, EcsName, {
-            .value = name,
-            .alloc_value = name
+            .value = name
         });
     }
 
