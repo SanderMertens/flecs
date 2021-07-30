@@ -1045,6 +1045,467 @@ void DeferredActions_recreate_deleted_entity_while_deferred() {
     ecs_fini(world);
 }
 
+void DeferredActions_defer_add_to_recycled_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t id = ecs_new_id(world);
+    test_assert(id != 0);
+
+    ecs_delete(world, id);
+
+    ecs_entity_t id_2 = ecs_new_id(world);
+    test_assert(id != id_2);
+    test_assert((int32_t)id == (int32_t)id_2);
+    
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_id(world, id_2);
+    ecs_add(world, child, Velocity);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, id));
+    test_assert(ecs_is_alive(world, id_2));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(ecs_has_id(world, child, id_2));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_add_to_recycled_id_w_role() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t id = ecs_new_id(world);
+    test_assert(id != 0);
+
+    ecs_delete(world, id);
+
+    ecs_entity_t id_2 = ecs_new_id(world);
+    test_assert(id != id_2);
+    test_assert((int32_t)id == (int32_t)id_2);
+    
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_id(world, ECS_DISABLED | id_2);
+    ecs_add(world, child, Velocity);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, id));
+    test_assert(ecs_is_alive(world, id_2));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(ecs_has_id(world, child, ECS_DISABLED | id_2));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_add_to_recycled_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t object = ecs_new_id(world);
+    test_assert(object != 0);
+
+    ecs_entity_t rel = ecs_new_id(world);
+    test_assert(rel != 0);
+
+    ecs_delete(world, rel);
+
+    ecs_entity_t rel_2 = ecs_new_id(world);
+    test_assert(rel != rel_2);
+    test_assert((int32_t)rel == (int32_t)rel_2);
+    
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_pair(world, rel_2, object);
+    ecs_add(world, child, Velocity);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(ecs_is_alive(world, object));
+    test_assert(!ecs_is_alive(world, rel));
+    test_assert(ecs_is_alive(world, rel_2));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(ecs_has_pair(world, child, rel_2, object));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_add_to_recycled_object() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t object = ecs_new(world, 0);
+    test_assert(object != 0);
+
+    ecs_delete(world, object);
+
+    ecs_entity_t object_2 = ecs_new_id(world);
+    test_assert(object != object_2);
+    test_assert((int32_t)object == (int32_t)object_2);
+    
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_pair(world, Rel, object_2);
+    ecs_add(world, child, Velocity);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, object));
+    test_assert(ecs_is_alive(world, object_2));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(ecs_has_pair(world, child, Rel, object_2));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_add_to_recycled_object_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    test_assert(parent != 0);
+
+    ecs_delete(world, parent);
+
+    ecs_entity_t parent_2 = ecs_new_id(world);
+    test_assert(parent != parent_2);
+    test_assert((int32_t)parent == (int32_t)parent_2);
+    
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent_2);
+    ecs_add(world, child, Velocity);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(ecs_is_alive(world, parent_2));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent_2));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_add_to_deleted_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t id = ecs_new_id(world);
+    test_assert(id != 0);
+    
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_delete(world, id);
+    ecs_entity_t child = ecs_new_w_id(world, id);
+    ecs_add(world, child, Velocity);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, id));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(!ecs_has_id(world, child, id));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_add_to_deleted_id_w_role() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t id = ecs_new_id(world);
+    test_assert(id != 0);
+    
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_delete(world, id);
+    ecs_entity_t child = ecs_new_w_id(world, ECS_DISABLED | id);
+    ecs_add(world, child, Velocity);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, id));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(!ecs_has_id(world, child, ECS_DISABLED | id));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_add_to_deleted_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t object = ecs_new_id(world);
+    test_assert(object != 0);
+
+    ecs_entity_t rel = ecs_new_id(world);
+    test_assert(rel != 0);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_delete(world, rel);
+    ecs_entity_t child = ecs_new_w_pair(world, rel, object);
+    ecs_add(world, child, Velocity);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(ecs_is_alive(world, object));
+    test_assert(!ecs_is_alive(world, rel));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(!ecs_has_pair(world, child, rel, object));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_add_to_deleted_object() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t object = ecs_new(world, 0);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_delete(world, object);
+    ecs_entity_t child = ecs_new_w_pair(world, Rel, object);
+    ecs_add(world, child, Velocity);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, object));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(!ecs_has_pair(world, child, Rel, object));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_add_to_deleted_object_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_delete(world, parent);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_add(world, child, Velocity);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_delete_added_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t id = ecs_new_id(world);
+    test_assert(id != 0);
+    
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_id(world, id);
+    ecs_add(world, child, Velocity);
+    ecs_delete(world, id);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, id));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(!ecs_has_id(world, child, id));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_delete_added_id_w_role() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t id = ecs_new_id(world);
+    test_assert(id != 0);
+    
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_id(world, ECS_DISABLED | id);
+    ecs_add(world, child, Velocity);
+    ecs_delete(world, id);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, id));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(!ecs_has_id(world, child, ECS_DISABLED | id));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_delete_added_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t object = ecs_new_id(world);
+    test_assert(object != 0);
+
+    ecs_entity_t rel = ecs_new_id(world);
+    test_assert(rel != 0);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_pair(world, rel, object);
+    ecs_add(world, child, Velocity);
+    ecs_delete(world, rel);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(ecs_is_alive(world, object));
+    test_assert(!ecs_is_alive(world, rel));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(!ecs_has_pair(world, child, rel, object));
+
+    ecs_fini(world); 
+}
+
+void DeferredActions_defer_delete_added_object() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t object = ecs_new(world, 0);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_pair(world, Rel, object);
+    ecs_add(world, child, Velocity);
+    ecs_delete(world, object);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, object));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(!ecs_has_pair(world, child, Rel, object));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_delete_added_object_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_add(world, child, Velocity);
+    ecs_delete(world, parent);
+
+    ecs_defer_end(world);  
+
+    ecs_frame_end(world);    
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world); 
+}
+
 void DeferredActions_discard_add() {
     ecs_world_t *world = ecs_init();
 
@@ -1617,3 +2078,4 @@ void DeferredActions_defer_disable() {
 
     ecs_fini(world);
 }
+

@@ -617,6 +617,7 @@ void OnDelete_stresstest_many_relations_on_delete(void);
 void OnDelete_on_delete_empty_table_w_on_remove(void);
 void OnDelete_delete_table_in_on_remove_during_fini(void);
 void OnDelete_delete_other_in_on_remove_during_fini(void);
+void OnDelete_on_delete_remove_id_w_role(void);
 
 // Testsuite 'Delete_w_filter'
 void Delete_w_filter_delete_1(void);
@@ -1722,6 +1723,21 @@ void DeferredActions_defer_get_mut_after_delete(void);
 void DeferredActions_defer_get_mut_after_delete_2nd_to_last(void);
 void DeferredActions_defer_add_child_to_deleted_parent(void);
 void DeferredActions_recreate_deleted_entity_while_deferred(void);
+void DeferredActions_defer_add_to_recycled_id(void);
+void DeferredActions_defer_add_to_recycled_id_w_role(void);
+void DeferredActions_defer_add_to_recycled_relation(void);
+void DeferredActions_defer_add_to_recycled_object(void);
+void DeferredActions_defer_add_to_recycled_object_childof(void);
+void DeferredActions_defer_add_to_deleted_id(void);
+void DeferredActions_defer_add_to_deleted_id_w_role(void);
+void DeferredActions_defer_add_to_deleted_relation(void);
+void DeferredActions_defer_add_to_deleted_object(void);
+void DeferredActions_defer_add_to_deleted_object_childof(void);
+void DeferredActions_defer_delete_added_id(void);
+void DeferredActions_defer_delete_added_id_w_role(void);
+void DeferredActions_defer_delete_added_relation(void);
+void DeferredActions_defer_delete_added_object(void);
+void DeferredActions_defer_delete_added_object_childof(void);
 void DeferredActions_discard_add(void);
 void DeferredActions_discard_remove(void);
 void DeferredActions_discard_add_two(void);
@@ -4308,6 +4324,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_other_in_on_remove_during_fini",
         OnDelete_delete_other_in_on_remove_during_fini
+    },
+    {
+        "on_delete_remove_id_w_role",
+        OnDelete_on_delete_remove_id_w_role
     }
 };
 
@@ -8502,6 +8522,66 @@ bake_test_case DeferredActions_testcases[] = {
         DeferredActions_recreate_deleted_entity_while_deferred
     },
     {
+        "defer_add_to_recycled_id",
+        DeferredActions_defer_add_to_recycled_id
+    },
+    {
+        "defer_add_to_recycled_id_w_role",
+        DeferredActions_defer_add_to_recycled_id_w_role
+    },
+    {
+        "defer_add_to_recycled_relation",
+        DeferredActions_defer_add_to_recycled_relation
+    },
+    {
+        "defer_add_to_recycled_object",
+        DeferredActions_defer_add_to_recycled_object
+    },
+    {
+        "defer_add_to_recycled_object_childof",
+        DeferredActions_defer_add_to_recycled_object_childof
+    },
+    {
+        "defer_add_to_deleted_id",
+        DeferredActions_defer_add_to_deleted_id
+    },
+    {
+        "defer_add_to_deleted_id_w_role",
+        DeferredActions_defer_add_to_deleted_id_w_role
+    },
+    {
+        "defer_add_to_deleted_relation",
+        DeferredActions_defer_add_to_deleted_relation
+    },
+    {
+        "defer_add_to_deleted_object",
+        DeferredActions_defer_add_to_deleted_object
+    },
+    {
+        "defer_add_to_deleted_object_childof",
+        DeferredActions_defer_add_to_deleted_object_childof
+    },
+    {
+        "defer_delete_added_id",
+        DeferredActions_defer_delete_added_id
+    },
+    {
+        "defer_delete_added_id_w_role",
+        DeferredActions_defer_delete_added_id_w_role
+    },
+    {
+        "defer_delete_added_relation",
+        DeferredActions_defer_delete_added_relation
+    },
+    {
+        "defer_delete_added_object",
+        DeferredActions_defer_delete_added_object
+    },
+    {
+        "defer_delete_added_object_childof",
+        DeferredActions_defer_delete_added_object_childof
+    },
+    {
         "discard_add",
         DeferredActions_discard_add
     },
@@ -9623,7 +9703,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        45,
+        46,
         OnDelete_testcases
     },
     {
@@ -9875,7 +9955,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        49,
+        64,
         DeferredActions_testcases
     },
     {

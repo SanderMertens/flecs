@@ -7071,10 +7071,33 @@ void remove_from_table(
     ecs_table_t *dst_table = src_table;
     bool is_pair = ECS_HAS_ROLE(id, PAIR);
 
-    /* If id is pair, ensure dst_table has no instances of the relation */
-    if (is_pair && ECS_PAIR_RELATION(id) != EcsWildcard) {
+    ecs_id_t *ids = ecs_vector_first(src_table->type, ecs_id_t);
+
+    /* If id is pair but the column pointed to is not a pair, the record is
+     * pointing to an instance of the id that has a (non-PAIR) role. */
+    if (ECS_HAS_ROLE(id, PAIR) && !ECS_HAS_ROLE(ids[column], PAIR)) {
+        ecs_assert((ids[column] & ECS_ROLE_MASK) != 0, 
+            ECS_INTERNAL_ERROR, NULL);
+
         int32_t i, count = ecs_vector_count(src_table->type);
-        ecs_id_t *ids = ecs_vector_first(src_table->type, ecs_id_t);
+        ecs_entity_t entity = ECS_PAIR_RELATION(id);
+
+        /* Find all instances of the id without the role */
+        for (i = column; i < count; i ++) {
+            ecs_id_t e = ids[i];
+            if ((e & ECS_COMPONENT_MASK) != entity) {
+                continue;
+            }
+
+            ecs_ids_t to_remove = { .array = &e, .count = 1 };
+            dst_table = flecs_table_traverse_remove(
+                world, dst_table, &to_remove, &removed);
+        }    
+
+    /* If id is pair, ensure dst_table has no instances of the relation */
+    } else if (is_pair && ECS_PAIR_RELATION(id) != EcsWildcard) {
+        int32_t i, count = ecs_vector_count(src_table->type);
+        
         for (i = column; i < count; i ++) {
             ecs_id_t e = ids[i];
             if (ECS_PAIR_RELATION(id) != ECS_PAIR_RELATION(e)) {
@@ -7089,7 +7112,6 @@ void remove_from_table(
         /* If pair has a relationship wildcard, this removes a relationship for
          * a specific object. Get the relation + object to delete */
         if (is_pair) {
-            ecs_id_t *ids = ecs_vector_first(src_table->type, ecs_id_t);
             id = ids[column];
         }
         ecs_ids_t to_remove = { .array = &id, .count = 1 };
@@ -7229,6 +7251,8 @@ void on_delete_relation_action(
     ecs_id_t id)
 {
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
+
+    char buf[255]; ecs_id_str(world, id, buf, 255);
 
     if (idr) {
         ecs_entity_t on_delete = idr->on_delete;
@@ -8502,22 +8526,76 @@ void discard_op(
     }    
 }
 
-static
-bool valid_components(
-    ecs_world_t * world,
-    ecs_ids_t * entities)
+static 
+bool is_entity_valid(
+    ecs_world_t *world,
+    ecs_entity_t e)
 {
-    ecs_entity_t *array = entities->array;
-    int32_t i, count = entities->count;
+    if (ecs_exists(world, e) && !ecs_is_alive(world, e)) {
+        return false;
+    }
+    return true;
+}
+
+static
+bool remove_invalid(
+    ecs_world_t * world,
+    ecs_ids_t * ids)
+{
+    ecs_entity_t *array = ids->array;
+    int32_t i, offset = 0, count = ids->count;
+
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = array[i];
-        if (ECS_HAS_RELATION(e, EcsChildOf)) {
-            e = ecs_entity_t_lo(e);
-            if (ecs_exists(world, e) && !ecs_is_alive(world, e)) {
-                return false;
+        ecs_id_t id = array[i];
+        bool is_remove = false;
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t rel = ecs_pair_relation(world, id);
+            if (!rel || !is_entity_valid(world, rel)) {
+                /* After relation is deleted we can no longer see what its
+                 * delete action was, so pretend this never happened */
+                is_remove = true;
+            } else {
+                ecs_entity_t obj = ecs_pair_object(world, id);
+                if (!obj || !is_entity_valid(world, obj)) {
+                    /* Check the relation's policy for deleted objects */
+                    ecs_id_record_t *idr = flecs_get_id_record(world, rel);
+                    if (!idr || (idr->on_delete_object == EcsRemove)) {
+                        is_remove = true;
+                    } else {
+                        if (idr->on_delete_object == EcsDelete) {
+                            /* Entity should be deleted, don't bother checking
+                             * other ids */
+                            return false;
+                        } else if (idr->on_delete_object == EcsThrow) {
+                            /* If policy is throw this object should not have
+                             * been deleted */
+                            throw_invalid_delete(world, id);
+                        }
+                    }
+                }
+            }
+
+        } else {
+            id &= ECS_COMPONENT_MASK;
+
+            if (!is_entity_valid(world, id)) {
+                /* After relation is deleted we can no longer see what its
+                 * delete action was, so pretend this never happened */
+                is_remove = true;
             }
         }
+
+        if (is_remove) {
+            offset ++;
+            count --;
+        }
+
+        ids->array[i] = ids->array[i + offset];
     }
+
+    ids->count = count;
+
     return true;
 }
 
@@ -8549,8 +8627,8 @@ bool flecs_defer_flush(
                 }
 
                 /* If entity is no longer alive, this could be because the queue
-                * contained both a delete and a subsequent add/remove/set which
-                * should be ignored. */
+                 * contained both a delete and a subsequent add/remove/set which
+                 * should be ignored. */
                 if (e && !ecs_is_alive(world, e) && ecs_eis_exists(world, e)) {
                     ecs_assert(op->kind != EcsOpNew && op->kind != EcsOpClone, 
                         ECS_INTERNAL_ERROR, NULL);
@@ -8566,7 +8644,7 @@ bool flecs_defer_flush(
                 switch(op->kind) {
                 case EcsOpNew:
                 case EcsOpAdd:
-                    if (valid_components(world, &op->components)) {
+                    if (remove_invalid(world, &op->components)) {
                         world->add_count ++;
                         add_ids(world, e, &op->components);
                     } else {
@@ -16361,11 +16439,15 @@ void do_register_each_id(
         } else {
             if (!(id & ECS_ROLE_MASK)) {
                 do_register_id(world, table, EcsWildcard, i, unregister);
-
-                if (!unregister) {
-                    flecs_set_watch(world, id);
-                }
+            } else {
+                id &= ECS_COMPONENT_MASK;
+                do_register_id(world, table, ecs_pair(id, EcsWildcard), 
+                    i, unregister);
             }
+
+            if (!unregister) {
+                flecs_set_watch(world, id);
+            }            
         }
     }
 

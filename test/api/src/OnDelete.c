@@ -1084,3 +1084,23 @@ void OnDelete_delete_other_in_on_remove_during_fini() {
     /* Trigger must have been called for both entities */
     test_int(trigger_count, 2);
 }
+
+void OnDelete_on_delete_remove_id_w_role() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_new_id(world);
+
+    ecs_entity_t e = ecs_new_id(world);
+    
+    ecs_add_id(world, e, ECS_DISABLED | c);
+    test_assert(ecs_has_id(world, e, ECS_DISABLED | c));
+
+    ecs_delete(world, c);
+
+    test_assert(!ecs_is_alive(world, c));
+    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_get_type(world, e) == NULL);
+    test_assert(!ecs_has_id(world, e, ECS_DISABLED | c));
+
+    ecs_fini(world);
+}

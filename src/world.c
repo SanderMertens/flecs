@@ -1487,11 +1487,15 @@ void do_register_each_id(
         } else {
             if (!(id & ECS_ROLE_MASK)) {
                 do_register_id(world, table, EcsWildcard, i, unregister);
-
-                if (!unregister) {
-                    flecs_set_watch(world, id);
-                }
+            } else {
+                id &= ECS_COMPONENT_MASK;
+                do_register_id(world, table, ecs_pair(id, EcsWildcard), 
+                    i, unregister);
             }
+
+            if (!unregister) {
+                flecs_set_watch(world, id);
+            }            
         }
     }
 
