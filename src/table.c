@@ -1964,10 +1964,8 @@ void merge_table_data(
         int16_t size = new_columns[i_new].size;
         int16_t alignment = new_columns[i_new].alignment;
 
-        if ((new_component & ECS_ROLE_MASK) || 
-            (old_component & ECS_ROLE_MASK)) 
-        {
-            break;
+        if (!size) {
+            continue;
         }
 
         if (new_component == old_component) {
@@ -2104,7 +2102,6 @@ ecs_data_t* flecs_table_merge(
     }
 
     ecs_entity_t *old_entities = ecs_vector_first(old_data->entities, ecs_entity_t);
-
     int32_t old_count = ecs_vector_count(old_data->entities);
     int32_t new_count = ecs_vector_count(new_data->entities);
 

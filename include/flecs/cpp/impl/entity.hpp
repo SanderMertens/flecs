@@ -183,6 +183,7 @@ inline flecs::type entity_view::to_type() const {
 }
 
 inline child_iterator entity_view::children() const {
+    ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
     return flecs::child_iterator(*this);
 }
 

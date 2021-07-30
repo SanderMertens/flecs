@@ -624,6 +624,7 @@ void OnDelete_on_delete_empty_table_w_on_remove(void);
 void OnDelete_delete_table_in_on_remove_during_fini(void);
 void OnDelete_delete_other_in_on_remove_during_fini(void);
 void OnDelete_on_delete_remove_id_w_role(void);
+void OnDelete_on_delete_merge_pair_component(void);
 
 // Testsuite 'Delete_w_filter'
 void Delete_w_filter_delete_1(void);
@@ -4358,6 +4359,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "on_delete_remove_id_w_role",
         OnDelete_on_delete_remove_id_w_role
+    },
+    {
+        "on_delete_merge_pair_component",
+        OnDelete_on_delete_merge_pair_component
     }
 };
 
@@ -9733,7 +9738,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        46,
+        47,
         OnDelete_testcases
     },
     {

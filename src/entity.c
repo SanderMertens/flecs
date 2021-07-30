@@ -2473,6 +2473,7 @@ void remove_from_table(
         if (is_pair) {
             id = ids[column];
         }
+
         ecs_ids_t to_remove = { .array = &id, .count = 1 };
         dst_table = flecs_table_traverse_remove(
             world, dst_table, &to_remove, &removed);

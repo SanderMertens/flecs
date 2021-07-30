@@ -4311,10 +4311,8 @@ void merge_table_data(
         int16_t size = new_columns[i_new].size;
         int16_t alignment = new_columns[i_new].alignment;
 
-        if ((new_component & ECS_ROLE_MASK) || 
-            (old_component & ECS_ROLE_MASK)) 
-        {
-            break;
+        if (!size) {
+            continue;
         }
 
         if (new_component == old_component) {
@@ -4451,7 +4449,6 @@ ecs_data_t* flecs_table_merge(
     }
 
     ecs_entity_t *old_entities = ecs_vector_first(old_data->entities, ecs_entity_t);
-
     int32_t old_count = ecs_vector_count(old_data->entities);
     int32_t new_count = ecs_vector_count(new_data->entities);
 
@@ -7114,6 +7111,7 @@ void remove_from_table(
         if (is_pair) {
             id = ids[column];
         }
+
         ecs_ids_t to_remove = { .array = &id, .count = 1 };
         dst_table = flecs_table_traverse_remove(
             world, dst_table, &to_remove, &removed);
@@ -7384,9 +7382,6 @@ void ecs_add_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    if (!ecs_is_valid(world, entity)) {
-        printf("INVALID: %lu, exists=%d, alive=%d\n", entity, ecs_exists(world, entity), ecs_is_alive(world, entity));
-    }
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     ecs_entities_t components = { .array = &id, .count = 1 };

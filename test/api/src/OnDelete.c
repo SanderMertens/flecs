@@ -1104,3 +1104,24 @@ void OnDelete_on_delete_remove_id_w_role() {
 
     ecs_fini(world);
 }
+
+void OnDelete_on_delete_merge_pair_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e_1 = ecs_new_id(world);
+    ecs_entity_t e_2 = ecs_new_id(world);
+    ecs_entity_t obj = ecs_new_id(world);
+
+    ecs_add_id(world, e_1, e_2);
+    ecs_set_pair(world, e_1, Position, obj, {10, 20});
+    ecs_delete(world, e_2);
+
+    const Position *ptr = ecs_get_pair(world, e_1, Position, obj);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
