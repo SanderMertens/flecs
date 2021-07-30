@@ -626,6 +626,11 @@ public:
         return this->add(flecs::IsA, object);
     }
 
+    template <typename T>
+    const Base& is_a() const {
+        return this->add(flecs::IsA, _::cpp_type<T>::id(this->base_world()));
+    }
+
     /** Shortcut for add(ChildOf. obj).
      *
      * @param object the object id.
@@ -633,6 +638,16 @@ public:
     const Base& child_of(entity_t object) const {
         return this->add(flecs::ChildOf, object);
     }
+
+    /** Shortcut for add(ChildOf. obj).
+     *
+     * @param object the object id.
+     */
+    template <typename T>
+    const Base& child_of() const {
+        return this->add(flecs::ChildOf, _::cpp_type<T>::id(this->base_world()));
+    }
+ 
 
     /** Add a pair with object type.
      * This operation adds a pair to the entity. The relation part of the pair

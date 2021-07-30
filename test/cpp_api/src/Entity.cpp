@@ -2812,3 +2812,49 @@ void Entity_id_default_from_world() {
     flecs::id id_default = ecs.id();
     test_assert(id_default == 0);
 }
+
+void Entity_is_a() {
+    flecs::world world;
+
+    auto base = world.entity();
+
+    auto e = world.entity().is_a(base);
+
+    test_assert(e.has(flecs::IsA, base));
+}
+
+void Entity_is_a_w_type() {
+    flecs::world world;
+
+    struct Prefab { };
+
+    auto base = world.entity().component<Prefab>();
+
+    auto e = world.entity().is_a<Prefab>();
+
+    test_assert(e.has(flecs::IsA, base));
+    test_assert(e.has_object<Prefab>(flecs::IsA));
+}
+
+void Entity_child_of() {
+    flecs::world world;
+
+    auto base = world.entity();
+
+    auto e = world.entity().child_of(base);
+
+    test_assert(e.has(flecs::ChildOf, base));
+}
+
+void Entity_child_of_w_type() {
+    flecs::world world;
+
+    struct Parent { };
+
+    auto base = world.entity().component<Parent>();
+
+    auto e = world.entity().child_of<Parent>();
+
+    test_assert(e.has(flecs::ChildOf, base));
+    test_assert(e.has_object<Parent>(flecs::ChildOf));
+}

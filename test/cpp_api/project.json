@@ -163,7 +163,11 @@
                 "owns_wildcard_pair",
                 "id_from_world",
                 "id_pair_from_world",
-                "id_default_from_world"
+                "id_default_from_world",
+                "is_a",
+                "is_a_w_type",
+                "child_of",
+                "child_of_w_type"
             ]
         }, {
             "id": "Pairs",
