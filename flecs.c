@@ -8070,6 +8070,11 @@ bool ecs_is_valid(
     if (!entity) {
         return false;
     }
+
+    /* Entities should not contain data in dead zone bits */
+    if (entity & ~0xFF00FFFFFFFFFFFF) {
+        return false;
+    }
     
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
@@ -9922,7 +9927,7 @@ ecs_vector_t* _ecs_vector_copy(
 #define CHUNK_COUNT (4096)
 
 /** Compute the chunk index from an id by stripping the first 12 bits */
-#define CHUNK(index) ((int32_t)index >> 12)
+#define CHUNK(index) ((int32_t)((uint32_t)index >> 12))
 
 /** This computes the offset of an index inside a chunk */
 #define OFFSET(index) ((int32_t)index & 0xFFF)

@@ -884,3 +884,76 @@ void Entity_init_w_with_w_name_scope() {
 
     ecs_fini(world);
 }
+
+void Entity_is_valid() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    test_bool(ecs_is_valid(world, e), true);
+
+    ecs_fini(world);
+}
+
+void Entity_is_recycled_valid() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    test_bool(ecs_is_valid(world, e), true);
+
+    ecs_delete(world, e);
+    test_bool(ecs_is_valid(world, e), false);
+
+    e = ecs_new_id(world);
+    test_assert(e != 0);
+    test_assert((uint32_t)e != e);
+    test_bool(ecs_is_valid(world, e), true);
+
+    ecs_fini(world);
+}
+
+void Entity_is_0_valid() {
+    ecs_world_t *world = ecs_init();
+
+    test_bool(ecs_is_valid(world, 0), false);
+
+    ecs_fini(world);
+}
+
+void Entity_is_junk_valid() {
+    ecs_world_t *world = ecs_init();
+
+    test_bool(ecs_is_valid(world, 500), true);
+    test_bool(ecs_is_valid(world, 0xFFFFFFFF), true);
+    test_bool(ecs_is_valid(world, 0x4DCDCDCDCDCD), true);
+    
+    test_bool(ecs_is_alive(world, 500), false);
+    test_bool(ecs_is_alive(world, 0xFFFFFFFF), false);
+    test_bool(ecs_is_alive(world, 0x4DCDCDCDCDCD), false);
+
+    test_bool(ecs_is_valid(world, 0xFFFFFFFFFFFFFFFF), false);
+    test_bool(ecs_is_valid(world, 0xFFFFFFFF00000000), false);
+    test_bool(ecs_is_valid(world, 0x4DCDCDCDCDCDCD), false);
+
+    ecs_fini(world);
+}
+
+void Entity_is_not_alive_valid() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    test_bool(ecs_is_valid(world, e), true);
+    test_bool(ecs_is_alive(world, e), true);
+
+    ecs_add_id(world, e, 500);
+    test_bool(ecs_is_valid(world, e), true);
+    test_bool(ecs_is_alive(world, e), true);
+
+    ecs_delete(world, e);
+    test_bool(ecs_is_valid(world, e), false);
+    test_bool(ecs_is_alive(world, e), false);
+
+    ecs_fini(world);
+}

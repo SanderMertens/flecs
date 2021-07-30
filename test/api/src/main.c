@@ -48,6 +48,11 @@ void Entity_init_w_with(void);
 void Entity_init_w_with_w_name(void);
 void Entity_init_w_with_w_scope(void);
 void Entity_init_w_with_w_name_scope(void);
+void Entity_is_valid(void);
+void Entity_is_recycled_valid(void);
+void Entity_is_0_valid(void);
+void Entity_is_junk_valid(void);
+void Entity_is_not_alive_valid(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -2162,6 +2167,26 @@ bake_test_case Entity_testcases[] = {
     {
         "init_w_with_w_name_scope",
         Entity_init_w_with_w_name_scope
+    },
+    {
+        "is_valid",
+        Entity_is_valid
+    },
+    {
+        "is_recycled_valid",
+        Entity_is_recycled_valid
+    },
+    {
+        "is_0_valid",
+        Entity_is_0_valid
+    },
+    {
+        "is_junk_valid",
+        Entity_is_junk_valid
+    },
+    {
+        "is_not_alive_valid",
+        Entity_is_not_alive_valid
     }
 };
 
@@ -9577,7 +9602,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        39,
+        44,
         Entity_testcases
     },
     {

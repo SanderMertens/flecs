@@ -3429,6 +3429,11 @@ bool ecs_is_valid(
     if (!entity) {
         return false;
     }
+
+    /* Entities should not contain data in dead zone bits */
+    if (entity & ~0xFF00FFFFFFFFFFFF) {
+        return false;
+    }
     
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);

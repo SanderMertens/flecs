@@ -5206,9 +5206,19 @@ bool ecs_has_id(
  */
 
 /** Test whether an entity is valid.
+ * Entities that are valid can be used with API functions.
+ *
  * An entity is valid if it is not 0 and if it is alive. If the provided id has
  * a role or a pair, the contents of the role or the pair will be checked for
  * validity.
+ *
+ * is_valid will return true for ids that don't exist (alive or not alive). This
+ * allows for using ids that have never been created by ecs_new or similar. In
+ * this the function differs from ecs_is_alive, which will return false for
+ * entities that do not yet exist.
+ *
+ * The operation will return false for an id that exists and is not alive, as
+ * using this id with an API operation would cause it to assert.
  *
  * @param world The world.
  * @param e The entity.
@@ -5220,6 +5230,8 @@ bool ecs_is_valid(
     ecs_entity_t e);
 
 /** Test whether an entity is alive.
+ * An entity is alive when it has been returned by ecs_new (or similar) or if
+ * it is not empty (componentts have been explicitly added to the id).
  *
  * @param world The world.
  * @param e The entity.

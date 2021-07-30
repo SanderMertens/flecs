@@ -4,7 +4,7 @@
 #define CHUNK_COUNT (4096)
 
 /** Compute the chunk index from an id by stripping the first 12 bits */
-#define CHUNK(index) ((int32_t)index >> 12)
+#define CHUNK(index) ((int32_t)((uint32_t)index >> 12))
 
 /** This computes the offset of an index inside a chunk */
 #define OFFSET(index) ((int32_t)index & 0xFFF)

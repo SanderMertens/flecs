@@ -54,7 +54,12 @@
                     "init_w_with",
                     "init_w_with_w_name",
                     "init_w_with_w_scope",
-                    "init_w_with_w_name_scope"
+                    "init_w_with_w_name_scope",
+                    "is_valid",
+                    "is_recycled_valid",
+                    "is_0_valid",
+                    "is_junk_valid",
+                    "is_not_alive_valid"
                 ]
             }, {
             "id": "New",
