@@ -24,7 +24,7 @@ inline void ecs_dtor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
 }
 
 inline void ecs_copy_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
-    const ecs_entity_t*, void *, const void *, size_t size, int32_t count, void*)
+    const ecs_entity_t*, void *, const void *, size_t, int32_t, void*)
 {
     char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
@@ -34,7 +34,7 @@ inline void ecs_copy_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
 }
 
 inline void ecs_move_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
-    const ecs_entity_t*, void *, void *, size_t size, int32_t count, void*)
+    const ecs_entity_t*, void *, void *, size_t, int32_t, void*)
 {
     char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
@@ -43,10 +43,9 @@ inline void ecs_move_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
     ecs_os_free(path);
 }
 
-inline void ecs_copy_ctor_illegal(
-    ecs_world_t* w, ecs_entity_t id, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    const void *src_ptr, size_t size, int32_t count, void*)
+inline void ecs_copy_ctor_illegal(ecs_world_t* w, ecs_entity_t id, 
+    const EcsComponentLifecycle*, const ecs_entity_t*, const ecs_entity_t*, 
+    void *, const void *, size_t, int32_t, void*)
 {
     char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
@@ -55,10 +54,9 @@ inline void ecs_copy_ctor_illegal(
     ecs_os_free(path);
 }
 
-inline void ecs_move_ctor_illegal(
-    ecs_world_t* w, ecs_entity_t id, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, size_t size, int32_t count, void*)
+inline void ecs_move_ctor_illegal(ecs_world_t* w, ecs_entity_t id, 
+    const EcsComponentLifecycle*, const ecs_entity_t*, const ecs_entity_t*, 
+    void *, void *, size_t, int32_t, void*)
 {
     char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
