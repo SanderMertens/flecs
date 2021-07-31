@@ -124,9 +124,8 @@ typedef struct ecs_table_leaf_t {
 /** Flags for quickly checking for special properties of a table. */
 #define EcsTableHasBuiltins         1u    /**< Does table have builtin components */
 #define EcsTableIsPrefab            2u    /**< Does the table store prefabs */
-#define EcsTableHasBase             4u    /**< Does the table type has IsA */
+#define EcsTableHasIsA             4u    /**< Does the table type has IsA */
 #define EcsTableHasModule           8u    /**< Does the table have module data */
-#define EcsTableHasComponentData    16u   /**< Does the table have component data */
 #define EcsTableHasXor              32u   /**< Does the table type has XOR */
 #define EcsTableIsDisabled          64u   /**< Does the table type has EcsDisabled */
 #define EcsTableHasCtors            128u
@@ -144,8 +143,8 @@ typedef struct ecs_table_leaf_t {
 /* Composite constants */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
 #define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasSwitch | EcsTableHasDisabled)
-#define EcsTableHasAddActions       (EcsTableHasBase | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
-#define EcsTableHasRemoveActions    (EcsTableHasBase | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors)
+#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
+#define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors)
 
 /** Edge used for traversing the table graph. */
 typedef struct ecs_edge_t {

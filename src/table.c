@@ -301,7 +301,7 @@ bool is_override(
     ecs_table_t *table,
     ecs_entity_t comp)
 {
-    if (!(table->flags & EcsTableHasBase)) {
+    if (!(table->flags & EcsTableHasIsA)) {
         return false;
     }
 

@@ -783,9 +783,8 @@ typedef struct ecs_table_leaf_t {
 /** Flags for quickly checking for special properties of a table. */
 #define EcsTableHasBuiltins         1u    /**< Does table have builtin components */
 #define EcsTableIsPrefab            2u    /**< Does the table store prefabs */
-#define EcsTableHasBase             4u    /**< Does the table type has IsA */
+#define EcsTableHasIsA             4u    /**< Does the table type has IsA */
 #define EcsTableHasModule           8u    /**< Does the table have module data */
-#define EcsTableHasComponentData    16u   /**< Does the table have component data */
 #define EcsTableHasXor              32u   /**< Does the table type has XOR */
 #define EcsTableIsDisabled          64u   /**< Does the table type has EcsDisabled */
 #define EcsTableHasCtors            128u
@@ -803,8 +802,8 @@ typedef struct ecs_table_leaf_t {
 /* Composite constants */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
 #define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasSwitch | EcsTableHasDisabled)
-#define EcsTableHasAddActions       (EcsTableHasBase | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
-#define EcsTableHasRemoveActions    (EcsTableHasBase | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors)
+#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
+#define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors)
 
 /** Edge used for traversing the table graph. */
 typedef struct ecs_edge_t {
@@ -2643,7 +2642,7 @@ bool is_override(
     ecs_table_t *table,
     ecs_entity_t comp)
 {
-    if (!(table->flags & EcsTableHasBase)) {
+    if (!(table->flags & EcsTableHasIsA)) {
         return false;
     }
 
@@ -4697,7 +4696,7 @@ void* get_base_component(
     ecs_assert(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_PARAMETER, NULL);
 
     /* Table (and thus entity) does not have component, look for base */
-    if (!(table->flags & EcsTableHasBase)) {
+    if (!(table->flags & EcsTableHasIsA)) {
         return NULL;
     }
 
@@ -5415,7 +5414,7 @@ int32_t move_entity(
         /* If removed components were overrides, run OnSet systems for those, as 
          * the value of those components changed from the removed component to 
          * the value of component on the base entity */
-        if (removed && dst_table->flags & EcsTableHasBase) {
+        if (removed && dst_table->flags & EcsTableHasIsA) {
             flecs_run_monitors(world, dst_table, src_table->on_set_override, 
                 dst_row, 1, dst_table->on_set_override);          
         }
@@ -5656,7 +5655,7 @@ const ecs_entity_t* new_w_data(
             if (!size) {
                 continue;
             }
-            
+
             int16_t alignment = column->alignment;
             void *ptr = ecs_vector_first_t(column->data, size, alignment);
             ptr = ECS_OFFSET(ptr, size * row);
@@ -5906,7 +5905,7 @@ void flecs_run_add_actions(
 {
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (table->flags & EcsTableHasBase) {
+    if (table->flags & EcsTableHasIsA) {
         ecs_column_info_t cinfo[ECS_MAX_ADD_REMOVE];
 
         int added_count = get_column_info(
@@ -21898,91 +21897,94 @@ ecs_edge_t* get_edge(
 
 static
 void init_edges(
-    ecs_world_t * world,
     ecs_table_t * table)
 {
-    ecs_entity_t *entities = ecs_vector_first(table->type, ecs_entity_t);
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
     int32_t count = ecs_vector_count(table->type);
 
     table->lo_edges = NULL;
     table->hi_edges = NULL;
     
-    /* Make add edges to own components point to self */
+    /* Iterate components for table, initialize edges that point to self */
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];
+        ecs_id_t id = ids[i];
 
-        ecs_edge_t *edge = get_edge(table, e);
+        ecs_edge_t *edge = get_edge(table, id);
         ecs_assert(edge != NULL, ECS_INTERNAL_ERROR, NULL);
-        edge->add = table;
+        edge->add = table;    
+    }
+}
+
+static
+void init_flags(
+    ecs_world_t * world,
+    ecs_table_t * table)
+{
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    int32_t count = ecs_vector_count(table->type);
+    
+    /* Iterate components to initialize table flags */
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
 
         /* As we're iterating over the table components, also set the table
          * flags. These allow us to quickly determine if the table contains
          * data that needs to be handled in a special way, like prefabs or 
          * containers */
-        if (e <= EcsLastInternalComponentId) {
+        if (id <= EcsLastInternalComponentId) {
             table->flags |= EcsTableHasBuiltins;
         }
 
-        if (e == EcsModule) {
+        if (id == EcsModule) {
             table->flags |= EcsTableHasBuiltins;
             table->flags |= EcsTableHasModule;
         }
 
-        if (e == EcsPrefab) {
+        if (id == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
             table->flags |= EcsTableIsDisabled;
         }
 
-        if (e == EcsDisabled) {
+        /* If table contains disabled entities, mark it as disabled */
+        if (id == EcsDisabled) {
             table->flags |= EcsTableIsDisabled;
         }
 
-        if (e == ecs_id(EcsComponent)) {
-            table->flags |= EcsTableHasComponentData;
-        }
-
-        if (ECS_HAS_ROLE(e, XOR)) {
+        /* Does table have exclusive or columns */
+        if (ECS_HAS_ROLE(id, XOR)) {
             table->flags |= EcsTableHasXor;
         }
 
-        if (ECS_HAS_RELATION(e, EcsIsA)) {
-            table->flags |= EcsTableHasBase;
+        /* Does table have IsA relations */
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
+            table->flags |= EcsTableHasIsA;
         }
 
-        if (ECS_HAS_ROLE(e, SWITCH)) {
+        /* Does table have switch columns */
+        if (ECS_HAS_ROLE(id, SWITCH)) {
             table->flags |= EcsTableHasSwitch;
         }
 
-        if (ECS_HAS_ROLE(e, DISABLED)) {
+        /* Does table support component disabling */
+        if (ECS_HAS_ROLE(id, DISABLED)) {
             table->flags |= EcsTableHasDisabled;
         }   
 
-        ecs_entity_t obj = 0;
-
-        if (ECS_HAS_RELATION(e, EcsChildOf)) {
-            obj = ecs_pair_object(world, e);
+        /* Does table have ChildOf relations */
+        if (ECS_HAS_RELATION(id, EcsChildOf)) {
+            ecs_entity_t obj = ecs_pair_object(world, id);
             if (obj == EcsFlecs || obj == EcsFlecsCore || 
                 ecs_has_id(world, obj, EcsModule)) 
             {
+                /* If table contains entities that are inside one of the builtin
+                 * modules, it contains builtin entities */
                 table->flags |= EcsTableHasBuiltins;
                 table->flags |= EcsTableHasModule;
             }
-
-            e = ecs_pair(EcsChildOf, obj);
-        }       
-
-        if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
-            flecs_set_watch(world, ecs_pair_object(world, e));
-        }        
+        }      
     }
-
-    flecs_register_table(world, table);
-
-    /* Register component info flags for all columns */
-    flecs_table_notify(world, table, &(ecs_table_event_t){
-        .kind = EcsTableComponentInfo
-    });
 }
 
 static
@@ -22012,7 +22014,15 @@ void init_table(
     table->sw_column_count = switch_column_count(table);
     table->bs_column_count = bitset_column_count(table);
 
-    init_edges(world, table);
+    init_edges(table);
+    init_flags(world, table);
+
+    flecs_register_table(world, table);
+
+    /* Register component info flags for all columns */
+    flecs_table_notify(world, table, &(ecs_table_event_t){
+        .kind = EcsTableComponentInfo
+    });    
 }
 
 static

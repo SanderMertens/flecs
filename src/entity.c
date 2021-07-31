@@ -64,7 +64,7 @@ void* get_base_component(
     ecs_assert(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_PARAMETER, NULL);
 
     /* Table (and thus entity) does not have component, look for base */
-    if (!(table->flags & EcsTableHasBase)) {
+    if (!(table->flags & EcsTableHasIsA)) {
         return NULL;
     }
 
@@ -782,7 +782,7 @@ int32_t move_entity(
         /* If removed components were overrides, run OnSet systems for those, as 
          * the value of those components changed from the removed component to 
          * the value of component on the base entity */
-        if (removed && dst_table->flags & EcsTableHasBase) {
+        if (removed && dst_table->flags & EcsTableHasIsA) {
             flecs_run_monitors(world, dst_table, src_table->on_set_override, 
                 dst_row, 1, dst_table->on_set_override);          
         }
@@ -1023,7 +1023,7 @@ const ecs_entity_t* new_w_data(
             if (!size) {
                 continue;
             }
-            
+
             int16_t alignment = column->alignment;
             void *ptr = ecs_vector_first_t(column->data, size, alignment);
             ptr = ECS_OFFSET(ptr, size * row);
@@ -1273,7 +1273,7 @@ void flecs_run_add_actions(
 {
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (table->flags & EcsTableHasBase) {
+    if (table->flags & EcsTableHasIsA) {
         ecs_column_info_t cinfo[ECS_MAX_ADD_REMOVE];
 
         int added_count = get_column_info(

@@ -209,91 +209,94 @@ ecs_edge_t* get_edge(
 
 static
 void init_edges(
-    ecs_world_t * world,
     ecs_table_t * table)
 {
-    ecs_entity_t *entities = ecs_vector_first(table->type, ecs_entity_t);
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
     int32_t count = ecs_vector_count(table->type);
 
     table->lo_edges = NULL;
     table->hi_edges = NULL;
     
-    /* Make add edges to own components point to self */
+    /* Iterate components for table, initialize edges that point to self */
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];
+        ecs_id_t id = ids[i];
 
-        ecs_edge_t *edge = get_edge(table, e);
+        ecs_edge_t *edge = get_edge(table, id);
         ecs_assert(edge != NULL, ECS_INTERNAL_ERROR, NULL);
-        edge->add = table;
+        edge->add = table;    
+    }
+}
+
+static
+void init_flags(
+    ecs_world_t * world,
+    ecs_table_t * table)
+{
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    int32_t count = ecs_vector_count(table->type);
+    
+    /* Iterate components to initialize table flags */
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
 
         /* As we're iterating over the table components, also set the table
          * flags. These allow us to quickly determine if the table contains
          * data that needs to be handled in a special way, like prefabs or 
          * containers */
-        if (e <= EcsLastInternalComponentId) {
+        if (id <= EcsLastInternalComponentId) {
             table->flags |= EcsTableHasBuiltins;
         }
 
-        if (e == EcsModule) {
+        if (id == EcsModule) {
             table->flags |= EcsTableHasBuiltins;
             table->flags |= EcsTableHasModule;
         }
 
-        if (e == EcsPrefab) {
+        if (id == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
             table->flags |= EcsTableIsDisabled;
         }
 
-        if (e == EcsDisabled) {
+        /* If table contains disabled entities, mark it as disabled */
+        if (id == EcsDisabled) {
             table->flags |= EcsTableIsDisabled;
         }
 
-        if (e == ecs_id(EcsComponent)) {
-            table->flags |= EcsTableHasComponentData;
-        }
-
-        if (ECS_HAS_ROLE(e, XOR)) {
+        /* Does table have exclusive or columns */
+        if (ECS_HAS_ROLE(id, XOR)) {
             table->flags |= EcsTableHasXor;
         }
 
-        if (ECS_HAS_RELATION(e, EcsIsA)) {
-            table->flags |= EcsTableHasBase;
+        /* Does table have IsA relations */
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
+            table->flags |= EcsTableHasIsA;
         }
 
-        if (ECS_HAS_ROLE(e, SWITCH)) {
+        /* Does table have switch columns */
+        if (ECS_HAS_ROLE(id, SWITCH)) {
             table->flags |= EcsTableHasSwitch;
         }
 
-        if (ECS_HAS_ROLE(e, DISABLED)) {
+        /* Does table support component disabling */
+        if (ECS_HAS_ROLE(id, DISABLED)) {
             table->flags |= EcsTableHasDisabled;
         }   
 
-        ecs_entity_t obj = 0;
-
-        if (ECS_HAS_RELATION(e, EcsChildOf)) {
-            obj = ecs_pair_object(world, e);
+        /* Does table have ChildOf relations */
+        if (ECS_HAS_RELATION(id, EcsChildOf)) {
+            ecs_entity_t obj = ecs_pair_object(world, id);
             if (obj == EcsFlecs || obj == EcsFlecsCore || 
                 ecs_has_id(world, obj, EcsModule)) 
             {
+                /* If table contains entities that are inside one of the builtin
+                 * modules, it contains builtin entities */
                 table->flags |= EcsTableHasBuiltins;
                 table->flags |= EcsTableHasModule;
             }
-
-            e = ecs_pair(EcsChildOf, obj);
-        }       
-
-        if (ECS_HAS_RELATION(e, EcsChildOf) || ECS_HAS_RELATION(e, EcsIsA)) {
-            flecs_set_watch(world, ecs_pair_object(world, e));
-        }        
+        }      
     }
-
-    flecs_register_table(world, table);
-
-    /* Register component info flags for all columns */
-    flecs_table_notify(world, table, &(ecs_table_event_t){
-        .kind = EcsTableComponentInfo
-    });
 }
 
 static
@@ -323,7 +326,15 @@ void init_table(
     table->sw_column_count = switch_column_count(table);
     table->bs_column_count = bitset_column_count(table);
 
-    init_edges(world, table);
+    init_edges(table);
+    init_flags(world, table);
+
+    flecs_register_table(world, table);
+
+    /* Register component info flags for all columns */
+    flecs_table_notify(world, table, &(ecs_table_event_t){
+        .kind = EcsTableComponentInfo
+    });    
 }
 
 static
