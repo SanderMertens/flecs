@@ -4094,6 +4094,9 @@ bool ecs_commit(
 #ifdef FLECS_MODULE
 #include "flecs/addons/module.h"
 #endif
+#ifdef FLECS_PLECS
+#include "flecs/addons/plecs.h"
+#endif
 #ifdef FLECS_PARSER
 #include "flecs/addons/parser.h"
 #endif
@@ -4108,9 +4111,6 @@ bool ecs_commit(
 #endif
 #ifdef FLECS_STATS
 #include "flecs/addons/stats.h"
-#endif
-#ifdef FLECS_PLECS
-#include "flecs/addons/plecs.h"
 #endif
 
 #ifdef __cplusplus

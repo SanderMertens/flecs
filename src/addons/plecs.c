@@ -1,7 +1,8 @@
-#include "../private_api.h"
-#include "errno.h"
+#include "flecs.h"
 
 #ifdef FLECS_PLECS
+
+#include "../private_api.h"
 
 #define TOK_NEWLINE '\n'
 

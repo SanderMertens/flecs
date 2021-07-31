@@ -14,6 +14,7 @@
 #define FLECS_OS_API_H
 
 #include <stdarg.h>
+#include <errno.h>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -392,7 +393,7 @@ FLECS_API
 void ecs_os_dbg(const char *fmt, ...);
 
 FLECS_API
-const char* ecs_os_strerror(int errno);
+const char* ecs_os_strerror(int err);
 
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort_()

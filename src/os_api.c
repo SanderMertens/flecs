@@ -316,11 +316,11 @@ bool ecs_os_has_modules(void) {
 static char error_str[255];
 #endif
 
-const char* ecs_os_strerror(int errno) {
+const char* ecs_os_strerror(int err) {
 #if defined(_MSC_VER)
-    strerror_s(error_str, 255, errno);
+    strerror_s(error_str, 255, err);
     return error_str;
 #else
-    return strerror(errno);
+    return strerror(err);
 #endif
 }

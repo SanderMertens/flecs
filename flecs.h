@@ -1621,6 +1621,7 @@ bool ecs_strbuf_list_appendstr(
 #define FLECS_OS_API_H
 
 #include <stdarg.h>
+#include <errno.h>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -1999,7 +2000,7 @@ FLECS_API
 void ecs_os_dbg(const char *fmt, ...);
 
 FLECS_API
-const char* ecs_os_strerror(int errno);
+const char* ecs_os_strerror(int err);
 
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort_()
@@ -8208,6 +8209,88 @@ void ecs_bulk_delete(
 #endif
 #ifdef FLECS_MODULE
 #endif
+#ifdef FLECS_PLECS
+/**
+ * @file pecs.h
+ * @brief Plecs addon.
+ *
+ * Plecs is a small data definition language for instantiating entities that
+ * reuses the existing flecs query parser. The following examples illustrate
+ * how a plecs snippet translates to regular flecs operations:
+ *
+ * Plecs:
+ *   Entity
+ * C code:
+ *   ecs_entity_t Entity = ecs_set_name(world, 0, "Entity");
+ *
+ * Plecs:
+ *   Position(Entity)
+ * C code:
+ *   ecs_entity_t Position = ecs_set_name(world, 0, "Position"); 
+ *   ecs_entity_t Entity = ecs_set_name(world, 0, "Entity");
+ *   ecs_add_id(world, Entity, Position);
+ *
+ * Plecs:
+ *   Likes(Entity, Apples)
+ * C code:
+ *   ecs_entity_t Likes = ecs_set_name(world, 0, "Likes"); 
+ *   ecs_entity_t Apples = ecs_set_name(world, 0, "Apples"); 
+ *   ecs_entity_t Entity = ecs_set_name(world, 0, "Entity");
+ *   ecs_add_pair(world, Entity, Likes, Apples);
+ *
+ * A plecs string may contain multiple statements, separated by a newline:
+ *   Likes(Entity, Apples)
+ *   Likes(Entity, Pears)
+ *   Likes(Entity, Bananas)
+ */
+
+#ifdef FLECS_PLECS
+
+#define FLECS_PARSER
+
+#ifndef FLECS_PLECS_H
+#define FLECS_PLECS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Parse plecs string.
+ * This parses a plecs string and instantiates the entities in the world.
+ *
+ * @param world The world.
+ * @param name The script name (typically the file).
+ * @param str The plecs string.
+ * @return Zero if success, non-zero otherwise.
+ */
+FLECS_API
+int ecs_plecs_from_str(
+    ecs_world_t *world,
+    const char *name,
+    const char *str);
+
+/** Parse plecs file.
+ * This parses a plecs file and instantiates the entities in the world. This
+ * operation is equivalent to loading the file contents and passing it to
+ * ecs_plecs_from_str.
+ *
+ * @param world The world.
+ * @param file The plecs file name.
+ * @return Zero if success, non-zero otherwise.
+ */
+FLECS_API
+int ecs_plecs_from_file(
+    ecs_world_t *world,
+    const char *filename);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
+#endif
 #ifdef FLECS_PARSER
 /**
  * @file parser.h
@@ -8975,86 +9058,6 @@ FLECS_API void ecs_gauge_reduce(
     int32_t t_dst,
     ecs_gauge_t *src,
     int32_t t_src);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#endif
-#endif
-#ifdef FLECS_PLECS
-/**
- * @file pecs.h
- * @brief Plecs addon.
- *
- * Plecs is a small data definition language for instantiating entities that
- * reuses the existing flecs query parser. The following examples illustrate
- * how a plecs snippet translates to regular flecs operations:
- *
- * Plecs:
- *   Entity
- * C code:
- *   ecs_entity_t Entity = ecs_set_name(world, 0, "Entity");
- *
- * Plecs:
- *   Position(Entity)
- * C code:
- *   ecs_entity_t Position = ecs_set_name(world, 0, "Position"); 
- *   ecs_entity_t Entity = ecs_set_name(world, 0, "Entity");
- *   ecs_add_id(world, Entity, Position);
- *
- * Plecs:
- *   Likes(Entity, Apples)
- * C code:
- *   ecs_entity_t Likes = ecs_set_name(world, 0, "Likes"); 
- *   ecs_entity_t Apples = ecs_set_name(world, 0, "Apples"); 
- *   ecs_entity_t Entity = ecs_set_name(world, 0, "Entity");
- *   ecs_add_pair(world, Entity, Likes, Apples);
- *
- * A plecs string may contain multiple statements, separated by a newline:
- *   Likes(Entity, Apples)
- *   Likes(Entity, Pears)
- *   Likes(Entity, Bananas)
- */
-
-#ifdef FLECS_PLECS
-
-#ifndef FLECS_PLECS_H
-#define FLECS_PLECS_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** Parse plecs string.
- * This parses a plecs string and instantiates the entities in the world.
- *
- * @param world The world.
- * @param name The script name (typically the file).
- * @param str The plecs string.
- * @return Zero if success, non-zero otherwise.
- */
-FLECS_API
-int ecs_plecs_from_str(
-    ecs_world_t *world,
-    const char *name,
-    const char *str);
-
-/** Parse plecs file.
- * This parses a plecs file and instantiates the entities in the world. This
- * operation is equivalent to loading the file contents and passing it to
- * ecs_plecs_from_str.
- *
- * @param world The world.
- * @param file The plecs file name.
- * @return Zero if success, non-zero otherwise.
- */
-FLECS_API
-int ecs_plecs_from_file(
-    ecs_world_t *world,
-    const char *filename);
 
 #ifdef __cplusplus
 }
