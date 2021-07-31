@@ -61,13 +61,14 @@ int main(int argc, char *argv[]) {
          * ecs_get_name function, since it tries to get the id from the world, and
          * we just deleted the entities from the world. Therefore, we should get
          * the name from the snapshot directly */
-        int32_t id_index = ecs_type_index_of(table_type, ecs_typeid(EcsName));
+        int32_t id_index = ecs_type_index_of(table_type,
+            ecs_pair(ecs_id(EcsIdentifier), EcsName));
 
         /* Get pointers to the Position and Velocity columns with the obtained
          * column indices */
         Position *p = ecs_table_column(&it, p_index);
         Velocity *v = ecs_table_column(&it, v_index);
-        EcsName *id = ecs_table_column(&it, id_index);
+        EcsIdentifier *id = ecs_table_column(&it, id_index);
 
         /* Now we can iterate the component data as usual */
         for (int i = 0; i < it.count; i ++) {

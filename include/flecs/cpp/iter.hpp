@@ -459,6 +459,16 @@ public:
             sizeof(A), col)), static_cast<std::size_t>(m_iter->count), false);
     }
 
+    template <typename T>
+    flecs::column<T> table_column(flecs::id_t obj) const {
+        auto col = ecs_iter_find_column(m_iter, 
+            ecs_pair(_::cpp_type<T>::id(), obj));
+        ecs_assert(col != -1, ECS_INVALID_PARAMETER, NULL);
+
+        return flecs::column<T>(static_cast<T*>(ecs_iter_column_w_size(m_iter,
+            sizeof(T), col)), static_cast<std::size_t>(m_iter->count), false);
+    }    
+
 private:
     /* Get term, check if correct type is used */
     template <typename T, typename A = actual_type_t<T>>

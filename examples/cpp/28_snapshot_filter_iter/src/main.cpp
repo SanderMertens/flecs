@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
         /* We can't use the name() method anymore to fetch the entity name as
          * we have removed the entities from the world. Instead, we must get the
          * name directly from the table in the snapshot */
-        auto name = it.table_column<flecs::Name>();
+        auto name = it.table_column<flecs::Identifier>(flecs::Name);
 
         for (auto row : it) {
             p[row].x += v[row].x;
