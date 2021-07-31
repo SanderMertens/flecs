@@ -1313,7 +1313,8 @@ ecs_type_t flecs_bootstrap_type(
     });
 
 #define flecs_bootstrap_tag(world, name)\
-    ecs_set(world, name, EcsName, {.value = (char*)&#name[ecs_os_strlen("Ecs")], .symbol = (char*)#name});\
+    ecs_set_name(world, name, (char*)&#name[ecs_os_strlen("Ecs")]);\
+    ecs_set_symbol(world, name, #name);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world))
 
 
@@ -5898,10 +5899,10 @@ void flecs_run_add_actions(
     bool run_on_set)
 {
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(added->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
     if (table->flags & EcsTableHasBase) {
         ecs_column_info_t cinfo[ECS_MAX_ADD_REMOVE];
+
         int added_count = get_column_info(
             world, table, added, cinfo, get_all);
 
@@ -5928,7 +5929,6 @@ void flecs_run_remove_actions(
     ecs_ids_t * removed)
 {
     ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(removed->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
     if (count) {
         if (table->flags & EcsTableHasUnSet) {
@@ -6593,13 +6593,13 @@ void traverse_add_remove(
     }
 
     if (desc->symbol) {
-        EcsName *name_ptr = ecs_get_mut(world, result, EcsName, NULL);
-        if (name_ptr->symbol) {
-            ecs_assert(!ecs_os_strcmp(desc->symbol, name_ptr->symbol),
+        EcsSymbol *sym_ptr = ecs_get_mut(world, result, EcsSymbol, NULL);
+        if (sym_ptr->value) {
+            ecs_assert(!ecs_os_strcmp(desc->symbol, sym_ptr->value),
                 ECS_INCONSISTENT_NAME, desc->symbol);
         } else {
-            name_ptr->symbol = ecs_os_strdup(desc->symbol);
-            ecs_modified(world, result, EcsName);
+            ecs_os_strset(&sym_ptr->value, desc->symbol);
+            ecs_modified(world, result, EcsSymbol);
         }
     }
 
@@ -6678,11 +6678,11 @@ void deferred_add_remove(
 
     /* Currently it's not supported to set the symbol from a deferred context */
     if (desc->symbol) {
-        const EcsName *ptr = ecs_get(world, entity, EcsName);
+        const EcsSymbol *ptr = ecs_get(world, entity, EcsSymbol);
         (void)ptr;
         
         ecs_assert(ptr != NULL, ECS_UNSUPPORTED, NULL);
-        ecs_assert(!ecs_os_strcmp(ptr->symbol, desc->symbol), 
+        ecs_assert(!ecs_os_strcmp(ptr->value, desc->symbol), 
             ECS_UNSUPPORTED, NULL);
     }
 }
@@ -7055,60 +7055,49 @@ void remove_from_table(
     ecs_world_t *world,
     ecs_table_t *src_table,
     ecs_id_t id,
-    int32_t column)
+    int32_t column,
+    int32_t column_count)
 {
     ecs_entity_t removed_buffer[ECS_MAX_ADD_REMOVE];
-    ecs_ids_t removed = { .array = removed_buffer };    
-    ecs_table_t *dst_table = src_table;
-    bool is_pair = ECS_HAS_ROLE(id, PAIR);
+    ecs_ids_t removed = { .array = removed_buffer };
 
+    if (column_count > ECS_MAX_ADD_REMOVE) {
+        removed.array = ecs_os_malloc_n(ecs_id_t, column_count);
+    }
+
+    ecs_table_t *dst_table = src_table; 
     ecs_id_t *ids = ecs_vector_first(src_table->type, ecs_id_t);
 
     /* If id is pair but the column pointed to is not a pair, the record is
      * pointing to an instance of the id that has a (non-PAIR) role. */
-    if (ECS_HAS_ROLE(id, PAIR) && !ECS_HAS_ROLE(ids[column], PAIR)) {
-        ecs_assert((ids[column] & ECS_ROLE_MASK) != 0, 
-            ECS_INTERNAL_ERROR, NULL);
+    bool is_pair = ECS_HAS_ROLE(id, PAIR);     
+    bool is_role = is_pair && !ECS_HAS_ROLE(ids[column], PAIR);
+    ecs_assert(!is_role || ((ids[column] & ECS_ROLE_MASK) != 0), 
+        ECS_INTERNAL_ERROR, NULL);
+    bool is_wildcard = ecs_id_is_wildcard(id);
 
-        int32_t i, count = ecs_vector_count(src_table->type);
-        ecs_entity_t entity = ECS_PAIR_RELATION(id);
+    int32_t i, count = ecs_vector_count(src_table->type), removed_count = 0;
+    ecs_entity_t entity = ECS_PAIR_RELATION(id);
 
-        /* Find all instances of the id without the role */
-        for (i = column; i < count; i ++) {
-            ecs_id_t e = ids[i];
+    for (i = column; i < count; i ++) {
+        ecs_id_t e = ids[i];
+
+        if (is_role) {
             if ((e & ECS_COMPONENT_MASK) != entity) {
                 continue;
             }
-
-            ecs_ids_t to_remove = { .array = &e, .count = 1 };
-            dst_table = flecs_table_traverse_remove(
-                world, dst_table, &to_remove, &removed);
-        }    
-
-    /* If id is pair, ensure dst_table has no instances of the relation */
-    } else if (is_pair && ECS_PAIR_RELATION(id) != EcsWildcard) {
-        int32_t i, count = ecs_vector_count(src_table->type);
-        
-        for (i = column; i < count; i ++) {
-            ecs_id_t e = ids[i];
-            if (ECS_PAIR_RELATION(id) != ECS_PAIR_RELATION(e)) {
-                break;
-            }
-
-            ecs_ids_t to_remove = { .array = &e, .count = 1 };
-            dst_table = flecs_table_traverse_remove(
-                world, dst_table, &to_remove, &removed);
-        }
-    } else {
-        /* If pair has a relationship wildcard, this removes a relationship for
-         * a specific object. Get the relation + object to delete */
-        if (is_pair) {
-            id = ids[column];
+        } else if (is_wildcard && !ecs_id_match(e, id)) {
+            continue;
         }
 
-        ecs_ids_t to_remove = { .array = &id, .count = 1 };
+        ecs_ids_t to_remove = { .array = &e, .count = 1 };
         dst_table = flecs_table_traverse_remove(
             world, dst_table, &to_remove, &removed);
+        
+        removed_count ++;
+        if (removed_count == column_count) {
+            break;
+        }
     }
 
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -7129,6 +7118,10 @@ void remove_from_table(
             ecs_data_t *dst_data = flecs_table_get_data(dst_table);
             flecs_table_merge(world, dst_table, src_table, dst_data, src_data);
         }
+    }
+
+    if (column_count > ECS_MAX_ADD_REMOVE) {
+        ecs_os_free(removed.array);
     }
 }
 
@@ -7204,6 +7197,7 @@ void on_delete_object_action(
         /* Execute the on delete action */
         while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
             ecs_table_t *table = tr->table;
+
             if (!ecs_table_count(table)) {
                 continue;
             }
@@ -7220,7 +7214,8 @@ void on_delete_object_action(
             if (idrr) {
                 ecs_entity_t action = idrr->on_delete_object;
                 if (!action || action == EcsRemove) {
-                    remove_from_table(world, table, id, tr->column);
+                    remove_from_table(world, table, id, tr->column, tr->count);
+                    it = ecs_map_iter(table_index);
                 } else if (action == EcsDelete) {
                     delete_objects(world, table);
                 } else if (action == EcsThrow) {
@@ -7229,7 +7224,8 @@ void on_delete_object_action(
             } else {
                 /* If no record was found for the relation, assume the default
                  * action which is to remove the relationship */
-                remove_from_table(world, table, id, tr->column);
+                remove_from_table(world, table, id, tr->column, tr->count);
+                it = ecs_map_iter(table_index);
             }
         }
 
@@ -7260,7 +7256,7 @@ void on_delete_relation_action(
             ecs_entity_t action = idr->on_delete;
 
             if (!action || action == EcsRemove) {
-                remove_from_table(world, table, id, tr->column);
+                remove_from_table(world, table, id, tr->column, tr->count);
             } else if (action == EcsDelete) {
                 delete_objects(world, table);
             }
@@ -7997,10 +7993,26 @@ const char* ecs_get_name(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    const EcsName *id = ecs_get(world, entity, EcsName);
+    const EcsName *ptr = ecs_get(world, entity, EcsName);
 
-    if (id) {
-        return id->value;
+    if (ptr) {
+        return ptr->value;
+    } else {
+        return NULL;
+    }
+}
+
+const char* ecs_get_symbol(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
+    const EcsSymbol *ptr = ecs_get(world, entity, EcsSymbol);
+
+    if (ptr) {
+        return ptr->value;
     } else {
         return NULL;
     }
@@ -8017,7 +8029,23 @@ ecs_entity_t ecs_set_name(
         entity = ecs_new_id(world);
     }
     
-    ecs_set(world, entity, EcsName, {(char*)name, .symbol = NULL});
+    ecs_set(world, entity, EcsName, {(char*)name});
+
+    return entity;
+}
+
+ecs_entity_t ecs_set_symbol(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!entity) {
+        entity = ecs_new_id(world);
+    }
+    
+    ecs_set(world, entity, EcsSymbol, {(char*)name});
 
     return entity;
 }
@@ -10719,433 +10747,6 @@ void* _ecs_sparse_get(
     return _flecs_sparse_get(sparse, elem_size, id);
 }
 
-#ifdef FLECS_READER_WRITER
-
-
-static
-void ecs_name_writer_alloc(
-    ecs_name_writer_t *writer,
-    int32_t len)
-{
-    writer->len = len;
-    if (writer->len > writer->max_len) {
-        ecs_os_free(writer->name);
-        writer->name = ecs_os_malloc(writer->len);
-        writer->max_len = writer->len;
-    }
-    writer->written = 0;
-}
-
-static
-bool ecs_name_writer_write(
-    ecs_name_writer_t *writer,
-    const char *buffer)
-{
-    ecs_size_t written = writer->len - writer->written;
-    char *name_ptr = ECS_OFFSET(writer->name, writer->written);
-
-    ecs_assert(name_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(buffer != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (written >= ECS_SIZEOF(int32_t)) {
-        ecs_os_memcpy(name_ptr, buffer, ECS_SIZEOF(int32_t));
-        writer->written += ECS_SIZEOF(int32_t);
-        return writer->written != writer->len;
-    } else {
-        ecs_os_memcpy(name_ptr, buffer, written);
-        writer->written += written;
-        return false;
-    }
-}
-
-static
-void ecs_name_writer_reset(
-    ecs_name_writer_t *writer)
-{
-    writer->name = NULL;
-    writer->max_len = 0;
-    writer->len = 0;
-}
-
-static
-void ecs_table_writer_register_table(
-    ecs_writer_t *stream)
-{
-    ecs_world_t *world = stream->world;
-    ecs_table_writer_t *writer = &stream->table;
-    ecs_type_t type = ecs_type_find(world, writer->type_array, writer->type_count);
-    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    writer->table = ecs_table_from_type(world, type);
-    ecs_assert(writer->table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_os_free(writer->type_array);
-    writer->type_array = NULL;
-
-    ecs_data_t *data = flecs_table_get_or_create_data(writer->table);
-    if (data->entities) {
-        /* Remove any existing entities from entity index */
-        ecs_vector_each(data->entities, ecs_entity_t, e_ptr, {
-            ecs_eis_delete(world, *e_ptr);
-            /* Don't increase generation to ensure the restored data exactly
-             * matches the data in the blob */
-            ecs_eis_set_generation(world, *e_ptr);
-        });
-      
-        return;
-    } else {
-        /* Set size of table to 0. This will initialize columns */
-        flecs_table_set_size(world, writer->table, data, 0);
-    }
-
-    ecs_assert(writer->table != NULL, ECS_INTERNAL_ERROR, NULL);
-}
-
-static
-void ecs_table_writer_finalize_table(
-    ecs_writer_t *stream)
-{
-    ecs_world_t *world = stream->world;
-    ecs_table_writer_t *writer = &stream->table;
-
-    /* Register entities in table in entity index */
-    ecs_data_t *data = flecs_table_get_data(writer->table);
-    ecs_vector_t *entity_vector = data->entities;
-    ecs_entity_t *entities = ecs_vector_first(entity_vector, ecs_entity_t);
-    ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
-    int32_t i, count = ecs_vector_count(entity_vector);
-
-    for (i = 0; i < count; i ++) {
-        ecs_record_t *record_ptr = ecs_eis_get_any(world, entities[i]);
-
-        if (record_ptr) {
-            if (record_ptr->table != writer->table) {
-                ecs_table_t *table = record_ptr->table;      
-                ecs_data_t *table_data = flecs_table_get_data(table);
-
-                ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-                flecs_table_delete(world, 
-                    table, table_data, record_ptr->row - 1, false);
-            }
-        } else {
-            record_ptr = ecs_eis_ensure(world, entities[i]);
-        }
-
-        record_ptr->row = i + 1;
-        record_ptr->table = writer->table;
-
-        record_ptrs[i] = record_ptr;
-
-        /* Strip entity from generation */
-        ecs_entity_t id = entities[i] & ECS_ENTITY_MASK;
-        if (id >= world->stats.last_id) {
-            world->stats.last_id = id + 1;
-        }
-        if (id < ECS_HI_COMPONENT_ID) {
-            if (id >= world->stats.last_component_id) {
-                world->stats.last_component_id = id + 1;
-            }
-        }
-    }
-}
-
-static
-void ecs_table_writer_prepare_column(
-    ecs_writer_t *stream,
-    int32_t size)
-{
-    ecs_table_writer_t *writer = &stream->table;
-    ecs_data_t *data = flecs_table_get_or_create_data(writer->table);
-        
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (writer->column_index) {
-        ecs_column_t *column = &data->columns[writer->column_index - 1];
-
-        if (size) {
-            int32_t old_count = ecs_vector_count(column->data);
-            _ecs_vector_set_count(&column->data, ECS_VECTOR_U(size, 0), writer->row_count);
-
-            /* Initialize new elements to 0 */
-            void *buffer = ecs_vector_first_t(column->data, size, 0);
-            ecs_os_memset(ECS_OFFSET(buffer, old_count * size), 0, 
-                (writer->row_count - old_count) * size);
-        }
-
-        writer->column_vector = column->data;
-        writer->column_size = flecs_to_i16(size);
-    } else {
-        ecs_vector_set_count(
-            &data->entities, ecs_entity_t, writer->row_count);
-
-        ecs_vector_set_count(
-            &data->record_ptrs, ecs_record_t*, writer->row_count);            
-
-        writer->column_vector = data->entities;
-        writer->column_size = ECS_SIZEOF(ecs_entity_t);      
-    }
-
-    writer->column_data = ecs_vector_first_t(writer->column_vector,
-        writer->column_size, 
-        writer->column_alignment);
-        
-    writer->column_written = 0;
-}
-
-static
-void ecs_table_writer_next(
-    ecs_writer_t *stream)
-{
-    ecs_table_writer_t *writer = &stream->table;
-
-    switch(writer->state) {
-    case EcsTableTypeSize:
-        writer->state = EcsTableType;
-        break;
-
-    case EcsTableType:
-        writer->state = EcsTableSize;
-        break;
-
-    case EcsTableSize:
-        writer->state = EcsTableColumn;
-        break;
-
-    case EcsTableColumnHeader:
-        writer->state = EcsTableColumnSize;
-        break;
-
-    case EcsTableColumnSize:
-        writer->state = EcsTableColumnData;
-        break;
-
-    case EcsTableColumnNameHeader:
-        writer->state = EcsTableColumnNameLength;
-        break;
-
-    case EcsTableColumnNameLength:
-        writer->state = EcsTableColumnName;
-        break;
-
-    case EcsTableColumnName:
-        writer->row_index ++;
-        if (writer->row_index < writer->row_count) {
-            writer->state = EcsTableColumnNameLength;
-            break;
-        }
-        // fall through
-
-    case EcsTableColumnData:
-        writer->column_index ++;
-
-        if (writer->column_index > writer->table->column_count) {
-            ecs_table_writer_finalize_table(stream);
-            stream->state = EcsStreamHeader;
-            writer->column_written = 0;
-            writer->state = EcsStreamHeader;
-            writer->column_index = 0;
-            writer->row_index = 0;
-        } else {
-            writer->state = EcsTableColumn;
-        }
-        break;
-
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-        break;
-    }
-}
-
-static
-ecs_size_t ecs_table_writer(
-    const char *buffer,
-    ecs_size_t size,
-    ecs_writer_t *stream)
-{
-    ecs_table_writer_t *writer = &stream->table;
-    ecs_size_t written = 0;
-
-    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size >= ECS_SIZEOF(int32_t), ECS_INVALID_PARAMETER, NULL);
-
-    if (!writer->state) {
-        writer->state = EcsTableTypeSize;
-    }
-
-    switch(writer->state) {
-    case EcsTableTypeSize:
-        ecs_os_memcpy(&writer->type_count, buffer, ECS_SIZEOF(int32_t));
-        writer->type_array = ecs_os_malloc(writer->type_count * ECS_SIZEOF(ecs_entity_t));
-        writer->type_max_count = writer->type_count;
-        writer->type_written = 0;
-        written = ECS_SIZEOF(int32_t);
-        ecs_table_writer_next(stream);
-        break;
-
-    case EcsTableType:
-        ecs_os_memcpy(ECS_OFFSET(writer->type_array, writer->type_written), buffer, ECS_SIZEOF(int32_t));
-        written = ECS_SIZEOF(int32_t);
-        writer->type_written += written;
-
-        if (writer->type_written == (writer->type_count * ECS_SIZEOF(ecs_entity_t))) {
-            ecs_table_writer_register_table(stream);
-            ecs_table_writer_next(stream);
-        }
-        break;
-
-    case EcsTableSize:
-        ecs_os_memcpy(&writer->row_count, buffer, ECS_SIZEOF(int32_t));
-        written += ECS_SIZEOF(int32_t);
-        ecs_table_writer_next(stream);
-        break;
-
-    case EcsTableColumn:
-        ecs_os_memcpy(&writer->state, buffer, ECS_SIZEOF(ecs_blob_header_kind_t));
-        if (writer->state != EcsTableColumnHeader &&
-            writer->state != EcsTableColumnNameHeader)
-        {
-            stream->error = ECS_DESERIALIZE_FORMAT_ERROR;
-            goto error;
-        }
-        written += ECS_SIZEOF(int32_t);
-        break;
-
-    case EcsTableColumnHeader:
-    case EcsTableColumnSize: {
-        int32_t column_size;
-        memcpy(&column_size, buffer, ECS_SIZEOF(int32_t));
-        ecs_table_writer_prepare_column(stream, column_size);
-        ecs_table_writer_next(stream);
-
-        written += ECS_SIZEOF(int32_t);
-        ecs_table_writer_next(stream);
-
-        /* If column has no size, there will be no column data, so skip to the
-         * next state. */
-        if (!writer->column_size) {
-            ecs_table_writer_next(stream);
-        }
-        break;
-    }
-
-    case EcsTableColumnData: {
-        written = writer->row_count * writer->column_size - writer->column_written;
-        if (written > size) {
-            written = size;
-        }
-
-        ecs_os_memcpy(ECS_OFFSET(writer->column_data, writer->column_written), buffer, written);
-        writer->column_written += written;
-        written = (((written - 1) / ECS_SIZEOF(int32_t)) + 1) * ECS_SIZEOF(int32_t);
-
-        if (writer->column_written == writer->row_count * writer->column_size) {
-            ecs_table_writer_next(stream);
-        }
-        break;
-    }
-
-    case EcsTableColumnNameHeader:
-        ecs_table_writer_prepare_column(stream, ECS_SIZEOF(EcsName));
-        ecs_table_writer_next(stream);
-        // fall through
-
-    case EcsTableColumnNameLength: {
-        int32_t name_size;
-        memcpy(&name_size, buffer, ECS_SIZEOF(int32_t));
-        ecs_name_writer_alloc(&writer->name, name_size);
-        written = ECS_SIZEOF(int32_t);
-        ecs_table_writer_next(stream);
-        break;
-    }
-
-    case EcsTableColumnName: {
-        written = ECS_SIZEOF(int32_t);
-        if (!ecs_name_writer_write(&writer->name, buffer)) {
-            EcsName *name_ptr = &((EcsName*)writer->column_data)[writer->row_index];
-            
-            ecs_os_strset(&name_ptr->value, writer->name.name);
-
-            /* Don't overwrite entity name */
-            ecs_name_writer_reset(&writer->name);   
-
-            ecs_table_writer_next(stream);
-        }
-        break;
-    }
-
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-        break;
-    }
-
-    ecs_assert(written <= size, ECS_INTERNAL_ERROR, NULL);
-
-    return written;
-error:
-    return -1;
-}
-
-int ecs_writer_write(
-    const char *buffer,
-    int32_t size,
-    ecs_writer_t *writer)
-{
-    int32_t written = 0, total_written = 0, remaining = size;
-
-    if (!size) {
-        return 0;
-    }
-
-    ecs_assert(size >= ECS_SIZEOF(int32_t), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(size % 4 == 0, ECS_INVALID_PARAMETER, NULL);
-
-    while (total_written < size) {
-        if (writer->state == EcsStreamHeader) {
-            writer->state = *(ecs_blob_header_kind_t*)ECS_OFFSET(buffer, 
-                total_written);
-
-            if (writer->state != EcsTableHeader) {
-                writer->error = ECS_DESERIALIZE_FORMAT_ERROR;
-                goto error;
-            }
-
-            written = ECS_SIZEOF(ecs_blob_header_kind_t);
-        } else
-        if (writer->state == EcsTableHeader) {
-            written = ecs_table_writer(ECS_OFFSET(buffer, total_written), 
-                remaining, writer);
-        }
-
-        if (!written) {
-            break;
-        }
-
-        if (written == (ecs_size_t)-1) {
-            goto error;
-        }
-
-        remaining -= written;
-        total_written += written;    
-    }
-
-    ecs_assert(total_written <= size, ECS_INTERNAL_ERROR, NULL);
-
-    return total_written == 0;
-error:
-    return -1;
-}
-
-ecs_writer_t ecs_writer_init(
-    ecs_world_t *world)
-{
-    return (ecs_writer_t){
-        .world = world,
-        .state = EcsStreamHeader,
-    };
-}
-
-#endif
-
 #ifdef FLECS_DEPRECATED
 
 
@@ -11700,12 +11301,12 @@ ecs_entity_t ecs_module_init(
     char *module_path = ecs_module_path_from_c(name);
     ecs_entity_t e = ecs_new_from_fullpath(world, module_path);
 
-    EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
-    ecs_os_free(name_ptr->symbol);
+    EcsSymbol *sym_ptr = ecs_get_mut(world, e, EcsSymbol, NULL);
+    ecs_os_free(sym_ptr->value);
 
     /* Assign full path to symbol. This allows for modules to be redefined
      * in C++ without causing name conflicts */
-    name_ptr->symbol = module_path;
+    sym_ptr->value = module_path;
 
     ecs_component_desc_t private_desc = *desc;
     private_desc.entity.entity = e;
@@ -12806,395 +12407,6 @@ void ecs_dbg_entity(
         dbg_out->is_watched = info.is_watched;
         dbg_out->type = info.table ? info.table->type : NULL;
     }
-}
-
-#endif
-
-#ifdef FLECS_READER_WRITER
-
-
-static
-bool iter_table(
-    ecs_table_reader_t *reader,
-    ecs_iter_t *it,
-    ecs_iter_next_action_t next,
-    bool skip_builtin)    
-{
-    bool table_found = false;
-
-    while (next(it)) {
-        ecs_table_t *table = it->table->table;
-
-        reader->table = table;
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_data_t *data = flecs_table_get_data(table);
-        reader->data = data;
-        reader->table_index ++;
-
-        if (skip_builtin && reader->table->flags & EcsTableHasBuiltins) {
-            continue;
-        }
-
-        if (!data || !it->count) {
-            continue;
-        }
-
-        table_found = true;
-        break;
-    }
-
-    return table_found;
-}
-
-static
-void next_table(
-    ecs_reader_t *stream,
-    ecs_table_reader_t *reader)
-{    
-    int32_t count;
-
-    /* First iterate all component tables, as component data must always be
-     * stored in a blob before anything else */
-    bool table_found = iter_table(
-        reader, &stream->component_iter, stream->component_next, false);
-
-    /* If all components have been added, add the regular data tables. Make sure
-     * to not add component tables again, in case the provided iterator also
-     * matches component tables. */
-    if (!table_found) {
-        table_found = iter_table(
-            reader, &stream->data_iter, stream->data_next, true);
-        count = stream->data_iter.count;
-    } else {
-        count = stream->component_iter.count;
-    }
-
-    if (!table_found) {
-        stream->state = EcsFooterSegment;
-    } else {
-        reader->type = reader->table->type;
-        reader->total_columns = reader->table->column_count + 1;
-        reader->column_index = 0;
-        reader->row_count = count;
-    }
-}
-
-static
-void ecs_table_reader_next(
-    ecs_reader_t *stream)
-{
-    ecs_table_reader_t *reader = &stream->table;
-
-    switch(reader->state) {
-    case EcsTableHeader:
-        reader->state = EcsTableTypeSize;
-        break;
-    case EcsTableTypeSize:
-        reader->state = EcsTableType;
-        reader->type_written = 0;
-        break;
-
-    case EcsTableType:
-        reader->state = EcsTableSize;
-        break;
-
-    case EcsTableSize: {
-        reader->state = EcsTableColumnHeader;
-        break;
-    }
-
-    case EcsTableColumnHeader:
-        reader->state = EcsTableColumnSize;
-        if (!reader->column_index) {
-            reader->column_vector = reader->data->entities;
-            reader->column_size = ECS_SIZEOF(ecs_entity_t);
-        } else {
-            ecs_column_t *column = 
-                &reader->data->columns[reader->column_index - 1];
-            reader->column_vector = column->data;
-            reader->column_size = column->size;
-            reader->column_alignment = column->alignment;
-        }
-        break;
-
-    case EcsTableColumnSize:
-        reader->state = EcsTableColumnData;
-        reader->column_data = ecs_vector_first_t(reader->column_vector, 
-            reader->column_size, reader->column_alignment);
-        reader->column_written = 0;
-        break;
-
-    case EcsTableColumnNameHeader: {
-        reader->state = EcsTableColumnNameLength;
-        ecs_column_t *column = 
-                &reader->data->columns[reader->column_index - 1];
-        reader->column_vector = column->data;                
-        reader->column_data = ecs_vector_first(reader->column_vector, EcsName);
-        reader->row_index = 0;
-        break;
-    }
-
-    case EcsTableColumnNameLength:
-        reader->state = EcsTableColumnName;
-        reader->row_index ++;
-        break;
-
-    case EcsTableColumnName:
-        if (reader->row_index < reader->row_count) {
-            reader->state = EcsTableColumnNameLength;
-            break;
-        }
-        // fall through
-
-    case EcsTableColumnData:
-        reader->column_index ++;
-        if (reader->column_index == reader->total_columns) {
-            reader->state = EcsTableHeader;
-            next_table(stream, reader);
-        } else {
-            ecs_entity_t *type_buffer = ecs_vector_first(reader->type, ecs_entity_t);
-            if (reader->column_index >= 1) {
-                ecs_entity_t e = type_buffer[reader->column_index - 1];
-                
-                if (e != ecs_id(EcsName)) {
-                    reader->state = EcsTableColumnHeader;
-                } else {
-                    reader->state = EcsTableColumnNameHeader;
-                }
-            } else {
-                reader->state = EcsTableColumnHeader;
-            }            
-        }
-        break;
-
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-    }
-
-    return;
-}
-
-static
-ecs_size_t ecs_table_reader(
-    char *buffer,
-    ecs_size_t size,
-    ecs_reader_t *stream)
-{
-    if (!size) {
-        return 0;
-    }
-
-    if (size < ECS_SIZEOF(int32_t)) {
-        return -1;
-    }
-
-    ecs_table_reader_t *reader = &stream->table;
-    ecs_size_t read = 0;
-
-    if (!reader->state) {
-        next_table(stream, reader);
-        reader->state = EcsTableHeader;
-    }
-
-    switch(reader->state) {
-    case EcsTableHeader:
-        ecs_os_memcpy(buffer, &(ecs_blob_header_kind_t){EcsTableHeader}, ECS_SIZEOF(EcsTableHeader));
-        read = ECS_SIZEOF(ecs_blob_header_kind_t);
-        ecs_table_reader_next(stream);
-        break;
-
-    case EcsTableTypeSize:
-        ecs_os_memcpy(buffer, &(int32_t){ecs_vector_count(reader->type)}, ECS_SIZEOF(int32_t));
-        read = ECS_SIZEOF(int32_t);
-        ecs_table_reader_next(stream);
-        break;  
-
-    case EcsTableType: {
-        ecs_entity_t *type_array = ecs_vector_first(reader->type, ecs_entity_t);
-        ecs_os_memcpy(buffer, ECS_OFFSET(type_array, reader->type_written), ECS_SIZEOF(int32_t));
-        reader->type_written += ECS_SIZEOF(int32_t);
-        read = ECS_SIZEOF(int32_t);
-
-        if (reader->type_written == ecs_vector_count(reader->type) * ECS_SIZEOF(ecs_entity_t)) {
-            ecs_table_reader_next(stream);
-        }
-        break;                
-    }
-
-    case EcsTableSize:
-        ecs_os_memcpy(buffer, &(int32_t){ecs_table_count(reader->table)}, ECS_SIZEOF(int32_t));
-        read = ECS_SIZEOF(int32_t);
-        ecs_table_reader_next(stream);
-        break;
-
-    case EcsTableColumnHeader:
-        ecs_os_memcpy(buffer, &(ecs_blob_header_kind_t){EcsTableColumnHeader}, ECS_SIZEOF(ecs_blob_header_kind_t));
-        read = ECS_SIZEOF(ecs_blob_header_kind_t);
-        ecs_table_reader_next(stream);
-        break; 
-
-    case EcsTableColumnSize: {
-        int32_t column_size = reader->column_size;
-        ecs_os_memcpy(buffer, &column_size, ECS_SIZEOF(int32_t));
-        read = ECS_SIZEOF(ecs_blob_header_kind_t);
-        ecs_table_reader_next(stream);
-
-        if (!reader->column_size) {
-            ecs_table_reader_next(stream);
-        }
-        break; 
-    }
-
-    case EcsTableColumnData: {
-        ecs_size_t column_bytes = reader->column_size * reader->row_count;
-        read = column_bytes - reader->column_written;
-        if (read > size) {
-            read = size;
-        }
-
-        ecs_os_memcpy(buffer, ECS_OFFSET(reader->column_data, reader->column_written), read);
-        reader->column_written += read;
-        ecs_assert(reader->column_written <= column_bytes, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_size_t align = (((read - 1) / ECS_SIZEOF(int32_t)) + 1) * ECS_SIZEOF(int32_t);
-        if (align != read) {
-            /* Initialize padding bytes to 0 to keep valgrind happy */
-            ecs_os_memset(ECS_OFFSET(buffer, read), 0, align - read);
-
-            /* Set read to align so that data is always aligned to 4 bytes */
-            read = align;
-
-            /* Buffer sizes are expected to be aligned to 4 bytes and the rest
-             * of the serialized data is aligned to 4 bytes. Should never happen
-             * that adding padding bytes exceeds the size. */
-            ecs_assert(read <= size, ECS_INTERNAL_ERROR, NULL);
-        }
-
-        if (reader->column_written == column_bytes) {
-            ecs_table_reader_next(stream);
-        }
-        break;
-    }
-
-    case EcsTableColumnNameHeader:
-        ecs_os_memcpy(buffer, &(ecs_blob_header_kind_t){EcsTableColumnNameHeader}, ECS_SIZEOF(ecs_blob_header_kind_t));
-        read = ECS_SIZEOF(ecs_blob_header_kind_t);
-        ecs_table_reader_next(stream);
-        break;
-
-    case EcsTableColumnNameLength: {
-        reader->name = ((EcsName*)reader->column_data)[reader->row_index].value;
-        reader->name_len = ecs_os_strlen(reader->name) + 1;
-        reader->name_written = 0;
-        int32_t name_len = reader->name_len;
-        ecs_os_memcpy(buffer, &name_len, ECS_SIZEOF(int32_t));
-        // *(int32_t*)buffer = reader->name_len;
-        read = ECS_SIZEOF(int32_t);
-        ecs_table_reader_next(stream);    
-        break;
-    }
-
-    case EcsTableColumnName:   
-        read = reader->name_len - reader->name_written;
-        if (read >= ECS_SIZEOF(int32_t)) {
-
-            int32_t i;
-            for (i = 0; i < 4; i ++) {
-                *(char*)ECS_OFFSET(buffer, i) = 
-                    *(char*)ECS_OFFSET(reader->name, reader->name_written + i);
-            }
-
-            reader->name_written += ECS_SIZEOF(int32_t);
-        } else {
-            ecs_os_memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
-            ecs_os_memset(ECS_OFFSET(buffer, read), 0, ECS_SIZEOF(int32_t) - read);
-            reader->name_written += read;
-        }
-
-        /* Always align buffer to multiples of 4 bytes */
-        read = ECS_SIZEOF(int32_t);
-
-        if (reader->name_written == reader->name_len) {
-            ecs_table_reader_next(stream);
-        }
-
-        break;
-
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-    }
-
-    ecs_assert(read % 4 == 0, ECS_INTERNAL_ERROR, NULL);
-
-    return read;
-}
-
-int32_t ecs_reader_read(
-    char *buffer,
-    int32_t size,
-    ecs_reader_t *reader)
-{
-    int32_t read, total_read = 0, remaining = size;
-
-    if (!size) {
-        return 0;
-    }
-
-    ecs_assert(size >= ECS_SIZEOF(int32_t), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(size % 4 == 0, ECS_INVALID_PARAMETER, NULL);
-
-    if (reader->state == EcsTableSegment) {
-        while ((read = ecs_table_reader(ECS_OFFSET(buffer, total_read), remaining, reader))) {
-            remaining -= read;
-            total_read += read;
-
-            if (reader->state != EcsTableSegment) {
-                break;
-            }
-
-            ecs_assert(remaining % 4 == 0, ECS_INTERNAL_ERROR, NULL);        
-        }
-    }  
-    
-    return total_read;
-}
-
-ecs_reader_t ecs_reader_init(
-    ecs_world_t *world)
-{
-    ecs_reader_t result = {
-        .world = world,
-        .state = EcsTableSegment,
-        .component_iter = ecs_filter_iter(world, &(ecs_filter_t){
-            .include = ecs_type(EcsComponent)
-        }),
-        .component_next = ecs_filter_next,
-        .data_iter = ecs_filter_iter(world, NULL),
-        .data_next = ecs_filter_next
-    };
-
-    return result;
-}
-
-ecs_reader_t ecs_reader_init_w_iter(
-    ecs_iter_t *it,
-    ecs_iter_next_action_t next)
-{
-    ecs_world_t *world = it->world;
-
-    ecs_reader_t result = {
-        .world = world,
-        .state = EcsTableSegment,
-        .component_iter = ecs_filter_iter(world, &(ecs_filter_t){
-            .include = ecs_type(EcsComponent)
-        }),
-        .component_next = ecs_filter_next,
-        .data_iter = *it,
-        .data_next = next
-    };
-
-    return result;
 }
 
 #endif
@@ -16350,8 +15562,12 @@ void register_table_for_id(
     if (!tr->table || column < tr->column) {
         tr->table = table;
         tr->column = column;
+        tr->count = 1;
+    } else {
         tr->count ++;
     }
+
+    char buf[255]; ecs_id_str(world, id, buf, 255);
 
     /* Set flags if triggers are registered for table */
     if (!(table->flags & EcsTableIsDisabled)) {
@@ -22692,6 +21908,7 @@ int32_t data_column_count(
          * doesn't work during bootstrap. */
         if ((component == ecs_id(EcsComponent)) || 
             (component == ecs_id(EcsName)) || 
+            (component == ecs_id(EcsSymbol)) || 
             flecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;
@@ -27751,28 +26968,39 @@ ecs_type_t ecs_type(EcsPrefab);
 /* Component lifecycle actions for EcsName */
 static ECS_CTOR(EcsName, ptr, {
     ptr->value = NULL;
-    ptr->symbol = NULL;
 })
 
 static ECS_DTOR(EcsName, ptr, {
     ecs_os_strset(&ptr->value, NULL);
-    ecs_os_strset(&ptr->symbol, NULL);
 })
 
 static ECS_COPY(EcsName, dst, src, {
     ecs_os_strset(&dst->value, src->value);
-    ecs_os_strset(&dst->symbol, src->symbol);
 })
 
 static ECS_MOVE(EcsName, dst, src, {
     ecs_os_strset(&dst->value, NULL);
-    ecs_os_strset(&dst->symbol, NULL);
-
     dst->value = src->value;
-    dst->symbol = src->symbol;
-
     src->value = NULL;
-    src->symbol = NULL;
+})
+
+/* Component lifecycle actions for EcsSymbol */
+static ECS_CTOR(EcsSymbol, ptr, {
+    ptr->value = NULL;
+})
+
+static ECS_DTOR(EcsSymbol, ptr, {
+    ecs_os_strset(&ptr->value, NULL);
+})
+
+static ECS_COPY(EcsSymbol, dst, src, {
+    ecs_os_strset(&dst->value, src->value);
+})
+
+static ECS_MOVE(EcsSymbol, dst, src, {
+    ecs_os_strset(&dst->value, NULL);
+    dst->value = src->value;
+    src->value = NULL;
 })
 
 /* Component lifecycle actions for EcsTrigger */
@@ -27862,14 +27090,14 @@ void on_set_component_lifecycle( ecs_iter_t *it) {
 }
 
 static
-void on_set_name( ecs_iter_t *it) {
-    EcsName *n = ecs_term(it, EcsName, 1);
+void on_set_symbol( ecs_iter_t *it) {
+    EcsSymbol *n = ecs_term(it, EcsSymbol, 1);
     ecs_world_t *world = it->world;
 
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        const char *symbol = n[i].symbol;
+        const char *symbol = n[i].value;
         if (symbol) {
             flecs_use_intern(e, symbol, &world->symbols);
         }
@@ -27908,13 +27136,14 @@ void _bootstrap_component(
     record->row = index + 1;
 
     /* Set size and id */
-    EcsComponent *c_info = ecs_vector_first(columns[0].data, EcsComponent);
-    EcsName *id_data = ecs_vector_first(columns[1].data, EcsName);
+    EcsComponent *component = ecs_vector_first(columns[0].data, EcsComponent);
+    EcsName *name = ecs_vector_first(columns[1].data, EcsName);
+    EcsSymbol *symbol = ecs_vector_first(columns[2].data, EcsSymbol);
     
-    c_info[index].size = size;
-    c_info[index].alignment = alignment;
-    id_data[index].value = ecs_os_strdup(&id[ecs_os_strlen("Ecs")]); /* Skip prefix */
-    id_data[index].symbol = ecs_os_strdup(id);
+    component[index].size = size;
+    component[index].alignment = alignment;
+    name[index].value = ecs_os_strdup(&id[ecs_os_strlen("Ecs")]); /* Skip prefix */
+    symbol[index].value = ecs_os_strdup(id);    
 }
 
 /** Create type for component */
@@ -27953,10 +27182,10 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t entities[] = {ecs_id(EcsComponent), ecs_id(EcsName), ecs_pair(EcsChildOf, EcsFlecsCore)};
+    ecs_entity_t entities[] = {ecs_id(EcsComponent), ecs_id(EcsName), ecs_id(EcsSymbol), ecs_pair(EcsChildOf, EcsFlecsCore)};
     ecs_ids_t array = {
         .array = entities,
-        .count = 3
+        .count = 4
     };
 
     ecs_table_t *result = flecs_table_find_or_create(world, &array);
@@ -27966,7 +27195,7 @@ ecs_table_t* bootstrap_component_table(
     data->entities = ecs_vector_new(ecs_entity_t, EcsFirstUserComponentId);
     data->record_ptrs = ecs_vector_new(ecs_record_t*, EcsFirstUserComponentId);
 
-    data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 2);
+    data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 3);
     ecs_assert(data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     data->columns[0].data = ecs_vector_new(EcsComponent, EcsFirstUserComponentId);
@@ -27975,8 +27204,11 @@ ecs_table_t* bootstrap_component_table(
     data->columns[1].data = ecs_vector_new(EcsName, EcsFirstUserComponentId);
     data->columns[1].size = sizeof(EcsName);
     data->columns[1].alignment = ECS_ALIGNOF(EcsName);
+    data->columns[2].data = ecs_vector_new(EcsSymbol, EcsFirstUserComponentId);
+    data->columns[2].size = sizeof(EcsSymbol);
+    data->columns[2].alignment = ECS_ALIGNOF(EcsSymbol);
 
-    result->column_count = 2;
+    result->column_count = 3;
     
     return result;
 }
@@ -27992,7 +27224,9 @@ void bootstrap_entity(
     ecs_os_strcpy(symbol, "flecs.core.");
     ecs_os_strcat(symbol, name);
 
-    ecs_set(world, id, EcsName, {.value = (char*)name, .symbol = symbol});
+    ecs_set_name(world, id, name);
+    ecs_set_symbol(world, id, symbol);
+
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_add_pair(world, id, EcsChildOf, parent);
 
@@ -28016,6 +27250,7 @@ void flecs_bootstrap(
 
     bootstrap_component(world, table, EcsName);
     bootstrap_component(world, table, EcsComponent);
+    bootstrap_component(world, table, EcsSymbol);
     bootstrap_component(world, table, EcsComponentLifecycle);
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);
@@ -28028,6 +27263,13 @@ void flecs_bootstrap(
         .copy = ecs_copy(EcsName),
         .move = ecs_move(EcsName)
     });
+
+    ecs_set_component_actions(world, EcsSymbol, {
+        .ctor = ecs_ctor(EcsSymbol),
+        .dtor = ecs_dtor(EcsSymbol),
+        .copy = ecs_copy(EcsSymbol),
+        .move = ecs_move(EcsSymbol)
+    });    
 
     ecs_set_component_actions(world, EcsTrigger, {
         .ctor = ecs_ctor(EcsTrigger),
@@ -28123,8 +27365,8 @@ void flecs_bootstrap(
 
     /* Define trigger for when name is set */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_id(EcsName)},
-        .callback = on_set_name,
+        .term = {.id = ecs_id(EcsSymbol)},
+        .callback = on_set_symbol,
         .events = {EcsOnSet}
     });    
 
@@ -28249,8 +27491,7 @@ ecs_entity_t get_builtin(
 static
 ecs_entity_t find_child_in_table(
     const ecs_table_t *table,
-    const char *name,
-    const char *symbol)
+    const char *name)
 {
     /* If table doesn't have EcsName, then don't bother */
     int32_t name_index = ecs_type_index_of(table->type, ecs_id(EcsName));
@@ -28271,24 +27512,15 @@ ecs_entity_t find_child_in_table(
     ecs_column_t *column = &data->columns[name_index];
     EcsName *names = ecs_vector_first(column->data, EcsName);
 
-    if (name) {
-        if (is_number(name)) {
-            return name_to_id(name);
+    if (is_number(name)) {
+        return name_to_id(name);
+    }
+
+    for (i = 0; i < count; i ++) {
+        const char *cur_name = names[i].value;
+        if (cur_name && !strcmp(cur_name, name)) {
+            return *ecs_vector_get(data->entities, ecs_entity_t, i);
         }
- 
-        for (i = 0; i < count; i ++) {
-            const char *cur_name = names[i].value;
-            if (cur_name && !strcmp(cur_name, name)) {
-                return *ecs_vector_get(data->entities, ecs_entity_t, i);
-            }
-        }        
-    } else if (symbol) {
-        for (i = 0; i < count; i ++) {
-            const char *cur_name = names[i].symbol;
-            if (cur_name && !strcmp(cur_name, symbol)) {
-                return *ecs_vector_get(data->entities, ecs_entity_t, i);
-            }
-        }         
     }
 
     return 0;
@@ -28418,7 +27650,7 @@ ecs_entity_t ecs_lookup_child(
         ecs_map_iter_t it = ecs_map_iter(r->table_index);
         ecs_table_record_t *tr;
         while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-            result = find_child_in_table(tr->table, name, NULL);
+            result = find_child_in_table(tr->table, name);
             if (result) {
                 return result;
             }            

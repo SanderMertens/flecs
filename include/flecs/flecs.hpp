@@ -203,7 +203,6 @@ static const flecs::entity_t Throw = EcsThrow;
 #include <flecs/cpp/query.hpp>
 #include <flecs/cpp/system.hpp>
 #include <flecs/cpp/observer.hpp>
-#include <flecs/cpp/reader_writer.hpp>
 #include <flecs/cpp/impl.hpp>
 
 #ifdef FLECS_DEPRECATED

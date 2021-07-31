@@ -317,11 +317,6 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_QUEUE
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_QUEUE
 
-      - name: FLECS_READER_WRITER
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_READER_WRITER
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_READER_WRITER
-
       - name: FLECS_SNAPSHOT
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SNAPSHOT

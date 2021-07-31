@@ -12,28 +12,39 @@ ecs_type_t ecs_type(EcsPrefab);
 /* Component lifecycle actions for EcsName */
 static ECS_CTOR(EcsName, ptr, {
     ptr->value = NULL;
-    ptr->symbol = NULL;
 })
 
 static ECS_DTOR(EcsName, ptr, {
     ecs_os_strset(&ptr->value, NULL);
-    ecs_os_strset(&ptr->symbol, NULL);
 })
 
 static ECS_COPY(EcsName, dst, src, {
     ecs_os_strset(&dst->value, src->value);
-    ecs_os_strset(&dst->symbol, src->symbol);
 })
 
 static ECS_MOVE(EcsName, dst, src, {
     ecs_os_strset(&dst->value, NULL);
-    ecs_os_strset(&dst->symbol, NULL);
-
     dst->value = src->value;
-    dst->symbol = src->symbol;
-
     src->value = NULL;
-    src->symbol = NULL;
+})
+
+/* Component lifecycle actions for EcsSymbol */
+static ECS_CTOR(EcsSymbol, ptr, {
+    ptr->value = NULL;
+})
+
+static ECS_DTOR(EcsSymbol, ptr, {
+    ecs_os_strset(&ptr->value, NULL);
+})
+
+static ECS_COPY(EcsSymbol, dst, src, {
+    ecs_os_strset(&dst->value, src->value);
+})
+
+static ECS_MOVE(EcsSymbol, dst, src, {
+    ecs_os_strset(&dst->value, NULL);
+    dst->value = src->value;
+    src->value = NULL;
 })
 
 /* Component lifecycle actions for EcsTrigger */
@@ -123,14 +134,14 @@ void on_set_component_lifecycle( ecs_iter_t *it) {
 }
 
 static
-void on_set_name( ecs_iter_t *it) {
-    EcsName *n = ecs_term(it, EcsName, 1);
+void on_set_symbol( ecs_iter_t *it) {
+    EcsSymbol *n = ecs_term(it, EcsSymbol, 1);
     ecs_world_t *world = it->world;
 
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        const char *symbol = n[i].symbol;
+        const char *symbol = n[i].value;
         if (symbol) {
             flecs_use_intern(e, symbol, &world->symbols);
         }
@@ -169,13 +180,14 @@ void _bootstrap_component(
     record->row = index + 1;
 
     /* Set size and id */
-    EcsComponent *c_info = ecs_vector_first(columns[0].data, EcsComponent);
-    EcsName *id_data = ecs_vector_first(columns[1].data, EcsName);
+    EcsComponent *component = ecs_vector_first(columns[0].data, EcsComponent);
+    EcsName *name = ecs_vector_first(columns[1].data, EcsName);
+    EcsSymbol *symbol = ecs_vector_first(columns[2].data, EcsSymbol);
     
-    c_info[index].size = size;
-    c_info[index].alignment = alignment;
-    id_data[index].value = ecs_os_strdup(&id[ecs_os_strlen("Ecs")]); /* Skip prefix */
-    id_data[index].symbol = ecs_os_strdup(id);
+    component[index].size = size;
+    component[index].alignment = alignment;
+    name[index].value = ecs_os_strdup(&id[ecs_os_strlen("Ecs")]); /* Skip prefix */
+    symbol[index].value = ecs_os_strdup(id);    
 }
 
 /** Create type for component */
@@ -214,10 +226,10 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t entities[] = {ecs_id(EcsComponent), ecs_id(EcsName), ecs_pair(EcsChildOf, EcsFlecsCore)};
+    ecs_entity_t entities[] = {ecs_id(EcsComponent), ecs_id(EcsName), ecs_id(EcsSymbol), ecs_pair(EcsChildOf, EcsFlecsCore)};
     ecs_ids_t array = {
         .array = entities,
-        .count = 3
+        .count = 4
     };
 
     ecs_table_t *result = flecs_table_find_or_create(world, &array);
@@ -227,7 +239,7 @@ ecs_table_t* bootstrap_component_table(
     data->entities = ecs_vector_new(ecs_entity_t, EcsFirstUserComponentId);
     data->record_ptrs = ecs_vector_new(ecs_record_t*, EcsFirstUserComponentId);
 
-    data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 2);
+    data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 3);
     ecs_assert(data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     data->columns[0].data = ecs_vector_new(EcsComponent, EcsFirstUserComponentId);
@@ -236,8 +248,11 @@ ecs_table_t* bootstrap_component_table(
     data->columns[1].data = ecs_vector_new(EcsName, EcsFirstUserComponentId);
     data->columns[1].size = sizeof(EcsName);
     data->columns[1].alignment = ECS_ALIGNOF(EcsName);
+    data->columns[2].data = ecs_vector_new(EcsSymbol, EcsFirstUserComponentId);
+    data->columns[2].size = sizeof(EcsSymbol);
+    data->columns[2].alignment = ECS_ALIGNOF(EcsSymbol);
 
-    result->column_count = 2;
+    result->column_count = 3;
     
     return result;
 }
@@ -253,7 +268,9 @@ void bootstrap_entity(
     ecs_os_strcpy(symbol, "flecs.core.");
     ecs_os_strcat(symbol, name);
 
-    ecs_set(world, id, EcsName, {.value = (char*)name, .symbol = symbol});
+    ecs_set_name(world, id, name);
+    ecs_set_symbol(world, id, symbol);
+
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_add_pair(world, id, EcsChildOf, parent);
 
@@ -277,6 +294,7 @@ void flecs_bootstrap(
 
     bootstrap_component(world, table, EcsName);
     bootstrap_component(world, table, EcsComponent);
+    bootstrap_component(world, table, EcsSymbol);
     bootstrap_component(world, table, EcsComponentLifecycle);
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);
@@ -289,6 +307,13 @@ void flecs_bootstrap(
         .copy = ecs_copy(EcsName),
         .move = ecs_move(EcsName)
     });
+
+    ecs_set_component_actions(world, EcsSymbol, {
+        .ctor = ecs_ctor(EcsSymbol),
+        .dtor = ecs_dtor(EcsSymbol),
+        .copy = ecs_copy(EcsSymbol),
+        .move = ecs_move(EcsSymbol)
+    });    
 
     ecs_set_component_actions(world, EcsTrigger, {
         .ctor = ecs_ctor(EcsTrigger),
@@ -384,8 +409,8 @@ void flecs_bootstrap(
 
     /* Define trigger for when name is set */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_id(EcsName)},
-        .callback = on_set_name,
+        .term = {.id = ecs_id(EcsSymbol)},
+        .callback = on_set_symbol,
         .events = {EcsOnSet}
     });    
 

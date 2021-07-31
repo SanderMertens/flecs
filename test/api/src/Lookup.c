@@ -142,11 +142,7 @@ void Lookup_lookup_symbol_by_id() {
 void Lookup_lookup_symbol_w_digit() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {
-        .value = "id",
-        .symbol = "10_id"
-    });
-    
+    ecs_entity_t e = ecs_set_symbol(world, 0, "10_id");    
     ecs_entity_t e2 = ecs_lookup_symbol(world, "10_id", true);
     test_assert(e == e2);
 
@@ -157,7 +153,7 @@ void Lookup_lookup_path_w_digit() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "parent");
-    ecs_entity_t e1 = ecs_set(world, 0, EcsName, {.value = "10_id"});
+    ecs_entity_t e1 = ecs_set_name(world, 0, "10_id");
     ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_lookup_fullpath(world, "parent.10_id");

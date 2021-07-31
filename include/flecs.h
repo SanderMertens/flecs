@@ -38,7 +38,6 @@
 #define FLECS_MODULE
 #define FLECS_PARSER
 #define FLECS_QUEUE
-#define FLECS_READER_WRITER
 #define FLECS_SNAPSHOT
 #define FLECS_DIRECT_ACCESS
 #define FLECS_STATS
@@ -541,11 +540,23 @@ typedef struct ecs_observer_desc_t {
  * @{
  */
 
-/** Entity name. */
+/** Entity name. 
+ * Entity names allow looking up entities by name & enables introspection. */
 typedef struct EcsName {
-    char *value;     /* Entity name */
-    char *symbol;    /* Optional symbol name, if it differs from name */
+    char *value;
 } EcsName;
+
+/** Entity symbol. 
+ * Symbols are the underlying identifier of what an entity represents and can be
+ * different from a name. For example, the EcsName component has flecs.core.Name
+ * as (path) name, and EcsName as symbol. 
+ *
+ * The distinction between names and symbols allows for sharing canonical names 
+ * across language bindings, while still being able to lookup an entity by its 
+ * original symbol. */
+typedef struct EcsSymbol {
+    char *value;
+} EcsSymbol;
 
 /** Component information. */
 typedef struct EcsComponent {
@@ -2313,9 +2324,23 @@ const char* ecs_get_name(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Get the symbol of an entity.
+ * This will return the name as specified in the EcsSymbol component.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return The type of the entity, NULL if the entity has no name.
+ */
+FLECS_API
+const char* ecs_get_symbol(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
 /** Set the name of an entity.
  * This will set or overwrite the name of an entity. If no entity is provided,
  * a new entity will be created.
+ *
+ * The name will be stored in the EcsName component.
  *
  * @param world The world.
  * @param entity The entity.
@@ -2327,6 +2352,23 @@ ecs_entity_t ecs_set_name(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name);
+
+/** Set the symbol of an entity.
+ * This will set or overwrite the symbol of an entity. If no entity is provided,
+ * a new entity will be created.
+ *
+ * The symbol will be stored in the EcsName component.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param symbol The entity's symbol.
+ * @return The provided entity, or a new entity if 0 was provided.
+ */
+FLECS_API
+ecs_entity_t ecs_set_symbol(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *symbol);
 
 /** Convert type role to string.
  * This operation converts a type role to a string.
@@ -4043,9 +4085,6 @@ bool ecs_commit(
 #endif
 #ifdef FLECS_QUEUE
 #include "flecs/addons/queue.h"
-#endif
-#ifdef FLECS_READER_WRITER
-#include "flecs/addons/reader_writer.h"
 #endif
 #ifdef FLECS_SNAPSHOT
 #include "flecs/addons/snapshot.h"

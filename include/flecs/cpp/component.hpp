@@ -592,16 +592,13 @@ flecs::entity pod_component(
          * we are trying to register under this name is the same */
         if (entity) {
             if (!id) {
-                const EcsName *name_comp = ecs_get_mut(world, entity, EcsName, NULL);
-                ecs_assert(name_comp != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(name_comp->symbol != NULL, ECS_INTERNAL_ERROR, NULL);
+                const char *sym = ecs_get_symbol(world, entity);
+                ecs_assert(sym != NULL, ECS_INTERNAL_ERROR, NULL);
+                (void)sym;
 
                 char *symbol = _::symbol_helper<T>::symbol();
-                ecs_assert(!ecs_os_strcmp(name_comp->symbol, symbol), 
-                    ECS_NAME_IN_USE, n);
+                ecs_assert(!ecs_os_strcmp(sym, symbol), ECS_NAME_IN_USE, n);
                 ecs_os_free(symbol);
-
-                (void)name_comp;
 
             /* If an existing id was provided, it's possible that this id was
              * registered with another type. Make sure that in this case at

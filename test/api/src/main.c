@@ -611,6 +611,9 @@ void OnDelete_on_delete_delete_recursive(void);
 void OnDelete_on_delete_component_throw(void);
 void OnDelete_on_delete_remove_2_relations(void);
 void OnDelete_on_delete_remove_object_w_2_relations(void);
+void OnDelete_on_delete_remove_object_w_5_relations(void);
+void OnDelete_on_delete_remove_object_w_50_relations(void);
+void OnDelete_on_delete_remove_object_w_50_relations_3_tables(void);
 void OnDelete_remove_id_from_2_tables(void);
 void OnDelete_remove_relation_from_2_tables(void);
 void OnDelete_remove_object_from_2_tables(void);
@@ -1896,31 +1899,6 @@ void Snapshot_set_after_snapshot(void);
 void Snapshot_restore_recycled(void);
 void Snapshot_snapshot_w_new_in_onset(void);
 void Snapshot_snapshot_w_new_in_onset_in_snapshot_table(void);
-
-// Testsuite 'ReaderWriter'
-void ReaderWriter_simple(void);
-void ReaderWriter_id(void);
-void ReaderWriter_id_w_simple(void);
-void ReaderWriter_unaligned(void);
-void ReaderWriter_empty(void);
-void ReaderWriter_tag(void);
-void ReaderWriter_simple_w_tag(void);
-void ReaderWriter_tag_w_simple(void);
-void ReaderWriter_empty_parent(void);
-void ReaderWriter_parent(void);
-void ReaderWriter_simple_w_parent(void);
-void ReaderWriter_inheritance(void);
-void ReaderWriter_simple_w_inheritance(void);
-void ReaderWriter_deserialize_twice(void);
-void ReaderWriter_entity_conflict(void);
-void ReaderWriter_snapshot_reader_simple(void);
-void ReaderWriter_snapshot_reader_id(void);
-void ReaderWriter_read_zero_size(void);
-void ReaderWriter_write_zero_size(void);
-void ReaderWriter_invalid_header(void);
-void ReaderWriter_recycled_id(void);
-void ReaderWriter_new_component_after_restore(void);
-void ReaderWriter_delete_all_after_restore(void);
 
 // Testsuite 'FilterIter'
 void FilterIter_iter_one_table(void);
@@ -4307,6 +4285,18 @@ bake_test_case OnDelete_testcases[] = {
     {
         "on_delete_remove_object_w_2_relations",
         OnDelete_on_delete_remove_object_w_2_relations
+    },
+    {
+        "on_delete_remove_object_w_5_relations",
+        OnDelete_on_delete_remove_object_w_5_relations
+    },
+    {
+        "on_delete_remove_object_w_50_relations",
+        OnDelete_on_delete_remove_object_w_50_relations
+    },
+    {
+        "on_delete_remove_object_w_50_relations_3_tables",
+        OnDelete_on_delete_remove_object_w_50_relations_3_tables
     },
     {
         "remove_id_from_2_tables",
@@ -9190,101 +9180,6 @@ bake_test_case Snapshot_testcases[] = {
     }
 };
 
-bake_test_case ReaderWriter_testcases[] = {
-    {
-        "simple",
-        ReaderWriter_simple
-    },
-    {
-        "id",
-        ReaderWriter_id
-    },
-    {
-        "id_w_simple",
-        ReaderWriter_id_w_simple
-    },
-    {
-        "unaligned",
-        ReaderWriter_unaligned
-    },
-    {
-        "empty",
-        ReaderWriter_empty
-    },
-    {
-        "tag",
-        ReaderWriter_tag
-    },
-    {
-        "simple_w_tag",
-        ReaderWriter_simple_w_tag
-    },
-    {
-        "tag_w_simple",
-        ReaderWriter_tag_w_simple
-    },
-    {
-        "empty_parent",
-        ReaderWriter_empty_parent
-    },
-    {
-        "parent",
-        ReaderWriter_parent
-    },
-    {
-        "simple_w_parent",
-        ReaderWriter_simple_w_parent
-    },
-    {
-        "inheritance",
-        ReaderWriter_inheritance
-    },
-    {
-        "simple_w_inheritance",
-        ReaderWriter_simple_w_inheritance
-    },
-    {
-        "deserialize_twice",
-        ReaderWriter_deserialize_twice
-    },
-    {
-        "entity_conflict",
-        ReaderWriter_entity_conflict
-    },
-    {
-        "snapshot_reader_simple",
-        ReaderWriter_snapshot_reader_simple
-    },
-    {
-        "snapshot_reader_id",
-        ReaderWriter_snapshot_reader_id
-    },
-    {
-        "read_zero_size",
-        ReaderWriter_read_zero_size
-    },
-    {
-        "write_zero_size",
-        ReaderWriter_write_zero_size
-    },
-    {
-        "invalid_header",
-        ReaderWriter_invalid_header
-    },
-    {
-        "recycled_id",
-        ReaderWriter_recycled_id
-    },
-    {
-        "new_component_after_restore",
-        ReaderWriter_new_component_after_restore
-    },
-    {
-        "delete_all_after_restore",
-        ReaderWriter_delete_all_after_restore
-    }
-};
-
 bake_test_case FilterIter_testcases[] = {
     {
         "iter_one_table",
@@ -9738,7 +9633,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        47,
+        50,
         OnDelete_testcases
     },
     {
@@ -10022,13 +9917,6 @@ static bake_test_suite suites[] = {
         Snapshot_testcases
     },
     {
-        "ReaderWriter",
-        NULL,
-        NULL,
-        23,
-        ReaderWriter_testcases
-    },
-    {
         "FilterIter",
         NULL,
         NULL,
@@ -10074,5 +9962,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 66);
+    return bake_test_run("api", argc, argv, suites, 65);
 }

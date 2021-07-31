@@ -118,7 +118,6 @@ Stats         | Collect statistics on entities and systems       | FLECS_STATS  
 Direct Access | Low-level API for direct access to component data| FLECS_DIRECT_ACCESS |
 Module        | Organize components and systems in modules       | FLECS_MODULE        | 
 Queue         | A queue data structure                           | FLECS_QUEUE         |
-Reader_writer | Serialize components to series of bytes          | FLECS_READER_WRITER | 
 Snapshot      | Take a snapshot that can be restored  afterwards | FLECS_SNAPSHOT      |
 
 #### Builtin modules

@@ -654,6 +654,9 @@
                 "on_delete_component_throw",
                 "on_delete_remove_2_relations",
                 "on_delete_remove_object_w_2_relations",
+                "on_delete_remove_object_w_5_relations",
+                "on_delete_remove_object_w_50_relations",
+                "on_delete_remove_object_w_50_relations_3_tables",
                 "remove_id_from_2_tables",
                 "remove_relation_from_2_tables",
                 "remove_object_from_2_tables",
@@ -2019,33 +2022,6 @@
                 "restore_recycled",
                 "snapshot_w_new_in_onset",
                 "snapshot_w_new_in_onset_in_snapshot_table"
-            ]
-        }, {
-            "id": "ReaderWriter",
-            "testcases": [
-                "simple",
-                "id",
-                "id_w_simple",
-                "unaligned",
-                "empty",
-                "tag",
-                "simple_w_tag",
-                "tag_w_simple",
-                "empty_parent",
-                "parent",
-                "simple_w_parent",
-                "inheritance",
-                "simple_w_inheritance",
-                "deserialize_twice",
-                "entity_conflict",
-                "snapshot_reader_simple",
-                "snapshot_reader_id",
-                "read_zero_size",
-                "write_zero_size",
-                "invalid_header",
-                "recycled_id",
-                "new_component_after_restore",
-                "delete_all_after_restore"
             ]
         }, {
             "id": "FilterIter",

@@ -119,6 +119,7 @@ typedef int32_t ecs_size_t;
 #define FLECS__EEcsComponentLifecycle (2)
 #define FLECS__EEcsType (3)
 #define FLECS__EEcsName (6)
+#define FLECS__EEcsSymbol (8)
 
 /** System module component ids */
 #define FLECS__EEcsTrigger (4)

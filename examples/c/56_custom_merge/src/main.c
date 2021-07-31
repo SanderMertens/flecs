@@ -27,9 +27,9 @@ int main(int argc, char *argv[]) {
     ecs_staging_begin(world);
 
     /* Create an entity in each stage */
-    ecs_entity_t e1 = ecs_set(stage_1, 0, EcsName, {.value = "e_stage_1"});
-    ecs_entity_t e2 = ecs_set(stage_2, 0, EcsName, {.value = "e_stage_2"});
-    ecs_entity_t e3 = ecs_set(stage_3, 0, EcsName, {.value = "e_stage_3"});
+    ecs_entity_t e1 = ecs_set_name(stage_1, 0, "e_stage_1");
+    ecs_entity_t e2 = ecs_set_name(stage_2, 0, "e_stage_2");
+    ecs_entity_t e3 = ecs_set_name(stage_3, 0, "e_stage_3");
 
     /* End staging. This will only merge the stages for which automerging has
      * been enabled, which in this case is just stage_1. */

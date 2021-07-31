@@ -1266,10 +1266,10 @@ void flecs_run_add_actions(
     bool run_on_set)
 {
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(added->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
     if (table->flags & EcsTableHasBase) {
         ecs_column_info_t cinfo[ECS_MAX_ADD_REMOVE];
+
         int added_count = get_column_info(
             world, table, added, cinfo, get_all);
 
@@ -1296,7 +1296,6 @@ void flecs_run_remove_actions(
     ecs_ids_t * removed)
 {
     ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(removed->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
 
     if (count) {
         if (table->flags & EcsTableHasUnSet) {
@@ -1961,13 +1960,13 @@ void traverse_add_remove(
     }
 
     if (desc->symbol) {
-        EcsName *name_ptr = ecs_get_mut(world, result, EcsName, NULL);
-        if (name_ptr->symbol) {
-            ecs_assert(!ecs_os_strcmp(desc->symbol, name_ptr->symbol),
+        EcsSymbol *sym_ptr = ecs_get_mut(world, result, EcsSymbol, NULL);
+        if (sym_ptr->value) {
+            ecs_assert(!ecs_os_strcmp(desc->symbol, sym_ptr->value),
                 ECS_INCONSISTENT_NAME, desc->symbol);
         } else {
-            name_ptr->symbol = ecs_os_strdup(desc->symbol);
-            ecs_modified(world, result, EcsName);
+            ecs_os_strset(&sym_ptr->value, desc->symbol);
+            ecs_modified(world, result, EcsSymbol);
         }
     }
 
@@ -2046,11 +2045,11 @@ void deferred_add_remove(
 
     /* Currently it's not supported to set the symbol from a deferred context */
     if (desc->symbol) {
-        const EcsName *ptr = ecs_get(world, entity, EcsName);
+        const EcsSymbol *ptr = ecs_get(world, entity, EcsSymbol);
         (void)ptr;
         
         ecs_assert(ptr != NULL, ECS_UNSUPPORTED, NULL);
-        ecs_assert(!ecs_os_strcmp(ptr->symbol, desc->symbol), 
+        ecs_assert(!ecs_os_strcmp(ptr->value, desc->symbol), 
             ECS_UNSUPPORTED, NULL);
     }
 }
@@ -2423,60 +2422,49 @@ void remove_from_table(
     ecs_world_t *world,
     ecs_table_t *src_table,
     ecs_id_t id,
-    int32_t column)
+    int32_t column,
+    int32_t column_count)
 {
     ecs_entity_t removed_buffer[ECS_MAX_ADD_REMOVE];
-    ecs_ids_t removed = { .array = removed_buffer };    
-    ecs_table_t *dst_table = src_table;
-    bool is_pair = ECS_HAS_ROLE(id, PAIR);
+    ecs_ids_t removed = { .array = removed_buffer };
 
+    if (column_count > ECS_MAX_ADD_REMOVE) {
+        removed.array = ecs_os_malloc_n(ecs_id_t, column_count);
+    }
+
+    ecs_table_t *dst_table = src_table; 
     ecs_id_t *ids = ecs_vector_first(src_table->type, ecs_id_t);
 
     /* If id is pair but the column pointed to is not a pair, the record is
      * pointing to an instance of the id that has a (non-PAIR) role. */
-    if (ECS_HAS_ROLE(id, PAIR) && !ECS_HAS_ROLE(ids[column], PAIR)) {
-        ecs_assert((ids[column] & ECS_ROLE_MASK) != 0, 
-            ECS_INTERNAL_ERROR, NULL);
+    bool is_pair = ECS_HAS_ROLE(id, PAIR);     
+    bool is_role = is_pair && !ECS_HAS_ROLE(ids[column], PAIR);
+    ecs_assert(!is_role || ((ids[column] & ECS_ROLE_MASK) != 0), 
+        ECS_INTERNAL_ERROR, NULL);
+    bool is_wildcard = ecs_id_is_wildcard(id);
 
-        int32_t i, count = ecs_vector_count(src_table->type);
-        ecs_entity_t entity = ECS_PAIR_RELATION(id);
+    int32_t i, count = ecs_vector_count(src_table->type), removed_count = 0;
+    ecs_entity_t entity = ECS_PAIR_RELATION(id);
 
-        /* Find all instances of the id without the role */
-        for (i = column; i < count; i ++) {
-            ecs_id_t e = ids[i];
+    for (i = column; i < count; i ++) {
+        ecs_id_t e = ids[i];
+
+        if (is_role) {
             if ((e & ECS_COMPONENT_MASK) != entity) {
                 continue;
             }
-
-            ecs_ids_t to_remove = { .array = &e, .count = 1 };
-            dst_table = flecs_table_traverse_remove(
-                world, dst_table, &to_remove, &removed);
-        }    
-
-    /* If id is pair, ensure dst_table has no instances of the relation */
-    } else if (is_pair && ECS_PAIR_RELATION(id) != EcsWildcard) {
-        int32_t i, count = ecs_vector_count(src_table->type);
-        
-        for (i = column; i < count; i ++) {
-            ecs_id_t e = ids[i];
-            if (ECS_PAIR_RELATION(id) != ECS_PAIR_RELATION(e)) {
-                break;
-            }
-
-            ecs_ids_t to_remove = { .array = &e, .count = 1 };
-            dst_table = flecs_table_traverse_remove(
-                world, dst_table, &to_remove, &removed);
-        }
-    } else {
-        /* If pair has a relationship wildcard, this removes a relationship for
-         * a specific object. Get the relation + object to delete */
-        if (is_pair) {
-            id = ids[column];
+        } else if (is_wildcard && !ecs_id_match(e, id)) {
+            continue;
         }
 
-        ecs_ids_t to_remove = { .array = &id, .count = 1 };
+        ecs_ids_t to_remove = { .array = &e, .count = 1 };
         dst_table = flecs_table_traverse_remove(
             world, dst_table, &to_remove, &removed);
+        
+        removed_count ++;
+        if (removed_count == column_count) {
+            break;
+        }
     }
 
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2497,6 +2485,10 @@ void remove_from_table(
             ecs_data_t *dst_data = flecs_table_get_data(dst_table);
             flecs_table_merge(world, dst_table, src_table, dst_data, src_data);
         }
+    }
+
+    if (column_count > ECS_MAX_ADD_REMOVE) {
+        ecs_os_free(removed.array);
     }
 }
 
@@ -2572,6 +2564,7 @@ void on_delete_object_action(
         /* Execute the on delete action */
         while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
             ecs_table_t *table = tr->table;
+
             if (!ecs_table_count(table)) {
                 continue;
             }
@@ -2588,7 +2581,8 @@ void on_delete_object_action(
             if (idrr) {
                 ecs_entity_t action = idrr->on_delete_object;
                 if (!action || action == EcsRemove) {
-                    remove_from_table(world, table, id, tr->column);
+                    remove_from_table(world, table, id, tr->column, tr->count);
+                    it = ecs_map_iter(table_index);
                 } else if (action == EcsDelete) {
                     delete_objects(world, table);
                 } else if (action == EcsThrow) {
@@ -2597,7 +2591,8 @@ void on_delete_object_action(
             } else {
                 /* If no record was found for the relation, assume the default
                  * action which is to remove the relationship */
-                remove_from_table(world, table, id, tr->column);
+                remove_from_table(world, table, id, tr->column, tr->count);
+                it = ecs_map_iter(table_index);
             }
         }
 
@@ -2628,7 +2623,7 @@ void on_delete_relation_action(
             ecs_entity_t action = idr->on_delete;
 
             if (!action || action == EcsRemove) {
-                remove_from_table(world, table, id, tr->column);
+                remove_from_table(world, table, id, tr->column, tr->count);
             } else if (action == EcsDelete) {
                 delete_objects(world, table);
             }
@@ -3365,10 +3360,26 @@ const char* ecs_get_name(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    const EcsName *id = ecs_get(world, entity, EcsName);
+    const EcsName *ptr = ecs_get(world, entity, EcsName);
 
-    if (id) {
-        return id->value;
+    if (ptr) {
+        return ptr->value;
+    } else {
+        return NULL;
+    }
+}
+
+const char* ecs_get_symbol(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+
+    const EcsSymbol *ptr = ecs_get(world, entity, EcsSymbol);
+
+    if (ptr) {
+        return ptr->value;
     } else {
         return NULL;
     }
@@ -3385,7 +3396,23 @@ ecs_entity_t ecs_set_name(
         entity = ecs_new_id(world);
     }
     
-    ecs_set(world, entity, EcsName, {(char*)name, .symbol = NULL});
+    ecs_set(world, entity, EcsName, {(char*)name});
+
+    return entity;
+}
+
+ecs_entity_t ecs_set_symbol(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!entity) {
+        entity = ecs_new_id(world);
+    }
+    
+    ecs_set(world, entity, EcsSymbol, {(char*)name});
 
     return entity;
 }

@@ -805,7 +805,7 @@ void Snapshot_snapshot_w_new_in_onset() {
     ecs_entity_t e2 = ecs_lookup(world, "e2");
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_set(world, 0, EcsName, {"e3"});
+    ecs_entity_t e3 = ecs_set_name(world, 0, "e3");
     test_assert(e3 != 0);
     test_assert(e3 > e2);
     test_str(ecs_get_name(world, e3), "e3");

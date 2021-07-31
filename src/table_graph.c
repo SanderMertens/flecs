@@ -98,6 +98,7 @@ int32_t data_column_count(
          * doesn't work during bootstrap. */
         if ((component == ecs_id(EcsComponent)) || 
             (component == ecs_id(EcsName)) || 
+            (component == ecs_id(EcsSymbol)) || 
             flecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;

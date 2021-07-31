@@ -1390,8 +1390,12 @@ void register_table_for_id(
     if (!tr->table || column < tr->column) {
         tr->table = table;
         tr->column = column;
+        tr->count = 1;
+    } else {
         tr->count ++;
     }
+
+    char buf[255]; ecs_id_str(world, id, buf, 255);
 
     /* Set flags if triggers are registered for table */
     if (!(table->flags & EcsTableIsDisabled)) {

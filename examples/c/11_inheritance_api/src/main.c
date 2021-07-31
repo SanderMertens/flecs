@@ -60,29 +60,29 @@ int main(int argc, char *argv[]) {
 
     /* Create regular entity with Position, Force and Mass */
     ecs_entity_t Instance0 = ecs_new(world, 0);
-    ecs_set(world, Instance0, EcsName, {.value = "Instance0"});
+    ecs_set_name(world, Instance0, "Instance0");
     ecs_set(world, Instance0, Position, {0, 0});
     ecs_set(world, Instance0, Force, {10, 10});
     ecs_set(world, Instance0, Mass, {2});
 
     /* Create instances which share the Mass component from a base */
     ecs_entity_t Instance1 = ecs_new_w_pair(world, EcsIsA, LightEntity);
-    ecs_set(world, Instance1, EcsName, {.value = "Instance1"});
+    ecs_set_name(world, Instance1, "Instance1");
     ecs_set(world, Instance1, Position, {0, 0});
     ecs_set(world, Instance1, Force, {10, 10});
 
     ecs_entity_t Instance2 = ecs_new_w_pair(world, EcsIsA, LightEntity);
-    ecs_set(world, Instance2, EcsName, {.value = "Instance2"});
+    ecs_set_name(world, Instance2, "Instance2");
     ecs_set(world, Instance2, Position, {0, 0});
     ecs_set(world, Instance2, Force, {10, 10});
 
     ecs_entity_t Instance3 = ecs_new_w_pair(world, EcsIsA, HeavyEntity);
-    ecs_set(world, Instance3, EcsName, {.value = "Instance3"});
+    ecs_set_name(world, Instance3, "Instance3");
     ecs_set(world, Instance3, Position, {0, 0});
     ecs_set(world, Instance3, Force, {10, 10});
 
     ecs_entity_t Instance4 = ecs_new_w_pair(world, EcsIsA, HeavyEntity);
-    ecs_set(world, Instance4, EcsName, {.value = "Instance4"});
+    ecs_set_name(world, Instance4, "Instance4");
     ecs_set(world, Instance4, Position, {0, 0});
     ecs_set(world, Instance4, Force, {10, 10});
 
