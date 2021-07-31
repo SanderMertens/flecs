@@ -1351,7 +1351,7 @@ void flecs_run_set_systems(
     if (!count || !data) {
         return;
     }
-    
+
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
     ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
@@ -3412,7 +3412,7 @@ ecs_entity_t ecs_set_name(
         entity = ecs_new_id(world);
     }
     
-    ecs_set_pair(world, entity, EcsIdentifier, EcsName, {(char*)name});
+    ecs_set_pair(world, entity, EcsIdentifier, EcsName, {.value = (char*)name});
 
     return entity;
 }
@@ -3428,7 +3428,9 @@ ecs_entity_t ecs_set_symbol(
         entity = ecs_new_id(world);
     }
     
-    ecs_set_pair(world, entity, EcsIdentifier, EcsSymbol, {(char*)name});
+    ecs_set_pair(world, entity, EcsIdentifier, EcsSymbol, {
+        .value = (char*)name
+    });
 
     return entity;
 }

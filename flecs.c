@@ -1914,6 +1914,9 @@ int flecs_entity_compare_qsort(
     const void *e1,
     const void *e2);
 
+uint64_t flecs_string_hash(
+    const void *ptr);
+
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(
     bool cond,
@@ -5988,7 +5991,7 @@ void flecs_run_set_systems(
     if (!count || !data) {
         return;
     }
-    
+
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
     ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
@@ -8049,7 +8052,7 @@ ecs_entity_t ecs_set_name(
         entity = ecs_new_id(world);
     }
     
-    ecs_set_pair(world, entity, EcsIdentifier, EcsName, {(char*)name});
+    ecs_set_pair(world, entity, EcsIdentifier, EcsName, {.value = (char*)name});
 
     return entity;
 }
@@ -8065,7 +8068,9 @@ ecs_entity_t ecs_set_symbol(
         entity = ecs_new_id(world);
     }
     
-    ecs_set_pair(world, entity, EcsIdentifier, EcsSymbol, {(char*)name});
+    ecs_set_pair(world, entity, EcsIdentifier, EcsSymbol, {
+        .value = (char*)name
+    });
 
     return entity;
 }
@@ -24243,6 +24248,19 @@ int flecs_entity_compare_qsort(
     return flecs_entity_compare(v1, NULL, v2, NULL);
 }
 
+uint64_t flecs_string_hash(
+    const void *ptr)
+{
+    const ecs_string_t *str = ptr;
+    if (str->hash) {
+        return str->hash;
+    } else {
+        uint64_t hash = 0;
+        flecs_hash(str->value, str->length, &hash);
+        return hash;
+    }
+}
+
 /*
     This code was taken from sokol_time.h 
     
@@ -26979,6 +26997,10 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
     src->value = NULL;
 })
 
+static ECS_ON_SET(EcsIdentifier, ptr, {
+    ptr->length = ecs_os_strlen(ptr->value);
+})
+
 /* Component lifecycle actions for EcsTrigger */
 static ECS_CTOR(EcsTrigger, ptr, {
     ptr->trigger = NULL;
@@ -27242,7 +27264,8 @@ void flecs_bootstrap(
         .ctor = ecs_ctor(EcsIdentifier),
         .dtor = ecs_dtor(EcsIdentifier),
         .copy = ecs_copy(EcsIdentifier),
-        .move = ecs_move(EcsIdentifier)
+        .move = ecs_move(EcsIdentifier),
+        .on_set = ecs_on_set(EcsIdentifier)
     });
 
     ecs_set_component_actions(world, EcsTrigger, {

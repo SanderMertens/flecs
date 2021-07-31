@@ -636,6 +636,9 @@ int flecs_entity_compare_qsort(
     const void *e1,
     const void *e2);
 
+uint64_t flecs_string_hash(
+    const void *ptr);
+
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(
     bool cond,

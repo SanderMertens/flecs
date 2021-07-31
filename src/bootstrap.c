@@ -28,6 +28,10 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
     src->value = NULL;
 })
 
+static ECS_ON_SET(EcsIdentifier, ptr, {
+    ptr->length = ecs_os_strlen(ptr->value);
+})
+
 /* Component lifecycle actions for EcsTrigger */
 static ECS_CTOR(EcsTrigger, ptr, {
     ptr->trigger = NULL;
@@ -291,7 +295,8 @@ void flecs_bootstrap(
         .ctor = ecs_ctor(EcsIdentifier),
         .dtor = ecs_dtor(EcsIdentifier),
         .copy = ecs_copy(EcsIdentifier),
-        .move = ecs_move(EcsIdentifier)
+        .move = ecs_move(EcsIdentifier),
+        .on_set = ecs_on_set(EcsIdentifier)
     });
 
     ecs_set_component_actions(world, EcsTrigger, {

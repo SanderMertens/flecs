@@ -860,7 +860,8 @@
                 "delete_self_in_dtor_on_delete_parent",
                 "delete_in_dtor_same_type_on_delete",
                 "delete_in_dtor_other_type_on_delete",
-                "delete_self_in_dtor_on_delete"
+                "delete_self_in_dtor_on_delete",
+                "on_set_after_set"
             ]
         }, {
             "id": "Pipeline",

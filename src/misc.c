@@ -130,6 +130,19 @@ int flecs_entity_compare_qsort(
     return flecs_entity_compare(v1, NULL, v2, NULL);
 }
 
+uint64_t flecs_string_hash(
+    const void *ptr)
+{
+    const ecs_string_t *str = ptr;
+    if (str->hash) {
+        return str->hash;
+    } else {
+        uint64_t hash = 0;
+        flecs_hash(str->value, str->length, &hash);
+        return hash;
+    }
+}
+
 /*
     This code was taken from sokol_time.h 
     

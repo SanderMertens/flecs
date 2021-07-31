@@ -403,7 +403,34 @@ typedef int32_t ecs_size_t;
             __VA_ARGS__\
         }\
     }
-    
+
+/* Constructor / destructor convenience macro */
+#define ECS_ON_SET_IMPL(type, var, ...)\
+    void type##_##on_set(\
+        ecs_world_t *world,\
+        ecs_entity_t component,\
+        const ecs_entity_t *entity_ptr,\
+        void *_ptr,\
+        size_t _size,\
+        int32_t _count,\
+        void *ctx)\
+    {\
+        (void)world;\
+        (void)component;\
+        (void)entity_ptr;\
+        (void)_ptr;\
+        (void)_size;\
+        (void)_count;\
+        (void)ctx;\
+        for (int32_t i = 0; i < _count; i ++) {\
+            ecs_entity_t entity = entity_ptr[i];\
+            type *var = &((type*)_ptr)[i];\
+            (void)entity;\
+            (void)var;\
+            __VA_ARGS__\
+        }\
+    }
+
 #endif
 
 
@@ -2607,6 +2634,15 @@ typedef void (*ecs_move_ctor_t)(
     int32_t count,
     void *ctx);
 
+/** Invoked when setting a component */
+typedef void (*ecs_on_set_t)(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entity_ptr,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx);
 
 #ifdef __cplusplus
 }
@@ -3023,6 +3059,8 @@ typedef struct ecs_observer_desc_t {
 /** A (string) identifier. */
 typedef struct EcsIdentifier {
     char *value;
+    ecs_size_t length;
+    // uint64_t hash;    
 } EcsIdentifier;
 
 /** Component information. */
@@ -3066,6 +3104,11 @@ struct EcsComponentLifecycle {
      * location to an existing location, like what happens during a remove. If
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_ctor_t move_dtor;
+
+    /* Callback that is invoked when an instance of the component is set. This
+     * callback is invoked before triggers are invoked, and enable the component
+     * to respond to changes on itself before others can. */
+    ecs_on_set_t on_set;
 };
 
 /** Component that stores reference to trigger */
@@ -4057,11 +4100,19 @@ FLECS_API extern const ecs_entity_t EcsPostFrame;
 #define ECS_MOVE(type, dst_var, src_var, ...)\
     ECS_MOVE_IMPL(type, dst_var, src_var, __VA_ARGS__)
 
+/** Declare an on_set action.
+ * Example:
+ *   ECS_ON_SET(MyType, ptr, { printf("%d\n", ptr->value); });
+ */
+#define ECS_ON_SET(type, ptr, ...)\
+    ECS_ON_SET_IMPL(type, ptr, __VA_ARGS__)
+
 /* Map from typename to function name of component lifecycle action */
 #define ecs_ctor(type) type##_ctor
 #define ecs_dtor(type) type##_dtor
 #define ecs_copy(type) type##_copy
 #define ecs_move(type) type##_move
+#define ecs_on_set(type) type##_on_set
 
 #endif /* FLECS_LEGACY */
 

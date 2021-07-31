@@ -804,6 +804,7 @@ void ComponentLifecycle_delete_self_in_dtor_on_delete_parent(void);
 void ComponentLifecycle_delete_in_dtor_same_type_on_delete(void);
 void ComponentLifecycle_delete_in_dtor_other_type_on_delete(void);
 void ComponentLifecycle_delete_self_in_dtor_on_delete(void);
+void ComponentLifecycle_on_set_after_set(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_setup(void);
@@ -5030,6 +5031,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "delete_self_in_dtor_on_delete",
         ComponentLifecycle_delete_self_in_dtor_on_delete
+    },
+    {
+        "on_set_after_set",
+        ComponentLifecycle_on_set_after_set
     }
 };
 
@@ -9757,7 +9762,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        59,
+        60,
         ComponentLifecycle_testcases
     },
     {

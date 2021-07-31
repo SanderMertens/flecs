@@ -307,7 +307,34 @@ typedef int32_t ecs_size_t;
             __VA_ARGS__\
         }\
     }
-    
+
+/* Constructor / destructor convenience macro */
+#define ECS_ON_SET_IMPL(type, var, ...)\
+    void type##_##on_set(\
+        ecs_world_t *world,\
+        ecs_entity_t component,\
+        const ecs_entity_t *entity_ptr,\
+        void *_ptr,\
+        size_t _size,\
+        int32_t _count,\
+        void *ctx)\
+    {\
+        (void)world;\
+        (void)component;\
+        (void)entity_ptr;\
+        (void)_ptr;\
+        (void)_size;\
+        (void)_count;\
+        (void)ctx;\
+        for (int32_t i = 0; i < _count; i ++) {\
+            ecs_entity_t entity = entity_ptr[i];\
+            type *var = &((type*)_ptr)[i];\
+            (void)entity;\
+            (void)var;\
+            __VA_ARGS__\
+        }\
+    }
+
 #endif
 
 

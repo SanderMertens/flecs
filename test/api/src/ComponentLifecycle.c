@@ -879,6 +879,8 @@ void ComponentLifecycle_move_on_tag() {
 static int ctor_position = 0;
 static
 ECS_CTOR(Position, ptr, {
+    ptr->x = 0;
+    ptr->y = 0;
     ctor_position ++;
 });
 
@@ -2455,6 +2457,44 @@ void ComponentLifecycle_delete_self_in_dtor_on_delete() {
     ecs_delete(world, e3);
 
     test_int(dummy_dtor_invoked, 3);
+
+    ecs_fini(world);
+}
+
+static int on_set_invoked;
+
+ECS_ON_SET(Position, ptr, {
+    ptr->x += 1;
+    ptr->y += 2;
+    on_set_invoked ++;
+})
+
+void ComponentLifecycle_on_set_after_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .ctor = ecs_ctor(Position),
+        .on_set = ecs_on_set(Position)
+    });
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_int(ctor_position, 1);
+    test_int(on_set_invoked, 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+    test_int(p->y, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctor_position, 1);
+    test_int(on_set_invoked, 1);
+
+    test_assert(p == ecs_get(world, e, Position));
+    test_int(p->x, 11);
+    test_int(p->y, 22);
 
     ecs_fini(world);
 }
