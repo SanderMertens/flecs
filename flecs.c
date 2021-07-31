@@ -11097,6 +11097,8 @@ ecs_query_t* ecs_subquery_new(
 #endif
 #include "errno.h"
 
+#ifdef FLECS_PLECS
+
 #define TOK_NEWLINE '\n'
 
 static
@@ -11188,7 +11190,7 @@ int ecs_plecs_from_file(
     size_t size;
 
     /* Open file for reading */
-    file = fopen(filename, "r");
+    ecs_os_fopen(&file, filename, "r");
     if (!file) {
         ecs_err("%s (%s)", strerror(errno), filename);
         goto error;
@@ -11223,6 +11225,8 @@ error:
     ecs_os_free(content);
     return -1;
 }
+
+#endif
 
 #ifdef FLECS_MODULE
 

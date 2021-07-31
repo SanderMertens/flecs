@@ -346,6 +346,13 @@ void ecs_os_set_api_defaults(void);
 #endif
 #endif
 
+/* Files */
+#if defined(_MSC_VER)
+#define ecs_os_fopen(result, file, mode) fopen_s(result, file, mode)
+#else
+#define ecs_os_fopen(result, file, mode) (*(result)) = fopen(file, mode)
+#endif
+
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new_(callback, param)
 #define ecs_os_thread_join(thread) ecs_os_api.thread_join_(thread)
