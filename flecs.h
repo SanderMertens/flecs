@@ -35,7 +35,6 @@
 
 /* Addons */
 #define FLECS_BULK
-#define FLECS_DBG
 #define FLECS_MODULE
 #define FLECS_PARSER
 #define FLECS_QUEUE
@@ -138,6 +137,7 @@ extern "C" {
 #define FLECS_DBG_API
 #endif
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Language support defines
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,6 +206,7 @@ typedef int32_t ecs_size_t;
 #define ECS_CAST(T, V) (static_cast<T>(V))
 #endif
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Reserved component ids
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,8 +215,7 @@ typedef int32_t ecs_size_t;
 #define FLECS__EEcsComponent (1)
 #define FLECS__EEcsComponentLifecycle (2)
 #define FLECS__EEcsType (3)
-#define FLECS__EEcsName (4)
-#define FLECS__EEcsSymbol (5)
+#define FLECS__EEcsIdentifier (4)
 #define FLECS__EEcsTrigger (6)
 #define FLECS__EEcsQuery (7)
 #define FLECS__EEcsObserver (8)
@@ -2639,8 +2639,7 @@ extern ecs_type_t
     ecs_type(EcsComponent),
     ecs_type(EcsComponentLifecycle),
     ecs_type(EcsType),
-    ecs_type(EcsName),
-    ecs_type(EcsSymbol);
+    ecs_type(EcsIdentifier);
 
 /** This allows passing 0 as type to functions that accept types */
 #define FLECS__TNULL 0
@@ -3009,23 +3008,10 @@ typedef struct ecs_observer_desc_t {
  * @{
  */
 
-/** Entity name. 
- * Entity names allow looking up entities by name & enables introspection. */
-typedef struct EcsName {
+/** A (string) identifier. */
+typedef struct EcsIdentifier {
     char *value;
-} EcsName;
-
-/** Entity symbol. 
- * Symbols are the underlying identifier of what an entity represents and can be
- * different from a name. For example, the EcsName component has flecs.core.Name
- * as (path) name, and EcsName as symbol. 
- *
- * The distinction between names and symbols allows for sharing canonical names 
- * across language bindings, while still being able to lookup an entity by its 
- * original symbol. */
-typedef struct EcsSymbol {
-    char *value;
-} EcsSymbol;
+} EcsIdentifier;
 
 /** Component information. */
 typedef struct EcsComponent {
@@ -3773,6 +3759,12 @@ FLECS_API extern const ecs_entity_t EcsFinal;
 /* Can be added to relation to indicate that it should never hold data, even
  * when it or the relation object is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
+
+/* Tag to indicate name identifier */
+FLECS_API extern const ecs_entity_t EcsName;
+
+/* Tag to indicate symbol identifier */
+FLECS_API extern const ecs_entity_t EcsSymbol;
 
 /* Used to express parent-child relations. */
 FLECS_API extern const ecs_entity_t EcsChildOf;
@@ -7591,50 +7583,6 @@ void* ecs_get_system_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t system);    
 
-////////////////////////////////////////////////////////////////////////////////
-//// System debug API
-////////////////////////////////////////////////////////////////////////////////
-
-typedef struct ecs_dbg_system_t {
-    ecs_entity_t system;   
-    int32_t entities_matched_count;
-    int32_t active_table_count;
-    int32_t inactive_table_count;
-    bool enabled;
-    void *system_data;
-} ecs_dbg_system_t;
-
-FLECS_API
-int ecs_dbg_system(
-    const ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_dbg_system_t *dbg_out);
-
-FLECS_API
-ecs_table_t* ecs_dbg_get_active_table(
-    const ecs_world_t *world,
-    ecs_dbg_system_t *dbg,
-    int32_t index);
-
-FLECS_API
-ecs_table_t* ecs_dbg_get_inactive_table(
-    const ecs_world_t *world,
-    ecs_dbg_system_t *dbg,
-    int32_t index);
-
-FLECS_API
-ecs_type_t ecs_dbg_get_column_type(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    int32_t column_index);
-
-FLECS_API
-bool ecs_dbg_match_entity(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t system,
-    ecs_match_failure_t *failure_info_out);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
@@ -8230,79 +8178,6 @@ FLECS_API
 void ecs_bulk_delete(
     ecs_world_t *world,
     const ecs_filter_t *filter);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#endif
-#endif
-#ifdef FLECS_DBG
-/**
- * @file dbg.h
- * @brief The debug addon enables requesting internals from entities and tables.
- */
-
-#ifdef FLECS_DBG
-
-#ifndef FLECS_DBG_H
-#define FLECS_DBG_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Unstable API */
-
-typedef struct ecs_dbg_entity_t {
-    ecs_entity_t entity;
-    ecs_table_t *table;
-    ecs_type_t type;
-    int32_t row;
-    bool is_watched;
-} ecs_dbg_entity_t;
-
-typedef struct ecs_dbg_table_t {
-    ecs_table_t *table;
-    ecs_type_t type;
-    ecs_type_t shared;
-    ecs_type_t container;
-    ecs_type_t parent_entities;
-    ecs_type_t base_entities;     
-    ecs_vector_t *systems_matched;
-    ecs_entity_t *entities;
-    int32_t entities_count;
-} ecs_dbg_table_t;
-
-FLECS_API
-void ecs_dbg_entity(
-    const ecs_world_t *world, 
-    ecs_entity_t entity, 
-    ecs_dbg_entity_t *dbg_out);
-
-FLECS_API
-ecs_table_t *ecs_dbg_find_table(
-    ecs_world_t *world,
-    ecs_type_t type);
-
-FLECS_API
-ecs_table_t *ecs_dbg_get_table(
-    const ecs_world_t *world,
-    int32_t index);
-
-FLECS_API
-bool ecs_dbg_filter_table(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    const ecs_filter_t *filter);
-
-FLECS_API
-void ecs_dbg_table(
-    ecs_world_t *world, 
-    ecs_table_t *table, 
-    ecs_dbg_table_t *dbg_out);
 
 #ifdef __cplusplus
 }
@@ -9201,7 +9076,7 @@ class cpp_type;
 /* Builtin components */
 using Component = EcsComponent;
 using Type = EcsType;
-using Name = EcsName;
+using Identifier = EcsIdentifier;
 using Timer = EcsTimer;
 using RateFilter = EcsRateFilter;
 using TickSource = EcsTickSource;
@@ -9272,6 +9147,10 @@ static const flecs::entity_t Tag = EcsTag;
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
+
+/* Builtin identifiers */
+static const flecs::entity_t Name = EcsName;
+static const flecs::entity_t Symbol = EcsSymbol;
 
 /* Cleanup rules */
 static const flecs::entity_t OnDelete = EcsOnDelete;
@@ -12431,9 +12310,7 @@ public:
      * @return The entity name, or an empty string if the entity has no name.
      */
     flecs::string_view name() const {
-        const EcsName *name = static_cast<const EcsName*>(
-            ecs_get_id(m_world, m_id, static_cast<ecs_entity_t>(ecs_id(EcsName))));
-        return flecs::string_view(name ? name->value : nullptr);
+        return flecs::string_view(ecs_get_name(m_world, m_id));
     }
 
     /** Return the entity path.
@@ -17700,7 +17577,7 @@ void scope(id_t parent, const Func& func);
 inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");
     pod_component<Type>("flecs::core::Type");
-    pod_component<Name>("flecs::core::Name");
+    pod_component<Identifier>("flecs::core::Identifier");
     pod_component<Trigger>("flecs::core::Trigger");
     pod_component<Observer>("flecs::core::Observer");
     pod_component<Query>("flecs::core::Query");

@@ -369,8 +369,8 @@ void New_create_w_explicit_id_2_worlds() {
     ecs_world_t *world_1 = ecs_init();
     ecs_world_t *world_2 = ecs_init();
 
-    ecs_entity_t p1 = ecs_set(world_1, 0, EcsName, {"Parent"});
-    ecs_entity_t p2 = ecs_set(world_2, 0, EcsName, {"Parent"});
+    ecs_entity_t p1 = ecs_set_name(world_1, 0, "Parent");
+    ecs_entity_t p2 = ecs_set_name(world_2, 0, "Parent");
 
     ecs_set_scope(world_1, p1);
     ecs_set_scope(world_2, p2);

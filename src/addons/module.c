@@ -210,13 +210,8 @@ ecs_entity_t ecs_module_init(
 
     char *module_path = ecs_module_path_from_c(name);
     ecs_entity_t e = ecs_new_from_fullpath(world, module_path);
-
-    EcsSymbol *sym_ptr = ecs_get_mut(world, e, EcsSymbol, NULL);
-    ecs_os_free(sym_ptr->value);
-
-    /* Assign full path to symbol. This allows for modules to be redefined
-     * in C++ without causing name conflicts */
-    sym_ptr->value = module_path;
+    ecs_set_symbol(world, e, module_path);
+    ecs_os_free(module_path);
 
     ecs_component_desc_t private_desc = *desc;
     private_desc.entity.entity = e;

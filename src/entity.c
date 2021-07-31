@@ -69,7 +69,7 @@ void* get_base_component(
     }
 
     /* Exclude Name */
-    if (id == ecs_id(EcsName)) {
+    if (id == ecs_pair(ecs_id(EcsIdentifier), EcsName)) {
         return NULL;
     }
 
@@ -318,10 +318,10 @@ void instantiate_children(
 
     /* Create component array for creating the table */
     ecs_ids_t components = {
-        .array = ecs_os_alloca(ECS_SIZEOF(ecs_entity_t) * type_count + 1)
+        .array = ecs_os_alloca_n(ecs_entity_t, type_count + 1)
     };
 
-    void **c_info = ecs_os_alloca(ECS_SIZEOF(void*) * column_count);
+    void **c_info = ecs_os_alloca_n(void*, column_count);
 
     /* Copy in component identifiers. Find the base index in the component
      * array, since we'll need this to replace the base with the instance id */
@@ -329,15 +329,15 @@ void instantiate_children(
 
     for (i = 0; i < type_count; i ++) {
         ecs_entity_t c = type_array[i];
-        
+
         /* Make sure instances don't have EcsPrefab */
         if (c == EcsPrefab) {
             continue;
         }
 
         /* Keep track of the element that creates the ChildOf relationship with
-        * the prefab parent. We need to replace this element to make sure the
-        * created children point to the instance and not the prefab */ 
+         * the prefab parent. We need to replace this element to make sure the
+         * created children point to the instance and not the prefab */ 
         if (ECS_HAS_RELATION(c, EcsChildOf) && (ecs_entity_t_lo(c) == base)) {
             base_index = pos;
         }        
@@ -348,6 +348,8 @@ void instantiate_children(
             ecs_column_t *column = &child_data->columns[i];
             c_info[pos] = ecs_vector_first_t(
                 column->data, column->size, column->alignment);
+        } else if (pos < column_count) {
+            c_info[pos] = NULL;
         }
 
         components.array[pos] = c;
@@ -1018,6 +1020,10 @@ const ecs_entity_t* new_w_data(
 
             ecs_column_t *column = &data->columns[table_index];
             int16_t size = column->size;
+            if (!size) {
+                continue;
+            }
+            
             int16_t alignment = column->alignment;
             void *ptr = ecs_vector_first_t(column->data, size, alignment);
             ptr = ECS_OFFSET(ptr, size * row);
@@ -1902,7 +1908,7 @@ void traverse_add_remove(
 
     /* If a name is provided but not yet assigned, add the Name component */
     if (name && !name_assigned) {
-        ecs_entity_t id = ecs_id(EcsName);
+        ecs_entity_t id = ecs_pair(ecs_id(EcsIdentifier), EcsName);
         ecs_ids_t arr = { .array = &id, .count = 1 };
         table = flecs_table_traverse_add(world, table, &arr, &added);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
@@ -1960,13 +1966,12 @@ void traverse_add_remove(
     }
 
     if (desc->symbol) {
-        EcsSymbol *sym_ptr = ecs_get_mut(world, result, EcsSymbol, NULL);
-        if (sym_ptr->value) {
-            ecs_assert(!ecs_os_strcmp(desc->symbol, sym_ptr->value),
+        const char *sym = ecs_get_symbol(world, result);
+        if (sym) {
+            ecs_assert(!ecs_os_strcmp(desc->symbol, sym),
                 ECS_INCONSISTENT_NAME, desc->symbol);
         } else {
-            ecs_os_strset(&sym_ptr->value, desc->symbol);
-            ecs_modified(world, result, EcsSymbol);
+            ecs_set_symbol(world, result, desc->symbol);
         }
     }
 
@@ -2045,12 +2050,9 @@ void deferred_add_remove(
 
     /* Currently it's not supported to set the symbol from a deferred context */
     if (desc->symbol) {
-        const EcsSymbol *ptr = ecs_get(world, entity, EcsSymbol);
-        (void)ptr;
-        
-        ecs_assert(ptr != NULL, ECS_UNSUPPORTED, NULL);
-        ecs_assert(!ecs_os_strcmp(ptr->value, desc->symbol), 
-            ECS_UNSUPPORTED, NULL);
+        const char *sym = ecs_get_symbol(world, entity);
+        ecs_assert(!ecs_os_strcmp(sym, desc->symbol), ECS_UNSUPPORTED, NULL);
+        (void)sym;
     }
 }
 
@@ -2121,7 +2123,8 @@ ecs_entity_t ecs_entity_init(
     } else {
         ecs_assert(ecs_is_valid(world, result), ECS_INVALID_PARAMETER, NULL);
 
-        name_assigned = ecs_has(world, result, EcsName);
+        name_assigned = ecs_has_pair(
+            world, result, ecs_id(EcsIdentifier), EcsName);
         if (name && name_assigned) {
             /* If entity has name, verify that name matches */
             char *path = ecs_get_path_w_sep(world, scope, result, 0, sep, NULL);
@@ -2136,8 +2139,9 @@ ecs_entity_t ecs_entity_init(
         }
     }
 
-    ecs_assert(name_assigned == ecs_has(world, result, EcsName),
-        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(name_assigned == ecs_has_pair(
+        world, result, ecs_id(EcsIdentifier), EcsName),
+            ECS_INTERNAL_ERROR, NULL);
 
     if (stage->defer) {
         deferred_add_remove(world, result, name, desc, 
@@ -3360,7 +3364,8 @@ const char* ecs_get_name(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    const EcsName *ptr = ecs_get(world, entity, EcsName);
+    const EcsIdentifier *ptr = ecs_get_pair(
+        world, entity, EcsIdentifier, EcsName);
 
     if (ptr) {
         return ptr->value;
@@ -3376,7 +3381,8 @@ const char* ecs_get_symbol(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    const EcsSymbol *ptr = ecs_get(world, entity, EcsSymbol);
+    const EcsIdentifier *ptr = ecs_get_pair(
+        world, entity, EcsIdentifier, EcsSymbol);
 
     if (ptr) {
         return ptr->value;
@@ -3396,7 +3402,7 @@ ecs_entity_t ecs_set_name(
         entity = ecs_new_id(world);
     }
     
-    ecs_set(world, entity, EcsName, {(char*)name});
+    ecs_set_pair(world, entity, EcsIdentifier, EcsName, {(char*)name});
 
     return entity;
 }
@@ -3412,7 +3418,7 @@ ecs_entity_t ecs_set_symbol(
         entity = ecs_new_id(world);
     }
     
-    ecs_set(world, entity, EcsSymbol, {(char*)name});
+    ecs_set_pair(world, entity, EcsIdentifier, EcsSymbol, {(char*)name});
 
     return entity;
 }

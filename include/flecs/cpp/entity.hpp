@@ -92,9 +92,7 @@ public:
      * @return The entity name, or an empty string if the entity has no name.
      */
     flecs::string_view name() const {
-        const EcsName *name = static_cast<const EcsName*>(
-            ecs_get_id(m_world, m_id, static_cast<ecs_entity_t>(ecs_id(EcsName))));
-        return flecs::string_view(name ? name->value : nullptr);
+        return flecs::string_view(ecs_get_name(m_world, m_id));
     }
 
     /** Return the entity path.

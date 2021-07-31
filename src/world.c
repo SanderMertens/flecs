@@ -23,6 +23,10 @@ const ecs_entity_t EcsTransitive =            ECS_HI_COMPONENT_ID + 12;
 const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 13;
 const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 14;
 
+/* Identifier tags */
+const ecs_entity_t EcsName =                  ECS_HI_COMPONENT_ID + 15;
+const ecs_entity_t EcsSymbol =                ECS_HI_COMPONENT_ID + 16;
+
 /* Relations */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 20;
 const ecs_entity_t EcsIsA =                   ECS_HI_COMPONENT_ID + 21;

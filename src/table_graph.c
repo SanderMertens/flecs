@@ -97,8 +97,8 @@ int32_t data_column_count(
          * Explicitly check for EcsComponent and EcsName since the ecs_has check
          * doesn't work during bootstrap. */
         if ((component == ecs_id(EcsComponent)) || 
-            (component == ecs_id(EcsName)) || 
-            (component == ecs_id(EcsSymbol)) || 
+            (component == ecs_pair(ecs_id(EcsIdentifier), EcsName)) || 
+            (component == ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)) || 
             flecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;
@@ -196,7 +196,7 @@ ecs_edge_t* get_edge(
 {
     if (e < ECS_HI_COMPONENT_ID) {
         if (!node->lo_edges) {
-            node->lo_edges = ecs_os_calloc(sizeof(ecs_edge_t) * ECS_HI_COMPONENT_ID);
+            node->lo_edges = ecs_os_calloc_n(ecs_edge_t, ECS_HI_COMPONENT_ID);
         }
         return &node->lo_edges[e];
     } else {
@@ -226,10 +226,6 @@ void init_edges(
         ecs_edge_t *edge = get_edge(table, e);
         ecs_assert(edge != NULL, ECS_INTERNAL_ERROR, NULL);
         edge->add = table;
-
-        if (count == 1) {
-            edge->remove = &world->store.root;
-        }
 
         /* As we're iterating over the table components, also set the table
          * flags. These allow us to quickly determine if the table contains
@@ -954,6 +950,7 @@ void flecs_table_clear_edges(
         for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
             ecs_edge_t *e = &table->lo_edges[i];
             ecs_table_t *add = e->add, *remove = e->remove;
+
             if (add) {
                 add->lo_edges[i].remove = NULL;
             }

@@ -118,7 +118,7 @@ void scope(id_t parent, const Func& func);
 inline void world::init_builtin_components() {
     pod_component<Component>("flecs::core::Component");
     pod_component<Type>("flecs::core::Type");
-    pod_component<Name>("flecs::core::Name");
+    pod_component<Identifier>("flecs::core::Identifier");
     pod_component<Trigger>("flecs::core::Trigger");
     pod_component<Observer>("flecs::core::Observer");
     pod_component<Query>("flecs::core::Query");

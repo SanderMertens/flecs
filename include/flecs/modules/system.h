@@ -280,50 +280,6 @@ void* ecs_get_system_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t system);    
 
-////////////////////////////////////////////////////////////////////////////////
-//// System debug API
-////////////////////////////////////////////////////////////////////////////////
-
-typedef struct ecs_dbg_system_t {
-    ecs_entity_t system;   
-    int32_t entities_matched_count;
-    int32_t active_table_count;
-    int32_t inactive_table_count;
-    bool enabled;
-    void *system_data;
-} ecs_dbg_system_t;
-
-FLECS_API
-int ecs_dbg_system(
-    const ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_dbg_system_t *dbg_out);
-
-FLECS_API
-ecs_table_t* ecs_dbg_get_active_table(
-    const ecs_world_t *world,
-    ecs_dbg_system_t *dbg,
-    int32_t index);
-
-FLECS_API
-ecs_table_t* ecs_dbg_get_inactive_table(
-    const ecs_world_t *world,
-    ecs_dbg_system_t *dbg,
-    int32_t index);
-
-FLECS_API
-ecs_type_t ecs_dbg_get_column_type(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    int32_t column_index);
-
-FLECS_API
-bool ecs_dbg_match_entity(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t system,
-    ecs_match_failure_t *failure_info_out);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module

@@ -42,6 +42,7 @@ extern "C" {
 #define FLECS_DBG_API
 #endif
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Language support defines
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,6 +111,7 @@ typedef int32_t ecs_size_t;
 #define ECS_CAST(T, V) (static_cast<T>(V))
 #endif
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Reserved component ids
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,8 +120,7 @@ typedef int32_t ecs_size_t;
 #define FLECS__EEcsComponent (1)
 #define FLECS__EEcsComponentLifecycle (2)
 #define FLECS__EEcsType (3)
-#define FLECS__EEcsName (4)
-#define FLECS__EEcsSymbol (5)
+#define FLECS__EEcsIdentifier (4)
 #define FLECS__EEcsTrigger (6)
 #define FLECS__EEcsQuery (7)
 #define FLECS__EEcsObserver (8)

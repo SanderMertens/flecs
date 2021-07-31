@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Entity_init_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){0});
     test_assert(e != 0);

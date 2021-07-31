@@ -1220,7 +1220,7 @@ void Entity_implicit_type_str_to_char() {
     auto entity = flecs::entity(world, "Foo");
     test_assert(entity);
 
-    test_str(entity.type().str(), "Name");
+    test_str(entity.type().str(), "(Identifier,Name)");
 }
 
 void Entity_entity_to_entity_view() {
@@ -1991,10 +1991,10 @@ void Entity_defer_new_w_name() {
         e = ecs.entity("Foo");
         test_assert(e != 0);
         test_assert(0 == ecs.lookup("Foo"));
-        test_assert(!e.has<flecs::Name>());
+        test_assert(!e.has<flecs::Identifier>(flecs::Name));
     });
 
-    test_assert(e.has<flecs::Name>());
+    test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Foo");
 }
 
@@ -2008,10 +2008,10 @@ void Entity_defer_new_w_nested_name() {
         test_assert(e != 0);
         test_assert(0 == ecs.lookup("Foo"));
         test_assert(0 == ecs.lookup("Bar"));
-        test_assert(!e.has<flecs::Name>());
+        test_assert(!e.has<flecs::Identifier>(flecs::Name));
     });
 
-    test_assert(e.has<flecs::Name>());
+    test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Bar");
     test_str(e.path(), "::Foo::Bar");
 }
@@ -2027,11 +2027,11 @@ void Entity_defer_new_w_scope_name() {
             e = ecs.entity("Foo");
             test_assert(e != 0);
             test_assert(0 == ecs.lookup("Foo"));
-            test_assert(!e.has<flecs::Name>());
+            test_assert(!e.has<flecs::Identifier>(flecs::Name));
         });
     });
 
-    test_assert(e.has<flecs::Name>());
+    test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Foo");
     test_str(e.path(), "::Parent::Foo");
 }
@@ -2047,11 +2047,11 @@ void Entity_defer_new_w_scope_nested_name() {
             test_assert(e != 0);
             test_assert(0 == ecs.lookup("Foo"));
             test_assert(0 == ecs.lookup("Bar"));
-            test_assert(!e.has<flecs::Name>());
+            test_assert(!e.has<flecs::Identifier>(flecs::Name));
         });
     });
 
-    test_assert(e.has<flecs::Name>());
+    test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Bar");
     test_str(e.path(), "::Parent::Foo::Bar");
 }
@@ -2067,20 +2067,20 @@ void Entity_defer_new_w_deferred_scope_nested_name() {
             test_assert(e != 0);
             test_assert(0 == ecs.lookup("Foo"));
             test_assert(0 == ecs.lookup("Bar"));
-            test_assert(!e.has<flecs::Name>());
+            test_assert(!e.has<flecs::Identifier>(flecs::Name));
         });
 
         test_assert(0 == ecs.lookup("Parent"));
         test_assert(0 == ecs.lookup("Foo"));
         test_assert(0 == ecs.lookup("Bar"));
-        test_assert(!parent.has<flecs::Name>());
+        test_assert(!parent.has<flecs::Identifier>(flecs::Name));
     });
 
-    test_assert(parent.has<flecs::Name>());
+    test_assert(parent.has<flecs::Identifier>(flecs::Name));
     test_str(parent.name(), "Parent");
     test_str(parent.path(), "::Parent");
 
-    test_assert(e.has<flecs::Name>());
+    test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Bar");
     test_str(e.path(), "::Parent::Foo::Bar");
 }
@@ -2128,19 +2128,19 @@ void Entity_defer_new_w_name_scope_with() {
                 test_assert(e != 0);
                 test_assert(0 == ecs.lookup("Foo"));
                 test_assert(!e.has(Tag));
-                test_assert(!e.has<flecs::Name>());
+                test_assert(!e.has<flecs::Identifier>(flecs::Name));
             });
             test_assert(0 == ecs.lookup("Foo"));
             test_assert(!e.has(Tag));
-            test_assert(!e.has<flecs::Name>());
+            test_assert(!e.has<flecs::Identifier>(flecs::Name));
         });
         test_assert(0 == ecs.lookup("Foo"));
         test_assert(!e.has(Tag));
-        test_assert(!e.has<flecs::Name>());
+        test_assert(!e.has<flecs::Identifier>(flecs::Name));
     });
 
     test_assert(e.has(Tag));
-    test_assert(e.has<flecs::Name>());
+    test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Foo");
     test_str(e.path(), "::Parent::Foo");
 }
@@ -2158,19 +2158,19 @@ void Entity_defer_new_w_nested_name_scope_with() {
                 test_assert(0 == ecs.lookup("Foo"));
                 test_assert(0 == ecs.lookup("Bar"));
                 test_assert(!e.has(Tag));
-                test_assert(!e.has<flecs::Name>());
+                test_assert(!e.has<flecs::Identifier>(flecs::Name));
             });
             test_assert(0 == ecs.lookup("Foo"));
             test_assert(!e.has(Tag));
-            test_assert(!e.has<flecs::Name>());
+            test_assert(!e.has<flecs::Identifier>(flecs::Name));
         });
         test_assert(0 == ecs.lookup("Foo"));
         test_assert(!e.has(Tag));
-        test_assert(!e.has<flecs::Name>());
+        test_assert(!e.has<flecs::Identifier>(flecs::Name));
     });
 
     test_assert(e.has(Tag));
-    test_assert(e.has<flecs::Name>());
+    test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Bar");
     test_str(e.path(), "::Parent::Foo::Bar");
 }

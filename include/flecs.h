@@ -34,7 +34,6 @@
 
 /* Addons */
 #define FLECS_BULK
-#define FLECS_DBG
 #define FLECS_MODULE
 #define FLECS_PARSER
 #define FLECS_QUEUE
@@ -540,23 +539,10 @@ typedef struct ecs_observer_desc_t {
  * @{
  */
 
-/** Entity name. 
- * Entity names allow looking up entities by name & enables introspection. */
-typedef struct EcsName {
+/** A (string) identifier. */
+typedef struct EcsIdentifier {
     char *value;
-} EcsName;
-
-/** Entity symbol. 
- * Symbols are the underlying identifier of what an entity represents and can be
- * different from a name. For example, the EcsName component has flecs.core.Name
- * as (path) name, and EcsName as symbol. 
- *
- * The distinction between names and symbols allows for sharing canonical names 
- * across language bindings, while still being able to lookup an entity by its 
- * original symbol. */
-typedef struct EcsSymbol {
-    char *value;
-} EcsSymbol;
+} EcsIdentifier;
 
 /** Component information. */
 typedef struct EcsComponent {
@@ -727,6 +713,12 @@ FLECS_API extern const ecs_entity_t EcsFinal;
 /* Can be added to relation to indicate that it should never hold data, even
  * when it or the relation object is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
+
+/* Tag to indicate name identifier */
+FLECS_API extern const ecs_entity_t EcsName;
+
+/* Tag to indicate symbol identifier */
+FLECS_API extern const ecs_entity_t EcsSymbol;
 
 /* Used to express parent-child relations. */
 FLECS_API extern const ecs_entity_t EcsChildOf;
@@ -4089,9 +4081,6 @@ bool ecs_commit(
 /* Optional addons */
 #ifdef FLECS_BULK
 #include "flecs/addons/bulk.h"
-#endif
-#ifdef FLECS_DBG
-#include "flecs/addons/dbg.h"
 #endif
 #ifdef FLECS_MODULE
 #include "flecs/addons/module.h"

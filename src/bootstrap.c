@@ -3,45 +3,26 @@
 /* Global type variables */
 ecs_type_t ecs_type(EcsComponent);
 ecs_type_t ecs_type(EcsType);
-ecs_type_t ecs_type(EcsName);
+ecs_type_t ecs_type(EcsIdentifier);
 ecs_type_t ecs_type(EcsQuery);
 ecs_type_t ecs_type(EcsTrigger);
 ecs_type_t ecs_type(EcsObserver);
 ecs_type_t ecs_type(EcsPrefab);
 
-/* Component lifecycle actions for EcsName */
-static ECS_CTOR(EcsName, ptr, {
+/* Component lifecycle actions for EcsIdentifier */
+static ECS_CTOR(EcsIdentifier, ptr, {
     ptr->value = NULL;
 })
 
-static ECS_DTOR(EcsName, ptr, {
+static ECS_DTOR(EcsIdentifier, ptr, {
     ecs_os_strset(&ptr->value, NULL);
 })
 
-static ECS_COPY(EcsName, dst, src, {
+static ECS_COPY(EcsIdentifier, dst, src, {
     ecs_os_strset(&dst->value, src->value);
 })
 
-static ECS_MOVE(EcsName, dst, src, {
-    ecs_os_strset(&dst->value, NULL);
-    dst->value = src->value;
-    src->value = NULL;
-})
-
-/* Component lifecycle actions for EcsSymbol */
-static ECS_CTOR(EcsSymbol, ptr, {
-    ptr->value = NULL;
-})
-
-static ECS_DTOR(EcsSymbol, ptr, {
-    ecs_os_strset(&ptr->value, NULL);
-})
-
-static ECS_COPY(EcsSymbol, dst, src, {
-    ecs_os_strset(&dst->value, src->value);
-})
-
-static ECS_MOVE(EcsSymbol, dst, src, {
+static ECS_MOVE(EcsIdentifier, dst, src, {
     ecs_os_strset(&dst->value, NULL);
     dst->value = src->value;
     src->value = NULL;
@@ -135,7 +116,7 @@ void on_set_component_lifecycle( ecs_iter_t *it) {
 
 static
 void on_set_symbol( ecs_iter_t *it) {
-    EcsSymbol *n = ecs_term(it, EcsSymbol, 1);
+    EcsIdentifier *n = ecs_term(it, EcsIdentifier, 1);
     ecs_world_t *world = it->world;
 
     int i;
@@ -181,8 +162,8 @@ void _bootstrap_component(
 
     /* Set size and id */
     EcsComponent *component = ecs_vector_first(columns[0].data, EcsComponent);
-    EcsName *name = ecs_vector_first(columns[1].data, EcsName);
-    EcsSymbol *symbol = ecs_vector_first(columns[2].data, EcsSymbol);
+    EcsIdentifier *name = ecs_vector_first(columns[1].data, EcsIdentifier);
+    EcsIdentifier *symbol = ecs_vector_first(columns[2].data, EcsIdentifier);
     
     component[index].size = size;
     component[index].alignment = alignment;
@@ -213,20 +194,26 @@ void bootstrap_types(
 {
     ecs_type(EcsComponent) = flecs_bootstrap_type(world, ecs_id(EcsComponent));
     ecs_type(EcsType) = flecs_bootstrap_type(world, ecs_id(EcsType));
-    ecs_type(EcsName) = flecs_bootstrap_type(world, ecs_id(EcsName));
+    ecs_type(EcsIdentifier) = flecs_bootstrap_type(world, ecs_id(EcsIdentifier));
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
  * flecs. After this function has been called, the builtin components can be
  * created. 
  * The reason this table is constructed manually is because it requires the size
- * and alignment of the EcsComponent and EcsName components, which haven't been 
- * created yet */
+ * and alignment of the EcsComponent and EcsIdentifier components, which haven't
+ * been created yet */
 static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t entities[] = {ecs_id(EcsComponent), ecs_id(EcsName), ecs_id(EcsSymbol), ecs_pair(EcsChildOf, EcsFlecsCore)};
+    ecs_entity_t entities[] = {
+        ecs_id(EcsComponent), 
+        ecs_pair(ecs_id(EcsIdentifier), EcsName),
+        ecs_pair(ecs_id(EcsIdentifier), EcsSymbol),
+        ecs_pair(EcsChildOf, EcsFlecsCore)
+    };
+    
     ecs_ids_t array = {
         .array = entities,
         .count = 4
@@ -239,18 +226,18 @@ ecs_table_t* bootstrap_component_table(
     data->entities = ecs_vector_new(ecs_entity_t, EcsFirstUserComponentId);
     data->record_ptrs = ecs_vector_new(ecs_record_t*, EcsFirstUserComponentId);
 
-    data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 3);
+    data->columns = ecs_os_malloc_n(ecs_column_t, 3);
     ecs_assert(data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     data->columns[0].data = ecs_vector_new(EcsComponent, EcsFirstUserComponentId);
-    data->columns[0].size = sizeof(EcsComponent);
+    data->columns[0].size = ECS_SIZEOF(EcsComponent);
     data->columns[0].alignment = ECS_ALIGNOF(EcsComponent);
-    data->columns[1].data = ecs_vector_new(EcsName, EcsFirstUserComponentId);
-    data->columns[1].size = sizeof(EcsName);
-    data->columns[1].alignment = ECS_ALIGNOF(EcsName);
-    data->columns[2].data = ecs_vector_new(EcsSymbol, EcsFirstUserComponentId);
-    data->columns[2].size = sizeof(EcsSymbol);
-    data->columns[2].alignment = ECS_ALIGNOF(EcsSymbol);
+    data->columns[1].data = ecs_vector_new(EcsIdentifier, EcsFirstUserComponentId);
+    data->columns[1].size = ECS_SIZEOF(EcsIdentifier);
+    data->columns[1].alignment = ECS_ALIGNOF(EcsIdentifier);
+    data->columns[2].data = ecs_vector_new(EcsIdentifier, EcsFirstUserComponentId);
+    data->columns[2].size = ECS_SIZEOF(EcsIdentifier);
+    data->columns[2].alignment = ECS_ALIGNOF(EcsIdentifier);
 
     result->column_count = 3;
     
@@ -288,32 +275,24 @@ void flecs_bootstrap(
     ecs_trace_1("bootstrap core components");
     ecs_log_push();
 
-    /* Create table that will hold components (EcsComponent, EcsName) */
+    /* Create table for initial components */
     ecs_table_t *table = bootstrap_component_table(world);
     assert(table != NULL);
 
-    bootstrap_component(world, table, EcsName);
+    bootstrap_component(world, table, EcsIdentifier);
     bootstrap_component(world, table, EcsComponent);
-    bootstrap_component(world, table, EcsSymbol);
     bootstrap_component(world, table, EcsComponentLifecycle);
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);
     bootstrap_component(world, table, EcsTrigger);
     bootstrap_component(world, table, EcsObserver);
 
-    ecs_set_component_actions(world, EcsName, {
-        .ctor = ecs_ctor(EcsName),
-        .dtor = ecs_dtor(EcsName),
-        .copy = ecs_copy(EcsName),
-        .move = ecs_move(EcsName)
+    ecs_set_component_actions(world, EcsIdentifier, {
+        .ctor = ecs_ctor(EcsIdentifier),
+        .dtor = ecs_dtor(EcsIdentifier),
+        .copy = ecs_copy(EcsIdentifier),
+        .move = ecs_move(EcsIdentifier)
     });
-
-    ecs_set_component_actions(world, EcsSymbol, {
-        .ctor = ecs_ctor(EcsSymbol),
-        .dtor = ecs_dtor(EcsSymbol),
-        .copy = ecs_copy(EcsSymbol),
-        .move = ecs_move(EcsSymbol)
-    });    
 
     ecs_set_component_actions(world, EcsTrigger, {
         .ctor = ecs_ctor(EcsTrigger),
@@ -338,6 +317,9 @@ void flecs_bootstrap(
 
     ecs_set_scope(world, EcsFlecsCore);
 
+    flecs_bootstrap_tag(world, EcsName);
+    flecs_bootstrap_tag(world, EcsSymbol);
+
     flecs_bootstrap_tag(world, EcsModule);
     flecs_bootstrap_tag(world, EcsPrefab);
     flecs_bootstrap_tag(world, EcsHidden);
@@ -359,14 +341,30 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsFinal, "Final", EcsFlecsCore);
     bootstrap_entity(world, EcsTag, "Tag", EcsFlecsCore);
 
+    bootstrap_entity(world, EcsIsA, "IsA", EcsFlecsCore);
+    bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
+
+    bootstrap_entity(world, EcsOnAdd, "OnAdd", EcsFlecsCore);
+    bootstrap_entity(world, EcsOnRemove, "OnRemove", EcsFlecsCore);
+    bootstrap_entity(world, EcsOnSet, "OnSet", EcsFlecsCore);
+    bootstrap_entity(world, EcsUnSet, "UnSet", EcsFlecsCore);
+
     bootstrap_entity(world, EcsOnDelete, "OnDelete", EcsFlecsCore);
+
+    // bootstrap_entity(world, EcsOnCreateTable, "OnCreateTable", EcsFlecsCore);
+    // bootstrap_entity(world, EcsOnDeleteTable, "OnDeleteTable", EcsFlecsCore);
+    // bootstrap_entity(world, EcsOnTableEmpty, "OnTableEmpty", EcsFlecsCore);
+    // bootstrap_entity(world, EcsOnTableNonEmpty, "OnTableNonEmpty", EcsFlecsCore);
+    // bootstrap_entity(world, EcsOnCreateTrigger, "OnCreateTrigger", EcsFlecsCore);
+    // bootstrap_entity(world, EcsOnDeleteTrigger, "OnDeleteTrigger", EcsFlecsCore);
+    // bootstrap_entity(world, EcsOnDeleteObservable, "OnDeleteObservable", EcsFlecsCore);
+    // bootstrap_entity(world, EcsOnComponentLifecycle, "OnComponentLifecycle", EcsFlecsCore);
+    
     bootstrap_entity(world, EcsOnDeleteObject, "OnDeleteObject", EcsFlecsCore);
+
     bootstrap_entity(world, EcsRemove, "Remove", EcsFlecsCore);
     bootstrap_entity(world, EcsDelete, "Delete", EcsFlecsCore);
     bootstrap_entity(world, EcsThrow, "Throw", EcsFlecsCore);
-
-    bootstrap_entity(world, EcsIsA, "IsA", EcsFlecsCore);
-    bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
 
 
     /* Transitive relations */
@@ -378,7 +376,7 @@ void flecs_bootstrap(
 
     /* Final components/relations */
     ecs_add_id(world, ecs_id(EcsComponent), EcsFinal);
-    ecs_add_id(world, ecs_id(EcsName), EcsFinal);
+    ecs_add_id(world, ecs_id(EcsIdentifier), EcsFinal);
     ecs_add_id(world, EcsTransitive, EcsFinal);
     ecs_add_id(world, EcsFinal, EcsFinal);
     ecs_add_id(world, EcsIsA, EcsFinal);
@@ -399,7 +397,6 @@ void flecs_bootstrap(
         .events = {EcsOnAdd}
     });
 
-
     /* Define trigger for when component lifecycle is set for component */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_id(EcsComponentLifecycle)},
@@ -409,11 +406,10 @@ void flecs_bootstrap(
 
     /* Define trigger for when name is set */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_id(EcsSymbol)},
+        .term = {.id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)},
         .callback = on_set_symbol,
         .events = {EcsOnSet}
     });    
-
 
     /* Removal of ChildOf objects (parents) deletes the subject (child) */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);  

@@ -37,8 +37,7 @@ extern ecs_type_t
     ecs_type(EcsComponent),
     ecs_type(EcsComponentLifecycle),
     ecs_type(EcsType),
-    ecs_type(EcsName),
-    ecs_type(EcsSymbol);
+    ecs_type(EcsIdentifier);
 
 /** This allows passing 0 as type to functions that accept types */
 #define FLECS__TNULL 0

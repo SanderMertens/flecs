@@ -749,8 +749,8 @@ void Snapshot_set_after_snapshot() {
     ecs_entity_t e2 = ecs_new(world, 0);
     test_assert(e2 != 0);
 
-    ecs_set(world, e2, EcsName, {"e2"});
-    test_assert(ecs_has(world, e2, EcsName));
+    ecs_set_name(world, e2, "e2");
+    test_assert(ecs_has_pair(world, e2, ecs_id(EcsIdentifier), EcsName));
     test_str(ecs_get_name(world, e2), "e2");
 
     ecs_fini(world);
@@ -783,7 +783,7 @@ static
 void SetP(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, 0, EcsName, {"e2"});
+        ecs_set_name(it->world, 0, "e2");
     }
 }
 

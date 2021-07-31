@@ -125,7 +125,7 @@ void Hierarchies_tree_iter_2_tables() {
     ecs_iter_t it = ecs_scope_iter(world, Parent);
     test_assert( ecs_scope_next(&it) == true);
     test_int( it.count, 2);
-     test_int(it.entities[0], Child1);
+    test_int(it.entities[0], Child1);
     test_int(it.entities[1], Child2);
 
     test_assert( ecs_scope_next(&it) == true);
@@ -379,7 +379,7 @@ void Hierarchies_path_w_number() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, 1000);
-    ecs_set(world, e, EcsName, {"Foo"});
+    ecs_set_name(world, e, "Foo");
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "1000.Foo");
@@ -520,7 +520,7 @@ void Hierarchies_lookup_number() {
     ECS_ENTITY(world, GrandChild, CHILDOF | Parent.Child);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, 1000);
-    ecs_set(world, e, EcsName, {"Foo"});
+    ecs_set_name(world, e, "Foo");
 
     ecs_entity_t c = ecs_lookup_path(world, 0, "1000.Foo");
     test_assert(e == c);

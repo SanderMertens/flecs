@@ -113,7 +113,7 @@ void Type_type_no_name() {
     auto type = flecs::type(world, nullptr, "Position");
     auto id = type.id();
     auto e = world.entity(id);
-    test_assert(!e.has<flecs::Name>());
+    test_assert(!e.has<flecs::Identifier>(flecs::Name));
 }
 
 void Type_null_args() {

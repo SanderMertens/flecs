@@ -94,8 +94,8 @@ ecs_entity_t flecs_type_contains(
         }
 
         if (e1 != e2) {
-            if (match_prefab && e2 != 
-                ecs_id(EcsName) && 
+            if (match_prefab && 
+                e2 != ecs_pair(ecs_id(EcsIdentifier), EcsName) &&
                 e2 != EcsPrefab && e2 != EcsDisabled) 
             {
                 if (flecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
@@ -310,7 +310,9 @@ bool search_type(
         }
     }
 
-    if (!matched && rel && id != EcsPrefab && id != EcsDisabled) {
+    if (!matched && rel && id != EcsPrefab && id != EcsDisabled && 
+        id != ecs_pair(ecs_id(EcsIdentifier), EcsName)) 
+    {
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = ids[i];
             if (!ECS_HAS_RELATION(e, rel)) {

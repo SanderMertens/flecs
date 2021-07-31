@@ -103,7 +103,7 @@ class cpp_type;
 /* Builtin components */
 using Component = EcsComponent;
 using Type = EcsType;
-using Name = EcsName;
+using Identifier = EcsIdentifier;
 using Timer = EcsTimer;
 using RateFilter = EcsRateFilter;
 using TickSource = EcsTickSource;
@@ -174,6 +174,10 @@ static const flecs::entity_t Tag = EcsTag;
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
+
+/* Builtin identifiers */
+static const flecs::entity_t Name = EcsName;
+static const flecs::entity_t Symbol = EcsSymbol;
 
 /* Cleanup rules */
 static const flecs::entity_t OnDelete = EcsOnDelete;
