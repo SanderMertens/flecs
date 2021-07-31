@@ -12,7 +12,6 @@ flecs_deps = dependency('threads')
 
 flecs_src = files(
     'src/addons/bulk.c',
-    'src/addons/dbg.c',
     'src/addons/deprecated.c',
     'src/addons/direct_access.c',
     'src/addons/module.c',
@@ -23,7 +22,6 @@ flecs_src = files(
     'src/modules/pipeline/pipeline.c',
     'src/modules/pipeline/worker.c',
     'src/modules/system/system.c',
-    'src/modules/system/system_dbg.c',
     'src/modules/timer.c',    
     'src/api_support.c',
     'src/bitset.c',
