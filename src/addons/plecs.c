@@ -96,7 +96,7 @@ int ecs_plecs_from_file(
     /* Open file for reading */
     ecs_os_fopen(&file, filename, "r");
     if (!file) {
-        ecs_err("%s (%s)", strerror(errno), filename);
+        ecs_err("%s (%s)", ecs_os_strerror(errno), filename);
         goto error;
     }
 

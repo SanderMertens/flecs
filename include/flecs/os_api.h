@@ -391,6 +391,9 @@ void ecs_os_err(const char *fmt, ...);
 FLECS_API
 void ecs_os_dbg(const char *fmt, ...);
 
+FLECS_API
+const char* ecs_os_strerror(int errno);
+
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort_()
 

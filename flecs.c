@@ -11192,7 +11192,7 @@ int ecs_plecs_from_file(
     /* Open file for reading */
     ecs_os_fopen(&file, filename, "r");
     if (!file) {
-        ecs_err("%s (%s)", strerror(errno), filename);
+        ecs_err("%s (%s)", ecs_os_strerror(errno), filename);
         goto error;
     }
 
@@ -18828,6 +18828,19 @@ bool ecs_os_has_modules(void) {
     return 
         (ecs_os_api.module_to_dl_ != NULL) &&
         (ecs_os_api.module_to_etc_ != NULL);
+}
+
+#if defined(_MSC_VER)
+static char error_str[255];
+#endif
+
+const char* ecs_os_strerror(int errno) {
+#if defined(_MSC_VER)
+    strerror_s(error_str, 255, errno);
+    return error_str;
+#else
+    return strerror(errno);
+#endif
 }
 
 #ifdef FLECS_SYSTEMS_H
