@@ -1313,7 +1313,7 @@ ecs_type_t flecs_bootstrap_type(
     });
 
 #define flecs_bootstrap_tag(world, name)\
-    ecs_set(world, name, EcsName, {.value = &#name[ecs_os_strlen("Ecs")], .symbol = (char*)#name});\
+    ecs_set(world, name, EcsName, {.value = (char*)&#name[ecs_os_strlen("Ecs")], .symbol = (char*)#name});\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world))
 
 
@@ -8004,6 +8004,22 @@ const char* ecs_get_name(
     } else {
         return NULL;
     }
+}
+
+ecs_entity_t ecs_set_name(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!entity) {
+        entity = ecs_new_id(world);
+    }
+    
+    ecs_set(world, entity, EcsName, {(char*)name, .symbol = NULL});
+
+    return entity;
 }
 
 ecs_type_t ecs_type_from_id(
@@ -28042,9 +28058,9 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsDisabled);
 
     /* Initialize scopes */
-    ecs_set(world, EcsFlecs, EcsName, {.value = "flecs"});
+    ecs_set_name(world, EcsFlecs, "flecs");
     ecs_add_id(world, EcsFlecs, EcsModule);
-    ecs_set(world, EcsFlecsCore, EcsName, {.value = "core"});
+    ecs_set_name(world, EcsFlecsCore, "core");
     ecs_add_id(world, EcsFlecsCore, EcsModule);
     ecs_add_pair(world, EcsFlecsCore, EcsChildOf, EcsFlecs);
 

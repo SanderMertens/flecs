@@ -1174,7 +1174,7 @@ void Query_only_from_entity() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"e"});
+    ecs_entity_t e = ecs_set_name(world, 0, "e");
 
     ecs_query_t *q = ecs_query_new(world, "e:Tag");
     ecs_iter_t it = ecs_query_iter(q);
@@ -1195,7 +1195,7 @@ void Query_only_from_singleton() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"e"});
+    ecs_entity_t e = ecs_set_name(world, 0, "e");
 
     ecs_query_t *q = ecs_query_new(world, "$e");
     ecs_iter_t it = ecs_query_iter(q);
@@ -1216,7 +1216,7 @@ void Query_only_not_from_entity() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"e"});
+    ecs_entity_t e = ecs_set_name(world, 0, "e");
 
     ecs_query_t *q = ecs_query_new(world, "!e:Tag");
     ecs_iter_t it = ecs_query_iter(q);
@@ -1237,7 +1237,7 @@ void Query_only_not_from_singleton() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"e"});
+    ecs_entity_t e = ecs_set_name(world, 0, "e");
 
     ecs_query_t *q = ecs_query_new(world, "!$e");
     ecs_iter_t it = ecs_query_iter(q);

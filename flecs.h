@@ -5342,6 +5342,21 @@ const char* ecs_get_name(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Set the name of an entity.
+ * This will set or overwrite the name of an entity. If no entity is provided,
+ * a new entity will be created.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param name The entity's name.
+ * @return The provided entity, or a new entity if 0 was provided.
+ */
+FLECS_API
+ecs_entity_t ecs_set_name(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name);
+
 /** Convert type role to string.
  * This operation converts a type role to a string.
  * 
@@ -13574,6 +13589,13 @@ public:
      */
     template <typename T>
     const Base& component() const;
+
+    /* Set the entity name.
+     */
+    const Base& set_name(const char *name) {
+        ecs_set_name(this->base_world(), this->base_id(), name);
+        return *this;
+    }    
 };
 
 ////////////////////////////////////////////////////////////////////////////////

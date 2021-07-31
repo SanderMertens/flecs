@@ -837,7 +837,7 @@ void Entity_set_name() {
     auto e = world.entity();
     test_str(e.name().c_str(), "");
 
-    e.set<flecs::Name>({"Foo"});
+    e.set_name("Foo");
     test_str(e.name().c_str(), "Foo");
 }
 
@@ -847,7 +847,7 @@ void Entity_change_name() {
     auto e = world.entity("Bar");
     test_str(e.name().c_str(), "Bar");
 
-    e.set<flecs::Name>({"Foo"});
+    e.set_name("Foo");
     test_str(e.name().c_str(), "Foo");
 }
 
@@ -1003,8 +1003,7 @@ void Entity_tag_has_size_zero() {
 void Entity_get_null_name() {
     flecs::world world;
 
-    auto e = world.entity()
-        .set<flecs::Name>({nullptr});
+    auto e = world.entity().set_name(nullptr);
 
     auto n = e.name();
     test_assert(n.size() == 0);

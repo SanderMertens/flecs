@@ -22,7 +22,7 @@ void Lookup_lookup_w_null_name() {
     ECS_ENTITY(world, MyEntity, 0);
 
     /* Ensure this doesn't crash the lookup function */
-    ecs_set(world, 0, EcsName, {NULL});
+    ecs_set_name(world, 0, NULL);
 
     ecs_entity_t lookup = ecs_lookup(world, "MyEntity");
     test_assert(lookup != 0);
@@ -58,8 +58,8 @@ void Lookup_lookup_child() {
     ECS_ENTITY(world, Parent1, 0);
     ECS_ENTITY(world, Parent2, 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, EcsName, {"Child"});
-    ecs_entity_t e2 = ecs_set(world, 0, EcsName, {"Child"});
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Child");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Child");
 
     ecs_add_pair(world, e1, EcsChildOf, Parent1);
     ecs_add_pair(world, e2, EcsChildOf, Parent2);
@@ -79,7 +79,7 @@ void Lookup_get_name() {
     ecs_world_t *world = ecs_init();
 
     /* Ensure this doesn't crash the lookup function */
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"Entity"});
+    ecs_entity_t e = ecs_set_name(world, 0, "Entity");
     const char *id = ecs_get_name(world, e);
     test_assert(id != NULL);
     test_str(id, "Entity");
@@ -123,7 +123,7 @@ void Lookup_lookup_by_id() {
 void Lookup_lookup_name_w_digit() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"10_id"});
+    ecs_entity_t e = ecs_set_name(world, 0, "10_id");
     ecs_entity_t e2 = ecs_lookup(world, "10_id");
     test_assert(e == e2);
 
@@ -156,8 +156,8 @@ void Lookup_lookup_symbol_w_digit() {
 void Lookup_lookup_path_w_digit() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t parent = ecs_set(world, 0, EcsName, {"parent"});
-    ecs_entity_t e1 = ecs_set(world, 0, EcsName, { .value = "10_id" });
+    ecs_entity_t parent = ecs_set_name(world, 0, "parent");
+    ecs_entity_t e1 = ecs_set(world, 0, EcsName, {.value = "10_id"});
     ecs_add_pair(world, e1, EcsChildOf, parent);
 
     ecs_entity_t e2 = ecs_lookup_fullpath(world, "parent.10_id");
@@ -173,7 +173,7 @@ void Lookup_set_name_of_existing() {
     test_assert(e != 0);
     test_assert(ecs_get_name(world, e) == NULL);
 
-    ecs_set(world, e, EcsName, {"Foo"});
+    ecs_set_name(world, e, "Foo");
     test_assert(ecs_get_name(world, e) != NULL);
     test_str(ecs_get_name(world, e), "Foo");
 
@@ -183,12 +183,12 @@ void Lookup_set_name_of_existing() {
 void Lookup_change_name_of_existing() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"Foo"});
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
     test_assert(e != 0);
     test_assert(ecs_get_name(world, e) != NULL);
     test_str(ecs_get_name(world, e), "Foo");
 
-    ecs_set(world, e, EcsName, {"Bar"});
+    ecs_set_name(world, e, "Bar");
     test_assert(ecs_get_name(world, e) != NULL);
     test_str(ecs_get_name(world, e), "Bar");
 
@@ -198,7 +198,7 @@ void Lookup_change_name_of_existing() {
 void Lookup_lookup_alias() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"MyEntity"});
+    ecs_entity_t e = ecs_set_name(world, 0, "MyEntity");
     test_assert(e != 0);
 
     ecs_use(world, e, "MyAlias");
@@ -213,9 +213,9 @@ void Lookup_lookup_alias() {
 void Lookup_lookup_scoped_alias() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = ecs_set(world, 0, EcsName, {"MyParent"});
+    ecs_entity_t p = ecs_set_name(world, 0, "MyParent");
     test_assert(p != 0);
-    ecs_entity_t e = ecs_set(world, 0, EcsName, {"MyEntity"});
+    ecs_entity_t e = ecs_set_name(world, 0, "MyEntity");
     test_assert(e != 0);
     ecs_add_pair(world, e, EcsChildOf, p);
 
@@ -233,9 +233,9 @@ void Lookup_define_duplicate_alias() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e1 = ecs_set(world, 0, EcsName, {"MyEntityA"});
+    ecs_entity_t e1 = ecs_set_name(world, 0, "MyEntityA");
     test_assert(e1 != 0);
-    ecs_entity_t e2 = ecs_set(world, 0, EcsName, {"MyEntityB"});
+    ecs_entity_t e2 = ecs_set_name(world, 0, "MyEntityB");
     test_assert(e2 != 0);
     
     test_expect_abort(); /* Not allowed to create duplicate aliases */

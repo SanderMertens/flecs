@@ -319,9 +319,9 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsDisabled);
 
     /* Initialize scopes */
-    ecs_set(world, EcsFlecs, EcsName, {.value = "flecs"});
+    ecs_set_name(world, EcsFlecs, "flecs");
     ecs_add_id(world, EcsFlecs, EcsModule);
-    ecs_set(world, EcsFlecsCore, EcsName, {.value = "core"});
+    ecs_set_name(world, EcsFlecsCore, "core");
     ecs_add_id(world, EcsFlecsCore, EcsModule);
     ecs_add_pair(world, EcsFlecsCore, EcsChildOf, EcsFlecs);
 

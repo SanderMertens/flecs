@@ -1234,13 +1234,13 @@ void Pairs_get_typeid_w_recycled_obj() {
 void Pairs_id_str_w_recycled_rel() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t o = ecs_set(world, 0, EcsName, {"o"});
+    ecs_entity_t o = ecs_set_name(world, 0, "o");
     test_assert(o != 0);
 
     ecs_entity_t dummy = ecs_new_id(world);
     ecs_delete(world, dummy); // force recycle
 
-    ecs_entity_t r = ecs_set(world, 0, EcsName, {"r"});
+    ecs_entity_t r = ecs_set_name(world, 0, "r");
     test_assert(r != 0);
     test_assert((uint32_t)r != r); // ensure recycled
 
@@ -1256,13 +1256,13 @@ void Pairs_id_str_w_recycled_rel() {
 void Pairs_id_str_w_recycled_obj() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t r = ecs_set(world, 0, EcsName, {"r"});
+    ecs_entity_t r = ecs_set_name(world, 0, "r");
     test_assert(r != 0);
 
     ecs_entity_t dummy = ecs_new_id(world);
     ecs_delete(world, dummy); // force recycle
 
-    ecs_entity_t o = ecs_set(world, 0, EcsName, {"o"});
+    ecs_entity_t o = ecs_set_name(world, 0, "o");
     test_assert(o != 0);
     test_assert((uint32_t)o != o); // ensure recycled
 

@@ -3374,6 +3374,22 @@ const char* ecs_get_name(
     }
 }
 
+ecs_entity_t ecs_set_name(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!entity) {
+        entity = ecs_new_id(world);
+    }
+    
+    ecs_set(world, entity, EcsName, {(char*)name, .symbol = NULL});
+
+    return entity;
+}
+
 ecs_type_t ecs_type_from_id(
     ecs_world_t *world,
     ecs_id_t id)

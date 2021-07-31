@@ -1099,6 +1099,13 @@ public:
      */
     template <typename T>
     const Base& component() const;
+
+    /* Set the entity name.
+     */
+    const Base& set_name(const char *name) {
+        ecs_set_name(this->base_world(), this->base_id(), name);
+        return *this;
+    }    
 };
 
 ////////////////////////////////////////////////////////////////////////////////

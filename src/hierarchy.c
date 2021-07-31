@@ -112,8 +112,7 @@ ecs_entity_t get_builtin(
 static
 ecs_entity_t find_child_in_table(
     const ecs_table_t *table,
-    const char *name,
-    const char *symbol)
+    const char *name)
 {
     /* If table doesn't have EcsName, then don't bother */
     int32_t name_index = ecs_type_index_of(table->type, ecs_id(EcsName));
@@ -134,24 +133,15 @@ ecs_entity_t find_child_in_table(
     ecs_column_t *column = &data->columns[name_index];
     EcsName *names = ecs_vector_first(column->data, EcsName);
 
-    if (name) {
-        if (is_number(name)) {
-            return name_to_id(name);
+    if (is_number(name)) {
+        return name_to_id(name);
+    }
+
+    for (i = 0; i < count; i ++) {
+        const char *cur_name = names[i].value;
+        if (cur_name && !strcmp(cur_name, name)) {
+            return *ecs_vector_get(data->entities, ecs_entity_t, i);
         }
- 
-        for (i = 0; i < count; i ++) {
-            const char *cur_name = names[i].value;
-            if (cur_name && !strcmp(cur_name, name)) {
-                return *ecs_vector_get(data->entities, ecs_entity_t, i);
-            }
-        }        
-    } else if (symbol) {
-        for (i = 0; i < count; i ++) {
-            const char *cur_name = names[i].symbol;
-            if (cur_name && !strcmp(cur_name, symbol)) {
-                return *ecs_vector_get(data->entities, ecs_entity_t, i);
-            }
-        }         
     }
 
     return 0;
@@ -281,7 +271,7 @@ ecs_entity_t ecs_lookup_child(
         ecs_map_iter_t it = ecs_map_iter(r->table_index);
         ecs_table_record_t *tr;
         while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-            result = find_child_in_table(tr->table, name, NULL);
+            result = find_child_in_table(tr->table, name);
             if (result) {
                 return result;
             }            

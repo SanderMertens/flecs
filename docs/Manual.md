@@ -256,26 +256,79 @@ ecs_os_free(path);
 ```
 
 ### Entity names
-An application can assign names to entities by setting the `EcsName` component. This component accepts a `const char*` for storing a name, which means that the string is application managed:
+An application can assign names to entities. Names can be assigned at entity creation, with the `ecs_entity_init` function:
 
 ```c
-// "MyEntity" is application managed
-ecs_set(world, e, EcsName, {.value = "MyEntity"});
+ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    .name = "MyEntity"
+});
 ```
 
-Sometimes this can be inconvenient as the lifecycle of a name needs to match that of the entity. For these scenario's, the `EcsName` component provides the `alloc_value` member:
+Alternatively, names can be assigned afterwards with the `ecs_set_name` function:
 
 ```c
-// "MyEntity" will be copied and framework managed
-ecs_set(world, EcsName, {.alloc_value = "MyEntity"});
+ecs_set_name(world, e, "MyEntity");
 ```
 
-When the `EcsName` component is set, the framework will make a copy of the `alloc_value` member and free the memory when the component is removed. If an application has a heap-allocated string, it can be freed after `ecs_set`:
+The `ecs_set_name` function may be used as a shortcut to create a new named entity by providing 0 for the entity argument:
 
 ```c
-char *str = strdup("MyEntity");
-ecs_set(world, EcsName, {.alloc_value = str});
-free(str); // Safe, framework made a copy of the string
+ecs_entity_t e = ecs_set_name(world, 0, "MyEntity");
+```
+
+The name of an entity can be retrieved with the `ecs_get_name` function:
+
+```c
+printf("Name = %s\n", ecs_get_name(world, e));
+```
+
+The entity name is stored in the `EcsName` component, which can be retrieved like any component with `ecs_get`:
+
+```c
+const EcsName *name = ecs_get(world, e, EcsName);
+printf("Name = %s\n", name->value);
+```
+
+Names can be used to lookup entities:
+
+```c
+ecs_entity_t e = ecs_lookup(world, "MyEntity");
+```
+
+When an entity is part of a hierarchy, names can be used to form a path:
+
+```c
+ecs_entity_t parent = ecs_new_id(world);
+ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+ecs_entity_t grandchild = ecs_new_w_pair(world, EcsChildOf, child);
+
+ecs_set_name(world, parent, "Parent");
+ecs_set_name(world, child, "Child");
+ecs_set_name(world, grandchild, "GrandChild");
+
+char *path = ecs_get_fullpath(world, grandchild);
+printf("Path = %s\n", path); // prints Parent.Child.GrandChild
+ecs_os_free(path);
+```
+
+A path can be created relative to a parent:
+
+```c
+char *path = ecs_get_path(world, parent, grandchild);
+printf("Path = %s\n", path); // prints Child.GrandChild
+ecs_os_free(path);
+```
+
+Paths can be used to lookup an entity:
+
+```c
+ecs_entity_t e = ecs_lookup_fullpath(world, "Parent.Child.GrandChild");
+```
+
+Path lookups may be relative:
+
+```c
+ecs_entity_t e = ecs_lookup_path(world, parent, "Child.GrandChild");
 ```
 
 ### Macro's
@@ -434,33 +487,6 @@ ecs_entity_t e = ecs_new(world, 0);
 
 This operation guarantees to return an unused entity identifier. The first entity returned is not 1, as Flecs creates a number of builtin entities during the intialization of the world. The identifier of the first returned entity is stored in the `EcsFirstUserEntityId` constant.
 
-
-### Named entities
-In Flecs, entities can be named. A named entity is an entity that has the `EcsName` component. Setting this component is straightforward:
-
-```c
-ecs_entity_t e = ecs_new(world, 0);
-ecs_set(world, e, EcsName, {"MyEntity"});
-```
-
-Alternatively, named entities can be declared with the `ECS_ENTITY` macro, which also allows for the entity to be initialized with a set of components:
-
-```c
-ECS_ENTITY(world, e, Position, Velocity);
-```
-
-Named entities can be looked up with `ecs_lookup`:
-
-```c
-ecs_entity_t e = ecs_lookup(world, "MyEntity");
-```
-
-An application can also request the name of a named entity:
-
-```c
-const char *name = ecs_get_name(world, e);
-```
-
 ### Id recycling
 Entity identifiers are reused when deleted. The `ecs_new` operation will first attempt to recycle a deleted identifier before producing a new one. If no identifier can be recycled, it will return the last issued identifier + 1. 
 
@@ -600,11 +626,11 @@ Printing the contents of the type of `e` now would produce something similar to:
 256, 257
 ```
 
-When the type contained components the names of the components were printed. This is because the component entities contained an `EcsName` component. The following  example does the same for `tag_1` and `tag_2`:
+When the type contained components the names of the components were printed. This is because the component entities contained an `EcsName` component. The following  example sets the names for `tag_1` and `tag_2`:
 
 ```c
-ecs_set(world, tag_1, EcsName, {"tag_1"});
-ecs_set(world, tag_2, EcsName, {"tag_2"});
+ecs_set_name(world, tag_1, "tag_1");
+ecs_set_name(world, tag_2, "tag_2");
 ```
 
 Printing the type again will now produce:
@@ -1279,7 +1305,7 @@ A query can request a component from a named entity directly as is shown in the 
 
 ```c
 // Shortcut to creating a new named entity
-ecs_entity_t e = ecs_set(world, 0, EcsName, {.value = "MyEntity"});
+ecs_entity_t e = ecs_set_name(world, 0, "MyEntity");
 ecs_set(world, e, Velocity, {1, 2});
 
 ecs_query_t *q = ecs_query_new(world, "Position, MyEntity:Velocity");
@@ -2175,7 +2201,7 @@ The children that are copied to the entity will have exactly the same set of com
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
-ecs_set(world, child, EcsName, {"Child"}); // Give child a name, so we can look it up
+ecs_set_name(world, child, "Child"); // Give child a name, so we can look it up
 ecs_set(world, child, Position, {10, 20});
 
 // Derive from parent, two childs are added to the derived entity
@@ -2196,7 +2222,7 @@ ecs_entity_t parent = ecs_new(world, 0);
 // Create child base from which we will share components
 ecs_entity_t child_base = ecs_new(world, 0);
 ecs_set(world, child_base, Position, {10, 20});
-ecs_set(world, child, EcsName, {"Child"});
+ecs_set_name(world, child, "Child");
 
 // Create actual child that inherits from the child base
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
