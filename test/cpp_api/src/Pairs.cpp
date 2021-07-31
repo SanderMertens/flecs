@@ -24,10 +24,10 @@ void Pairs_add_tag_pair() {
     auto Pair = ecs.entity("Pair");
 
     auto entity = ecs.entity()
-        .add_object<Position>(Pair);
+        .add_w_object<Position>(Pair);
 
     test_assert(entity.id() != 0);
-    test_assert(entity.has_object<Position>(Pair));
+    test_assert(entity.has_w_object<Position>(Pair));
     test_assert(!entity.has<Position>(Pair));
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 }
@@ -72,10 +72,10 @@ void Pairs_remove_tag_pair() {
     auto Pair = ecs.entity("Pair");
 
     auto entity = ecs.entity()
-        .add_object<Position>(Pair);
+        .add_w_object<Position>(Pair);
 
     test_assert(entity.id() != 0);
-    test_assert(entity.has_object<Position>(Pair));
+    test_assert(entity.has_w_object<Position>(Pair));
     test_assert(!entity.has<Position>(Pair));
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 
@@ -122,13 +122,13 @@ void Pairs_set_tag_pair() {
     auto Pair = ecs.entity("Pair");
 
     auto entity = ecs.entity()
-        .set_object<Position>(Pair, {10, 20});
+        .set_w_object<Position>(Pair, {10, 20});
 
     test_assert(entity.id() != 0);
-    test_assert(entity.has_object<Position>(Pair));
+    test_assert(entity.has_w_object<Position>(Pair));
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 
-    const Position *p = entity.get_object<Position>(Pair);
+    const Position *p = entity.get_w_object<Position>(Pair);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -222,27 +222,27 @@ void Pairs_override_tag_pair() {
     auto Pair = ecs.entity();
 
     auto base = ecs.entity()
-        .set_object<Position>(Pair, {10, 20});
+        .set_w_object<Position>(Pair, {10, 20});
 
     auto instance = ecs.entity()
         .add(flecs::IsA, base);
 
-    test_assert((instance.has_object<Position>(Pair)));
-    const Position *t = instance.get_object<Position>(Pair);
+    test_assert((instance.has_w_object<Position>(Pair)));
+    const Position *t = instance.get_w_object<Position>(Pair);
     test_int(t->x, 10);
     test_int(t->y, 20);
 
-    const Position *t_2 = base.get_object<Position>(Pair);
+    const Position *t_2 = base.get_w_object<Position>(Pair);
     test_assert(t == t_2);
 
-    instance.add_object<Position>(Pair);
-    t = instance.get_object<Position>(Pair);
+    instance.add_w_object<Position>(Pair);
+    t = instance.get_w_object<Position>(Pair);
     test_int(t->x, 10);
     test_int(t->y, 20);
     test_assert(t != t_2);
 
-    instance.remove_object<Position>(Pair);
-    t = instance.get_object<Position>(Pair);
+    instance.remove_w_object<Position>(Pair);
+    t = instance.get_w_object<Position>(Pair);
     test_int(t->x, 10);
     test_int(t->y, 20);
     test_assert(t == t_2); 
@@ -290,13 +290,13 @@ void Pairs_get_mut_pair_tag() {
     auto e = ecs.entity();
 
     bool added = false;
-    Position *p = e.get_mut_object<Position>(Pair, &added);
+    Position *p = e.get_mut_w_object<Position>(Pair, &added);
     test_assert(p != NULL);
     test_bool(added, true);
     p->x = 10;
     p->y = 20;
 
-    const Position *p_2 = e.get_object<Position>(Pair);
+    const Position *p_2 = e.get_w_object<Position>(Pair);
     test_assert(p == p_2);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -308,16 +308,16 @@ void Pairs_get_mut_pair_tag_existing() {
     auto Pair = ecs.entity();
 
     auto e = ecs.entity()
-        .set_object<Position>(Pair, {10, 20});
+        .set_w_object<Position>(Pair, {10, 20});
 
     bool added = false;
-    Position *p = e.get_mut_object<Position>(Pair, &added);
+    Position *p = e.get_mut_w_object<Position>(Pair, &added);
     test_assert(p != NULL);
     test_bool(added, false);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Position *p_2 = e.get_object<Position>(Pair);
+    const Position *p_2 = e.get_w_object<Position>(Pair);
     test_assert(p == p_2);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -438,23 +438,23 @@ void Pairs_override_tag_pair_w_type() {
     auto Pair = ecs.entity();
 
     auto Prefab = ecs.prefab("Prefab")
-        .set_object<Position>(Pair, {10, 20});
+        .set_w_object<Position>(Pair, {10, 20});
 
     auto Type = ecs.type()
         .add(flecs::IsA, Prefab)
-        .add_object<Position>(Pair);
+        .add_w_object<Position>(Pair);
 
     auto e = ecs.entity()
         .add(Type);
 
-    test_assert((e.has_object<Position>(Pair)));
+    test_assert((e.has_w_object<Position>(Pair)));
 
-    const Position *p_1 = Prefab.get_object<Position>(Pair);
+    const Position *p_1 = Prefab.get_w_object<Position>(Pair);
     test_assert(p_1 != nullptr);
     test_int(p_1->x, 10);
     test_int(p_1->y, 20);
 
-    const Position *p_2 = e.get_object<Position>(Pair);
+    const Position *p_2 = e.get_w_object<Position>(Pair);
     test_assert(p_2 != nullptr);
 
     test_assert(p_1 != p_2);
@@ -477,7 +477,7 @@ void Pairs_get_relation_from_id() {
     test_assert(pair.relation().is_valid());
 }
 
-void Pairs_get_object_from_id() {
+void Pairs_get_w_object_from_id() {
     flecs::world ecs;
 
     auto rel = ecs.entity();
@@ -840,14 +840,14 @@ void Pairs_has_tag_w_object() {
     test_assert(e.has<Likes>(Bob));
 }
 
-void Pairs_has_object_tag() {
+void Pairs_has_w_object_tag() {
     flecs::world ecs;
 
     struct Bob { };
 
     auto Likes = ecs.entity();
-    auto e = ecs.entity().add_object<Bob>(Likes);
-    test_assert(e.has_object<Bob>(Likes));
+    auto e = ecs.entity().add_w_object<Bob>(Likes);
+    test_assert(e.has_w_object<Bob>(Likes));
 }
 
 struct Eats { int amount; };
@@ -983,7 +983,7 @@ void Pairs_set_inline_pair_type() {
 void Pairs_get_pair_type_object() {
     flecs::world ecs;
 
-    auto e = ecs.entity().set_object<Apples, Eats>({10});
+    auto e = ecs.entity().set_w_object<Apples, Eats>({10});
     test_assert((e.has<Apples, Eats>()));
 
     test_bool(e.get([](const flecs::pair_object<Apples, Eats>& a) {
@@ -999,7 +999,7 @@ void Pairs_set_pair_type_object() {
             a->amount = 10;
         });
 
-    auto eats = e.get_object<Apples, Eats>();
+    auto eats = e.get_w_object<Apples, Eats>();
     test_int(eats->amount, 10);
 }
 
@@ -1013,12 +1013,12 @@ struct End { };
 using BeginEvent = flecs::pair<Begin, Event>;
 using EndEvent = flecs::pair<End, Event>;
 
-void Pairs_set_get_object_variants() {
+void Pairs_set_get_w_object_variants() {
     flecs::world ecs;
 
-    auto e1 = ecs.entity().set_object<Begin, Event>({"Big Bang"});
+    auto e1 = ecs.entity().set_w_object<Begin, Event>({"Big Bang"});
     test_assert((e1.has<Begin, Event>()));
-    const Event* v = e1.get_object<Begin, Event>();
+    const Event* v = e1.get_w_object<Begin, Event>();
     test_assert(v != NULL);
     test_str(v->value, "Big Bang");
 

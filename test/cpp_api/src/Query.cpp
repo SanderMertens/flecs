@@ -1094,7 +1094,7 @@ void Query_each_pair_object() {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
-        .set_object<Begin, Event>({"Big Bang"})
+        .set_w_object<Begin, Event>({"Big Bang"})
         .set<EndEvent>({"Heat Death"});
 
     auto q = ecs.query<BeginEvent, EndEvent>();
@@ -1114,7 +1114,7 @@ void Query_iter_pair_object() {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
-        .set_object<Begin, Event>({"Big Bang"})
+        .set_w_object<Begin, Event>({"Big Bang"})
         .set<EndEvent>({"Heat Death"});
 
     auto q = ecs.query<BeginEvent, EndEvent>();

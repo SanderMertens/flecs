@@ -241,7 +241,7 @@ public:
      * @param relation the relation.
      */
     template<typename O>
-    const O* get_object(const flecs::entity_view& relation) const {
+    const O* get_w_object(const flecs::entity_view& relation) const {
         auto comp_id = _::cpp_type<O>::id(m_world);
         ecs_assert(_::cpp_type<O>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const O*>(
@@ -256,9 +256,19 @@ public:
      * @tparam O the object type.
      */
     template<typename R, typename O>
-    const O* get_object() const {
+    const O* get_w_object() const {
         return get<pair_object<R, O>>();
-    }    
+    }
+
+    /** Get object for a given relation.
+     * This operation returns the object for a given relation. The optional
+     * index can be used to iterate through objects, in case the entity has
+     * multiple instances for the same relation.
+     *
+     * @param relation The relation for which to retrieve the object.
+     * @param index The index (0 for the first instance of the relation).
+     */
+    entity get_object(flecs::entity_t relation, int32_t index = 0) const;
 
     /** Get parent from an entity.
      * This operation retrieves the parent entity that has the specified 
@@ -351,7 +361,7 @@ public:
      * @return True if the entity has the provided component, false otherwise.
      */
     template <typename Object>
-    bool has_object(flecs::id_t relation) const {
+    bool has_w_object(flecs::id_t relation) const {
         auto comp_id = _::cpp_type<Object>::id(m_world);
         return ecs_has_id(m_world, m_id, ecs_pair(relation, comp_id));
     }
@@ -652,7 +662,7 @@ public:
      * @tparam O the object type.
      */
     template<typename O>
-    const Base& add_object(entity_t relation) const {
+    const Base& add_w_object(entity_t relation) const {
         flecs_static_assert(is_flecs_constructible<O>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");      
         return this->add(relation,  _::cpp_type<O>::id(this->base_world()));
@@ -726,7 +736,7 @@ public:
      * @tparam Object the object type.
      */
     template<typename Object>
-    const Base& remove_object(entity_t relation) const {
+    const Base& remove_w_object(entity_t relation) const {
         return this->remove(relation, _::cpp_type<Object>::id(this->base_world()));
     }    
 
@@ -980,7 +990,7 @@ public:
      * @param value The value to set.
      */
     template <typename O>
-    const Base& set_object(entity_t relation, const O& value) const {
+    const Base& set_w_object(entity_t relation, const O& value) const {
         auto object = _::cpp_type<O>::id(this->base_world());
         flecs::set(this->base_world(), this->base_id(), value, 
             ecs_pair(relation, object));
@@ -988,7 +998,7 @@ public:
     }
 
     template <typename R, typename O>
-    const Base& set_object(const O& value) const {
+    const Base& set_w_object(const O& value) const {
         flecs::set<pair_object<R, O>>(this->base_world(), this->base_id(), value);
         return *this;
     }    
@@ -1305,7 +1315,7 @@ public:
      * @param relation the relation.
      */
     template <typename Object>
-    Object* get_mut_object(entity_t relation, bool *is_added = nullptr) const {
+    Object* get_mut_w_object(entity_t relation, bool *is_added = nullptr) const {
         auto comp_id = _::cpp_type<Object>::id(m_world);
         ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Object*>(

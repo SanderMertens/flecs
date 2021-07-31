@@ -2406,36 +2406,26 @@ size_t ecs_id_str(
     char *buffer,
     size_t buffer_len);
 
-/** Get the object of an entity.
- * This will return a object of the entity that has the specified component. If
- * the component is 0, the operation will return the first object that it finds
- * in the entity type.
+/** Get the object of a relation.
+ * This will return a object of the entity for the specified relation. The index
+ * allows for iterating through the objects, if a single entity has multiple
+ * objects for the same relation.
+ *
+ * If the index is larger than the total number of instances the entity has for
+ * the relation, the operation will return 0.
  *
  * @param world The world.
  * @param entity The entity.
  * @param rel The relation between the entity and the object.
- * @param id The entity id of a component that the object must have.
- * @return The object that has the specified id.
+ * @param index The index of the relation instance.
+ * @return The object for the relation at the specified index.
  */
 FLECS_API
-ecs_entity_t ecs_get_object_w_id(
+ecs_entity_t ecs_get_object(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel,
-    ecs_id_t id);
-
-/** Get the parent of an entity.
- * Same as ecs_get_parent_w_id but accepts a component typename.
- *
- * @param world The world.
- * @param entity The entity.
- * @param rel The relation between the entity and the object.
- * @param component A component that the parent must have.
- * @return The parent of the entity, 0 if no parent was found.
- */
-#define ecs_get_object(world, entity, rel, component)\
-    ecs_get_parent_w_id(world, entity, ecs_id(component))
-
+    int32_t index);
 
 /** Enable or disable an entity.
  * This operation enables or disables an entity by adding or removing the

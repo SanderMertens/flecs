@@ -76,7 +76,6 @@
                 "tag_has_size_zero",
                 "get_null_name",
                 "get_parent",
-                "get_parent_w_tag",
                 "is_component_enabled",
                 "is_enabled_component_enabled",
                 "is_disabled_component_enabled",
@@ -196,7 +195,7 @@
                 "override_pair_w_type_tag",
                 "override_tag_pair_w_type",
                 "get_relation_from_id",
-                "get_object_from_id",
+                "get_w_object_from_id",
                 "get_recycled_relation_from_id",
                 "get_recycled_object_from_id",
                 "each",
@@ -210,7 +209,7 @@
                 "match_pair_rel_wildcard",
                 "match_pair_both_wildcard",
                 "has_tag_w_object",
-                "has_object_tag",
+                "has_w_object_tag",
                 "add_pair_type",
                 "remove_pair_type",
                 "set_pair_type",
@@ -223,7 +222,7 @@
                 "set_inline_pair_type",
                 "get_pair_type_object",
                 "set_pair_type_object",
-                "set_get_object_variants"
+                "set_get_w_object_variants"
             ]
         }, {
             "id": "Switch",
@@ -486,7 +485,7 @@
                 "default_init",
                 "no_default_ctor_add",
                 "no_default_ctor_add_relation",
-                "no_default_ctor_add_object",
+                "no_default_ctor_add_w_object",
                 "no_default_ctor_set",
                 "no_copy_ctor",
                 "no_move_ctor",

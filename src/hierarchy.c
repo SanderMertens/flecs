@@ -406,7 +406,7 @@ tail:
     if (!cur && recursive) {
         if (!core_searched) {
             if (parent) {
-                parent = ecs_get_object_w_id(world, parent, EcsChildOf, 0);
+                parent = ecs_get_object(world, parent, EcsChildOf, 0);
             } else {
                 parent = EcsFlecsCore;
                 core_searched = true;

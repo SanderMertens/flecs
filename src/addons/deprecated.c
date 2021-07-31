@@ -149,7 +149,8 @@ ecs_entity_t ecs_get_parent_w_entity(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    return ecs_get_object_w_id(world, entity, EcsChildOf, id);
+    (void)id;
+    return ecs_get_object(world, entity, EcsChildOf, 0);
 }
 
 int32_t ecs_get_thread_index(

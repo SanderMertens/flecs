@@ -1144,7 +1144,10 @@
                 "get_tag_pair_w_obj_comp",
                 "get_tag_pair_w_rel_obj_comp",
                 "tag_pair_w_childof_w_comp",
-                "tag_pair_w_isa_w_comp"
+                "tag_pair_w_isa_w_comp",
+                "get_1_object",
+                "get_1_object_not_found",
+                "get_n_objects"
             ]
         }, {
            "id": "Trigger",

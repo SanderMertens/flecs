@@ -2167,3 +2167,52 @@ void Pairs_tag_pair_w_isa_w_comp() {
 
     ecs_fini(world);
 }
+
+void Pairs_get_1_object() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t rel = ecs_new_id(world);
+    ecs_entity_t obj = ecs_new_id(world);
+
+    ecs_add_pair(world, e, rel, obj);
+    test_assert(ecs_has_pair(world, e, rel, obj));
+    test_assert(ecs_get_object(world, e, rel, 0) == obj);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_1_object_not_found() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t rel = ecs_new_id(world);
+
+    test_assert(ecs_get_object(world, e, rel, 0) == 0);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_n_objects() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t rel = ecs_new_id(world);
+    ecs_entity_t obj_1 = ecs_new_id(world);
+    ecs_entity_t obj_2 = ecs_new_id(world);
+    ecs_entity_t obj_3 = ecs_new_id(world);
+
+    ecs_add_pair(world, e, rel, obj_1);
+    ecs_add_pair(world, e, rel, obj_2);
+    ecs_add_pair(world, e, rel, obj_3);
+    test_assert(ecs_has_pair(world, e, rel, obj_1));
+    test_assert(ecs_has_pair(world, e, rel, obj_2));
+    test_assert(ecs_has_pair(world, e, rel, obj_3));
+    test_assert(ecs_get_object(world, e, rel, 0) == obj_1);
+    test_assert(ecs_get_object(world, e, rel, 1) == obj_2);
+    test_assert(ecs_get_object(world, e, rel, 2) == obj_3);
+    test_assert(ecs_get_object(world, e, rel, 3) == 0);
+
+    ecs_fini(world);
+}
+

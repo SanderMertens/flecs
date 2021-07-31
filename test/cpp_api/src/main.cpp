@@ -69,7 +69,6 @@ void Entity_force_owned_type_w_pair(void);
 void Entity_tag_has_size_zero(void);
 void Entity_get_null_name(void);
 void Entity_get_parent(void);
-void Entity_get_parent_w_tag(void);
 void Entity_is_component_enabled(void);
 void Entity_is_enabled_component_enabled(void);
 void Entity_is_disabled_component_enabled(void);
@@ -187,7 +186,7 @@ void Pairs_override_pair_w_type(void);
 void Pairs_override_pair_w_type_tag(void);
 void Pairs_override_tag_pair_w_type(void);
 void Pairs_get_relation_from_id(void);
-void Pairs_get_object_from_id(void);
+void Pairs_get_w_object_from_id(void);
 void Pairs_get_recycled_relation_from_id(void);
 void Pairs_get_recycled_object_from_id(void);
 void Pairs_each(void);
@@ -201,7 +200,7 @@ void Pairs_match_pair_obj_wildcard(void);
 void Pairs_match_pair_rel_wildcard(void);
 void Pairs_match_pair_both_wildcard(void);
 void Pairs_has_tag_w_object(void);
-void Pairs_has_object_tag(void);
+void Pairs_has_w_object_tag(void);
 void Pairs_add_pair_type(void);
 void Pairs_remove_pair_type(void);
 void Pairs_set_pair_type(void);
@@ -214,7 +213,7 @@ void Pairs_get_inline_pair_type(void);
 void Pairs_set_inline_pair_type(void);
 void Pairs_get_pair_type_object(void);
 void Pairs_set_pair_type_object(void);
-void Pairs_set_get_object_variants(void);
+void Pairs_set_get_w_object_variants(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -457,7 +456,7 @@ void ComponentLifecycle_no_default_ctor_emplace(void);
 void ComponentLifecycle_default_init(void);
 void ComponentLifecycle_no_default_ctor_add(void);
 void ComponentLifecycle_no_default_ctor_add_relation(void);
-void ComponentLifecycle_no_default_ctor_add_object(void);
+void ComponentLifecycle_no_default_ctor_add_w_object(void);
 void ComponentLifecycle_no_default_ctor_set(void);
 void ComponentLifecycle_no_copy_ctor(void);
 void ComponentLifecycle_no_move_ctor(void);
@@ -857,10 +856,6 @@ bake_test_case Entity_testcases[] = {
     {
         "get_parent",
         Entity_get_parent
-    },
-    {
-        "get_parent_w_tag",
-        Entity_get_parent_w_tag
     },
     {
         "is_component_enabled",
@@ -1326,8 +1321,8 @@ bake_test_case Pairs_testcases[] = {
         Pairs_get_relation_from_id
     },
     {
-        "get_object_from_id",
-        Pairs_get_object_from_id
+        "get_w_object_from_id",
+        Pairs_get_w_object_from_id
     },
     {
         "get_recycled_relation_from_id",
@@ -1382,8 +1377,8 @@ bake_test_case Pairs_testcases[] = {
         Pairs_has_tag_w_object
     },
     {
-        "has_object_tag",
-        Pairs_has_object_tag
+        "has_w_object_tag",
+        Pairs_has_w_object_tag
     },
     {
         "add_pair_type",
@@ -1434,8 +1429,8 @@ bake_test_case Pairs_testcases[] = {
         Pairs_set_pair_type_object
     },
     {
-        "set_get_object_variants",
-        Pairs_set_get_object_variants
+        "set_get_w_object_variants",
+        Pairs_set_get_w_object_variants
     }
 };
 
@@ -2356,8 +2351,8 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_no_default_ctor_add_relation
     },
     {
-        "no_default_ctor_add_object",
-        ComponentLifecycle_no_default_ctor_add_object
+        "no_default_ctor_add_w_object",
+        ComponentLifecycle_no_default_ctor_add_w_object
     },
     {
         "no_default_ctor_set",
@@ -2954,7 +2949,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        152,
+        151,
         Entity_testcases
     },
     {

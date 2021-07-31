@@ -3332,29 +3332,39 @@ bool ecs_has_type(
     return has_type(world, entity, type, true, true);
 }
 
-ecs_entity_t ecs_get_object_w_id(
+ecs_entity_t ecs_get_object(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel,
-    ecs_id_t id)
+    int32_t index)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!entity || ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!id || ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(rel != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!entity) {
         return 0;
     }
 
-    ecs_type_t type = ecs_get_type(world, entity);    
-    ecs_entity_t object;
+    world = ecs_get_world(world);
 
-    /* Find first object for relation */
-    if (ecs_type_find_id(world, type, id, rel, 1, 0, &object)) {
-        return ecs_get_alive(world, object);
-    } else {
+    ecs_record_t *r = ecs_eis_get(world, entity);
+    ecs_table_t *table;
+    if (!r || !(table = r->table)) {
         return 0;
     }
+
+    ecs_id_t wc = ecs_pair(rel, EcsWildcard);
+    ecs_table_record_t *tr = flecs_get_table_record(world, table, wc);
+    if (!tr) {
+        return 0;
+    }
+
+    if (index >= tr->count) {
+        return 0;
+    }
+
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    return ecs_pair_object(world, ids[tr->column + index]);
 }
 
 const char* ecs_get_name(

@@ -1412,6 +1412,11 @@ ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id);
 
+ecs_table_record_t* flecs_get_table_record(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id);
+
 void flecs_clear_id_record(
     const ecs_world_t *world,
     ecs_id_t id);
@@ -7964,29 +7969,39 @@ bool ecs_has_type(
     return has_type(world, entity, type, true, true);
 }
 
-ecs_entity_t ecs_get_object_w_id(
+ecs_entity_t ecs_get_object(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel,
-    ecs_id_t id)
+    int32_t index)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!entity || ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!id || ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(rel != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!entity) {
         return 0;
     }
 
-    ecs_type_t type = ecs_get_type(world, entity);    
-    ecs_entity_t object;
+    world = ecs_get_world(world);
 
-    /* Find first object for relation */
-    if (ecs_type_find_id(world, type, id, rel, 1, 0, &object)) {
-        return ecs_get_alive(world, object);
-    } else {
+    ecs_record_t *r = ecs_eis_get(world, entity);
+    ecs_table_t *table;
+    if (!r || !(table = r->table)) {
         return 0;
     }
+
+    ecs_id_t wc = ecs_pair(rel, EcsWildcard);
+    ecs_table_record_t *tr = flecs_get_table_record(world, table, wc);
+    if (!tr) {
+        return 0;
+    }
+
+    if (index >= tr->count) {
+        return 0;
+    }
+
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    return ecs_pair_object(world, ids[tr->column + index]);
 }
 
 const char* ecs_get_name(
@@ -10900,7 +10915,8 @@ ecs_entity_t ecs_get_parent_w_entity(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    return ecs_get_object_w_id(world, entity, EcsChildOf, id);
+    (void)id;
+    return ecs_get_object(world, entity, EcsChildOf, 0);
 }
 
 int32_t ecs_get_thread_index(
@@ -15735,6 +15751,19 @@ ecs_id_record_t* flecs_get_id_record(
     ecs_id_t id)
 {
     return ecs_map_get(world->id_index, ecs_id_record_t, id);
+}
+
+ecs_table_record_t* flecs_get_table_record(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_id_record_t* idr = flecs_get_id_record(world, id);
+    if (!idr) {
+        return NULL;
+    }
+
+    return ecs_map_get(idr->table_index, ecs_table_record_t, table->id);
 }
 
 void flecs_clear_id_record(
@@ -27747,7 +27776,7 @@ tail:
     if (!cur && recursive) {
         if (!core_searched) {
             if (parent) {
-                parent = ecs_get_object_w_id(world, parent, EcsChildOf, 0);
+                parent = ecs_get_object(world, parent, EcsChildOf, 0);
             } else {
                 parent = EcsFlecsCore;
                 core_searched = true;

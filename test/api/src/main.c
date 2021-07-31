@@ -1076,6 +1076,9 @@ void Pairs_get_tag_pair_w_obj_comp(void);
 void Pairs_get_tag_pair_w_rel_obj_comp(void);
 void Pairs_tag_pair_w_childof_w_comp(void);
 void Pairs_tag_pair_w_isa_w_comp(void);
+void Pairs_get_1_object(void);
+void Pairs_get_1_object_not_found(void);
+void Pairs_get_n_objects(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -6077,6 +6080,18 @@ bake_test_case Pairs_testcases[] = {
     {
         "tag_pair_w_isa_w_comp",
         Pairs_tag_pair_w_isa_w_comp
+    },
+    {
+        "get_1_object",
+        Pairs_get_1_object
+    },
+    {
+        "get_1_object_not_found",
+        Pairs_get_1_object_not_found
+    },
+    {
+        "get_n_objects",
+        Pairs_get_n_objects
     }
 };
 
@@ -9784,7 +9799,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        59,
+        62,
         Pairs_testcases
     },
     {

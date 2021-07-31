@@ -134,6 +134,11 @@ ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id);
 
+ecs_table_record_t* flecs_get_table_record(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id);
+
 void flecs_clear_id_record(
     const ecs_world_t *world,
     ecs_id_t id);

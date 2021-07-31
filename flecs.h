@@ -5463,36 +5463,26 @@ size_t ecs_id_str(
     char *buffer,
     size_t buffer_len);
 
-/** Get the object of an entity.
- * This will return a object of the entity that has the specified component. If
- * the component is 0, the operation will return the first object that it finds
- * in the entity type.
+/** Get the object of a relation.
+ * This will return a object of the entity for the specified relation. The index
+ * allows for iterating through the objects, if a single entity has multiple
+ * objects for the same relation.
+ *
+ * If the index is larger than the total number of instances the entity has for
+ * the relation, the operation will return 0.
  *
  * @param world The world.
  * @param entity The entity.
  * @param rel The relation between the entity and the object.
- * @param id The entity id of a component that the object must have.
- * @return The object that has the specified id.
+ * @param index The index of the relation instance.
+ * @return The object for the relation at the specified index.
  */
 FLECS_API
-ecs_entity_t ecs_get_object_w_id(
+ecs_entity_t ecs_get_object(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel,
-    ecs_id_t id);
-
-/** Get the parent of an entity.
- * Same as ecs_get_parent_w_id but accepts a component typename.
- *
- * @param world The world.
- * @param entity The entity.
- * @param rel The relation between the entity and the object.
- * @param component A component that the parent must have.
- * @return The parent of the entity, 0 if no parent was found.
- */
-#define ecs_get_object(world, entity, rel, component)\
-    ecs_get_parent_w_id(world, entity, ecs_id(component))
-
+    int32_t index);
 
 /** Enable or disable an entity.
  * This operation enables or disables an entity by adding or removing the
@@ -12571,7 +12561,7 @@ public:
      * @param relation the relation.
      */
     template<typename O>
-    const O* get_object(const flecs::entity_view& relation) const {
+    const O* get_w_object(const flecs::entity_view& relation) const {
         auto comp_id = _::cpp_type<O>::id(m_world);
         ecs_assert(_::cpp_type<O>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const O*>(
@@ -12586,9 +12576,19 @@ public:
      * @tparam O the object type.
      */
     template<typename R, typename O>
-    const O* get_object() const {
+    const O* get_w_object() const {
         return get<pair_object<R, O>>();
-    }    
+    }
+
+    /** Get object for a given relation.
+     * This operation returns the object for a given relation. The optional
+     * index can be used to iterate through objects, in case the entity has
+     * multiple instances for the same relation.
+     *
+     * @param relation The relation for which to retrieve the object.
+     * @param index The index (0 for the first instance of the relation).
+     */
+    entity get_object(flecs::entity_t relation, int32_t index = 0) const;
 
     /** Get parent from an entity.
      * This operation retrieves the parent entity that has the specified 
@@ -12681,7 +12681,7 @@ public:
      * @return True if the entity has the provided component, false otherwise.
      */
     template <typename Object>
-    bool has_object(flecs::id_t relation) const {
+    bool has_w_object(flecs::id_t relation) const {
         auto comp_id = _::cpp_type<Object>::id(m_world);
         return ecs_has_id(m_world, m_id, ecs_pair(relation, comp_id));
     }
@@ -12982,7 +12982,7 @@ public:
      * @tparam O the object type.
      */
     template<typename O>
-    const Base& add_object(entity_t relation) const {
+    const Base& add_w_object(entity_t relation) const {
         flecs_static_assert(is_flecs_constructible<O>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");      
         return this->add(relation,  _::cpp_type<O>::id(this->base_world()));
@@ -13056,7 +13056,7 @@ public:
      * @tparam Object the object type.
      */
     template<typename Object>
-    const Base& remove_object(entity_t relation) const {
+    const Base& remove_w_object(entity_t relation) const {
         return this->remove(relation, _::cpp_type<Object>::id(this->base_world()));
     }    
 
@@ -13310,7 +13310,7 @@ public:
      * @param value The value to set.
      */
     template <typename O>
-    const Base& set_object(entity_t relation, const O& value) const {
+    const Base& set_w_object(entity_t relation, const O& value) const {
         auto object = _::cpp_type<O>::id(this->base_world());
         flecs::set(this->base_world(), this->base_id(), value, 
             ecs_pair(relation, object));
@@ -13318,7 +13318,7 @@ public:
     }
 
     template <typename R, typename O>
-    const Base& set_object(const O& value) const {
+    const Base& set_w_object(const O& value) const {
         flecs::set<pair_object<R, O>>(this->base_world(), this->base_id(), value);
         return *this;
     }    
@@ -13635,7 +13635,7 @@ public:
      * @param relation the relation.
      */
     template <typename Object>
-    Object* get_mut_object(entity_t relation, bool *is_added = nullptr) const {
+    Object* get_mut_w_object(entity_t relation, bool *is_added = nullptr) const {
         auto comp_id = _::cpp_type<Object>::id(m_world);
         ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Object*>(
@@ -16125,7 +16125,7 @@ public:
     }     
 
     template <typename Object>
-    Base& add_object(entity_t relation) {
+    Base& add_w_object(entity_t relation) {
         return this->add(relation, _::cpp_type<Object>::id(world()));
     }
 
@@ -17317,6 +17317,14 @@ inline flecs::entity entity_view::get_case(const flecs::type& sw) const {
 
 inline flecs::entity entity_view::get_case(flecs::id_t sw) const {
     return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw));
+}
+
+inline flecs::entity entity_view::get_object(
+    flecs::entity_t relation, 
+    int32_t index) const 
+{
+    return flecs::entity(m_world, 
+        ecs_get_object(m_world, m_id, relation, index));
 }
 
 inline flecs::entity id::role() const {

@@ -1012,50 +1012,40 @@ void Entity_get_null_name() {
 void Entity_get_parent() {
     flecs::world world;
 
-    auto parent1 = world.entity()
+    auto Rel = world.entity();
+
+    auto obj1 = world.entity()
         .add<Position>();
 
-    auto parent2 = world.entity()
+    auto obj2 = world.entity()
         .add<Velocity>();
 
-    auto parent3 = world.entity()
+    auto obj3 = world.entity()
         .add<Mass>();
 
     auto child = world.entity()
-        .add(flecs::ChildOf, parent1)
-        .add(flecs::ChildOf, parent2)
-        .add(flecs::ChildOf, parent3);
+        .add(Rel, obj1)
+        .add(Rel, obj2)
+        .add(Rel, obj3);
 
-    auto p = child.get_parent<Velocity>();
+    auto p = child.get_object(Rel);
     test_assert(p != 0);
-    test_int(p, parent2);
-    test_assert(p == parent2);
-}
+    test_assert(p == obj1);
 
-void Entity_get_parent_w_tag() {
-    flecs::world world;
-
-    auto TagA = world.entity();
-    auto TagB = world.entity();
-    auto TagC = world.entity();
-
-    auto parent1 = world.entity()
-        .add(TagA);
-
-    auto parent2 = world.entity()
-        .add(TagB);
-
-    auto parent3 = world.entity()
-        .add(TagC);
-
-    auto child = world.entity()
-        .add(flecs::ChildOf, parent1)
-        .add(flecs::ChildOf, parent2)
-        .add(flecs::ChildOf, parent3);
-
-    auto p = child.get_parent(TagB);
+    p = child.get_object(Rel, 0);
     test_assert(p != 0);
-    test_assert(p == parent2);
+    test_assert(p == obj1);
+
+    p = child.get_object(Rel, 1);
+    test_assert(p != 0);
+    test_assert(p == obj2);
+
+    p = child.get_object(Rel, 2);
+    test_assert(p != 0);
+    test_assert(p == obj3);
+
+    p = child.get_object(Rel, 3);
+    test_assert(p == 0);
 }
 
 void Entity_is_component_enabled() {
@@ -2832,7 +2822,7 @@ void Entity_is_a_w_type() {
     auto e = world.entity().is_a<Prefab>();
 
     test_assert(e.has(flecs::IsA, base));
-    test_assert(e.has_object<Prefab>(flecs::IsA));
+    test_assert(e.has_w_object<Prefab>(flecs::IsA));
 }
 
 void Entity_child_of() {
@@ -2855,5 +2845,5 @@ void Entity_child_of_w_type() {
     auto e = world.entity().child_of<Parent>();
 
     test_assert(e.has(flecs::ChildOf, base));
-    test_assert(e.has_object<Parent>(flecs::ChildOf));
+    test_assert(e.has_w_object<Parent>(flecs::ChildOf));
 }

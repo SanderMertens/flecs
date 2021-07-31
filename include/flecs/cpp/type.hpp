@@ -77,7 +77,7 @@ public:
     }     
 
     template <typename Object>
-    Base& add_object(entity_t relation) {
+    Base& add_w_object(entity_t relation) {
         return this->add(relation, _::cpp_type<Object>::id(world()));
     }
 

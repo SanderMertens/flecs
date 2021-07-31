@@ -429,10 +429,10 @@ static void try_add_relation(flecs::world& ecs) {
 }
 
 template <typename T>
-static void try_add_object(flecs::world& ecs) {
+static void try_add_w_object(flecs::world& ecs) {
     flecs::entity rel = ecs.entity();
 
-    flecs::entity e = ecs.entity().add_object<T>(rel);
+    flecs::entity e = ecs.entity().add_w_object<T>(rel);
     test_assert(e.has<T>());
 
     const T *ptr = e.get<T>();
@@ -546,7 +546,7 @@ void ComponentLifecycle_no_default_ctor_add_relation() {
     try_add_relation<NoDefaultCtor>(ecs); 
 }
 
-void ComponentLifecycle_no_default_ctor_add_object() {
+void ComponentLifecycle_no_default_ctor_add_w_object() {
     install_test_abort();
 
     flecs::world ecs;
@@ -555,7 +555,7 @@ void ComponentLifecycle_no_default_ctor_add_object() {
 
     test_expect_abort();
 
-    try_add_object<NoDefaultCtor>(ecs);
+    try_add_w_object<NoDefaultCtor>(ecs);
 }
 
 void ComponentLifecycle_no_default_ctor_set() {
@@ -902,4 +902,3 @@ void ComponentLifecycle_dtor_w_non_trivial_explicit_move() {
     test_int(CtorDtor_w_MoveAssign::move_value, 10);
     test_int(CtorDtor_w_MoveAssign::dtor_value, 0);
 }
-

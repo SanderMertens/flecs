@@ -1549,6 +1549,19 @@ ecs_id_record_t* flecs_get_id_record(
     return ecs_map_get(world->id_index, ecs_id_record_t, id);
 }
 
+ecs_table_record_t* flecs_get_table_record(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_id_record_t* idr = flecs_get_id_record(world, id);
+    if (!idr) {
+        return NULL;
+    }
+
+    return ecs_map_get(idr->table_index, ecs_table_record_t, table->id);
+}
+
 void flecs_clear_id_record(
     const ecs_world_t *world,
     ecs_id_t id)    
