@@ -377,6 +377,21 @@
                 "expr_w_symbol"
             ]
         }, {
+            "id": "Plecs",
+            "testcases": [
+                "null",
+                "empty",
+                "space",
+                "space_newline",
+                "empty_newline",
+                "entity",
+                "entity_w_entity",
+                "entity_w_pair",
+                "2_entities",
+                "2_entities_w_entities",
+                "3_entities_w_pairs"
+            ]            
+        }, {
             "id": "GlobalComponentIds",
             "testcases": [
                 "declare",

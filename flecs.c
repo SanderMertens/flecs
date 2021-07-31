@@ -11095,6 +11095,134 @@ ecs_query_t* ecs_subquery_new(
 }
 
 #endif
+#include "errno.h"
+
+#define TOK_NEWLINE '\n'
+
+static
+ecs_entity_t ensure_entity(
+    ecs_world_t *world,
+    const char *path)
+{
+    ecs_entity_t e = ecs_lookup_fullpath(world, path);
+    if (!e) {
+        e = ecs_new_from_path(world, 0, path);
+        ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    return e;
+}
+
+static
+int create_term(
+    ecs_world_t *world, 
+    ecs_term_t *term,
+    const char *name,
+    const char *expr,
+    int32_t column)
+{
+    if (!ecs_term_id_is_set(&term->pred)) {
+        ecs_parser_error(name, expr, column, "missing predicate in expression");
+        return -1;
+    }
+
+    if (!ecs_term_id_is_set(&term->args[0])) {
+        ecs_parser_error(name, expr, column, "missing subject in expression");
+        return -1;
+    }
+
+    ecs_entity_t pred = ensure_entity(world, term->pred.name);
+    ecs_entity_t subj = ensure_entity(world, term->args[0].name);
+    ecs_entity_t obj = 0;
+
+    if (ecs_term_id_is_set(&term->args[1])) {
+        obj = ensure_entity(world, term->args[1].name);
+    }
+
+    if (!obj) {
+        ecs_add_id(world, subj, pred);
+    } else {
+        ecs_add_pair(world, subj, pred, obj);
+    }
+
+    return 0;
+}
+
+int ecs_plecs_from_str(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr) 
+{
+    const char *ptr = expr;
+    ecs_term_t term = {0};
+
+    if (!expr) {
+        return 0;
+    }
+
+    while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
+        if (!ecs_term_is_set(&term)) {
+            break;
+        }
+        
+        if (create_term(world, &term, name, expr, (int32_t)(ptr - expr))) {
+            return -1;
+        }
+
+        if (ptr[0] == TOK_NEWLINE) {
+            ptr ++;
+            expr = ptr;
+        }
+    }
+
+    return 0;
+}
+
+int ecs_plecs_from_file(
+    ecs_world_t *world,
+    const char *filename) 
+{
+    FILE* file;
+    char* content = NULL;
+    int32_t bytes;
+    size_t size;
+
+    /* Open file for reading */
+    file = fopen(filename, "r");
+    if (!file) {
+        ecs_err("%s (%s)", strerror(errno), filename);
+        goto error;
+    }
+
+    /* Determine file size */
+    fseek(file, 0 , SEEK_END);
+    bytes = (int32_t)ftell(file);
+    if (bytes == -1) {
+        goto error;
+    }
+    rewind(file);
+
+    /* Load contents in memory */
+    content = ecs_os_malloc(bytes + 1);
+    size = (size_t)bytes;
+    if (!(size = fread(content, 1, size, file)) && bytes) {
+        ecs_err("%s: read zero bytes instead of %d", filename, size);
+        ecs_os_free(content);
+        content = NULL;
+        goto error;
+    } else {
+        content[size] = '\0';
+    }
+
+    fclose(file);
+
+    int result = ecs_plecs_from_str(world, filename, content);
+    ecs_os_free(content);
+    return result;
+error:
+    ecs_os_free(content);
+    return -1;
+}
 
 #ifdef FLECS_MODULE
 
@@ -12671,14 +12799,26 @@ void ecs_bulk_remove_entity(
 
 typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
 
-/** Skip spaces when parsing signature */
 static
-const char *skip_space(
+const char *skip_newline_and_space(
     const char *ptr)
 {
     while (isspace(*ptr)) {
         ptr ++;
     }
+
+    return ptr;    
+}
+
+/** Skip spaces when parsing signature */
+static
+const char *skip_space(
+    const char *ptr)
+{
+    while ((*ptr != '\n') && isspace(*ptr)) {
+        ptr ++;
+    }
+
     return ptr;
 }
 
@@ -13548,7 +13688,7 @@ char* ecs_parse_term(
         } while (true);
     }
 
-    ptr = skip_space(ptr);
+    ptr = skip_newline_and_space(ptr);
     if (!ptr[0]) {
         return (char*)ptr;
     }
@@ -13582,7 +13722,7 @@ char* ecs_parse_term(
     }
 
     /* Term must either end in end of expression, AND or OR token */
-    if (ptr[0] != TOK_AND && (ptr[0] != TOK_OR[0]) && ptr[0]) {
+    if (ptr[0] != TOK_AND && (ptr[0] != TOK_OR[0]) && (ptr[0] != '\n') && ptr[0]) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "expected end of expression or next term");
         ecs_term_fini(term);
@@ -16299,13 +16439,6 @@ void flecs_hash(
 
 
 static
-bool term_id_is_set(
-    const ecs_term_id_t *id)
-{
-    return id->entity != 0 || id->name != NULL;
-}
-
-static
 int resolve_identifier(
     const ecs_world_t *world,
     const char *name,
@@ -16468,10 +16601,16 @@ bool ecs_id_is_wildcard(
     return false;
 }
 
+bool ecs_term_id_is_set(
+    const ecs_term_id_t *id)
+{
+    return id->entity != 0 || id->name != NULL;
+}
+
 bool ecs_term_is_set(
     const ecs_term_t *term)
 {
-    return term->id != 0 || term_id_is_set(&term->pred);
+    return term->id != 0 || ecs_term_id_is_set(&term->pred);
 }
 
 bool ecs_term_is_trivial(
@@ -16825,31 +16964,33 @@ char* ecs_filter_str(
             ecs_strbuf_appendstr(&buf, "?");
         }
 
-        if (term->args[0].entity == EcsThis && term_id_is_set(&term->args[1])) {
+        if (term->args[0].entity == EcsThis && 
+            ecs_term_id_is_set(&term->args[1])) 
+        {
             ecs_strbuf_appendstr(&buf, "(");
         }
 
-        if (!term_id_is_set(&term->args[1]) && 
+        if (!ecs_term_id_is_set(&term->args[1]) && 
             (term->pred.entity != term->args[0].entity)) 
         {
             filter_str_add_id(world, &buf, &term->pred);
 
-            if (!term_id_is_set(&term->args[0])) {
+            if (!ecs_term_id_is_set(&term->args[0])) {
                 ecs_strbuf_appendstr(&buf, "()");
             } else if (term->args[0].entity != EcsThis) {
                 ecs_strbuf_appendstr(&buf, "(");
                 filter_str_add_id(world, &buf, &term->args[0]);
             }
 
-            if (term_id_is_set(&term->args[1])) {
+            if (ecs_term_id_is_set(&term->args[1])) {
                 ecs_strbuf_appendstr(&buf, ", ");
                 filter_str_add_id(world, &buf, &term->args[1]);
                 ecs_strbuf_appendstr(&buf, ")");
             }
-        } else if (!term_id_is_set(&term->args[1])) {
+        } else if (!ecs_term_id_is_set(&term->args[1])) {
             ecs_strbuf_appendstr(&buf, "$");
             filter_str_add_id(world, &buf, &term->pred);
-        } else if (term_id_is_set(&term->args[1])) {
+        } else if (ecs_term_id_is_set(&term->args[1])) {
             filter_str_add_id(world, &buf, &term->pred);
             ecs_strbuf_appendstr(&buf, ", ");
             filter_str_add_id(world, &buf, &term->args[1]);

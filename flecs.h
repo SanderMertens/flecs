@@ -37,6 +37,7 @@
 #define FLECS_BULK
 #define FLECS_MODULE
 #define FLECS_PARSER
+#define FLECS_PLECS
 #define FLECS_QUEUE
 #define FLECS_SNAPSHOT
 #define FLECS_DIRECT_ACCESS
@@ -5920,6 +5921,14 @@ const char* ecs_set_name_prefix(
  * @{
  */
 
+/** Test whether term id is set.
+ *
+ * @param id The term id.
+ * @return True when set, false when not set.
+ */
+bool ecs_term_id_is_set(
+    const ecs_term_id_t *id);
+
 /** Test whether a term is set.
  * This operation can be used to test whether a term has been initialized with
  * values or whether it is empty.
@@ -8956,6 +8965,35 @@ FLECS_API void ecs_gauge_reduce(
     int32_t t_dst,
     ecs_gauge_t *src,
     int32_t t_src);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
+#endif
+#ifdef FLECS_PLECS
+#ifdef FLECS_PLECS
+
+#ifndef FLECS_PLECS_H
+#define FLECS_PLECS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+FLECS_API
+int ecs_plecs_from_str(
+    ecs_world_t *world,
+    const char *name,
+    const char *str);
+
+FLECS_API
+int ecs_plecs_from_file(
+    ecs_world_t *world,
+    const char *filename);
 
 #ifdef __cplusplus
 }

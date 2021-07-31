@@ -355,6 +355,19 @@ void Parser_pred_implicit_subject_superset_cascade_childof(void);
 void Parser_pred_implicit_subject_superset_cascade_childof_optional(void);
 void Parser_expr_w_symbol(void);
 
+// Testsuite 'Plecs'
+void Plecs_null(void);
+void Plecs_empty(void);
+void Plecs_space(void);
+void Plecs_space_newline(void);
+void Plecs_empty_newline(void);
+void Plecs_entity(void);
+void Plecs_entity_w_entity(void);
+void Plecs_entity_w_pair(void);
+void Plecs_2_entities(void);
+void Plecs_2_entities_w_entities(void);
+void Plecs_3_entities_w_pairs(void);
+
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
 void GlobalComponentIds_declare_w_entity(void);
@@ -3328,6 +3341,53 @@ bake_test_case Parser_testcases[] = {
     {
         "expr_w_symbol",
         Parser_expr_w_symbol
+    }
+};
+
+bake_test_case Plecs_testcases[] = {
+    {
+        "null",
+        Plecs_null
+    },
+    {
+        "empty",
+        Plecs_empty
+    },
+    {
+        "space",
+        Plecs_space
+    },
+    {
+        "space_newline",
+        Plecs_space_newline
+    },
+    {
+        "empty_newline",
+        Plecs_empty_newline
+    },
+    {
+        "entity",
+        Plecs_entity
+    },
+    {
+        "entity_w_entity",
+        Plecs_entity_w_entity
+    },
+    {
+        "entity_w_pair",
+        Plecs_entity_w_pair
+    },
+    {
+        "2_entities",
+        Plecs_2_entities
+    },
+    {
+        "2_entities_w_entities",
+        Plecs_2_entities_w_entities
+    },
+    {
+        "3_entities_w_pairs",
+        Plecs_3_entities_w_pairs
     }
 };
 
@@ -9560,6 +9620,13 @@ static bake_test_suite suites[] = {
         Parser_testcases
     },
     {
+        "Plecs",
+        NULL,
+        NULL,
+        11,
+        Plecs_testcases
+    },
+    {
         "GlobalComponentIds",
         NULL,
         NULL,
@@ -9962,5 +10029,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 65);
+    return bake_test_run("api", argc, argv, suites, 66);
 }
