@@ -29,7 +29,11 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
 })
 
 static ECS_ON_SET(EcsIdentifier, ptr, {
-    ptr->length = ecs_os_strlen(ptr->value);
+    if (ptr->value) {
+        ptr->length = ecs_os_strlen(ptr->value);
+    } else {
+        ptr->length = 0;
+    }
 })
 
 /* Component lifecycle actions for EcsTrigger */

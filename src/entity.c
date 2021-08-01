@@ -1349,9 +1349,9 @@ void flecs_run_set_systems(
     bool set_all)
 {
     ecs_assert(set_all || column != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!column || column->size != 0, ECS_INTERNAL_ERROR, NULL);
 
-#ifdef FLECS_SYSTEM    
-    if (!count || !data) {
+    if (!count || !data || (column && !column->size)) {
         return;
     }
 
@@ -1359,14 +1359,53 @@ void flecs_run_set_systems(
     ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
     ecs_assert((row + count) <= ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
-
     entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
 
-    ecs_ids_t components = {
-        .array = &component,
-        .count = component != 0
-    };
+    ecs_ids_t components;
 
+    if (!set_all) {
+        const ecs_type_info_t *info = get_c_info(world, component);
+        ecs_on_set_t on_set;
+        if (info && (on_set = info->lifecycle.on_set)) {
+            ecs_size_t size = column->size;
+            void *ptr = ecs_vector_get_t(
+                column->data, size, column->alignment, row);
+            on_set(world, component, entities, ptr, flecs_to_size_t(size), count, 
+                info->lifecycle.ctx);
+        }
+
+        components = (ecs_ids_t){
+            .array = &component,
+            .count = component != 0
+        };
+    } else {
+        ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+        int32_t i, column_count = table->column_count;        
+
+        for (i = 0; i < column_count; i ++) {
+            ecs_id_t id = ids[i];
+            const ecs_type_info_t *info = get_c_info(world, id);
+            ecs_on_set_t on_set;
+            if (info && (on_set = info->lifecycle.on_set)) {
+                ecs_column_t *c = &data->columns[i];
+                ecs_size_t size = c->size;
+                if (!size) {
+                    continue;
+                }
+
+                void *ptr = ecs_vector_get_t(c->data, size, c->alignment, row);
+                on_set(world, ids[i], entities, ptr, flecs_to_size_t(size), 
+                    count, info->lifecycle.ctx);
+            }
+        }
+
+        components = (ecs_ids_t){
+            .array = ids,
+            .count = column_count
+        };        
+    }
+
+#ifdef FLECS_SYSTEM
     run_set_systems_for_entities(world, &components, table, row, 
         count, entities, set_all);
 #endif
@@ -1375,18 +1414,12 @@ void flecs_run_set_systems(
         if (!set_all) {
             notify(world, table, data, row, count, EcsOnSet, &components);
         } else {
-            ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
             int32_t i, column_count = table->column_count;
             for (i = 0; i < column_count; i ++) {
-                ecs_column_t *column = &data->columns[i];
-                if (column->size) {
-                    ecs_ids_t component = {
-                        .array = &ids[i],
-                        .count = 1
-                    };
-
-                    notify( world, table, data, row, count, EcsOnSet, 
-                        &component);
+                ecs_column_t *c = &data->columns[i];
+                if (c->size) {
+                    notify(world, table, data, row, count, EcsOnSet, 
+                        &components);
                 }
             }
         }

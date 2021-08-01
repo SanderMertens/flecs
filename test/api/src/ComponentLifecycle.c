@@ -2461,16 +2461,22 @@ void ComponentLifecycle_delete_self_in_dtor_on_delete() {
     ecs_fini(world);
 }
 
-static int on_set_invoked;
+static int position_on_set_invoked;
+static int velocity_on_set_invoked;
 
 ECS_ON_SET(Position, ptr, {
     ptr->x += 1;
     ptr->y += 2;
-    on_set_invoked ++;
+    position_on_set_invoked ++;
+})
+
+ECS_ON_SET(Velocity, ptr, {
+    ptr->x += 1;
+    ptr->y += 2;
+    velocity_on_set_invoked ++;
 })
 
 void ComponentLifecycle_on_set_after_set() {
-    test_quarantine("July 31 2021");
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2482,7 +2488,7 @@ void ComponentLifecycle_on_set_after_set() {
 
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctor_position, 1);
-    test_int(on_set_invoked, 0);
+    test_int(position_on_set_invoked, 0);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -2491,11 +2497,78 @@ void ComponentLifecycle_on_set_after_set() {
 
     ecs_set(world, e, Position, {10, 20});
     test_int(ctor_position, 1);
-    test_int(on_set_invoked, 1);
+    test_int(position_on_set_invoked, 1);
 
     test_assert(p == ecs_get(world, e, Position));
     test_int(p->x, 11);
     test_int(p->y, 22);
 
     ecs_fini(world);
+}
+
+void ComponentLifecycle_on_set_after_new_w_data() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .on_set = ecs_on_set(Position)
+    });
+
+    ecs_set(world, ecs_id(Velocity), EcsComponentLifecycle, {
+        .on_set = ecs_on_set(Velocity)
+    });
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
+        &(ecs_ids_t){
+            .array = (ecs_entity_t[]){
+                ecs_typeid(Position),
+                ecs_typeid(Velocity)
+            }, 
+            .count = 2
+        },
+        (void*[]){
+            (Position[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            (Velocity[]) {
+                {1, 2},
+                {3, 4},
+                {5, 6}
+            }
+        });
+
+    ecs_entity_t e1 = ids[0];
+    ecs_entity_t e2 = ids[1];
+    ecs_entity_t e3 = ids[2];
+
+    test_int(position_on_set_invoked, 3);
+    test_int(velocity_on_set_invoked, 3);
+
+    const Position *pos = ecs_get(world, e1, Position);
+    test_int(pos->x, 11);
+    test_int(pos->y, 22);
+
+    pos = ecs_get(world, e2, Position);
+    test_int(pos->x, 31);
+    test_int(pos->y, 42);
+
+    pos = ecs_get(world, e3, Position);
+    test_int(pos->x, 51);
+    test_int(pos->y, 62);
+
+    const Velocity *vel = ecs_get(world, e1, Velocity);
+    test_int(vel->x, 2);
+    test_int(vel->y, 4);
+
+    vel = ecs_get(world, e2, Velocity);
+    test_int(vel->x, 4);
+    test_int(vel->y, 6);
+
+    vel = ecs_get(world, e3, Velocity);
+    test_int(vel->x, 6);
+    test_int(vel->y, 8);
 }
