@@ -1230,7 +1230,8 @@
                 "observer_w_self",
                 "add_after_delete_observer",
                 "remove_after_delete_observer",
-                "delete_observer_w_ctx"
+                "delete_observer_w_ctx",
+                "filter_w_strings"
             ]                
         }, {
             "id": "TriggerOnAdd",

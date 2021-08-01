@@ -2470,6 +2470,7 @@ ECS_ON_SET(Position, ptr, {
 })
 
 void ComponentLifecycle_on_set_after_set() {
+    test_quarantine("July 31 2021");
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

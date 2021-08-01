@@ -324,7 +324,7 @@ ecs_entity_t ecs_trigger_init(
             ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
     #endif
         } else {
-            term = desc->term;
+            term = ecs_term_copy(&desc->term);
         }
 
         if (ecs_term_finalize(world, name, expr, &term)) {

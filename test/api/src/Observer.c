@@ -1007,3 +1007,38 @@ void Observer_delete_observer_w_ctx() {
 
     ecs_fini(world);
 }
+
+void Observer_filter_w_strings() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{.pred.name = "TagA"}, {.pred.name = "TagB"}},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_id(world, e, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.c[0][1], TagB);
+
+    ecs_fini(world);
+}

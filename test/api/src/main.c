@@ -1158,6 +1158,7 @@ void Observer_observer_w_self(void);
 void Observer_add_after_delete_observer(void);
 void Observer_remove_after_delete_observer(void);
 void Observer_delete_observer_w_ctx(void);
+void Observer_filter_w_strings(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -6399,6 +6400,10 @@ bake_test_case Observer_testcases[] = {
     {
         "delete_observer_w_ctx",
         Observer_delete_observer_w_ctx
+    },
+    {
+        "filter_w_strings",
+        Observer_filter_w_strings
     }
 };
 
@@ -9818,7 +9823,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        25,
+        26,
         Observer_testcases
     },
     {
