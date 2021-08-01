@@ -2106,6 +2106,9 @@ extern "C" {
  * @{
  */
 
+/** Pointer object returned by API. */
+typedef void ecs_object_t;
+
 /** An id. Ids are the things that can be added to an entity. An id can be an
  * entity or pair, and can have an optional role. */
 typedef uint64_t ecs_id_t;
@@ -6474,6 +6477,40 @@ FLECS_API
 void* ecs_get_trigger_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger);
+
+
+typedef enum ecs_payload_kind_t {
+    EcsPayloadNone,
+    EcsPayloadEntity,
+    EcsPayloadTable
+} ecs_payload_kind_t;
+
+typedef struct ecs_event_desc_t {
+    ecs_entity_t event;
+    ecs_ids_t *ids; /* When NULL, notify for all ids in entity/table type */
+    ecs_payload_kind_t payload_kind;
+    union {
+        ecs_entity_t entity;
+        struct {
+            ecs_table_t *table;
+            int32_t offset;
+            int32_t count; /* When 0 notify all entities starting from offset */
+        } table;
+    } payload;
+
+    void *param; /* Assigned to iter param member */
+
+    /* Observable for which to notify the triggers/observers. If NULL, the
+     * world will be used as observable. */
+    ecs_object_t *observable;
+} ecs_event_desc_t;
+
+/** Send event.
+ */
+FLECS_API
+void ecs_emit( 
+    ecs_world_t *world,
+    ecs_event_desc_t *desc);
 
 /** @} */
 

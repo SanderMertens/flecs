@@ -232,8 +232,7 @@ void ecs_snapshot_restore(
                 data = flecs_table_merge(world, table, table, data, leaf->data);
 
                 /* Run OnSet systems for merged entities */
-                ecs_ids_t components = flecs_type_to_ids(table->type);
-                flecs_run_set_systems(world, &components, table, data,
+                flecs_run_set_systems(world, 0, table, data, NULL,
                     old_count, new_count, true);
 
                 ecs_os_free(leaf->data->columns);
@@ -269,13 +268,12 @@ void ecs_snapshot_restore(
             if (table->flags & EcsTableHasBuiltins) {
                 continue;
             }
-
-            ecs_ids_t components = flecs_type_to_ids(table->type);
+            
             ecs_data_t *table_data = flecs_table_get_data(table);
             int32_t entity_count = flecs_table_data_count(table_data);
 
-            flecs_run_set_systems(world, &components, table, 
-                table_data, 0, entity_count, true);            
+            flecs_run_set_systems(world, 0, table, 
+                table_data, NULL, 0, entity_count, true);            
         }
     }
 

@@ -136,7 +136,7 @@ ecs_id_record_t* flecs_get_id_record(
 
 ecs_table_record_t* flecs_get_table_record(
     const ecs_world_t *world,
-    ecs_table_t *table,
+    const ecs_table_t *table,
     ecs_id_t id);
 
 void flecs_clear_id_record(
@@ -319,9 +319,10 @@ void flecs_run_remove_actions(
 
 void flecs_run_set_systems(
     ecs_world_t *world,
-    ecs_ids_t *components,
+    ecs_id_t component,
     ecs_table_t *table,
     ecs_data_t *data,
+    ecs_column_t *column,
     int32_t row,
     int32_t count,
     bool set_all);
@@ -513,6 +514,11 @@ void flecs_table_delete_entities(
     ecs_table_t *table);
 
 ecs_hashmap_t flecs_table_hashmap_new(void);
+
+ecs_column_t *ecs_table_column_for_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API

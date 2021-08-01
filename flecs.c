@@ -1414,7 +1414,7 @@ ecs_id_record_t* flecs_get_id_record(
 
 ecs_table_record_t* flecs_get_table_record(
     const ecs_world_t *world,
-    ecs_table_t *table,
+    const ecs_table_t *table,
     ecs_id_t id);
 
 void flecs_clear_id_record(
@@ -1597,9 +1597,10 @@ void flecs_run_remove_actions(
 
 void flecs_run_set_systems(
     ecs_world_t *world,
-    ecs_ids_t *components,
+    ecs_id_t component,
     ecs_table_t *table,
     ecs_data_t *data,
+    ecs_column_t *column,
     int32_t row,
     int32_t count,
     bool set_all);
@@ -1791,6 +1792,11 @@ void flecs_table_delete_entities(
     ecs_table_t *table);
 
 ecs_hashmap_t flecs_table_hashmap_new(void);
+
+ecs_column_t *ecs_table_column_for_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
@@ -4640,6 +4646,22 @@ bool ecs_table_has_module(
     return table->flags & EcsTableHasModule;
 }
 
+ecs_column_t *ecs_table_column_for_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
+    if (tr) {
+        ecs_data_t *data = table->data;
+        if (data) {
+            return &data->columns[tr->column];
+        }
+    }
+
+    return NULL;
+}
+
 
 static
 const ecs_entity_t* new_w_data(
@@ -5683,9 +5705,10 @@ const ecs_entity_t* new_w_data(
             } else {
                 ecs_os_memcpy(ptr, src_ptr, size * count);
             }
-        };
 
-        flecs_run_set_systems(world, &added, table, data, row, count, true);        
+            flecs_run_set_systems(world, c, table, data, 
+                column, row, count, false); 
+        };       
     }
 
     flecs_run_monitors(world, table, table->monitors, row, count, NULL);
@@ -5979,14 +6002,17 @@ bool flecs_get_info(
 }
 
 void flecs_run_set_systems(
-    ecs_world_t * world,
-    ecs_ids_t * components,
-    ecs_table_t * table,
-    ecs_data_t * data,
+    ecs_world_t *world,
+    ecs_id_t component,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    ecs_column_t *column,
     int32_t row,
     int32_t count,
     bool set_all)
 {
+    ecs_assert(set_all || column != NULL, ECS_INTERNAL_ERROR, NULL);
+
 #ifdef FLECS_SYSTEM    
     if (!count || !data) {
         return;
@@ -5999,13 +6025,18 @@ void flecs_run_set_systems(
 
     entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
 
-    run_set_systems_for_entities(world, components, table, row, 
+    ecs_ids_t components = {
+        .array = &component,
+        .count = component != 0
+    };
+
+    run_set_systems_for_entities(world, &components, table, row, 
         count, entities, set_all);
 #endif
 
     if (table->flags & EcsTableHasOnSet) {
         if (!set_all) {
-            notify(world, table, data, row, count, EcsOnSet, components);
+            notify(world, table, data, row, count, EcsOnSet, &components);
         } else {
             ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
             int32_t i, column_count = table->column_count;
@@ -7482,11 +7513,8 @@ ecs_entity_t ecs_clone(
         flecs_table_move(world, dst, src, src_table, dst_info.data, 
             dst_info.row, src_table, src_info.data, src_info.row, true);
 
-        int i;
-        for (i = 0; i < to_add.count; i ++) {
-            flecs_run_set_systems(world, &to_add, 
-                src_table, src_info.data, dst_info.row, 1, true);
-        }
+        flecs_run_set_systems(world, 0,
+                src_table, src_info.data, NULL, dst_info.row, 1, true);
     }
 
     flecs_defer_flush(world, stage);
@@ -7704,12 +7732,10 @@ void ecs_modified_id(
 
     ecs_entity_info_t info = {0};
     if (flecs_get_info(world, entity, &info)) {
-        ecs_ids_t added = {
-            .array = &id,
-            .count = 1
-        };
-        flecs_run_set_systems(world, &added, 
-            info.table, info.data, info.row, 1, false);
+        ecs_column_t *column = ecs_table_column_for_id(world, info.table, id);
+        ecs_assert(column != NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_run_set_systems(world, id, 
+            info.table, info.data, column, info.row, 1, false);
     }
 
     flecs_table_mark_dirty(info.table, id);
@@ -7728,11 +7754,6 @@ ecs_entity_t assign_ptr_w_id(
     bool notify)
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-
-    ecs_ids_t added = {
-        .array = &id,
-        .count = 1
-    };
 
     if (!entity) {
         entity = ecs_new_id(world);
@@ -7786,8 +7807,9 @@ ecs_entity_t assign_ptr_w_id(
     flecs_table_mark_dirty(info.table, id);
 
     if (notify) {
-        flecs_run_set_systems(world, &added, 
-            info.table, info.data, info.row, 1, false);
+        ecs_column_t *column = ecs_table_column_for_id(world, info.table, id);
+        flecs_run_set_systems(world, id, 
+            info.table, info.data, column, info.row, 1, false);
     }
 
     flecs_defer_flush(world, stage);
@@ -12308,8 +12330,7 @@ void ecs_snapshot_restore(
                 data = flecs_table_merge(world, table, table, data, leaf->data);
 
                 /* Run OnSet systems for merged entities */
-                ecs_ids_t components = flecs_type_to_ids(table->type);
-                flecs_run_set_systems(world, &components, table, data,
+                flecs_run_set_systems(world, 0, table, data, NULL,
                     old_count, new_count, true);
 
                 ecs_os_free(leaf->data->columns);
@@ -12345,13 +12366,12 @@ void ecs_snapshot_restore(
             if (table->flags & EcsTableHasBuiltins) {
                 continue;
             }
-
-            ecs_ids_t components = flecs_type_to_ids(table->type);
+            
             ecs_data_t *table_data = flecs_table_get_data(table);
             int32_t entity_count = flecs_table_data_count(table_data);
 
-            flecs_run_set_systems(world, &components, table, 
-                table_data, 0, entity_count, true);            
+            flecs_run_set_systems(world, 0, table, 
+                table_data, NULL, 0, entity_count, true);            
         }
     }
 
@@ -15760,7 +15780,7 @@ ecs_id_record_t* flecs_get_id_record(
 
 ecs_table_record_t* flecs_get_table_record(
     const ecs_world_t *world,
-    ecs_table_t *table,
+    const ecs_table_t *table,
     ecs_id_t id)
 {
     ecs_id_record_t* idr = flecs_get_id_record(world, id);

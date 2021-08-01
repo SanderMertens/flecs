@@ -2290,3 +2290,19 @@ bool ecs_table_has_module(
 {
     return table->flags & EcsTableHasModule;
 }
+
+ecs_column_t *ecs_table_column_for_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
+    if (tr) {
+        ecs_data_t *data = table->data;
+        if (data) {
+            return &data->columns[tr->column];
+        }
+    }
+
+    return NULL;
+}
