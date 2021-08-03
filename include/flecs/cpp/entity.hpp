@@ -38,7 +38,7 @@ namespace flecs
  */
 class entity_view : public id {
 public:
-    explicit entity_view() : flecs::id() { }
+    entity_view() : flecs::id() { }
 
     /** Wrap an existing entity id.
      *
@@ -1179,7 +1179,7 @@ class entity :
 public:
     /** Default constructor.
      */
-    explicit entity()
+    entity()
         : flecs::entity_view() { }
 
     /** Create entity.
